@@ -11,13 +11,15 @@ var _social = require('./social');
 
 var _enums = require('./enums');
 
+var _request = require('../../request');
+
 var _errors = require('../../errors');
 
-var _network = require('../../requests/network');
-
-var _request = require('../../requests/request');
-
 var _es6Promise = require('es6-promise');
+
+var _regeneratorRuntime = require('regenerator-runtime');
+
+var _regeneratorRuntime2 = _interopRequireDefault(_regeneratorRuntime);
 
 var _path = require('path');
 
@@ -39,7 +41,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } // eslint-disable-line no-unused-vars
+
 
 var authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 var tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
@@ -67,7 +70,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
   function MobileIdentityConnect() {
     _classCallCheck(this, MobileIdentityConnect);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(MobileIdentityConnect).apply(this, arguments));
+    return _possibleConstructorReturn(this, (MobileIdentityConnect.__proto__ || Object.getPrototypeOf(MobileIdentityConnect)).apply(this, arguments));
   }
 
   _createClass(MobileIdentityConnect, [{
@@ -122,7 +125,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
         pathname = _path2.default.join(pathname, version.indexOf('v') === 0 ? version : 'v' + version);
       }
 
-      var config = new _request.KinveyRequestConfig({
+      var request = new _request.KinveyRequest({
         method: _request.RequestMethod.POST,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -139,7 +142,6 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
           response_type: 'code'
         }
       });
-      var request = new _network.NetworkRequest(config);
       return request.execute().then(function (response) {
         return response.data.temp_login_uri;
       });
@@ -164,8 +166,8 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
           pathname = _path2.default.join(pathname, version.indexOf('v') === 0 ? version : 'v' + version);
         }
 
-        if (global.KinveyPopup) {
-          var popup = new global.KinveyPopup();
+        if (global.Kinvey.Popup) {
+          var popup = new global.Kinvey.Popup();
           return popup.open(_url2.default.format({
             protocol: _this3.client.micProtocol,
             host: _this3.client.micHost,
@@ -178,7 +180,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
           }));
         }
 
-        throw new _errors.KinveyError('KinveyPopup is undefined.' + (' Unable to login using authorization grant ' + AuthorizationGrant.AuthorizationCodeLoginPage + '.'));
+        throw new _errors.KinveyError('Kinvey.Popup is undefined.' + (' Unable to login using authorization grant ' + AuthorizationGrant.AuthorizationCodeLoginPage + '.'));
       }).then(function (popup) {
         var promise = new _es6Promise.Promise(function (resolve, reject) {
           var redirected = false;
@@ -236,7 +238,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
       var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
       var promise = _es6Promise.Promise.resolve().then(function () {
-        var config = new _request.KinveyRequestConfig({
+        var request = new _request.KinveyRequest({
           method: _request.RequestMethod.POST,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -252,7 +254,6 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
           },
           followRedirect: false
         });
-        var request = new _network.NetworkRequest(config);
         return request.execute();
       }).then(function (response) {
         var location = response.getHeader('location');
@@ -271,7 +272,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
     value: function requestToken(code, clientId, redirectUri) {
       var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
-      var config = new _request.KinveyRequestConfig({
+      var request = new _request.KinveyRequest({
         method: _request.RequestMethod.POST,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -290,7 +291,6 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
           code: code
         }
       });
-      var request = new _network.NetworkRequest(config);
       var promise = request.execute().then(function (response) {
         return response.data;
       });
@@ -299,14 +299,14 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
   }, {
     key: 'logout',
     value: function () {
-      var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(user) {
+      var _ref = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee(user) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var config, request, response;
-        return regeneratorRuntime.wrap(function _callee$(_context) {
+        var request, response;
+        return _regeneratorRuntime2.default.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                config = new _request.KinveyRequestConfig({
+                request = new _request.KinveyRequest({
                   method: _request.RequestMethod.GET,
                   headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -320,15 +320,14 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
                   }),
                   properties: options.properties
                 });
-                request = new _network.NetworkRequest(config);
-                _context.next = 4;
+                _context.next = 3;
                 return request.execute();
 
-              case 4:
+              case 3:
                 response = _context.sent;
                 return _context.abrupt('return', response.data);
 
-              case 6:
+              case 5:
               case 'end':
                 return _context.stop();
             }

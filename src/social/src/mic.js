@@ -1,16 +1,15 @@
 import { Social } from './social';
 import { SocialIdentity } from './enums';
+import { AuthType, RequestMethod, KinveyRequest } from '../../request';
 import { KinveyError } from '../../errors';
-import { NetworkRequest } from '../../requests/network';
-import { AuthType, RequestMethod, KinveyRequestConfig } from '../../requests/request';
 import { Promise } from 'es6-promise';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import path from 'path';
 import url from 'url';
 import isString from 'lodash/isString';
 const authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 const invalidatePathname = process.env.KINVEY_MIC_INVALIDATE_PATHNAME || '/oauth/invalidate';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
 /**
  * Enum for Mobile Identity Connect authorization grants.
@@ -78,7 +77,7 @@ export class MobileIdentityConnect extends Social {
       pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
     }
 
-    const config = new KinveyRequestConfig({
+    const request = new KinveyRequest({
       method: RequestMethod.POST,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -95,7 +94,6 @@ export class MobileIdentityConnect extends Social {
         response_type: 'code'
       }
     });
-    const request = new NetworkRequest(config);
     return request.execute().then(response => response.data.temp_login_uri);
   }
 
@@ -113,8 +111,8 @@ export class MobileIdentityConnect extends Social {
         pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
       }
 
-      if (global.KinveyPopup) {
-        const popup = new global.KinveyPopup();
+      if (global.Kinvey.Popup) {
+        const popup = new global.Kinvey.Popup();
         return popup.open(url.format({
           protocol: this.client.micProtocol,
           host: this.client.micHost,
@@ -127,7 +125,7 @@ export class MobileIdentityConnect extends Social {
         }));
       }
 
-      throw new KinveyError('KinveyPopup is undefined.'
+      throw new KinveyError('Kinvey.Popup is undefined.'
         + ` Unable to login using authorization grant ${AuthorizationGrant.AuthorizationCodeLoginPage}.`);
     }).then((popup) => {
       const promise = new Promise((resolve, reject) => {
@@ -183,7 +181,7 @@ export class MobileIdentityConnect extends Social {
 
   requestCodeWithUrl(loginUrl, clientId, redirectUri, options = {}) {
     const promise = Promise.resolve().then(() => {
-      const config = new KinveyRequestConfig({
+      const request = new KinveyRequest({
         method: RequestMethod.POST,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -199,7 +197,6 @@ export class MobileIdentityConnect extends Social {
         },
         followRedirect: false
       });
-      const request = new NetworkRequest(config);
       return request.execute();
     }).then(response => {
       const location = response.getHeader('location');
@@ -216,7 +213,7 @@ export class MobileIdentityConnect extends Social {
   }
 
   requestToken(code, clientId, redirectUri, options = {}) {
-    const config = new KinveyRequestConfig({
+    const request = new KinveyRequest({
       method: RequestMethod.POST,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -235,13 +232,12 @@ export class MobileIdentityConnect extends Social {
         code: code
       }
     });
-    const request = new NetworkRequest(config);
     const promise = request.execute().then(response => response.data);
     return promise;
   }
 
   async logout(user, options = {}) {
-    const config = new KinveyRequestConfig({
+    const request = new KinveyRequest({
       method: RequestMethod.GET,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -255,7 +251,6 @@ export class MobileIdentityConnect extends Social {
       }),
       properties: options.properties
     });
-    const request = new NetworkRequest(config);
     const response = await request.execute();
     return response.data;
   }

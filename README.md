@@ -1,6 +1,18 @@
 # Kinvey JavaScript SDK Core
 
-The Kinvey JavaScript SDK core is a package that can be used to develop JavaScript applications on the Kinvey platform. The Kinvey JavaScript SDK core is intended used as a way to share common code across different Kinvey JavaScript SDK builds.
+The Kinvey JavaScript SDK core is a package that can be used to develop JavaScript applications on the Kinvey platform. The Kinvey JavaScript SDK core is intended used as a way to share common code across different JS SDK builds.
+
+The Kinvey JS SDK core supports several platforms through platform-specific shims. Here is a list of shims we currently support, each as a separate repo -
+
+* [Angular](https://github.com/Kinvey/angular-sdk)
+* [Angular 2](https://github.com/Kinvey/angular2-sdk)
+* [Backbone](https://github.com/Kinvey/backbone-sdk)
+* [HTML5](https://github.com/Kinvey/html5-sdk)
+* [Node](https://github.com/Kinvey/kinvey-nodejs)
+* [PhoneGap](https://github.com/Kinvey/phonegap-sdk)
+* [Titanium](https://github.com/Kinvey/titanium-sdk)
+
+Refer to the Kinvey [DevCenter](http://devcenter.kinvey.com/) for documentation on using Kinvey.
 
 ## Building
 The simplest way to build the sdk is by running `gulp`. More advanced tasks are available.
@@ -28,9 +40,9 @@ The workflow for releasing a new version of the sdk is as follows:
 3. Update the [Changelog](CHANGELOG.md).
 4. Run `gulp bump --type <type>` replacing `<type>` with major, minor, patch, or prerelease. See [Flags](#Flags) above.
 5. Run `gulp`.
-6. Run `gulp tag`.
-7. Make sure all changes are committed on the master branch and push.
-8. Checkout the develop branch and merge the master branch.
+6. Make sure all changes are committed on the master branch and push.
+7. Checkout the develop branch and merge the master branch.
+8. Tag the version with git.
 
 ### Version Management
 Updating the sdk version should follow [Semantic Version 2.0.0](http://semver.org/):
@@ -38,3 +50,9 @@ Updating the sdk version should follow [Semantic Version 2.0.0](http://semver.or
 * Major (x.0.0): when making an incompatible API changes.
 * Minor (3.x.0): when adding functionality in a backwards-compatible manner.
 * Patch (3.0.x): when making backwards-compatible bug fixes or enhancements.
+
+## License
+See [LICENSE](LICENSE) for details.
+
+## Contributing
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on reporting bugs and making contributions.

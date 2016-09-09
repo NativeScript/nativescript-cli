@@ -1,19 +1,13 @@
-import { KinveyError } from './errors';
-import { Acl } from './acl';
-import { Aggregation } from './aggregation';
 import { Client } from './client';
 import { CustomEndpoint } from './endpoint';
-import { Log } from './log';
-import { Metadata } from './metadata';
+import { Log } from './utils';
 import { Query } from './query';
-import { DataStore, DataStoreType } from './datastore';
-import { FileStore } from './filestore';
-import { Sync } from './sync';
-import { User, UserStore } from './user';
+import { Aggregation } from './aggregation';
+import { DataStore, DataStoreType, FileStore } from './datastore';
+import { Acl, Metadata, User, UserStore } from './entity';
 import { AuthorizationGrant, SocialIdentity } from './social';
-import { NetworkRequest } from './requests/network';
-import { AuthType, RequestMethod } from './requests/request';
-import { KinveyRackManager } from './rack/rack';
+import { AuthType, RequestMethod, CacheRequest, NetworkRequest, KinveyRequest } from './request';
+import { KinveyError } from './errors';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
@@ -21,7 +15,7 @@ const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 /**
  * The Kinvey class is used as the entry point for the Kinvey JavaScript SDK.
  */
-export class Kinvey {
+class Kinvey {
   /**
    * Returns the shared instance of the Client class used by the SDK.
    *
@@ -65,30 +59,6 @@ export class Kinvey {
   }
 
   /**
-   * Get the rack manager module.
-   *
-   * @return {KinveyRackManager} The KinveyRackManager module.
-   *
-   * @example
-   * var RackManager = Kinvey.RackManager;
-   */
-  static get RackManager() {
-    return KinveyRackManager;
-  }
-
-  /**
-   * Get the logging module.
-   *
-   * @return {Log}  The log module.
-   *
-   * @example
-   * var Log = Kinvey.Log;
-   */
-  static get Log() {
-    return Log;
-  }
-
-  /**
    * Initializes the library with your app's information.
    *
    * @param {Object}    options                                            Options
@@ -126,18 +96,10 @@ export class Kinvey {
     // Initialize the client
     const client = Client.init(options);
 
-    // Add all the modules to the Kinvey namespace
-    this.Acl = Acl;
-    this.Aggregation = Aggregation;
-    this.AuthorizationGrant = AuthorizationGrant;
+    // Add modules that require initialization
     this.CustomEndpoint = CustomEndpoint;
     this.DataStore = DataStore;
-    this.DataStoreType = DataStoreType;
     this.Files = new FileStore();
-    this.Metadata = Metadata;
-    this.Query = Query;
-    this.SocialIdentity = SocialIdentity;
-    this.Sync = Sync;
     this.User = User;
     this.UserStore = UserStore;
 
@@ -158,7 +120,7 @@ export class Kinvey {
    * });
    */
   static async ping(client = Client.sharedInstance()) {
-    const request = new NetworkRequest({
+    const request = new KinveyRequest({
       method: RequestMethod.GET,
       authType: AuthType.All,
       url: url.format({
@@ -171,3 +133,18 @@ export class Kinvey {
     return response.data;
   }
 }
+
+// Add modules
+Kinvey.Acl = Acl;
+Kinvey.Aggregation = Aggregation;
+Kinvey.AuthorizationGrant = AuthorizationGrant;
+Kinvey.CacheRequest = CacheRequest;
+Kinvey.DataStoreType = DataStoreType;
+Kinvey.Log = Log;
+Kinvey.Metadata = Metadata;
+Kinvey.NetworkRequest = NetworkRequest;
+Kinvey.Query = Query;
+Kinvey.SocialIdentity = SocialIdentity;
+
+// Export
+export { Kinvey };

@@ -9,7 +9,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _errors = require('./errors');
 
-var _storage = require('./utils/storage');
+var _utils = require('./utils');
 
 var _url = require('url');
 
@@ -145,15 +145,15 @@ var Client = exports.Client = function () {
 
 
   _createClass(Client, [{
-    key: 'toJSON',
+    key: 'toPlainObject',
 
 
     /**
      * Returns an object containing all the information for this Client.
      *
-     * @return {Object} JSON
+     * @return {Object} Object
      */
-    value: function toJSON() {
+    value: function toPlainObject() {
       return {
         apiHostname: this.apiHostname,
         apiProtocol: this.apiProtocol,
@@ -266,7 +266,7 @@ var Client = exports.Client = function () {
   }, {
     key: 'activeUser',
     get: function get() {
-      return (0, _storage.getActiveUser)(this);
+      return (0, _utils.getActiveUser)(this);
     }
 
     /**

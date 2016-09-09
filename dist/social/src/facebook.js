@@ -15,7 +15,7 @@ var _es6Promise = require('es6-promise');
 
 var _errors = require('../../errors');
 
-var _string = require('../../utils/string');
+var _utils = require('../../utils');
 
 var _regeneratorRuntime = require('regenerator-runtime');
 
@@ -54,13 +54,13 @@ var Facebook = exports.Facebook = function (_Social) {
   function Facebook() {
     _classCallCheck(this, Facebook);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(Facebook).apply(this, arguments));
+    return _possibleConstructorReturn(this, (Facebook.__proto__ || Object.getPrototypeOf(Facebook)).apply(this, arguments));
   }
 
   _createClass(Facebook, [{
     key: 'isSupported',
     value: function isSupported() {
-      return !!global.KinveyPopup;
+      return !!global.Kinvey.Popup;
     }
   }, {
     key: 'login',
@@ -107,8 +107,8 @@ var Facebook = exports.Facebook = function (_Social) {
               case 8:
                 promise = new _es6Promise.Promise(function (resolve, reject) {
                   var redirectUri = options.redirectUri || global.location.href;
-                  var originalState = (0, _string.randomString)();
-                  var popup = new global.KinveyPopup();
+                  var originalState = (0, _utils.randomString)();
+                  var popup = new global.Kinvey.Popup();
                   var redirected = false;
 
                   // Handle the response from a login request

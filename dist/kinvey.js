@@ -8,37 +8,25 @@ exports.Kinvey = undefined;
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); // eslint-disable-line no-unused-vars
 
 
-var _errors = require('./errors');
-
-var _acl = require('./acl');
-
-var _aggregation = require('./aggregation');
-
 var _client = require('./client');
 
 var _endpoint = require('./endpoint');
 
-var _log = require('./log');
-
-var _metadata = require('./metadata');
+var _utils = require('./utils');
 
 var _query = require('./query');
 
+var _aggregation = require('./aggregation');
+
 var _datastore = require('./datastore');
 
-var _filestore = require('./filestore');
-
-var _sync = require('./sync');
-
-var _user = require('./user');
+var _entity = require('./entity');
 
 var _social = require('./social');
 
-var _network = require('./requests/network');
+var _request = require('./request');
 
-var _request = require('./requests/request');
-
-var _rack = require('./rack/rack');
+var _errors = require('./errors');
 
 var _regeneratorRuntime = require('regenerator-runtime');
 
@@ -60,7 +48,7 @@ var appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
  * The Kinvey class is used as the entry point for the Kinvey JavaScript SDK.
  */
 
-var Kinvey = exports.Kinvey = function () {
+var Kinvey = function () {
   function Kinvey() {
     _classCallCheck(this, Kinvey);
   }
@@ -105,20 +93,12 @@ var Kinvey = exports.Kinvey = function () {
       // Initialize the client
       var client = _client.Client.init(options);
 
-      // Add all the modules to the Kinvey namespace
-      this.Acl = _acl.Acl;
-      this.Aggregation = _aggregation.Aggregation;
-      this.AuthorizationGrant = _social.AuthorizationGrant;
+      // Add modules that require initialization
       this.CustomEndpoint = _endpoint.CustomEndpoint;
       this.DataStore = _datastore.DataStore;
-      this.DataStoreType = _datastore.DataStoreType;
-      this.Files = new _filestore.FileStore();
-      this.Metadata = _metadata.Metadata;
-      this.Query = _query.Query;
-      this.SocialIdentity = _social.SocialIdentity;
-      this.Sync = _sync.Sync;
-      this.User = _user.User;
-      this.UserStore = _user.UserStore;
+      this.Files = new _datastore.FileStore();
+      this.User = _entity.User;
+      this.UserStore = _entity.UserStore;
 
       // Return the client
       return client;
@@ -147,7 +127,7 @@ var Kinvey = exports.Kinvey = function () {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                request = new _network.NetworkRequest({
+                request = new _request.KinveyRequest({
                   method: _request.RequestMethod.GET,
                   authType: _request.AuthType.All,
                   url: _url2.default.format({
@@ -225,37 +205,24 @@ var Kinvey = exports.Kinvey = function () {
     set: function set(appVersion) {
       this.client.appVersion = appVersion;
     }
-
-    /**
-     * Get the rack manager module.
-     *
-     * @return {KinveyRackManager} The KinveyRackManager module.
-     *
-     * @example
-     * var RackManager = Kinvey.RackManager;
-     */
-
-  }, {
-    key: 'RackManager',
-    get: function get() {
-      return _rack.KinveyRackManager;
-    }
-
-    /**
-     * Get the logging module.
-     *
-     * @return {Log}  The log module.
-     *
-     * @example
-     * var Log = Kinvey.Log;
-     */
-
-  }, {
-    key: 'Log',
-    get: function get() {
-      return _log.Log;
-    }
   }]);
 
   return Kinvey;
 }();
+
+// Add modules
+
+
+Kinvey.Acl = _entity.Acl;
+Kinvey.Aggregation = _aggregation.Aggregation;
+Kinvey.AuthorizationGrant = _social.AuthorizationGrant;
+Kinvey.CacheRequest = _request.CacheRequest;
+Kinvey.DataStoreType = _datastore.DataStoreType;
+Kinvey.Log = _utils.Log;
+Kinvey.Metadata = _entity.Metadata;
+Kinvey.NetworkRequest = _request.NetworkRequest;
+Kinvey.Query = _query.Query;
+Kinvey.SocialIdentity = _social.SocialIdentity;
+
+// Export
+exports.Kinvey = Kinvey;

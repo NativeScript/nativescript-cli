@@ -1,7 +1,6 @@
 import { Client } from './client';
-import { RequestMethod, AuthType } from './requests/request';
+import { RequestMethod, AuthType, KinveyRequest } from './request';
 import { KinveyError } from './errors';
-import { NetworkRequest } from './requests/network';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import assign from 'lodash/assign';
@@ -12,6 +11,10 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
  * Executes a custom endpoint on the Kinvey backend.
  */
 export class CustomEndpoint {
+  constructor() {
+    throw new KinveyError('Not allowed to create an instance of the `CustomEndpoint` class.',
+      'Please use `CustomEndpoint.execute()` function.');
+  }
   /**
    * Execute a custom endpoint. A promise will be returned that will be resolved
    * with the result of the command or rejected with an error.
@@ -37,14 +40,14 @@ export class CustomEndpoint {
     }, options);
 
     if (!endpoint) {
-      throw new KinveyError('An endpoint is required.');
+      throw new KinveyError('An endpoint argument is required.');
     }
 
     if (!isString(endpoint)) {
-      throw new KinveyError('The endpoint must be a string.');
+      throw new KinveyError('The endpoint argument must be a string.');
     }
 
-    const request = new NetworkRequest({
+    const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.Default,
       url: url.format({

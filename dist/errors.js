@@ -30,7 +30,7 @@ var KinveyError = exports.KinveyError = function (_ExtendableError) {
 
     _classCallCheck(this, KinveyError);
 
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(KinveyError).call(this, message));
+    var _this = _possibleConstructorReturn(this, (KinveyError.__proto__ || Object.getPrototypeOf(KinveyError)).call(this, message));
 
     _this.debug = debug;
     _this.code = code;
@@ -54,7 +54,7 @@ var ActiveUserError = exports.ActiveUserError = function (_KinveyError) {
 
     _classCallCheck(this, ActiveUserError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(ActiveUserError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (ActiveUserError.__proto__ || Object.getPrototypeOf(ActiveUserError)).call(this, message, debug));
   }
 
   return ActiveUserError;
@@ -74,7 +74,7 @@ var FeatureUnavailableError = exports.FeatureUnavailableError = function (_Kinve
 
     _classCallCheck(this, FeatureUnavailableError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(FeatureUnavailableError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (FeatureUnavailableError.__proto__ || Object.getPrototypeOf(FeatureUnavailableError)).call(this, message, debug));
   }
 
   return FeatureUnavailableError;
@@ -94,7 +94,7 @@ var IncompleteRequestBodyError = exports.IncompleteRequestBodyError = function (
 
     _classCallCheck(this, IncompleteRequestBodyError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(IncompleteRequestBodyError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (IncompleteRequestBodyError.__proto__ || Object.getPrototypeOf(IncompleteRequestBodyError)).call(this, message, debug));
   }
 
   return IncompleteRequestBodyError;
@@ -114,7 +114,7 @@ var InsufficientCredentialsError = exports.InsufficientCredentialsError = functi
 
     _classCallCheck(this, InsufficientCredentialsError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(InsufficientCredentialsError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (InsufficientCredentialsError.__proto__ || Object.getPrototypeOf(InsufficientCredentialsError)).call(this, message, debug));
   }
 
   return InsufficientCredentialsError;
@@ -134,7 +134,7 @@ var InvalidCredentialsError = exports.InvalidCredentialsError = function (_Kinve
 
     _classCallCheck(this, InvalidCredentialsError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(InvalidCredentialsError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (InvalidCredentialsError.__proto__ || Object.getPrototypeOf(InvalidCredentialsError)).call(this, message, debug));
   }
 
   return InvalidCredentialsError;
@@ -154,7 +154,7 @@ var InvalidIdentifierError = exports.InvalidIdentifierError = function (_KinveyE
 
     _classCallCheck(this, InvalidIdentifierError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(InvalidIdentifierError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (InvalidIdentifierError.__proto__ || Object.getPrototypeOf(InvalidIdentifierError)).call(this, message, debug));
   }
 
   return InvalidIdentifierError;
@@ -174,7 +174,7 @@ var InvalidQuerySyntaxError = exports.InvalidQuerySyntaxError = function (_Kinve
 
     _classCallCheck(this, InvalidQuerySyntaxError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(InvalidQuerySyntaxError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (InvalidQuerySyntaxError.__proto__ || Object.getPrototypeOf(InvalidQuerySyntaxError)).call(this, message, debug));
   }
 
   return InvalidQuerySyntaxError;
@@ -194,7 +194,7 @@ var JSONParseError = exports.JSONParseError = function (_KinveyError8) {
 
     _classCallCheck(this, JSONParseError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(JSONParseError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (JSONParseError.__proto__ || Object.getPrototypeOf(JSONParseError)).call(this, message, debug));
   }
 
   return JSONParseError;
@@ -214,7 +214,7 @@ var MissingQueryError = exports.MissingQueryError = function (_KinveyError9) {
 
     _classCallCheck(this, MissingQueryError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(MissingQueryError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (MissingQueryError.__proto__ || Object.getPrototypeOf(MissingQueryError)).call(this, message, debug));
   }
 
   return MissingQueryError;
@@ -234,7 +234,7 @@ var MissingRequestHeaderError = exports.MissingRequestHeaderError = function (_K
 
     _classCallCheck(this, MissingRequestHeaderError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(MissingRequestHeaderError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (MissingRequestHeaderError.__proto__ || Object.getPrototypeOf(MissingRequestHeaderError)).call(this, message, debug));
   }
 
   return MissingRequestHeaderError;
@@ -254,7 +254,7 @@ var MissingRequestParameterError = exports.MissingRequestParameterError = functi
 
     _classCallCheck(this, MissingRequestParameterError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(MissingRequestParameterError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (MissingRequestParameterError.__proto__ || Object.getPrototypeOf(MissingRequestParameterError)).call(this, message, debug));
   }
 
   return MissingRequestParameterError;
@@ -274,7 +274,7 @@ var NoNetworkConnectionError = exports.NoNetworkConnectionError = function (_Kin
 
     _classCallCheck(this, NoNetworkConnectionError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(NoNetworkConnectionError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (NoNetworkConnectionError.__proto__ || Object.getPrototypeOf(NoNetworkConnectionError)).call(this, message, debug));
   }
 
   return NoNetworkConnectionError;
@@ -294,7 +294,7 @@ var NoActiveUserError = exports.NoActiveUserError = function (_KinveyError13) {
 
     _classCallCheck(this, NoActiveUserError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(NoActiveUserError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (NoActiveUserError.__proto__ || Object.getPrototypeOf(NoActiveUserError)).call(this, message, debug));
   }
 
   return NoActiveUserError;
@@ -314,7 +314,7 @@ var NotFoundError = exports.NotFoundError = function (_KinveyError14) {
 
     _classCallCheck(this, NotFoundError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(NotFoundError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (NotFoundError.__proto__ || Object.getPrototypeOf(NotFoundError)).call(this, message, debug));
   }
 
   return NotFoundError;
@@ -334,7 +334,7 @@ var NoResponseError = exports.NoResponseError = function (_KinveyError15) {
 
     _classCallCheck(this, NoResponseError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(NoResponseError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (NoResponseError.__proto__ || Object.getPrototypeOf(NoResponseError)).call(this, message, debug));
   }
 
   return NoResponseError;
@@ -354,7 +354,7 @@ var ParameterValueOutOfRangeError = exports.ParameterValueOutOfRangeError = func
 
     _classCallCheck(this, ParameterValueOutOfRangeError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(ParameterValueOutOfRangeError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (ParameterValueOutOfRangeError.__proto__ || Object.getPrototypeOf(ParameterValueOutOfRangeError)).call(this, message, debug));
   }
 
   return ParameterValueOutOfRangeError;
@@ -374,7 +374,7 @@ var QueryError = exports.QueryError = function (_KinveyError17) {
 
     _classCallCheck(this, QueryError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(QueryError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (QueryError.__proto__ || Object.getPrototypeOf(QueryError)).call(this, message, debug));
   }
 
   return QueryError;
@@ -394,7 +394,7 @@ var ServerError = exports.ServerError = function (_KinveyError18) {
 
     _classCallCheck(this, ServerError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(ServerError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (ServerError.__proto__ || Object.getPrototypeOf(ServerError)).call(this, message, debug));
   }
 
   return ServerError;
@@ -414,7 +414,7 @@ var SyncError = exports.SyncError = function (_KinveyError19) {
 
     _classCallCheck(this, SyncError);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(SyncError).call(this, message, debug));
+    return _possibleConstructorReturn(this, (SyncError.__proto__ || Object.getPrototypeOf(SyncError)).call(this, message, debug));
   }
 
   return SyncError;

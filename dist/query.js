@@ -11,7 +11,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _errors = require('./errors');
 
-var _object = require('./utils/object');
+var _utils = require('./utils');
 
 var _sift = require('sift');
 
@@ -174,8 +174,7 @@ var Query = function () {
   }, {
     key: 'equalTo',
     value: function equalTo(field, value) {
-      this.filter[field] = value;
-      return this;
+      return this.addFilter(field, '$eq', value);
     }
 
     /**
@@ -769,7 +768,7 @@ var Query = function () {
     value: function process(data) {
       var _this3 = this;
 
-      if (!this.isSupportedOffline()) {
+      if (this.isSupportedOffline() === false) {
         (function () {
           var message = 'This query is not able to run locally. The following filters are not supported' + ' locally:';
 
@@ -811,8 +810,8 @@ var Query = function () {
             var fields = Object.keys(json.sort);
             (0, _forEach2.default)(fields, function (field) {
               // Find field in objects.
-              var aField = (0, _object.nested)(a, field);
-              var bField = (0, _object.nested)(b, field);
+              var aField = (0, _utils.nested)(a, field);
+              var bField = (0, _utils.nested)(b, field);
 
               // Elements which do not contain the field should always be sorted
               // lower.
@@ -857,16 +856,16 @@ var Query = function () {
     }
 
     /**
-     * Returns JSON representation of the query.
+     * Returns Object representation of the query.
      *
-     * @returns {Object} JSON object-literal.
+     * @returns {Object} Object
      */
 
   }, {
-    key: 'toJSON',
-    value: function toJSON() {
+    key: 'toPlainObject',
+    value: function toPlainObject() {
       if (this._parent) {
-        return this._parent.toJSON();
+        return this._parent.toPlainObject();
       }
 
       // Return set of parameters.
@@ -879,6 +878,19 @@ var Query = function () {
       };
 
       return json;
+    }
+
+    /**
+     * Returns Object representation of the query.
+     *
+     * @returns {Object} Object
+     * @deprecated Use toPlainObject() instead.
+     */
+
+  }, {
+    key: 'toJSON',
+    value: function toJSON() {
+      return this.toPlainObject();
     }
 
     /**

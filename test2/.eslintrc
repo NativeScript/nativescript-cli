@@ -1,0 +1,20 @@
+{
+  "extends": "../.eslintrc",
+  "env": {
+    "browser": true,
+    "node": true,
+    "mocha": true
+  },
+  "rules": {
+    "prefer-arrow-callback": 0,
+    "no-unused-expressions": 0
+  },
+  "globals": {
+    "spy": true,
+    "expect": true,
+    "chai": true,
+    "sinon": true,
+    "stub": true,
+    "Common": true
+  }
+}

@@ -197,9 +197,9 @@ var Social = exports.Social = function () {
     }
   }, {
     key: 'logout',
-    value: function logout() {
+    value: function logout(user, options) {
       var social = new this();
-      return social.logout();
+      return social.logout(user, options);
     }
   }, {
     key: 'identity',

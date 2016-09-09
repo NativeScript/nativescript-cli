@@ -10,11 +10,9 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _client = require('./client');
 
-var _request = require('./requests/request');
+var _request = require('./request');
 
 var _errors = require('./errors');
-
-var _network = require('./requests/network');
 
 var _regeneratorRuntime = require('regenerator-runtime');
 
@@ -47,30 +45,32 @@ var rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 var CustomEndpoint = exports.CustomEndpoint = function () {
   function CustomEndpoint() {
     _classCallCheck(this, CustomEndpoint);
+
+    throw new _errors.KinveyError('Not allowed to create an instance of the `CustomEndpoint` class.', 'Please use `CustomEndpoint.execute()` function.');
   }
+  /**
+   * Execute a custom endpoint. A promise will be returned that will be resolved
+   * with the result of the command or rejected with an error.
+   *
+   * @param   {String}          endpoint                          Endpoint to execute.
+   * @param   {Object}          [args]                            Command arguments
+   * @param   {Object}          [options={}]                      Options
+   * @param   {Properties}      [options.properties]              Custom properties to send with
+   *                                                              the request.
+   * @param   {Number}          [options.timeout]                 Timeout for the request.
+   * @return  {Promise}                                           Promise
+   *
+   * @example
+   * var promise = CustomEndpoint.execute('myCustomEndpoint').then(function(data) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+
 
   _createClass(CustomEndpoint, null, [{
     key: 'execute',
-
-    /**
-     * Execute a custom endpoint. A promise will be returned that will be resolved
-     * with the result of the command or rejected with an error.
-     *
-     * @param   {String}          endpoint                          Endpoint to execute.
-     * @param   {Object}          [args]                            Command arguments
-     * @param   {Object}          [options={}]                      Options
-     * @param   {Properties}      [options.properties]              Custom properties to send with
-     *                                                              the request.
-     * @param   {Number}          [options.timeout]                 Timeout for the request.
-     * @return  {Promise}                                           Promise
-     *
-     * @example
-     * var promise = CustomEndpoint.execute('myCustomEndpoint').then(function(data) {
-     *   ...
-     * }).catch(function(error) {
-     *   ...
-     * });
-     */
     value: function () {
       var _ref = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee(endpoint, args) {
         var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
@@ -88,7 +88,7 @@ var CustomEndpoint = exports.CustomEndpoint = function () {
                   break;
                 }
 
-                throw new _errors.KinveyError('An endpoint is required.');
+                throw new _errors.KinveyError('An endpoint argument is required.');
 
               case 3:
                 if ((0, _isString2.default)(endpoint)) {
@@ -96,10 +96,10 @@ var CustomEndpoint = exports.CustomEndpoint = function () {
                   break;
                 }
 
-                throw new _errors.KinveyError('The endpoint must be a string.');
+                throw new _errors.KinveyError('The endpoint argument must be a string.');
 
               case 5:
-                request = new _network.NetworkRequest({
+                request = new _request.KinveyRequest({
                   method: _request.RequestMethod.POST,
                   authType: _request.AuthType.Default,
                   url: _url2.default.format({
