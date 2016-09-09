@@ -1,4 +1,9 @@
 ## Changelog
+### 3.1.0 (2016-09-09)
+* Test: Update unit tests.
+* Enhancement: Restructure files.
+* Enhancement: Update LiveStream API.
+
 ### 3.0.3 (2016-08-11)
 * Bug (MLIBZ-1226): Send correct `X-Kinvey-Device-Information` header format.
 * Bug (MLIBZ-1270): Update the cache to represent the state of the backend correctly when a sync pull is performed.
