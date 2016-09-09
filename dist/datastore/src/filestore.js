@@ -80,7 +80,7 @@ var FileStore = exports.FileStore = function (_NetworkStore) {
   function FileStore() {
     _classCallCheck(this, FileStore);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(FileStore).apply(this, arguments));
+    return _possibleConstructorReturn(this, (FileStore.__proto__ || Object.getPrototypeOf(FileStore)).apply(this, arguments));
   }
 
   _createClass(FileStore, [{
@@ -135,7 +135,7 @@ var FileStore = exports.FileStore = function (_NetworkStore) {
                   options.query.ttl_in_seconds = options.ttl;
                 }
 
-                stream = _get(Object.getPrototypeOf(FileStore.prototype), 'find', this).call(this, query, options);
+                stream = _get(FileStore.prototype.__proto__ || Object.getPrototypeOf(FileStore.prototype), 'find', this).call(this, query, options);
                 _context.next = 6;
                 return stream.toPromise();
 
@@ -215,7 +215,7 @@ var FileStore = exports.FileStore = function (_NetworkStore) {
                 }
 
                 _context2.next = 5;
-                return _get(Object.getPrototypeOf(FileStore.prototype), 'findById', this).call(this, name, options).toPromise();
+                return _get(FileStore.prototype.__proto__ || Object.getPrototypeOf(FileStore.prototype), 'findById', this).call(this, name, options).toPromise();
 
               case 5:
                 file = _context2.sent;

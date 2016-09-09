@@ -1,7 +1,7 @@
 import { Request } from './request';
 import { NoResponseError, KinveyError } from '../../errors';
 import { Response } from './response';
-import { Rack } from 'kinvey-javascript-rack/dist/rack';
+import { Rack } from 'kinvey-javascript-rack';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
 export class NetworkRequest extends Request {

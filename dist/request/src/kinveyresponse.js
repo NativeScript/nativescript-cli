@@ -28,7 +28,7 @@ var KinveyResponse = exports.KinveyResponse = function (_Response) {
   function KinveyResponse() {
     _classCallCheck(this, KinveyResponse);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(KinveyResponse).apply(this, arguments));
+    return _possibleConstructorReturn(this, (KinveyResponse.__proto__ || Object.getPrototypeOf(KinveyResponse)).apply(this, arguments));
   }
 
   _createClass(KinveyResponse, [{
@@ -72,7 +72,7 @@ var KinveyResponse = exports.KinveyResponse = function (_Response) {
         return new _errors.ServerError(message, debug, code);
       }
 
-      return _get(Object.getPrototypeOf(KinveyResponse.prototype), 'error', this);
+      return _get(KinveyResponse.prototype.__proto__ || Object.getPrototypeOf(KinveyResponse.prototype), 'error', this);
     }
   }]);
 

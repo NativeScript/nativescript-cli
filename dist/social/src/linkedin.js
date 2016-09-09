@@ -26,7 +26,7 @@ var LinkedIn = exports.LinkedIn = function (_Social) {
   function LinkedIn() {
     _classCallCheck(this, LinkedIn);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(LinkedIn).apply(this, arguments));
+    return _possibleConstructorReturn(this, (LinkedIn.__proto__ || Object.getPrototypeOf(LinkedIn)).apply(this, arguments));
   }
 
   _createClass(LinkedIn, [{

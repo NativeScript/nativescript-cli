@@ -2,7 +2,7 @@ import { Request } from './request';
 import { NoResponseError, KinveyError } from '../../errors';
 import { Response } from './response';
 import { Client } from '../../client';
-import { Rack } from 'kinvey-javascript-rack/dist/rack';
+import { Rack } from 'kinvey-javascript-rack';
 import UrlPattern from 'url-pattern';
 import url from 'url';
 import assign from 'lodash/assign';

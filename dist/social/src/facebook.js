@@ -54,7 +54,7 @@ var Facebook = exports.Facebook = function (_Social) {
   function Facebook() {
     _classCallCheck(this, Facebook);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(Facebook).apply(this, arguments));
+    return _possibleConstructorReturn(this, (Facebook.__proto__ || Object.getPrototypeOf(Facebook)).apply(this, arguments));
   }
 
   _createClass(Facebook, [{

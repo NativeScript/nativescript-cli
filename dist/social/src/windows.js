@@ -26,7 +26,7 @@ var Windows = exports.Windows = function (_Social) {
   function Windows() {
     _classCallCheck(this, Windows);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(Windows).apply(this, arguments));
+    return _possibleConstructorReturn(this, (Windows.__proto__ || Object.getPrototypeOf(Windows)).apply(this, arguments));
   }
 
   _createClass(Windows, [{

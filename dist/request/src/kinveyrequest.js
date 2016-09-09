@@ -213,7 +213,7 @@ var Properties = exports.Properties = function (_Headers) {
   function Properties() {
     _classCallCheck(this, Properties);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(Properties).apply(this, arguments));
+    return _possibleConstructorReturn(this, (Properties.__proto__ || Object.getPrototypeOf(Properties)).apply(this, arguments));
   }
 
   return Properties;
@@ -228,7 +228,7 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
     _classCallCheck(this, KinveyRequest);
 
     // Set default options
-    var _this2 = _possibleConstructorReturn(this, Object.getPrototypeOf(KinveyRequest).call(this, options));
+    var _this2 = _possibleConstructorReturn(this, (KinveyRequest.__proto__ || Object.getPrototypeOf(KinveyRequest)).call(this, options));
 
     options = (0, _assign2.default)({
       authType: AuthType.None,
@@ -262,7 +262,7 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
               case 0:
                 _context.prev = 0;
                 _context.next = 3;
-                return _get(Object.getPrototypeOf(KinveyRequest.prototype), 'execute', this).call(this);
+                return _get(KinveyRequest.prototype.__proto__ || Object.getPrototypeOf(KinveyRequest.prototype), 'execute', this).call(this);
 
               case 3:
                 response = _context.sent;
@@ -392,7 +392,7 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
   }, {
     key: 'headers',
     get: function get() {
-      var headers = _get(Object.getPrototypeOf(KinveyRequest.prototype), 'headers', this);
+      var headers = _get(KinveyRequest.prototype.__proto__ || Object.getPrototypeOf(KinveyRequest.prototype), 'headers', this);
 
       // Add the Accept header
       if (!headers.has('Accept')) {
@@ -508,12 +508,12 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
       return headers;
     },
     set: function set(headers) {
-      _set(Object.getPrototypeOf(KinveyRequest.prototype), 'headers', headers, this);
+      _set(KinveyRequest.prototype.__proto__ || Object.getPrototypeOf(KinveyRequest.prototype), 'headers', headers, this);
     }
   }, {
     key: 'url',
     get: function get() {
-      var urlString = _get(Object.getPrototypeOf(KinveyRequest.prototype), 'url', this);
+      var urlString = _get(KinveyRequest.prototype.__proto__ || Object.getPrototypeOf(KinveyRequest.prototype), 'url', this);
       var queryString = this.query ? this.query.toQueryString() : {};
 
       if ((0, _isEmpty2.default)(queryString)) {
@@ -523,7 +523,7 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
       return (0, _appendQuery2.default)(urlString, _qs2.default.stringify(queryString));
     },
     set: function set(urlString) {
-      _set(Object.getPrototypeOf(KinveyRequest.prototype), 'url', urlString, this);
+      _set(KinveyRequest.prototype.__proto__ || Object.getPrototypeOf(KinveyRequest.prototype), 'url', urlString, this);
     }
   }, {
     key: 'apiVersion',

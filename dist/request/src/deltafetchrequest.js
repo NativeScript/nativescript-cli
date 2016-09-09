@@ -84,7 +84,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
   function DeltaFetchRequest() {
     _classCallCheck(this, DeltaFetchRequest);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(DeltaFetchRequest).apply(this, arguments));
+    return _possibleConstructorReturn(this, (DeltaFetchRequest.__proto__ || Object.getPrototypeOf(DeltaFetchRequest)).apply(this, arguments));
   }
 
   _createClass(DeltaFetchRequest, [{
@@ -101,7 +101,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
               case 0:
                 cacheData = [];
                 _context2.next = 3;
-                return _get(Object.getPrototypeOf(DeltaFetchRequest.prototype), 'execute', this).call(this);
+                return _get(DeltaFetchRequest.prototype.__proto__ || Object.getPrototypeOf(DeltaFetchRequest.prototype), 'execute', this).call(this);
 
               case 3:
                 _context2.prev = 3;
@@ -296,7 +296,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
   }, {
     key: 'method',
     get: function get() {
-      return _get(Object.getPrototypeOf(DeltaFetchRequest.prototype), 'method', this);
+      return _get(DeltaFetchRequest.prototype.__proto__ || Object.getPrototypeOf(DeltaFetchRequest.prototype), 'method', this);
     },
     set: function set(method) {
       // Cast the method to a string
@@ -310,7 +310,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
       // Verify that the method is allowed
       switch (method) {
         case _request3.RequestMethod.GET:
-          _set(Object.getPrototypeOf(DeltaFetchRequest.prototype), 'method', method, this);
+          _set(DeltaFetchRequest.prototype.__proto__ || Object.getPrototypeOf(DeltaFetchRequest.prototype), 'method', method, this);
           break;
         case _request3.RequestMethod.POST:
         case _request3.RequestMethod.PATCH:

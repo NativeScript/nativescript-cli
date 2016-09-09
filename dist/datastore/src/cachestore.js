@@ -84,7 +84,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
     /**
      * @type {number|undefined}
      */
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(CacheStore).call(this, collection, options));
+    var _this = _possibleConstructorReturn(this, (CacheStore.__proto__ || Object.getPrototypeOf(CacheStore)).call(this, collection, options));
 
     _this.ttl = options.ttl || undefined;
 
@@ -208,7 +208,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
                 case 27:
                   _context.next = 29;
-                  return _get(Object.getPrototypeOf(CacheStore.prototype), 'find', _this2).call(_this2, query, options).toPromise();
+                  return _get(CacheStore.prototype.__proto__ || Object.getPrototypeOf(CacheStore.prototype), 'find', _this2).call(_this2, query, options).toPromise();
 
                 case 29:
                   networkEntities = _context.sent;
@@ -378,7 +378,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
                 case 28:
                   _context2.next = 30;
-                  return _get(Object.getPrototypeOf(CacheStore.prototype), 'findById', _this3).call(_this3, id, options).toPromise();
+                  return _get(CacheStore.prototype.__proto__ || Object.getPrototypeOf(CacheStore.prototype), 'findById', _this3).call(_this3, id, options).toPromise();
 
                 case 30:
                   networkEntity = _context2.sent;
@@ -543,7 +543,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
                 case 26:
                   _context3.next = 28;
-                  return _get(Object.getPrototypeOf(CacheStore.prototype), 'count', _this4).call(_this4, query, options).toPromise();
+                  return _get(CacheStore.prototype.__proto__ || Object.getPrototypeOf(CacheStore.prototype), 'count', _this4).call(_this4, query, options).toPromise();
 
                 case 28:
                   networkCount = _context3.sent;

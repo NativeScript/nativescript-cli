@@ -70,7 +70,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
   function MobileIdentityConnect() {
     _classCallCheck(this, MobileIdentityConnect);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(MobileIdentityConnect).apply(this, arguments));
+    return _possibleConstructorReturn(this, (MobileIdentityConnect.__proto__ || Object.getPrototypeOf(MobileIdentityConnect)).apply(this, arguments));
   }
 
   _createClass(MobileIdentityConnect, [{

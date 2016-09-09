@@ -52,7 +52,7 @@ var UserStore = exports.UserStore = function (_NetworkStore) {
   function UserStore(options) {
     _classCallCheck(this, UserStore);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(UserStore).call(this, null, options));
+    return _possibleConstructorReturn(this, (UserStore.__proto__ || Object.getPrototypeOf(UserStore)).call(this, null, options));
   }
 
   /**
@@ -136,7 +136,7 @@ var UserStore = exports.UserStore = function (_NetworkStore) {
                 throw new _errors.KinveyError('User must have an _id.');
 
               case 6:
-                return _context2.abrupt('return', _get(Object.getPrototypeOf(UserStore.prototype), 'update', this).call(this, data, options));
+                return _context2.abrupt('return', _get(UserStore.prototype.__proto__ || Object.getPrototypeOf(UserStore.prototype), 'update', this).call(this, data, options));
 
               case 7:
               case 'end':

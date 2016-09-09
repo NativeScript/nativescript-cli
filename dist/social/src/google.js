@@ -26,7 +26,7 @@ var Google = exports.Google = function (_Social) {
   function Google() {
     _classCallCheck(this, Google);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(Google).apply(this, arguments));
+    return _possibleConstructorReturn(this, (Google.__proto__ || Object.getPrototypeOf(Google)).apply(this, arguments));
   }
 
   _createClass(Google, [{

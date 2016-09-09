@@ -46,7 +46,7 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
   function SyncStore() {
     _classCallCheck(this, SyncStore);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(SyncStore).apply(this, arguments));
+    return _possibleConstructorReturn(this, (SyncStore.__proto__ || Object.getPrototypeOf(SyncStore)).apply(this, arguments));
   }
 
   _createClass(SyncStore, [{

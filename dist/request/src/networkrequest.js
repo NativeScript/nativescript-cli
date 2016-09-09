@@ -15,7 +15,7 @@ var _errors = require('../../errors');
 
 var _response = require('./response');
 
-var _rack = require('kinvey-javascript-rack/dist/rack');
+var _kinveyJavascriptRack = require('kinvey-javascript-rack');
 
 var _regeneratorRuntime = require('regenerator-runtime');
 
@@ -41,7 +41,7 @@ var NetworkRequest = exports.NetworkRequest = function (_Request) {
 
     _classCallCheck(this, NetworkRequest);
 
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(NetworkRequest).call(this, options));
+    var _this = _possibleConstructorReturn(this, (NetworkRequest.__proto__ || Object.getPrototypeOf(NetworkRequest)).call(this, options));
 
     _this.rack = NetworkRequest.rack;
     return _this;
@@ -110,7 +110,7 @@ var NetworkRequest = exports.NetworkRequest = function (_Request) {
     value: function cancel() {
       var _this2 = this;
 
-      var promise = _get(Object.getPrototypeOf(NetworkRequest.prototype), 'cancel', this).call(this).then(function () {
+      var promise = _get(NetworkRequest.prototype.__proto__ || Object.getPrototypeOf(NetworkRequest.prototype), 'cancel', this).call(this).then(function () {
         return _this2.rack.cancel();
       });
       return promise;
@@ -121,7 +121,7 @@ var NetworkRequest = exports.NetworkRequest = function (_Request) {
       return NetworkRequest._rack;
     },
     set: function set(rack) {
-      if (!rack || !(rack instanceof _rack.Rack)) {
+      if (!rack || !(rack instanceof _kinveyJavascriptRack.Rack)) {
         throw new _errors.KinveyError('Unable to set the rack of a NetworkRequest. It must be an instance of a Rack');
       }
 

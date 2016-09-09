@@ -19,7 +19,7 @@ var _response = require('./response');
 
 var _client = require('../../client');
 
-var _rack = require('kinvey-javascript-rack/dist/rack');
+var _kinveyJavascriptRack = require('kinvey-javascript-rack');
 
 var _urlPattern = require('url-pattern');
 
@@ -61,7 +61,7 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
     _classCallCheck(this, CacheRequest);
 
     // Set default options
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(CacheRequest).call(this, options));
+    var _this = _possibleConstructorReturn(this, (CacheRequest.__proto__ || Object.getPrototypeOf(CacheRequest)).call(this, options));
 
     options = (0, _assign2.default)({
       query: null,
@@ -166,7 +166,7 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
             switch (_context2.prev = _context2.next) {
               case 0:
                 _context2.next = 2;
-                return _get(Object.getPrototypeOf(CacheRequest.prototype), 'cancel', this).call(this);
+                return _get(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'cancel', this).call(this);
 
               case 2:
                 return _context2.abrupt('return', this.rack.cancel());
@@ -188,7 +188,7 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
   }, {
     key: 'toPlainObject',
     value: function toPlainObject() {
-      var obj = _get(Object.getPrototypeOf(CacheRequest.prototype), 'toPlainObject', this).call(this);
+      var obj = _get(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'toPlainObject', this).call(this);
       obj.appKey = this.appKey;
       obj.collection = this.collection;
       obj.entityId = this.entityId;
@@ -198,10 +198,10 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
   }, {
     key: 'url',
     get: function get() {
-      return _get(Object.getPrototypeOf(CacheRequest.prototype), 'url', this);
+      return _get(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'url', this);
     },
     set: function set(urlString) {
-      _set(Object.getPrototypeOf(CacheRequest.prototype), 'url', urlString, this);
+      _set(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'url', urlString, this);
       var pathname = global.escape(_url2.default.parse(urlString).pathname);
       var pattern = new _urlPattern2.default('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:entityId)(/)');
 
@@ -235,7 +235,7 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
       return CacheRequest._rack;
     },
     set: function set(rack) {
-      if (!rack || !(rack instanceof _rack.Rack)) {
+      if (!rack || !(rack instanceof _kinveyJavascriptRack.Rack)) {
         throw new _errors.KinveyError('Unable to set the rack of a CacheRequest. It must be an instance of a Rack');
       }
 

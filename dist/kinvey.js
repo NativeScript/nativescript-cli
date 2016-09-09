@@ -28,10 +28,6 @@ var _request = require('./request');
 
 var _errors = require('./errors');
 
-var _rack = require('kinvey-javascript-rack/dist/rack');
-
-var _middleware = require('kinvey-javascript-rack/dist/middleware');
-
 var _regeneratorRuntime = require('regenerator-runtime');
 
 var _regeneratorRuntime2 = _interopRequireDefault(_regeneratorRuntime);
@@ -101,7 +97,6 @@ var Kinvey = function () {
       this.CustomEndpoint = _endpoint.CustomEndpoint;
       this.DataStore = _datastore.DataStore;
       this.Files = new _datastore.FileStore();
-      this.Sync = _datastore.SyncManager;
       this.User = _entity.User;
       this.UserStore = _entity.UserStore;
 
@@ -225,10 +220,8 @@ Kinvey.CacheRequest = _request.CacheRequest;
 Kinvey.DataStoreType = _datastore.DataStoreType;
 Kinvey.Log = _utils.Log;
 Kinvey.Metadata = _entity.Metadata;
-Kinvey.Middleware = _middleware.Middleware;
 Kinvey.NetworkRequest = _request.NetworkRequest;
 Kinvey.Query = _query.Query;
-Kinvey.Rack = _rack.Rack;
 Kinvey.SocialIdentity = _social.SocialIdentity;
 
 // Export

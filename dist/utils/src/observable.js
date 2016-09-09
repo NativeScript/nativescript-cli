@@ -26,7 +26,7 @@ var KinveyObservable = exports.KinveyObservable = function (_Observable) {
   function KinveyObservable() {
     _classCallCheck(this, KinveyObservable);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(KinveyObservable).apply(this, arguments));
+    return _possibleConstructorReturn(this, (KinveyObservable.__proto__ || Object.getPrototypeOf(KinveyObservable)).apply(this, arguments));
   }
 
   _createClass(KinveyObservable, [{
