@@ -3,6 +3,10 @@ env:
     - DATE=$(date +%Y-%m-%d)
     - PACKAGE_VERSION=$DATE-$TRAVIS_BUILD_NUMBER
     - NATIVESCRIPT_SKIP_POSTINSTALL_TASKS=1
+addons:
+  artifacts:
+    paths:
+      - "$HOME/nativescript.tgz"
 language: node_js
 node_js:
 - '4'
