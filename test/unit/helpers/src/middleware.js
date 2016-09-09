@@ -1,4 +1,4 @@
-import { Middleware } from 'kinvey-javascript-rack/dist/middleware';
+import { Middleware } from 'kinvey-javascript-rack';
 
 /**
  * @private

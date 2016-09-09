@@ -1,4 +1,4 @@
-import { Rack as CoreRack } from 'kinvey-javascript-rack/dist/rack';
+import { Rack as CoreRack } from 'kinvey-javascript-rack';
 import { CacheMiddleware } from './cache';
 import { HttpMiddleware } from './http';
 import { ParseMiddleware } from './parse';

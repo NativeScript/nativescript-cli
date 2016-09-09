@@ -10,7 +10,7 @@ test: ;@echo "Testing ${PROJECT}..."; \
 	npm run test:jenkins
 
 build: ;@echo "Building ${PROJECT}..."; \
-	./node_modules/.bin/gulp default
+	npm run build
 
 publish: ;@echo "Publishing ${PROJECT}..."; \
 	npm publish .
