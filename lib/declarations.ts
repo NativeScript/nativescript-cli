@@ -82,6 +82,7 @@ interface IOptions extends ICommonOptions {
 	frameworkPath: string;
 	frameworkVersion: string;
 	ignoreScripts: boolean;
+	disableNpmInstall: boolean;
 	ipa: string;
 	keyStoreAlias: string;
 	keyStoreAliasPassword: string;
