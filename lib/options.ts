@@ -26,6 +26,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			keyStoreAlias: { type: OptionType.String },
 			keyStoreAliasPassword: { type: OptionType.String },
 			ignoreScripts: {type: OptionType.Boolean },
+			disableNpmInstall: {type: OptionType.Boolean },
 			tnsModulesVersion: { type: OptionType.String },
 			compileSdk: {type: OptionType.Number },
 			port: { type: OptionType.Number },
