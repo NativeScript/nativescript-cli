@@ -1,3 +1,10 @@
-import { Kinvey as PhoneGapKinvey } from 'kinvey-phonegap-sdk/dist/kinvey';
+import { Kinvey } from 'kinvey-phonegap-sdk';
+import { Device } from './device';
+import { Popup } from './popup';
 
-export class Kinvey extends PhoneGapKinvey {}
+// Add Modules
+Kinvey.Device = Device;
+Kinvey.Popup = Popup;
+
+// Export
+export { Kinvey };

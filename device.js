@@ -1,5 +1,5 @@
-import { Device as PhoneGapDevice } from 'kinvey-phonegap-sdk/dist/device';
-import { Device as Html5Device } from 'kinvey-html5-sdk/dist/device';
+import { Device as PhoneGapDevice } from 'kinvey-phonegap-sdk';
+import { Device as Html5Device } from 'kinvey-html5-sdk';
 import packageJSON from '../package.json';
 
 export class Device extends PhoneGapDevice {

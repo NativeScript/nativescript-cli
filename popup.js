@@ -1,5 +1,5 @@
-import { Popup as PhoneGapPopup } from 'kinvey-phonegap-sdk/dist/popup';
-import { Popup as Html5Popup } from 'kinvey-html5-sdk/dist/popup';
+import { Popup as PhoneGapPopup } from 'kinvey-phonegap-sdk';
+import { Popup as Html5Popup } from 'kinvey-html5-sdk';
 import { Device } from './device';
 
 /**
@@ -7,7 +7,6 @@ import { Device } from './device';
  */
 export class Popup {
   constructor() {
-    // Create a popup proxy
     if (Device.isPhoneGap()) {
       return new PhoneGapPopup();
     }
