@@ -1,9 +1,6 @@
+import { NetworkRequest, RequestMethod, AuthType, KinveyError, User, Client } from 'kinvey-javascript-sdk-core';
 import { Device } from './device';
-import { KinveyError } from 'kinvey-javascript-sdk-core/dist/errors';
 import { EventEmitter } from 'events';
-import { NetworkRequest, RequestMethod, AuthType } from 'kinvey-javascript-sdk-core/dist/request';
-import { User } from 'kinvey-javascript-sdk-core/dist/entity';
-import { Client } from 'kinvey-javascript-sdk-core/dist/client';
 import { Promise } from 'es6-promise';
 import url from 'url';
 import bind from 'lodash/bind';
@@ -23,16 +20,15 @@ export class Push extends EventEmitter {
 
     Device.ready().then(() => {
       try {
-        if (this.isSupported()) {
-          const pushOptions = JSON.parse(storage.getItem(pushSettingsCollectionName));
-          if (pushOptions) {
-            this.phonegapPush = global.PushNotification.init(pushOptions);
-            this.phonegapPush.on(notificationEvent, notificationEventListener);
-          }
+        const pushOptions = JSON.parse(storage.getItem(pushSettingsCollectionName));
+        if (pushOptions) {
+          return this.register(pushOptions);
         }
       } catch (error) {
         // Cactch the JSON parsing error
       }
+
+      return null;
     });
   }
 
@@ -78,7 +74,7 @@ export class Push extends EventEmitter {
 
         if (typeof global.PushNotification === 'undefined') {
           throw new KinveyError('PhoneGap Push Notification Plugin is not installed.',
-            'Please refer to http://devcenter.kinvey.com/phonegap-v3.0/guides/push#ProjectSetUp for help with ' +
+            'Please refer to http://devcenter.kinvey.com/phonegap/guides/push#ProjectSetUp for help with ' +
             'setting up your project.');
         }
 

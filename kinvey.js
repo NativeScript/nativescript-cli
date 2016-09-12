@@ -1,7 +1,9 @@
-import { Kinvey as Html5Kinvey } from 'kinvey-html5-sdk/dist/kinvey';
+import { Kinvey as Html5Kinvey } from 'kinvey-html5-sdk';
+import { Device } from './device';
+import { Popup } from './popup';
 import { Push } from './push';
 
-export class Kinvey extends Html5Kinvey {
+class Kinvey extends Html5Kinvey {
   static init(options) {
     // Initialize Kinvey
     const client = super.init(options);
@@ -13,3 +15,10 @@ export class Kinvey extends Html5Kinvey {
     return client;
   }
 }
+
+// Add modules
+Kinvey.Device = Device;
+Kinvey.Popup = Popup;
+
+// Export
+export { Kinvey };
