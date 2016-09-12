@@ -11,7 +11,7 @@ Attach the debug tools to a running app in the iOS Simulator | `$ tns debug ios 
 Livesync on device, run the app, start Safari Web Inspector and attach the debugger | `$ tns debug ios --no-rebuild`
 Livesync on device, run the app and stop at the first code statement | `$ tns debug ios --no-rebuild --debug-brk [--device <Device ID>] [--no-client]`
 Livesync in the iOS Simulator, run the app and stop at the first code statement | `$ tns debug ios --no-rebuild --debug-brk --emulator [<Emulator Options>] [--no-client]`
-Livesync on device/simulator, run the app, start and attach the debugger. Refresh everything automatically upon changes | `$ tns debug ios -watch [--debug-brk]`
+Livesync on device/simulator, run the app, start and attach the debugger. Refresh everything automatically upon changes | `$ tns debug ios --watch [--debug-brk]`
 
 Debugs your project on a connected device or in the iOS Simulator. <% if(isHtml) { %>Any debugging traffic is forwarded on port 8080 from the device to the local machine.<% } %>
 
