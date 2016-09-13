@@ -9,3 +9,7 @@ export * from './endpoint';
 export * from './errors';
 export * from './kinvey';
 export * from './query';
+
+// Export default
+import { Kinvey } from './kinvey';
+export default Kinvey;
