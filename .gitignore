@@ -10,6 +10,7 @@ docs
 .env
 .tmp
 tmp
+dist
 
 # Test Files
 coverage
