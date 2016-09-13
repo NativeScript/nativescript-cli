@@ -225,7 +225,7 @@ export class User {
 
     let credentials = username;
     if (isObject(credentials)) {
-      options = password;
+      options = password || {};
     } else {
       credentials = {
         username: username,
@@ -808,7 +808,7 @@ export class User {
    * @param {Object} [options = {}] Options
    * @return {Promise<Object>} The response.
    */
-  rc(options = {}) {
+  resetPassword(options = {}) {
     options.client = this.client;
     return User.resetPassword(this.username, options);
   }

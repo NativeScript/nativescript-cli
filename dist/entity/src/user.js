@@ -195,7 +195,7 @@ var User = exports.User = function () {
                 credentials = username;
 
                 if ((0, _isObject2.default)(credentials)) {
-                  options = password;
+                  options = password || {};
                 } else {
                   credentials = {
                     username: username,
@@ -1287,8 +1287,8 @@ var User = exports.User = function () {
      */
 
   }, {
-    key: 'rc',
-    value: function rc() {
+    key: 'resetPassword',
+    value: function resetPassword() {
       var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
       options.client = this.client;

@@ -1,4 +1,7 @@
 ## Changelog
+### 3.1.1 (2016-09-13)
+* Bugfix (MLIBZ-1322): Can't login user when providing credentials as an object.
+
 ### 3.1.0 (2016-09-09)
 * Test: Update unit tests.
 * Enhancement: Restructure files.

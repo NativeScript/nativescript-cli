@@ -1,10 +1,11 @@
 {
   "name": "kinvey-javascript-sdk-core",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Kinvey JavaScript SDK Core",
   "main": "./dist/export.js",
   "scripts": {
     "build": "BABEL_ENV=production gulp build",
+    "bundle": "npm run build",
     "clean": "gulp clean",
     "docs": "esdoc -c esdoc.json",
     "lint": "gulp lint",

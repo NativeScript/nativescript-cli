@@ -222,7 +222,7 @@ export class Query {
    * @returns {Query} The query.
    */
   equalTo(field, value) {
-    return this.addFilter(field, '$eq', value);
+    return this.addFilter(field, value);
   }
 
   /**
@@ -664,7 +664,12 @@ export class Query {
       this.filter[field] = {};
     }
 
-    this.filter[field][condition] = values;
+    if (condition && values) {
+      this.filter[field][condition] = values;
+    } else {
+      this.filter[field] = condition;
+    }
+
     return this;
   }
 

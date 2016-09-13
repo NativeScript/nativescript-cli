@@ -174,7 +174,7 @@ var Query = function () {
   }, {
     key: 'equalTo',
     value: function equalTo(field, value) {
-      return this.addFilter(field, '$eq', value);
+      return this.addFilter(field, value);
     }
 
     /**
@@ -691,7 +691,12 @@ var Query = function () {
         this.filter[field] = {};
       }
 
-      this.filter[field][condition] = values;
+      if (condition && values) {
+        this.filter[field][condition] = values;
+      } else {
+        this.filter[field] = condition;
+      }
+
       return this;
     }
 
