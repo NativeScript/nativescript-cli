@@ -225,7 +225,7 @@ export class User {
 
     let credentials = username;
     if (isObject(credentials)) {
-      options = password;
+      options = password || {};
     } else {
       credentials = {
         username: username,
