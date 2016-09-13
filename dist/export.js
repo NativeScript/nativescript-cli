@@ -135,3 +135,6 @@ Object.keys(_query).forEach(function (key) {
     }
   });
 });
+exports.default = _kinvey.Kinvey;
+
+// Export default
