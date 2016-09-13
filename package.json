@@ -5,6 +5,7 @@
   "main": "./dist/export.js",
   "scripts": {
     "build": "BABEL_ENV=production gulp build",
+    "bundle": "npm run build",
     "clean": "gulp clean",
     "docs": "esdoc -c esdoc.json",
     "lint": "gulp lint",
