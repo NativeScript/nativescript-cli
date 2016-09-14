@@ -1,4 +1,4 @@
-# Kinvey JavaScript SDK Core [![Build Status](https://travis-ci.org/Kinvey/javascript-sdk-core.svg?branch=develop)](https://travis-ci.org/Kinvey/javascript-sdk-core)
+# Kinvey JavaScript SDK Core [![Build Status](https://travis-ci.org/Kinvey/javascript-sdk-core.svg?branch=develop)](https://travis-ci.org/Kinvey/javascript-sdk-core) [![Test Coverage](https://codeclimate.com/github/Kinvey/javascript-sdk-core/badges/coverage.svg)](https://codeclimate.com/github/Kinvey/javascript-sdk-core/coverage)
 
 The Kinvey JavaScript SDK core is a package that can be used to develop JavaScript applications on the Kinvey platform. The Kinvey JavaScript SDK core is intended used as a way to share common code across different JS SDK builds.
 
