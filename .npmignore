@@ -18,7 +18,6 @@ gulpfile.babel.js
 hints.md
 Makefile
 README.md
-tester
 
 # Build Files
 .env
