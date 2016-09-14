@@ -1,5 +1,6 @@
 import { FileStore } from '../../../src/datastore';
 import { KinveyError, NotFoundError, ServerError } from '../../../src/errors';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import fs from 'fs';
 import path from 'path';
 import nock from 'nock';
