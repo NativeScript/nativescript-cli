@@ -10,7 +10,6 @@ npm-debug.log
 .gitattributes
 .gitignore
 .nvmrc
-/src
 dist
 docs
 manual
