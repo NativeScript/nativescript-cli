@@ -11,6 +11,7 @@ npm-debug.log
 .gitignore
 .nvmrc
 /src
+dist
 docs
 manual
 esdoc.json
