@@ -252,8 +252,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return (() => {
 			if (this.canUseGradle().wait()) {
 				let buildOptions = this.getBuildOptions();
+				if (this.$logger.getLevel() === "TRACE") {
+					buildOptions.unshift("--stacktrace");
+					buildOptions.unshift("--debug");
+				}
 				buildOptions.unshift("buildapk");
-
 				let gradleBin = this.useGradleWrapper(projectRoot) ? path.join(projectRoot, "gradlew") : "gradle";
 				if (this.$hostInfo.isWindows) {
 					gradleBin += ".bat"; // cmd command line parsing rules are weird. Avoid issues with quotes. See https://github.com/apache/cordova-android/blob/master/bin/templates/cordova/lib/builders/GradleBuilder.js for another approach
