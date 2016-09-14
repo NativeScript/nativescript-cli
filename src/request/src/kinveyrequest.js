@@ -136,7 +136,7 @@ function byteCount(str) {
     const stringLength = str.length;
     str = String(str || '');
 
-    for (let i = 0; i < stringLength; i++) {
+    for (let i = 0; i < stringLength; i += 1) {
       const partCount = encodeURI(str[i]).split('%').length;
       count += partCount === 1 ? 1 : partCount - 1;
     }

@@ -93,7 +93,7 @@ function deviceInformation() {
   }
 
   return parts.concat([platform, version, manufacturer, id]).map(part => {
-    if (!!part) {
+    if (part) {
       return part.toString().replace(/\s/g, '_').toLowerCase();
     }
 

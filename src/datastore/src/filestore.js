@@ -333,7 +333,7 @@ export class FileStore extends NetworkStore {
         // Upload the remaining protion of the file after the backoff time has passed
         return new Promise(resolve => {
           setTimeout(() => {
-            options.count = options.count + 1;
+            options.count += 1;
             resolve(this.uploadToGCS(uploadUrl, headers, file, metadata, options));
           }, backoff);
         });

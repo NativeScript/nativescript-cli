@@ -1,11 +1,11 @@
-import { KinveyError } from './errors';
-import { Query } from './query';
 import result from 'lodash/result';
 import assign from 'lodash/assign';
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import isFunction from 'lodash/isFunction';
+import { KinveyError } from './errors';
+import { Query } from './query';
 
 /**
  * @private
@@ -81,11 +81,11 @@ export class Aggregation {
       entities = this.query.process(entities);
     }
 
-    forEach(entities, entity => {
+    forEach(entities, (entity) => {
       const group = {};
       const entityNames = Object.keys(entity);
 
-      forEach(entityNames, name => {
+      forEach(entityNames, (name) => {
         group[name] = entity[name];
       });
 
@@ -94,7 +94,7 @@ export class Aggregation {
         groups[key] = group;
         const attributes = Object.keys(aggregation.initial);
 
-        forEach(attributes, attr => {
+        forEach(attributes, (attr) => {
           groups[key][attr] = aggregation.initial[attr];
         });
       }
@@ -103,7 +103,7 @@ export class Aggregation {
     });
 
     const segments = Object.keys(groups);
-    forEach(segments, segment => {
+    forEach(segments, (segment) => {
       response.push(groups[segment]);
     });
 
@@ -176,7 +176,7 @@ export class Aggregation {
     const aggregation = new Aggregation();
     aggregation.initial = { count: 0, result: 0 };
     aggregation.reduceFn = (doc, out) => {
-      out.result = (out.result * out.count + doc[`'${field}'`]) / (out.count + 1);
+      out.result = ((out.result * out.count) + doc[`'${field}'`]) / (out.count + 1);
       out.count += 1;
     };
     return aggregation;

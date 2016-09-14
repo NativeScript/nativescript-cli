@@ -390,7 +390,7 @@ export class Query {
     // NOR is preceded by AND. Therefore, if this query is part of an AND-join,
     // apply the NOR onto the parent to make sure AND indeed precedes NOR.
     if (this._parent && this._parent.filter.$and) {
-      return this._parent.nor.apply(this._parent, args);
+      return this._parent.nor(...args);
     }
 
     return this.join('$nor', args);
@@ -409,7 +409,7 @@ export class Query {
     // apply the OR onto the parent to make sure OR has indeed the lowest
     // precedence.
     if (this._parent) {
-      return this._parent.or.apply(this._parent, args);
+      return this._parent.or(...args);
     }
 
     return this.join('$or', args);
