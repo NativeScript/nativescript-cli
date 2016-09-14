@@ -9,3 +9,7 @@ engines:
     - "node_modules/"
     - "test/"
     - "test2/"
+ratings:
+  paths:
+  - src/**
+  - test/**
