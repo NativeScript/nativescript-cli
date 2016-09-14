@@ -7,7 +7,6 @@ npm-debug.log
 docs
 
 # Build Files
-.env
 .tmp
 tmp
 dist
