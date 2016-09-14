@@ -4,12 +4,17 @@ node_modules
 npm-debug.log
 
 # Src files
+.github
 .babelrc
+.codeclimate.yml
 .editorconfig
+.eslintignore
 .eslintrc
 .gitattributes
 .gitignore
-.nvmrc
+.travis.yml
+CHANGELOG.md
+CONTRIBUTING.md
 dist
 docs
 manual
