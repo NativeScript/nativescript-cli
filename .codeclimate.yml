@@ -2,3 +2,10 @@ engines:
   eslint:
     enabled: true
     channel: "eslint-3"
+    exclude_paths:
+    - "coverage/"
+    - "dist/"
+    - "manual/"
+    - "node_modules/"
+    - "test/"
+    - "test2/"
