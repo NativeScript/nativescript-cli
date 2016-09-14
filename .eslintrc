@@ -1,10 +1,15 @@
  {
-  "extends": "airbnb",
+  "extends": "airbnb-base",
   "parser": "babel-eslint",
   "rules": {
+    "arrow-parens": "warn",
+    "class-methods-use-this": "off",
     "comma-dangle": "off",
     "func-names": "off",
     "id-length": "off",
+    "import/imports-first": "off",
+    "import/newline-after-import": "off",
+    "import/prefer-default-export": "off",
     "max-len": [
       "warn",
       {
@@ -19,6 +24,7 @@
     "no-param-reassign": "off",
     "no-shadow": "off",
     "no-underscore-dangle": "off",
+    "prefer-default-export": "off",
     "object-shorthand": [
       "error",
       "methods"
