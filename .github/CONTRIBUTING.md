@@ -1,13 +1,13 @@
-# Contributing
+## Contributing
 
-## Reporting Issues
+### Reporting Issues
 
 We recommend the following guidelines for reporting bugs -
 
 - For faster response, we recommend using [Kinvey support](https://support.kinvey.com/support/home).
 - For bugs and enhancements specific to the JS library that are not time critical, developers may [file a GitHub issue](https://github.com/Kinvey/javascript-sdk-core/issues).
 
-## Contributing Code
+### Contributing Code
 
 When contributing to the repository, please follow these guidelines -
 
