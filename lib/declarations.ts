@@ -228,6 +228,7 @@ interface IAndroidToolsInfoData {
 
 interface ISocketProxyFactory {
 	createSocketProxy(factory: () => any): IFuture<any>;
+	stopServer(): void;
 }
 
 interface IiOSNotification {
