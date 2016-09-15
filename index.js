@@ -1,4 +1,4 @@
-import { Kinvey } from './kinvey';
+import { KinveyModule } from './ngKinvey';
 
 // Export
-export { Kinvey };
+export { KinveyModule };
