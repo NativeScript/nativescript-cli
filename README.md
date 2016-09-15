@@ -17,4 +17,4 @@ Refer to the Kinvey [DevCenter](http://devcenter.kinvey.com/) for documentation 
 See [LICENSE](LICENSE) for details.
 
 ## Contributing
-See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for details on reporting bugs and making contributions.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on reporting bugs and making contributions.
