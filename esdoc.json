@@ -1,5 +1,5 @@
 {
-  "destination": "./docs",
+  "destination": "./reference",
   "lint": true,
   "manual": {
     "overview": ["./manual/overview.md"],

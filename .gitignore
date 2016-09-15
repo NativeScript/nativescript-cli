@@ -3,8 +3,8 @@
 node_modules
 npm-debug.log
 
-# Src files
-docs
+# Reference files
+reference
 
 # Build Files
 .tmp
