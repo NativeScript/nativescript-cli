@@ -5,4 +5,4 @@ This is my project overview.
 Kinvey
 
 ## License
-MIT
+Apache-2.0
