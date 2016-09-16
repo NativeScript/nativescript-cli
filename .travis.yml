@@ -26,17 +26,16 @@ after_success:
 before_deploy:
 - node .travis/add-publishConfig.js next
 deploy:
-#  matrix:
-#  - provider: s3
-#    bucket: nativescript-ci
-#    access_key_id: AKIAIYSWYOZRFLVKPCTQ
-#    secret_access_key:
-#      secure: THGlblH9XdRcTQMc3jm4kpwCB3myl8MGB3v9XjB5ObK4gqxUxuPi6e158LEG9Dgb730MGEYtaAjc9OneH59WAjQOrdcf3GXiGKOiCYzGYZLqVE4pjNDuxHaVGOj7mso4TzMinMCaDSQajTvadCfVmXqgT6p9eSXkiV3V2d2DN6c=
-#    skip_cleanup: true
-#    local-dir: s3-publish
-#    upload-dir: build_result
-#    on:
-#      branch: master
+  - provider: s3
+    bucket: nativescript-ci
+    access_key_id: AKIAIYSWYOZRFLVKPCTQ
+    secret_access_key:
+      secure: THGlblH9XdRcTQMc3jm4kpwCB3myl8MGB3v9XjB5ObK4gqxUxuPi6e158LEG9Dgb730MGEYtaAjc9OneH59WAjQOrdcf3GXiGKOiCYzGYZLqVE4pjNDuxHaVGOj7mso4TzMinMCaDSQajTvadCfVmXqgT6p9eSXkiV3V2d2DN6c=
+    skip_cleanup: true
+    local-dir: s3-publish
+    upload-dir: build_result
+    on:
+      branch: master
   - provider: npm
     skip_cleanup: true
     email: nativescript@telerik.com
