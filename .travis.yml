@@ -31,10 +31,10 @@ deploy:
     bucket: nativescript-ci
     access_key_id: AKIAIYSWYOZRFLVKPCTQ
     secret_access_key:
-      secure: HbAi6CiFoA2PsVpv/uT7obcfKXBeRqt0Arq3Wy2WgvAswnPrY9vkqWJb4e/NAo5XTzwe55Z8NhxAQXJAF+R0F3ZkD65TeQ1gptVgePLggOAsAeAw4eYY20YeGsTGJJ90V/O2yOHUKWOmVA19qkQin5GKIkXAlEIm4K/+SMefvic=
+      secure: THGlblH9XdRcTQMc3jm4kpwCB3myl8MGB3v9XjB5ObK4gqxUxuPi6e158LEG9Dgb730MGEYtaAjc9OneH59WAjQOrdcf3GXiGKOiCYzGYZLqVE4pjNDuxHaVGOj7mso4TzMinMCaDSQajTvadCfVmXqgT6p9eSXkiV3V2d2DN6c=
     skip_cleanup: true
-    local-dir: "s3-publish"
-    upload-dir: "build_result"
+    local-dir: s3-publish
+    upload-dir: build_result
     on:
       all_branches: true
   - provider: npm
