@@ -31,9 +31,13 @@ class IOSDebugService implements IDebugService {
 		private $utils: IUtils,
 		private $iOSNotification: IiOSNotification,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
-		private $socketProxyFactory: ISocketProxyFactory) { }
+		private $processService: IProcessService,
+		private $socketProxyFactory: ISocketProxyFactory) {
+			this.$processService.attachToProcessExitSignals(this, this.debugStop);
+		}
 
 	private _lldbProcess: ChildProcess;
+	private _sockets: net.Socket[] = [];
 
 	public get platform(): string {
 		return "ios";
@@ -76,6 +80,11 @@ class IOSDebugService implements IDebugService {
 
 	public debugStop(): IFuture<void> {
 		return (() => {
+			this.$socketProxyFactory.stopServer();
+			for (let socket of this._sockets) {
+				socket.destroy();
+			}
+			this._sockets = [];
 			if (this._lldbProcess) {
 				this._lldbProcess.stdin.write("process detach\n");
 				this._lldbProcess.kill();
@@ -105,19 +114,19 @@ class IOSDebugService implements IDebugService {
 				if (lineText && _.startsWith(lineText, this.$projectData.projectId)) {
 					let pid = _.trimStart(lineText, this.$projectData.projectId + ": ");
 					this._lldbProcess = this.$childProcess.spawn("lldb", [ "-p", pid]);
-					this._lldbProcess.stdin.write("process continue\n");
+				 	this._lldbProcess.stdin.write("process continue\n");
 				} else {
 					process.stdout.write(line + "\n");
 				}
 			});
 
-			this.wireDebuggerClient(() => net.connect(inspectorBackendPort)).wait();
+			this.wireDebuggerClient().wait();
 		}).future<void>()();
 	}
 
 	private emulatorStart(): IFuture<void> {
 		return (() => {
-			this.wireDebuggerClient(() => net.connect(inspectorBackendPort)).wait();
+			this.wireDebuggerClient().wait();
 
 			let attachRequestMessage = this.$iOSNotification.attachRequest;
 
@@ -152,7 +161,7 @@ class IOSDebugService implements IDebugService {
 			let readyForAttachTimeout = this.getReadyForAttachTimeout(timeout);
 
 			this.$iOSSocketRequestExecutor.executeLaunchRequest(device, timeout, readyForAttachTimeout, shouldBreak).wait();
-			this.wireDebuggerClient(() => device.connectToPort(inspectorBackendPort)).wait();
+			this.wireDebuggerClient(device).wait();
 		}).future<void>()();
 	}
 
@@ -167,13 +176,17 @@ class IOSDebugService implements IDebugService {
 		return (() => {
 			let timeout = this.getReadyForAttachTimeout();
 			this.$iOSSocketRequestExecutor.executeAttachRequest(device, timeout).wait();
-			this.wireDebuggerClient(() => device.connectToPort(inspectorBackendPort)).wait();
+			this.wireDebuggerClient(device).wait();
 		}).future<void>()();
 	}
 
-	private wireDebuggerClient(factory: () => net.Socket): IFuture<void> {
+	private wireDebuggerClient(device?: Mobile.IiOSDevice): IFuture<void> {
 		return (() => {
-			let socketProxy = this.$socketProxyFactory.createSocketProxy(factory).wait();
+			let socketProxy = this.$socketProxyFactory.createSocketProxy(() => {
+				let socket = device ? device.connectToPort(inspectorBackendPort) : net.connect(inspectorBackendPort);
+				this._sockets.push(socket);
+				return socket;
+			}).wait();
 			this.executeOpenDebuggerClient(socketProxy).wait();
 		}).future<void>()();
 	}

@@ -20,9 +20,6 @@ fiber(() => {
 	let messages: IMessagesService = $injector.resolve("$messagesService");
 	messages.pathsToMessageJsonFiles = [/* Place client-specific json message file paths here */];
 
-	let processService: IProcessService = $injector.resolve("$processService");
-	processService.attachToProcessExitSignals(this, process.exit);
-
 	if (process.argv[2] === "completion") {
 		commandDispatcher.completeCommand().wait();
 	} else {
