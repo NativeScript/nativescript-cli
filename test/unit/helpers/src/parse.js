@@ -1,10 +1,10 @@
-import { KinveyMiddleware } from './middleware';
+import { Middleware } from 'kinvey-javascript-rack';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
 /**
  * @private
  */
-export class ParseMiddleware extends KinveyMiddleware {
+export class ParseMiddleware extends Middleware {
   constructor(name = 'Kinvey Parse Middleware') {
     super(name);
   }
