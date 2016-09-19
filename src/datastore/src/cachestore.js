@@ -644,23 +644,14 @@ export class CacheStore extends NetworkStore {
           timeout: options.timeout
         });
 
-        // Execite the request
+        // Execute the request
         const removeResponse = await removeRequest.execute();
         entities = removeResponse.data;
 
         if (entities && entities.length > 0) {
-          // Clear local entities from the sync table
-          const localEntities = filter(entities, entity => {
-            const metadata = new Metadata(entity);
-            return metadata.isLocal();
-          });
-          const query = new Query().contains('entityId', Object.keys(keyBy(localEntities, idAttribute)));
+          // Clear entities from the sync table
+          const query = new Query().contains('entityId', Object.keys(keyBy(entities, idAttribute)));
           await this.clearSync(query, options);
-
-          // Create delete operations for non local data in the sync table
-          const syncEntities = xorWith(entities, localEntities,
-            (entity, localEntity) => entity[idAttribute] === localEntity[idAttribute]);
-          await this.syncManager.addDeleteOperation(syncEntities, options);
         }
 
         // Emit the data
