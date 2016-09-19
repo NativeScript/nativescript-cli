@@ -1,13 +1,11 @@
 import * as iOSDevice from "../common/mobile/ios/device/ios-device";
 import * as net from "net";
 import * as path from "path";
-import * as semver from "semver";
 import {ChildProcess} from "child_process";
 import byline = require("byline");
 
 const inspectorBackendPort = 18181;
 const inspectorAppName = "NativeScript Inspector.app";
-const inspectorZipName = "NativeScript Inspector.zip";
 const inspectorNpmPackageName = "tns-ios-inspector";
 const inspectorUiDir = "WebInspectorUI/";
 const TIMEOUT_SECONDS = 90;
@@ -203,73 +201,13 @@ class IOSDebugService implements IDebugService {
 
 	private openDebuggingClient(fileDescriptor: string): IFuture<void> {
 		return (() => {
-			let frameworkVersion = this.getProjectFrameworkVersion().wait();
-			let inspectorPath = this.getInspectorPath(frameworkVersion).wait();
-			let inspectorSourceLocation: string;
-			let cmd: string = null;
+			let inspectorPath = this.$npmInstallationManager.install(inspectorNpmPackageName).wait();
+			let inspectorSourceLocation = path.join(inspectorPath, inspectorUiDir, "Main.html");
+			let inspectorApplicationPath = path.join(inspectorPath, inspectorAppName);
 
-			if (semver.lt(frameworkVersion, "1.2.0")) {
-				cmd = `open -a Safari "${inspectorSourceLocation}"`;
-			} else {
-				let inspectorApplicationDir: string;
-				if (semver.lt(frameworkVersion, "1.6.0")) {
-					inspectorApplicationDir = inspectorPath;
-					inspectorSourceLocation = path.join(inspectorPath, "Safari/Main.html");
-				} else {
-					inspectorApplicationDir = path.join(inspectorPath, "..");
-					inspectorSourceLocation = path.join(inspectorPath, "Main.html");
-				}
-
-				let inspectorApplicationPath = path.join(inspectorApplicationDir, inspectorAppName);
-				if (!this.$fs.exists(inspectorApplicationPath).wait()) {
-					this.$fs.unzip(path.join(inspectorApplicationDir, inspectorZipName), inspectorApplicationDir).wait();
-				}
-				cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${this.$projectData.projectName}' '${fileDescriptor}'`;
-			}
-
+			let cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${this.$projectData.projectName}' '${fileDescriptor}'`;
 			this.$childProcess.exec(cmd).wait();
 		}).future<void>()();
-	}
-
-	private getProjectFrameworkVersion(): IFuture<string> {
-		return (() => {
-			this.$projectDataService.initialize(this.$projectData.projectDir);
-			let platformData = this.$platformsData.getPlatformData(this.platform);
-			return this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
-		}).future<string>()();
-	}
-
-	private getInspectorPath(frameworkVersion: string): IFuture<string> {
-		if (semver.lt(frameworkVersion, "1.6.0")) {
-			return this.getInspectorPathFromTnsIosPackage(frameworkVersion);
-		} else {
-			return this.getInspectorPathFromInspectorPackage();
-		}
-	}
-
-	private getInspectorPathFromInspectorPackage(): IFuture<string> {
-		return (() => {
-			let inspectorPackage = this.$npmInstallationManager.install(inspectorNpmPackageName).wait();
-			let inspectorPath = path.join(inspectorPackage, inspectorUiDir);
-			return inspectorPath;
-		}).future<string>()();
-	}
-
-	private getInspectorPathFromTnsIosPackage(frameworkVersion: string): IFuture<string> {
-		return (() => {
-			let tnsIosPackage = "";
-			if (this.$options.frameworkPath) {
-				if (this.$fs.getFsStats(this.$options.frameworkPath).wait().isFile()) {
-					this.$errors.failWithoutHelp("frameworkPath option must be path to directory which contains tns-ios framework");
-				}
-				tnsIosPackage = path.resolve(this.$options.frameworkPath);
-			} else {
-				let platformData = this.$platformsData.getPlatformData(this.platform);
-				tnsIosPackage = this.$npmInstallationManager.install(platformData.frameworkPackageName, { version: frameworkVersion }).wait();
-			}
-			let inspectorPath = path.join(tnsIosPackage, inspectorUiDir);
-			return inspectorPath;
-		}).future<string>()();
 	}
 
 	private getReadyForAttachTimeout(timeoutInMilliseconds?: number): number {
