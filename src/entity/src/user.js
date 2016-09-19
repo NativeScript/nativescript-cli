@@ -4,9 +4,9 @@ import { Metadata } from './metadata';
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
 import { KinveyError, NotFoundError, ActiveUserError } from '../../errors';
 import { DataStore, UserStore } from '../../datastore';
-import { Promise } from 'es6-promise';
 import { Facebook, Google, LinkedIn, MobileIdentityConnect } from '../../social';
 import { Log, setActiveUser, setIdentitySession } from '../../utils';
+import Promise from 'pinkie';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import assign from 'lodash/assign';
@@ -214,13 +214,13 @@ export class User {
   async login(username, password, options = {}) {
     const isActiveUser = this.isActive();
     if (isActiveUser) {
-      return Promise.reject(new ActiveUserError('This user is already the active user.'));
+      throw new ActiveUserError('This user is already the active user.');
     }
 
     const activeUser = User.getActiveUser(this.client);
     if (activeUser) {
-      return Promise.reject(new ActiveUserError('An active user already exists. ' +
-        'Please logout the active user before you login.'));
+      throw new ActiveUserError('An active user already exists. ' +
+        'Please logout the active user before you login.');
     }
 
     let credentials = username;
@@ -245,8 +245,8 @@ export class User {
 
     if ((!credentials.username || credentials.username === '' || !credentials.password || credentials.password === '')
       && !credentials[socialIdentityAttribute]) {
-      return Promise.reject(new KinveyError('Username and/or password missing. ' +
-        'Please provide both a username and password to login.'));
+      throw new KinveyError('Username and/or password missing. ' +
+        'Please provide both a username and password to login.');
     }
 
     const request = new KinveyRequest({
@@ -292,13 +292,13 @@ export class User {
   async loginWithMIC(redirectUri, authorizationGrant, options = {}) {
     const isActiveUser = this.isActive();
     if (isActiveUser) {
-      return Promise.reject(new ActiveUserError('This user is already the active user.'));
+      throw new ActiveUserError('This user is already the active user.');
     }
 
     const activeUser = User.getActiveUser(this.client);
     if (activeUser) {
-      return Promise.reject(new ActiveUserError('An active user already exists. ' +
-        'Please logout the active user before you login.'));
+      throw new ActiveUserError('An active user already exists. ' +
+        'Please logout the active user before you login.');
     }
 
     const mic = new MobileIdentityConnect({ client: this.client });

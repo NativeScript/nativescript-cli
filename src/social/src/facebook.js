@@ -1,9 +1,9 @@
 /* eslint-disable camelcase */
 import { Social } from './social';
 import { SocialIdentity } from './enums';
-import { Promise } from 'es6-promise';
 import { KinveyError } from '../../errors';
 import { randomString } from '../../utils';
+import Promise from 'pinkie';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import assign from 'lodash/assign';
 import querystring from 'querystring';

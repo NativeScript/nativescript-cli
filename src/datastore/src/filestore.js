@@ -8,8 +8,8 @@ import {
 } from '../../request';
 import { KinveyError } from '../../errors';
 import { NetworkStore } from './networkstore';
-import { Promise } from 'es6-promise';
 import { Log } from '../../utils';
+import Promise from 'pinkie';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import map from 'lodash/map';
