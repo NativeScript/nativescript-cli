@@ -608,23 +608,63 @@ export class CacheStore extends NetworkStore {
   clear(query, options = {}) {
     const stream = KinveyObservable.create(async observer => {
       try {
-        // Check that the query is valid
         if (query && !(query instanceof Query)) {
           throw new KinveyError('Invalid query. It must be an instance of the Query class.');
-        } else {
-          // Clear the cache
-          const entities = await this.remove(query, options);
-
-          // Remove the data from sync
-          if (!query) {
-            await this.clearSync(null, options);
-          } else if (entities && entities.length > 0) {
-            const syncQuery = new Query().contains('entityId', Object.keys(keyBy(entities, idAttribute)));
-            await this.clearSync(syncQuery, options);
-          }
-
-          observer.next(entities);
         }
+
+        // Fetch the cache entities
+        const fetchRequest = new CacheRequest({
+          method: RequestMethod.GET,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: this.pathname,
+            query: options.query
+          }),
+          properties: options.properties,
+          query: query,
+          timeout: options.timeout
+        });
+
+        // Execute the request
+        const fetchResponse = await fetchRequest.execute();
+        let entities = fetchResponse.data;
+
+        // Remove the data from the cache
+        const removeRequest = new CacheRequest({
+          method: RequestMethod.DELETE,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: this.pathname,
+            query: options.query
+          }),
+          properties: options.properties,
+          body: entities,
+          timeout: options.timeout
+        });
+
+        // Execite the request
+        const removeResponse = await removeRequest.execute();
+        entities = removeResponse.data;
+
+        if (entities && entities.length > 0) {
+          // Clear local entities from the sync table
+          const localEntities = filter(entities, entity => {
+            const metadata = new Metadata(entity);
+            return metadata.isLocal();
+          });
+          const query = new Query().contains('entityId', Object.keys(keyBy(localEntities, idAttribute)));
+          await this.clearSync(query, options);
+
+          // Create delete operations for non local data in the sync table
+          const syncEntities = xorWith(entities, localEntities,
+            (entity, localEntity) => entity[idAttribute] === localEntity[idAttribute]);
+          await this.syncManager.addDeleteOperation(syncEntities, options);
+        }
+
+        // Emit the data
+        observer.next(entities);
       } catch (error) {
         return observer.error(error);
       }
