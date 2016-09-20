@@ -762,17 +762,39 @@ export class User {
    * @return {Promise<Object>} The response.
    */
   async verifyEmail(options = {}) {
+    options.client = this.client;
+    return User.verifyEmail(this.username, options);
+  }
+
+  /**
+   * Request an email to be sent to verify the users email.
+   *
+   * @param {string} username Username
+   * @param {Object} [options={}] Options
+   * @return {Promise<Object>} The response.
+   */
+  static async verifyEmail(username, options = {}) {
+    if (!username) {
+      throw new KinveyError('A username was not provided.',
+       'Please provide a username for the user that you would like to verify their email.');
+    }
+
+    if (!isString(username)) {
+      throw new KinveyError('The provided username is not a string.');
+    }
+
+    const client = options.client || Client.sharedInstance();
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: `/${rpcNamespace}/${this.client.appKey}/${this.username}/user-email-verification-initiate`
+        protocol: client.protocol,
+        host: client.host,
+        pathname: `/${rpcNamespace}/${client.appKey}/${username}/user-email-verification-initiate`
       }),
       properties: options.properties,
       timeout: options.timeout,
-      client: this.client
+      client: client
     });
     const { data } = await request.execute();
     return data;
