@@ -4,6 +4,7 @@ import { ActiveUserError, KinveyError } from '../../../src/errors';
 import { TestUser } from '../helpers';
 import expect from 'expect';
 import nock from 'nock';
+const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 describe('User', function() {
   describe('login()', function() {
@@ -122,6 +123,102 @@ describe('User', function() {
       expect(user.authtoken).toEqual(reply._kmd.authtoken);
       expect(user.username).toEqual(reply.username);
       expect(user.isActive()).toEqual(true);
+    });
+  });
+
+  describe('verifyEmail()', function() {
+    it('should throw an error if a username is not provided', async function() {
+      try {
+        await User.verifyEmail();
+      } catch (error) {
+        expect(error).toBeA(KinveyError);
+      }
+    });
+
+    it('should throw an error if the provided username is not a string', async function() {
+      try {
+        await User.verifyEmail({});
+      } catch (error) {
+        expect(error).toBeA(KinveyError);
+      }
+    });
+
+    it('should verify an email for a user', async function() {
+      const username = 'test';
+
+      // Kinvey API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .post(`/${rpcNamespace}/${this.client.appKey}/${username}/user-email-verification-initiate`)
+        .reply(200, {}, {
+          'content-type': 'application/json; charset=utf-8'
+        });
+
+      const response = await User.verifyEmail(username);
+      expect(response).toEqual({});
+    });
+  });
+
+  describe('resetPassword()', function() {
+    it('should throw an error if a username is not provided', async function() {
+      try {
+        await User.resetPassword();
+      } catch (error) {
+        expect(error).toBeA(KinveyError);
+      }
+    });
+
+    it('should throw an error if the provided username is not a string', async function() {
+      try {
+        await User.resetPassword({});
+      } catch (error) {
+        expect(error).toBeA(KinveyError);
+      }
+    });
+
+    it('should reset the password for a user', async function() {
+      const username = 'test';
+
+      // Kinvey API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .post(`/${rpcNamespace}/${this.client.appKey}/${username}/user-password-reset-initiate`)
+        .reply(200, {}, {
+          'content-type': 'application/json; charset=utf-8'
+        });
+
+      const response = await User.resetPassword(username);
+      expect(response).toEqual({});
+    });
+  });
+
+  describe('forgotUsername()', function() {
+    it('should throw an error if an email is not provided', async function() {
+      try {
+        await User.forgotUsername();
+      } catch (error) {
+        expect(error).toBeA(KinveyError);
+      }
+    });
+
+    it('should throw an error if the provided email is not a string', async function() {
+      try {
+        await User.forgotUsername({});
+      } catch (error) {
+        expect(error).toBeA(KinveyError);
+      }
+    });
+
+    it('should retrieve a username for a user', async function() {
+      const email = 'test@test.com';
+
+      // Kinvey API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .post(`/${rpcNamespace}/${this.client.appKey}/user-forgot-username`, { email: email })
+        .reply(200, {}, {
+          'content-type': 'application/json; charset=utf-8'
+        });
+
+      const response = await User.forgotUsername(email);
+      expect(response).toEqual({});
     });
   });
 });
