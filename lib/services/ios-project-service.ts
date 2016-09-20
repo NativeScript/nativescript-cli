@@ -94,19 +94,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$errors.fail("Xcode is not installed. Make sure you have Xcode installed and added to your PATH");
 			}
 
-			let xcodeBuildVersion = "";
-
-			try {
-				xcodeBuildVersion = this.$childProcess.exec("xcodebuild -version | head -n 1 | sed -e 's/Xcode //'").wait();
-			} catch (error) {
-				this.$errors.fail("xcodebuild execution failed. Make sure that you have latest Xcode and tools installed.");
-			}
-
-			let splitedXcodeBuildVersion = xcodeBuildVersion.split(".");
-			if (splitedXcodeBuildVersion.length === 3) {
-				xcodeBuildVersion = `${splitedXcodeBuildVersion[0]}.${splitedXcodeBuildVersion[1]}`;
-			}
-
+			let xcodeBuildVersion = this.getXcodeVersion();
 			if (helpers.versionCompare(xcodeBuildVersion, IOSProjectService.XCODEBUILD_MIN_VERSION) < 0) {
 				this.$errors.fail("NativeScript can only run in Xcode version %s or greater", IOSProjectService.XCODEBUILD_MIN_VERSION);
 			}
@@ -290,6 +278,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				]);
 
 				args = args.concat((buildConfig && buildConfig.architectures) || defaultArchitectures);
+
+				let xcodeBuildVersion = this.getXcodeVersion();
+				if (helpers.versionCompare(xcodeBuildVersion, "8.0")>=0) {
+					let teamId = this.getDevelopmentTeam();
+					if (teamId) {
+						args = args.concat("DEVELOPMENT_TEAM="+teamId);
+					}
+				}
 			} else {
 				args = basicArgs.concat([
 					"-sdk", "iphonesimulator",
@@ -1072,6 +1068,124 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				return true;
 			}
 		}).future<void>()();
+	}
+
+	private getXcodeVersion(): string {
+		let xcodeBuildVersion = "";
+
+		try {
+			xcodeBuildVersion = this.$childProcess.exec("xcodebuild -version | head -n 1 | sed -e 's/Xcode //'").wait();
+		} catch (error) {
+			this.$errors.fail("xcodebuild execution failed. Make sure that you have latest Xcode and tools installed.");
+		}
+
+		let splitedXcodeBuildVersion = xcodeBuildVersion.split(".");
+		if (splitedXcodeBuildVersion.length === 3) {
+			xcodeBuildVersion = `${splitedXcodeBuildVersion[0]}.${splitedXcodeBuildVersion[1]}`;
+		}
+
+		return xcodeBuildVersion;
+	}
+
+	private getDevelopmentTeams(): Array<{id:string, name: string}> {
+		let dir = path.join(process.env.HOME, "Library/MobileDevice/Provisioning Profiles/");
+		let files = this.$fs.readDirectory(dir).wait();
+		let teamIds: any = {};
+		for (let file of files) {
+			let filePath = path.join(dir, file);
+			let data = this.$fs.readText(filePath, "utf8").wait();
+			let teamId = this.getProvisioningProfileValue("TeamIdentifier", data);
+			let teamName = this.getProvisioningProfileValue("TeamName", data);
+			if (teamId) {
+				teamIds[teamId] = teamName;
+			}
+		}
+		let teamIdsArray = new Array<{id:string, name: string}>();
+		for (let teamId in teamIds) {
+			teamIdsArray.push({ id:teamId, name:teamIds[teamId] });
+		}
+		return teamIdsArray;
+	}
+
+	private getProvisioningProfileValue(name: string, text: string): string {
+		let findStr = "<key>"+name+"</key>";
+		let index = text.indexOf(findStr);
+		if (index > 0) {
+			index = text.indexOf("<string>", index+findStr.length);
+			if (index > 0) {
+				index += "<string>".length;
+				let endIndex = text.indexOf("</string>", index);
+				let result = text.substring(index, endIndex);
+				return result;
+			}
+		}
+		return null;
+	}
+
+	private readTeamId(): string {
+		let xcconfigFile = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, "build.xcconfig");
+		if (this.$fs.exists(xcconfigFile).wait()) {
+			let text = this.$fs.readText(xcconfigFile).wait();
+			let teamId: string;
+			text.split(/\r?\n/).forEach((line) => {
+				line = line.replace(/\/(\/)[^\n]*$/, "");
+				if (line.indexOf("DEVELOPMENT_TEAM") >= 0) {
+					teamId = line.split("=")[1].trim();
+				}
+			});
+			if (teamId) {
+				return teamId;
+			}
+		}
+		let fileName = path.join(this.platformData.projectRoot, "teamid");
+		if (this.$fs.exists(fileName).wait()) {
+			return this.$fs.readText(fileName).wait();
+		}
+		return null;
+	}
+
+	private getDevelopmentTeam(): string {
+		let teamId: string;
+		if (this.$options.teamId) {
+			teamId = this.$options.teamId;
+		} else {
+			teamId = this.readTeamId();
+		}
+		if (!teamId) {
+			let teams = this.getDevelopmentTeams();
+			this.$logger.warn("Xcode 8 requires a team id to be specified when building for device.");
+			this.$logger.warn("You can specify the team id by setting the DEVELOPMENT_TEAM setting in build.xcconfig file located in App_Resources folder of your app, or by using the --teamId option when calling run, debug or livesync commnads.");
+			if (teams.length === 1) {
+				teamId = teams[0].id;
+				this.$logger.warn("Found and using the following development team installed on your system: " + teams[0].name + " (" + teams[0].id + ")");
+			} else if (teams.length > 0) {
+				let choices: string[] = [];
+				for (let team of teams) {
+					choices.push(team.name + " (" + team.id + ")");
+				}
+				let choice = this.$prompter.promptForChoice('Found multiple development teams, select one:', choices).wait();
+				teamId = teams[choices.indexOf(choice)].id;
+
+				let choicesPersist = [
+					"Yes, set the DEVELOPMENT_TEAM setting in build.xcconfig file.",
+					"Yes, persist the team id in platforms folder.",
+					"No, don't persist this setting."
+				];
+				let choicePersist = this.$prompter.promptForChoice("Do you want to make teamId: "+teamId+" a persistent choice for your app?", choicesPersist).wait();
+				switch (choicesPersist.indexOf(choicePersist)) {
+					case 0:
+						let xcconfigFile = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, "build.xcconfig");
+						this.$fs.appendFile(xcconfigFile, "\nDEVELOPMENT_TEAM = " + teamId + "\n").wait();
+						break;
+					case 1:
+						this.$fs.writeFile(path.join(this.platformData.projectRoot, "teamid"), teamId);
+						break;
+					default:
+						break;
+				}
+			}
+		}
+		return teamId;
 	}
 }
 
