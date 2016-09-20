@@ -785,18 +785,40 @@ export class User {
    * @return {Promise<Object>} The response.
    */
   async forgotUsername(options = {}) {
+    options.client = this.client;
+    return User.forgotUsername(this.email, options);
+  }
+
+  /**
+   * Request an email to be sent to recover a forgot username.
+   *
+   * @param {string} email Email
+   * @param {Object} [options={}] Options
+   * @return {Promise<Object>} The response.
+   */
+  static async forgotUsername(email, options = {}) {
+    if (!email) {
+      throw new KinveyError('An email was not provided.',
+       'Please provide an email for the user that you would like to retrieve their username.');
+    }
+
+    if (!isString(email)) {
+      throw new KinveyError('The provided email is not a string.');
+    }
+
+    const client = options.client || Client.sharedInstance();
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: `/${rpcNamespace}/${this.client.appKey}/user-forgot-username`
+        protocol: client.protocol,
+        host: client.host,
+        pathname: `/${rpcNamespace}/${client.appKey}/user-forgot-username`
       }),
       properties: options.properties,
-      data: { email: this.email },
+      data: { email: email },
       timeout: options.timeout,
-      client: this.client
+      client: client
     });
     const { data } = await request.execute();
     return data;
