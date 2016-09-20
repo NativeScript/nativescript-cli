@@ -1,6 +1,5 @@
-import { KinveyMiddleware } from './middleware';
+import { Middleware } from 'kinvey-javascript-rack';
 import { KinveyError, NotFoundError } from '../../../../src/errors';
-import { Promise } from 'es6-promise';
 import MemoryCache from 'fast-memory-cache';
 import Queue from 'promise-queue';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
@@ -20,9 +19,6 @@ const queue = new Queue(1, Infinity);
 const dbCache = {};
 const caches = [];
 
-/**
- * @private
- */
 class Memory {
   constructor(name) {
     if (!name) {
@@ -117,9 +113,6 @@ class Memory {
   }
 }
 
-/**
- * @private
- */
 class DB {
   constructor(name) {
     if (!name) {
@@ -249,10 +242,7 @@ class DB {
   }
 }
 
-/**
- * @private
- */
-export class CacheMiddleware extends KinveyMiddleware {
+export class CacheMiddleware extends Middleware {
   constructor(name = 'Kinvey Cache Middleware') {
     super(name);
   }

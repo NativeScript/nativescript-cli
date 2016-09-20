@@ -86,6 +86,8 @@ describe('SyncStore', function() {
           'x-kinvey-api-version': '4'
         });
 
+
+
       // Pull data into cache
       const store = new SyncStore(collection);
       return store.pull();

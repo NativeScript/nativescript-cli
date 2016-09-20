@@ -1,8 +1,7 @@
-import { KinveyMiddleware } from './middleware';
-import { Promise } from 'es6-promise';
+import { Middleware } from 'kinvey-javascript-rack';
 import http from 'request';
 
-export class HttpMiddleware extends KinveyMiddleware {
+export class HttpMiddleware extends Middleware {
   constructor(name = 'Kinvey Node Http Middleware') {
     super(name);
   }
