@@ -6,13 +6,13 @@
   "scripts": {
     "build": "npm run clean && babel src --out-dir dist",
     "clean": "del dist coverage",
+    "cover": "istanbul cover _mocha -- --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/setup test/unit",
     "docs": "esdoc -c esdoc.json",
-    "postinstall": "npm run build",
     "lint": "npm run lint:src",
     "lint:src": "eslint src/**",
     "lint:test": "eslint test/unit/**",
-    "test": "npm run test:mocha",
-    "test:mocha": "istanbul cover _mocha -- --reporter tap --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/setup test/unit",
+    "postinstall": "npm run build",
+    "test": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/setup test/unit",
     "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/setup test/unit"
   },
   "repository": {
