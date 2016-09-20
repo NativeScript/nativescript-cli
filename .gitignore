@@ -4,17 +4,15 @@ node_modules
 npm-debug.log
 
 # Reference files
-reference
+/reference
 
 # Build Files
-.tmp
-tmp
-dist
+/.tmp
+/tmp
+/dist
 
-# Test Files
-coverage
-report.xml
-*.tap
+# Test Coverage Files
+/coverage
 
 # MacOS Files
 .DS_Store
@@ -66,4 +64,3 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
-src/.DS_Store
