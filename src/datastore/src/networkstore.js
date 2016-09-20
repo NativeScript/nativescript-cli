@@ -2,8 +2,8 @@ import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod } from '../..
 import { KinveyError } from '../../errors';
 import { Query } from '../../query';
 import { Client } from '../../client';
-import { Promise } from 'es6-promise';
 import { Log, KinveyObservable } from '../../utils';
+import Promise from 'pinkie'
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import isString from 'lodash/isString';
 import url from 'url';

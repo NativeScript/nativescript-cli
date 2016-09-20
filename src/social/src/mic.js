@@ -2,7 +2,7 @@ import { Social } from './social';
 import { SocialIdentity } from './enums';
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
 import { KinveyError } from '../../errors';
-import { Promise } from 'es6-promise';
+import Promise from 'pinkie';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import path from 'path';
 import url from 'url';

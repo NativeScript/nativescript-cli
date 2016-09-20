@@ -4,7 +4,7 @@ import { CacheRequest } from './cacherequest';
 import { Response, StatusCode } from './response';
 import { NotFoundError } from '../../errors';
 import { Query } from '../../query';
-import { Promise } from 'es6-promise';
+import Promise from 'pinkie';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import keyBy from 'lodash/keyBy';
 import reduce from 'lodash/reduce';

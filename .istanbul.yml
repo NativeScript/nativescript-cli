@@ -1,0 +1,3 @@
+reporting:
+  reports:
+    - lcovonly
