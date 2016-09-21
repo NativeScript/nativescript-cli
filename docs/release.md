@@ -1,8 +1,8 @@
 ### Release
-[Install Git-Extras](https://github.com/tj/git-extras/blob/master/Installation.md#mac-os-x-with-homebrew) before releasing the SDK.
-
 1. Checkout the master branch.
-2. Execute `git release <version>`. See [Version Management](#version-management) for more info on version.
+2. Update the CHANGELOG.md.
+3. Execute `npm version [<newversion> | major | minor | patch | premajor | preminor | prepatch | prerelease | from-git]`. See [Version Management](#version-management) for more info on incrementing the version.
+4. Done.
 
 ### Version Management
 Updating the SDK version should follow [Semantic Version 2.0.0](http://semver.org/):
