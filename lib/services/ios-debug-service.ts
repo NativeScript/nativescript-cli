@@ -38,6 +38,7 @@ class IOSDebugService implements IDebugService {
 
 	private _lldbProcess: ChildProcess;
 	private _sockets: net.Socket[] = [];
+	private _childProcess: ChildProcess;
 
 	public get platform(): string {
 		return "ios";
@@ -85,10 +86,14 @@ class IOSDebugService implements IDebugService {
 				socket.destroy();
 			}
 			this._sockets = [];
-			if (this._lldbProcess) {
+ 			if (this._lldbProcess) {
 				this._lldbProcess.stdin.write("process detach\n");
 				this._lldbProcess.kill();
 				this._lldbProcess = undefined;
+			}
+			if (this._childProcess) {
+				this._childProcess.kill();
+				this._childProcess = undefined;
 			}
 		}).future<void>()();
 	}
@@ -108,6 +113,7 @@ class IOSDebugService implements IDebugService {
 				skipInstall: this.$config.debugLivesync
 			}).wait();
 			let lineStream = byline(child_process.stdout);
+			this._childProcess = child_process;
 
 			lineStream.on('data', (line: NodeBuffer) => {
 				let lineText = line.toString();
