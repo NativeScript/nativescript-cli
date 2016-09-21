@@ -9,7 +9,6 @@ npm-debug.log
 # Build Files
 /.tmp
 /tmp
-/dist
 
 # Test Coverage Files
 /coverage
