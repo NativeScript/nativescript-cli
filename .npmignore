@@ -4,7 +4,7 @@ node_modules
 npm-debug.log
 
 # Src files
-.github
+/.github
 .babelrc
 .codeclimate.yml
 .editorconfig
@@ -15,9 +15,9 @@ npm-debug.log
 .travis.yml
 CHANGELOG.md
 CONTRIBUTING.md
-dist
-docs
-manual
+/src
+/docs
+/manual
 esdoc.json
 gulpfile.babel.js
 hints.md
@@ -26,15 +26,15 @@ README.md
 
 # Build Files
 .env
-.tmp
-tmp
+/.tmp
+/tmp
 
 # Test Files
-coverage
+/coverage
 report.xml
 *.tap
-test
-test2
+/test
+/test2
 
 # MacOS Files
 .DS_Store
