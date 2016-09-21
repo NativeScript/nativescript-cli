@@ -1,4 +1,28 @@
-## Changelog
+# Changelog
+
+## [v3.1.2](https://github.com/Kinvey/javascript-sdk-core/tree/v3.1.2) (2016-09-21)
+[Full Changelog](https://github.com/Kinvey/javascript-sdk-core/compare/3.1.1...3.1.2)
+
+**Implemented enhancements:**
+
+- Added files to integrate [TravisCI](https://travis-ci.org/Kinvey/javascript-sdk-core), [CodeClimate](https://codeclimate.com/github/Kinvey/javascript-sdk-core), and [CodeCov](https://codecov.io/gh/Kinvey/javascript-sdk-core).
+
+**Fixed bugs:**
+
+- DELETE requests sent to backend when clearing cache [\#68](https://github.com/Kinvey/javascript-sdk-core/issues/68)
+- Can't login a user when providing credentials as an object.
+- Use `{ field: <value> }` format when serializing a query that contains an `equalTo` expression.
+
+**Deprecated**
+
+- Deprecated `forgotUsername()`, `verifyEmail()`, and `resetPassword()` instance functions on the User class. You should now use the static version of each function.
+
+**Merged pull requests:**
+
+- MLIBZ-1322 Can't login user when providing credentials as an object [\#67](https://github.com/Kinvey/javascript-sdk-core/pull/67)
+- Do not send DELETE network requests when clearing the local cache [\#69](https://github.com/Kinvey/javascript-sdk-core/pull/69)
+- MLIBZ-1317 Make forgotUsername(), verifyEmail(), and resetPassword() functions on the User class static [\#70](https://github.com/Kinvey/javascript-sdk-core/pull/70)
+
 ### 3.1.1 (2016-09-13)
 * Bugfix (MLIBZ-1322): Can't login user when providing credentials as an object.
 
