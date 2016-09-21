@@ -117,3 +117,5 @@ $injector.require("iOSNotification", "./device-sockets/ios/notification");
 $injector.require("iOSSocketRequestExecutor", "./device-sockets/ios/socket-request-executor");
 $injector.require("messages", "./common/messages/messages");
 $injector.require("xmlValidator", "./xml-validator");
+
+$injector.requireCommand("devices", "./commands/devices");
