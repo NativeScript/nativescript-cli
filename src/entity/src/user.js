@@ -758,6 +758,8 @@ export class User {
   /**
    * Request an email to be sent to verify the users email.
    *
+   * @deprecated Use the static function verifyEmail().
+   *
    * @param {Object} [options={}] Options
    * @return {Promise<Object>} The response.
    */
@@ -802,6 +804,8 @@ export class User {
 
   /**
    * Request an email to be sent to recover a forgot username.
+   *
+   * @deprecated Use the static function forgotUsername().
    *
    * @param {Object} [options={}] Options
    * @return {Promise<Object>} The response.
@@ -848,6 +852,8 @@ export class User {
 
   /**
    * Request an email to be sent to reset the users password.
+   *
+   * @deprecated Use the static function resetPassword().
    *
    * @param {Object} [options = {}] Options
    * @return {Promise<Object>} The response.
