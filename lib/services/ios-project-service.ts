@@ -1131,6 +1131,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				line = line.replace(/\/(\/)[^\n]*$/, "");
 				if (line.indexOf("DEVELOPMENT_TEAM") >= 0) {
 					teamId = line.split("=")[1].trim();
+					if (teamId[teamId.length-1] === ';') {
+						teamId = teamId.slice(0, -1);
+					}
 				}
 			});
 			if (teamId) {
