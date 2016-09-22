@@ -1,7 +1,7 @@
 import { NetworkRequest, RequestMethod, AuthType, KinveyError, User, Client } from 'kinvey-javascript-sdk-core';
 import { Device } from './device';
 import { EventEmitter } from 'events';
-import { Promise } from 'es6-promise';
+import Promise from 'core-js/es6/promise';
 import url from 'url';
 import bind from 'lodash/bind';
 const pushNamespace = process.env.KINVEY_PUSH_NAMESPACE || 'push';

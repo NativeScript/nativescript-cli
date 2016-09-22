@@ -1,4 +1,4 @@
-import { Promise } from 'es6-promise';
+import Promise from 'core-js/es6/promise';
 import packageJSON from '../package.json';
 let deviceReady;
 
