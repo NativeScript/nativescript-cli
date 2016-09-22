@@ -138,11 +138,9 @@ class Kinvey {
 Kinvey.Acl = Acl;
 Kinvey.Aggregation = Aggregation;
 Kinvey.AuthorizationGrant = AuthorizationGrant;
-Kinvey.CacheRequest = CacheRequest;
 Kinvey.DataStoreType = DataStoreType;
 Kinvey.Log = Log;
 Kinvey.Metadata = Metadata;
-Kinvey.NetworkRequest = NetworkRequest;
 Kinvey.Query = Query;
 Kinvey.SocialIdentity = SocialIdentity;
 
