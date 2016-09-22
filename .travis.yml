@@ -1,10 +1,6 @@
 language: node_js
 node_js:
   - '6'
-addons:
-  code_climate:
-    repo_token:
-      secure: pjnl2IGK7W+EceE50hoqKKvO6389gUY7dOmT5eUEeCQd1hruM7/Qc09YDLWsxyCC/MNEZYJK/7EclL1lhTDaVgjgMv890RLUaN+kJrQuKS7mJTiXknXiF6x5yDrtukatJTw0dFrkyCnmJaxrJiKZp8CcuuE4FZ9UsklU/VPf+CZ91oJF+IBtBQYpxO7D1pWIrH4MIBj5Vj9EcO2QYl2lOqT18uSMuMwBrBH8dI4cRUYvw2Wf7nDOyQYqS1YB3kEejD7cHHYX+vJ1QDT2ikAf4ds3W0K3l4oc6krjgVPwvUV8LoyZvXuhacLw6lS7a47vqHhjQ+nhiVOydoQA7B6lYsK0iTMKomW6A1gvGAI8VdWuDYLF9p6Fu1SigkZUW6px0Le4W8XvOjLgm2TNAYnzRujfDDticUvafep3WlOYijj/LRmD2KCXOxtaaG0SCmNy6ox6rBzIOMWr9y8dita/AKnW5cxHRCtPFAVLugFVZoZ7kEds2/b5Y+KCMy7Bl/RcLQuVJOoTuiQASPE33p618QiwGY+TD0dR+Kj+9SvRy4p8oYDOQLuy8SuMx3gAGmyy5Kg2wQ6Ng1DmKWm0xGWx+PjgYHUR/Mxbpt/cAc2AlMp7w5xClUgAyTuJsTsW0sK5fBpULEyZARRlNHnYl50XaqY6B1b2+M1Gg1stdGEmanA=
 deploy:
   provider: npm
   email: thomas.conner@me.com
