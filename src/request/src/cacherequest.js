@@ -2,7 +2,7 @@ import { Request } from './request';
 import { NoResponseError, KinveyError } from '../../errors';
 import { Response } from './response';
 import { Client } from '../../client';
-import { Rack } from 'kinvey-javascript-rack';
+import { CacheRack } from 'kinvey-cache-rack'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 import UrlPattern from 'url-pattern';
 import url from 'url';
 import assign from 'lodash/assign';
@@ -23,19 +23,7 @@ export class CacheRequest extends Request {
 
     this.query = options.query;
     this.client = options.client;
-    this.rack = CacheRequest.rack;
-  }
-
-  static get rack() {
-    return CacheRequest._rack;
-  }
-
-  static set rack(rack) {
-    if (!rack || !(rack instanceof Rack)) {
-      throw new KinveyError('Unable to set the rack of a CacheRequest. It must be an instance of a Rack');
-    }
-
-    CacheRequest._rack = rack;
+    this.rack = new CacheRack();
   }
 
   get url() {

@@ -3,6 +3,7 @@ import { Social } from './social';
 import { SocialIdentity } from './enums';
 import { KinveyError } from '../../errors';
 import { randomString } from '../../utils';
+import { Popup } from 'kinvey-popup'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 import Promise from 'pinkie';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import assign from 'lodash/assign';
@@ -22,7 +23,7 @@ export class Facebook extends Social {
   }
 
   isSupported() {
-    return !!global.Kinvey.Popup;
+    return !!Popup;
   }
 
   async login(clientId, options = {}) {
@@ -48,7 +49,7 @@ export class Facebook extends Social {
     const promise = new Promise((resolve, reject) => {
       const redirectUri = options.redirectUri || global.location.href;
       const originalState = randomString();
-      const popup = new global.Kinvey.Popup();
+      const popup = new Popup();
       let redirected = false;
 
       // Handle the response from a login request

@@ -2,6 +2,7 @@ import { Social } from './social';
 import { SocialIdentity } from './enums';
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
 import { KinveyError } from '../../errors';
+import { Popup } from 'kinvey-popup'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 import Promise from 'pinkie';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import path from 'path';
@@ -111,8 +112,8 @@ export class MobileIdentityConnect extends Social {
         pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
       }
 
-      if (global.Kinvey.Popup) {
-        const popup = new global.Kinvey.Popup();
+      if (Popup) {
+        const popup = new Popup();
         return popup.open(url.format({
           protocol: this.client.micProtocol,
           host: this.client.micHost,
@@ -125,7 +126,7 @@ export class MobileIdentityConnect extends Social {
         }));
       }
 
-      throw new KinveyError('Kinvey.Popup is undefined.'
+      throw new KinveyError('Popup is undefined.'
         + ` Unable to login using authorization grant ${AuthorizationGrant.AuthorizationCodeLoginPage}.`);
     }).then((popup) => {
       const promise = new Promise((resolve, reject) => {

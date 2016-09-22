@@ -1,25 +1,13 @@
 import { Request } from './request';
 import { NoResponseError, KinveyError } from '../../errors';
 import { Response } from './response';
-import { Rack } from 'kinvey-javascript-rack';
+import { NetworkRack } from 'kinvey-network-rack'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
 export class NetworkRequest extends Request {
   constructor(options = {}) {
     super(options);
-    this.rack = NetworkRequest.rack;
-  }
-
-  static get rack() {
-    return NetworkRequest._rack;
-  }
-
-  static set rack(rack) {
-    if (!rack || !(rack instanceof Rack)) {
-      throw new KinveyError('Unable to set the rack of a NetworkRequest. It must be an instance of a Rack');
-    }
-
-    NetworkRequest._rack = rack;
+    this.rack = new NetworkRack();
   }
 
   async execute() {
