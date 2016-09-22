@@ -8,7 +8,7 @@ export class Configuration extends ConfigBase implements IConfiguration { // Use
 	TYPESCRIPT_COMPILER_OPTIONS = {};
 	USE_PROXY = false;
 	ANDROID_DEBUG_UI: string = null;
-	USE_POD_SANDBOX: boolean = true;
+	USE_POD_SANDBOX: boolean = false;
 	debugLivesync: boolean = false;
 
 	/*don't require logger and everything that has logger as dependency in config.js due to cyclic dependency*/
