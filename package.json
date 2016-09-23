@@ -48,7 +48,7 @@
     "hellojs": "^1.13.1",
     "istanbul": "^1.0.0-alpha.2",
     "json-loader": "^0.5.4",
-    "kinvey-javascript-rack": "../../Rack",
+    "kinvey-javascript-rack": "^1.2.0",
     "local-storage": "^1.4.2",
     "lodash": "^4.16.0",
     "loglevel": "^1.4.1",
