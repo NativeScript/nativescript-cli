@@ -3,7 +3,7 @@ import { KinveyError } from '../../errors';
 import { Query } from '../../query';
 import { Client } from '../../client';
 import { Log, KinveyObservable } from '../../utils';
-import Promise from 'pinkie'
+import Promise from 'core-js/es6/promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import isString from 'lodash/isString';
 import url from 'url';

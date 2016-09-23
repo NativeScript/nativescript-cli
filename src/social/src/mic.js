@@ -2,8 +2,8 @@ import { Social } from './social';
 import { SocialIdentity } from './enums';
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
 import { KinveyError } from '../../errors';
-import { Popup } from 'kinvey-popup'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
-import Promise from 'pinkie';
+import { Popup } from '../../utils';
+import Promise from 'core-js/es6/promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import path from 'path';
 import url from 'url';

@@ -1,8 +1,8 @@
-import { Request } from './request';
-import { NoResponseError, KinveyError } from '../../errors';
-import { Response } from './response';
+import Request from './request';
+import KinveyResponse from './kinveyresponse';
+import { KinveyError } from '../../errors';
 import { Client } from '../../client';
-import { CacheRack } from 'kinvey-cache-rack'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
+import { CacheRack } from 'kinvey-javascript-rack';
 import UrlPattern from 'url-pattern';
 import url from 'url';
 import assign from 'lodash/assign';
@@ -11,7 +11,7 @@ import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-
 /**
  * @private
  */
-export class CacheRequest extends Request {
+export default class CacheRequest extends Request {
   constructor(options = {}) {
     super(options);
 
@@ -55,25 +55,10 @@ export class CacheRequest extends Request {
   }
 
   async execute() {
-    if (!this.rack) {
-      throw new KinveyError('Unable to execute the request. Please provide a rack to execute the request.');
-    }
+    let response = await super.execute();
 
-    let response = await this.rack.execute(this);
-
-    // Flip the executing flag to false
-    this.executing = false;
-
-    // Throw a NoResponseError if we did not receive
-    // a response
-    if (!response) {
-      throw new NoResponseError();
-    }
-
-    // Make sure the response is an instance of the
-    // Response class
-    if (!(response instanceof Response)) {
-      response = new Response({
+    if (!(response instanceof KinveyResponse)) {
+      response = new KinveyResponse({
         statusCode: response.statusCode,
         headers: response.headers,
         data: response.data

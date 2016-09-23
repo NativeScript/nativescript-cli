@@ -13,12 +13,12 @@ import {
   ParameterValueOutOfRangeError,
   ServerError
 } from '../../errors';
-import { StatusCode, Response } from './response';
+import Response, { StatusCode } from './response';
 
 /**
  * @private
  */
-export class KinveyResponse extends Response {
+export default class KinveyResponse extends Response {
   get error() {
     if (this.isSuccess()) {
       return null;

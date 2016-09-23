@@ -9,7 +9,7 @@ import {
 import { KinveyError } from '../../errors';
 import { NetworkStore } from './networkstore';
 import { Log } from '../../utils';
-import Promise from 'pinkie';
+import Promise from 'core-js/es6/promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import map from 'lodash/map';
@@ -301,8 +301,8 @@ export class FileStore extends NetworkStore {
       timeout: options.timeout
     });
     request.headers.addAll(headers.toPlainObject());
-    request.headers.set('content-length', fileSliceSize);
-    request.headers.set('content-range', `bytes ${options.start}-${metadata.size - 1}/${metadata.size}`);
+    request.headers.set('Content-Length', fileSliceSize);
+    request.headers.set('Content-Range', `bytes ${options.start}-${metadata.size - 1}/${metadata.size}`);
     const response = await request.execute(true);
 
     Log.debug('File upload response', response);

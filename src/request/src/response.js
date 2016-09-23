@@ -1,4 +1,4 @@
-import { Headers } from './request';
+import Headers from './headers';
 import { KinveyError } from '../../errors';
 import assign from 'lodash/assign';
 
@@ -23,7 +23,7 @@ export { StatusCode };
 /**
  * @private
  */
-export class Response {
+export default class Response {
   constructor(options = {}) {
     options = assign({
       statusCode: StatusCode.Empty,

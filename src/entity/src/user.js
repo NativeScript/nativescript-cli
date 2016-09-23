@@ -6,7 +6,7 @@ import { KinveyError, NotFoundError, ActiveUserError } from '../../errors';
 import { DataStore, UserStore } from '../../datastore';
 import { Facebook, Google, LinkedIn, MobileIdentityConnect } from '../../social';
 import { Log, setActiveUser, setIdentitySession } from '../../utils';
-import Promise from 'pinkie';
+import Promise from 'core-js/es6/promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import assign from 'lodash/assign';

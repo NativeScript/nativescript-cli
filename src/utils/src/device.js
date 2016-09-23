@@ -1,4 +1,4 @@
-import pkg from '../../../package.json';
+let deviceReady;
 
 // Helper function to detect the browser name and version.
 function browserDetect(ua) {
@@ -86,7 +86,7 @@ function deviceInformation() {
   }
 
   // Return the device information string.
-  const parts = [`js-${pkg.name}/${pkg.version}`];
+  const parts = ['js-kinvey-javascript-sdk-core'];
 
   if (libraries.length !== 0) { // Add external library information.
     parts.push(`(${libraries.sort().join(', ')})`);
@@ -102,6 +102,33 @@ function deviceInformation() {
 }
 
 export class Device {
+  static isPhoneGap() {
+    if (typeof document !== 'undefined') {
+      return document.URL.indexOf('http://') === -1 && document.URL.indexOf('https://') === -1;
+    }
+
+    return false;
+  }
+
+  static ready() {
+    if (!deviceReady) {
+      if (this.isPhoneGap()) {
+        deviceReady = new Promise((resolve) => {
+          const onDeviceReady = () => {
+            document.removeEventListener('deviceready', onDeviceReady);
+            resolve();
+          };
+
+          document.addEventListener('deviceready', onDeviceReady, false);
+        });
+      } else {
+        deviceReady = Promise.resolve();
+      }
+    }
+
+    return deviceReady;
+  }
+
   static toString() {
     return deviceInformation();
   }

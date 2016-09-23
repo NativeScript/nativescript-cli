@@ -2,9 +2,8 @@
 import { Social } from './social';
 import { SocialIdentity } from './enums';
 import { KinveyError } from '../../errors';
-import { randomString } from '../../utils';
-import { Popup } from 'kinvey-popup'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
-import Promise from 'pinkie';
+import { randomString, Popup } from '../../utils';
+import Promise from 'core-js/es6/promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import assign from 'lodash/assign';
 import querystring from 'querystring';

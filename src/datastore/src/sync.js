@@ -8,7 +8,7 @@ import {
 import { InsufficientCredentialsError, SyncError } from '../../errors';
 import { Client } from '../../client';
 import { Query } from '../../query';
-import Promise from 'pinkie'
+import Promise from 'core-js/es6/promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import map from 'lodash/map';

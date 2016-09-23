@@ -1,10 +1,10 @@
-import { KinveyRequest } from './kinveyrequest';
+import KinveyRequest from './kinveyrequest';
 import { RequestMethod } from './request';
-import { CacheRequest } from './cacherequest';
-import { Response, StatusCode } from './response';
+import CacheRequest from './cacherequest';
+import Response, { StatusCode } from './response';
 import { NotFoundError } from '../../errors';
 import { Query } from '../../query';
-import Promise from 'pinkie';
+import Promise from 'core-js/es6/promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import keyBy from 'lodash/keyBy';
 import reduce from 'lodash/reduce';
@@ -20,7 +20,7 @@ const maxIdsPerRequest = 200;
 /**
  * @private
  */
-export class DeltaFetchRequest extends KinveyRequest {
+export default class DeltaFetchRequest extends KinveyRequest {
   get method() {
     return super.method;
   }

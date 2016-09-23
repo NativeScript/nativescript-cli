@@ -1,6 +1,7 @@
-import { RequestMethod, Headers } from './request';
-import { NetworkRequest } from './networkrequest';
-import { KinveyResponse } from './kinveyresponse';
+import { RequestMethod } from './request';
+import Headers from './headers';
+import NetworkRequest from './networkrequest';
+import KinveyResponse from './kinveyresponse';
 import { KinveyError, InvalidCredentialsError, NoActiveUserError } from '../../errors';
 import { Client } from '../../client';
 import { SocialIdentity } from '../../social';
@@ -152,7 +153,7 @@ function byteCount(str) {
  */
 export class Properties extends Headers {}
 
-export class KinveyRequest extends NetworkRequest {
+export default class KinveyRequest extends NetworkRequest {
   constructor(options = {}) {
     super(options);
 
