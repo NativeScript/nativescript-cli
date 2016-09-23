@@ -6,7 +6,7 @@ import { Aggregation } from './aggregation';
 import { DataStore, DataStoreType, FileStore } from './datastore';
 import { Acl, Metadata, User, UserStore } from './entity';
 import { AuthorizationGrant, SocialIdentity } from './social';
-import { AuthType, RequestMethod, CacheRequest, NetworkRequest, KinveyRequest } from './request';
+import { AuthType, RequestMethod, KinveyRequest } from './request';
 import { KinveyError } from './errors';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';

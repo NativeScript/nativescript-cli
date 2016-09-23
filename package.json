@@ -11,7 +11,6 @@
     "lint": "npm run lint:src",
     "lint:src": "eslint src/**",
     "lint:test": "eslint test/unit/**",
-    "test": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/setup test/unit",
     "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/setup test/unit",
     "preversion": "npm test",
     "version": "npm run build && git add -A dist",
@@ -29,7 +28,7 @@
   "dependencies": {
     "append-query": "^1.1.0",
     "babel-cli": "^6.14.0",
-    "babel-core": "^6.13.2",
+    "babel-core": "^6.14.0",
     "babel-eslint": "^6.1.0",
     "babel-plugin-inline-dotenv": "^1.1.1",
     "babel-polyfill": "^6.9.1",
@@ -46,6 +45,7 @@
     "fast-memory-cache": "^2.0.4",
     "hellojs": "^1.13.1",
     "istanbul": "^1.0.0-alpha.2",
+    "kinvey-javascript-rack": "^1.1.0",
     "local-storage": "^1.4.2",
     "lodash": "^4.16.0",
     "loglevel": "^1.4.1",
@@ -61,5 +61,8 @@
     "sift": "^3.0.0",
     "uid": "0.0.2",
     "url-pattern": "^1.0.0"
+  },
+  "peerDependencies": {
+    "kinvey-javascript-rack": "1.1.0"
   }
 }
