@@ -1,4 +1,4 @@
-export * from './device';
-export * from './kinvey';
-export * from './popup';
-export * from './push';
+import Kinvey from './kinvey';
+
+// Export default
+export default Kinvey;

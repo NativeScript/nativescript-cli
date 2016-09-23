@@ -11,7 +11,7 @@ const pushSettingsCollectionName = process.env.KINVEY_PUSH_COLLECTION_NAME || 'k
 const storage = global.localStorage;
 let notificationEventListener;
 
-export class Push extends EventEmitter {
+export default class Push extends EventEmitter {
   constructor() {
     super();
 
