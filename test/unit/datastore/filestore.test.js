@@ -47,7 +47,6 @@ describe('FileStore', function() {
 
       // GCS status check response
       nock('https://www.googleapis.com', { encodedQueryParams: true })
-        .matchHeader('content-length', 0)
         .matchHeader('content-range', `bytes */${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o')
         .query({
@@ -170,7 +169,6 @@ describe('FileStore', function() {
 
       // GCS status check response
       nock('https://www.googleapis.com', { encodedQueryParams: true })
-        .matchHeader('content-length', 0)
         .matchHeader('content-range', `bytes */${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o')
         .query({
@@ -309,7 +307,6 @@ describe('FileStore', function() {
 
       // GCS status check response
       nock('https://www.googleapis.com', { encodedQueryParams: true })
-        .matchHeader('content-length', 0)
         .matchHeader('content-range', `bytes */${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o')
         .query({
@@ -466,7 +463,6 @@ describe('FileStore', function() {
 
       // GCS status check response
       nock('https://www.googleapis.com', { encodedQueryParams: true })
-        .matchHeader('content-length', 0)
         .matchHeader('content-range', `bytes */${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o')
         .query({
@@ -566,7 +562,6 @@ describe('FileStore', function() {
 
       // GCS status check response
       nock('https://www.googleapis.com', { encodedQueryParams: true })
-        .matchHeader('content-length', 0)
         .matchHeader('content-range', `bytes */${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o')
         .query({

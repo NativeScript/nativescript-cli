@@ -1,7 +1,5 @@
-import {
-  TestKinvey,
-  TestUser
-} from './helpers';
+import { Kinvey } from '../../src/kinvey';
+import { TestUser } from './helpers';
 import nock from 'nock';
 
 // Record for nock
@@ -9,7 +7,7 @@ import nock from 'nock';
 
 // Init Kinvey
 before(function() {
-  this.client = TestKinvey.init({
+  this.client = Kinvey.init({
     appKey: 'kid_HkTD2CJc',
     appSecret: 'cd7f658ed0a548dd8dfadf5a1787568b'
   });

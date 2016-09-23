@@ -1,6 +1,6 @@
 import { Kinvey } from '../../src/kinvey';
 import { Client } from '../../src/client';
-import { TestKinvey, TestUser } from './helpers';
+import  { TestUser } from './helpers';
 import { randomString } from '../../src/utils';
 import expect from 'expect';
 import nock from 'nock';
@@ -12,7 +12,7 @@ const defaultMicHost = process.env.KINVEY_MIC_HOST || 'auth.kinvey.com';
 describe('Kinvey', function () {
   afterEach(function() {
     // Reintialize with the previous client
-    TestKinvey.init({
+    Kinvey.init({
       appKey: this.client.appKey,
       appSecret: this.client.appSecret
     });
