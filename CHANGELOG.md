@@ -1,5 +1,12 @@
 # Changelog
 
+## [v3.2.0](https://github.com/Kinvey/javascript-sdk-core/tree/v3.2.0) (2016-09-23)
+[Full Changelog](https://github.com/Kinvey/javascript-sdk-core/compare/3.1.2...3.2.0)
+
+**Implemented enhancements:**
+
+- Added `Popup` class to open popups in HTML5, Titanium, PhoneGap, and Angular environments.
+
 ## [v3.1.2](https://github.com/Kinvey/javascript-sdk-core/tree/v3.1.2) (2016-09-21)
 [Full Changelog](https://github.com/Kinvey/javascript-sdk-core/compare/3.1.1...3.1.2)
 
