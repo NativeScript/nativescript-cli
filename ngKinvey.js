@@ -1,7 +1,7 @@
-import { Kinvey } from './kinvey';
+import Kinvey from './kinvey';
 import angular from 'angular'; // eslint-disable-line import/no-unresolved
 
-export class KinveyProvider {
+class KinveyProvider {
   init(options) {
     return Kinvey.init(options);
   }
@@ -11,7 +11,8 @@ export class KinveyProvider {
   }
 }
 
+
 // Create the kinvey angular module
 const ngKinvey = angular.module('kinvey', []);
 ngKinvey.provider('$kinvey', KinveyProvider);
-export { ngKinvey };
+export default ngKinvey;
