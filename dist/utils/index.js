@@ -52,6 +52,15 @@ Object.keys(_observable).forEach(function (key) {
   });
 });
 
+var _popup = require('./src/popup');
+
+Object.defineProperty(exports, 'Popup', {
+  enumerable: true,
+  get: function get() {
+    return _popup.Popup;
+  }
+});
+
 var _storage = require('./src/storage');
 
 Object.keys(_storage).forEach(function (key) {

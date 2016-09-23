@@ -24,9 +24,9 @@ var _social = require('../../social');
 
 var _utils = require('../../utils');
 
-var _pinkie = require('pinkie');
+var _promise = require('core-js/es6/promise');
 
-var _pinkie2 = _interopRequireDefault(_pinkie);
+var _promise2 = _interopRequireDefault(_promise);
 
 var _regeneratorRuntime = require('regenerator-runtime');
 
@@ -58,7 +58,7 @@ var _isEmpty2 = _interopRequireDefault(_isEmpty);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _pinkie2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _pinkie2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _promise2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _promise2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -871,7 +871,7 @@ var User = exports.User = function () {
                   return _this.disconnectIdentity(identity, options);
                 });
                 _context12.next = 14;
-                return _pinkie2.default.all(promises);
+                return _promise2.default.all(promises);
 
               case 14:
                 _context12.next = 19;

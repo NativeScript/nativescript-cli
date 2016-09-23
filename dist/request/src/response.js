@@ -3,11 +3,13 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Response = exports.StatusCode = undefined;
+exports.StatusCode = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _request = require('./request');
+var _headers = require('./headers');
+
+var _headers2 = _interopRequireDefault(_headers);
 
 var _errors = require('../../errors');
 
@@ -41,7 +43,7 @@ exports.StatusCode = StatusCode;
  * @private
  */
 
-var Response = exports.Response = function () {
+var Response = function () {
   function Response() {
     var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
@@ -49,7 +51,7 @@ var Response = exports.Response = function () {
 
     options = (0, _assign2.default)({
       statusCode: StatusCode.Empty,
-      headers: new _request.Headers(),
+      headers: new _headers2.default(),
       data: null
     }, options);
 
@@ -69,8 +71,8 @@ var Response = exports.Response = function () {
       return this._headers;
     },
     set: function set(headers) {
-      if (!(headers instanceof _request.Headers)) {
-        headers = new _request.Headers(headers);
+      if (!(headers instanceof _headers2.default)) {
+        headers = new _headers2.default(headers);
       }
 
       this._headers = headers;
@@ -93,3 +95,5 @@ var Response = exports.Response = function () {
 
   return Response;
 }();
+
+exports.default = Response;

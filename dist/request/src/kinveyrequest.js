@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.KinveyRequest = exports.Properties = exports.AuthType = undefined;
+exports.Properties = exports.AuthType = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -13,9 +13,17 @@ var _get = function get(object, property, receiver) { if (object === null) objec
 
 var _request = require('./request');
 
+var _headers = require('./headers');
+
+var _headers2 = _interopRequireDefault(_headers);
+
 var _networkrequest = require('./networkrequest');
 
+var _networkrequest2 = _interopRequireDefault(_networkrequest);
+
 var _kinveyresponse = require('./kinveyresponse');
+
+var _kinveyresponse2 = _interopRequireDefault(_kinveyresponse);
 
 var _errors = require('../../errors');
 
@@ -217,9 +225,9 @@ var Properties = exports.Properties = function (_Headers) {
   }
 
   return Properties;
-}(_request.Headers);
+}(_headers2.default);
 
-var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
+var KinveyRequest = function (_NetworkRequest) {
   _inherits(KinveyRequest, _NetworkRequest);
 
   function KinveyRequest() {
@@ -268,8 +276,8 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
                 response = _context.sent;
 
 
-                if (!(response instanceof _kinveyresponse.KinveyResponse)) {
-                  response = new _kinveyresponse.KinveyResponse({
+                if (!(response instanceof _kinveyresponse2.default)) {
+                  response = new _kinveyresponse2.default({
                     statusCode: response.statusCode,
                     headers: response.headers,
                     data: response.data
@@ -564,4 +572,6 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
   }]);
 
   return KinveyRequest;
-}(_networkrequest.NetworkRequest);
+}(_networkrequest2.default);
+
+exports.default = KinveyRequest;

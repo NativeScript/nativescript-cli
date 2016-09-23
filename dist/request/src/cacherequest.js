@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.CacheRequest = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -13,9 +12,13 @@ var _get = function get(object, property, receiver) { if (object === null) objec
 
 var _request = require('./request');
 
-var _errors = require('../../errors');
+var _request2 = _interopRequireDefault(_request);
 
-var _response = require('./response');
+var _kinveyresponse = require('./kinveyresponse');
+
+var _kinveyresponse2 = _interopRequireDefault(_kinveyresponse);
+
+var _errors = require('../../errors');
 
 var _client = require('../../client');
 
@@ -52,7 +55,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /**
  * @private
  */
-var CacheRequest = exports.CacheRequest = function (_Request) {
+var CacheRequest = function (_Request) {
   _inherits(CacheRequest, _Request);
 
   function CacheRequest() {
@@ -70,7 +73,7 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
 
     _this.query = options.query;
     _this.client = options.client;
-    _this.rack = CacheRequest.rack;
+    _this.rack = new _kinveyJavascriptRack.CacheRack();
     return _this;
   }
 
@@ -83,40 +86,15 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                if (this.rack) {
-                  _context.next = 2;
-                  break;
-                }
-
-                throw new _errors.KinveyError('Unable to execute the request. Please provide a rack to execute the request.');
+                _context.next = 2;
+                return _get(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'execute', this).call(this);
 
               case 2:
-                _context.next = 4;
-                return this.rack.execute(this);
-
-              case 4:
                 response = _context.sent;
 
 
-                // Flip the executing flag to false
-                this.executing = false;
-
-                // Throw a NoResponseError if we did not receive
-                // a response
-
-                if (response) {
-                  _context.next = 8;
-                  break;
-                }
-
-                throw new _errors.NoResponseError();
-
-              case 8:
-
-                // Make sure the response is an instance of the
-                // Response class
-                if (!(response instanceof _response.Response)) {
-                  response = new _response.Response({
+                if (!(response instanceof _kinveyresponse2.default)) {
+                  response = new _kinveyresponse2.default({
                     statusCode: response.statusCode,
                     headers: response.headers,
                     data: response.data
@@ -127,13 +105,13 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
                 // a successfull response
 
                 if (response.isSuccess()) {
-                  _context.next = 11;
+                  _context.next = 6;
                   break;
                 }
 
                 throw response.error;
 
-              case 11:
+              case 6:
 
                 // If a query was provided then process the data with the query
                 if (this.query) {
@@ -143,7 +121,7 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
                 // Just return the response
                 return _context.abrupt('return', response);
 
-              case 13:
+              case 8:
               case 'end':
                 return _context.stop();
             }
@@ -229,19 +207,9 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
 
       this._client = client;
     }
-  }], [{
-    key: 'rack',
-    get: function get() {
-      return CacheRequest._rack;
-    },
-    set: function set(rack) {
-      if (!rack || !(rack instanceof _kinveyJavascriptRack.Rack)) {
-        throw new _errors.KinveyError('Unable to set the rack of a CacheRequest. It must be an instance of a Rack');
-      }
-
-      CacheRequest._rack = rack;
-    }
   }]);
 
   return CacheRequest;
-}(_request.Request);
+}(_request2.default);
+
+exports.default = CacheRequest;

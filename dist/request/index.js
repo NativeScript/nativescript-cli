@@ -3,87 +3,55 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.StatusCode = exports.Response = exports.RequestMethod = exports.Properties = exports.NetworkRequest = exports.KinveyResponse = exports.KinveyRequest = exports.Headers = exports.DeltaFetchRequest = exports.CacheRequest = exports.AuthType = undefined;
 
 var _cacherequest = require('./src/cacherequest');
 
-Object.keys(_cacherequest).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _cacherequest[key];
-    }
-  });
-});
+var _cacherequest2 = _interopRequireDefault(_cacherequest);
 
 var _deltafetchrequest = require('./src/deltafetchrequest');
 
-Object.keys(_deltafetchrequest).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _deltafetchrequest[key];
-    }
-  });
-});
+var _deltafetchrequest2 = _interopRequireDefault(_deltafetchrequest);
+
+var _headers = require('./src/headers');
+
+var _headers2 = _interopRequireDefault(_headers);
 
 var _kinveyrequest = require('./src/kinveyrequest');
 
-Object.keys(_kinveyrequest).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _kinveyrequest[key];
-    }
-  });
-});
+var _kinveyrequest2 = _interopRequireDefault(_kinveyrequest);
 
 var _kinveyresponse = require('./src/kinveyresponse');
 
-Object.keys(_kinveyresponse).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _kinveyresponse[key];
-    }
-  });
-});
+var _kinveyresponse2 = _interopRequireDefault(_kinveyresponse);
 
 var _networkrequest = require('./src/networkrequest');
 
-Object.keys(_networkrequest).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _networkrequest[key];
-    }
-  });
-});
+var _networkrequest2 = _interopRequireDefault(_networkrequest);
 
 var _request = require('./src/request');
 
-Object.keys(_request).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _request[key];
-    }
-  });
-});
+var _request2 = _interopRequireDefault(_request);
 
 var _response = require('./src/response');
 
-Object.keys(_response).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _response[key];
-    }
-  });
-});
+var _response2 = _interopRequireDefault(_response);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// Export
+exports.AuthType = _kinveyrequest.AuthType;
+exports.CacheRequest = _cacherequest2.default;
+exports.DeltaFetchRequest = _deltafetchrequest2.default;
+exports.Headers = _headers2.default;
+exports.KinveyRequest = _kinveyrequest2.default;
+exports.KinveyResponse = _kinveyresponse2.default;
+exports.NetworkRequest = _networkrequest2.default;
+exports.Properties = _kinveyrequest.Properties;
+exports.RequestMethod = _request.RequestMethod;
+exports.Response = _response2.default;
+exports.StatusCode = _response.StatusCode;
+
+// Export default
+
+exports.default = _request2.default;

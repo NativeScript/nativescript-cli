@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.KinveyResponse = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -12,6 +11,10 @@ var _get = function get(object, property, receiver) { if (object === null) objec
 var _errors = require('../../errors');
 
 var _response = require('./response');
+
+var _response2 = _interopRequireDefault(_response);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -22,7 +25,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /**
  * @private
  */
-var KinveyResponse = exports.KinveyResponse = function (_Response) {
+var KinveyResponse = function (_Response) {
   _inherits(KinveyResponse, _Response);
 
   function KinveyResponse() {
@@ -77,4 +80,6 @@ var KinveyResponse = exports.KinveyResponse = function (_Response) {
   }]);
 
   return KinveyResponse;
-}(_response.Response);
+}(_response2.default);
+
+exports.default = KinveyResponse;

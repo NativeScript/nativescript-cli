@@ -15,9 +15,11 @@ var _request = require('../../request');
 
 var _errors = require('../../errors');
 
-var _pinkie = require('pinkie');
+var _utils = require('../../utils');
 
-var _pinkie2 = _interopRequireDefault(_pinkie);
+var _promise = require('core-js/es6/promise');
+
+var _promise2 = _interopRequireDefault(_promise);
 
 var _regeneratorRuntime = require('regenerator-runtime');
 
@@ -37,7 +39,7 @@ var _isString2 = _interopRequireDefault(_isString);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _pinkie2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _pinkie2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _promise2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _promise2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -85,7 +87,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
 
       var clientId = this.client.appKey;
 
-      var promise = _pinkie2.default.resolve().then(function () {
+      var promise = _promise2.default.resolve().then(function () {
         if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
           // Step 1: Request a code
           return _this2.requestCodeWithPopup(clientId, redirectUri, options);
@@ -155,7 +157,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
 
       var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
-      var promise = _pinkie2.default.resolve().then(function () {
+      var promise = _promise2.default.resolve().then(function () {
         var pathname = '/';
 
         if (options.version) {
@@ -168,8 +170,8 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
           pathname = _path2.default.join(pathname, version.indexOf('v') === 0 ? version : 'v' + version);
         }
 
-        if (global.Kinvey.Popup) {
-          var popup = new global.Kinvey.Popup();
+        if (_utils.Popup) {
+          var popup = new _utils.Popup();
           return popup.open(_url2.default.format({
             protocol: _this3.client.micProtocol,
             host: _this3.client.micHost,
@@ -182,9 +184,9 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
           }));
         }
 
-        throw new _errors.KinveyError('Kinvey.Popup is undefined.' + (' Unable to login using authorization grant ' + AuthorizationGrant.AuthorizationCodeLoginPage + '.'));
+        throw new _errors.KinveyError('Popup is undefined.' + (' Unable to login using authorization grant ' + AuthorizationGrant.AuthorizationCodeLoginPage + '.'));
       }).then(function (popup) {
-        var promise = new _pinkie2.default(function (resolve, reject) {
+        var promise = new _promise2.default(function (resolve, reject) {
           var redirected = false;
 
           function loadCallback(event) {
@@ -239,7 +241,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
     value: function requestCodeWithUrl(loginUrl, clientId, redirectUri) {
       var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
-      var promise = _pinkie2.default.resolve().then(function () {
+      var promise = _promise2.default.resolve().then(function () {
         var request = new _request.KinveyRequest({
           method: _request.RequestMethod.POST,
           headers: {

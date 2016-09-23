@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.DeltaFetchRequest = undefined;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
@@ -15,19 +14,25 @@ var _get = function get(object, property, receiver) { if (object === null) objec
 
 var _kinveyrequest = require('./kinveyrequest');
 
+var _kinveyrequest2 = _interopRequireDefault(_kinveyrequest);
+
 var _request3 = require('./request');
 
 var _cacherequest = require('./cacherequest');
 
+var _cacherequest2 = _interopRequireDefault(_cacherequest);
+
 var _response = require('./response');
+
+var _response2 = _interopRequireDefault(_response);
 
 var _errors = require('../../errors');
 
 var _query3 = require('../../query');
 
-var _pinkie = require('pinkie');
+var _promise = require('core-js/es6/promise');
 
-var _pinkie2 = _interopRequireDefault(_pinkie);
+var _promise2 = _interopRequireDefault(_promise);
 
 var _regeneratorRuntime = require('regenerator-runtime');
 
@@ -63,7 +68,7 @@ var _isString2 = _interopRequireDefault(_isString);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _pinkie2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _pinkie2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _promise2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _promise2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -80,7 +85,7 @@ var maxIdsPerRequest = 200;
  * @private
  */
 
-var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
+var DeltaFetchRequest = function (_KinveyRequest) {
   _inherits(DeltaFetchRequest, _KinveyRequest);
 
   function DeltaFetchRequest() {
@@ -107,7 +112,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
 
               case 3:
                 _context2.prev = 3;
-                _request = new _cacherequest.CacheRequest({
+                _request = new _cacherequest2.default({
                   method: _request3.RequestMethod.GET,
                   url: this.url,
                   headers: this.headers,
@@ -157,7 +162,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
                           query = new _query3.Query((0, _result2.default)(_this2.query, 'toJSON', _this2.query));
 
                           query.fields = [idAttribute, kmdAttribute + '.lmt'];
-                          request = new _kinveyrequest.KinveyRequest({
+                          request = new _kinveyrequest2.default({
                             method: _request3.RequestMethod.GET,
                             url: _this2.url,
                             headers: _this2.headers,
@@ -203,7 +208,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
                             ids = deltaSetIds.slice(i, deltaSetIds.length > maxIdsPerRequest + i ? maxIdsPerRequest : deltaSetIds.length);
 
                             _query.contains(idAttribute, ids);
-                            _request2 = new _kinveyrequest.KinveyRequest({
+                            _request2 = new _kinveyrequest2.default({
                               method: _request3.RequestMethod.GET,
                               url: _this2.url,
                               headers: _this2.headers,
@@ -219,7 +224,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
                           }
 
                           _context.next = 17;
-                          return _pinkie2.default.all(promises);
+                          return _promise2.default.all(promises);
 
                         case 17:
                           responses = _context.sent;
@@ -232,7 +237,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
                             }
 
                             return result;
-                          }, new _response.Response({
+                          }, new _response2.default({
                             statusCode: _response.StatusCode.Ok,
                             data: []
                           }));
@@ -270,7 +275,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
                 return _context2.abrupt('return', _ret.v);
 
               case 20:
-                request = new _kinveyrequest.KinveyRequest({
+                request = new _kinveyrequest2.default({
                   method: _request3.RequestMethod.GET,
                   url: this.url,
                   headers: this.headers,
@@ -325,4 +330,6 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
   }]);
 
   return DeltaFetchRequest;
-}(_kinveyrequest.KinveyRequest);
+}(_kinveyrequest2.default);
+
+exports.default = DeltaFetchRequest;

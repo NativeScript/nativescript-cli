@@ -3,10 +3,20 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Request = exports.Headers = exports.RequestMethod = undefined;
+exports.RequestMethod = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); // eslint-disable-line no-unused-vars
 
+
+var _errors = require('../../errors');
+
+var _response = require('./response');
+
+var _response2 = _interopRequireDefault(_response);
+
+var _headers = require('./headers');
+
+var _headers2 = _interopRequireDefault(_headers);
 
 var _regeneratorRuntime = require('regenerator-runtime');
 
@@ -24,10 +34,6 @@ var _assign = require('lodash/assign');
 
 var _assign2 = _interopRequireDefault(_assign);
 
-var _forEach = require('lodash/forEach');
-
-var _forEach2 = _interopRequireDefault(_forEach);
-
 var _isString = require('lodash/isString');
 
 var _isString2 = _interopRequireDefault(_isString);
@@ -35,10 +41,6 @@ var _isString2 = _interopRequireDefault(_isString);
 var _isNumber = require('lodash/isNumber');
 
 var _isNumber2 = _interopRequireDefault(_isNumber);
-
-var _isPlainObject = require('lodash/isPlainObject');
-
-var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -66,129 +68,7 @@ exports.RequestMethod = RequestMethod;
  * @private
  */
 
-var Headers = exports.Headers = function () {
-  function Headers() {
-    var headers = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-
-    _classCallCheck(this, Headers);
-
-    this.headers = {};
-    this.addAll(headers);
-  }
-
-  _createClass(Headers, [{
-    key: 'get',
-    value: function get(name) {
-      if (name) {
-        if (!(0, _isString2.default)(name)) {
-          name = String(name);
-        }
-
-        var headers = this.headers;
-        return headers[name.toLowerCase()];
-      }
-
-      return undefined;
-    }
-  }, {
-    key: 'set',
-    value: function set(name, value) {
-      if (name === undefined || name === null || value === undefined || value === null) {
-        throw new Error('A name and value must be provided to set a header.');
-      }
-
-      if (!(0, _isString2.default)(name)) {
-        name = String(name);
-      }
-
-      var headers = this.headers;
-      name = name.toLowerCase();
-
-      if (!(0, _isString2.default)(value)) {
-        headers[name] = JSON.stringify(value);
-      } else {
-        headers[name] = value;
-      }
-
-      this.headers = headers;
-      return this;
-    }
-  }, {
-    key: 'has',
-    value: function has(name) {
-      return !!this.get(name);
-    }
-  }, {
-    key: 'add',
-    value: function add() {
-      var header = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-
-      return this.set(header.name, header.value);
-    }
-  }, {
-    key: 'addAll',
-    value: function addAll() {
-      var _this = this;
-
-      var headers = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-
-      if (headers instanceof Headers) {
-        headers = headers.toPlainObject();
-      }
-
-      if (!(0, _isPlainObject2.default)(headers)) {
-        throw new Error('Headers argument must be an object.');
-      }
-
-      var names = Object.keys(headers);
-      (0, _forEach2.default)(names, function (name) {
-        var value = headers[name];
-        _this.set(name, value);
-      });
-      return this;
-    }
-  }, {
-    key: 'remove',
-    value: function remove(name) {
-      if (name) {
-        if (!(0, _isString2.default)(name)) {
-          name = String(name);
-        }
-
-        var headers = this.headers;
-        delete headers[name.toLowerCase()];
-        this.headers = headers;
-      }
-
-      return this;
-    }
-  }, {
-    key: 'clear',
-    value: function clear() {
-      this.headers = {};
-      return this;
-    }
-  }, {
-    key: 'toPlainObject',
-    value: function toPlainObject() {
-      return this.headers;
-    }
-  }, {
-    key: 'toString',
-    value: function toString() {
-      return JSON.stringify(this.toPlainObject());
-    }
-  }]);
-
-  return Headers;
-}();
-
-/**
- * @private
- */
-
-
-var Request = exports.Request = function () {
+var Request = function () {
   function Request() {
     var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
@@ -196,7 +76,7 @@ var Request = exports.Request = function () {
 
     options = (0, _assign2.default)({
       method: RequestMethod.GET,
-      headers: new Headers(),
+      headers: new _headers2.default(),
       url: '',
       body: null,
       timeout: defaultTimeout,
@@ -223,10 +103,45 @@ var Request = exports.Request = function () {
     key: 'execute',
     value: function () {
       var _ref = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee() {
+        var response;
         return _regeneratorRuntime2.default.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
+                if (this.rack) {
+                  _context.next = 2;
+                  break;
+                }
+
+                throw new _errors.KinveyError('Unable to execute the request. Please provide a rack to execute the request.');
+
+              case 2:
+                _context.next = 4;
+                return this.rack.execute(this.toPlainObject());
+
+              case 4:
+                response = _context.sent;
+
+                if (response) {
+                  _context.next = 7;
+                  break;
+                }
+
+                throw new _errors.NoResponseError();
+
+              case 7:
+
+                if (!(response instanceof _response2.default)) {
+                  response = new _response2.default({
+                    statusCode: response.statusCode,
+                    headers: response.headers,
+                    data: response.data
+                  });
+                }
+
+                return _context.abrupt('return', response);
+
+              case 9:
               case 'end':
                 return _context.stop();
             }
@@ -281,8 +196,8 @@ var Request = exports.Request = function () {
       return this._headers;
     },
     set: function set(headers) {
-      if (!(headers instanceof Headers)) {
-        headers = new Headers(headers);
+      if (!(headers instanceof _headers2.default)) {
+        headers = new _headers2.default(headers);
       }
 
       this._headers = headers;
@@ -339,3 +254,5 @@ var Request = exports.Request = function () {
 
   return Request;
 }();
+
+exports.default = Request;

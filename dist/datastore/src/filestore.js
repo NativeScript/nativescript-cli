@@ -19,9 +19,9 @@ var _networkstore = require('./networkstore');
 
 var _utils = require('../../utils');
 
-var _pinkie = require('pinkie');
+var _promise = require('core-js/es6/promise');
 
-var _pinkie2 = _interopRequireDefault(_pinkie);
+var _promise2 = _interopRequireDefault(_promise);
 
 var _regeneratorRuntime = require('regenerator-runtime');
 
@@ -49,7 +49,7 @@ var _isNumber2 = _interopRequireDefault(_isNumber);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _pinkie2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _pinkie2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _promise2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _promise2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -149,7 +149,7 @@ var FileStore = exports.FileStore = function (_NetworkStore) {
                   break;
                 }
 
-                return _context.abrupt('return', _pinkie2.default.all((0, _map2.default)(files, function (file) {
+                return _context.abrupt('return', _promise2.default.all((0, _map2.default)(files, function (file) {
                   return _this2.downloadByUrl(file._downloadURL, options);
                 })));
 
@@ -513,8 +513,8 @@ var FileStore = exports.FileStore = function (_NetworkStore) {
                 });
 
                 request.headers.addAll(headers.toPlainObject());
-                request.headers.set('content-length', fileSliceSize);
-                request.headers.set('content-range', 'bytes ' + options.start + '-' + (metadata.size - 1) + '/' + metadata.size);
+                request.headers.set('Content-Length', fileSliceSize);
+                request.headers.set('Content-Range', 'bytes ' + options.start + '-' + (metadata.size - 1) + '/' + metadata.size);
                 _context5.next = 15;
                 return request.execute(true);
 
@@ -564,7 +564,7 @@ var FileStore = exports.FileStore = function (_NetworkStore) {
 
                   // Upload the remaining protion of the file after the backoff time has passed
                   return {
-                    v: new _pinkie2.default(function (resolve) {
+                    v: new _promise2.default(function (resolve) {
                       setTimeout(function () {
                         options.count += 1;
                         resolve(_this3.uploadToGCS(uploadUrl, headers, file, metadata, options));

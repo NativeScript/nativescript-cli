@@ -18,9 +18,9 @@ var _client = require('../../client');
 
 var _query = require('../../query');
 
-var _pinkie = require('pinkie');
+var _promise = require('core-js/es6/promise');
 
-var _pinkie2 = _interopRequireDefault(_pinkie);
+var _promise2 = _interopRequireDefault(_promise);
 
 var _regeneratorRuntime = require('regenerator-runtime');
 
@@ -48,7 +48,7 @@ var _isString2 = _interopRequireDefault(_isString);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _pinkie2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _pinkie2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _promise2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _promise2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -304,7 +304,7 @@ var SyncManager = exports.SyncManager = function () {
 
                 // Process the array of entities
                 _context7.next = 4;
-                return _pinkie2.default.all((0, _map2.default)(entities, function () {
+                return _promise2.default.all((0, _map2.default)(entities, function () {
                   var _ref7 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee6(entity) {
                     var id, query, findRequest, response, syncEntities, syncEntity, request;
                     return _regeneratorRuntime2.default.wrap(function _callee6$(_context6) {
@@ -545,7 +545,7 @@ var SyncManager = exports.SyncManager = function () {
                         while (1) {
                           switch (_context13.prev = _context13.next) {
                             case 0:
-                              promise = new _pinkie2.default(function () {
+                              promise = new _promise2.default(function () {
                                 var _ref11 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee12(resolve) {
                                   var batch, results;
                                   return _regeneratorRuntime2.default.wrap(function _callee12$(_context12) {
@@ -558,7 +558,7 @@ var SyncManager = exports.SyncManager = function () {
 
                                           // Get the results of syncing all of the entities
                                           _context12.next = 4;
-                                          return _pinkie2.default.all((0, _map2.default)(batch, function (syncEntity) {
+                                          return _promise2.default.all((0, _map2.default)(batch, function (syncEntity) {
                                             var entityId = syncEntity.entityId;
                                             var state = syncEntity.state;
                                             var method = state.method;

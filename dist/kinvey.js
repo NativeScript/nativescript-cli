@@ -216,11 +216,9 @@ var Kinvey = function () {
 Kinvey.Acl = _entity.Acl;
 Kinvey.Aggregation = _aggregation.Aggregation;
 Kinvey.AuthorizationGrant = _social.AuthorizationGrant;
-Kinvey.CacheRequest = _request.CacheRequest;
 Kinvey.DataStoreType = _datastore.DataStoreType;
 Kinvey.Log = _utils.Log;
 Kinvey.Metadata = _entity.Metadata;
-Kinvey.NetworkRequest = _request.NetworkRequest;
 Kinvey.Query = _query.Query;
 Kinvey.SocialIdentity = _social.SocialIdentity;
 
