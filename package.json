@@ -4,18 +4,19 @@
   "description": "Kinvey JavaScript SDK Core",
   "main": "./dist/export.js",
   "scripts": {
-    "build": "npm run clean && babel src --out-dir dist",
+    "build": "npm run clean && npm run transpile",
     "clean": "del dist coverage",
     "cover": "istanbul cover _mocha -- --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/setup test/unit",
     "docs": "esdoc -c esdoc.json",
     "lint": "npm run lint:src",
     "lint:src": "eslint src/**",
     "lint:test": "eslint test/unit/**",
+    "preversion": "npm test",
+    "postversion": "git push && git push --tags",
     "test": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/setup test/unit",
     "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/setup test/unit",
-    "preversion": "npm test",
-    "version": "npm run build && git add -A dist",
-    "postversion": "git push && git push --tags"
+    "transpile": "BABEL_ENV=production babel --no-comments --out-dir dist src",
+    "version": "npm run build && git add -A dist"
   },
   "repository": {
     "type": "git",
