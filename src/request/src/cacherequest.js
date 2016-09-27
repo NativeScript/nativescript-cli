@@ -5,8 +5,6 @@ import { Client } from '../../client';
 import { CacheRack } from 'kinvey-javascript-rack';
 import UrlPattern from 'url-pattern';
 import url from 'url';
-import assign from 'lodash/assign';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
 /**
  * @private
@@ -14,13 +12,6 @@ import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-
 export default class CacheRequest extends Request {
   constructor(options = {}) {
     super(options);
-
-    // Set default options
-    options = assign({
-      query: null,
-      client: Client.sharedInstance()
-    }, options);
-
     this.query = options.query;
     this.client = options.client;
     this.rack = new CacheRack();
@@ -41,7 +32,7 @@ export default class CacheRequest extends Request {
   }
 
   get client() {
-    return this._client;
+    return this._client || Client.sharedInstance();
   }
 
   set client(client) {
@@ -54,34 +45,33 @@ export default class CacheRequest extends Request {
     this._client = client;
   }
 
-  async execute() {
-    let response = await super.execute();
+  execute() {
+    return super.execute().then((response) => {
+      if (!(response instanceof KinveyResponse)) {
+        response = new KinveyResponse({
+          statusCode: response.statusCode,
+          headers: response.headers,
+          data: response.data
+        });
+      }
 
-    if (!(response instanceof KinveyResponse)) {
-      response = new KinveyResponse({
-        statusCode: response.statusCode,
-        headers: response.headers,
-        data: response.data
-      });
-    }
+      // Throw the response error if we did not receive
+      // a successfull response
+      if (!response.isSuccess()) {
+        throw response.error;
+      }
 
-    // Throw the response error if we did not receive
-    // a successfull response
-    if (!response.isSuccess()) {
-      throw response.error;
-    }
+      // If a query was provided then process the data with the query
+      if (this.query) {
+        response.data = this.query.process(response.data);
+      }
 
-    // If a query was provided then process the data with the query
-    if (this.query) {
-      response.data = this.query.process(response.data);
-    }
-
-    // Just return the response
-    return response;
+      // Just return the response
+      return response;
+    });
   }
 
-  async cancel() {
-    await super.cancel();
+  cancel() {
     return this.rack.cancel();
   }
 
