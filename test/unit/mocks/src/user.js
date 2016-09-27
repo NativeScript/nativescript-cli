@@ -3,7 +3,7 @@ import { Client } from '../../../../src/client';
 import { randomString } from '../../../../src/utils';
 import nock from 'nock';
 
-export class TestUser extends User {
+export default class TestUser extends User {
   static getActiveUser(client = Client.sharedInstance()) {
     const data = client.activeUser;
     let user = null;

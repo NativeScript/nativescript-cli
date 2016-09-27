@@ -1,6 +1,5 @@
-import { Kinvey } from '../../src/kinvey';
+import { TestKinvey as Kinvey, TestUser } from './mocks';
 import { Client } from '../../src/client';
-import  { TestUser } from './helpers';
 import { randomString } from '../../src/utils';
 import expect from 'expect';
 import nock from 'nock';

@@ -1,5 +1,4 @@
-import { Kinvey } from '../../src/kinvey';
-import { TestUser } from './helpers';
+import { TestKinvey as Kinvey, TestUser as User } from './mocks';
 import nock from 'nock';
 
 // Record for nock
@@ -19,10 +18,10 @@ after(function() {
 });
 
 // Login a user
-beforeEach(() => TestUser.login('test', 'test'));
+beforeEach(() => User.login('test', 'test'));
 
 // Logout the active user
-afterEach(() => TestUser.logout());
+afterEach(() => User.logout());
 
 // Clean up nock
 afterEach(function() {
