@@ -1,4 +1,4 @@
-import Kinvey from 'kinvey-phonegap-sdk';
+import { Kinvey } from 'kinvey-javascript-sdk-core';
 
 // Export
 export default Kinvey;
