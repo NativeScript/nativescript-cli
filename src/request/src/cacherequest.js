@@ -1,8 +1,5 @@
 import Request from './request';
 import KinveyResponse from './kinveyresponse';
-import { KinveyError } from '../../errors';
-import { Client } from '../../client';
-import { CacheRack } from 'kinvey-javascript-rack';
 import UrlPattern from 'url-pattern';
 import url from 'url';
 
@@ -14,7 +11,7 @@ export default class CacheRequest extends Request {
     super(options);
     this.query = options.query;
     this.client = options.client;
-    this.rack = new CacheRack();
+    this.rack = this.client.cacheRack;
   }
 
   get url() {
@@ -29,20 +26,6 @@ export default class CacheRequest extends Request {
     this.appKey = appKey;
     this.collection = collection;
     this.entityId = entityId;
-  }
-
-  get client() {
-    return this._client || Client.sharedInstance();
-  }
-
-  set client(client) {
-    if (client) {
-      if (!(client instanceof Client)) {
-        throw new KinveyError('client must be an instance of the Client class.');
-      }
-    }
-
-    this._client = client;
   }
 
   execute() {
@@ -69,10 +52,6 @@ export default class CacheRequest extends Request {
       // Just return the response
       return response;
     });
-  }
-
-  cancel() {
-    return this.rack.cancel();
   }
 
   toPlainObject() {

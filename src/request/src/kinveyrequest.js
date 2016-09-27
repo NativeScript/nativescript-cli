@@ -2,8 +2,7 @@ import { RequestMethod } from './request';
 import Headers from './headers';
 import NetworkRequest from './networkrequest';
 import KinveyResponse from './kinveyresponse';
-import { KinveyError, InvalidCredentialsError, NoActiveUserError } from '../../errors';
-import { Client } from '../../client';
+import { InvalidCredentialsError, NoActiveUserError } from '../../errors';
 import { SocialIdentity } from '../../social';
 import { Device, setActiveUser, getIdentitySession, setIdentitySession } from '../../utils';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
@@ -156,25 +155,16 @@ export class Properties extends Headers {}
 export default class KinveyRequest extends NetworkRequest {
   constructor(options = {}) {
     super(options);
-
-    // Set default options
-    options = assign({
-      authType: AuthType.None,
-      query: null,
-      apiVersion: defaultApiVersion,
-      properties: new Properties(),
-      skipBL: false,
-      trace: false,
-      client: Client.sharedInstance()
-    }, options);
-
-    this.authType = options.authType;
+    this.authType = options.authType || AuthType.None;
     this.query = options.query;
-    this.apiVersion = options.apiVersion;
-    this.properties = options.properties;
-    this.client = options.client;
-    this.skipBL = options.skipBL;
-    this.trace = options.trace;
+    this.apiVersion = defaultApiVersion;
+    this.properties = options.properties || new Properties();
+    this.skipBL = options.skipBL === true;
+    this.trace = options.trace === true;
+  }
+
+  get appVersion() {
+    return this.client.appVersion;
   }
 
   get headers() {
@@ -334,22 +324,6 @@ export default class KinveyRequest extends NetworkRequest {
     }
 
     this._properties = properties;
-  }
-
-  get client() {
-    return this._client;
-  }
-
-  set client(client) {
-    if (client) {
-      if (!(client instanceof Client)) {
-        throw new KinveyError('client must be an instance of the Client class.');
-      }
-
-      this.appVersion = client.appVersion;
-    }
-
-    this._client = client;
   }
 
   async execute(rawResponse = false) {
