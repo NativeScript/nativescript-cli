@@ -1,3 +1,4 @@
+import Rack from 'kinvey-javascript-rack';
 import { KinveyError } from './errors';
 import { getActiveUser } from './utils';
 import url from 'url';
@@ -108,6 +109,16 @@ export class Client {
      * @type {?string}
      */
     this.appVersion = options.appVersion;
+
+    /**
+     * @type {Rack}
+     */
+    this.cacheRack = options.cacheRack;
+
+    /**
+     * @type {Rack}
+     */
+    this.networkRack = options.networkRack;
   }
 
   /**
@@ -190,6 +201,50 @@ export class Client {
     }
 
     this._appVersion = appVersion;
+  }
+
+  /**
+   * Get the cache rack used by the client.
+   */
+  get cacheRack() {
+    return this._cacheRack || global.KinveyCacheRack;
+  }
+
+  /**
+   * Set the cache rack used by the client.
+   *
+   * @param  {Rack} rack  Cache rack.
+   */
+  set cacheRack(rack) {
+    if (rack) {
+      if (!(rack instanceof Rack)) {
+        throw new KinveyError('rack must be an instance of the Rack class.');
+      }
+    }
+
+    this._cacheRack = rack;
+  }
+
+  /**
+   * Get the network rack used by the client.
+   */
+  get networkRack() {
+    return this._networkRack || global.KinveyNetworkRack;
+  }
+
+  /**
+   * Set the network rack used by the client.
+   *
+   * @param  {Rack} rack  Network rack.
+   */
+  set networkRack(rack) {
+    if (rack) {
+      if (!(rack instanceof Rack)) {
+        throw new KinveyError('rack must be an instance of the Rack class.');
+      }
+    }
+
+    this._networkRack = rack;
   }
 
   /**

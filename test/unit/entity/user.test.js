@@ -1,7 +1,7 @@
 import { User } from '../../../src/entity';
 import { randomString } from '../../../src/utils';
 import { ActiveUserError, KinveyError } from '../../../src/errors';
-import { TestUser } from '../helpers';
+import { TestUser } from '../mocks';
 import expect from 'expect';
 import nock from 'nock';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
