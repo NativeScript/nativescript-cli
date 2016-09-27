@@ -1,14 +1,4 @@
-import { Kinvey } from 'kinvey-phonegap-sdk';
-import { HttpMiddleware } from './rack';
-import { Device } from './device';
-import { Popup } from './popup';
-import { Promise } from 'es6-promise';
-
-// Add Modules
-Kinvey.Device = Device;
-Kinvey.Popup = Popup;
-Kinvey.Promise = Promise;
-Kinvey.HttpMiddleware = HttpMiddleware;
+import Kinvey from 'kinvey-phonegap-sdk';
 
 // Export
-export { Kinvey };
+export default Kinvey;

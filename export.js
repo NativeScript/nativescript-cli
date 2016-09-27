@@ -1,9 +1,11 @@
-export * from './rack';
-export * from './device';
-export * from './kinvey';
-export * from './popup';
-export * from './ngKinvey';
+import Kinvey from './kinvey';
+import KinveyModule from './ngKinvey';
 
-// Set default export
-import { KinveyModule } from './ngKinvey';
+// Export
+export {
+  Kinvey,
+  KinveyModule
+};
+
+// Export default
 export default KinveyModule;
