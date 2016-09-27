@@ -22,6 +22,9 @@ export class Client {
    * @param {string}    [options.masterSecret]                             App Master Secret
    * @param {string}    [options.encryptionKey]                            App Encryption Key
    * @param {string}    [options.appVersion]                               App Version
+   * @param {Rack}      [options.cacheRack]                                Cache Rack
+   * @param {Rack}      [options.networkRack]                              Network Rack
+   * @param {Device}    [options.device]                                   Device
    * @return {Client}                                                      An instance of the Client class.
    *
    * @example
@@ -119,6 +122,11 @@ export class Client {
      * @type {Rack}
      */
     this.networkRack = options.networkRack;
+
+    /**
+     * @type {Device}
+     */
+    this.device = options.device;
   }
 
   /**

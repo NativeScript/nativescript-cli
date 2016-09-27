@@ -4,7 +4,7 @@ import NetworkRequest from './networkrequest';
 import KinveyResponse from './kinveyresponse';
 import { InvalidCredentialsError, NoActiveUserError } from '../../errors';
 import { SocialIdentity } from '../../social';
-import { Device, setActiveUser, getIdentitySession, setIdentitySession } from '../../utils';
+import { setActiveUser, getIdentitySession, setIdentitySession } from '../../utils';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import qs from 'qs';
@@ -12,6 +12,7 @@ import appendQuery from 'append-query';
 import assign from 'lodash/assign';
 import isNumber from 'lodash/isNumber';
 import isEmpty from 'lodash/isEmpty';
+import isFunction from 'lodash/isFunction';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
@@ -231,7 +232,12 @@ export default class KinveyRequest extends NetworkRequest {
     }
 
     // Add the X-Kinvey-Device-Information header
-    headers.set('X-Kinvey-Device-Information', Device.toString());
+    if (this.client.device && isFunction(this.client.device, 'toString')) {
+      headers.set('X-Kinvey-Device-Information', this.client.device.toString());
+    } else {
+      headers.remove('X-Kinvey-Device-Information');
+    }
+
 
     // Add or remove the Authorization header
     if (this.authType) {
