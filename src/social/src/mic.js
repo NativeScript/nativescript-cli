@@ -2,7 +2,6 @@ import { Social } from './social';
 import { SocialIdentity } from './enums';
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
 import { KinveyError } from '../../errors';
-import { Popup } from '../../utils';
 import Promise from 'core-js/es6/promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import path from 'path';
@@ -54,7 +53,7 @@ export class MobileIdentityConnect extends Social {
           'Please use a supported authorization grant.');
       })
       .then(code => this.requestToken(code, clientId, redirectUri, options)) // Step 3: Request a token
-      .then(session => {
+      .then((session) => {
         session.client_id = clientId;
         session.redirect_uri = redirectUri;
         session.protocol = this.client.micProtocol;
@@ -112,7 +111,8 @@ export class MobileIdentityConnect extends Social {
         pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
       }
 
-      if (Popup) {
+      if (this.client.popupClass) {
+        const Popup = this.client.popupClass;
         const popup = new Popup();
         return popup.open(url.format({
           protocol: this.client.micProtocol,

@@ -124,9 +124,14 @@ export class Client {
     this.networkRack = options.networkRack;
 
     /**
+     * @type {Popup}
+     */
+    this.popupClass = options.popupClass;
+
+    /**
      * @type {Device}
      */
-    this.device = options.device;
+    this.deviceClass = options.deviceClass;
   }
 
   /**

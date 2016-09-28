@@ -2,7 +2,7 @@
 import { Social } from './social';
 import { SocialIdentity } from './enums';
 import { KinveyError } from '../../errors';
-import { randomString, Popup } from '../../utils';
+import { randomString } from '../../utils';
 import Promise from 'core-js/es6/promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import assign from 'lodash/assign';
@@ -22,7 +22,7 @@ export class Facebook extends Social {
   }
 
   isSupported() {
-    return !!Popup;
+    return !!this.client.popupClass;
   }
 
   async login(clientId, options = {}) {
@@ -48,6 +48,7 @@ export class Facebook extends Social {
     const promise = new Promise((resolve, reject) => {
       const redirectUri = options.redirectUri || global.location.href;
       const originalState = randomString();
+      const Popup = this.client.popupClass;
       const popup = new Popup();
       let redirected = false;
 
