@@ -145,9 +145,21 @@ export class PluginsService implements IPluginsService {
 	public ensureAllDependenciesAreInstalled(): IFuture<void> {
 		return (() => {
 			let installedDependencies = this.$fs.exists(this.nodeModulesPath).wait() ? this.$fs.readDirectory(this.nodeModulesPath).wait() : [];
+			// Scoped dependencies are not on the root of node_modules,
+			// so we have to list the contents of all directories, starting with @
+			// and add them to installed dependencies, so we can apply correct comparison against package.json's dependencies.
+			_(installedDependencies)
+				.filter(dependencyName => _.startsWith(dependencyName, "@"))
+				.each(scopedDependencyDir => {
+					let contents = this.$fs.readDirectory(path.join(this.nodeModulesPath, scopedDependencyDir)).wait();
+					installedDependencies = installedDependencies.concat(...contents.map(dependencyName => `${scopedDependencyDir}/${dependencyName}`));
+				});
+
 			let packageJsonContent = this.$fs.readJson(this.getPackageJsonFilePath()).wait();
 			let allDependencies = _.keys(packageJsonContent.dependencies).concat(_.keys(packageJsonContent.devDependencies));
-			if (this.$options.force || _.difference(allDependencies, installedDependencies).length) {
+			let notInstalledDependencies = _.difference(allDependencies, installedDependencies);
+			if (this.$options.force || notInstalledDependencies.length) {
+				this.$logger.trace("Npm install will be called from CLI. Force option is: ", this.$options.force, " Not installed dependencies are: ", notInstalledDependencies);
 				this.$npm.install(this.$projectData.projectDir, this.$projectData.projectDir, { "ignore-scripts": this.$options.ignoreScripts }).wait();
 			}
 		}).future<void>()();
