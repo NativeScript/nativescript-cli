@@ -9,6 +9,7 @@ interface INpmOpts {
 
 export class NodePackageManager implements INodePackageManager {
 	constructor(private $childProcess: IChildProcess,
+		private $logger: ILogger,
 		private $options: IOptions) { }
 
 	public getCache(): string {
@@ -37,15 +38,46 @@ export class NodePackageManager implements INodePackageManager {
 	}
 
 	public install(packageName: string, pathToSave: string, config?: any): IFuture<any> {
-		if (this.$options.disableNpmInstall) {
-			return Future.fromResult();
-		}
-		if (this.$options.ignoreScripts) {
-			config = config || {};
-			config["ignore-scripts"] = true;
-		}
+		return (() => {
+			if (this.$options.disableNpmInstall) {
+				return;
+			}
+			if (this.$options.ignoreScripts) {
+				config = config || {};
+				config["ignore-scripts"] = true;
+			}
 
-		return this.loadAndExecute("install", [pathToSave, packageName], { config: config });
+			try {
+				return this.loadAndExecute("install", [pathToSave, packageName], { config: config }).wait();
+			} catch (err) {
+				if (err.code === "EPEERINVALID") {
+					// Not installed peer dependencies are treated by npm 2 as errors, but npm 3 treats them as warnings.
+					// We'll show them as warnings and let the user install them in case they are needed.
+					// The strucutre of the error object in such case is:
+					//	{ [Error: The package @angular/core@2.1.0-beta.0 does not satisfy its siblings' peerDependencies requirements!]
+					//   code: 'EPEERINVALID',
+					//   packageName: '@angular/core',
+					//   packageVersion: '2.1.0-beta.0',
+					//   peersDepending:
+					//    { '@angular/common@2.1.0-beta.0': '2.1.0-beta.0',
+					//      '@angular/compiler@2.1.0-beta.0': '2.1.0-beta.0',
+					//      '@angular/forms@2.1.0-beta.0': '2.1.0-beta.0',
+					//      '@angular/http@2.1.0-beta.0': '2.1.0-beta.0',
+					//      '@angular/platform-browser@2.1.0-beta.0': '2.1.0-beta.0',
+					//      '@angular/platform-browser-dynamic@2.1.0-beta.0': '2.1.0-beta.0',
+					//      '@angular/platform-server@2.1.0-beta.0': '2.1.0-beta.0',
+					//      '@angular/router@3.1.0-beta.0': '2.1.0-beta.0',
+					//      '@ngrx/effects@2.0.0': '^2.0.0',
+					//      '@ngrx/store@2.2.1': '^2.0.0',
+					//      'ng2-translate@2.5.0': '~2.0.0' } }
+					this.$logger.warn(err.message);
+					this.$logger.trace("Required peerDependencies are: ", err.peersDepending);
+				} else {
+					// All other errors should be handled by the caller code.
+					throw err;
+				}
+			}
+		}).future<any>()();
 	}
 
 	public uninstall(packageName: string, config?: any, path?: string): IFuture<any> {
