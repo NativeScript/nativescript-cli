@@ -410,6 +410,8 @@ export class HooksServiceStub implements IHooksService {
 	executeAfterHooks(commandName: string): IFuture<void> {
 		return Future.fromResult();
 	}
+
+	hookArgsName = "hookArgs";
 }
 
 export class LockFile {
