@@ -24,9 +24,6 @@ export class PluginsService implements IPluginsService {
 	private get $projectFilesManager(): IProjectFilesManager {
 		return this.$injector.resolve("projectFilesManager");
 	}
-	private get $broccoliBuilder(): IBroccoliBuilder {
-		return this.$injector.resolve("broccoliBuilder");
-	}
 
 	constructor(private $npm: INodePackageManager,
 		private $fs: IFileSystem,

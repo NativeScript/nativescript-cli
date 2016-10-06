@@ -52,3 +52,7 @@ interface IPlatformsData {
 	getPlatformData(platform: string): IPlatformData;
 }
 
+interface INodeModulesBuilder {
+	prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date): IFuture<void>;
+	cleanNodeModules(absoluteOutputPath: string, platform: string): void;
+}

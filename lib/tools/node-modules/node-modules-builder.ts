@@ -9,10 +9,9 @@ import {sleep} from "../../../lib/common/helpers";
 
 let glob = require("glob");
 
-export class Builder implements IBroccoliBuilder {
+export class NodeModulesBuilder implements INodeModulesBuilder {
 	constructor(
 		private $fs: IFileSystem,
-		private $nodeModulesTree: INodeModulesTree,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $injector: IInjector,
@@ -129,7 +128,7 @@ export class Builder implements IBroccoliBuilder {
 		});
 	}
 
-	public prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime?: Date): IFuture<void> {
+	public prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date): IFuture<void> {
 		return (() => {
 			if (!fs.existsSync(absoluteOutputPath)) {
 				// Force copying if the destination doesn't exist.
@@ -153,4 +152,4 @@ export class Builder implements IBroccoliBuilder {
 		shelljs.rm("-rf", absoluteOutputPath);
     }
 }
-$injector.register("broccoliBuilder", Builder);
+$injector.register("nodeModulesBuilder", NodeModulesBuilder);

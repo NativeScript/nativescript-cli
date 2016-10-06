@@ -2,7 +2,6 @@ import * as fs from "fs";
 import * as path from "path";
 import * as semver from "semver";
 import * as shelljs from "shelljs";
-import {wrapBroccoliPlugin} from './broccoli-plugin-wrapper-factory';
 import * as constants from "../../constants";
 import * as minimatch from "minimatch";
 import Future = require("fibers/future");
@@ -11,7 +10,7 @@ import Future = require("fibers/future");
  * Intercepts each directory as it is copied to the destination tempdir,
  * and tees a copy to the given path outside the tmp dir.
  */
-export class DestCopy implements IBroccoliPlugin {
+export class DestCopy {
 	private dependencies: IDictionary<any> = null;
 	private devDependencies: IDictionary<any> = null;
 
@@ -111,16 +110,6 @@ export class DestCopy implements IBroccoliPlugin {
 		shelljs.rm("-rf", path.join(targetDir, dependency.name, "node_modules"));
 	}
 
-	public rebuild(treeDiff: IDiffResult): void {
-		this.rebuildChangedDirectories(treeDiff.changedDirectories, "");
-
-		// Cache input tree
-		let projectFilePath = path.join(this.projectDir, constants.PACKAGE_JSON_FILE_NAME);
-		let projectFileContent = require(projectFilePath);
-		projectFileContent[constants.NATIVESCRIPT_KEY_NAME][constants.NODE_MODULE_CACHE_PATH_KEY_NAME] = this.inputPath;
-		fs.writeFileSync(projectFilePath, JSON.stringify(projectFileContent, null, "\t"), { encoding: "utf8" });
-	}
-
 	private getDevDependencies(projectDir: string): IDictionary<any> {
 		let projectFilePath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
 		let projectFileContent = require(projectFilePath);
@@ -152,4 +141,4 @@ export class DestCopy implements IBroccoliPlugin {
 	}
 }
 
-export default wrapBroccoliPlugin(DestCopy);
+export default DestCopy;

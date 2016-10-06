@@ -73,9 +73,7 @@ $injector.require("deviceLogProvider", "./common/mobile/device-log-provider");
 $injector.require("liveSyncProvider", "./providers/livesync-provider");
 $injector.require("projectFilesProvider", "./providers/project-files-provider");
 
-$injector.require("broccoliBuilder", "./tools/broccoli/builder");
-$injector.require("nodeModulesTree", "./tools/broccoli/trees/node-modules-tree");
-$injector.require("broccoliPluginWrapper", "./tools/broccoli/broccoli-plugin-wrapper");
+$injector.require("nodeModulesBuilder", "./tools/node-modules/node-modules-builder");
 
 $injector.require("pluginVariablesService", "./services/plugin-variables-service");
 $injector.require("pluginsService", "./services/plugins-service");
