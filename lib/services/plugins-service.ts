@@ -124,17 +124,13 @@ export class PluginsService implements IPluginsService {
 			}
 
 			if (exists) {
-				this.$fs.ensureDirectoryExists(pluginDestinationPath).wait();
-				shelljs.cp("-Rf", pluginData.fullPath, pluginDestinationPath);
-
+				//prepare platform speciffic files, .map and .ts files
 				this.$projectFilesManager.processPlatformSpecificFiles(pluginDestinationPath, platform).wait();
 
+				//deal with platforms/android folder in ns plugin
 				pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform);
 				platformData.platformProjectService.preparePluginNativeCode(pluginData).wait();
-
 				shelljs.rm("-rf", path.join(pluginDestinationPath, pluginData.name, "platforms"));
-				// Remove node_modules of the plugin. The destination path should have flattened node_modules.
-				shelljs.rm("-rf", path.join(pluginDestinationPath, pluginData.name, constants.NODE_MODULES_FOLDER_NAME));
 
 				// Show message
 				this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
