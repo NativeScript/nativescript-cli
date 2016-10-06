@@ -307,18 +307,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public prepareProject(): IFuture<void> {
-		return (() => {
-			let resDestinationDir = this.getAppResourcesDestinationDirectoryPath().wait();
-			let androidManifestPath = path.join(resDestinationDir, this.platformData.configurationFileName);
-
-			// In case the file is not correct, looks like we are still using the default AndroidManifest.xml from runtime and the current file (in res dir)
-			// should be merged with it.
-			if (this.isAndroidManifestFileCorrect(androidManifestPath).wait()) {
-				// Delete the AndroidManifest.xml file from res directory as the runtime will consider it as addition to the one in src/main and will try to merge them.
-				// However now they are the same file.
-				this.$fs.deleteFile(androidManifestPath).wait();
-			}
-		}).future<void>()();
+		return Future.fromResult();
 	}
 
 	public ensureConfigurationFileInAppResources(): IFuture<void> {
