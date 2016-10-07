@@ -7,7 +7,6 @@ import * as projectServiceBaseLib from "./platform-project-service-base";
 import {DeviceAndroidDebugBridge} from "../common/mobile/android/device-android-debug-bridge";
 import {AndroidDeviceHashService} from "../common/mobile/android/android-device-hash-service";
 import {EOL} from "os";
-import { createGUID } from "../common/helpers";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static VALUES_DIRNAME = "values";
@@ -506,28 +505,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			});
 
 		}).future<void>()();
-	}
-
-	private isAndroidManifestFileCorrect(pathToAndroidManifest: string): IFuture<boolean> {
-		return ((): boolean => {
-			try {
-				// Check if the AndroidManifest in app/App_Resouces is the correct one
-				// Use a real magic to detect if this is the correct file, by checking some mandatory strings.
-				let fileContent = this.$fs.readText(pathToAndroidManifest).wait(),
-					isFileCorrect = !!(~fileContent.indexOf("android:minSdkVersion") && ~fileContent.indexOf("android:targetSdkVersion")
-						&& ~fileContent.indexOf("uses-permission") && ~fileContent.indexOf("<application")
-						&& ~fileContent.indexOf("<activity") && ~fileContent.indexOf("<intent-filter>")
-						&& ~fileContent.indexOf("android.intent.action.MAIN")
-						&& ~fileContent.indexOf("android:versionCode")
-						&& !this.$xmlValidator.getXmlFileErrors(pathToAndroidManifest).wait());
-
-				this.$logger.trace(`Existing ${this.platformData.configurationFileName} is ${isFileCorrect ? "" : "NOT "}correct.`);
-				return isFileCorrect;
-			} catch (err) {
-				this.$logger.trace(`Error while checking ${pathToAndroidManifest}: `, err);
-				return false;
-			}
-		}).future<boolean>()();
 	}
 }
 $injector.register("androidProjectService", AndroidProjectService);
