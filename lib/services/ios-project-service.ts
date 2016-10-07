@@ -624,26 +624,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			);
 	}
 	public ensureConfigurationFileInAppResources(): IFuture<void> {
-		return (() => {
-			let infoPlistPath = this.getInfoPlistPath();
-			if (!this.$fs.exists(infoPlistPath).wait()) {
-				// The project is missing Info.plist, try to populate it from the project template.
-				let projectTemplateService: IProjectTemplatesService = this.$injector.resolve("projectTemplatesService");
-				let defaultTemplatePath = projectTemplateService.defaultTemplatePath.wait();
-				let templateInfoPlist = path.join(defaultTemplatePath, constants.APP_RESOURCES_FOLDER_NAME, this.$devicePlatformsConstants.iOS, this.platformData.configurationFileName);
-				if (this.$fs.exists(templateInfoPlist).wait()) {
-					this.$logger.trace("Info.plist: app/App_Resources/iOS/Info.plist is missing. Upgrading the source of the project with one from the new project template. Copy " + templateInfoPlist + " to " + infoPlistPath);
-					try {
-						this.$fs.copyFile(templateInfoPlist, infoPlistPath).wait();
-					} catch (e) {
-						this.$logger.trace("Copying template's Info.plist failed. " + e);
-					}
-				} else {
-					this.$logger.trace("Info.plist: app/App_Resources/iOS/Info.plist is missing but the template " + templateInfoPlist + " is missing too, can not upgrade Info.plist.");
-				}
-			}
-
-		}).future<void>()();
+		return Future.fromResult();
 	}
 
 	private mergeInfoPlists(): IFuture<void> {

@@ -259,12 +259,6 @@ export class PlatformService implements IPlatformService {
 				sourceFiles = sourceFiles.filter(source => source.indexOf(testsFolderPath) === -1);
 			}
 
-			let hasTnsModulesInAppFolder = this.$fs.exists(path.join(appSourceDirectoryPath, constants.TNS_MODULES_FOLDER_NAME)).wait();
-			if (hasTnsModulesInAppFolder && this.$projectData.dependencies && this.$projectData.dependencies[constants.TNS_CORE_MODULES_NAME]) {
-				this.$logger.warn("You have tns_modules dir in your app folder and tns-core-modules in your package.json file. Tns_modules dir in your app folder will not be used and you can safely remove it.");
-				sourceFiles = sourceFiles.filter(source => !minimatch(source, `**/${constants.TNS_MODULES_FOLDER_NAME}/**`, { nocase: true }));
-			}
-
 			// verify .xml files are well-formed
 			this.$xmlValidator.validateXmlFiles(sourceFiles).wait();
 
