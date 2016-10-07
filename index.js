@@ -1,4 +1,4 @@
 import Kinvey from './kinvey';
 
-// Export
-module.exports = Kinvey;
+// Export default
+export default Kinvey;
