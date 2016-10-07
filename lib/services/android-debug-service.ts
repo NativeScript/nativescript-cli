@@ -214,7 +214,7 @@ class AndroidDebugService implements IDebugService {
 
 	private waitForDebugger(packageName: String) {
 		let waitText: string = `0 /data/local/tmp/${packageName}-debugger-started`;
-		let maxWait = 12;
+		let maxWait = 24;
 		let debugerStarted: boolean = false;
 		while (maxWait > 0 && !debugerStarted) {
 			let forwardsResult = this.device.adb.executeShellCommand(["ls", "-s", `/data/local/tmp/${packageName}-debugger-started`]).wait();
