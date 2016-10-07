@@ -1,4 +1,4 @@
 import ngKinvey from './ngKinvey';
 
-// Export
-module.exports = ngKinvey;
+// Set default export
+export default ngKinvey;

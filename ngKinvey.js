@@ -2,7 +2,7 @@ import Kinvey from './kinvey';
 import angular from 'angular'; // eslint-disable-line import/no-unresolved
 
 class KinveyProvider {
-  init(options) {
+  init(options = {}) {
     return Kinvey.init(options);
   }
 
