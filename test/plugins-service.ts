@@ -20,11 +20,10 @@ import {ResourceLoader} from "../lib/common/resource-loader";
 import {PluginsService} from "../lib/services/plugins-service";
 import {AddPluginCommand} from "../lib/commands/plugin/add-plugin";
 import {MessagesService} from "../lib/common/services/messages-service";
-import {Builder} from "../lib/tools/broccoli/builder";
+import {NodeModulesBuilder} from "../lib/tools/node-modules/node-modules-builder";
 import {AndroidProjectService} from "../lib/services/android-project-service";
 import {AndroidToolsInfo} from "../lib/android-tools-info";
 import {assert} from "chai";
-import NodeModulesTreeLib = require("../lib/tools/broccoli/trees/node-modules-tree");
 import {DeviceAppDataFactory} from "../lib/common/mobile/device-app-data/device-app-data-factory";
 import {LocalToDevicePathDataFactory} from "../lib/common/mobile/local-to-device-path-data-factory";
 import {MobileHelper} from "../lib/common/mobile/mobile-helper";
@@ -61,14 +60,13 @@ function createTestInjector() {
 	testInjector.register("projectDataService", ProjectDataService);
 	testInjector.register("prompter", {});
 	testInjector.register("resources", ResourceLoader);
-	testInjector.register("broccoliBuilder", Builder);
+	testInjector.register("nodeModulesBuilder", NodeModulesBuilder);
 	testInjector.register("options", Options);
 	testInjector.register("errors", Errors);
 	testInjector.register("logger", stubs.LoggerStub);
 	testInjector.register("staticConfig", StaticConfig);
 	testInjector.register("hooksService", stubs.HooksServiceStub);
 	testInjector.register("commandsService", CommandsService);
-	testInjector.register("nodeModulesTree", NodeModulesTreeLib.NodeModulesTree);
 	testInjector.register("commandsServiceProvider", {
 		registerDynamicSubCommands: () => { /* intentionally empty body */ }
 	});
@@ -164,23 +162,24 @@ function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: string, e
 }
 
 function createAndroidManifestFile(projectFolder: string, fs: IFileSystem): void {
-	let manifest = '<?xml version="1.0" encoding="UTF-8"?>' +
-		'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
-		'<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>' +
-		'<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>' +
-		'<uses-permission android:name="android.permission.INTERNET"/>' +
-		'<application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >' +
-        '<activity android:name="com.example.android.basiccontactables.MainActivity" android:label="@string/app_name" android:launchMode="singleTop">' +
-		'<meta-data android:name="android.app.searchable" android:resource="@xml/searchable" />' +
-		'<intent-filter>' +
-		'<action android:name="android.intent.action.SEARCH" />' +
-		'</intent-filter>' +
-		'<intent-filter>' +
-		'<action android:name="android.intent.action.MAIN" />' +
-		'</intent-filter>' +
-        '</activity>' +
-		'</application>' +
-		'</manifest>';
+	let manifest = `
+        <?xml version="1.0" encoding="UTF-8"?>
+		<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+            <uses-permission android:name="android.permission.INTERNET"/>
+            <application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >
+                <activity android:name="com.example.android.basiccontactables.MainActivity" android:label="@string/app_name" android:launchMode="singleTop">
+                    <meta-data android:name="android.app.searchable" android:resource="@xml/searchable" />
+                    <intent-filter>
+                        <action android:name="android.intent.action.SEARCH" />
+                    </intent-filter>
+                    <intent-filter>
+                        <action android:name="android.intent.action.MAIN" />
+                    </intent-filter>
+                </activity>
+            </application>
+		</manifest>`;
 
 	fs.createDirectory(path.join(projectFolder, "platforms")).wait();
 	fs.createDirectory(path.join(projectFolder, "platforms", "android")).wait();

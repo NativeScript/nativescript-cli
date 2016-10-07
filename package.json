@@ -29,8 +29,6 @@
   "dependencies": {
     "bluebird": "2.9.34",
     "bplist-parser": "0.1.0",
-    "broccoli": "0.16.9",
-    "broccoli-funnel": "1.0.3",
     "bufferpack": "0.0.6",
     "bufferutil": "https://github.com/telerik/bufferutil/tarball/v1.0.1.3",
     "byline": "4.2.1",

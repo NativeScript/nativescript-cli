@@ -23,7 +23,7 @@ export class PlatformService implements IPlatformService {
 		private $hooksService: IHooksService,
 		private $commandsService: ICommandsService,
 		private $options: IOptions,
-		private $broccoliBuilder: IBroccoliBuilder,
+		private $nodeModulesBuilder: INodeModulesBuilder,
 		private $pluginsService: IPluginsService,
 		private $projectFilesManager: IProjectFilesManager,
 		private $mobileHelper: Mobile.IMobileHelper,
@@ -298,10 +298,10 @@ export class PlatformService implements IPlatformService {
 				let tnsModulesDestinationPath = path.join(appDir, constants.TNS_MODULES_FOLDER_NAME);
 				if (!this.$options.bundle) {
 					// Process node_modules folder
-					this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime).wait();
+					this.$nodeModulesBuilder.prepareNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime).wait();
 				} else {
 					// Clean target node_modules folder. Not needed when bundling.
-					this.$broccoliBuilder.cleanNodeModules(tnsModulesDestinationPath, platform);
+					this.$nodeModulesBuilder.cleanNodeModules(tnsModulesDestinationPath, platform);
 				}
 			} catch (error) {
 				this.$logger.debug(error);
