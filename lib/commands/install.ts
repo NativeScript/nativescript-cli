@@ -1,12 +1,7 @@
-import {EOL} from "os";
-
 export class InstallCommand implements ICommand {
-	constructor(private $platformsData: IPlatformsData,
-		private $platformService: IPlatformService,
-		private $projectData: IProjectData,
+	constructor(private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $pluginsService: IPluginsService,
-		private $logger: ILogger,
 		private $fs: IFileSystem,
 		private $stringParameter: ICommandParameter,
 		private $npm: INodePackageManager) { }
@@ -21,26 +16,7 @@ export class InstallCommand implements ICommand {
 
 	private installProjectDependencies(): IFuture<void> {
 		return (() => {
-			let error: string = "";
-
 			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
-
-			this.$projectDataService.initialize(this.$projectData.projectDir);
-			_.each(this.$platformsData.platformsNames, platform => {
-				let platformData = this.$platformsData.getPlatformData(platform);
-				let frameworkPackageData = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
-				if (frameworkPackageData && frameworkPackageData.version) {
-					try {
-						this.$platformService.addPlatforms([`${platform}@${frameworkPackageData.version}`]).wait();
-					} catch (err) {
-						error = `${error}${EOL}${err}`;
-					}
-				}
-			});
-
-			if (error) {
-				this.$logger.error(error);
-			}
 		}).future<void>()();
 	}
 
