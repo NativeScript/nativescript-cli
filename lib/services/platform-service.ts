@@ -290,13 +290,8 @@ export class PlatformService implements IPlatformService {
 			let appDir = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			try {
 				let tnsModulesDestinationPath = path.join(appDir, constants.TNS_MODULES_FOLDER_NAME);
-				if (!this.$options.bundle) {
-					// Process node_modules folder
-					this.$nodeModulesBuilder.prepareNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime).wait();
-				} else {
-					// Clean target node_modules folder. Not needed when bundling.
-					this.$nodeModulesBuilder.cleanNodeModules(tnsModulesDestinationPath, platform);
-				}
+				// Process node_modules folder
+				this.$nodeModulesBuilder.prepareNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime).wait();
 			} catch (error) {
 				this.$logger.debug(error);
 				shell.rm("-rf", appDir);

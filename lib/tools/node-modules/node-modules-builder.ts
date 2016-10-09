@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as shelljs from "shelljs";
 import Future = require("fibers/future");
-import * as destCopyLib from "./node-modules-dest-copy";
+import {NpmDependencyResolver, TnsModulesCopy, NpmPluginPrepare} from "./node-modules-dest-copy";
 import * as fiberBootstrap from "../../common/fiber-bootstrap";
 import {sleep} from "../../../lib/common/helpers";
 
@@ -16,7 +16,9 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 		private $projectDataService: IProjectDataService,
 		private $injector: IInjector,
 		private $logger: ILogger,
-		private $lockfile: ILockFile) { }
+		private $lockfile: ILockFile,
+		private $options: IOptions
+	) { }
 
 	public getChangedNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime?: Date): IFuture<any> {
 		return (() => {
@@ -108,20 +110,20 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 			}
 
 			if (!lastModifiedTime || isNodeModulesModified) {
-				this.listModules(nodeModulesPath, nodeModules);
+				this.expandScopedModules(nodeModulesPath, nodeModules);
 			}
 
 			return nodeModules;
 		}).future<any>()();
 	}
 
-	private listModules(nodeModulesPath: string, nodeModules: any): void {
+	private expandScopedModules(nodeModulesPath: string, nodeModules: IStringDictionary): void {
 		let nodeModulesDirectories = this.$fs.exists(nodeModulesPath).wait() ? this.$fs.readDirectory(nodeModulesPath).wait() : [];
 		_.each(nodeModulesDirectories, nodeModuleDirectoryName => {
 			let isNpmScope = /^@/.test(nodeModuleDirectoryName);
 			let nodeModuleFullPath = path.join(nodeModulesPath, nodeModuleDirectoryName);
 			if (isNpmScope) {
-				this.listModules(nodeModuleFullPath, nodeModules);
+				this.expandScopedModules(nodeModuleFullPath, nodeModules);
 			} else {
 				nodeModules[nodeModuleFullPath] = nodeModuleFullPath;
 			}
@@ -135,16 +137,21 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 				lastModifiedTime = null;
 			}
 			let nodeModules = this.getChangedNodeModules(absoluteOutputPath, platform, lastModifiedTime).wait();
-			let destCopy = this.$injector.resolve(destCopyLib.DestCopy, {
-				inputPath: this.$projectData.projectDir,
-				cachePath: "",
-				outputRoot: absoluteOutputPath,
-				projectDir: this.$projectData.projectDir,
-				platform: platform
-			});
 
-			destCopy.rebuildChangedDirectories(_.keys(nodeModules), platform);
+			const resolver = new NpmDependencyResolver(this.$projectData.projectDir);
+			const resolvedDependencies = resolver.resolveDependencies(_.keys(nodeModules), platform);
 
+			if (!this.$options.bundle) {
+				const tnsModulesCopy = this.$injector.resolve(TnsModulesCopy, {
+					outputRoot: absoluteOutputPath
+				});
+				tnsModulesCopy.copyModules(resolvedDependencies, platform);
+			} else {
+				this.cleanNodeModules(absoluteOutputPath, platform);
+			}
+
+			const npmPluginPrepare = this.$injector.resolve(NpmPluginPrepare, {});
+			npmPluginPrepare.preparePlugins(resolvedDependencies, platform);
 		}).future<void>()();
 	}
 
