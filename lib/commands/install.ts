@@ -1,6 +1,5 @@
 export class InstallCommand implements ICommand {
 	constructor(private $projectData: IProjectData,
-		private $projectDataService: IProjectDataService,
 		private $pluginsService: IPluginsService,
 		private $fs: IFileSystem,
 		private $stringParameter: ICommandParameter,
@@ -15,9 +14,7 @@ export class InstallCommand implements ICommand {
 	}
 
 	private installProjectDependencies(): IFuture<void> {
-		return (() => {
-			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
-		}).future<void>()();
+		return this.$pluginsService.ensureAllDependenciesAreInstalled();
 	}
 
 	private installModule(moduleName: string): IFuture<void> {
