@@ -109,30 +109,46 @@ export class PluginsService implements IPluginsService {
 		return (() => {
 			platform = platform.toLowerCase();
 			let platformData = this.$platformsData.getPlatformData(platform);
-			let pluginDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
 			let pluginData = this.convertToPluginData(dependencyData);
 
-			let exists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait();
-
-			if (!this.isPluginDataValidForPlatform(pluginData, platform).wait()) {
-				// Still clean up platform in case other platforms were supported.
-				shelljs.rm("-rf", path.join(pluginDestinationPath, pluginData.name, "platforms"));
-				return;
-			}
-
-			if (exists) {
-				//prepare platform speciffic files, .map and .ts files
-				this.$projectFilesManager.processPlatformSpecificFiles(pluginDestinationPath, platform).wait();
-
-				//deal with platforms/android folder in ns plugin
-				pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform);
-				platformData.platformProjectService.preparePluginNativeCode(pluginData).wait();
-				shelljs.rm("-rf", path.join(pluginDestinationPath, pluginData.name, "platforms"));
+			let appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait();
+			if (appFolderExists) {
+				this.preparePluginScripts(pluginData, platform);
+				this.preparePluginNativeCode(pluginData, platform);
 
 				// Show message
 				this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
 			}
 		}).future<void>()();
+	}
+
+	private preparePluginScripts(pluginData: IPluginData, platform: string): void {
+		let platformData = this.$platformsData.getPlatformData(platform);
+		let pluginScriptsDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
+		let scriptsDestinationExists = this.$fs.exists(pluginScriptsDestinationPath).wait();
+		if (!scriptsDestinationExists) {
+			//tns_modules/<plugin> doesn't exist. Assuming we're running a bundled prepare.
+			return;
+		}
+
+		if (!this.isPluginDataValidForPlatform(pluginData, platform).wait()) {
+			// Still clean up platform in case other platforms were supported.
+			shelljs.rm("-rf", path.join(pluginScriptsDestinationPath , pluginData.name, "platforms"));
+			return;
+		}
+
+		//prepare platform speciffic files, .map and .ts files
+		this.$projectFilesManager.processPlatformSpecificFiles(pluginScriptsDestinationPath , platform).wait();
+	}
+
+	private preparePluginNativeCode(pluginData: IPluginData, platform: string): void {
+		let platformData = this.$platformsData.getPlatformData(platform);
+		let pluginScriptsDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
+
+		pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform);
+		platformData.platformProjectService.preparePluginNativeCode(pluginData).wait();
+		shelljs.rm("-rf", path.join(pluginScriptsDestinationPath , pluginData.name, "platforms"));
+
 	}
 
 	public ensureAllDependenciesAreInstalled(): IFuture<void> {
@@ -163,22 +179,6 @@ export class PluginsService implements IPluginsService {
 			let nodeModules = this.getAllInstalledModules().wait().map(nodeModuleData => this.convertToPluginData(nodeModuleData));
 			return _.filter(nodeModules, nodeModuleData => nodeModuleData && nodeModuleData.isPlugin);
 		}).future<IPluginData[]>()();
-	}
-
-	public afterPrepareAllPlugins(): IFuture<void> {
-		let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => {
-			return platformData.platformProjectService.afterPrepareAllPlugins();
-		};
-
-		return this.executeForAllInstalledPlatforms(action);
-	}
-
-	public beforePrepareAllPlugins(): IFuture<void> {
-		let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => {
-			return platformData.platformProjectService.beforePrepareAllPlugins();
-		};
-
-		return this.executeForAllInstalledPlatforms(action);
 	}
 
 	public getDependenciesFromPackageJson(): IFuture<IPackageJsonDepedenciesResult> {

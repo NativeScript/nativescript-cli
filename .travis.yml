@@ -14,6 +14,9 @@ before_script:
 - npm install grunt
 - node_modules/.bin/grunt enableScripts:false
 - npm install
+- grunt rebuild
+- ./bin/nativescript error-reporting disable # force ~/.local dir creation -- some tests rely on it
+- ./bin/nativescript usage-reporting disable
 - npm test
 - node_modules/.bin/grunt enableScripts:true
 script:
