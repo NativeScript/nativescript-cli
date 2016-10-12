@@ -29,10 +29,11 @@ class IOSPlatformLiveSyncService extends PlatformLiveSyncServiceBase {
 					let localToDevicePaths = this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, null, this.liveSyncData.excludedProjectDirsAndFiles);
 					let afterSyncAction: () => IFuture<void>;
 
+					this.transferFiles(deviceAppData, localToDevicePaths, this.liveSyncData.projectFilesPath, true).wait();
+
 					if(installed) {
 						afterSyncAction = () => device.applicationManager.tryStartApplication(deviceAppData.appIdentifier);
 					} else {
-						this.transferFiles(deviceAppData, localToDevicePaths, this.liveSyncData.projectFilesPath, true).wait();
 						afterSyncAction = () => this.refreshApplication(deviceAppData, localToDevicePaths);
 					}
 
