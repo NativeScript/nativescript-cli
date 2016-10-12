@@ -2,11 +2,13 @@ import * as path from "path";
 import * as net from "net";
 import Future = require("fibers/future");
 import { sleep } from "../common/helpers";
+import {ChildProcess} from "child_process";
 
 class AndroidDebugService implements IDebugService {
 	private static DEFAULT_NODE_INSPECTOR_URL = "http://127.0.0.1:8080/debug";
 
 	private _device: Mobile.IAndroidDevice = null;
+	private _debuggerClientProcess: ChildProcess;
 
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $platformService: IPlatformService,
@@ -19,6 +21,7 @@ class AndroidDebugService implements IDebugService {
 		private $errors: IErrors,
 		private $opener: IOpener,
 		private $config: IConfiguration,
+		private $processService: IProcessService,
 		private $androidDeviceDiscovery: Mobile.IDeviceDiscovery) { }
 
 	public get platform() { return "android"; }
@@ -187,6 +190,7 @@ class AndroidDebugService implements IDebugService {
 	}
 
 	public debugStop(): IFuture<void> {
+		this.stopDebuggerClient();
 		return Future.fromResult();
 	}
 
@@ -237,8 +241,16 @@ class AndroidDebugService implements IDebugService {
 			let nodeInspectorModuleFilePath = require.resolve("node-inspector");
 			let nodeInspectorModuleDir = path.dirname(nodeInspectorModuleFilePath);
 			let nodeInspectorFullPath = path.join(nodeInspectorModuleDir, "bin", "inspector");
-			this.$childProcess.spawn(process.argv[0], [nodeInspectorFullPath, "--debug-port", port.toString()], { stdio: "ignore", detached: true });
+			this._debuggerClientProcess = this.$childProcess.spawn(process.argv[0], [nodeInspectorFullPath, "--debug-port", port.toString()], { stdio: "ignore", detached: true });
+			this.$processService.attachToProcessExitSignals(this, this.debugStop);
 		}).future<void>()();
+	}
+
+	private stopDebuggerClient(): void {
+		if (this._debuggerClientProcess) {
+			this._debuggerClientProcess.kill();
+			this._debuggerClientProcess = null;
+		}
 	}
 
 	private openDebuggerClient(url: string): void {
