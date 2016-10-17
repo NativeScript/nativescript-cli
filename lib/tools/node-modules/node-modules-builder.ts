@@ -10,7 +10,7 @@ import {sleep} from "../../../lib/common/helpers";
 let glob = require("glob");
 
 export class NodeModulesBuilder implements INodeModulesBuilder {
-	constructor(
+	constructor(private $childProcess: IChildProcess,
 		private $fs: IFileSystem,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
@@ -133,6 +133,13 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 				// Force copying if the destination doesn't exist.
 				lastModifiedTime = null;
 			}
+			
+			//TODO: plamen5kov: WIP
+			let depJsonStr = this.$childProcess.exec("npm list --prod --json").wait();
+			let prodDependenciesJson = JSON.parse(depJsonStr);
+			let productionDepArray = this.getProductionDependencyNames(prodDependenciesJson);
+
+
 			let nodeModules = this.getChangedNodeModules(absoluteOutputPath, platform, lastModifiedTime).wait();
 
 			const resolver = new NpmDependencyResolver(this.$projectData.projectDir);
@@ -150,6 +157,29 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 			const npmPluginPrepare = this.$injector.resolve(NpmPluginPrepare, {});
 			npmPluginPrepare.preparePlugins(resolvedDependencies, platform);
 		}).future<void>()();
+	}
+
+	private getProductionDependencyNames(inputJson: any): any {
+		var finalDependencies:any = {};
+		var queue:any = [];
+
+		inputJson.level = 0;
+		queue.push(inputJson)
+
+		while(queue.length > 0) {
+			var parent = queue.pop();
+
+			if(parent.dependencies) {
+				for(var dep in parent.dependencies) {
+					var currentDependency = parent.dependencies[dep];
+					currentDependency.level = parent.level + 1;
+					queue.push(currentDependency);
+					finalDependencies[dep] = currentDependency;
+				}
+			}
+		}
+
+		return finalDependencies;
 	}
 
 	public cleanNodeModules(absoluteOutputPath: string, platform: string): void {
