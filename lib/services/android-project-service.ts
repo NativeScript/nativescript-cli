@@ -393,8 +393,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return Future.fromResult();
 	}
 
-	public beforePrepareAllPlugins(): IFuture<void> {
+	public beforePrepareAllPlugins(dependencies?: IDictionary<IDependencyData>): IFuture<void> {
 		if (!this.$config.debugLivesync) {
+			if (dependencies) {
+				let platformDir = path.join(this.$projectData.platformsDir, "android");
+				let buildDir = path.join(platformDir, "build-tools");
+				let checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
+				if (this.$fs.exists(checkV8dependants).wait()) {
+					let stringifiedDependencies = JSON.stringify(dependencies);
+					this.spawn('node', [checkV8dependants, stringifiedDependencies, this.$projectData.platformsDir], { stdio: "inherit" }).wait();
+				}
+			}
+
 			let buildOptions = this.getBuildOptions();
 
 			buildOptions.unshift("clean");
