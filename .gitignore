@@ -29,9 +29,12 @@ results
 scratch/
 .idea/
 .settings/
-.vscode/
+.vscode/**
+!.vscode/launch.json
 test-reports.xml
 
 npm-debug.log
 node_modules
 docs/html
+
+!test-scripts/*.js
