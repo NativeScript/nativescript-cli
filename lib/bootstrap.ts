@@ -117,5 +117,6 @@ $injector.require("messages", "./common/messages/messages");
 $injector.require("xmlValidator", "./xml-validator");
 
 $injector.requireCommand("devices", "./commands/devices");
+$injector.requireCommand("post-install-cli", "./commands/post-install");
 
 $injector.require("iOSLogFilter", "./services/ios-log-filter");
