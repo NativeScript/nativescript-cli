@@ -1,4 +1,19 @@
 #!/bin/sh
 
 AB_DIR="`dirname \"$0\"`"
-node "$AB_DIR/nativescript.js" "$@"
+NODE_VERSION=`node --version`
+NODE4_VERSION_PREFIX="v4."
+NODE5_VERSION_PREFIX="v5."
+
+# check if Node.js version is 4.x.x or 5.x.x - both of them do not support some of required features
+# so we have to pass --harmony flag for them in order to enable spread opearator usage
+# Use POSIX substring parameter expansion, so the code will work on all shells.
+
+if [ "${NODE_VERSION#$NODE4_VERSION_PREFIX*}" != "$NODE_VERSION" -o "${NODE_VERSION#$NODE5_VERSION_PREFIX*}" != "$NODE_VERSION" ]
+then
+	# Node is 4.x.x or 5.x.x
+	node --harmony "$AB_DIR/nativescript.js" "$@"
+else
+	# Node is NOT 4.x.x or 5.x.x
+	node "$AB_DIR/nativescript.js" "$@"
+fi

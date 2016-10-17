@@ -18,7 +18,10 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 				let templateName = originalTemplateName.toLowerCase();
 
 				// support <reserved_name>@<version> syntax
-				let [name, version] = templateName.split("@");
+				let data = templateName.split("@"),
+					name = data[0],
+					version = data[1];
+
 				if(constants.RESERVED_TEMPLATE_NAMES[name]) {
 					realTemplatePath = this.prepareNativeScriptTemplate(constants.RESERVED_TEMPLATE_NAMES[name], version, projectDir).wait();
 				} else {
