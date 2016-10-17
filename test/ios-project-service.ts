@@ -466,16 +466,16 @@ describe("Static libraries support", () => {
 });
 
 describe("Relative paths", () => {
-		it("checks for correct calculation of relative paths", () => {
-			let projectName = "projectDirectory";
-			let projectPath = temp.mkdirSync(projectName);
-			let subpath = path.join(projectPath, "sub/path");
+	it("checks for correct calculation of relative paths", () => {
+		let projectName = "projectDirectory";
+		let projectPath = temp.mkdirSync(projectName);
+		let subpath = path.join(projectPath, "sub", "path");
 
-			let testInjector = createTestInjector(projectPath, projectName);
-			createPackageJson(testInjector, projectPath, projectName);
-			let iOSProjectService = testInjector.resolve("iOSProjectService");
+		let testInjector = createTestInjector(projectPath, projectName);
+		createPackageJson(testInjector, projectPath, projectName);
+		let iOSProjectService = testInjector.resolve("iOSProjectService");
 
-			let result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath);
-			assert.equal(result, "../../sub/path");
-		});
+		let result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath);
+		assert.equal(result, path.join("..", "..", "sub", "path"));
+	});
 });
