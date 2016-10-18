@@ -63,7 +63,7 @@ export class PostInstallCliCommand extends PostInstallCommand {
 	private sendEmail(email: string): void {
  		if (email) {
  		 	let postData = queryString.stringify({
- 		 		'elqFormName': process.argv[2],
+ 		 		'elqFormName': "Telerik-TrialRegistration",
  		 		'elqSiteID': '1325',
  		 		'emailAddress': email,
  		 		'elqCookieWrite': '0'
