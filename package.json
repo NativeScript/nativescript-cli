@@ -20,5 +20,16 @@
   "bugs": {
     "url": "https://github.com/NativeScript/nativescript-doctor/issues"
   },
-  "homepage": "https://github.com/NativeScript/nativescript-doctor#readme"
+  "homepage": "https://github.com/NativeScript/nativescript-doctor#readme",
+  "devDependencies": {
+    "grunt": "1.0.1",
+    "grunt-contrib-clean": "1.0.0",
+    "grunt-shell": "2.0.0",
+    "grunt-ts": "6.0.0-beta.3",
+    "grunt-tslint": "3.3.0",
+    "istanbul": "0.4.5",
+    "mocha": "3.1.2",
+    "tslint": "3.15.1",
+    "typescript": "2.0.3"
+  }
 }
