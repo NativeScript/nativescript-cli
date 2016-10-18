@@ -6,7 +6,7 @@ interface IPlatformService {
 	removePlatforms(platforms: string[]): IFuture<void>;
 	updatePlatforms(platforms: string[]): IFuture<void>;
 	runPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
-	preparePlatform(platform: string): IFuture<boolean>;
+	preparePlatform(platform: string, force?: boolean, skipModulesAndResources?: boolean): IFuture<boolean>;
 	cleanDestinationApp(platform: string): IFuture<void>;
 	buildPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
 	buildForDeploy(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
@@ -23,7 +23,7 @@ interface IPlatformService {
 	lastOutputPath(platform: string, settings: { isForDevice: boolean }): string;
 	ensurePlatformInstalled(platform: string): IFuture<void>;
 
-	prepareAndExecute(platform: string, executeAction: () => IFuture<void>): IFuture<void>;
+	prepareAndBuild(platform: string, buildConfig?: IBuildConfig, forceBuild?: boolean): IFuture<void>;
 }
 
 interface IPlatformData {

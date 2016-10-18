@@ -244,6 +244,7 @@ describe('Platform Service Tests', () => {
 					appDestinationDirectoryPath: appDestFolderPath,
 					appResourcesDestinationDirectoryPath: appResourcesFolderPath,
 					normalizedPlatformName: platformToTest,
+					projectRoot: tempFolder,
 					platformProjectService: {
 						prepareProject: () => Future.fromResult(),
 						validate: () => Future.fromResult(),
@@ -253,7 +254,8 @@ describe('Platform Service Tests', () => {
 						getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
 						processConfigurationFilesFromAppResources: () => Future.fromResult(),
 						ensureConfigurationFileInAppResources: () => Future.fromResult(),
-						interpolateConfigurationFile: () => Future.fromResult()
+						interpolateConfigurationFile: () => Future.fromResult(),
+						isPlatformPrepared: (projectRoot: string) => Future.fromResult(false)
 					}
 				};
 			};
@@ -316,6 +318,7 @@ describe('Platform Service Tests', () => {
 					appDestinationDirectoryPath: appDestFolderPath,
 					appResourcesDestinationDirectoryPath: appResourcesFolderPath,
 					normalizedPlatformName: "Android",
+					projectRoot: tempFolder,
 					platformProjectService: {
 						prepareProject: () => Future.fromResult(),
 						validate: () => Future.fromResult(),
@@ -325,7 +328,8 @@ describe('Platform Service Tests', () => {
 						getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
 						processConfigurationFilesFromAppResources: () => Future.fromResult(),
 						ensureConfigurationFileInAppResources: () => Future.fromResult(),
-						interpolateConfigurationFile: () => Future.fromResult()
+						interpolateConfigurationFile: () => Future.fromResult(),
+						isPlatformPrepared: (projectRoot: string) => Future.fromResult(false)
 					}
 				};
 			};

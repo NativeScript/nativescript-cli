@@ -5,9 +5,7 @@ export class PrepareCommand implements ICommand {
 
 	execute(args: string[]): IFuture<void> {
 		return (() => {
-			if (!this.$platformService.preparePlatform(args[0]).wait()) {
-				this.$errors.failWithoutHelp("Unable to prepare the project.");
-			}
+			this.$platformService.preparePlatform(args[0], true).wait();
 		}).future<void>()();
 	}
 

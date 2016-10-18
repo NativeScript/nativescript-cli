@@ -102,7 +102,7 @@ class IOSDebugService implements IDebugService {
 		return (() => {
 			let platformData = this.$platformsData.getPlatformData(this.platform);
 			if (this.$options.rebuild) {
-				this.$platformService.prepareAndExecute(this.platform, () => this.$platformService.buildPlatform(this.platform)).wait();
+				this.$platformService.prepareAndBuild(this.platform).wait();
 			}
 			let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait();
 

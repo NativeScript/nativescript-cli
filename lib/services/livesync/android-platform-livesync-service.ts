@@ -5,14 +5,15 @@ class AndroidPlatformLiveSyncService extends PlatformLiveSyncServiceBase {
 		protected $devicesService: Mobile.IDevicesService,
 		protected $mobileHelper: Mobile.IMobileHelper,
 		protected $logger: ILogger,
-		protected $options: ICommonOptions,
+		protected $options: IOptions,
 		protected $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		protected $fs: IFileSystem,
 		protected $injector: IInjector,
 		protected $projectFilesManager: IProjectFilesManager,
 		protected $projectFilesProvider: IProjectFilesProvider,
+		protected $platformService: IPlatformService,
 		protected $liveSyncProvider: ILiveSyncProvider) {
-		super(_liveSyncData, $devicesService, $mobileHelper, $logger, $options, $deviceAppDataFactory, $fs, $injector, $projectFilesManager, $projectFilesProvider, $liveSyncProvider);
+		super(_liveSyncData, $devicesService, $mobileHelper, $logger, $options, $deviceAppDataFactory, $fs, $injector, $projectFilesManager, $projectFilesProvider, $platformService, $liveSyncProvider);
 	}
 
 	public fullSync(postAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): IFuture<void> {

@@ -133,12 +133,15 @@ function setupProject(): IFuture<any> {
 		// Mock platform data
 		let appDestinationFolderPath = path.join(androidFolderPath, "assets");
 		let platformsData = testInjector.resolve("platformsData");
+
 		platformsData.getPlatformData = (platform: string) => {
 			return {
 				appDestinationDirectoryPath: appDestinationFolderPath,
 				appResourcesDestinationDirectoryPath: path.join(appDestinationFolderPath, "app", "App_Resources"),
 				frameworkPackageName: "tns-android",
 				normalizedPlatformName: "Android",
+				projectRoot: projectFolder,
+				configurationFileName: "AndroidManifest.xml",
 				platformProjectService: {
 					prepareProject: () => Future.fromResult(),
 					prepareAppResources: () => Future.fromResult(),
@@ -147,7 +150,8 @@ function setupProject(): IFuture<any> {
 					getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
 					processConfigurationFilesFromAppResources: () => Future.fromResult(),
 					ensureConfigurationFileInAppResources: () => Future.fromResult(),
-					interpolateConfigurationFile: () => Future.fromResult()
+					interpolateConfigurationFile: () => Future.fromResult(),
+					isPlatformPrepared: (projectRoot: string) => Future.fromResult<boolean>(false)
 				}
 			};
 		};

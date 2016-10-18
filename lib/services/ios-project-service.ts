@@ -1010,30 +1010,30 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	private mergeProjectXcconfigFiles(): IFuture<void> {
 		return (() => {
-			this.$fs.deleteFile(this.pluginsDebugXcconfigFilePath).wait();
-			this.$fs.deleteFile(this.pluginsReleaseXcconfigFilePath).wait();
+			this.$fs.deleteFile(this.$options.release ? this.pluginsReleaseXcconfigFilePath : this.pluginsDebugXcconfigFilePath).wait();
 
 			let allPlugins: IPluginData[] = (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins().wait();
 			for (let plugin of allPlugins) {
 				let pluginPlatformsFolderPath = plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 				let pluginXcconfigFilePath = path.join(pluginPlatformsFolderPath, "build.xcconfig");
 				if (this.$fs.exists(pluginXcconfigFilePath).wait()) {
-					this.mergeXcconfigFiles(pluginXcconfigFilePath, this.pluginsDebugXcconfigFilePath).wait();
-					this.mergeXcconfigFiles(pluginXcconfigFilePath, this.pluginsReleaseXcconfigFilePath).wait();
+					this.mergeXcconfigFiles(pluginXcconfigFilePath,this.$options.release ? this.pluginsReleaseXcconfigFilePath : this.pluginsDebugXcconfigFilePath).wait();
 				}
 			}
 
 			let appResourcesXcconfigPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, "build.xcconfig");
 			if (this.$fs.exists(appResourcesXcconfigPath).wait()) {
-				this.mergeXcconfigFiles(appResourcesXcconfigPath, this.pluginsDebugXcconfigFilePath).wait();
-				this.mergeXcconfigFiles(appResourcesXcconfigPath, this.pluginsReleaseXcconfigFilePath).wait();
+				this.mergeXcconfigFiles(appResourcesXcconfigPath, this.$options.release ? this.pluginsReleaseXcconfigFilePath : this.pluginsDebugXcconfigFilePath).wait();
 			}
 
 			let podFilesRootDirName = path.join("Pods", "Target Support Files", `Pods-${this.$projectData.projectName}`);
 			let podFolder = path.join(this.platformData.projectRoot, podFilesRootDirName);
 			if (this.$fs.exists(podFolder).wait()) {
-				this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, podFilesRootDirName, `Pods-${this.$projectData.projectName}.debug.xcconfig`), this.pluginsDebugXcconfigFilePath).wait();
-				this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, podFilesRootDirName, `Pods-${this.$projectData.projectName}.release.xcconfig`), this.pluginsReleaseXcconfigFilePath).wait();
+				if (this.$options.release) {
+					this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, podFilesRootDirName, `Pods-${this.$projectData.projectName}.release.xcconfig`), this.pluginsReleaseXcconfigFilePath).wait();
+				} else {
+					this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, podFilesRootDirName, `Pods-${this.$projectData.projectName}.debug.xcconfig`), this.pluginsDebugXcconfigFilePath).wait();
+				}
 			}
 		}).future<void>()();
 	}

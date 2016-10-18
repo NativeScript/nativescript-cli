@@ -18,12 +18,13 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 		protected $devicesService: Mobile.IDevicesService,
 		protected $mobileHelper: Mobile.IMobileHelper,
 		protected $logger: ILogger,
-		protected $options: ICommonOptions,
+		protected $options: IOptions,
 		protected $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		protected $fs: IFileSystem,
 		protected $injector: IInjector,
 		protected $projectFilesManager: IProjectFilesManager,
 		protected $projectFilesProvider: IProjectFilesProvider,
+		protected $platformService: IPlatformService,
 		protected $liveSyncProvider: ILiveSyncProvider) {
 		this.liveSyncData = _liveSyncData;
 		this.fileHashes = Object.create(null);
@@ -151,8 +152,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 							for (let platformName in this.batch) {
 								let batch = this.batch[platformName];
 								batch.syncFiles(((filesToSync:string[]) => {
-									this.$liveSyncProvider.preparePlatformForSync(platformName).wait();
-
+									this.$platformService.preparePlatform(platformName, false, !this.$options.syncAllFiles).wait();
 									let canExecute = this.getCanExecuteAction(this.liveSyncData.platform, this.liveSyncData.appIdentifier);
 									let deviceFileAction = (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => this.transferFiles(deviceAppData, localToDevicePaths, this.liveSyncData.projectFilesPath, !filePath);
 									let action = this.getSyncAction(filesToSync, deviceFileAction, afterFileSyncAction);

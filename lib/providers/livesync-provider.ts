@@ -69,9 +69,7 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 
 	public preparePlatformForSync(platform: string): IFuture<void> {
 		return (() => {
-			if (!this.$platformService.preparePlatform(platform).wait()) {
-				this.$logger.out("Verify that listed files are well-formed and try again the operation.");
-			}
+			this.$platformService.preparePlatform(platform).wait();
 		}).future<void>()();
 	}
 
