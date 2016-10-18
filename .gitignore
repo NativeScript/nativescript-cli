@@ -35,3 +35,32 @@ jspm_packages
 
 # Optional REPL history
 .node_repl_history
+
+npm-debug.log
+node_modules
+docs/html
+tscommand*.tmp.txt
+.tscache/
+*.seed
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
+*.tgz
+*.tmp
+*.sublime-workspace
+
+pids
+logs
+results
+scratch/
+.idea/
+.settings/
+.vscode/
+test-reports.xml
+
+*.js
+*.js.map
+/lib/.d.ts
