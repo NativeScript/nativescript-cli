@@ -3,8 +3,7 @@ import * as shell from "shelljs";
 import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import * as semver from "semver";
-import * as minimatch from "minimatch";
-import Future = require("fibers/future");
+import {AppFilesUpdater} from "./app-files-updater";
 import * as temp from "temp";
 temp.track();
 let clui = require("clui");
@@ -244,44 +243,18 @@ export class PlatformService implements IPlatformService {
 			this.$fs.ensureDirectoryExists(appDestinationDirectoryPath).wait();
 			let appSourceDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
 
-			// Delete the destination app in order to prevent EEXIST errors when symlinks are used.
-			let contents = this.$fs.readDirectory(appDestinationDirectoryPath).wait();
-
-			_(contents)
-				.filter(directoryName => directoryName !== constants.TNS_MODULES_FOLDER_NAME)
-				.each(directoryName => this.$fs.deleteDirectory(path.join(appDestinationDirectoryPath, directoryName)).wait());
-
-			// Copy all files from app dir, but make sure to exclude tns_modules
-			let sourceFiles = this.$fs.enumerateFilesInDirectorySync(appSourceDirectoryPath, null, { includeEmptyDirectories: true });
-
-			if (this.$options.release) {
-				let testsFolderPath = path.join(appSourceDirectoryPath, 'tests');
-				sourceFiles = sourceFiles.filter(source => source.indexOf(testsFolderPath) === -1);
-			}
-
-			// verify .xml files are well-formed
-			this.$xmlValidator.validateXmlFiles(sourceFiles).wait();
-
-			// Remove .ts and .js.map files in release
-			if (this.$options.release) {
-				constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => sourceFiles = sourceFiles.filter(file => !minimatch(file, pattern, { nocase: true })));
-			}
-
-			let copyFileFutures = sourceFiles.map(source => {
-				let destinationPath = path.join(appDestinationDirectoryPath, path.relative(appSourceDirectoryPath, source));
-				if (this.$fs.getFsStats(source).wait().isDirectory()) {
-					return this.$fs.createDirectory(destinationPath);
-				}
-				return this.$fs.copyFile(source, destinationPath);
+			const appUpdater = new AppFilesUpdater(appSourceDirectoryPath, appDestinationDirectoryPath, this.$options, this.$fs);
+			appUpdater.updateApp(sourceFiles => {
+				this.$xmlValidator.validateXmlFiles(sourceFiles).wait();
 			});
-			Future.wait(copyFileFutures);
 
 			// Copy App_Resources to project root folder
-			this.$fs.ensureDirectoryExists(platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait()).wait(); // Should be deleted
+			const appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait();
+			this.$fs.ensureDirectoryExists(appResourcesDestination).wait(); // Should be deleted
 			let appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
 				platformData.platformProjectService.prepareAppResources(appResourcesDirectoryPath).wait();
-				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait());
+				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), appResourcesDestination);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
 
@@ -314,6 +287,16 @@ export class PlatformService implements IPlatformService {
 			this.$logger.out("Project successfully prepared ("+platform+")");
 			return true;
 		}).future<boolean>()();
+	}
+
+	public cleanDestinationApp(platform: string): IFuture<void> {
+		return (() => {
+			const appSourceDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
+			let platformData = this.$platformsData.getPlatformData(platform);
+			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+			const appUpdater = new AppFilesUpdater(appSourceDirectoryPath, appDestinationDirectoryPath, this.$options, this.$fs);
+			appUpdater.cleanDestinationApp();
+		}).future<void>()();
 	}
 
 	public buildPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {

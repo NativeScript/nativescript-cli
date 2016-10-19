@@ -4,7 +4,11 @@ global._ = require("lodash");
 global.$injector = require("../lib/common/yok").injector;
 
 $injector.register("analyticsService", {
-	trackException: (): IFuture<void> => undefined
+	trackException: (): {wait(): void} => {
+		return {
+			wait: () => undefined
+		};
+	}
 });
 
 // Converts the js callstack to typescript
