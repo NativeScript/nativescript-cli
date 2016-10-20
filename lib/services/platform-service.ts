@@ -348,7 +348,8 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			let shouldBuild = this.preparePlatform(platform, false).wait();
 			let platformData = this.$platformsData.getPlatformData(platform);
-			let buildInfoFile = path.join(platformData.projectRoot, buildInfoFileName);
+			let buildInfoFilePath = this.getBuildOutputPath(platform, platformData, buildConfig);
+			let buildInfoFile = path.join(buildInfoFilePath, buildInfoFileName);
 			if (!shouldBuild) {
 				if (this.$fs.exists(buildInfoFile).wait()) {
 					let buildInfoText = this.$fs.readText(buildInfoFile).wait();
@@ -362,6 +363,14 @@ export class PlatformService implements IPlatformService {
 				this.$fs.writeFile(buildInfoFile, this._prepareInfo.time).wait();
 			}
 		}).future<void>()();
+	}
+
+	private getBuildOutputPath(platform: string, platformData: IPlatformData, buildConfig?: IBuildConfig): string {
+		let buildForDevice = buildConfig ? buildConfig.buildForDevice : false;
+		if (platform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
+			return buildForDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath;
+		}
+		return platformData.deviceBuildOutputPath;
 	}
 
 	public buildForDeploy(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
@@ -467,7 +476,7 @@ export class PlatformService implements IPlatformService {
 						} else {
 							let deviceBuildConfig = buildConfig || {};
 							deviceBuildConfig.buildForDevice = true;
-							this.prepareAndBuild(platform, buildConfig).wait();
+							this.prepareAndBuild(platform, deviceBuildConfig).wait();
 							packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 						}
 					}

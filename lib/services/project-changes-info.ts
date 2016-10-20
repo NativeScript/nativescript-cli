@@ -5,6 +5,7 @@ const prepareInfoFileName = ".nsprepareinfo";
 export interface IPrepareInfo {
 	time: string;
 	bundle: boolean;
+	release: boolean;
 }
 
 export class ProjectChangesInfo {
@@ -36,7 +37,7 @@ export class ProjectChangesInfo {
 				this.appResourcesChanged = true;
 				this.modulesChanged = true;
 				this.configChanged = true;
-				this.prepareInfo = { time: "", bundle: $options.bundle };
+				this.prepareInfo = { time: "", bundle: $options.bundle, release: $options.release };
 			} else {
 				let outputProjectMtime = this.$fs.getFsStats(buildInfoFile).wait().mtime.getTime();
 				this.prepareInfo = this.$fs.readJson(buildInfoFile).wait();
@@ -58,9 +59,20 @@ export class ProjectChangesInfo {
 						], outputProjectMtime);
 					}
 				}
+
 				if (this.$options.bundle !== this.prepareInfo.bundle) {
 					this.modulesChanged = true;
 					this.prepareInfo.bundle = this.$options.bundle;
+				}
+				if (this.$options.release !== this.prepareInfo.release) {
+					this.appFilesChanged = true;
+					this.appResourcesChanged = true;
+					this.modulesChanged = true;
+					this.configChanged = true;
+					this.prepareInfo.release = this.$options.release;
+				}
+				if (this.modulesChanged || this.appResourcesChanged) {
+					this.configChanged = true;
 				}
 			}
 
