@@ -80,10 +80,7 @@ class LiveSyncService implements ILiveSyncService {
 
 	private prepareLiveSyncData(platform: string): ILiveSyncData {
 		platform = platform || this.$devicesService.platform;
-		if (!this.$platformService.preparePlatform(platform.toLowerCase()).wait()) {
-			this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
-		}
-
+		this.$platformService.preparePlatform(platform.toLowerCase()).wait();
 		let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
 		if (this.$mobileHelper.isAndroidPlatform(platform)) {
 			this.ensureAndroidFrameworkVersion(platformData).wait();

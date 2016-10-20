@@ -50,7 +50,8 @@ export class AppFilesUpdater {
 	}
 
 	protected readSourceDir(): string[] {
-		return this.fs.enumerateFilesInDirectorySync(this.appSourceDirectoryPath, null, { includeEmptyDirectories: true });
+		let tnsDir = path.join(this.appSourceDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
+		return this.fs.enumerateFilesInDirectorySync(this.appSourceDirectoryPath, null, { includeEmptyDirectories: true }).filter(dirName => dirName !== tnsDir);
 	}
 
 	protected resolveAppSourceFiles(): string[] {

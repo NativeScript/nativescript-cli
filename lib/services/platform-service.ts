@@ -5,8 +5,11 @@ import * as helpers from "../common/helpers";
 import * as semver from "semver";
 import {AppFilesUpdater} from "./app-files-updater";
 import * as temp from "temp";
+import {ProjectChangesInfo, IPrepareInfo} from "./project-changes-info";
 temp.track();
 let clui = require("clui");
+
+const buildInfoFileName = ".nsbuildinfo";
 
 export class PlatformService implements IPlatformService {
 
@@ -31,7 +34,10 @@ export class PlatformService implements IPlatformService {
 		private $npm: INodePackageManager,
 		private $sysInfo: ISysInfo,
 		private $staticConfig: Config.IStaticConfig,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $childProcess: IChildProcess) { }
+
+	private _prepareInfo: IPrepareInfo;
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -201,7 +207,7 @@ export class PlatformService implements IPlatformService {
 		}).future<string[]>()();
 	}
 
-	public preparePlatform(platform: string): IFuture<boolean> {
+	public preparePlatform(platform: string, force?: boolean, skipModulesAndResources?: boolean): IFuture<boolean> {
 		return (() => {
 			this.validatePlatform(platform);
 
@@ -223,21 +229,57 @@ export class PlatformService implements IPlatformService {
 				});
 			}
 
-			return this.preparePlatformCore(platform).wait();
+			this.ensurePlatformInstalled(platform).wait();
+
+			let changeInfo:ProjectChangesInfo = new ProjectChangesInfo(platform, force, skipModulesAndResources, this.$platformsData, this.$projectData, this.$devicePlatformsConstants, this.$options, this.$fs);
+			this._prepareInfo = changeInfo.prepareInfo;
+			if (!this.isPlatformPrepared(platform).wait() || changeInfo.hasChanges) {
+				this.preparePlatformCore(platform, changeInfo).wait();
+				return true;
+			}
+			return false;
 		}).future<boolean>()();
 	}
 
 	@helpers.hook('prepare')
-	private preparePlatformCore(platform: string): IFuture<boolean> {
+	private preparePlatformCore(platform: string, changeInfo:ProjectChangesInfo): IFuture<void> {
 		return (() => {
-			platform = platform.toLowerCase();
-			this.ensurePlatformInstalled(platform).wait();
 
+			let platformData = this.$platformsData.getPlatformData(platform);
+
+			if (changeInfo.appFilesChanged) {
+				this.copyAppFiles(platform).wait();
+			}
+			if (changeInfo.appResourcesChanged) {
+				this.copyAppResources(platform).wait();
+				platformData.platformProjectService.prepareProject().wait();
+			}
+			if (changeInfo.modulesChanged) {
+				this.copyTnsModules(platform).wait();
+			}
+
+			let directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+			let excludedDirs = [constants.APP_RESOURCES_FOLDER_NAME];
+			if (!changeInfo.modulesChanged) {
+				excludedDirs.push(constants.TNS_MODULES_FOLDER_NAME);
+			}
+			this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs).wait();
+
+			if (changeInfo.configChanged || changeInfo.modulesChanged) {
+				this.applyBaseConfigOption(platformData).wait();
+				platformData.platformProjectService.processConfigurationFilesFromAppResources().wait();
+				platformData.platformProjectService.interpolateConfigurationFile().wait();
+			}
+
+			this.$logger.out("Project successfully prepared ("+platform+")");
+		}).future<void>()();
+	}
+
+	private copyAppFiles(platform: string): IFuture<void> {
+		return (() => {
 			let platformData = this.$platformsData.getPlatformData(platform);
 			platformData.platformProjectService.ensureConfigurationFileInAppResources().wait();
 			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath).wait() ?
-				this.$fs.getFsStats(appDestinationDirectoryPath).wait().mtime : null;
 
 			// Copy app folder to native project
 			this.$fs.ensureDirectoryExists(appDestinationDirectoryPath).wait();
@@ -247,9 +289,14 @@ export class PlatformService implements IPlatformService {
 			appUpdater.updateApp(sourceFiles => {
 				this.$xmlValidator.validateXmlFiles(sourceFiles).wait();
 			});
+		}).future<void>()();
+	}
 
-			// Copy App_Resources to project root folder
-			const appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait();
+	private copyAppResources(platform: string): IFuture<void> {
+		return (() => {
+			let platformData = this.$platformsData.getPlatformData(platform);
+			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+			let appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait();
 			this.$fs.ensureDirectoryExists(appResourcesDestination).wait(); // Should be deleted
 			let appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
@@ -257,36 +304,25 @@ export class PlatformService implements IPlatformService {
 				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), appResourcesDestination);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
+		}).future<void>()();
+	}
 
-			platformData.platformProjectService.prepareProject().wait();
+	private copyTnsModules(platform: string): IFuture<void> {
+		return (() => {
+			let platformData = this.$platformsData.getPlatformData(platform);
+			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath).wait() ? this.$fs.getFsStats(appDestinationDirectoryPath).wait().mtime : null;
 
-			let appDir = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			try {
-				let tnsModulesDestinationPath = path.join(appDir, constants.TNS_MODULES_FOLDER_NAME);
+				let tnsModulesDestinationPath = path.join(appDestinationDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
 				// Process node_modules folder
 				this.$nodeModulesBuilder.prepareNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime).wait();
 			} catch (error) {
 				this.$logger.debug(error);
-				shell.rm("-rf", appDir);
+				shell.rm("-rf", appDestinationDirectoryPath);
 				this.$errors.failWithoutHelp(`Processing node_modules failed. ${error}`);
 			}
-
-			// Process platform specific files
-			let directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-			let excludedDirs = [constants.APP_RESOURCES_FOLDER_NAME];
-			this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs).wait();
-
-			this.applyBaseConfigOption(platformData).wait();
-
-			// Process configurations files from App_Resources
-			platformData.platformProjectService.processConfigurationFilesFromAppResources().wait();
-
-			// Replace placeholders in configuration files
-			platformData.platformProjectService.interpolateConfigurationFile().wait();
-
-			this.$logger.out("Project successfully prepared ("+platform+")");
-			return true;
-		}).future<boolean>()();
+		}).future<void>()();
 	}
 
 	public cleanDestinationApp(platform: string): IFuture<void> {
@@ -308,15 +344,25 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	public prepareAndExecute(platform: string, executeAction: () => IFuture<void>): IFuture<void> {
- 		return (() => {
- 			platform = platform.toLowerCase();
- 			if (!this.preparePlatform(platform).wait()) {
- 				this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
- 			}
- 			executeAction().wait();
- 		}).future<void>()();
- 	}
+	public prepareAndBuild(platform: string, buildConfig?: IBuildConfig, forceBuild?: boolean): IFuture<void> {
+		return (() => {
+			let shouldBuild = this.preparePlatform(platform, false).wait();
+			let platformData = this.$platformsData.getPlatformData(platform);
+			let buildInfoFile = path.join(platformData.projectRoot, buildInfoFileName);
+			if (!shouldBuild) {
+				if (this.$fs.exists(buildInfoFile).wait()) {
+					let buildInfoText = this.$fs.readText(buildInfoFile).wait();
+					shouldBuild = this._prepareInfo.time !== buildInfoText;
+				} else {
+					shouldBuild = true;
+				}
+			}
+			if (shouldBuild || forceBuild) {
+				this.buildForDeploy(platform, buildConfig).wait();
+				this.$fs.writeFile(buildInfoFile, this._prepareInfo.time).wait();
+			}
+		}).future<void>()();
+	}
 
 	public buildForDeploy(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
@@ -393,7 +439,6 @@ export class PlatformService implements IPlatformService {
 
 	public runPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		platform = platform.toLowerCase();
-
 		if (this.$options.emulator) {
 			return this.deployOnEmulator(platform, buildConfig);
 		}
@@ -417,12 +462,12 @@ export class PlatformService implements IPlatformService {
 					let packageFile = packageFileDict[packageFileKey];
 					if (!packageFile) {
 						if (this.$devicesService.isiOSSimulator(device)) {
-							this.prepareAndExecute(platform, () => this.buildForDeploy(platform, buildConfig)).wait();
+							this.prepareAndBuild(platform, buildConfig).wait();
 							packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 						} else {
 							let deviceBuildConfig = buildConfig || {};
 							deviceBuildConfig.buildForDevice = true;
-							this.prepareAndExecute(platform, () => this.buildForDeploy(platform, deviceBuildConfig)).wait();
+							this.prepareAndBuild(platform, buildConfig).wait();
 							packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 						}
 					}
@@ -485,7 +530,6 @@ export class PlatformService implements IPlatformService {
 
 	public deployOnEmulator(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		platform = platform.toLowerCase();
-
 		if (this.$options.avd) {
 			this.$logger.warn(`Option --avd is no longer supported. Please use --device isntead!`);
 		}
@@ -520,7 +564,7 @@ export class PlatformService implements IPlatformService {
 						emulatorServices.checkAvailability().wait();
 						emulatorServices.checkDependencies().wait();
 
-						this.prepareAndExecute(platform, () => this.buildPlatform(platform, buildConfig)).wait();
+						this.prepareAndBuild(platform, buildConfig).wait();
 
 						packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 						this.$logger.out("Using ", packageFile);
