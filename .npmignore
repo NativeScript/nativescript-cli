@@ -18,6 +18,7 @@ bin/nativescript
 bin/*.cmd
 
 lib/**/*.ts
+!lib/**/*.d.ts
 lib/**/*.js.map
 
 test/
@@ -28,3 +29,5 @@ scratch/
 .travis.yml
 docs/html/
 dev/
+
+tscommand*.tmp.txt
