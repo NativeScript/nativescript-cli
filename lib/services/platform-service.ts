@@ -367,7 +367,7 @@ export class PlatformService implements IPlatformService {
 	}
 
 	private getBuildOutputPath(platform: string, platformData: IPlatformData, buildConfig?: IBuildConfig): string {
-		let buildForDevice = buildConfig ? buildConfig.buildForDevice : false;
+		let buildForDevice = buildConfig ? buildConfig.buildForDevice : this.$options.forDevice;
 		if (platform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
 			return buildForDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath;
 		}
