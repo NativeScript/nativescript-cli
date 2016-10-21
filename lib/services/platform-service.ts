@@ -268,8 +268,9 @@ export class PlatformService implements IPlatformService {
 			if (changeInfo.configChanged || changeInfo.modulesChanged) {
 				this.applyBaseConfigOption(platformData).wait();
 				platformData.platformProjectService.processConfigurationFilesFromAppResources().wait();
-				platformData.platformProjectService.interpolateConfigurationFile().wait();
 			}
+
+			platformData.platformProjectService.interpolateConfigurationFile().wait();
 
 			this.$logger.out("Project successfully prepared ("+platform+")");
 		}).future<void>()();

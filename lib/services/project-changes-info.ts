@@ -60,16 +60,13 @@ export class ProjectChangesInfo {
 					}
 				}
 
-				if (this.$options.bundle !== this.prepareInfo.bundle) {
-					this.modulesChanged = true;
-					this.prepareInfo.bundle = this.$options.bundle;
-				}
-				if (this.$options.release !== this.prepareInfo.release) {
+				if (this.$options.bundle !== this.prepareInfo.bundle || this.$options.release !== this.prepareInfo.release) {
 					this.appFilesChanged = true;
 					this.appResourcesChanged = true;
 					this.modulesChanged = true;
 					this.configChanged = true;
 					this.prepareInfo.release = this.$options.release;
+					this.prepareInfo.bundle = this.$options.bundle;
 				}
 				if (this.modulesChanged || this.appResourcesChanged) {
 					this.configChanged = true;
