@@ -1,6 +1,4 @@
-import * as fs from "fs";
 import * as path from "path";
-import * as semver from "semver";
 import * as shelljs from "shelljs";
 import * as constants from "../../constants";
 import * as minimatch from "minimatch";
@@ -18,8 +16,8 @@ export class TnsModulesCopy {
 	}
 
 	public copyModules(dependencies: any[], platform: string): void {
-		for (var entry in dependencies) {
-			var dependency = dependencies[entry];
+		for (let entry in dependencies) {
+			let dependency = dependencies[entry];
 
 			this.copyDependencyDir(dependency);
 
@@ -30,13 +28,11 @@ export class TnsModulesCopy {
 				let allFiles = this.$fs.enumerateFilesInDirectorySync(tnsCoreModulesResourcePath);
 				let deleteFilesFutures = allFiles.filter(file => minimatch(file, "**/*.ts", { nocase: true })).map(file => this.$fs.deleteFile(file));
 				Future.wait(deleteFilesFutures);
-
-				shelljs.rm("-rf", path.join(this.outputRoot, dependency.name, "node_modules"));
 			}
 		}
 	}
 
-	private copyDependencyDir(dependency: any) {
+	private copyDependencyDir(dependency: any): void {
 		if (dependency.depth === 0) {
 			let isScoped = dependency.name.indexOf("@") === 0;
 			let targetDir = this.outputRoot;
@@ -47,7 +43,6 @@ export class TnsModulesCopy {
 
 			shelljs.mkdir("-p", targetDir);
 			shelljs.cp("-Rf", dependency.directory, targetDir);
-			// console.log("Copied dependency: " + dependency.name);
 		}
 	}
 }

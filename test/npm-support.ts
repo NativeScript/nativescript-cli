@@ -16,20 +16,19 @@ import NodeModulesLib = require("../lib/tools/node-modules/node-modules-builder"
 import PluginsServiceLib = require("../lib/services/plugins-service");
 import ChildProcessLib = require("../lib/common/child-process");
 import ProjectFilesManagerLib = require("../lib/common/services/project-files-manager");
-import {DeviceAppDataFactory} from "../lib/common/mobile/device-app-data/device-app-data-factory";
-import {LocalToDevicePathDataFactory} from "../lib/common/mobile/local-to-device-path-data-factory";
-import {MobileHelper} from "../lib/common/mobile/mobile-helper";
-import {ProjectFilesProvider} from "../lib/providers/project-files-provider";
-import {DeviceAppDataProvider} from "../lib/providers/device-app-data-provider";
-import {MobilePlatformsCapabilities} from "../lib/mobile-platforms-capabilities";
-import {DevicePlatformsConstants} from "../lib/common/mobile/device-platforms-constants";
+import { DeviceAppDataFactory } from "../lib/common/mobile/device-app-data/device-app-data-factory";
+import { LocalToDevicePathDataFactory } from "../lib/common/mobile/local-to-device-path-data-factory";
+import { MobileHelper } from "../lib/common/mobile/mobile-helper";
+import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
+import { DeviceAppDataProvider } from "../lib/providers/device-app-data-provider";
+import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilities";
+import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
 import { LockFile } from "../lib/lockfile";
 import Future = require("fibers/future");
 
 import path = require("path");
 import temp = require("temp");
-import shelljs = require("shelljs");
 temp.track();
 
 let assert = require("chai").assert;
@@ -191,6 +190,7 @@ describe("Npm support tests", () => {
 		appDestinationFolderPath = projectSetup.appDestinationFolderPath;
 	});
 	it("Ensures that the installed dependencies are prepared correctly", () => {
+		let fs: IFileSystem = testInjector.resolve("fs");
 		// Setup
 		addDependencies(testInjector, projectFolder, { "bplist": "0.0.4" }).wait();
 
@@ -199,37 +199,28 @@ describe("Npm support tests", () => {
 
 		// Assert
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
-		let lodashFolderPath = path.join(tnsModulesFolderPath, "lodash");
-		let bplistFolderPath = path.join(tnsModulesFolderPath, "bplist");
-		let bplistCreatorFolderPath = path.join(tnsModulesFolderPath, "bplist-creator");
-		let bplistParserFolderPath = path.join(tnsModulesFolderPath, "bplist-parser");
 
-		let fs = testInjector.resolve("fs");
-		assert.isTrue(fs.exists(lodashFolderPath).wait());
-		assert.isTrue(fs.exists(bplistFolderPath).wait());
-		assert.isTrue(fs.exists(bplistCreatorFolderPath).wait());
-		assert.isTrue(fs.exists(bplistParserFolderPath).wait());
+		let results = fs.enumerateFilesInDirectorySync(tnsModulesFolderPath, (file, stat) => {
+			return true;
+		}, { enumerateDirectories: true });
+
+		assert.isTrue(results.filter((val) => _.endsWith(val, "lodash")).length === 1);
+		assert.isTrue(results.filter((val) => _.endsWith(val, path.join(tnsModulesFolderPath, "bplist"))).length === 1);
+		assert.isTrue(results.filter((val) => _.endsWith(val, "bplist-creator")).length === 1);
+		assert.isTrue(results.filter((val) => _.endsWith(val, "bplist-parser")).length === 1);
 	});
 	it("Ensures that scoped dependencies are prepared correctly", () => {
 		// Setup
 		let fs = testInjector.resolve("fs");
 		let scopedName = "@reactivex/rxjs";
-		let scopedModule = path.join(projectFolder, nodeModulesFolderName, "@reactivex/rxjs");
-		let scopedPackageJson = path.join(scopedModule, "package.json");
 		let dependencies: any = {};
 		dependencies[scopedName] = "0.0.0-prealpha.3";
 		// Do not pass dependencies object as the sinopia cannot work with scoped dependencies. Instead move them manually.
-		addDependencies(testInjector, projectFolder, {}).wait();
-		//create module dir, and add a package.json
-		shelljs.mkdir("-p", scopedModule);
-		fs.writeFile(scopedPackageJson, JSON.stringify({ name: scopedName, version: "1.0.0" })).wait();
-
+		addDependencies(testInjector, projectFolder, dependencies).wait();
 		// Act
 		preparePlatform(testInjector).wait();
-
 		// Assert
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
-
 		let scopedDependencyPath = path.join(tnsModulesFolderPath, "@reactivex", "rxjs");
 		assert.isTrue(fs.exists(scopedDependencyPath).wait());
 	});
@@ -243,15 +234,19 @@ describe("Npm support tests", () => {
 		fs.unzip(path.join("resources", "test", `${customPluginName}.zip`), customPluginDirectory).wait();
 
 		addDependencies(testInjector, projectFolder, { "plugin-with-scoped-dependency": `file:${path.join(customPluginDirectory, customPluginName)}` }).wait();
-
 		// Act
 		preparePlatform(testInjector).wait();
-
 		// Assert
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
+		let results = fs.enumerateFilesInDirectorySync(tnsModulesFolderPath, (file, stat) => {
+			return true;
+		}, { enumerateDirectories: true });
 
-		let scopedDependencyPath = path.join(tnsModulesFolderPath, "@scoped-plugin", "inner-plugin");
-		assert.isTrue(fs.exists(scopedDependencyPath).wait());
+		let filteredResults = results.filter((val) => {
+			return _.endsWith(val, path.join("@scoped-plugin", "inner-plugin"));
+		});
+
+		assert.isTrue(filteredResults.length === 1);
 	});
 
 	it("Ensures that tns_modules absent when bundling", () => {
