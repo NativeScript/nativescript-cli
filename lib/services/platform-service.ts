@@ -82,9 +82,7 @@ export class PlatformService implements IPlatformService {
 				pathToSave: path.join(this.$projectData.platformsDir, platform)
 			};
 
-			if (this.$options.frameworkPath) {
-				packageToInstall = this.$options.frameworkPath;
-			} else {
+			if (!this.$options.frameworkPath) {
 				packageToInstall = platformData.frameworkPackageName;
 				npmOptions["version"] = version;
 			}

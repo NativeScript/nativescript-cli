@@ -181,7 +181,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	private installCore(packageName: string, pathToSave: string, version: string): IFuture<string> {
 		return (() => {
 			if (this.$options.frameworkPath) {
-				this.npmInstall(packageName, pathToSave, version).wait();
+				this.npmInstall(this.$options.frameworkPath, pathToSave, version).wait();
 				let pathToNodeModules = path.join(pathToSave, "node_modules");
 				let folders = this.$fs.readDirectory(pathToNodeModules).wait();
 
