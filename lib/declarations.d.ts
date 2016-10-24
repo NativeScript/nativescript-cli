@@ -17,3 +17,7 @@ interface IProcessInfo {
 	 */
 	exitCode?: number;
 }
+
+interface IDictionary<T> {
+	[key: string]: T
+}
