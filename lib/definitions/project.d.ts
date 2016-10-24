@@ -86,7 +86,7 @@ interface IPlatformProjectService {
 	preparePluginNativeCode(pluginData: IPluginData, options?: any): IFuture<void>;
 	removePluginNativeCode(pluginData: IPluginData): IFuture<void>;
 	afterPrepareAllPlugins(): IFuture<void>;
-	beforePrepareAllPlugins(): IFuture<void>;
+	beforePrepareAllPlugins(dependencies?: IDictionary<IDependencyData>): IFuture<void>;
 	getAppResourcesDestinationDirectoryPath(): IFuture<string>;
 	deploy(deviceIdentifier: string): IFuture<void>;
 	processConfigurationFilesFromAppResources(): IFuture<void>;

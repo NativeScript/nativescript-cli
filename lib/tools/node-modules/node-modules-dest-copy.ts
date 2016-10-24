@@ -142,7 +142,8 @@ export class NpmPluginPrepare {
 			return;
 		}
 
-		this.$platformsData.getPlatformData(platform).platformProjectService.beforePrepareAllPlugins().wait();
+		this.$platformsData.getPlatformData(platform).platformProjectService.beforePrepareAllPlugins(dependencies).wait();
+
 		_.each(dependencies, dependency => {
 			let isPlugin = !!dependency.nativescript;
 			if (isPlugin) {
