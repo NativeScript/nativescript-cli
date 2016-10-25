@@ -29,38 +29,17 @@ export class NpmDependencyResolver {
 		_.each(changedDirectories, changedDirectoryAbsolutePath => {
 			if (!devDependencies[path.basename(changedDirectoryAbsolutePath)]) {
 				let pathToPackageJson = path.join(changedDirectoryAbsolutePath, constants.PACKAGE_JSON_FILE_NAME);
-				let packageJsonFiles = fs.existsSync(pathToPackageJson) ? [pathToPackageJson] : [];
-				let nodeModulesFolderPath = path.join(changedDirectoryAbsolutePath, constants.NODE_MODULES_FOLDER_NAME);
-				packageJsonFiles = packageJsonFiles.concat(this.enumeratePackageJsonFilesSync(nodeModulesFolderPath));
-
-				_.each(packageJsonFiles, packageJsonFilePath => {
-					let fileContent = require(packageJsonFilePath);
-
-					if (!devDependencies[fileContent.name] && fileContent.name && fileContent.version) { // Don't flatten dev dependencies and flatten only dependencies with valid package.json
-						let currentDependency: ILocalDependencyData = {
-							name: fileContent.name,
-							version: fileContent.version,
-							directory: path.dirname(packageJsonFilePath),
-							nativescript: fileContent.nativescript
-						};
-
-						let addedDependency = dependencies[currentDependency.name];
-						if (addedDependency) {
-							if (semver.gt(currentDependency.version, addedDependency.version)) {
-								let currentDependencyMajorVersion = semver.major(currentDependency.version);
-								let addedDependencyMajorVersion = semver.major(addedDependency.version);
-
-								let message = `The dependency located at ${addedDependency.directory} with version ${addedDependency.version} will be replaced with dependency located at ${currentDependency.directory} with version ${currentDependency.version}`;
-								let logger = $injector.resolve("$logger");
-								currentDependencyMajorVersion === addedDependencyMajorVersion ? logger.out(message) : logger.warn(message);
-
-								dependencies[currentDependency.name] = currentDependency;
-							}
-						} else {
-							dependencies[currentDependency.name] = currentDependency;
-						}
-					}
-				});
+				let packageJsonFileExists = fs.existsSync(pathToPackageJson);
+				if(packageJsonFileExists) {
+					let fileContent = require(pathToPackageJson);
+					let currentDependency: ILocalDependencyData = {
+						name: fileContent.name,
+						version: fileContent.version,
+						directory: path.dirname(pathToPackageJson),
+						nativescript: fileContent.nativescript
+					};
+					dependencies[currentDependency.name] = currentDependency;
+				}
 			}
 		});
 		return dependencies;
@@ -102,6 +81,7 @@ export class TnsModulesCopy {
 		_.each(dependencies, dependency => {
 			this.copyDependencyDir(dependency);
 
+			//TODO: plamen5kov: this logic for all plugins (remove .ts files and remove platforms/ folder from plugins)
 			if (dependency.name === constants.TNS_CORE_MODULES_NAME) {
 				let tnsCoreModulesResourcePath = path.join(this.outputRoot, constants.TNS_CORE_MODULES_NAME);
 
@@ -110,8 +90,7 @@ export class TnsModulesCopy {
 				let deleteFilesFutures = allFiles.filter(file => minimatch(file, "**/*.ts", { nocase: true })).map(file => this.$fs.deleteFile(file));
 				Future.wait(deleteFilesFutures);
 
-				shelljs.cp("-Rf", path.join(tnsCoreModulesResourcePath, "*"), this.outputRoot);
-				this.$fs.deleteDirectory(tnsCoreModulesResourcePath).wait();
+				shelljs.rm("-rf", path.join(this.outputRoot, dependency.name, "node_modules"));
 			}
 		});
 	}
@@ -125,7 +104,6 @@ export class TnsModulesCopy {
 		}
 		shelljs.mkdir("-p", targetDir);
 		shelljs.cp("-Rf", dependency.directory, targetDir);
-		shelljs.rm("-rf", path.join(targetDir, dependency.name, "node_modules"));
 	}
 }
 
