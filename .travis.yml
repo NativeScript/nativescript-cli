@@ -1,0 +1,10 @@
+language: node_js
+node_js:
+- '4'
+git:
+  submodules: false
+before_script:
+- npm install grunt-cli
+- npm install
+script:
+- node_modules/.bin/grunt pack --no-color
