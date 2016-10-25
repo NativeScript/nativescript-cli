@@ -11,8 +11,7 @@ import { sleep } from "../../../lib/common/helpers";
 let glob = require("glob");
 
 export class NodeModulesBuilder implements INodeModulesBuilder {
-	constructor(private $childProcess: IChildProcess,
-		private $fs: IFileSystem,
+	constructor(private $fs: IFileSystem,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $injector: IInjector,
