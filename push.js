@@ -1,4 +1,4 @@
-import { AuthType, RequestMethod, CacheReqeust, KinveyRequest } from 'kinvey-node-sdk/dist/request';
+import { AuthType, RequestMethod, CacheRequest, KinveyRequest } from 'kinvey-node-sdk/dist/request';
 import { Client } from 'kinvey-node-sdk/dist/client';
 import { User } from 'kinvey-node-sdk/dist/entity';
 import Device from './device';
@@ -102,7 +102,7 @@ export default class Push extends EventEmitter {
         return request.execute()
           .then(response => response.data)
           .then((data) => {
-            const request = new CacheReqeust({
+            const request = new CacheRequest({
               method: RequestMethod.PUT,
               url: url.format({
                 protocol: this.client.protocol,
@@ -141,7 +141,7 @@ export default class Push extends EventEmitter {
         });
       })
       .then(() => {
-        const request = new CacheReqeust({
+        const request = new CacheRequest({
           method: RequestMethod.GET,
           url: url.format({
             protocol: this.client.protocol,
@@ -180,7 +180,7 @@ export default class Push extends EventEmitter {
         return request.execute();
       })
       .then((data) => {
-        const request = new CacheReqeust({
+        const request = new CacheRequest({
           method: RequestMethod.DELETE,
           url: url.format({
             protocol: this.client.protocol,
