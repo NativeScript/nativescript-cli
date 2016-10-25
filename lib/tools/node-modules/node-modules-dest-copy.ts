@@ -28,6 +28,8 @@ export class TnsModulesCopy {
 				let allFiles = this.$fs.enumerateFilesInDirectorySync(tnsCoreModulesResourcePath);
 				let deleteFilesFutures = allFiles.filter(file => minimatch(file, "**/*.ts", { nocase: true })).map(file => this.$fs.deleteFile(file));
 				Future.wait(deleteFilesFutures);
+
+				shelljs.rm("-rf", path.join(tnsCoreModulesResourcePath, "node_modules"));
 			}
 		}
 	}
