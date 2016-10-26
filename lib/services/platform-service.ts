@@ -326,6 +326,8 @@ export class PlatformService implements IPlatformService {
 
 	public cleanDestinationApp(platform: string): IFuture<void> {
 		return (() => {
+			this.ensurePlatformInstalled(platform).wait();
+
 			const appSourceDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
 			let platformData = this.$platformsData.getPlatformData(platform);
 			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
