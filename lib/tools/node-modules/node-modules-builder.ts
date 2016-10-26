@@ -3,15 +3,15 @@ import * as fs from "fs";
 import * as path from "path";
 import * as shelljs from "shelljs";
 import Future = require("fibers/future");
-import {NpmDependencyResolver, TnsModulesCopy, NpmPluginPrepare} from "./node-modules-dest-copy";
+import { TnsModulesCopy, NpmPluginPrepare } from "./node-modules-dest-copy";
+import { NodeModulesDependenciesBuilder } from "./node-modules-dependencies-builder";
 import * as fiberBootstrap from "../../common/fiber-bootstrap";
-import {sleep} from "../../../lib/common/helpers";
+import { sleep } from "../../../lib/common/helpers";
 
 let glob = require("glob");
 
 export class NodeModulesBuilder implements INodeModulesBuilder {
-	constructor(
-		private $fs: IFileSystem,
+	constructor(private $fs: IFileSystem,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $injector: IInjector,
@@ -37,7 +37,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 				}, (er: Error, files: string[]) => {
 					fiberBootstrap.run(() => {
 
-						while(this.$lockfile.check().wait()) {
+						while (this.$lockfile.check().wait()) {
 							sleep(10);
 						}
 
@@ -85,7 +85,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 						let intervalId = setInterval(() => {
 							fiberBootstrap.run(() => {
 								if (!this.$lockfile.check().wait() || future.isResolved()) {
-									if(!future.isResolved()) {
+									if (!future.isResolved()) {
 										future.return();
 									}
 									clearInterval(intervalId);
@@ -133,27 +133,27 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 				// Force copying if the destination doesn't exist.
 				lastModifiedTime = null;
 			}
-			let nodeModules = this.getChangedNodeModules(absoluteOutputPath, platform, lastModifiedTime).wait();
 
-			const resolver = new NpmDependencyResolver(this.$projectData.projectDir);
-			const resolvedDependencies = resolver.resolveDependencies(_.keys(nodeModules), platform);
+			let dependenciesBuilder = this.$injector.resolve(NodeModulesDependenciesBuilder, {});
+			let productionDependencies = dependenciesBuilder.getProductionDependencies(this.$projectData.projectDir);
 
 			if (!this.$options.bundle) {
 				const tnsModulesCopy = this.$injector.resolve(TnsModulesCopy, {
 					outputRoot: absoluteOutputPath
 				});
-				tnsModulesCopy.copyModules(resolvedDependencies, platform);
+				tnsModulesCopy.copyModules(productionDependencies, platform);
 			} else {
 				this.cleanNodeModules(absoluteOutputPath, platform);
 			}
 
 			const npmPluginPrepare = this.$injector.resolve(NpmPluginPrepare, {});
-			npmPluginPrepare.preparePlugins(resolvedDependencies, platform);
+			npmPluginPrepare.preparePlugins(productionDependencies, platform);
 		}).future<void>()();
 	}
 
 	public cleanNodeModules(absoluteOutputPath: string, platform: string): void {
 		shelljs.rm("-rf", absoluteOutputPath);
-    }
+	}
 }
+
 $injector.register("nodeModulesBuilder", NodeModulesBuilder);
