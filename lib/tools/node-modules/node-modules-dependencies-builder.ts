@@ -100,8 +100,11 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
     }
 
     private moduleExists(modulePath: string): boolean {
-        try {
+       try {
             let exists = fs.lstatSync(modulePath);
+            if (exists.isSymbolicLink()) {
+                exists = fs.lstatSync(fs.realpathSync(modulePath));
+            }
             return exists.isDirectory();
         } catch (e) {
             return false;
