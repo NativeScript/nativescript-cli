@@ -52,6 +52,8 @@ export class PublishIOS implements ICommand {
 				this.$logger.warn("No code sign identity set. A default code sign identity will be used. You can set one in app/App_Resources/iOS/build.xcconfig");
 			}
 
+			this.$options.release = true;
+
 			if (!ipaFilePath) {
 				let platform = this.$devicePlatformsConstants.iOS;
 				// No .ipa path provided, build .ipa on out own.
@@ -82,7 +84,6 @@ export class PublishIOS implements ICommand {
 				}
 			}
 
-			this.$options.release = true;
 			this.$itmsTransporterService.upload({
 				username,
 				password,
