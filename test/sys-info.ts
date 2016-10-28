@@ -22,7 +22,7 @@ describe("SysInfo unit tests", () => {
 			}
 		};
 
-		sysInfo = new SysInfo(childProcess);
+		sysInfo = new SysInfo(childProcess, null, null, null, null);
 	});
 
 	describe("Should execute correct commands to check for", () => {
