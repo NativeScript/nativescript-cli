@@ -641,9 +641,11 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			let session = new PlistSession({ log: (txt: string) => this.$logger.trace("Info.plist: " + txt) });
 			let makePatch = (plistPath: string) => {
 				if (!this.$fs.exists(plistPath).wait()) {
+					this.$logger.trace("No plist found at: " + plistPath);
 					return;
 				}
 
+				this.$logger.trace("Schedule merge plist at: " + plistPath);
 				session.patch({
 					name: path.relative(projectDir, plistPath),
 					read: () => this.$fs.readFile(plistPath).wait().toString()
