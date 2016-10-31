@@ -86,6 +86,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 				infoData.buildToolsVersion = this.getBuildToolsVersion().wait();
 				infoData.targetSdkVersion = this.getTargetSdk().wait();
 				infoData.supportRepositoryVersion = this.getAndroidSupportRepositoryVersion().wait();
+				infoData.generateTypings = this.shouldGenerateTypings();
 
 				this.toolsInfo = infoData;
 			}
@@ -194,6 +195,10 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 			return null;
 		}).future<string>()();
+	}
+
+	private shouldGenerateTypings(): boolean {
+		return this.$options.androidTypings;
 	}
 
 	/**

@@ -91,6 +91,7 @@ interface IOptions extends ICommonOptions {
 	linkTo: string;
 	ng: boolean;
 	tsc: boolean;
+	androidTypings: boolean;
 	bundle: boolean;
 	platformTemplate: string;
 	port: Number;
@@ -224,6 +225,11 @@ interface IAndroidToolsInfoData {
 	 * In case it is not specified, compileSdkVersion will be used for targetSdkVersion.
 	 */
 	targetSdkVersion: number;
+
+	/**
+	 * Whether or not `.d.ts` typings should be generated for compileSdk. Experimental feature
+	 */
+	generateTypings: boolean;
 }
 
 interface ISocketProxyFactory {
