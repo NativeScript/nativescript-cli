@@ -3,9 +3,10 @@ import * as path from "path";
 
 export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 
+	private $projectData: IProjectData;
+
 	constructor(
 		private $fs: IFileSystem,
-		private $projectData: IProjectData,
 		private $loggingLevels: Mobile.ILoggingLevels) { }
 
 	public filterData(data: string, logLevel: string, pid?: string): string {
@@ -22,16 +23,16 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 			}
 			// CONSOLE LOG messages comme in the following form:
 			// <date> <domain> <app>[pid] CONSOLE LOG file:///location:row:column: <actual message goes here>
-			// This code removes unnecessary information from log messages. The output looks like: 
-			// CONSOLE LOG file:///location:row:column: <actual message goes here>			
+			// This code removes unnecessary information from log messages. The output looks like:
+			// CONSOLE LOG file:///location:row:column: <actual message goes here>
 			if (pid) {
 				let searchString = "["+pid+"]: ";
 				let pidIndex = data.indexOf(searchString);
 				if (pidIndex > 0) {
 					data = data.substring(pidIndex + searchString.length, data.length);
-					data = this.getOriginalFileLocation(data);
 				}
 			}
+			data = this.getOriginalFileLocation(data);
 			return data.trim();
 		}
 
@@ -45,24 +46,33 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 			let parts = data.substring(fileIndex + fileString.length).split(":");
 			if (parts.length >= 4) {
 				let file = parts[0];
-				let sourceMapFile = path.join(this.$projectData.projectDir, file + ".map");
-				let row = parseInt(parts[1]);
-				let column = parseInt(parts[2]);
-				if (this.$fs.exists(sourceMapFile).wait()) {
-					let sourceMap = this.$fs.readText(sourceMapFile, "utf8").wait();
-					let smc = new sourcemap.SourceMapConsumer(sourceMap);
-					let originalPosition = smc.originalPositionFor({line:row,column:column});
-					data = data.substring(0, fileIndex + fileString.length)
-						+ file.replace(".js", ".ts") + ":"
-						+ originalPosition.line + ":"
-						+ originalPosition.column;
-					for (let i = 3; i<parts.length; i++) {
-						data += ":" + parts[i];
+				if (this.ensureProjectData()) {
+					let sourceMapFile = path.join(this.$projectData.projectDir, file + ".map");
+					let row = parseInt(parts[1]);
+					let column = parseInt(parts[2]);
+					if (this.$fs.exists(sourceMapFile).wait()) {
+						let sourceMap = this.$fs.readText(sourceMapFile, "utf8").wait();
+						let smc = new sourcemap.SourceMapConsumer(sourceMap);
+						let originalPosition = smc.originalPositionFor({line:row,column:column});
+						data = data.substring(0, fileIndex + fileString.length)
+							+ file.replace(".js", ".ts") + ":"
+							+ originalPosition.line + ":"
+							+ originalPosition.column;
+						for (let i = 3; i<parts.length; i++) {
+							data += ":" + parts[i];
+						}
 					}
 				}
 			}
 		}
 		return data;
+	}
+
+	private ensureProjectData(): boolean {
+		if (!this.$projectData) {
+			this.$projectData = $injector.resolve("projectData");
+		}
+		return !!this.$projectData;
 	}
 }
 $injector.register("iOSLogFilter", IOSLogFilter);
