@@ -1,10 +1,10 @@
 import * as childProcess from "child_process";
-import * as Promise from "bluebird";
 
 export class ChildProcess {
-	public spawnFromEvent(command: string, args: string[], event: string, options?: childProcess.SpawnOptions, ignoreError: boolean = false): Promise<IProcessInfo> {
+	public spawnFromEvent(command: string, args: string[], event: string, options?: ISpawnFromEventOptions): Promise<IProcessInfo> {
 		return new Promise<IProcessInfo>((resolve, reject) => {
-			let commandChildProcess = childProcess.spawn(command, args, options);
+			options = options || {};
+			const commandChildProcess = childProcess.spawn(command, args, options.spawnOptions);
 			let capturedOut = "";
 			let capturedErr = "";
 
@@ -21,14 +21,14 @@ export class ChildProcess {
 			}
 
 			commandChildProcess.on(event, (arg: any) => {
-				let exitCode = typeof arg === "number" ? arg : arg && arg.code;
-				let result = {
+				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
+				const result = {
 					stdout: capturedOut,
 					stderr: capturedErr,
 					exitCode: exitCode
 				};
 
-				if (ignoreError) {
+				if (options.ignoreError) {
 					resolve(result);
 				} else {
 					if (exitCode === 0) {
@@ -39,21 +39,21 @@ export class ChildProcess {
 							errorMessage += ` Error output: \n ${capturedErr}`;
 						}
 
-						throw new Error(errorMessage);
+						reject(errorMessage);
 					}
 				}
 			});
 
 			commandChildProcess.once("error", (err: Error) => {
-				if (ignoreError) {
-					let result = {
+				if (options.ignoreError) {
+					const result = {
 						stdout: capturedOut,
 						stderr: err.message,
 						exitCode: (<any>err).code
 					};
 					resolve(result);
 				} else {
-					throw err;
+					reject(err);
 				}
 			});
 		});
@@ -63,10 +63,10 @@ export class ChildProcess {
 		return new Promise<IProcessInfo>((resolve, reject) => {
 			childProcess.exec(command, options, (err, stdout, stderr) => {
 				if (err) {
-					throw err;
+					reject(err);
 				}
 
-				let result: IProcessInfo = {
+				const result: IProcessInfo = {
 					stdout,
 					stderr
 				};

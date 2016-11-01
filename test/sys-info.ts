@@ -1,5 +1,4 @@
 import * as assert from "assert";
-import * as Promise from "bluebird";
 import * as path from "path";
 import { SysInfo } from "../lib/sys-info";
 import { ChildProcess } from "../lib/wrappers/child-process";
@@ -12,14 +11,14 @@ describe("SysInfo unit tests", () => {
 	let execCommand: string;
 
 	beforeEach(() => {
-		let childProcess: ChildProcess = {
-			spawnFromEvent: (command: string, args: string[], event: string) => {
+		const childProcess: ChildProcess = {
+			spawnFromEvent: async (command: string, args: string[], event: string) => {
 				spawnFromEventCommand = `${command} ${args.join(" ")}`;
-				return Promise.resolve({ stdout: "", stderr: "" });
+				return { stdout: "", stderr: "" };
 			},
-			exec: (command: string) => {
+			exec: async (command: string) => {
 				execCommand = command;
-				return Promise.resolve({ stdout: "", stderr: "" });
+				return { stdout: "", stderr: "" };
 			}
 		};
 
@@ -27,34 +26,31 @@ describe("SysInfo unit tests", () => {
 	});
 
 	describe("Should execute correct commands to check for", () => {
-		it("java version.", (done: MochaDone) => {
-			sysInfo.getJavaVersion()
-				.then(version => {
-					assert.deepEqual(spawnFromEventCommand, "java -version");
-					done();
-				});
+		it("java version.", async () => {
+			await sysInfo.getJavaVersion();
+			assert.deepEqual(spawnFromEventCommand, "java -version");
 		});
 
-		it("java compiler version when there is JAVA_HOME.", (done: MochaDone) => {
-			let pathToJavac = path.join(process.env[JavaHomeName], "bin", "javac");
-			sysInfo.getJavaCompilerVersion()
-				.then(version => {
-					assert.deepEqual(execCommand, `"${pathToJavac}" -version`);
-					done();
-				});
+		it("java compiler version when there is JAVA_HOME.", async () => {
+			const originalJavaHome = process.env[JavaHomeName];
+			process.env[JavaHomeName] = "mock";
+
+			const pathToJavac = path.join(process.env[JavaHomeName], "bin", "javac");
+			await sysInfo.getJavaCompilerVersion();
+
+			process.env[JavaHomeName] = originalJavaHome;
+			assert.deepEqual(execCommand, `"${pathToJavac}" -version`);
 		});
 
-		it("java compiler version when there is no JAVA_HOME.", (done: MochaDone) => {
-			let originalJavaHome = process.env[JavaHomeName];
+		it("java compiler version when there is no JAVA_HOME.", async () => {
+			const originalJavaHome = process.env[JavaHomeName];
 
 			delete process.env[JavaHomeName];
 
-			sysInfo.getJavaCompilerVersion()
-				.then(version => {
-					assert.deepEqual(execCommand, `"javac" -version`);
-					process.env[JavaHomeName] = originalJavaHome;
-					done();
-				});
+			await sysInfo.getJavaCompilerVersion();
+
+			process.env[JavaHomeName] = originalJavaHome;
+			assert.deepEqual(execCommand, `"javac" -version`);
 		});
 	});
 });

@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/NativeScript/nativescript-doctor#readme",
   "devDependencies": {
+    "@types/mocha": "2.2.32",
     "grunt": "1.0.1",
     "grunt-contrib-clean": "1.0.0",
     "grunt-contrib-watch": "1.0.0",
@@ -35,7 +36,5 @@
     "tslint": "3.15.1",
     "typescript": "2.0.3"
   },
-  "dependencies": {
-    "bluebird": "3.4.6"
-  }
+  "dependencies": {}
 }

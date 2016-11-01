@@ -18,7 +18,6 @@ bin/nativescript
 bin/*.cmd
 
 lib/**/*.ts
-!lib/**/*.d.ts
 lib/**/*.js.map
 
 test/

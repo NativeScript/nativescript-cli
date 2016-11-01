@@ -18,6 +18,11 @@ interface IProcessInfo {
 	exitCode?: number;
 }
 
+interface ISpawnFromEventOptions {
+	spawnOptions?: any;
+	ignoreError?: boolean;
+}
+
 interface IDictionary<T> {
 	[key: string]: T
 }
