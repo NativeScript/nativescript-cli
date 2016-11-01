@@ -11,18 +11,18 @@ The NativeScript CLI lets you create, build, and deploy NativeScript-based proje
 * [Supported Platforms](#supported-platforms "The mobile platforms you can target with NativeScript")
 * [System Requirements](#system-requirements "The hardware and software requirements for setting up and working with the NativeScript CLI")
 * [Installation](#installation "How to configure and install the NativeScript CLI")
-	* [Install the NativeScript CLI](#install-the-nativescript-cli)
-	* [Configure Proxy Usage](#configure-proxy-usage)
+    * [Install the NativeScript CLI](#install-the-nativescript-cli)
+    * [Configure Proxy Usage](#configure-proxy-usage)
 * [Quick Start](#quick-start "Get started with the NativeScript CLI")
-	* [The Commands](#the-commands)
-	* [Create Project](#create-project)
-	* [Add Platforms](#add-platforms)
-	* [Develop Your Project](#develop-your-project)
-	* [Prepare for Build](#prepare-for-build)
-	* [Build Your Project](#build-your-project)
-	* [Deploy Your Project](#deploy-your-project)
-	* [Emulate Your Project](#emulate-your-project)
-	* [Run Your Project](#run-your-project)
+    * [The Commands](#the-commands)
+    * [Create Project](#create-project)
+    * [Add Platforms](#add-platforms)
+    * [Develop Your Project](#develop-your-project)
+    * [Prepare for Build](#prepare-for-build)
+    * [Build Your Project](#build-your-project)
+    * [Deploy Your Project](#deploy-your-project)
+    * [Emulate Your Project](#emulate-your-project)
+    * [Run Your Project](#run-your-project)
 * [Extending the CLI](#extending-the-cli)
 * [Troubleshooting](#troubleshooting)
 * [Known Issues](#known-issues)
@@ -100,35 +100,35 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, an
 1. Run a Windows command prompt.
 1. To install JDK, run the following command.
 
-	```Shell
-	choco install java.jdk
-	```
+    ```Shell
+    choco install java.jdk
+    ```
 1. If not present, create the following environment variables.
 
-	```
-	JAVA_HOME=Path to the jdk* install directory
-	```
+    ```
+    JAVA_HOME=Path to the jdk* install directory
+    ```
 
-	For example: JAVA_HOME=C:\Program Files\Java\jdk1.8.0_66
+    For example: JAVA_HOME=C:\Program Files\Java\jdk1.8.0_66
 
-	```
-	ANDROID_HOME=Path to Android installation directory
-	```
+    ```
+    ANDROID_HOME=Path to Android installation directory
+    ```
 
-	For example: ANDROID_HOME=C:\Android\android-sdk
+    For example: ANDROID_HOME=C:\Android\android-sdk
 
 > NOTE: This is the directory that contains `tools` and `platform-tools` directories.
 
 1. To install the Android SDK, run the following command.
 
-	```Shell
-	choco install android-sdk
-	```
+    ```Shell
+    choco install android-sdk
+    ```
 1. To update the Android SDK to 22 or later, run the following command.
 
-	```Shell
-	android update sdk
-	```
+    ```Shell
+    android update sdk
+    ```
 1. Select all packages for the Android 22 SDK and any other SDKs that you want to install, click **Install** and wait for the installation to complete.
 1. Select Android SDK Build-tools 22.0.0 or later stable version, click **Install** and wait for the installation to complete.
 1. Select Extras/Android Support Repository, click **Install** and wait for the installation to complete.
@@ -153,17 +153,17 @@ sudo ruby -e "$(curl -fsSL https://www.nativescript.org/setup/mac)"
 * OS X Mavericks
 * The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
 * For iOS development
-	* [Latest Xcode][12]
-	* [Xcode command-line tools][12]
-	* [xcodeproj ruby gem][13] - can be installed by running `$ [sudo] gem install xcodeproj` in the terminal
-	* (Optional) [CocoaPods][CocoaPods]
-	* (Optional) [xcproj][xcproj] - you only need this command line tool in case you have Xcode 7.3 or later installed and CocoaPods 0.39.0 or earlier. `xcproj` can either be installed by running `$ brew install xcproj` in the terminal, or by building it manually with xcodebuild
+    * [Latest Xcode][12]
+    * [Xcode command-line tools][12]
+    * [xcodeproj ruby gem][13] - can be installed by running `$ [sudo] gem install xcodeproj` in the terminal
+    * (Optional) [CocoaPods][CocoaPods]
+    * (Optional) [xcproj][xcproj] - you only need this command line tool in case you have Xcode 7.3 or later installed and CocoaPods 0.39.0 or earlier. `xcproj` can either be installed by running `$ brew install xcproj` in the terminal, or by building it manually with xcodebuild
 * For Android development
-	* [JDK 8][JDK 8] or a later stable official release
-	* [Android SDK 22][Android SDK 22] or a later stable official release
-	* [Android SDK Build-tools 23.0.0][Android SDK Build-tools 23.0.0] or a later stable official release
-	* [Android Support Repository][Android Support Repository]
-	* (Optional) [Genymotion][Genymotion]
+    * [JDK 8][JDK 8] or a later stable official release
+    * [Android SDK 22][Android SDK 22] or a later stable official release
+    * [Android SDK Build-tools 23.0.0][Android SDK Build-tools 23.0.0] or a later stable official release
+    * [Android Support Repository][Android Support Repository]
+    * (Optional) [Genymotion][Genymotion]
 
 If not present, create the following environment variables.
 
@@ -194,19 +194,19 @@ echo yes | android update sdk --filter tools,platform-tools,android-23,build-too
 * Ubuntu 14.04 LTS
 * The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
 
-	> **TIP:** You can follow the instructions provided [here](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager) to install Node.js on your system.
+    > **TIP:** You can follow the instructions provided [here](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager) to install Node.js on your system.
 
 * G++ compiler
 
-	```Shell
-	sudo apt-get install g++
+    ```Shell
+    sudo apt-get install g++
     ```
 * On 64-bit systems only
-	* The runtime libraries for the ia32/i386 architecture.
+    * The runtime libraries for the ia32/i386 architecture.
 
-		```Shell
-		sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 libstdc++6:i386
-		```
+        ```Shell
+        sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 libstdc++6:i386
+        ```
 * [JDK 8][JDK 8] or a later stable official release
 * [Android SDK 22][Android SDK 22] or a later stable official release
 * [Android SDK Build-tools 23.0.0][Android SDK Build-tools 23.0.0] or a later stable official release
@@ -290,7 +290,7 @@ Quick Start
 Run `tns help` to view all available commands in the browser. Run `tns help <Command>` to view more information about a selected command in the browser.
 
 * `help` opens a new browser window and lists all available commands.
-* `create <App Name> [--path <Directory>] [--appid <App ID>] [--copy-from <Directory>]` creates a new project with the specified settings.
+* `create <App Name> [--path <Directory>] [--appid <App ID>] [--copy-from <Directory>] [--template <Valid template>] [--ng] [--tsc]` creates a new project with the specified settings.
 * `init` initializes an existing project and prompts for project configuration.
 * `platform list` lists the current target platforms for your project.
 * `platform add <Platform>` adds a new target platform to your project.
@@ -317,21 +317,41 @@ Run `tns help` to view all available commands in the browser. Run `tns help <Com
 
 ## Create Project
 
-To create a new cross-platform project from the default template, run the following command.
+To create a new cross-platform project from the default JavaScript template, run the following command.
 
 ```Shell
 tns create MyApp
 ```
 
-To create a new cross-platform project from an existing NativeScript project, run the following command.
+To create a new cross-platform project from the default TypeScript or Angular template, use the `template` option followed by either `typescript`, or `angular`.
+
+```Shell
+tns create MyApp --template typescript
+tns create MyApp --template angular
+```
+
+Or you can simply use the shorthand `tsc` and `ng` options.
+
+```Shell
+tns create MyApp --tsc
+tns create MyApp --ng
+```
+With the `template` option you can also specify a local or a remote path to the template that you want to use to create your project.
+For example, if you want to use the nightly build of the default JavaScript template, run the following command.
+
+```Shell
+tns create MyApp --template https://github.com/NativeScript/template-hello-world.git
+```
+
+To create a new cross-platform project from an existing NativeScript project, run the following command. 
 
 ```Shell
 tns create MyApp --copy-from <Directory>
 ```
 
-Where <Directory> is the complete path to the directory that contains your existing project. You can use any NativeScript project, created with the Telerik AppBuilder clients.
+Where `<Directory>` is the complete path to the directory that contains your existing project. You can use any NativeScript project, created with the Telerik AppBuilder clients.
 
-The NativeScript creates a new project based on the JavaScript built-in template and sets the application identifier to `org.nativescript.myapp`.
+The NativeScript CLI creates a new project and sets the application identifier to `org.nativescript.myapp`.
 
 The CLI places the project in a new directory in the current directory. The newly created directory has the following structure.
 
@@ -389,7 +409,7 @@ platforms/
 |-- |-- libTNSBridge.a
 |-- |-- node_modules
 `-- |-- MyApp/
-	`-- MyApp.xcodeproj
+    `-- MyApp.xcodeproj
 ...
 ```
 
@@ -568,11 +588,11 @@ Known Issues
 * You cannot synchronize changes to apps on Android 4.3 devices and on some Samsung devices using the `livesync android` command.<br/>**Workaround:** Upgrade to a later version of Android to be able to use the `livesync` command. If you need to develop for Android 4.3 devices, re-build and re-deploy your app to get your latest changes on device.
 
 * On OS X systems with configured firewall or web proxy, when you run a command, the operation might not release the command line and you might not be able to run other commands until you break the current operation.<br/>If you have enabled feature usage tracking for the NativeScript CLI, but you have not authenticated with the firewall or web proxy on your OS X system, the NativeScript CLI might not release the command line after you run a command. To continue working with the NativeScript CLI, you need to break the current operation by pressing `Ctrl+C`.<br/>**Workaround:** Authenticate with the firewall or web proxy.
-	1. Close the terminal.
-	1. Run Safari.
-	1. Attempt to open a web page.
-	1. Provide your authentication credentials for accessing the Internet.
-	1. Run the terminal and continue working with the NativeScript CLI.
+    1. Close the terminal.
+    1. Run Safari.
+    1. Attempt to open a web page.
+    1. Provide your authentication credentials for accessing the Internet.
+    1. Run the terminal and continue working with the NativeScript CLI.
 
 [Back to Top][1]
 
