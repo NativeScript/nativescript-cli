@@ -5,7 +5,9 @@ export class UpdateCommand implements ICommand {
 	constructor(
 		private $projectData: IProjectData,
 		private $platformService: IPlatformService,
+		private $platformsData: IPlatformsData,
 		private $pluginsService: IPluginsService,
+		private $projectDataService: IProjectDataService,
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $errors: IErrors) { }
@@ -51,6 +53,18 @@ export class UpdateCommand implements ICommand {
 
 	private executeCore(args: string[], folders: string[]) {
 		let platforms = this.$platformService.getInstalledPlatforms().wait();
+		let availablePlatforms = this.$platformService.getAvailablePlatforms().wait();
+		let packagePlatforms: string[] = [];
+
+		this.$projectDataService.initialize(this.$projectData.projectDir);
+		for (let platform of availablePlatforms) {
+			let platformData = this.$platformsData.getPlatformData(platform);
+			let platformVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
+			if (platformVersion) {
+				packagePlatforms.push(platform);
+				this.$projectDataService.removeProperty(platformData.frameworkPackageName).wait();
+			}
+		}
 
 		this.$platformService.removePlatforms(platforms).wait();
 		this.$pluginsService.remove("tns-core-modules").wait();
@@ -60,6 +74,7 @@ export class UpdateCommand implements ICommand {
 			shelljs.rm("-fr", folder);
 		}
 
+		platforms = platforms.concat(packagePlatforms);
 		if (args.length === 1) {
 			for (let platform of platforms) {
 				this.$platformService.addPlatforms([ platform+"@"+args[0] ]).wait();
