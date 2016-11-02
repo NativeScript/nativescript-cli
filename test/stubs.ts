@@ -121,6 +121,10 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
+	getLsStats(path: string): IFuture<IFsStats> {
+		return undefined;
+	}
+
 	isEmptyDir(directoryPath: string): IFuture<boolean> {
 		return Future.fromResult(true);
 	}
