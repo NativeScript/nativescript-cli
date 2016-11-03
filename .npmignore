@@ -28,3 +28,5 @@ scratch/
 .travis.yml
 docs/html/
 dev/
+
+tscommand*.tmp.txt
