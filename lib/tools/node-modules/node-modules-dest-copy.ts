@@ -62,20 +62,69 @@ export class NpmPluginPrepare {
 	) {
 	}
 
+	protected beforePrepare(dependencies: IDictionary<IDependencyData>, platform: string): void {
+		this.$platformsData.getPlatformData(platform).platformProjectService.beforePrepareAllPlugins(dependencies).wait();
+	}
+
+	protected afterPrepare(dependencies: IDictionary<IDependencyData>, platform: string): void {
+		this.$platformsData.getPlatformData(platform).platformProjectService.afterPrepareAllPlugins().wait();
+		this.writePreparedDependencyInfo(dependencies, platform);
+	}
+
+	private writePreparedDependencyInfo(dependencies: IDictionary<IDependencyData>, platform: string): void {
+		let prepareData: IDictionary<boolean> = {};
+		_.values(dependencies).forEach(d => {
+			prepareData[d.name] = true;
+		});
+		this.$fs.createDirectory(this.preparedPlatformsDir(platform)).wait();
+		this.$fs.writeJson(this.preparedPlatformsFile(platform), prepareData, "    ", "utf8").wait();
+	}
+
+	private preparedPlatformsDir(platform: string): string {
+		const platformRoot = this.$platformsData.getPlatformData(platform).projectRoot;
+		if (/android/i.test(platform)) {
+			return path.join(platformRoot, "build", "intermediates");
+		} else if (/ios/i.test(platform)) {
+			return path.join(platformRoot, "build");
+		} else {
+			throw new Error("Invalid platform: " + platform);
+		}
+	}
+
+	private preparedPlatformsFile(platform: string): string {
+		return path.join(this.preparedPlatformsDir(platform), "prepared-platforms.json");
+	}
+
+	protected getPreviouslyPreparedDependencies(platform: string): IDictionary<boolean> {
+		if (!this.$fs.exists(this.preparedPlatformsFile(platform)).wait()) {
+			return {};
+		}
+		return this.$fs.readJson(this.preparedPlatformsFile(platform), "utf8").wait();
+	}
+
+	private allPrepared(dependencies: IDictionary<IDependencyData>, platform: string): boolean {
+		let result = true;
+		const previouslyPrepared = this.getPreviouslyPreparedDependencies(platform);
+		_.values(dependencies).forEach(d => {
+			if (!previouslyPrepared[d.name]) {
+				result = false;
+			}
+		});
+		return result;
+	}
+
 	public preparePlugins(dependencies: IDictionary<IDependencyData>, platform: string): void {
-		if (_.isEmpty(dependencies)) {
+		if (_.isEmpty(dependencies) || this.allPrepared(dependencies, platform)) {
 			return;
 		}
 
-		this.$platformsData.getPlatformData(platform).platformProjectService.beforePrepareAllPlugins(dependencies).wait();
-
+		this.beforePrepare(dependencies, platform);
 		_.each(dependencies, dependency => {
 			let isPlugin = !!dependency.nativescript;
 			if (isPlugin) {
-				console.log("preparing: " + dependency.name);
 				this.$pluginsService.prepare(dependency, platform).wait();
 			}
 		});
-		this.$platformsData.getPlatformData(platform).platformProjectService.afterPrepareAllPlugins().wait();
+		this.afterPrepare(dependencies, platform);
 	}
 }
