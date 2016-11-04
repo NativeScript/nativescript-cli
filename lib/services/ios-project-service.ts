@@ -357,42 +357,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return Future.fromResult();
 	}
 
-	private getDeploymentTarget(project: xcode.project): string {
-		let configurations = project.pbxXCBuildConfigurationSection();
-
-		for (let configName in configurations) {
-			if (!Object.prototype.hasOwnProperty.call(configurations, configName)) {
-				continue;
-			}
-
-			let configuration = configurations[configName];
-			if (typeof configuration !== "object") {
-				continue;
-			}
-
-			let buildSettings = configuration.buildSettings;
-			if (buildSettings["IPHONEOS_DEPLOYMENT_TARGET"]) {
-				return buildSettings["IPHONEOS_DEPLOYMENT_TARGET"];
-			}
-		}
-	}
-
-	private ensureIos8DeploymentTarget(project: xcode.project) {
-		// tns-ios@2.1.0+ has a default deployment target of 8.0 so this is not needed there
-		if (this.getDeploymentTarget(project) === "7.0") {
-			project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
-			this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
-		}
-	}
-
-	private addDynamicFramework(frameworkPath: string): IFuture<void> {
+	private addFramework(frameworkPath: string): IFuture<void> {
 		return (() => {
 			this.validateFramework(frameworkPath).wait();
-
-			let targetPath = path.join("lib", this.platformData.normalizedPlatformName);
-			let fullTargetPath = path.join(this.$projectData.projectDir, targetPath);
-			this.$fs.ensureDirectoryExists(fullTargetPath).wait();
-			shell.cp("-R", frameworkPath, fullTargetPath);
 
 			let project = this.createPbxProj();
 			let frameworkName = path.basename(frameworkPath, path.extname(frameworkPath));
@@ -403,10 +370,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			if (isDynamic) {
 				frameworkAddOptions["embed"] = true;
-				this.ensureIos8DeploymentTarget(project);
 			}
 
-			let frameworkRelativePath = this.getLibSubpathRelativeToProjectPath(path.basename(frameworkPath));
+			let frameworkRelativePath = '$(SRCROOT)/' + this.getLibSubpathRelativeToProjectPath(frameworkPath);
 			project.addFramework(frameworkRelativePath, frameworkAddOptions);
 			this.savePbxProj(project).wait();
 		}).future<void>()();
@@ -417,21 +383,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			this.validateStaticLibrary(staticLibPath).wait();
 			// Copy files to lib folder.
 			let libraryName = path.basename(staticLibPath, ".a");
-			let libDestinationPath = path.join(this.$projectData.projectDir, path.join("lib", this.platformData.normalizedPlatformName));
-			let headersSubpath = path.join("include", libraryName);
-			this.$fs.ensureDirectoryExists(path.join(libDestinationPath, headersSubpath)).wait();
-			shell.cp("-Rf", staticLibPath, libDestinationPath);
-			shell.cp("-Rf", path.join(path.dirname(staticLibPath), headersSubpath), path.join(libDestinationPath, "include"));
+			let headersSubpath = path.join(path.dirname(staticLibPath), "include", libraryName);
 
 			// Add static library to project file and setup header search paths
 			let project = this.createPbxProj();
-			let relativeStaticLibPath = this.getLibSubpathRelativeToProjectPath(path.basename(staticLibPath));
+			let relativeStaticLibPath = this.getLibSubpathRelativeToProjectPath(staticLibPath);
 			project.addFramework(relativeStaticLibPath);
 
 			let relativeHeaderSearchPath = path.join(this.getLibSubpathRelativeToProjectPath(headersSubpath));
 			project.addToHeaderSearchPaths({ relativePath: relativeHeaderSearchPath });
 
-			this.generateMobulemap(path.join(libDestinationPath, headersSubpath), libraryName);
+			this.generateModulemap(headersSubpath, libraryName);
 			this.savePbxProj(project).wait();
 		}).future<void>()();
 	}
@@ -711,9 +673,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return name.replace(/\\\"/g, "\"");
 	}
 
-	private getLibSubpathRelativeToProjectPath(subPath: string): string {
-		let targetPath = path.join("lib", this.platformData.normalizedPlatformName);
-		let frameworkPath = path.relative("platforms/ios", path.join(targetPath, subPath));
+	private getLibSubpathRelativeToProjectPath(targetPath: string): string {
+		let frameworkPath = path.relative("platforms/ios", targetPath);
 		return frameworkPath;
 	}
 
@@ -883,7 +844,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	private prepareFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
 		return (() => {
-			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".framework").wait(), fileName => this.addDynamicFramework(path.join(pluginPlatformsFolderPath, fileName)).wait());
+			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".framework").wait(), fileName => this.addFramework(path.join(pluginPlatformsFolderPath, fileName)).wait());
 		}).future<void>()();
 	}
 
@@ -917,7 +878,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 					this.$fs.writeFile(this.projectPodFilePath, contentToWrite).wait();
 
 					let project = this.createPbxProj();
-					this.ensureIos8DeploymentTarget(project);
 					this.savePbxProj(project).wait();
 				}
 			}
@@ -980,7 +940,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return `# Begin Podfile - ${pluginPodFilePath} ${os.EOL} ${pluginPodFileContent} ${os.EOL} # End Podfile ${os.EOL}`;
 	}
 
-	private generateMobulemap(headersFolderPath: string, libraryName: string): void {
+	private generateModulemap(headersFolderPath: string, libraryName: string): void {
 		let headersFilter = (fileName: string, containingFolderPath: string) => (path.extname(fileName) === ".h" && this.$fs.getFsStats(path.join(containingFolderPath, fileName)).wait().isFile());
 		let headersFolderContents = this.$fs.readDirectory(headersFolderPath).wait();
 		let headers = _(headersFolderContents).filter(item => headersFilter(item, headersFolderPath)).value();
