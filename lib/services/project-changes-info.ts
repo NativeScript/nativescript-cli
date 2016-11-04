@@ -102,6 +102,10 @@ export class ProjectChangesInfo {
 			if (fileStats.mtime.getTime() > mtime) {
 				return true;
 			}
+			let lFileStats = this.$fs.getLsStats(filePath).wait();
+			if (lFileStats.mtime.getTime() > mtime) {
+				return true;
+			}
 			if (fileStats.isDirectory()) {
 				if (this.containsNewerFiles(filePath, skipDir, mtime)) {
 					return true;
