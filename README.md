@@ -415,7 +415,7 @@ platforms/
 
 For more information about the structure of Android native projects, see [Android Projects](http://developer.android.com/tools/projects/index.html#ApplicationProjects).
 
-For more information about the structure iOS native projects, see [Code Organization in Xcode Projects](http://akosma.com/2009/07/28/code-organization-in-xcode-projects/).
+For more information about the structure of iOS native projects, see [Code Organization in Xcode Projects](http://akosma.com/2009/07/28/code-organization-in-xcode-projects/).
 
 > **TIP:** The NativeScript team provides experimental support for the latest versions of iOS and Android. You can choose which platform runtime to use in your project by running `tns platform add <platform>@<Version>`<br/>To list all available versions for android, run $ npm view tns-android versions<br/>To list only experimental versions for android, run $ npm view tns-android dist-tags
 To list all available versions for ios, run $ npm view tns-ios versions<br/>To list only experimental versions for ios, run $ npm view tns-ios dist-tags
