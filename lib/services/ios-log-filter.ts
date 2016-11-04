@@ -54,8 +54,9 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 						let sourceMap = this.$fs.readText(sourceMapFile, "utf8").wait();
 						let smc = new sourcemap.SourceMapConsumer(sourceMap);
 						let originalPosition = smc.originalPositionFor({line:row,column:column});
+						let sourceFile = smc.sources.length > 0 ? file.replace(smc.file, smc.sources[0]) : file;
 						data = data.substring(0, fileIndex + fileString.length)
-							+ file.replace(".js", ".ts") + ":"
+							+ sourceFile + ":"
 							+ originalPosition.line + ":"
 							+ originalPosition.column;
 						for (let i = 3; i<parts.length; i++) {
