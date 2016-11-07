@@ -5,24 +5,25 @@ import { HostInfo } from "./host-info";
 import { AndroidLocalBuildRequirements } from "./local-build-requirements/android-local-build-requirements";
 import { IosLocalBuildRequirements } from "./local-build-requirements/ios-local-build-requirements";
 import { Helpers } from "./helpers";
+import { IWarning } from "../typings/nativescript-doctor";
 import * as semver from "semver";
 
 export class Doctor {
 	private static MIN_SUPPORTED_POD_VERSION = "0.38.2";
 
-	constructor(private sysInfo: SysInfo,
+	constructor(private androidLocalBuildRequirements: AndroidLocalBuildRequirements,
+		private helpers: Helpers,
 		private hostInfo: HostInfo,
-		private androidLocalBuildRequirements: AndroidLocalBuildRequirements,
-		private iosLocalBuildRequirements: IosLocalBuildRequirements,
-		private helpers: Helpers) { }
+		private iOSLocalBuildRequirements: IosLocalBuildRequirements,
+		private sysInfo: SysInfo) { }
 
 	public async canExecuteLocalBuild(platform: string): Promise<boolean> {
 		this.validatePlatform(platform);
 
-		if (platform.toLocaleLowerCase() === Constants.ANDROID_PLATFORM_NAME.toLocaleLowerCase()) {
+		if (platform.toLowerCase() === Constants.ANDROID_PLATFORM_NAME.toLowerCase()) {
 			return await this.androidLocalBuildRequirements.checkRequirements();
-		} else if (platform.toLocaleLowerCase() === Constants.IOS_PLATFORM_NAME.toLocaleLowerCase()) {
-			return await this.iosLocalBuildRequirements.checkRequirements();
+		} else if (platform.toLowerCase() === Constants.IOS_PLATFORM_NAME.toLowerCase()) {
+			return await this.iOSLocalBuildRequirements.checkRequirements();
 		}
 
 		return false;
@@ -93,28 +94,10 @@ export class Doctor {
 					+ `To be able to build such projects, verify that you have at least ${Doctor.MIN_SUPPORTED_POD_VERSION} version installed.`
 				});
 			}
-
-			if (!sysInfoData.monoVer || semver.lt(sysInfoData.monoVer, "3.12.0")) {
-				result.push({
-					warning: "WARNING: Mono 3.12 or later is not installed or not configured properly.",
-					additionalInformation: "You will not be able to work with Android devices in the device simulator or debug on connected Android devices." + EOL
-					+ "To be able to work with Android in the device simulator and debug on connected Android devices," + EOL
-					+ "download and install Mono 3.12 or later from http://www.mono-project.com/download/" + EOL
-				});
-			}
 		} else {
 			result.push({
 				warning: "NOTE: You can develop for iOS only on Mac OS X systems.",
 				additionalInformation: "To be able to work with iOS devices and projects, you need Mac OS X Mavericks or later." + EOL
-			});
-		}
-
-		if (!sysInfoData.itunesInstalled) {
-			result.push({
-				warning: "WARNING: iTunes is not installed.",
-				additionalInformation: "You will not be able to work with iOS devices via cable connection." + EOL
-				+ "To be able to work with connected iOS devices," + EOL
-				+ "download and install iTunes from http://www.apple.com" + EOL
 			});
 		}
 
@@ -142,13 +125,7 @@ export class Doctor {
 	}
 
 	private isPlatformSupported(platform: string): boolean {
-		return Constants.SUPPORTED_PLATFORMS.reduce((prevValue, currentValue) => {
-			if (!prevValue) {
-				return currentValue.toLocaleLowerCase() === platform.toLocaleLowerCase();
-			} else {
-				return prevValue;
-			}
-		}, false);
+		return Constants.SUPPORTED_PLATFORMS.map(pl => pl.toLowerCase()).indexOf(platform.toLowerCase()) !== -1;
 	}
 
 	private validatePlatform(platform: string): void {

@@ -5,6 +5,7 @@ import { ExecOptions } from "child_process";
 import { WinReg } from "./winreg";
 import { Helpers } from "./helpers";
 import { platform } from "os";
+import { ISysInfoData } from "../typings/nativescript-doctor";
 import * as path from "path";
 import * as osenv from "osenv";
 import * as temp from "temp";
@@ -39,10 +40,10 @@ export class SysInfo {
 	private isCocoaPodsWorkingCorrectlyCache: boolean = null;
 
 	constructor(private childProcess: ChildProcess,
-		private hostInfo: HostInfo,
 		private fileSystem: FileSystem,
-		private winreg: WinReg,
-		private helpers: Helpers) { }
+		private helpers: Helpers,
+		private hostInfo: HostInfo,
+		private winreg: WinReg) { }
 
 	public async getJavaVersion(): Promise<string> {
 		if (!this.javaVerCache) {

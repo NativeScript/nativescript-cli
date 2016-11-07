@@ -13,11 +13,11 @@ const winreg = new WinReg();
 const hostInfo = new HostInfo(winreg);
 const fileSystem = new FileSystem();
 const helpers = new Helpers();
-const sysInfo = new SysInfo(childProcess, hostInfo, fileSystem, winreg, helpers);
+const sysInfo = new SysInfo(childProcess, fileSystem, helpers, hostInfo, winreg);
 
 const androidLocalBuildRequirements = new AndroidLocalBuildRequirements(sysInfo);
-const iosLocalBuildRequirements = new IosLocalBuildRequirements(sysInfo, hostInfo);
-const doctor = new Doctor(sysInfo, hostInfo, androidLocalBuildRequirements, iosLocalBuildRequirements, helpers);
+const iOSLocalBuildRequirements = new IosLocalBuildRequirements(sysInfo, hostInfo);
+const doctor = new Doctor(androidLocalBuildRequirements, helpers, hostInfo, iOSLocalBuildRequirements, sysInfo);
 
 export {
 	sysInfo,

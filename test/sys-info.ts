@@ -2,6 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import { SysInfo } from "../lib/sys-info";
 import { ChildProcess } from "../lib/wrappers/child-process";
+import { ISysInfoData } from "../typings/nativescript-doctor";
 
 const JavaHomeName = "JAVA_HOME";
 const AndroidHomeName = "ANDROID_HOME";
@@ -96,7 +97,7 @@ function mockSysInfo(childProcessResult: IChildProcessResults, hostInfoOptions?:
 		extractZip: () => Promise.resolve()
 	};
 
-	return new SysInfo(childProcess, hostInfo, fileSystem, winreg, null);
+	return new SysInfo(childProcess, fileSystem, null, hostInfo, winreg);
 }
 
 function setStdOut(value: string): { stdout: string } {
