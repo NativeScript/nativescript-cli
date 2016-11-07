@@ -1,4 +1,4 @@
-import { User } from '../../../src/entity';
+import { TestUser as User } from '../mocks';
 import { randomString } from '../../../src/utils';
 import { ActiveUserError, KinveyError } from '../../../src/errors';
 import { TestUser } from '../mocks';
@@ -8,8 +8,13 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 describe('User', function() {
   describe('login()', function() {
+    beforeEach(function() {
+      return User.logout();
+    });
+
     it('should throw an error if an active user already exists', async function() {
       try {
+        await User.login(randomString(), randomString());
         await User.login(randomString(), randomString());
       } catch (error) {
         expect(error).toBeA(ActiveUserError);

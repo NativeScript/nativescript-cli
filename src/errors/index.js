@@ -7,7 +7,7 @@ import InvalidIdentifierError from './src/invalidIdentifier';
 import InvalidQuerySyntaxError from './src/invalidQuerySyntax';
 import JSONParseError from './src/jsonParse';
 import KinveyError from './src/kinvey';
-import MissingQueryError from './src/missingQueryError';
+import MissingQueryError from './src/missingQuery';
 import MissingRequestHeaderError from './src/missingRequestHeader';
 import MissingRequestParameterError from './src/missingRequestParameter';
 import NoActiveUserError from './src/noActiveUser';
