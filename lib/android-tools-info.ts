@@ -4,46 +4,7 @@ import {EOL} from "os";
 
 export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private static ANDROID_TARGET_PREFIX = "android";
-	private static SUPPORTED_TARGETS = [
-	"android-17", 
-	"android-18", 
-	"android-19", 
-	"android-21", 
-	"android-22", 
-	"android-23",
-	"android-24", 
-	"android-25", 
-	"android-26", 
-	"android-27", 
-	"android-28", 
-	"android-29", 
-	"android-30", 
-	"android-31", 
-	"android-32", 
-	"android-33", 
-	"android-34", 
-	"android-35", 
-	"android-37", 
-	"android-38", 
-	"android-39", 
-	"android-35",
-	"android-36",
-	"android-37",
-	"android-38",
-	"android-39",
-	"android-40",
-	"android-41",
-	"android-42",
-	"android-43",
-	"android-44",
-	"android-45",
-	"android-46",
-	"android-47",
-	"android-48",
-	"android-49",
-	"android-50",
-	"android-51",
-	"android-52"];
+	private static SUPPORTED_TARGETS = ["android-17", "android-18",	"android-19", "android-21",	"android-22", "android-23", "android-24", "android-25", "android-26", "android-27"];
 	
 	private static MIN_REQUIRED_COMPILE_TARGET = 22;
 	private static REQUIRED_BUILD_TOOLS_RANGE_PREFIX = ">=23";
