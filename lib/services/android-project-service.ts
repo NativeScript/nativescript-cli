@@ -275,11 +275,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		let targetSdk = this.getTargetFromAndroidManifest().wait() || compileSdk;
 		let buildToolsVersion = androidToolsInfo.buildToolsVersion;
 		let appCompatVersion = androidToolsInfo.supportRepositoryVersion;
+		let generateTypings = androidToolsInfo.generateTypings;
 		let buildOptions = [
 			`-PcompileSdk=android-${compileSdk}`,
 			`-PtargetSdk=${targetSdk}`,
 			`-PbuildToolsVersion=${buildToolsVersion}`,
 			`-PsupportVersion=${appCompatVersion}`,
+			`-PgenerateTypings=${generateTypings}`
 		];
 
 		if (this.$options.release) {
