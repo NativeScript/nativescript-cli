@@ -1,0 +1,22 @@
+language: node_js
+node_js:
+- '6'
+deploy:
+  provider: npm
+  email: thomas.conner@me.com
+  api_key:
+    secure: FSizWq7v0QhQ2SfvxhkN9fwN00YRJdI1rUWS5Nu68mvSrDWNmH4sMSlRUl+muAqIdERS4ov8/DDj7F6/5PEnE3GZ43oM0we+qvS7XZCs+kTC3+DV7R+8dHAG2IF1yYzq7ejVAeGKB9aCKPATaiaGgMATNq7ZeY/vKswNWWAOg0A=
+  on:
+    tags: true
+    repo: Kinvey/kinvey-nodejs
+notifications:
+  email:
+    on_success: change
+    on_failure: always
+  slack:
+    on_success: change
+    on_failure: always
+    secure: djxIuHEu0xNvpncK++aMnWUm5/QgBTO4HL4TyDDGslWT+Atnx+BgsX63omREvZyg81vjAWjm1WjIWQfU06NFM5Nvf23qcsK065yog4mNi+TzfDm9TWhz3bQDCHqZb7hgx5k/CYkiXD2RKwvaWuEP0XakYquydXW+3jXcHdyiCHs=
+script: npm run cover
+after_success:
+- bash <(curl -s https://codecov.io/bash)

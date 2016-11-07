@@ -1,0 +1,11 @@
+engines:
+  eslint:
+    enabled: true
+    channel: "eslint-3"
+    exclude_paths:
+    - "dist/"
+    - "node_modules/"
+    - "test/"
+ratings:
+  paths:
+  - src/**
