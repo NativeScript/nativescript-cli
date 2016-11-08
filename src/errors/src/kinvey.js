@@ -1,7 +1,7 @@
 function KinveyError(message = 'An error occurred.', debug = '', code = -1) {
   const error = Error.call(this, message);
 
-  this.name = 'KinveyError';
+  this.name = this.constructor.name;
   this.message = error.message;
   this.stack = error.stack;
   this.debug = debug;

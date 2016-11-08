@@ -1,14 +1,10 @@
-function InvalidIdentifierError(message = 'One of more identifier names in the request has an invalid format.', debug = '', code = -1) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'InvalidIdentifierError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function InvalidIdentifierError(message = 'One of more identifier names in the request has an invalid format.', ..args) {
+  return KinveyError.call(this, message, ...args);
 }
 
-InvalidIdentifierError.prototype = Object.create(Error.prototype);
+InvalidIdentifierError.prototype = Object.create(KinveyError.prototype);
 InvalidIdentifierError.prototype.constructor = InvalidIdentifierError;
 
 export default InvalidIdentifierError;

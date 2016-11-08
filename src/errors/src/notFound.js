@@ -1,14 +1,10 @@
-function NotFoundError(message = 'The item was not found.', debug = '', code = 404) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'NotFoundError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function NotFoundError(message = 'The item was not found.', debug, code = 404) {
+  return KinveyError.call(this, message, debug, code);
 }
 
-NotFoundError.prototype = Object.create(Error.prototype);
+NotFoundError.prototype = Object.create(KinveyError.prototype);
 NotFoundError.prototype.constructor = NotFoundError;
 
 export default NotFoundError;

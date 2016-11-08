@@ -1,14 +1,10 @@
-function QueryError(message = 'An error occurred on the query.', debug = '', code = -1) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'QueryError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function QueryError(message = 'An error occurred on the query.', ...args) {
+  return KinveyError.call(this, message, ...args);
 }
 
-QueryError.prototype = Object.create(Error.prototype);
+QueryError.prototype = Object.create(KinveyError.prototype);
 QueryError.prototype.constructor = QueryError;
 
 export default QueryError;

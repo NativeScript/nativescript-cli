@@ -1,14 +1,10 @@
-function InvalidQuerySyntaxError(message = 'The query string in the request has an invalid syntax.', debug = '', code = -1) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'InvalidQuerySyntaxError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function InvalidQuerySyntaxError(message = 'The query string in the request has an invalid syntax.', ...args) {
+  return KinveyError.call(this, message, ...args);
 }
 
-InvalidQuerySyntaxError.prototype = Object.create(Error.prototype);
+InvalidQuerySyntaxError.prototype = Object.create(KinveyError.prototype);
 InvalidQuerySyntaxError.prototype.constructor = InvalidQuerySyntaxError;
 
 export default InvalidQuerySyntaxError;

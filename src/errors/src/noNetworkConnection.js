@@ -1,14 +1,10 @@
-function NoNetworkConnectionError(message = 'You do not have a network connection.', debug = '', code = -1) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'NoNetworkConnectionError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function NoNetworkConnectionError(message = 'You do not have a network connection.', ...args) {
+  return KinveyError.call(this, message, ...args);
 }
 
-NoNetworkConnectionError.prototype = Object.create(Error.prototype);
+NoNetworkConnectionError.prototype = Object.create(KinveyError.prototype);
 NoNetworkConnectionError.prototype.constructor = NoNetworkConnectionError;
 
 export default NoNetworkConnectionError;

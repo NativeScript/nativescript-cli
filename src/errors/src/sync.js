@@ -1,14 +1,10 @@
-function SyncError(message = 'An error occurred during sync.', debug = '', code = -1) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'SyncError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function SyncError(message = 'An error occurred during sync.', ...args) {
+  return KinveyError.call(this, message, ...args);
 }
 
-SyncError.prototype = Object.create(Error.prototype);
+SyncError.prototype = Object.create(KinveyError.prototype);
 SyncError.prototype.constructor = SyncError;
 
 export default SyncError;

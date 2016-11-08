@@ -1,15 +1,13 @@
-function InsufficientCredentialsError(message = 'The credentials used to authenticate this request are not authorized to run ' +
-    'this operation. Please retry your request with appropriate credentials.', debug = '', code = -1) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'InsufficientCredentialsError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function InsufficientCredentialsError(message = 'The credentials used to authenticate this' +
+    ' request are not authorized to run' +
+    ' this operation. Please retry your' +
+    ' request with appropriate credentials.', ...args) {
+  return KinveyError.call(this, message, ...args);
 }
 
-InsufficientCredentialsError.prototype = Object.create(Error.prototype);
+InsufficientCredentialsError.prototype = Object.create(KinveyError.prototype);
 InsufficientCredentialsError.prototype.constructor = InsufficientCredentialsError;
 
 export default InsufficientCredentialsError;

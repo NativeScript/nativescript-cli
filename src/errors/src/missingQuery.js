@@ -1,14 +1,10 @@
-function MissingQueryError(message = 'The request is missing a query string.', debug = '', code = -1) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'MissingQueryError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function MissingQueryError(message = 'The request is missing a query string.', ..args) {
+  return KinveyError.call(this, message, ...args);
 }
 
-MissingQueryError.prototype = Object.create(Error.prototype);
+MissingQueryError.prototype = Object.create(KinveyError.prototype);
 MissingQueryError.prototype.constructor = MissingQueryError;
 
 export default MissingQueryError;

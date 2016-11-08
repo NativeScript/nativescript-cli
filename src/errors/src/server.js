@@ -1,14 +1,10 @@
-function ServerError(message = 'An error occurred on the server.', debug = '', code = 500) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'ServerError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function ServerError(message = 'An error occurred on the server.', debug, code = 500) {
+  return KinveyError.call(this, message, debug, code);
 }
 
-ServerError.prototype = Object.create(Error.prototype);
+ServerError.prototype = Object.create(KinveyError.prototype);
 ServerError.prototype.constructor = ServerError;
 
 export default ServerError;

@@ -1,14 +1,10 @@
-function InvalidCredentialsError(message = 'Invalid credentials. Please retry your request with correct credentials.', debug = '', code = -1) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'InvalidCredentialsError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function InvalidCredentialsError(message = 'Invalid credentials. Please retry your request with correct credentials.', ...args) {
+  return KinveyError.call(this, message, ...args);
 }
 
-InvalidCredentialsError.prototype = Object.create(Error.prototype);
+InvalidCredentialsError.prototype = Object.create(KinveyError.prototype);
 InvalidCredentialsError.prototype.constructor = InvalidCredentialsError;
 
 export default InvalidCredentialsError;

@@ -1,14 +1,10 @@
-function ActiveUserError(message = 'An active user already exists.', debug = '', code = -1) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'ActiveUserError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function ActiveUserError(message = 'An active user already exists.', ...args) {
+  return KinveyError.call(this, message, ...args);
 }
 
-ActiveUserError.prototype = Object.create(Error.prototype);
+ActiveUserError.prototype = Object.create(KinveyError.prototype);
 ActiveUserError.prototype.constructor = ActiveUserError;
 
 export default ActiveUserError;

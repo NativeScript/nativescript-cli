@@ -1,14 +1,10 @@
-function FeatureUnavailableError(message = 'Requested functionality is unavailable in this API version.', debug = '', code = -1) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'FeatureUnavailableError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function FeatureUnavailableError(message = 'Requested functionality is unavailable in this API version.', ...args) {
+  return KinveyError.call(this, message, ...args);
 }
 
-FeatureUnavailableError.prototype = Object.create(Error.prototype);
+FeatureUnavailableError.prototype = Object.create(KinveyError.prototype);
 FeatureUnavailableError.prototype.constructor = FeatureUnavailableError;
 
 export default FeatureUnavailableError;

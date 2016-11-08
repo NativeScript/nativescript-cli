@@ -1,14 +1,10 @@
-function MissingRequestParameterError(message = 'A required parameter is missing from the request.', debug = '', code = -1) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'MissingRequestParameterError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function MissingRequestParameterError(message = 'A required parameter is missing from the request.', ...args) {
+  return KinveyError.call(this, message, ...args);
 }
 
-MissingRequestParameterError.prototype = Object.create(Error.prototype);
+MissingRequestParameterError.prototype = Object.create(KinveyError.prototype);
 MissingRequestParameterError.prototype.constructor = MissingRequestParameterError;
 
 export default MissingRequestParameterError;

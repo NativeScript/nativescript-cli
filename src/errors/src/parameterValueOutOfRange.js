@@ -1,14 +1,10 @@
-function ParameterValueOutOfRangeError(message = 'The value specified for one of the request parameters is out of range.', debug = '', code = -1) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'ParameterValueOutOfRangeError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function ParameterValueOutOfRangeError(message = 'The value specified for one of the request parameters is out of range.', ...args) {
+  return KinveyError.call(this, message, ...args);
 }
 
-ParameterValueOutOfRangeError.prototype = Object.create(Error.prototype);
+ParameterValueOutOfRangeError.prototype = Object.create(KinveyError.prototype);
 ParameterValueOutOfRangeError.prototype.constructor = ParameterValueOutOfRangeError;
 
 export default ParameterValueOutOfRangeError;

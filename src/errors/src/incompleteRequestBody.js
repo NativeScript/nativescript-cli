@@ -1,14 +1,10 @@
-function IncompleteRequestBodyError(message = 'The request body is either missing or incomplete.', debug = '', code = -1) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'IncompleteRequestBodyError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function IncompleteRequestBodyError(message = 'The request body is either missing or incomplete.', ...args) {
+  return KinveyError.call(this, message, ...args);
 }
 
-IncompleteRequestBodyError.prototype = Object.create(Error.prototype);
+IncompleteRequestBodyError.prototype = Object.create(KinveyError.prototype);
 IncompleteRequestBodyError.prototype.constructor = IncompleteRequestBodyError;
 
 export default IncompleteRequestBodyError;

@@ -1,14 +1,10 @@
-function NoActiveUserError(message = 'There is not an active user.', debug = '', code = -1) {
-  const error = Error.call(this, message);
+import KinveyError from './kinvey';
 
-  this.name = 'NoActiveUserError';
-  this.message = error.message;
-  this.stack = error.stack;
-  this.debug = debug;
-  this.code = code;
+function NoActiveUserError(message = 'There is not an active user.', ...args) {
+  return KinveyError.call(this, message, ...args);
 }
 
-NoActiveUserError.prototype = Object.create(Error.prototype);
+NoActiveUserError.prototype = Object.create(KinveyError.prototype);
 NoActiveUserError.prototype.constructor = NoActiveUserError;
 
 export default NoActiveUserError;
