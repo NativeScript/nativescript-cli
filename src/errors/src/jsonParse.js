@@ -1,7 +1,7 @@
 import KinveyError from './kinvey';
 
-function JSONParseError(message = 'Unable to parse the JSON in the request.', ...args) {
-  return KinveyError.call(this, message, ...args);
+function JSONParseError(message = 'Unable to parse the JSON in the request.', debug, code) {
+  return KinveyError.call(this, message, debug, code);
 }
 
 JSONParseError.prototype = Object.create(KinveyError.prototype);

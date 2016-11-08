@@ -1,7 +1,7 @@
 import KinveyError from './kinvey';
 
-function MissingQueryError(message = 'The request is missing a query string.', ..args) {
-  return KinveyError.call(this, message, ...args);
+function MissingQueryError(message = 'The request is missing a query string.', debug, code) {
+  return KinveyError.call(this, message, debug, code);
 }
 
 MissingQueryError.prototype = Object.create(KinveyError.prototype);

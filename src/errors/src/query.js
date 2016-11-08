@@ -1,7 +1,7 @@
 import KinveyError from './kinvey';
 
-function QueryError(message = 'An error occurred on the query.', ...args) {
-  return KinveyError.call(this, message, ...args);
+function QueryError(message = 'An error occurred on the query.', debug, code) {
+  return KinveyError.call(this, message, debug, code);
 }
 
 QueryError.prototype = Object.create(KinveyError.prototype);
