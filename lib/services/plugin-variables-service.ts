@@ -120,4 +120,3 @@ export class PluginVariablesService implements IPluginVariablesService {
 	}
 }
 $injector.register("pluginVariablesService", PluginVariablesService);
-
