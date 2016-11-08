@@ -6,7 +6,7 @@ const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 /**
  * The Metadata class is used to as a wrapper for accessing the `_kmd` properties of an entity.
  */
-export class Metadata {
+export default class Metadata {
   constructor(entity = {}) {
     if (!isPlainObject(entity)) {
       throw new KinveyError('entity argument must be an object');

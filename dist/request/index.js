@@ -39,7 +39,6 @@ var _response2 = _interopRequireDefault(_response);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// Export
 exports.AuthType = _kinveyrequest.AuthType;
 exports.CacheRequest = _cacherequest2.default;
 exports.DeltaFetchRequest = _deltafetchrequest2.default;
@@ -51,7 +50,4 @@ exports.Properties = _kinveyrequest.Properties;
 exports.RequestMethod = _request.RequestMethod;
 exports.Response = _response2.default;
 exports.StatusCode = _response.StatusCode;
-
-// Export default
-
 exports.default = _request2.default;

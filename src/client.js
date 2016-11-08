@@ -1,6 +1,6 @@
-import Rack from 'kinvey-javascript-rack';
+import Rack, { CacheRack, NetworkRack } from './rack';
 import { KinveyError } from './errors';
-import { getActiveUser } from './utils';
+import { Device } from './utils';
 import url from 'url';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
@@ -24,7 +24,8 @@ export class Client {
    * @param {string}    [options.appVersion]                               App Version
    * @param {Rack}      [options.cacheRack]                                Cache Rack
    * @param {Rack}      [options.networkRack]                              Network Rack
-   * @param {Device}    [options.device]                                   Device
+   * @param {Device}    [options.deviceClass]                              Device Class
+   * @param {Device}    [options.popupClass]                               Popup Class
    * @return {Client}                                                      An instance of the Client class.
    *
    * @example
@@ -42,19 +43,19 @@ export class Client {
 
     if (options.apiHostname && isString(options.apiHostname)) {
       const apiHostnameParsed = url.parse(options.apiHostname);
-      options.apiProtocol = apiHostnameParsed.protocol;
+      options.apiProtocol = apiHostnameParsed.protocol || 'https:';
       options.apiHost = apiHostnameParsed.host;
     }
 
     if (options.micHostname && isString(options.micHostname)) {
       const micHostnameParsed = url.parse(options.micHostname);
-      options.micProtocol = micHostnameParsed.protocol;
+      options.micProtocol = micHostnameParsed.protocol || 'https:';
       options.micHost = micHostnameParsed.host;
     }
 
     if (options.liveServiceHostname && isString(options.liveServiceHostname)) {
       const liveServiceHostnameParsed = url.parse(options.liveServiceHostname);
-      options.liveServiceProtocol = liveServiceHostnameParsed.protocol;
+      options.liveServiceProtocol = liveServiceHostnameParsed.protocol || 'https:';
       options.liveServiceHost = liveServiceHostnameParsed.host;
     }
 
@@ -116,22 +117,22 @@ export class Client {
     /**
      * @type {Rack}
      */
-    this.cacheRack = options.cacheRack;
+    this.cacheRack = options.cacheRack || new CacheRack();
 
     /**
      * @type {Rack}
      */
-    this.networkRack = options.networkRack;
+    this.networkRack = options.networkRack || new NetworkRack();
+
+    /**
+     * @type {Device}
+     */
+    this.deviceClass = options.deviceClass || Device;
 
     /**
      * @type {Popup}
      */
     this.popupClass = options.popupClass;
-
-    /**
-     * @type {Device}
-     */
-    this.deviceClass = options.deviceClass;
   }
 
   /**
@@ -186,14 +187,6 @@ export class Client {
     });
   }
 
-
-  /**
-   * Active user for your app.
-   */
-  get activeUser() {
-    return getActiveUser(this);
-  }
-
   /**
    * The version of your app. It will sent with Kinvey API requests
    * using the X-Kinvey-Api-Version header.
@@ -220,7 +213,7 @@ export class Client {
    * Get the cache rack used by the client.
    */
   get cacheRack() {
-    return this._cacheRack || global.KinveyCacheRack;
+    return this._cacheRack;
   }
 
   /**
@@ -229,10 +222,8 @@ export class Client {
    * @param  {Rack} rack  Cache rack.
    */
   set cacheRack(rack) {
-    if (rack) {
-      if (!(rack instanceof Rack)) {
-        throw new KinveyError('rack must be an instance of the Rack class.');
-      }
+    if (rack && !(rack instanceof Rack)) {
+      throw new KinveyError('rack must be an instance of the Rack class.');
     }
 
     this._cacheRack = rack;
@@ -242,7 +233,7 @@ export class Client {
    * Get the network rack used by the client.
    */
   get networkRack() {
-    return this._networkRack || global.KinveyNetworkRack;
+    return this._networkRack;
   }
 
   /**
@@ -251,10 +242,8 @@ export class Client {
    * @param  {Rack} rack  Network rack.
    */
   set networkRack(rack) {
-    if (rack) {
-      if (!(rack instanceof Rack)) {
-        throw new KinveyError('rack must be an instance of the Rack class.');
-      }
+    if (rack && !(rack instanceof Rack)) {
+      throw new KinveyError('rack must be an instance of the Rack class.');
     }
 
     this._networkRack = rack;

@@ -61,9 +61,12 @@ export default class Headers {
     }
 
     const names = Object.keys(headers);
-    forEach(names, name => {
-      const value = headers[name];
-      this.set(name, value);
+    forEach(names, (name) => {
+      try {
+        this.set(name, headers[name]);
+      } catch (error) {
+        // Catch the error
+      }
     });
     return this;
   }

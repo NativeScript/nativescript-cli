@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Log = undefined;
 
 var _loglevel = require('loglevel');
 
@@ -13,9 +12,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var originalFactory = _loglevel2.default.methodFactory;
 
-/**
- * @private
- */
 _loglevel2.default.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
   var rawMethod = originalFactory(methodName, logLevel, loggerName);
 
@@ -34,12 +30,6 @@ _loglevel2.default.methodFactory = function methodFactory(methodName, logLevel, 
   };
 };
 
-/**
- * @private
- */
 _loglevel2.default.setDefaultLevel(_loglevel2.default.levels.SILENT);
 
-/**
- * @private
- */
-exports.Log = _loglevel2.default;
+exports.default = _loglevel2.default;

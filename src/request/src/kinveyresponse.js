@@ -34,7 +34,7 @@ export default class KinveyResponse extends Response {
       return new FeatureUnavailableError(message, debug, code);
     } else if (name === 'IncompleteRequestBodyError') {
       return new IncompleteRequestBodyError(message, debug, code);
-    } else if (name === 'InsufficientCredentials') {
+    } else if (name === 'InsufficientCredentials' || code === StatusCode.Unauthorized) {
       return new InsufficientCredentialsError(message, debug, code);
     } else if (name === 'InvalidCredentials') {
       return new InvalidCredentialsError(message, debug, code);

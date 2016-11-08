@@ -21,10 +21,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-/**
- * @private
- * Enum for Status Codes.
- */
 var StatusCode = {
   Ok: 200,
   Created: 201,
@@ -34,18 +30,15 @@ var StatusCode = {
   NotModified: 304,
   ResumeIncomplete: 308,
   NotFound: 404,
-  ServerError: 500
+  ServerError: 500,
+  Unauthorized: 401
 };
 Object.freeze(StatusCode);
 exports.StatusCode = StatusCode;
 
-/**
- * @private
- */
-
 var Response = function () {
   function Response() {
-    var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, Response);
 

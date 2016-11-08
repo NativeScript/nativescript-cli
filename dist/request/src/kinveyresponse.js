@@ -22,9 +22,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-/**
- * @private
- */
 var KinveyResponse = function (_Response) {
   _inherits(KinveyResponse, _Response);
 
@@ -51,7 +48,7 @@ var KinveyResponse = function (_Response) {
         return new _errors.FeatureUnavailableError(message, debug, code);
       } else if (name === 'IncompleteRequestBodyError') {
         return new _errors.IncompleteRequestBodyError(message, debug, code);
-      } else if (name === 'InsufficientCredentials') {
+      } else if (name === 'InsufficientCredentials' || code === _response.StatusCode.Unauthorized) {
         return new _errors.InsufficientCredentialsError(message, debug, code);
       } else if (name === 'InvalidCredentials') {
         return new _errors.InvalidCredentialsError(message, debug, code);

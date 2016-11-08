@@ -7,9 +7,8 @@ import {
 } from '../../request';
 import { InsufficientCredentialsError, SyncError } from '../../errors';
 import { Client } from '../../client';
-import { Query } from '../../query';
-import Promise from 'core-js/es6/promise';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
+import Query from '../../query';
+import Promise from 'es6-promise';
 import url from 'url';
 import map from 'lodash/map';
 import result from 'lodash/result';
@@ -17,7 +16,6 @@ import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sync';
-const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
 /**
  * @private
@@ -34,7 +32,7 @@ export { SyncOperation };
 /**
  * @private
  */
-export class SyncManager {
+export default class SyncManager {
   constructor(collection, options = {}) {
     if (!collection) {
       throw new SyncError('A collection is required.');
@@ -73,9 +71,7 @@ export class SyncManager {
     return `/${appdataNamespace}/${this.client.appKey}/${this.collection}`;
   }
 
-  async find(query = new Query(), options = {}) {
-    let syncEntities = [];
-
+  find(query = new Query(), options = {}) {
     if (!(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
     }
@@ -95,10 +91,8 @@ export class SyncManager {
       timeout: options.timeout,
       client: this.client
     });
-    syncEntities = await request.execute().then(response => response.data);
-
-    // Return the length of sync entities
-    return syncEntities;
+    return request.execute()
+      .then(response => response.data);
   }
 
   /**
@@ -110,26 +104,24 @@ export class SyncManager {
    * @param   {Number}        [options.timeout]           Timeout for the request.
    * @return  {Promise}                                   Promise
    */
-  async count(query = new Query(), options = {}) {
-    const syncEntities = await this.find(query, options);
-
-    // Return the length of sync entities
-    return syncEntities.length;
+  count(query = new Query(), options = {}) {
+    return this.find(query, options)
+      .then(entities => entities.length);
   }
 
-  async addCreateOperation(entities, options = {}) {
+  addCreateOperation(entities, options = {}) {
     return this.addOperation(SyncOperation.Create, entities, options);
   }
 
-  async addUpdateOperation(entities, options = {}) {
+  addUpdateOperation(entities, options = {}) {
     return this.addOperation(SyncOperation.Update, entities, options);
   }
 
-  async addDeleteOperation(entities, options = {}) {
+  addDeleteOperation(entities, options = {}) {
     return this.addOperation(SyncOperation.Delete, entities, options);
   }
 
-  async addOperation(operation = SyncOperation.Create, entities, options = {}) {
+  addOperation(operation = SyncOperation.Create, entities, options = {}) {
     let singular = false;
 
     // Cast the entities to an array
@@ -139,18 +131,20 @@ export class SyncManager {
     }
 
     // Process the array of entities
-    await Promise.all(map(entities, async entity => {
+    return Promise.all(map(entities, (entity) => {
       // Just return null if nothing was provided
       // to be added to the sync table
       if (!entity) {
-        return null;
+        return Promise.resolve(null);
       }
 
       // Validate that the entity has an id
-      const id = entity[idAttribute];
+      const id = entity._id;
       if (!id) {
-        throw new SyncError('An entity is missing an _id. All entities must have an _id in order to be ' +
-          'added to the sync table.', entity);
+        return Promise.reject(
+          new SyncError('An entity is missing an _id. All entities must have an _id in order to be ' +
+            'added to the sync table.', entity)
+        );
       }
 
       // Find an existing sync operation for the entity
@@ -166,80 +160,90 @@ export class SyncManager {
         query: query,
         timeout: options.timeout
       });
-      const response = await findRequest.execute();
-      const syncEntities = response.data;
-      const syncEntity = syncEntities.length === 1
-        ? syncEntities[0]
-        : { collection: this.collection, state: {}, entityId: id };
+      return findRequest.execute()
+        .then(response => response.data)
+        .then((entities) => {
+          const syncEntity = entities.length === 1
+            ? entities[0]
+            : { collection: this.collection, state: {}, entityId: id };
 
-      // Update the state
-      syncEntity.state = syncEntity.state || {};
-      syncEntity.state.method = operation;
+          // Update the state
+          syncEntity.state = syncEntity.state || {};
+          syncEntity.state.method = operation;
 
-      // Send a request to save the sync entity
-      const request = new CacheRequest({
-        method: RequestMethod.PUT,
-        url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this.pathname
-        }),
-        properties: options.properties,
-        body: syncEntity,
-        timeout: options.timeout
-      });
-      return request.execute();
-    }));
+          // Send a request to save the sync entity
+          const request = new CacheRequest({
+            method: RequestMethod.PUT,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: this.pathname
+            }),
+            properties: options.properties,
+            body: syncEntity,
+            timeout: options.timeout
+          });
+          return request.execute();
+        });
+    })).then(() => {
+      if (singular === true) {
+        return entities[0];
+      }
 
-    // Return the entity
-    return singular ? entities[0] : entities;
+      return entities;
+    });
   }
 
-  async pull(query, options = {}) {
+  pull(query, options = {}) {
     // Check that the query is valid
     if (query && !(query instanceof Query)) {
-      throw new SyncError('Invalid query. It must be an instance of the Query class.');
+      return Promise.reject(new SyncError('Invalid query. It must be an instance of the Query class.'));
     }
 
-    let count = await this.count();
+    return this.count()
+      .then((count) => {
+        // Attempt to push any pending sync data before fetching from the network.
+        if (count > 0) {
+          return this.push()
+            .then(() => this.count);
+        }
 
-    // Attempt to push any pending sync data before fetching from the network.
-    if (count > 0) {
-      await this.push();
-      count = await this.count();
-    }
+        return count;
+      })
+      .then((count) => {
+        // Throw an error if there are still items that need to be synced
+        if (count > 0) {
+          throw new SyncError('Unable to pull data from the network.'
+            + ` There are ${count} entities that need`
+            + ' to be synced before data is loaded from the network.');
+        }
 
-    // Throw an error if there are still items that need to be synced
-    if (count > 0) {
-      throw new SyncError('Unable to pull data from the network.'
-        + ` There are ${count} entities that need`
-        + ' to be synced before data is loaded from the network.');
-    }
 
-    const config = {
-      method: RequestMethod.GET,
-      authType: AuthType.Default,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: this.backendPathname,
-        query: options.query
-      }),
-      properties: options.properties,
-      query: query,
-      timeout: options.timeout,
-      client: this.client
-    };
-    let request = new KinveyRequest(config);
+        const config = {
+          method: RequestMethod.GET,
+          authType: AuthType.Default,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: this.backendPathname,
+            query: options.query
+          }),
+          properties: options.properties,
+          query: query,
+          timeout: options.timeout,
+          client: this.client
+        };
+        let request = new KinveyRequest(config);
 
-    // Should we use delta fetch?
-    if (options.useDeltaFetch === true) {
-      request = new DeltaFetchRequest(config);
-    }
+        // Should we use delta fetch?
+        if (options.useDeltaFetch === true) {
+          request = new DeltaFetchRequest(config);
+        }
 
-    // Execute the request
-    const response = await request.execute();
-    return response.data;
+        // Execute the request
+        return request.execute();
+      })
+      .then(response => response.data);
   }
 
   /*
@@ -251,68 +255,141 @@ export class SyncManager {
    * @param   {Number}        [options.timeout]           Timeout for the request.
    * @return  {Promise}                                   Promise
    */
-  async push(query, options = {}) {
+  push(query, options = {}) {
     const batchSize = 100;
     let i = 0;
 
     // Get the pending sync items
-    const syncEntities = await this.find(query);
+    return this.find(query)
+      .then((syncEntities) => {
+        if (syncEntities.length > 0) {
+          // Sync the entities in batches to prevent exhausting
+          // available network connections
+          const batchSync = (syncResults) => {
+            const promise = new Promise((resolve) => {
+              const batch = syncEntities.slice(i, i + batchSize);
+              i += batchSize;
 
-    if (syncEntities.length > 0) {
-      // Sync the entities in batches to prevent exhausting
-      // available network connections
-      const batchSync = async (syncResults) => {
-        const promise = new Promise(async resolve => {
-          const batch = syncEntities.slice(i, i + batchSize);
-          i += batchSize;
+              // Get the results of syncing all of the entities
+              return Promise.all(map(batch, (syncEntity) => {
+                const { entityId, state } = syncEntity;
+                const { method } = state;
 
-          // Get the results of syncing all of the entities
-          const results = await Promise.all(map(batch, syncEntity => {
-            const { entityId, state } = syncEntity;
-            const { method } = state;
-
-            if (method === RequestMethod.DELETE) {
-              // Remove the entity from the network.
-              const request = new KinveyRequest({
-                method: RequestMethod.DELETE,
-                authType: AuthType.Default,
-                url: url.format({
-                  protocol: this.client.protocol,
-                  host: this.client.host,
-                  pathname: `${this.backendPathname}/${entityId}`
-                }),
-                properties: options.properties,
-                timeout: options.timeout,
-                client: this.client
-              });
-              return request.execute()
-                .then(() => {
-                  // Remove the sync entity from the cache
-                  const request = new CacheRequest({
+                if (method === RequestMethod.DELETE) {
+                  // Remove the entity from the network.
+                  const request = new KinveyRequest({
                     method: RequestMethod.DELETE,
+                    authType: AuthType.Default,
                     url: url.format({
                       protocol: this.client.protocol,
                       host: this.client.host,
-                      pathname: `${this.pathname}/${syncEntity[idAttribute]}`
+                      pathname: `${this.backendPathname}/${entityId}`
+                    }),
+                    properties: options.properties,
+                    timeout: options.timeout,
+                    client: this.client
+                  });
+                  return request.execute()
+                    .then(() => {
+                      // Remove the sync entity from the cache
+                      const request = new CacheRequest({
+                        method: RequestMethod.DELETE,
+                        url: url.format({
+                          protocol: this.client.protocol,
+                          host: this.client.host,
+                          pathname: `${this.pathname}/${syncEntity._id}`
+                        }),
+                        properties: options.properties,
+                        timeout: options.timeout
+                      });
+                      return request.execute();
+                    })
+                    .then(() => {
+                      // Return the result
+                      const result = { _id: entityId };
+                      return result;
+                    })
+                    .catch((error) => {
+                      // If the credentials used to authenticate this request are
+                      // not authorized to run the operation
+                      if (error instanceof InsufficientCredentialsError) {
+                        // Get the original entity
+                        const request = new KinveyRequest({
+                          method: RequestMethod.GET,
+                          authType: AuthType.Default,
+                          url: url.format({
+                            protocol: this.client.protocol,
+                            host: this.client.host,
+                            pathname: `${this.backendPathname}/${entityId}`
+                          }),
+                          properties: options.properties,
+                          timeout: options.timeout,
+                          client: this.client
+                        });
+                        return request.execute().then(response => response.data)
+                          .then((originalEntity) => {
+                            // Update the cache with the original entity
+                            const request = new CacheRequest({
+                              method: RequestMethod.PUT,
+                              url: url.format({
+                                protocol: this.client.protocol,
+                                host: this.client.host,
+                                pathname: `${this.backendPathname}/${entityId}`
+                              }),
+                              properties: options.properties,
+                              timeout: options.timeout,
+                              body: originalEntity
+                            });
+                            return request.execute();
+                          })
+                          .then(() => {
+                            // Clear the item from the sync table
+                            const request = new CacheRequest({
+                              method: RequestMethod.DELETE,
+                              url: url.format({
+                                protocol: this.client.protocol,
+                                host: this.client.host,
+                                pathname: `${this.pathname}/${syncEntity._id}`
+                              }),
+                              properties: options.properties,
+                              timeout: options.timeout
+                            });
+                            return request.execute();
+                          })
+                          .catch(() => {
+                            throw error;
+                          });
+                      }
+
+                      throw error;
+                    })
+                    .catch((error) => {
+                      // Return the result of the sync operation.
+                      const result = {
+                        _id: entityId,
+                        error: error
+                      };
+                      return result;
+                    });
+                } else if (method === RequestMethod.POST || method === RequestMethod.PUT) {
+                  // Get the entity from cache
+                  const request = new CacheRequest({
+                    method: RequestMethod.GET,
+                    url: url.format({
+                      protocol: this.client.protocol,
+                      host: this.client.host,
+                      pathname: `${this.backendPathname}/${entityId}`
                     }),
                     properties: options.properties,
                     timeout: options.timeout
                   });
-                  return request.execute();
-                })
-                .then(() => {
-                  // Return the result
-                  const result = { _id: entityId };
-                  return result;
-                })
-                .catch(async error => {
-                  // If the credentials used to authenticate this request are
-                  // not authorized to run the operation
-                  if (error instanceof InsufficientCredentialsError) {
-                    try {
-                      // Get the original entity
-                      const getNetworkRequest = new KinveyRequest({
-                        method: RequestMethod.GET,
+                  return request.execute()
+                    .then((response) => {
+                      const entity = response.data;
+
+                      // Save the entity to the backend.
+                      const request = new KinveyRequest({
+                        method: method,
                         authType: AuthType.Default,
                         url: url.format({
                           protocol: this.client.protocol,
@@ -321,243 +398,199 @@ export class SyncManager {
                         }),
                         properties: options.properties,
                         timeout: options.timeout,
+                        body: entity,
                         client: this.client
                       });
-                      const originalEntity = await getNetworkRequest.execute().then(response => response.data);
 
-                      // Update the cache with the original entity
-                      const putCacheRequest = new CacheRequest({
-                        method: RequestMethod.PUT,
-                        url: url.format({
+                      // If the entity was created locally then delete the autogenerated _id,
+                      // send a POST request, and update the url.
+                      if (method === RequestMethod.POST) {
+                        delete entity._id;
+                        request.method = RequestMethod.POST;
+                        request.url = url.format({
                           protocol: this.client.protocol,
                           host: this.client.host,
-                          pathname: `${this.backendPathname}/${entityId}`
-                        }),
-                        properties: options.properties,
-                        timeout: options.timeout,
-                        body: originalEntity
-                      });
-                      await putCacheRequest.execute();
+                          pathname: this.backendPathname
+                        });
+                        request.body = entity;
+                      }
 
-                      // Clear the item from the sync table
-                      const deleteSyncRequest = new CacheRequest({
-                        method: RequestMethod.DELETE,
-                        url: url.format({
-                          protocol: this.client.protocol,
-                          host: this.client.host,
-                          pathname: `${this.pathname}/${syncEntity[idAttribute]}`
-                        }),
-                        properties: options.properties,
-                        timeout: options.timeout
-                      });
-                      await deleteSyncRequest.execute();
-                    } catch (error) {
-                      // Throw away the error
-                    }
-                  }
-
-                  // Return the result of the sync operation.
-                  return {
-                    _id: entityId,
-                    error: error
-                  };
-                });
-            } else if (method === RequestMethod.POST || method === RequestMethod.PUT) {
-              // Get the entity from cache
-              const request = new CacheRequest({
-                method: RequestMethod.GET,
-                url: url.format({
-                  protocol: this.client.protocol,
-                  host: this.client.host,
-                  pathname: `${this.backendPathname}/${entityId}`
-                }),
-                properties: options.properties,
-                timeout: options.timeout
-              });
-              return request.execute().then(response => {
-                const entity = response.data;
-
-                // Save the entity to the backend.
-                const request = new KinveyRequest({
-                  method: method,
-                  authType: AuthType.Default,
-                  url: url.format({
-                    protocol: this.client.protocol,
-                    host: this.client.host,
-                    pathname: `${this.backendPathname}/${entityId}`
-                  }),
-                  properties: options.properties,
-                  timeout: options.timeout,
-                  body: entity,
-                  client: this.client
-                });
-
-                // If the entity was created locally then delete the autogenerated _id,
-                // send a POST request, and update the url.
-                if (method === RequestMethod.POST) {
-                  delete entity[idAttribute];
-                  request.method = RequestMethod.POST;
-                  request.url = url.format({
-                    protocol: this.client.protocol,
-                    host: this.client.host,
-                    pathname: this.backendPathname
-                  });
-                  request.body = entity;
-                }
-
-                return request.execute()
-                  .then(response => response.data)
-                  .then(async entity => {
-                    // Remove the sync entity
-                    const deleteRequest = new CacheRequest({
-                      method: RequestMethod.DELETE,
-                      url: url.format({
-                        protocol: this.client.protocol,
-                        host: this.client.host,
-                        pathname: `${this.pathname}/${syncEntity[idAttribute]}`
-                      }),
-                      properties: options.properties,
-                      timeout: options.timeout
-                    });
-                    await deleteRequest.execute();
-
-                    // Save the result of the network request locally.
-                    const putCacheRequest = new CacheRequest({
-                      method: RequestMethod.PUT,
-                      url: url.format({
-                        protocol: this.client.protocol,
-                        host: this.client.host,
-                        pathname: `${this.backendPathname}/${entity[idAttribute]}`
-                      }),
-                      properties: options.properties,
-                      timeout: options.timeout,
-                      body: entity
-                    });
-                    entity = await putCacheRequest.execute().then(response => response.data);
-
-                    // Remove the original entity if it was created locally
-                    if (method === RequestMethod.POST) {
-                      const deleteCacheRequest = new CacheRequest({
-                        method: RequestMethod.DELETE,
-                        url: url.format({
-                          protocol: this.client.protocol,
-                          host: this.client.host,
-                          pathname: `${this.backendPathname}/${entityId}`
-                        }),
-                        properties: options.properties,
-                        timeout: options.timeout
-                      });
-                      await deleteCacheRequest.execute();
-                    }
-
-                    // Return the result of the sync operation.
-                    return {
-                      _id: entityId,
-                      entity: entity
-                    };
-                  })
-                  .catch(async error => {
-                    // If the credentials used to authenticate this request are
-                    // not authorized to run the operation then just remove the entity
-                    // from the sync table
-                    if (error instanceof InsufficientCredentialsError) {
-                      try {
-                        // Try and reset the state of the entity if the entity
-                        // is not local
-                        if (method !== RequestMethod.POST) {
-                          // Get the original entity
-                          const getNetworkRequest = new KinveyRequest({
-                            method: RequestMethod.GET,
-                            authType: AuthType.Default,
-                            url: url.format({
-                              protocol: this.client.protocol,
-                              host: this.client.host,
-                              pathname: `${this.backendPathname}/${entityId}`
-                            }),
-                            properties: options.properties,
-                            timeout: options.timeout,
-                            client: this.client
-                          });
-                          const originalEntity = await getNetworkRequest.execute().then(response => response.data);
-
-                          // Update the cache with the original entity
-                          const putCacheRequest = new CacheRequest({
-                            method: RequestMethod.PUT,
-                            url: url.format({
-                              protocol: this.client.protocol,
-                              host: this.client.host,
-                              pathname: `${this.backendPathname}/${entityId}`
-                            }),
-                            properties: options.properties,
-                            timeout: options.timeout,
-                            body: originalEntity
-                          });
-                          await putCacheRequest.execute();
-
-                          // Clear the item from the sync table
-                          const deleteSyncRequest = new CacheRequest({
+                      return request.execute()
+                        .then(response => response.data)
+                        .then((entity) => {
+                          // Remove the sync entity
+                          const request = new CacheRequest({
                             method: RequestMethod.DELETE,
                             url: url.format({
                               protocol: this.client.protocol,
                               host: this.client.host,
-                              pathname: `${this.pathname}/${syncEntity[idAttribute]}`
+                              pathname: `${this.pathname}/${syncEntity._id}`
                             }),
                             properties: options.properties,
                             timeout: options.timeout
                           });
-                          await deleteSyncRequest.execute();
-                        }
-                      } catch (error) {
-                        // Throw away the error
-                      }
-                    }
+                          return request.execute()
+                            .then(() => {
+                              // Save the result of the network request locally.
+                              const request = new CacheRequest({
+                                method: RequestMethod.PUT,
+                                url: url.format({
+                                  protocol: this.client.protocol,
+                                  host: this.client.host,
+                                  pathname: `${this.backendPathname}/${entity._id}`
+                                }),
+                                properties: options.properties,
+                                timeout: options.timeout,
+                                body: entity
+                              });
+                              return request.execute().then(response => response.data);
+                            })
+                            .then((entity) => {
+                              // Remove the original entity if it was created locally
+                              if (method === RequestMethod.POST) {
+                                const request = new CacheRequest({
+                                  method: RequestMethod.DELETE,
+                                  url: url.format({
+                                    protocol: this.client.protocol,
+                                    host: this.client.host,
+                                    pathname: `${this.backendPathname}/${entityId}`
+                                  }),
+                                  properties: options.properties,
+                                  timeout: options.timeout
+                                });
 
-                    // Return the result of the sync operation.
-                    return {
-                      _id: entityId,
-                      entity: entity,
-                      error: error
-                    };
-                  });
-              }).catch(error => ({ _id: entityId, entity: undefined, error: error }));
-            }
+                                return request.execute().then(() => entity);
+                              }
 
-            return {
-              _id: entityId,
-              entity: undefined,
-              error: new SyncError('Unable to sync the entity since the method was not recognized.', syncEntity)
-            };
-          }));
+                              return entity;
+                            })
+                            .then((entity) => {
+                              // Return the result of the sync operation.
+                              const result = {
+                                _id: entityId,
+                                entity: entity
+                              };
+                              return result;
+                            });
+                        })
+                        .catch((error) => {
+                          // If the credentials used to authenticate this request are
+                          // not authorized to run the operation
+                          if (error instanceof InsufficientCredentialsError) {
+                            // Get the original entity
+                            const request = new KinveyRequest({
+                              method: RequestMethod.GET,
+                              authType: AuthType.Default,
+                              url: url.format({
+                                protocol: this.client.protocol,
+                                host: this.client.host,
+                                pathname: `${this.backendPathname}/${entityId}`
+                              }),
+                              properties: options.properties,
+                              timeout: options.timeout,
+                              client: this.client
+                            });
+                            return request.execute()
+                              .then(response => response.data)
+                              .then((originalEntity) => {
+                                // Update the cache with the original entity
+                                const request = new CacheRequest({
+                                  method: RequestMethod.PUT,
+                                  url: url.format({
+                                    protocol: this.client.protocol,
+                                    host: this.client.host,
+                                    pathname: `${this.backendPathname}/${entityId}`
+                                  }),
+                                  properties: options.properties,
+                                  timeout: options.timeout,
+                                  body: originalEntity
+                                });
+                                return request.execute();
+                              })
+                              .then(() => {
+                                // Clear the item from the sync table
+                                const request = new CacheRequest({
+                                  method: RequestMethod.DELETE,
+                                  url: url.format({
+                                    protocol: this.client.protocol,
+                                    host: this.client.host,
+                                    pathname: `${this.pathname}/${syncEntity._id}`
+                                  }),
+                                  properties: options.properties,
+                                  timeout: options.timeout
+                                });
+                                return request.execute();
+                              })
+                              .catch(() => {
+                                throw error;
+                              });
+                          }
 
-          // Concat the results
-          syncResults = syncResults.concat(results);
+                          throw error;
+                        })
+                        .catch((error) => {
+                          // Return the result of the sync operation.
+                          const result = {
+                            _id: entityId,
+                            entity: entity,
+                            error: error
+                          };
+                          return result;
+                        });
+                    })
+                    .catch((error) => {
+                      const result = {
+                        _id: entityId,
+                        entity: undefined,
+                        error: error
+                      };
+                      return result;
+                    });
+                }
 
-          // Sync the remaining entities
-          if (i < syncEntities.length) {
-            return resolve(batchSync(syncResults));
-          }
+                return {
+                  _id: entityId,
+                  entity: undefined,
+                  error: new SyncError('Unable to sync the entity since the method was not recognized.', syncEntity)
+                };
+              })).then((results) => {
+                // Concat the results
+                syncResults = syncResults.concat(results);
 
-          // Resolve with the sync results
-          return resolve(syncResults);
-        });
-        return promise;
-      };
+                // Sync the remaining entities
+                if (i < syncEntities.length) {
+                  return resolve(batchSync(syncResults));
+                }
 
-      // Return the result
-      return batchSync([]);
-    }
+                // Resolve with the sync results
+                return resolve(syncResults);
+              });
+            });
+            return promise;
+          };
 
-    // Return an empty array
-    return [];
+          // Return the result
+          return batchSync([]);
+        }
+
+        // Return an empty array
+        return [];
+      });
   }
 
-  async sync(query, options = {}) {
-    const push = await this.push(null, options);
-    const pull = await this.pull(query, options);
-    return {
-      push: push,
-      pull: pull
-    };
+  sync(query, options = {}) {
+    return this.push(null, options)
+      .then((push) => {
+        const promise = this.pull(query, options)
+          .then((pull) => {
+            const result = {
+              push: push,
+              pull: pull
+            };
+            return result;
+          });
+        return promise;
+      });
   }
 
   /**
@@ -569,13 +602,13 @@ export class SyncManager {
    * @param   {Number}        [options.timeout]           Timeout for the request.
    * @return  {Promise}                                   Promise
    */
-  async clear(query = new Query(), options = {}) {
+  clear(query = new Query(), options = {}) {
     if (!(query instanceof Query)) {
       query = new Query(query);
     }
     query.equalTo('collection', this.collection);
 
-    const fetchRequest = new CacheRequest({
+    const request = new CacheRequest({
       method: RequestMethod.GET,
       url: url.format({
         protocol: this.client.protocol,
@@ -586,21 +619,22 @@ export class SyncManager {
       query: query,
       timeout: options.timeout
     });
-    const fetchResponse = await fetchRequest.execute();
-    const entities = fetchResponse.data;
-
-    const removeRequest = new CacheRequest({
-      method: RequestMethod.DELETE,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: this.pathname
-      }),
-      properties: options.properties,
-      body: entities,
-      timeout: options.timeout
-    });
-    const removeResponse = await removeRequest.execute();
-    return removeResponse.data;
+    return request.execute()
+      .then(response => response.data)
+      .then((entities) => {
+        const request = new CacheRequest({
+          method: RequestMethod.DELETE,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: this.pathname
+          }),
+          properties: options.properties,
+          body: entities,
+          timeout: options.timeout
+        });
+        return request.execute()
+          .then(response => response.data);
+      });
   }
 }

@@ -1,22 +1,23 @@
 import { RequestMethod } from './request';
+import CacheRequest from './cacherequest';
 import Headers from './headers';
 import NetworkRequest from './networkrequest';
 import KinveyResponse from './kinveyresponse';
-import { InvalidCredentialsError, NoActiveUserError } from '../../errors';
-import { SocialIdentity } from '../../social';
-import { setActiveUser, getIdentitySession, setIdentitySession } from '../../utils';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
+import Query from '../../query';
+import Aggregation from '../../aggregation';
+import { isDefined } from '../../utils';
+import { InvalidCredentialsError, NoActiveUserError, KinveyError } from '../../errors';
+import { SocialIdentity } from '../../identity';
+import Promise from 'es6-promise';
 import url from 'url';
 import qs from 'qs';
 import appendQuery from 'append-query';
 import assign from 'lodash/assign';
-import isNumber from 'lodash/isNumber';
+import defaults from 'lodash/defaults';
 import isEmpty from 'lodash/isEmpty';
 import isFunction from 'lodash/isFunction';
-const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
-const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const defaultApiVersion = process.env.KINVEY_DEFAULT_API_VERSION || 4;
 const customPropertiesMaxBytesAllowed = process.env.KINVEY_MAX_HEADER_BYTES || 2000;
 
@@ -44,11 +45,8 @@ const Auth = {
    * @returns {Object}
    */
   all(client) {
-    try {
-      return Auth.session(client);
-    } catch (error) {
-      return Auth.basic(client);
-    }
+    return Auth.session(client)
+      .catch(() => Auth.basic(client));
   },
 
   /**
@@ -58,15 +56,17 @@ const Auth = {
    */
   app(client) {
     if (!client.appKey || !client.appSecret) {
-      throw new Error('Missing client appKey and/or appSecret.'
-        + ' Use Kinvey.init() to set the appKey and appSecret for the client.');
+      return Promise.reject(
+        new Error('Missing client appKey and/or appSecret.'
+          + ' Use Kinvey.init() to set the appKey and appSecret for the client.')
+      );
     }
 
-    return {
+    return Promise.resolve({
       scheme: 'Basic',
       username: client.appKey,
       password: client.appSecret
-    };
+    });
   },
 
   /**
@@ -75,11 +75,8 @@ const Auth = {
    * @returns {Object}
    */
   basic(client) {
-    try {
-      return Auth.master(client);
-    } catch (error) {
-      return Auth.app(client);
-    }
+    return Auth.master(client)
+      .catch(() => Auth.app(client));
   },
 
   /**
@@ -89,15 +86,17 @@ const Auth = {
    */
   master(client) {
     if (!client.appKey || !client.masterSecret) {
-      throw new Error('Missing client appKey and/or appSecret.'
-        + ' Use Kinvey.init() to set the appKey and appSecret for the client.');
+      return Promise.reject(
+        new Error('Missing client appKey and/or appSecret.'
+          + ' Use Kinvey.init() to set the appKey and appSecret for the client.')
+      );
     }
 
-    return {
+    return Promise.resolve({
       scheme: 'Basic',
       username: client.appKey,
       password: client.masterSecret
-    };
+    });
   },
 
   /**
@@ -106,7 +105,7 @@ const Auth = {
    * @returns {Null}
    */
   none() {
-    return null;
+    return Promise.resolve(null);
   },
 
   /**
@@ -115,16 +114,18 @@ const Auth = {
    * @returns {Object}
    */
   session(client) {
-    const activeUser = client.activeUser;
+    const activeUser = CacheRequest.getActiveUserLegacy(client);
 
     if (!activeUser) {
-      throw new NoActiveUserError('There is not an active user. Please login a user and retry the request.');
+      return Promise.reject(
+        new NoActiveUserError('There is not an active user. Please login a user and retry the request.'
+      ));
     }
 
-    return {
+    return Promise.resolve({
       scheme: 'Kinvey',
-      credentials: activeUser[kmdAttribute].authtoken
-    };
+      credentials: activeUser._kmd.authtoken
+    });
   }
 };
 
@@ -156,9 +157,14 @@ export class Properties extends Headers {}
 export default class KinveyRequest extends NetworkRequest {
   constructor(options = {}) {
     super(options);
+
+    options = assign({
+      skipBL: false,
+      trace: false
+    }, options);
+
     this.authType = options.authType || AuthType.None;
     this.query = options.query;
-    this.apiVersion = defaultApiVersion;
     this.properties = options.properties || new Properties();
     this.skipBL = options.skipBL === true;
     this.trace = options.trace === true;
@@ -166,6 +172,34 @@ export default class KinveyRequest extends NetworkRequest {
 
   get appVersion() {
     return this.client.appVersion;
+  }
+
+  get query() {
+    return this._query;
+  }
+
+  set query(query) {
+    if (isDefined(query) && !(query instanceof Query)) {
+      throw new KinveyError('Invalid query. It must be an instance of the Query class.');
+    }
+
+    this._query = query;
+  }
+
+  get aggregation() {
+    return this._aggregation;
+  }
+
+  set aggregation(aggregation) {
+    if (isDefined(aggregation) && !(aggregation instanceof Aggregation)) {
+      throw new KinveyError('Invalid aggregation. It must be an instance of the Aggregation class.');
+    }
+
+    if (isDefined(aggregation)) {
+      this.body = aggregation.toJSON();
+    }
+
+    this._aggregation = aggregation;
   }
 
   get headers() {
@@ -183,8 +217,9 @@ export default class KinveyRequest extends NetworkRequest {
 
     // Add the X-Kinvey-API-Version header
     if (!headers.has('X-Kinvey-Api-Version')) {
-      headers.set('X-Kinvey-Api-Version', this.apiVersion);
+      headers.set('X-Kinvey-Api-Version', defaultApiVersion);
     }
+
 
     // Add or remove the X-Kinvey-Skip-Business-Logic header
     if (this.skipBL === true) {
@@ -232,61 +267,10 @@ export default class KinveyRequest extends NetworkRequest {
     }
 
     // Add the X-Kinvey-Device-Information header
-    if (this.client.device && isFunction(this.client.device, 'toString')) {
-      headers.set('X-Kinvey-Device-Information', this.client.device.toString());
+    if (typeof this.client.deviceClass !== 'undefined' && isFunction(this.client.deviceClass, 'toString')) {
+      headers.set('X-Kinvey-Device-Information', this.client.deviceClass.toString());
     } else {
       headers.remove('X-Kinvey-Device-Information');
-    }
-
-
-    // Add or remove the Authorization header
-    if (this.authType) {
-      let authInfo;
-
-      // Get the auth info based on the set AuthType
-      switch (this.authType) {
-        case AuthType.All:
-          authInfo = Auth.all(this.client);
-          break;
-        case AuthType.App:
-          authInfo = Auth.app(this.client);
-          break;
-        case AuthType.Basic:
-          authInfo = Auth.basic(this.client);
-          break;
-        case AuthType.Master:
-          authInfo = Auth.master(this.client);
-          break;
-        case AuthType.None:
-          authInfo = Auth.none(this.client);
-          break;
-        case AuthType.Session:
-          authInfo = Auth.session(this.client);
-          break;
-        default:
-          try {
-            authInfo = Auth.session(this.client);
-          } catch (error) {
-            try {
-              authInfo = Auth.master(this.client);
-            } catch (error2) {
-              throw error;
-            }
-          }
-      }
-
-      // Add the auth info to the Authorization header
-      if (authInfo) {
-        let credentials = authInfo.credentials;
-
-        if (authInfo.username) {
-          credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
-        }
-
-        headers.set('Authorization', `${authInfo.scheme} ${credentials}`);
-      }
-    } else {
-      headers.remove('Authorization');
     }
 
     // Return the headers
@@ -312,14 +296,6 @@ export default class KinveyRequest extends NetworkRequest {
     super.url = urlString;
   }
 
-  get apiVersion() {
-    return this._apiVersion;
-  }
-
-  set apiVersion(apiVersion) {
-    this._apiVersion = isNumber(apiVersion) ? apiVersion : defaultApiVersion;
-  }
-
   get properties() {
     return this._properties;
   }
@@ -332,86 +308,163 @@ export default class KinveyRequest extends NetworkRequest {
     this._properties = properties;
   }
 
-  async execute(rawResponse = false) {
-    try {
-      let response = await super.execute();
+  getAuthorizationHeader() {
+    let promise = Promise.resolve(undefined);
 
-      if (!(response instanceof KinveyResponse)) {
-        response = new KinveyResponse({
-          statusCode: response.statusCode,
-          headers: response.headers,
-          data: response.data
-        });
+    // Add or remove the Authorization header
+    if (this.authType) {
+      // Get the auth info based on the set AuthType
+      switch (this.authType) {
+        case AuthType.All:
+          promise = Auth.all(this.client);
+          break;
+        case AuthType.App:
+          promise = Auth.app(this.client);
+          break;
+        case AuthType.Basic:
+          promise = Auth.basic(this.client);
+          break;
+        case AuthType.Master:
+          promise = Auth.master(this.client);
+          break;
+        case AuthType.None:
+          promise = Auth.none(this.client);
+          break;
+        case AuthType.Session:
+          promise = Auth.session(this.client);
+          break;
+        default:
+          promise = Auth.session(this.client)
+            .catch((error) => {
+              return Auth.master(this.client)
+                .catch(() => {
+                  throw error;
+                });
+            });
       }
-
-      if (rawResponse === false && response.isSuccess() === false) {
-        throw response.error;
-      }
-
-      return response;
-    } catch (error) {
-      if (error instanceof InvalidCredentialsError) {
-        // Retrieve the MIC session
-        let micSession = getIdentitySession(this.client, SocialIdentity.MobileIdentityConnect);
-
-        if (micSession) {
-          // Refresh MIC Auth Token
-          const refreshMICRequest = new KinveyRequest({
-            method: RequestMethod.POST,
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            authType: AuthType.App,
-            url: url.format({
-              protocol: micSession.protocol || this.client.micProtocol,
-              host: micSession.host || this.client.micHost,
-              pathname: tokenPathname
-            }),
-            body: {
-              grant_type: 'refresh_token',
-              client_id: micSession.client_id,
-              redirect_uri: micSession.redirect_uri,
-              refresh_token: micSession.refresh_token
-            },
-            timeout: this.timeout,
-            properties: this.properties
-          });
-          const newMicSession = await refreshMICRequest.execute().then(response => response.data);
-          micSession = assign(micSession, newMicSession);
-
-          // Login the user with the new mic session
-          const data = {};
-          data[socialIdentityAttribute] = {};
-          data[socialIdentityAttribute][SocialIdentity.MobileIdentityConnect] = micSession;
-
-          // Login the user
-          const loginRequest = new KinveyRequest({
-            method: RequestMethod.POST,
-            authType: AuthType.App,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: `/${usersNamespace}/${this.client.appKey}/login`
-            }),
-            properties: this.properties,
-            body: data,
-            timeout: this.timeout,
-            client: this.client
-          });
-          const activeUser = await loginRequest.execute().then(response => response.data);
-
-          // Store the updated active user
-          setActiveUser(this.client, activeUser);
-
-          // Store the updated mic session
-          setIdentitySession(this.client, SocialIdentity.MobileIdentityConnect, micSession);
-
-          // Execute the original request
-          return this.execute(rawResponse);
-        }
-      }
-
-      throw error;
     }
+
+    return promise
+      .then((authInfo) => {
+        // Add the auth info to the Authorization header
+        if (authInfo !== undefined || authInfo !== null) {
+          let credentials = authInfo.credentials;
+
+          if (authInfo.username) {
+            credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
+          }
+
+          return `${authInfo.scheme} ${credentials}`;
+        }
+
+        return undefined;
+      });
+  }
+
+  execute(rawResponse = false, retry = true) {
+    return this.getAuthorizationHeader()
+      .then((authorizationHeader) => {
+        if (authorizationHeader !== undefined || authorizationHeader !== null) {
+          this.headers.set('Authorization', authorizationHeader);
+        } else {
+          this.headers.remove('Authorization');
+        }
+      })
+      .then(() => {
+        return super.execute();
+      })
+      .then((response) => {
+        if (!(response instanceof KinveyResponse)) {
+          response = new KinveyResponse({
+            statusCode: response.statusCode,
+            headers: response.headers,
+            data: response.data
+          });
+        }
+
+        if (rawResponse === false && response.isSuccess() === false) {
+          throw response.error;
+        }
+
+        return response;
+      })
+      .catch((error) => {
+        if (error instanceof InvalidCredentialsError && retry) {
+          const user = CacheRequest.getActiveUserLegacy(this.client);
+
+          if (!user) {
+            throw error;
+          }
+
+          const socialIdentities = user._socialIdentity;
+          const sessionKey = Object.keys(socialIdentities).find((sessionKey) => {
+            return socialIdentities[sessionKey].identity === SocialIdentity.MobileIdentityConnect;
+          });
+          const session = socialIdentities[sessionKey];
+
+          if (session) {
+            // Refresh MIC Token
+            if (session.identity === SocialIdentity.MobileIdentityConnect) {
+              const refreshMICRequest = new KinveyRequest({
+                method: RequestMethod.POST,
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                authType: AuthType.App,
+                url: url.format({
+                  protocol: session.protocol || this.client.micProtocol,
+                  host: session.host || this.client.micHost,
+                  pathname: tokenPathname
+                }),
+                body: {
+                  grant_type: 'refresh_token',
+                  client_id: session.client_id,
+                  redirect_uri: session.redirect_uri,
+                  refresh_token: session.refresh_token
+                },
+                timeout: this.timeout,
+                properties: this.properties
+              });
+
+              return refreshMICRequest.execute()
+                .then(response => response.data)
+                .then((newSession) => {
+                  // Login the user with the new mic session
+                  const data = {};
+                  data._socialIdentity = {};
+                  data._socialIdentity[session.identity] = newSession;
+
+                  // Login the user
+                  const loginRequest = new KinveyRequest({
+                    method: RequestMethod.POST,
+                    authType: AuthType.App,
+                    url: url.format({
+                      protocol: this.client.protocol,
+                      host: this.client.host,
+                      pathname: `/${usersNamespace}/${this.client.appKey}/login`
+                    }),
+                    properties: this.properties,
+                    body: data,
+                    timeout: this.timeout,
+                    client: this.client
+                  });
+                  return loginRequest.execute()
+                    .then(response => response.data);
+                })
+                .then((user) => {
+                  user._socialIdentity[session.identity] = defaults(user._socialIdentity[session.identity], session);
+                  return CacheRequest.setActiveUserLegacy(this.client, user);
+                })
+                .then(() => {
+                  return this.execute(rawResponse, false);
+                });
+            }
+          }
+
+          throw error;
+        }
+
+        throw error;
+      });
   }
 }

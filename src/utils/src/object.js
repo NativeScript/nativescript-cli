@@ -1,5 +1,7 @@
 import forEach from 'lodash/forEach';
 import isFunction from 'lodash/isFunction';
+import isNull from 'lodash/isNull';
+import isUndefined from 'lodash/isUndefined';
 
 /**
  * @private
@@ -24,7 +26,7 @@ export function nested(obj, dotProperty, value) {
  * @private
  */
 export function isDefined(obj) {
-  return obj !== undefined && obj !== null;
+  return !isUndefined(obj) && !isNull(obj);
 }
 
 /**
@@ -32,7 +34,7 @@ export function isDefined(obj) {
  */
 export function use(nsInterface) {
   return function(adapter = {}) {
-    forEach(nsInterface, methodName => {
+    forEach(nsInterface, (methodName) => {
       if (isFunction(adapter[methodName])) {
         this.prototype[methodName] = function(...args) {
           return adapter[methodName].apply(this, args);

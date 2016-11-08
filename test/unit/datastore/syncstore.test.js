@@ -1,6 +1,6 @@
 import { SyncStore } from '../../../src/datastore';
 import { Client } from '../../../src/client';
-import { Query } from '../../../src/query';
+import Query from '../../../src/query';
 import { KinveyError, NotFoundError } from '../../../src/errors';
 import { randomString } from '../../../src/utils';
 import nock from 'nock';
@@ -970,6 +970,15 @@ describe('SyncStore', function() {
         prop: randomString()
       };
       entity = await store.save(entity);
+
+      // Kinvey API Response
+      nock(store.client.baseUrl)
+        .post(store.pathname, () => true)
+        .query(true)
+        .reply(500, '', {
+          'content-type': 'application/json'
+        });
+
       let result = await store.push();
 
       expect(result).toBeA(Array);
@@ -998,6 +1007,15 @@ describe('SyncStore', function() {
         prop: randomString()
       };
       entity = await store.save(entity);
+
+      // Kinvey API Response
+      nock(store.client.baseUrl)
+        .put(`${store.pathname}/${entity._id}`, () => true)
+        .query(true)
+        .reply(500, '', {
+          'content-type': 'application/json'
+        });
+
       let result = await store.push();
 
       expect(result).toBeA(Array);

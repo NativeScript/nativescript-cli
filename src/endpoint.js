@@ -1,9 +1,7 @@
 import { Client } from './client';
 import { RequestMethod, AuthType, KinveyRequest } from './request';
 import { KinveyError } from './errors';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
-import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
@@ -34,33 +32,30 @@ export class CustomEndpoint {
    *   ...
    * });
    */
-  static async execute(endpoint, args, options = {}) {
-    options = assign({
-      client: Client.sharedInstance()
-    }, options);
+  static execute(endpoint, args, options = {}) {
+    const client = options.client || Client.sharedInstance();
 
     if (!endpoint) {
-      throw new KinveyError('An endpoint argument is required.');
+      return Promise.reject(new KinveyError('An endpoint argument is required.'));
     }
 
     if (!isString(endpoint)) {
-      throw new KinveyError('The endpoint argument must be a string.');
+      return Promise.reject(new KinveyError('The endpoint argument must be a string.'));
     }
 
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.Default,
       url: url.format({
-        protocol: options.client.protocol,
-        host: options.client.host,
-        pathname: `/${rpcNamespace}/${options.client.appKey}/custom/${endpoint}`
+        protocol: client.protocol,
+        host: client.host,
+        pathname: `/${rpcNamespace}/${client.appKey}/custom/${endpoint}`
       }),
       properties: options.properties,
       body: args,
       timeout: options.timeout,
-      client: options.client
+      client: client
     });
-    const response = await request.execute();
-    return response.data;
+    return request.execute().then(response => response.data);
   }
 }

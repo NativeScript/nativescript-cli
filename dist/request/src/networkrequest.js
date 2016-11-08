@@ -8,8 +8,6 @@ var _request = require('./request');
 
 var _request2 = _interopRequireDefault(_request);
 
-var _kinveyJavascriptRack = require('kinvey-javascript-rack');
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -22,13 +20,13 @@ var NetworkRequest = function (_Request) {
   _inherits(NetworkRequest, _Request);
 
   function NetworkRequest() {
-    var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, NetworkRequest);
 
     var _this = _possibleConstructorReturn(this, (NetworkRequest.__proto__ || Object.getPrototypeOf(NetworkRequest)).call(this, options));
 
-    _this.rack = new _kinveyJavascriptRack.NetworkRack();
+    _this.rack = _this.client.networkRack;
     return _this;
   }
 

@@ -1,6 +1,6 @@
 import { NetworkStore } from '../../../src/datastore';
 import { Client } from '../../../src/client';
-import { Query } from '../../../src/query';
+import Query from '../../../src/query';
 import { KinveyError, NotFoundError } from '../../../src/errors';
 import { randomString } from '../../../src/utils';
 import nock from 'nock';
@@ -415,7 +415,7 @@ describe('NetworkStore', function() {
         .reply(200, [entity3, entity4], {
           'content-type': 'application/json'
         });
-  
+
     });
 
     afterEach(function () {

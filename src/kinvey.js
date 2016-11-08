@@ -1,14 +1,13 @@
 import { Client } from './client';
 import { CustomEndpoint } from './endpoint';
+import Query from './query';
 import { Log } from './utils';
-import { Query } from './query';
-import { Aggregation } from './aggregation';
-import { DataStore, DataStoreType, FileStore } from './datastore';
-import { Acl, Metadata, User, UserStore } from './entity';
-import { AuthorizationGrant, SocialIdentity } from './social';
+import Aggregation from './aggregation';
+import DataStore, { DataStoreType, FileStore, UserStore } from './datastore';
+import { Acl, Metadata, User } from './entity';
+import { AuthorizationGrant, SocialIdentity } from './identity';
 import { AuthType, RequestMethod, KinveyRequest } from './request';
 import { KinveyError } from './errors';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
@@ -97,11 +96,7 @@ class Kinvey {
     const client = Client.init(options);
 
     // Add modules that require initialization
-    this.CustomEndpoint = CustomEndpoint;
-    this.DataStore = DataStore;
     this.Files = new FileStore();
-    this.User = User;
-    this.UserStore = UserStore;
 
     // Return the client
     return client;
@@ -119,7 +114,7 @@ class Kinvey {
    *   console.log('Kinvey Ping Failed. Response: ' + error.description);
    * });
    */
-  static async ping(client = Client.sharedInstance()) {
+  static ping(client = Client.sharedInstance()) {
     const request = new KinveyRequest({
       method: RequestMethod.GET,
       authType: AuthType.All,
@@ -129,8 +124,8 @@ class Kinvey {
         pathname: `${appdataNamespace}/${client.appKey}`
       })
     });
-    const response = await request.execute();
-    return response.data;
+
+    return request.execute().then(response => response.data);
   }
 }
 
@@ -138,11 +133,15 @@ class Kinvey {
 Kinvey.Acl = Acl;
 Kinvey.Aggregation = Aggregation;
 Kinvey.AuthorizationGrant = AuthorizationGrant;
+Kinvey.CustomEndpoint = CustomEndpoint;
+Kinvey.DataStore = DataStore;
 Kinvey.DataStoreType = DataStoreType;
 Kinvey.Log = Log;
 Kinvey.Metadata = Metadata;
 Kinvey.Query = Query;
 Kinvey.SocialIdentity = SocialIdentity;
+Kinvey.User = User;
+Kinvey.UserStore = UserStore;
 
 // Export
-export { Kinvey };
+export default Kinvey;

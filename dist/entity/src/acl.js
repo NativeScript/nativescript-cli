@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Acl = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -21,19 +20,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var aclAttribute = process && process.env && process.env.KINVEY_ACL_ATTRIBUTE || '_acl' || '_acl';
+var aclAttribute = process && process.env && process.env.KINVEY_ACL_ATTRIBUTE || undefined || '_acl';
 
-/**
- * The Acl class is used as a wrapper for reading and setting permissions on an entity level.
- *
- * @example
- * var entity = { _acl: {} };
- * var acl = new Kinvey.Acl(entity);
- */
-
-var Acl = exports.Acl = function () {
+var Acl = function () {
   function Acl() {
-    var entity = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var entity = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, Acl);
 
@@ -41,12 +32,6 @@ var Acl = exports.Acl = function () {
       throw new _errors.KinveyError('entity argument must be an object');
     }
 
-    /**
-     * The kmd properties.
-     *
-     * @private
-     * @type {Object}
-     */
     this.acl = (0, _clone2.default)(entity[aclAttribute]);
   }
 
@@ -217,3 +202,5 @@ var Acl = exports.Acl = function () {
 
   return Acl;
 }();
+
+exports.default = Acl;

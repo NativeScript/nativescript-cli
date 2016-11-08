@@ -15,11 +15,16 @@ var _isFunction = require('lodash/isFunction');
 
 var _isFunction2 = _interopRequireDefault(_isFunction);
 
+var _isNull = require('lodash/isNull');
+
+var _isNull2 = _interopRequireDefault(_isNull);
+
+var _isUndefined = require('lodash/isUndefined');
+
+var _isUndefined2 = _interopRequireDefault(_isUndefined);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/**
- * @private
- */
 function nested(obj, dotProperty, value) {
   if (!dotProperty) {
     obj = value || obj;
@@ -36,21 +41,15 @@ function nested(obj, dotProperty, value) {
   return value || obj;
 }
 
-/**
- * @private
- */
 function isDefined(obj) {
-  return obj !== undefined && obj !== null;
+  return !(0, _isUndefined2.default)(obj) && !(0, _isNull2.default)(obj);
 }
 
-/**
- * @private
- */
 function use(nsInterface) {
   return function () {
     var _this = this;
 
-    var adapter = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var adapter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     (0, _forEach2.default)(nsInterface, function (methodName) {
       if ((0, _isFunction2.default)(adapter[methodName])) {

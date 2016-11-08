@@ -7,16 +7,14 @@ import {
   Headers
 } from '../../request';
 import { KinveyError } from '../../errors';
-import { NetworkStore } from './networkstore';
+import NetworkStore from './networkstore';
 import { Log } from '../../utils';
-import Promise from 'core-js/es6/promise';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
+import Promise from 'es6-promise';
 import url from 'url';
 import map from 'lodash/map';
 import assign from 'lodash/assign';
 import isFunction from 'lodash/isFunction';
 import isNumber from 'lodash/isNumber';
-const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
 const MAX_BACKOFF = process.env.KINVEY_MAX_BACKOFF || 32 * 1000;
 
@@ -33,7 +31,7 @@ function getStartIndex(rangeHeader, max) {
 /**
  * The FileStore class is used to find, save, update, remove, count and group files.
  */
-export class FileStore extends NetworkStore {
+export default class FileStore extends NetworkStore {
   /**
    * @private
    * The pathname for the store.
@@ -75,7 +73,7 @@ export class FileStore extends NetworkStore {
    *   ...
    * });
    */
-  async find(query, options = {}) {
+  find(query, options = {}) {
     options.query = options.query || {};
     options.query.tls = options.tls === true;
 
@@ -83,14 +81,15 @@ export class FileStore extends NetworkStore {
       options.query.ttl_in_seconds = options.ttl;
     }
 
-    const stream = super.find(query, options);
-    const files = await stream.toPromise();
+    return super.find(query, options)
+      .toPromise()
+      .then((files) => {
+        if (options.download === true) {
+          return Promise.all(map(files, file => this.downloadByUrl(file._downloadURL, options)));
+        }
 
-    if (options.download === true) {
-      return Promise.all(map(files, file => this.downloadByUrl(file._downloadURL, options)));
-    }
-
-    return files;
+        return files;
+      });
   }
 
   findById(id, options) {
@@ -119,7 +118,7 @@ export class FileStore extends NetworkStore {
    *   ...
    * });
   */
-  async download(name, options = {}) {
+  download(name, options = {}) {
     options.query = options.query || {};
     options.query.tls = options.tls === true;
 
@@ -127,14 +126,16 @@ export class FileStore extends NetworkStore {
       options.query.ttl_in_seconds = options.ttl;
     }
 
-    const file = await super.findById(name, options).toPromise();
+    return super.findById(name, options)
+      .toPromise()
+      .then((file) => {
+        if (options.stream === true) {
+          return file;
+        }
 
-    if (options.stream === true) {
-      return file;
-    }
-
-    options.mimeType = file.mimeType;
-    return this.downloadByUrl(file._downloadURL, options);
+        options.mimeType = file.mimeType;
+        return this.downloadByUrl(file._downloadURL, options);
+      });
   }
 
   /**
@@ -144,14 +145,13 @@ export class FileStore extends NetworkStore {
    * @param   {Object}        [options]                                     Options
    * @return  {Promise<string>}                                             File content.
   */
-  async downloadByUrl(url, options = {}) {
+  downloadByUrl(url, options = {}) {
     const request = new NetworkRequest({
       method: RequestMethod.GET,
       url: url,
       timeout: options.timeout
     });
-    const response = await request.execute();
-    return response.data;
+    return request.execute().then(response => response.data);
   }
 
   /**
@@ -190,7 +190,7 @@ export class FileStore extends NetworkStore {
    * @param {Object} [options={}] Options
    * @return {Promise<File>} A file entity.
    */
-  async upload(file, metadata = {}, options = {}) {
+  upload(file, metadata = {}, options = {}) {
     // Set defaults for metadata
     metadata = assign({
       filename: file._filename || file.name,
@@ -222,7 +222,7 @@ export class FileStore extends NetworkStore {
 
     // If the file metadata contains an _id then
     // update the file
-    if (metadata[idAttribute]) {
+    if (metadata._id) {
       request.method = RequestMethod.PUT;
       request.url = url.format({
         protocol: this.client.protocol,
@@ -233,48 +233,54 @@ export class FileStore extends NetworkStore {
     }
 
     // Execute the request
-    const response = await request.execute();
-    const data = response.data;
-    const uploadUrl = data._uploadURL;
-    const headers = new Headers(data._requiredHeaders);
-    headers.set('content-type', metadata.mimeType);
+    return request.execute()
+      .then(response => response.data)
+      .then((data) => {
+        const uploadUrl = data._uploadURL;
+        const headers = new Headers(data._requiredHeaders);
+        headers.set('content-type', metadata.mimeType);
 
-    // Delete fields from the response
-    delete data._expiresAt;
-    delete data._requiredHeaders;
-    delete data._uploadURL;
+        // Delete fields from the response
+        delete data._expiresAt;
+        delete data._requiredHeaders;
+        delete data._uploadURL;
 
-    // Execute the status check request
-    const statusCheckRequest = new NetworkRequest({
-      method: RequestMethod.PUT,
-      url: uploadUrl,
-      timeout: options.timeout
-    });
-    statusCheckRequest.headers.addAll(headers.toPlainObject());
-    statusCheckRequest.headers.set('Content-Length', '0');
-    statusCheckRequest.headers.set('Content-Range', `bytes */${metadata.size}`);
-    const statusCheckResponse = await statusCheckRequest.execute(true);
+        // Execute the status check request
+        const statusCheckRequest = new NetworkRequest({
+          method: RequestMethod.PUT,
+          url: uploadUrl,
+          timeout: options.timeout
+        });
+        statusCheckRequest.headers.addAll(headers.toPlainObject());
+        statusCheckRequest.headers.set('Content-Length', '0');
+        statusCheckRequest.headers.set('Content-Range', `bytes */${metadata.size}`);
+        return statusCheckRequest.execute(true)
+          .then((statusCheckResponse) => {
+            Log.debug('File upload status check response', statusCheckResponse);
 
-    Log.debug('File upload status check response', statusCheckResponse);
+            // Upload the file
+            if (statusCheckResponse.isSuccess() === false) {
+              if (statusCheckResponse.statusCode !== StatusCode.ResumeIncomplete) {
+                throw statusCheckResponse.error;
+              }
 
-    // Upload the file
-    if (statusCheckResponse.isSuccess() === false) {
-      if (statusCheckResponse.statusCode === StatusCode.ResumeIncomplete) {
-        options.start = getStartIndex(statusCheckResponse.headers.get('range'), metadata.size);
-        await this.uploadToGCS(uploadUrl, headers, file, metadata, options);
-      } else {
-        throw statusCheckResponse.error;
-      }
-    }
+              options.start = getStartIndex(statusCheckResponse.headers.get('range'), metadata.size);
+              return this.uploadToGCS(uploadUrl, headers, file, metadata, options);
+            }
 
-    data._data = file;
-    return data;
+            return file;
+          })
+          .then((file) => {
+            data._data = file;
+            return data;
+          });
+      });
   }
 
   /**
    * @private
    */
-  async uploadToGCS(uploadUrl, headers, file, metadata, options = {}) {
+  uploadToGCS(uploadUrl, headers, file, metadata, options = {}) {
     // Set default options
     options = assign({
       count: 0,
@@ -303,48 +309,48 @@ export class FileStore extends NetworkStore {
     request.headers.addAll(headers.toPlainObject());
     request.headers.set('Content-Length', fileSliceSize);
     request.headers.set('Content-Range', `bytes ${options.start}-${metadata.size - 1}/${metadata.size}`);
-    const response = await request.execute(true);
+    return request.execute(true)
+      .then((response) => {
+        Log.debug('File upload response', response);
 
-    Log.debug('File upload response', response);
+        // If the request was not successful uploading the file
+        // then check if we should try uploading the remaining
+        // portion of the file
+        if (response.isSuccess() === false) {
+          if (response.statusCode === StatusCode.ResumeIncomplete) {
+            Log.debug('File upload was incomplete. Trying to upload the remaining protion of the file.');
+            options.start = getStartIndex(response.headers.get('range'), metadata.size);
+            return this.uploadToGCS(uploadUrl, headers, file, metadata, options);
+          } else if (response.statusCode >= 500 && response.statusCode < 600) {
+            Log.debug('File upload error.', response.statusCode);
 
-    // If the request was not successful uploading the file
-    // then check if we should try uploading the remaining
-    // portion of the file
-    if (response.isSuccess() === false) {
-      if (response.statusCode === StatusCode.ResumeIncomplete) {
-        Log.debug('File upload was incomplete. Trying to upload the remaining protion of the file.');
+            // Calculate the exponential backoff
+            const backoff = Math.pow(2, options.count) + randomInt(1000, 1);
 
-        options.start = getStartIndex(response.headers.get('range'), metadata.size);
-        return this.uploadToGCS(uploadUrl, headers, file, metadata, options);
-      } else if (response.statusCode >= 500 && response.statusCode < 600) {
-        Log.debug('File upload error.', response.statusCode);
+            // Throw the error if we have excedded the max backoff
+            if (backoff >= options.maxBackoff) {
+              throw response.error;
+            }
 
-        // Calculate the exponential backoff
-        const backoff = Math.pow(2, options.count) + randomInt(1000, 1);
+            Log.debug(`File upload will try again in ${backoff} seconds.`);
 
-        // Throw the error if we have excedded the max backoff
-        if (backoff >= options.maxBackoff) {
+
+            // Upload the remaining protion of the file after the backoff time has passed
+            return new Promise((resolve) => {
+              setTimeout(() => {
+                options.count += 1;
+                resolve(this.uploadToGCS(uploadUrl, headers, file, metadata, options));
+              }, backoff);
+            });
+          }
+
+          // Throw the error because we do not know how to handle it
           throw response.error;
         }
 
-        Log.debug(`File upload will try again in ${backoff} seconds.`);
-
-
-        // Upload the remaining protion of the file after the backoff time has passed
-        return new Promise(resolve => {
-          setTimeout(() => {
-            options.count += 1;
-            resolve(this.uploadToGCS(uploadUrl, headers, file, metadata, options));
-          }, backoff);
-        });
-      }
-
-      // Throw the error because we do not know how to handle it
-      throw response.error;
-    }
-
-    // Return the response because we are all done
-    return response;
+        // Return the file because we are all done
+        return file;
+      });
   }
 
   /**

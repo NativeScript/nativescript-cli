@@ -9,7 +9,5 @@ describe('CacheRequest', () => {
       expect(request).toBeA(CacheRequest);
       expect(request).toBeA(Request);
     });
-
-    it('should accept a');
   });
 });

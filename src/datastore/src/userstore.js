@@ -1,17 +1,16 @@
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
 import { KinveyError } from '../../errors';
-import { NetworkStore } from './networkstore';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
+import NetworkStore from './networkstore';
+import Promise from 'es6-promise';
 import url from 'url';
 import isArray from 'lodash/isArray';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
-const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
 /**
  * The UserStore class is used to find, save, update, remove, count and group users.
  */
-export class UserStore extends NetworkStore {
+export default class UserStore extends NetworkStore {
   constructor(options) {
     super(null, options);
   }
@@ -29,8 +28,8 @@ export class UserStore extends NetworkStore {
    * @private
    * @throws {KinveyError} Method is unsupported. Instead use User.signup() to create a user.
    */
-  async create() {
-    throw new KinveyError('Please use `User.signup()` to create a user.');
+  create() {
+    return Promise.reject(new KinveyError('Please use `User.signup()` to create a user.'));
   }
 
   /**
@@ -42,17 +41,17 @@ export class UserStore extends NetworkStore {
    * @param {Object} [options={}] Options
    * @return {Promise<Object>} The updated user data.
    */
-  async update(data, options = {}) {
+  update(data, options = {}) {
     if (!data) {
-      throw new KinveyError('No user was provided to be updated.');
+      return Promise.reject(new KinveyError('No user was provided to be updated.'));
     }
 
     if (isArray(data)) {
-      throw new KinveyError('Only one user can be updated at one time.', data);
+      return Promise.reject(new KinveyError('Only one user can be updated at one time.', data));
     }
 
-    if (!data[idAttribute]) {
-      throw new KinveyError('User must have an _id.');
+    if (!data._id) {
+      return Promise.ject(new KinveyError('User must have an _id.'));
     }
 
     return super.update(data, options);
@@ -67,7 +66,7 @@ export class UserStore extends NetworkStore {
    * @param {Object} [options={}] Options
    * @return {boolean} True if the username already exists otherwise false.
    */
-  async exists(username, options = {}) {
+  exists(username, options = {}) {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
@@ -81,9 +80,9 @@ export class UserStore extends NetworkStore {
       timeout: options.timeout,
       client: this.client
     });
-    const response = await request.execute();
-    const data = response.data || {};
-    return data.usernameExists === true;
+    return request.execute()
+      .then(response => response.data)
+      .then((data = {}) => data.usernameExists === true);
   }
 
   /**
@@ -95,7 +94,7 @@ export class UserStore extends NetworkStore {
    * @param {Object} [options={}] Options
    * @return {Promise<Object>} The response.
    */
-  async restore(id, options = {}) {
+  restore(id, options = {}) {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.Master,
@@ -108,7 +107,7 @@ export class UserStore extends NetworkStore {
       timeout: options.timeout,
       client: this.client
     });
-    const response = await request.execute();
-    return response.data;
+    return request.execute()
+      .then(response => response.data);
   }
 }

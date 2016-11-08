@@ -70,29 +70,4 @@ describe('Client', () => {
       expect(client.appVersion).toEqual(appVersion);
     });
   });
-
-  describe('activeUser', () => {
-    it('should return null when an active user does not exist', () => {
-      const client = new Client();
-      expect(client.activeUser).toEqual(null);
-    });
-
-    it('should return the active user when one does exist', () => {
-      const client = new Client({
-        appKey: 'kid_HkTD2CJc',
-        appSecret: 'cd7f658ed0a548dd8dfadf5a1787568b'
-      });
-      expect(client.activeUser).toNotEqual(null);
-    });
-
-    it('should not be able to set an active user', () => {
-      expect(() => {
-        const client = new Client({
-          appKey: 'kid_HkTD2CJc',
-          appSecret: 'cd7f658ed0a548dd8dfadf5a1787568b'
-        });
-        client.activeUser = {};
-      }).toThrow();
-    });
-  });
 });

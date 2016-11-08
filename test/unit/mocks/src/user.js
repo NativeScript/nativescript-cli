@@ -1,19 +1,16 @@
 import { User } from '../../../../src/entity';
-import { Client } from '../../../../src/client';
 import { randomString } from '../../../../src/utils';
 import nock from 'nock';
 
 export default class TestUser extends User {
-  static getActiveUser(client = Client.sharedInstance()) {
-    const data = client.activeUser;
-    let user = null;
+  static getActiveUser(client) {
+    const user = super.getActiveUser(client);
 
-    if (data) {
-      user = new User(data);
-      user.client = client;
+    if (user) {
+      return new TestUser(user.data);
     }
 
-    return user;
+    return null;
   }
 
   login(username, password, options) {
@@ -44,7 +41,7 @@ export default class TestUser extends User {
   logout(options) {
     // Setup nock response
     nock(this.client.apiHostname, { encodedQueryParams: true })
-      .post('/user/kid_HkTD2CJc/_logout')
+      .post(`${this.pathname}/_logout`)
       .reply(204, '', {});
 
     // Logout

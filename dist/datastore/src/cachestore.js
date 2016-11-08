@@ -3,7 +3,8 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.CacheStore = undefined;
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -11,25 +12,35 @@ var _get = function get(object, property, receiver) { if (object === null) objec
 
 var _networkstore = require('./networkstore');
 
+var _networkstore2 = _interopRequireDefault(_networkstore);
+
 var _request = require('../../request');
 
 var _errors = require('../../errors');
 
-var _query5 = require('../../query');
+var _query3 = require('../../query');
+
+var _query4 = _interopRequireDefault(_query3);
+
+var _aggregation = require('../../aggregation');
+
+var _aggregation2 = _interopRequireDefault(_aggregation);
 
 var _sync = require('./sync');
+
+var _sync2 = _interopRequireDefault(_sync);
 
 var _entity = require('../../entity');
 
 var _utils = require('../../utils');
 
-var _regeneratorRuntime = require('regenerator-runtime');
-
-var _regeneratorRuntime2 = _interopRequireDefault(_regeneratorRuntime);
-
 var _differenceBy = require('lodash/differenceBy');
 
 var _differenceBy2 = _interopRequireDefault(_differenceBy);
+
+var _assign = require('lodash/assign');
+
+var _assign2 = _interopRequireDefault(_assign);
 
 var _keyBy = require('lodash/keyBy');
 
@@ -57,1201 +68,665 @@ var _isArray2 = _interopRequireDefault(_isArray);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } // eslint-disable-line no-unused-vars
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-
-var idAttribute = process && process.env && process.env.KINVEY_ID_ATTRIBUTE || '_id' || '_id';
-
-/**
- * The CacheStore class is used to find, create, update, remove, count and group entities. Entities are stored
- * in a cache and synced with the backend.
- */
-
-var CacheStore = exports.CacheStore = function (_NetworkStore) {
+var CacheStore = function (_NetworkStore) {
   _inherits(CacheStore, _NetworkStore);
 
   function CacheStore(collection) {
-    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
     _classCallCheck(this, CacheStore);
 
-    /**
-     * @type {number|undefined}
-     */
     var _this = _possibleConstructorReturn(this, (CacheStore.__proto__ || Object.getPrototypeOf(CacheStore)).call(this, collection, options));
 
     _this.ttl = options.ttl || undefined;
 
-    /**
-     * @type {SyncManager}
-     */
-    _this.syncManager = new _sync.SyncManager(_this.collection, options);
+    _this.syncManager = new _sync2.default(_this.collection, options);
     return _this;
   }
 
   _createClass(CacheStore, [{
     key: 'find',
-
-
-    /**
-     * Find all entities in the data store. A query can be optionally provided to return
-     * a subset of all entities in a collection or omitted to return all entities in
-     * a collection. The number of entities returned adheres to the limits specified
-     * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
-     *
-     * @param   {Query}                 [query]                             Query used to filter entities.
-     * @param   {Object}                [options]                           Options
-     * @param   {Properties}            [options.properties]                Custom properties to send with
-     *                                                                      the request.
-     * @param   {Number}                [options.timeout]                   Timeout for the request.
-     * @param   {Boolean}               [options.useDeltaFetch]             Turn on or off the use of delta fetch.
-     * @return  {Observable}                                                Observable.
-     */
     value: function find(query) {
       var _this2 = this;
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      var stream = _utils.KinveyObservable.create(function () {
-        var _ref = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee(observer) {
-          var cacheEntities, request, response, syncCount, networkEntities, removedEntities, removedIds, removeQuery, saveRequest;
-          return _regeneratorRuntime2.default.wrap(function _callee$(_context) {
-            while (1) {
-              switch (_context.prev = _context.next) {
-                case 0:
-                  _context.prev = 0;
-                  cacheEntities = [];
-                  _context.prev = 2;
+      options = (0, _assign2.default)({ syncAutomatically: this.syncAutomatically }, options);
+      var syncAutomatically = options.syncAutomatically === true;
+      var stream = _utils.KinveyObservable.create(function (observer) {
+        if (query && !(query instanceof _query4.default)) {
+          return observer.error(new _errors.KinveyError('Invalid query. It must be an instance of the Query class.'));
+        }
 
-                  if (!(query && !(query instanceof _query5.Query))) {
-                    _context.next = 5;
-                    break;
-                  }
+        var request = new _request.CacheRequest({
+          method: _request.RequestMethod.GET,
+          url: _url2.default.format({
+            protocol: _this2.client.protocol,
+            host: _this2.client.host,
+            pathname: _this2.pathname,
+            query: options.query
+          }),
+          properties: options.properties,
+          query: query,
+          timeout: options.timeout
+        });
 
-                  throw new _errors.KinveyError('Invalid query. It must be an instance of the Query class.');
+        return request.execute().then(function (response) {
+          return response.data;
+        }).catch(function () {
+          return [];
+        }).then(function () {
+          var cacheEntities = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
 
-                case 5:
+          observer.next(cacheEntities);
 
-                  // Fetch the cache entities
-                  request = new _request.CacheRequest({
-                    method: _request.RequestMethod.GET,
-                    url: _url2.default.format({
-                      protocol: _this2.client.protocol,
-                      host: _this2.client.host,
-                      pathname: _this2.pathname,
-                      query: options.query
-                    }),
-                    properties: options.properties,
-                    query: query,
-                    timeout: options.timeout
-                  });
-
-                  // Execute the request
-
-                  _context.next = 8;
-                  return request.execute();
-
-                case 8:
-                  response = _context.sent;
-
-                  cacheEntities = response.data;
-
-                  // Emit the cache entities
-                  observer.next(cacheEntities);
-                  _context.next = 15;
-                  break;
-
-                case 13:
-                  _context.prev = 13;
-                  _context.t0 = _context['catch'](2);
-
-                case 15:
-                  if (!(_this2.syncAutomatically === true)) {
-                    _context.next = 39;
-                    break;
-                  }
-
-                  _context.next = 18;
+          if (syncAutomatically === true) {
+            return _this2.pendingSyncCount(null, options).then(function (syncCount) {
+              if (syncCount > 0) {
+                return _this2.push(null, options).then(function () {
                   return _this2.pendingSyncCount(null, options);
-
-                case 18:
-                  syncCount = _context.sent;
-
-                  if (!(syncCount > 0)) {
-                    _context.next = 25;
-                    break;
-                  }
-
-                  _context.next = 22;
-                  return _this2.push(null, options);
-
-                case 22:
-                  _context.next = 24;
-                  return _this2.pendingSyncCount(null, options);
-
-                case 24:
-                  syncCount = _context.sent;
-
-                case 25:
-                  if (!(syncCount > 0)) {
-                    _context.next = 27;
-                    break;
-                  }
-
-                  throw new _errors.KinveyError('Unable to load data from the network.' + (' There are ' + syncCount + ' entities that need') + ' to be synced before data is loaded from the network.');
-
-                case 27:
-                  _context.next = 29;
-                  return _get(CacheStore.prototype.__proto__ || Object.getPrototypeOf(CacheStore.prototype), 'find', _this2).call(_this2, query, options).toPromise();
-
-                case 29:
-                  networkEntities = _context.sent;
-
-
-                  // Remove entities from the cache that no longer exists
-                  removedEntities = (0, _differenceBy2.default)(cacheEntities, networkEntities, idAttribute);
-                  removedIds = Object.keys((0, _keyBy2.default)(removedEntities, idAttribute));
-                  removeQuery = new _query5.Query().contains(idAttribute, removedIds);
-                  _context.next = 35;
-                  return _this2.clear(removeQuery, options);
-
-                case 35:
-
-                  // Save network entities to cache
-                  saveRequest = new _request.CacheRequest({
-                    method: _request.RequestMethod.PUT,
-                    url: _url2.default.format({
-                      protocol: _this2.client.protocol,
-                      host: _this2.client.host,
-                      pathname: _this2.pathname,
-                      query: options.query
-                    }),
-                    properties: options.properties,
-                    body: networkEntities,
-                    timeout: options.timeout
-                  });
-                  _context.next = 38;
-                  return saveRequest.execute();
-
-                case 38:
-
-                  // Emit the network entities
-                  observer.next(networkEntities);
-
-                case 39:
-                  _context.next = 44;
-                  break;
-
-                case 41:
-                  _context.prev = 41;
-                  _context.t1 = _context['catch'](0);
-                  return _context.abrupt('return', observer.error(_context.t1));
-
-                case 44:
-                  return _context.abrupt('return', observer.complete());
-
-                case 45:
-                case 'end':
-                  return _context.stop();
+                });
               }
-            }
-          }, _callee, _this2, [[0, 41], [2, 13]]);
-        }));
 
-        return function (_x3) {
-          return _ref.apply(this, arguments);
-        };
-      }());
+              return syncCount;
+            }).then(function (syncCount) {
+              if (syncCount > 0) {
+                throw new _errors.KinveyError('Unable to load data from the network.' + (' There are ' + syncCount + ' entities that need') + ' to be synced before data is loaded from the network.');
+              }
+
+              return _get(CacheStore.prototype.__proto__ || Object.getPrototypeOf(CacheStore.prototype), 'find', _this2).call(_this2, query, options).toPromise();
+            }).then(function (networkEntities) {
+              var removedEntities = (0, _differenceBy2.default)(cacheEntities, networkEntities, '_id');
+              var removedIds = Object.keys((0, _keyBy2.default)(removedEntities, '_id'));
+              var removeQuery = new _query4.default().contains('_id', removedIds);
+              return _this2.clear(removeQuery, options).then(function () {
+                return networkEntities;
+              });
+            }).then(function (networkEntities) {
+              var request = new _request.CacheRequest({
+                method: _request.RequestMethod.PUT,
+                url: _url2.default.format({
+                  protocol: _this2.client.protocol,
+                  host: _this2.client.host,
+                  pathname: _this2.pathname,
+                  query: options.query
+                }),
+                properties: options.properties,
+                body: networkEntities,
+                timeout: options.timeout
+              });
+              return request.execute().then(function (response) {
+                return response.data;
+              });
+            });
+          }
+
+          return cacheEntities;
+        }).then(function (entities) {
+          return observer.next(entities);
+        }).then(function () {
+          return observer.complete();
+        }).catch(function (error) {
+          return observer.error(error);
+        });
+      });
 
       return stream;
     }
-
-    /**
-     * Find a single entity in the data store by id.
-     *
-     * @param   {string}                id                               Entity by id to find.
-     * @param   {Object}                [options]                        Options
-     * @param   {Properties}            [options.properties]             Custom properties to send with
-     *                                                                   the request.
-     * @param   {Number}                [options.timeout]                Timeout for the request.
-     * @param   {Boolean}               [options.useDeltaFetch]          Turn on or off the use of delta fetch.
-     * @return  {Observable}                                             Observable.
-     */
-
   }, {
     key: 'findById',
     value: function findById(id) {
       var _this3 = this;
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      var stream = _utils.KinveyObservable.create(function () {
-        var _ref2 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee2(observer) {
-          var request, response, cacheEntity, syncCount, networkEntity, saveRequest;
-          return _regeneratorRuntime2.default.wrap(function _callee2$(_context2) {
-            while (1) {
-              switch (_context2.prev = _context2.next) {
-                case 0:
-                  _context2.prev = 0;
+      options = (0, _assign2.default)({ syncAutomatically: this.syncAutomatically }, options);
+      var syncAutomatically = options.syncAutomatically === true;
+      var stream = _utils.KinveyObservable.create(function (observer) {
+        if (!id) {
+          observer.next(undefined);
+          return observer.complete();
+        }
 
-                  if (id) {
-                    _context2.next = 5;
-                    break;
-                  }
+        var request = new _request.CacheRequest({
+          method: _request.RequestMethod.GET,
+          url: _url2.default.format({
+            protocol: _this3.client.protocol,
+            host: _this3.client.host,
+            pathname: _this3.pathname + '/' + id,
+            query: options.query
+          }),
+          properties: options.properties,
+          timeout: options.timeout
+        });
+        return request.execute().then(function (response) {
+          return response.data;
+        }).catch(function () {
+          return undefined;
+        }).then(function (cacheEntity) {
+          observer.next(cacheEntity);
 
-                  observer.next(undefined);
-                  _context2.next = 35;
-                  break;
-
-                case 5:
-                  _context2.prev = 5;
-
-                  // Fetch from the cache
-                  request = new _request.CacheRequest({
-                    method: _request.RequestMethod.GET,
-                    url: _url2.default.format({
-                      protocol: _this3.client.protocol,
-                      host: _this3.client.host,
-                      pathname: _this3.pathname + '/' + id,
-                      query: options.query
-                    }),
-                    properties: options.properties,
-                    timeout: options.timeout
-                  });
-                  _context2.next = 9;
-                  return request.execute();
-
-                case 9:
-                  response = _context2.sent;
-                  cacheEntity = response.data;
-
-                  // Emit the cache entity
-
-                  observer.next(cacheEntity);
-                  _context2.next = 16;
-                  break;
-
-                case 14:
-                  _context2.prev = 14;
-                  _context2.t0 = _context2['catch'](5);
-
-                case 16:
-                  if (!(_this3.syncAutomatically === true)) {
-                    _context2.next = 35;
-                    break;
-                  }
-
-                  _context2.next = 19;
+          if (syncAutomatically === true) {
+            return _this3.pendingSyncCount(null, options).then(function (syncCount) {
+              if (syncCount > 0) {
+                return _this3.push(null, options).then(function () {
                   return _this3.pendingSyncCount(null, options);
-
-                case 19:
-                  syncCount = _context2.sent;
-
-                  if (!(syncCount > 0)) {
-                    _context2.next = 26;
-                    break;
-                  }
-
-                  _context2.next = 23;
-                  return _this3.push(null, options);
-
-                case 23:
-                  _context2.next = 25;
-                  return _this3.pendingSyncCount(null, options);
-
-                case 25:
-                  syncCount = _context2.sent;
-
-                case 26:
-                  if (!(syncCount > 0)) {
-                    _context2.next = 28;
-                    break;
-                  }
-
-                  throw new _errors.KinveyError('Unable to load data from the network.' + (' There are ' + syncCount + ' entities that need') + ' to be synced before data is loaded from the network.');
-
-                case 28:
-                  _context2.next = 30;
-                  return _get(CacheStore.prototype.__proto__ || Object.getPrototypeOf(CacheStore.prototype), 'findById', _this3).call(_this3, id, options).toPromise();
-
-                case 30:
-                  networkEntity = _context2.sent;
-
-
-                  // Save the network entity to cache
-                  saveRequest = new _request.CacheRequest({
-                    method: _request.RequestMethod.PUT,
-                    url: _url2.default.format({
-                      protocol: _this3.client.protocol,
-                      host: _this3.client.host,
-                      pathname: _this3.pathname,
-                      query: options.query
-                    }),
-                    properties: options.properties,
-                    body: networkEntity,
-                    timeout: options.timeout
-                  });
-                  _context2.next = 34;
-                  return saveRequest.execute();
-
-                case 34:
-
-                  // Emit the network entity
-                  observer.next(networkEntity);
-
-                case 35:
-                  _context2.next = 40;
-                  break;
-
-                case 37:
-                  _context2.prev = 37;
-                  _context2.t1 = _context2['catch'](0);
-                  return _context2.abrupt('return', observer.error(_context2.t1));
-
-                case 40:
-                  return _context2.abrupt('return', observer.complete());
-
-                case 41:
-                case 'end':
-                  return _context2.stop();
+                });
               }
-            }
-          }, _callee2, _this3, [[0, 37], [5, 14]]);
-        }));
 
-        return function (_x5) {
-          return _ref2.apply(this, arguments);
-        };
-      }());
+              return syncCount;
+            }).then(function (syncCount) {
+              if (syncCount > 0) {
+                throw new _errors.KinveyError('Unable to load data from the network.' + (' There are ' + syncCount + ' entities that need') + ' to be synced before data is loaded from the network.');
+              }
+            }).then(function () {
+              return _get(CacheStore.prototype.__proto__ || Object.getPrototypeOf(CacheStore.prototype), 'findById', _this3).call(_this3, id, options).toPromise();
+            }).then(function (networkEntity) {
+              var request = new _request.CacheRequest({
+                method: _request.RequestMethod.PUT,
+                url: _url2.default.format({
+                  protocol: _this3.client.protocol,
+                  host: _this3.client.host,
+                  pathname: _this3.pathname,
+                  query: options.query
+                }),
+                properties: options.properties,
+                body: networkEntity,
+                timeout: options.timeout
+              });
+              return request.execute().then(function (response) {
+                return response.data;
+              });
+            });
+          }
+
+          return cacheEntity;
+        }).then(function (entity) {
+          return observer.next(entity);
+        }).then(function () {
+          return observer.complete();
+        }).catch(function (error) {
+          return observer.error(error);
+        });
+      });
 
       return stream;
     }
+  }, {
+    key: 'group',
+    value: function group(aggregation) {
+      var _this4 = this;
 
-    /**
-     * Count all entities in the data store. A query can be optionally provided to return
-     * a subset of all entities in a collection or omitted to return all entities in
-     * a collection. The number of entities returned adheres to the limits specified
-     * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
-     *
-     * @param   {Query}                 [query]                          Query used to filter entities.
-     * @param   {Object}                [options]                        Options
-     * @param   {Properties}            [options.properties]             Custom properties to send with
-     *                                                                   the request.
-     * @param   {Number}                [options.timeout]                Timeout for the request.
-     * @return  {Observable}                                             Observable.
-     */
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
+      options = (0, _assign2.default)({ syncAutomatically: this.syncAutomatically }, options);
+      var syncAutomatically = options.syncAutomatically === true;
+      var stream = _utils.KinveyObservable.create(function (observer) {
+        if (!(aggregation instanceof _aggregation2.default)) {
+          return observer.error(new _errors.KinveyError('Invalid aggregation. It must be an instance of the Aggregation class.'));
+        }
+
+        var request = new _request.CacheRequest({
+          method: _request.RequestMethod.GET,
+          url: _url2.default.format({
+            protocol: _this4.client.protocol,
+            host: _this4.client.host,
+            pathname: _this4.pathname + '/_group'
+          }),
+          properties: options.properties,
+          aggregation: aggregation,
+          timeout: options.timeout
+        });
+
+        return request.execute().then(function (response) {
+          return response.data;
+        }).catch(function () {
+          return [];
+        }).then(function () {
+          var cacheResult = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+
+          observer.next(cacheResult);
+
+          if (syncAutomatically === true) {
+            return _this4.pendingSyncCount(null, options).then(function (syncCount) {
+              if (syncCount > 0) {
+                return _this4.push(null, options).then(function () {
+                  return _this4.pendingSyncCount(null, options);
+                });
+              }
+
+              return syncCount;
+            }).then(function (syncCount) {
+              if (syncCount > 0) {
+                throw new _errors.KinveyError('Unable to load data from the network.' + (' There are ' + syncCount + ' entities that need') + ' to be synced before data is loaded from the network.');
+              }
+
+              return _get(CacheStore.prototype.__proto__ || Object.getPrototypeOf(CacheStore.prototype), 'group', _this4).call(_this4, aggregation, options).toPromise();
+            });
+          }
+
+          return cacheResult;
+        }).then(function (result) {
+          return observer.next(result);
+        }).then(function () {
+          return observer.complete();
+        }).catch(function (error) {
+          return observer.error(error);
+        });
+      });
+      return stream;
+    }
   }, {
     key: 'count',
     value: function count(query) {
-      var _this4 = this;
+      var _this5 = this;
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      var stream = _utils.KinveyObservable.create(function () {
-        var _ref3 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee3(observer) {
-          var request, response, data, syncCount, networkCount;
-          return _regeneratorRuntime2.default.wrap(function _callee3$(_context3) {
-            while (1) {
-              switch (_context3.prev = _context3.next) {
-                case 0:
-                  _context3.prev = 0;
+      options = (0, _assign2.default)({ syncAutomatically: this.syncAutomatically }, options);
+      var syncAutomatically = options.syncAutomatically === true;
+      var stream = _utils.KinveyObservable.create(function (observer) {
+        if (query && !(query instanceof _query4.default)) {
+          return observer.error(new _errors.KinveyError('Invalid query. It must be an instance of the Query class.'));
+        }
 
-                  if (!(query && !(query instanceof _query5.Query))) {
-                    _context3.next = 3;
-                    break;
-                  }
+        var request = new _request.CacheRequest({
+          method: _request.RequestMethod.GET,
+          url: _url2.default.format({
+            protocol: _this5.client.protocol,
+            host: _this5.client.host,
+            pathname: _this5.pathname,
+            query: options.query
+          }),
+          properties: options.properties,
+          query: query,
+          timeout: options.timeout
+        });
 
-                  throw new _errors.KinveyError('Invalid query. It must be an instance of the Query class.');
+        return request.execute().then(function (response) {
+          return response.data;
+        }).catch(function () {
+          return [];
+        }).then(function () {
+          var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+          return data.length;
+        }).then(function (cacheCount) {
+          observer.next(cacheCount);
 
-                case 3:
-                  _context3.prev = 3;
-
-                  // Count the entities in the cache
-                  request = new _request.CacheRequest({
-                    method: _request.RequestMethod.GET,
-                    url: _url2.default.format({
-                      protocol: _this4.client.protocol,
-                      host: _this4.client.host,
-                      pathname: _this4.pathname,
-                      query: options.query
-                    }),
-                    properties: options.properties,
-                    query: query,
-                    timeout: options.timeout
-                  });
-
-                  // Execute the request
-
-                  _context3.next = 7;
-                  return request.execute();
-
-                case 7:
-                  response = _context3.sent;
-                  data = response.data;
-
-                  // Emit the cache count
-
-                  observer.next(data ? data.length : 0);
-                  _context3.next = 14;
-                  break;
-
-                case 12:
-                  _context3.prev = 12;
-                  _context3.t0 = _context3['catch'](3);
-
-                case 14:
-                  if (!(_this4.syncAutomatically === true)) {
-                    _context3.next = 30;
-                    break;
-                  }
-
-                  _context3.next = 17;
-                  return _this4.pendingSyncCount(null, options);
-
-                case 17:
-                  syncCount = _context3.sent;
-
-                  if (!(syncCount > 0)) {
-                    _context3.next = 24;
-                    break;
-                  }
-
-                  _context3.next = 21;
-                  return _this4.push(null, options);
-
-                case 21:
-                  _context3.next = 23;
-                  return _this4.pendingSyncCount(null, options);
-
-                case 23:
-                  syncCount = _context3.sent;
-
-                case 24:
-                  if (!(syncCount > 0)) {
-                    _context3.next = 26;
-                    break;
-                  }
-
-                  throw new _errors.KinveyError('Unable to load data from the network.' + (' There are ' + syncCount + ' entities that need') + ' to be synced before data is loaded from the network.');
-
-                case 26:
-                  _context3.next = 28;
-                  return _get(CacheStore.prototype.__proto__ || Object.getPrototypeOf(CacheStore.prototype), 'count', _this4).call(_this4, query, options).toPromise();
-
-                case 28:
-                  networkCount = _context3.sent;
-
-
-                  // Emit the network count
-                  observer.next(networkCount);
-
-                case 30:
-                  _context3.next = 35;
-                  break;
-
-                case 32:
-                  _context3.prev = 32;
-                  _context3.t1 = _context3['catch'](0);
-                  return _context3.abrupt('return', observer.error(_context3.t1));
-
-                case 35:
-                  return _context3.abrupt('return', observer.complete());
-
-                case 36:
-                case 'end':
-                  return _context3.stop();
+          if (syncAutomatically === true) {
+            return _this5.pendingSyncCount(null, options).then(function (syncCount) {
+              if (syncCount > 0) {
+                return _this5.push(null, options).then(function () {
+                  return _this5.pendingSyncCount(null, options);
+                });
               }
-            }
-          }, _callee3, _this4, [[0, 32], [3, 12]]);
-        }));
 
-        return function (_x7) {
-          return _ref3.apply(this, arguments);
-        };
-      }());
+              return syncCount;
+            }).then(function (syncCount) {
+              if (syncCount > 0) {
+                throw new _errors.KinveyError('Unable to load data from the network.' + (' There are ' + syncCount + ' entities that need') + ' to be synced before data is loaded from the network.');
+              }
+            }).then(function () {
+              return _get(CacheStore.prototype.__proto__ || Object.getPrototypeOf(CacheStore.prototype), 'count', _this5).call(_this5, query, options).toPromise();
+            });
+          }
+
+          return cacheCount;
+        }).then(function (count) {
+          return observer.next(count);
+        }).then(function () {
+          return observer.complete();
+        }).catch(function (error) {
+          return observer.error(error);
+        });
+      });
 
       return stream;
     }
-
-    /**
-     * Create a single or an array of entities on the data store.
-     *
-     * @param   {Object|Array}          data                              Data that you want to create on the data store.
-     * @param   {Object}                [options]                         Options
-     * @param   {Properties}            [options.properties]              Custom properties to send with
-     *                                                                    the request.
-     * @param   {Number}                [options.timeout]                 Timeout for the request.
-     * @return  {Promise}                                                 Promise.
-     */
-
   }, {
     key: 'create',
     value: function create(data) {
-      var _this5 = this;
+      var _this6 = this;
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      var stream = _utils.KinveyObservable.create(function () {
-        var _ref4 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee4(observer) {
-          var singular, request, response, ids, query, results, entities;
-          return _regeneratorRuntime2.default.wrap(function _callee4$(_context4) {
-            while (1) {
-              switch (_context4.prev = _context4.next) {
-                case 0:
-                  _context4.prev = 0;
+      var stream = _utils.KinveyObservable.create(function (observer) {
+        if (!data) {
+          observer.next(null);
+          observer.complete();
+        }
 
-                  if (data) {
-                    _context4.next = 5;
-                    break;
-                  }
+        var singular = false;
 
-                  observer.next(null);
-                  _context4.next = 25;
-                  break;
+        if (!(0, _isArray2.default)(data)) {
+          singular = true;
+          data = [data];
+        }
 
-                case 5:
-                  singular = false;
+        var request = new _request.CacheRequest({
+          method: _request.RequestMethod.POST,
+          url: _url2.default.format({
+            protocol: _this6.client.protocol,
+            host: _this6.client.host,
+            pathname: _this6.pathname,
+            query: options.query
+          }),
+          properties: options.properties,
+          body: data,
+          timeout: options.timeout
+        });
 
-                  // Cast the data to an array
+        return request.execute().then(function (response) {
+          return response.data;
+        }).then(function (data) {
+          return _this6.syncManager.addCreateOperation(data, options).then(function () {
+            return data;
+          });
+        }).then(function (data) {
+          if (_this6.syncAutomatically === true) {
+            var ids = Object.keys((0, _keyBy2.default)(data, '_id'));
+            var query = new _query4.default().contains('entityId', ids);
+            return _this6.push(query, options).then(function (results) {
+              return (0, _map2.default)(results, function (result) {
+                return result.entity;
+              });
+            });
+          }
 
-                  if (!(0, _isArray2.default)(data)) {
-                    singular = true;
-                    data = [data];
-                  }
-
-                  // Save the data to the cache
-                  request = new _request.CacheRequest({
-                    method: _request.RequestMethod.POST,
-                    url: _url2.default.format({
-                      protocol: _this5.client.protocol,
-                      host: _this5.client.host,
-                      pathname: _this5.pathname,
-                      query: options.query
-                    }),
-                    properties: options.properties,
-                    body: data,
-                    timeout: options.timeout
-                  });
-
-                  // Execute the request
-
-                  _context4.next = 10;
-                  return request.execute();
-
-                case 10:
-                  response = _context4.sent;
-
-                  data = response.data;
-
-                  // Add a create operation to sync
-                  _context4.next = 14;
-                  return _this5.syncManager.addCreateOperation(data, options);
-
-                case 14:
-                  if (!(_this5.syncAutomatically === true)) {
-                    _context4.next = 24;
-                    break;
-                  }
-
-                  ids = Object.keys((0, _keyBy2.default)(data, idAttribute));
-                  query = new _query5.Query().contains('entityId', ids);
-                  _context4.next = 19;
-                  return _this5.push(query, options);
-
-                case 19:
-                  results = _context4.sent;
-                  entities = (0, _map2.default)(results, function (result) {
-                    return result.entity;
-                  });
-
-                  // Emit the data
-
-                  observer.next(singular ? entities[0] : entities);
-                  _context4.next = 25;
-                  break;
-
-                case 24:
-                  // Emit the data
-                  observer.next(singular ? data[0] : data);
-
-                case 25:
-                  _context4.next = 30;
-                  break;
-
-                case 27:
-                  _context4.prev = 27;
-                  _context4.t0 = _context4['catch'](0);
-                  return _context4.abrupt('return', observer.error(_context4.t0));
-
-                case 30:
-                  return _context4.abrupt('return', observer.complete());
-
-                case 31:
-                case 'end':
-                  return _context4.stop();
-              }
-            }
-          }, _callee4, _this5, [[0, 27]]);
-        }));
-
-        return function (_x9) {
-          return _ref4.apply(this, arguments);
-        };
-      }());
+          return data;
+        }).then(function (entities) {
+          return observer.next(singular ? entities[0] : entities);
+        }).then(function () {
+          return observer.complete();
+        }).catch(function (error) {
+          return observer.error(error);
+        });
+      });
 
       return stream.toPromise();
     }
-
-    /**
-     * Update a single or an array of entities on the data store.
-     *
-     * @param   {Object|Array}          data                              Data that you want to update on the data store.
-     * @param   {Object}                [options]                         Options
-     * @param   {Properties}            [options.properties]              Custom properties to send with
-     *                                                                    the request.
-     * @param   {Number}                [options.timeout]                 Timeout for the request.
-     * @return  {Promise}                                                 Promise.
-     */
-
   }, {
     key: 'update',
     value: function update(data) {
-      var _this6 = this;
+      var _this7 = this;
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      var stream = _utils.KinveyObservable.create(function () {
-        var _ref5 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee5(observer) {
-          var singular, request, response, ids, query, results, entities;
-          return _regeneratorRuntime2.default.wrap(function _callee5$(_context5) {
-            while (1) {
-              switch (_context5.prev = _context5.next) {
-                case 0:
-                  _context5.prev = 0;
+      var stream = _utils.KinveyObservable.create(function (observer) {
+        if (!data) {
+          observer.next(null);
+          return observer.complete();
+        }
 
-                  if (data) {
-                    _context5.next = 5;
-                    break;
-                  }
+        var singular = false;
 
-                  observer.next(null);
-                  _context5.next = 25;
-                  break;
+        if (!(0, _isArray2.default)(data)) {
+          singular = true;
+          data = [data];
+        }
 
-                case 5:
-                  singular = false;
+        var request = new _request.CacheRequest({
+          method: _request.RequestMethod.PUT,
+          url: _url2.default.format({
+            protocol: _this7.client.protocol,
+            host: _this7.client.host,
+            pathname: _this7.pathname,
+            query: options.query
+          }),
+          properties: options.properties,
+          body: data,
+          timeout: options.timeout
+        });
 
-                  // Cast the data to an array
+        return request.execute().then(function (response) {
+          return response.data;
+        }).then(function (data) {
+          return _this7.syncManager.addUpdateOperation(data, options).then(function () {
+            return data;
+          });
+        }).then(function (data) {
+          if (_this7.syncAutomatically === true) {
+            var ids = Object.keys((0, _keyBy2.default)(data, '_id'));
+            var query = new _query4.default().contains('entityId', ids);
+            return _this7.push(query, options).then(function (results) {
+              return (0, _map2.default)(results, function (result) {
+                return result.entity;
+              });
+            });
+          }
 
-                  if (!(0, _isArray2.default)(data)) {
-                    singular = true;
-                    data = [data];
-                  }
-
-                  // Save the data to the cache
-                  request = new _request.CacheRequest({
-                    method: _request.RequestMethod.PUT,
-                    url: _url2.default.format({
-                      protocol: _this6.client.protocol,
-                      host: _this6.client.host,
-                      pathname: _this6.pathname,
-                      query: options.query
-                    }),
-                    properties: options.properties,
-                    body: data,
-                    timeout: options.timeout
-                  });
-
-                  // Execute the request
-
-                  _context5.next = 10;
-                  return request.execute();
-
-                case 10:
-                  response = _context5.sent;
-
-                  data = response.data;
-
-                  // Add an update operation to sync
-                  _context5.next = 14;
-                  return _this6.syncManager.addUpdateOperation(data, options);
-
-                case 14:
-                  if (!(_this6.syncAutomatically === true)) {
-                    _context5.next = 24;
-                    break;
-                  }
-
-                  ids = Object.keys((0, _keyBy2.default)(data, idAttribute));
-                  query = new _query5.Query().contains('entityId', ids);
-                  _context5.next = 19;
-                  return _this6.push(query, options);
-
-                case 19:
-                  results = _context5.sent;
-                  entities = (0, _map2.default)(results, function (result) {
-                    return result.entity;
-                  });
-
-                  // Emit the data
-
-                  observer.next(singular ? entities[0] : entities);
-                  _context5.next = 25;
-                  break;
-
-                case 24:
-                  // Emit the data
-                  observer.next(singular ? data[0] : data);
-
-                case 25:
-                  _context5.next = 30;
-                  break;
-
-                case 27:
-                  _context5.prev = 27;
-                  _context5.t0 = _context5['catch'](0);
-                  return _context5.abrupt('return', observer.error(_context5.t0));
-
-                case 30:
-                  return _context5.abrupt('return', observer.complete());
-
-                case 31:
-                case 'end':
-                  return _context5.stop();
-              }
-            }
-          }, _callee5, _this6, [[0, 27]]);
-        }));
-
-        return function (_x11) {
-          return _ref5.apply(this, arguments);
-        };
-      }());
+          return data;
+        }).then(function (entities) {
+          return observer.next(singular ? entities[0] : entities);
+        }).then(function () {
+          return observer.complete();
+        }).catch(function (error) {
+          return observer.error(error);
+        });
+      });
 
       return stream.toPromise();
     }
-
-    /**
-     * Remove all entities in the data store. A query can be optionally provided to remove
-     * a subset of all entities in a collection or omitted to remove all entities in
-     * a collection. The number of entities removed adheres to the limits specified
-     * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
-     *
-     * @param   {Query}                 [query]                           Query used to filter entities.
-     * @param   {Object}                [options]                         Options
-     * @param   {Properties}            [options.properties]              Custom properties to send with
-     *                                                                    the request.
-     * @param   {Number}                [options.timeout]                 Timeout for the request.
-     * @return  {Promise}                                                 Promise.
-     */
-
   }, {
     key: 'remove',
     value: function remove(query) {
-      var _this7 = this;
+      var _this8 = this;
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      var stream = _utils.KinveyObservable.create(function () {
-        var _ref6 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee6(observer) {
-          var fetchRequest, fetchResponse, entities, removeRequest, removeResponse, localEntities, _query, syncEntities, ids, _query2;
+      var stream = _utils.KinveyObservable.create(function (observer) {
+        if (query && !(query instanceof _query4.default)) {
+          return observer.error(new _errors.KinveyError('Invalid query. It must be an instance of the Query class.'));
+        }
 
-          return _regeneratorRuntime2.default.wrap(function _callee6$(_context6) {
-            while (1) {
-              switch (_context6.prev = _context6.next) {
-                case 0:
-                  _context6.prev = 0;
+        var fetchRequest = new _request.CacheRequest({
+          method: _request.RequestMethod.GET,
+          url: _url2.default.format({
+            protocol: _this8.client.protocol,
+            host: _this8.client.host,
+            pathname: _this8.pathname,
+            query: options.query
+          }),
+          properties: options.properties,
+          query: query,
+          timeout: options.timeout
+        });
 
-                  if (!(query && !(query instanceof _query5.Query))) {
-                    _context6.next = 3;
-                    break;
-                  }
+        return fetchRequest.execute().then(function (response) {
+          return response.data;
+        }).then(function (entities) {
+          var removeRequest = new _request.CacheRequest({
+            method: _request.RequestMethod.DELETE,
+            url: _url2.default.format({
+              protocol: _this8.client.protocol,
+              host: _this8.client.host,
+              pathname: _this8.pathname,
+              query: options.query
+            }),
+            properties: options.properties,
+            body: entities,
+            timeout: options.timeout
+          });
 
-                  throw new _errors.KinveyError('Invalid query. It must be an instance of the Query class.');
-
-                case 3:
-
-                  // Fetch the cache entities
-                  fetchRequest = new _request.CacheRequest({
-                    method: _request.RequestMethod.GET,
-                    url: _url2.default.format({
-                      protocol: _this7.client.protocol,
-                      host: _this7.client.host,
-                      pathname: _this7.pathname,
-                      query: options.query
-                    }),
-                    properties: options.properties,
-                    query: query,
-                    timeout: options.timeout
+          return removeRequest.execute().then(function (response) {
+            return response.data;
+          });
+        }).then(function (entities) {
+          if (entities && entities.length > 0) {
+            var _ret = function () {
+              var localEntities = (0, _filter2.default)(entities, function (entity) {
+                var metadata = new _entity.Metadata(entity);
+                return metadata.isLocal();
+              });
+              var query = new _query4.default().contains('entityId', Object.keys((0, _keyBy2.default)(localEntities, '_id')));
+              return {
+                v: _this8.clearSync(query, options).then(function () {
+                  var syncEntities = (0, _xorWith2.default)(entities, localEntities, function (entity, localEntity) {
+                    return entity._id === localEntity._id;
                   });
+                  return _this8.syncManager.addDeleteOperation(syncEntities, options);
+                }).then(function () {
+                  return entities;
+                })
+              };
+            }();
 
-                  // Execute the request
+            if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+          }
 
-                  _context6.next = 6;
-                  return fetchRequest.execute();
+          return entities;
+        }).then(function (entities) {
+          if (_this8.syncAutomatically === true) {
+            var ids = Object.keys((0, _keyBy2.default)(entities, '_id'));
+            var _query = new _query4.default().contains('entityId', ids);
+            return _this8.push(_query, options).then(function () {
+              return entities;
+            });
+          }
 
-                case 6:
-                  fetchResponse = _context6.sent;
-                  entities = fetchResponse.data;
-
-                  // Remove the data from the cache
-
-                  removeRequest = new _request.CacheRequest({
-                    method: _request.RequestMethod.DELETE,
-                    url: _url2.default.format({
-                      protocol: _this7.client.protocol,
-                      host: _this7.client.host,
-                      pathname: _this7.pathname,
-                      query: options.query
-                    }),
-                    properties: options.properties,
-                    body: entities,
-                    timeout: options.timeout
-                  });
-
-                  // Execite the request
-
-                  _context6.next = 11;
-                  return removeRequest.execute();
-
-                case 11:
-                  removeResponse = _context6.sent;
-
-                  entities = removeResponse.data;
-
-                  if (!(entities && entities.length > 0)) {
-                    _context6.next = 21;
-                    break;
-                  }
-
-                  // Clear local entities from the sync table
-                  localEntities = (0, _filter2.default)(entities, function (entity) {
-                    var metadata = new _entity.Metadata(entity);
-                    return metadata.isLocal();
-                  });
-                  _query = new _query5.Query().contains('entityId', Object.keys((0, _keyBy2.default)(localEntities, idAttribute)));
-                  _context6.next = 18;
-                  return _this7.clearSync(_query, options);
-
-                case 18:
-
-                  // Create delete operations for non local data in the sync table
-                  syncEntities = (0, _xorWith2.default)(entities, localEntities, function (entity, localEntity) {
-                    return entity[idAttribute] === localEntity[idAttribute];
-                  });
-                  _context6.next = 21;
-                  return _this7.syncManager.addDeleteOperation(syncEntities, options);
-
-                case 21:
-                  if (!(_this7.syncAutomatically === true)) {
-                    _context6.next = 26;
-                    break;
-                  }
-
-                  ids = Object.keys((0, _keyBy2.default)(entities, idAttribute));
-                  _query2 = new _query5.Query().contains('entityId', ids);
-                  _context6.next = 26;
-                  return _this7.push(_query2, options);
-
-                case 26:
-
-                  // Emit the data
-                  observer.next(entities);
-                  _context6.next = 32;
-                  break;
-
-                case 29:
-                  _context6.prev = 29;
-                  _context6.t0 = _context6['catch'](0);
-                  return _context6.abrupt('return', observer.error(_context6.t0));
-
-                case 32:
-                  return _context6.abrupt('return', observer.complete());
-
-                case 33:
-                case 'end':
-                  return _context6.stop();
-              }
-            }
-          }, _callee6, _this7, [[0, 29]]);
-        }));
-
-        return function (_x13) {
-          return _ref6.apply(this, arguments);
-        };
-      }());
+          return entities;
+        }).then(function (entities) {
+          return observer.next(entities);
+        }).then(function () {
+          return observer.complete();
+        }).catch(function (error) {
+          return observer.error(error);
+        });
+      });
 
       return stream.toPromise();
     }
-
-    /**
-     * Remove a single entity in the data store by id.
-     *
-     * @param   {string}                id                               Entity by id to remove.
-     * @param   {Object}                [options]                        Options
-     * @param   {Properties}            [options.properties]             Custom properties to send with
-     *                                                                   the request.
-     * @param   {Number}                [options.timeout]                Timeout for the request.
-     * @return  {Observable}                                             Observable.
-     */
-
   }, {
     key: 'removeById',
     value: function removeById(id) {
-      var _this8 = this;
+      var _this9 = this;
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      var stream = _utils.KinveyObservable.create(function () {
-        var _ref7 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee7(observer) {
-          var request, response, entity, metadata, query, _query3;
+      var stream = _utils.KinveyObservable.create(function (observer) {
+        var request = new _request.CacheRequest({
+          method: _request.RequestMethod.DELETE,
+          url: _url2.default.format({
+            protocol: _this9.client.protocol,
+            host: _this9.client.host,
+            pathname: _this9.pathname + '/' + id,
+            query: options.query
+          }),
+          properties: options.properties,
+          authType: _request.AuthType.Default,
+          timeout: options.timeout
+        });
 
-          return _regeneratorRuntime2.default.wrap(function _callee7$(_context7) {
-            while (1) {
-              switch (_context7.prev = _context7.next) {
-                case 0:
-                  _context7.prev = 0;
+        return request.execute().then(function (response) {
+          return response.data;
+        }).then(function (entity) {
+          if (entity) {
+            var metadata = new _entity.Metadata(entity);
 
-                  // Remove from cache
-                  request = new _request.CacheRequest({
-                    method: _request.RequestMethod.DELETE,
-                    url: _url2.default.format({
-                      protocol: _this8.client.protocol,
-                      host: _this8.client.host,
-                      pathname: _this8.pathname + '/' + id,
-                      query: options.query
-                    }),
-                    properties: options.properties,
-                    authType: _request.AuthType.Default,
-                    timeout: options.timeout
-                  });
-
-                  // Execute the request
-
-                  _context7.next = 4;
-                  return request.execute();
-
-                case 4:
-                  response = _context7.sent;
-                  entity = response.data;
-
-                  if (!entity) {
-                    _context7.next = 17;
-                    break;
-                  }
-
-                  metadata = new _entity.Metadata(entity);
-
-                  // Clear any pending sync items if the entity
-                  // was created locally
-
-                  if (!metadata.isLocal()) {
-                    _context7.next = 15;
-                    break;
-                  }
-
-                  query = new _query5.Query();
-
-                  query.equalTo('entityId', entity[idAttribute]);
-                  _context7.next = 13;
-                  return _this8.clearSync(query, options);
-
-                case 13:
-                  _context7.next = 17;
-                  break;
-
-                case 15:
-                  _context7.next = 17;
-                  return _this8.syncManager.addDeleteOperation(entity, options);
-
-                case 17:
-                  if (!(_this8.syncAutomatically === true)) {
-                    _context7.next = 21;
-                    break;
-                  }
-
-                  _query3 = new _query5.Query().equalTo('entityId', entity[idAttribute]);
-                  _context7.next = 21;
-                  return _this8.push(_query3, options);
-
-                case 21:
-
-                  // Emit the data
-                  observer.next(entity);
-                  _context7.next = 27;
-                  break;
-
-                case 24:
-                  _context7.prev = 24;
-                  _context7.t0 = _context7['catch'](0);
-                  return _context7.abrupt('return', observer.error(_context7.t0));
-
-                case 27:
-                  return _context7.abrupt('return', observer.complete());
-
-                case 28:
-                case 'end':
-                  return _context7.stop();
-              }
+            if (metadata.isLocal()) {
+              var query = new _query4.default();
+              query.equalTo('entityId', entity._id);
+              return _this9.clearSync(query, options).then(function () {
+                return entity;
+              });
             }
-          }, _callee7, _this8, [[0, 24]]);
-        }));
 
-        return function (_x15) {
-          return _ref7.apply(this, arguments);
-        };
-      }());
+            return _this9.syncManager.addDeleteOperation(entity, options).then(function () {
+              return entity;
+            });
+          }
+
+          return entity;
+        }).then(function (entity) {
+          if (_this9.syncAutomatically === true) {
+            var query = new _query4.default().equalTo('entityId', entity._id);
+            return _this9.push(query, options).then(function () {
+              return entity;
+            });
+          }
+
+          return entity;
+        }).then(function (entity) {
+          return observer.next(entity);
+        }).then(function () {
+          return observer.complete();
+        }).catch(function (error) {
+          return observer.error(error);
+        });
+      });
 
       return stream.toPromise();
     }
-
-    /**
-     * Remove all entities in the data store that are stored locally.
-     *
-     * @param   {Query}                 [query]                           Query used to filter entities.
-     * @param   {Object}                [options]                         Options
-     * @param   {Properties}            [options.properties]              Custom properties to send with
-     *                                                                    the request.
-     * @param   {Number}                [options.timeout]                 Timeout for the request.
-     * @return  {Promise}                                                 Promise.
-     */
-
   }, {
     key: 'clear',
     value: function clear(query) {
-      var _this9 = this;
+      var _this10 = this;
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      var stream = _utils.KinveyObservable.create(function () {
-        var _ref8 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee8(observer) {
-          var fetchRequest, fetchResponse, entities, removeRequest, removeResponse, _query4;
+      var stream = _utils.KinveyObservable.create(function (observer) {
+        if (query && !(query instanceof _query4.default)) {
+          return observer.error(new _errors.KinveyError('Invalid query. It must be an instance of the Query class.'));
+        }
 
-          return _regeneratorRuntime2.default.wrap(function _callee8$(_context8) {
-            while (1) {
-              switch (_context8.prev = _context8.next) {
-                case 0:
-                  _context8.prev = 0;
+        var request = new _request.CacheRequest({
+          method: _request.RequestMethod.GET,
+          url: _url2.default.format({
+            protocol: _this10.client.protocol,
+            host: _this10.client.host,
+            pathname: _this10.pathname,
+            query: options.query
+          }),
+          properties: options.properties,
+          query: query,
+          timeout: options.timeout
+        });
 
-                  if (!(query && !(query instanceof _query5.Query))) {
-                    _context8.next = 3;
-                    break;
-                  }
+        return request.execute().then(function (response) {
+          return response.data;
+        }).then(function (entities) {
+          var request = new _request.CacheRequest({
+            method: _request.RequestMethod.DELETE,
+            url: _url2.default.format({
+              protocol: _this10.client.protocol,
+              host: _this10.client.host,
+              pathname: _this10.pathname,
+              query: options.query
+            }),
+            properties: options.properties,
+            body: entities,
+            timeout: options.timeout
+          });
 
-                  throw new _errors.KinveyError('Invalid query. It must be an instance of the Query class.');
+          return request.execute().then(function (response) {
+            return response.data;
+          });
+        }).then(function (entities) {
+          if (entities && entities.length > 0) {
+            var _query2 = new _query4.default().contains('entityId', Object.keys((0, _keyBy2.default)(entities, '_id')));
+            return _this10.clearSync(_query2, options).then(function () {
+              return entities;
+            });
+          }
 
-                case 3:
-
-                  // Fetch the cache entities
-                  fetchRequest = new _request.CacheRequest({
-                    method: _request.RequestMethod.GET,
-                    url: _url2.default.format({
-                      protocol: _this9.client.protocol,
-                      host: _this9.client.host,
-                      pathname: _this9.pathname,
-                      query: options.query
-                    }),
-                    properties: options.properties,
-                    query: query,
-                    timeout: options.timeout
-                  });
-
-                  // Execute the request
-
-                  _context8.next = 6;
-                  return fetchRequest.execute();
-
-                case 6:
-                  fetchResponse = _context8.sent;
-                  entities = fetchResponse.data;
-
-                  // Remove the data from the cache
-
-                  removeRequest = new _request.CacheRequest({
-                    method: _request.RequestMethod.DELETE,
-                    url: _url2.default.format({
-                      protocol: _this9.client.protocol,
-                      host: _this9.client.host,
-                      pathname: _this9.pathname,
-                      query: options.query
-                    }),
-                    properties: options.properties,
-                    body: entities,
-                    timeout: options.timeout
-                  });
-
-                  // Execute the request
-
-                  _context8.next = 11;
-                  return removeRequest.execute();
-
-                case 11:
-                  removeResponse = _context8.sent;
-
-                  entities = removeResponse.data;
-
-                  if (!(entities && entities.length > 0)) {
-                    _context8.next = 17;
-                    break;
-                  }
-
-                  // Clear entities from the sync table
-                  _query4 = new _query5.Query().contains('entityId', Object.keys((0, _keyBy2.default)(entities, idAttribute)));
-                  _context8.next = 17;
-                  return _this9.clearSync(_query4, options);
-
-                case 17:
-
-                  // Emit the data
-                  observer.next(entities);
-                  _context8.next = 23;
-                  break;
-
-                case 20:
-                  _context8.prev = 20;
-                  _context8.t0 = _context8['catch'](0);
-                  return _context8.abrupt('return', observer.error(_context8.t0));
-
-                case 23:
-                  return _context8.abrupt('return', observer.complete());
-
-                case 24:
-                case 'end':
-                  return _context8.stop();
-              }
-            }
-          }, _callee8, _this9, [[0, 20]]);
-        }));
-
-        return function (_x17) {
-          return _ref8.apply(this, arguments);
-        };
-      }());
+          return entities;
+        }).then(function (entities) {
+          return observer.next(entities);
+        }).then(function () {
+          return observer.complete();
+        }).catch(function (error) {
+          return observer.error(error);
+        });
+      });
 
       return stream.toPromise();
     }
-
-    /**
-     * Count the number of entities waiting to be pushed to the network. A promise will be
-     * returned with the count of entities or rejected with an error.
-     *
-     * @param   {Query}                 [query]                                   Query to count a subset of entities.
-     * @param   {Object}                options                                   Options
-     * @param   {Properties}            [options.properties]                      Custom properties to send with
-     *                                                                            the request.
-     * @param   {Number}                [options.timeout]                         Timeout for the request.
-     * @param   {Number}                [options.ttl]                             Time to live for data retrieved
-     *                                                                            from the local cache.
-     * @return  {Promise}                                                         Promise
-     */
-
   }, {
     key: 'pendingSyncCount',
     value: function pendingSyncCount(query, options) {
@@ -1267,107 +742,43 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
     value: function pendingSyncEntities(query, options) {
       return this.syncManager.find(query, options);
     }
-
-    /**
-     * Push sync items for the data store to the network. A promise will be returned that will be
-     * resolved with the result of the push or rejected with an error.
-     *
-     * @param   {Query}                 [query]                                   Query to push a subset of items.
-     * @param   {Object}                options                                   Options
-     * @param   {Properties}            [options.properties]                      Custom properties to send with
-     *                                                                            the request.
-     * @param   {Number}                [options.timeout]                         Timeout for the request.
-     * @return  {Promise}                                                         Promise
-     */
-
   }, {
     key: 'push',
     value: function push(query, options) {
       return this.syncManager.push(query, options);
     }
-
-    /**
-     * Pull items for the data store from the network to your local cache. A promise will be
-     * returned that will be resolved with the result of the pull or rejected with an error.
-     *
-     * @param   {Query}                 [query]                                   Query to pull a subset of items.
-     * @param   {Object}                options                                   Options
-     * @param   {Properties}            [options.properties]                      Custom properties to send with
-     *                                                                            the request.
-     * @param   {Number}                [options.timeout]                         Timeout for the request.
-     * @return  {Promise}                                                         Promise
-     */
-
   }, {
     key: 'pull',
-    value: function () {
-      var _ref9 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee9(query) {
-        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var entities, saveRequest;
-        return _regeneratorRuntime2.default.wrap(function _callee9$(_context9) {
-          while (1) {
-            switch (_context9.prev = _context9.next) {
-              case 0:
-                _context9.next = 2;
-                return this.syncManager.pull(query, options);
+    value: function pull(query) {
+      var _this11 = this;
 
-              case 2:
-                entities = _context9.sent;
-                _context9.next = 5;
-                return this.clear(query, options);
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-              case 5:
-
-                // Save network entities to cache
-                saveRequest = new _request.CacheRequest({
-                  method: _request.RequestMethod.PUT,
-                  url: _url2.default.format({
-                    protocol: this.client.protocol,
-                    host: this.client.host,
-                    pathname: this.pathname,
-                    query: options.query
-                  }),
-                  properties: options.properties,
-                  body: entities,
-                  timeout: options.timeout
-                });
-                _context9.next = 8;
-                return saveRequest.execute();
-
-              case 8:
-                return _context9.abrupt('return', entities);
-
-              case 9:
-              case 'end':
-                return _context9.stop();
-            }
-          }
-        }, _callee9, this);
-      }));
-
-      function pull(_x18, _x19) {
-        return _ref9.apply(this, arguments);
-      }
-
-      return pull;
-    }()
-
-    /**
-     * Sync items for the data store. This will push pending sync items first and then
-     * pull items from the network into your local cache. A promise will be
-     * returned that will be resolved with the result of the pull or rejected with an error.
-     *
-     * @param   {Query}                 [query]                                   Query to pull a subset of items.
-     * @param   {Object}                options                                   Options
-     * @param   {Properties}            [options.properties]                      Custom properties to send with
-     *                                                                            the request.
-     * @param   {Number}                [options.timeout]                         Timeout for the request.
-     * @return  {Promise}                                                         Promise
-     */
-
+      options = (0, _assign2.default)({ useDeltaFetch: this.useDeltaFetch }, options);
+      return this.syncManager.pull(query, options).then(function (entities) {
+        return _this11.clear(query, options).then(function () {
+          var saveRequest = new _request.CacheRequest({
+            method: _request.RequestMethod.PUT,
+            url: _url2.default.format({
+              protocol: _this11.client.protocol,
+              host: _this11.client.host,
+              pathname: _this11.pathname,
+              query: options.query
+            }),
+            properties: options.properties,
+            body: entities,
+            timeout: options.timeout
+          });
+          return saveRequest.execute();
+        }).then(function () {
+          return entities;
+        });
+      });
+    }
   }, {
     key: 'sync',
     value: function sync(query, options) {
+      options = (0, _assign2.default)({ useDeltaFetch: this.useDeltaFetch }, options);
       return this.syncManager.sync(query, options);
     }
   }, {
@@ -1375,11 +786,6 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
     value: function clearSync(query, options) {
       return this.syncManager.clear(query, options);
     }
-
-    /**
-     * @deprecated Use clearSync() instead of this.
-     */
-
   }, {
     key: 'purge',
     value: function purge(query, options) {
@@ -1393,4 +799,6 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
   }]);
 
   return CacheStore;
-}(_networkstore.NetworkStore);
+}(_networkstore2.default);
+
+exports.default = CacheStore;

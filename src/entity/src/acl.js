@@ -10,7 +10,7 @@ const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
  * var entity = { _acl: {} };
  * var acl = new Kinvey.Acl(entity);
  */
-export class Acl {
+export default class Acl {
   constructor(entity = {}) {
     if (!isPlainObject(entity)) {
       throw new KinveyError('entity argument must be an object');

@@ -17,16 +17,13 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-/**
- * @private
- */
 var KinveyError = exports.KinveyError = function (_ExtendableError) {
   _inherits(KinveyError, _ExtendableError);
 
   function KinveyError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'An error has occurred.' : arguments[0];
-    var debug = arguments.length <= 1 || arguments[1] === undefined ? '' : arguments[1];
-    var code = arguments.length <= 2 || arguments[2] === undefined ? -1 : arguments[2];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'An error has occurred.';
+    var debug = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+    var code = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : -1;
 
     _classCallCheck(this, KinveyError);
 
@@ -40,16 +37,11 @@ var KinveyError = exports.KinveyError = function (_ExtendableError) {
   return KinveyError;
 }(_es6Error2.default);
 
-/**
- * @private
- */
-
-
 var ActiveUserError = exports.ActiveUserError = function (_KinveyError) {
   _inherits(ActiveUserError, _KinveyError);
 
   function ActiveUserError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'An active user already exists.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'An active user already exists.';
     var debug = arguments[1];
 
     _classCallCheck(this, ActiveUserError);
@@ -60,16 +52,11 @@ var ActiveUserError = exports.ActiveUserError = function (_KinveyError) {
   return ActiveUserError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var FeatureUnavailableError = exports.FeatureUnavailableError = function (_KinveyError2) {
   _inherits(FeatureUnavailableError, _KinveyError2);
 
   function FeatureUnavailableError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'Requested functionality is unavailable in this API version.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'Requested functionality is unavailable in this API version.';
     var debug = arguments[1];
 
     _classCallCheck(this, FeatureUnavailableError);
@@ -80,16 +67,11 @@ var FeatureUnavailableError = exports.FeatureUnavailableError = function (_Kinve
   return FeatureUnavailableError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var IncompleteRequestBodyError = exports.IncompleteRequestBodyError = function (_KinveyError3) {
   _inherits(IncompleteRequestBodyError, _KinveyError3);
 
   function IncompleteRequestBodyError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? ' The request body is either missing or incomplete.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : ' The request body is either missing or incomplete.';
     var debug = arguments[1];
 
     _classCallCheck(this, IncompleteRequestBodyError);
@@ -100,16 +82,11 @@ var IncompleteRequestBodyError = exports.IncompleteRequestBodyError = function (
   return IncompleteRequestBodyError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var InsufficientCredentialsError = exports.InsufficientCredentialsError = function (_KinveyError4) {
   _inherits(InsufficientCredentialsError, _KinveyError4);
 
   function InsufficientCredentialsError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'The credentials used to authenticate this request are not authorized to run ' + 'this operation. Please retry your request with appropriate credentials.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'The credentials used to authenticate this request are not authorized to run ' + 'this operation. Please retry your request with appropriate credentials.';
     var debug = arguments[1];
 
     _classCallCheck(this, InsufficientCredentialsError);
@@ -120,16 +97,11 @@ var InsufficientCredentialsError = exports.InsufficientCredentialsError = functi
   return InsufficientCredentialsError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var InvalidCredentialsError = exports.InvalidCredentialsError = function (_KinveyError5) {
   _inherits(InvalidCredentialsError, _KinveyError5);
 
   function InvalidCredentialsError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? ' Invalid credentials. Please retry your request with correct credentials.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : ' Invalid credentials. Please retry your request with correct credentials.';
     var debug = arguments[1];
 
     _classCallCheck(this, InvalidCredentialsError);
@@ -140,16 +112,11 @@ var InvalidCredentialsError = exports.InvalidCredentialsError = function (_Kinve
   return InvalidCredentialsError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var InvalidIdentifierError = exports.InvalidIdentifierError = function (_KinveyError6) {
   _inherits(InvalidIdentifierError, _KinveyError6);
 
   function InvalidIdentifierError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'One of more identifier names in the request has an invalid format.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'One of more identifier names in the request has an invalid format.';
     var debug = arguments[1];
 
     _classCallCheck(this, InvalidIdentifierError);
@@ -160,16 +127,11 @@ var InvalidIdentifierError = exports.InvalidIdentifierError = function (_KinveyE
   return InvalidIdentifierError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var InvalidQuerySyntaxError = exports.InvalidQuerySyntaxError = function (_KinveyError7) {
   _inherits(InvalidQuerySyntaxError, _KinveyError7);
 
   function InvalidQuerySyntaxError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'The query string in the request has an invalid syntax.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'The query string in the request has an invalid syntax.';
     var debug = arguments[1];
 
     _classCallCheck(this, InvalidQuerySyntaxError);
@@ -180,16 +142,11 @@ var InvalidQuerySyntaxError = exports.InvalidQuerySyntaxError = function (_Kinve
   return InvalidQuerySyntaxError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var JSONParseError = exports.JSONParseError = function (_KinveyError8) {
   _inherits(JSONParseError, _KinveyError8);
 
   function JSONParseError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'Unable to parse the JSON in the request.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'Unable to parse the JSON in the request.';
     var debug = arguments[1];
 
     _classCallCheck(this, JSONParseError);
@@ -200,16 +157,11 @@ var JSONParseError = exports.JSONParseError = function (_KinveyError8) {
   return JSONParseError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var MissingQueryError = exports.MissingQueryError = function (_KinveyError9) {
   _inherits(MissingQueryError, _KinveyError9);
 
   function MissingQueryError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'The request is missing a query string.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'The request is missing a query string.';
     var debug = arguments[1];
 
     _classCallCheck(this, MissingQueryError);
@@ -220,16 +172,11 @@ var MissingQueryError = exports.MissingQueryError = function (_KinveyError9) {
   return MissingQueryError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var MissingRequestHeaderError = exports.MissingRequestHeaderError = function (_KinveyError10) {
   _inherits(MissingRequestHeaderError, _KinveyError10);
 
   function MissingRequestHeaderError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'The request is missing a required header.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'The request is missing a required header.';
     var debug = arguments[1];
 
     _classCallCheck(this, MissingRequestHeaderError);
@@ -240,16 +187,11 @@ var MissingRequestHeaderError = exports.MissingRequestHeaderError = function (_K
   return MissingRequestHeaderError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var MissingRequestParameterError = exports.MissingRequestParameterError = function (_KinveyError11) {
   _inherits(MissingRequestParameterError, _KinveyError11);
 
   function MissingRequestParameterError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'A required parameter is missing from the request.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'A required parameter is missing from the request.';
     var debug = arguments[1];
 
     _classCallCheck(this, MissingRequestParameterError);
@@ -260,16 +202,11 @@ var MissingRequestParameterError = exports.MissingRequestParameterError = functi
   return MissingRequestParameterError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var NoNetworkConnectionError = exports.NoNetworkConnectionError = function (_KinveyError12) {
   _inherits(NoNetworkConnectionError, _KinveyError12);
 
   function NoNetworkConnectionError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'You do not have a network connect.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'You do not have a network connect.';
     var debug = arguments[1];
 
     _classCallCheck(this, NoNetworkConnectionError);
@@ -280,16 +217,11 @@ var NoNetworkConnectionError = exports.NoNetworkConnectionError = function (_Kin
   return NoNetworkConnectionError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var NoActiveUserError = exports.NoActiveUserError = function (_KinveyError13) {
   _inherits(NoActiveUserError, _KinveyError13);
 
   function NoActiveUserError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'There is not an active user.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'There is not an active user.';
     var debug = arguments[1];
 
     _classCallCheck(this, NoActiveUserError);
@@ -300,16 +232,11 @@ var NoActiveUserError = exports.NoActiveUserError = function (_KinveyError13) {
   return NoActiveUserError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var NotFoundError = exports.NotFoundError = function (_KinveyError14) {
   _inherits(NotFoundError, _KinveyError14);
 
   function NotFoundError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'The item was not found.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'The item was not found.';
     var debug = arguments[1];
 
     _classCallCheck(this, NotFoundError);
@@ -320,16 +247,11 @@ var NotFoundError = exports.NotFoundError = function (_KinveyError14) {
   return NotFoundError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var NoResponseError = exports.NoResponseError = function (_KinveyError15) {
   _inherits(NoResponseError, _KinveyError15);
 
   function NoResponseError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'No response was provided.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'No response was provided.';
     var debug = arguments[1];
 
     _classCallCheck(this, NoResponseError);
@@ -340,16 +262,11 @@ var NoResponseError = exports.NoResponseError = function (_KinveyError15) {
   return NoResponseError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var ParameterValueOutOfRangeError = exports.ParameterValueOutOfRangeError = function (_KinveyError16) {
   _inherits(ParameterValueOutOfRangeError, _KinveyError16);
 
   function ParameterValueOutOfRangeError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'The value specified for one of the request parameters is out of range.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'The value specified for one of the request parameters is out of range.';
     var debug = arguments[1];
 
     _classCallCheck(this, ParameterValueOutOfRangeError);
@@ -360,16 +277,11 @@ var ParameterValueOutOfRangeError = exports.ParameterValueOutOfRangeError = func
   return ParameterValueOutOfRangeError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var QueryError = exports.QueryError = function (_KinveyError17) {
   _inherits(QueryError, _KinveyError17);
 
   function QueryError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'An error occurred on the query.' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'An error occurred on the query.';
     var debug = arguments[1];
 
     _classCallCheck(this, QueryError);
@@ -380,16 +292,11 @@ var QueryError = exports.QueryError = function (_KinveyError17) {
   return QueryError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var ServerError = exports.ServerError = function (_KinveyError18) {
   _inherits(ServerError, _KinveyError18);
 
   function ServerError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'An error occurred on the server' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'An error occurred on the server';
     var debug = arguments[1];
 
     _classCallCheck(this, ServerError);
@@ -400,16 +307,11 @@ var ServerError = exports.ServerError = function (_KinveyError18) {
   return ServerError;
 }(KinveyError);
 
-/**
- * @private
- */
-
-
 var SyncError = exports.SyncError = function (_KinveyError19) {
   _inherits(SyncError, _KinveyError19);
 
   function SyncError() {
-    var message = arguments.length <= 0 || arguments[0] === undefined ? 'An error occurred during sync' : arguments[0];
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'An error occurred during sync';
     var debug = arguments[1];
 
     _classCallCheck(this, SyncError);

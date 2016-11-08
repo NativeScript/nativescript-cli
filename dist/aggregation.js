@@ -3,13 +3,8 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Aggregation = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _result = require('lodash/result');
-
-var _result2 = _interopRequireDefault(_result);
 
 var _assign = require('lodash/assign');
 
@@ -35,14 +30,13 @@ var _errors = require('./errors');
 
 var _query = require('./query');
 
+var _utils = require('./utils');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-/**
- * @private
- */
-var Aggregation = exports.Aggregation = function () {
+var Aggregation = function () {
   function Aggregation(options) {
     _classCallCheck(this, Aggregation);
 
@@ -68,13 +62,13 @@ var Aggregation = exports.Aggregation = function () {
   }, {
     key: 'process',
     value: function process() {
-      var entities = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
+      var entities = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
 
       var groups = {};
-      var response = [];
+      var result = [];
       var aggregation = this.toJSON();
       var reduceFn = aggregation.reduceFn.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
-      aggregation.reduce = new Function(['doc', 'out'], reduceFn); // eslint-disable-line no-new-func
+      aggregation.reduce = new Function(['doc', 'out'], reduceFn);
 
       if (this.query) {
         entities = this.query.process(entities);
@@ -103,10 +97,10 @@ var Aggregation = exports.Aggregation = function () {
 
       var segments = Object.keys(groups);
       (0, _forEach2.default)(segments, function (segment) {
-        response.push(groups[segment]);
+        result.push(groups[segment]);
       });
 
-      return response;
+      return result;
     }
   }, {
     key: 'toJSON',
@@ -124,31 +118,31 @@ var Aggregation = exports.Aggregation = function () {
   }, {
     key: 'initial',
     get: function get() {
-      return this.aggregationInitial;
+      return this._initial;
     },
     set: function set(initial) {
       if (!(0, _isObject2.default)(initial)) {
         throw new _errors.KinveyError('initial must be an Object.');
       }
 
-      this.aggregationInitial = initial;
+      this._initial = initial;
     }
   }, {
     key: 'query',
     get: function get() {
-      return this.aggregationQuery;
+      return this._query;
     },
     set: function set(query) {
-      if (query && !(query instanceof _query.Query)) {
-        query = new _query.Query((0, _result2.default)(query, 'toJSON', query));
+      if ((0, _utils.isDefined)(query) && !(query instanceof _query.Query)) {
+        throw new _errors.KinveyError('Invalid query. It must be an instance of the Query class.');
       }
 
-      this.aggregationQuery = query;
+      this._query = query;
     }
   }, {
     key: 'reduceFn',
     get: function get() {
-      return this.aggregationReduceFn;
+      return this._reduceFn;
     },
     set: function set(fn) {
       if ((0, _isFunction2.default)(fn)) {
@@ -159,12 +153,12 @@ var Aggregation = exports.Aggregation = function () {
         throw new _errors.KinveyError('fn argument must be of type function or string.');
       }
 
-      this.aggregationReduceFn = fn;
+      this._reduceFn = fn;
     }
   }], [{
     key: 'count',
     value: function count() {
-      var field = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
+      var field = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
 
       var aggregation = new Aggregation();
 
@@ -182,7 +176,7 @@ var Aggregation = exports.Aggregation = function () {
   }, {
     key: 'sum',
     value: function sum() {
-      var field = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
+      var field = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
 
       field = field.replace('\'', '\\\'');
 
@@ -196,7 +190,7 @@ var Aggregation = exports.Aggregation = function () {
   }, {
     key: 'min',
     value: function min() {
-      var field = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
+      var field = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
 
       field = field.replace('\'', '\\\'');
 
@@ -210,7 +204,7 @@ var Aggregation = exports.Aggregation = function () {
   }, {
     key: 'max',
     value: function max() {
-      var field = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
+      var field = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
 
       field = field.replace('\'', '\\\'');
 
@@ -224,7 +218,7 @@ var Aggregation = exports.Aggregation = function () {
   }, {
     key: 'average',
     value: function average() {
-      var field = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
+      var field = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
 
       field = field.replace('\'', '\\\'');
 
@@ -240,3 +234,5 @@ var Aggregation = exports.Aggregation = function () {
 
   return Aggregation;
 }();
+
+exports.default = Aggregation;

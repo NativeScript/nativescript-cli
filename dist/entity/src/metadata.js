@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Metadata = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -21,15 +20,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var kmdAttribute = process && process.env && process.env.KINVEY_KMD_ATTRIBUTE || '_kmd' || '_kmd';
+var kmdAttribute = process && process.env && process.env.KINVEY_KMD_ATTRIBUTE || undefined || '_kmd';
 
-/**
- * The Metadata class is used to as a wrapper for accessing the `_kmd` properties of an entity.
- */
-
-var Metadata = exports.Metadata = function () {
+var Metadata = function () {
   function Metadata() {
-    var entity = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var entity = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, Metadata);
 
@@ -37,12 +32,6 @@ var Metadata = exports.Metadata = function () {
       throw new _errors.KinveyError('entity argument must be an object');
     }
 
-    /**
-     * The kmd properties.
-     *
-     * @private
-     * @type {Object}
-     */
     this.kmd = (0, _clone2.default)(entity[kmdAttribute] || {});
   }
 
@@ -106,3 +95,5 @@ var Metadata = exports.Metadata = function () {
 
   return Metadata;
 }();
+
+exports.default = Metadata;

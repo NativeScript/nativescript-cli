@@ -3,87 +3,38 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.UserStore = exports.SyncStore = exports.NetworkStore = exports.FileStore = exports.DataStoreType = exports.CacheStore = undefined;
 
 var _cachestore = require('./src/cachestore');
 
-Object.keys(_cachestore).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _cachestore[key];
-    }
-  });
-});
+var _cachestore2 = _interopRequireDefault(_cachestore);
 
 var _datastore = require('./src/datastore');
 
-Object.keys(_datastore).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _datastore[key];
-    }
-  });
-});
+var _datastore2 = _interopRequireDefault(_datastore);
 
 var _filestore = require('./src/filestore');
 
-Object.keys(_filestore).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _filestore[key];
-    }
-  });
-});
+var _filestore2 = _interopRequireDefault(_filestore);
 
 var _networkstore = require('./src/networkstore');
 
-Object.keys(_networkstore).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _networkstore[key];
-    }
-  });
-});
-
-var _sync = require('./src/sync');
-
-Object.keys(_sync).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _sync[key];
-    }
-  });
-});
+var _networkstore2 = _interopRequireDefault(_networkstore);
 
 var _syncstore = require('./src/syncstore');
 
-Object.keys(_syncstore).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _syncstore[key];
-    }
-  });
-});
+var _syncstore2 = _interopRequireDefault(_syncstore);
 
 var _userstore = require('./src/userstore');
 
-Object.keys(_userstore).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _userstore[key];
-    }
-  });
-});
+var _userstore2 = _interopRequireDefault(_userstore);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.CacheStore = _cachestore2.default;
+exports.DataStoreType = _datastore.DataStoreType;
+exports.FileStore = _filestore2.default;
+exports.NetworkStore = _networkstore2.default;
+exports.SyncStore = _syncstore2.default;
+exports.UserStore = _userstore2.default;
+exports.default = _datastore2.default;

@@ -1,4 +1,5 @@
-import { TestKinvey as Kinvey, TestUser as User } from './mocks';
+import { TestUser as User } from './mocks';
+import Kinvey from '../../src/kinvey';
 import nock from 'nock';
 
 // Record for nock

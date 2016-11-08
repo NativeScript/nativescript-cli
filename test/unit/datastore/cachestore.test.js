@@ -1,6 +1,6 @@
 import { CacheStore, SyncStore } from '../../../src/datastore';
 import { Client } from '../../../src/client';
-import { Query } from '../../../src/query';
+import Query from '../../../src/query';
 import { KinveyError, NotFoundError } from '../../../src/errors';
 import { randomString } from '../../../src/utils';
 import nock from 'nock';
@@ -38,7 +38,7 @@ describe('CacheStore', function() {
       }
     };
 
-    beforeEach(function() {
+    beforeEach(async function() {
       // Kinvey API response
       nock(this.client.apiHostname, { encodedQueryParams: true })
         .get(`/appdata/${this.client.appKey}/${collection}`)
@@ -48,13 +48,16 @@ describe('CacheStore', function() {
 
       // Pull data into cache
       const store = new CacheStore(collection);
-      return store.pull();
+      const entities = await store.pull();
+      expect(entities).toEqual([entity1, entity2]);
     });
 
     afterEach(async function() {
       // Clear the cache
       const store = new CacheStore(collection);
       await store.clear();
+      const entities = await store.find(null, { syncAutomatically: false }).toPromise();
+      expect(entities).toEqual([]);
     });
 
     it('should remove all entities from the cache', async function() {

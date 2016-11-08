@@ -1,4 +1,3 @@
-import result from 'lodash/result';
 import assign from 'lodash/assign';
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
@@ -6,11 +5,12 @@ import isObject from 'lodash/isObject';
 import isFunction from 'lodash/isFunction';
 import { KinveyError } from './errors';
 import { Query } from './query';
+import { isDefined } from './utils';
 
 /**
  * @private
  */
-export class Aggregation {
+export default class Aggregation {
   constructor(options) {
     options = assign({
       query: null,
@@ -26,7 +26,7 @@ export class Aggregation {
   }
 
   get initial() {
-    return this.aggregationInitial;
+    return this._initial;
   }
 
   set initial(initial) {
@@ -34,23 +34,23 @@ export class Aggregation {
       throw new KinveyError('initial must be an Object.');
     }
 
-    this.aggregationInitial = initial;
+    this._initial = initial;
   }
 
   get query() {
-    return this.aggregationQuery;
+    return this._query;
   }
 
   set query(query) {
-    if (query && !(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
+    if (isDefined(query) && !(query instanceof Query)) {
+      throw new KinveyError('Invalid query. It must be an instance of the Query class.');
     }
 
-    this.aggregationQuery = query;
+    this._query = query;
   }
 
   get reduceFn() {
-    return this.aggregationReduceFn;
+    return this._reduceFn;
   }
 
   set reduceFn(fn) {
@@ -62,7 +62,7 @@ export class Aggregation {
       throw new KinveyError('fn argument must be of type function or string.');
     }
 
-    this.aggregationReduceFn = fn;
+    this._reduceFn = fn;
   }
 
   by(field) {
@@ -72,7 +72,7 @@ export class Aggregation {
 
   process(entities = []) {
     const groups = {};
-    const response = [];
+    const result = [];
     const aggregation = this.toJSON();
     const reduceFn = aggregation.reduceFn.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
     aggregation.reduce = new Function(['doc', 'out'], reduceFn); // eslint-disable-line no-new-func
@@ -104,10 +104,10 @@ export class Aggregation {
 
     const segments = Object.keys(groups);
     forEach(segments, (segment) => {
-      response.push(groups[segment]);
+      result.push(groups[segment]);
     });
 
-    return response;
+    return result;
   }
 
   toJSON() {

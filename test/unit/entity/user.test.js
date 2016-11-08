@@ -82,7 +82,9 @@ describe('User', function() {
       expect(user._id).toEqual(reply._id);
       expect(user.authtoken).toEqual(reply._kmd.authtoken);
       expect(user.username).toEqual(reply.username);
-      expect(user.isActive()).toEqual(true);
+
+      const isActive = await user.isActive();
+      expect(isActive).toEqual(true);
     });
 
     it('should login a user by providing credentials as an object', async function() {
@@ -122,7 +124,9 @@ describe('User', function() {
       expect(user._id).toEqual(reply._id);
       expect(user.authtoken).toEqual(reply._kmd.authtoken);
       expect(user.username).toEqual(reply.username);
-      expect(user.isActive()).toEqual(true);
+
+      const isActive = await user.isActive();
+      expect(isActive).toEqual(true);
     });
   });
 

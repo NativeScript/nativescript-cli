@@ -4,9 +4,10 @@ import Response from './response';
 import Headers from './headers';
 import qs from 'qs';
 import appendQuery from 'append-query';
+import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
-const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 30;
+const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 10000;
 
 /**
  * @private
@@ -27,13 +28,17 @@ export { RequestMethod };
  */
 export default class Request {
   constructor(options = {}) {
+    options = assign({
+      followRedirect: true
+    }, options);
+
     this.client = options.client;
     this.method = options.method || RequestMethod.GET;
     this.headers = options.headers || new Headers();
     this.url = options.url || '';
     this.body = options.body || options.data;
     this.timeout = options.timeout || defaultTimeout;
-    this.followRedirect = options.followRedirect || true;
+    this.followRedirect = options.followRedirect === true;
     this.cache = options.cache === true;
     this.executing = false;
   }

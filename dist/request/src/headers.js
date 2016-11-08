@@ -24,7 +24,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var Headers = function () {
   function Headers() {
-    var headers = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var headers = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, Headers);
 
@@ -77,7 +77,7 @@ var Headers = function () {
   }, {
     key: 'add',
     value: function add() {
-      var header = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+      var header = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       return this.set(header.name, header.value);
     }
@@ -86,7 +86,7 @@ var Headers = function () {
     value: function addAll() {
       var _this = this;
 
-      var headers = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+      var headers = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       if (headers instanceof Headers) {
         headers = headers.toPlainObject();
@@ -98,8 +98,9 @@ var Headers = function () {
 
       var names = Object.keys(headers);
       (0, _forEach2.default)(names, function (name) {
-        var value = headers[name];
-        _this.set(name, value);
+        try {
+          _this.set(name, headers[name]);
+        } catch (error) {}
       });
       return this;
     }

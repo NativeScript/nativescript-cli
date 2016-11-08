@@ -9,7 +9,11 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _Observable2 = require('rxjs/Observable');
 
-var _toPromise2 = require('rxjs/operator/toPromise');
+var _es6Promise = require('es6-promise');
+
+var _es6Promise2 = _interopRequireDefault(_es6Promise);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -17,9 +21,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-/**
- * @private
- */
 var KinveyObservable = exports.KinveyObservable = function (_Observable) {
   _inherits(KinveyObservable, _Observable);
 
@@ -32,7 +33,16 @@ var KinveyObservable = exports.KinveyObservable = function (_Observable) {
   _createClass(KinveyObservable, [{
     key: 'toPromise',
     value: function toPromise() {
-      return _toPromise2.toPromise.call(this);
+      var _this2 = this;
+
+      return new _es6Promise2.default(function (resolve, reject) {
+        var value = void 0;
+        _this2.subscribe(function (v) {
+          value = v;
+        }, reject, function () {
+          resolve(value);
+        });
+      });
     }
   }], [{
     key: 'create',

@@ -1,16 +1,16 @@
-import { CacheStore } from './cachestore';
+import CacheStore from './cachestore';
 import { CacheRequest, RequestMethod } from '../../request';
 import { KinveyError } from '../../errors';
-import { Query } from '../../query';
+import Query from '../../query';
+import Aggregation from '../../aggregation';
 import { KinveyObservable } from '../../utils';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 
 /**
  * The SyncStore class is used to find, create, update, remove, count and group entities. Entities are stored
  * in a cache and synced with the backend.
  */
-export class SyncStore extends CacheStore {
+export default class SyncStore extends CacheStore {
   get syncAutomatically() {
     return false;
   }
@@ -30,40 +30,32 @@ export class SyncStore extends CacheStore {
    * @return  {Observable}                                                Observable.
    */
   find(query, options = {}) {
-    const stream = KinveyObservable.create(async observer => {
-      try {
-        let entities = [];
-
-        // Check that the query is valid
-        if (query && !(query instanceof Query)) {
-          throw new KinveyError('Invalid query. It must be an instance of the Query class.');
-        }
-
-        // Fetch the cache entities
-        const request = new CacheRequest({
-          method: RequestMethod.GET,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: this.pathname,
-            query: options.query
-          }),
-          properties: options.properties,
-          query: query,
-          timeout: options.timeout
-        });
-
-        // Execute the request
-        const response = await request.execute();
-        entities = response.data;
-
-        // Emit the cache entities
-        observer.next(entities);
-      } catch (error) {
-        observer.error(error);
+    const stream = KinveyObservable.create((observer) => {
+      // Check that the query is valid
+      if (query && !(query instanceof Query)) {
+        return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
       }
 
-      return observer.complete();
+      // Fetch the cache entities
+      const request = new CacheRequest({
+        method: RequestMethod.GET,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this.pathname,
+          query: options.query
+        }),
+        properties: options.properties,
+        query: query,
+        timeout: options.timeout
+      });
+
+      // Execute the request
+      return request.execute()
+        .then(response => response.data)
+        .then(data => observer.next(data))
+        .then(() => observer.complete())
+        .catch(error => observer.error(error));
     });
 
     return stream;
@@ -81,7 +73,7 @@ export class SyncStore extends CacheStore {
    * @return  {Observable}                                             Observable.
    */
   findById(id, options = {}) {
-    const stream = KinveyObservable.create(async observer => {
+    const stream = KinveyObservable.create((observer) => {
       try {
         // Fetch from the cache
         const request = new CacheRequest({
@@ -95,19 +87,57 @@ export class SyncStore extends CacheStore {
           properties: options.properties,
           timeout: options.timeout
         });
-        const response = await request.execute();
-        const entity = response.data;
 
-        // Emit the cache entity
-        observer.next(entity);
+        return request.execute()
+          .then(response => response.data)
+          .then(data => observer.next(data))
+          .then(() => observer.complete())
+          .catch(error => observer.error(error));
       } catch (error) {
-        observer.error(error);
+        return observer.error(error);
       }
-
-      // Complete the stream
-      return observer.complete();
     });
 
+    return stream;
+  }
+
+  /**
+   * Group entities.
+   *
+   * @param   {Aggregation}           aggregation                         Aggregation used to group entities.
+   * @param   {Object}                [options]                           Options
+   * @param   {Properties}            [options.properties]                Custom properties to send with
+   *                                                                      the request.
+   * @param   {Number}                [options.timeout]                   Timeout for the request.
+   * @return  {Observable}                                                Observable.
+   */
+  group(aggregation, options = {}) {
+    const stream = KinveyObservable.create((observer) => {
+      // Check that the aggregation is valid
+      if (!(aggregation instanceof Aggregation)) {
+        return observer.error(new KinveyError('Invalid aggregation. It must be an instance of the Aggregation class.'));
+      }
+
+      // Fetch the cache entities
+      const request = new CacheRequest({
+        method: RequestMethod.GET,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: `${this.pathname}/_group`
+        }),
+        properties: options.properties,
+        aggregation: aggregation,
+        timeout: options.timeout
+      });
+
+      // Execute the request
+      return request.execute()
+        .then(response => response.data)
+        .then(result => observer.next(result))
+        .then(() => observer.complete())
+        .catch(error => observer.error(error));
+    });
     return stream;
   }
 
@@ -125,7 +155,7 @@ export class SyncStore extends CacheStore {
    * @return  {Observable}                                             Observable.
    */
   count(query, options = {}) {
-    const stream = KinveyObservable.create(async observer => {
+    const stream = KinveyObservable.create((observer) => {
       try {
         if (query && !(query instanceof Query)) {
           throw new KinveyError('Invalid query. It must be an instance of the Query class.');
@@ -145,17 +175,14 @@ export class SyncStore extends CacheStore {
           timeout: options.timeout
         });
 
-        // Execute the request
-        const response = await request.execute();
-        const data = response.data;
-
-        // Emit the cache count
-        observer.next(data ? data.length : 0);
+        return request.execute()
+          .then(response => response.data)
+          .then(data => observer.next(data ? data.length : 0))
+          .then(() => observer.complete())
+          .catch(error => observer.error(error));
       } catch (error) {
         return observer.error(error);
       }
-
-      return observer.complete();
     });
 
     return stream;

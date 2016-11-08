@@ -14,15 +14,11 @@ var _request = require('./request');
 
 var _request2 = _interopRequireDefault(_request);
 
+var _client = require('../../client');
+
 var _kinveyresponse = require('./kinveyresponse');
 
 var _kinveyresponse2 = _interopRequireDefault(_kinveyresponse);
-
-var _errors = require('../../errors');
-
-var _client = require('../../client');
-
-var _kinveyJavascriptRack = require('kinvey-javascript-rack');
 
 var _urlPattern = require('url-pattern');
 
@@ -32,17 +28,23 @@ var _url = require('url');
 
 var _url2 = _interopRequireDefault(_url);
 
-var _assign = require('lodash/assign');
+var _localStorage = require('local-storage');
 
-var _assign2 = _interopRequireDefault(_assign);
+var _localStorage2 = _interopRequireDefault(_localStorage);
 
-var _regeneratorRuntime = require('regenerator-runtime');
+var _errors = require('../../errors');
 
-var _regeneratorRuntime2 = _interopRequireDefault(_regeneratorRuntime);
+var _query = require('../../query');
+
+var _query2 = _interopRequireDefault(_query);
+
+var _aggregation = require('../../aggregation');
+
+var _aggregation2 = _interopRequireDefault(_aggregation);
+
+var _utils = require('../../utils');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -50,119 +52,51 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-// eslint-disable-line no-unused-vars
-
-/**
- * @private
- */
 var CacheRequest = function (_Request) {
   _inherits(CacheRequest, _Request);
 
   function CacheRequest() {
-    var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, CacheRequest);
 
-    // Set default options
     var _this = _possibleConstructorReturn(this, (CacheRequest.__proto__ || Object.getPrototypeOf(CacheRequest)).call(this, options));
 
-    options = (0, _assign2.default)({
-      query: null,
-      client: _client.Client.sharedInstance()
-    }, options);
-
+    _this.aggregation = options.aggregation;
     _this.query = options.query;
-    _this.client = options.client;
-    _this.rack = new _kinveyJavascriptRack.CacheRack();
+    _this.rack = _this.client.cacheRack;
     return _this;
   }
 
   _createClass(CacheRequest, [{
     key: 'execute',
-    value: function () {
-      var _ref = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee() {
-        var response;
-        return _regeneratorRuntime2.default.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                _context.next = 2;
-                return _get(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'execute', this).call(this);
+    value: function execute() {
+      var _this2 = this;
 
-              case 2:
-                response = _context.sent;
+      return _get(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'execute', this).call(this).then(function (response) {
+        if (!(response instanceof _kinveyresponse2.default)) {
+          response = new _kinveyresponse2.default({
+            statusCode: response.statusCode,
+            headers: response.headers,
+            data: response.data
+          });
+        }
 
+        if (!response.isSuccess()) {
+          throw response.error;
+        }
 
-                if (!(response instanceof _kinveyresponse2.default)) {
-                  response = new _kinveyresponse2.default({
-                    statusCode: response.statusCode,
-                    headers: response.headers,
-                    data: response.data
-                  });
-                }
+        if ((0, _utils.isDefined)(_this2.query)) {
+          response.data = _this2.query.process(response.data);
+        }
 
-                // Throw the response error if we did not receive
-                // a successfull response
+        if ((0, _utils.isDefined)(_this2.aggregation)) {
+          response.data = _this2.aggregation.process(response.data);
+        }
 
-                if (response.isSuccess()) {
-                  _context.next = 6;
-                  break;
-                }
-
-                throw response.error;
-
-              case 6:
-
-                // If a query was provided then process the data with the query
-                if (this.query) {
-                  response.data = this.query.process(response.data);
-                }
-
-                // Just return the response
-                return _context.abrupt('return', response);
-
-              case 8:
-              case 'end':
-                return _context.stop();
-            }
-          }
-        }, _callee, this);
-      }));
-
-      function execute() {
-        return _ref.apply(this, arguments);
-      }
-
-      return execute;
-    }()
-  }, {
-    key: 'cancel',
-    value: function () {
-      var _ref2 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee2() {
-        return _regeneratorRuntime2.default.wrap(function _callee2$(_context2) {
-          while (1) {
-            switch (_context2.prev = _context2.next) {
-              case 0:
-                _context2.next = 2;
-                return _get(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'cancel', this).call(this);
-
-              case 2:
-                return _context2.abrupt('return', this.rack.cancel());
-
-              case 3:
-              case 'end':
-                return _context2.stop();
-            }
-          }
-        }, _callee2, this);
-      }));
-
-      function cancel() {
-        return _ref2.apply(this, arguments);
-      }
-
-      return cancel;
-    }()
+        return response;
+      });
+    }
   }, {
     key: 'toPlainObject',
     value: function toPlainObject() {
@@ -174,6 +108,30 @@ var CacheRequest = function (_Request) {
       return obj;
     }
   }, {
+    key: 'query',
+    get: function get() {
+      return this._query;
+    },
+    set: function set(query) {
+      if ((0, _utils.isDefined)(query) && !(query instanceof _query2.default)) {
+        throw new _errors.KinveyError('Invalid query. It must be an instance of the Query class.');
+      }
+
+      this._query = query;
+    }
+  }, {
+    key: 'aggregation',
+    get: function get() {
+      return this._aggregation;
+    },
+    set: function set(aggregation) {
+      if ((0, _utils.isDefined)(aggregation) && !(aggregation instanceof _aggregation2.default)) {
+        throw new _errors.KinveyError('Invalid aggregation. It must be an instance of the Aggregation class.');
+      }
+
+      this._aggregation = aggregation;
+    }
+  }, {
     key: 'url',
     get: function get() {
       return _get(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'url', this);
@@ -183,29 +141,49 @@ var CacheRequest = function (_Request) {
       var pathname = global.escape(_url2.default.parse(urlString).pathname);
       var pattern = new _urlPattern2.default('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:entityId)(/)');
 
-      var _ref3 = pattern.match(pathname) || {};
+      var _ref = pattern.match(pathname) || {};
 
-      var appKey = _ref3.appKey;
-      var collection = _ref3.collection;
-      var entityId = _ref3.entityId;
+      var appKey = _ref.appKey;
+      var collection = _ref.collection;
+      var entityId = _ref.entityId;
 
       this.appKey = appKey;
       this.collection = collection;
       this.entityId = entityId;
     }
-  }, {
-    key: 'client',
-    get: function get() {
-      return this._client;
-    },
-    set: function set(client) {
-      if (client) {
-        if (!(client instanceof _client.Client)) {
-          throw new _errors.KinveyError('client must be an instance of the Client class.');
-        }
-      }
+  }], [{
+    key: 'getActiveUser',
+    value: function getActiveUser() {
+      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
 
-      this._client = client;
+      return Promise.resolve(CacheRequest.getActiveUserLegacy(client));
+    }
+  }, {
+    key: 'getActiveUserLegacy',
+    value: function getActiveUserLegacy(client) {
+      try {
+        return _localStorage2.default.get(client.appKey + 'kinvey_user');
+      } catch (error) {
+        return null;
+      }
+    }
+  }, {
+    key: 'setActiveUser',
+    value: function setActiveUser() {
+      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
+      var user = arguments[1];
+
+      return Promise.resolve(CacheRequest.setActiveUserLegacy(client, user));
+    }
+  }, {
+    key: 'setActiveUserLegacy',
+    value: function setActiveUserLegacy(client, user) {
+      try {
+        _localStorage2.default.remove(client.appKey + 'kinvey_user');
+        return _localStorage2.default.set(client.appKey + 'kinvey_user', user);
+      } catch (error) {
+        return false;
+      }
     }
   }]);
 

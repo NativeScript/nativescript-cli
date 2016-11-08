@@ -1,13 +1,12 @@
 import { Client } from '../../client';
-import { Acl } from './acl';
-import { Metadata } from './metadata';
-import { AuthType, RequestMethod, KinveyRequest } from '../../request';
+import Acl from './acl';
+import Metadata from './metadata';
+import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from '../../request';
 import { KinveyError, NotFoundError, ActiveUserError } from '../../errors';
-import { DataStore, UserStore } from '../../datastore';
-import { Facebook, Google, LinkedIn, MobileIdentityConnect } from '../../social';
-import { Log, setActiveUser, setIdentitySession } from '../../utils';
-import Promise from 'core-js/es6/promise';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
+import DataStore, { UserStore } from '../../datastore';
+import { Facebook, Google, LinkedIn, MobileIdentityConnect } from '../../identity';
+import { Log } from '../../utils';
+import Promise from 'es6-promise';
 import url from 'url';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
@@ -26,7 +25,7 @@ const emailAttribute = process.env.KINVEY_EMAIL_ATTRIBUTE || 'email';
  * The User class is used to represent a single user on the Kinvey platform.
  * Use the user class to manage the active user lifecycle and perform user operations.
  */
-export class User {
+export default class User {
   /**
    * Create a new instance of a User.
    *
@@ -192,15 +191,22 @@ export class User {
    * @return {?User} The active user.
    */
   static getActiveUser(client = Client.sharedInstance()) {
-    const data = client.activeUser;
-    let user = null;
+    const data = CacheRequest.getActiveUserLegacy(client);
 
     if (data) {
-      user = new this(data);
-      user.client = client;
+      return new this(data, { client: client });
     }
 
-    return user;
+    return null;
+
+    // return CacheRequest.getActiveUser(client)
+    //   .then((data) => {
+    //     if (data) {
+    //       return new this(data, { client: client });
+    //     }
+
+    //     return null;
+    //   });
   }
 
   /**
@@ -211,19 +217,9 @@ export class User {
    * @param {Object} [options={}] Options
    * @return {Promise<User>} The user.
    */
-  async login(username, password, options = {}) {
-    const isActiveUser = this.isActive();
-    if (isActiveUser) {
-      throw new ActiveUserError('This user is already the active user.');
-    }
-
-    const activeUser = User.getActiveUser(this.client);
-    if (activeUser) {
-      throw new ActiveUserError('An active user already exists. ' +
-        'Please logout the active user before you login.');
-    }
-
+  login(username, password, options = {}) {
     let credentials = username;
+
     if (isObject(credentials)) {
       options = password || {};
     } else {
@@ -231,6 +227,14 @@ export class User {
         username: username,
         password: password
       };
+    }
+
+    if (this.isActive()) {
+      return Promise.reject(new ActiveUserError('This user is already the active user.'));
+    }
+
+    if (User.getActiveUser(this.client)) {
+      return Promise.reject(new ActiveUserError('An active user already exists. Please logout the active user before you login.'));
     }
 
     if (!credentials[socialIdentityAttribute]) {
@@ -243,10 +247,14 @@ export class User {
       }
     }
 
-    if ((!credentials.username || credentials.username === '' || !credentials.password || credentials.password === '')
-      && !credentials[socialIdentityAttribute]) {
-      throw new KinveyError('Username and/or password missing. ' +
-        'Please provide both a username and password to login.');
+    if ((!credentials.username
+        || credentials.username === ''
+        || !credentials.password
+        || credentials.password === ''
+      ) && !credentials[socialIdentityAttribute]) {
+      return Promise.reject(new KinveyError(
+        'Username and/or password missing. Please provide both a username and password to login.'
+      ));
     }
 
     const request = new KinveyRequest({
@@ -262,10 +270,17 @@ export class User {
       timeout: options.timeout,
       client: this.client
     });
-    const { data } = await request.execute();
-    this.data = data;
-    setActiveUser(this.client, this.data);
-    return this;
+    return request.execute()
+      .then(response => response.data)
+      .then((data) => {
+        if (credentials[socialIdentityAttribute]) {
+          data[socialIdentityAttribute] = credentials[socialIdentityAttribute];
+        }
+
+        this.data = data;
+        CacheRequest.setActiveUserLegacy(this.client, this.data);
+      })
+      .then(() => this);
   }
 
   /**
@@ -289,21 +304,18 @@ export class User {
    * @param {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  async loginWithMIC(redirectUri, authorizationGrant, options = {}) {
-    const isActiveUser = this.isActive();
-    if (isActiveUser) {
-      throw new ActiveUserError('This user is already the active user.');
+  loginWithMIC(redirectUri, authorizationGrant, options = {}) {
+    if (this.isActive()) {
+      return Promise.reject(new ActiveUserError('This user is already the active user.'));
     }
 
-    const activeUser = User.getActiveUser(this.client);
-    if (activeUser) {
-      throw new ActiveUserError('An active user already exists. ' +
-        'Please logout the active user before you login.');
+    if (User.getActiveUser(this.client)) {
+      return Promise.reject(new ActiveUserError('An active user already exists. Please logout the active user before you login.'));
     }
 
     const mic = new MobileIdentityConnect({ client: this.client });
-    const session = await mic.login(redirectUri, authorizationGrant, options);
-    return this.connectIdentity(MobileIdentityConnect.identity, session, options);
+    return mic.login(redirectUri, authorizationGrant, options)
+      .then(session => this.connectIdentity(MobileIdentityConnect.identity, session, options));
   }
 
   /**
@@ -327,31 +339,24 @@ export class User {
    * @param {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  async connectIdentity(identity, session, options) {
-    const data = this.data;
+  connectIdentity(identity, session, options) {
+    const data = {};
     const socialIdentity = data[socialIdentityAttribute] || {};
     socialIdentity[identity] = session;
     data[socialIdentityAttribute] = socialIdentity;
-    this.data = data;
 
-    try {
-      const isActive = this.isActive();
-
-      if (isActive) {
-        return this.update(data, options);
-      }
-
-      await this.login(data, options);
-      setIdentitySession(this.client, identity, session);
-      return this;
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        await this.signup(data, options);
-        return this.connectIdentity(identity, session, options);
-      }
-
-      throw error;
+    if (this.isActive()) {
+      return this.update(data, options);
     }
+
+    return this.login(data, options)
+      .catch((error) => {
+        if (error instanceof NotFoundError) {
+          return this.signup(data, options).then(() => this.connectIdentity(identity, session, options));
+        }
+
+        throw error;
+      });
   }
 
   /**
@@ -377,7 +382,7 @@ export class User {
    * @param {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  async connectWithIdentity(identity, session, options) {
+  connectWithIdentity(identity, session, options) {
     return this.connectIdentity(identity, session, options);
   }
 
@@ -387,10 +392,10 @@ export class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  async connectFacebook(clientId, options) {
+  connectFacebook(clientId, options) {
     const facebook = new Facebook({ client: this.client });
-    const session = await facebook.login(clientId, options);
-    return this.connectIdentity(Facebook.identity, session, options);
+    return facebook.login(clientId, options)
+      .then(session => this.connectIdentity(Facebook.identity, session, options));
   }
 
   /**
@@ -410,7 +415,7 @@ export class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  async disconnectFacebook(options) {
+  disconnectFacebook(options) {
     return this.disconnectIdentity(Facebook.identity, options);
   }
 
@@ -420,10 +425,10 @@ export class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  async connectGoogle(clientId, options) {
+  connectGoogle(clientId, options) {
     const google = new Google({ client: this.client });
-    const session = await google.login(clientId, options);
-    return this.connectIdentity(Google.identity, session, options);
+    return google.login(clientId, options)
+      .then(session => this.connectIdentity(Google.identity, session, options));
   }
 
   /**
@@ -443,7 +448,7 @@ export class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  async disconnectGoogle(options) {
+  disconnectGoogle(options) {
     return this.disconnectIdentity(Google.identity, options);
   }
 
@@ -453,10 +458,10 @@ export class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  async connectLinkedIn(clientId, options) {
+  googleconnectLinkedIn(clientId, options) {
     const linkedIn = new LinkedIn({ client: this.client });
-    const session = await linkedIn.login(clientId, options);
-    return this.connectIdentity(LinkedIn.identity, session, options);
+    return linkedIn.login(clientId, options)
+      .then(session => this.connectIdentity(LinkedIn.identity, session, options));
   }
 
   /**
@@ -476,7 +481,7 @@ export class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  async disconnectLinkedIn(options) {
+  disconnectLinkedIn(options) {
     return this.disconnectIdentity(LinkedIn.identity, options);
   }
 
@@ -488,35 +493,37 @@ export class User {
    * @param  {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  async disconnectIdentity(identity, options) {
-    try {
-      if (identity === Facebook.identity) {
-        await Facebook.logout(this, options);
-      } else if (identity === Google.identity) {
-        await Google.logout(this, options);
-      } else if (identity === LinkedIn.identity) {
-        await LinkedIn.logout(this, options);
-      } else if (identity === MobileIdentityConnect.identity) {
-        await MobileIdentityConnect.logout(this, options);
-      }
+  disconnectIdentity(identity, options) {
+    let promise = Promise.resolve();
 
-      setIdentitySession(this.client, identity, null);
-    } catch (error) {
-      Log.error(error);
+    if (identity === Facebook.identity) {
+      promise = Facebook.logout(this, options);
+    } else if (identity === Google.identity) {
+      promise = Google.logout(this, options);
+    } else if (identity === LinkedIn.identity) {
+      promise = LinkedIn.logout(this, options);
+    } else if (identity === MobileIdentityConnect.identity) {
+      promise = MobileIdentityConnect.logout(this, options);
     }
 
-    const data = this.data;
-    const socialIdentity = data[socialIdentityAttribute] || {};
-    delete socialIdentity[identity];
-    data[socialIdentityAttribute] = socialIdentity;
-    this.data = data;
+    return promise
+      .catch((error) => {
+        Log.error(error);
+      })
+      .then(() => {
+        const data = this.data;
+        const socialIdentity = data[socialIdentityAttribute] || {};
+        delete socialIdentity[identity];
+        data[socialIdentityAttribute] = socialIdentity;
+        this.data = data;
 
-    if (!this[idAttribute]) {
-      return this;
-    }
+        if (!this[idAttribute]) {
+          return this;
+        }
 
-    await this.update(data, options);
-    return this;
+        return this.update(data, options);
+      })
+      .then(() => this);
   }
 
   /**
@@ -525,38 +532,43 @@ export class User {
    * @param {Object} [options={}] Options
    * @return {Promise<User>} The user.
    */
-  async logout(options = {}) {
+  logout(options = {}) {
     // Logout from Kinvey
-    try {
-      const request = new KinveyRequest({
-        method: RequestMethod.POST,
-        authType: AuthType.Session,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/_logout`
-        }),
-        properties: options.properties,
-        timeout: options.timeout,
-        client: this.client
-      });
-      await request.execute();
-    } catch (error) {
-      Log.error(error);
-    }
+    const request = new KinveyRequest({
+      method: RequestMethod.POST,
+      authType: AuthType.Session,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: `${this.pathname}/_logout`
+      }),
+      properties: options.properties,
+      timeout: options.timeout,
+      client: this.client
+    });
 
-    // Disconnect from connected identities
-    try {
-      const identities = Object.keys(this._socialIdentity || {});
-      const promises = identities.map(identity => this.disconnectIdentity(identity, options));
-      await Promise.all(promises);
-    } catch (error) {
-      Log.error(error);
-    }
-
-    setActiveUser(this.client, null);
-    await DataStore.clearCache({ client: this.client });
-    return this;
+    return request.execute()
+      .catch((error) => {
+        Log.error(error);
+      })
+      .then(() => {
+        const identities = Object.keys(this._socialIdentity || {});
+        const promises = identities.map(identity => this.disconnectIdentity(identity, options));
+        return Promise.all(promises);
+      })
+      .catch((error) => {
+        Log.error(error);
+      })
+      .then(() => {
+        return CacheRequest.setActiveUserLegacy(this.client, null);
+      })
+      .then(() => {
+        return DataStore.clearCache({ client: this.client });
+      })
+      .catch((error) => {
+        Log.error(error);
+      })
+      .then(() => this);
   }
 
   /**
@@ -565,14 +577,14 @@ export class User {
    * @param {Object} [options={}] Options
    * @return {Promise<User>} The user.
    */
-  static async logout(options = {}) {
-    const user = User.getActiveUser(options.client);
+  static logout(options = {}) {
+    const user = this.getActiveUser(options.client);
 
     if (user) {
       return user.logout(options);
     }
 
-    return null;
+    return Promise.resolve(null);
   }
 
   /**
@@ -584,17 +596,13 @@ export class User {
    *                                       being signed up.
    * @return {Promise<User>} The user.
    */
-  async signup(data, options = {}) {
+  signup(data, options = {}) {
     options = assign({
       state: true
     }, options);
 
-    if (options.state === true) {
-      const activeUser = User.getActiveUser(this.client);
-      if (activeUser) {
-        throw new ActiveUserError('An active user already exists.'
-          + ' Please logout the active user before you login.');
-      }
+    if (options.state === true && User.getActiveUser(this.client)) {
+      return Promise.reject(new ActiveUserError('An active user already exists. Please logout the active user before you login.'));
     }
 
     if (data instanceof User) {
@@ -614,14 +622,21 @@ export class User {
       timeout: options.timeout,
       client: this.client
     });
-    const response = await request.execute();
-    this.data = response.data;
 
-    if (options.state === true) {
-      setActiveUser(this.client, this.data);
-    }
+    return request.execute()
+      .then(response => response.data)
+      .then((data) => {
+        this.data = data;
 
-    return this;
+        if (options.state === true) {
+          return CacheRequest.setActiveUserLegacy(this.client, this.data);
+        }
+
+        return this;
+      })
+      .then(() => {
+        return this;
+      });
   }
 
   /**
@@ -677,16 +692,24 @@ export class User {
    * @param {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  async update(data, options) {
+  update(data, options) {
     data = assign(this.data, data);
     const userStore = new UserStore();
-    await userStore.update(data, options);
+    return userStore.update(data, options)
+      .then(() => {
+        this.data = data;
+        return this.isActive();
+      })
+      .then((isActive) => {
+        if (isActive) {
+          return CacheRequest.setActiveUserLegacy(this.client, this.data);
+        }
 
-    if (this.isActive()) {
-      setActiveUser(this.client, this.data);
-    }
-
-    return this;
+        return this;
+      })
+      .then(() => {
+        return this;
+      });
   }
 
   /**
@@ -696,14 +719,14 @@ export class User {
    * @param {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  static async update(data, options) {
-    const user = User.getActiveUser(options.client);
+  static update(data, options) {
+    const user = this.getActiveUser(options.client);
 
     if (user) {
       return user.update(data, options);
     }
 
-    return null;
+    return Promise.resolve(null);
   }
 
   /**
@@ -712,7 +735,7 @@ export class User {
    * @param {Object} [options={}] Options
    * @return {Promise<User>} The user.
    */
-  async me(options = {}) {
+  me(options = {}) {
     const request = new KinveyRequest({
       method: RequestMethod.GET,
       authType: AuthType.Session,
@@ -724,19 +747,29 @@ export class User {
       properties: options.properties,
       timeout: options.timeout
     });
-    const { data } = await request.execute();
-    this.data = data;
 
-    if (!this.authtoken) {
-      const activeUser = User.getActiveUser(this.client);
+    return request.execute()
+      .then(response => response.data)
+      .then((data) => {
+        if (!data[kmdAttribute].authtoken) {
+          const activeUser = User.getActiveUser(this.client);
 
-      if (activeUser) {
-        this.authtoken = activeUser.authtoken;
-      }
-    }
+          if (activeUser) {
+            data[kmdAttribute].authtoken = activeUser.authtoken;
+          }
 
-    setActiveUser(this.client, this.data);
-    return this;
+          return data;
+        }
+
+        return data;
+      })
+      .then((data) => {
+        CacheRequest.setActiveUserLegacy(this.client, data);
+        this.data = data;
+      })
+      .then(() => {
+        return this;
+      });
   }
 
   /**
@@ -745,27 +778,14 @@ export class User {
    * @param {Object} [options={}] Options
    * @return {Promise<User>} The user.
    */
-  static async me(options) {
-    const user = User.getActiveUser(options.client);
+  static me(options) {
+    const user = this.getActiveUser(options.client);
 
     if (user) {
       return user.me(options);
     }
 
-    return null;
-  }
-
-  /**
-   * Request an email to be sent to verify the users email.
-   *
-   * @deprecated Use the static function verifyEmail().
-   *
-   * @param {Object} [options={}] Options
-   * @return {Promise<Object>} The response.
-   */
-  async verifyEmail(options = {}) {
-    options.client = this.client;
-    return User.verifyEmail(this.username, options);
+    return Promise.resolve(null);
   }
 
   /**
@@ -775,14 +795,16 @@ export class User {
    * @param {Object} [options={}] Options
    * @return {Promise<Object>} The response.
    */
-  static async verifyEmail(username, options = {}) {
+  static verifyEmail(username, options = {}) {
     if (!username) {
-      throw new KinveyError('A username was not provided.',
-       'Please provide a username for the user that you would like to verify their email.');
+      return Promise.reject(
+        new KinveyError('A username was not provided.',
+          'Please provide a username for the user that you would like to verify their email.')
+      );
     }
 
     if (!isString(username)) {
-      throw new KinveyError('The provided username is not a string.');
+      return Promise.reject(new KinveyError('The provided username is not a string.'));
     }
 
     const client = options.client || Client.sharedInstance();
@@ -798,21 +820,8 @@ export class User {
       timeout: options.timeout,
       client: client
     });
-    const { data } = await request.execute();
-    return data;
-  }
-
-  /**
-   * Request an email to be sent to recover a forgot username.
-   *
-   * @deprecated Use the static function forgotUsername().
-   *
-   * @param {Object} [options={}] Options
-   * @return {Promise<Object>} The response.
-   */
-  async forgotUsername(options = {}) {
-    options.client = this.client;
-    return User.forgotUsername(this.email, options);
+    return request.execute()
+      .then(response => response.data);
   }
 
   /**
@@ -822,14 +831,16 @@ export class User {
    * @param {Object} [options={}] Options
    * @return {Promise<Object>} The response.
    */
-  static async forgotUsername(email, options = {}) {
+  static forgotUsername(email, options = {}) {
     if (!email) {
-      throw new KinveyError('An email was not provided.',
-       'Please provide an email for the user that you would like to retrieve their username.');
+      return Promise.reject(
+        new KinveyError('An email was not provided.',
+          'Please provide an email for the user that you would like to retrieve their username.')
+      );
     }
 
     if (!isString(email)) {
-      throw new KinveyError('The provided email is not a string.');
+      return Promise.reject(new KinveyError('The provided email is not a string.'));
     }
 
     const client = options.client || Client.sharedInstance();
@@ -846,21 +857,8 @@ export class User {
       timeout: options.timeout,
       client: client
     });
-    const { data } = await request.execute();
-    return data;
-  }
-
-  /**
-   * Request an email to be sent to reset the users password.
-   *
-   * @deprecated Use the static function resetPassword().
-   *
-   * @param {Object} [options = {}] Options
-   * @return {Promise<Object>} The response.
-   */
-  resetPassword(options = {}) {
-    options.client = this.client;
-    return User.resetPassword(this.username, options);
+    return request.execute()
+      .then(response => response.data);
   }
 
   /**
@@ -870,14 +868,16 @@ export class User {
    * @param {Object} [options={}] Options
    * @return {Promise<Object>} The response.
    */
-  static async resetPassword(username, options = {}) {
+  static resetPassword(username, options = {}) {
     if (!username) {
-      throw new KinveyError('A username was not provided.',
-       'Please provide a username for the user that you would like to reset their password.');
+      return Promise.reject(
+        new KinveyError('A username was not provided.',
+          'Please provide a username for the user that you would like to verify their email.')
+      );
     }
 
     if (!isString(username)) {
-      throw new KinveyError('The provided username is not a string.');
+      return Promise.reject(new KinveyError('The provided username is not a string.'));
     }
 
     const client = options.client || Client.sharedInstance();
@@ -893,8 +893,8 @@ export class User {
       timeout: options.timeout,
       client: client
     });
-    const { data } = await request.execute();
-    return data;
+    return request.execute()
+      .then(response => response.data);
   }
 
   /**

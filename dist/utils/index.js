@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.Log = undefined;
 
 var _device = require('./src/device');
 
@@ -12,18 +13,6 @@ Object.keys(_device).forEach(function (key) {
     enumerable: true,
     get: function get() {
       return _device[key];
-    }
-  });
-});
-
-var _log = require('./src/log');
-
-Object.keys(_log).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _log[key];
     }
   });
 });
@@ -52,27 +41,6 @@ Object.keys(_observable).forEach(function (key) {
   });
 });
 
-var _popup = require('./src/popup');
-
-Object.defineProperty(exports, 'Popup', {
-  enumerable: true,
-  get: function get() {
-    return _popup.Popup;
-  }
-});
-
-var _storage = require('./src/storage');
-
-Object.keys(_storage).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _storage[key];
-    }
-  });
-});
-
 var _string = require('./src/string');
 
 Object.keys(_string).forEach(function (key) {
@@ -84,3 +52,11 @@ Object.keys(_string).forEach(function (key) {
     }
   });
 });
+
+var _log = require('./src/log');
+
+var _log2 = _interopRequireDefault(_log);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.Log = _log2.default;

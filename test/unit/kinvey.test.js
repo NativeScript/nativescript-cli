@@ -1,4 +1,5 @@
-import { TestKinvey as Kinvey, TestUser } from './mocks';
+import { TestUser } from './mocks';
+import Kinvey from '../../src/kinvey';
 import { Client } from '../../src/client';
 import { randomString } from '../../src/utils';
 import expect from 'expect';
@@ -84,7 +85,6 @@ describe('Kinvey', function () {
       expect(Kinvey.DataStore).toNotEqual(undefined);
       expect(Kinvey.DataStoreType).toNotEqual(undefined);
       expect(Kinvey.Files).toNotEqual(undefined);
-      expect(Kinvey.Log).toNotEqual(undefined);
       expect(Kinvey.Metadata).toNotEqual(undefined);
       expect(Kinvey.Query).toNotEqual(undefined);
       expect(Kinvey.SocialIdentity).toNotEqual(undefined);

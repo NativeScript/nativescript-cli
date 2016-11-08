@@ -1,5 +1,5 @@
 import { QueryError } from './errors';
-import { nested } from './utils';
+import { nested, isDefined } from './utils';
 import sift from 'sift';
 import assign from 'lodash/assign';
 import isArray from 'lodash/isArray';
@@ -10,6 +10,7 @@ import isRegExp from 'lodash/isRegExp';
 import isEmpty from 'lodash/isEmpty';
 import forEach from 'lodash/forEach';
 import findKey from 'lodash/findKey';
+import has from 'lodash/has';
 const unsupportedFilters = ['$nearSphere'];
 
 /**
@@ -20,7 +21,7 @@ const unsupportedFilters = ['$nearSphere'];
  * var query = new Kinvey.Query();
  * query.equalTo('name', 'Kinvey');
  */
-export class Query {
+export default class Query {
   /**
    * Create an instance of the Query class.
    *
@@ -102,7 +103,7 @@ export class Query {
       throw new QueryError('fields must be an Array');
     }
 
-    if (this._parent) {
+    if (isDefined(this._parent)) {
       this._parent.fields = fields;
     } else {
       this._fields = fields;
@@ -138,7 +139,7 @@ export class Query {
       throw new QueryError('sort must an Object');
     }
 
-    if (this._parent) {
+    if (isDefined(this._parent)) {
       this._parent.sort(sort);
     } else {
       this._sort = sort || {};
@@ -160,7 +161,7 @@ export class Query {
       limit = parseFloat(limit);
     }
 
-    if (limit && !isNumber(limit)) {
+    if (isDefined(limit) && !isNumber(limit)) {
       throw new QueryError('limit must be a number');
     }
 
@@ -190,7 +191,7 @@ export class Query {
       throw new QueryError('skip must be a number');
     }
 
-    if (this._parent) {
+    if (isDefined(this._parent)) {
       this._parent.skip(skip);
     } else {
       this._skip = skip;
@@ -204,7 +205,7 @@ export class Query {
   isSupportedOffline() {
     let supported = true;
 
-    forEach(unsupportedFilters, filter => {
+    forEach(unsupportedFilters, (filter) => {
       supported = !findKey(this.filter, filter);
       return supported;
     });
@@ -389,7 +390,7 @@ export class Query {
   nor(...args) {
     // NOR is preceded by AND. Therefore, if this query is part of an AND-join,
     // apply the NOR onto the parent to make sure AND indeed precedes NOR.
-    if (this._parent && this._parent.filter.$and) {
+    if (isDefined(this._parent) && has(this._parent, 'filter.$and')) {
       return this._parent.nor(...args);
     }
 
@@ -408,7 +409,7 @@ export class Query {
     // OR has lowest precedence. Therefore, if this query is part of any join,
     // apply the OR onto the parent to make sure OR has indeed the lowest
     // precedence.
-    if (this._parent) {
+    if (isDefined(this._parent)) {
       return this._parent.or(...args);
     }
 
@@ -529,7 +530,7 @@ export class Query {
 
     const result = this.addFilter(field, '$nearSphere', [coord[0], coord[1]]);
 
-    if (maxDistance) {
+    if (isNumber(maxDistance)) {
       this.addFilter(field, '$maxDistance', maxDistance);
     }
 
@@ -550,11 +551,11 @@ export class Query {
    * @returns {Query} The query.
    */
   withinBox(field, bottomLeftCoord, upperRightCoord) {
-    if (!isArray(bottomLeftCoord) || !bottomLeftCoord[0] || !bottomLeftCoord[1]) {
+    if (!isArray(bottomLeftCoord) || !isNumber(bottomLeftCoord[0]) || !isNumber(bottomLeftCoord[1])) {
       throw new QueryError('bottomLeftCoord must be a [number, number]');
     }
 
-    if (!isArray(upperRightCoord) || !upperRightCoord[0] || !upperRightCoord[1]) {
+    if (!isArray(upperRightCoord) || !isNumber(upperRightCoord[0]) || !isNumber(upperRightCoord[1])) {
       throw new QueryError('upperRightCoord must be a [number, number]');
     }
 
@@ -585,7 +586,7 @@ export class Query {
       throw new QueryError('coords must be [[number, number]]');
     }
 
-    coords = coords.map(coord => {
+    coords = coords.map((coord) => {
       if (!coord[0] || !coord[1]) {
         throw new QueryError('coords argument must be [number, number]');
       }
@@ -625,7 +626,7 @@ export class Query {
    * @returns {Query} The query.
    */
   ascending(field) {
-    if (this._parent) {
+    if (isDefined(this._parent)) {
       this._parent.ascending(field);
     } else {
       this.sort[field] = 1;
@@ -642,7 +643,7 @@ export class Query {
    * @returns {Query} The query.
    */
   descending(field) {
-    if (this._parent) {
+    if (isDefined(this._parent)) {
       this._parent.descending(field);
     } else {
       this.sort[field] = -1;
@@ -664,7 +665,7 @@ export class Query {
       this.filter[field] = {};
     }
 
-    if (condition && values) {
+    if (isDefined(condition) && isDefined(values)) {
       this.filter[field][condition] = values;
     } else {
       this.filter[field] = condition;
@@ -689,7 +690,7 @@ export class Query {
     // Cast, validate, and parse arguments. If `queries` are supplied, obtain
     // the `filter` for joining. The eventual return function will be the
     // current query.
-    queries = queries.map(query => {
+    queries = queries.map((query) => {
       if (!(query instanceof Query)) {
         if (isObject(query)) {
           query = new Query(query);
@@ -714,7 +715,7 @@ export class Query {
     // magic requires `filter` to be passed by reference, we cannot simply re-
     // assign `filter`. Instead, empty it without losing the reference.
     const members = Object.keys(this.filter);
-    forEach(members, member => {
+    forEach(members, (member) => {
       currentQuery[member] = this.filter[member];
       delete this.filter[member];
     });
@@ -740,52 +741,50 @@ export class Query {
       let message = 'This query is not able to run locally. The following filters are not supported'
         + ' locally:';
 
-      forEach(unsupportedFilters, filter => {
+      forEach(unsupportedFilters, (filter) => {
         message = `${message} ${filter}`;
       });
 
       throw new QueryError(message);
     }
 
-    if (data) {
-      // Validate arguments.
-      if (!isArray(data)) {
-        throw new QueryError('data argument must be of type: Array.');
-      }
+    // Validate arguments.
+    if (!isArray(data)) {
+      throw new QueryError('data argument must be of type: Array.');
+    }
 
-      // Apply the query
-      const json = this.toJSON();
-      data = sift(json.filter, data);
+    // Apply the query
+    const json = this.toJSON();
+    data = sift(json.filter, data);
 
-      // Remove fields
-      if (json.fields && json.fields.length > 0) {
-        data = data.map((item) => {
-          const keys = Object.keys(item);
-          forEach(keys, key => {
-            if (json.fields.indexOf(key) === -1) {
-              delete item[key];
-            }
-          });
-
-          return item;
+    // Remove fields
+    if (isArray(json.fields) && json.fields.length > 0) {
+      data = data.map((item) => {
+        const keys = Object.keys(item);
+        forEach(keys, (key) => {
+          if (json.fields.indexOf(key) === -1) {
+            delete item[key];
+          }
         });
-      }
+
+        return item;
+      });
 
       // Sorting.
       data = data.sort((a, b) => {
         const fields = Object.keys(json.sort);
-        forEach(fields, field => {
+        forEach(fields, (field) => {
           // Find field in objects.
           const aField = nested(a, field);
           const bField = nested(b, field);
 
           // Elements which do not contain the field should always be sorted
           // lower.
-          if (aField && !bField) {
+          if (isDefined(aField) && !isDefined(bField)) {
             return -1;
           }
 
-          if (bField && !aField) {
+          if (isDefined(bField) && !isDefined(aField)) {
             return 1;
           }
 
@@ -804,11 +803,13 @@ export class Query {
       });
 
       // Limit and skip.
-      if (json.limit) {
-        return data.slice(json.skip, json.skip + json.limit);
-      }
+      if (isNumber(json.skip)) {
+        if (isNumber(json.limit)) {
+          return data.slice(json.skip, json.skip + json.limit);
+        }
 
-      return data.slice(json.skip);
+        return data.slice(json.skip);
+      }
     }
 
     return data;
@@ -820,7 +821,7 @@ export class Query {
    * @returns {Object} Object
    */
   toPlainObject() {
-    if (this._parent) {
+    if (isDefined(this._parent)) {
       return this._parent.toPlainObject();
     }
 
@@ -862,11 +863,11 @@ export class Query {
       queryString.fields = this.fields.join(',');
     }
 
-    if (this.limit) {
+    if (isNumber(this.limit)) {
       queryString.limit = this.limit;
     }
 
-    if (this.skip > 0) {
+    if (isNumber(this.skip) && this.skip > 0) {
       queryString.skip = this.skip;
     }
 
@@ -875,7 +876,7 @@ export class Query {
     }
 
     const keys = Object.keys(queryString);
-    forEach(keys, key => {
+    forEach(keys, (key) => {
       queryString[key] = isString(queryString[key]) ? queryString[key] : JSON.stringify(queryString[key]);
     });
 
