@@ -87,7 +87,7 @@ start-process -FilePath PowerShell.exe -Verb Runas -Wait -ArgumentList "-NoProfi
 ### Manual Setup
 
 * Windows 7 SP1 or later
-* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
+* The latest Node.js [4.x](https://nodejs.org/dist/latest-v4.x/), [6.x](https://nodejs.org/dist/latest-v6.x/) or [7.x](https://nodejs.org/dist/latest-v7.x/) stable official release
 * (Optional) [Chocolatey][Chocolatey]
 * [JDK 8][JDK 8] or a later stable official release
 * [Android SDK 22][Android SDK 22] or a later stable official release
@@ -151,7 +151,7 @@ sudo ruby -e "$(curl -fsSL https://www.nativescript.org/setup/mac)"
 ### Manual Setup
 
 * OS X Mavericks
-* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
+* The latest Node.js [4.x](https://nodejs.org/dist/latest-v4.x/), [6.x](https://nodejs.org/dist/latest-v6.x/) or [7.x](https://nodejs.org/dist/latest-v7.x/) stable official release
 * For iOS development
     * [Latest Xcode][12]
     * [Xcode command-line tools][12]
@@ -192,7 +192,7 @@ echo yes | android update sdk --filter tools,platform-tools,android-23,build-too
 > On Linux systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Ubuntu 14.04 LTS
-* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
+* The latest Node.js [4.x](https://nodejs.org/dist/latest-v4.x/), [6.x](https://nodejs.org/dist/latest-v6.x/) or [7.x](https://nodejs.org/dist/latest-v7.x/) stable official release
 
     > **TIP:** You can follow the instructions provided [here](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager) to install Node.js on your system.
 
@@ -343,7 +343,7 @@ For example, if you want to use the nightly build of the default JavaScript temp
 tns create MyApp --template https://github.com/NativeScript/template-hello-world.git
 ```
 
-To create a new cross-platform project from an existing NativeScript project, run the following command. 
+To create a new cross-platform project from an existing NativeScript project, run the following command.
 
 ```Shell
 tns create MyApp --copy-from <Directory>
