@@ -369,4 +369,3 @@ interface IXcprojInfo {
 	 */
 	xcprojAvailable: boolean;
 }
-

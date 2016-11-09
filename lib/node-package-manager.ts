@@ -120,7 +120,7 @@ export class NodePackageManager implements INodePackageManager {
 		let oldNpmPath: string = undefined;
 		let callback = (err: Error, data: any) => {
 			if (oldNpmPath) {
-				npm.prefix = oldNpmPath;
+				(<any>npm).prefix = oldNpmPath;
 			}
 
 			if (err) {
@@ -133,7 +133,7 @@ export class NodePackageManager implements INodePackageManager {
 
 		if (opts && opts.path) {
 			oldNpmPath = npm.prefix;
-			npm.prefix = opts.path;
+			(<any>npm).prefix = opts.path;
 		}
 
 		let subCommandName: string = opts.subCommandName;

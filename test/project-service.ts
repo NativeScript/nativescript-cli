@@ -1,24 +1,24 @@
 import * as yok from "../lib/common/yok";
 import * as stubs from "./stubs";
 import * as constants from "./../lib/constants";
-import {ChildProcess} from "../lib/common/child-process";
+import { ChildProcess } from "../lib/common/child-process";
 import * as ProjectServiceLib from "../lib/services/project-service";
-import {ProjectNameService} from "../lib/services/project-name-service";
+import { ProjectNameService } from "../lib/services/project-name-service";
 import * as ProjectDataServiceLib from "../lib/services/project-data-service";
 import * as ProjectDataLib from "../lib/project-data";
 import * as ProjectHelperLib from "../lib/common/project-helper";
-import {StaticConfig} from "../lib/config";
+import { StaticConfig } from "../lib/config";
 import * as NpmLib from "../lib/node-package-manager";
-import {NpmInstallationManager} from "../lib/npm-installation-manager";
+import { NpmInstallationManager } from "../lib/npm-installation-manager";
 import * as HttpClientLib from "../lib/common/http-client";
-import {FileSystem} from "../lib/common/file-system";
+import { FileSystem } from "../lib/common/file-system";
 import * as path from "path";
 import temp = require("temp");
-import * as helpers from "../lib/common/helpers";
-import {assert} from "chai";
-import {Options} from "../lib/options";
-import {HostInfo} from "../lib/common/host-info";
-import {ProjectTemplatesService} from "../lib/services/project-templates-service";
+import helpers = require("../lib/common/helpers");
+import { assert } from "chai";
+import { Options } from "../lib/options";
+import { HostInfo } from "../lib/common/host-info";
+import { ProjectTemplatesService } from "../lib/services/project-templates-service";
 import Future = require("fibers/future");
 
 let mockProjectNameValidator = {
@@ -52,10 +52,10 @@ class ProjectIntegrationTest {
 			let defaultTemplatePath = path.join(cacheRoot, packageName);
 			let latestVersion = npmInstallationManager.getLatestVersion(packageName).wait();
 
-			if(!fs.exists(path.join(defaultTemplatePath, latestVersion)).wait()) {
+			if (!fs.exists(path.join(defaultTemplatePath, latestVersion)).wait()) {
 				npmInstallationManager.addToCache(packageName, latestVersion).wait();
 			}
-			if(!fs.exists(path.join(defaultTemplatePath, latestVersion, "package", "app")).wait()) {
+			if (!fs.exists(path.join(defaultTemplatePath, latestVersion, "package", "app")).wait()) {
 				npmInstallationManager.cacheUnpack(packageName, latestVersion).wait();
 			}
 
@@ -461,7 +461,7 @@ describe("project upgrade procedure tests", () => {
 
 		try {
 			testInjector.resolve("projectData"); // This should trigger upgrade procedure
-		} catch(err) {
+		} catch (err) {
 			isErrorThrown = true;
 			let expectedErrorMessage = "No project found at or above '%s' and neither was a --path specified.," + tempFolder;
 			assert.equal(expectedErrorMessage, err.toString());

@@ -88,15 +88,15 @@
     "grunt-contrib-copy": "1.0.0",
     "grunt-contrib-watch": "1.0.0",
     "grunt-shell": "1.3.0",
-    "grunt-ts": "5.5.1",
-    "grunt-tslint": "3.1.0",
+    "grunt-ts": "6.0.0-beta.3",
+    "grunt-tslint": "3.3.0",
     "istanbul": "0.4.5",
     "mocha": "2.5.3",
     "mocha-fibers": "https://github.com/NativeScript/mocha-fibers.git",
     "mocha-typescript": "^1.0.4",
     "should": "7.0.2",
-    "tslint": "3.11.0",
-    "typescript": "^1.8.10"
+    "tslint": "3.15.1",
+    "typescript": "2.0.7"
   },
   "license": "Apache-2.0",
   "engines": {
