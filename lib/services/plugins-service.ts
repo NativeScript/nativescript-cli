@@ -132,8 +132,6 @@ export class PluginsService implements IPluginsService {
 		}
 
 		if (!this.isPluginDataValidForPlatform(pluginData, platform).wait()) {
-			// Still clean up platform in case other platforms were supported.
-			shelljs.rm("-rf", path.join(pluginScriptsDestinationPath , pluginData.name, "platforms"));
 			return;
 		}
 
@@ -143,12 +141,9 @@ export class PluginsService implements IPluginsService {
 
 	private preparePluginNativeCode(pluginData: IPluginData, platform: string): void {
 		let platformData = this.$platformsData.getPlatformData(platform);
-		let pluginScriptsDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
 
 		pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform);
 		platformData.platformProjectService.preparePluginNativeCode(pluginData).wait();
-		shelljs.rm("-rf", path.join(pluginScriptsDestinationPath , pluginData.name, "platforms"));
-
 	}
 
 	public ensureAllDependenciesAreInstalled(): IFuture<void> {
