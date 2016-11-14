@@ -273,10 +273,8 @@ export default class User {
     return request.execute()
       .then(response => response.data)
       .then((data) => {
-        if (credentials[socialIdentityAttribute]) {
-          data[socialIdentityAttribute] = credentials[socialIdentityAttribute];
-        }
-
+        data = assign(data, credentials);
+        delete data.password;
         this.data = data;
         CacheRequest.setActiveUserLegacy(this.client, this.data);
       })
