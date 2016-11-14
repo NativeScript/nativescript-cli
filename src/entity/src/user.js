@@ -560,6 +560,7 @@ export default class User {
     return request.execute()
       .catch((error) => {
         Log.error(error);
+        return null;
       })
       .then(() => {
         const identities = Object.keys(this._socialIdentity || {});
@@ -568,11 +569,17 @@ export default class User {
       })
       .catch((error) => {
         Log.error(error);
+        return null;
       })
       .then(() => CacheRequest.setActiveUser(this.client, null))
+      .catch((error) => {
+        Log.error(error);
+        return null;
+      })
       .then(() => DataStore.clearCache({ client: this.client }))
       .catch((error) => {
         Log.error(error);
+        return null;
       })
       .then(() => this);
   }
@@ -584,13 +591,14 @@ export default class User {
    * @return {Promise<User>} The user.
    */
   static logout(options = {}) {
-    const user = this.getActiveUser(options.client);
+    return this.getActiveUser(options.client)
+      .then((user) => {
+        if (isDefined(user)) {
+          return user.logout(options);
+        }
 
-    if (user) {
-      return user.logout(options);
-    }
-
-    return Promise.resolve(null);
+        return null;
+      });
   }
 
   /**

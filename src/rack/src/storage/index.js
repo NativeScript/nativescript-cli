@@ -28,12 +28,15 @@ export default class Storage {
     this.name = name;
   }
 
-  get adapter() {
-    if (Memory.isSupported()) {
-      return new Memory(this.name);
-    }
+  getAdapter() {
+    return Memory.isSupported()
+      .then((isMemorySupported) => {
+        if (isMemorySupported) {
+          return new Memory(this.name);
+        }
 
-    throw new Error('No storage adapter is available.');
+        throw new Error('No storage adapter is available.');
+      });
   }
 
   generateObjectId(length = 24) {
@@ -49,7 +52,8 @@ export default class Storage {
   }
 
   find(collection) {
-    return this.adapter.find(collection)
+    return this.getAdapter()
+      .then(adapter => adapter.find(collection))
       .catch((error) => {
         if (error instanceof NotFoundError || error.code === 404) {
           return [];
@@ -65,7 +69,8 @@ export default class Storage {
       return Promise.reject(new Error('id must be a string', id));
     }
 
-    return this.adapter.findById(collection, id);
+    return this.getAdapter()
+      .then(adapter => adapter.findById(collection, id));
   }
 
   // async group(collection, aggregation) {
@@ -109,7 +114,8 @@ export default class Storage {
         return entity;
       });
 
-      return this.adapter.save(collection, entities)
+      return this.getAdapter()
+        .then(adapter => adapter.save(collection, entities))
         .then((entities) => {
           if (singular && entities.length > 0) {
             return entities[0];
@@ -142,11 +148,12 @@ export default class Storage {
         return Promise.reject(new Error('id must be a string', id));
       }
 
-      return this.adapter.removeById(collection, id);
+      return this.getAdapter()
+        .then(adapter => adapter.removeById(collection, id));
     });
   }
 
   clear() {
-    return queue.add(() => this.adapter.clear());
+    return queue.add(() => this.getAdapter().then(adapter => adapter.clear()));
   }
 }

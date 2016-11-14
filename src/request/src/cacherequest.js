@@ -78,12 +78,12 @@ export default class CacheRequest extends Request {
         }
 
         // If a query was provided then process the data with the query
-        if (isDefined(this.query)) {
+        if (isDefined(this.query) && isDefined(response.data)) {
           response.data = this.query.process(response.data);
         }
 
         // If an aggregation was provided then process the data with the aggregation
-        if (isDefined(this.aggregation)) {
+        if (isDefined(this.aggregation) && isDefined(response.data)) {
           response.data = this.aggregation.process(response.data);
         }
 
@@ -118,7 +118,12 @@ export default class CacheRequest extends Request {
         }
 
         // Try local storage (legacy)
-        return CacheRequest.getActiveUserLegacy(client);
+        const legacyActiveUser = CacheRequest.getActiveUserLegacy(client);
+        if (isDefined(legacyActiveUser)) {
+          return CacheRequest.setActiveUser(client, legacyActiveUser);
+        }
+
+        return null;
       })
       .catch(() => null);
   }
@@ -135,33 +140,41 @@ export default class CacheRequest extends Request {
     // Remove from local storage (legacy)
     CacheRequest.setActiveUserLegacy(client);
 
-    // Delete from cache
-    const request = new CacheRequest({
-      method: RequestMethod.DELETE,
-      url: url.format({
-        protocol: client.protocol,
-        host: client.host,
-        pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}`
-      })
-    });
-    return request.execute()
-      .then(response => response.data)
-      .then((prevActiveUser) => {
-        if (isDefined(user)) {
-          const request = new CacheRequest({
-            method: RequestMethod.PUT,
-            url: url.format({
-              protocol: client.protocol,
-              host: client.host,
-              pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}`
-            }),
-            body: user
-          });
-          return request.execute()
-            .then(response => response.data);
+    // Get the active user
+    return CacheRequest.getActiveUser(client)
+      .then((activeUser) => {
+        if (isDefined(activeUser) === false) {
+          return null;
         }
 
-        return prevActiveUser;
+        // Delete from cache
+        const request = new CacheRequest({
+          method: RequestMethod.DELETE,
+          url: url.format({
+            protocol: client.protocol,
+            host: client.host,
+            pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}/${activeUser._id}`
+          })
+        });
+        return request.execute()
+          .then(response => response.data);
+      })
+      .then(() => {
+        if (isDefined(user) === false) {
+          return null;
+        }
+
+        const request = new CacheRequest({
+          method: RequestMethod.POST,
+          url: url.format({
+            protocol: client.protocol,
+            host: client.host,
+            pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}`
+          }),
+          body: user
+        });
+        return request.execute()
+          .then(response => response.data);
       });
   }
 

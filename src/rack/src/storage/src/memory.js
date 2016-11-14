@@ -110,6 +110,6 @@ export default class Memory {
   }
 
   static isSupported() {
-    return true;
+    return Promise.resolve(true);
   }
 }
