@@ -6,7 +6,7 @@ let clui = require("clui");
 
 class DoctorService implements IDoctorService {
 	private static PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
-	private static MIN_SUPPORTED_POD_VERSION = "0.38.2";
+	private static MIN_SUPPORTED_POD_VERSION = "1.0.0";
 	private static DarwinSetupScriptLocation = path.join(__dirname, "..", "..", "setup", "mac-startup-shell-script.sh");
 	private static DarwinSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-os-x";
 	private static WindowsSetupScriptExecutable = "powershell.exe";
