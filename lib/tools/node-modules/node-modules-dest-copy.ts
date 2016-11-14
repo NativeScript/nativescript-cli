@@ -50,6 +50,10 @@ export class TnsModulesCopy {
 
 			shelljs.mkdir("-p", targetDir);
 			shelljs.cp("-Rf", dependency.directory, targetDir);
+
+			//remove platform-specific files (processed separately by plugin services)
+			const targetPackageDir = path.join(targetDir, dependency.name);
+			shelljs.rm("-rf", path.join(targetPackageDir, "platforms"));
 		}
 	}
 }
