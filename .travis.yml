@@ -5,10 +5,10 @@ deploy:
   provider: npm
   email: thomas.conner@me.com
   api_key:
-    secure: FSizWq7v0QhQ2SfvxhkN9fwN00YRJdI1rUWS5Nu68mvSrDWNmH4sMSlRUl+muAqIdERS4ov8/DDj7F6/5PEnE3GZ43oM0we+qvS7XZCs+kTC3+DV7R+8dHAG2IF1yYzq7ejVAeGKB9aCKPATaiaGgMATNq7ZeY/vKswNWWAOg0A=
+    secure: zs64wz+OIVD9gKu2qZ+zjDJZsFqBPAM0umhYxdCXvBPfxPnHiy5CYJJWhzi8E/bY9o5jfPRc04OFWcKRYVI0k65fCImpnuettO/ADXJ1fB/9H7YuKyNz/TwFsehmbRiiyyqRQn4neIrXs0ewxZFoh/4+HBN29PCrTj5s2o5Xt+c+44ijON2hpSFZA8emTLscdL0shuWHOv9PCxbfm6E/eBrC0/NW3pWQDOCDFJX7ZQzYX8M3DmSwKyf1U7XOLlUAwZ0FmmncXHrzDGRL2hypbOLae6sY3b34/cE+zi/CGoot5k4QvTrAQewX6ufwu2iAxSU8Fq4zF0Qb1Ry4T20j2XB9IBzEc79nHJT20naBAtZVJ5eKPCeU1yzoWJbM51lAUm2SGzNU3dQue6P71r/PsKD4oJLT2SdGHi+uq492SWWnBN8EJU0w82q1/UnKpUPMazN+lYGNmxCXeQbm5MLOJ0g783LH2XV6vOaESr97B3tNkE30krrwCH148UVcHkBOhkY5U8vwMp+EKv4IFTGZmoBylUMAHCpr7XrYRubHPseFva+pCTd4BfhhEZx8F1ikzC0rbN4/X0yGOnumKbH5s1QL9iU/AvSksyLLEnTQ5ZlCS1yaB02MBt8jK19VT1WWZc66QGpwDsgOSMyvN6Wyju1zpD1clYEEbqIwZgs9kR0=
   on:
     tags: true
-    repo: Kinvey/kinvey-nodejs
+    repo: Kinvey/javascript-sdk
 notifications:
   email:
     on_success: change
@@ -16,7 +16,7 @@ notifications:
   slack:
     on_success: change
     on_failure: always
-    secure: djxIuHEu0xNvpncK++aMnWUm5/QgBTO4HL4TyDDGslWT+Atnx+BgsX63omREvZyg81vjAWjm1WjIWQfU06NFM5Nvf23qcsK065yog4mNi+TzfDm9TWhz3bQDCHqZb7hgx5k/CYkiXD2RKwvaWuEP0XakYquydXW+3jXcHdyiCHs=
+    secure: zhQEKSmoMrI5yj180Z8NtAqujmMgRI3TIO/DrnFEDjuXziBanKr2Thnzup0Gmr5vfOA1c3yh/HVs671188UDsE6YSf/r8ephjE+dzlk3iyYE6ViHUHB7ju+DKyGOeNPk8yMFUqDhLhtQ9wA8Bvlzbfn/ZwPk2ArDZgp3ixBEmIzB/gkcq4EC+2ciJbBUh99fOPUYspvAvf4xLlQRPNiuZ/BSCfeASRkvYdUp9kAMZecIt2EfAneTAOyEBKc+8ob24Yu5L8GfSnNa8qeAmzwki6WGaVR7EantJ0SA/dXyISlj08ckW/MEY5hoBhy1x0/gsaPaLNfq/GRz1Zj69Qmqz359tknuRBC4lMmEyutG9SKNBB8OAtNyUUnnNi45P+fyTUP/4l+4tYEN4hj/ncnFKvW5P5ls/LZ84wpjfAiUlkVqSwKXUnzccYDYNBfeVMEpTwoxctBgRp9Akalf3nVYfZHvH+/Sy3VGzDqagF+55+kTgfPmf763lKbOanr2HNzpvIfT21UyZ2EEDAoAkqr65HbA+yYgs/Awni02qzalafmIbP3aF9a3yULftubAvfsKALjrde38iqE5kOvsyiFOjescA7chdpJqudn6sT6SuYHaVoaBzqKX0t2aLWq8a9rMoS1qKW22IQ2CQilAtVG5Nb19mcUSjkisoIYnrCvK700=
 script: npm run cover
 after_success:
 - bash <(curl -s https://codecov.io/bash)
