@@ -114,17 +114,18 @@ const Auth = {
    * @returns {Object}
    */
   session(client) {
-    return CacheRequest.getActiveUser(client)
-      .then((activeUser) => {
-        if (!isDefined(activeUser)) {
-          throw new NoActiveUserError('There is not an active user. Please login a user and retry the request.');
-        }
+    const activeUser = CacheRequest.getActiveUser(client);
 
-        return Promise.resolve({
-          scheme: 'Kinvey',
-          credentials: activeUser._kmd.authtoken
-        });
-      });
+    if (!isDefined(activeUser)) {
+      return Promise.reject(
+        new NoActiveUserError('There is not an active user. Please login a user and retry the request.')
+      );
+    }
+
+    return Promise.resolve({
+      scheme: 'Kinvey',
+      credentials: activeUser._kmd.authtoken
+    });
   }
 };
 

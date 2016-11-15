@@ -1,4 +1,5 @@
 import Rack, { CacheRack, NetworkRack } from './rack';
+import { CacheRequest } from './request';
 import { KinveyError } from './errors';
 import { Device } from './utils';
 import url from 'url';
@@ -133,6 +134,13 @@ export class Client {
      * @type {Popup}
      */
     this.popupClass = options.popupClass;
+  }
+
+  /**
+   * Get the active user.
+   */
+  get activeUser() {
+    return CacheRequest.getActiveUser(this);
   }
 
   /**
@@ -297,7 +305,8 @@ export class Client {
   static init(options) {
     const client = new Client(options);
     sharedInstance = client;
-    return client;
+    return CacheRequest.initActiveUser(client)
+      .then(() => client);
   }
 
   /**
