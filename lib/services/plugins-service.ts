@@ -36,9 +36,13 @@ export class PluginsService implements IPluginsService {
 	public add(plugin: string): IFuture<void> {
 		return (() => {
 			this.ensure().wait();
-			let dependencyData = this.$npm.cache(plugin, undefined, PluginsService.NPM_CONFIG).wait();
-			if (dependencyData.nativescript) {
-				let pluginData = this.convertToPluginData(dependencyData);
+			let name = this.$npm.install(plugin, this.$projectData.projectDir, PluginsService.NPM_CONFIG).wait()[0];
+
+			let pathToRealNpmPackageJson = path.join(this.$projectData.projectDir, "node_modules", name, "package.json");
+			let realNpmPackageJson = this.$fs.readJson(pathToRealNpmPackageJson).wait();
+
+			if (realNpmPackageJson.nativescript) {
+				let pluginData = this.convertToPluginData(realNpmPackageJson);
 
 				// Validate
 				let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => {
@@ -50,18 +54,18 @@ export class PluginsService implements IPluginsService {
 
 				try {
 					this.$pluginVariablesService.savePluginVariablesInProjectFile(pluginData).wait();
-					this.executeNpmCommand(PluginsService.INSTALL_COMMAND_NAME, plugin).wait();
 				} catch (err) {
 					// Revert package.json
 					this.$projectDataService.initialize(this.$projectData.projectDir);
 					this.$projectDataService.removeProperty(this.$pluginVariablesService.getPluginVariablePropertyName(pluginData.name)).wait();
-					this.$projectDataService.removeDependency(pluginData.name).wait();
+					this.$npm.uninstall(plugin, PluginsService.NPM_CONFIG, this.$projectData.projectDir).wait();
 
 					throw err;
 				}
 
-				this.$logger.out(`Successfully installed plugin ${dependencyData.name}.`);
+				this.$logger.out(`Successfully installed plugin ${realNpmPackageJson.name}.`);
 			} else {
+				this.$npm.uninstall(realNpmPackageJson.name, {save: true}, this.$projectData.projectDir);
 				this.$errors.failWithoutHelp(`${plugin} is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.`);
 			}
 
@@ -102,7 +106,7 @@ export class PluginsService implements IPluginsService {
 
 	public getAvailable(filter: string[]): IFuture<IDictionary<any>> {
 		let silent: boolean = true;
-		return this.$npm.search(filter, silent);
+		return this.$npm.search(filter, {"silent": silent});
 	}
 
 	public prepare(dependencyData: IDependencyData, platform: string): IFuture<void> {
@@ -266,24 +270,19 @@ export class PluginsService implements IPluginsService {
 
 	private executeNpmCommand(npmCommandName: string, npmCommandArguments: string): IFuture<string> {
 		return (() => {
-			let result = "";
 
 			if (npmCommandName === PluginsService.INSTALL_COMMAND_NAME) {
-				result = this.$npm.install(npmCommandArguments, this.$projectData.projectDir, PluginsService.NPM_CONFIG).wait();
+				this.$npm.install(npmCommandArguments, this.$projectData.projectDir, PluginsService.NPM_CONFIG).wait();
 			} else if (npmCommandName === PluginsService.UNINSTALL_COMMAND_NAME) {
-				result = this.$npm.uninstall(npmCommandArguments, PluginsService.NPM_CONFIG, this.$projectData.projectDir).wait();
-				if (!result || !result.length) {
-					// indicates something's wrong with the data in package.json, for example version of the plugin that we are trying to remove is invalid.
-					return npmCommandArguments.toLowerCase();
-				}
+				this.$npm.uninstall(npmCommandArguments, PluginsService.NPM_CONFIG, this.$projectData.projectDir).wait();
 			}
 
-			return this.parseNpmCommandResult(result);
+			return this.parseNpmCommandResult(npmCommandArguments);
 		}).future<string>()();
 	}
 
-	private parseNpmCommandResult(npmCommandResult: string): string {  // [[name@version, node_modules/name]]
-		return npmCommandResult[0][0].split("@")[0]; // returns plugin name
+	private parseNpmCommandResult(npmCommandResult: string): string {
+		return npmCommandResult.split("@")[0]; // returns plugin name
 	}
 
 	private executeForAllInstalledPlatforms(action: (_pluginDestinationPath: string, pl: string, _platformData: IPlatformData) => IFuture<void>): IFuture<void> {

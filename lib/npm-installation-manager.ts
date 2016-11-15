@@ -1,20 +1,10 @@
 import * as path from "path";
 import * as semver from "semver";
-import * as npm from "npm";
 import * as constants from "./constants";
 import {sleep} from "../lib/common/helpers";
 
 export class NpmInstallationManager implements INpmInstallationManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
-	private versionsCache: IDictionary<string[]>;
-	private packageSpecificDirectories: IStringDictionary = {
-		"tns-android": constants.PROJECT_FRAMEWORK_FOLDER_NAME,
-		"tns-ios": constants.PROJECT_FRAMEWORK_FOLDER_NAME,
-		"tns-ios-inspector": "WebInspectorUI",
-		"tns-template-hello-world": constants.APP_RESOURCES_FOLDER_NAME,
-		"tns-template-hello-world-ts": constants.APP_RESOURCES_FOLDER_NAME,
-		"tns-template-hello-world-ng": constants.APP_RESOURCES_FOLDER_NAME
-	};
 
 	constructor(private $npm: INodePackageManager,
 		private $logger: ILogger,
@@ -23,91 +13,38 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		private $options: IOptions,
 		private $fs: IFileSystem,
 		private $staticConfig: IStaticConfig) {
-		this.versionsCache = {};
-		this.$npm.load().wait();
-	}
-
-	public getCacheRootPath(): string {
-		return this.$npm.getCache();
-	}
-
-	public getCachedPackagePath(packageName: string, version: string): string {
-		return path.join(this.getCacheRootPath(), packageName, version, "package");
-	}
-
-	public addToCache(packageName: string, version: string): IFuture<any> {
-		return (() => {
-			let cachedPackagePath = this.getCachedPackagePath(packageName, version);
-			let cachedPackageData: any;
-			if(!this.$fs.exists(cachedPackagePath).wait() || !this.$fs.exists(path.join(cachedPackagePath, "framework")).wait()) {
-				cachedPackageData = this.addToCacheCore(packageName, version).wait();
-			}
-
-			// In case the version is tag (for example `next`), we need the real version number from the cache.
-			// In these cases the cachePackageData is populated when data is added to the cache.
-			// Also whenever the version is tag, we always get inside the above `if` and the cachedPackageData is populated.
-			let realVersion = (cachedPackageData && cachedPackageData.version) || version;
-			if(!this.isShasumOfPackageCorrect(packageName, realVersion).wait()) {
-				// In some cases the package is not fully downloaded and there are missing directories
-				// Try removing the old package and add the real one to cache again
-				cachedPackageData = this.addCleanCopyToCache(packageName, version).wait();
-			}
-
-			return cachedPackageData;
-		}).future<any>()();
-	}
-
-	public cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void> {
-		unpackTarget = unpackTarget || path.join(npm.cache, packageName, version, "package");
-		return this.$npm.cacheUnpack(packageName, version, unpackTarget);
 	}
 
 	public getLatestVersion(packageName: string): IFuture<string> {
-		return (() => {
-			let data = this.$npm.view(packageName, "dist-tags").wait();
-			// data is something like :
-			// { '1.0.1': { 'dist-tags': { latest: '1.0.1', next: '1.0.2-2016-02-25-181', next1: '1.0.2' } }
-			// There's only one key and it's always the @latest tag.
-			let latestVersion = _.first(_.keys(data));
-			this.$logger.trace("Using version %s. ", latestVersion);
+		return(() => {
+			return this.getVersion(packageName, constants.PackageVersion.LATEST).wait();
+		}).future<string>()();
+	}
 
-			return latestVersion;
+	public getNextVersion(packageName: string): IFuture<string> {
+		return (() => {
+			return this.getVersion(packageName, constants.PackageVersion.NEXT).wait();
 		}).future<string>()();
 	}
 
 	public getLatestCompatibleVersion(packageName: string): IFuture<string> {
 		return (() => {
+
 			let cliVersionRange = `~${this.$staticConfig.version}`;
 			let latestVersion = this.getLatestVersion(packageName).wait();
 			if(semver.satisfies(latestVersion, cliVersionRange)) {
 				return latestVersion;
 			}
+			let data = this.$npm.view(packageName, {json: true, "versions": true}).wait();
 
-			let data: any = this.$npm.view(packageName, "versions").wait();
-			/* data is something like:
-				{
-					"1.1.0":{
-						"versions":[
-							"1.0.0",
-							"1.0.1-2016-02-25-181",
-							"1.0.1",
-							"1.0.2-2016-02-25-182",
-							"1.0.2",
-							"1.1.0-2016-02-25-183",
-							"1.1.0",
-							"1.2.0-2016-02-25-184"
-						]
-					}
-				}
-			*/
-			let versions: string[] = data && data[latestVersion] && data[latestVersion].versions;
-			return semver.maxSatisfying(versions, cliVersionRange) || latestVersion;
+			return semver.maxSatisfying(data, cliVersionRange) || latestVersion;
 		}).future<string>()();
 	}
 
-	public install(packageName: string, opts?: INpmInstallOptions): IFuture<string> {
+	public install(packageName: string, projectDir: string, opts?: INpmInstallOptions): IFuture<any> {
 		return (() => {
 
+			// TODO: plamen5kov: figure a way to remove this
 			while(this.$lockfile.check().wait()) {
 				sleep(10);
 			}
@@ -115,11 +52,12 @@ export class NpmInstallationManager implements INpmInstallationManager {
 			this.$lockfile.lock().wait();
 
 			try {
-				let packageToInstall = packageName;
-				let pathToSave = (opts && opts.pathToSave) || npm.cache;
+				let packageToInstall = this.$options.frameworkPath || packageName;
+				let pathToSave = projectDir;
 				let version = (opts && opts.version) || null;
+				let dependencyType = (opts && opts.dependencyType) || null;
 
-				return this.installCore(packageToInstall, pathToSave, version).wait();
+				return this.installCore(packageToInstall, pathToSave, version, dependencyType).wait();
 			} catch(error) {
 				this.$logger.debug(error);
 				this.$errors.fail("%s. Error: %s", NpmInstallationManager.NPM_LOAD_FAILED, error);
@@ -130,99 +68,56 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		}).future<string>()();
 	}
 
-	private addCleanCopyToCache(packageName: string, version: string): IFuture<any> {
+	private installCore(packageName: string, pathToSave: string, version: string, dependencyType: string): IFuture<string> {
 		return (() => {
-			let packagePath = path.join(this.getCacheRootPath(), packageName, version);
-			this.$logger.trace(`Deleting: ${packagePath}.`);
-			this.$fs.deleteDirectory(packagePath).wait();
-			let cachedPackageData = this.addToCacheCore(packageName, version).wait();
-			if(!this.isShasumOfPackageCorrect(packageName, cachedPackageData.version).wait()) {
-				this.$errors.failWithoutHelp(`Unable to add package ${packageName} with version ${cachedPackageData.version} to npm cache. Try cleaning your cache and execute the command again.`);
-			}
-
-			return cachedPackageData;
-		}).future<any>()();
-	}
-
-	private addToCacheCore(packageName: string, version: string): IFuture<any> {
-		return (() => {
-			let cachedPackageData = this.$npm.cache(packageName, version).wait();
-			let packagePath = path.join(this.getCacheRootPath(), packageName, cachedPackageData.version, "package");
-			if(!this.isPackageUnpacked(packagePath, packageName).wait()) {
-				this.cacheUnpack(packageName, cachedPackageData.version).wait();
-			}
-			return cachedPackageData;
-		}).future<any>()();
-	}
-
-	private isShasumOfPackageCorrect(packageName: string, version: string): IFuture<boolean> {
-		return ((): boolean => {
-			let shasumProperty = "dist.shasum";
-			let cachedPackagePath = this.getCachedPackagePath(packageName, version);
-			let packageInfo = this.$npm.view(`${packageName}@${version}`, shasumProperty).wait();
-
-			if (_.isEmpty(packageInfo)) {
-				// this package has not been published to npmjs.org yet - perhaps manually added via --framework-path
-				this.$logger.trace(`Checking shasum of package ${packageName}@${version}: skipped because the package was not found in npmjs.org`);
-				return true;
-			}
-
-			let realShasum = packageInfo[version][shasumProperty];
-			let packageTgz = cachedPackagePath + ".tgz";
-			let currentShasum = "";
-			if(this.$fs.exists(packageTgz).wait()) {
-				currentShasum = this.$fs.getFileShasum(packageTgz).wait();
-			}
-			this.$logger.trace(`Checking shasum of package ${packageName}@${version}: expected ${realShasum}, actual ${currentShasum}.`);
-			return realShasum === currentShasum;
-		}).future<boolean>()();
-	}
-
-	private installCore(packageName: string, pathToSave: string, version: string): IFuture<string> {
-		return (() => {
-			if (this.$options.frameworkPath) {
-				this.npmInstall(this.$options.frameworkPath, pathToSave, version).wait();
-				let pathToNodeModules = path.join(pathToSave, "node_modules");
-				let folders = this.$fs.readDirectory(pathToNodeModules).wait();
-
-				let data = this.$fs.readJson(path.join(pathToNodeModules, folders[0], "package.json")).wait();
-				if(!this.isPackageUnpacked(this.getCachedPackagePath(data.name, data.version), data.name).wait()) {
-					this.cacheUnpack(data.name, data.version).wait();
-				}
-
-				return path.join(pathToNodeModules, folders[0]);
+			// check if the packageName is url or local file and if it is, let npm install deal with the version
+			if(this.isURL(packageName) || this.$fs.exists(packageName).wait()) {
+				version = null;
 			} else {
 				version = version || this.getLatestCompatibleVersion(packageName).wait();
-				let cachedData = this.addToCache(packageName, version).wait();
-				let packageVersion = (cachedData && cachedData.version) || version;
-				return this.getCachedPackagePath(packageName, packageVersion);
 			}
+
+			let installedModuleNames = this.npmInstall(packageName, pathToSave, version, dependencyType).wait();
+			let installedPackageName =  installedModuleNames[0];
+
+			let pathToInstalledPackage = path.join(pathToSave, "node_modules", installedPackageName);
+			return pathToInstalledPackage;
 		}).future<string>()();
 	}
 
-	private npmInstall(packageName: string, pathToSave: string, version: string): IFuture<void> {
-		this.$logger.out("Installing ", packageName);
-
-		let incrementedVersion = semver.inc(version, constants.ReleaseType.MINOR);
-		if (!this.$options.frameworkPath && packageName.indexOf("@") < 0) {
-			packageName = packageName + "@<" + incrementedVersion;
-		}
-
-		return this.$npm.install(packageName, pathToSave);
+	private isURL(str: string) {
+		let urlRegex = '^(?!mailto:)(?:(?:http|https|ftp)://)(?:\\S+(?::\\S*)?@)?(?:(?:(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[0-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)(?:\\.(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)*(?:\\.(?:[a-z\\u00a1-\\uffff]{2,})))|localhost)(?::\\d{2,5})?(?:(/|\\?|#)[^\\s]*)?$';
+		let url = new RegExp(urlRegex, 'i');
+		return str.length < 2083 && url.test(str);
 	}
 
-	private isPackageUnpacked(packagePath: string, packageName: string): IFuture<boolean> {
+	private npmInstall(packageName: string, pathToSave: string, version: string, dependencyType: string): IFuture<any> {
+		return(() => {
+			this.$logger.out("Installing ", packageName);
+
+			packageName = packageName + (version ? `@${version}` : "");
+
+			let npmOptions: any = {silent: true};
+
+			if(dependencyType) {
+				npmOptions[dependencyType] = true;
+			}
+
+			return this.$npm.install(packageName , pathToSave, npmOptions).wait();
+		}).future<any>()();
+	}
+
+	/**
+	 * This function must not be used with packageName being a URL or local file,
+	 * because npm view doens't work with those
+	 */
+	private getVersion(packageName: string, version: string): IFuture<string> {
 		return (() => {
-			let additionalDirectoryToCheck = this.packageSpecificDirectories[packageName];
-			return this.$fs.getFsStats(packagePath).wait().isDirectory() &&
-					(!additionalDirectoryToCheck || this.hasFilesInDirectory(path.join(packagePath, additionalDirectoryToCheck)).wait());
-		}).future<boolean>()();
-	}
+			let data:any = this.$npm.view(packageName, {json: true, "dist-tags": true}).wait();
+			this.$logger.trace("Using version %s. ", data[version]);
 
-	private hasFilesInDirectory(directory: string): IFuture<boolean> {
-		return ((): boolean => {
-			return this.$fs.exists(directory).wait() &&	this.$fs.enumerateFilesInDirectorySync(directory).length > 0;
-		}).future<boolean>()();
+			return data[version];
+		}).future<string>()();
 	}
 }
 $injector.register("npmInstallationManager", NpmInstallationManager);
