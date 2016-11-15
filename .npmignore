@@ -4,20 +4,13 @@ node_modules
 npm-debug.log
 
 # Src files
-/.github
 .babelrc
-.codeclimate.yml
 .editorconfig
-.eslintignore
 .eslintrc
 .gitattributes
 .gitignore
-.travis.yml
-CHANGELOG.md
-CONTRIBUTING.md
+.nvmrc
 /src
-/docs
-/manual
 esdoc.json
 gulpfile.babel.js
 hints.md
@@ -26,8 +19,10 @@ README.md
 
 # Build Files
 .env
-/.tmp
-/tmp
+.tmp
+tmp
+/dist/kinvey-html5-sdk.js
+/dist/kinvey-html5-sdk.min.js
 
 # Test Files
 /coverage
