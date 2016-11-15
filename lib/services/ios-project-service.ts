@@ -687,23 +687,34 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private prepareCocoapods(pluginPlatformsFolderPath: string, opts?: any): IFuture<void> {
 		return (() => {
 			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
+			if (this.$fs.exists(pluginPodFilePath).wait()) {
+				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait(),
+					pluginPodFilePreparedContent = this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent),
+					projectPodFileContent = this.$fs.exists(this.projectPodFilePath).wait() ? this.$fs.readText(this.projectPodFilePath).wait() : "";
 
-			if(this.$fs.exists(pluginPodFilePath).wait()) {
-				if(!this.$fs.exists(this.projectPodFilePath).wait()) {
-					this.$fs.writeFile(this.projectPodFilePath, "use_frameworks!\n").wait();
+				if (!~projectPodFileContent.indexOf(pluginPodFilePreparedContent)) {
+					let podFileHeader = `use_frameworks!${os.EOL}${os.EOL}target "${this.$projectData.projectName}" do${os.EOL}`,
+						podFileFooter = `${os.EOL}end`;
+
+					if (_.startsWith(projectPodFileContent, podFileHeader)) {
+						projectPodFileContent = projectPodFileContent.substr(podFileHeader.length);
+					}
+
+					if (_.endsWith(projectPodFileContent, podFileFooter)) {
+						projectPodFileContent = projectPodFileContent.substr(0, projectPodFileContent.length - podFileFooter.length);
+					}
+
+					let contentToWrite = `${podFileHeader}${projectPodFileContent}${pluginPodFilePreparedContent}${podFileFooter}`;
+					this.$fs.writeFile(this.projectPodFilePath, contentToWrite).wait();
+
+					let project = this.createPbxProj();
+					project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
+					this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks in CocoaPods.");
+					this.savePbxProj(project).wait();
 				}
-
-				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
-				let contentToWrite = this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);
-				this.$fs.appendFile(this.projectPodFilePath, contentToWrite).wait();
-
-				let project = this.createPbxProj();
-				project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
-				this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks in CocoaPods.");
-				this.savePbxProj(project).wait();
 			}
 
-			if(opts && opts.executePodInstall && this.$fs.exists(pluginPodFilePath).wait()) {
+			if (opts && opts.executePodInstall && this.$fs.exists(pluginPodFilePath).wait()) {
 				this.executePodInstall().wait();
 			}
 		}).future<void>()();
@@ -747,7 +758,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				let projectPodFileContent = this.$fs.readText(this.projectPodFilePath).wait();
 				let contentToRemove= this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);
 				projectPodFileContent = helpers.stringReplaceAll(projectPodFileContent, contentToRemove, "");
-				if(projectPodFileContent.trim() === "use_frameworks!") {
+				if(projectPodFileContent.trim() === `use_frameworks!${os.EOL}${os.EOL}target "${this.$projectData.projectName}" do${os.EOL}${os.EOL}end`) {
 					this.$fs.deleteFile(this.projectPodFilePath).wait();
 				} else {
 					this.$fs.writeFile(this.projectPodFilePath, projectPodFileContent).wait();
@@ -811,10 +822,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.mergeXcconfigFiles(appResourcesXcconfigPath, this.pluginsReleaseXcconfigFilePath).wait();
 			}
 
-			let podFolder = path.join(this.platformData.projectRoot, "Pods/Target Support Files/Pods/");
+			let podFilesRootDirName = path.join("Pods", "Target Support Files", `Pods-${this.$projectData.projectName}`);
+			let podFolder = path.join(this.platformData.projectRoot, podFilesRootDirName);
 			if (this.$fs.exists(podFolder).wait()) {
-				this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, "Pods/Target Support Files/Pods/Pods.debug.xcconfig"), this.pluginsDebugXcconfigFilePath).wait();
-				this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, "Pods/Target Support Files/Pods/Pods.release.xcconfig"), this.pluginsReleaseXcconfigFilePath).wait();
+				this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, podFilesRootDirName, `Pods-${this.$projectData.projectName}.debug.xcconfig`), this.pluginsDebugXcconfigFilePath).wait();
+				this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, podFilesRootDirName, `Pods-${this.$projectData.projectName}.release.xcconfig`), this.pluginsReleaseXcconfigFilePath).wait();
 			}
 		}).future<void>()();
 	}
