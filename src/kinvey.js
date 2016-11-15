@@ -8,6 +8,7 @@ import { Acl, Metadata, User } from './entity';
 import { AuthorizationGrant, SocialIdentity } from './identity';
 import { AuthType, RequestMethod, KinveyRequest } from './request';
 import { KinveyError } from './errors';
+import Promise from 'es6-promise';
 import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
@@ -82,24 +83,29 @@ class Kinvey {
   static init(options) {
     // Check that an appKey or appId was provided
     if (!options.appKey) {
-      throw new KinveyError('No App Key was provided. ' +
-        'Unable to create a new Client without an App Key.');
+      return Promise.reject(
+        new KinveyError('No App Key was provided. ' +
+          'Unable to create a new Client without an App Key.')
+      );
     }
 
     // Check that an appSecret or masterSecret was provided
     if (!options.appSecret && !options.masterSecret) {
-      throw new KinveyError('No App Secret or Master Secret was provided. ' +
-        'Unable to create a new Client without an App Key.');
+      return Promise.reject(
+        new KinveyError('No App Secret or Master Secret was provided. ' +
+          'Unable to create a new Client without an App Key.')
+      );
     }
 
     // Initialize the client
-    const client = Client.init(options);
+    return Client.init(options)
+      .then((client) => {
+        // Add modules that require initialization
+        this.Files = new FileStore();
 
-    // Add modules that require initialization
-    this.Files = new FileStore();
-
-    // Return the client
-    return client;
+        // Return the client
+        return client;
+      });
   }
 
   /**
@@ -125,7 +131,8 @@ class Kinvey {
       })
     });
 
-    return request.execute().then(response => response.data);
+    return request.execute()
+      .then(response => response.data);
   }
 }
 
