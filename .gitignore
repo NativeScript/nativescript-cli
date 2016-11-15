@@ -3,15 +3,20 @@
 node_modules
 npm-debug.log
 
-# Reference files
-/reference
+# Src files
+docs
 
 # Build Files
-/.tmp
-/tmp
+.tmp
+tmp
+/dist/kinvey-html5-sdk.js
+/dist/kinvey-html5-sdk.min.js
 
-# Test Coverage Files
-/coverage
+# Test Files
+coverage
+report.xml
+*.tap
+*.log
 
 # MacOS Files
 .DS_Store
