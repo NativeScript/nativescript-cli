@@ -8,9 +8,14 @@ const inspectorBackendPort = 18181;
 const inspectorAppName = "NativeScript Inspector.app";
 const inspectorNpmPackageName = "tns-ios-inspector";
 const inspectorUiDir = "WebInspectorUI/";
-const TIMEOUT_SECONDS = 90;
+const TIMEOUT_SECONDS = 9;
 
 class IOSDebugService implements IDebugService {
+	private _lldbProcess: ChildProcess;
+	private _sockets: net.Socket[] = [];
+	private _childProcess: ChildProcess;
+	private _socketProxy: net.Server;
+
 	constructor(
 		private $config: IConfiguration,
 		private $platformService: IPlatformService,
@@ -34,10 +39,6 @@ class IOSDebugService implements IDebugService {
 		private $npm: INodePackageManager) {
 			this.$processService.attachToProcessExitSignals(this, this.debugStop);
 		}
-
-	private _lldbProcess: ChildProcess;
-	private _sockets: net.Socket[] = [];
-	private _childProcess: ChildProcess;
 
 	public get platform(): string {
 		return "ios";
@@ -80,16 +81,20 @@ class IOSDebugService implements IDebugService {
 
 	public debugStop(): IFuture<void> {
 		return (() => {
-			this.$socketProxyFactory.stopServer();
-			for (let socket of this._sockets) {
-				socket.destroy();
+			if (this._socketProxy) {
+				this._socketProxy.close();
+				this._socketProxy = null;
 			}
+
+			_.forEach(this._sockets, socket => socket.destroy());
 			this._sockets = [];
+
  			if (this._lldbProcess) {
 				this._lldbProcess.stdin.write("process detach\n");
 				this._lldbProcess.kill();
 				this._lldbProcess = undefined;
 			}
+
 			if (this._childProcess) {
 				this._childProcess.kill();
 				this._childProcess = undefined;
@@ -163,9 +168,7 @@ class IOSDebugService implements IDebugService {
 	private debugBrkCore(device: Mobile.IiOSDevice, shouldBreak?: boolean): IFuture<void> {
 		return (() => {
 			let timeout = this.$utils.getMilliSecondsTimeout(TIMEOUT_SECONDS);
-			let readyForAttachTimeout = this.getReadyForAttachTimeout(timeout);
-
-			this.$iOSSocketRequestExecutor.executeLaunchRequest(device, timeout, readyForAttachTimeout, shouldBreak).wait();
+			this.$iOSSocketRequestExecutor.executeLaunchRequest(device, timeout, timeout, shouldBreak).wait();
 			this.wireDebuggerClient(device).wait();
 		}).future<void>()();
 	}
@@ -179,7 +182,7 @@ class IOSDebugService implements IDebugService {
 
 	private deviceStartCore(device: Mobile.IiOSDevice): IFuture<void> {
 		return (() => {
-			let timeout = this.getReadyForAttachTimeout();
+			let timeout = this.$utils.getMilliSecondsTimeout(TIMEOUT_SECONDS);
 			this.$iOSSocketRequestExecutor.executeAttachRequest(device, timeout).wait();
 			this.wireDebuggerClient(device).wait();
 		}).future<void>()();
@@ -187,48 +190,38 @@ class IOSDebugService implements IDebugService {
 
 	private wireDebuggerClient(device?: Mobile.IiOSDevice): IFuture<void> {
 		return (() => {
-			let socketProxy = this.$socketProxyFactory.createSocketProxy(() => {
+			this._socketProxy = this.$socketProxyFactory.createSocketProxy(() => {
 				let socket = device ? device.connectToPort(inspectorBackendPort) : net.connect(inspectorBackendPort);
 				this._sockets.push(socket);
 				return socket;
 			}).wait();
-			this.executeOpenDebuggerClient(socketProxy).wait();
+
+			this.openDebuggerClient(<any>this._socketProxy.address()).wait();
 		}).future<void>()();
 	}
 
-	public executeOpenDebuggerClient(fileDescriptor: string): IFuture<void> {
+	private openDebuggerClient(fileDescriptor: string): IFuture<void> {
 		if (this.$options.client) {
-			return this.openDebuggingClient(fileDescriptor);
+			return (() => {
+				let inspectorPath = this.$npmInstallationManager.install(inspectorNpmPackageName).wait();
+				let inspectorSourceLocation = path.join(inspectorPath, inspectorUiDir, "Main.html");
+				let inspectorApplicationPath = path.join(inspectorPath, inspectorAppName);
+
+				// TODO : Sadly $npmInstallationManager.install does not install the package, it only inserts it in the cache through the npm cache add command
+				// Since npm cache add command does not execute scripts our posinstall script that extract the Inspector Application does not execute as well
+				// So until this behavior is changed this ugly workaround should not be deleted
+				if (!this.$fs.exists(inspectorApplicationPath).wait()) {
+					this.$npm.executeNpmCommand("npm run-script postinstall", inspectorPath).wait();
+				}
+
+				let cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${this.$projectData.projectName}' '${fileDescriptor}'`;
+				this.$childProcess.exec(cmd).wait();
+			}).future<void>()();
 		} else {
 			return (() => {
 				this.$logger.info("Suppressing debugging client.");
 			}).future<void>()();
 		}
-	}
-
-	private openDebuggingClient(fileDescriptor: string): IFuture<void> {
-		return (() => {
-			let inspectorPath = this.$npmInstallationManager.install(inspectorNpmPackageName).wait();
-			let inspectorSourceLocation = path.join(inspectorPath, inspectorUiDir, "Main.html");
-			let inspectorApplicationPath = path.join(inspectorPath, inspectorAppName);
-
-			// TODO : Sadly $npmInstallationManager.install does not install the package, it only inserts it in the cache through the npm cache add command
-			// Since npm cache add command does not execute scripts our posinstall script that extract the Inspector Application does not execute as well
-			// So until this behavior is changed this ugly workaround should not be deleted
-			if (!this.$fs.exists(inspectorApplicationPath).wait()) {
-				this.$npm.executeNpmCommand("npm run-script postinstall", inspectorPath).wait();
-			}
-
-			let cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${this.$projectData.projectName}' '${fileDescriptor}'`;
-			this.$childProcess.exec(cmd).wait();
-		}).future<void>()();
-	}
-
-	private getReadyForAttachTimeout(timeoutInMilliseconds?: number): number {
-		let timeout = timeoutInMilliseconds || this.$utils.getMilliSecondsTimeout(TIMEOUT_SECONDS);
-		let readyForAttachTimeout = timeout / 10;
-		let defaultReadyForAttachTimeout = 5000;
-		return readyForAttachTimeout > defaultReadyForAttachTimeout ? readyForAttachTimeout : defaultReadyForAttachTimeout;
 	}
 }
 $injector.register("iOSDebugService", IOSDebugService);

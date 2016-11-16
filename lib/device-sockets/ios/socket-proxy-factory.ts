@@ -10,11 +10,7 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 		private $config: IConfiguration,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
-		private $processService: IProcessService,
 		private $options: IOptions) { }
-
-	private _server: any;
-	private _sockets: net.Socket[] = [];
 
 	public createSocketProxy(factory: () => net.Socket): IFuture<any> {
 		return (() => {
@@ -87,14 +83,11 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 
 		});
 
-		this._server = server;
-		this.$processService.attachToProcessExitSignals(this, this.stopServer);
-
 		this.$logger.info("Opened localhost " + localPort);
 		return server;
 	}
 
-	private createTcpSocketProxy(socketFactory: (handler: (socket: net.Socket) => void) => void): string {
+	private createTcpSocketProxy(socketFactory: (handler: (socket: net.Socket) => void) => void): net.Server {
 		this.$logger.info("\nSetting up proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
 
 		let server = net.createServer({
@@ -103,8 +96,6 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 
 		server.on("connection", (frontendSocket: net.Socket) => {
 			this.$logger.info("Frontend client connected.");
-
-			this._sockets.push(frontendSocket);
 
 			frontendSocket.on("end", () => {
 				this.$logger.info('Frontend socket closed!');
@@ -123,6 +114,17 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 					}
 				});
 
+				frontendSocket.on("close", () => {
+					if (!(<any>backendSocket).destroyed) {
+						backendSocket.destroy();
+					}
+				});
+				backendSocket.on("close", () => {
+					if (!(<any>frontendSocket).destroyed) {
+						frontendSocket.destroy();
+					}
+				});
+
 				backendSocket.pipe(frontendSocket);
 				frontendSocket.pipe(backendSocket);
 				frontendSocket.resume();
@@ -135,21 +137,7 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 			this.$logger.info("socket-file-location: " + socketFileLocation);
 		}
 
-		this._server = server;
-		this.$processService.attachToProcessExitSignals(this, this.stopServer);
-
-		return socketFileLocation;
-	}
-
-	public stopServer() {
-		if (this._server) {
-			this._server.close();
-			for (let socket of this._sockets) {
-				socket.destroy();
-			}
-			this._sockets = [];
-			this._server = null;
-		}
+		return server;
 	}
 }
 $injector.register("socketProxyFactory", SocketProxyFactory);
