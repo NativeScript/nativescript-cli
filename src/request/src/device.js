@@ -1,6 +1,6 @@
 import pkg from '../../../package.json';
 
-function deviceInformation() {
+export function deviceInformation() {
   const platform = process.title;
   const version = process.version;
   const manufacturer = process.platform;
@@ -15,10 +15,4 @@ function deviceInformation() {
 
     return 'unknown';
   }).join(' ');
-}
-
-export class Device {
-  static toString() {
-    return deviceInformation();
-  }
 }

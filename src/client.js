@@ -21,8 +21,6 @@ export class Client {
    * @param {string}    [options.masterSecret]                             App Master Secret
    * @param {string}    [options.encryptionKey]                            App Encryption Key
    * @param {string}    [options.appVersion]                               App Version
-   * @param {Device}    [options.deviceClass]                              Device Class
-   * @param {Device}    [options.popupClass]                               Popup Class
    * @return {Client}                                                      An instance of the Client class.
    *
    * @example
@@ -110,16 +108,6 @@ export class Client {
      * @type {?string}
      */
     this.appVersion = options.appVersion;
-
-    /**
-     * @type {Device}
-     */
-    this.deviceClass = options.deviceClass || Device;
-
-    /**
-     * @type {Popup}
-     */
-    this.popupClass = options.popupClass;
   }
 
   /**

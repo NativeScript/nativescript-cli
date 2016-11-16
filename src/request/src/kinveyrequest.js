@@ -9,13 +9,13 @@ import { isDefined } from '../../utils';
 import { InvalidCredentialsError, NoActiveUserError, KinveyError } from '../../errors';
 import { SocialIdentity } from '../../identity';
 import Promise from 'es6-promise';
+import { deviceInformation } from './device';
 import url from 'url';
 import qs from 'qs';
 import appendQuery from 'append-query';
 import assign from 'lodash/assign';
 import defaults from 'lodash/defaults';
 import isEmpty from 'lodash/isEmpty';
-import isFunction from 'lodash/isFunction';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const defaultApiVersion = process.env.KINVEY_DEFAULT_API_VERSION || 4;
@@ -267,11 +267,7 @@ export default class KinveyRequest extends NetworkRequest {
     }
 
     // Add the X-Kinvey-Device-Information header
-    if (typeof this.client.deviceClass !== 'undefined' && isFunction(this.client.deviceClass, 'toString')) {
-      headers.set('X-Kinvey-Device-Information', this.client.deviceClass.toString());
-    } else {
-      headers.remove('X-Kinvey-Device-Information');
-    }
+    headers.set('X-Kinvey-Device-Information', deviceInformation());
 
     // Return the headers
     return headers;
