@@ -47,6 +47,8 @@ def execute(script, warning_message, run_as_root = false)
   unless result
     STDERR.puts "WARNING: " + warning_message
   end
+
+  return result
 end
 
 def install(program_name, message, script, run_as_root = false, show_all_option = true)
@@ -73,16 +75,25 @@ def install(program_name, message, script, run_as_root = false, show_all_option 
   execute(script, program_name + " not installed", run_as_root)
 end
 
+def install_environment_variable(name, value)
+  ENV[name] = value
+
+  execute("echo \"export #{name}=#{value}\" >> ~/.profile", "Unable to set #{name}")
+
+  if File.exist?(File.expand_path("~/.zshrc"))
+    execute("echo \"export #{name}=#{value}\" >> ~/.zprofile", "Unable to set #{name}")
+  end
+end
+
 # Actually installing all other dependencies
 install("Homebrew",	"Installing Homebrew...", 'ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"</dev/null', false, false)
 
-if !(`brew --version`.include? "git revision")
-  puts "Homebrew is not installed or not configured properly. Download it from http://brew.sh/, install, set it up and run this script again."
+if !(execute("brew --version", "Homebrew is not installed or not configured properly. Download it from http://brew.sh/, install, set it up and run this script again."))
   exit
 end
 
 install("Java SE Development Kit", "Installing the Java SE Development Kit... This might take some time, please, be patient. (You will be prompted for your password)", 'brew cask install java', false, false)
-install("Android SDK", "Installing Android SDK", 'brew install android-sdk')
+install("Android SDK", "Installing Android SDK", 'brew install android-sdk', false)
 
 unless ENV["ANDROID_HOME"]
   require 'pathname'
@@ -98,18 +109,20 @@ unless ENV["ANDROID_HOME"]
     end
   end
 
-  ENV["ANDROID_HOME"] = android_home
-  execute('echo "export ANDROID_HOME=%s" >> ~/.profile' % ENV["ANDROID_HOME"], "Unable to set ANDROID_HOME")
+  install_environment_variable("ANDROID_HOME", android_home)
 end
 
 unless ENV["JAVA_HOME"]
-  execute('echo "export JAVA_HOME=$(/Library/Java/Home)" >> ~/.profile', "Unable to set JAVA_HOME")
+  install_environment_variable("JAVA_HOME", "/Library/Java/Home")
 end
 
 # the -p flag is set in order to ensure zero status code even if the directory exists
 execute("mkdir -p ~/.cocoapods", "There was a problem in creating ~/.cocoapods directory")
-install("xcodeproj", "Installing xcodeproj... This might take some time, please, be patient.", 'gem install xcodeproj -V', true)
+# CocoaPods already has a dependency to xcodeproj and also has a dependency to a lower version of activesupport
+# which works with Ruby 2.0 that comes as the macOS default, so these two installations should be in this order.
+# For more information see: https://github.com/CocoaPods/Xcodeproj/pull/393#issuecomment-231055159
 install("CocoaPods", "Installing CocoaPods... This might take some time, please, be patient.", 'gem install cocoapods -V', true)
+install("xcodeproj", "Installing xcodeproj... This might take some time, please, be patient.", 'gem install xcodeproj -V', true)
 
 puts "Configuring your system for Android development... This might take some time, please, be patient."
 # Note that multiple license acceptances may be required, hence the multiple commands
@@ -129,17 +142,17 @@ puts "Do you want to install Android emulator? (y/n)"
 if gets.chomp.downcase == "y"
   puts "Do you want to install HAXM (Hardware accelerated Android emulator)? (y/n)"
   if gets.chomp.downcase == "y"
-    execute("echo y | $ANDROID_HOME/tools/android update sdk --filter extra-intel-Hardware_Accelerated_Execution_Manager --all --no-ui", error_msg)
+    execute("echo y | #{android_executable} update sdk --filter extra-intel-Hardware_Accelerated_Execution_Manager --all --no-ui", error_msg)
 
     haxm_silent_installer = File.join(ENV["ANDROID_HOME"], "extras", "intel", "Hardware_Accelerated_Execution_Manager", "silent_install.sh")
     execute("#{haxm_silent_installer}", "There seem to be some problems with the Android configuration")
 
-    execute("echo y | $ANDROID_HOME/tools/android update sdk --filter sys-img-x86-android-23 --all --no-ui", error_msg)
-    execute("echo no | $ANDROID_HOME/tools/android create avd -n Emulator-Api23-Default -t android-23 --abi default/x86 -c 12M -f", error_msg)
+    execute("echo y | #{android_executable} update sdk --filter sys-img-x86-android-23 --all --no-ui", error_msg)
+    execute("echo no | #{android_executable} create avd -n Emulator-Api23-Default -t android-23 --abi default/x86 -c 12M -f", error_msg)
   else
-    execute("echo y | $ANDROID_HOME/tools/android update sdk --filter sys-img-armeabi-v7a-android-23 --all --no-ui", error_msg)
-    execute("echo no | $ANDROID_HOME/tools/android create avd -n Emulator-Api23-Default -t android-23 --abi default/armeabi-v7a -c 12M -f", error_msg)
+    execute("echo y | #{android_executable} update sdk --filter sys-img-armeabi-v7a-android-23 --all --no-ui", error_msg)
+    execute("echo no | #{android_executable} create avd -n Emulator-Api23-Default -t android-23 --abi default/armeabi-v7a -c 12M -f", error_msg)
   end
 end
 
-puts "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .profile. Restart the terminal to use them."
+puts "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .profile/.zprofile. Restart the terminal to use them."
