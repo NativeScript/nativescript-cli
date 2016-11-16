@@ -1,11 +1,13 @@
-export * from './src/device';
-export * from './src/object';
-export * from './src/observable';
-export * from './src/string';
-
+import { isDefined, nested } from './src/object';
+import KinveyObservable from './src/observable';
+import { randomString } from './src/string';
 import Log from './src/log';
 
 // Export
 export {
-  Log
+  KinveyObservable,
+  Log,
+  isDefined,
+  nested,
+  randomString
 };

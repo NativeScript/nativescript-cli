@@ -4,7 +4,7 @@ import Promise from 'es6-promise';
 /**
  * @private
  */
-export class KinveyObservable extends Observable {
+export default class KinveyObservable extends Observable {
   toPromise() {
     return new Promise((resolve, reject) => {
       let value;
