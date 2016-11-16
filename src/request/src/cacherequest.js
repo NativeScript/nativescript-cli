@@ -103,7 +103,7 @@ export default class CacheRequest extends Request {
     return obj;
   }
 
-  static initActiveUser(client = Client.sharedInstance()) {
+  static loadActiveUser(client = Client.sharedInstance()) {
     const request = new CacheRequest({
       method: RequestMethod.GET,
       url: url.format({
@@ -120,7 +120,7 @@ export default class CacheRequest extends Request {
         }
 
         // Try local storage (legacy)
-        const legacyActiveUser = CacheRequest.initActiveUserLegacy(client);
+        const legacyActiveUser = CacheRequest.loadActiveUserLegacy(client);
         if (isDefined(legacyActiveUser)) {
           return CacheRequest.setActiveUser(client, legacyActiveUser);
         }
@@ -134,16 +134,22 @@ export default class CacheRequest extends Request {
       .catch(() => null);
   }
 
-  static initActiveUserLegacy(client = Client.sharedInstance()) {
+  static loadActiveUserLegacy(client = Client.sharedInstance()) {
+    const activeUser = CacheRequest.getActiveUserLegacy(client);
+    activeUsers[client.appKey] = activeUser;
+    return activeUser;
+  }
+
+  static getActiveUser(client = Client.sharedInstance()) {
+    return activeUsers[client.appKey];
+  }
+
+  static getActiveUserLegacy(client = Client.sharedInstance()) {
     try {
       return localStorage.get(`${client.appKey}kinvey_user`);
     } catch (error) {
       return null;
     }
-  }
-
-  static getActiveUser(client = Client.sharedInstance()) {
-    return activeUsers[client.appKey];
   }
 
   static setActiveUser(client = Client.sharedInstance(), user) {
@@ -178,6 +184,9 @@ export default class CacheRequest extends Request {
 
         // Save to memory
         activeUsers[client.appKey] = user;
+
+        // Save to local storage (legacy)
+        CacheRequest.setActiveUserLegacy(client, user);
 
         // Save to cache
         const request = new CacheRequest({

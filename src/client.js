@@ -285,6 +285,8 @@ export class Client {
    * Initializes the Client class by creating a new instance of the
    * Client class and storing it as a shared instance.
    *
+   * @deprecated Use `Client.initialize` instead.
+   *
    * @param {Object}    options                                            Options
    * @param {string}    [options.apiHostname='https://baas.kinvey.com']    Host name used for Kinvey API requests
    * @param {string}    [options.micHostname='https://auth.kinvey.com']    Host name used for Kinvey MIC requests
@@ -305,7 +307,29 @@ export class Client {
   static init(options) {
     const client = new Client(options);
     sharedInstance = client;
-    return CacheRequest.initActiveUser(client)
+    CacheRequest.loadActiveUserLegacy(client);
+    return client;
+  }
+
+  /**
+   * Initializes the Client class by creating a new instance of the
+   * Client class and storing it as a shared instance. The returned promise
+   * resolves with the shared instance of the Client class.
+   *
+   * @param {Object}    options                                            Options
+   * @param {string}    [options.apiHostname='https://baas.kinvey.com']    Host name used for Kinvey API requests
+   * @param {string}    [options.micHostname='https://auth.kinvey.com']    Host name used for Kinvey MIC requests
+   * @param {string}    [options.appKey]                                   App Key
+   * @param {string}    [options.appSecret]                                App Secret
+   * @param {string}    [options.masterSecret]                             App Master Secret
+   * @param {string}    [options.encryptionKey]                            App Encryption Key
+   * @param {string}    [options.appVersion]                               App Version
+   * @return {Promise}                                                     A promise.
+   */
+  static initialize(options) {
+    const client = new Client(options);
+    sharedInstance = client;
+    return CacheRequest.loadActiveUser(client)
       .then(() => client);
   }
 
