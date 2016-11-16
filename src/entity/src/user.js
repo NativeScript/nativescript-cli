@@ -3,7 +3,7 @@ import Acl from './acl';
 import Metadata from './metadata';
 import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from '../../request';
 import { KinveyError, NotFoundError, ActiveUserError } from '../../errors';
-import DataStore, { UserStore } from '../../datastore';
+import DataStore, { UserStore as store } from '../../datastore';
 import { Facebook, Google, LinkedIn, MobileIdentityConnect } from '../../identity';
 import { Log } from '../../utils';
 import Promise from 'es6-promise';
@@ -686,8 +686,7 @@ export default class User {
    */
   update(data, options) {
     data = assign(this.data, data);
-    const userStore = new UserStore();
-    return userStore.update(data, options)
+    return store.update(data, options)
       .then(() => {
         this.data = data;
         return this.isActive();
@@ -897,7 +896,6 @@ export default class User {
    * @return {boolean} True if the username already exists otherwise false.
    */
   static exists(username, options) {
-    const store = new UserStore(options);
     return store.exists(username, options);
   }
 
@@ -909,7 +907,6 @@ export default class User {
    * @return {Promise<Object>} The response.
    */
   static restore(id, options) {
-    const store = new UserStore(options);
     return store.restore(id, options);
   }
 }

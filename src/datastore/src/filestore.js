@@ -219,7 +219,6 @@ class FileStore extends NetworkStore {
     });
     request.headers.set('X-Kinvey-Content-Type', metadata.mimeType);
 
-
     // If the file metadata contains an _id then
     // update the file
     if (metadata._id) {

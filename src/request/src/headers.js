@@ -1,6 +1,7 @@
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
+import { isDefined } from '../../utils';
 
 export default class Headers {
   constructor(headers = {}) {
@@ -22,7 +23,7 @@ export default class Headers {
   }
 
   set(name, value) {
-    if (name === undefined || name === null || value === undefined || value === null) {
+    if (!isDefined(name) || !isDefined(value)) {
       throw new Error('A name and value must be provided to set a header.');
     }
 

@@ -343,7 +343,7 @@ export default class KinveyRequest extends NetworkRequest {
     return promise
       .then((authInfo) => {
         // Add the auth info to the Authorization header
-        if (authInfo !== undefined || authInfo !== null) {
+        if (isDefined(authInfo)) {
           let credentials = authInfo.credentials;
 
           if (authInfo.username) {
@@ -360,7 +360,7 @@ export default class KinveyRequest extends NetworkRequest {
   execute(rawResponse = false, retry = true) {
     return this.getAuthorizationHeader()
       .then((authorizationHeader) => {
-        if (authorizationHeader !== undefined || authorizationHeader !== null) {
+        if (isDefined(authorizationHeader)) {
           this.headers.set('Authorization', authorizationHeader);
         } else {
           this.headers.remove('Authorization');
