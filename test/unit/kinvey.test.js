@@ -85,10 +85,13 @@ describe('Kinvey', function () {
       expect(Kinvey.DataStore).toNotEqual(undefined);
       expect(Kinvey.DataStoreType).toNotEqual(undefined);
       expect(Kinvey.Files).toNotEqual(undefined);
+      expect(Kinvey.Log).toNotEqual(undefined);
       expect(Kinvey.Metadata).toNotEqual(undefined);
       expect(Kinvey.Query).toNotEqual(undefined);
       expect(Kinvey.SocialIdentity).toNotEqual(undefined);
       expect(Kinvey.User).toNotEqual(undefined);
+      expect(Kinvey.Users).toNotEqual(undefined);
+      expect(Kinvey.UserStore).toNotEqual(undefined);
     });
   });
 

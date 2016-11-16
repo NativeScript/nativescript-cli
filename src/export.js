@@ -15,6 +15,7 @@ export {
   CustomEndpoint,
   DataStore,
   DataStoreType,
+  FileStore as File,
   FileStore as Files,
   Kinvey,
   Log,

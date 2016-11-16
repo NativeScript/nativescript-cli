@@ -1,4 +1,4 @@
-import { FileStore } from '../../../src/datastore';
+import { FileStore as store } from '../../../src/datastore';
 import { KinveyError, NotFoundError, ServerError } from '../../../src/errors';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import fs from 'fs';
@@ -9,7 +9,6 @@ import expect from 'expect';
 describe('FileStore', function() {
   describe('upload()', function() {
     it('should upload a file', async function() {
-      const store = new FileStore();
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -131,7 +130,6 @@ describe('FileStore', function() {
     });
 
     it('should resume a file upload when a 308 status code is received', async function() {
-      const store = new FileStore();
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -269,7 +267,6 @@ describe('FileStore', function() {
     });
 
     it('should resume a file upload when a 5xx status code is received', async function() {
-      const store = new FileStore();
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -422,7 +419,6 @@ describe('FileStore', function() {
     });
 
     it('should fail to upload a file when a 5xx status code is received mutiple times', async function() {
-      const store = new FileStore();
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -524,7 +520,6 @@ describe('FileStore', function() {
     });
 
     it('should fail to upload a file when a 4xx status code is received', async function() {
-      const store = new FileStore();
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
