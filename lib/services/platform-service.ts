@@ -79,13 +79,13 @@ export class PlatformService implements IPlatformService {
 
 			let packageToInstall = "";
 			let npmOptions: IStringDictionary = {
-				pathToSave: path.join(this.$projectData.platformsDir, platform)
+				pathToSave: path.join(this.$projectData.platformsDir, platform),
+				dependencyType: "save"
 			};
 
 			if (!this.$options.frameworkPath) {
 				packageToInstall = platformData.frameworkPackageName;
 				npmOptions["version"] = version;
-				npmOptions["dependencyType"] = "save";
 			}
 
 			let spinner = new clui.Spinner("Installing " + packageToInstall);
