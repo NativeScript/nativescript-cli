@@ -1,5 +1,4 @@
 import { KinveyError } from './errors';
-import { Device } from './utils';
 import url from 'url';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';

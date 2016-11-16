@@ -114,6 +114,15 @@ export class MissingRequestParameterError extends KinveyError {
 /**
  * @private
  */
+export class MobileIdentityConnectError extends KinveyError {
+  constructor(message = 'An error occurred with Mobile Identity Connect.', debug) {
+    super(message, debug);
+  }
+}
+
+/**
+ * @private
+ */
 export class NoNetworkConnectionError extends KinveyError {
   constructor(message = 'You do not have a network connect.', debug) {
     super(message, debug);
@@ -152,6 +161,15 @@ export class NoResponseError extends KinveyError {
  */
 export class ParameterValueOutOfRangeError extends KinveyError {
   constructor(message = 'The value specified for one of the request parameters is out of range.', debug) {
+    super(message, debug);
+  }
+}
+
+/**
+ * @private
+ */
+export class PopupError extends KinveyError {
+  constructor(message = 'An error occurred with the popup.', debug) {
     super(message, debug);
   }
 }

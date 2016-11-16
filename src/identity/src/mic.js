@@ -1,7 +1,8 @@
+import Popup from './popup';
 import Identity from './identity';
 import { SocialIdentity } from './enums';
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
-import { KinveyError } from '../../errors';
+import { KinveyError, MobileIdentityConnectError, PopupError } from '../../errors';
 import Promise from 'es6-promise';
 import path from 'path';
 import url from 'url';
@@ -41,7 +42,12 @@ export class MobileIdentityConnect extends Identity {
       .then(() => {
         if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
           // Step 1: Request a code
-          return this.requestCodeWithPopup(clientId, redirectUri, options);
+          return this.requestCodeWithPopup(clientId, redirectUri, options)
+            .catch((error) => {
+              if (error instanceof PopupError) {
+                throw new MobileIdentityConnectError('AuthorizationGrant.AuthorizationCodeLoginPage is not supported on this platform.');
+              }
+            });
         } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
           // Step 1a: Request a temp login url
           return this.requestTempLoginUrl(clientId, redirectUri, options)
@@ -99,10 +105,9 @@ export class MobileIdentityConnect extends Identity {
   }
 
   requestCodeWithPopup(clientId, redirectUri, options = {}) {
-    const Popup = this.client.popupClass;
-
     const promise = Promise.resolve().then(() => {
       let pathname = '/';
+      const popup = new Popup();
 
       if (options.version) {
         let version = options.version;
@@ -114,12 +119,6 @@ export class MobileIdentityConnect extends Identity {
         pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
       }
 
-      if (!Popup) {
-        throw new KinveyError('Popup is undefined.'
-          + ` Unable to login using authorization grant ${AuthorizationGrant.AuthorizationCodeLoginPage}.`);
-      }
-
-      const popup = new Popup();
       return popup.open(url.format({
         protocol: this.client.micProtocol,
         host: this.client.micHost,

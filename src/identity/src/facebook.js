@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+import Popup from './popup';
 import Identity from './identity';
 import { SocialIdentity } from './enums';
 import { KinveyError } from '../../errors';
@@ -21,7 +22,7 @@ export class Facebook extends Identity {
   }
 
   isSupported() {
-    return typeof this.client.popupClass !== 'undefined';
+    return Popup.isSupported();
   }
 
   login(clientId, options = {}) {
@@ -50,13 +51,7 @@ export class Facebook extends Identity {
     const promise = new Promise((resolve, reject) => {
       const redirectUri = options.redirectUri || global.location.href;
       const originalState = randomString();
-      const Popup = this.client.popupClass;
       let redirected = false;
-
-      if (!Popup) {
-        return reject(new KinveyError('Popup is undefined. Unable to connect to Facebook.'));
-      }
-
       const popup = new Popup();
 
       // Handle the response from a login request

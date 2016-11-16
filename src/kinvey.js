@@ -20,11 +20,13 @@ import {
   MissingQueryError,
   MissingRequestHeaderError,
   MissingRequestParameterError,
+  MobileIdentityConnectError,
   NoNetworkConnectionError,
   NoActiveUserError,
   NotFoundError,
   NoResponseError,
   ParameterValueOutOfRangeError,
+  PopupError,
   QueryError,
   ServerError,
   SyncError
@@ -177,11 +179,13 @@ Kinvey.KinveyError = KinveyError;
 Kinvey.MissingQueryError = MissingQueryError;
 Kinvey.MissingRequestHeaderError = MissingRequestHeaderError;
 Kinvey.MissingRequestParameterError = MissingRequestParameterError;
+Kinvey.MobileIdentityConnectError = MobileIdentityConnectError;
 Kinvey.NoNetworkConnectionError = NoNetworkConnectionError;
 Kinvey.NoActiveUserError = NoActiveUserError;
 Kinvey.NotFoundError = NotFoundError;
 Kinvey.NoResponseError = NoResponseError;
 Kinvey.ParameterValueOutOfRangeError = ParameterValueOutOfRangeError;
+Kinvey.PopupError = PopupError;
 Kinvey.QueryError = QueryError;
 Kinvey.ServerError = ServerError;
 Kinvey.SyncError = SyncError;
