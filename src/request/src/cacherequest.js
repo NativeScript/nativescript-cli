@@ -8,6 +8,7 @@ import { KinveyError } from '../../errors';
 import Query from '../../query';
 import Aggregation from '../../aggregation';
 import { isDefined } from '../../utils';
+import { CacheRack } from './rack';
 // const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 // const activeUserCollectionName = process.env.KINVEY_USER_ACTIVE_COLLECTION_NAME || 'kinvey_active_user';
 
@@ -19,7 +20,7 @@ export default class CacheRequest extends Request {
     super(options);
     this.aggregation = options.aggregation;
     this.query = options.query;
-    this.rack = this.client.cacheRack;
+    this.rack = new CacheRack();
   }
 
   get query() {

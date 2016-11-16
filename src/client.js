@@ -1,4 +1,3 @@
-import Rack, { CacheRack, NetworkRack } from './rack';
 import { KinveyError } from './errors';
 import { Device } from './utils';
 import url from 'url';
@@ -22,8 +21,6 @@ export class Client {
    * @param {string}    [options.masterSecret]                             App Master Secret
    * @param {string}    [options.encryptionKey]                            App Encryption Key
    * @param {string}    [options.appVersion]                               App Version
-   * @param {Rack}      [options.cacheRack]                                Cache Rack
-   * @param {Rack}      [options.networkRack]                              Network Rack
    * @param {Device}    [options.deviceClass]                              Device Class
    * @param {Device}    [options.popupClass]                               Popup Class
    * @return {Client}                                                      An instance of the Client class.
@@ -115,16 +112,6 @@ export class Client {
     this.appVersion = options.appVersion;
 
     /**
-     * @type {Rack}
-     */
-    this.cacheRack = options.cacheRack || new CacheRack();
-
-    /**
-     * @type {Rack}
-     */
-    this.networkRack = options.networkRack || new NetworkRack();
-
-    /**
      * @type {Device}
      */
     this.deviceClass = options.deviceClass || Device;
@@ -207,46 +194,6 @@ export class Client {
     }
 
     this._appVersion = appVersion;
-  }
-
-  /**
-   * Get the cache rack used by the client.
-   */
-  get cacheRack() {
-    return this._cacheRack;
-  }
-
-  /**
-   * Set the cache rack used by the client.
-   *
-   * @param  {Rack} rack  Cache rack.
-   */
-  set cacheRack(rack) {
-    if (rack && !(rack instanceof Rack)) {
-      throw new KinveyError('rack must be an instance of the Rack class.');
-    }
-
-    this._cacheRack = rack;
-  }
-
-  /**
-   * Get the network rack used by the client.
-   */
-  get networkRack() {
-    return this._networkRack;
-  }
-
-  /**
-   * Set the network rack used by the client.
-   *
-   * @param  {Rack} rack  Network rack.
-   */
-  set networkRack(rack) {
-    if (rack && !(rack instanceof Rack)) {
-      throw new KinveyError('rack must be an instance of the Rack class.');
-    }
-
-    this._networkRack = rack;
   }
 
   /**
