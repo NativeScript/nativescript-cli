@@ -231,83 +231,83 @@ describe("Project Service Tests", () => {
 			projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", defaultSpecificVersionTemplatePath).wait();
 		});
 
-		it("creates valid project from typescript template", () => {
-			let projectIntegrationTest = new ProjectIntegrationTest();
-			let tempFolder = temp.mkdirSync("projectTypescript");
-			let projectName = "myapp";
-			let options = projectIntegrationTest.testInjector.resolve("options");
+		// it("creates valid project from typescript template", () => {
+		// 	let projectIntegrationTest = new ProjectIntegrationTest();
+		// 	let tempFolder = temp.mkdirSync("projectTypescript");
+		// 	let projectName = "myapp";
+		// 	let options = projectIntegrationTest.testInjector.resolve("options");
 
-			options.path = tempFolder;
-			projectIntegrationTest.createProject(projectName, "typescript").wait();
+		// 	options.path = tempFolder;
+		// 	projectIntegrationTest.createProject(projectName, "typescript").wait();
 
-			projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", typescriptTemplatePath).wait();
-		});
+		// 	projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", typescriptTemplatePath).wait();
+		// });
 
-		it("creates valid project from tsc template", () => {
-			let projectIntegrationTest = new ProjectIntegrationTest();
-			let tempFolder = temp.mkdirSync("projectTsc");
-			let projectName = "myapp";
-			let options = projectIntegrationTest.testInjector.resolve("options");
+		// it("creates valid project from tsc template", () => {
+		// 	let projectIntegrationTest = new ProjectIntegrationTest();
+		// 	let tempFolder = temp.mkdirSync("projectTsc");
+		// 	let projectName = "myapp";
+		// 	let options = projectIntegrationTest.testInjector.resolve("options");
 
-			options.path = tempFolder;
-			projectIntegrationTest.createProject(projectName, "tsc").wait();
+		// 	options.path = tempFolder;
+		// 	projectIntegrationTest.createProject(projectName, "tsc").wait();
 
-			projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", typescriptTemplatePath).wait();
-		});
+		// 	projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", typescriptTemplatePath).wait();
+		// });
 
-		it("creates valid project from angular template", () => {
-			let projectIntegrationTest = new ProjectIntegrationTest();
-			let tempFolder = temp.mkdirSync("projectAngular");
-			let projectName = "myapp";
-			let options = projectIntegrationTest.testInjector.resolve("options");
+		// it("creates valid project from angular template", () => {
+		// 	let projectIntegrationTest = new ProjectIntegrationTest();
+		// 	let tempFolder = temp.mkdirSync("projectAngular");
+		// 	let projectName = "myapp";
+		// 	let options = projectIntegrationTest.testInjector.resolve("options");
 
-			options.path = tempFolder;
-			projectIntegrationTest.createProject(projectName, "angular").wait();
+		// 	options.path = tempFolder;
+		// 	projectIntegrationTest.createProject(projectName, "angular").wait();
 
-			projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", angularTemplatePath).wait();
-		});
+		// 	projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", angularTemplatePath).wait();
+		// });
 
-		it("creates valid project from ng template", () => {
-			let projectIntegrationTest = new ProjectIntegrationTest();
-			let tempFolder = temp.mkdirSync("projectNg");
-			let projectName = "myapp";
-			let options = projectIntegrationTest.testInjector.resolve("options");
+		// it("creates valid project from ng template", () => {
+		// 	let projectIntegrationTest = new ProjectIntegrationTest();
+		// 	let tempFolder = temp.mkdirSync("projectNg");
+		// 	let projectName = "myapp";
+		// 	let options = projectIntegrationTest.testInjector.resolve("options");
 
-			options.path = tempFolder;
-			projectIntegrationTest.createProject(projectName, "ng").wait();
+		// 	options.path = tempFolder;
+		// 	projectIntegrationTest.createProject(projectName, "ng").wait();
 
-			projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", angularTemplatePath).wait();
-		});
+		// 	projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", angularTemplatePath).wait();
+		// });
 
-		it("creates valid project from local directory template", () => {
-			let projectIntegrationTest = new ProjectIntegrationTest();
-			let tempFolder = temp.mkdirSync("projectLocalDir");
-			let projectName = "myapp";
-			let options = projectIntegrationTest.testInjector.resolve("options");
+		// it("creates valid project from local directory template", () => {
+		// 	let projectIntegrationTest = new ProjectIntegrationTest();
+		// 	let tempFolder = temp.mkdirSync("projectLocalDir");
+		// 	let projectName = "myapp";
+		// 	let options = projectIntegrationTest.testInjector.resolve("options");
 
-			options.path = tempFolder;
-			let tempDir = temp.mkdirSync("template");
-			let fs: IFileSystem = projectIntegrationTest.testInjector.resolve("fs");
-			fs.writeJson(path.join(tempDir, "package.json"), {
-				name: "myCustomTemplate",
-				version: "1.0.0",
-				dependencies: {
-					"lodash": "3.10.1"
-				},
-				devDependencies: {
-					"minimist": "1.2.0"
-				},
-				"description": "dummy",
-				"license": "MIT",
-				"readme": "dummy",
-				"repository": "dummy"
-			}).wait();
-			fs.createDirectory(path.join(tempDir, "app", "App_Resources", "Android")).wait(); //copy App_Resources from somewhere
-			fs.createDirectory(path.join(tempDir, "app", "App_Resources", "iOS")).wait();
+		// 	options.path = tempFolder;
+		// 	let tempDir = temp.mkdirSync("template");
+		// 	let fs: IFileSystem = projectIntegrationTest.testInjector.resolve("fs");
+		// 	fs.writeJson(path.join(tempDir, "package.json"), {
+		// 		name: "myCustomTemplate",
+		// 		version: "1.0.0",
+		// 		dependencies: {
+		// 			"lodash": "3.10.1"
+		// 		},
+		// 		devDependencies: {
+		// 			"minimist": "1.2.0"
+		// 		},
+		// 		"description": "dummy",
+		// 		"license": "MIT",
+		// 		"readme": "dummy",
+		// 		"repository": "dummy"
+		// 	}).wait();
+		// 	fs.createDirectory(path.join(tempDir, "app", "App_Resources", "Android")).wait(); //copy App_Resources from somewhere
+		// 	fs.createDirectory(path.join(tempDir, "app", "App_Resources", "iOS")).wait();
 
-			projectIntegrationTest.createProject(projectName, tempDir).wait();
-			projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", tempDir).wait();
-		});
+		// 	projectIntegrationTest.createProject(projectName, tempDir).wait();
+		// 	projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", tempDir).wait();
+		// });
 
 		it("creates valid project from tarball", () => {
 			let projectIntegrationTest = new ProjectIntegrationTest();
