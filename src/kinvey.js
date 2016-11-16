@@ -3,11 +3,32 @@ import { CustomEndpoint } from './endpoint';
 import Query from './query';
 import { Log } from './utils';
 import Aggregation from './aggregation';
-import DataStore, { DataStoreType, FileStore, UserStore } from './datastore';
+import DataStore, { DataStoreType, FilesStore, UserStore } from './datastore';
 import { Acl, Metadata, User } from './entity';
 import { AuthorizationGrant, SocialIdentity } from './identity';
 import { AuthType, RequestMethod, KinveyRequest } from './request';
-import { KinveyError } from './errors';
+import {
+  ActiveUserError,
+  FeatureUnavailableError,
+  IncompleteRequestBodyError,
+  InsufficientCredentialsError,
+  InvalidCredentialsError,
+  InvalidIdentifierError,
+  InvalidQuerySyntaxError,
+  JSONParseError,
+  KinveyError,
+  MissingQueryError,
+  MissingRequestHeaderError,
+  MissingRequestParameterError,
+  NoNetworkConnectionError,
+  NoActiveUserError,
+  NotFoundError,
+  NoResponseError,
+  ParameterValueOutOfRangeError,
+  QueryError,
+  ServerError,
+  SyncError
+} from './errors';
 import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
@@ -133,13 +154,36 @@ Kinvey.AuthorizationGrant = AuthorizationGrant;
 Kinvey.CustomEndpoint = CustomEndpoint;
 Kinvey.DataStore = DataStore;
 Kinvey.DataStoreType = DataStoreType;
-Kinvey.Files = new FileStore();
+Kinvey.Files = FilesStore;
 Kinvey.Log = Log;
 Kinvey.Metadata = Metadata;
 Kinvey.Query = Query;
 Kinvey.SocialIdentity = SocialIdentity;
 Kinvey.User = User;
+Kinvey.Users = UserStore;
 Kinvey.UserStore = UserStore;
+
+// Add errors
+Kinvey.ActiveUserError = ActiveUserError;
+Kinvey.FeatureUnavailableError = FeatureUnavailableError;
+Kinvey.IncompleteRequestBodyError = IncompleteRequestBodyError;
+Kinvey.InsufficientCredentialsError = InsufficientCredentialsError;
+Kinvey.InvalidCredentialsError = InvalidCredentialsError;
+Kinvey.InvalidIdentifierError = InvalidIdentifierError;
+Kinvey.InvalidQuerySyntaxError = InvalidQuerySyntaxError;
+Kinvey.JSONParseError = JSONParseError;
+Kinvey.KinveyError = KinveyError;
+Kinvey.MissingQueryError = MissingQueryError;
+Kinvey.MissingRequestHeaderError = MissingRequestHeaderError;
+Kinvey.MissingRequestParameterError = MissingRequestParameterError;
+Kinvey.NoNetworkConnectionError = NoNetworkConnectionError;
+Kinvey.NoActiveUserError = NoActiveUserError;
+Kinvey.NotFoundError = NotFoundError;
+Kinvey.NoResponseError = NoResponseError;
+Kinvey.ParameterValueOutOfRangeError = ParameterValueOutOfRangeError;
+Kinvey.QueryError = QueryError;
+Kinvey.ServerError = ServerError;
+Kinvey.SyncError = SyncError;
 
 // Export
 export default Kinvey;

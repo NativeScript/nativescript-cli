@@ -31,7 +31,7 @@ function getStartIndex(rangeHeader, max) {
 /**
  * The FileStore class is used to find, save, update, remove, count and group files.
  */
-export default class FileStore extends NetworkStore {
+class FileStore extends NetworkStore {
   /**
    * @private
    * The pathname for the store.
@@ -374,3 +374,6 @@ export default class FileStore extends NetworkStore {
     throw new KinveyError('Please use removeById() to remove files one by one.');
   }
 }
+
+// Export
+export default new FileStore();

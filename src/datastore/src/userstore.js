@@ -10,7 +10,7 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 /**
  * The UserStore class is used to find, save, update, remove, count and group users.
  */
-export default class UserStore extends NetworkStore {
+class UserStore extends NetworkStore {
   constructor(options) {
     super(null, options);
   }
@@ -111,3 +111,6 @@ export default class UserStore extends NetworkStore {
       .then(response => response.data);
   }
 }
+
+// Export
+export default new UserStore();
