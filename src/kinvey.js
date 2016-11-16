@@ -95,9 +95,6 @@ class Kinvey {
     // Initialize the client
     const client = Client.init(options);
 
-    // Add modules that require initialization
-    this.Files = new FileStore();
-
     // Return the client
     return client;
   }
@@ -136,6 +133,7 @@ Kinvey.AuthorizationGrant = AuthorizationGrant;
 Kinvey.CustomEndpoint = CustomEndpoint;
 Kinvey.DataStore = DataStore;
 Kinvey.DataStoreType = DataStoreType;
+Kinvey.Files = new FileStore();
 Kinvey.Log = Log;
 Kinvey.Metadata = Metadata;
 Kinvey.Query = Query;

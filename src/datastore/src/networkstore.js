@@ -28,12 +28,36 @@ export default class NetworkStore {
     /**
      * @type {Client}
      */
-    this.client = options.client || Client.sharedInstance();
+    this.client = options.client;
 
     /**
      * @type {boolean}
      */
     this.useDeltaFetch = options.useDeltaFetch === true;
+  }
+
+  /**
+   * The client for the store.
+   * @return {Client} Client
+   */
+  get client() {
+    if (isDefined(this._client)) {
+      return this._client;
+    }
+
+    return Client.sharedInstance();
+  }
+
+  /**
+   * Set the client for the store
+   * @param {Client} [client] Client
+   */
+  set client(client) {
+    if (client instanceof Client) {
+      this._client = client;
+    } else {
+      this._client = null;
+    }
   }
 
   /**
