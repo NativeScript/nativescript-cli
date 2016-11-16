@@ -7,12 +7,12 @@ import nock from 'nock';
 
 // Init Kinvey
 before(function() {
-  return Kinvey.init({
+  return Kinvey.initialize({
     appKey: 'kid_HkTD2CJc',
     appSecret: 'cd7f658ed0a548dd8dfadf5a1787568b'
   }).then((client) => {
     this.client = client;
-  })
+  });
 });
 
 // Clean up

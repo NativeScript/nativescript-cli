@@ -28,7 +28,76 @@ describe('Kinvey', function () {
 
   describe('init()', function () {
     it('should throw an error if an appKey is not provided', function() {
-      return Kinvey.init({
+      try {
+        Kinvey.init({
+          appSecret: randomString()
+        });
+      } catch (error) {
+        expect(error).toBeA(KinveyError);
+      }
+    });
+
+    it('should throw an error if an appSecret or masterSecret is not provided', function() {
+      try {
+        Kinvey.init({
+          appKey: randomString()
+        });
+      } catch (error) {
+        expect(error).toBeA(KinveyError);
+      }
+    });
+
+    it('should return a client', function() {
+      const client = Kinvey.init({
+        appKey: randomString(),
+        appSecret: randomString()
+      });
+      expect(client).toBeA(Client);
+    });
+
+    it('should set default MIC host name when a custom one is not provided', function() {
+      const client = Kinvey.init({
+        appKey: randomString(),
+        appSecret: randomString()
+      });
+      expect(client).toInclude({ micProtocol: defaultMicProtocol });
+      expect(client).toInclude({ micHost: defaultMicHost });
+    });
+
+    it('should set a custom MIC host name when one is provided', function() {
+      const micHostname = 'https://auth.example.com';
+      const client = Kinvey.init({
+        appKey: randomString(),
+        appSecret: randomString(),
+        micHostname: micHostname
+      });
+      expect(client).toInclude({ micProtocol: 'https:' });
+      expect(client).toInclude({ micHost: 'auth.example.com' });
+    });
+
+    it('should set additional modules after init', function() {
+      // Initialize Kinvey
+      Kinvey.init({
+        appKey: randomString(),
+        appSecret: randomString()
+      });
+      expect(Kinvey.Acl).toNotEqual(undefined);
+      expect(Kinvey.Aggregation).toNotEqual(undefined);
+      expect(Kinvey.AuthorizationGrant).toNotEqual(undefined);
+      expect(Kinvey.CustomEndpoint).toNotEqual(undefined);
+      expect(Kinvey.DataStore).toNotEqual(undefined);
+      expect(Kinvey.DataStoreType).toNotEqual(undefined);
+      expect(Kinvey.Files).toNotEqual(undefined);
+      expect(Kinvey.Metadata).toNotEqual(undefined);
+      expect(Kinvey.Query).toNotEqual(undefined);
+      expect(Kinvey.SocialIdentity).toNotEqual(undefined);
+      expect(Kinvey.User).toNotEqual(undefined);
+    });
+  });
+
+  describe('initialize()', function () {
+    it('should throw an error if an appKey is not provided', function() {
+      Kinvey.initialize({
         appSecret: randomString()
       }).catch((error) => {
         expect(error).toBeA(KinveyError);
@@ -37,7 +106,7 @@ describe('Kinvey', function () {
     });
 
     it('should throw an error if an appSecret or masterSecret is not provided', function() {
-      return Kinvey.init({
+      return Kinvey.initialize({
         appKey: randomString()
       }).catch((error) => {
         expect(error).toBeA(KinveyError);
@@ -46,7 +115,7 @@ describe('Kinvey', function () {
     });
 
     it('should return a client', function() {
-      return Kinvey.init({
+      return Kinvey.initialize({
         appKey: randomString(),
         appSecret: randomString()
       }).then((client) => {
@@ -55,7 +124,7 @@ describe('Kinvey', function () {
     });
 
     it('should set default MIC host name when a custom one is not provided', function() {
-      return Kinvey.init({
+      return Kinvey.initialize({
         appKey: randomString(),
         appSecret: randomString()
       }).then((client) => {
@@ -66,7 +135,7 @@ describe('Kinvey', function () {
 
     it('should set a custom MIC host name when one is provided', function() {
       const micHostname = 'https://auth.example.com';
-      return Kinvey.init({
+      return Kinvey.initialize({
         appKey: randomString(),
         appSecret: randomString(),
         micHostname: micHostname
@@ -78,7 +147,7 @@ describe('Kinvey', function () {
 
     it('should set additional modules after init', function() {
       // Initialize Kinvey
-      return Kinvey.init({
+      return Kinvey.initialize({
         appKey: randomString(),
         appSecret: randomString()
       }).then(() => {
