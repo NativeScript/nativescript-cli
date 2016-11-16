@@ -14,9 +14,9 @@ const StatusCode = {
   RedirectPermanently: 302,
   NotModified: 304,
   ResumeIncomplete: 308,
+  Unauthorized: 401,
   NotFound: 404,
-  ServerError: 500,
-  Unauthorized: 401
+  ServerError: 500
 };
 Object.freeze(StatusCode);
 export { StatusCode };
