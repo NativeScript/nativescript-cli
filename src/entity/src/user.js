@@ -552,14 +552,6 @@ export default class User {
         Log.error(error);
       })
       .then(() => {
-        const identities = Object.keys(this._socialIdentity || {});
-        const promises = identities.map(identity => this.disconnectIdentity(identity, options));
-        return Promise.all(promises);
-      })
-      .catch((error) => {
-        Log.error(error);
-      })
-      .then(() => {
         return CacheRequest.setActiveUserLegacy(this.client, null);
       })
       .then(() => {
