@@ -5,7 +5,7 @@ import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from '../../requ
 import { KinveyError, NotFoundError, ActiveUserError } from '../../errors';
 import DataStore, { UserStore } from '../../datastore';
 import { Facebook, Google, LinkedIn, MobileIdentityConnect } from '../../identity';
-import { Log } from '../../utils';
+import { isDefined, Log } from '../../utils';
 import Promise from 'es6-promise';
 import url from 'url';
 import assign from 'lodash/assign';
@@ -237,7 +237,7 @@ export default class User {
       return Promise.reject(new ActiveUserError('An active user already exists. Please logout the active user before you login.'));
     }
 
-    if (!credentials[socialIdentityAttribute]) {
+    if (!isDefined(credentials._socialIdentity)) {
       if (credentials.username) {
         credentials.username = String(credentials.username).trim();
       }
@@ -247,11 +247,11 @@ export default class User {
       }
     }
 
-    if ((!credentials.username
+    if ((!isDefined(credentials.username)
         || credentials.username === ''
-        || !credentials.password
+        || !isDefined(credentials.password)
         || credentials.password === ''
-      ) && !credentials[socialIdentityAttribute]) {
+      ) && !isDefined(credentials._socialIdentity)) {
       return Promise.reject(new KinveyError(
         'Username and/or password missing. Please provide both a username and password to login.'
       ));
@@ -273,8 +273,8 @@ export default class User {
     return request.execute()
       .then(response => response.data)
       .then((data) => {
-        if (credentials[socialIdentityAttribute]) {
-          data[socialIdentityAttribute] = credentials[socialIdentityAttribute];
+        if (isDefined(data._socialIdentity) && isDefined(credentials._socialIdentity)) {
+          data._socialIdentity = assign(data._socialIdentity, credentials._socialIdentity);
         }
 
         this.data = data;
