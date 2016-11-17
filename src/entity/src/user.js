@@ -213,12 +213,14 @@ export default class User {
     const isActive = this.isActive();
     const activeUser = User.getActiveUser(this.client);
 
-    if (isActive) {
-      throw new ActiveUserError('This user is already the active user.');
+    if (isActive()) {
+      return Promise.reject(new ActiveUserError('This user is already the active user.'));
     }
 
     if (isDefined(activeUser)) {
-      throw new ActiveUserError('An active user already exists. Please logout the active user before you login.');
+      return Promise.reject(
+        new ActiveUserError('An active user already exists. Please logout the active user before you login.')
+      );
     }
 
     if (isObject(credentials)) {
@@ -245,8 +247,8 @@ export default class User {
         || !isDefined(credentials.password)
         || credentials.password === ''
       ) && !isDefined(credentials[socialIdentityAttribute])) {
-      throw new KinveyError(
-        'Username and/or password missing. Please provide both a username and password to login.'
+      return Promise.reject(
+        new KinveyError('Username and/or password missing. Please provide both a username and password to login.')
       );
     }
 
@@ -547,15 +549,6 @@ export default class User {
     });
 
     return request.execute()
-      .catch((error) => {
-        Log.error(error);
-        return null;
-      })
-      .then(() => {
-        const identities = Object.keys(this._socialIdentity || {});
-        const promises = identities.map(identity => this.disconnectIdentity(identity, options));
-        return Promise.all(promises);
-      })
       .catch((error) => {
         Log.error(error);
         return null;

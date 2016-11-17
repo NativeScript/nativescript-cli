@@ -1,8 +1,17 @@
-# Kinvey NodeJS SDK [![Build Status](https://travis-ci.org/Kinvey/kinvey-nodejs.svg?branch=master)](https://travis-ci.org/Kinvey/kinvey-nodejs) [![Code Climate](https://codeclimate.com/github/Kinvey/kinvey-nodejs/badges/gpa.svg)](https://codeclimate.com/github/Kinvey/kinvey-nodejs) [![codecov](https://codecov.io/gh/Kinvey/kinvey-nodejs/branch/master/graph/badge.svg)](https://codecov.io/gh/Kinvey/kinvey-nodejs)
+# Kinvey JS SDK [![Build Status](https://travis-ci.org/Kinvey/javascript-sdk.svg?branch=master)](https://travis-ci.org/Kinvey/javascript-sdk) [![Code Climate](https://codeclimate.com/github/Kinvey/javascript-sdk/badges/gpa.svg)](https://codeclimate.com/github/Kinvey/javascript-sdk) [![codecov](https://codecov.io/gh/Kinvey/js-sdk/branch/master/graph/badge.svg)](https://codecov.io/gh/Kinvey/js-sdk)
 
 [Kinvey](http://www.kinvey.com) (pronounced Kin-vey, like convey) makes it ridiculously easy for developers to setup, use and operate a cloud backend for their mobile apps. They don't have to worry about connecting to various cloud services, setting up servers for their backend, or maintaining and scaling them.
 
-This node module makes it very easy to connect your NodeJS app with Kinvey.
+The JS SDK is used as a way to share common code for platform specific SDK shims. Here is a list of the platforms we currently support, each as a separate repo -
+
+* [Angular](https://github.com/Kinvey/angular-sdk)
+* [Angular 2](https://github.com/Kinvey/angular2-sdk)
+* [Backbone](https://github.com/Kinvey/backbone-sdk)
+* [HTML5](https://github.com/Kinvey/html5-sdk)
+* [PhoneGap](https://github.com/Kinvey/phonegap-sdk)
+* [Titanium](https://github.com/Kinvey/titanium-sdk)
+
+Refer to the Kinvey [DevCenter](http://devcenter.kinvey.com/) for documentation on using Kinvey.
 
 ## How to use
 
@@ -27,30 +36,19 @@ Next, use `Kinvey.init` to configure your app. Replace `<appKey>` and `<appSecre
 
 ```javascript
 Kinvey.init({
-    appKey: '<appKey>',
-    appSecret: '<appSecret>'
-});
-```
-
-#### 4. Verify Set Up
-You can use the following snippet to verify the app credentials were entered correctly. This function will contact the backend and verify that the SDK can communicate with your app.
-
-```javascript
-Kinvey.ping().then(function(response) {
-  console.log('Kinvey Ping Success. Kinvey Service is alive, version: ' + response.version + ', response: ' + response.kinvey);
-}).catch(function(error) {
-  console.log('Kinvey Ping Failed. Response: ' + error.message);
+  appKey: '<appKey>',
+  appSecret: '<appSecret>'
 });
 ```
 
 ## What’s next?
-You are now ready to start building your awesome apps! Next we recommend diving into the [User guide](http://devcenter.kinvey.com/node-v3.0/guides/users) or [Data store guide](http://devcenter.kinvey.com/node-v3.0/guides/datastore) to learn more about our service, or explore the [sample apps](http://devcenter.kinvey.com/node-v3.0/samples) to go straight to working projects.
+You are now ready to start building your awesome apps! Next we recommend diving into the [User guide](http://devcenter.kinvey.com/node/guides/users) or [Data store guide](http://devcenter.kinvey.com/node/guides/datastore) to learn more about our service, or explore the [sample apps](http://devcenter.kinvey.com/node/samples) to go straight to working projects.
 
 ## Build
 Execute `npm run build` to build the package.
 
 ## Release
-[TravisCI](https://travis-ci.org/Kinvey/kinvey-nodejs) will deploy the pacakge to [NPM](https://www.npmjs.com/package/kinvey-node-sdk).
+[TravisCI](https://travis-ci.org/Kinvey/javascript-sdk) will deploy the pacakge to [NPM](https://www.npmjs.com/package/kinvey-javascript-sdk).
 
 1. Checkout the master branch.
 2. Update the CHANGELOG.md.
