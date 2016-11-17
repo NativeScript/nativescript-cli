@@ -76,7 +76,7 @@ end
 # Actually installing all other dependencies
 install("Homebrew",	"Installing Homebrew...", 'ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"</dev/null', false, false)
 
-if !(`brew --version`.include? "git revision")
+if !(`sudo -u #{ENV['SUDO_USER']} brew --version`.include? "git revision")
   puts "Homebrew is not installed or not configured properly. Download it from http://brew.sh/, install, set it up and run this script again."
   exit
 end
