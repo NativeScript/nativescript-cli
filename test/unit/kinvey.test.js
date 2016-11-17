@@ -1,6 +1,7 @@
 import { TestUser } from './mocks';
 import Kinvey from '../../src/kinvey';
 import { Client } from '../../src/client';
+import { User } from '../../src/entity';
 import { randomString } from '../../src/utils';
 import { KinveyError } from '../../src/errors';
 import expect from 'expect';
@@ -114,20 +115,45 @@ describe('Kinvey', function () {
       });
     });
 
-    it('should return a client', function() {
+    it('should return null', function() {
       return Kinvey.initialize({
         appKey: randomString(),
         appSecret: randomString()
-      }).then((client) => {
-        expect(client).toBeA(Client);
+      }).then((activeUser) => {
+        expect(activeUser).toEqual(null);
       });
+    });
+
+    it('should return the active user', function() {
+      const appKey = randomString();
+      const appSecret = randomString();
+
+      // Initialize Kinvey
+      return Kinvey.initialize({
+        appKey: appKey,
+        appSecret: appSecret
+      })
+        .then(() => TestUser.login(randomString(), randomString())) // Login a user
+        .then(() => {
+          // Initialize Kinvey again
+          return Kinvey.initialize({
+            appKey: appKey,
+            appSecret: appSecret
+          });
+        })
+        .then((activeUser) => {
+          expect(activeUser).toBeA(User);
+          expect(activeUser._id).toEqual(TestUser.getActiveUser()._id);
+        })
+        .then(() => TestUser.logout()) // Logout
     });
 
     it('should set default MIC host name when a custom one is not provided', function() {
       return Kinvey.initialize({
         appKey: randomString(),
         appSecret: randomString()
-      }).then((client) => {
+      }).then(() => {
+        const client = Kinvey.client;
         expect(client).toInclude({ micProtocol: defaultMicProtocol });
         expect(client).toInclude({ micHost: defaultMicHost });
       });
@@ -139,7 +165,8 @@ describe('Kinvey', function () {
         appKey: randomString(),
         appSecret: randomString(),
         micHostname: micHostname
-      }).then((client) => {
+      }).then(() => {
+        const client = Kinvey.client;
         expect(client).toInclude({ micProtocol: 'https:' });
         expect(client).toInclude({ micHost: 'auth.example.com' });
       });
