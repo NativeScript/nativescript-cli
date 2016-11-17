@@ -213,7 +213,7 @@ export default class User {
     const isActive = this.isActive();
     const activeUser = User.getActiveUser(this.client);
 
-    if (isActive()) {
+    if (isActive === true) {
       return Promise.reject(new ActiveUserError('This user is already the active user.'));
     }
 
