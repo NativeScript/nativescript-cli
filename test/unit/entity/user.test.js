@@ -1,4 +1,4 @@
-import { User } from '../../../src/entity';
+import { TestUser as User } from '../mocks';
 import { randomString } from '../../../src/utils';
 import { ActiveUserError, KinveyError } from '../../../src/errors';
 import { TestUser } from '../mocks';
@@ -8,8 +8,13 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 describe('User', function() {
   describe('login()', function() {
+    beforeEach(function() {
+      return User.logout();
+    });
+
     it('should throw an error if an active user already exists', async function() {
       try {
+        await User.login(randomString(), randomString());
         await User.login(randomString(), randomString());
       } catch (error) {
         expect(error).toBeA(ActiveUserError);
@@ -126,6 +131,51 @@ describe('User', function() {
       expect(user.username).toEqual(reply.username);
 
       const isActive = await user.isActive();
+      expect(isActive).toEqual(true);
+    });
+
+    it('should login a user with _socialIdentity and merge the result', async function() {
+      const socialIdentity = { foo: randomString() };
+      let user = new User();
+      const reply = {
+        _id: randomString(),
+        _kmd: {
+          lmt: new Date().toISOString(),
+          ect: new Date().toISOString(),
+          authtoken: randomString()
+        },
+        _socialIdentity: {
+          bar: randomString()
+        },
+        username: randomString(),
+        _acl: {
+          creator: randomString()
+        }
+      };
+
+      // Kinvey API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .post(`${user.pathname}/login`, { _socialIdentity: socialIdentity })
+        .reply(200, reply, {
+          'content-type': 'application/json; charset=utf-8'
+        });
+
+      // Logout the test user
+      await TestUser.logout();
+
+      // Login
+      user = await user.login({
+        _socialIdentity: socialIdentity
+      });
+
+      // Expectations
+      expect(user._id).toEqual(reply._id);
+      expect(user.authtoken).toEqual(reply._kmd.authtoken);
+      expect(user.username).toEqual(reply.username);
+      expect(user._socialIdentity.foo).toEqual(socialIdentity.foo);
+      expect(user._socialIdentity.bar).toEqual(reply._socialIdentity.bar);
+
+      const isActive = user.isActive();
       expect(isActive).toEqual(true);
     });
   });

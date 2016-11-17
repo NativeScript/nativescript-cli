@@ -1,4 +1,4 @@
-import Request from './request';
+import Request, { RequestMethod } from './request';
 import { Client } from '../../client';
 import KinveyResponse from './kinveyresponse';
 import UrlPattern from 'url-pattern';
@@ -7,6 +7,7 @@ import localStorage from 'local-storage';
 import { KinveyError } from '../../errors';
 import Query from '../../query';
 import Aggregation from '../../aggregation';
+import Promise from 'es6-promise';
 import { isDefined } from '../../utils';
 import { CacheRack } from './rack';
 // const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
@@ -79,12 +80,12 @@ export default class CacheRequest extends Request {
         }
 
         // If a query was provided then process the data with the query
-        if (isDefined(this.query)) {
+        if (isDefined(this.query) && isDefined(response.data)) {
           response.data = this.query.process(response.data);
         }
 
         // If an aggregation was provided then process the data with the aggregation
-        if (isDefined(this.aggregation)) {
+        if (isDefined(this.aggregation) && isDefined(response.data)) {
           response.data = this.aggregation.process(response.data);
         }
 
@@ -102,31 +103,48 @@ export default class CacheRequest extends Request {
     return obj;
   }
 
-  static getActiveUser(client = Client.sharedInstance()) {
-    return Promise.resolve(CacheRequest.getActiveUserLegacy(client));
+  static loadActiveUser(client = Client.sharedInstance()) {
+    const request = new CacheRequest({
+      method: RequestMethod.GET,
+      url: url.format({
+        protocol: client.protocol,
+        host: client.host,
+        pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}`
+      })
+    });
+    return request.execute()
+      .then(response => response.data)
+      .then((users) => {
+        if (users.length > 0) {
+          return users[0];
+        }
 
-    // const request = new CacheRequest({
-    //   method: RequestMethod.GET,
-    //   url: url.format({
-    //     protocol: client.protocol,
-    //     host: client.host,
-    //     pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}`
-    //   })
-    // });
-    // return request.execute()
-    //   .then(response => response.data)
-    //   .then((users) => {
-    //     if (users.length > 0) {
-    //       return users[0];
-    //     }
+        // Try local storage (legacy)
+        const legacyActiveUser = CacheRequest.loadActiveUserLegacy(client);
+        if (isDefined(legacyActiveUser)) {
+          return CacheRequest.setActiveUser(client, legacyActiveUser);
+        }
 
-    //     // Try local storage (legacy)
-    //     return localStorage.get(`${client.appKey}kinvey_user`);
-    //   })
-    //   .catch(() => null);
+        return null;
+      })
+      .then((activeUser) => {
+        activeUsers[client.appKey] = activeUser;
+        return activeUser;
+      })
+      .catch(() => null);
   }
 
-  static getActiveUserLegacy(client) {
+  static loadActiveUserLegacy(client = Client.sharedInstance()) {
+    const activeUser = CacheRequest.getActiveUserLegacy(client);
+    activeUsers[client.appKey] = activeUser;
+    return activeUser;
+  }
+
+  static getActiveUser(client = Client.sharedInstance()) {
+    return activeUsers[client.appKey];
+  }
+
+  static getActiveUserLegacy(client = Client.sharedInstance()) {
     try {
       return localStorage.get(`${client.appKey}kinvey_user`);
     } catch (error) {
@@ -135,44 +153,66 @@ export default class CacheRequest extends Request {
   }
 
   static setActiveUser(client = Client.sharedInstance(), user) {
-    return Promise.resolve(CacheRequest.setActiveUserLegacy(client, user));
-    // // Remove from local storage (legacy)
-    // localStorage.remove(`${client.appKey}kinvey_user`);
+    let promise = Promise.resolve(null);
+    const activeUser = CacheRequest.getActiveUser(client);
 
-    // const request = new CacheRequest({
-    //   method: RequestMethod.DELETE,
-    //   url: url.format({
-    //     protocol: client.protocol,
-    //     host: client.host,
-    //     pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}`
-    //   })
-    // });
+    if (isDefined(activeUser)) {
+      // Delete from local storage (legacy)
+      CacheRequest.setActiveUserLegacy(client, null);
 
-    // return request.execute()
-    //   .then(response => response.data)
-    //   .then((prevActiveUser) => {
-    //     if (user) {
-    //       const request = new CacheRequest({
-    //         method: RequestMethod.PUT,
-    //         url: url.format({
-    //           protocol: client.protocol,
-    //           host: client.host,
-    //           pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}`
-    //         }),
-    //         body: user
-    //       });
-    //       return request.execute()
-    //         .then(response => response.data);
-    //     }
+      // Delete from memory
+      activeUsers[client.appKey] = null;
 
-    //     return prevActiveUser;
-    //   });
+      // Delete from cache
+      const request = new CacheRequest({
+        method: RequestMethod.DELETE,
+        url: url.format({
+          protocol: client.protocol,
+          host: client.host,
+          pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}/${activeUser._id}`
+        })
+      });
+      promise = request.execute()
+        .then(response => response.data);
+    }
+
+    return promise
+      .then(() => {
+        if (isDefined(user) === false) {
+          return null;
+        }
+
+        // Save to memory
+        activeUsers[client.appKey] = user;
+
+        // Save to local storage (legacy)
+        CacheRequest.setActiveUserLegacy(client, user);
+
+        // Save to cache
+        const request = new CacheRequest({
+          method: RequestMethod.POST,
+          url: url.format({
+            protocol: client.protocol,
+            host: client.host,
+            pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}`
+          }),
+          body: user
+        });
+        return request.execute()
+          .then(response => response.data);
+      })
+      .then(() => user);
   }
 
-  static setActiveUserLegacy(client, user) {
+  static setActiveUserLegacy(client = Client.sharedInstance(), user) {
     try {
       localStorage.remove(`${client.appKey}kinvey_user`);
-      return localStorage.set(`${client.appKey}kinvey_user`, user);
+
+      if (isDefined(user)) {
+        localStorage.set(`${client.appKey}kinvey_user`, user);
+      }
+
+      return true;
     } catch (error) {
       return false;
     }

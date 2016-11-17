@@ -1,7 +1,6 @@
 import { Client } from '../../src/client';
 import { randomString } from '../../src/utils';
 import expect from 'expect';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
 describe('Client', () => {
   describe('constructor', () => {
