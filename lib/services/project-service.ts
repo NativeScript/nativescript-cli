@@ -27,11 +27,6 @@ export class ProjectService implements IProjectService {
 
 			let projectDir = path.join(path.resolve(this.$options.path || "."), projectName);
 			this.$fs.createDirectory(projectDir).wait();
-			if(this.$fs.exists(projectDir).wait() && !this.$fs.isEmptyDir(projectDir).wait()) {
-				this.$errors.fail("Path already exists and is not empty %s", projectDir);
-			}
-
-			this.createPackageJson(projectDir,  projectId).wait();
 
 			let customAppPath = this.getCustomAppPath();
 			if(customAppPath) {
@@ -46,39 +41,41 @@ export class ProjectService implements IProjectService {
 				}
 			}
 
+			if(this.$fs.exists(projectDir).wait() && !this.$fs.isEmptyDir(projectDir).wait()) {
+				this.$errors.fail("Path already exists and is not empty %s", projectDir);
+			}
+
 			this.$logger.trace("Creating a new NativeScript project with name %s and id %s at location %s", projectName, projectId, projectDir);
 
-			let projectAppDirectory = path.join(projectDir, constants.APP_FOLDER_NAME);
+			let appDirectory = path.join(projectDir, constants.APP_FOLDER_NAME);
 			let appPath: string = null;
 			if (customAppPath) {
 				this.$logger.trace("Using custom app from %s", customAppPath);
 
 				// Make sure that the source app/ is not a direct ancestor of a target app/
-				let relativePathFromSourceToTarget = path.relative(customAppPath, projectAppDirectory);
+				let relativePathFromSourceToTarget = path.relative(customAppPath, appDirectory);
 				// path.relative returns second argument if the paths are located on different disks
 				// so in this case we don't need to make the check for direct ancestor
-				if (relativePathFromSourceToTarget !== projectAppDirectory) {
+				if (relativePathFromSourceToTarget !== appDirectory) {
 					let doesRelativePathGoUpAtLeastOneDir = relativePathFromSourceToTarget.split(path.sep)[0] === "..";
 					if (!doesRelativePathGoUpAtLeastOneDir) {
 						this.$errors.fail("Project dir %s must not be created at/inside the template used to create the project %s.", projectDir, customAppPath);
 					}
 				}
-				this.$logger.trace("Copying custom app into %s", projectAppDirectory);
+				this.$logger.trace("Copying custom app into %s", appDirectory);
 				appPath = customAppPath;
 			} else {
-				let defaultTemplatePath = this.$projectTemplatesService.prepareTemplate(selectedTemplate, projectDir).wait();
-				this.$logger.trace(`Copying application from '${defaultTemplatePath}' into '${projectAppDirectory}'.`);
+				let defaultTemplatePath = this.$projectTemplatesService.prepareTemplate(selectedTemplate).wait();
+				this.$logger.trace(`Copying application from '${defaultTemplatePath}' into '${appDirectory}'.`);
 				appPath = defaultTemplatePath;
 			}
 
 			try {
-				//TODO: plamen5kov: move copy of template and npm uninstall in prepareTemplate logic
 				this.createProjectCore(projectDir, appPath, projectId).wait();
-				this.mergeProjectAndTemplateProperties(projectDir, appPath).wait(); //merging dependencies from template (dev && prod)
+				//update dependencies and devDependencies of newly created project with data from template
+				this.mergeProjectAndTemplateProperties(projectDir, appPath).wait();
+				this.updateAppResourcesDir(appDirectory).wait();
 				this.$npm.install(projectDir, projectDir, { "ignore-scripts": this.$options.ignoreScripts }).wait();
-				selectedTemplate = selectedTemplate || "";
-				let templateName = (constants.RESERVED_TEMPLATE_NAMES[selectedTemplate.toLowerCase()] || selectedTemplate/*user template*/) || constants.RESERVED_TEMPLATE_NAMES["default"];
-				this.$npm.uninstall(templateName, {save: true}, projectDir).wait();
 			} catch (err) {
 				this.$fs.deleteDirectory(projectDir).wait();
 				throw err;
@@ -112,6 +109,15 @@ export class ProjectService implements IProjectService {
 		}).future<void>()();
 	}
 
+	private updateAppResourcesDir(appDirectory: string): IFuture<void> {
+		return (() => {
+			let defaultAppResourcesDir = path.join(this.$projectTemplatesService.defaultTemplatePath.wait(), constants.APP_RESOURCES_FOLDER_NAME);
+			let targetAppResourcesDir = path.join(appDirectory, constants.APP_RESOURCES_FOLDER_NAME);
+			this.$logger.trace(`Updating AppResources values from ${defaultAppResourcesDir} to ${targetAppResourcesDir}`);
+			shelljs.cp("-R", path.join(defaultAppResourcesDir, "*"), targetAppResourcesDir);
+		}).future<void>()();
+	}
+
 	private mergeDependencies(projectDependencies: IStringDictionary, templateDependencies: IStringDictionary): IStringDictionary {
 		// Cast to any when logging as logger thinks it can print only string.
 		// Cannot use toString() because we want to print the whole objects, not [Object object]
@@ -141,22 +147,25 @@ export class ProjectService implements IProjectService {
 				// Copy hidden files.
 				shelljs.cp('-R', path.join(appSourcePath, ".*"), appDestinationPath);
 			}
+
+			this.createBasicProjectStructure(projectDir,  projectId).wait();
+		}).future<void>()();
+	}
+
+	private createBasicProjectStructure(projectDir: string,  projectId: string): IFuture<void> {
+		return (() => {
 			this.$fs.createDirectory(path.join(projectDir, "platforms")).wait();
+
+			this.$projectDataService.initialize(projectDir);
+			this.$projectDataService.setValue("id", projectId).wait();
 
 			let tnsModulesVersion = this.$options.tnsModulesVersion;
 			let packageName = constants.TNS_CORE_MODULES_NAME;
 			if (tnsModulesVersion) {
 				packageName = `${packageName}@${tnsModulesVersion}`;
 			}
-			this.$npm.install(packageName, projectDir, {save:true, "save-exact": true}).wait();
-		}).future<void>()();
-	}
 
-	private createPackageJson(projectDir: string,  projectId: string): IFuture<void> {
-		return (() => {
-
-			this.$projectDataService.initialize(projectDir);
-			this.$projectDataService.setValue("id", projectId).wait();
+			this.$npm.executeNpmCommand(`npm install ${packageName} --save --save-exact`, projectDir).wait();
 		}).future<void>()();
 	}
 

@@ -16,18 +16,6 @@ export let TEST_RUNNER_NAME = "nativescript-unit-test-runner";
 export let LIVESYNC_EXCLUDED_FILE_PATTERNS = ["**/*.js.map", "**/*.ts"];
 export let XML_FILE_EXTENSION = ".xml";
 
-export class PackageVersion {
-	static NEXT = "next";
-	static LATEST = "latest";
-}
-
-export class SaveOptions {
-	static PRODUCTION = "save";
-	static DEV = "save-dev";
-	static OPTIONAL = "save-optional";
-	static EXACT = "save-exact";
-}
-
 export class ReleaseType {
 	static MAJOR = "major";
 	static PREMAJOR = "premajor";
@@ -37,14 +25,6 @@ export class ReleaseType {
 	static PREPATCH = "prepatch";
 	static PRERELEASE = "prerelease";
 }
-
-export let RESERVED_TEMPLATE_NAMES: IStringDictionary = {
-	"default": "tns-template-hello-world",
-	"tsc": "tns-template-hello-world-ts",
-	"typescript": "tns-template-hello-world-ts",
-	"ng": "tns-template-hello-world-ng",
-	"angular": "tns-template-hello-world-ng"
-};
 
 export class ITMSConstants {
 	static ApplicationMetadataFile = "metadata.xml";
@@ -64,4 +44,4 @@ class ItunesConnectApplicationTypesClass implements IiTunesConnectApplicationTyp
 export let ItunesConnectApplicationTypes = new ItunesConnectApplicationTypesClass();
 
 export let ANGULAR_NAME = "angular";
-export let TYPESCRIPT_NAME = "typescript";
+export let TYPESCRIPT_NAME = "TypeScript";

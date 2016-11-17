@@ -44,7 +44,7 @@ export class ProjectChangesInfo {
 				this.appFilesChanged = this.containsNewerFiles(this.$projectData.appDirectoryPath, this.$projectData.appResourcesDirectoryPath, outputProjectMtime);
 				if (!skipModulesAndResources) {
 					this.appResourcesChanged = this.containsNewerFiles(this.$projectData.appResourcesDirectoryPath, null, outputProjectMtime);
-					this.modulesChanged = this.containsNewerFiles(path.join(this.$projectData.projectDir, "node_modules"), path.join(this.$projectData.projectDir, "node_modules", "tns-ios-inspector")/*done because currently all node_modules are traversed, but tzraikov is working on improving behavior by resolving only the production dependencies*/, outputProjectMtime);
+					this.modulesChanged = this.containsNewerFiles(path.join(this.$projectData.projectDir, "node_modules"), null, outputProjectMtime);
 					let platformResourcesDir = path.join(this.$projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
 					if (platform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
 						this.configChanged = this.filesChanged([

@@ -203,9 +203,16 @@ class IOSDebugService implements IDebugService {
 	private openDebuggerClient(fileDescriptor: string): IFuture<void> {
 		if (this.$options.client) {
 			return (() => {
-				let inspectorPath = this.$npmInstallationManager.install(inspectorNpmPackageName, this.$projectData.projectDir).wait();
+				let inspectorPath = this.$npmInstallationManager.install(inspectorNpmPackageName).wait();
 				let inspectorSourceLocation = path.join(inspectorPath, inspectorUiDir, "Main.html");
 				let inspectorApplicationPath = path.join(inspectorPath, inspectorAppName);
+
+				// TODO : Sadly $npmInstallationManager.install does not install the package, it only inserts it in the cache through the npm cache add command
+				// Since npm cache add command does not execute scripts our posinstall script that extract the Inspector Application does not execute as well
+				// So until this behavior is changed this ugly workaround should not be deleted
+				if (!this.$fs.exists(inspectorApplicationPath).wait()) {
+					this.$npm.executeNpmCommand("npm run-script postinstall", inspectorPath).wait();
+				}
 
 				let cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${this.$projectData.projectName}' '${fileDescriptor}'`;
 				this.$childProcess.exec(cmd).wait();

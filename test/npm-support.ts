@@ -33,7 +33,6 @@ temp.track();
 
 let assert = require("chai").assert;
 let nodeModulesFolderName = "node_modules";
-let packageJsonName = "package.json";
 
 function createTestInjector(): IInjector {
 	let testInjector = new yok.Yok();
@@ -111,10 +110,10 @@ function createProject(testInjector: IInjector, dependencies?: any): string {
 	return tempFolder;
 }
 
-function setupProject(dependencies?: any): IFuture<any> {
+function setupProject(): IFuture<any> {
 	return (() => {
 		let testInjector = createTestInjector();
-		let projectFolder = createProject(testInjector, dependencies);
+		let projectFolder = createProject(testInjector);
 
 		let fs = testInjector.resolve("fs");
 
@@ -279,7 +278,7 @@ describe("Npm support tests", () => {
 
 describe("Flatten npm modules tests", () => {
 	it("Doesn't handle the dependencies of devDependencies", () => {
-		let projectSetup = setupProject({}).wait();
+		let projectSetup = setupProject().wait();
 		let testInjector = projectSetup.testInjector;
 		let projectFolder = projectSetup.projectFolder;
 		let appDestinationFolderPath = projectSetup.appDestinationFolderPath;
@@ -298,6 +297,9 @@ describe("Flatten npm modules tests", () => {
 		let fs = testInjector.resolve("fs");
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
 
+		let lodashFolderPath = path.join(tnsModulesFolderPath, "lodash");
+		assert.isTrue(fs.exists(lodashFolderPath).wait());
+
 		let gulpFolderPath = path.join(tnsModulesFolderPath, "gulp");
 		assert.isFalse(fs.exists(gulpFolderPath).wait());
 
@@ -308,20 +310,20 @@ describe("Flatten npm modules tests", () => {
 		assert.isFalse(fs.exists(gulpJshint).wait());
 
 		// Get  all gulp dependencies
-		let gulpJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp", packageJsonName)).wait();
-		_.each(_.keys(gulpJsonContent.dependencies), dependency => {
+		let gulpDependencies = fs.readDirectory(path.join(projectFolder, nodeModulesFolderName, "gulp", nodeModulesFolderName)).wait();
+		_.each(gulpDependencies, dependency => {
 			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
 		});
 
 		// Get all gulp-jscs dependencies
-		let gulpJscsJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jscs", packageJsonName)).wait();
-		_.each(_.keys(gulpJscsJsonContent.dependencies), dependency => {
+		let gulpJscsDependencies = fs.readDirectory(path.join(projectFolder, nodeModulesFolderName, "gulp-jscs", nodeModulesFolderName)).wait();
+		_.each(gulpJscsDependencies, dependency => {
 			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
 		});
 
 		// Get all gulp-jshint dependencies
-		let gulpJshintJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jshint", packageJsonName)).wait();
-		_.each(_.keys(gulpJshintJsonContent.dependencies), dependency => {
+		let gulpJshintDependencies = fs.readDirectory(path.join(projectFolder, nodeModulesFolderName, "gulp-jshint", nodeModulesFolderName)).wait();
+		_.each(gulpJshintDependencies, dependency => {
 			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
 		});
 	});

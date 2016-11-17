@@ -29,15 +29,21 @@ function createTestInjector(): IInjector {
 
 function mockNpm(testInjector: IInjector, versions: string[], latestVersion: string) {
 	testInjector.register("npm", {
-		view: (packageName: string, config: any) => {
-			return(() => {
-				if(config.versions) {
-					return versions;
+		view: (packageName: string, propertyName: string) => {
+			return (() => {
+				if(propertyName === "versions") {
+					let result = Object.create(null);
+					result[latestVersion] = {
+						"versions": versions
+					};
+
+					return result;
 				}
 
-				throw new Error(`Unable to find propertyName ${config}.`);
+				throw new Error(`Unable to find propertyName ${propertyName}.`);
 			}).future<any>()();
-		}
+		},
+		load: () => Future.fromResult()
 	});
 }
 

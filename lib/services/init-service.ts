@@ -109,14 +109,13 @@ export class InitService implements IInitService {
 				return this.buildVersionData(latestVersion);
 			}
 
-			let data:any = this.$npm.view(packageName, "versions").wait();
+			let data = this.$npm.view(packageName, "versions").wait();
 			let versions = _.filter(data[latestVersion].versions, (version: string) => semver.gte(version, InitService.MIN_SUPPORTED_FRAMEWORK_VERSIONS[packageName]));
 			if (versions.length === 1) {
 				this.$logger.info(`Only ${versions[0]} version is available for ${packageName}.`);
 				return this.buildVersionData(versions[0]);
 			}
 			let sortedVersions = versions.sort(helpers.versionCompare).reverse();
-			//TODO: plamen5kov: don't offer versions from next (they are not available)
 			let version = this.$prompter.promptForChoice(`${packageName} version:`, sortedVersions).wait();
 			return this.buildVersionData(version);
 		}).future<IStringDictionary>()();

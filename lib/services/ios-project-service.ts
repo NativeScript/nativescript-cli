@@ -436,20 +436,45 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
-	public canUpdatePlatform(installedModuleDir: string): IFuture<boolean> {
+	public canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
 		return (() => {
-			let currentXcodeProjectFile = this.buildPathToCurrentXcodeProjectFile();
+			let currentXcodeProjectFile = this.buildPathToXcodeProjectFile(currentVersion);
 			let currentXcodeProjectFileContent = this.$fs.readFile(currentXcodeProjectFile).wait();
 
-			let newXcodeProjectFile = this.buildPathToNewXcodeProjectFile(installedModuleDir);
+			let newXcodeProjectFile = this.buildPathToXcodeProjectFile(newVersion);
 			let newXcodeProjectFileContent = this.$fs.readFile(newXcodeProjectFile).wait();
 
-			let contentIsTheSame = currentXcodeProjectFileContent === newXcodeProjectFileContent;
-			if(!contentIsTheSame) {
-				this.$logger.warn(`The content of the current project file: ${currentXcodeProjectFile} and the new project file: ${newXcodeProjectFile} is different.`);
-			}
-			return contentIsTheSame;
+			return currentXcodeProjectFileContent === newXcodeProjectFileContent;
 
+		}).future<boolean>()();
+	}
+
+	public updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean): IFuture<boolean> {
+		return (() => {
+			if (!canUpdate) {
+				let isUpdateConfirmed = this.$prompter.confirm(`We need to override xcodeproj file. The old one will be saved at ${this.$options.profileDir}. Are you sure?`, () => true).wait();
+				if (isUpdateConfirmed) {
+					// Copy old file to options["profile-dir"]
+					let sourceDir = this.xcodeprojPath;
+					let destinationDir = path.join(this.$options.profileDir, "xcodeproj");
+					this.$fs.deleteDirectory(destinationDir).wait();
+					shell.cp("-R", path.join(sourceDir, "*"), destinationDir);
+					this.$logger.info(`Backup file ${sourceDir} at location ${destinationDir}`);
+					this.$fs.deleteDirectory(sourceDir).wait();
+
+					// Copy xcodeProject file
+					let cachedPackagePath = path.join(this.$npmInstallationManager.getCachedPackagePath(this.platformData.frameworkPackageName, newVersion), constants.PROJECT_FRAMEWORK_FOLDER_NAME, `${IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER}.xcodeproj`);
+					shell.cp("-R", path.join(cachedPackagePath, "*"), sourceDir);
+					this.$logger.info(`Copied from ${cachedPackagePath} at ${this.platformData.projectRoot}.`);
+
+					let pbxprojFilePath = this.pbxProjPath;
+					this.replaceFileContent(pbxprojFilePath).wait();
+				}
+
+				return isUpdateConfirmed;
+			}
+
+			return true;
 		}).future<boolean>()();
 	}
 
@@ -765,12 +790,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return this.getAllNativeLibrariesForPlugin(pluginData, IOSProjectService.IOS_PLATFORM_NAME, filterCallback);
 	};
 
-	private buildPathToCurrentXcodeProjectFile(): string {
-		return path.join(this.$projectData.platformsDir, "ios", `${this.$projectData.projectName}.xcodeproj`, "project.pbxproj");
-	}
-
-	private buildPathToNewXcodeProjectFile(newModulesDir: string): string {
-		return path.join(newModulesDir, constants.PROJECT_FRAMEWORK_FOLDER_NAME, `${IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER}.xcodeproj`, "project.pbxproj");
+	private buildPathToXcodeProjectFile(version: string): string {
+		return path.join(this.$npmInstallationManager.getCachedPackagePath(this.platformData.frameworkPackageName, version), constants.PROJECT_FRAMEWORK_FOLDER_NAME, `${IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER}.xcodeproj`, "project.pbxproj");
 	}
 
 	private validateFramework(libraryPath: string): IFuture<void> {

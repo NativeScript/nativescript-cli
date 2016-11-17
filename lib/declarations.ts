@@ -1,21 +1,28 @@
 interface INodePackageManager {
+	getCache(): string;
+	load(config?: any): IFuture<void>;
 	install(packageName: string, pathToSave: string, config?: any): IFuture<any>;
 	uninstall(packageName: string, config?: any, path?: string): IFuture<any>;
-	view(packageName: string, config: any): IFuture<any>;
-	search(filter: string[], config: any): IFuture<any>;
+	cache(packageName: string, version: string, cache?: any): IFuture<IDependencyData>;
+	cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void>;
+	view(packageName: string, propertyName: string): IFuture<any>;
+	executeNpmCommand(npmCommandName: string, currentWorkingDirectory: string): IFuture<any>;
+	search(filter: string[], silent: boolean): IFuture<any>;
 }
 
 interface INpmInstallationManager {
-	install(packageName: string, packageDir: string, options?: INpmInstallOptions): IFuture<any>;
+	getCacheRootPath(): string;
+	addToCache(packageName: string, version: string): IFuture<any>;
+	cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void>;
+	install(packageName: string, options?: INpmInstallOptions): IFuture<string>;
 	getLatestVersion(packageName: string): IFuture<string>;
-	getNextVersion(packageName: string): IFuture<string>;
 	getLatestCompatibleVersion(packageName: string): IFuture<string>;
+	getCachedPackagePath(packageName: string, version: string): string;
 }
 
 interface INpmInstallOptions {
 	pathToSave?: string;
 	version?: string;
-	dependencyType?: string;
 }
 
 interface IDependencyData {
@@ -74,7 +81,7 @@ interface IOptions extends ICommonOptions {
 	frameworkName: string;
 	frameworkPath: string;
 	frameworkVersion: string;
-	ignoreScripts: boolean; //npm flag
+	ignoreScripts: boolean;
 	disableNpmInstall: boolean;
 	ipa: string;
 	keyStoreAlias: string;
@@ -88,7 +95,7 @@ interface IOptions extends ICommonOptions {
 	bundle: boolean;
 	platformTemplate: string;
 	port: Number;
-	production: boolean; //npm flag
+	production: boolean;
 	sdk: string;
 	symlink: boolean;
 	tnsModulesVersion: string;
