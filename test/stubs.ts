@@ -215,22 +215,6 @@ export class ErrorsStub implements IErrors {
 }
 
 export class NpmInstallationManagerStub implements INpmInstallationManager {
-	getCacheRootPath(): string {
-		return undefined;
-	}
-
-	addToCache(packageName: string, version: string): IFuture<void> {
-		return undefined;
-	}
-
-	cacheUnpack(packageName: string, version: string): IFuture<void> {
-		return undefined;
-	}
-
-	load(config?: any): IFuture<void> {
-		return undefined;
-	}
-
 	install(packageName: string, pathToSave?: string, version?: string): IFuture<string> {
 		return Future.fromResult("");
 	}
@@ -239,12 +223,12 @@ export class NpmInstallationManagerStub implements INpmInstallationManager {
 		return Future.fromResult("");
 	}
 
-	getLatestCompatibleVersion(packageName: string): IFuture<string> {
+	getNextVersion(packageName: string): IFuture<string> {
 		return Future.fromResult("");
 	}
 
-	getCachedPackagePath(packageName: string, version: string): string {
-		return "";
+	getLatestCompatibleVersion(packageName: string): IFuture<string> {
+		return Future.fromResult("");
 	}
 }
 
@@ -331,7 +315,7 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	isPlatformPrepared(projectRoot: string): IFuture<boolean> {
 		return Future.fromResult(false);
 	}
-	canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
+	canUpdatePlatform(installedModulePath: string): IFuture<boolean> {
 		return Future.fromResult(false);
 	}
 	updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean): IFuture<boolean> {
@@ -401,7 +385,8 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 	get defaultTemplatePath(): IFuture<string> {
 		return Future.fromResult("");
 	}
-
+	setProjectDir(projectDir: string):void {
+	}
 	prepareTemplate(templateName: string): IFuture<string> {
 		return Future.fromResult("");
 	}

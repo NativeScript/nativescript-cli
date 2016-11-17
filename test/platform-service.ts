@@ -70,7 +70,13 @@ function createTestInjector() {
 	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("xmlValidator", XmlValidator);
-	testInjector.register("npm", {});
+	testInjector.register("npm", {
+		uninstall: () => {
+			return (() => {
+				return true;
+			}).future<any>()();
+		}
+	});
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 
 	return testInjector;
@@ -186,7 +192,6 @@ describe('Platform Service Tests', () => {
 			it("should fail when the versions are the same", () => {
 				let npmInstallationManager: INpmInstallationManager = testInjector.resolve("npmInstallationManager");
 				npmInstallationManager.getLatestVersion = () => (() => "0.2.0").future<string>()();
-				npmInstallationManager.getCacheRootPath = () => "";
 
 				(() => platformService.updatePlatforms(["android"]).wait()).should.throw();
 			});
