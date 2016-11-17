@@ -1,16 +1,17 @@
 import { User } from '../../../../src/entity';
 import { randomString } from '../../../../src/utils';
+import Promise from 'es6-promise';
 import nock from 'nock';
 
 export default class TestUser extends User {
   static getActiveUser(client) {
-    const user = super.getActiveUser(client);
+    const activeUser = super.getActiveUser(client);
 
-    if (user) {
-      return new TestUser(user.data);
+    if (activeUser) {
+      return new TestUser(activeUser.data);
     }
 
-    return null;
+    return Promise.resolve(null);
   }
 
   login(username, password, options) {

@@ -5,7 +5,7 @@ import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from '../../requ
 import { KinveyError, NotFoundError, ActiveUserError } from '../../errors';
 import DataStore, { UserStore } from '../../datastore';
 import { Facebook, Google, LinkedIn, MobileIdentityConnect } from '../../identity';
-import { isDefined, Log } from '../../utils';
+import { Log, isDefined } from '../../utils';
 import Promise from 'es6-promise';
 import url from 'url';
 import assign from 'lodash/assign';
@@ -166,7 +166,7 @@ export default class User {
   isActive() {
     const activeUser = User.getActiveUser(this.client);
 
-    if (activeUser && activeUser[idAttribute] === this[idAttribute]) {
+    if (isDefined(activeUser) && activeUser._id === this._id) {
       return true;
     }
 
@@ -191,22 +191,13 @@ export default class User {
    * @return {?User} The active user.
    */
   static getActiveUser(client = Client.sharedInstance()) {
-    const data = CacheRequest.getActiveUserLegacy(client);
+    const data = CacheRequest.getActiveUser(client);
 
-    if (data) {
+    if (isDefined(data)) {
       return new this(data, { client: client });
     }
 
     return null;
-
-    // return CacheRequest.getActiveUser(client)
-    //   .then((data) => {
-    //     if (data) {
-    //       return new this(data, { client: client });
-    //     }
-
-    //     return null;
-    //   });
   }
 
   /**
@@ -219,6 +210,18 @@ export default class User {
    */
   login(username, password, options = {}) {
     let credentials = username;
+    const isActive = this.isActive();
+    const activeUser = User.getActiveUser(this.client);
+
+    if (isActive === true) {
+      return Promise.reject(new ActiveUserError('This user is already the active user.'));
+    }
+
+    if (isDefined(activeUser)) {
+      return Promise.reject(
+        new ActiveUserError('An active user already exists. Please logout the active user before you login.')
+      );
+    }
 
     if (isObject(credentials)) {
       options = password || {};
@@ -229,20 +232,12 @@ export default class User {
       };
     }
 
-    if (this.isActive()) {
-      return Promise.reject(new ActiveUserError('This user is already the active user.'));
-    }
-
-    if (User.getActiveUser(this.client)) {
-      return Promise.reject(new ActiveUserError('An active user already exists. Please logout the active user before you login.'));
-    }
-
-    if (!isDefined(credentials._socialIdentity)) {
-      if (credentials.username) {
+    if (!isDefined(credentials[socialIdentityAttribute])) {
+      if (isDefined(credentials.username)) {
         credentials.username = String(credentials.username).trim();
       }
 
-      if (credentials.password) {
+      if (isDefined(credentials.password)) {
         credentials.password = String(credentials.password).trim();
       }
     }
@@ -251,10 +246,10 @@ export default class User {
         || credentials.username === ''
         || !isDefined(credentials.password)
         || credentials.password === ''
-      ) && !isDefined(credentials._socialIdentity)) {
-      return Promise.reject(new KinveyError(
-        'Username and/or password missing. Please provide both a username and password to login.'
-      ));
+      ) && !isDefined(credentials[socialIdentityAttribute])) {
+      return Promise.reject(
+        new KinveyError('Username and/or password missing. Please provide both a username and password to login.')
+      );
     }
 
     const request = new KinveyRequest({
@@ -270,15 +265,16 @@ export default class User {
       timeout: options.timeout,
       client: this.client
     });
+
     return request.execute()
       .then(response => response.data)
       .then((data) => {
-        if (isDefined(data._socialIdentity) && isDefined(credentials._socialIdentity)) {
-          data._socialIdentity = assign(data._socialIdentity, credentials._socialIdentity);
+        if (isDefined(credentials[socialIdentityAttribute])) {
+          data[socialIdentityAttribute] = credentials[socialIdentityAttribute];
         }
 
         this.data = data;
-        CacheRequest.setActiveUserLegacy(this.client, this.data);
+        return CacheRequest.setActiveUser(this.client, this.data);
       })
       .then(() => this);
   }
@@ -305,12 +301,15 @@ export default class User {
    * @return {Promise<User>} The user.
    */
   loginWithMIC(redirectUri, authorizationGrant, options = {}) {
-    if (this.isActive()) {
-      return Promise.reject(new ActiveUserError('This user is already the active user.'));
+    const isActive = this.isActive();
+    const activeUser = User.getActiveUser(this.client);
+
+    if (isActive) {
+      throw new ActiveUserError('This user is already the active user.');
     }
 
-    if (User.getActiveUser(this.client)) {
-      return Promise.reject(new ActiveUserError('An active user already exists. Please logout the active user before you login.'));
+    if (isDefined(activeUser)) {
+      throw new ActiveUserError('An active user already exists. Please logout the active user before you login.');
     }
 
     const mic = new MobileIdentityConnect({ client: this.client });
@@ -340,19 +339,21 @@ export default class User {
    * @return {Promise<User>} The user.
    */
   connectIdentity(identity, session, options) {
+    const isActive = this.isActive();
     const data = {};
     const socialIdentity = data[socialIdentityAttribute] || {};
     socialIdentity[identity] = session;
     data[socialIdentityAttribute] = socialIdentity;
 
-    if (this.isActive()) {
+    if (isActive) {
       return this.update(data, options);
     }
 
     return this.login(data, options)
       .catch((error) => {
         if (error instanceof NotFoundError) {
-          return this.signup(data, options).then(() => this.connectIdentity(identity, session, options));
+          return this.signup(data, options)
+            .then(() => this.connectIdentity(identity, session, options));
         }
 
         throw error;
@@ -550,15 +551,17 @@ export default class User {
     return request.execute()
       .catch((error) => {
         Log.error(error);
+        return null;
       })
-      .then(() => {
-        return CacheRequest.setActiveUserLegacy(this.client, null);
-      })
-      .then(() => {
-        return DataStore.clearCache({ client: this.client });
-      })
+      .then(() => CacheRequest.setActiveUser(this.client, null))
       .catch((error) => {
         Log.error(error);
+        return null;
+      })
+      .then(() => DataStore.clearCache({ client: this.client }))
+      .catch((error) => {
+        Log.error(error);
+        return null;
       })
       .then(() => this);
   }
@@ -570,10 +573,10 @@ export default class User {
    * @return {Promise<User>} The user.
    */
   static logout(options = {}) {
-    const user = this.getActiveUser(options.client);
+    const activeUser = User.getActiveUser(options.client);
 
-    if (user) {
-      return user.logout(options);
+    if (isDefined(activeUser)) {
+      return activeUser.logout(options);
     }
 
     return Promise.resolve(null);
@@ -589,12 +592,13 @@ export default class User {
    * @return {Promise<User>} The user.
    */
   signup(data, options = {}) {
+    const activeUser = User.getActiveUser(this.client);
     options = assign({
       state: true
     }, options);
 
-    if (options.state === true && User.getActiveUser(this.client)) {
-      return Promise.reject(new ActiveUserError('An active user already exists. Please logout the active user before you login.'));
+    if (options.state === true && isDefined(activeUser)) {
+      throw new ActiveUserError('An active user already exists. Please logout the active user before you login.');
     }
 
     if (data instanceof User) {
@@ -621,14 +625,12 @@ export default class User {
         this.data = data;
 
         if (options.state === true) {
-          return CacheRequest.setActiveUserLegacy(this.client, this.data);
+          return CacheRequest.setActiveUser(this.client, this.data);
         }
 
         return this;
       })
-      .then(() => {
-        return this;
-      });
+      .then(() => this);
   }
 
   /**
@@ -694,14 +696,12 @@ export default class User {
       })
       .then((isActive) => {
         if (isActive) {
-          return CacheRequest.setActiveUserLegacy(this.client, this.data);
+          return CacheRequest.setActiveUser(this.client, this.data);
         }
 
         return this;
       })
-      .then(() => {
-        return this;
-      });
+      .then(() => this);
   }
 
   /**
@@ -712,10 +712,10 @@ export default class User {
    * @return {Promise<User>} The user.
    */
   static update(data, options) {
-    const user = this.getActiveUser(options.client);
+    const activeUser = User.getActiveUser(options.client);
 
-    if (user) {
-      return user.update(data, options);
+    if (isDefined(activeUser)) {
+      return activeUser.update(data, options);
     }
 
     return Promise.resolve(null);
@@ -743,10 +743,10 @@ export default class User {
     return request.execute()
       .then(response => response.data)
       .then((data) => {
-        if (!data[kmdAttribute].authtoken) {
+        if (!isDefined(data[kmdAttribute].authtoken)) {
           const activeUser = User.getActiveUser(this.client);
 
-          if (activeUser) {
+          if (isDefined(activeUser)) {
             data[kmdAttribute].authtoken = activeUser.authtoken;
           }
 
@@ -756,12 +756,10 @@ export default class User {
         return data;
       })
       .then((data) => {
-        CacheRequest.setActiveUserLegacy(this.client, data);
         this.data = data;
+        return CacheRequest.setActiveUser(this.client, data);
       })
-      .then(() => {
-        return this;
-      });
+      .then(() => this);
   }
 
   /**
@@ -771,10 +769,10 @@ export default class User {
    * @return {Promise<User>} The user.
    */
   static me(options) {
-    const user = this.getActiveUser(options.client);
+    const activeUser = User.getActiveUser(options.client);
 
-    if (user) {
-      return user.me(options);
+    if (activeUser) {
+      return activeUser.me(options);
     }
 
     return Promise.resolve(null);
