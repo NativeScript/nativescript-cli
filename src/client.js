@@ -1,3 +1,4 @@
+import { CacheRequest } from './request';
 import { KinveyError } from './errors';
 import url from 'url';
 import assign from 'lodash/assign';

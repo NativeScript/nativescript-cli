@@ -232,21 +232,19 @@ export default class User {
       };
     }
 
-    if (!isDefined(credentials[socialIdentityAttribute])) {
-      if (isDefined(credentials.username)) {
-        credentials.username = String(credentials.username).trim();
-      }
+    if (isDefined(credentials.username)) {
+      credentials.username = String(credentials.username).trim();
+    }
 
-      if (isDefined(credentials.password)) {
-        credentials.password = String(credentials.password).trim();
-      }
+    if (isDefined(credentials.password)) {
+      credentials.password = String(credentials.password).trim();
     }
 
     if ((!isDefined(credentials.username)
         || credentials.username === ''
         || !isDefined(credentials.password)
         || credentials.password === ''
-      ) && !isDefined(credentials[socialIdentityAttribute])) {
+      ) && !isDefined(credentials._socialIdentity)) {
       return Promise.reject(
         new KinveyError('Username and/or password missing. Please provide both a username and password to login.')
       );
@@ -269,8 +267,8 @@ export default class User {
     return request.execute()
       .then(response => response.data)
       .then((data) => {
-        if (isDefined(credentials[socialIdentityAttribute])) {
-          data[socialIdentityAttribute] = credentials[socialIdentityAttribute];
+        if (isDefined(data._socialIdentity)) {
+          data._socialIdentity = assign(data._socialIdentity, credentials._socialIdentity);
         }
 
         this.data = data;

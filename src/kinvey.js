@@ -171,9 +171,6 @@ class Kinvey {
     // Initialize the client
     return Client.initialize(options)
       .then(() => {
-        // Add modules that require initialization
-        this.Files = new FileStore();
-
         // Return the active user
         return User.getActiveUser();
       });

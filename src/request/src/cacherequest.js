@@ -10,8 +10,9 @@ import Aggregation from '../../aggregation';
 import Promise from 'es6-promise';
 import { isDefined } from '../../utils';
 import { CacheRack } from './rack';
-// const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
-// const activeUserCollectionName = process.env.KINVEY_USER_ACTIVE_COLLECTION_NAME || 'kinvey_active_user';
+const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
+const activeUserCollectionName = process.env.KINVEY_USER_ACTIVE_COLLECTION_NAME || 'kinvey_active_user';
+const activeUsers = {};
 
 /**
  * @private
