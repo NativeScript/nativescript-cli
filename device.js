@@ -18,7 +18,7 @@ function browserDetect(ua) {
     rOpera.exec(ua) || rSafari.exec(ua) || [];
 }
 
-function deviceInformation() {
+export function deviceInformation() {
   const libraries = [];
   let browser;
   let platform;
@@ -114,10 +114,6 @@ export default class Device {
     }
 
     return deviceReady;
-  }
-
-  static toString() {
-    return deviceInformation();
   }
 }
 
