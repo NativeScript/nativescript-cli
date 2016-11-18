@@ -1,8 +1,10 @@
-import CacheMiddleware from './cache';
-import Middleware from './middleware';
-import HttpMiddleware from './http';
-import ParseMiddleware from './parse';
-import SerializeMiddleware from './serialize';
+import {
+  CacheMiddleware,
+  HttpMiddleware,
+  Middleware,
+  ParseMiddleware,
+  SerializeMiddleware
+} from './middleware';
 import Promise from 'es6-promise';
 import reduce from 'lodash/reduce';
 import isFunction from 'lodash/isFunction';

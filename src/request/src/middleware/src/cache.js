@@ -7,13 +7,9 @@ export default class CacheMiddleware extends Middleware {
     super(name);
   }
 
-  openStorage(name) {
-    return new Storage(name);
-  }
-
   handle(request) {
-    const { method, body, appKey, collection, entityId, encryptionKey } = request;
-    const storage = this.openStorage(appKey, encryptionKey);
+    const { method, body, appKey, collection, entityId } = request;
+    const storage = new Storage(appKey);
     let promise;
 
     if (method === 'GET') {

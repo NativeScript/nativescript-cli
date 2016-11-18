@@ -1,13 +1,13 @@
-import { RequestMethod } from './request';
-import CacheRequest from './cacherequest';
+import Request, { RequestMethod } from './request';
+import LocalRequest from './local';
 import Headers from './headers';
-import NetworkRequest from './networkrequest';
-import KinveyResponse from './kinveyresponse';
+import { KinveyResponse } from './response';
 import Query from '../../query';
 import Aggregation from '../../aggregation';
 import { isDefined } from '../../utils';
 import { InvalidCredentialsError, NoActiveUserError, KinveyError } from '../../errors';
 import { SocialIdentity } from '../../identity';
+import { NetworkRack } from './rack';
 import Promise from 'es6-promise';
 import { deviceInformation } from './device';
 import url from 'url';
@@ -20,6 +20,13 @@ const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const defaultApiVersion = process.env.KINVEY_DEFAULT_API_VERSION || 4;
 const customPropertiesMaxBytesAllowed = process.env.KINVEY_MAX_HEADER_BYTES || 2000;
+
+export default class NetworkRequest extends Request {
+  constructor(options = {}) {
+    super(options);
+    this.rack = new NetworkRack();
+  }
+}
 
 /**
  * @private
@@ -114,7 +121,7 @@ const Auth = {
    * @returns {Object}
    */
   session(client) {
-    const activeUser = CacheRequest.getActiveUser(client);
+    const activeUser = LocalRequest.getActiveUser(client);
 
     if (!isDefined(activeUser)) {
       return Promise.reject(
@@ -154,7 +161,7 @@ function byteCount(str) {
  */
 export class Properties extends Headers {}
 
-export default class KinveyRequest extends NetworkRequest {
+export class KinveyRequest extends NetworkRequest {
   constructor(options = {}) {
     super(options);
 
@@ -386,7 +393,7 @@ export default class KinveyRequest extends NetworkRequest {
       })
       .catch((error) => {
         if (error instanceof InvalidCredentialsError && retry === true) {
-          return CacheRequest.getActiveUser(this.client)
+          return LocalRequest.getActiveUser(this.client)
             .then((activeUser) => {
               if (!isDefined(activeUser)) {
                 throw error;
@@ -448,7 +455,7 @@ export default class KinveyRequest extends NetworkRequest {
                     })
                     .then((user) => {
                       user._socialIdentity[session.identity] = defaults(user._socialIdentity[session.identity], session);
-                      return CacheRequest.setActiveUser(this.client, user);
+                      return LocalRequest.setActiveUser(this.client, user);
                     })
                     .then(() => this.execute(rawResponse, false));
                 }

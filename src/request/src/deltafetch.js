@@ -1,6 +1,6 @@
-import KinveyRequest from './kinveyrequest';
 import { RequestMethod } from './request';
-import CacheRequest from './cacherequest';
+import { KinveyRequest } from './network';
+import LocalRequest from './local';
 import Response, { StatusCode } from './response';
 import { NotFoundError } from '../../errors';
 import Query from '../../query';
@@ -46,7 +46,7 @@ export default class DeltaFetchRequest extends KinveyRequest {
   }
 
   execute() {
-    const request = new CacheRequest({
+    const request = new LocalRequest({
       method: RequestMethod.GET,
       url: this.url,
       headers: this.headers,
