@@ -251,7 +251,6 @@ class FileStore extends NetworkStore {
           timeout: options.timeout
         });
         statusCheckRequest.headers.addAll(headers.toPlainObject());
-        statusCheckRequest.headers.set('Content-Length', '0');
         statusCheckRequest.headers.set('Content-Range', `bytes */${metadata.size}`);
         return statusCheckRequest.execute(true)
           .then((statusCheckResponse) => {
@@ -294,19 +293,14 @@ class FileStore extends NetworkStore {
     Log.debug('File upload metadata', metadata);
     Log.debug('File upload options', options);
 
-    // Get slice of file to upload
-    const fileSlice = isFunction(file.slice) ? file.slice(options.start) : file;
-    const fileSliceSize = fileSlice.size || fileSlice.length;
-
     // Execute the file upload request
     const request = new NetworkRequest({
       method: RequestMethod.PUT,
       url: uploadUrl,
-      body: fileSlice,
+      body: isFunction(file.slice) ? file.slice(options.start) : file,
       timeout: options.timeout
     });
     request.headers.addAll(headers.toPlainObject());
-    request.headers.set('Content-Length', fileSliceSize);
     request.headers.set('Content-Range', `bytes ${options.start}-${metadata.size - 1}/${metadata.size}`);
     return request.execute(true)
       .then((response) => {
