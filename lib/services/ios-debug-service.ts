@@ -1,6 +1,7 @@
 import * as iOSDevice from "../common/mobile/ios/device/ios-device";
 import * as net from "net";
 import * as path from "path";
+import * as log4js from "log4js";
 import {ChildProcess} from "child_process";
 import byline = require("byline");
 
@@ -124,7 +125,11 @@ class IOSDebugService implements IDebugService {
 				if (lineText && _.startsWith(lineText, this.$projectData.projectId)) {
 					let pid = _.trimStart(lineText, this.$projectData.projectId + ": ");
 					this._lldbProcess = this.$childProcess.spawn("lldb", [ "-p", pid]);
-				 	this._lldbProcess.stdin.write("process continue\n");
+					if (log4js.levels.TRACE.isGreaterThanOrEqualTo(this.$logger.getLevel())) {
+						this._lldbProcess.stdout.pipe(process.stdout);
+					}
+					this._lldbProcess.stderr.pipe(process.stderr);
+					this._lldbProcess.stdin.write("process continue\n");
 				} else {
 					process.stdout.write(line + "\n");
 				}
