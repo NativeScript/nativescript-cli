@@ -1,5 +1,42 @@
 NativeScript CLI Changelog
 ================
+2.4.0 (2016, October 16)
+==
+### New
+* [Implemented #2071](https://github.com/NativeScript/nativescript-cli/issues/2071): Add device alias command
+* [Implemented #1968](https://github.com/NativeScript/nativescript-cli/issues/1968): Add `tns devices` as synonym for `tns device`
+* [Implemented #2067](https://github.com/NativeScript/nativescript-cli/issues/2067): Build, run, and livesync commands should support the teamid option
+* [Implemented #2111](https://github.com/NativeScript/nativescript-cli/issues/2111): Prevent app folder updates when --bundle option used
+* [Implemented #2129](https://github.com/NativeScript/nativescript-cli/issues/2129): Show typescript file row:column in CLI log when possible
+* [Implemented #2128](https://github.com/NativeScript/nativescript-cli/issues/2128): Add option to subscribe to NativeScript email lists when installing CLI
+* [Implemented #2027](https://github.com/NativeScript/nativescript-cli/issues/2027): Create tns update command
+* [Implemented #2157](https://github.com/NativeScript/nativescript-cli/issues/2157): Add support for Node 7
+* [Implemented #2151](https://github.com/NativeScript/nativescript-cli/issues/2151): Add snapshot plugin to project package.json
+* [Implemented #2164](https://github.com/NativeScript/nativescript-cli/issues/2164): Deprecate support for Node 0.12
+* [Implemented #2149](https://github.com/NativeScript/nativescript-cli/issues/2149): Implement incremental prepare
+
+### Fixed
+* [Fixed #2061](https://github.com/NativeScript/nativescript-cli/issues/2061): "Tns debug ios --watch" increase node processes after every change
+* [Fixed #2081](https://github.com/NativeScript/nativescript-cli/issues/2081): List of all iOS devices produces an error
+* [Fixed #2081](https://github.com/NativeScript/nativescript-cli/issues/2081): Check for iOS simulator and get full iOS logs on Mac
+* [Fixed #2086](https://github.com/NativeScript/nativescript-cli/issues/2086): Stop calling npm install on each prepare of NG projects
+* [Fixed #2087](https://github.com/NativeScript/nativescript-cli/issues/2087): Do not stop process when EPEERINVALID error is raised
+* [Fixed #2088](https://github.com/NativeScript/nativescript-cli/issues/2088): Show helpful information when sync over WiFi error is detected
+* [Fixed #2093](https://github.com/NativeScript/nativescript-cli/issues/2093): Fix getting iOS simulator device logs
+* [Fixed #2094](https://github.com/NativeScript/nativescript-cli/issues/2094): "--framework-path" with no argument fails with "input.replace is not a function" message
+* [Fixed #2056](https://github.com/NativeScript/nativescript-cli/issues/2056): Please let `tns` continue if it encounters a "does not satisfy its siblings' peerDependencies requirements!
+* [Fixed #1980](https://github.com/NativeScript/nativescript-cli/issues/1980): Prepare does not work properly when plugin has only Android native implementaion
+* [Fixed #1974](https://github.com/NativeScript/nativescript-cli/issues/1974): The plugin remove command fails with ENOENT
+* [Fixed #2110](https://github.com/NativeScript/nativescript-cli/issues/2110): Prepare plugins without node_modules
+* [Fixed #2072](https://github.com/NativeScript/nativescript-cli/issues/2072): First-time livesync fails on device
+* [Fixed #2070](https://github.com/NativeScript/nativescript-cli/issues/2070): Tns debug Android --watch cannot be stopped with Ctrl + C command after a few changes in the code
+* [Fixed #2152](https://github.com/NativeScript/nativescript-cli/issues/2152): Copy node_modules to platform on prepare (fix Node6/npm 3.x bug)
+* [Fixed #2154](https://github.com/NativeScript/nativescript-cli/issues/2154): "tns device log" throws exception on real iOS devices
+* [Fixed #2168](https://github.com/NativeScript/nativescript-cli/issues/2168): CALL_AND_RETRY_LAST Allocation failed - JavaScript heap out of memory
+* [Fixed #2178](https://github.com/NativeScript/nativescript-cli/issues/2178): Running `tsc` after runing tests causes test execution to fail
+* [Fixed #1398](https://github.com/NativeScript/nativescript-cli/issues/1398): CLI( tns ) Only can deploy first time to real iPhone device
+* [Fixed #2155](https://github.com/NativeScript/nativescript-cli/issues/2155): CLI does not work with Node7
+* [Fixed #1989](https://github.com/NativeScript/nativescript-cli/issues/1989): TNS and dependencies vs devdependencies
 
 2.3.0 (2016, September 15)
 ==
