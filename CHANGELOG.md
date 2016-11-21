@@ -1,6 +1,6 @@
 NativeScript CLI Changelog
 ================
-2.4.0 (2016, October 16)
+2.4.0 (2016, November 16)
 ==
 ### New
 * [Implemented #2071](https://github.com/NativeScript/nativescript-cli/issues/2071): Add device alias command
