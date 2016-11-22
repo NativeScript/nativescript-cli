@@ -70,11 +70,20 @@ export default class Response {
     }
 
     const data = this.data || {};
+    const name = data.name || data.error;
     const message = data.message || data.description;
     const debug = data.debug;
     const code = this.statusCode;
 
-    return new KinveyError(message, debug, code);
+    if (code === StatusCode.Unauthorized) {
+      return new InsufficientCredentialsError(message, debug, code);
+    } else if (code === StatusCode.NotFound) {
+      return new NotFoundError(message, debug, code);
+    } else if (code === StatusCode.ServerError) {
+      return new ServerError(message, debug, code);
+    }
+
+    return new KinveyError(name, message, debug, code);
   }
 
   isSuccess() {
@@ -103,7 +112,7 @@ export class KinveyResponse extends Response {
       return new FeatureUnavailableError(message, debug, code);
     } else if (name === 'IncompleteRequestBodyError') {
       return new IncompleteRequestBodyError(message, debug, code);
-    } else if (name === 'InsufficientCredentials' || code === StatusCode.Unauthorized) {
+    } else if (name === 'InsufficientCredentials') {
       return new InsufficientCredentialsError(message, debug, code);
     } else if (name === 'InvalidCredentials') {
       return new InvalidCredentialsError(message, debug, code);
@@ -124,13 +133,11 @@ export class KinveyResponse extends Response {
         || name === 'AppNotFound'
         || name === 'UserNotFound'
         || name === 'BlobNotFound'
-        || name === 'DocumentNotFound'
-        || code === StatusCode.NotFound) {
+        || name === 'DocumentNotFound') {
       return new NotFoundError(message, debug, code);
     } else if (name === 'ParameterValueOutOfRangeError') {
       return new ParameterValueOutOfRangeError(message, debug, code);
-    } else if (name === 'ServerError'
-      || code === StatusCode.ServerError) {
+    } else if (name === 'ServerError') {
       return new ServerError(message, debug, code);
     }
 
