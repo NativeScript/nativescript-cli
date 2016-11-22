@@ -1,10 +1,7 @@
 import KinveyError from './kinvey';
 
-function ServerError(message = 'An error occurred on the server.', debug, code = 500) {
-  return KinveyError.call(this, message, debug, code);
+export default class ServerError extends KinveyError {
+  constructor(message = 'An error occurred on the server.', debug, code = 500) {
+    super('ServerError', message, debug, code);
+  }
 }
-
-ServerError.prototype = Object.create(KinveyError.prototype);
-ServerError.prototype.constructor = ServerError;
-
-export default ServerError;

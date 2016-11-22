@@ -1,11 +1,8 @@
 import KinveyError from './kinvey';
 
-function InvalidCredentialsError(message = 'Invalid credentials. Please retry your request with correct credentials.', debug, code) {
-  return KinveyError.call(this, message, debug, code);
+export default class InvalidCredentialsError extends KinveyError {
+  constructor(message = 'Invalid credentials. Please retry your request with correct credentials.', debug, code) {
+    super('InvalidCredentialsError', message, debug, code);
+  }
 }
-
-InvalidCredentialsError.prototype = Object.create(KinveyError.prototype);
-InvalidCredentialsError.prototype.constructor = InvalidCredentialsError;
-
-export default InvalidCredentialsError;
 

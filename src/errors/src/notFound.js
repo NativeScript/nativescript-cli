@@ -1,11 +1,7 @@
 import KinveyError from './kinvey';
 
-function NotFoundError(message = 'The item was not found.', debug, code = 404) {
-  return KinveyError.call(this, message, debug, code);
+export default class NotFoundError extends KinveyError {
+  constructor(message = 'The item was not found.', debug, code = 404) {
+    super('NotFoundError', message, debug, code);
+  }
 }
-
-NotFoundError.prototype = Object.create(KinveyError.prototype);
-NotFoundError.prototype.constructor = NotFoundError;
-
-export default NotFoundError;
-

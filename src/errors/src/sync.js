@@ -1,10 +1,7 @@
 import KinveyError from './kinvey';
 
-function SyncError(message = 'An error occurred during sync.', debug, code) {
-  return KinveyError.call(this, message, debug, code);
+export default class SyncError extends KinveyError {
+  constructor(message = 'An error occurred during sync.', debug, code) {
+    super('SyncError', message, debug, code);
+  }
 }
-
-SyncError.prototype = Object.create(KinveyError.prototype);
-SyncError.prototype.constructor = SyncError;
-
-export default SyncError;
