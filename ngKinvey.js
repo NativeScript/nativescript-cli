@@ -1,4 +1,4 @@
-import Kinvey from './kinvey';
+import Kinvey from 'kinvey-phonegap-sdk';
 import angular from 'angular'; // eslint-disable-line import/no-unresolved
 
 class KinveyProvider {
@@ -10,7 +10,6 @@ class KinveyProvider {
     return Kinvey;
   }
 }
-
 
 // Create the kinvey angular module
 const ngKinvey = angular.module('kinvey', []);
