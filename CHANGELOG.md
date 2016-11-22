@@ -1,4 +1,21 @@
 ## Changelog
+## [v3.3.0](https://github.com/Kinvey/kinvey-nodejs/tree/v3.3.0) (2016-11-22)
+
+**Enhancements:**
+
+- Expose all the error objects on the `Kinvey` namespace.
+
+**Bug fixes:**
+
+- Fix name property on `Error` objects.
+- Merge `user._socialIdentity` when using an identity to login a user.
+- Do not disconnect identities on user logout.
+- Support private browser mode for Safari and Firefox.
+
+**Deprecated:**
+
+- `Kinvey.initialize` should be used instead of `Kinvey.init`.
+
 ## [v3.2.2](https://github.com/Kinvey/kinvey-nodejs/tree/v3.2.2) (2016-10-25)
 
 **Bug fixes:**
