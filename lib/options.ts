@@ -41,7 +41,8 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			teamId: { type: OptionType.String },
 			rebuild: { type: OptionType.Boolean, default: true },
 			syncAllFiles: { type: OptionType.Boolean },
-			liveEdit: { type: OptionType.Boolean }
+			liveEdit: { type: OptionType.Boolean },
+			chrome: { type: OptionType.Boolean }
 		},
 			path.join($hostInfo.isWindows ? process.env.AppData : path.join(osenv.home(), ".local/share"), ".nativescript-cli"),
 			$errors, $staticConfig);
