@@ -52,8 +52,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var filesNamespace = process && process.env && process.env.KINVEY_FILES_NAMESPACE || undefined || 'blob';
-var MAX_BACKOFF = process && process.env && process.env.KINVEY_MAX_BACKOFF || undefined || 32 * 1000;
+var filesNamespace = process && process.env && process.env.KINVEY_FILES_NAMESPACE || 'blob' || 'blob';
+var MAX_BACKOFF = process && process.env && process.env.KINVEY_MAX_BACKOFF || '32000' || 32 * 1000;
 
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
@@ -208,7 +208,6 @@ var FileStore = function (_NetworkStore) {
           timeout: options.timeout
         });
         statusCheckRequest.headers.addAll(headers.toPlainObject());
-        statusCheckRequest.headers.set('Content-Length', '0');
         statusCheckRequest.headers.set('Content-Range', 'bytes */' + metadata.size);
         return statusCheckRequest.execute(true).then(function (statusCheckResponse) {
           _utils.Log.debug('File upload status check response', statusCheckResponse);
@@ -249,17 +248,13 @@ var FileStore = function (_NetworkStore) {
       _utils.Log.debug('File upload metadata', metadata);
       _utils.Log.debug('File upload options', options);
 
-      var fileSlice = (0, _isFunction2.default)(file.slice) ? file.slice(options.start) : file;
-      var fileSliceSize = fileSlice.size || fileSlice.length;
-
       var request = new _request.NetworkRequest({
         method: _request.RequestMethod.PUT,
         url: uploadUrl,
-        body: fileSlice,
+        body: (0, _isFunction2.default)(file.slice) ? file.slice(options.start) : file,
         timeout: options.timeout
       });
       request.headers.addAll(headers.toPlainObject());
-      request.headers.set('Content-Length', fileSliceSize);
       request.headers.set('Content-Range', 'bytes ' + options.start + '-' + (metadata.size - 1) + '/' + metadata.size);
       return request.execute(true).then(function (response) {
         _utils.Log.debug('File upload response', response);
@@ -325,4 +320,4 @@ var FileStore = function (_NetworkStore) {
   return FileStore;
 }(_networkstore2.default);
 
-exports.default = FileStore;
+exports.default = new FileStore();

@@ -18,6 +18,8 @@ var _isPlainObject = require('lodash/isPlainObject');
 
 var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 
+var _utils = require('../../utils');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -49,7 +51,7 @@ var Headers = function () {
   }, {
     key: 'set',
     value: function set(name, value) {
-      if (name === undefined || name === null || value === undefined || value === null) {
+      if (!(0, _utils.isDefined)(name) || !(0, _utils.isDefined)(value)) {
         throw new Error('A name and value must be provided to set a header.');
       }
 

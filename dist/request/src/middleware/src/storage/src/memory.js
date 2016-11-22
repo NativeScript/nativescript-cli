@@ -44,7 +44,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var idAttribute = process && process.env && process.env.KINVEY_ID_ATTRIBUTE || undefined || '_id';
+var idAttribute = process && process.env && process.env.KINVEY_ID_ATTRIBUTE || '_id' || '_id';
 var caches = {};
 
 var Memory = function () {
@@ -159,7 +159,7 @@ var Memory = function () {
   }], [{
     key: 'isSupported',
     value: function isSupported() {
-      return true;
+      return _es6Promise2.default.resolve(true);
     }
   }]);
 

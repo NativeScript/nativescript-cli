@@ -25,7 +25,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var rpcNamespace = process && process.env && process.env.KINVEY_RPC_NAMESPACE || undefined || 'rpc';
+var rpcNamespace = process && process.env && process.env.KINVEY_RPC_NAMESPACE || 'rpc' || 'rpc';
 
 var CustomEndpoint = exports.CustomEndpoint = function () {
   function CustomEndpoint() {

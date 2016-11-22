@@ -16,9 +16,7 @@ var _request2 = _interopRequireDefault(_request);
 
 var _client = require('../../client');
 
-var _kinveyresponse = require('./kinveyresponse');
-
-var _kinveyresponse2 = _interopRequireDefault(_kinveyresponse);
+var _response = require('./response');
 
 var _urlPattern = require('url-pattern');
 
@@ -42,7 +40,13 @@ var _aggregation = require('../../aggregation');
 
 var _aggregation2 = _interopRequireDefault(_aggregation);
 
+var _es6Promise = require('es6-promise');
+
+var _es6Promise2 = _interopRequireDefault(_es6Promise);
+
 var _utils = require('../../utils');
+
+var _rack = require('./rack');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -52,30 +56,34 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var CacheRequest = function (_Request) {
-  _inherits(CacheRequest, _Request);
+var usersNamespace = process && process.env && process.env.KINVEY_USERS_NAMESPACE || 'user' || 'user';
+var activeUserCollectionName = process && process.env && process.env.KINVEY_USER_ACTIVE_COLLECTION_NAME || undefined || 'kinvey_active_user';
+var activeUsers = {};
 
-  function CacheRequest() {
+var LocalRequest = function (_Request) {
+  _inherits(LocalRequest, _Request);
+
+  function LocalRequest() {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-    _classCallCheck(this, CacheRequest);
+    _classCallCheck(this, LocalRequest);
 
-    var _this = _possibleConstructorReturn(this, (CacheRequest.__proto__ || Object.getPrototypeOf(CacheRequest)).call(this, options));
+    var _this = _possibleConstructorReturn(this, (LocalRequest.__proto__ || Object.getPrototypeOf(LocalRequest)).call(this, options));
 
     _this.aggregation = options.aggregation;
     _this.query = options.query;
-    _this.rack = _this.client.cacheRack;
+    _this.rack = new _rack.CacheRack();
     return _this;
   }
 
-  _createClass(CacheRequest, [{
+  _createClass(LocalRequest, [{
     key: 'execute',
     value: function execute() {
       var _this2 = this;
 
-      return _get(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'execute', this).call(this).then(function (response) {
-        if (!(response instanceof _kinveyresponse2.default)) {
-          response = new _kinveyresponse2.default({
+      return _get(LocalRequest.prototype.__proto__ || Object.getPrototypeOf(LocalRequest.prototype), 'execute', this).call(this).then(function (response) {
+        if (!(response instanceof _response.KinveyResponse)) {
+          response = new _response.KinveyResponse({
             statusCode: response.statusCode,
             headers: response.headers,
             data: response.data
@@ -86,11 +94,11 @@ var CacheRequest = function (_Request) {
           throw response.error;
         }
 
-        if ((0, _utils.isDefined)(_this2.query)) {
+        if ((0, _utils.isDefined)(_this2.query) && (0, _utils.isDefined)(response.data)) {
           response.data = _this2.query.process(response.data);
         }
 
-        if ((0, _utils.isDefined)(_this2.aggregation)) {
+        if ((0, _utils.isDefined)(_this2.aggregation) && (0, _utils.isDefined)(response.data)) {
           response.data = _this2.aggregation.process(response.data);
         }
 
@@ -100,7 +108,7 @@ var CacheRequest = function (_Request) {
   }, {
     key: 'toPlainObject',
     value: function toPlainObject() {
-      var obj = _get(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'toPlainObject', this).call(this);
+      var obj = _get(LocalRequest.prototype.__proto__ || Object.getPrototypeOf(LocalRequest.prototype), 'toPlainObject', this).call(this);
       obj.appKey = this.appKey;
       obj.collection = this.collection;
       obj.entityId = this.entityId;
@@ -134,33 +142,76 @@ var CacheRequest = function (_Request) {
   }, {
     key: 'url',
     get: function get() {
-      return _get(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'url', this);
+      return _get(LocalRequest.prototype.__proto__ || Object.getPrototypeOf(LocalRequest.prototype), 'url', this);
     },
     set: function set(urlString) {
-      _set(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'url', urlString, this);
+      _set(LocalRequest.prototype.__proto__ || Object.getPrototypeOf(LocalRequest.prototype), 'url', urlString, this);
       var pathname = global.escape(_url2.default.parse(urlString).pathname);
       var pattern = new _urlPattern2.default('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:entityId)(/)');
 
-      var _ref = pattern.match(pathname) || {};
-
-      var appKey = _ref.appKey;
-      var collection = _ref.collection;
-      var entityId = _ref.entityId;
+      var _ref = pattern.match(pathname) || {},
+          appKey = _ref.appKey,
+          collection = _ref.collection,
+          entityId = _ref.entityId;
 
       this.appKey = appKey;
       this.collection = collection;
       this.entityId = entityId;
     }
   }], [{
+    key: 'loadActiveUser',
+    value: function loadActiveUser() {
+      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
+
+      var request = new LocalRequest({
+        method: _request.RequestMethod.GET,
+        url: _url2.default.format({
+          protocol: client.protocol,
+          host: client.host,
+          pathname: '/' + usersNamespace + '/' + client.appKey + '/' + activeUserCollectionName
+        })
+      });
+      return request.execute().then(function (response) {
+        return response.data;
+      }).then(function (users) {
+        if (users.length > 0) {
+          return users[0];
+        }
+
+        var legacyActiveUser = LocalRequest.loadActiveUserLegacy(client);
+        if ((0, _utils.isDefined)(legacyActiveUser)) {
+          return LocalRequest.setActiveUser(client, legacyActiveUser);
+        }
+
+        return null;
+      }).then(function (activeUser) {
+        activeUsers[client.appKey] = activeUser;
+        return activeUser;
+      }).catch(function () {
+        return null;
+      });
+    }
+  }, {
+    key: 'loadActiveUserLegacy',
+    value: function loadActiveUserLegacy() {
+      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
+
+      var activeUser = LocalRequest.getActiveUserLegacy(client);
+      activeUsers[client.appKey] = activeUser;
+      return activeUser;
+    }
+  }, {
     key: 'getActiveUser',
     value: function getActiveUser() {
       var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
 
-      return Promise.resolve(CacheRequest.getActiveUserLegacy(client));
+      return activeUsers[client.appKey];
     }
   }, {
     key: 'getActiveUserLegacy',
-    value: function getActiveUserLegacy(client) {
+    value: function getActiveUserLegacy() {
+      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
+
       try {
         return _localStorage2.default.get(client.appKey + 'kinvey_user');
       } catch (error) {
@@ -173,21 +224,73 @@ var CacheRequest = function (_Request) {
       var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
       var user = arguments[1];
 
-      return Promise.resolve(CacheRequest.setActiveUserLegacy(client, user));
+      var promise = _es6Promise2.default.resolve(null);
+      var activeUser = LocalRequest.getActiveUser(client);
+
+      if ((0, _utils.isDefined)(activeUser)) {
+        LocalRequest.setActiveUserLegacy(client, null);
+
+        activeUsers[client.appKey] = null;
+
+        var request = new LocalRequest({
+          method: _request.RequestMethod.DELETE,
+          url: _url2.default.format({
+            protocol: client.protocol,
+            host: client.host,
+            pathname: '/' + usersNamespace + '/' + client.appKey + '/' + activeUserCollectionName + '/' + activeUser._id
+          })
+        });
+        promise = request.execute().then(function (response) {
+          return response.data;
+        });
+      }
+
+      return promise.then(function () {
+        if ((0, _utils.isDefined)(user) === false) {
+          return null;
+        }
+
+        activeUsers[client.appKey] = user;
+
+        LocalRequest.setActiveUserLegacy(client, user);
+
+        var request = new LocalRequest({
+          method: _request.RequestMethod.POST,
+          url: _url2.default.format({
+            protocol: client.protocol,
+            host: client.host,
+            pathname: '/' + usersNamespace + '/' + client.appKey + '/' + activeUserCollectionName
+          }),
+          body: user
+        });
+        return request.execute().then(function (response) {
+          return response.data;
+        });
+      }).then(function () {
+        return user;
+      });
     }
   }, {
     key: 'setActiveUserLegacy',
-    value: function setActiveUserLegacy(client, user) {
+    value: function setActiveUserLegacy() {
+      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
+      var user = arguments[1];
+
       try {
         _localStorage2.default.remove(client.appKey + 'kinvey_user');
-        return _localStorage2.default.set(client.appKey + 'kinvey_user', user);
+
+        if ((0, _utils.isDefined)(user)) {
+          _localStorage2.default.set(client.appKey + 'kinvey_user', user);
+        }
+
+        return true;
       } catch (error) {
         return false;
       }
     }
   }]);
 
-  return CacheRequest;
+  return LocalRequest;
 }(_request2.default);
 
-exports.default = CacheRequest;
+exports.default = LocalRequest;

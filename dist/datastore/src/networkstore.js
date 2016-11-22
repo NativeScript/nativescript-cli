@@ -48,7 +48,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var appdataNamespace = process && process.env && process.env.KINVEY_DATASTORE_NAMESPACE || undefined || 'appdata';
+var appdataNamespace = process && process.env && process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata' || 'appdata';
 
 var NetworkStore = function () {
   function NetworkStore(collection) {
@@ -62,7 +62,7 @@ var NetworkStore = function () {
 
     this.collection = collection;
 
-    this.client = options.client || _client.Client.sharedInstance();
+    this.client = options.client;
 
     this.useDeltaFetch = options.useDeltaFetch === true;
   }
@@ -464,6 +464,22 @@ var NetworkStore = function () {
     key: 'subscribe',
     value: function subscribe(onNext, onError, onComplete) {
       return this.liveStream.subscribe(onNext, onError, onComplete);
+    }
+  }, {
+    key: 'client',
+    get: function get() {
+      if ((0, _utils.isDefined)(this._client)) {
+        return this._client;
+      }
+
+      return _client.Client.sharedInstance();
+    },
+    set: function set(client) {
+      if (client instanceof _client.Client) {
+        this._client = client;
+      } else {
+        this._client = null;
+      }
     }
   }, {
     key: 'pathname',

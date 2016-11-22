@@ -7,6 +7,10 @@ exports.MobileIdentityConnect = exports.AuthorizationGrant = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _popup = require('./popup');
+
+var _popup2 = _interopRequireDefault(_popup);
+
 var _identity = require('./identity');
 
 var _identity2 = _interopRequireDefault(_identity);
@@ -41,9 +45,9 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var authPathname = process && process.env && process.env.KINVEY_MIC_AUTH_PATHNAME || undefined || '/oauth/auth';
-var tokenPathname = process && process.env && process.env.KINVEY_MIC_TOKEN_PATHNAME || undefined || '/oauth/token';
-var invalidatePathname = process && process.env && process.env.KINVEY_MIC_INVALIDATE_PATHNAME || undefined || '/oauth/invalidate';
+var authPathname = process && process.env && process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth' || '/oauth/auth';
+var tokenPathname = process && process.env && process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token' || '/oauth/token';
+var invalidatePathname = process && process.env && process.env.KINVEY_MIC_INVALIDATE_PATHNAME || '/oauth/invalidate' || '/oauth/invalidate';
 
 var AuthorizationGrant = {
   AuthorizationCodeLoginPage: 'AuthorizationCodeLoginPage',
@@ -73,7 +77,11 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Identity)
 
       var promise = _es6Promise2.default.resolve().then(function () {
         if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
-          return _this2.requestCodeWithPopup(clientId, redirectUri, options);
+          return _this2.requestCodeWithPopup(clientId, redirectUri, options).catch(function (error) {
+            if (error instanceof _errors.PopupError) {
+              throw new _errors.MobileIdentityConnectError('AuthorizationGrant.AuthorizationCodeLoginPage is not supported on this platform.');
+            }
+          });
         } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
           return _this2.requestTempLoginUrl(clientId, redirectUri, options).then(function (url) {
             return _this2.requestCodeWithUrl(url, clientId, redirectUri, options);
@@ -139,10 +147,9 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Identity)
 
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-      var Popup = this.client.popupClass;
-
       var promise = _es6Promise2.default.resolve().then(function () {
         var pathname = '/';
+        var popup = new _popup2.default();
 
         if (options.version) {
           var version = options.version;
@@ -154,11 +161,6 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Identity)
           pathname = _path2.default.join(pathname, version.indexOf('v') === 0 ? version : 'v' + version);
         }
 
-        if (!Popup) {
-          throw new _errors.KinveyError('Popup is undefined.' + (' Unable to login using authorization grant ' + AuthorizationGrant.AuthorizationCodeLoginPage + '.'));
-        }
-
-        var popup = new Popup();
         return popup.open(_url2.default.format({
           protocol: _this3.client.micProtocol,
           host: _this3.client.micHost,

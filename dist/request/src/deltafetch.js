@@ -12,15 +12,13 @@ var _set = function set(object, property, value, receiver) { var desc = Object.g
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _kinveyrequest = require('./kinveyrequest');
-
-var _kinveyrequest2 = _interopRequireDefault(_kinveyrequest);
-
 var _request2 = require('./request');
 
-var _cacherequest = require('./cacherequest');
+var _network = require('./network');
 
-var _cacherequest2 = _interopRequireDefault(_cacherequest);
+var _local = require('./local');
+
+var _local2 = _interopRequireDefault(_local);
 
 var _response = require('./response');
 
@@ -88,7 +86,7 @@ var DeltaFetchRequest = function (_KinveyRequest) {
     value: function execute() {
       var _this2 = this;
 
-      var request = new _cacherequest2.default({
+      var request = new _local2.default({
         method: _request2.RequestMethod.GET,
         url: this.url,
         headers: this.headers,
@@ -110,7 +108,7 @@ var DeltaFetchRequest = function (_KinveyRequest) {
             var cacheDocuments = (0, _keyBy2.default)(cacheData, '_id');
             var query = new _query4.default((0, _result2.default)(_this2.query, 'toJSON', _this2.query));
             query.fields = ['_id', '_kmd.lmt'];
-            var request = new _kinveyrequest2.default({
+            var request = new _network.KinveyRequest({
               method: _request2.RequestMethod.GET,
               url: _this2.url,
               headers: _this2.headers,
@@ -157,7 +155,7 @@ var DeltaFetchRequest = function (_KinveyRequest) {
                   var ids = deltaSetIds.slice(i, deltaSetIds.length > maxIdsPerRequest + i ? maxIdsPerRequest : deltaSetIds.length);
                   _query.contains('_id', ids);
 
-                  var _request = new _kinveyrequest2.default({
+                  var _request = new _network.KinveyRequest({
                     method: _request2.RequestMethod.GET,
                     url: _this2.url,
                     headers: _this2.headers,
@@ -209,7 +207,7 @@ var DeltaFetchRequest = function (_KinveyRequest) {
           if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
         }
 
-        var request = new _kinveyrequest2.default({
+        var request = new _network.KinveyRequest({
           method: _request2.RequestMethod.GET,
           url: _this2.url,
           headers: _this2.headers,
@@ -253,6 +251,6 @@ var DeltaFetchRequest = function (_KinveyRequest) {
   }]);
 
   return DeltaFetchRequest;
-}(_kinveyrequest2.default);
+}(_network.KinveyRequest);
 
 exports.default = DeltaFetchRequest;

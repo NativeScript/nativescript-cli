@@ -36,8 +36,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var usersNamespace = process && process.env && process.env.KINVEY_USERS_NAMESPACE || undefined || 'user';
-var rpcNamespace = process && process.env && process.env.KINVEY_RPC_NAMESPACE || undefined || 'rpc';
+var usersNamespace = process && process.env && process.env.KINVEY_USERS_NAMESPACE || 'user' || 'user';
+var rpcNamespace = process && process.env && process.env.KINVEY_RPC_NAMESPACE || 'rpc' || 'rpc';
 
 var UserStore = function (_NetworkStore) {
   _inherits(UserStore, _NetworkStore);
@@ -128,4 +128,4 @@ var UserStore = function (_NetworkStore) {
   return UserStore;
 }(_networkstore2.default);
 
-exports.default = UserStore;
+exports.default = new UserStore();

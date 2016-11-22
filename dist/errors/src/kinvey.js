@@ -4,9 +4,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _request = require('./request');
+var _es6Error = require('es6-error');
 
-var _request2 = _interopRequireDefault(_request);
+var _es6Error2 = _interopRequireDefault(_es6Error);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -16,21 +16,27 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var NetworkRequest = function (_Request) {
-  _inherits(NetworkRequest, _Request);
+var KinveyError = function (_ExtendableError) {
+  _inherits(KinveyError, _ExtendableError);
 
-  function NetworkRequest() {
-    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  function KinveyError(name) {
+    var message = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'An error occurred.';
+    var debug = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
+    var code = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : -1;
 
-    _classCallCheck(this, NetworkRequest);
+    _classCallCheck(this, KinveyError);
 
-    var _this = _possibleConstructorReturn(this, (NetworkRequest.__proto__ || Object.getPrototypeOf(NetworkRequest)).call(this, options));
+    var _this = _possibleConstructorReturn(this, (KinveyError.__proto__ || Object.getPrototypeOf(KinveyError)).call(this));
 
-    _this.rack = _this.client.networkRack;
+    _this.name = name || _this.constructor.name;
+    _this.message = message;
+    _this.debug = debug;
+    _this.code = code;
+    _this.stack = new Error(message).stack;
     return _this;
   }
 
-  return NetworkRequest;
-}(_request2.default);
+  return KinveyError;
+}(_es6Error2.default);
 
-exports.default = NetworkRequest;
+exports.default = KinveyError;

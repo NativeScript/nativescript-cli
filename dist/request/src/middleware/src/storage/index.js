@@ -56,6 +56,19 @@ var Storage = function () {
   }
 
   _createClass(Storage, [{
+    key: 'getAdapter',
+    value: function getAdapter() {
+      var _this = this;
+
+      return _memory2.default.isSupported().then(function (isMemorySupported) {
+        if (isMemorySupported) {
+          return new _memory2.default(_this.name);
+        }
+
+        throw new Error('No storage adapter is available.');
+      });
+    }
+  }, {
     key: 'generateObjectId',
     value: function generateObjectId() {
       var length = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 24;
@@ -73,7 +86,9 @@ var Storage = function () {
   }, {
     key: 'find',
     value: function find(collection) {
-      return this.adapter.find(collection).catch(function (error) {
+      return this.getAdapter().then(function (adapter) {
+        return adapter.find(collection);
+      }).catch(function (error) {
         if (error instanceof _errors.NotFoundError || error.code === 404) {
           return [];
         }
@@ -91,12 +106,14 @@ var Storage = function () {
         return _es6Promise2.default.reject(new Error('id must be a string', id));
       }
 
-      return this.adapter.findById(collection, id);
+      return this.getAdapter().then(function (adapter) {
+        return adapter.findById(collection, id);
+      });
     }
   }, {
     key: 'save',
     value: function save(collection) {
-      var _this = this;
+      var _this2 = this;
 
       var entities = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
 
@@ -117,7 +134,7 @@ var Storage = function () {
           var kmd = entity._kmd || {};
 
           if (!id) {
-            id = _this.generateObjectId();
+            id = _this2.generateObjectId();
             kmd.local = true;
           }
 
@@ -126,7 +143,9 @@ var Storage = function () {
           return entity;
         });
 
-        return _this.adapter.save(collection, entities).then(function (entities) {
+        return _this2.getAdapter().then(function (adapter) {
+          return adapter.save(collection, entities);
+        }).then(function (entities) {
           if (singular && entities.length > 0) {
             return entities[0];
           }
@@ -138,7 +157,7 @@ var Storage = function () {
   }, {
     key: 'remove',
     value: function remove(collection) {
-      var _this2 = this;
+      var _this3 = this;
 
       var entities = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
 
@@ -147,7 +166,7 @@ var Storage = function () {
           return _es6Promise2.default.reject('Unable to remove an entity because it does not have _id.');
         }
 
-        return _this2.removeById(collection, entity._id);
+        return _this3.removeById(collection, entity._id);
       })).then(function (responses) {
         return responses.reduce(function (entities, entity) {
           entities.push(entity);
@@ -158,33 +177,28 @@ var Storage = function () {
   }, {
     key: 'removeById',
     value: function removeById(collection, id) {
-      var _this3 = this;
+      var _this4 = this;
 
       return queue.add(function () {
         if (!(0, _isString2.default)(id)) {
           return _es6Promise2.default.reject(new Error('id must be a string', id));
         }
 
-        return _this3.adapter.removeById(collection, id);
+        return _this4.getAdapter().then(function (adapter) {
+          return adapter.removeById(collection, id);
+        });
       });
     }
   }, {
     key: 'clear',
     value: function clear() {
-      var _this4 = this;
+      var _this5 = this;
 
       return queue.add(function () {
-        return _this4.adapter.clear();
+        return _this5.getAdapter().then(function (adapter) {
+          return adapter.clear();
+        });
       });
-    }
-  }, {
-    key: 'adapter',
-    get: function get() {
-      if (_memory2.default.isSupported()) {
-        return new _memory2.default(this.name);
-      }
-
-      throw new Error('No storage adapter is available.');
     }
   }]);
 

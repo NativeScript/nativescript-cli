@@ -33,7 +33,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var appdataNamespace = process && process.env && process.env.KINVEY_DATASTORE_NAMESPACE || undefined || 'appdata';
+var appdataNamespace = process && process.env && process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata' || 'appdata';
 
 var DataStoreType = {
   Cache: 'Cache',

@@ -20,7 +20,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var kmdAttribute = process && process.env && process.env.KINVEY_KMD_ATTRIBUTE || undefined || '_kmd';
+var kmdAttribute = process && process.env && process.env.KINVEY_KMD_ATTRIBUTE || '_kmd' || '_kmd';
 
 var Metadata = function () {
   function Metadata() {

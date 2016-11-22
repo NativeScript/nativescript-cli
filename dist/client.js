@@ -7,13 +7,9 @@ exports.Client = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _rack = require('./rack');
-
-var _rack2 = _interopRequireDefault(_rack);
+var _request = require('./request');
 
 var _errors = require('./errors');
-
-var _utils = require('./utils');
 
 var _url = require('url');
 
@@ -84,14 +80,6 @@ var Client = exports.Client = function () {
     this.encryptionKey = options.encryptionKey;
 
     this.appVersion = options.appVersion;
-
-    this.cacheRack = options.cacheRack || new _rack.CacheRack();
-
-    this.networkRack = options.networkRack || new _rack.NetworkRack();
-
-    this.deviceClass = options.deviceClass || _utils.Device;
-
-    this.popupClass = options.popupClass;
   }
 
   _createClass(Client, [{
@@ -113,6 +101,11 @@ var Client = exports.Client = function () {
         encryptionKey: this.encryptionKey,
         appVersion: this.appVersion
       };
+    }
+  }, {
+    key: 'activeUser',
+    get: function get() {
+      return _request.CacheRequest.getActiveUser(this);
     }
   }, {
     key: 'apiHostname',
@@ -165,36 +158,22 @@ var Client = exports.Client = function () {
 
       this._appVersion = appVersion;
     }
-  }, {
-    key: 'cacheRack',
-    get: function get() {
-      return this._cacheRack;
-    },
-    set: function set(rack) {
-      if (rack && !(rack instanceof _rack2.default)) {
-        throw new _errors.KinveyError('rack must be an instance of the Rack class.');
-      }
-
-      this._cacheRack = rack;
-    }
-  }, {
-    key: 'networkRack',
-    get: function get() {
-      return this._networkRack;
-    },
-    set: function set(rack) {
-      if (rack && !(rack instanceof _rack2.default)) {
-        throw new _errors.KinveyError('rack must be an instance of the Rack class.');
-      }
-
-      this._networkRack = rack;
-    }
   }], [{
     key: 'init',
     value: function init(options) {
       var client = new Client(options);
       _sharedInstance = client;
+      _request.CacheRequest.loadActiveUserLegacy(client);
       return client;
+    }
+  }, {
+    key: 'initialize',
+    value: function initialize(options) {
+      var client = new Client(options);
+      _sharedInstance = client;
+      return _request.CacheRequest.loadActiveUser(client).then(function () {
+        return client;
+      });
     }
   }, {
     key: 'sharedInstance',

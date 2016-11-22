@@ -3,31 +3,23 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.StatusCode = exports.Response = exports.RequestMethod = exports.Properties = exports.NetworkRequest = exports.KinveyResponse = exports.KinveyRequest = exports.Headers = exports.DeltaFetchRequest = exports.CacheRequest = exports.AuthType = undefined;
+exports.StatusCode = exports.Response = exports.RequestMethod = exports.Properties = exports.NetworkRequest = exports.CacheRequest = exports.LocalRequest = exports.KinveyResponse = exports.KinveyRequest = exports.Headers = exports.DeltaFetchRequest = exports.AuthType = undefined;
 
-var _cacherequest = require('./src/cacherequest');
+var _local = require('./src/local');
 
-var _cacherequest2 = _interopRequireDefault(_cacherequest);
+var _local2 = _interopRequireDefault(_local);
 
-var _deltafetchrequest = require('./src/deltafetchrequest');
+var _deltafetch = require('./src/deltafetch');
 
-var _deltafetchrequest2 = _interopRequireDefault(_deltafetchrequest);
+var _deltafetch2 = _interopRequireDefault(_deltafetch);
 
 var _headers = require('./src/headers');
 
 var _headers2 = _interopRequireDefault(_headers);
 
-var _kinveyrequest = require('./src/kinveyrequest');
+var _network = require('./src/network');
 
-var _kinveyrequest2 = _interopRequireDefault(_kinveyrequest);
-
-var _kinveyresponse = require('./src/kinveyresponse');
-
-var _kinveyresponse2 = _interopRequireDefault(_kinveyresponse);
-
-var _networkrequest = require('./src/networkrequest');
-
-var _networkrequest2 = _interopRequireDefault(_networkrequest);
+var _network2 = _interopRequireDefault(_network);
 
 var _request = require('./src/request');
 
@@ -39,14 +31,15 @@ var _response2 = _interopRequireDefault(_response);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-exports.AuthType = _kinveyrequest.AuthType;
-exports.CacheRequest = _cacherequest2.default;
-exports.DeltaFetchRequest = _deltafetchrequest2.default;
+exports.AuthType = _network.AuthType;
+exports.DeltaFetchRequest = _deltafetch2.default;
 exports.Headers = _headers2.default;
-exports.KinveyRequest = _kinveyrequest2.default;
-exports.KinveyResponse = _kinveyresponse2.default;
-exports.NetworkRequest = _networkrequest2.default;
-exports.Properties = _kinveyrequest.Properties;
+exports.KinveyRequest = _network.KinveyRequest;
+exports.KinveyResponse = _response.KinveyResponse;
+exports.LocalRequest = _local2.default;
+exports.CacheRequest = _local2.default;
+exports.NetworkRequest = _network2.default;
+exports.Properties = _network.Properties;
 exports.RequestMethod = _request.RequestMethod;
 exports.Response = _response2.default;
 exports.StatusCode = _response.StatusCode;

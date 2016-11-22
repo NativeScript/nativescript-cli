@@ -47,8 +47,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var appdataNamespace = process && process.env && process.env.KINVEY_DATASTORE_NAMESPACE || undefined || 'appdata';
-var syncCollectionName = process && process.env && process.env.KINVEY_SYNC_COLLECTION_NAME || undefined || 'kinvey_sync';
+var appdataNamespace = process && process.env && process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata' || 'appdata';
+var syncCollectionName = process && process.env && process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sync' || 'kinvey_sync';
 
 var SyncOperation = {
   Create: _request5.RequestMethod.POST,
@@ -272,8 +272,8 @@ var SyncManager = function () {
                 i += batchSize;
 
                 return _es6Promise2.default.all((0, _map2.default)(batch, function (syncEntity) {
-                  var entityId = syncEntity.entityId;
-                  var state = syncEntity.state;
+                  var entityId = syncEntity.entityId,
+                      state = syncEntity.state;
                   var method = state.method;
 
 

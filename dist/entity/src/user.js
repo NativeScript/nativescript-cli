@@ -60,13 +60,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var usersNamespace = process && process.env && process.env.KINVEY_USERS_NAMESPACE || undefined || 'user';
-var rpcNamespace = process && process.env && process.env.KINVEY_RPC_NAMESPACE || undefined || 'rpc';
-var idAttribute = process && process.env && process.env.KINVEY_ID_ATTRIBUTE || undefined || '_id';
-var kmdAttribute = process && process.env && process.env.KINVEY_KMD_ATTRIBUTE || undefined || '_kmd';
-var socialIdentityAttribute = process && process.env && process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || undefined || '_socialIdentity';
-var usernameAttribute = process && process.env && process.env.KINVEY_USERNAME_ATTRIBUTE || undefined || 'username';
-var emailAttribute = process && process.env && process.env.KINVEY_EMAIL_ATTRIBUTE || undefined || 'email';
+var usersNamespace = process && process.env && process.env.KINVEY_USERS_NAMESPACE || 'user' || 'user';
+var rpcNamespace = process && process.env && process.env.KINVEY_RPC_NAMESPACE || 'rpc' || 'rpc';
+var idAttribute = process && process.env && process.env.KINVEY_ID_ATTRIBUTE || '_id' || '_id';
+var kmdAttribute = process && process.env && process.env.KINVEY_KMD_ATTRIBUTE || '_kmd' || '_kmd';
+var socialIdentityAttribute = process && process.env && process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity' || '_socialIdentity';
+var usernameAttribute = process && process.env && process.env.KINVEY_USERNAME_ATTRIBUTE || 'username' || 'username';
+var emailAttribute = process && process.env && process.env.KINVEY_EMAIL_ATTRIBUTE || 'email' || 'email';
 
 var User = function () {
   function User() {
@@ -85,7 +85,7 @@ var User = function () {
     value: function isActive() {
       var activeUser = User.getActiveUser(this.client);
 
-      if (activeUser && activeUser[idAttribute] === this[idAttribute]) {
+      if ((0, _utils.isDefined)(activeUser) && activeUser._id === this._id) {
         return true;
       }
 
@@ -105,6 +105,16 @@ var User = function () {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
       var credentials = username;
+      var isActive = this.isActive();
+      var activeUser = User.getActiveUser(this.client);
+
+      if (isActive === true) {
+        return _es6Promise2.default.reject(new _errors.ActiveUserError('This user is already the active user.'));
+      }
+
+      if ((0, _utils.isDefined)(activeUser)) {
+        return _es6Promise2.default.reject(new _errors.ActiveUserError('An active user already exists. Please logout the active user before you login.'));
+      }
 
       if ((0, _isObject2.default)(credentials)) {
         options = password || {};
@@ -115,25 +125,15 @@ var User = function () {
         };
       }
 
-      if (this.isActive()) {
-        return _es6Promise2.default.reject(new _errors.ActiveUserError('This user is already the active user.'));
+      if ((0, _utils.isDefined)(credentials.username)) {
+        credentials.username = String(credentials.username).trim();
       }
 
-      if (User.getActiveUser(this.client)) {
-        return _es6Promise2.default.reject(new _errors.ActiveUserError('An active user already exists. Please logout the active user before you login.'));
+      if ((0, _utils.isDefined)(credentials.password)) {
+        credentials.password = String(credentials.password).trim();
       }
 
-      if (!credentials[socialIdentityAttribute]) {
-        if (credentials.username) {
-          credentials.username = String(credentials.username).trim();
-        }
-
-        if (credentials.password) {
-          credentials.password = String(credentials.password).trim();
-        }
-      }
-
-      if ((!credentials.username || credentials.username === '' || !credentials.password || credentials.password === '') && !credentials[socialIdentityAttribute]) {
+      if ((!(0, _utils.isDefined)(credentials.username) || credentials.username === '' || !(0, _utils.isDefined)(credentials.password) || credentials.password === '') && !(0, _utils.isDefined)(credentials._socialIdentity)) {
         return _es6Promise2.default.reject(new _errors.KinveyError('Username and/or password missing. Please provide both a username and password to login.'));
       }
 
@@ -150,15 +150,16 @@ var User = function () {
         timeout: options.timeout,
         client: this.client
       });
+
       return request.execute().then(function (response) {
         return response.data;
       }).then(function (data) {
-        if (credentials[socialIdentityAttribute]) {
-          data[socialIdentityAttribute] = credentials[socialIdentityAttribute];
+        if ((0, _utils.isDefined)(data._socialIdentity)) {
+          data._socialIdentity = (0, _assign2.default)(data._socialIdentity, credentials._socialIdentity);
         }
 
         _this.data = data;
-        _request.CacheRequest.setActiveUserLegacy(_this.client, _this.data);
+        return _request.CacheRequest.setActiveUser(_this.client, _this.data);
       }).then(function () {
         return _this;
       });
@@ -170,12 +171,15 @@ var User = function () {
 
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-      if (this.isActive()) {
-        return _es6Promise2.default.reject(new _errors.ActiveUserError('This user is already the active user.'));
+      var isActive = this.isActive();
+      var activeUser = User.getActiveUser(this.client);
+
+      if (isActive) {
+        throw new _errors.ActiveUserError('This user is already the active user.');
       }
 
-      if (User.getActiveUser(this.client)) {
-        return _es6Promise2.default.reject(new _errors.ActiveUserError('An active user already exists. Please logout the active user before you login.'));
+      if ((0, _utils.isDefined)(activeUser)) {
+        throw new _errors.ActiveUserError('An active user already exists. Please logout the active user before you login.');
       }
 
       var mic = new _identity.MobileIdentityConnect({ client: this.client });
@@ -188,12 +192,13 @@ var User = function () {
     value: function connectIdentity(identity, session, options) {
       var _this3 = this;
 
+      var isActive = this.isActive();
       var data = {};
       var socialIdentity = data[socialIdentityAttribute] || {};
       socialIdentity[identity] = session;
       data[socialIdentityAttribute] = socialIdentity;
 
-      if (this.isActive()) {
+      if (isActive) {
         return this.update(data, options);
       }
 
@@ -314,20 +319,17 @@ var User = function () {
 
       return request.execute().catch(function (error) {
         _utils.Log.error(error);
+        return null;
       }).then(function () {
-        var identities = Object.keys(_this8._socialIdentity || {});
-        var promises = identities.map(function (identity) {
-          return _this8.disconnectIdentity(identity, options);
-        });
-        return _es6Promise2.default.all(promises);
+        return _request.CacheRequest.setActiveUser(_this8.client, null);
       }).catch(function (error) {
         _utils.Log.error(error);
-      }).then(function () {
-        return _request.CacheRequest.setActiveUserLegacy(_this8.client, null);
+        return null;
       }).then(function () {
         return _datastore2.default.clearCache({ client: _this8.client });
       }).catch(function (error) {
         _utils.Log.error(error);
+        return null;
       }).then(function () {
         return _this8;
       });
@@ -339,12 +341,13 @@ var User = function () {
 
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
+      var activeUser = User.getActiveUser(this.client);
       options = (0, _assign2.default)({
         state: true
       }, options);
 
-      if (options.state === true && User.getActiveUser(this.client)) {
-        return _es6Promise2.default.reject(new _errors.ActiveUserError('An active user already exists. Please logout the active user before you login.'));
+      if (options.state === true && (0, _utils.isDefined)(activeUser)) {
+        throw new _errors.ActiveUserError('An active user already exists. Please logout the active user before you login.');
       }
 
       if (data instanceof User) {
@@ -371,7 +374,7 @@ var User = function () {
         _this9.data = data;
 
         if (options.state === true) {
-          return _request.CacheRequest.setActiveUserLegacy(_this9.client, _this9.data);
+          return _request.CacheRequest.setActiveUser(_this9.client, _this9.data);
         }
 
         return _this9;
@@ -393,13 +396,12 @@ var User = function () {
       var _this10 = this;
 
       data = (0, _assign2.default)(this.data, data);
-      var userStore = new _datastore.UserStore();
-      return userStore.update(data, options).then(function () {
+      return _datastore.UserStore.update(data, options).then(function () {
         _this10.data = data;
         return _this10.isActive();
       }).then(function (isActive) {
         if (isActive) {
-          return _request.CacheRequest.setActiveUserLegacy(_this10.client, _this10.data);
+          return _request.CacheRequest.setActiveUser(_this10.client, _this10.data);
         }
 
         return _this10;
@@ -429,10 +431,10 @@ var User = function () {
       return request.execute().then(function (response) {
         return response.data;
       }).then(function (data) {
-        if (!data[kmdAttribute].authtoken) {
+        if (!(0, _utils.isDefined)(data[kmdAttribute].authtoken)) {
           var activeUser = User.getActiveUser(_this11.client);
 
-          if (activeUser) {
+          if ((0, _utils.isDefined)(activeUser)) {
             data[kmdAttribute].authtoken = activeUser.authtoken;
           }
 
@@ -441,8 +443,8 @@ var User = function () {
 
         return data;
       }).then(function (data) {
-        _request.CacheRequest.setActiveUserLegacy(_this11.client, data);
         _this11.data = data;
+        return _request.CacheRequest.setActiveUser(_this11.client, data);
       }).then(function () {
         return _this11;
       });
@@ -508,9 +510,9 @@ var User = function () {
     value: function getActiveUser() {
       var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
 
-      var data = _request.CacheRequest.getActiveUserLegacy(client);
+      var data = _request.CacheRequest.getActiveUser(client);
 
-      if (data) {
+      if ((0, _utils.isDefined)(data)) {
         return new this(data, { client: client });
       }
 
@@ -559,10 +561,10 @@ var User = function () {
     value: function logout() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-      var user = this.getActiveUser(options.client);
+      var activeUser = User.getActiveUser(options.client);
 
-      if (user) {
-        return user.logout(options);
+      if ((0, _utils.isDefined)(activeUser)) {
+        return activeUser.logout(options);
       }
 
       return _es6Promise2.default.resolve(null);
@@ -582,10 +584,10 @@ var User = function () {
   }, {
     key: 'update',
     value: function update(data, options) {
-      var user = this.getActiveUser(options.client);
+      var activeUser = User.getActiveUser(options.client);
 
-      if (user) {
-        return user.update(data, options);
+      if ((0, _utils.isDefined)(activeUser)) {
+        return activeUser.update(data, options);
       }
 
       return _es6Promise2.default.resolve(null);
@@ -593,10 +595,10 @@ var User = function () {
   }, {
     key: 'me',
     value: function me(options) {
-      var user = this.getActiveUser(options.client);
+      var activeUser = User.getActiveUser(options.client);
 
-      if (user) {
-        return user.me(options);
+      if (activeUser) {
+        return activeUser.me(options);
       }
 
       return _es6Promise2.default.resolve(null);
@@ -695,14 +697,12 @@ var User = function () {
   }, {
     key: 'exists',
     value: function exists(username, options) {
-      var store = new _datastore.UserStore(options);
-      return store.exists(username, options);
+      return _datastore.UserStore.exists(username, options);
     }
   }, {
     key: 'restore',
     value: function restore(id, options) {
-      var store = new _datastore.UserStore(options);
-      return store.restore(id, options);
+      return _datastore.UserStore.restore(id, options);
     }
   }]);
 

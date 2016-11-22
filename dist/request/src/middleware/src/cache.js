@@ -38,21 +38,15 @@ var CacheMiddleware = function (_Middleware) {
   }
 
   _createClass(CacheMiddleware, [{
-    key: 'openStorage',
-    value: function openStorage(name) {
-      return new _storage2.default(name);
-    }
-  }, {
     key: 'handle',
     value: function handle(request) {
-      var method = request.method;
-      var body = request.body;
-      var appKey = request.appKey;
-      var collection = request.collection;
-      var entityId = request.entityId;
-      var encryptionKey = request.encryptionKey;
+      var method = request.method,
+          body = request.body,
+          appKey = request.appKey,
+          collection = request.collection,
+          entityId = request.entityId;
 
-      var storage = this.openStorage(appKey, encryptionKey);
+      var storage = new _storage2.default(appKey);
       var promise = void 0;
 
       if (method === 'GET') {

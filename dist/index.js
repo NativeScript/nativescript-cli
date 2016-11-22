@@ -1,9 +1,9 @@
 'use strict';
 
-var _export = require('./export');
+var _kinvey = require('./kinvey');
 
-var _export2 = _interopRequireDefault(_export);
+var _kinvey2 = _interopRequireDefault(_kinvey);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-module.exports = _export2.default;
+module.exports = _kinvey2.default;

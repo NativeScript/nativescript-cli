@@ -43,12 +43,12 @@ var HttpMiddleware = function (_Middleware) {
       var _this2 = this;
 
       var promise = new _es6Promise2.default(function (resolve, reject) {
-        var url = request.url;
-        var method = request.method;
-        var headers = request.headers;
-        var body = request.body;
-        var timeout = request.timeout;
-        var followRedirect = request.followRedirect;
+        var url = request.url,
+            method = request.method,
+            headers = request.headers,
+            body = request.body,
+            timeout = request.timeout,
+            followRedirect = request.followRedirect;
 
         var redirects = followRedirect === true ? 5 : 0;
 

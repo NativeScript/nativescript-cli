@@ -9,25 +9,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _cache = require('./cache');
-
-var _cache2 = _interopRequireDefault(_cache);
-
 var _middleware = require('./middleware');
-
-var _middleware2 = _interopRequireDefault(_middleware);
-
-var _http = require('./http');
-
-var _http2 = _interopRequireDefault(_http);
-
-var _parse = require('./parse');
-
-var _parse2 = _interopRequireDefault(_parse);
-
-var _serialize = require('./serialize');
-
-var _serialize2 = _interopRequireDefault(_serialize);
 
 var _es6Promise = require('es6-promise');
 
@@ -69,7 +51,7 @@ var Rack = function (_Middleware) {
     key: 'use',
     value: function use(middleware) {
       if (middleware) {
-        if (middleware instanceof _middleware2.default) {
+        if (middleware instanceof _middleware.Middleware) {
           this.middlewares.push(middleware);
           return;
         }
@@ -93,8 +75,8 @@ var Rack = function (_Middleware) {
 
       return (0, _reduce2.default)(this.middlewares, function (promise, middleware) {
         return promise.then(function (_ref) {
-          var request = _ref.request;
-          var response = _ref.response;
+          var request = _ref.request,
+              response = _ref.response;
 
           if (_this2.canceled === true) {
             return _es6Promise2.default.reject(new Error('Cancelled'));
@@ -152,7 +134,7 @@ var Rack = function (_Middleware) {
   }]);
 
   return Rack;
-}(_middleware2.default);
+}(_middleware.Middleware);
 
 exports.default = Rack;
 
@@ -166,7 +148,7 @@ var CacheRack = exports.CacheRack = function (_Rack) {
 
     var _this3 = _possibleConstructorReturn(this, (CacheRack.__proto__ || Object.getPrototypeOf(CacheRack)).call(this, name));
 
-    _this3.use(new _cache2.default());
+    _this3.use(new _middleware.CacheMiddleware());
     return _this3;
   }
 
@@ -183,9 +165,9 @@ var NetworkRack = exports.NetworkRack = function (_Rack2) {
 
     var _this4 = _possibleConstructorReturn(this, (NetworkRack.__proto__ || Object.getPrototypeOf(NetworkRack)).call(this, name));
 
-    _this4.use(new _serialize2.default());
-    _this4.use(new _http2.default());
-    _this4.use(new _parse2.default());
+    _this4.use(new _middleware.SerializeMiddleware());
+    _this4.use(new _middleware.HttpMiddleware());
+    _this4.use(new _middleware.ParseMiddleware());
     return _this4;
   }
 

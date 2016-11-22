@@ -6,13 +6,9 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _Observable2 = require('rxjs/Observable');
+var _events = require('events');
 
-var _es6Promise = require('es6-promise');
-
-var _es6Promise2 = _interopRequireDefault(_es6Promise);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var _errors = require('../../errors');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -20,37 +16,33 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var KinveyObservable = function (_Observable) {
-  _inherits(KinveyObservable, _Observable);
+var Popup = function (_EventEmitter) {
+  _inherits(Popup, _EventEmitter);
 
-  function KinveyObservable() {
-    _classCallCheck(this, KinveyObservable);
+  function Popup() {
+    _classCallCheck(this, Popup);
 
-    return _possibleConstructorReturn(this, (KinveyObservable.__proto__ || Object.getPrototypeOf(KinveyObservable)).apply(this, arguments));
+    return _possibleConstructorReturn(this, (Popup.__proto__ || Object.getPrototypeOf(Popup)).apply(this, arguments));
   }
 
-  _createClass(KinveyObservable, [{
-    key: 'toPromise',
-    value: function toPromise() {
-      var _this2 = this;
-
-      return new _es6Promise2.default(function (resolve, reject) {
-        var value = void 0;
-        _this2.subscribe(function (v) {
-          value = v;
-        }, reject, function () {
-          resolve(value);
-        });
-      });
+  _createClass(Popup, [{
+    key: 'open',
+    value: function open() {
+      throw new _errors.PopupError('Unable to open a popup on this platform.');
+    }
+  }, {
+    key: 'close',
+    value: function close() {
+      return this;
     }
   }], [{
-    key: 'create',
-    value: function create(subscriber) {
-      return new KinveyObservable(subscriber);
+    key: 'isSupported',
+    value: function isSupported() {
+      return false;
     }
   }]);
 
-  return KinveyObservable;
-}(_Observable2.Observable);
+  return Popup;
+}(_events.EventEmitter);
 
-exports.default = KinveyObservable;
+exports.default = Popup;

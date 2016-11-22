@@ -3,9 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Properties = exports.AuthType = undefined;
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+exports.KinveyRequest = exports.Properties = exports.AuthType = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -15,21 +13,17 @@ var _get = function get(object, property, receiver) { if (object === null) objec
 
 var _request = require('./request');
 
-var _cacherequest = require('./cacherequest');
+var _request2 = _interopRequireDefault(_request);
 
-var _cacherequest2 = _interopRequireDefault(_cacherequest);
+var _local = require('./local');
+
+var _local2 = _interopRequireDefault(_local);
 
 var _headers = require('./headers');
 
 var _headers2 = _interopRequireDefault(_headers);
 
-var _networkrequest = require('./networkrequest');
-
-var _networkrequest2 = _interopRequireDefault(_networkrequest);
-
-var _kinveyresponse = require('./kinveyresponse');
-
-var _kinveyresponse2 = _interopRequireDefault(_kinveyresponse);
+var _response = require('./response');
 
 var _query = require('../../query');
 
@@ -45,9 +39,13 @@ var _errors = require('../../errors');
 
 var _identity = require('../../identity');
 
+var _rack = require('./rack');
+
 var _es6Promise = require('es6-promise');
 
 var _es6Promise2 = _interopRequireDefault(_es6Promise);
+
+var _device = require('./device');
 
 var _url = require('url');
 
@@ -73,10 +71,6 @@ var _isEmpty = require('lodash/isEmpty');
 
 var _isEmpty2 = _interopRequireDefault(_isEmpty);
 
-var _isFunction = require('lodash/isFunction');
-
-var _isFunction2 = _interopRequireDefault(_isFunction);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -85,10 +79,29 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var tokenPathname = process && process.env && process.env.KINVEY_MIC_TOKEN_PATHNAME || undefined || '/oauth/token';
-var usersNamespace = process && process.env && process.env.KINVEY_USERS_NAMESPACE || undefined || 'user';
-var defaultApiVersion = process && process.env && process.env.KINVEY_DEFAULT_API_VERSION || undefined || 4;
-var customPropertiesMaxBytesAllowed = process && process.env && process.env.KINVEY_MAX_HEADER_BYTES || undefined || 2000;
+var tokenPathname = process && process.env && process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token' || '/oauth/token';
+var usersNamespace = process && process.env && process.env.KINVEY_USERS_NAMESPACE || 'user' || 'user';
+var defaultApiVersion = process && process.env && process.env.KINVEY_DEFAULT_API_VERSION || '4' || 4;
+var customPropertiesMaxBytesAllowed = process && process.env && process.env.KINVEY_MAX_HEADER_BYTES || '2000' || 2000;
+
+var NetworkRequest = function (_Request) {
+  _inherits(NetworkRequest, _Request);
+
+  function NetworkRequest() {
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    _classCallCheck(this, NetworkRequest);
+
+    var _this = _possibleConstructorReturn(this, (NetworkRequest.__proto__ || Object.getPrototypeOf(NetworkRequest)).call(this, options));
+
+    _this.rack = new _rack.NetworkRack();
+    return _this;
+  }
+
+  return NetworkRequest;
+}(_request2.default);
+
+exports.default = NetworkRequest;
 
 var AuthType = {
   All: 'All',
@@ -140,9 +153,9 @@ var Auth = {
     return _es6Promise2.default.resolve(null);
   },
   session: function session(client) {
-    var activeUser = _cacherequest2.default.getActiveUserLegacy(client);
+    var activeUser = _local2.default.getActiveUser(client);
 
-    if (!activeUser) {
+    if (!(0, _utils.isDefined)(activeUser)) {
       return _es6Promise2.default.reject(new _errors.NoActiveUserError('There is not an active user. Please login a user and retry the request.'));
     }
 
@@ -182,7 +195,7 @@ var Properties = exports.Properties = function (_Headers) {
   return Properties;
 }(_headers2.default);
 
-var KinveyRequest = function (_NetworkRequest) {
+var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
   _inherits(KinveyRequest, _NetworkRequest);
 
   function KinveyRequest() {
@@ -190,25 +203,25 @@ var KinveyRequest = function (_NetworkRequest) {
 
     _classCallCheck(this, KinveyRequest);
 
-    var _this2 = _possibleConstructorReturn(this, (KinveyRequest.__proto__ || Object.getPrototypeOf(KinveyRequest)).call(this, options));
+    var _this3 = _possibleConstructorReturn(this, (KinveyRequest.__proto__ || Object.getPrototypeOf(KinveyRequest)).call(this, options));
 
     options = (0, _assign2.default)({
       skipBL: false,
       trace: false
     }, options);
 
-    _this2.authType = options.authType || AuthType.None;
-    _this2.query = options.query;
-    _this2.properties = options.properties || new Properties();
-    _this2.skipBL = options.skipBL === true;
-    _this2.trace = options.trace === true;
-    return _this2;
+    _this3.authType = options.authType || AuthType.None;
+    _this3.query = options.query;
+    _this3.properties = options.properties || new Properties();
+    _this3.skipBL = options.skipBL === true;
+    _this3.trace = options.trace === true;
+    return _this3;
   }
 
   _createClass(KinveyRequest, [{
     key: 'getAuthorizationHeader',
     value: function getAuthorizationHeader() {
-      var _this3 = this;
+      var _this4 = this;
 
       var promise = _es6Promise2.default.resolve(undefined);
 
@@ -234,7 +247,7 @@ var KinveyRequest = function (_NetworkRequest) {
             break;
           default:
             promise = Auth.session(this.client).catch(function (error) {
-              return Auth.master(_this3.client).catch(function () {
+              return Auth.master(_this4.client).catch(function () {
                 throw error;
               });
             });
@@ -242,7 +255,7 @@ var KinveyRequest = function (_NetworkRequest) {
       }
 
       return promise.then(function (authInfo) {
-        if (authInfo !== undefined || authInfo !== null) {
+        if ((0, _utils.isDefined)(authInfo)) {
           var credentials = authInfo.credentials;
 
           if (authInfo.username) {
@@ -258,22 +271,22 @@ var KinveyRequest = function (_NetworkRequest) {
   }, {
     key: 'execute',
     value: function execute() {
-      var _this4 = this;
+      var _this5 = this;
 
       var rawResponse = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       var retry = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
       return this.getAuthorizationHeader().then(function (authorizationHeader) {
-        if (authorizationHeader !== undefined || authorizationHeader !== null) {
-          _this4.headers.set('Authorization', authorizationHeader);
+        if ((0, _utils.isDefined)(authorizationHeader)) {
+          _this5.headers.set('Authorization', authorizationHeader);
         } else {
-          _this4.headers.remove('Authorization');
+          _this5.headers.remove('Authorization');
         }
       }).then(function () {
-        return _get(KinveyRequest.prototype.__proto__ || Object.getPrototypeOf(KinveyRequest.prototype), 'execute', _this4).call(_this4);
+        return _get(KinveyRequest.prototype.__proto__ || Object.getPrototypeOf(KinveyRequest.prototype), 'execute', _this5).call(_this5);
       }).then(function (response) {
-        if (!(response instanceof _kinveyresponse2.default)) {
-          response = new _kinveyresponse2.default({
+        if (!(response instanceof _response.KinveyResponse)) {
+          response = new _response.KinveyResponse({
             statusCode: response.statusCode,
             headers: response.headers,
             data: response.data
@@ -286,21 +299,19 @@ var KinveyRequest = function (_NetworkRequest) {
 
         return response;
       }).catch(function (error) {
-        if (error instanceof _errors.InvalidCredentialsError && retry) {
-          var _ret = function () {
-            var user = _cacherequest2.default.getActiveUserLegacy(_this4.client);
-
-            if (!user) {
+        if (error instanceof _errors.InvalidCredentialsError && retry === true) {
+          return _local2.default.getActiveUser(_this5.client).then(function (activeUser) {
+            if (!(0, _utils.isDefined)(activeUser)) {
               throw error;
             }
 
-            var socialIdentities = user._socialIdentity;
+            var socialIdentities = activeUser._socialIdentity;
             var sessionKey = Object.keys(socialIdentities).find(function (sessionKey) {
               return socialIdentities[sessionKey].identity === _identity.SocialIdentity.MobileIdentityConnect;
             });
             var session = socialIdentities[sessionKey];
 
-            if (session) {
+            if ((0, _utils.isDefined)(session)) {
               if (session.identity === _identity.SocialIdentity.MobileIdentityConnect) {
                 var refreshMICRequest = new KinveyRequest({
                   method: _request.RequestMethod.POST,
@@ -309,8 +320,8 @@ var KinveyRequest = function (_NetworkRequest) {
                   },
                   authType: AuthType.App,
                   url: _url2.default.format({
-                    protocol: session.protocol || _this4.client.micProtocol,
-                    host: session.host || _this4.client.micHost,
+                    protocol: session.protocol || _this5.client.micProtocol,
+                    host: session.host || _this5.client.micHost,
                     pathname: tokenPathname
                   }),
                   body: {
@@ -319,48 +330,44 @@ var KinveyRequest = function (_NetworkRequest) {
                     redirect_uri: session.redirect_uri,
                     refresh_token: session.refresh_token
                   },
-                  timeout: _this4.timeout,
-                  properties: _this4.properties
+                  timeout: _this5.timeout,
+                  properties: _this5.properties
                 });
 
-                return {
-                  v: refreshMICRequest.execute().then(function (response) {
-                    return response.data;
-                  }).then(function (newSession) {
-                    var data = {};
-                    data._socialIdentity = {};
-                    data._socialIdentity[session.identity] = newSession;
+                return refreshMICRequest.execute().then(function (response) {
+                  return response.data;
+                }).then(function (newSession) {
+                  var data = {};
+                  data._socialIdentity = {};
+                  data._socialIdentity[session.identity] = newSession;
 
-                    var loginRequest = new KinveyRequest({
-                      method: _request.RequestMethod.POST,
-                      authType: AuthType.App,
-                      url: _url2.default.format({
-                        protocol: _this4.client.protocol,
-                        host: _this4.client.host,
-                        pathname: '/' + usersNamespace + '/' + _this4.client.appKey + '/login'
-                      }),
-                      properties: _this4.properties,
-                      body: data,
-                      timeout: _this4.timeout,
-                      client: _this4.client
-                    });
-                    return loginRequest.execute().then(function (response) {
-                      return response.data;
-                    });
-                  }).then(function (user) {
-                    user._socialIdentity[session.identity] = (0, _defaults2.default)(user._socialIdentity[session.identity], session);
-                    return _cacherequest2.default.setActiveUserLegacy(_this4.client, user);
-                  }).then(function () {
-                    return _this4.execute(rawResponse, false);
-                  })
-                };
+                  var loginRequest = new KinveyRequest({
+                    method: _request.RequestMethod.POST,
+                    authType: AuthType.App,
+                    url: _url2.default.format({
+                      protocol: _this5.client.protocol,
+                      host: _this5.client.host,
+                      pathname: '/' + usersNamespace + '/' + _this5.client.appKey + '/login'
+                    }),
+                    properties: _this5.properties,
+                    body: data,
+                    timeout: _this5.timeout,
+                    client: _this5.client
+                  });
+                  return loginRequest.execute().then(function (response) {
+                    return response.data;
+                  });
+                }).then(function (user) {
+                  user._socialIdentity[session.identity] = (0, _defaults2.default)(user._socialIdentity[session.identity], session);
+                  return _local2.default.setActiveUser(_this5.client, user);
+                }).then(function () {
+                  return _this5.execute(rawResponse, false);
+                });
               }
             }
 
             throw error;
-          }();
-
-          if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+          });
         }
 
         throw error;
@@ -454,11 +461,7 @@ var KinveyRequest = function (_NetworkRequest) {
         headers.remove('X-Kinvey-Custom-Request-Properties');
       }
 
-      if (typeof this.client.deviceClass !== 'undefined' && (0, _isFunction2.default)(this.client.deviceClass, 'toString')) {
-        headers.set('X-Kinvey-Device-Information', this.client.deviceClass.toString());
-      } else {
-        headers.remove('X-Kinvey-Device-Information');
-      }
+      headers.set('X-Kinvey-Device-Information', (0, _device.deviceInformation)());
 
       return headers;
     },
@@ -495,6 +498,4 @@ var KinveyRequest = function (_NetworkRequest) {
   }]);
 
   return KinveyRequest;
-}(_networkrequest2.default);
-
-exports.default = KinveyRequest;
+}(NetworkRequest);

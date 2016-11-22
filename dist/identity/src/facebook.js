@@ -7,6 +7,10 @@ exports.Facebook = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _popup = require('./popup');
+
+var _popup2 = _interopRequireDefault(_popup);
+
 var _identity = require('./identity');
 
 var _identity2 = _interopRequireDefault(_identity);
@@ -53,7 +57,7 @@ var Facebook = exports.Facebook = function (_Identity) {
   _createClass(Facebook, [{
     key: 'isSupported',
     value: function isSupported() {
-      return typeof this.client.popupClass !== 'undefined';
+      return _popup2.default.isSupported();
     }
   }, {
     key: 'login',
@@ -83,28 +87,20 @@ var Facebook = exports.Facebook = function (_Identity) {
       var promise = new _es6Promise2.default(function (resolve, reject) {
         var redirectUri = options.redirectUri || global.location.href;
         var originalState = (0, _utils.randomString)();
-        var Popup = _this2.client.popupClass;
         var redirected = false;
-
-        if (!Popup) {
-          return reject(new _errors.KinveyError('Popup is undefined. Unable to connect to Facebook.'));
-        }
-
-        var popup = new Popup();
+        var popup = new _popup2.default();
 
         var oauthCallback = function oauthCallback(urlString) {
-          var _url$parse = _url2.default.parse(urlString);
+          var _url$parse = _url2.default.parse(urlString),
+              hash = _url$parse.hash;
 
-          var hash = _url$parse.hash;
-
-          var _querystring$parse = _querystring2.default.parse(hash.substring(1));
-
-          var access_token = _querystring$parse.access_token;
-          var expires_in = _querystring$parse.expires_in;
-          var error = _querystring$parse.error;
-          var error_description = _querystring$parse.error_description;
-          var error_reason = _querystring$parse.error_reason;
-          var state = _querystring$parse.state;
+          var _querystring$parse = _querystring2.default.parse(hash.substring(1)),
+              access_token = _querystring$parse.access_token,
+              expires_in = _querystring$parse.expires_in,
+              error = _querystring$parse.error,
+              error_description = _querystring$parse.error_description,
+              error_reason = _querystring$parse.error_reason,
+              state = _querystring$parse.state;
 
           var expiresIn = parseInt(expires_in, 10);
           var expires = new Date().getTime() / 1e3 + (expiresIn || 60 * 60 * 24 * 365);

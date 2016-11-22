@@ -40,7 +40,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var appdataNamespace = process && process.env && process.env.KINVEY_DATASTORE_NAMESPACE || undefined || 'appdata';
+var appdataNamespace = process && process.env && process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata' || 'appdata';
 
 var Kinvey = function () {
   function Kinvey() {
@@ -49,20 +49,37 @@ var Kinvey = function () {
 
   _createClass(Kinvey, null, [{
     key: 'init',
-    value: function init(options) {
+    value: function init() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
       if (!options.appKey) {
-        throw new _errors.KinveyError('No App Key was provided. ' + 'Unable to create a new Client without an App Key.');
+        throw new _errors.KinveyError('No App Key was provided.' + ' Unable to create a new Client without an App Key.');
       }
 
       if (!options.appSecret && !options.masterSecret) {
-        throw new _errors.KinveyError('No App Secret or Master Secret was provided. ' + 'Unable to create a new Client without an App Key.');
+        throw new _errors.KinveyError('No App Secret or Master Secret was provided.' + ' Unable to create a new Client without an App Key.');
       }
 
       var client = _client.Client.init(options);
 
-      this.Files = new _datastore.FileStore();
-
       return client;
+    }
+  }, {
+    key: 'initialize',
+    value: function initialize() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+      if (!options.appKey) {
+        return Promise.reject(new _errors.KinveyError('No App Key was provided. ' + 'Unable to create a new Client without an App Key.'));
+      }
+
+      if (!options.appSecret && !options.masterSecret) {
+        return Promise.reject(new _errors.KinveyError('No App Secret or Master Secret was provided. ' + 'Unable to create a new Client without an App Key.'));
+      }
+
+      return _client.Client.initialize(options).then(function () {
+        return _entity.User.getActiveUser();
+      });
     }
   }, {
     key: 'ping',
@@ -107,11 +124,37 @@ Kinvey.AuthorizationGrant = _identity.AuthorizationGrant;
 Kinvey.CustomEndpoint = _endpoint.CustomEndpoint;
 Kinvey.DataStore = _datastore2.default;
 Kinvey.DataStoreType = _datastore.DataStoreType;
+Kinvey.File = _datastore.FileStore;
+Kinvey.Files = _datastore.FileStore;
 Kinvey.Log = _utils.Log;
 Kinvey.Metadata = _entity.Metadata;
 Kinvey.Query = _query2.default;
 Kinvey.SocialIdentity = _identity.SocialIdentity;
 Kinvey.User = _entity.User;
+Kinvey.Users = _datastore.UserStore;
 Kinvey.UserStore = _datastore.UserStore;
+
+Kinvey.ActiveUserError = _errors.ActiveUserError;
+Kinvey.FeatureUnavailableError = _errors.FeatureUnavailableError;
+Kinvey.IncompleteRequestBodyError = _errors.IncompleteRequestBodyError;
+Kinvey.InsufficientCredentialsError = _errors.InsufficientCredentialsError;
+Kinvey.InvalidCredentialsError = _errors.InvalidCredentialsError;
+Kinvey.InvalidIdentifierError = _errors.InvalidIdentifierError;
+Kinvey.InvalidQuerySyntaxError = _errors.InvalidQuerySyntaxError;
+Kinvey.JSONParseError = _errors.JSONParseError;
+Kinvey.KinveyError = _errors.KinveyError;
+Kinvey.MissingQueryError = _errors.MissingQueryError;
+Kinvey.MissingRequestHeaderError = _errors.MissingRequestHeaderError;
+Kinvey.MissingRequestParameterError = _errors.MissingRequestParameterError;
+Kinvey.MobileIdentityConnectError = _errors.MobileIdentityConnectError;
+Kinvey.NoNetworkConnectionError = _errors.NoNetworkConnectionError;
+Kinvey.NoActiveUserError = _errors.NoActiveUserError;
+Kinvey.NotFoundError = _errors.NotFoundError;
+Kinvey.NoResponseError = _errors.NoResponseError;
+Kinvey.ParameterValueOutOfRangeError = _errors.ParameterValueOutOfRangeError;
+Kinvey.PopupError = _errors.PopupError;
+Kinvey.QueryError = _errors.QueryError;
+Kinvey.ServerError = _errors.ServerError;
+Kinvey.SyncError = _errors.SyncError;
 
 exports.default = Kinvey;
