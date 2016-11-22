@@ -1,1 +1,1 @@
-export * from 'kinvey-node-sdk';
+export * from 'kinvey-html5-sdk/dist/export';
