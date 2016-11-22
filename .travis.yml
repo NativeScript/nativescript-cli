@@ -8,7 +8,7 @@ deploy:
     secure: zs64wz+OIVD9gKu2qZ+zjDJZsFqBPAM0umhYxdCXvBPfxPnHiy5CYJJWhzi8E/bY9o5jfPRc04OFWcKRYVI0k65fCImpnuettO/ADXJ1fB/9H7YuKyNz/TwFsehmbRiiyyqRQn4neIrXs0ewxZFoh/4+HBN29PCrTj5s2o5Xt+c+44ijON2hpSFZA8emTLscdL0shuWHOv9PCxbfm6E/eBrC0/NW3pWQDOCDFJX7ZQzYX8M3DmSwKyf1U7XOLlUAwZ0FmmncXHrzDGRL2hypbOLae6sY3b34/cE+zi/CGoot5k4QvTrAQewX6ufwu2iAxSU8Fq4zF0Qb1Ry4T20j2XB9IBzEc79nHJT20naBAtZVJ5eKPCeU1yzoWJbM51lAUm2SGzNU3dQue6P71r/PsKD4oJLT2SdGHi+uq492SWWnBN8EJU0w82q1/UnKpUPMazN+lYGNmxCXeQbm5MLOJ0g783LH2XV6vOaESr97B3tNkE30krrwCH148UVcHkBOhkY5U8vwMp+EKv4IFTGZmoBylUMAHCpr7XrYRubHPseFva+pCTd4BfhhEZx8F1ikzC0rbN4/X0yGOnumKbH5s1QL9iU/AvSksyLLEnTQ5ZlCS1yaB02MBt8jK19VT1WWZc66QGpwDsgOSMyvN6Wyju1zpD1clYEEbqIwZgs9kR0=
   on:
     tags: true
-    repo: Kinvey/javascript-sdk
+    repo: Kinvey/js-sdk
 notifications:
   email:
     on_success: change
