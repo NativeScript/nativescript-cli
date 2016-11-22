@@ -674,7 +674,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private getLibSubpathRelativeToProjectPath(targetPath: string): string {
-		let frameworkPath = path.relative("platforms/ios", targetPath);
+		let frameworkPath = path.relative(this.platformData.projectRoot, targetPath);
 		return frameworkPath;
 	}
 
