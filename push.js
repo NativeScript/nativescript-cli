@@ -1,33 +1,34 @@
-import { AuthType, RequestMethod, CacheRequest, KinveyRequest } from 'kinvey-node-sdk/dist/request';
+import { AuthType, RequestMethod, KinveyRequest } from 'kinvey-node-sdk/dist/request';
 import { Client } from 'kinvey-node-sdk/dist/client';
 import { User } from 'kinvey-node-sdk/dist/entity';
 import Device from './device';
 import { EventEmitter } from 'events';
+import localStorage from 'local-storage';
 import Promise from 'es6-promise';
 import url from 'url';
 const pushNamespace = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 const notificationEvent = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
 
-export default class Push extends EventEmitter {
-  constructor(options = {}) {
-    super();
-    this.client = options.client || Client.sharedInstance();
-  }
 
+class Push extends EventEmitter {
   get pathname() {
     return `/${pushNamespace}/${this.client.appKey}`;
   }
 
   get client() {
-    return this.pushClient;
+    if (!this._client) {
+      return Client.sharedInstance();
+    }
+
+    return this._client;
   }
 
   set client(client) {
-    if (!client) {
-      throw new Error('Kinvey.Push must have a client defined.');
+    if (!(client instanceof Client)) {
+      throw new Error('client must be an instance of Client.');
     }
 
-    this.pushClient = client;
+    this._client = client;
   }
 
   isSupported() {
@@ -55,7 +56,7 @@ export default class Push extends EventEmitter {
             + ' setting up your project.');
         }
 
-        return this.unregister()
+        return this.unregister(options)
           .catch(() => null);
       })
       .then(() => {
@@ -102,20 +103,9 @@ export default class Push extends EventEmitter {
         return request.execute()
           .then(response => response.data)
           .then((data) => {
-            const request = new CacheRequest({
-              method: RequestMethod.PUT,
-              url: url.format({
-                protocol: this.client.protocol,
-                host: this.client.host,
-                pathname: `${this.pathname}/device`
-              }),
-              data: {
-                deviceId: deviceId
-              },
-              client: this.client
-            });
-            return request.execute()
-              .then(() => data);
+            const key = user ? `${this.pathname}_${user._id}` : `${this.pathname}_${options.userId}`;
+            localStorage.set(key, { deviceId: deviceId });
+            return data;
           });
       });
   }
@@ -127,35 +117,27 @@ export default class Push extends EventEmitter {
           return null;
         }
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           if (this.phonegapPush) {
-            this.phonegapPush.unregister(() => {
+            return this.phonegapPush.unregister(() => {
               this.phonegapPush = null;
               resolve();
             }, () => {
-              reject(new Error('Unable to unregister with the PhoneGap Push Plugin.'));
+              resolve();
             });
           }
 
-          resolve();
+          return resolve();
         });
       })
       .then(() => {
-        const request = new CacheRequest({
-          method: RequestMethod.GET,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: `${this.pathname}/device`
-          }),
-          client: this.client
-        });
-        return request.execute()
-          .then(response => response.data);
+        const user = User.getActiveUser(this.client);
+        const key = user ? `${this.pathname}_${user._id}` : `${this.pathname}__${options.userId}`;
+        return localStorage.get(key);
       })
       .then(({ deviceId }) => {
         if (typeof deviceId === 'undefined') {
-          throw new Error('This device has not been registered for push notifications.');
+          return null;
         }
 
         const user = User.getActiveUser(this.client);
@@ -180,17 +162,13 @@ export default class Push extends EventEmitter {
         return request.execute();
       })
       .then((data) => {
-        const request = new CacheRequest({
-          method: RequestMethod.DELETE,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: `${this.pathname}/device`
-          }),
-          client: this.client
-        });
-        return request.execute()
-          .then(() => data);
+        const user = User.getActiveUser(this.client);
+        const key = user ? `${this.pathname}_${user._id}` : `${this.pathname}_${options.userId}`;
+        localStorage.remove(key);
+        return data;
       });
   }
 }
+
+// Export
+export default new Push();
