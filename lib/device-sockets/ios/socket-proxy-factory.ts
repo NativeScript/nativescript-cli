@@ -1,6 +1,5 @@
 import { PacketStream } from "./packet-stream";
 import * as net from "net";
-import * as semver from "semver";
 import * as ws from "ws";
 import temp = require("temp");
 import * as helpers from "../../common/helpers";
@@ -12,25 +11,65 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 		private $projectDataService: IProjectDataService,
 		private $options: IOptions) { }
 
-	public createSocketProxy(factory: () => net.Socket): IFuture<any> {
-		return (() => {
-			let socketFactory = (callback: (_socket: net.Socket) => void) => helpers.connectEventually(factory, callback);
+	public createTCPSocketProxy(factory: () => net.Socket): any {
+		let socketFactory = (callback: (_socket: net.Socket) => void) => helpers.connectEventually(factory, callback);
 
-			this.$projectDataService.initialize(this.$projectData.projectDir);
-			let frameworkVersion = this.$projectDataService.getValue("tns-ios").wait().version;
-			let result: any;
+		this.$logger.info("\nSetting up proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
 
-			if(semver.gte(frameworkVersion, "1.4.0")) {
-				result = this.createTcpSocketProxy(socketFactory);
-			} else {
-				result = this.createWebSocketProxy(socketFactory);
-			}
+		let server = net.createServer({
+			allowHalfOpen: true
+		});
 
-			return result;
-		}).future<any>()();
+		server.on("connection", (frontendSocket: net.Socket) => {
+			this.$logger.info("Frontend client connected.");
+
+			frontendSocket.on("end", () => {
+				this.$logger.info('Frontend socket closed!');
+				if (!(this.$config.debugLivesync && this.$options.watch)) {
+					process.exit(0);
+				}
+			});
+
+			socketFactory((backendSocket: net.Socket) => {
+				this.$logger.info("Backend socket created.");
+
+				backendSocket.on("end", () => {
+					this.$logger.info("Backend socket closed!");
+					if (!(this.$config.debugLivesync && this.$options.watch)) {
+						process.exit(0);
+					}
+				});
+
+				frontendSocket.on("close", () => {
+					console.log("frontend socket closed");
+					if (!(<any>backendSocket).destroyed) {
+						backendSocket.destroy();
+					}
+				});
+				backendSocket.on("close", () => {
+					console.log("backend socket closed");
+					if (!(<any>frontendSocket).destroyed) {
+						frontendSocket.destroy();
+					}
+				});
+
+				backendSocket.pipe(frontendSocket);
+				frontendSocket.pipe(backendSocket);
+				frontendSocket.resume();
+			});
+		});
+
+		let socketFileLocation = temp.path({ suffix: ".sock" });
+		server.listen(socketFileLocation);
+		if(!this.$options.client) {
+			this.$logger.info("socket-file-location: " + socketFileLocation);
+		}
+
+		return server;
 	}
 
-	private createWebSocketProxy(socketFactory: (handler: (socket: net.Socket) => void) => void): ws.Server {
+	public createWebSocketProxy(factory: () => net.Socket): ws.Server {
+		let socketFactory = (callback: (_socket: net.Socket) => void) => helpers.connectEventually(factory, callback);
 		// NOTE: We will try to provide command line options to select ports, at least on the localhost.
 		let localPort = 8080;
 
@@ -84,59 +123,6 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 		});
 
 		this.$logger.info("Opened localhost " + localPort);
-		return server;
-	}
-
-	private createTcpSocketProxy(socketFactory: (handler: (socket: net.Socket) => void) => void): net.Server {
-		this.$logger.info("\nSetting up proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
-
-		let server = net.createServer({
-			allowHalfOpen: true
-		});
-
-		server.on("connection", (frontendSocket: net.Socket) => {
-			this.$logger.info("Frontend client connected.");
-
-			frontendSocket.on("end", () => {
-				this.$logger.info('Frontend socket closed!');
-				if (!(this.$config.debugLivesync && this.$options.watch)) {
-					process.exit(0);
-				}
-			});
-
-			socketFactory((backendSocket: net.Socket) => {
-				this.$logger.info("Backend socket created.");
-
-				backendSocket.on("end", () => {
-					this.$logger.info("Backend socket closed!");
-					if (!(this.$config.debugLivesync && this.$options.watch)) {
-						process.exit(0);
-					}
-				});
-
-				frontendSocket.on("close", () => {
-					if (!(<any>backendSocket).destroyed) {
-						backendSocket.destroy();
-					}
-				});
-				backendSocket.on("close", () => {
-					if (!(<any>frontendSocket).destroyed) {
-						frontendSocket.destroy();
-					}
-				});
-
-				backendSocket.pipe(frontendSocket);
-				frontendSocket.pipe(backendSocket);
-				frontendSocket.resume();
-			});
-		});
-
-		let socketFileLocation = temp.path({ suffix: ".sock" });
-		server.listen(socketFileLocation);
-		if(!this.$options.client) {
-			this.$logger.info("socket-file-location: " + socketFileLocation);
-		}
-
 		return server;
 	}
 }
