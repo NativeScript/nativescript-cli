@@ -541,7 +541,7 @@ export class PlatformService implements IPlatformService {
 	public deployOnEmulator(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		platform = platform.toLowerCase();
 		if (this.$options.avd) {
-			this.$logger.warn(`Option --avd is no longer supported. Please use --device isntead!`);
+			this.$logger.warn(`Option --avd is no longer supported. Please use --device instead!`);
 		}
 
 		if (this.$options.availableDevices || this.$options.device || this.$options.avd) {
