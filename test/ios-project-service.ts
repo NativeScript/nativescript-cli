@@ -442,7 +442,7 @@ describe("Static libraries support", () => {
 		fs.ensureDirectoryExists(staticLibraryHeadersPath).wait();
 		_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), "").wait(); });
 
-		iOSProjectService.generateMobulemap(staticLibraryHeadersPath, libraryName);
+		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);
 		// Read the generated modulemap and verify it.
 		let modulemap = fs.readFile(path.join(staticLibraryHeadersPath, "module.modulemap")).wait();
 		let headerCommands = _.map(headers, value => `header "${value}"`);
@@ -452,7 +452,7 @@ describe("Static libraries support", () => {
 
 		// Delete all header files. And try to regenerate modulemap.
 		_.each(headers, header => { fs.deleteFile(path.join(staticLibraryHeadersPath, header)).wait(); });
-		iOSProjectService.generateMobulemap(staticLibraryHeadersPath, libraryName);
+		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);
 
 		let error: any;
 		try {
@@ -476,6 +476,6 @@ describe("Relative paths", () => {
 			let iOSProjectService = testInjector.resolve("iOSProjectService");
 
 			let result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath);
-			assert.equal(result, path.join("../../lib/iOS/", subpath));
+			assert.equal(result, path.join("../../", subpath));
 		});
 });
