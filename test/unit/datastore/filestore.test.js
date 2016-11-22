@@ -506,7 +506,7 @@ describe('FileStore', function() {
           maxBackoff: 250
         });
       } catch (error) {
-        expect(error).toBeA(KinveyError);
+        expect(error).toBeA(ServerError);
         expect(error.code).toEqual(500);
       }
     });
@@ -602,7 +602,7 @@ describe('FileStore', function() {
           maxBackoff: 250
         });
       } catch (error) {
-        expect(error).toBeA(KinveyError);
+        expect(error).toBeA(NotFoundError);
         expect(error.code).toEqual(404);
       }
     });
