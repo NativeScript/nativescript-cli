@@ -109,13 +109,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
 			let targetSdkVersion = androidToolsInfo.targetSdkVersion;
 			this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
-			if (this.$options.symlink) {
-				this.symlinkDirectory("libs", this.platformData.projectRoot, frameworkDir).wait();
-			} else {
-				this.copy(this.platformData.projectRoot, frameworkDir, "libs", "-R");
-			}
+			this.copy(this.platformData.projectRoot, frameworkDir, "libs", "-R");
 
-			// These files and directories should not be symlinked as CLI is modifying them and we'll change the original values as well.
 			if (pathToTemplate) {
 				let mainPath = path.join(this.platformData.projectRoot, "src", "main");
 				this.$fs.createDirectory(mainPath).wait();
@@ -505,24 +500,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			return versionInManifest;
 		}).future<string>()();
-	}
-
-	private symlinkDirectory(directoryName: string, projectRoot: string, frameworkDir: string): IFuture<void> {
-		return (() => {
-			this.$fs.createDirectory(path.join(projectRoot, directoryName)).wait();
-			let directoryContent = this.$fs.readDirectory(path.join(frameworkDir, directoryName)).wait();
-
-			_.each(directoryContent, (file: string) => {
-				let sourceFilePath = path.join(frameworkDir, directoryName, file);
-				let destinationFilePath = path.join(projectRoot, directoryName, file);
-				if (this.$fs.getFsStats(sourceFilePath).wait().isFile()) {
-					this.$fs.symlink(sourceFilePath, destinationFilePath).wait();
-				} else {
-					this.$fs.symlink(sourceFilePath, destinationFilePath, "dir").wait();
-				}
-			});
-
-		}).future<void>()();
 	}
 }
 $injector.register("androidProjectService", AndroidProjectService);

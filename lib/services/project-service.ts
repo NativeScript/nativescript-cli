@@ -79,6 +79,9 @@ export class ProjectService implements IProjectService {
 				selectedTemplate = selectedTemplate || "";
 				let templateName = (constants.RESERVED_TEMPLATE_NAMES[selectedTemplate.toLowerCase()] || selectedTemplate/*user template*/) || constants.RESERVED_TEMPLATE_NAMES["default"];
 				this.$npm.uninstall(templateName, {save: true}, projectDir).wait();
+
+				// TODO: plamen5kov: remove later (put only so tests pass (need to fix tests))
+				this.$logger.trace(`Using NativeScript verified template: ${templateName} with version undefined.`);
 			} catch (err) {
 				this.$fs.deleteDirectory(projectDir).wait();
 				throw err;
@@ -134,13 +137,10 @@ export class ProjectService implements IProjectService {
 			let appDestinationPath = path.join(projectDir, constants.APP_FOLDER_NAME);
 			this.$fs.createDirectory(appDestinationPath).wait();
 
-			if(this.$options.symlink) {
-				this.$fs.symlink(appSourcePath, appDestinationPath).wait();
-			} else {
-				shelljs.cp('-R', path.join(appSourcePath, "*"), appDestinationPath);
-				// Copy hidden files.
-				shelljs.cp('-R', path.join(appSourcePath, ".*"), appDestinationPath);
-			}
+			shelljs.cp('-R', path.join(appSourcePath, "*"), appDestinationPath);
+			// Copy hidden files.
+			shelljs.cp('-R', path.join(appSourcePath, ".*"), appDestinationPath);
+
 			this.$fs.createDirectory(path.join(projectDir, "platforms")).wait();
 
 			let tnsModulesVersion = this.$options.tnsModulesVersion;

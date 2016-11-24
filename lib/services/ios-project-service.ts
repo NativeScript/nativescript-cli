@@ -111,17 +111,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					.filter(dirName => dirName.indexOf(IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER) === -1)
 					.forEach(dirName => shell.cp("-R", path.join(frameworkDir, dirName), this.platformData.projectRoot));
 				shell.cp("-rf", path.join(pathToTemplate, "*"), this.platformData.projectRoot);
-			} else if (this.$options.symlink) {
-				let xcodeProjectName = `${IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER}.xcodeproj`;
-
-				shell.cp("-R", path.join(frameworkDir, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, "*"), path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
-				shell.cp("-R", path.join(frameworkDir, xcodeProjectName), this.platformData.projectRoot);
-
-				let directoryContent = this.$fs.readDirectory(frameworkDir).wait();
-				let frameworkFiles = _.difference(directoryContent, [IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, xcodeProjectName]);
-				_.each(frameworkFiles, (file: string) => {
-					this.$fs.symlink(path.join(frameworkDir, file), path.join(this.platformData.projectRoot, file)).wait();
-				});
 			} else {
 				shell.cp("-R", path.join(frameworkDir, "*"), this.platformData.projectRoot);
 			}
@@ -404,9 +393,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			let currentXcodeProjectFileContent = this.$fs.readFile(currentXcodeProjectFile).wait();
 
 			let newXcodeProjectFile = this.buildPathToNewXcodeProjectFile(installedModuleDir);
+			this.replaceFileContent(newXcodeProjectFile).wait();
 			let newXcodeProjectFileContent = this.$fs.readFile(newXcodeProjectFile).wait();
 
-			let contentIsTheSame = currentXcodeProjectFileContent === newXcodeProjectFileContent;
+			let contentIsTheSame = currentXcodeProjectFileContent.toString() === newXcodeProjectFileContent.toString();
 			if(!contentIsTheSame) {
 				this.$logger.warn(`The content of the current project file: ${currentXcodeProjectFile} and the new project file: ${newXcodeProjectFile} is different.`);
 			}
