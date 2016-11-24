@@ -303,7 +303,7 @@ describe("Cocoapods support", () => {
 			let pluginPath = temp.mkdirSync("pluginDirectory");
 			let pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
 			let pluginPodfilePath = path.join(pluginPlatformsFolderPath, "Podfile");
-			let pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'",  "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
+			let pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
 			fs.writeFile(pluginPodfilePath, pluginPodfileContent).wait();
 
 			let pluginData = {
@@ -373,7 +373,7 @@ describe("Cocoapods support", () => {
 			let pluginPath = temp.mkdirSync("pluginDirectory");
 			let pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
 			let pluginPodfilePath = path.join(pluginPlatformsFolderPath, "Podfile");
-			let pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'",  "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
+			let pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
 			fs.writeFile(pluginPodfilePath, pluginPodfileContent).wait();
 
 			let pluginData = {
@@ -417,7 +417,7 @@ describe("Static libraries support", () => {
 	let testInjector = createTestInjector(projectPath, projectName);
 	let fs: IFileSystem = testInjector.resolve("fs");
 	let staticLibraryPath = path.join(path.join(temp.mkdirSync("pluginDirectory"), "platforms", "ios"));
-	let staticLibraryHeadersPath = path.join(staticLibraryPath,"include", libraryName);
+	let staticLibraryHeadersPath = path.join(staticLibraryPath, "include", libraryName);
 
 	it("checks validation of header files", () => {
 		let iOSProjectService = testInjector.resolve("iOSProjectService");
@@ -430,7 +430,7 @@ describe("Static libraries support", () => {
 		let error: any;
 		try {
 			iOSProjectService.validateStaticLibrary(path.join(staticLibraryPath, libraryName + ".a")).wait();
-		} catch(err) {
+		} catch (err) {
 			error = err;
 		}
 
@@ -457,7 +457,7 @@ describe("Static libraries support", () => {
 		let error: any;
 		try {
 			modulemap = fs.readFile(path.join(staticLibraryHeadersPath, "module.modulemap")).wait();
-		} catch(err) {
+		} catch (err) {
 			error = err;
 		}
 
