@@ -114,18 +114,11 @@ export class PlatformService implements IPlatformService {
 			let coreModuleData = this.$fs.readJson(path.join(frameworkDir, "../", "package.json")).wait();
 			let installedVersion = coreModuleData.version;
 			let coreModuleName = coreModuleData.name;
-			let isFrameworkPathDirectory = false;
 
-			if (this.$options.frameworkPath) {
-				let frameworkPathStats = this.$fs.getFsStats(this.$options.frameworkPath).wait();
-				isFrameworkPathDirectory = frameworkPathStats.isDirectory();
-			}
-
-			let sourceFrameworkDir = isFrameworkPathDirectory && this.$options.symlink ? path.join(this.$options.frameworkPath, "framework") : frameworkDir;
 			this.$projectDataService.initialize(this.$projectData.projectDir);
 			let customTemplateOptions = this.getPathToPlatformTemplate(this.$options.platformTemplate, platformData.frameworkPackageName).wait();
 			let pathToTemplate = customTemplateOptions && customTemplateOptions.pathToTemplate;
-			platformData.platformProjectService.createProject(path.resolve(sourceFrameworkDir), installedVersion, pathToTemplate).wait();
+			platformData.platformProjectService.createProject(path.resolve(frameworkDir), installedVersion, pathToTemplate).wait();
 			platformData.platformProjectService.ensureConfigurationFileInAppResources().wait();
 			platformData.platformProjectService.interpolateData().wait();
 			platformData.platformProjectService.afterCreateProject(platformData.projectRoot).wait();
@@ -692,12 +685,13 @@ export class PlatformService implements IPlatformService {
 
 			let newVersion = version === constants.PackageVersion.NEXT ?
 				this.$npmInstallationManager.getNextVersion(platformData.frameworkPackageName).wait() :
-				this.$npmInstallationManager.getLatestVersion(platformData.frameworkPackageName).wait();
-			let installedModuleDir = this.$npmInstallationManager.install(platformData.frameworkPackageName, this.$projectData.projectDir, {version: newVersion}).wait();
+				version || this.$npmInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName).wait();
+			let installedModuleDir = this.$npmInstallationManager.install(platformData.frameworkPackageName, this.$projectData.projectDir, {version: newVersion, dependencyType: "save"}).wait();
 			let cachedPackageData = this.$fs.readJson(path.join(installedModuleDir, "package.json")).wait();
 			newVersion = (cachedPackageData && cachedPackageData.version) || newVersion;
 
 			let canUpdate = platformData.platformProjectService.canUpdatePlatform(installedModuleDir).wait();
+			this.$npm.uninstall(platformData.frameworkPackageName, {save: true}, this.$projectData.projectDir).wait();
 			if (canUpdate) {
 				if (!semver.valid(newVersion)) {
 					this.$errors.fail("The version %s is not valid. The version should consists from 3 parts separated by dot.", newVersion);
@@ -723,6 +717,7 @@ export class PlatformService implements IPlatformService {
 			this.removePlatforms([packageName]).wait();
 			packageName = newVersion ? `${packageName}@${newVersion}` : packageName;
 			this.addPlatform(packageName).wait();
+			this.$logger.out("Successfully updated to version ", newVersion);
 		}).future<void>()();
 	}
 

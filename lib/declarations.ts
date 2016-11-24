@@ -90,7 +90,6 @@ interface IOptions extends ICommonOptions {
 	port: Number;
 	production: boolean; //npm flag
 	sdk: string;
-	symlink: boolean;
 	tnsModulesVersion: string;
 	teamId: string;
 	rebuild: boolean;

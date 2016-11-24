@@ -178,11 +178,16 @@ class DoctorService implements IDoctorService {
 		let temp = require("temp");
 		temp.track();
 		let projDir = temp.mkdirSync("nativescript-check-cocoapods");
+		let packageJsonData = {
+			"name": "nativescript-check-cocoapods",
+			"version": "0.0.1"
+		};
+		this.$fs.writeJson(path.join(projDir, "package.json"), packageJsonData).wait();
 
 		let spinner = new clui.Spinner("Installing iOS runtime.");
 		try {
 			spinner.start();
-			this.$npm.install("tns-ios", projDir, { "ignore-scripts": true, production: true }).wait();
+			this.$npm.install("tns-ios", projDir, { "ignore-scripts": true, production: true, save: true}).wait();
 			spinner.stop();
 			let iosDir = path.join(projDir, "node_modules", "tns-ios", "framework");
 			this.$fs.writeFile(

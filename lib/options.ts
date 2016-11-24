@@ -16,7 +16,6 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			frameworkVersion: { type: OptionType.String },
 			copyFrom: { type: OptionType.String },
 			linkTo: { type: OptionType.String },
-			symlink: { type: OptionType.Boolean },
 			forDevice: { type: OptionType.Boolean },
 			client: { type: OptionType.Boolean, default: true },
 			production: { type: OptionType.Boolean },
