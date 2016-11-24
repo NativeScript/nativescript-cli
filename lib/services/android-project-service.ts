@@ -230,12 +230,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return Future.fromResult();
 	}
 
-	public canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
+	public canUpdatePlatform(newInstalledModuleDir: string): IFuture<boolean> {
 		return Future.fromResult(true);
 	}
 
 	public updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean, addPlatform?: Function, removePlatforms?: (platforms: string[]) => IFuture<void>): IFuture<boolean> {
 		return (() => {
+			// TODO: plamen5kov: drop support for project older than 1.3.0(MIN_RUNTIME_VERSION_WITH_GRADLE)
 			if (semver.eq(newVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
 				let platformLowercase = this.platformData.normalizedPlatformName.toLowerCase();
 				removePlatforms([platformLowercase.split("@")[0]]).wait();
