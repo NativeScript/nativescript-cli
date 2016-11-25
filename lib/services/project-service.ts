@@ -66,9 +66,11 @@ export class ProjectService implements IProjectService {
 				this.$logger.trace("Copying custom app into %s", projectAppDirectory);
 				appPath = customAppPath;
 			} else {
-				let defaultTemplatePath = this.$projectTemplatesService.prepareTemplate(selectedTemplate, projectDir).wait();
-				this.$logger.trace(`Copying application from '${defaultTemplatePath}' into '${projectAppDirectory}'.`);
-				appPath = defaultTemplatePath;
+				let templatePath = this.$projectTemplatesService.prepareTemplate(selectedTemplate, projectDir).wait();
+				this.$logger.trace(`Copying application from '${templatePath}' into '${projectAppDirectory}'.`);
+				let templatePackageJson = this.$fs.readJson(path.join(templatePath, "package.json")).wait();
+				selectedTemplate = templatePackageJson.name;
+				appPath = templatePath;
 			}
 
 			try {
@@ -78,7 +80,7 @@ export class ProjectService implements IProjectService {
 				this.$npm.install(projectDir, projectDir, { "ignore-scripts": this.$options.ignoreScripts }).wait();
 				selectedTemplate = selectedTemplate || "";
 				let templateName = (constants.RESERVED_TEMPLATE_NAMES[selectedTemplate.toLowerCase()] || selectedTemplate/*user template*/) || constants.RESERVED_TEMPLATE_NAMES["default"];
-				this.$npm.uninstall(templateName, {save: true}, projectDir).wait();
+				this.$npm.uninstall(selectedTemplate, {save: true}, projectDir).wait();
 
 				// TODO: plamen5kov: remove later (put only so tests pass (need to fix tests))
 				this.$logger.trace(`Using NativeScript verified template: ${templateName} with version undefined.`);
