@@ -36,8 +36,11 @@ export class PluginsService implements IPluginsService {
 	public add(plugin: string): IFuture<void> {
 		return (() => {
 			this.ensure().wait();
+			const possiblePackageName= path.resolve(plugin);
+			if(possiblePackageName.indexOf(".tgz") !== -1 && this.$fs.exists(possiblePackageName).wait()) {
+				plugin = possiblePackageName;
+			}
 			let name = this.$npm.install(plugin, this.$projectData.projectDir, PluginsService.NPM_CONFIG).wait()[0];
-
 			let pathToRealNpmPackageJson = path.join(this.$projectData.projectDir, "node_modules", name, "package.json");
 			let realNpmPackageJson = this.$fs.readJson(pathToRealNpmPackageJson).wait();
 
