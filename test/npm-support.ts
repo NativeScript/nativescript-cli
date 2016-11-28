@@ -147,7 +147,7 @@ function setupProject(dependencies?: any): IFuture<any> {
 					prepareAppResources: () => Future.fromResult(),
 					afterPrepareAllPlugins: () => Future.fromResult(),
 					beforePrepareAllPlugins: () => Future.fromResult(),
-					getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
+					getAppResourcesDestinationDirectoryPath: () => Future.fromResult(path.join(androidFolderPath, "src", "main", "res")),
 					processConfigurationFilesFromAppResources: () => Future.fromResult(),
 					ensureConfigurationFileInAppResources: () => Future.fromResult(),
 					interpolateConfigurationFile: () => Future.fromResult(),
