@@ -69,7 +69,9 @@ class AndroidLiveSyncService implements IDeviceLiveSyncService {
 	private reloadPage(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<void> {
 		return (() => {
 			this.device.adb.executeCommand(["forward", `tcp:${AndroidLiveSyncService.BACKEND_PORT.toString()}`, `localabstract:${deviceAppData.appIdentifier}-livesync`]).wait();
-			this.sendPageReloadMessage().wait();
+			if (!this.sendPageReloadMessage().wait()) {
+				this.restartApplication(deviceAppData).wait();
+			}
 		}).future<void>()();
 	}
 
@@ -97,15 +99,25 @@ class AndroidLiveSyncService implements IDeviceLiveSyncService {
 		return `/data/local/tmp/${appIdentifier}`;
 	}
 
-	private sendPageReloadMessage(): IFuture<void> {
-		let future = new Future<void>();
+	private sendPageReloadMessage(): IFuture<boolean> {
+		let future = new Future<boolean>();
 		let socket = new net.Socket();
 		socket.connect(AndroidLiveSyncService.BACKEND_PORT, '127.0.0.1', () => {
 			socket.write(new Buffer([0, 0, 0, 1, 1]));
 		});
 		socket.on("data", (data: any) => {
 			socket.destroy();
-			future.return();
+			future.return(true);
+		});
+		socket.on("error", () => {
+			if (!future.isResolved()) {
+				future.return(false);
+			}
+		});
+		socket.on("close", () => {
+			if (!future.isResolved()) {
+				future.return(false);
+			}
 		});
 		return future;
 	}

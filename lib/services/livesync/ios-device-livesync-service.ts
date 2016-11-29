@@ -47,8 +47,7 @@ class IOSLiveSyncService implements IDeviceLiveSyncService {
 				try {
 					this.socket = helpers.connectEventuallyUntilTimeout(() => net.connect(IOSLiveSyncService.BACKEND_PORT), 5000).wait();
 				} catch (e) {
-					this.$logger.warn(e);
-
+					this.$logger.debug(e);
 					return false;
 				}
 			} else {
@@ -82,21 +81,16 @@ class IOSLiveSyncService implements IDeviceLiveSyncService {
 			let otherFiles = _.difference(localToDevicePaths, _.concat(scriptFiles, scriptRelatedFiles));
 			let shouldRestart = _.some(otherFiles, (localToDevicePath: Mobile.ILocalToDevicePathData) => !this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), deviceAppData.platform));
 
-			if (shouldRestart) {
+			if (shouldRestart || (!this.$options.liveEdit && scriptFiles.length)) {
 				this.restartApplication(deviceAppData).wait();
-
-				return;
-			}
-
-			if (!this.$options.liveEdit && scriptFiles.length) {
-				this.restartApplication(deviceAppData).wait();
-
 				return;
 			}
 
 			if (this.setupSocketIfNeeded().wait()) {
 				this.liveEdit(scriptFiles);
 				this.reloadPage(deviceAppData, otherFiles).wait();
+			} else {
+				this.restartApplication(deviceAppData).wait();
 			}
 		}).future<void>()();
 	}
