@@ -95,6 +95,7 @@ interface IOptions extends ICommonOptions {
 	rebuild: boolean;
 	syncAllFiles: boolean;
 	liveEdit: boolean;
+	chrome: boolean;
 }
 
 interface IInitService {
@@ -225,7 +226,8 @@ interface IAndroidToolsInfoData {
 }
 
 interface ISocketProxyFactory {
-	createSocketProxy(factory: () => any): IFuture<any>;
+	createTCPSocketProxy(factory: () => any): any;
+	createWebSocketProxy(factory: () => any): any;
 }
 
 interface IiOSNotification {

@@ -15,7 +15,7 @@ class IOSDebugService implements IDebugService {
 	private _lldbProcess: ChildProcess;
 	private _sockets: net.Socket[] = [];
 	private _childProcess: ChildProcess;
-	private _socketProxy: net.Server;
+	private _socketProxy: any;
 
 	constructor(
 		private $config: IConfiguration,
@@ -31,7 +31,6 @@ class IOSDebugService implements IDebugService {
 		private $injector: IInjector,
 		private $npmInstallationManager: INpmInstallationManager,
 		private $options: IOptions,
-		private $projectDataService: IProjectDataService,
 		private $utils: IUtils,
 		private $iOSNotification: IiOSNotification,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
@@ -195,17 +194,24 @@ class IOSDebugService implements IDebugService {
 
 	private wireDebuggerClient(device?: Mobile.IiOSDevice): IFuture<void> {
 		return (() => {
-			this._socketProxy = this.$socketProxyFactory.createSocketProxy(() => {
+			let factory = () => {
 				let socket = device ? device.connectToPort(inspectorBackendPort) : net.connect(inspectorBackendPort);
 				this._sockets.push(socket);
 				return socket;
-			}).wait();
+			};
 
-			this.openDebuggerClient(<any>this._socketProxy.address()).wait();
+			if (this.$options.chrome) {
+				this._socketProxy = this.$socketProxyFactory.createWebSocketProxy(factory);
+
+				this.$logger.info(`To start debugging, open the following URL in Chrome:\nchrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:${this._socketProxy.options.port}\n`);
+			} else {
+				this._socketProxy = this.$socketProxyFactory.createTCPSocketProxy(factory);
+				this.openAppInspector(this._socketProxy.address()).wait();
+			}
 		}).future<void>()();
 	}
 
-	private openDebuggerClient(fileDescriptor: string): IFuture<void> {
+	private openAppInspector(fileDescriptor: string): IFuture<void> {
 		if (this.$options.client) {
 			return (() => {
 				let inspectorPath = this.$npmInstallationManager.install(inspectorNpmPackageName, this.$projectData.projectDir).wait();
