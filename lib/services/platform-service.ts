@@ -285,11 +285,11 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			let platformData = this.$platformsData.getPlatformData(platform);
 			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-			let appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait();
-			this.$fs.ensureDirectoryExists(appResourcesDestination).wait(); // Should be deleted
 			let appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
 				platformData.platformProjectService.prepareAppResources(appResourcesDirectoryPath).wait();
+				let appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait();
+				this.$fs.ensureDirectoryExists(appResourcesDestination).wait();
 				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), appResourcesDestination);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
