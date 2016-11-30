@@ -122,4 +122,12 @@ interface ICocoaPodsService {
 	 * @return {string} The footer which needs to be placed at the end of a Podfile.
 	 */
 	getPodfileFooter(): string;
+
+	/**
+	 * Merges the content of hooks with the provided name if there are more than one hooks with this name in the Podfile.
+	 * @param {string} hookName The name of the hook.
+	 * @param {string} pathToPodfile The path to the Podfile.
+	 * @return {IFuture<void>}
+	 */
+	mergePodfileHookContent(sectionName: string, pathToPodfile: string): IFuture<void>
 }
