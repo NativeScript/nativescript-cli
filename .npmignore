@@ -21,7 +21,6 @@ lib/**/*.ts
 lib/**/*.js.map
 
 test/
-test-scripts/
 .vscode
 lib/common/test/
 coverage/

@@ -28,7 +28,15 @@ module.exports = function(grunt) {
 
 		pkg: grunt.file.readJSON("package.json"),
 		ts: {
-			options: grunt.file.readJSON("tsconfig.json").compilerOptions,
+			options: {
+				target: 'es5',
+				module: 'commonjs',
+				sourceMap: true,
+				declaration: false,
+				removeComments: false,
+				noImplicitAny: true,
+				experimentalDecorators: true
+			},
 
 			devlib: {
 				src: ["lib/**/*.ts", "!lib/common/node_modules/**/*.ts"],
@@ -123,17 +131,7 @@ module.exports = function(grunt) {
 		},
 
 		clean: {
-			src: ["test/**/*.js*",
-				"lib/**/*.js*",
-				"!test-scripts/**/*",
-				"!lib/common/vendor/*.js",
-				"!lib/common/**/*.json",
-				"!lib/common/Gruntfile.js",
-				"!lib/common/node_modules/**/*",
-				"!lib/common/hooks/**/*.js",
-				"!lib/common/bin/*.js",
-				"!lib/common/test-scripts/**/*",
-				"*.tgz"]
+			src: ["test/**/*.js*", "lib/**/*.js*", "!lib/common/vendor/*.js", "!lib/common/**/*.json", "!lib/common/Gruntfile.js", "!lib/common/node_modules/**/*", "!lib/common/hooks/**/*.js", "!lib/common/bin/*.js", "*.tgz"]
 		}
 	});
 
