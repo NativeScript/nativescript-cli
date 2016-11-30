@@ -280,10 +280,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				args = args.concat((buildConfig && buildConfig.architectures) || defaultArchitectures);
 
 				let xcodeBuildVersion = this.getXcodeVersion();
-				if (helpers.versionCompare(xcodeBuildVersion, "8.0")>=0) {
+				if (helpers.versionCompare(xcodeBuildVersion, "8.0") >= 0) {
 					let teamId = this.getDevelopmentTeam();
 					if (teamId) {
-						args = args.concat("DEVELOPMENT_TEAM="+teamId);
+						args = args.concat("DEVELOPMENT_TEAM=" + teamId);
 					}
 				}
 			} else {
@@ -551,10 +551,10 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			try {
 				this.$fs.createDirectory(path.dirname(compatabilityXibPath)).wait();
 				this.$fs.writeFile(compatabilityXibPath, content).wait();
-			} catch(e) {
+			} catch (e) {
 				this.$logger.warn("We have failed to add compatability LaunchScreen.xib due to: " + e);
 			}
-		} catch(e) {
+		} catch (e) {
 			this.$logger.warn("We have failed to check if we need to add a compatability LaunchScreen.xib due to: " + e);
 		}
 	}
@@ -761,7 +761,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 				let firstPostInstallIndex = projectPodfileContent.indexOf(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME);
 				if (firstPostInstallIndex !== -1 && firstPostInstallIndex !== projectPodfileContent.lastIndexOf(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME)) {
-					this.$logger.warn(`Podfile contains more than one post_install sections. You need to open ${this.projectPodFilePath} file and manually resolve this issue.`);
+					this.$cocoapodsService.mergePodfileHookContent(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME, this.projectPodFilePath).wait();
 				}
 
 				let xcuserDataPath = path.join(this.xcodeprojPath, "xcuserdata");
@@ -1019,7 +1019,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				let pluginPlatformsFolderPath = plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 				let pluginXcconfigFilePath = path.join(pluginPlatformsFolderPath, "build.xcconfig");
 				if (this.$fs.exists(pluginXcconfigFilePath).wait()) {
-					this.mergeXcconfigFiles(pluginXcconfigFilePath,this.$options.release ? this.pluginsReleaseXcconfigFilePath : this.pluginsDebugXcconfigFilePath).wait();
+					this.mergeXcconfigFiles(pluginXcconfigFilePath, this.$options.release ? this.pluginsReleaseXcconfigFilePath : this.pluginsDebugXcconfigFilePath).wait();
 				}
 			}
 
@@ -1070,7 +1070,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return xcodeBuildVersion;
 	}
 
-	private getDevelopmentTeams(): Array<{id:string, name: string}> {
+	private getDevelopmentTeams(): Array<{ id: string, name: string }> {
 		let dir = path.join(process.env.HOME, "Library/MobileDevice/Provisioning Profiles/");
 		let files = this.$fs.readDirectory(dir).wait();
 		let teamIds: any = {};
@@ -1083,18 +1083,18 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				teamIds[teamId] = teamName;
 			}
 		}
-		let teamIdsArray = new Array<{id:string, name: string}>();
+		let teamIdsArray = new Array<{ id: string, name: string }>();
 		for (let teamId in teamIds) {
-			teamIdsArray.push({ id:teamId, name:teamIds[teamId] });
+			teamIdsArray.push({ id: teamId, name: teamIds[teamId] });
 		}
 		return teamIdsArray;
 	}
 
 	private getProvisioningProfileValue(name: string, text: string): string {
-		let findStr = "<key>"+name+"</key>";
+		let findStr = "<key>" + name + "</key>";
 		let index = text.indexOf(findStr);
 		if (index > 0) {
-			index = text.indexOf("<string>", index+findStr.length);
+			index = text.indexOf("<string>", index + findStr.length);
 			if (index > 0) {
 				index += "<string>".length;
 				let endIndex = text.indexOf("</string>", index);
@@ -1114,7 +1114,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				line = line.replace(/\/(\/)[^\n]*$/, "");
 				if (line.indexOf("DEVELOPMENT_TEAM") >= 0) {
 					teamId = line.split("=")[1].trim();
-					if (teamId[teamId.length-1] === ';') {
+					if (teamId[teamId.length - 1] === ';') {
 						teamId = teamId.slice(0, -1);
 					}
 				}
@@ -1157,7 +1157,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 					"Yes, persist the team id in platforms folder.",
 					"No, don't persist this setting."
 				];
-				let choicePersist = this.$prompter.promptForChoice("Do you want to make teamId: "+teamId+" a persistent choice for your app?", choicesPersist).wait();
+				let choicePersist = this.$prompter.promptForChoice("Do you want to make teamId: " + teamId + " a persistent choice for your app?", choicesPersist).wait();
 				switch (choicesPersist.indexOf(choicePersist)) {
 					case 0:
 						let xcconfigFile = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, "build.xcconfig");
