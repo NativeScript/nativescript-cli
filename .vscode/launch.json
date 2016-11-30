@@ -1,0 +1,70 @@
+{
+	// Use IntelliSense to learn about possible Node.js debug attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Launch Program (Node 6+)",
+			"program": "${workspaceRoot}/lib/nativescript-cli.js",
+			"cwd": "${workspaceRoot}",
+			"sourceMaps": true,
+			// define the arguments that you would like to pass to CLI, for example
+			// "args": [ "build", "android", "--justlaunch" ]
+			"args": [
+
+			]
+		},
+
+		{
+			// in case you want to debug a single test, modify it's code to be `it.only(...` instead of `it(...`
+			"type": "node",
+			"request": "launch",
+			"name": "Launch Tests (Node 6+)",
+			"program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+			"cwd": "${workspaceRoot}",
+			"sourceMaps": true
+		},
+
+		{
+			"type": "node",
+			"runtimeArgs": [
+				"--harmony"
+			],
+			"request": "launch",
+			"name": "Launch Program (Node 4, Node 5)",
+			"program": "${workspaceRoot}/lib/nativescript-cli.js",
+			"cwd": "${workspaceRoot}",
+			"sourceMaps": true,
+			// define the arguments that you would like to pass to CLI, for example
+			// "args": [ "build", "android", "--justlaunch" ]
+			"args": [
+
+			]
+		},
+
+		{
+			// in case you want to debug a single test, modify it's code to be `it.only(...` instead of `it(...`
+			"type": "node",
+			"runtimeArgs": [
+				"--harmony"
+			],
+			"request": "launch",
+			"name": "Launch Tests (Node 4, Node 5)",
+			"program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+			"cwd": "${workspaceRoot}",
+			"sourceMaps": true
+		},
+
+		{
+			"type": "node",
+			"request": "attach",
+			"name": "Attach to Process",
+			"port": 5858,
+			"sourceMaps": true
+		}
+
+	]
+}
