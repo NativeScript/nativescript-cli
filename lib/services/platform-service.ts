@@ -53,9 +53,7 @@ export class PlatformService implements IPlatformService {
 
 	private addPlatform(platformParam: string): IFuture<void> {
 		return (() => {
-			let data = platformParam.split("@"),
-				platform = data[0],
-				version = data[1];
+			let [platform, version] = platformParam.split("@");
 
 			this.validatePlatform(platform);
 
@@ -429,10 +427,7 @@ export class PlatformService implements IPlatformService {
 	public updatePlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
 			_.each(platforms, platformParam => {
-				let data = platformParam.split("@"),
-					platform = data[0],
-					version = data[1];
-
+				let [platform, version] = platformParam.split("@");
 				if (this.isPlatformInstalled(platform).wait()) {
 					this.updatePlatform(platform, version).wait();
 				} else {
