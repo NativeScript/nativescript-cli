@@ -123,7 +123,7 @@ class LiveSyncService implements ILiveSyncService {
 	private partialSync(syncWorkingDirectory: string, onChangedActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => void )[]): void {
 		let that = this;
 
-		let gazeWatcher = gaze("**/*", { cwd: syncWorkingDirectory }, function (err: any, watcher: any) {
+		let gazeWatcher = gaze("**/*", { cwd: syncWorkingDirectory, follow: true }, function (err: any, watcher: any) {
 			this.on('all', (event: string, filePath: string) => {
 				fiberBootstrap.run(() => {
 					that.$dispatcher.dispatch(() => (() => {

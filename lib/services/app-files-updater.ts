@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as minimatch from "minimatch";
 import * as constants from "../constants";
+import * as fs from "fs";
 import Future = require("fibers/future");
 
 export class AppFilesUpdater {
@@ -77,7 +78,12 @@ export class AppFilesUpdater {
 	protected copyAppSourceFiles(sourceFiles: string[]): void {
 		let copyFileFutures = sourceFiles.map(source => {
 			let destinationPath = path.join(this.appDestinationDirectoryPath, path.relative(this.appSourceDirectoryPath, source));
-			if (this.fs.getFsStats(source).wait().isDirectory()) {
+            let exists = fs.lstatSync(source);
+            if (exists.isSymbolicLink()) {
+				source = fs.realpathSync(source);
+                exists = fs.lstatSync(source);
+            }
+			if (exists.isDirectory()) {
 				return this.fs.createDirectory(destinationPath);
 			}
 			return this.fs.copyFile(source, destinationPath);
