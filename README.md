@@ -7,6 +7,8 @@ Get it using: `npm install nativescript@next -g`
 
 The NativeScript CLI lets you create, build, and deploy NativeScript-based projects on iOS and Android devices.
 
+================
+
 * [What is NativeScript](#what-is-nativescript "Quick overview of NativeScript, the JavaScript framework for cross-platform development of native iOS and Android apps")
 * [Supported Platforms](#supported-platforms "The mobile platforms you can target with NativeScript")
 * [System Requirements](#system-requirements "The hardware and software requirements for setting up and working with the NativeScript CLI")
