@@ -1,4 +1,12 @@
 ## Changelog
+## [v3.3.1](https://github.com/Kinvey/kinvey-nodejs/tree/v3.3.1) (2016-12-02)
+
+**Bug fixes:**
+
+- Fix aggregations.
+- Merge `user._socialIdentity` recuresively when using an identity to login a user.
+- Fix typo of `complete` in `NetworkStore`.
+
 ## [v3.3.0](https://github.com/Kinvey/kinvey-nodejs/tree/v3.3.0) (2016-11-22)
 
 **Enhancements:**
