@@ -249,7 +249,7 @@ export default class NetworkStore {
 
       // Create the request
       const request = new KinveyRequest({
-        method: RequestMethod.GET,
+        method: RequestMethod.POST,
         authType: AuthType.Default,
         url: url.format({
           protocol: this.client.protocol,

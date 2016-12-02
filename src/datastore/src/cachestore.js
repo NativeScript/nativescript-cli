@@ -248,7 +248,7 @@ export default class CacheStore extends NetworkStore {
 
       // Fetch the cache entities
       const request = new CacheRequest({
-        method: RequestMethod.GET,
+        method: RequestMethod.POST,
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,

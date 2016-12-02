@@ -73,20 +73,6 @@ export default class Storage {
       .then(adapter => adapter.findById(collection, id));
   }
 
-  // async group(collection, aggregation) {
-  //   const entities = await this.find(collection);
-
-  //   if (!(aggregation instanceof Aggregation)) {
-  //     aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
-  //   }
-
-  //   if (entities.length > 0 && aggregation) {
-  //     return aggregation.process(entities);
-  //   }
-
-  //   return null;
-  // }
-
   save(collection, entities = []) {
     return queue.add(() => {
       let singular = false;

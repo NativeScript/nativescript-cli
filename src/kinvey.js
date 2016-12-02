@@ -213,6 +213,7 @@ Kinvey.DataStore = DataStore;
 Kinvey.DataStoreType = DataStoreType;
 Kinvey.File = FileStore;
 Kinvey.Files = FileStore;
+Kinvey.Group = Aggregation;
 Kinvey.Log = Log;
 Kinvey.Metadata = Metadata;
 Kinvey.Query = Query;
