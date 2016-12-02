@@ -114,6 +114,7 @@ export default class Aggregation {
     const json = {
       key: this.key,
       initial: this.initial,
+      reduce: this.reduceFn,
       reduceFn: this.reduceFn,
       condition: this.query ? this.query.toJSON().filter : {},
       query: this.query ? this.query.toJSON() : null
@@ -129,9 +130,9 @@ export default class Aggregation {
       aggregation.by(field);
     }
 
-    aggregation.initial = { result: 0 };
+    aggregation.initial = { count: 0 };
     aggregation.reduceFn = (doc, out) => {
-      out.result += 1;
+      out.count += 1;
       return out;
     };
     return aggregation;
