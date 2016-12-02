@@ -68,7 +68,6 @@ interface IPlatformProjectService {
 	interpolateConfigurationFile(configurationFilePath?: string): IFuture<void>;
 	afterCreateProject(projectRoot: string): IFuture<void>;
 	buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void>;
-	buildForDeploy(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void>;
 	prepareProject(): IFuture<void>;
 	prepareAppResources(appResourcesDirectoryPath: string): IFuture<void>;
 	isPlatformPrepared(projectRoot: string): IFuture<boolean>;

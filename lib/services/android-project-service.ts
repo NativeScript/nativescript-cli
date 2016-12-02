@@ -291,10 +291,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return buildOptions;
 	}
 
-	public buildForDeploy(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
-		return this.buildProject(projectRoot, buildConfig);
-	}
-
 	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {
 		return this.$fs.exists(path.join(this.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
 	}

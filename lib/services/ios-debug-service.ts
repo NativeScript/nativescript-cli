@@ -106,7 +106,7 @@ class IOSDebugService implements IDebugService {
 		return (() => {
 			let platformData = this.$platformsData.getPlatformData(this.platform);
 			if (this.$options.rebuild) {
-				this.$platformService.prepareAndBuild(this.platform).wait();
+				this.$platformService.buildPlatform(this.platform).wait();
 			}
 			let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait();
 
@@ -159,9 +159,9 @@ class IOSDebugService implements IDebugService {
 				// we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
 				let action: IFuture<void>;
 				if (this.$config.debugLivesync) {
-					action = this.$platformService.startOnDevice(this.platform);
+					action = this.$platformService.runPlatform(this.platform);
 				} else {
-					action = this.$platformService.deployOnDevice(this.platform);
+					action = this.$platformService.deployPlatform(this.platform);
 				}
 				this.debugBrkCore(device, shouldBreak).wait();
 				action.wait();

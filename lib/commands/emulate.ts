@@ -2,7 +2,7 @@ export class EmulateCommandBase {
 	constructor(private $platformService: IPlatformService) { }
 
 	executeCore(args: string[]): IFuture<void> {
-		return this.$platformService.deployOnEmulator(args[0]);
+		return this.$platformService.emulatePlatform(args[0]);
 	}
 }
 
