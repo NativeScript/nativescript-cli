@@ -56,7 +56,11 @@ var CacheMiddleware = function (_Middleware) {
           promise = storage.find(collection);
         }
       } else if (method === 'POST' || method === 'PUT') {
-        promise = storage.save(collection, body);
+        if (entityId === '_group') {
+          promise = storage.find(collection);
+        } else {
+          promise = storage.save(collection, body);
+        }
       } else if (method === 'DELETE') {
         if (collection && entityId) {
           promise = storage.removeById(collection, entityId);
@@ -72,6 +76,10 @@ var CacheMiddleware = function (_Middleware) {
           statusCode: method === 'POST' ? 201 : 200,
           data: data
         };
+
+        if (method === 'POST' && entityId === '_group') {
+          response.statusCode = 200;
+        }
 
         if (!data || (0, _isEmpty2.default)(data)) {
           response.statusCode = 204;

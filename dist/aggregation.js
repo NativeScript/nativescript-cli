@@ -4,6 +4,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _assign = require('lodash/assign');
@@ -25,6 +27,14 @@ var _isObject2 = _interopRequireDefault(_isObject);
 var _isFunction = require('lodash/isFunction');
 
 var _isFunction2 = _interopRequireDefault(_isFunction);
+
+var _cloneDeep = require('lodash/cloneDeep');
+
+var _cloneDeep2 = _interopRequireDefault(_cloneDeep);
+
+var _values = require('lodash/values');
+
+var _values2 = _interopRequireDefault(_values);
 
 var _errors = require('./errors');
 
@@ -64,9 +74,8 @@ var Aggregation = function () {
     value: function process() {
       var entities = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
 
-      var groups = {};
-      var result = [];
       var aggregation = this.toJSON();
+      var keys = Object.keys(aggregation.key);
       var reduceFn = aggregation.reduceFn.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
       aggregation.reduce = new Function(['doc', 'out'], reduceFn);
 
@@ -74,33 +83,42 @@ var Aggregation = function () {
         entities = this.query.process(entities);
       }
 
-      (0, _forEach2.default)(entities, function (entity) {
-        var group = {};
-        var entityNames = Object.keys(entity);
+      if (keys.length > 0) {
+        var _ret = function () {
+          var groups = {};
 
-        (0, _forEach2.default)(entityNames, function (name) {
-          group[name] = entity[name];
-        });
+          (0, _forEach2.default)(keys, function (key) {
+            (0, _forEach2.default)(entities, function (entity) {
+              var keyVal = entity[key];
+              var result = (0, _utils.isDefined)(groups[keyVal]) ? groups[keyVal] : (0, _cloneDeep2.default)(aggregation.initial);
+              result[key] = keyVal;
+              var newResult = aggregation.reduce(entity, result);
 
-        var key = JSON.stringify(group);
-        if (!groups[key]) {
-          groups[key] = group;
-          var attributes = Object.keys(aggregation.initial);
+              if ((0, _utils.isDefined)(newResult)) {
+                result = newResult;
+              }
 
-          (0, _forEach2.default)(attributes, function (attr) {
-            groups[key][attr] = aggregation.initial[attr];
+              groups[keyVal] = result;
+            });
           });
+
+          return {
+            v: (0, _values2.default)(groups)
+          };
+        }();
+
+        if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+      }
+
+      var result = (0, _cloneDeep2.default)(aggregation.initial);
+      (0, _forEach2.default)(entities, function (entity) {
+        var newResult = aggregation.reduce(entity, result);
+
+        if ((0, _utils.isDefined)(newResult)) {
+          result = newResult;
         }
-
-        aggregation.reduce(entity, groups[key]);
       });
-
-      var segments = Object.keys(groups);
-      (0, _forEach2.default)(segments, function (segment) {
-        result.push(groups[segment]);
-      });
-
-      return result;
+      return [result];
     }
   }, {
     key: 'toJSON',
@@ -108,6 +126,7 @@ var Aggregation = function () {
       var json = {
         key: this.key,
         initial: this.initial,
+        reduce: this.reduceFn,
         reduceFn: this.reduceFn,
         condition: this.query ? this.query.toJSON().filter : {},
         query: this.query ? this.query.toJSON() : null
@@ -118,7 +137,7 @@ var Aggregation = function () {
   }, {
     key: 'initial',
     get: function get() {
-      return this._initial;
+      return (0, _cloneDeep2.default)(this._initial);
     },
     set: function set(initial) {
       if (!(0, _isObject2.default)(initial)) {
@@ -160,17 +179,12 @@ var Aggregation = function () {
     value: function count() {
       var field = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
 
+      field = field.replace('\'', '\\\'');
+
       var aggregation = new Aggregation();
-
-      if (field) {
-        aggregation.by(field);
-      }
-
-      aggregation.initial = { result: 0 };
-      aggregation.reduceFn = function (doc, out) {
-        out.result += 1;
-        return out;
-      };
+      aggregation.by(field);
+      aggregation.initial = { count: 0 };
+      aggregation.reduceFn = '' + 'function(doc, out) {' + '  out.count += 1' + '  return out;' + '}';
       return aggregation;
     }
   }, {
@@ -181,10 +195,9 @@ var Aggregation = function () {
       field = field.replace('\'', '\\\'');
 
       var aggregation = new Aggregation();
-      aggregation.initial = { result: 0 };
-      aggregation.reduceFn = function (doc, out) {
-        out.result += doc['\'' + field + '\''];
-      };
+
+      aggregation.initial = { sum: 0 };
+      aggregation.reduceFn = '' + 'function(doc, out) {' + ('  out.sum += doc["' + field + '"];') + '  return out;' + '}';
       return aggregation;
     }
   }, {
@@ -195,10 +208,9 @@ var Aggregation = function () {
       field = field.replace('\'', '\\\'');
 
       var aggregation = new Aggregation();
-      aggregation.initial = { result: Infinity };
-      aggregation.reduceFn = function (doc, out) {
-        out.result = Math.min(out.result, doc['\'' + field + '\'']);
-      };
+
+      aggregation.initial = { min: Infinity };
+      aggregation.reduceFn = '' + 'function(doc, out) {' + ('  out.min = Math.min(out.min, doc["' + field + '"]);') + '}';
       return aggregation;
     }
   }, {
@@ -209,10 +221,9 @@ var Aggregation = function () {
       field = field.replace('\'', '\\\'');
 
       var aggregation = new Aggregation();
-      aggregation.initial = { result: -Infinity };
-      aggregation.reduceFn = function (doc, out) {
-        out.result = Math.max(out.result, doc['\'' + field + '\'']);
-      };
+
+      aggregation.initial = { max: -Infinity };
+      aggregation.reduceFn = '' + 'function(doc, out) {' + ('  out.max = Math.max(out.max, doc["' + field + '"]);') + '}';
       return aggregation;
     }
   }, {
@@ -223,11 +234,9 @@ var Aggregation = function () {
       field = field.replace('\'', '\\\'');
 
       var aggregation = new Aggregation();
-      aggregation.initial = { count: 0, result: 0 };
-      aggregation.reduceFn = function (doc, out) {
-        out.result = (out.result * out.count + doc['\'' + field + '\'']) / (out.count + 1);
-        out.count += 1;
-      };
+
+      aggregation.initial = { count: 0, average: 0 };
+      aggregation.reduceFn = '' + 'function(doc, out) {' + ('  out.average = (out.average * out.count + doc["' + field + '"]) / (out.count + 1);') + '  out.count += 1;' + '}';
       return aggregation;
     }
   }]);

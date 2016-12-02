@@ -273,7 +273,7 @@ var CacheStore = function (_NetworkStore) {
         }
 
         var request = new _request.CacheRequest({
-          method: _request.RequestMethod.GET,
+          method: _request.RequestMethod.POST,
           url: _url2.default.format({
             protocol: _this4.client.protocol,
             host: _this4.client.host,

@@ -212,6 +212,7 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
 
     _this3.authType = options.authType || AuthType.None;
     _this3.query = options.query;
+    _this3.aggregation = options.aggregation;
     _this3.properties = options.properties || new Properties();
     _this3.skipBL = options.skipBL === true;
     _this3.trace = options.trace === true;

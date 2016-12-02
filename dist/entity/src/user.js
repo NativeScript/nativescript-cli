@@ -154,8 +154,12 @@ var User = function () {
       return request.execute().then(function (response) {
         return response.data;
       }).then(function (data) {
-        if ((0, _utils.isDefined)(data._socialIdentity)) {
-          data._socialIdentity = (0, _assign2.default)(data._socialIdentity, credentials._socialIdentity);
+        if ((0, _utils.isDefined)(credentials._socialIdentity) && (0, _utils.isDefined)(data._socialIdentity)) {
+          var identities = Object.keys(data._socialIdentity);
+          identities.forEach(function (identity) {
+            data._socialIdentity[identity] = (0, _assign2.default)({}, credentials._socialIdentity[identity], data._socialIdentity[identity]);
+          });
+          data._socialIdentity = (0, _assign2.default)({}, credentials._socialIdentity, data._socialIdentity);
         }
 
         _this.data = data;

@@ -126,6 +126,7 @@ Kinvey.DataStore = _datastore2.default;
 Kinvey.DataStoreType = _datastore.DataStoreType;
 Kinvey.File = _datastore.FileStore;
 Kinvey.Files = _datastore.FileStore;
+Kinvey.Group = _aggregation2.default;
 Kinvey.Log = _utils.Log;
 Kinvey.Metadata = _entity.Metadata;
 Kinvey.Query = _query2.default;

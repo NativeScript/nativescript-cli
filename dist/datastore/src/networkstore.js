@@ -123,7 +123,7 @@ var NetworkStore = function () {
       var stream = _utils.KinveyObservable.create(function (observer) {
         if (!id) {
           observer.next(undefined);
-          return observer.compelete();
+          return observer.complete();
         }
 
         var config = {
@@ -171,7 +171,7 @@ var NetworkStore = function () {
         }
 
         var request = new _request.KinveyRequest({
-          method: _request.RequestMethod.GET,
+          method: _request.RequestMethod.POST,
           authType: _request.AuthType.Default,
           url: _url2.default.format({
             protocol: _this3.client.protocol,
@@ -253,7 +253,7 @@ var NetworkStore = function () {
             if (!entities) {
               observer.next(null);
               return {
-                v: observer.compelete()
+                v: observer.complete()
               };
             }
 
@@ -316,7 +316,7 @@ var NetworkStore = function () {
             if (!entities) {
               observer.next(null);
               return {
-                v: observer.compelete()
+                v: observer.complete()
               };
             }
 
@@ -429,7 +429,7 @@ var NetworkStore = function () {
         try {
           if (!id) {
             observer.next(undefined);
-            return observer.compelete();
+            return observer.complete();
           }
 
           var request = new _request.KinveyRequest({

@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Users = exports.UserStore = exports.User = exports.SocialIdentity = exports.Query = exports.Metadata = exports.Log = exports.Kinvey = exports.Files = exports.File = exports.DataStoreType = exports.DataStore = exports.CustomEndpoint = exports.AuthorizationGrant = exports.Aggregation = exports.Acl = undefined;
+exports.Users = exports.UserStore = exports.User = exports.SocialIdentity = exports.Query = exports.Metadata = exports.Log = exports.Kinvey = exports.Files = exports.File = exports.DataStoreType = exports.DataStore = exports.CustomEndpoint = exports.AuthorizationGrant = exports.Group = exports.Aggregation = exports.Acl = undefined;
 
 var _errors = require('./errors');
 
@@ -45,6 +45,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 exports.Acl = _entity.Acl;
 exports.Aggregation = _aggregation2.default;
+exports.Group = _aggregation2.default;
 exports.AuthorizationGrant = _identity.AuthorizationGrant;
 exports.CustomEndpoint = _endpoint.CustomEndpoint;
 exports.DataStore = _datastore2.default;
