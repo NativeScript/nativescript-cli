@@ -172,6 +172,7 @@ export class KinveyRequest extends NetworkRequest {
 
     this.authType = options.authType || AuthType.None;
     this.query = options.query;
+    this.aggregation = options.aggregation;
     this.properties = options.properties || new Properties();
     this.skipBL = options.skipBL === true;
     this.trace = options.trace === true;
