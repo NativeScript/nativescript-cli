@@ -214,7 +214,10 @@ class IOSDebugService implements IDebugService {
 	private openAppInspector(fileDescriptor: string): IFuture<void> {
 		if (this.$options.client) {
 			return (() => {
-				let inspectorPath = this.$npmInstallationManager.install(inspectorNpmPackageName, this.$projectData.projectDir, {dependencyType: "save-dev"}).wait();
+				let inspectorPath = path.join(this.$projectData.projectDir, "node_modules", inspectorNpmPackageName);
+				if(!this.inspectorAlreadyInstalled(inspectorPath).wait()) {
+					inspectorPath = this.$npmInstallationManager.install(inspectorNpmPackageName, this.$projectData.projectDir, {dependencyType: "save-dev"}).wait();
+				}
 				let inspectorSourceLocation = path.join(inspectorPath, inspectorUiDir, "Main.html");
 				let inspectorApplicationPath = path.join(inspectorPath, inspectorAppName);
 
@@ -226,6 +229,15 @@ class IOSDebugService implements IDebugService {
 				this.$logger.info("Suppressing debugging client.");
 			}).future<void>()();
 		}
+	}
+
+	private inspectorAlreadyInstalled(pathToInspector: string): IFuture<Boolean> {
+		return (() => {
+			if(this.$fs.exists(pathToInspector).wait()) {
+				return true;
+			}
+			return false;
+		}).future<Boolean>()();
 	}
 }
 $injector.register("iOSDebugService", IOSDebugService);
