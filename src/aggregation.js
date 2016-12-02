@@ -3,6 +3,8 @@ import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import isFunction from 'lodash/isFunction';
+import cloneDeep from 'lodash/cloneDeep';
+import values from 'lodash/values';
 import { KinveyError } from './errors';
 import { Query } from './query';
 import { isDefined } from './utils';
@@ -26,7 +28,7 @@ export default class Aggregation {
   }
 
   get initial() {
-    return this._initial;
+    return cloneDeep(this._initial);
   }
 
   set initial(initial) {
@@ -71,9 +73,8 @@ export default class Aggregation {
   }
 
   process(entities = []) {
-    const groups = {};
-    const result = [];
     const aggregation = this.toJSON();
+    const keys = Object.keys(aggregation.key);
     const reduceFn = aggregation.reduceFn.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
     aggregation.reduce = new Function(['doc', 'out'], reduceFn); // eslint-disable-line no-new-func
 
@@ -81,33 +82,36 @@ export default class Aggregation {
       entities = this.query.process(entities);
     }
 
-    forEach(entities, (entity) => {
-      const group = {};
-      const entityNames = Object.keys(entity);
+    if (keys.length > 0) {
+      const groups = {};
 
-      forEach(entityNames, (name) => {
-        group[name] = entity[name];
+      forEach(keys, (key) => {
+        forEach(entities, (entity) => {
+          const keyVal = entity[key];
+          let result = isDefined(groups[keyVal]) ? groups[keyVal] : cloneDeep(aggregation.initial);
+          result[key] = keyVal;
+          const newResult = aggregation.reduce(entity, result);
+
+          if (isDefined(newResult)) {
+            result = newResult;
+          }
+
+          groups[keyVal] = result;
+        });
       });
 
-      const key = JSON.stringify(group);
-      if (!groups[key]) {
-        groups[key] = group;
-        const attributes = Object.keys(aggregation.initial);
+      return values(groups);
+    }
 
-        forEach(attributes, (attr) => {
-          groups[key][attr] = aggregation.initial[attr];
-        });
+    let result = cloneDeep(aggregation.initial);
+    forEach(entities, (entity) => {
+      const newResult = aggregation.reduce(entity, result);
+
+      if (isDefined(newResult)) {
+        result = newResult;
       }
-
-      aggregation.reduce(entity, groups[key]);
     });
-
-    const segments = Object.keys(groups);
-    forEach(segments, (segment) => {
-      result.push(groups[segment]);
-    });
-
-    return result;
+    return [result];
   }
 
   toJSON() {
@@ -124,17 +128,16 @@ export default class Aggregation {
   }
 
   static count(field = '') {
+    field = field.replace('\'', '\\\'');
+
     const aggregation = new Aggregation();
-
-    if (field) {
-      aggregation.by(field);
-    }
-
+    aggregation.by(field);
     aggregation.initial = { count: 0 };
-    aggregation.reduceFn = (doc, out) => {
-      out.count += 1;
-      return out;
-    };
+    aggregation.reduceFn = ''
+      + 'function(doc, out) {'
+      + '  out.count += 1'
+      + '  return out;'
+      + '}';
     return aggregation;
   }
 
@@ -142,10 +145,13 @@ export default class Aggregation {
     field = field.replace('\'', '\\\'');
 
     const aggregation = new Aggregation();
-    aggregation.initial = { result: 0 };
-    aggregation.reduceFn = (doc, out) => {
-      out.result += doc[`'${field}'`];
-    };
+    // aggregation.by(field);
+    aggregation.initial = { sum: 0 };
+    aggregation.reduceFn = ''
+      + 'function(doc, out) {'
+      + `  out.sum += doc["${field}"];`
+      + '  return out;'
+      + '}';
     return aggregation;
   }
 
@@ -153,10 +159,12 @@ export default class Aggregation {
     field = field.replace('\'', '\\\'');
 
     const aggregation = new Aggregation();
-    aggregation.initial = { result: Infinity };
-    aggregation.reduceFn = (doc, out) => {
-      out.result = Math.min(out.result, doc[`'${field}'`]);
-    };
+    // aggregation.by(field);
+    aggregation.initial = { min: Infinity };
+    aggregation.reduceFn = ''
+      + 'function(doc, out) {'
+      + `  out.min = Math.min(out.min, doc["${field}"]);`
+      + '}';
     return aggregation;
   }
 
@@ -164,10 +172,12 @@ export default class Aggregation {
     field = field.replace('\'', '\\\'');
 
     const aggregation = new Aggregation();
-    aggregation.initial = { result: -Infinity };
-    aggregation.reduceFn = (doc, out) => {
-      out.result = Math.max(out.result, doc[`'${field}'`]);
-    };
+    // aggregation.by(field);
+    aggregation.initial = { max: -Infinity };
+    aggregation.reduceFn = ''
+      + 'function(doc, out) {'
+      + `  out.max = Math.max(out.max, doc["${field}"]);`
+      + '}';
     return aggregation;
   }
 
@@ -175,11 +185,13 @@ export default class Aggregation {
     field = field.replace('\'', '\\\'');
 
     const aggregation = new Aggregation();
-    aggregation.initial = { count: 0, result: 0 };
-    aggregation.reduceFn = (doc, out) => {
-      out.result = ((out.result * out.count) + doc[`'${field}'`]) / (out.count + 1);
-      out.count += 1;
-    };
+    // aggregation.by(field);
+    aggregation.initial = { count: 0, average: 0 };
+    aggregation.reduceFn = ''
+      + 'function(doc, out) {'
+      + `  out.average = (out.average * out.count + doc["${field}"]) / (out.count + 1);`
+      + '  out.count += 1;'
+      + '}';
     return aggregation;
   }
 }
