@@ -120,7 +120,7 @@ export default class SyncStore extends CacheStore {
 
       // Fetch the cache entities
       const request = new CacheRequest({
-        method: RequestMethod.GET,
+        method: RequestMethod.POST,
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
