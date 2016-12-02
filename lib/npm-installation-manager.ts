@@ -1,14 +1,12 @@
 import * as path from "path";
 import * as semver from "semver";
 import * as constants from "./constants";
-import {sleep} from "../lib/common/helpers";
 
 export class NpmInstallationManager implements INpmInstallationManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
 
 	constructor(private $npm: INodePackageManager,
 		private $logger: ILogger,
-		private $lockfile: ILockFile,
 		private $errors: IErrors,
 		private $options: IOptions,
 		private $fs: IFileSystem,
@@ -44,13 +42,6 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	public install(packageName: string, projectDir: string, opts?: INpmInstallOptions): IFuture<any> {
 		return (() => {
 
-			// TODO: plamen5kov: figure a way to remove this
-			while(this.$lockfile.check().wait()) {
-				sleep(10);
-			}
-
-			this.$lockfile.lock().wait();
-
 			try {
 				let packageToInstall = this.$options.frameworkPath || packageName;
 				let pathToSave = projectDir;
@@ -61,8 +52,6 @@ export class NpmInstallationManager implements INpmInstallationManager {
 			} catch(error) {
 				this.$logger.debug(error);
 				this.$errors.fail("%s. Error: %s", NpmInstallationManager.NPM_LOAD_FAILED, error);
-			} finally {
-				this.$lockfile.unlock().wait();
 			}
 
 		}).future<string>()();
