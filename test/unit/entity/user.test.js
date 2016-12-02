@@ -135,7 +135,7 @@ describe('User', function() {
     });
 
     it('should login a user with _socialIdentity and merge the result', async function() {
-      const socialIdentity = { foo: randomString() };
+      const socialIdentity = { foo: { baz: randomString() }, faa: randomString() };
       let user = new User();
       const reply = {
         _id: randomString(),
@@ -145,7 +145,9 @@ describe('User', function() {
           authtoken: randomString()
         },
         _socialIdentity: {
-          bar: randomString()
+          foo: {
+            bar: randomString()
+          }
         },
         username: randomString(),
         _acl: {
@@ -172,8 +174,9 @@ describe('User', function() {
       expect(user._id).toEqual(reply._id);
       expect(user.authtoken).toEqual(reply._kmd.authtoken);
       expect(user.username).toEqual(reply.username);
-      expect(user._socialIdentity.foo).toEqual(socialIdentity.foo);
-      expect(user._socialIdentity.bar).toEqual(reply._socialIdentity.bar);
+      expect(user._socialIdentity.foo.baz).toEqual(socialIdentity.foo.baz);
+      expect(user._socialIdentity.foo.bar).toEqual(reply._socialIdentity.foo.bar);
+      expect(user._socialIdentity.faa).toEqual(socialIdentity.faa);
 
       const isActive = user.isActive();
       expect(isActive).toEqual(true);
