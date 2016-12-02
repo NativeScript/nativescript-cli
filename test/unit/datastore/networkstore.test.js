@@ -1,6 +1,7 @@
 import { NetworkStore } from '../../../src/datastore';
 import { Client } from '../../../src/client';
 import Query from '../../../src/query';
+import Aggregation from '../../../src/aggregation';
 import { KinveyError, NotFoundError } from '../../../src/errors';
 import { randomString } from '../../../src/utils';
 import nock from 'nock';
@@ -161,6 +162,26 @@ describe('NetworkStore', function() {
       const store = new NetworkStore(collection);
       const entity = await store.findById(entityId).toPromise();
       expect(entity).toEqual(entity1);
+    });
+  });
+
+  describe('group()', function() {
+    it('return the count of all unique properties on the collection', async function() {
+      // Kinvey API response
+      const reply = [{ title: randomString(), count: 2 }, { title: randomString(), count: 1 }]
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .post(`/appdata/${this.client.appKey}/${collection}/_group`)
+        .reply(200, reply , {
+          'content-type': 'application/json'
+        });
+
+      const store = new NetworkStore(collection);
+      const aggregation = Aggregation.count('title');
+      return store.group(aggregation).toPromise()
+        .then((result) => {
+          expect(result).toBeA(Array);
+          expect(result).toEqual(reply);
+        })
     });
   });
 
