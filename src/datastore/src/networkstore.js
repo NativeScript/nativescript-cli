@@ -197,7 +197,7 @@ export default class NetworkStore {
     const stream = KinveyObservable.create((observer) => {
       if (!id) {
         observer.next(undefined);
-        return observer.compelete();
+        return observer.complete();
       }
 
       // Fetch data from the network
@@ -337,7 +337,7 @@ export default class NetworkStore {
       try {
         if (!entities) {
           observer.next(null);
-          return observer.compelete();
+          return observer.complete();
         }
 
         let singular = false;
@@ -391,7 +391,7 @@ export default class NetworkStore {
       try {
         if (!entities) {
           observer.next(null);
-          return observer.compelete();
+          return observer.complete();
         }
 
         let singular = false;
@@ -510,7 +510,7 @@ export default class NetworkStore {
       try {
         if (!id) {
           observer.next(undefined);
-          return observer.compelete();
+          return observer.complete();
         }
 
         const request = new KinveyRequest({
