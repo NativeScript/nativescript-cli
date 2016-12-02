@@ -11,6 +11,7 @@ import { Log } from './utils';
 export {
   Acl,
   Aggregation,
+  Aggregation as Group,
   AuthorizationGrant,
   CustomEndpoint,
   DataStore,
