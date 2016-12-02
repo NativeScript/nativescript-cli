@@ -214,7 +214,7 @@ class IOSDebugService implements IDebugService {
 	private openAppInspector(fileDescriptor: string): IFuture<void> {
 		if (this.$options.client) {
 			return (() => {
-				let inspectorPath = this.$npmInstallationManager.install(inspectorNpmPackageName, this.$projectData.projectDir).wait();
+				let inspectorPath = this.$npmInstallationManager.install(inspectorNpmPackageName, this.$projectData.projectDir, {dependencyType: "save-dev"}).wait();
 				let inspectorSourceLocation = path.join(inspectorPath, inspectorUiDir, "Main.html");
 				let inspectorApplicationPath = path.join(inspectorPath, inspectorAppName);
 
