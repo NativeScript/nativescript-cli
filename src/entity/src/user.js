@@ -267,8 +267,12 @@ export default class User {
     return request.execute()
       .then(response => response.data)
       .then((data) => {
-        if (isDefined(data._socialIdentity)) {
-          data._socialIdentity = assign(data._socialIdentity, credentials._socialIdentity);
+        if (isDefined(credentials._socialIdentity) && isDefined(data._socialIdentity)) {
+          const identities = Object.keys(data._socialIdentity);
+          identities.forEach((identity) => {
+            data._socialIdentity[identity] = assign({}, credentials._socialIdentity[identity], data._socialIdentity[identity]);
+          });
+          data._socialIdentity = assign({}, credentials._socialIdentity, data._socialIdentity);
         }
 
         this.data = data;
