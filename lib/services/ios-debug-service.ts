@@ -229,7 +229,7 @@ class IOSDebugService implements IDebugService {
 						this.$childProcess.exec(`tar -xf ${inspectorTgzPathInCache} -C ${pathToPackageInCache}`).wait();
 						this.$childProcess.exec(`npm install --prefix ${pathToUnzippedInspector}`).wait();
 					}
-
+					this.$logger.out("Using inspector from cache.");
 					inspectorPath = pathToUnzippedInspector;
 				}
 
