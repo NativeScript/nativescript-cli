@@ -4,7 +4,6 @@ import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import isFunction from 'lodash/isFunction';
 import cloneDeep from 'lodash/cloneDeep';
-import values from 'lodash/values';
 import { KinveyError } from './errors';
 import { Query } from './query';
 import { isDefined } from './utils';
@@ -83,13 +82,14 @@ export default class Aggregation {
     }
 
     if (keys.length > 0) {
-      const groups = {};
+      const results = [];
 
-      forEach(keys, (key) => {
-        forEach(entities, (entity) => {
+      keys.forEach((key) => {
+        const groups = {};
+
+        entities.forEach((entity) => {
           const keyVal = entity[key];
           let result = isDefined(groups[keyVal]) ? groups[keyVal] : cloneDeep(aggregation.initial);
-          result[key] = keyVal;
           const newResult = aggregation.reduce(entity, result);
 
           if (isDefined(newResult)) {
@@ -98,9 +98,16 @@ export default class Aggregation {
 
           groups[keyVal] = result;
         });
+
+        Object.keys(groups).forEach((groupKey) => {
+          let result = {};
+          result[key] = groupKey;
+          result = assign({}, result, groups[groupKey]);
+          results.push(result);
+        });
       });
 
-      return values(groups);
+      return results;
     }
 
     let result = cloneDeep(aggregation.initial);
@@ -135,7 +142,7 @@ export default class Aggregation {
     aggregation.initial = { count: 0 };
     aggregation.reduceFn = ''
       + 'function(doc, out) {'
-      + '  out.count += 1'
+      + '  out.count += 1;'
       + '  return out;'
       + '}';
     return aggregation;
@@ -164,6 +171,7 @@ export default class Aggregation {
     aggregation.reduceFn = ''
       + 'function(doc, out) {'
       + `  out.min = Math.min(out.min, doc["${field}"]);`
+      + '  return out;'
       + '}';
     return aggregation;
   }
@@ -177,6 +185,7 @@ export default class Aggregation {
     aggregation.reduceFn = ''
       + 'function(doc, out) {'
       + `  out.max = Math.max(out.max, doc["${field}"]);`
+      + '  return out;'
       + '}';
     return aggregation;
   }
@@ -191,6 +200,7 @@ export default class Aggregation {
       + 'function(doc, out) {'
       + `  out.average = (out.average * out.count + doc["${field}"]) / (out.count + 1);`
       + '  out.count += 1;'
+      + '  return out;'
       + '}';
     return aggregation;
   }
