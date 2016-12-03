@@ -83,13 +83,14 @@ export default class Aggregation {
     }
 
     if (keys.length > 0) {
-      const groups = {};
+      const results = [];
 
-      forEach(keys, (key) => {
-        forEach(entities, (entity) => {
+      keys.forEach((key) => {
+        const groups = {};
+
+        entities.forEach((entity) => {
           const keyVal = entity[key];
           let result = isDefined(groups[keyVal]) ? groups[keyVal] : cloneDeep(aggregation.initial);
-          result[key] = keyVal;
           const newResult = aggregation.reduce(entity, result);
 
           if (isDefined(newResult)) {
@@ -98,9 +99,16 @@ export default class Aggregation {
 
           groups[keyVal] = result;
         });
+
+        Object.keys(groups).forEach((groupKey) => {
+          let result = {};
+          result[key] = groupKey;
+          result = assign({}, result, groups[groupKey]);
+          results.push(result);
+        });
       });
 
-      return values(groups);
+      return results;
     }
 
     let result = cloneDeep(aggregation.initial);
