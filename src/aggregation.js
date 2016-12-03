@@ -135,7 +135,7 @@ export default class Aggregation {
     aggregation.initial = { count: 0 };
     aggregation.reduceFn = ''
       + 'function(doc, out) {'
-      + '  out.count += 1'
+      + '  out.count += 1;'
       + '  return out;'
       + '}';
     return aggregation;
