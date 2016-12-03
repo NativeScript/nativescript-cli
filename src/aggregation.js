@@ -4,7 +4,6 @@ import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import isFunction from 'lodash/isFunction';
 import cloneDeep from 'lodash/cloneDeep';
-import values from 'lodash/values';
 import { KinveyError } from './errors';
 import { Query } from './query';
 import { isDefined } from './utils';
