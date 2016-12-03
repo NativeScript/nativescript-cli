@@ -7,6 +7,9 @@ engines:
     - "node_modules/"
     - "test/"
     - "test2/"
+    checks:
+      import/no-unresolved:
+        enabled: false
 ratings:
   paths:
   - src/**
