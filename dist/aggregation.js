@@ -32,10 +32,6 @@ var _cloneDeep = require('lodash/cloneDeep');
 
 var _cloneDeep2 = _interopRequireDefault(_cloneDeep);
 
-var _values = require('lodash/values');
-
-var _values2 = _interopRequireDefault(_values);
-
 var _errors = require('./errors');
 
 var _query = require('./query');
@@ -85,13 +81,14 @@ var Aggregation = function () {
 
       if (keys.length > 0) {
         var _ret = function () {
-          var groups = {};
+          var results = [];
 
-          (0, _forEach2.default)(keys, function (key) {
-            (0, _forEach2.default)(entities, function (entity) {
+          keys.forEach(function (key) {
+            var groups = {};
+
+            entities.forEach(function (entity) {
               var keyVal = entity[key];
               var result = (0, _utils.isDefined)(groups[keyVal]) ? groups[keyVal] : (0, _cloneDeep2.default)(aggregation.initial);
-              result[key] = keyVal;
               var newResult = aggregation.reduce(entity, result);
 
               if ((0, _utils.isDefined)(newResult)) {
@@ -100,10 +97,17 @@ var Aggregation = function () {
 
               groups[keyVal] = result;
             });
+
+            Object.keys(groups).forEach(function (groupKey) {
+              var result = {};
+              result[key] = groupKey;
+              result = (0, _assign2.default)({}, result, groups[groupKey]);
+              results.push(result);
+            });
           });
 
           return {
-            v: (0, _values2.default)(groups)
+            v: results
           };
         }();
 
@@ -184,7 +188,7 @@ var Aggregation = function () {
       var aggregation = new Aggregation();
       aggregation.by(field);
       aggregation.initial = { count: 0 };
-      aggregation.reduceFn = '' + 'function(doc, out) {' + '  out.count += 1' + '  return out;' + '}';
+      aggregation.reduceFn = '' + 'function(doc, out) {' + '  out.count += 1;' + '  return out;' + '}';
       return aggregation;
     }
   }, {
@@ -210,7 +214,7 @@ var Aggregation = function () {
       var aggregation = new Aggregation();
 
       aggregation.initial = { min: Infinity };
-      aggregation.reduceFn = '' + 'function(doc, out) {' + ('  out.min = Math.min(out.min, doc["' + field + '"]);') + '}';
+      aggregation.reduceFn = '' + 'function(doc, out) {' + ('  out.min = Math.min(out.min, doc["' + field + '"]);') + '  return out;' + '}';
       return aggregation;
     }
   }, {
@@ -223,7 +227,7 @@ var Aggregation = function () {
       var aggregation = new Aggregation();
 
       aggregation.initial = { max: -Infinity };
-      aggregation.reduceFn = '' + 'function(doc, out) {' + ('  out.max = Math.max(out.max, doc["' + field + '"]);') + '}';
+      aggregation.reduceFn = '' + 'function(doc, out) {' + ('  out.max = Math.max(out.max, doc["' + field + '"]);') + '  return out;' + '}';
       return aggregation;
     }
   }, {
@@ -236,7 +240,7 @@ var Aggregation = function () {
       var aggregation = new Aggregation();
 
       aggregation.initial = { count: 0, average: 0 };
-      aggregation.reduceFn = '' + 'function(doc, out) {' + ('  out.average = (out.average * out.count + doc["' + field + '"]) / (out.count + 1);') + '  out.count += 1;' + '}';
+      aggregation.reduceFn = '' + 'function(doc, out) {' + ('  out.average = (out.average * out.count + doc["' + field + '"]) / (out.count + 1);') + '  out.count += 1;' + '  return out;' + '}';
       return aggregation;
     }
   }]);

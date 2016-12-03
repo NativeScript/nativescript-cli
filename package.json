@@ -1,6 +1,6 @@
 {
   "name": "kinvey-node-sdk",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "Kinvey JavaScript SDK for NodeJS applications.",
   "homepage": "http://www.kinvey.com",
   "bugs": {
