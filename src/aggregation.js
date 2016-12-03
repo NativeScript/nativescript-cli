@@ -172,6 +172,7 @@ export default class Aggregation {
     aggregation.reduceFn = ''
       + 'function(doc, out) {'
       + `  out.min = Math.min(out.min, doc["${field}"]);`
+      + '  return out;'
       + '}';
     return aggregation;
   }
@@ -185,6 +186,7 @@ export default class Aggregation {
     aggregation.reduceFn = ''
       + 'function(doc, out) {'
       + `  out.max = Math.max(out.max, doc["${field}"]);`
+      + '  return out;'
       + '}';
     return aggregation;
   }
@@ -199,6 +201,7 @@ export default class Aggregation {
       + 'function(doc, out) {'
       + `  out.average = (out.average * out.count + doc["${field}"]) / (out.count + 1);`
       + '  out.count += 1;'
+      + '  return out;'
       + '}';
     return aggregation;
   }
