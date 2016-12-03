@@ -94,7 +94,7 @@ describe('Aggregation', function() {
       function createEntity() {
         const entity = {
           _id: randomString(),
-          count: getRandomIntInclusive(0, 100),
+          count: getRandomIntInclusive(1, 100),
           _acl: {
             creator: randomString()
           },
@@ -147,7 +147,7 @@ describe('Aggregation', function() {
   });
 
   describe('min()', function() {
-    let min = 0;
+    let min = Infinity;
 
     beforeEach(function() {
       const entities = [];
@@ -164,7 +164,7 @@ describe('Aggregation', function() {
       function createEntity() {
         const entity = {
           _id: randomString(),
-          count: getRandomIntInclusive(0, 100),
+          count: getRandomIntInclusive(1, 100),
           _acl: {
             creator: randomString()
           },
@@ -217,7 +217,7 @@ describe('Aggregation', function() {
   });
 
   describe('max()', function() {
-    let max = 0;
+    let max = -Infinity;
 
     beforeEach(function() {
       const entities = [];
@@ -234,7 +234,7 @@ describe('Aggregation', function() {
       function createEntity() {
         const entity = {
           _id: randomString(),
-          count: getRandomIntInclusive(0, 100),
+          count: getRandomIntInclusive(1, 100),
           _acl: {
             creator: randomString()
           },
@@ -305,7 +305,7 @@ describe('Aggregation', function() {
       function createEntity() {
         const entity = {
           _id: randomString(),
-          count: getRandomIntInclusive(0, 100),
+          count: getRandomIntInclusive(1, 100),
           _acl: {
             creator: randomString()
           },
