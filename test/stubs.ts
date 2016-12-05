@@ -230,6 +230,10 @@ export class NpmInstallationManagerStub implements INpmInstallationManager {
 	getLatestCompatibleVersion(packageName: string): IFuture<string> {
 		return Future.fromResult("");
 	}
+
+	getInspectorFromCache(name: string, projectDir: string): IFuture<string> {
+		return Future.fromResult("");
+	}
 }
 
 export class ProjectDataStub implements IProjectData {

@@ -10,6 +10,7 @@ interface INpmInstallationManager {
 	getLatestVersion(packageName: string): IFuture<string>;
 	getNextVersion(packageName: string): IFuture<string>;
 	getLatestCompatibleVersion(packageName: string): IFuture<string>;
+	getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string): IFuture<string>;
 }
 
 interface INpmInstallOptions {
