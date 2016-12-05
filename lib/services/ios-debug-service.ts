@@ -215,9 +215,24 @@ class IOSDebugService implements IDebugService {
 		if (this.$options.client) {
 			return (() => {
 				let inspectorPath = path.join(this.$projectData.projectDir, "node_modules", inspectorNpmPackageName);
+
+				// local installation takes precedence over cache
 				if(!this.inspectorAlreadyInstalled(inspectorPath).wait()) {
-					inspectorPath = this.$npmInstallationManager.install(inspectorNpmPackageName, this.$projectData.projectDir, {dependencyType: "save-dev"}).wait();
+					let cachepath = this.$childProcess.exec("npm get cache").wait().trim();
+					let version = this.$npmInstallationManager.getLatestCompatibleVersion(inspectorNpmPackageName).wait();
+					let pathToPackageInCache = path.join(cachepath, inspectorNpmPackageName, version);
+					let pathToUnzippedInspector = path.join(pathToPackageInCache, "package");
+
+					if(!this.$fs.exists(pathToPackageInCache).wait()) {
+						this.$childProcess.exec(`npm cache add ${inspectorNpmPackageName}@${version}`).wait();
+						let inspectorTgzPathInCache = path.join(pathToPackageInCache, "package.tgz");
+						this.$childProcess.exec(`tar -xf ${inspectorTgzPathInCache} -C ${pathToPackageInCache}`).wait();
+						this.$childProcess.exec(`npm install --prefix ${pathToUnzippedInspector}`).wait();
+					}
+					this.$logger.out("Using inspector from cache.");
+					inspectorPath = pathToUnzippedInspector;
 				}
+
 				let inspectorSourceLocation = path.join(inspectorPath, inspectorUiDir, "Main.html");
 				let inspectorApplicationPath = path.join(inspectorPath, inspectorAppName);
 
