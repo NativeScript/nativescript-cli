@@ -39,7 +39,6 @@ class AndroidDebugService implements IDebugService {
 
 	private debugOnEmulator(): IFuture<void> {
 		return (() => {
-			this.$platformService.deployPlatform(this.platform).wait();
 			// Assure we've detected the emulator as device
 			// For example in case deployOnEmulator had stated new emulator instance
 			// we need some time to detect it. Let's force detection.
@@ -109,9 +108,6 @@ class AndroidDebugService implements IDebugService {
 			if (!this.$options.start && !this.$options.emulator && !this.$options.getPort) {
 				let cachedDeviceOption = this.$options.forDevice;
 				this.$options.forDevice = true;
-				if (this.$options.rebuild) {
-					this.$platformService.buildPlatform(this.platform).wait();
-				}
 				this.$options.forDevice = !!cachedDeviceOption;
 
 				let platformData = this.$platformsData.getPlatformData(this.platform);

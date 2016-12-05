@@ -5,7 +5,6 @@ import * as constants from "../constants";
 import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
-import { AndroidDeviceHashService } from "../common/mobile/android/android-device-hash-service";
 import { EOL } from "os";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
@@ -424,17 +423,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return (() => {
 			let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
 			let deviceRootPath = `/data/local/tmp/${this.$projectData.projectId}`;
-			adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, "fullsync"),
-				this.$mobileHelper.buildDevicePath(deviceRootPath, "sync"),
-				this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync")]).wait();
-
-			let projectFilesManager = this.$injector.resolve("projectFilesManager"); // We need to resolve projectFilesManager here due to cyclic dependency
-			let devicesService: Mobile.IDevicesService = this.$injector.resolve("devicesService");
-			let device = _.find(devicesService.getDevicesForPlatform(this.platformData.normalizedPlatformName), d => d.deviceInfo.identifier === deviceIdentifier);
-			let deviceAppData = this.$deviceAppDataFactory.create(this.$projectData.projectId, this.platformData.normalizedPlatformName, device);
-			let localToDevicePaths = projectFilesManager.createLocalToDevicePaths(deviceAppData, path.join(this.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
-			let deviceHashService = this.$injector.resolve(AndroidDeviceHashService, { adb: adb, appIdentifier: this.$projectData.projectId });
-			deviceHashService.uploadHashFileToDevice(localToDevicePaths).wait();
+			adb.executeShellCommand(["rm", "-rf", deviceRootPath]).wait();
+			adb.executeShellCommand(["mkdir", deviceRootPath]);
 		}).future<void>()();
 	}
 

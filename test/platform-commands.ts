@@ -20,6 +20,7 @@ import {DevicePlatformsConstants} from "../lib/common/mobile/device-platforms-co
 import { XmlValidator } from "../lib/xml-validator";
 import * as ChildProcessLib from "../lib/common/child-process";
 import {CleanCommand} from "../lib/commands/platform-clean";
+import ProjectChangesLib = require("../lib/services/project-changes-service");
 
 let isCommandExecuted = true;
 
@@ -139,6 +140,7 @@ function createTestInjector() {
 	testInjector.register("xmlValidator", XmlValidator);
 	testInjector.register("npm", {});
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
+	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
 
 	return testInjector;
 }

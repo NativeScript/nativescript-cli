@@ -51,14 +51,13 @@ interface IOpener {
 }
 
 interface ILiveSyncService {
-	liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): IFuture<void>;
-	forceExecuteFullSync: boolean;
+	liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => IFuture<void>): IFuture<void>;
 }
 
 interface IPlatformLiveSyncService {
 	fullSync(postAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): IFuture<void>;
 	partialSync(event: string, filePath: string, dispatcher: IFutureDispatcher, afterFileSyncAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): void;
-	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<void>;
+	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], isFullSync: boolean): IFuture<void>;
 }
 
 interface IOptions extends ICommonOptions {
@@ -93,10 +92,10 @@ interface IOptions extends ICommonOptions {
 	sdk: string;
 	tnsModulesVersion: string;
 	teamId: string;
-	rebuild: boolean;
 	syncAllFiles: boolean;
 	liveEdit: boolean;
 	chrome: boolean;
+	clean: boolean;
 }
 
 interface IInitService {
