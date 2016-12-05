@@ -1,8 +1,6 @@
-import Popup from './popup';
 import Identity from './identity';
-import { SocialIdentity } from './enums';
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
-import { KinveyError, MobileIdentityConnectError, PopupError } from '../../errors';
+import { KinveyError, MobileIdentityConnectError } from '../../errors';
 import Promise from 'es6-promise';
 import path from 'path';
 import url from 'url';
@@ -25,14 +23,30 @@ export { AuthorizationGrant };
 
 /**
  * @private
+ * Enum for Social Identities
  */
-export class MobileIdentityConnect extends Identity {
+const AuthIdentity = {
+  Kinvey: process.env.KINVEY_IDENTITY || 'kinvey',
+  MobileIdentityConnect: process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth'
+};
+Object.freeze(AuthIdentity);
+export { AuthIdentity };
+
+
+/**
+ * @private
+ */
+export default class MobileIdentityConnect extends Identity {
   get identity() {
-    return SocialIdentity.MobileIdentityConnect;
+    return AuthIdentity.MobileIdentityConnect;
   }
 
   static get identity() {
-    return SocialIdentity.MobileIdentityConnect;
+    return AuthIdentity.MobileIdentityConnect;
+  }
+
+  isSupported() {
+    return true;
   }
 
   login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
@@ -41,17 +55,10 @@ export class MobileIdentityConnect extends Identity {
     const promise = Promise.resolve()
       .then(() => {
         if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
-          // Step 1: Request a code
-          return this.requestCodeWithPopup(clientId, redirectUri, options)
-            .catch((error) => {
-              if (error instanceof PopupError) {
-                throw new MobileIdentityConnectError('AuthorizationGrant.AuthorizationCodeLoginPage is not supported on this platform.');
-              }
-            });
+          return this.requestCodeWithPopup(clientId, redirectUri, options); // Step 1: Request a code
         } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
-          // Step 1a: Request a temp login url
-          return this.requestTempLoginUrl(clientId, redirectUri, options)
-            .then((url) => this.requestCodeWithUrl(url, clientId, redirectUri, options)); // Step 1b: Request a code
+          return this.requestTempLoginUrl(clientId, redirectUri, options) // Step 1a: Request a temp login url
+            .then(url => this.requestCodeWithUrl(url, clientId, redirectUri, options)); // Step 1b: Request a code
         }
 
         throw new KinveyError(`The authorization grant ${authorizationGrant} is unsupported. ` +
@@ -68,6 +75,12 @@ export class MobileIdentityConnect extends Identity {
       });
 
     return promise;
+  }
+
+  requestCodeWithPopup() {
+    return Promise.reject(
+      new MobileIdentityConnectError('AuthorizationGrant.AuthorizationCodeLoginPage is not supported on this platform.')
+    );
   }
 
   requestTempLoginUrl(clientId, redirectUri, options = {}) {
@@ -102,83 +115,6 @@ export class MobileIdentityConnect extends Identity {
     });
     return request.execute()
       .then(response => response.data.temp_login_uri);
-  }
-
-  requestCodeWithPopup(clientId, redirectUri, options = {}) {
-    const promise = Promise.resolve().then(() => {
-      let pathname = '/';
-      const popup = new Popup();
-
-      if (options.version) {
-        let version = options.version;
-
-        if (!isString(version)) {
-          version = String(version);
-        }
-
-        pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
-      }
-
-      return popup.open(url.format({
-        protocol: this.client.micProtocol,
-        host: this.client.micHost,
-        pathname: path.join(pathname, authPathname),
-        query: {
-          client_id: clientId,
-          redirect_uri: redirectUri,
-          response_type: 'code'
-        }
-      }));
-    }).then((popup) => {
-      const promise = new Promise((resolve, reject) => {
-        let redirected = false;
-
-        function loadCallback(event) {
-          try {
-            if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
-              redirected = true;
-              popup.removeAllListeners();
-              popup.close();
-              resolve(url.parse(event.url, true).query.code);
-            }
-          } catch (error) {
-            // Just catch the error
-          }
-        }
-
-        function errorCallback(event) {
-          try {
-            if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
-              redirected = true;
-              popup.removeAllListeners();
-              popup.close();
-              resolve(url.parse(event.url, true).query.code);
-            } else if (redirected === false) {
-              popup.removeAllListeners();
-              popup.close();
-              reject(new KinveyError(event.message, '', event.code));
-            }
-          } catch (error) {
-            // Just catch the error
-          }
-        }
-
-        function exitCallback() {
-          if (redirected === false) {
-            popup.removeAllListeners();
-            reject(new KinveyError('Login has been cancelled.'));
-          }
-        }
-
-        popup.on('loadstart', loadCallback);
-        popup.on('loadstop', loadCallback);
-        popup.on('error', errorCallback);
-        popup.on('exit', exitCallback);
-      });
-      return promise;
-    });
-
-    return promise;
   }
 
   requestCodeWithUrl(loginUrl, clientId, redirectUri, options = {}) {

@@ -4,7 +4,7 @@ import Metadata from './metadata';
 import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from '../../request';
 import { KinveyError, NotFoundError, ActiveUserError } from '../../errors';
 import DataStore, { UserStore as store } from '../../datastore';
-import { Facebook, Google, LinkedIn, MobileIdentityConnect } from '../../identity';
+import { MobileIdentityConnect } from '../../identity';
 import { Log, isDefined } from '../../utils';
 import Promise from 'es6-promise';
 import url from 'url';
@@ -395,10 +395,10 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  connectFacebook(clientId, options) {
-    const facebook = new Facebook({ client: this.client });
-    return facebook.login(clientId, options)
-      .then(session => this.connectIdentity(Facebook.identity, session, options));
+  connectFacebook() {
+    return Promise.reject(
+      new KinveyError(null, 'Unable to connect to Facebook on this platform.')
+    );
   }
 
   /**
@@ -418,8 +418,10 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  disconnectFacebook(options) {
-    return this.disconnectIdentity(Facebook.identity, options);
+  disconnectFacebook() {
+    return Promise.reject(
+      new KinveyError(null, 'Unable to connect to Facebook on this platform.')
+    );
   }
 
   /**
@@ -428,10 +430,10 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  connectGoogle(clientId, options) {
-    const google = new Google({ client: this.client });
-    return google.login(clientId, options)
-      .then(session => this.connectIdentity(Google.identity, session, options));
+  connectGoogle() {
+    return Promise.reject(
+      new KinveyError(null, 'Unable to connect to Google on this platform.')
+    );
   }
 
   /**
@@ -451,8 +453,10 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  disconnectGoogle(options) {
-    return this.disconnectIdentity(Google.identity, options);
+  disconnectGoogle() {
+    return Promise.reject(
+      new KinveyError(null, 'Unable to connect to Google on this platform.')
+    );
   }
 
   /**
@@ -461,10 +465,10 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  googleconnectLinkedIn(clientId, options) {
-    const linkedIn = new LinkedIn({ client: this.client });
-    return linkedIn.login(clientId, options)
-      .then(session => this.connectIdentity(LinkedIn.identity, session, options));
+  connectLinkedIn() {
+    return Promise.reject(
+      new KinveyError(null, 'Unable to connect to LinkedIn on this platform.')
+    );
   }
 
   /**
@@ -484,8 +488,10 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  disconnectLinkedIn(options) {
-    return this.disconnectIdentity(LinkedIn.identity, options);
+  disconnectLinkedIn() {
+    return Promise.reject(
+      new KinveyError(null, 'Unable to connect to LinkedIn on this platform.')
+    );
   }
 
   /**
@@ -499,13 +505,7 @@ export default class User {
   disconnectIdentity(identity, options) {
     let promise = Promise.resolve();
 
-    if (identity === Facebook.identity) {
-      promise = Facebook.logout(this, options);
-    } else if (identity === Google.identity) {
-      promise = Google.logout(this, options);
-    } else if (identity === LinkedIn.identity) {
-      promise = LinkedIn.logout(this, options);
-    } else if (identity === MobileIdentityConnect.identity) {
+    if (identity === MobileIdentityConnect.identity) {
       promise = MobileIdentityConnect.logout(this, options);
     }
 
