@@ -1,9 +1,9 @@
-import { NetworkStore } from '../../../src/datastore';
-import { Client } from '../../../src/client';
-import Query from '../../../src/query';
-import Aggregation from '../../../src/aggregation';
-import { KinveyError, NotFoundError } from '../../../src/errors';
-import { randomString } from '../../../src/utils';
+import { NetworkStore } from 'src/datastore';
+import { Client } from 'src/client';
+import Query from 'src/query';
+import Aggregation from 'src/aggregation';
+import { KinveyError, NotFoundError } from 'src/errors';
+import { randomString } from 'src/utils';
 import nock from 'nock';
 import expect from 'expect';
 const collection = 'Books';

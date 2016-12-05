@@ -1,4 +1,4 @@
-import Request, { CacheRequest } from '../../../src/request';
+import Request, { CacheRequest } from 'src/request';
 import expect from 'expect';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 

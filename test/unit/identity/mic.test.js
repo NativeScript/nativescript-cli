@@ -1,4 +1,4 @@
-import { MobileIdentityConnect, SocialIdentity } from '../../../src/identity';
+import { MobileIdentityConnect, SocialIdentity } from 'src/identity';
 import expect from 'expect';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 

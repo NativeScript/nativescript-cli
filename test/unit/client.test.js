@@ -1,5 +1,5 @@
-import { Client } from '../../src/client';
-import { randomString } from '../../src/utils';
+import { Client } from 'src/client';
+import { randomString } from 'src/utils';
 import expect from 'expect';
 
 describe('Client', () => {

@@ -1,4 +1,10 @@
  {
+  "env": {
+    "browser": true,
+    "es6": true,
+    "mocha": true,
+    "node": true
+  },
   "extends": "airbnb-base",
   "parser": "babel-eslint",
   "rules": {
@@ -33,10 +39,9 @@
     ],
     "space-before-function-paren": "off"
   },
-  "env": {
-    "browser": true,
-    "es6": true,
-    "mocha": true,
-    "node": true
+  "settings": {
+    "import/resolver": {
+      "babel-module": {}
+    }
   }
 }
