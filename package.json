@@ -25,7 +25,7 @@
     "lint": "npm run lint:src",
     "lint:src": "eslint src/**",
     "lint:test": "eslint test/unit/**",
-    "preversion": "npm test",
+    "preversion": "del node_modules && npm install && npm test",
     "postversion": "git push && git push --tags",
     "test": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/setup test/unit",
     "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/setup test/unit",
