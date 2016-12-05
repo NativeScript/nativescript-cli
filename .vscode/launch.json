@@ -7,7 +7,7 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"cwd": "${workspaceRoot}/scratch",
+			"cwd": "${workspaceRoot}",
 			"sourceMaps": true,
 			"name": "Launch CLI (Node 6+)",
 			"program": "${workspaceRoot}/lib/nativescript-cli.js",

@@ -104,10 +104,9 @@ $injector.requireCommand("platform|clean", "./commands/platform-clean");
 
 $injector.requireCommand("livesync", "./commands/livesync");
 $injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
-$injector.require("iosPlatformLiveSyncServiceLocator", "./services/livesync/ios-platform-livesync-service");
 $injector.require("iosLiveSyncServiceLocator", "./services/livesync/ios-device-livesync-service");
-$injector.require("androidPlatformLiveSyncServiceLocator", "./services/livesync/android-platform-livesync-service");
 $injector.require("androidLiveSyncServiceLocator", "./services/livesync/android-device-livesync-service");
+$injector.require("platformLiveSyncService", "./services/livesync/platform-livesync-service");
 
 $injector.require("sysInfo", "./sys-info");
 
@@ -123,3 +122,4 @@ $injector.requireCommand("post-install-cli", "./commands/post-install");
 $injector.requireCommand("update", "./commands/update");
 
 $injector.require("iOSLogFilter", "./services/ios-log-filter");
+$injector.require("projectChangesService", "./services/project-changes-service");

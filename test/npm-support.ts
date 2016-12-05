@@ -26,6 +26,7 @@ import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-
 import { XmlValidator } from "../lib/xml-validator";
 import { LockFile } from "../lib/lockfile";
 import Future = require("fibers/future");
+import ProjectChangesLib = require("../lib/services/project-changes-service");
 
 import path = require("path");
 import temp = require("temp");
@@ -77,6 +78,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("xmlValidator", XmlValidator);
 	testInjector.register("config", StaticConfigLib.Configuration);
+	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
 
 	return testInjector;
 }

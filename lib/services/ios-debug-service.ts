@@ -106,16 +106,13 @@ class IOSDebugService implements IDebugService {
 	private emulatorDebugBrk(shouldBreak?: boolean): IFuture<void> {
 		return (() => {
 			let platformData = this.$platformsData.getPlatformData(this.platform);
-			if (this.$options.rebuild) {
-				this.$platformService.buildPlatform(this.platform).wait();
-			}
 			let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData);
 
 			let args = shouldBreak ? "--nativescript-debug-brk" : "--nativescript-debug-start";
 			let child_process = this.$iOSEmulatorServices.runApplicationOnEmulator(emulatorPackage.packageName, {
 				waitForDebugger: true, captureStdin: true,
 				args: args, appId: this.$projectData.projectId,
-				skipInstall: this.$config.debugLivesync
+				skipInstall: true
 			}).wait();
 			let lineStream = byline(child_process.stdout);
 			this._childProcess = child_process;
@@ -158,12 +155,7 @@ class IOSDebugService implements IDebugService {
 					return this.emulatorDebugBrk(shouldBreak).wait();
 				}
 				// we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
-				let action: IFuture<void>;
-				if (this.$config.debugLivesync) {
-					action = this.$platformService.runPlatform(this.platform);
-				} else {
-					action = this.$platformService.deployPlatform(this.platform);
-				}
+				let action = this.$platformService.runPlatform(this.platform);
 				this.debugBrkCore(device, shouldBreak).wait();
 				action.wait();
 			}).future<void>()()).wait();

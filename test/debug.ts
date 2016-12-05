@@ -47,6 +47,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("androidEmulatorServices", {});
 	testInjector.register("adb", AndroidDebugBridge);
 	testInjector.register("androidDebugBridgeResultHandler", AndroidDebugBridgeResultHandler);
+	testInjector.register("platformService", stubs.PlatformServiceStub);
 
 	return testInjector;
 }
@@ -65,7 +66,6 @@ describe("Debugger tests", () => {
 		debugCommand.execute(["android","--watch"]).wait();
 		let config:IConfiguration = testInjector.resolve("config");
 		assert.isTrue(config.debugLivesync);
-		assert.isFalse(options.rebuild);
     });
 
 	it("Ensures that beforePrepareAllPlugins will not call gradle when livesyncing", () => {

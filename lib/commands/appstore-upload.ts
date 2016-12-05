@@ -65,11 +65,12 @@ export class PublishIOS implements ICommand {
 					};
 					this.$logger.info("Building .ipa with the selected mobile provision and/or certificate.");
 					// This is not very correct as if we build multiple targets we will try to sign all of them using the signing identity here.
-					this.$platformService.buildPlatform(platform, iOSBuildConfig, true).wait();
+					this.$platformService.preparePlatform(platform).wait();
+					this.$platformService.buildPlatform(platform, iOSBuildConfig).wait();
 					ipaFilePath = this.$platformService.lastOutputPath(platform, { isForDevice: iOSBuildConfig.buildForDevice });
 				} else {
 					this.$logger.info("No .ipa, mobile provision or certificate set. Perfect! Now we'll build .xcarchive and let Xcode pick the distribution certificate and provisioning profile for you when exporting .ipa for AppStore submission.");
-					this.$platformService.preparePlatform(platform, true).wait();
+					this.$platformService.preparePlatform(platform).wait();
 
 					let platformData = this.$platformsData.getPlatformData(platform);
 					let iOSProjectService = <IOSProjectService>platformData.platformProjectService;

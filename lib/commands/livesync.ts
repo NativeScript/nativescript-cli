@@ -3,9 +3,11 @@ export class LivesyncCommand implements ICommand {
 		private $usbLiveSyncService: ILiveSyncService,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $options: IOptions,
+		private $platformService: IPlatformService,
 		private $errors: IErrors) { }
 
 	public execute(args: string[]): IFuture<void> {
+		this.$platformService.deployPlatform(args[0]).wait();
 		return this.$usbLiveSyncService.liveSync(args[0]);
 	}
 
