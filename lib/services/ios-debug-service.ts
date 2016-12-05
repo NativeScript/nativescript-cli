@@ -214,24 +214,7 @@ class IOSDebugService implements IDebugService {
 	private openAppInspector(fileDescriptor: string): IFuture<void> {
 		if (this.$options.client) {
 			return (() => {
-				let inspectorPath = path.join(this.$projectData.projectDir, "node_modules", inspectorNpmPackageName);
-
-				// local installation takes precedence over cache
-				if(!this.inspectorAlreadyInstalled(inspectorPath).wait()) {
-					let cachepath = this.$childProcess.exec("npm get cache").wait().trim();
-					let version = this.$npmInstallationManager.getLatestCompatibleVersion(inspectorNpmPackageName).wait();
-					let pathToPackageInCache = path.join(cachepath, inspectorNpmPackageName, version);
-					let pathToUnzippedInspector = path.join(pathToPackageInCache, "package");
-
-					if(!this.$fs.exists(pathToPackageInCache).wait()) {
-						this.$childProcess.exec(`npm cache add ${inspectorNpmPackageName}@${version}`).wait();
-						let inspectorTgzPathInCache = path.join(pathToPackageInCache, "package.tgz");
-						this.$childProcess.exec(`tar -xf ${inspectorTgzPathInCache} -C ${pathToPackageInCache}`).wait();
-						this.$childProcess.exec(`npm install --prefix ${pathToUnzippedInspector}`).wait();
-					}
-					this.$logger.out("Using inspector from cache.");
-					inspectorPath = pathToUnzippedInspector;
-				}
+				let  inspectorPath = this.$npmInstallationManager.getInspectorFromCache(inspectorNpmPackageName).wait();
 
 				let inspectorSourceLocation = path.join(inspectorPath, inspectorUiDir, "Main.html");
 				let inspectorApplicationPath = path.join(inspectorPath, inspectorAppName);
@@ -244,15 +227,6 @@ class IOSDebugService implements IDebugService {
 				this.$logger.info("Suppressing debugging client.");
 			}).future<void>()();
 		}
-	}
-
-	private inspectorAlreadyInstalled(pathToInspector: string): IFuture<Boolean> {
-		return (() => {
-			if(this.$fs.exists(pathToInspector).wait()) {
-				return true;
-			}
-			return false;
-		}).future<Boolean>()();
 	}
 }
 $injector.register("iOSDebugService", IOSDebugService);
