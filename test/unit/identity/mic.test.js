@@ -1,23 +1,152 @@
-import { MobileIdentityConnect } from 'src/identity';
+import { MIC, AuthorizationGrant } from 'src/identity';
+import { InsufficientCredentialsError, MobileIdentityConnectError } from 'src/errors';
+import { Client } from 'src/client';
+import { randomString } from 'src/utils';
+import assign from 'lodash/assign';
 import expect from 'expect';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
+import nock from 'nock';
+import url from 'url';
+const redirectUri = 'http://localhost:3000';
 
-describe('MobileIdentityConnect', () => {
-  describe('identity', () => {
-    it('should return MobileIdentityConnect', () => {
-      expect(MobileIdentityConnect.identity).toEqual('kinveyAuth');
-      expect(new MobileIdentityConnect().identity).toEqual('kinveyAuth');
+describe('MobileIdentityConnect', function() {
+  // Get the shared client instance
+  before(function() {
+    this.client = Client.sharedInstance();
+  });
+
+  // Cleanup
+  after(function() {
+    delete this.client;
+  });
+
+  describe('identity', function() {
+    it('should return MobileIdentityConnect', function() {
+      expect(MIC.identity).toEqual('kinveyAuth');
+      expect(new MIC().identity).toEqual('kinveyAuth');
     });
   });
 
-  // describe('login with AuthorizationGrant.AuthorizationCodeLoginPage', () => {
-  //   it('should return a session for a valid user', async function() {
-  //     // Disable timeout for this test
-  //     this.timeout(0);
+  describe('isSupported()', function() {
+    it('should return true', function() {
+      expect(MIC.isSupported()).toEqual(true);
+      expect(new MIC().isSupported()).toEqual(true);
+    });
+  });
 
-  //     const mic = new MobileIdentityConnect();
-  //     const session = await mic.login('http://localhost:9876/');
-  //     console.log(session);
-  //   });
-  // });
+  describe('login()', function() {
+    it('should throw an error for AuthorizationGrant.AuthorizationCodeLoginPage', function() {
+      const mic = new MIC();
+      return mic.login(redirectUri, {
+        authorizationGrant: AuthorizationGrant.AuthorizationCodeLoginPage
+      })
+        .catch((error) => {
+          expect(error).toBeA(MobileIdentityConnectError);
+          expect(error.name).toEqual('MobileIdentityConnectError');
+          expect(error.message).toEqual(
+            'AuthorizationGrant.AuthorizationCodeLoginPage is not supported on this platform.'
+          );
+        });
+    });
+
+    describe('AuthorizationGrant.AuthorizationCodeAPI', function() {
+      it('should fail with invalid credentials', function() {
+        const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
+        const username = 'test';
+        const password = 'test';
+
+        // API Response
+        nock(this.client.micHostname, { encodedQueryParams: true })
+          .post(
+            '/oauth/auth',
+            `client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
+          )
+          .reply(200, {
+            temp_login_uri: tempLoginUriParts.href
+          }, {
+            'Content-Type': 'application/json; charset=utf-8'
+          });
+
+        nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
+          .post(
+            tempLoginUriParts.pathname,
+            `client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}`
+          )
+          .reply(401, {
+            error: 'access_denied',
+            error_description: 'The resource owner or authorization server denied the request.',
+            debug: 'Authentication failed for undefined'
+          }, {
+            'Content-Type': 'application/json; charset=utf-8'
+          });
+
+        const mic = new MIC();
+        return mic.login(redirectUri, {
+          username: username,
+          password: password
+        })
+          .catch((error) => {
+            expect(error).toBeA(InsufficientCredentialsError);
+          });
+      });
+
+      it('should succeed with valid credentials', function() {
+        const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
+        const username = 'custom';
+        const password = '1234';
+        const code = randomString();
+        const token = {
+          access_token: randomString(),
+          token_type: 'bearer',
+          expires_in: 3599,
+          refresh_token: randomString()
+        };
+
+        // API Response
+        nock(this.client.micHostname, { encodedQueryParams: true })
+          .post(
+            '/oauth/auth',
+            `client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
+          )
+          .reply(200, {
+            temp_login_uri: tempLoginUriParts.href
+          }, {
+            'Content-Type': 'application/json; charset=utf-8'
+          });
+
+        nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
+          .post(
+            tempLoginUriParts.pathname,
+            `client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}`
+          )
+          .reply(302, null, {
+            'Content-Type': 'application/json; charset=utf-8',
+            Location: `${redirectUri}/?code=${code}`
+          });
+
+        nock(this.client.micHostname, { encodedQueryParams: true })
+          .post(
+            '/oauth/token',
+            `grant_type=authorization_code&client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
+          )
+          .reply(200, token, {
+            'Content-Type': 'application/json; charset=utf-8'
+          });
+
+        const mic = new MIC();
+        return mic.login(redirectUri, {
+          username: username,
+          password: password
+        })
+          .then((response) => {
+            expect(response).toEqual(assign(token, {
+              identity: MIC.identity,
+              client_id: this.client.appKey,
+              redirect_uri: redirectUri,
+              protocol: this.client.micProtocol,
+              host: this.client.micHost
+            }));
+          });
+      });
+    });
+  });
 });

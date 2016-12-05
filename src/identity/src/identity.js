@@ -30,6 +30,10 @@ export default class Identity {
     return false;
   }
 
+  static isSupported() {
+    return false;
+  }
+
   isActive(session) {
     const currentTime = (new Date()).getTime() / 1000;
     return session && session.access_token && session.expires > currentTime;

@@ -10,6 +10,7 @@ import KinveyError from './src/kinvey';
 import MissingQueryError from './src/missingQuery';
 import MissingRequestHeaderError from './src/missingRequestHeader';
 import MissingRequestParameterError from './src/missingRequestParameter';
+import MobileIdentityConnectError from './src/mobileIdentityConnect';
 import NoActiveUserError from './src/noActiveUser';
 import NoNetworkConnectionError from './src/noNetworkConnection';
 import NoResponseError from './src/noResponse';
@@ -33,6 +34,7 @@ export {
   MissingQueryError,
   MissingRequestHeaderError,
   MissingRequestParameterError,
+  MobileIdentityConnectError,
   NoActiveUserError,
   NoNetworkConnectionError,
   NoResponseError,
