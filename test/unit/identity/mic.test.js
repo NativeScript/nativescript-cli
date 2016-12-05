@@ -1,12 +1,12 @@
-import { MobileIdentityConnect, SocialIdentity } from 'src/identity';
+import { MobileIdentityConnect } from 'src/identity';
 import expect from 'expect';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
 describe('MobileIdentityConnect', () => {
   describe('identity', () => {
     it('should return MobileIdentityConnect', () => {
-      expect(MobileIdentityConnect.identity).toEqual(SocialIdentity.MobileIdentityConnect);
-      expect(new MobileIdentityConnect().identity).toEqual(SocialIdentity.MobileIdentityConnect);
+      expect(MobileIdentityConnect.identity).toEqual('kinveyAuth');
+      expect(new MobileIdentityConnect().identity).toEqual('kinveyAuth');
     });
   });
 
