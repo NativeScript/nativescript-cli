@@ -6,7 +6,6 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
 
 	constructor(private $npm: INodePackageManager,
-		private $projectData: IProjectData,
 		private $childProcess: IChildProcess,
 		private $logger: ILogger,
 		private $errors: IErrors,
@@ -59,9 +58,9 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		}).future<string>()();
 	}
 
-	public getInspectorFromCache(inspectorNpmPackageName: string) : IFuture<string> {
+	public getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string) : IFuture<string> {
 		return (() => {
-			let inspectorPath = path.join(this.$projectData.projectDir, "node_modules", inspectorNpmPackageName);
+			let inspectorPath = path.join(projectDir, "node_modules", inspectorNpmPackageName);
 
 			// local installation takes precedence over cache
 			if(!this.inspectorAlreadyInstalled(inspectorPath).wait()) {

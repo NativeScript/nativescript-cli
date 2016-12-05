@@ -9,6 +9,7 @@ import * as OptionsLib from "../lib/options";
 import * as StaticConfigLib from "../lib/config";
 import Future = require("fibers/future");
 import * as yok from "../lib/common/yok";
+import ChildProcessLib = require("../lib/common/child-process");
 
 function createTestInjector(): IInjector {
 	let testInjector = new yok.Yok();
@@ -21,6 +22,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("fs", FsLib.FileSystem);
 	testInjector.register("hostInfo", HostInfoLib.HostInfo);
 	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
+	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 
 	testInjector.register("npmInstallationManager", NpmInstallationManagerLib.NpmInstallationManager);
 
