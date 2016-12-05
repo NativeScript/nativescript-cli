@@ -89,6 +89,44 @@ describe('MobileIdentityConnect', function() {
           });
       });
 
+      it('should fail when a location header is not provided', function() {
+        const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
+        const username = 'test';
+        const password = 'test';
+
+        // API Response
+        nock(this.client.micHostname, { encodedQueryParams: true })
+          .post(
+            '/oauth/auth',
+            `client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
+          )
+          .reply(200, {
+            temp_login_uri: tempLoginUriParts.href
+          }, {
+            'Content-Type': 'application/json; charset=utf-8'
+          });
+
+        nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
+          .post(
+            tempLoginUriParts.pathname,
+            `client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}`
+          )
+          .reply(302, null, {
+            'Content-Type': 'application/json; charset=utf-8'
+          });
+
+        const mic = new MIC();
+        return mic.login(redirectUri, {
+          username: username,
+          password: password
+        })
+          .catch((error) => {
+            expect(error).toBeA(MobileIdentityConnectError);
+            expect(error.message).toEqual(`Unable to authorize user with username ${username}.`,
+              'A location header was not provided with a code to exchange for an auth token.');
+          });
+      });
+
       it('should succeed with valid credentials', function() {
         const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
         const username = 'custom';

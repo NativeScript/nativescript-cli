@@ -150,7 +150,7 @@ export default class MobileIdentityConnect extends Identity {
         return url.parse(location, true).query.code;
       }
 
-      throw new KinveyError(`Unable to authorize user with username ${options.username}.`,
+      throw new MobileIdentityConnectError(`Unable to authorize user with username ${options.username}.`,
         'A location header was not provided with a code to exchange for an auth token.');
     });
 
