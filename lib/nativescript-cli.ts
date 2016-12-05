@@ -1,7 +1,3 @@
-let node = require("../package.json").engines.node;
-// this call must be first to avoid requiring c++ dependencies
-require("./common/verify-node-version").verifyNodeVersion(node, "NativeScript", "2.5.0");
-
 require("./bootstrap");
 import * as fiber from "fibers";
 import Future = require("fibers/future");
