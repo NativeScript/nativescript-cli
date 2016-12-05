@@ -1,7 +1,9 @@
 import { KinveyError } from '../../errors';
-import clone from 'lodash/clone';
+import { isDefined } from '../../utils';
+import cloneDeep from 'lodash/cloneDeep';
 import isPlainObject from 'lodash/isPlainObject';
-const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
+import isArray from 'lodash/isArray';
+import assign from 'lodash/assign';
 
 /**
  * The Acl class is used as a wrapper for reading and setting permissions on an entity level.
@@ -22,7 +24,7 @@ export default class Acl {
      * @private
      * @type {Object}
      */
-    this.acl = clone(entity[aclAttribute]);
+    this.acl = cloneDeep(entity._acl);
   }
 
   get creator() {
@@ -30,31 +32,39 @@ export default class Acl {
   }
 
   get readers() {
-    return this.acl.r || [];
+    return isArray(this.acl.r) ? this.acl.r : [];
   }
 
   get writers() {
-    return this.acl.w || [];
+    return isArray(this.acl.w) ? this.acl.w : [];
   }
 
   get readerGroups() {
-    return this.acl.groups ? this.acl.groups.r : [];
+    return isDefined(this.acl.groups) && isArray(this.acl.groups.r) ? this.acl.groups.r : [];
   }
 
   get writerGroups() {
-    return this.acl.groups ? this.acl.groups.w : [];
+    return isDefined(this.acl.groups) && isArray(this.acl.groups.w) ? this.acl.groups.w : [];
   }
 
   set globallyReadable(gr) {
-    this.acl.gr = gr || false;
+    if (gr === true) {
+      this.acl.gr = gr;
+    } else {
+      this.acl.gr = false;
+    }
   }
 
   set globallyWritable(gw) {
-    this.acl.gw = gw || false;
+    if (gw === true) {
+      this.acl.gw = gw;
+    } else {
+      this.acl.gw = false;
+    }
   }
 
   addReader(user) {
-    const r = this.acl.r || [];
+    const r = this.readers;
 
     if (r.indexOf(user) === -1) {
       r.push(user);
@@ -65,20 +75,18 @@ export default class Acl {
   }
 
   addReaderGroup(group) {
-    const groups = this.acl.groups || {};
-    const r = groups.r || [];
+    const groups = this.readerGroups;
 
-    if (r.indexOf(group) === -1) {
-      r.push(group);
+    if (groups.indexOf(group) === -1) {
+      groups.push(group);
     }
 
-    groups.r = r;
-    this.acl.groups = groups;
+    this.acl.groups = assign({}, this.acl.groups, { r: groups });
     return this;
   }
 
   addWriter(user) {
-    const w = this.acl.w || [];
+    const w = this.writers;
 
     if (w.indexOf(user) === -1) {
       w.push(user);
@@ -89,32 +97,38 @@ export default class Acl {
   }
 
   addWriterGroup(group) {
-    const groups = this.acl.groups || {};
-    const w = groups.w || [];
+    const groups = this.writerGroups;
 
-    if (w.indexOf(group) === -1) {
-      w.push(group);
+    if (groups.indexOf(group) === -1) {
+      groups.push(group);
     }
 
-    groups.w = w;
-    this.acl.groups = groups;
+    this.acl.groups = assign({}, this.acl.groups, { w: groups });
     return this;
   }
 
   isGloballyReadable() {
-    return this.acl.gr || false;
+    if (this.acl.gr === true) {
+      return this.acl.gr;
+    }
+
+    return false;
   }
 
   isGloballyWritable() {
-    return this.acl.gw || false;
+    if (this.acl.gw === true) {
+      return this.acl.gw;
+    }
+
+    return false;
   }
 
   removeReader(user) {
-    const r = this.acl.r || [];
-    const pos = r.indexOf(user);
+    const r = this.readers;
+    const index = r.indexOf(user);
 
-    if (pos !== -1) {
-      r.splice(pos, 1);
+    if (index !== -1) {
+      r.splice(index, 1);
     }
 
     this.acl.r = r;
@@ -122,25 +136,23 @@ export default class Acl {
   }
 
   removeReaderGroup(group) {
-    const groups = this.acl.groups || {};
-    const r = groups.r || [];
-    const pos = r.indexOf(group);
+    const groups = this.readerGroups;
+    const index = groups.indexOf(group);
 
-    if (pos !== -1) {
-      r.splice(pos, 1);
+    if (index !== -1) {
+      groups.splice(index, 1);
     }
 
-    groups.r = r;
-    this.acl.groups = groups;
+    this.acl.groups = assign({}, this.acl.groups, { r: groups });
     return this;
   }
 
   removeWriter(user) {
-    const w = this.acl.w || [];
-    const pos = w.indexOf(user);
+    const w = this.writers;
+    const index = w.indexOf(user);
 
-    if (pos !== -1) {
-      w.splice(pos, 1);
+    if (index !== -1) {
+      w.splice(index, 1);
     }
 
     this.acl.w = w;
@@ -148,24 +160,18 @@ export default class Acl {
   }
 
   removeWriterGroup(group) {
-    const groups = this.acl.groups || {};
-    const w = groups.w || [];
-    const pos = w.indexOf(group);
+    const groups = this.writerGroups;
+    const index = groups.indexOf(group);
 
-    if (pos !== -1) {
-      w.splice(pos, 1);
+    if (index !== -1) {
+      groups.splice(index, 1);
     }
 
-    groups.w = w;
-    this.acl.groups = groups;
+    this.acl.groups = assign({}, this.acl.groups, { w: groups });
     return this;
   }
 
   toPlainObject() {
     return this.acl;
-  }
-
-  toJSON() {
-    return this.toPlainObject();
   }
 }
