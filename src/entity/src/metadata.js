@@ -1,6 +1,6 @@
 import { KinveyError } from '../../errors';
 import { isDefined } from '../../utils';
-import clone from 'lodash/clone';
+import cloneDeep from 'lodash/clone';
 import isPlainObject from 'lodash/isPlainObject';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
@@ -19,7 +19,7 @@ export default class Metadata {
      * @private
      * @type {Object}
      */
-    this.kmd = clone(entity[kmdAttribute] || {});
+    this.kmd = cloneDeep(entity[kmdAttribute] || {});
   }
 
   get createdAt() {
