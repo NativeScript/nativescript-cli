@@ -158,8 +158,7 @@ export default class DeltaFetchRequest extends KinveyRequest {
 
               if (this.query) {
                 const query = new Query(result(this.query, 'toJSON', this.query));
-                query.skip = 0;
-                query.limit = 0;
+                query.skip(0).limit(0);
                 response.data = query.process(response.data);
               }
 
