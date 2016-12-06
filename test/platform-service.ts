@@ -226,14 +226,14 @@ describe('Platform Service Tests', () => {
 		}
 
 		function testPreparePlatform(platformToTest: string, release?: boolean) {
-			let { tempFolder, appFolderPath, app1FolderPath, appDestFolderPath, appResourcesFolderPath } = prepareDirStructure();
+			let testDirData = prepareDirStructure();
 
 			// Add platform specific files to app and app1 folders
 			let platformSpecificFiles = [
 				"test1.ios.js", "test1-ios-js", "test2.android.js", "test2-android-js"
 			];
 
-			let destinationDirectories = [appFolderPath, app1FolderPath];
+			let destinationDirectories = [testDirData.appFolderPath, testDirData.app1FolderPath];
 
 			_.each(destinationDirectories, directoryPath => {
 				_.each(platformSpecificFiles, filePath => {
@@ -246,10 +246,10 @@ describe('Platform Service Tests', () => {
 			platformsData.platformsNames = ["ios", "android"];
 			platformsData.getPlatformData = (platform: string) => {
 				return {
-					appDestinationDirectoryPath: appDestFolderPath,
-					appResourcesDestinationDirectoryPath: appResourcesFolderPath,
+					appDestinationDirectoryPath: testDirData.appDestFolderPath,
+					appResourcesDestinationDirectoryPath: testDirData.appResourcesFolderPath,
 					normalizedPlatformName: platformToTest,
-					projectRoot: tempFolder,
+					projectRoot: testDirData.tempFolder,
 					platformProjectService: {
 						prepareProject: () => Future.fromResult(),
 						validate: () => Future.fromResult(),
@@ -266,7 +266,7 @@ describe('Platform Service Tests', () => {
 			};
 
 			let projectData = testInjector.resolve("projectData");
-			projectData.projectDir = tempFolder;
+			projectData.projectDir = testDirData.tempFolder;
 
 			platformService = testInjector.resolve("platformService");
 			let options : IOptions = testInjector.resolve("options");
@@ -277,18 +277,18 @@ describe('Platform Service Tests', () => {
 			let test2FileName = platformToTest.toLowerCase() === "ios" ? "test2.js" : "test1.js";
 
 			// Asserts that the files in app folder are process as platform specific
-			assert.isTrue(fs.exists(path.join(appDestFolderPath, "app", test1FileName)).wait());
-			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test1-js")).wait());
+			assert.isTrue(fs.exists(path.join(testDirData.appDestFolderPath, "app", test1FileName)).wait());
+			assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "app", "test1-js")).wait());
 
-			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", test2FileName)).wait());
-			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test2-js")).wait());
+			assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "app", test2FileName)).wait());
+			assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "app", "test2-js")).wait());
 
 			// Asserts that the files in app1 folder aren't process as platform specific
-			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app1")).wait(), "Asserts that the files in app1 folder aren't process as platform specific");
+			assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "app1")).wait(), "Asserts that the files in app1 folder aren't process as platform specific");
 
 			if (release) {
 				// Asserts that the files in tests folder aren't copied
-				assert.isFalse(fs.exists(path.join(appDestFolderPath, "tests")).wait(), "Asserts that the files in tests folder aren't copied");
+				assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "tests")).wait(), "Asserts that the files in tests folder aren't copied");
 			}
 		}
 
@@ -310,20 +310,20 @@ describe('Platform Service Tests', () => {
 
 		it("invalid xml is caught", () => {
 			require("colors");
-			let { tempFolder, appFolderPath, appDestFolderPath, appResourcesFolderPath } = prepareDirStructure();
+			let testDirData = prepareDirStructure();
 
 			// generate invalid xml
-			let fileFullPath = path.join(appFolderPath, "file.xml");
+			let fileFullPath = path.join(testDirData.appFolderPath, "file.xml");
 			fs.writeFile(fileFullPath, "<xml><unclosedTag></xml>").wait();
 
 			let platformsData = testInjector.resolve("platformsData");
 			platformsData.platformsNames = ["android"];
 			platformsData.getPlatformData = (platform: string) => {
 				return {
-					appDestinationDirectoryPath: appDestFolderPath,
-					appResourcesDestinationDirectoryPath: appResourcesFolderPath,
+					appDestinationDirectoryPath: testDirData.appDestFolderPath,
+					appResourcesDestinationDirectoryPath: testDirData.appResourcesFolderPath,
 					normalizedPlatformName: "Android",
-					projectRoot: tempFolder,
+					projectRoot: testDirData.tempFolder,
 					platformProjectService: {
 						prepareProject: () => Future.fromResult(),
 						validate: () => Future.fromResult(),
@@ -340,7 +340,7 @@ describe('Platform Service Tests', () => {
 			};
 
 			let projectData = testInjector.resolve("projectData");
-			projectData.projectDir = tempFolder;
+			projectData.projectDir = testDirData.tempFolder;
 
 			platformService = testInjector.resolve("platformService");
 			let oldLoggerWarner = testInjector.resolve("$logger").warn;
