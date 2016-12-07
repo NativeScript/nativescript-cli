@@ -6,3 +6,6 @@ The NativeScript CLI lets you create, build, and deploy NativeScript-based proje
 
 # Get started
 To learn more about how to use NativeScript, please follow our [getting started article](http://docs.nativescript.org). To see what commands are available in the CLI, follow the [CLI API docs](https://github.com/NativeScript/nativescript-cli/blob/master/docs/man_pages/index.md).
+
+# License
+Apache 2.0
