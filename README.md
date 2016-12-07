@@ -45,7 +45,7 @@ Kinvey.init({
 You are now ready to start building your awesome apps! Next we recommend diving into the [User guide](http://devcenter.kinvey.com/node/guides/users) or [Data store guide](http://devcenter.kinvey.com/node/guides/datastore) to learn more about our service, or explore the [sample apps](http://devcenter.kinvey.com/node/samples) to go straight to working projects.
 
 ## Build
-Execute `npm run build` to build the package.
+`npm run build`
 
 ## Release
 [TravisCI](https://travis-ci.org/Kinvey/javascript-sdk) will deploy the pacakge to [NPM](https://www.npmjs.com/package/kinvey-javascript-sdk).
@@ -66,9 +66,7 @@ Updating the package version should follow [Semantic Version 2.0.0](http://semve
 _Note: Before running any tests you will need to run `npm install` to install any dependencies required._
 
 ### Unit Tests
-The steps for running the unit tests is as follows:
-
-1. Open a terminal window and execute `npm test`.
+`npm test`
 
 ## License
 See [LICENSE](LICENSE) for details.
