@@ -29,10 +29,9 @@ export class PostInstallCliCommand extends PostInstallCommand {
 			if (this.shouldAskForEmail()) {
 				this.logger.out("Leave your e-mail address here to subscribe for NativeScript newsletter and product updates, tips and tricks:");
  				let email = this.getEmail("(press Enter for blank)").wait();
- 				this.$userSettingsService.saveSetting("EMAIL_REGISTERED", true).wait();
+				this.$userSettingsService.saveSetting("EMAIL_REGISTERED", true).wait();
  				this.sendEmail(email);
  			}
-
 		}).future<void>()();
 	}
 
@@ -56,7 +55,7 @@ export class PostInstallCliCommand extends PostInstallCommand {
 			};
 
 			let result = this.$prompter.get([schema]).wait();
-			return result.inputString;
+			return result.inputEmail;
 		}).future<string>()();
 	}
 
