@@ -5,7 +5,7 @@ NativeScript is a cross-platform JavaScript framework that lets you develop nati
 The NativeScript CLI lets you create, build, and deploy NativeScript-based projects on iOS and Android devices.
 
 # Get started
-To learn more about how to use NativeScript, please follow our [getting started article](http://docs.nativescript.org). To see what commands are available in the CLI, follow the [CLI API docs](https://github.com/NativeScript/nativescript-cli/blob/master/docs/man_pages/index.md).
+To learn more about how to use NativeScript, please follow our [getting started article](http://docs.nativescript.org). To see what commands are available in the CLI please use `tns --help`.
 
 # License
 Apache 2.0
