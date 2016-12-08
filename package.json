@@ -48,7 +48,7 @@
     "ios-sim-portable": "~1.6.0",
     "lockfile": "1.0.1",
     "lodash": "4.13.1",
-    "log4js": "0.6.26",
+    "log4js": "1.0.1",
     "marked": "0.3.6",
     "marked-terminal": "2.0.0",
     "minimatch": "3.0.2",
