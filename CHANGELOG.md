@@ -1,5 +1,16 @@
 NativeScript CLI Changelog
 ================
+2.4.2 (2016, December 8)
+==
+### Fixed
+* [Fixed #2332](https://github.com/NativeScript/nativescript-cli/pull/2332): Fixed email registration process 
+
+2.4.1 (2016, December 4)
+==
+### Fixed
+* [Fixed #2200](https://github.com/NativeScript/nativescript-cli/pull/2200): TypeScript files don't show in {N} debugger. 
+* [Fixed #2273](https://github.com/NativeScript/nativescript-cli/pull/2273): Livesync should continue to work after app crash 
+
 2.4.0 (2016, November 16)
 ==
 ### New
