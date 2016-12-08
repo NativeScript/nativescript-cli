@@ -163,7 +163,7 @@ export class PluginsService implements IPluginsService {
 				.filter(dependencyName => _.startsWith(dependencyName, "@"))
 				.each(scopedDependencyDir => {
 					let contents = this.$fs.readDirectory(path.join(this.nodeModulesPath, scopedDependencyDir)).wait();
-					installedDependencies = installedDependencies.concat(...contents.map(dependencyName => `${scopedDependencyDir}/${dependencyName}`));
+					installedDependencies = installedDependencies.concat(contents.map(dependencyName => `${scopedDependencyDir}/${dependencyName}`));
 				});
 
 			let packageJsonContent = this.$fs.readJson(this.getPackageJsonFilePath()).wait();

@@ -10,10 +10,10 @@
   },
   "main": "./lib/nativescript-cli.js",
   "scripts": {
-    "test": "node_modules/.bin/istanbul cover node_modules/mocha/bin/_mocha",
+    "test": "node test-scripts/istanbul.js",
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
-    "mocha": "mocha",
+    "mocha": "node test-scripts/mocha.js",
     "tsc": "tsc",
     "test-watch": "node ./dev/tsc-to-mocha-watch.js"
   },
@@ -27,7 +27,6 @@
     "mobile"
   ],
   "dependencies": {
-    "bluebird": "2.9.34",
     "bplist-parser": "0.1.0",
     "bufferpack": "0.0.6",
     "bufferutil": "https://github.com/telerik/bufferutil/tarball/v1.0.1.4",
@@ -90,7 +89,7 @@
     "grunt-ts": "6.0.0-beta.3",
     "grunt-tslint": "3.3.0",
     "istanbul": "0.4.5",
-    "mocha": "2.5.3",
+    "mocha": "3.1.2",
     "mocha-fibers": "https://github.com/NativeScript/mocha-fibers.git",
     "mocha-typescript": "^1.0.4",
     "should": "7.0.2",
