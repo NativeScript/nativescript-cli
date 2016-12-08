@@ -5,8 +5,8 @@
   "author": "Telerik <support@telerik.com>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
-    "tns": "./bin/nativescript.js",
-    "nativescript": "./bin/nativescript.js"
+    "tns": "./bin/tns",
+    "nativescript": "./bin/tns"
   },
   "main": "./lib/nativescript-cli.js",
   "scripts": {
