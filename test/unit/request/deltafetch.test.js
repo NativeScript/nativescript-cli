@@ -2,6 +2,7 @@ import { AuthType, DeltaFetchRequest, RequestMethod } from 'src/request';
 import { KinveyError } from 'src/errors';
 import { SyncStore } from 'src/datastore'
 import { randomString } from 'src/utils';
+import Query from 'src/query';
 import nock from 'nock';
 import expect from 'expect';
 import url from 'url';
@@ -206,6 +207,55 @@ describe('DeltaFetchRequest', function() {
           const data = response.data;
           expect(data).toBeA(Array);
           expect(data).toEqual([entity2, entity1]);
+        });
+    });
+
+    it('should fetch only the updated entities from the network matching the query', function() {
+      const query = new Query();
+      query.equalTo('_id', entity1._id);
+      const request = new DeltaFetchRequest({
+        method: RequestMethod.GET,
+        authType: AuthType.Default,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: `/appdata/${this.client.appKey}/${collection}`
+        }),
+        query: query,
+        client: this.client
+      });
+
+      // API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .get(`/appdata/${this.client.appKey}/${collection}`)
+        .query({
+          fields: '_id,_kmd.lmt',
+          query: `{"_id":"${entity1._id}"}`
+        })
+        .reply(200, [{
+          _id: entity1._id,
+          _kmd: {
+            lmt: new Date().toISOString(),
+            ect: entity1._kmd.ect
+          }
+        }], {
+          'Content-Type': 'application/json'
+        });
+
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .get(`/appdata/${this.client.appKey}/${collection}`)
+        .query({
+          query: `{"_id":{"$in":["${entity1._id}"]}}`
+        })
+        .reply(200, [entity1], {
+          'Content-Type': 'application/json'
+        });
+
+      return request.execute()
+        .then((response) => {
+          const data = response.data;
+          expect(data).toBeA(Array);
+          expect(data).toEqual([entity1]);
         });
     });
 
