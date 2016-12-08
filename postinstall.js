@@ -1,7 +1,7 @@
 "use strict";
 
 var child_process = require("child_process");
-var commandArgs = ["bin/nativescript.js", "post-install-cli"];
+var commandArgs = ["bin/tns", "post-install-cli"];
 var path = require("path");
 var nodeArgs = require(path.join(__dirname, "lib", "common", "scripts", "node-args")).getNodeArgs();
 
