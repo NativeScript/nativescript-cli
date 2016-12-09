@@ -1,12 +1,7 @@
-import ExtendableError from 'es6-error';
+import BaseError from './base';
 
-export default class KinveyError extends ExtendableError {
-  constructor(name, message = 'An error occurred.', debug = '', code = -1) {
-    super();
-    this.name = name || this.constructor.name;
-    this.message = message;
-    this.debug = debug;
-    this.code = code;
-    this.stack = (new Error(message)).stack;
+export default class KinveyError extends BaseError {
+  constructor(message, debug, code) {
+    super('KinveyError', message, debug, code);
   }
 }

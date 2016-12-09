@@ -1,6 +1,6 @@
-import KinveyError from './kinvey';
+import BaseError from './base';
 
-export default class MissingRequestParameterError extends KinveyError {
+export default class MissingRequestParameterError extends BaseError {
   constructor(message = 'A required parameter is missing from the request.', debug, code) {
     super('MissingRequestParameterError', message, debug, code);
   }

@@ -1,6 +1,6 @@
-import KinveyError from './kinvey';
+import BaseError from './base';
 
-export default class ParameterValueOutOfRangeError extends KinveyError {
+export default class ParameterValueOutOfRangeError extends BaseError {
   constructor(message = 'The value specified for one of the request parameters is out of range.', debug, code) {
     super('ParameterValueOutOfRangeError', message, debug, code);
   }
