@@ -451,7 +451,7 @@ describe("Static libraries support", () => {
 		assert.equal(modulemap, modulemapExpectation);
 
 		// Delete all header files. And try to regenerate modulemap.
-		_.each(headers, header => { fs.deleteFile(path.join(staticLibraryHeadersPath, header)).wait(); });
+		_.each(headers, header => { fs.deleteFile(path.join(staticLibraryHeadersPath, header)); });
 		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);
 
 		let error: any;

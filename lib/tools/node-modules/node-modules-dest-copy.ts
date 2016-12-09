@@ -2,7 +2,6 @@ import * as path from "path";
 import * as shelljs from "shelljs";
 import * as constants from "../../constants";
 import * as minimatch from "minimatch";
-import Future = require("fibers/future");
 
 export interface ILocalDependencyData extends IDependencyData {
 	directory: string;
@@ -28,8 +27,7 @@ export class TnsModulesCopy {
 				// Remove .ts files
 				let allFiles = this.$fs.enumerateFilesInDirectorySync(tnsCoreModulesResourcePath);
 				let matchPattern = this.$options.release ? "**/*.ts" : "**/*.d.ts";
-				let deleteFilesFutures = allFiles.filter(file => minimatch(file, matchPattern, { nocase: true })).map(file => this.$fs.deleteFile(file));
-				Future.wait(deleteFilesFutures);
+				allFiles.filter(file => minimatch(file, matchPattern, { nocase: true })).map(file => this.$fs.deleteFile(file));
 
 				shelljs.rm("-rf", path.join(tnsCoreModulesResourcePath, "node_modules"));
 

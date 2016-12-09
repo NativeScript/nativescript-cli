@@ -48,7 +48,7 @@ export class FileSystemStub implements IFileSystem {
 		return true;
 	}
 
-	deleteFile(path:string):IFuture<void> {
+	deleteFile(path:string): void {
 		return undefined;
 	}
 

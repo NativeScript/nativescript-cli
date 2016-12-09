@@ -84,7 +84,7 @@ export class ProjectData implements IProjectData {
 				this.$fs.writeJson(newProjectFilePath, newProjectData).wait();
 				this.projectId = newProjectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE].id;
 
-				this.$fs.deleteFile(oldProjectFilePath).wait();
+				this.$fs.deleteFile(oldProjectFilePath);
 			} catch(err) {
 				this.$logger.out("An error occurred while upgrading your project.");
 				throw err;

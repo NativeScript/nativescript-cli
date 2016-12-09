@@ -537,7 +537,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	public prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
 		return (() => {
 			let platformFolder = path.join(appResourcesDirectoryPath, this.platformData.normalizedPlatformName);
-			let filterFile = (filename: string) => this.$fs.deleteFile(path.join(platformFolder, filename)).wait();
+			let filterFile = (filename: string) => this.$fs.deleteFile(path.join(platformFolder, filename));
 
 			filterFile(this.platformData.configurationFileName);
 
@@ -912,7 +912,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				let contentToRemove = this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);
 				projectPodFileContent = helpers.stringReplaceAll(projectPodFileContent, contentToRemove, "");
 				if (projectPodFileContent.trim() === `use_frameworks!${os.EOL}${os.EOL}target "${this.$projectData.projectName}" do${os.EOL}${os.EOL}end`) {
-					this.$fs.deleteFile(this.projectPodFilePath).wait();
+					this.$fs.deleteFile(this.projectPodFilePath);
 				} else {
 					this.$fs.writeFile(this.projectPodFilePath, projectPodFileContent).wait();
 				}
@@ -931,7 +931,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		let headers = _(headersFolderContents).filter(item => headersFilter(item, headersFolderPath)).value();
 
 		if (!headers.length) {
-			this.$fs.deleteFile(path.join(headersFolderPath, "module.modulemap")).wait();
+			this.$fs.deleteFile(path.join(headersFolderPath, "module.modulemap"));
 			return;
 		}
 
@@ -957,7 +957,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	private mergeProjectXcconfigFiles(): IFuture<void> {
 		return (() => {
-			this.$fs.deleteFile(this.$options.release ? this.pluginsReleaseXcconfigFilePath : this.pluginsDebugXcconfigFilePath).wait();
+			this.$fs.deleteFile(this.$options.release ? this.pluginsReleaseXcconfigFilePath : this.pluginsDebugXcconfigFilePath);
 
 			let allPlugins: IPluginData[] = (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins().wait();
 			for (let plugin of allPlugins) {
