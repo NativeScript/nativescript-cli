@@ -25,7 +25,6 @@ function createTestInjector(configuration?: {shouldNpmInstallThrow: boolean, npm
 			if(directory.indexOf("node_modules") !== -1) {
 				isDeleteDirectoryCalledForNodeModulesDir = true;
 			}
-			return Future.fromResult();
 		}
 
 	});

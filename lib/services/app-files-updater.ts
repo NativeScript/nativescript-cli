@@ -47,7 +47,7 @@ export class AppFilesUpdater {
 	}
 
 	protected deleteDestinationItem(directoryItem: string): void {
-		this.fs.deleteDirectory(path.join(this.appDestinationDirectoryPath, directoryItem)).wait();
+		this.fs.deleteDirectory(path.join(this.appDestinationDirectoryPath, directoryItem));
 	}
 
 	protected readSourceDir(): string[] {

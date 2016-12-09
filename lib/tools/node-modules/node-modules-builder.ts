@@ -102,7 +102,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 				let tnsModulesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_CORE_MODULES_NAME);
 				let tnsModulesInApp = this.$fs.readDirectory(tnsModulesPath).wait();
 				let modulesToDelete = _.difference(currentPreparedTnsModules, tnsModulesInApp);
-				_.each(modulesToDelete, moduleName => this.$fs.deleteDirectory(path.join(absoluteOutputPath, moduleName)).wait());
+				_.each(modulesToDelete, moduleName => this.$fs.deleteDirectory(path.join(absoluteOutputPath, moduleName)));
 			}
 
 			if (!lastModifiedTime || isNodeModulesModified) {

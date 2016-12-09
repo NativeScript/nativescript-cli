@@ -101,7 +101,7 @@ export class PlatformService implements IPlatformService {
 				let coreModuleName = this.addPlatformCore(platformData, frameworkDir).wait();
 				this.$npm.uninstall(coreModuleName, {save: true}, this.$projectData.projectDir).wait();
 			} catch (err) {
-				this.$fs.deleteDirectory(platformPath).wait();
+				this.$fs.deleteDirectory(platformPath);
 				throw err;
 			} finally {
 				spinner.stop();
@@ -292,7 +292,7 @@ export class PlatformService implements IPlatformService {
 				let appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait();
 				this.$fs.ensureDirectoryExists(appResourcesDestination).wait();
 				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), appResourcesDestination);
-				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
+				this.$fs.deleteDirectory(appResourcesDirectoryPath);
 			}
 		}).future<void>()();
 	}
@@ -406,7 +406,7 @@ export class PlatformService implements IPlatformService {
 				let platformData = this.$platformsData.getPlatformData(platform);
 
 				let platformDir = path.join(this.$projectData.platformsDir, platform);
-				this.$fs.deleteDirectory(platformDir).wait();
+				this.$fs.deleteDirectory(platformDir);
 				this.$projectDataService.removeProperty(platformData.frameworkPackageName).wait();
 
 				this.$logger.out(`Platform ${platform} successfully removed.`);

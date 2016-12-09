@@ -34,7 +34,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 
 			if(realTemplatePath) {
 				//this removes dependencies from templates so they are not copied to app folder
-				this.$fs.deleteDirectory(path.join(realTemplatePath, constants.NODE_MODULES_FOLDER_NAME)).wait();
+				this.$fs.deleteDirectory(path.join(realTemplatePath, constants.NODE_MODULES_FOLDER_NAME));
 				return realTemplatePath;
 			}
 

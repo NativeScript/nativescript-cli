@@ -85,7 +85,7 @@ export class ProjectService implements IProjectService {
 				// TODO: plamen5kov: remove later (put only so tests pass (need to fix tests))
 				this.$logger.trace(`Using NativeScript verified template: ${templateName} with version undefined.`);
 			} catch (err) {
-				this.$fs.deleteDirectory(projectDir).wait();
+				this.$fs.deleteDirectory(projectDir);
 				throw err;
 			}
 			this.$logger.printMarkdown("Project `%s` was successfully created.", projectName);

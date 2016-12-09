@@ -541,7 +541,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 			filterFile(this.platformData.configurationFileName);
 
-			this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath().wait()).wait();
+			this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath().wait());
 		}).future<void>()();
 	}
 

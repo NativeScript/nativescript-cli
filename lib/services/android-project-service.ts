@@ -182,7 +182,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				.map(dir => path.join(resDestinationDir, dir.dirName));
 			this.$logger.trace("Directories to clean:");
 			this.$logger.trace(directoriesToClean);
-			Future.wait(_.map(directoriesToClean, dir => this.$fs.deleteDirectory(dir)));
+			_.map(directoriesToClean, dir => this.$fs.deleteDirectory(dir));
 		}).future<void>()();
 	}
 
@@ -327,7 +327,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			let valuesDirRegExp = /^values/;
 			let resourcesDirs = this.$fs.readDirectory(resourcesDirPath).wait().filter(resDir => !resDir.match(valuesDirRegExp));
 			_.each(resourcesDirs, resourceDir => {
-				this.$fs.deleteDirectory(path.join(this.getAppResourcesDestinationDirectoryPath().wait(), resourceDir)).wait();
+				this.$fs.deleteDirectory(path.join(this.getAppResourcesDestinationDirectoryPath().wait(), resourceDir));
 			});
 		}).future<void>()();
 	}
@@ -372,11 +372,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}).future<void>()();
 	}
 
+	// TODO: Remove IFuture, reason: fs.deleteDirectory - blocked as the other implementation of the interface has async operations.
 	public removePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			try {
-				this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "configurations", pluginData.name)).wait();
-				this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "src", pluginData.name)).wait();
+				this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "configurations", pluginData.name));
+				this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "src", pluginData.name));
 			} catch (e) {
 				if (e.code === "ENOENT") {
 					this.$logger.debug("No native code jars found: " + e.message);
