@@ -5,15 +5,12 @@ interface IPlatformService {
 	getPreparedPlatforms(): IFuture<string[]>;
 	removePlatforms(platforms: string[]): IFuture<void>;
 	updatePlatforms(platforms: string[]): IFuture<void>;
-	runPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
 	preparePlatform(platform: string, force?: boolean, skipModulesAndResources?: boolean): IFuture<boolean>;
+	buildPlatform(platform: string, buildConfig?: IBuildConfig, forceBuild?: boolean): IFuture<void>;
+	deployPlatform(platform: string): IFuture<void>;
+	runPlatform(platform: string): IFuture<void>;
+	emulatePlatform(platform: string): IFuture<void>;
 	cleanDestinationApp(platform: string): IFuture<void>;
-	buildPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
-	buildForDeploy(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
-	installOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
-	deployOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
-	startOnDevice(platform: string): IFuture<void>;
-	deployOnEmulator(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
 	validatePlatformInstalled(platform: string): void;
 	validatePlatform(platform: string): void;
 
@@ -22,8 +19,6 @@ interface IPlatformService {
 	copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}): IFuture<void>;
 	lastOutputPath(platform: string, settings: { isForDevice: boolean }): string;
 	ensurePlatformInstalled(platform: string): IFuture<void>;
-
-	prepareAndBuild(platform: string, buildConfig?: IBuildConfig, forceBuild?: boolean): IFuture<void>;
 }
 
 interface IPlatformData {

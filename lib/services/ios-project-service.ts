@@ -244,7 +244,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				"build",
 				'SHARED_PRECOMPS_DIR=' + path.join(projectRoot, 'build', 'sharedpch')
 			];
-
 			basicArgs = basicArgs.concat(this.xcbuildProjectArgs(projectRoot));
 
 			// Starting from tns-ios 1.4 the xcconfig file is referenced in the project template
@@ -253,37 +252,58 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				basicArgs.push("-xcconfig", path.join(projectRoot, this.$projectData.projectName, "build.xcconfig"));
 			}
 
-			let args: string[] = [];
 			let buildForDevice = this.$options.forDevice || (buildConfig && buildConfig.buildForDevice);
 			if (buildForDevice) {
-				let defaultArchitectures = [
-					'ARCHS=armv7 arm64',
-					'VALID_ARCHS=armv7 arm64'
-				];
-
-				args = basicArgs.concat([
-					"-sdk", "iphoneos",
-					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "device")
-				]);
-
-				args = args.concat((buildConfig && buildConfig.architectures) || defaultArchitectures);
-
-				let xcodeBuildVersion = this.getXcodeVersion();
-				if (helpers.versionCompare(xcodeBuildVersion, "8.0") >= 0) {
-					let teamId = this.getDevelopmentTeam();
-					if (teamId) {
-						args = args.concat("DEVELOPMENT_TEAM=" + teamId);
-					}
-				}
+				this.buildForDevice(projectRoot, basicArgs, buildConfig).wait();
 			} else {
-				args = basicArgs.concat([
-					"-sdk", "iphonesimulator",
-					"ARCHS=i386 x86_64",
-					"VALID_ARCHS=i386 x86_64",
-					"ONLY_ACTIVE_ARCH=NO",
-					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
-					"CODE_SIGN_IDENTITY="
-				]);
+				this.buildForSimulator(projectRoot, basicArgs, buildConfig).wait();
+			}
+		}).future<void>()();
+	}
+
+	private buildForDevice(projectRoot: string, args: string[], buildConfig?: IiOSBuildConfig): IFuture<void> {
+		return (() => {
+			let defaultArchitectures = [
+				'ARCHS=armv7 arm64',
+				'VALID_ARCHS=armv7 arm64'
+			];
+
+			// build only for device specific architecture
+			if (!this.$options.release && !(buildConfig && buildConfig.architectures)) {
+				this.$devicesService.initialize({ platform: this.$devicePlatformsConstants.iOS.toLowerCase(), deviceId: this.$options.device }).wait();
+				let instances = this.$devicesService.getDeviceInstances();
+				let devicesArchitectures = _(instances)
+					.filter(d => this.$mobileHelper.isiOSPlatform(d.deviceInfo.platform) && d.deviceInfo.activeArchitecture)
+					.map(d => d.deviceInfo.activeArchitecture)
+					.uniq()
+					.value();
+				if (devicesArchitectures.length > 0) {
+					let architectures = [
+						`ARCHS=${devicesArchitectures.join(" ")}`,
+						`VALID_ARCHS=${devicesArchitectures.join(" ")}`
+					];
+					if (devicesArchitectures.length > 1) {
+						architectures.push('ONLY_ACTIVE_ARCH=NO');
+					}
+					if (!buildConfig) {
+						buildConfig = {};
+					}
+					buildConfig.architectures = architectures;
+				}
+			}
+			args = args.concat((buildConfig && buildConfig.architectures) || defaultArchitectures);
+
+			args = args.concat([
+				"-sdk", "iphoneos",
+				"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "device")
+			]);
+
+			let xcodeBuildVersion = this.getXcodeVersion();
+			if (helpers.versionCompare(xcodeBuildVersion, "8.0") >= 0) {
+				let teamId = this.getDevelopmentTeam();
+				if (teamId) {
+					args = args.concat("DEVELOPMENT_TEAM=" + teamId);
+				}
 			}
 
 			if (buildConfig && buildConfig.codeSignIdentity) {
@@ -295,47 +315,38 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 
 			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
+			this.createIpa(projectRoot).wait();
 
-			if (buildForDevice) {
-				let buildOutputPath = path.join(projectRoot, "build", "device");
-
-				// Produce ipa file
-				let xcrunArgs = [
-					"-sdk", "iphoneos",
-					"PackageApplication",
-					"-v", path.join(buildOutputPath, this.$projectData.projectName + ".app"),
-					"-o", path.join(buildOutputPath, this.$projectData.projectName + ".ipa")
-				];
-
-				this.$childProcess.spawnFromEvent("xcrun", xcrunArgs, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
-			}
 		}).future<void>()();
 	}
 
-	public buildForDeploy(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
-		if (this.$options.release) {
-			return this.buildProject(this.platformData.projectRoot, buildConfig);
-		}
+	private buildForSimulator(projectRoot: string, args: string[], buildConfig?: IiOSBuildConfig): IFuture<void> {
+		return (() => {
+			args = args.concat([
+				"-sdk", "iphonesimulator",
+				"ARCHS=i386 x86_64",
+				"VALID_ARCHS=i386 x86_64",
+				"ONLY_ACTIVE_ARCH=NO",
+				"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
+				"CODE_SIGN_IDENTITY="
+			]);
 
-		let devicesArchitectures = _(this.$devicesService.getDeviceInstances())
-			.filter(d => this.$mobileHelper.isiOSPlatform(d.deviceInfo.platform))
-			.map(d => d.deviceInfo.activeArchitecture)
-			.uniq()
-			.value();
+			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
 
-		let architectures = [
-			`ARCHS=${devicesArchitectures.join(" ")}`,
-			`VALID_ARCHS=${devicesArchitectures.join(" ")}`
-		];
+		}).future<void>()();
+	}
 
-		if (devicesArchitectures.length > 1) {
-			architectures.push('ONLY_ACTIVE_ARCH=NO');
-		}
-
-		buildConfig = buildConfig || {};
-		buildConfig.architectures = architectures;
-
-		return this.buildProject(this.platformData.projectRoot, buildConfig);
+	private createIpa(projectRoot: string): IFuture<void> {
+		return (() => {
+			let buildOutputPath = path.join(projectRoot, "build", "device");
+			let xcrunArgs = [
+				"-sdk", "iphoneos",
+				"PackageApplication",
+				"-v", path.join(buildOutputPath, this.$projectData.projectName + ".app"),
+				"-o", path.join(buildOutputPath, this.$projectData.projectName + ".ipa")
+			];
+			this.$childProcess.spawnFromEvent("xcrun", xcrunArgs, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
+		}).future<void>()();
 	}
 
 	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {

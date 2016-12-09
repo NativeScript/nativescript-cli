@@ -6,6 +6,7 @@ import * as semver from "semver";
 import {AppFilesUpdater} from "./app-files-updater";
 import * as temp from "temp";
 import {ProjectChangesInfo, IPrepareInfo} from "./project-changes-info";
+import Future = require("fibers/future");
 temp.track();
 let clui = require("clui");
 
@@ -54,7 +55,7 @@ export class PlatformService implements IPlatformService {
 	private addPlatform(platformParam: string): IFuture<void> {
 		return (() => {
 			let data = platformParam.split("@"),
-				platform = data[0],
+				platform = data[0].toLowerCase(),
 				version = data[1];
 
 			this.validatePlatform(platform);
@@ -328,16 +329,7 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	public buildPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
-		return (() => {
-			platform = platform.toLowerCase();
-			let platformData = this.$platformsData.getPlatformData(platform);
-			platformData.platformProjectService.buildProject(platformData.projectRoot, buildConfig).wait();
-			this.$logger.out("Project successfully built.");
-		}).future<void>()();
-	}
-
-	public prepareAndBuild(platform: string, buildConfig?: IBuildConfig, forceBuild?: boolean): IFuture<void> {
+	public buildPlatform(platform: string, buildConfig?: IBuildConfig, forceBuild?: boolean): IFuture<void> {
 		return (() => {
 			let shouldBuild = this.preparePlatform(platform, false).wait();
 			let platformData = this.$platformsData.getPlatformData(platform);
@@ -352,9 +344,17 @@ export class PlatformService implements IPlatformService {
 				}
 			}
 			if (shouldBuild || forceBuild) {
-				this.buildForDeploy(platform, buildConfig).wait();
+				this.buildPlatformCore(platform, buildConfig).wait();
 				this.$fs.writeFile(buildInfoFile, this._prepareInfo.time).wait();
 			}
+		}).future<void>()();
+	}
+
+	private buildPlatformCore(platform: string, buildConfig?: IBuildConfig) {
+		return (() => {
+			let platformData = this.$platformsData.getPlatformData(platform);
+			platformData.platformProjectService.buildProject(platformData.projectRoot, buildConfig).wait();
+			this.$logger.out("Project successfully built.");
 		}).future<void>()();
 	}
 
@@ -364,15 +364,6 @@ export class PlatformService implements IPlatformService {
 			return buildForDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath;
 		}
 		return platformData.deviceBuildOutputPath;
-	}
-
-	public buildForDeploy(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
-		return (() => {
-			platform = platform.toLowerCase();
-			let platformData = this.$platformsData.getPlatformData(platform);
-			platformData.platformProjectService.buildForDeploy(platformData.projectRoot, buildConfig).wait();
-			this.$logger.out("Project successfully built");
-		}).future<void>()();
 	}
 
 	public lastOutputPath(platform: string, settings: { isForDevice: boolean }): string {
@@ -442,37 +433,23 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	public runPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
-		platform = platform.toLowerCase();
-		if (this.$options.emulator) {
-			return this.deployOnEmulator(platform, buildConfig);
-		}
-
-		return this.deployOnDevice(platform, buildConfig);
-	}
-
-	public installOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
+	public deployPlatform(platform: string): IFuture<void> {
 		return (() => {
-			platform = platform.toLowerCase();
-			this.ensurePlatformInstalled(platform).wait();
 			let platformData = this.$platformsData.getPlatformData(platform);
-
 			this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device }).wait();
 			let packageFileDict: IStringDictionary = {};
-
 			let action = (device: Mobile.IDevice): IFuture<void> => {
 				return (() => {
-
 					let packageFileKey = this.getPackageFileKey(device);
 					let packageFile = packageFileDict[packageFileKey];
 					if (!packageFile) {
-						if (this.$devicesService.isiOSSimulator(device)) {
-							this.prepareAndBuild(platform, buildConfig).wait();
+						let buildConfig: IBuildConfig = {};
+						let isSimulator = this.$devicesService.isiOSSimulator(device);
+						buildConfig.buildForDevice = !isSimulator;
+						this.buildPlatform(platform, buildConfig, false).wait();
+						if (isSimulator) {
 							packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 						} else {
-							let deviceBuildConfig = buildConfig || {};
-							deviceBuildConfig.buildForDevice = true;
-							this.prepareAndBuild(platform, deviceBuildConfig).wait();
 							packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 						}
 					}
@@ -482,11 +459,29 @@ export class PlatformService implements IPlatformService {
 					this.$logger.info(`Successfully deployed on device with identifier '${device.deviceInfo.identifier}'.`);
 
 					packageFileDict[packageFileKey] = packageFile;
-
 				}).future<void>()();
 			};
 			this.$devicesService.execute(action, this.getCanExecuteAction(platform)).wait();
 		}).future<void>()();
+	}
+
+	public runPlatform(platform: string): IFuture<void> {
+		if (this.$options.avd) {
+			this.$logger.warn(`Option --avd is no longer supported. Please use --device instead!`);
+			return Future.fromResult();
+		}
+		return (() => {
+			this.deployPlatform(platform).wait();
+			let action = (device: Mobile.IDevice) => device.applicationManager.startApplication(this.$projectData.projectId);
+			this.$devicesService.execute(action, this.getCanExecuteAction(platform)).wait();
+		}).future<void>()();
+	}
+
+	public emulatePlatform(platform: string): IFuture<void> {
+		if (this.$options.availableDevices) {
+			return $injector.resolveCommand("device").execute([platform]);
+		}
+		return this.runPlatform(platform);
 	}
 
 	private getPackageFileKey(device: Mobile.IDevice): string {
@@ -494,20 +489,6 @@ export class PlatformService implements IPlatformService {
 			return device.deviceInfo.platform.toLowerCase();
 		}
 		return device.deviceInfo.platform.toLowerCase() + device.deviceInfo.type;
-	}
-
-	public deployOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
-		return (() => {
-			this.installOnDevice(platform, buildConfig).wait();
-			this.startOnDevice(platform).wait();
-		}).future<void>()();
-	}
-
-	public startOnDevice(platform: string): IFuture<void> {
-		return (() => {
-			let action = (device: Mobile.IDevice) => device.applicationManager.startApplication(this.$projectData.projectId);
-			this.$devicesService.execute(action, this.getCanExecuteAction(platform)).wait();
-		}).future<void>()();
 	}
 
 	private getCanExecuteAction(platform: string): any {
@@ -531,61 +512,6 @@ export class PlatformService implements IPlatformService {
 		};
 
 		return canExecute;
-	}
-
-	public deployOnEmulator(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
-		platform = platform.toLowerCase();
-		if (this.$options.avd) {
-			this.$logger.warn(`Option --avd is no longer supported. Please use --device instead!`);
-		}
-
-		if (this.$options.availableDevices || this.$options.device || this.$options.avd) {
-			return (() => {
-				let devices: string;
-
-				if (this.$mobileHelper.isiOSPlatform(platform)) {
-					devices = this.$childProcess.exec("instruments -s devices").wait();
-				} else if (this.$mobileHelper.isAndroidPlatform(platform)) {
-					let androidPath = path.join(process.env.ANDROID_HOME, "tools", "android");
-					devices = this.$childProcess.exec(`${androidPath} list avd`).wait();
-				}
-
-				if (this.$options.availableDevices) {
-					this.$logger.info(devices);
-				}
-
-				if (this.$options.device || this.$options.avd) {
-					if (this.$options.device) {
-						this.$options.avd = this.$options.device;
-					}
-
-					if (devices.indexOf(this.$options.device) !== -1 || devices.indexOf(this.$options.avd) !== -1) {
-						this.ensurePlatformInstalled(platform).wait();
-
-						let packageFile: string, logFilePath: string;
-						let platformData = this.$platformsData.getPlatformData(platform);
-						let emulatorServices = platformData.emulatorServices;
-
-						emulatorServices.checkAvailability().wait();
-						emulatorServices.checkDependencies().wait();
-
-						this.prepareAndBuild(platform, buildConfig).wait();
-
-						packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
-						this.$logger.out("Using ", packageFile);
-
-						logFilePath = path.join(platformData.projectRoot, this.$projectData.projectName, "emulator.log");
-
-						emulatorServices.runApplicationOnEmulator(packageFile, { stderrFilePath: logFilePath, stdoutFilePath: logFilePath, appId: this.$projectData.projectId }).wait();
-					} else {
-						this.$errors.fail(`Cannot find device with name: ${this.$options.device || this.$options.avd}.`);
-					}
-				}
-			}).future<void>()();
-		} else {
-			this.$options.emulator = true;
-			return this.deployOnDevice(platform, buildConfig);
-		}
 	}
 
 	public validatePlatform(platform: string): void {
