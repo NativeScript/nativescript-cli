@@ -63,13 +63,13 @@ export class NpmInstallationManager implements INpmInstallationManager {
 			let inspectorPath = path.join(projectDir, "node_modules", inspectorNpmPackageName);
 
 			// local installation takes precedence over cache
-			if(!this.inspectorAlreadyInstalled(inspectorPath).wait()) {
+			if(!this.inspectorAlreadyInstalled(inspectorPath)) {
 				let cachepath = this.$childProcess.exec("npm get cache").wait().trim();
 				let version = this.getLatestCompatibleVersion(inspectorNpmPackageName).wait();
 				let pathToPackageInCache = path.join(cachepath, inspectorNpmPackageName, version);
 				let pathToUnzippedInspector = path.join(pathToPackageInCache, "package");
 
-				if(!this.$fs.exists(pathToPackageInCache).wait()) {
+				if(!this.$fs.exists(pathToPackageInCache)) {
 					this.$childProcess.exec(`npm cache add ${inspectorNpmPackageName}@${version}`).wait();
 					let inspectorTgzPathInCache = path.join(pathToPackageInCache, "package.tgz");
 					this.$childProcess.exec(`tar -xf ${inspectorTgzPathInCache} -C ${pathToPackageInCache}`).wait();
@@ -82,26 +82,24 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		}).future<string>()();
 	}
 
-	private inspectorAlreadyInstalled(pathToInspector: string): IFuture<Boolean> {
-		return (() => {
-			if(this.$fs.exists(pathToInspector).wait()) {
-				return true;
-			}
-			return false;
-		}).future<Boolean>()();
+	private inspectorAlreadyInstalled(pathToInspector: string): Boolean {
+		if(this.$fs.exists(pathToInspector)) {
+			return true;
+		}
+		return false;
 	}
 
 	private installCore(packageName: string, pathToSave: string, version: string, dependencyType: string): IFuture<string> {
 		return (() => {
 			const possiblePackageName= path.resolve(packageName);
-			if(this.$fs.exists(possiblePackageName).wait()) {
+			if(this.$fs.exists(possiblePackageName)) {
 				packageName = possiblePackageName;
 			}
 			if(packageName.indexOf(".tgz") >= 0) {
 				version = null;
 			}
 			// check if the packageName is url or local file and if it is, let npm install deal with the version
-			if(this.isURL(packageName) || this.$fs.exists(packageName).wait()) {
+			if(this.isURL(packageName) || this.$fs.exists(packageName)) {
 				version = null;
 			} else {
 				version = version || this.getLatestCompatibleVersion(packageName).wait();

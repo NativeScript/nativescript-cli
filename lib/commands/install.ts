@@ -49,7 +49,7 @@ export class InstallCommand implements ICommand {
 			let projectDir = this.$projectData.projectDir;
 
 			let devPrefix = 'nativescript-dev-';
-			if (!this.$fs.exists(moduleName).wait() && moduleName.indexOf(devPrefix) !== 0) {
+			if (!this.$fs.exists(moduleName) && moduleName.indexOf(devPrefix) !== 0) {
 				moduleName = devPrefix + moduleName;
 			}
 

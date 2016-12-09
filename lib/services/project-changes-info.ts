@@ -32,7 +32,7 @@ export class ProjectChangesInfo {
 			let platformData = this.$platformsData.getPlatformData(platform);
 			let buildInfoFile = path.join(platformData.projectRoot, prepareInfoFileName);
 
-			if (force || !this.$fs.exists(buildInfoFile).wait()) {
+			if (force || !this.$fs.exists(buildInfoFile)) {
 				this.appFilesChanged = true;
 				this.appResourcesChanged = true;
 				this.modulesChanged = true;
@@ -81,7 +81,7 @@ export class ProjectChangesInfo {
 
 	private filesChanged(files: string[], mtime: number): boolean {
 		for (let file of files) {
-			if (this.$fs.exists(file).wait()) {
+			if (this.$fs.exists(file)) {
 				let fileStats = this.$fs.getFsStats(file).wait();
 				if (fileStats.mtime.getTime() > mtime) {
 					return true;

@@ -62,7 +62,7 @@ export class PlatformService implements IPlatformService {
 
 			let platformPath = path.join(this.$projectData.platformsDir, platform);
 
-			if (this.$fs.exists(platformPath).wait()) {
+			if (this.$fs.exists(platformPath)) {
 				this.$errors.failWithoutHelp("Platform %s already added", platform);
 			}
 
@@ -174,7 +174,7 @@ export class PlatformService implements IPlatformService {
 
 	public getInstalledPlatforms(): IFuture<string[]> {
 		return (() => {
-			if (!this.$fs.exists(this.$projectData.platformsDir).wait()) {
+			if (!this.$fs.exists(this.$projectData.platformsDir)) {
 				return [];
 			}
 
@@ -192,10 +192,8 @@ export class PlatformService implements IPlatformService {
 		}).future<string[]>()();
 	}
 
-	public getPreparedPlatforms(): IFuture<string[]> {
-		return (() => {
-			return _.filter(this.$platformsData.platformsNames, p => { return this.isPlatformPrepared(p).wait(); });
-		}).future<string[]>()();
+	public getPreparedPlatforms(): string[] {
+		return _.filter(this.$platformsData.platformsNames, p => { return this.isPlatformPrepared(p); });
 	}
 
 	public preparePlatform(platform: string, force?: boolean, skipModulesAndResources?: boolean): IFuture<boolean> {
@@ -213,7 +211,7 @@ export class PlatformService implements IPlatformService {
 			// Need to check if any plugin requires Cocoapods to be installed.
 			if (platform === "ios") {
 				_.each(this.$pluginsService.getAllInstalledPlugins().wait(), (pluginData: IPluginData) => {
-					if (this.$fs.exists(path.join(pluginData.pluginPlatformsFolderPath(platform), "Podfile")).wait() &&
+					if (this.$fs.exists(path.join(pluginData.pluginPlatformsFolderPath(platform), "Podfile")) &&
 						!this.$sysInfo.getCocoapodVersion().wait()) {
 						this.$errors.failWithoutHelp(`${pluginData.name} has Podfile and you don't have Cocoapods installed or it is not configured correctly. Please verify Cocoapods can work on your machine.`);
 					}
@@ -224,7 +222,7 @@ export class PlatformService implements IPlatformService {
 
 			let changeInfo:ProjectChangesInfo = new ProjectChangesInfo(platform, force, skipModulesAndResources, this.$platformsData, this.$projectData, this.$devicePlatformsConstants, this.$options, this.$fs);
 			this._prepareInfo = changeInfo.prepareInfo;
-			if (!this.isPlatformPrepared(platform).wait() || changeInfo.hasChanges) {
+			if (!this.isPlatformPrepared(platform) || changeInfo.hasChanges) {
 				this.preparePlatformCore(platform, changeInfo).wait();
 				return true;
 			}
@@ -289,7 +287,7 @@ export class PlatformService implements IPlatformService {
 			let platformData = this.$platformsData.getPlatformData(platform);
 			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			let appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
-			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
+			if (this.$fs.exists(appResourcesDirectoryPath)) {
 				platformData.platformProjectService.prepareAppResources(appResourcesDirectoryPath).wait();
 				let appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait();
 				this.$fs.ensureDirectoryExists(appResourcesDestination).wait();
@@ -303,7 +301,7 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			let platformData = this.$platformsData.getPlatformData(platform);
 			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath).wait() ? this.$fs.getFsStats(appDestinationDirectoryPath).wait().mtime : null;
+			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).wait().mtime : null;
 
 			try {
 				let tnsModulesDestinationPath = path.join(appDestinationDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
@@ -336,7 +334,7 @@ export class PlatformService implements IPlatformService {
 			let buildInfoFilePath = this.getBuildOutputPath(platform, platformData, buildConfig);
 			let buildInfoFile = path.join(buildInfoFilePath, buildInfoFileName);
 			if (!shouldBuild) {
-				if (this.$fs.exists(buildInfoFile).wait()) {
+				if (this.$fs.exists(buildInfoFile)) {
 					let buildInfoText = this.$fs.readText(buildInfoFile).wait();
 					shouldBuild = this._prepareInfo.time !== buildInfoText;
 				} else {
@@ -374,7 +372,7 @@ export class PlatformService implements IPlatformService {
 		} else {
 			packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 		}
-		if (!packageFile || !this.$fs.exists(packageFile).wait()) {
+		if (!packageFile || !this.$fs.exists(packageFile)) {
 			this.$errors.failWithoutHelp("Unable to find built application. Try 'tns build %s'.", platform);
 		}
 		return packageFile;
@@ -389,7 +387,7 @@ export class PlatformService implements IPlatformService {
 
 			this.$fs.ensureDirectoryExists(path.dirname(targetPath)).wait();
 
-			if (this.$fs.exists(targetPath).wait() && this.$fs.getFsStats(targetPath).wait().isDirectory()) {
+			if (this.$fs.exists(targetPath) && this.$fs.getFsStats(targetPath).wait().isDirectory()) {
 				let sourceFileName = path.basename(packageFile);
 				this.$logger.trace(`Specified target path: '${targetPath}' is directory. Same filename will be used: '${sourceFileName}'.`);
 				targetPath = path.join(targetPath, sourceFileName);
@@ -424,7 +422,7 @@ export class PlatformService implements IPlatformService {
 					platform = data[0],
 					version = data[1];
 
-				if (this.isPlatformInstalled(platform).wait()) {
+				if (this.isPlatformInstalled(platform)) {
 					this.updatePlatform(platform, version).wait();
 				} else {
 					this.addPlatform(platformParam).wait();
@@ -533,20 +531,20 @@ export class PlatformService implements IPlatformService {
 	public validatePlatformInstalled(platform: string): void {
 		this.validatePlatform(platform);
 
-		if (!this.isPlatformInstalled(platform).wait()) {
+		if (!this.isPlatformInstalled(platform)) {
 			this.$errors.fail("The platform %s is not added to this project. Please use 'tns platform add <platform>'", platform);
 		}
 	}
 
 	public ensurePlatformInstalled(platform: string): IFuture<void> {
 		return (() => {
-			if (!this.isPlatformInstalled(platform).wait()) {
+			if (!this.isPlatformInstalled(platform)) {
 				this.addPlatform(platform).wait();
 			}
 		}).future<void>()();
 	}
 
-	private isPlatformInstalled(platform: string): IFuture<boolean> {
+	private isPlatformInstalled(platform: string): boolean {
 		return this.$fs.exists(path.join(this.$projectData.platformsDir, platform.toLowerCase()));
 	}
 
@@ -560,7 +558,7 @@ export class PlatformService implements IPlatformService {
 		return res;
 	}
 
-	private isPlatformPrepared(platform: string): IFuture<boolean> {
+	private isPlatformPrepared(platform: string): boolean {
 		let platformData = this.$platformsData.getPlatformData(platform);
 		return platformData.platformProjectService.isPlatformPrepared(platformData.projectRoot);
 	}

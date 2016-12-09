@@ -212,7 +212,7 @@ class DoctorService implements IDoctorService {
 				return true;
 			}
 
-			return !(this.$fs.exists(path.join(iosDir, `${DoctorService.PROJECT_NAME_PLACEHOLDER}.xcworkspace`)).wait());
+			return !(this.$fs.exists(path.join(iosDir, `${DoctorService.PROJECT_NAME_PLACEHOLDER}.xcworkspace`)));
 		} catch (err) {
 			this.$logger.trace(`verifyCocoaPods error: ${err}`);
 			return true;

@@ -94,7 +94,7 @@ describe('Platform Service Tests', () => {
 		describe("#add platform()", () => {
 			it("should not fail if platform is not normalized", () => {
 				let fs = testInjector.resolve("fs");
-				fs.exists = () => Future.fromResult(false);
+				fs.exists = () => false;
 
 				platformService.addPlatforms(["Android"]).wait();
 				platformService.addPlatforms(["ANDROID"]).wait();
@@ -113,7 +113,7 @@ describe('Platform Service Tests', () => {
 			});
 			it("should fail if npm is unavalible", () => {
 				let fs = testInjector.resolve("fs");
-				fs.exists = () => Future.fromResult(false);
+				fs.exists = () => false;
 
 				let errorMessage = "Npm is unavalible";
 				let npmInstallationManager = testInjector.resolve("npmInstallationManager");
@@ -129,7 +129,7 @@ describe('Platform Service Tests', () => {
 		describe("#add platform(ios)", () => {
 			it("should call validate method", () => {
 				let fs = testInjector.resolve("fs");
-				fs.exists = () => Future.fromResult(false);
+				fs.exists = () => false;
 
 				let errorMessage = "Xcode is not installed or Xcode version is smaller that 5.0";
 				let platformsData = testInjector.resolve("platformsData");
@@ -148,7 +148,7 @@ describe('Platform Service Tests', () => {
 		describe("#add platform(android)", () => {
 			it("should fail if java, ant or android are not installed", () => {
 				let fs = testInjector.resolve("fs");
-				fs.exists = () => Future.fromResult(false);
+				fs.exists = () => false;
 
 				let errorMessage = "Java, ant or android are not installed";
 				let platformsData = testInjector.resolve("platformsData");
@@ -168,15 +168,15 @@ describe('Platform Service Tests', () => {
 
 	describe("remove platform unit tests", () => {
 		it("should fail when platforms are not added", () => {
-			testInjector.resolve("fs").exists = () => Future.fromResult(false);
+			testInjector.resolve("fs").exists = () => false;
 			(() => platformService.removePlatforms(["android"]).wait()).should.throw();
 			(() => platformService.removePlatforms(["ios"]).wait()).should.throw();
 		});
 		it("shouldn't fail when platforms are added", () => {
-			testInjector.resolve("fs").exists = () => Future.fromResult(false);
+			testInjector.resolve("fs").exists = () => false;
 			platformService.addPlatforms(["android"]).wait();
 
-			testInjector.resolve("fs").exists = () => Future.fromResult(true);
+			testInjector.resolve("fs").exists = () => true;
 			platformService.removePlatforms(["android"]).wait();
 		});
 	});
@@ -260,7 +260,7 @@ describe('Platform Service Tests', () => {
 						processConfigurationFilesFromAppResources: () => Future.fromResult(),
 						ensureConfigurationFileInAppResources: () => Future.fromResult(),
 						interpolateConfigurationFile: () => Future.fromResult(),
-						isPlatformPrepared: (projectRoot: string) => Future.fromResult(false)
+						isPlatformPrepared: (projectRoot: string) => false
 					}
 				};
 			};
@@ -277,18 +277,18 @@ describe('Platform Service Tests', () => {
 			let test2FileName = platformToTest.toLowerCase() === "ios" ? "test2.js" : "test1.js";
 
 			// Asserts that the files in app folder are process as platform specific
-			assert.isTrue(fs.exists(path.join(testDirData.appDestFolderPath, "app", test1FileName)).wait());
-			assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "app", "test1-js")).wait());
+			assert.isTrue(fs.exists(path.join(testDirData.appDestFolderPath, "app", test1FileName)));
+			assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "app", "test1-js")));
 
-			assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "app", test2FileName)).wait());
-			assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "app", "test2-js")).wait());
+			assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "app", test2FileName)));
+			assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "app", "test2-js")));
 
 			// Asserts that the files in app1 folder aren't process as platform specific
-			assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "app1")).wait(), "Asserts that the files in app1 folder aren't process as platform specific");
+			assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "app1")), "Asserts that the files in app1 folder aren't process as platform specific");
 
 			if (release) {
 				// Asserts that the files in tests folder aren't copied
-				assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "tests")).wait(), "Asserts that the files in tests folder aren't copied");
+				assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "tests")), "Asserts that the files in tests folder aren't copied");
 			}
 		}
 
@@ -334,7 +334,7 @@ describe('Platform Service Tests', () => {
 						processConfigurationFilesFromAppResources: () => Future.fromResult(),
 						ensureConfigurationFileInAppResources: () => Future.fromResult(),
 						interpolateConfigurationFile: () => Future.fromResult(),
-						isPlatformPrepared: (projectRoot: string) => Future.fromResult(false)
+						isPlatformPrepared: (projectRoot: string) => false
 					}
 				};
 			};

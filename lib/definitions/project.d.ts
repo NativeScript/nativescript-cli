@@ -74,7 +74,14 @@ interface IPlatformProjectService {
 	buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void>;
 	prepareProject(): IFuture<void>;
 	prepareAppResources(appResourcesDirectoryPath: string): IFuture<void>;
-	isPlatformPrepared(projectRoot: string): IFuture<boolean>;
+
+	/**
+	 * Defines if current platform is prepared (i.e. if <project dir>/platforms/<platform> dir exists).
+	 * @param {string} projectRoot The project directory (path where root's package.json is located).
+	 * @returns {boolean} True in case platform is prepare (i.e. if <project dir>/platforms/<platform> dir exists), false otherwise.
+	 */
+	isPlatformPrepared(projectRoot: string): boolean;
+
 	canUpdatePlatform(newInstalledModuleDir: string): IFuture<boolean>;
 	preparePluginNativeCode(pluginData: IPluginData, options?: any): IFuture<void>;
 	removePluginNativeCode(pluginData: IPluginData): IFuture<void>;

@@ -37,7 +37,7 @@ export class PluginsService implements IPluginsService {
 		return (() => {
 			this.ensure().wait();
 			const possiblePackageName= path.resolve(plugin);
-			if(possiblePackageName.indexOf(".tgz") !== -1 && this.$fs.exists(possiblePackageName).wait()) {
+			if(possiblePackageName.indexOf(".tgz") !== -1 && this.$fs.exists(possiblePackageName)) {
 				plugin = possiblePackageName;
 			}
 			let name = this.$npm.install(plugin, this.$projectData.projectDir, PluginsService.NPM_CONFIG).wait()[0];
@@ -118,7 +118,7 @@ export class PluginsService implements IPluginsService {
 			let platformData = this.$platformsData.getPlatformData(platform);
 			let pluginData = this.convertToPluginData(dependencyData);
 
-			let appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait();
+			let appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
 			if (appFolderExists) {
 				this.preparePluginScripts(pluginData, platform);
 				this.preparePluginNativeCode(pluginData, platform);
@@ -132,7 +132,7 @@ export class PluginsService implements IPluginsService {
 	private preparePluginScripts(pluginData: IPluginData, platform: string): void {
 		let platformData = this.$platformsData.getPlatformData(platform);
 		let pluginScriptsDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
-		let scriptsDestinationExists = this.$fs.exists(pluginScriptsDestinationPath).wait();
+		let scriptsDestinationExists = this.$fs.exists(pluginScriptsDestinationPath);
 		if (!scriptsDestinationExists) {
 			//tns_modules/<plugin> doesn't exist. Assuming we're running a bundled prepare.
 			return;
@@ -155,7 +155,7 @@ export class PluginsService implements IPluginsService {
 
 	public ensureAllDependenciesAreInstalled(): IFuture<void> {
 		return (() => {
-			let installedDependencies = this.$fs.exists(this.nodeModulesPath).wait() ? this.$fs.readDirectory(this.nodeModulesPath).wait() : [];
+			let installedDependencies = this.$fs.exists(this.nodeModulesPath) ? this.$fs.readDirectory(this.nodeModulesPath).wait() : [];
 			// Scoped dependencies are not on the root of node_modules,
 			// so we have to list the contents of all directories, starting with @
 			// and add them to installed dependencies, so we can apply correct comparison against package.json's dependencies.
@@ -223,7 +223,7 @@ export class PluginsService implements IPluginsService {
 
 	private getNodeModuleData(module: string): IFuture<INodeModuleData> { // module can be  modulePath or moduleName
 		return (() => {
-			if (!this.$fs.exists(module).wait() || path.basename(module) !== "package.json") {
+			if (!this.$fs.exists(module) || path.basename(module) !== "package.json") {
 				module = this.getPackageJsonFilePathForModule(module);
 			}
 
@@ -292,7 +292,7 @@ export class PluginsService implements IPluginsService {
 		return (() => {
 			let availablePlatforms = _.keys(this.$platformsData.availablePlatforms);
 			_.each(availablePlatforms, platform => {
-				let isPlatformInstalled = this.$fs.exists(path.join(this.$projectData.platformsDir, platform.toLowerCase())).wait();
+				let isPlatformInstalled = this.$fs.exists(path.join(this.$projectData.platformsDir, platform.toLowerCase()));
 				if (isPlatformInstalled) {
 					let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
 					let pluginDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");

@@ -9,7 +9,7 @@ export class ListPlatformsCommand implements ICommand {
 			let installedPlatforms = this.$platformService.getInstalledPlatforms().wait();
 
 			if(installedPlatforms.length > 0) {
-				let preparedPlatforms = this.$platformService.getPreparedPlatforms().wait();
+				let preparedPlatforms = this.$platformService.getPreparedPlatforms();
 				if(preparedPlatforms.length > 0) {
 					this.$logger.out("The project is prepared for: ", helpers.formatListOfNames(preparedPlatforms, "and"));
 				} else {

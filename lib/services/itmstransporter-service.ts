@@ -116,7 +116,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				if (!ipaFileFullPath) {
 					this._bundleIdentifier = this.$projectData.projectId;
 				} else {
-					if (!this.$fs.exists(ipaFileFullPath).wait() || path.extname(ipaFileFullPath) !== ".ipa") {
+					if (!this.$fs.exists(ipaFileFullPath) || path.extname(ipaFileFullPath) !== ".ipa") {
 						this.$errors.failWithoutHelp(`Cannot use specified ipa file ${ipaFileFullPath}. File either does not exist or is not an ipa file.`);
 					}
 
@@ -172,7 +172,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				this._itmsTransporterPath = path.join(result, ITMSConstants.iTMSDirectoryName, "bin", ITMSConstants.iTMSExecutableName);
 			}
 
-			if(!this.$fs.exists(this._itmsTransporterPath).wait()) {
+			if(!this.$fs.exists(this._itmsTransporterPath)) {
 				this.$errors.failWithoutHelp('iTMS Transporter not found on this machine - make sure your Xcode installation is not damaged.');
 			}
 

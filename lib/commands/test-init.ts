@@ -41,7 +41,7 @@ class TestInitCommand implements ICommand {
 
 			let testsDir = path.join(projectDir, 'app/tests');
 			let shouldCreateSampleTests = true;
-			if (this.$fs.exists(testsDir).wait()) {
+			if (this.$fs.exists(testsDir)) {
 				this.$logger.info('app/tests/ directory already exists, will not create an example test project.');
 				shouldCreateSampleTests = false;
 			}
@@ -59,7 +59,7 @@ class TestInitCommand implements ICommand {
 
 			let exampleFilePath = this.$resources.resolvePath(`test/example.${frameworkToInstall}.js`);
 
-			if (shouldCreateSampleTests && this.$fs.exists(exampleFilePath).wait()) {
+			if (shouldCreateSampleTests && this.$fs.exists(exampleFilePath)) {
 				this.$fs.copyFile(exampleFilePath, path.join(testsDir, 'example.js')).wait();
 				this.$logger.info('\nExample test file created in app/tests/'.yellow);
 			} else {

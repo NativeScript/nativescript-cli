@@ -42,8 +42,8 @@ class VersionsService implements IVersionsService {
 			if (this.projectData) {
 				let nodeModulesPath = path.join(this.projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME);
 				let tnsCoreModulesPath = path.join(nodeModulesPath, constants.TNS_CORE_MODULES_NAME);
-				if (!this.$fs.exists(nodeModulesPath).wait() ||
-					!this.$fs.exists(tnsCoreModulesPath).wait()) {
+				if (!this.$fs.exists(nodeModulesPath) ||
+					!this.$fs.exists(tnsCoreModulesPath)) {
 					this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
 				}
 

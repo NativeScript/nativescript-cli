@@ -38,7 +38,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 			return;
 		}
 
-		let fileHash = this.$fs.exists(filePath).wait() && this.$fs.getFsStats(filePath).wait().isFile() ? this.$fs.getFileShasum(filePath).wait() : "";
+		let fileHash = this.$fs.exists(filePath) && this.$fs.getFsStats(filePath).wait().isFile() ? this.$fs.getFileShasum(filePath).wait() : "";
 		if (fileHash === this.fileHashes[filePath]) {
 			this.$logger.trace(`Skipping livesync for ${filePath} file with ${fileHash} hash.`);
 			return;

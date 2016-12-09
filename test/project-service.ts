@@ -54,10 +54,10 @@ class ProjectIntegrationTest {
 			let packageJsonContent = fs.readJson(tnsProjectFilePath).wait();
 			let options = this.testInjector.resolve("options");
 
-			assert.isTrue(fs.exists(appDirectoryPath).wait());
-			assert.isTrue(fs.exists(platformsDirectoryPath).wait());
-			assert.isTrue(fs.exists(tnsProjectFilePath).wait());
-			assert.isTrue(fs.exists(tnsModulesPath).wait());
+			assert.isTrue(fs.exists(appDirectoryPath));
+			assert.isTrue(fs.exists(platformsDirectoryPath));
+			assert.isTrue(fs.exists(tnsProjectFilePath));
+			assert.isTrue(fs.exists(tnsModulesPath));
 
 			assert.isFalse(fs.isEmptyDir(appDirectoryPath).wait());
 			assert.isTrue(fs.isEmptyDir(platformsDirectoryPath).wait());
@@ -77,7 +77,7 @@ class ProjectIntegrationTest {
 			_.each(expectedFiles, file => {
 				let relativeToProjectDir = helpers.getRelativeToRootPath(sourceDir, file);
 				let filePathInApp = path.join(appDirectoryPath, relativeToProjectDir);
-				assert.isTrue(fs.exists(filePathInApp).wait(), `File ${filePathInApp} does not exist.`);
+				assert.isTrue(fs.exists(filePathInApp), `File ${filePathInApp} does not exist.`);
 			});
 
 			// assert dependencies and devDependencies are copied from template to real project
@@ -524,8 +524,8 @@ describe("project upgrade procedure tests", () => {
 
 		let packageJsonFilePath = path.join(tempFolder, "package.json");
 		let packageJsonFileContent = require(packageJsonFilePath);
-		assert.isTrue(fs.exists(packageJsonFilePath).wait());
-		assert.isFalse(fs.exists(tnsProjectFilePath).wait());
+		assert.isTrue(fs.exists(packageJsonFilePath));
+		assert.isFalse(fs.exists(tnsProjectFilePath));
 		assert.deepEqual(tnsProjectData, packageJsonFileContent["nativescript"]);
 	});
 	it("should upgrade project when .tnsproject and package.json exist but nativescript key is not presented in package.json file", () => {

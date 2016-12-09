@@ -28,7 +28,7 @@ export class InitService implements IInitService {
 		return (() => {
 			let projectData: any = {};
 
-			if (this.$fs.exists(this.projectFilePath).wait()) {
+			if (this.$fs.exists(this.projectFilePath)) {
 				projectData = this.$fs.readJson(this.projectFilePath).wait();
 			}
 

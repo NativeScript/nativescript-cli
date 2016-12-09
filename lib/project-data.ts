@@ -31,7 +31,7 @@ export class ProjectData implements IProjectData {
 				this.initializeProjectDataCore(projectDir);
 				let data: any = null;
 
-				if (this.$fs.exists(this.projectFilePath).wait()) {
+				if (this.$fs.exists(this.projectFilePath)) {
 					let fileContent: any = null;
 					try {
 						fileContent = this.$fs.readJson(this.projectFilePath).wait();
@@ -65,7 +65,7 @@ export class ProjectData implements IProjectData {
 		return (() => {
 			let projectDir = this.projectDir || path.resolve(this.$options.path || ".");
 			let oldProjectFilePath = path.join(projectDir, ProjectData.OLD_PROJECT_FILE_NAME);
-			if(this.$fs.exists(oldProjectFilePath).wait()) {
+			if(this.$fs.exists(oldProjectFilePath)) {
 				this.upgrade(projectDir, oldProjectFilePath).wait();
 			} else {
 				this.throwNoProjectFoundError();
@@ -79,7 +79,7 @@ export class ProjectData implements IProjectData {
 				let oldProjectData = this.$fs.readJson(oldProjectFilePath).wait();
 
 				let newProjectFilePath = this.projectFilePath || path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
-				let newProjectData = this.$fs.exists(newProjectFilePath).wait() ? this.$fs.readJson(newProjectFilePath).wait() : {};
+				let newProjectData = this.$fs.exists(newProjectFilePath) ? this.$fs.readJson(newProjectFilePath).wait() : {};
 				newProjectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE] = oldProjectData;
 				this.$fs.writeJson(newProjectFilePath, newProjectData).wait();
 				this.projectId = newProjectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE].id;

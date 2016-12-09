@@ -308,14 +308,14 @@ describe("Plugins service", () => {
 
 				// Asserts that the all plugin's content is successfully added to node_modules folder
 				let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
-				assert.isTrue(fs.exists(nodeModulesFolderPath).wait());
+				assert.isTrue(fs.exists(nodeModulesFolderPath));
 
 				let pluginFolderPath = path.join(nodeModulesFolderPath, pluginName);
-				assert.isTrue(fs.exists(pluginFolderPath).wait());
+				assert.isTrue(fs.exists(pluginFolderPath));
 
 				let pluginFiles = ["injex.js", "main.js", "package.json"];
 				_.each(pluginFiles, pluginFile => {
-					assert.isTrue(fs.exists(path.join(pluginFolderPath, pluginFile)).wait());
+					assert.isTrue(fs.exists(path.join(pluginFolderPath, pluginFile)));
 				});
 
 				// Asserts that the plugin is added in package.json file
@@ -345,14 +345,14 @@ describe("Plugins service", () => {
 
 				// Assert that the all plugin's content is successfully added to node_modules folder
 				let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
-				assert.isTrue(fs.exists(nodeModulesFolderPath).wait());
+				assert.isTrue(fs.exists(nodeModulesFolderPath));
 
 				let pluginFolderPath = path.join(nodeModulesFolderPath, pluginName);
-				assert.isTrue(fs.exists(pluginFolderPath).wait());
+				assert.isTrue(fs.exists(pluginFolderPath));
 
 				let pluginFiles = ["injex.js", "main.js", "package.json"];
 				_.each(pluginFiles, pluginFile => {
-					assert.isTrue(fs.exists(path.join(pluginFolderPath, pluginFile)).wait());
+					assert.isTrue(fs.exists(path.join(pluginFolderPath, pluginFile)));
 				});
 
 				// Assert that the plugin is added in package.json file
@@ -393,12 +393,12 @@ describe("Plugins service", () => {
 
 				// Assert that the all plugin's content is successfully added to node_modules folder
 				let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
-				assert.isTrue(fs.exists(nodeModulesFolderPath).wait());
-				assert.isTrue(fs.exists(path.join(nodeModulesFolderPath, pluginName)).wait());
+				assert.isTrue(fs.exists(nodeModulesFolderPath));
+				assert.isTrue(fs.exists(path.join(nodeModulesFolderPath, pluginName)));
 
 				let pluginFiles = ["package.json"];
 				_.each(pluginFiles, pluginFile => {
-					assert.isTrue(fs.exists(path.join(nodeModulesFolderPath, pluginName, pluginFile)).wait());
+					assert.isTrue(fs.exists(path.join(nodeModulesFolderPath, pluginName, pluginFile)));
 				});
 			});
 			it("adds plugin by github url", () => {
@@ -441,7 +441,7 @@ describe("Plugins service", () => {
 				commandsService.tryExecuteCommand(`plugin|${command}`, [pluginFolderPath]).wait();
 
 				let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
-				assert.isFalse(fs.exists(path.join(nodeModulesFolderPath, pluginName, "node_modules", "grunt")).wait());
+				assert.isFalse(fs.exists(path.join(nodeModulesFolderPath, pluginName, "node_modules", "grunt")));
 			});
 			it("install dev dependencies when --production option is not specified", () => {
 				// Creates a plugin in tempFolder

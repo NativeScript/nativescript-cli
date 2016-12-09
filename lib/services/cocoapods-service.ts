@@ -18,7 +18,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 
 	public mergePodfileHookContent(hookName: string, pathToPodfile: string): IFuture<void> {
 		return (() => {
-			if (!this.$fs.exists(pathToPodfile).wait()) {
+			if (!this.$fs.exists(pathToPodfile)) {
 				throw new Error(`The Podfile ${pathToPodfile} does not exist.`);
 			}
 

@@ -39,7 +39,7 @@ export class NodePackageManager implements INodePackageManager {
 				let relativePathFromCwdToSource = "";
 				if(this.$options.frameworkPath) {
 					relativePathFromCwdToSource = path.relative(this.$options.frameworkPath, pathToSave);
-					if(this.$fs.exists(relativePathFromCwdToSource).wait()) {
+					if(this.$fs.exists(relativePathFromCwdToSource)) {
 						packageName = relativePathFromCwdToSource;
 					}
 				}

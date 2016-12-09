@@ -148,7 +148,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					// The plugin version is not valid. Check node_modules for the valid version.
 					if (!cleanedVerson) {
 						let pathToPluginPackageJson = path.join(this.$projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, dependency.name, constants.PACKAGE_JSON_FILE_NAME);
-						dependencyVersionInProject = this.$fs.exists(pathToPluginPackageJson).wait() && this.$fs.readJson(pathToPluginPackageJson).wait().version;
+						dependencyVersionInProject = this.$fs.exists(pathToPluginPackageJson) && this.$fs.readJson(pathToPluginPackageJson).wait().version;
 					}
 
 					if (!semver.satisfies(dependencyVersionInProject || cleanedVerson, dependency.version)) {
@@ -162,7 +162,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	private useGradleWrapper(frameworkDir: string): boolean {
 		let gradlew = path.join(frameworkDir, "gradlew");
-		return this.$fs.exists(gradlew).wait();
+		return this.$fs.exists(gradlew);
 	}
 
 	private cleanResValues(targetSdkVersion: number, frameworkVersion: string): IFuture<void> {
@@ -291,7 +291,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return buildOptions;
 	}
 
-	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {
+	public buildForDeploy(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
+		return this.buildProject(projectRoot, buildConfig);
+	}
+
+	public isPlatformPrepared(projectRoot: string): boolean {
 		return this.$fs.exists(path.join(this.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
 	}
 
@@ -307,7 +311,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return (() => {
 			let originalAndroidManifestFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, this.platformData.configurationFileName);
 
-			let manifestExists = this.$fs.exists(originalAndroidManifestFilePath).wait();
+			let manifestExists = this.$fs.exists(originalAndroidManifestFilePath);
 			if(!manifestExists) {
 				this.$logger.warn('No manifest found in ' + originalAndroidManifestFilePath);
 				return;
@@ -345,7 +349,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.$fs.ensureDirectoryExists(configurationsDirectoryPath).wait();
 
 			let pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginData.name);
-			if (this.$fs.exists(pluginPlatformsFolderPath).wait()) {
+			if (this.$fs.exists(pluginPlatformsFolderPath)) {
 				this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath).wait();
 
 				// Copy all resources from plugin
@@ -362,7 +366,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			// Copy include.gradle file
 			let includeGradleFilePath = path.join(pluginPlatformsFolderPath, "include.gradle");
-			if (this.$fs.exists(includeGradleFilePath).wait()) {
+			if (this.$fs.exists(includeGradleFilePath)) {
 				shell.cp("-f", includeGradleFilePath, pluginConfigurationDirectoryPath);
 			}
 		}).future<void>()();
@@ -393,7 +397,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				let platformDir = path.join(this.$projectData.platformsDir, "android");
 				let buildDir = path.join(platformDir, "build-tools");
 				let checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
-				if (this.$fs.exists(checkV8dependants).wait()) {
+				if (this.$fs.exists(checkV8dependants)) {
 					let stringifiedDependencies = JSON.stringify(dependencies);
 					this.spawn('node', [checkV8dependants, stringifiedDependencies, this.$projectData.platformsDir], { stdio: "inherit" }).wait();
 				}
@@ -484,7 +488,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private getTargetFromAndroidManifest(): IFuture<string> {
 		return ((): string => {
 			let versionInManifest: string;
-			if (this.$fs.exists(this.platformData.configurationFilePath).wait()) {
+			if (this.$fs.exists(this.platformData.configurationFilePath)) {
 				let targetFromAndroidManifest: string = this.$fs.readText(this.platformData.configurationFilePath).wait();
 				if (targetFromAndroidManifest) {
 					let match = targetFromAndroidManifest.match(/.*?android:targetSdkVersion=\"(.*?)\"/);

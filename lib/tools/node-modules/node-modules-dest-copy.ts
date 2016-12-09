@@ -102,7 +102,7 @@ export class NpmPluginPrepare {
 	}
 
 	protected getPreviouslyPreparedDependencies(platform: string): IDictionary<boolean> {
-		if (!this.$fs.exists(this.preparedPlatformsFile(platform)).wait()) {
+		if (!this.$fs.exists(this.preparedPlatformsFile(platform))) {
 			return {};
 		}
 		return this.$fs.readJson(this.preparedPlatformsFile(platform), "utf8").wait();

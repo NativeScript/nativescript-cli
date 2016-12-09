@@ -151,7 +151,7 @@ function setupProject(dependencies?: any): IFuture<any> {
 					processConfigurationFilesFromAppResources: () => Future.fromResult(),
 					ensureConfigurationFileInAppResources: () => Future.fromResult(),
 					interpolateConfigurationFile: () => Future.fromResult(),
-					isPlatformPrepared: (projectRoot: string) => Future.fromResult<boolean>(false)
+					isPlatformPrepared: (projectRoot: string) => false
 				}
 			};
 		};
@@ -227,7 +227,7 @@ describe("Npm support tests", () => {
 		// Assert
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
 		let scopedDependencyPath = path.join(tnsModulesFolderPath, "@reactivex", "rxjs");
-		assert.isTrue(fs.exists(scopedDependencyPath).wait());
+		assert.isTrue(fs.exists(scopedDependencyPath));
 	});
 
 	it("Ensures that scoped dependencies are prepared correctly when are not in root level", () => {
@@ -262,15 +262,15 @@ describe("Npm support tests", () => {
 		try {
 			options.bundle = false;
 			preparePlatform(testInjector).wait();
-			assert.isTrue(fs.exists(tnsModulesFolderPath).wait(), "tns_modules created first");
+			assert.isTrue(fs.exists(tnsModulesFolderPath), "tns_modules created first");
 
 			options.bundle = true;
 			preparePlatform(testInjector).wait();
-			assert.isFalse(fs.exists(tnsModulesFolderPath).wait(), "tns_modules deleted when bundling");
+			assert.isFalse(fs.exists(tnsModulesFolderPath), "tns_modules deleted when bundling");
 
 			options.bundle = false;
 			preparePlatform(testInjector).wait();
-			assert.isTrue(fs.exists(tnsModulesFolderPath).wait(), "tns_modules recreated");
+			assert.isTrue(fs.exists(tnsModulesFolderPath), "tns_modules recreated");
 		} finally {
 			options.bundle = false;
 		}
@@ -299,30 +299,30 @@ describe("Flatten npm modules tests", () => {
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
 
 		let gulpFolderPath = path.join(tnsModulesFolderPath, "gulp");
-		assert.isFalse(fs.exists(gulpFolderPath).wait());
+		assert.isFalse(fs.exists(gulpFolderPath));
 
 		let gulpJscsFolderPath = path.join(tnsModulesFolderPath, "gulp-jscs");
-		assert.isFalse(fs.exists(gulpJscsFolderPath).wait());
+		assert.isFalse(fs.exists(gulpJscsFolderPath));
 
 		let gulpJshint = path.join(tnsModulesFolderPath, "gulp-jshint");
-		assert.isFalse(fs.exists(gulpJshint).wait());
+		assert.isFalse(fs.exists(gulpJshint));
 
 		// Get  all gulp dependencies
 		let gulpJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp", packageJsonName)).wait();
 		_.each(_.keys(gulpJsonContent.dependencies), dependency => {
-			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
+			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)));
 		});
 
 		// Get all gulp-jscs dependencies
 		let gulpJscsJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jscs", packageJsonName)).wait();
 		_.each(_.keys(gulpJscsJsonContent.dependencies), dependency => {
-			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
+			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)));
 		});
 
 		// Get all gulp-jshint dependencies
 		let gulpJshintJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jshint", packageJsonName)).wait();
 		_.each(_.keys(gulpJshintJsonContent.dependencies), dependency => {
-			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
+			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)));
 		});
 	});
 });

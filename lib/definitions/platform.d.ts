@@ -2,7 +2,13 @@ interface IPlatformService {
 	addPlatforms(platforms: string[]): IFuture<void>;
 	getInstalledPlatforms(): IFuture<string[]>;
 	getAvailablePlatforms(): IFuture<string[]>;
-	getPreparedPlatforms(): IFuture<string[]>;
+
+	/**
+	 * Returns a list of all currently prepared platforms.
+	 * @returns {string[]} List of all prepared platforms.
+	 */
+	getPreparedPlatforms(): string[];
+
 	removePlatforms(platforms: string[]): IFuture<void>;
 	updatePlatforms(platforms: string[]): IFuture<void>;
 	preparePlatform(platform: string, force?: boolean, skipModulesAndResources?: boolean): IFuture<boolean>;

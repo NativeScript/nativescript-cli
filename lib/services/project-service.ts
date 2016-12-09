@@ -27,7 +27,7 @@ export class ProjectService implements IProjectService {
 
 			let projectDir = path.join(path.resolve(this.$options.path || "."), projectName);
 			this.$fs.createDirectory(projectDir).wait();
-			if(this.$fs.exists(projectDir).wait() && !this.$fs.isEmptyDir(projectDir).wait()) {
+			if(this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir).wait()) {
 				this.$errors.fail("Path already exists and is not empty %s", projectDir);
 			}
 
@@ -36,7 +36,7 @@ export class ProjectService implements IProjectService {
 			let customAppPath = this.getCustomAppPath();
 			if(customAppPath) {
 				customAppPath = path.resolve(customAppPath);
-				if(!this.$fs.exists(customAppPath).wait()) {
+				if(!this.$fs.exists(customAppPath)) {
 					this.$errors.failWithoutHelp(`The specified path "${customAppPath}" doesn't exist. Check that you specified the path correctly and try again.`);
 				}
 
@@ -96,7 +96,7 @@ export class ProjectService implements IProjectService {
 	private mergeProjectAndTemplateProperties(projectDir: string, templatePath: string): IFuture<void> {
 		return (() => {
 			let templatePackageJsonPath = path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME);
-			if(this.$fs.exists(templatePackageJsonPath).wait()) {
+			if(this.$fs.exists(templatePackageJsonPath)) {
 				let projectPackageJsonPath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
 				let projectPackageJsonData = this.$fs.readJson(projectPackageJsonPath).wait();
 				this.$logger.trace("Initial project package.json data: ", projectPackageJsonData);

@@ -12,7 +12,7 @@ export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 		return (() => {
 			let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, platform),
 				nativeLibraries: string[] = [];
-			if(pluginPlatformsFolderPath && this.$fs.exists(pluginPlatformsFolderPath).wait()) {
+			if(pluginPlatformsFolderPath && this.$fs.exists(pluginPlatformsFolderPath)) {
 				let platformsContents = this.$fs.readDirectory(pluginPlatformsFolderPath).wait();
 				nativeLibraries = _(platformsContents)
 								.filter(platformItemName => filter(platformItemName, pluginPlatformsFolderPath))

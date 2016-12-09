@@ -315,7 +315,7 @@ describe("Cocoapods support", () => {
 			iOSProjectService.preparePluginNativeCode(pluginData).wait();
 
 			let projectPodfilePath = path.join(platformsFolderPath, "Podfile");
-			assert.isTrue(fs.exists(projectPodfilePath).wait());
+			assert.isTrue(fs.exists(projectPodfilePath));
 
 			let actualProjectPodfileContent = fs.readText(projectPodfilePath).wait();
 			let expectedProjectPodfileContent = ["use_frameworks!\n",
@@ -385,7 +385,7 @@ describe("Cocoapods support", () => {
 			iOSProjectService.preparePluginNativeCode(pluginData).wait();
 
 			let projectPodfilePath = path.join(platformsFolderPath, "Podfile");
-			assert.isTrue(fs.exists(projectPodfilePath).wait());
+			assert.isTrue(fs.exists(projectPodfilePath));
 
 			let actualProjectPodfileContent = fs.readText(projectPodfilePath).wait();
 			let expectedProjectPodfileContent = ["use_frameworks!\n",
@@ -399,7 +399,7 @@ describe("Cocoapods support", () => {
 
 			iOSProjectService.removePluginNativeCode(pluginData).wait();
 
-			assert.isFalse(fs.exists(projectPodfilePath).wait());
+			assert.isFalse(fs.exists(projectPodfilePath));
 		});
 	}
 });

@@ -58,7 +58,7 @@ export class ProjectDataService implements IProjectDataService {
 		return (() => {
 			assert.ok(this.projectFilePath, "Initialize method of projectDataService is not called.");
 
-			if (!this.$fs.exists(this.projectFilePath).wait()) {
+			if (!this.$fs.exists(this.projectFilePath)) {
 				this.$fs.writeJson(this.projectFilePath, {
 					"description": "NativeScript Application",
 					"license": "SEE LICENSE IN <your-license-filename>",

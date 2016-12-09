@@ -39,7 +39,7 @@ export class AppFilesUpdater {
 	}
 
 	protected readDestinationDir(): string[] {
-		if (this.fs.exists(this.appDestinationDirectoryPath).wait()) {
+		if (this.fs.exists(this.appDestinationDirectoryPath)) {
 			return this.fs.readDirectory(this.appDestinationDirectoryPath).wait();
 		} else {
 			return [];

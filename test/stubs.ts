@@ -43,8 +43,9 @@ export class FileSystemStub implements IFileSystem {
 	unzip(zipFile: string, destination: string): IFuture<void> {
 		return undefined;
 	}
-	exists(path: string): IFuture<boolean> {
-		return Future.fromResult(true);
+
+	exists(path: string): boolean {
+		return true;
 	}
 
 	deleteFile(path:string):IFuture<void> {
@@ -113,7 +114,7 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	getUniqueFileName(baseName: string): IFuture<string> {
+	getUniqueFileName(baseName: string): string {
 		return undefined;
 	}
 
@@ -316,8 +317,8 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	buildForDeploy(projectRoot: string): IFuture<void> {
 		return Future.fromResult();
 	}
-	isPlatformPrepared(projectRoot: string): IFuture<boolean> {
-		return Future.fromResult(false);
+	isPlatformPrepared(projectRoot: string): boolean {
+		return false;
 	}
 	canUpdatePlatform(installedModulePath: string): IFuture<boolean> {
 		return Future.fromResult(false);
