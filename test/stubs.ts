@@ -56,7 +56,7 @@ export class FileSystemStub implements IFileSystem {
 		return Future.fromResult();
 	}
 
-	getFileSize(path:string):IFuture<number> {
+	getFileSize(path:string): number {
 		return undefined;
 	}
 

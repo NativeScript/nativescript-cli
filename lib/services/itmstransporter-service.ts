@@ -45,7 +45,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 			this.$fs.copyFile(data.ipaFilePath, ipaFileLocation).wait();
 
 			let ipaFileHash = this.$fs.getFileShasum(ipaFileLocation, {algorithm: "md5"}).wait(),
-				ipaFileSize = this.$fs.getFileSize(ipaFileLocation).wait(),
+				ipaFileSize = this.$fs.getFileSize(ipaFileLocation),
 				metadata = this.getITMSMetadataXml(iOSApplication.adamId, ipaFileName, ipaFileHash, ipaFileSize);
 
 			this.$fs.writeFile(path.join(innerDirectory, ITMSConstants.ApplicationMetadataFile), metadata).wait();
