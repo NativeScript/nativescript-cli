@@ -1,11 +1,7 @@
 import * as path from "path";
 import * as minimatch from "minimatch";
 import * as constants from "../constants";
-<<<<<<< HEAD
 import * as fs from "fs";
-import Future = require("fibers/future");
-=======
->>>>>>>  Make createDirectory sync (use mkdirp.sync)
 
 export class AppFilesUpdater {
 	constructor(
