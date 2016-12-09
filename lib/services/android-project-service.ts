@@ -113,7 +113,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			if (pathToTemplate) {
 				let mainPath = path.join(this.platformData.projectRoot, "src", "main");
-				this.$fs.createDirectory(mainPath).wait();
+				this.$fs.createDirectory(mainPath);
 				shell.cp("-R", path.join(path.resolve(pathToTemplate), "*"), mainPath);
 			} else {
 				this.copy(this.platformData.projectRoot, frameworkDir, "src", "-R");

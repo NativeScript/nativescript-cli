@@ -40,7 +40,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				bundleId = this.getBundleIdentifier(data.ipaFilePath).wait(),
 				iOSApplication = this.getiOSApplication(data.username, data.password, bundleId).wait();
 
-			this.$fs.createDirectory(innerDirectory).wait();
+			this.$fs.createDirectory(innerDirectory);
 
 			this.$fs.copyFile(data.ipaFilePath, ipaFileLocation).wait();
 

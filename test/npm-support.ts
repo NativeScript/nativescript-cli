@@ -120,11 +120,11 @@ function setupProject(dependencies?: any): IFuture<any> {
 
 		// Creates app folder
 		let appFolderPath = path.join(projectFolder, "app");
-		fs.createDirectory(appFolderPath).wait();
+		fs.createDirectory(appFolderPath);
 		let appResourcesFolderPath = path.join(appFolderPath, "App_Resources");
-		fs.createDirectory(appResourcesFolderPath).wait();
-		fs.createDirectory(path.join(appResourcesFolderPath, "Android")).wait();
-		fs.createDirectory(path.join(appFolderPath, "tns_modules")).wait();
+		fs.createDirectory(appResourcesFolderPath);
+		fs.createDirectory(path.join(appResourcesFolderPath, "Android"));
+		fs.createDirectory(path.join(appFolderPath, "tns_modules"));
 
 		// Creates platforms/android folder
 		let androidFolderPath = path.join(projectFolder, "platforms", "android");

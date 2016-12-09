@@ -26,7 +26,7 @@ export class ProjectService implements IProjectService {
 			let projectId = this.$options.appid || this.$projectHelper.generateDefaultAppId(projectName, constants.DEFAULT_APP_IDENTIFIER_PREFIX);
 
 			let projectDir = path.join(path.resolve(this.$options.path || "."), projectName);
-			this.$fs.createDirectory(projectDir).wait();
+			this.$fs.createDirectory(projectDir);
 			if(this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir).wait()) {
 				this.$errors.fail("Path already exists and is not empty %s", projectDir);
 			}
@@ -137,13 +137,13 @@ export class ProjectService implements IProjectService {
 			this.$fs.ensureDirectoryExists(projectDir).wait();
 
 			let appDestinationPath = path.join(projectDir, constants.APP_FOLDER_NAME);
-			this.$fs.createDirectory(appDestinationPath).wait();
+			this.$fs.createDirectory(appDestinationPath);
 
 			shelljs.cp('-R', path.join(appSourcePath, "*"), appDestinationPath);
 			// Copy hidden files.
 			shelljs.cp('-R', path.join(appSourcePath, ".*"), appDestinationPath);
 
-			this.$fs.createDirectory(path.join(projectDir, "platforms")).wait();
+			this.$fs.createDirectory(path.join(projectDir, "platforms"));
 
 			let tnsModulesVersion = this.$options.tnsModulesVersion;
 			let packageName = constants.TNS_CORE_MODULES_NAME;

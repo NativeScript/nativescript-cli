@@ -1,8 +1,11 @@
 import * as path from "path";
 import * as minimatch from "minimatch";
 import * as constants from "../constants";
+<<<<<<< HEAD
 import * as fs from "fs";
 import Future = require("fibers/future");
+=======
+>>>>>>>  Make createDirectory sync (use mkdirp.sync)
 
 export class AppFilesUpdater {
 	constructor(
@@ -76,7 +79,7 @@ export class AppFilesUpdater {
 	}
 
 	protected copyAppSourceFiles(sourceFiles: string[]): void {
-		let copyFileFutures = sourceFiles.map(source => {
+		sourceFiles.map(source => {
 			let destinationPath = path.join(this.appDestinationDirectoryPath, path.relative(this.appSourceDirectoryPath, source));
 
 			let exists = fs.lstatSync(source);
@@ -87,8 +90,8 @@ export class AppFilesUpdater {
 			if (exists.isDirectory()) {
 				return this.fs.createDirectory(destinationPath);
 			}
-			return this.fs.copyFile(source, destinationPath);
+
+			return this.fs.copyFile(source, destinationPath).wait();
 		});
-		Future.wait(copyFileFutures);
 	}
 }

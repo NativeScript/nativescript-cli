@@ -181,8 +181,8 @@ function createAndroidManifestFile(projectFolder: string, fs: IFileSystem): void
             </application>
 		</manifest>`;
 
-	fs.createDirectory(path.join(projectFolder, "platforms")).wait();
-	fs.createDirectory(path.join(projectFolder, "platforms", "android")).wait();
+	fs.createDirectory(path.join(projectFolder, "platforms"));
+	fs.createDirectory(path.join(projectFolder, "platforms", "android"));
 	fs.writeFile(path.join(projectFolder, "platforms", "android", "AndroidManifest.xml"), manifest).wait();
 }
 
@@ -253,9 +253,9 @@ describe("Plugins service", () => {
 				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData).wait();
 
 				// Adds android platform
-				fs.createDirectory(path.join(projectFolder, "platforms")).wait();
-				fs.createDirectory(path.join(projectFolder, "platforms", "android")).wait();
-				fs.createDirectory(path.join(projectFolder, "platforms", "android", "app")).wait();
+				fs.createDirectory(path.join(projectFolder, "platforms"));
+				fs.createDirectory(path.join(projectFolder, "platforms", "android"));
+				fs.createDirectory(path.join(projectFolder, "platforms", "android", "app"));
 
 				// Mock logger.warn
 				let logger = testInjector.resolve("logger");

@@ -492,7 +492,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
     </objects>
 </document>`;
 			try {
-				this.$fs.createDirectory(path.dirname(compatabilityXibPath)).wait();
+				this.$fs.createDirectory(path.dirname(compatabilityXibPath));
 				this.$fs.writeFile(compatabilityXibPath, content).wait();
 			} catch (e) {
 				this.$logger.warn("We have failed to add compatability LaunchScreen.xib due to: " + e);

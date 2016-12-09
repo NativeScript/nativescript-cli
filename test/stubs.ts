@@ -64,8 +64,8 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	createDirectory(path:string):IFuture<void> {
-		return Future.fromResult();
+	createDirectory(path:string):void {
+		return undefined;
 	}
 
 	readDirectory(path:string):IFuture<string[]> {

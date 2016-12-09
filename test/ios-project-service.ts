@@ -283,7 +283,7 @@ describe("Cocoapods support", () => {
 			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData).wait();
 
 			let platformsFolderPath = path.join(projectPath, "platforms", "ios");
-			fs.createDirectory(platformsFolderPath).wait();
+			fs.createDirectory(platformsFolderPath);
 
 			let iOSProjectService = testInjector.resolve("iOSProjectService");
 			iOSProjectService.prepareFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
@@ -347,7 +347,7 @@ describe("Cocoapods support", () => {
 			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData).wait();
 
 			let platformsFolderPath = path.join(projectPath, "platforms", "ios");
-			fs.createDirectory(platformsFolderPath).wait();
+			fs.createDirectory(platformsFolderPath);
 
 			let iOSProjectService = testInjector.resolve("iOSProjectService");
 			iOSProjectService.prepareFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {

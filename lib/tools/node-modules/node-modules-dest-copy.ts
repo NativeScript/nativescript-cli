@@ -80,7 +80,7 @@ export class NpmPluginPrepare {
 		_.values(dependencies).forEach(d => {
 			prepareData[d.name] = true;
 		});
-		this.$fs.createDirectory(this.preparedPlatformsDir(platform)).wait();
+		this.$fs.createDirectory(this.preparedPlatformsDir(platform));
 		this.$fs.writeJson(this.preparedPlatformsFile(platform), prepareData, "    ", "utf8").wait();
 	}
 

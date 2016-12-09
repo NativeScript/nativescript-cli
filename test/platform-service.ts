@@ -211,13 +211,13 @@ describe('Platform Service Tests', () => {
 			let tempFolder = temp.mkdirSync("prepare platform");
 
 			let appFolderPath = path.join(tempFolder, "app");
-			fs.createDirectory(appFolderPath).wait();
+			fs.createDirectory(appFolderPath);
 
 			let testsFolderPath = path.join(appFolderPath, "tests");
-			fs.createDirectory(testsFolderPath).wait();
+			fs.createDirectory(testsFolderPath);
 
 			let app1FolderPath = path.join(tempFolder, "app1");
-			fs.createDirectory(app1FolderPath).wait();
+			fs.createDirectory(app1FolderPath);
 
 			let appDestFolderPath = path.join(tempFolder, "appDest");
 			let appResourcesFolderPath = path.join(appDestFolderPath, "App_Resources");
