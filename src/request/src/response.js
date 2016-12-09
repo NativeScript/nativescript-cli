@@ -74,16 +74,17 @@ export default class Response {
     const message = data.message || data.description;
     const debug = data.debug;
     const code = this.statusCode;
+    const kinveyRequestId = this.headers.get('X-Kinvey-Request-ID');
 
     if (code === StatusCode.Unauthorized) {
-      return new InsufficientCredentialsError(message, debug, code);
+      return new InsufficientCredentialsError(message, debug, code, kinveyRequestId);
     } else if (code === StatusCode.NotFound) {
-      return new NotFoundError(message, debug, code);
+      return new NotFoundError(message, debug, code, kinveyRequestId);
     } else if (code === StatusCode.ServerError) {
-      return new ServerError(message, debug, code);
+      return new ServerError(message, debug, code, kinveyRequestId);
     }
 
-    return new KinveyError(name, message, debug, code);
+    return new KinveyError(name, message, debug, code, kinveyRequestId);
   }
 
   isSuccess() {
@@ -107,38 +108,39 @@ export class KinveyResponse extends Response {
     const message = data.message || data.description;
     const debug = data.debug;
     const code = this.statusCode;
+    const kinveyRequestId = this.headers.get('X-Kinvey-Request-ID');
 
     if (name === 'FeatureUnavailableError') {
-      return new FeatureUnavailableError(message, debug, code);
+      return new FeatureUnavailableError(message, debug, code, kinveyRequestId);
     } else if (name === 'IncompleteRequestBodyError') {
-      return new IncompleteRequestBodyError(message, debug, code);
+      return new IncompleteRequestBodyError(message, debug, code, kinveyRequestId);
     } else if (name === 'InsufficientCredentials') {
-      return new InsufficientCredentialsError(message, debug, code);
+      return new InsufficientCredentialsError(message, debug, code, kinveyRequestId);
     } else if (name === 'InvalidCredentials') {
-      return new InvalidCredentialsError(message, debug, code);
+      return new InvalidCredentialsError(message, debug, code, kinveyRequestId);
     } else if (name === 'InvalidIdentifierError') {
-      return new InvalidIdentifierError(message, debug, code);
+      return new InvalidIdentifierError(message, debug, code, kinveyRequestId);
     } else if (name === 'InvalidQuerySyntaxError') {
-      return new InvalidQuerySyntaxError(message, debug, code);
+      return new InvalidQuerySyntaxError(message, debug, code, kinveyRequestId);
     } else if (name === 'JSONParseError') {
-      return new JSONParseError(message, debug, code);
+      return new JSONParseError(message, debug, code, kinveyRequestId);
     } else if (name === 'MissingQueryError') {
-      return new MissingQueryError(message, debug, code);
+      return new MissingQueryError(message, debug, code, kinveyRequestId);
     } else if (name === 'MissingRequestHeaderError') {
-      return new MissingRequestHeaderError(message, debug, code);
+      return new MissingRequestHeaderError(message, debug, code, kinveyRequestId);
     } else if (name === 'MissingRequestParameterError') {
-      return new MissingRequestParameterError(message, debug, code);
+      return new MissingRequestParameterError(message, debug, code, kinveyRequestId);
     } else if (name === 'EntityNotFound'
         || name === 'CollectionNotFound'
         || name === 'AppNotFound'
         || name === 'UserNotFound'
         || name === 'BlobNotFound'
         || name === 'DocumentNotFound') {
-      return new NotFoundError(message, debug, code);
+      return new NotFoundError(message, debug, code, kinveyRequestId);
     } else if (name === 'ParameterValueOutOfRangeError') {
-      return new ParameterValueOutOfRangeError(message, debug, code);
+      return new ParameterValueOutOfRangeError(message, debug, code, kinveyRequestId);
     } else if (name === 'ServerError') {
-      return new ServerError(message, debug, code);
+      return new ServerError(message, debug, code, kinveyRequestId);
     }
 
     return super.error;
