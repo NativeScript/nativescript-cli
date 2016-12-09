@@ -58,6 +58,10 @@ interface IiOSBuildConfig extends IBuildConfig {
 	 * Code sign identity used for build. If not set iPhone Developer is used as a default when building for device.
 	 */
 	codeSignIdentity?: string;
+	/**
+	 * Team identifier.
+	 */
+	teamIdentifier?: string;
 }
 
 interface IPlatformProjectService {
