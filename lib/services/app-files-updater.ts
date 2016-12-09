@@ -78,11 +78,12 @@ export class AppFilesUpdater {
 	protected copyAppSourceFiles(sourceFiles: string[]): void {
 		let copyFileFutures = sourceFiles.map(source => {
 			let destinationPath = path.join(this.appDestinationDirectoryPath, path.relative(this.appSourceDirectoryPath, source));
-            let exists = fs.lstatSync(source);
-            if (exists.isSymbolicLink()) {
+
+			let exists = fs.lstatSync(source);
+			if (exists.isSymbolicLink()) {
 				source = fs.realpathSync(source);
-                exists = fs.lstatSync(source);
-            }
+				exists = fs.lstatSync(source);
+			}
 			if (exists.isDirectory()) {
 				return this.fs.createDirectory(destinationPath);
 			}

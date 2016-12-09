@@ -926,7 +926,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private generateModulemap(headersFolderPath: string, libraryName: string): void {
-		let headersFilter = (fileName: string, containingFolderPath: string) => (path.extname(fileName) === ".h" && this.$fs.getFsStats(path.join(containingFolderPath, fileName)).wait().isFile());
+		let headersFilter = (fileName: string, containingFolderPath: string) => (path.extname(fileName) === ".h" && this.$fs.getFsStats(path.join(containingFolderPath, fileName)).isFile());
 		let headersFolderContents = this.$fs.readDirectory(headersFolderPath).wait();
 		let headers = _(headersFolderContents).filter(item => headersFilter(item, headersFolderPath)).value();
 

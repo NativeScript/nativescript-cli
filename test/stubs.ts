@@ -118,7 +118,7 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	getFsStats(path: string): IFuture<IFsStats> {
+	getFsStats(path: string): IFsStats {
 		return undefined;
 	}
 

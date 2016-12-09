@@ -56,7 +56,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 								relativePath = path.relative(projectDir, resolvedPath);
 							let stat = match.statCache[resolvedPath] || match.statCache[relativePath];
 							if (!stat) {
-								match.statCache[resolvedPath] = stat = this.$fs.getFsStats(resolvedPath).wait();
+								match.statCache[resolvedPath] = stat = this.$fs.getFsStats(resolvedPath);
 							}
 
 							if (stat.mtime <= lastModifiedTime) {

@@ -39,7 +39,7 @@ export class ProjectChangesInfo {
 				this.configChanged = true;
 				this.prepareInfo = { time: "", bundle: $options.bundle, release: $options.release };
 			} else {
-				let outputProjectMtime = this.$fs.getFsStats(buildInfoFile).wait().mtime.getTime();
+				let outputProjectMtime = this.$fs.getFsStats(buildInfoFile).mtime.getTime();
 				this.prepareInfo = this.$fs.readJson(buildInfoFile).wait();
 				this.appFilesChanged = this.containsNewerFiles(this.$projectData.appDirectoryPath, this.$projectData.appResourcesDirectoryPath, outputProjectMtime);
 				if (!skipModulesAndResources) {
@@ -82,7 +82,7 @@ export class ProjectChangesInfo {
 	private filesChanged(files: string[], mtime: number): boolean {
 		for (let file of files) {
 			if (this.$fs.exists(file)) {
-				let fileStats = this.$fs.getFsStats(file).wait();
+				let fileStats = this.$fs.getFsStats(file);
 				if (fileStats.mtime.getTime() > mtime) {
 					return true;
 				}
@@ -98,7 +98,7 @@ export class ProjectChangesInfo {
 			if (filePath === skipDir) {
 				continue;
 			}
-			let fileStats = this.$fs.getFsStats(filePath).wait();
+			let fileStats = this.$fs.getFsStats(filePath);
 			if (fileStats.mtime.getTime() > mtime) {
 				return true;
 			}

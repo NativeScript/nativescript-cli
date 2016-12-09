@@ -357,7 +357,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath).wait();
 				shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
 
-				(this.$fs.enumerateFilesInDirectorySync(resourcesDestinationDirectoryPath, file => this.$fs.getFsStats(file).wait().isDirectory() || path.extname(file) === constants.XML_FILE_EXTENSION) || [])
+				(this.$fs.enumerateFilesInDirectorySync(resourcesDestinationDirectoryPath, file => this.$fs.getFsStats(file).isDirectory() || path.extname(file) === constants.XML_FILE_EXTENSION) || [])
 					.forEach(file => {
 						this.$logger.trace(`Interpolate data for plugin file: ${file}`);
 						this.$pluginVariablesService.interpolate(pluginData, file).wait();

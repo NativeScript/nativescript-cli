@@ -301,7 +301,7 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			let platformData = this.$platformsData.getPlatformData(platform);
 			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).wait().mtime : null;
+			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).mtime : null;
 
 			try {
 				let tnsModulesDestinationPath = path.join(appDestinationDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
@@ -387,7 +387,7 @@ export class PlatformService implements IPlatformService {
 
 			this.$fs.ensureDirectoryExists(path.dirname(targetPath)).wait();
 
-			if (this.$fs.exists(targetPath) && this.$fs.getFsStats(targetPath).wait().isDirectory()) {
+			if (this.$fs.exists(targetPath) && this.$fs.getFsStats(targetPath).isDirectory()) {
 				let sourceFileName = path.basename(packageFile);
 				this.$logger.trace(`Specified target path: '${targetPath}' is directory. Same filename will be used: '${sourceFileName}'.`);
 				targetPath = path.join(targetPath, sourceFileName);
@@ -574,7 +574,7 @@ export class PlatformService implements IPlatformService {
 
 				return {
 					packageName: currentPackage,
-					time: this.$fs.getFsStats(currentPackage).wait().mtime
+					time: this.$fs.getFsStats(currentPackage).mtime
 				};
 			});
 
