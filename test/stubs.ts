@@ -138,9 +138,7 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	symlink(sourcePath: string, destinationPath: string): IFuture<void> {
-		return undefined;
-	}
+	symlink(sourcePath: string, destinationPath: string): void { }
 
 	closeStream(stream: any): IFuture<void> {
 		return undefined;
