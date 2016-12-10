@@ -234,7 +234,7 @@ describe("iOSProjectService", () => {
 
 				assert.ok(plist);
 
-				let plistContent = fs.readFile(plist).wait().toString();
+				let plistContent = fs.readText(plist).wait();
 				// There may be better way to equal property lists
 				assert.equal(plistContent, expectedPlistContent, "Mismatch in exportOptionsPlist content");
 
@@ -444,7 +444,7 @@ describe("Static libraries support", () => {
 
 		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);
 		// Read the generated modulemap and verify it.
-		let modulemap = fs.readFile(path.join(staticLibraryHeadersPath, "module.modulemap")).wait();
+		let modulemap = fs.readFile(path.join(staticLibraryHeadersPath, "module.modulemap"));
 		let headerCommands = _.map(headers, value => `header "${value}"`);
 		let modulemapExpectation = `module ${libraryName} { explicit module ${libraryName} { ${headerCommands.join(" ")} } }`;
 
@@ -456,7 +456,7 @@ describe("Static libraries support", () => {
 
 		let error: any;
 		try {
-			modulemap = fs.readFile(path.join(staticLibraryHeadersPath, "module.modulemap")).wait();
+			modulemap = fs.readFile(path.join(staticLibraryHeadersPath, "module.modulemap"));
 		} catch (err) {
 			error = err;
 		}

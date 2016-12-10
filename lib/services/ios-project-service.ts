@@ -405,11 +405,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	public canUpdatePlatform(installedModuleDir: string): IFuture<boolean> {
 		return (() => {
 			let currentXcodeProjectFile = this.buildPathToCurrentXcodeProjectFile();
-			let currentXcodeProjectFileContent = this.$fs.readFile(currentXcodeProjectFile).wait();
+			let currentXcodeProjectFileContent = this.$fs.readFile(currentXcodeProjectFile);
 
 			let newXcodeProjectFile = this.buildPathToNewXcodeProjectFile(installedModuleDir);
 			this.replaceFileContent(newXcodeProjectFile).wait();
-			let newXcodeProjectFileContent = this.$fs.readFile(newXcodeProjectFile).wait();
+			let newXcodeProjectFileContent = this.$fs.readFile(newXcodeProjectFile);
 
 			let contentIsTheSame = currentXcodeProjectFileContent.toString() === newXcodeProjectFileContent.toString();
 			if(!contentIsTheSame) {
@@ -590,7 +590,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				this.$logger.trace("Schedule merge plist at: " + plistPath);
 				session.patch({
 					name: path.relative(projectDir, plistPath),
-					read: () => this.$fs.readFile(plistPath).wait().toString()
+					read: () => this.$fs.readText(plistPath).wait()
 				});
 			};
 
