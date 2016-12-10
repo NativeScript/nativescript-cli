@@ -134,7 +134,7 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	rename(oldPath: string, newPath: string): IFuture<void> {
+	rename(oldPath: string, newPath: string): void {
 		return undefined;
 	}
 
@@ -170,7 +170,7 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	renameIfExists(oldPath: string, newPath: string): IFuture<boolean> {
+	renameIfExists(oldPath: string, newPath: string): boolean {
 		return undefined;
 	}
 
@@ -305,8 +305,8 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	interpolateConfigurationFile(): IFuture<void> {
 		return Future.fromResult();
 	}
-	afterCreateProject(projectRoot: string): IFuture<void> {
-		return Future.fromResult();
+	afterCreateProject(projectRoot: string): void {
+		return null;
 	}
 	prepareProject(): IFuture<void> {
 		return Future.fromResult();

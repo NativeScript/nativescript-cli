@@ -124,7 +124,7 @@ export class PlatformService implements IPlatformService {
 			platformData.platformProjectService.createProject(path.resolve(frameworkDir), installedVersion, pathToTemplate).wait();
 			platformData.platformProjectService.ensureConfigurationFileInAppResources().wait();
 			platformData.platformProjectService.interpolateData().wait();
-			platformData.platformProjectService.afterCreateProject(platformData.projectRoot).wait();
+			platformData.platformProjectService.afterCreateProject(platformData.projectRoot);
 
 			this.applyBaseConfigOption(platformData).wait();
 

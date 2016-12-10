@@ -70,7 +70,14 @@ interface IPlatformProjectService {
 	createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): IFuture<void>;
 	interpolateData(): IFuture<void>;
 	interpolateConfigurationFile(configurationFilePath?: string): IFuture<void>;
-	afterCreateProject(projectRoot: string): IFuture<void>;
+
+	/**
+	 * Executes additional actions after native project is created.
+	 * @param {string} projectRoot Path to the real NativeScript project.
+	 * @returns {void}
+	 */
+	afterCreateProject(projectRoot: string): void;
+
 	buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void>;
 	prepareProject(): IFuture<void>;
 	prepareAppResources(appResourcesDirectoryPath: string): IFuture<void>;

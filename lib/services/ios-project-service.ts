@@ -130,9 +130,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			// Starting with NativeScript for iOS 1.6.0, the project Info.plist file resides not in the platform project,
 			// but in the hello-world app template as a platform specific resource.
 			if (this.$fs.exists(path.join(projectRootFilePath, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + "-Info.plist"))) {
-				this.replaceFileName("-Info.plist", projectRootFilePath).wait();
+				this.replaceFileName("-Info.plist", projectRootFilePath);
 			}
-			this.replaceFileName("-Prefix.pch", projectRootFilePath).wait();
+			this.replaceFileName("-Prefix.pch", projectRootFilePath);
 
 			let xcschemeDirPath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + IOSProjectService.XCODE_PROJECT_EXT_NAME, "xcshareddata/xcschemes");
 			let xcschemeFilePath = path.join(xcschemeDirPath, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + IOSProjectService.XCODE_SCHEME_EXT_NAME);
@@ -142,13 +142,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$logger.debug("Checkpoint 0");
 				this.replaceFileContent(xcschemeFilePath).wait();
 				this.$logger.debug("Checkpoint 1");
-				this.replaceFileName(IOSProjectService.XCODE_SCHEME_EXT_NAME, xcschemeDirPath).wait();
+				this.replaceFileName(IOSProjectService.XCODE_SCHEME_EXT_NAME, xcschemeDirPath);
 				this.$logger.debug("Checkpoint 2");
 			} else {
 				this.$logger.debug("Copying xcscheme from template not found at " + xcschemeFilePath);
 			}
 
-			this.replaceFileName(IOSProjectService.XCODE_PROJECT_EXT_NAME, this.platformData.projectRoot).wait();
+			this.replaceFileName(IOSProjectService.XCODE_PROJECT_EXT_NAME, this.platformData.projectRoot);
 
 			let pbxprojFilePath = this.pbxProjPath;
 			this.replaceFileContent(pbxprojFilePath).wait();
@@ -162,11 +162,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
-	public afterCreateProject(projectRoot: string): IFuture<void> {
-		return (() => {
-			this.$fs.rename(path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER),
-				path.join(projectRoot, this.$projectData.projectName)).wait();
-		}).future<void>()();
+	public afterCreateProject(projectRoot: string): void {
+		this.$fs.rename(path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER),
+			path.join(projectRoot, this.$projectData.projectName));
 	}
 
 	/**
@@ -779,13 +777,11 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}).future<void>()();
 	}
 
-	private replaceFileName(fileNamePart: string, fileRootLocation: string): IFuture<void> {
-		return (() => {
-			let oldFileName = IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + fileNamePart;
-			let newFileName = this.$projectData.projectName + fileNamePart;
+	private replaceFileName(fileNamePart: string, fileRootLocation: string): void {
+		let oldFileName = IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + fileNamePart;
+		let newFileName = this.$projectData.projectName + fileNamePart;
 
-			this.$fs.rename(path.join(fileRootLocation, oldFileName), path.join(fileRootLocation, newFileName)).wait();
-		}).future<void>()();
+		this.$fs.rename(path.join(fileRootLocation, oldFileName), path.join(fileRootLocation, newFileName));
 	}
 
 	private executePodInstall(): IFuture<any> {

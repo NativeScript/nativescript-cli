@@ -221,8 +221,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return id;
 	}
 
-	public afterCreateProject(projectRoot: string): IFuture<void> {
-		return Future.fromResult();
+	public afterCreateProject(projectRoot: string): void {
+		return null;
 	}
 
 	public canUpdatePlatform(newInstalledModuleDir: string): IFuture<boolean> {
