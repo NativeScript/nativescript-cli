@@ -92,7 +92,7 @@ export class ProjectChangesInfo {
 	}
 
 	private containsNewerFiles(dir: string, skipDir: string, mtime: number): boolean {
-		let files = this.$fs.readDirectory(dir).wait();
+		let files = this.$fs.readDirectory(dir);
 		for (let file of files) {
 			let filePath = path.join(dir, file);
 			if (filePath === skipDir) {

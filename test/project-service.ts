@@ -59,8 +59,8 @@ class ProjectIntegrationTest {
 			assert.isTrue(fs.exists(tnsProjectFilePath));
 			assert.isTrue(fs.exists(tnsModulesPath));
 
-			assert.isFalse(fs.isEmptyDir(appDirectoryPath).wait());
-			assert.isTrue(fs.isEmptyDir(platformsDirectoryPath).wait());
+			assert.isFalse(fs.isEmptyDir(appDirectoryPath));
+			assert.isTrue(fs.isEmptyDir(platformsDirectoryPath));
 
 			let actualAppId = packageJsonContent["nativescript"].id;
 			let expectedAppId = appId;
@@ -89,7 +89,7 @@ class ProjectIntegrationTest {
 
 			// assert App_Resources are prepared correctly
 			let appResourcesDir = path.join(appDirectoryPath, "App_Resources");
-			let appResourcesContents = fs.readDirectory(appResourcesDir).wait();
+			let appResourcesContents = fs.readDirectory(appResourcesDir);
 			assert.deepEqual(appResourcesContents, ["Android", "iOS"], "Project's app/App_Resources must contain Android and iOS directories.");
 		}).future<void>()();
 	}

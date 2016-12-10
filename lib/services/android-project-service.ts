@@ -168,7 +168,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private cleanResValues(targetSdkVersion: number, frameworkVersion: string): IFuture<void> {
 		return (() => {
 			let resDestinationDir = this.getAppResourcesDestinationDirectoryPath(frameworkVersion).wait();
-			let directoriesInResFolder = this.$fs.readDirectory(resDestinationDir).wait();
+			let directoriesInResFolder = this.$fs.readDirectory(resDestinationDir);
 			let directoriesToClean = directoriesInResFolder
 				.map(dir => {
 					return {
@@ -325,7 +325,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return (() => {
 			let resourcesDirPath = path.join(appResourcesDirectoryPath, this.platformData.normalizedPlatformName);
 			let valuesDirRegExp = /^values/;
-			let resourcesDirs = this.$fs.readDirectory(resourcesDirPath).wait().filter(resDir => !resDir.match(valuesDirRegExp));
+			let resourcesDirs = this.$fs.readDirectory(resourcesDirPath).filter(resDir => !resDir.match(valuesDirRegExp));
 			_.each(resourcesDirs, resourceDir => {
 				this.$fs.deleteDirectory(path.join(this.getAppResourcesDestinationDirectoryPath().wait(), resourceDir));
 			});

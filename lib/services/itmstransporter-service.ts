@@ -126,7 +126,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 					this.$fs.unzip(ipaFileFullPath, destinationDir).wait();
 
 					let payloadDir = path.join(destinationDir, "Payload");
-					let allApps = this.$fs.readDirectory(payloadDir).wait();
+					let allApps = this.$fs.readDirectory(payloadDir);
 
 					this.$logger.debug("ITMSTransporter .ipa Payload files:");
 					allApps.forEach(f => this.$logger.debug(" - " + f));

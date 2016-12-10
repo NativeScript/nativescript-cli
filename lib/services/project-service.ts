@@ -27,7 +27,7 @@ export class ProjectService implements IProjectService {
 
 			let projectDir = path.join(path.resolve(this.$options.path || "."), projectName);
 			this.$fs.createDirectory(projectDir);
-			if(this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir).wait()) {
+			if(this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir)) {
 				this.$errors.fail("Path already exists and is not empty %s", projectDir);
 			}
 

@@ -98,9 +98,9 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 			}
 
 			if (isNodeModulesModified && this.$fs.exists(absoluteOutputPath)) {
-				let currentPreparedTnsModules = this.$fs.readDirectory(absoluteOutputPath).wait();
+				let currentPreparedTnsModules = this.$fs.readDirectory(absoluteOutputPath);
 				let tnsModulesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_CORE_MODULES_NAME);
-				let tnsModulesInApp = this.$fs.readDirectory(tnsModulesPath).wait();
+				let tnsModulesInApp = this.$fs.readDirectory(tnsModulesPath);
 				let modulesToDelete = _.difference(currentPreparedTnsModules, tnsModulesInApp);
 				_.each(modulesToDelete, moduleName => this.$fs.deleteDirectory(path.join(absoluteOutputPath, moduleName)));
 			}
@@ -114,7 +114,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 	}
 
 	private expandScopedModules(nodeModulesPath: string, nodeModules: IStringDictionary): void {
-		let nodeModulesDirectories = this.$fs.exists(nodeModulesPath) ? this.$fs.readDirectory(nodeModulesPath).wait() : [];
+		let nodeModulesDirectories = this.$fs.exists(nodeModulesPath) ? this.$fs.readDirectory(nodeModulesPath) : [];
 		_.each(nodeModulesDirectories, nodeModuleDirectoryName => {
 			let isNpmScope = /^@/.test(nodeModuleDirectoryName);
 			let nodeModuleFullPath = path.join(nodeModulesPath, nodeModuleDirectoryName);

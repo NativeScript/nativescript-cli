@@ -62,7 +62,7 @@ class LiveSyncService implements ILiveSyncService {
 			} else {
 				this.$devicesService.initialize({ skipInferPlatform: true }).wait();
 				this.$devicesService.stopDeviceDetectionInterval().wait();
-				for(let installedPlatform of this.$platformService.getInstalledPlatforms().wait()) {
+				for(let installedPlatform of this.$platformService.getInstalledPlatforms()) {
 					if (this.$devicesService.getDevicesForPlatform(installedPlatform).length === 0) {
 						this.$devicesService.startEmulator(installedPlatform).wait();
 					}

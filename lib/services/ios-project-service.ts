@@ -106,12 +106,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
+	// TODO: Remove IFuture, reason: readDirectory - unable until androidProjectService has async operations.
 	public createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): IFuture<void> {
 		return (() => {
 			this.$fs.ensureDirectoryExists(path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
 			if (pathToTemplate) {
 				// Copy everything except the template from the runtime
-				this.$fs.readDirectory(frameworkDir).wait()
+				this.$fs.readDirectory(frameworkDir)
 					.filter(dirName => dirName.indexOf(IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER) === -1)
 					.forEach(dirName => shell.cp("-R", path.join(frameworkDir, dirName), this.platformData.projectRoot));
 				shell.cp("-rf", path.join(pathToTemplate, "*"), this.platformData.projectRoot);
@@ -515,7 +516,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				this.$logger.trace("Images from Xcode project");
 				this.$logger.trace(xcodeProjectImages);
 
-				let appResourcesImages = this.$fs.readDirectory(this.getAppResourcesDestinationDirectoryPath().wait()).wait();
+				let appResourcesImages = this.$fs.readDirectory(this.getAppResourcesDestinationDirectoryPath().wait());
 				this.$logger.trace("Current images from App_Resources");
 				this.$logger.trace(appResourcesImages);
 
@@ -725,7 +726,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return Future.fromResult();
 	}
 
-	private getAllLibsForPluginWithFileExtension(pluginData: IPluginData, fileExtension: string): IFuture<string[]> {
+	private getAllLibsForPluginWithFileExtension(pluginData: IPluginData, fileExtension: string): string[] {
 		let filterCallback = (fileName: string, pluginPlatformsFolderPath: string) => path.extname(fileName) === fileExtension;
 		return this.getAllNativeLibrariesForPlugin(pluginData, IOSProjectService.IOS_PLATFORM_NAME, filterCallback);
 	};
@@ -825,13 +826,13 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	private prepareFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
 		return (() => {
-			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".framework").wait(), fileName => this.addFramework(path.join(pluginPlatformsFolderPath, fileName)).wait());
+			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".framework"), fileName => this.addFramework(path.join(pluginPlatformsFolderPath, fileName)).wait());
 		}).future<void>()();
 	}
 
 	private prepareStaticLibs(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
 		return (() => {
-			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".a").wait(), fileName => this.addStaticLibrary(path.join(pluginPlatformsFolderPath, fileName)).wait());
+			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".a"), fileName => this.addStaticLibrary(path.join(pluginPlatformsFolderPath, fileName)).wait());
 		}).future<void>()();
 	}
 
@@ -872,7 +873,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	private removeFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let project = this.createPbxProj();
-			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".framework").wait(), fileName => {
+			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".framework"), fileName => {
 				let relativeFrameworkPath = this.getLibSubpathRelativeToProjectPath(fileName);
 				project.removeFramework(relativeFrameworkPath, { customFramework: true, embed: true });
 			});
@@ -885,7 +886,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return (() => {
 			let project = this.createPbxProj();
 
-			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".a").wait(), fileName => {
+			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".a"), fileName => {
 				let staticLibPath = path.join(pluginPlatformsFolderPath, fileName);
 				let relativeStaticLibPath = this.getLibSubpathRelativeToProjectPath(path.basename(staticLibPath));
 				project.removeFramework(relativeStaticLibPath);
@@ -923,7 +924,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	private generateModulemap(headersFolderPath: string, libraryName: string): void {
 		let headersFilter = (fileName: string, containingFolderPath: string) => (path.extname(fileName) === ".h" && this.$fs.getFsStats(path.join(containingFolderPath, fileName)).isFile());
-		let headersFolderContents = this.$fs.readDirectory(headersFolderPath).wait();
+		let headersFolderContents = this.$fs.readDirectory(headersFolderPath);
 		let headers = _(headersFolderContents).filter(item => headersFilter(item, headersFolderPath)).value();
 
 		if (!headers.length) {
@@ -1076,7 +1077,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	private getDevelopmentTeams(): Array<{ id: string, name: string }> {
 		let dir = path.join(process.env.HOME, "Library/MobileDevice/Provisioning Profiles/");
-		let files = this.$fs.readDirectory(dir).wait();
+		let files = this.$fs.readDirectory(dir);
 		let teamIds: any = {};
 		for (let file of files) {
 			let filePath = path.join(dir, file);

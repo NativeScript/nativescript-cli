@@ -4,23 +4,22 @@ export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 			protected $projectDataService: IProjectDataService) {
 	}
 
-	public getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string) {
+	public getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string {
 		return pluginData.pluginPlatformsFolderPath(platform);
 	}
 
-	public getAllNativeLibrariesForPlugin(pluginData: IPluginData, platform: string, filter: (fileName: string, _pluginPlatformsFolderPath: string) => boolean): IFuture<string[]> {
-		return (() => {
-			let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, platform),
-				nativeLibraries: string[] = [];
-			if(pluginPlatformsFolderPath && this.$fs.exists(pluginPlatformsFolderPath)) {
-				let platformsContents = this.$fs.readDirectory(pluginPlatformsFolderPath).wait();
-				nativeLibraries = _(platformsContents)
-								.filter(platformItemName => filter(platformItemName, pluginPlatformsFolderPath))
-								.value();
-			}
+	protected getAllNativeLibrariesForPlugin(pluginData: IPluginData, platform: string, filter: (fileName: string, _pluginPlatformsFolderPath: string) => boolean): string[] {
+		let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, platform),
+			nativeLibraries: string[] = [];
 
-			return nativeLibraries;
-		}).future<string[]>()();
+		if(pluginPlatformsFolderPath && this.$fs.exists(pluginPlatformsFolderPath)) {
+			let platformsContents = this.$fs.readDirectory(pluginPlatformsFolderPath);
+			nativeLibraries = _(platformsContents)
+							.filter(platformItemName => filter(platformItemName, pluginPlatformsFolderPath))
+							.value();
+		}
+
+		return nativeLibraries;
 	}
 
 	protected getFrameworkVersion(runtimePackageName: string): IFuture<string> {

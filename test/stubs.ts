@@ -68,7 +68,7 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	readDirectory(path:string):IFuture<string[]> {
+	readDirectory(path:string): string[] {
 		return undefined;
 	}
 
@@ -126,8 +126,8 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	isEmptyDir(directoryPath: string): IFuture<boolean> {
-		return Future.fromResult(true);
+	isEmptyDir(directoryPath: string): boolean {
+		return true;
 	}
 
 	ensureDirectoryExists(directoryPath: string): void {
@@ -172,9 +172,7 @@ export class FileSystemStub implements IFileSystem {
 		// Mock
 	}
 
-	deleteEmptyParents(directory: string): IFuture<void> {
-		return Future.fromResult();
-	}
+	deleteEmptyParents(directory: string): void { }
 }
 
 export class ErrorsStub implements IErrors {

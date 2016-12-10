@@ -258,32 +258,30 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		}).future<number>()();
 	}
 
-	private getMatchingDir(pathToDir: string, versionRange: string): IFuture<string> {
-		return ((): string => {
-			let selectedVersion: string;
-			if (this.$fs.exists(pathToDir)) {
-				let subDirs = this.$fs.readDirectory(pathToDir).wait();
-				this.$logger.trace(`Directories found in ${pathToDir} are ${subDirs.join(", ")}`);
+	private getMatchingDir(pathToDir: string, versionRange: string): string {
+		let selectedVersion: string;
+		if (this.$fs.exists(pathToDir)) {
+			let subDirs = this.$fs.readDirectory(pathToDir);
+			this.$logger.trace(`Directories found in ${pathToDir} are ${subDirs.join(", ")}`);
 
-				let subDirsVersions = subDirs
-					.map(dirName => {
-						let dirNameGroups = dirName.match(AndroidToolsInfo.VERSION_REGEX);
-						if (dirNameGroups) {
-							return dirNameGroups[1];
-						}
+			let subDirsVersions = subDirs
+				.map(dirName => {
+					let dirNameGroups = dirName.match(AndroidToolsInfo.VERSION_REGEX);
+					if (dirNameGroups) {
+						return dirNameGroups[1];
+					}
 
-						return null;
-					})
-					.filter(dirName => !!dirName);
-				this.$logger.trace(`Versions found in ${pathToDir} are ${subDirsVersions.join(", ")}`);
-				let version = semver.maxSatisfying(subDirsVersions, versionRange);
-				if (version) {
-					selectedVersion = _.find(subDirs, dir => dir.indexOf(version) !== -1);
-				}
+					return null;
+				})
+				.filter(dirName => !!dirName);
+			this.$logger.trace(`Versions found in ${pathToDir} are ${subDirsVersions.join(", ")}`);
+			let version = semver.maxSatisfying(subDirsVersions, versionRange);
+			if (version) {
+				selectedVersion = _.find(subDirs, dir => dir.indexOf(version) !== -1);
 			}
-			this.$logger.trace("Selected version is: ", selectedVersion);
-			return selectedVersion;
-		}).future<string>()();
+		}
+		this.$logger.trace("Selected version is: ", selectedVersion);
+		return selectedVersion;
 	}
 
 	private getBuildToolsRange(): string {
@@ -296,7 +294,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			if (this.androidHome) {
 				let pathToBuildTools = path.join(this.androidHome, "build-tools");
 				let buildToolsRange = this.getBuildToolsRange();
-				buildToolsVersion = this.getMatchingDir(pathToBuildTools, buildToolsRange).wait();
+				buildToolsVersion = this.getMatchingDir(pathToBuildTools, buildToolsRange);
 			}
 
 			return buildToolsVersion;
@@ -321,7 +319,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			let requiredAppCompatRange = this.getAppCompatRange().wait();
 			if (this.androidHome && requiredAppCompatRange) {
 				let pathToAppCompat = path.join(this.androidHome, "extras", "android", "m2repository", "com", "android", "support", "appcompat-v7");
-				selectedAppCompatVersion = this.getMatchingDir(pathToAppCompat, requiredAppCompatRange).wait();
+				selectedAppCompatVersion = this.getMatchingDir(pathToAppCompat, requiredAppCompatRange);
 			}
 
 			this.$logger.trace(`Selected AppCompat version is: ${selectedAppCompatVersion}`);

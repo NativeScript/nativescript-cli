@@ -172,24 +172,20 @@ export class PlatformService implements IPlatformService {
 		}).future<any>()();
 	}
 
-	public getInstalledPlatforms(): IFuture<string[]> {
-		return (() => {
-			if (!this.$fs.exists(this.$projectData.platformsDir)) {
-				return [];
-			}
+	public getInstalledPlatforms(): string[] {
+		if (!this.$fs.exists(this.$projectData.platformsDir)) {
+			return [];
+		}
 
-			let subDirs = this.$fs.readDirectory(this.$projectData.platformsDir).wait();
-			return _.filter(subDirs, p => this.$platformsData.platformsNames.indexOf(p) > -1);
-		}).future<string[]>()();
+		let subDirs = this.$fs.readDirectory(this.$projectData.platformsDir);
+		return _.filter(subDirs, p => this.$platformsData.platformsNames.indexOf(p) > -1);
 	}
 
-	public getAvailablePlatforms(): IFuture<string[]> {
-		return (() => {
-			let installedPlatforms = this.getInstalledPlatforms().wait();
-			return _.filter(this.$platformsData.platformsNames, p => {
-				return installedPlatforms.indexOf(p) < 0 && this.isPlatformSupportedForOS(p); // Only those not already installed
-			});
-		}).future<string[]>()();
+	public getAvailablePlatforms(): string[] {
+		let installedPlatforms = this.getInstalledPlatforms();
+		return _.filter(this.$platformsData.platformsNames, p => {
+			return installedPlatforms.indexOf(p) < 0 && this.isPlatformSupportedForOS(p); // Only those not already installed
+		});
 	}
 
 	public getPreparedPlatforms(): string[] {
@@ -368,9 +364,9 @@ export class PlatformService implements IPlatformService {
 		let packageFile: string;
 		let platformData = this.$platformsData.getPlatformData(platform);
 		if (settings.isForDevice) {
-			packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
+			packageFile = this.getLatestApplicationPackageForDevice(platformData).packageName;
 		} else {
-			packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
+			packageFile = this.getLatestApplicationPackageForEmulator(platformData).packageName;
 		}
 		if (!packageFile || !this.$fs.exists(packageFile)) {
 			this.$errors.failWithoutHelp("Unable to find built application. Try 'tns build %s'.", platform);
@@ -446,9 +442,9 @@ export class PlatformService implements IPlatformService {
 						buildConfig.buildForDevice = !isSimulator;
 						this.buildPlatform(platform, buildConfig, false).wait();
 						if (isSimulator) {
-							packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
+							packageFile = this.getLatestApplicationPackageForEmulator(platformData).packageName;
 						} else {
-							packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
+							packageFile = this.getLatestApplicationPackageForDevice(platformData).packageName;
 						}
 					}
 
@@ -563,44 +559,40 @@ export class PlatformService implements IPlatformService {
 		return platformData.platformProjectService.isPlatformPrepared(platformData.projectRoot);
 	}
 
-	private getApplicationPackages(buildOutputPath: string, validPackageNames: string[]): IFuture<IApplicationPackage[]> {
-		return (() => {
-			// Get latest package that is produced from build
-			let candidates = this.$fs.readDirectory(buildOutputPath).wait();
-			let packages = _.filter(candidates, candidate => {
-				return _.includes(validPackageNames, candidate);
-			}).map(currentPackage => {
-				currentPackage = path.join(buildOutputPath, currentPackage);
+	private getApplicationPackages(buildOutputPath: string, validPackageNames: string[]): IApplicationPackage[] {
+		// Get latest package` that is produced from build
+		let candidates = this.$fs.readDirectory(buildOutputPath);
+		let packages = _.filter(candidates, candidate => {
+			return _.includes(validPackageNames, candidate);
+		}).map(currentPackage => {
+			currentPackage = path.join(buildOutputPath, currentPackage);
 
-				return {
-					packageName: currentPackage,
-					time: this.$fs.getFsStats(currentPackage).mtime
-				};
-			});
+			return {
+				packageName: currentPackage,
+				time: this.$fs.getFsStats(currentPackage).mtime
+			};
+		});
 
-			return packages;
-		}).future<IApplicationPackage[]>()();
+		return packages;
 	}
 
-	private getLatestApplicationPackage(buildOutputPath: string, validPackageNames: string[]): IFuture<IApplicationPackage> {
-		return (() => {
-			let packages = this.getApplicationPackages(buildOutputPath, validPackageNames).wait();
-			if (packages.length === 0) {
-				let packageExtName = path.extname(validPackageNames[0]);
-				this.$errors.fail("No %s found in %s directory", packageExtName, buildOutputPath);
-			}
+	private getLatestApplicationPackage(buildOutputPath: string, validPackageNames: string[]): IApplicationPackage {
+		let packages = this.getApplicationPackages(buildOutputPath, validPackageNames);
+		if (packages.length === 0) {
+			let packageExtName = path.extname(validPackageNames[0]);
+			this.$errors.fail("No %s found in %s directory", packageExtName, buildOutputPath);
+		}
 
-			packages = _.sortBy(packages, pkg => pkg.time).reverse(); // We need to reverse because sortBy always sorts in ascending order
+		packages = _.sortBy(packages, pkg => pkg.time).reverse(); // We need to reverse because sortBy always sorts in ascending order
 
-			return packages[0];
-		}).future<IApplicationPackage>()();
+		return packages[0];
 	}
 
-	public getLatestApplicationPackageForDevice(platformData: IPlatformData) {
+	public getLatestApplicationPackageForDevice(platformData: IPlatformData): IApplicationPackage {
 		return this.getLatestApplicationPackage(platformData.deviceBuildOutputPath, platformData.validPackageNamesForDevice);
 	}
 
-	public getLatestApplicationPackageForEmulator(platformData: IPlatformData) {
+	public getLatestApplicationPackageForEmulator(platformData: IPlatformData): IApplicationPackage {
 		return this.getLatestApplicationPackage(platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath, platformData.validPackageNamesForEmulator || platformData.validPackageNamesForDevice);
 	}
 

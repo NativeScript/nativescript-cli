@@ -30,7 +30,7 @@ export class UpdateCommand implements ICommand {
 			}
 
 			try {
-				this.executeCore(args, folders);
+				this.executeCore(args, folders).wait();
 			} catch (error) {
 				shelljs.cp("-f", path.join(tmpDir, "package.json"), this.$projectData.projectDir);
 				for (let folder of folders) {
@@ -51,40 +51,42 @@ export class UpdateCommand implements ICommand {
 		}).future<boolean>()();
 	}
 
-	private executeCore(args: string[], folders: string[]) {
-		let platforms = this.$platformService.getInstalledPlatforms().wait();
-		let availablePlatforms = this.$platformService.getAvailablePlatforms().wait();
-		let packagePlatforms: string[] = [];
+	private executeCore(args: string[], folders: string[]): IFuture<void> {
+		return (() => {
+			let platforms = this.$platformService.getInstalledPlatforms();
+			let availablePlatforms = this.$platformService.getAvailablePlatforms();
+			let packagePlatforms: string[] = [];
 
-		this.$projectDataService.initialize(this.$projectData.projectDir);
-		for (let platform of availablePlatforms) {
-			let platformData = this.$platformsData.getPlatformData(platform);
-			let platformVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
-			if (platformVersion) {
-				packagePlatforms.push(platform);
-				this.$projectDataService.removeProperty(platformData.frameworkPackageName).wait();
+			this.$projectDataService.initialize(this.$projectData.projectDir);
+			for (let platform of availablePlatforms) {
+				let platformData = this.$platformsData.getPlatformData(platform);
+				let platformVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
+				if (platformVersion) {
+					packagePlatforms.push(platform);
+					this.$projectDataService.removeProperty(platformData.frameworkPackageName).wait();
+				}
 			}
-		}
 
-		this.$platformService.removePlatforms(platforms).wait();
-		this.$pluginsService.remove("tns-core-modules").wait();
-		this.$pluginsService.remove("tns-core-modules-widgets").wait();
+			this.$platformService.removePlatforms(platforms).wait();
+			this.$pluginsService.remove("tns-core-modules").wait();
+			this.$pluginsService.remove("tns-core-modules-widgets").wait();
 
-		for (let folder of folders) {
-			shelljs.rm("-fr", folder);
-		}
-
-		platforms = platforms.concat(packagePlatforms);
-		if (args.length === 1) {
-			for (let platform of platforms) {
-				this.$platformService.addPlatforms([ platform+"@"+args[0] ]).wait();
+			for (let folder of folders) {
+				shelljs.rm("-fr", folder);
 			}
-			this.$pluginsService.add("tns-core-modules@" + args[0]).wait();
-		} else {
-			this.$platformService.addPlatforms(platforms).wait();
-			this.$pluginsService.add("tns-core-modules").wait();
-		}
-		this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
+
+			platforms = platforms.concat(packagePlatforms);
+			if (args.length === 1) {
+				for (let platform of platforms) {
+					this.$platformService.addPlatforms([ platform+"@"+args[0] ]).wait();
+				}
+				this.$pluginsService.add("tns-core-modules@" + args[0]).wait();
+			} else {
+				this.$platformService.addPlatforms(platforms).wait();
+				this.$pluginsService.add("tns-core-modules").wait();
+			}
+			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
+		}).future<void>()();
 	}
 
 	allowedParameters: ICommandParameter[] = [];

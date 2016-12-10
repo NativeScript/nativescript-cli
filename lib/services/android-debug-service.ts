@@ -115,7 +115,7 @@ class AndroidDebugService implements IDebugService {
 				this.$options.forDevice = !!cachedDeviceOption;
 
 				let platformData = this.$platformsData.getPlatformData(this.platform);
-				packageFile = this.$platformService.getLatestApplicationPackageForDevice(platformData).wait().packageName;
+				packageFile = this.$platformService.getLatestApplicationPackageForDevice(platformData).packageName;
 				this.$logger.out("Using ", packageFile);
 			}
 

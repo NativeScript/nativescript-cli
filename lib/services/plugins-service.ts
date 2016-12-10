@@ -155,14 +155,14 @@ export class PluginsService implements IPluginsService {
 
 	public ensureAllDependenciesAreInstalled(): IFuture<void> {
 		return (() => {
-			let installedDependencies = this.$fs.exists(this.nodeModulesPath) ? this.$fs.readDirectory(this.nodeModulesPath).wait() : [];
+			let installedDependencies = this.$fs.exists(this.nodeModulesPath) ? this.$fs.readDirectory(this.nodeModulesPath) : [];
 			// Scoped dependencies are not on the root of node_modules,
 			// so we have to list the contents of all directories, starting with @
 			// and add them to installed dependencies, so we can apply correct comparison against package.json's dependencies.
 			_(installedDependencies)
 				.filter(dependencyName => _.startsWith(dependencyName, "@"))
 				.each(scopedDependencyDir => {
-					let contents = this.$fs.readDirectory(path.join(this.nodeModulesPath, scopedDependencyDir)).wait();
+					let contents = this.$fs.readDirectory(path.join(this.nodeModulesPath, scopedDependencyDir));
 					installedDependencies = installedDependencies.concat(contents.map(dependencyName => `${scopedDependencyDir}/${dependencyName}`));
 				});
 
