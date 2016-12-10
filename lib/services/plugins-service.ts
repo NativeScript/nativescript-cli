@@ -258,7 +258,7 @@ export class PluginsService implements IPluginsService {
 	private ensure(): IFuture<void> {
 		return (() => {
 			this.ensureAllDependenciesAreInstalled().wait();
-			this.$fs.ensureDirectoryExists(this.nodeModulesPath).wait();
+			this.$fs.ensureDirectoryExists(this.nodeModulesPath);
 		}).future<void>()();
 	}
 

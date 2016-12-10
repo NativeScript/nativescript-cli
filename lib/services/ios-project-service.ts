@@ -108,7 +108,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): IFuture<void> {
 		return (() => {
-			this.$fs.ensureDirectoryExists(path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
+			this.$fs.ensureDirectoryExists(path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
 			if (pathToTemplate) {
 				// Copy everything except the template from the runtime
 				this.$fs.readDirectory(frameworkDir).wait()

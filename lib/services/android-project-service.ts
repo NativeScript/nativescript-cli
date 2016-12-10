@@ -104,7 +104,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
 			}
 
-			this.$fs.ensureDirectoryExists(this.platformData.projectRoot).wait();
+			this.$fs.ensureDirectoryExists(this.platformData.projectRoot);
 			this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true }).wait();
 			let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
 			let targetSdkVersion = androidToolsInfo.targetSdkVersion;
@@ -346,15 +346,15 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private processResourcesFromPlugin(pluginData: IPluginData, pluginPlatformsFolderPath: string): IFuture<void> {
 		return (() => {
 			let configurationsDirectoryPath = path.join(this.platformData.projectRoot, "configurations");
-			this.$fs.ensureDirectoryExists(configurationsDirectoryPath).wait();
+			this.$fs.ensureDirectoryExists(configurationsDirectoryPath);
 
 			let pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginData.name);
 			if (this.$fs.exists(pluginPlatformsFolderPath)) {
-				this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath).wait();
+				this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath);
 
 				// Copy all resources from plugin
 				let resourcesDestinationDirectoryPath = path.join(this.platformData.projectRoot, "src", pluginData.name);
-				this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath).wait();
+				this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath);
 				shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
 
 				(this.$fs.enumerateFilesInDirectorySync(resourcesDestinationDirectoryPath, file => this.$fs.getFsStats(file).isDirectory() || path.extname(file) === constants.XML_FILE_EXTENSION) || [])

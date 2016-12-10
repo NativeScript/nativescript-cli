@@ -134,7 +134,7 @@ export class ProjectService implements IProjectService {
 
 	private createProjectCore(projectDir: string, appSourcePath: string, projectId: string): IFuture<void> {
 		return (() => {
-			this.$fs.ensureDirectoryExists(projectDir).wait();
+			this.$fs.ensureDirectoryExists(projectDir);
 
 			let appDestinationPath = path.join(projectDir, constants.APP_FOLDER_NAME);
 			this.$fs.createDirectory(appDestinationPath);

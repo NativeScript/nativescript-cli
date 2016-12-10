@@ -537,7 +537,7 @@ describe("Plugins service", () => {
 
 			// Ensure the pluginDestinationPath folder exists
 			let pluginPlatformsDirPath = path.join(projectFolder, "node_modules", pluginName, "platforms", "android");
-			fs.ensureDirectoryExists(pluginPlatformsDirPath).wait();
+			fs.ensureDirectoryExists(pluginPlatformsDirPath);
 
 			// Creates invalid plugin's AndroidManifest.xml file
 			let xml = '<?xml version="1.0" encoding="UTF-8"?>' +

@@ -128,7 +128,7 @@ function setupProject(dependencies?: any): IFuture<any> {
 
 		// Creates platforms/android folder
 		let androidFolderPath = path.join(projectFolder, "platforms", "android");
-		fs.ensureDirectoryExists(androidFolderPath).wait();
+		fs.ensureDirectoryExists(androidFolderPath);
 
 		// Mock platform data
 		let appDestinationFolderPath = path.join(androidFolderPath, "assets");

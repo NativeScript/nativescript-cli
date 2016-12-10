@@ -421,7 +421,7 @@ describe("Static libraries support", () => {
 
 	it("checks validation of header files", () => {
 		let iOSProjectService = testInjector.resolve("iOSProjectService");
-		fs.ensureDirectoryExists(staticLibraryHeadersPath).wait();
+		fs.ensureDirectoryExists(staticLibraryHeadersPath);
 		_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), "").wait(); });
 
 		// Add all header files.
@@ -439,7 +439,7 @@ describe("Static libraries support", () => {
 
 	it("checks generation of modulemaps", () => {
 		let iOSProjectService = testInjector.resolve("iOSProjectService");
-		fs.ensureDirectoryExists(staticLibraryHeadersPath).wait();
+		fs.ensureDirectoryExists(staticLibraryHeadersPath);
 		_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), "").wait(); });
 
 		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);

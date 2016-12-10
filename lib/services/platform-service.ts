@@ -43,7 +43,7 @@ export class PlatformService implements IPlatformService {
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
 			let platformsDir = this.$projectData.platformsDir;
-			this.$fs.ensureDirectoryExists(platformsDir).wait();
+			this.$fs.ensureDirectoryExists(platformsDir);
 
 			_.each(platforms, platform => {
 				this.addPlatform(platform.toLowerCase()).wait();
@@ -272,7 +272,7 @@ export class PlatformService implements IPlatformService {
 			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
 			// Copy app folder to native project
-			this.$fs.ensureDirectoryExists(appDestinationDirectoryPath).wait();
+			this.$fs.ensureDirectoryExists(appDestinationDirectoryPath);
 			let appSourceDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
 
 			const appUpdater = new AppFilesUpdater(appSourceDirectoryPath, appDestinationDirectoryPath, this.$options, this.$fs);
@@ -290,7 +290,7 @@ export class PlatformService implements IPlatformService {
 			if (this.$fs.exists(appResourcesDirectoryPath)) {
 				platformData.platformProjectService.prepareAppResources(appResourcesDirectoryPath).wait();
 				let appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait();
-				this.$fs.ensureDirectoryExists(appResourcesDestination).wait();
+				this.$fs.ensureDirectoryExists(appResourcesDestination);
 				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), appResourcesDestination);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath);
 			}
@@ -385,7 +385,7 @@ export class PlatformService implements IPlatformService {
 
 			let packageFile = this.lastOutputPath(platform, settings);
 
-			this.$fs.ensureDirectoryExists(path.dirname(targetPath)).wait();
+			this.$fs.ensureDirectoryExists(path.dirname(targetPath));
 
 			if (this.$fs.exists(targetPath) && this.$fs.getFsStats(targetPath).isDirectory()) {
 				let sourceFileName = path.basename(packageFile);
