@@ -24,7 +24,7 @@ export class NodePackageManager implements INodePackageManager {
 				config["ignore-scripts"] = true;
 			}
 
-			let jsonContentBefore = this.$fs.readJson(path.join(pathToSave, "package.json")).wait();
+			let jsonContentBefore = this.$fs.readJson(path.join(pathToSave, "package.json"));
 			let dependenciesBefore = _.keys(jsonContentBefore.dependencies).concat(_.keys(jsonContentBefore.devDependencies));
 
 			let flags = this.getFlagsString(config, true);
@@ -58,7 +58,7 @@ export class NodePackageManager implements INodePackageManager {
 				}
 			}
 
-			let jsonContentAfter = this.$fs.readJson(path.join(pathToSave, "package.json")).wait();
+			let jsonContentAfter = this.$fs.readJson(path.join(pathToSave, "package.json"));
 			let dependenciesAfter = _.keys(jsonContentAfter.dependencies).concat(_.keys(jsonContentAfter.devDependencies));
 
 			/** This diff is done in case the installed pakcage is a URL address, a path to local directory or a .tgz file

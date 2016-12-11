@@ -3,9 +3,9 @@ import * as shell from "shelljs";
 import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import * as semver from "semver";
-import {AppFilesUpdater} from "./app-files-updater";
+import { AppFilesUpdater } from "./app-files-updater";
 import * as temp from "temp";
-import {ProjectChangesInfo, IPrepareInfo} from "./project-changes-info";
+import { ProjectChangesInfo, IPrepareInfo } from "./project-changes-info";
 import Future = require("fibers/future");
 temp.track();
 let clui = require("clui");
@@ -99,7 +99,7 @@ export class PlatformService implements IPlatformService {
 				frameworkDir = path.resolve(frameworkDir);
 
 				let coreModuleName = this.addPlatformCore(platformData, frameworkDir).wait();
-				this.$npm.uninstall(coreModuleName, {save: true}, this.$projectData.projectDir).wait();
+				this.$npm.uninstall(coreModuleName, { save: true }, this.$projectData.projectDir).wait();
 			} catch (err) {
 				this.$fs.deleteDirectory(platformPath);
 				throw err;
@@ -114,7 +114,7 @@ export class PlatformService implements IPlatformService {
 
 	private addPlatformCore(platformData: IPlatformData, frameworkDir: string): IFuture<string> {
 		return (() => {
-			let coreModuleData = this.$fs.readJson(path.join(frameworkDir, "../", "package.json")).wait();
+			let coreModuleData = this.$fs.readJson(path.join(frameworkDir, "../", "package.json"));
 			let installedVersion = coreModuleData.version;
 			let coreModuleName = coreModuleData.name;
 
@@ -216,7 +216,7 @@ export class PlatformService implements IPlatformService {
 
 			this.ensurePlatformInstalled(platform).wait();
 
-			let changeInfo:ProjectChangesInfo = new ProjectChangesInfo(platform, force, skipModulesAndResources, this.$platformsData, this.$projectData, this.$devicePlatformsConstants, this.$options, this.$fs);
+			let changeInfo: ProjectChangesInfo = new ProjectChangesInfo(platform, force, skipModulesAndResources, this.$platformsData, this.$projectData, this.$devicePlatformsConstants, this.$options, this.$fs);
 			this._prepareInfo = changeInfo.prepareInfo;
 			if (!this.isPlatformPrepared(platform) || changeInfo.hasChanges) {
 				this.preparePlatformCore(platform, changeInfo).wait();
@@ -227,7 +227,7 @@ export class PlatformService implements IPlatformService {
 	}
 
 	@helpers.hook('prepare')
-	private preparePlatformCore(platform: string, changeInfo:ProjectChangesInfo): IFuture<void> {
+	private preparePlatformCore(platform: string, changeInfo: ProjectChangesInfo): IFuture<void> {
 		return (() => {
 
 			let platformData = this.$platformsData.getPlatformData(platform);
@@ -257,7 +257,7 @@ export class PlatformService implements IPlatformService {
 
 			platformData.platformProjectService.interpolateConfigurationFile().wait();
 
-			this.$logger.out("Project successfully prepared ("+platform+")");
+			this.$logger.out("Project successfully prepared (" + platform + ")");
 		}).future<void>()();
 	}
 
@@ -273,7 +273,7 @@ export class PlatformService implements IPlatformService {
 
 			const appUpdater = new AppFilesUpdater(appSourceDirectoryPath, appDestinationDirectoryPath, this.$options, this.$fs);
 			appUpdater.updateApp(sourceFiles => {
-				this.$xmlValidator.validateXmlFiles(sourceFiles).wait();
+				this.$xmlValidator.validateXmlFiles(sourceFiles);
 			});
 		}).future<void>()();
 	}
@@ -607,12 +607,12 @@ export class PlatformService implements IPlatformService {
 			let newVersion = version === constants.PackageVersion.NEXT ?
 				this.$npmInstallationManager.getNextVersion(platformData.frameworkPackageName).wait() :
 				version || this.$npmInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName).wait();
-			let installedModuleDir = this.$npmInstallationManager.install(platformData.frameworkPackageName, this.$projectData.projectDir, {version: newVersion, dependencyType: "save"}).wait();
-			let cachedPackageData = this.$fs.readJson(path.join(installedModuleDir, "package.json")).wait();
+			let installedModuleDir = this.$npmInstallationManager.install(platformData.frameworkPackageName, this.$projectData.projectDir, { version: newVersion, dependencyType: "save" }).wait();
+			let cachedPackageData = this.$fs.readJson(path.join(installedModuleDir, "package.json"));
 			newVersion = (cachedPackageData && cachedPackageData.version) || newVersion;
 
 			let canUpdate = platformData.platformProjectService.canUpdatePlatform(installedModuleDir).wait();
-			this.$npm.uninstall(platformData.frameworkPackageName, {save: true}, this.$projectData.projectDir).wait();
+			this.$npm.uninstall(platformData.frameworkPackageName, { save: true }, this.$projectData.projectDir).wait();
 			if (canUpdate) {
 				if (!semver.valid(newVersion)) {
 					this.$errors.fail("The version %s is not valid. The version should consists from 3 parts separated by dot.", newVersion);

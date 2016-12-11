@@ -319,7 +319,7 @@ describe("Plugins service", () => {
 				});
 
 				// Asserts that the plugin is added in package.json file
-				let packageJsonContent = fs.readJson(path.join(projectFolder, "package.json")).wait();
+				let packageJsonContent = fs.readJson(path.join(projectFolder, "package.json"));
 				let actualDependencies = packageJsonContent.dependencies;
 				let expectedDependencies = { "plugin1": "^1.0.3" };
 				let expectedDependenciesExact = { "plugin1": "1.0.3" };
@@ -356,7 +356,7 @@ describe("Plugins service", () => {
 				});
 
 				// Assert that the plugin is added in package.json file
-				let packageJsonContent = fs.readJson(path.join(projectFolder, "package.json")).wait();
+				let packageJsonContent = fs.readJson(path.join(projectFolder, "package.json"));
 				let actualDependencies = packageJsonContent.dependencies;
 				let expectedDependencies = { "plugin1": "^1.0.0" };
 				let expectedDependenciesExact = { "plugin1": "1.0.0" };

@@ -1,7 +1,7 @@
 import * as constants from "../constants";
 import * as semver from "semver";
 import * as path from "path";
-import {createTable} from "../common/helpers";
+import { createTable } from "../common/helpers";
 
 class VersionsService implements IVersionsService {
 	private static UP_TO_DATE_MESSAGE = "Up to date".green.toString();
@@ -47,7 +47,7 @@ class VersionsService implements IVersionsService {
 					this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
 				}
 
-				let currentTnsCoreModulesVersion = this.$fs.readJson(path.join(tnsCoreModulesPath, constants.PACKAGE_JSON_FILE_NAME)).wait().version;
+				let currentTnsCoreModulesVersion = this.$fs.readJson(path.join(tnsCoreModulesPath, constants.PACKAGE_JSON_FILE_NAME)).version;
 				nativescriptCoreModulesInfo.currentVersion = currentTnsCoreModulesVersion;
 			}
 
@@ -65,7 +65,7 @@ class VersionsService implements IVersionsService {
 			let projectConfig: any;
 
 			if (this.projectData) {
-				projectConfig = this.$fs.readJson(this.projectData.projectFilePath).wait();
+				projectConfig = this.$fs.readJson(this.projectData.projectFilePath);
 			}
 
 			let runtimesVersions: IVersionInformation[] = runtimes.map((runtime: string) => {

@@ -29,7 +29,7 @@ export class InitService implements IInitService {
 			let projectData: any = {};
 
 			if (this.$fs.exists(this.projectFilePath)) {
-				projectData = this.$fs.readJson(this.projectFilePath).wait();
+				projectData = this.$fs.readJson(this.projectFilePath);
 			}
 
 			let projectDataBackup = _.extend({}, projectData);

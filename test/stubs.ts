@@ -80,8 +80,8 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	readJson(filename:string, encoding?:string):IFuture<any> {
-		return Future.fromResult({});
+	readJson(filename:string, encoding?:string): any {
+		return {};
 	}
 
 	writeFile(filename: string, data: any, encoding?: string): IFuture<void> {

@@ -103,7 +103,7 @@ export class NpmPluginPrepare {
 		if (!this.$fs.exists(this.preparedPlatformsFile(platform))) {
 			return {};
 		}
-		return this.$fs.readJson(this.preparedPlatformsFile(platform), "utf8").wait();
+		return this.$fs.readJson(this.preparedPlatformsFile(platform), "utf8");
 	}
 
 	private allPrepared(dependencies: IDictionary<IDependencyData>, platform: string): boolean {

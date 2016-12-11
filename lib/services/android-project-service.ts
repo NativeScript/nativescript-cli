@@ -4,9 +4,9 @@ import Future = require("fibers/future");
 import * as constants from "../constants";
 import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
-import {DeviceAndroidDebugBridge} from "../common/mobile/android/device-android-debug-bridge";
-import {AndroidDeviceHashService} from "../common/mobile/android/android-device-hash-service";
-import {EOL} from "os";
+import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
+import { AndroidDeviceHashService } from "../common/mobile/android/android-device-hash-service";
+import { EOL } from "os";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static VALUES_DIRNAME = "values";
@@ -134,7 +134,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				"silent": true
 			};
 
-			let projectPackageJson: any = this.$fs.readJson(this.$projectData.projectFilePath).wait();
+			let projectPackageJson: any = this.$fs.readJson(this.$projectData.projectFilePath);
 
 			_.each(AndroidProjectService.REQUIRED_DEV_DEPENDENCIES, (dependency: any) => {
 				let dependencyVersionInProject = (projectPackageJson.dependencies && projectPackageJson.dependencies[dependency.name]) ||
@@ -148,7 +148,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					// The plugin version is not valid. Check node_modules for the valid version.
 					if (!cleanedVerson) {
 						let pathToPluginPackageJson = path.join(this.$projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, dependency.name, constants.PACKAGE_JSON_FILE_NAME);
-						dependencyVersionInProject = this.$fs.exists(pathToPluginPackageJson) && this.$fs.readJson(pathToPluginPackageJson).wait().version;
+						dependencyVersionInProject = this.$fs.exists(pathToPluginPackageJson) && this.$fs.readJson(pathToPluginPackageJson).version;
 					}
 
 					if (!semver.satisfies(dependencyVersionInProject || cleanedVerson, dependency.version)) {
@@ -312,7 +312,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			let originalAndroidManifestFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, this.platformData.configurationFileName);
 
 			let manifestExists = this.$fs.exists(originalAndroidManifestFilePath);
-			if(!manifestExists) {
+			if (!manifestExists) {
 				this.$logger.warn('No manifest found in ' + originalAndroidManifestFilePath);
 				return;
 			}

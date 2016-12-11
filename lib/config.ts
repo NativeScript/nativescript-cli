@@ -14,7 +14,7 @@ export class Configuration extends ConfigBase implements IConfiguration { // Use
 	/*don't require logger and everything that has logger as dependency in config.js due to cyclic dependency*/
 	constructor(protected $fs: IFileSystem) {
 		super($fs);
-		_.extend(this, this.loadConfig("config").wait());
+		_.extend(this, this.loadConfig("config"));
 	}
 }
 $injector.register("config", Configuration);

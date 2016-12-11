@@ -155,7 +155,7 @@ class TestExecutionService implements ITestExecutionService {
 	private detourEntryPoint(projectFilesPath: string): IFuture<void> {
 		return (() => {
 			let packageJsonPath = path.join(projectFilesPath, 'package.json');
-			let packageJson = this.$fs.readJson(packageJsonPath).wait();
+			let packageJson = this.$fs.readJson(packageJsonPath);
 			packageJson.main = TestExecutionService.MAIN_APP_NAME;
 			this.$fs.writeJson(packageJsonPath, packageJson).wait();
 		}).future<void>()();

@@ -51,7 +51,7 @@ class ProjectIntegrationTest {
 			let platformsDirectoryPath = path.join(projectDir, "platforms");
 			let tnsProjectFilePath = path.join(projectDir, "package.json");
 			let tnsModulesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_CORE_MODULES_NAME);
-			let packageJsonContent = fs.readJson(tnsProjectFilePath).wait();
+			let packageJsonContent = fs.readJson(tnsProjectFilePath);
 			let options = this.testInjector.resolve("options");
 
 			assert.isTrue(fs.exists(appDirectoryPath));
@@ -81,7 +81,7 @@ class ProjectIntegrationTest {
 			});
 
 			// assert dependencies and devDependencies are copied from template to real project
-			let sourcePackageJsonContent = fs.readJson(path.join(sourceDir, "package.json")).wait();
+			let sourcePackageJsonContent = fs.readJson(path.join(sourceDir, "package.json"));
 			let missingDeps = _.difference(_.keys(sourcePackageJsonContent.dependencies), _.keys(packageJsonContent.dependencies));
 			let missingDevDeps = _.difference(_.keys(sourcePackageJsonContent.devDependencies), _.keys(packageJsonContent.devDependencies));
 			assert.deepEqual(missingDeps, [], `All dependencies from template must be copied to project's package.json. Missing ones are: ${missingDeps.join(", ")}.`);

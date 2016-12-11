@@ -168,7 +168,7 @@ function addDependencies(testInjector: IInjector, projectFolder: string, depende
 	return (() => {
 		let fs = testInjector.resolve("fs");
 		let packageJsonPath = path.join(projectFolder, "package.json");
-		let packageJsonData = fs.readJson(packageJsonPath).wait();
+		let packageJsonData = fs.readJson(packageJsonPath);
 
 		let currentDependencies = packageJsonData.dependencies;
 		_.extend(currentDependencies, dependencies);
@@ -308,19 +308,19 @@ describe("Flatten npm modules tests", () => {
 		assert.isFalse(fs.exists(gulpJshint));
 
 		// Get  all gulp dependencies
-		let gulpJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp", packageJsonName)).wait();
+		let gulpJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp", packageJsonName));
 		_.each(_.keys(gulpJsonContent.dependencies), dependency => {
 			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)));
 		});
 
 		// Get all gulp-jscs dependencies
-		let gulpJscsJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jscs", packageJsonName)).wait();
+		let gulpJscsJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jscs", packageJsonName));
 		_.each(_.keys(gulpJscsJsonContent.dependencies), dependency => {
 			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)));
 		});
 
 		// Get all gulp-jshint dependencies
-		let gulpJshintJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jshint", packageJsonName)).wait();
+		let gulpJshintJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jshint", packageJsonName));
 		_.each(_.keys(gulpJshintJsonContent.dependencies), dependency => {
 			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)));
 		});

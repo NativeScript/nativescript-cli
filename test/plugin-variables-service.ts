@@ -123,7 +123,7 @@ describe("Plugin Variables service", () => {
 			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
-			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json")).wait();
+			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
 			assert.equal(pluginVariableValue, projectFileContent[staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][`${pluginData.name}-variables`]["MY_APP_ID"]);
 		});
 		it("does not fail when default value is specified", () => {
@@ -139,7 +139,7 @@ describe("Plugin Variables service", () => {
 			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
-			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json")).wait();
+			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
 			assert.equal(defaultPluginValue, projectFileContent[staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][`${pluginData.name}-variables`]["MY_TEST_PLUGIN_VARIABLE"]);
 		});
 	});
@@ -167,7 +167,7 @@ describe("Plugin Variables service", () => {
 			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
-			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json")).wait();
+			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
 			assert.equal(pluginVariableValue, projectFileContent[staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][`${pluginData.name}-variables`]["APP_URL"]);
 		});
 		it("does not prompt for plugin variable value when default value is specified", () => {
@@ -183,7 +183,7 @@ describe("Plugin Variables service", () => {
 			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
-			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json")).wait();
+			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
 			assert.equal(defaultPluginValue, projectFileContent[staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][`${pluginData.name}-variables`]["APP_NAME"]);
 		});
 		it("does not prompt for plugin variable value when --var option is specified", () => {
@@ -203,7 +203,7 @@ describe("Plugin Variables service", () => {
 			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
-			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json")).wait();
+			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
 			assert.equal(pluginVariableValue, projectFileContent[staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][`${pluginData.name}-variables`]["USERNAME"]);
 		});
 	});
@@ -240,7 +240,7 @@ describe("Plugin Variables service", () => {
 
 			// Write plugin variables values to package.json file
 			let packageJsonFilePath = path.join(projectData.projectDir, "package.json");
-			let data = fs.readJson(packageJsonFilePath).wait();
+			let data = fs.readJson(packageJsonFilePath);
 			data["nativescript"]["myTestPlugin-variables"] = {
 				"FB_APP_NAME": "myFacebookAppName"
 			};
@@ -279,7 +279,7 @@ describe("Plugin Variables service", () => {
 
 			// Write plugin variables values to package.json file
 			let packageJsonFilePath = path.join(projectData.projectDir, "package.json");
-			let data = fs.readJson(packageJsonFilePath).wait();
+			let data = fs.readJson(packageJsonFilePath);
 			data["nativescript"]["myTestPlugin-variables"] = {
 				"FB_APP_NAME": "myFacebookAppName"
 			};
@@ -317,7 +317,7 @@ describe("Plugin Variables service", () => {
 			let fs: IFileSystem = testInjector.resolve("fs");
 
 			let packageJsonFilePath = path.join(projectData.projectDir, "package.json");
-			let data = fs.readJson(packageJsonFilePath).wait();
+			let data = fs.readJson(packageJsonFilePath);
 			data["nativescript"]["myTestPlugin-variables"] = {
 				"FB_APP_NAME": "myFacebookAppName",
 				"FB_APP_URL": "myFacebookAppURl"

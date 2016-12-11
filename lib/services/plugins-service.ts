@@ -36,13 +36,13 @@ export class PluginsService implements IPluginsService {
 	public add(plugin: string): IFuture<void> {
 		return (() => {
 			this.ensure().wait();
-			const possiblePackageName= path.resolve(plugin);
-			if(possiblePackageName.indexOf(".tgz") !== -1 && this.$fs.exists(possiblePackageName)) {
+			const possiblePackageName = path.resolve(plugin);
+			if (possiblePackageName.indexOf(".tgz") !== -1 && this.$fs.exists(possiblePackageName)) {
 				plugin = possiblePackageName;
 			}
 			let name = this.$npm.install(plugin, this.$projectData.projectDir, PluginsService.NPM_CONFIG).wait()[0];
 			let pathToRealNpmPackageJson = path.join(this.$projectData.projectDir, "node_modules", name, "package.json");
-			let realNpmPackageJson = this.$fs.readJson(pathToRealNpmPackageJson).wait();
+			let realNpmPackageJson = this.$fs.readJson(pathToRealNpmPackageJson);
 
 			if (realNpmPackageJson.nativescript) {
 				let pluginData = this.convertToPluginData(realNpmPackageJson);
@@ -68,7 +68,7 @@ export class PluginsService implements IPluginsService {
 
 				this.$logger.out(`Successfully installed plugin ${realNpmPackageJson.name}.`);
 			} else {
-				this.$npm.uninstall(realNpmPackageJson.name, {save: true}, this.$projectData.projectDir);
+				this.$npm.uninstall(realNpmPackageJson.name, { save: true }, this.$projectData.projectDir);
 				this.$errors.failWithoutHelp(`${plugin} is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.`);
 			}
 
@@ -79,7 +79,7 @@ export class PluginsService implements IPluginsService {
 		return (() => {
 			let removePluginNativeCodeAction = (modulesDestinationPath: string, platform: string, platformData: IPlatformData) => {
 				return (() => {
-					let pluginData = this.convertToPluginData(this.getNodeModuleData(pluginName).wait());
+					let pluginData = this.convertToPluginData(this.getNodeModuleData(pluginName));
 
 					platformData.platformProjectService.removePluginNativeCode(pluginData).wait();
 				}).future<void>()();
@@ -109,7 +109,7 @@ export class PluginsService implements IPluginsService {
 
 	public getAvailable(filter: string[]): IFuture<IDictionary<any>> {
 		let silent: boolean = true;
-		return this.$npm.search(filter, {"silent": silent});
+		return this.$npm.search(filter, { "silent": silent });
 	}
 
 	public prepare(dependencyData: IDependencyData, platform: string): IFuture<void> {
@@ -143,7 +143,7 @@ export class PluginsService implements IPluginsService {
 		}
 
 		//prepare platform speciffic files, .map and .ts files
-		this.$projectFilesManager.processPlatformSpecificFiles(pluginScriptsDestinationPath , platform).wait();
+		this.$projectFilesManager.processPlatformSpecificFiles(pluginScriptsDestinationPath, platform).wait();
 	}
 
 	private preparePluginNativeCode(pluginData: IPluginData, platform: string): void {
@@ -166,7 +166,7 @@ export class PluginsService implements IPluginsService {
 					installedDependencies = installedDependencies.concat(contents.map(dependencyName => `${scopedDependencyDir}/${dependencyName}`));
 				});
 
-			let packageJsonContent = this.$fs.readJson(this.getPackageJsonFilePath()).wait();
+			let packageJsonContent = this.$fs.readJson(this.getPackageJsonFilePath());
 			let allDependencies = _.keys(packageJsonContent.dependencies).concat(_.keys(packageJsonContent.devDependencies));
 			let notInstalledDependencies = _.difference(allDependencies, installedDependencies);
 			if (this.$options.force || notInstalledDependencies.length) {
@@ -183,18 +183,16 @@ export class PluginsService implements IPluginsService {
 		}).future<IPluginData[]>()();
 	}
 
-	public getDependenciesFromPackageJson(): IFuture<IPackageJsonDepedenciesResult> {
-		return (() => {
-			let packageJson = this.$fs.readJson(this.getPackageJsonFilePath()).wait();
-			let dependencies: IBasePluginData[] = this.getBasicPluginInformation(packageJson.dependencies);
+	public getDependenciesFromPackageJson(): IPackageJsonDepedenciesResult {
+		let packageJson = this.$fs.readJson(this.getPackageJsonFilePath());
+		let dependencies: IBasePluginData[] = this.getBasicPluginInformation(packageJson.dependencies);
 
-			let devDependencies: IBasePluginData[] = this.getBasicPluginInformation(packageJson.devDependencies);
+		let devDependencies: IBasePluginData[] = this.getBasicPluginInformation(packageJson.devDependencies);
 
-			return {
-				dependencies,
-				devDependencies
-			};
-		}).future<IPackageJsonDepedenciesResult>()();
+		return {
+			dependencies,
+			devDependencies
+		};
 	}
 
 	private getBasicPluginInformation(dependencies: any): IBasePluginData[] {
@@ -221,21 +219,19 @@ export class PluginsService implements IPluginsService {
 		return _.keys(require(packageJsonFilePath).dependencies);
 	}
 
-	private getNodeModuleData(module: string): IFuture<INodeModuleData> { // module can be  modulePath or moduleName
-		return (() => {
-			if (!this.$fs.exists(module) || path.basename(module) !== "package.json") {
-				module = this.getPackageJsonFilePathForModule(module);
-			}
+	private getNodeModuleData(module: string): INodeModuleData { // module can be  modulePath or moduleName
+		if (!this.$fs.exists(module) || path.basename(module) !== "package.json") {
+			module = this.getPackageJsonFilePathForModule(module);
+		}
 
-			let data = this.$fs.readJson(module).wait();
-			return {
-				name: data.name,
-				version: data.version,
-				fullPath: path.dirname(module),
-				isPlugin: data.nativescript !== undefined,
-				moduleInfo: data.nativescript
-			};
-		}).future<INodeModuleData>()();
+		let data = this.$fs.readJson(module);
+		return {
+			name: data.name,
+			version: data.version,
+			fullPath: path.dirname(module),
+			isPlugin: data.nativescript !== undefined,
+			moduleInfo: data.nativescript
+		};
 	}
 
 	private convertToPluginData(cacheData: any): IPluginData {
@@ -267,7 +263,7 @@ export class PluginsService implements IPluginsService {
 			this.ensure().wait();
 
 			let nodeModules = this.getDependencies();
-			return _.map(nodeModules, nodeModuleName => this.getNodeModuleData(nodeModuleName).wait());
+			return _.map(nodeModules, nodeModuleName => this.getNodeModuleData(nodeModuleName));
 		}).future<INodeModuleData[]>()();
 	}
 
