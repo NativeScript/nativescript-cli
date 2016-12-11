@@ -68,7 +68,7 @@ export class ProjectDataService implements IProjectDataService {
 			}
 
 			// Detect indent and use it later to write JSON.
-			let projectFileContent = this.$fs.readText(this.projectFilePath).wait();
+			let projectFileContent = this.$fs.readText(this.projectFilePath);
 
 			this.projectFileIndent = projectFileContent ? this.detectIndent(projectFileContent) : "\t";
 

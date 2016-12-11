@@ -234,7 +234,7 @@ describe("iOSProjectService", () => {
 
 				assert.ok(plist);
 
-				let plistContent = fs.readText(plist).wait();
+				let plistContent = fs.readText(plist);
 				// There may be better way to equal property lists
 				assert.equal(plistContent, expectedPlistContent, "Mismatch in exportOptionsPlist content");
 
@@ -317,7 +317,7 @@ describe("Cocoapods support", () => {
 			let projectPodfilePath = path.join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath));
 
-			let actualProjectPodfileContent = fs.readText(projectPodfilePath).wait();
+			let actualProjectPodfileContent = fs.readText(projectPodfilePath);
 			let expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
 				`# Begin Podfile - ${pluginPodfilePath} `,
@@ -387,7 +387,7 @@ describe("Cocoapods support", () => {
 			let projectPodfilePath = path.join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath));
 
-			let actualProjectPodfileContent = fs.readText(projectPodfilePath).wait();
+			let actualProjectPodfileContent = fs.readText(projectPodfilePath);
 			let expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
 				`# Begin Podfile - ${pluginPodfilePath} `,

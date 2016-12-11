@@ -48,7 +48,7 @@ class TestInitCommand implements ICommand {
 
 			this.$fs.ensureDirectoryExists(testsDir);
 
-			let karmaConfTemplate = this.$resources.readText('test/karma.conf.js').wait();
+			let karmaConfTemplate = this.$resources.readText('test/karma.conf.js');
 			let karmaConf = _.template(karmaConfTemplate)({
 				frameworks: [frameworkToInstall].concat(dependencies)
 					.map(fw => `'${fw}'`)

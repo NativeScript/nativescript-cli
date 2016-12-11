@@ -268,7 +268,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true }).wait();
 		let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
 		let compileSdk = androidToolsInfo.compileSdkVersion;
-		let targetSdk = this.getTargetFromAndroidManifest().wait() || compileSdk;
+		let targetSdk = this.getTargetFromAndroidManifest() || compileSdk;
 		let buildToolsVersion = androidToolsInfo.buildToolsVersion;
 		let appCompatVersion = androidToolsInfo.supportRepositoryVersion;
 		let generateTypings = androidToolsInfo.generateTypings;
@@ -486,21 +486,19 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	private getTargetFromAndroidManifest(): IFuture<string> {
-		return ((): string => {
-			let versionInManifest: string;
-			if (this.$fs.exists(this.platformData.configurationFilePath)) {
-				let targetFromAndroidManifest: string = this.$fs.readText(this.platformData.configurationFilePath).wait();
-				if (targetFromAndroidManifest) {
-					let match = targetFromAndroidManifest.match(/.*?android:targetSdkVersion=\"(.*?)\"/);
-					if (match && match[1]) {
-						versionInManifest = match[1];
-					}
+	private getTargetFromAndroidManifest(): string {
+		let versionInManifest: string;
+		if (this.$fs.exists(this.platformData.configurationFilePath)) {
+			let targetFromAndroidManifest: string = this.$fs.readText(this.platformData.configurationFilePath);
+			if (targetFromAndroidManifest) {
+				let match = targetFromAndroidManifest.match(/.*?android:targetSdkVersion=\"(.*?)\"/);
+				if (match && match[1]) {
+					versionInManifest = match[1];
 				}
 			}
+		}
 
-			return versionInManifest;
-		}).future<string>()();
+		return versionInManifest;
 	}
 }
 $injector.register("androidProjectService", AndroidProjectService);

@@ -23,10 +23,11 @@ export class XmlValidator implements IXmlValidator {
 		}).future<boolean>()();
 	}
 
+	// TODO: Remove IFuture, reason: readText
 	public getXmlFileErrors(sourceFile: string): IFuture<string> {
 		return ((): string => {
 			let errorOutput = "";
-			let fileContents = this.$fs.readText(sourceFile).wait();
+			let fileContents = this.$fs.readText(sourceFile);
 			let domErrorHandler = (level:any, msg:string) => {
 				errorOutput += level + EOL + msg + EOL;
 			};

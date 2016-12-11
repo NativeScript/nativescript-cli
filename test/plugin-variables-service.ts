@@ -260,7 +260,7 @@ describe("Plugin Variables service", () => {
 
 			pluginVariablesService.interpolatePluginVariables(pluginData, filePath).wait();
 
-			let result = fs.readText(filePath).wait();
+			let result = fs.readText(filePath);
 			let expectedResult = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
 					'<application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >' +
@@ -299,7 +299,7 @@ describe("Plugin Variables service", () => {
 
 			pluginVariablesService.interpolatePluginVariables(pluginData, filePath).wait();
 
-			let result = fs.readText(filePath).wait();
+			let result = fs.readText(filePath);
 			let expectedResult = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
 					'<application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >' +
@@ -339,7 +339,7 @@ describe("Plugin Variables service", () => {
 
 			pluginVariablesService.interpolatePluginVariables(pluginData, filePath).wait();
 
-			let result = fs.readText(filePath).wait();
+			let result = fs.readText(filePath);
 			let expectedResult = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
 					'<application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >' +

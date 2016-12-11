@@ -331,7 +331,7 @@ export class PlatformService implements IPlatformService {
 			let buildInfoFile = path.join(buildInfoFilePath, buildInfoFileName);
 			if (!shouldBuild) {
 				if (this.$fs.exists(buildInfoFile)) {
-					let buildInfoText = this.$fs.readText(buildInfoFile).wait();
+					let buildInfoText = this.$fs.readText(buildInfoFile);
 					shouldBuild = this._prepareInfo.time !== buildInfoText;
 				} else {
 					shouldBuild = true;

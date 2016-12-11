@@ -76,7 +76,7 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	readText(filename:string, encoding?:string):IFuture<string> {
+	readText(filename:string, encoding?:string): string {
 		return undefined;
 	}
 

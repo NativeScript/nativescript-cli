@@ -22,7 +22,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 				throw new Error(`The Podfile ${pathToPodfile} does not exist.`);
 			}
 
-			let podfileContent = this.$fs.readText(pathToPodfile).wait();
+			let podfileContent = this.$fs.readText(pathToPodfile);
 			let hookStart = `${hookName} do`;
 
 			let hookDefinitionRegExp = new RegExp(`${hookStart} *(\\|(\\w+)\\|)?`, "g");

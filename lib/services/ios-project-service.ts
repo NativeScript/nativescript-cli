@@ -435,7 +435,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			let platformData = this.platformData;
 			let projectPath = path.join(platformData.projectRoot, this.$projectData.projectName);
 			let projectPlist = this.getInfoPlistPath();
-			let plistContent = plist.parse(this.$fs.readText(projectPlist).wait());
+			let plistContent = plist.parse(this.$fs.readText(projectPlist));
 			let storyName = plistContent["UILaunchStoryboardName"];
 			this.$logger.trace(`Examining ${projectPlist} UILaunchStoryboardName: "${storyName}".`);
 			if (storyName !== "LaunchScreen") {
@@ -590,7 +590,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				this.$logger.trace("Schedule merge plist at: " + plistPath);
 				session.patch({
 					name: path.relative(projectDir, plistPath),
-					read: () => this.$fs.readText(plistPath).wait()
+					read: () => this.$fs.readText(plistPath)
 				});
 			};
 
@@ -696,7 +696,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	public afterPrepareAllPlugins(): IFuture<void> {
 		return (() => {
 			if (this.$fs.exists(this.projectPodFilePath)) {
-				let projectPodfileContent = this.$fs.readText(this.projectPodFilePath).wait();
+				let projectPodfileContent = this.$fs.readText(this.projectPodFilePath);
 				this.$logger.trace("Project Podfile content");
 				this.$logger.trace(projectPodfileContent);
 
@@ -772,7 +772,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	private replaceFileContent(file: string): IFuture<void> {
 		return (() => {
-			let fileContent = this.$fs.readText(file).wait();
+			let fileContent = this.$fs.readText(file);
 			let replacedContent = helpers.stringReplaceAll(fileContent, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, this.$projectData.projectName);
 			this.$fs.writeFile(file, replacedContent).wait();
 		}).future<void>()();
@@ -840,9 +840,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return (() => {
 			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
 			if (this.$fs.exists(pluginPodFilePath)) {
-				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait(),
+				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath),
 					pluginPodFilePreparedContent = this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent),
-					projectPodFileContent = this.$fs.exists(this.projectPodFilePath) ? this.$fs.readText(this.projectPodFilePath).wait() : "";
+					projectPodFileContent = this.$fs.exists(this.projectPodFilePath) ? this.$fs.readText(this.projectPodFilePath) : "";
 
 				if (!~projectPodFileContent.indexOf(pluginPodFilePreparedContent)) {
 					let podFileHeader = this.$cocoapodsService.getPodfileHeader(this.$projectData.projectName),
@@ -904,8 +904,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return (() => {
 			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
 			if (this.$fs.exists(pluginPodFilePath) && this.$fs.exists(this.projectPodFilePath)) {
-				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
-				let projectPodFileContent = this.$fs.readText(this.projectPodFilePath).wait();
+				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath);
+				let projectPodFileContent = this.$fs.readText(this.projectPodFilePath);
 				let contentToRemove = this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);
 				projectPodFileContent = helpers.stringReplaceAll(projectPodFileContent, contentToRemove, "");
 				if (projectPodFileContent.trim() === `use_frameworks!${os.EOL}${os.EOL}target "${this.$projectData.projectName}" do${os.EOL}${os.EOL}end`) {
@@ -1081,7 +1081,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		let teamIds: any = {};
 		for (let file of files) {
 			let filePath = path.join(dir, file);
-			let data = this.$fs.readText(filePath, "utf8").wait();
+			let data = this.$fs.readText(filePath, "utf8");
 			let teamId = this.getProvisioningProfileValue("TeamIdentifier", data);
 			let teamName = this.getProvisioningProfileValue("TeamName", data);
 			if (teamId) {

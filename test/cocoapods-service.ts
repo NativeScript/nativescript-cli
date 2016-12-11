@@ -36,7 +36,7 @@ describe("Cocoapods service", () => {
 			let fs: IFileSystem = injector.resolve("fs");
 
 			fs.exists = () => true;
-			fs.readText = () => Future.fromResult(podfileContent);
+			fs.readText = () => podfileContent;
 			fs.writeFile = (pathToFile: string, content: any) => {
 				newPodfileContent = content;
 				return Future.fromResult();
