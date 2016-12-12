@@ -16,10 +16,35 @@ interface IProjectData {
 
 interface IProjectDataService {
 	initialize(projectDir: string): void;
-	getValue(propertyName: string): IFuture<any>;
-	setValue(key: string, value: any): IFuture<void>;
-	removeProperty(propertyName: string): IFuture<void>;
-	removeDependency(dependencyName: string): IFuture<void>;
+
+	/**
+	 * Returns a value from `nativescript` key in project's package.json.
+	 * @param {string} propertyName The name of the property to be checked in `nativescript` key.
+	 * @returns {any} The value of the property.
+	 */
+	getValue(propertyName: string): any;
+
+	/**
+	 * Sets a value in the `nativescript` key in a project's package.json.
+	 * @param {string} key Key to be added to `nativescript` key in project's package.json.
+	 * @param {any} value Value of the key to be added to `nativescript` key in project's package.json.
+	 * @returns {void}
+	 */
+	setValue(key: string, value: any): void;
+
+	/**
+	 * Removes a property from `nativescript` key in project's package.json.
+	 * @param {string} propertyName The name of the property to be removed from `nativescript` key.
+	 * @returns {void}
+	 */
+	removeProperty(propertyName: string): void;
+
+	/**
+	 * Removes dependency from package.json
+	 * @param {string} dependencyName Name of the dependency that has to be removed.
+	 * @returns {void}
+	 */
+	removeDependency(dependencyName: string): void;
 }
 
 /**
@@ -79,8 +104,19 @@ interface IPlatformProjectService {
 	afterCreateProject(projectRoot: string): void;
 
 	buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void>;
-	prepareProject(): IFuture<void>;
-	prepareAppResources(appResourcesDirectoryPath: string): IFuture<void>;
+
+	/**
+	 * Prepares images in Native project (for iOS).
+	 * @returns {void}
+	 */
+	prepareProject(): void;
+
+	/**
+	 * Prepares App_Resources in the native project by clearing data from other platform and applying platform specific rules.
+	 * @param {string} appResourcesDirectoryPath The place in the native project where the App_Resources are copied first.
+	 * @returns {void}
+	 */
+	prepareAppResources(appResourcesDirectoryPath: string): void;
 
 	/**
 	 * Defines if current platform is prepared (i.e. if <project dir>/platforms/<platform> dir exists).
@@ -107,7 +143,13 @@ interface IPlatformProjectService {
 
 	afterPrepareAllPlugins(): IFuture<void>;
 	beforePrepareAllPlugins(dependencies?: IDictionary<IDependencyData>): IFuture<void>;
-	getAppResourcesDestinationDirectoryPath(): IFuture<string>;
+
+	/**
+	 * Gets the path wheren App_Resources should be copied.
+	 * @returns {string} Path to native project, where App_Resources should be copied.
+	 */
+	getAppResourcesDestinationDirectoryPath(): string;
+
 	deploy(deviceIdentifier: string): IFuture<void>;
 	processConfigurationFilesFromAppResources(): IFuture<void>;
 	/**

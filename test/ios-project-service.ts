@@ -99,7 +99,7 @@ function createPackageJson(testInjector: IInjector, projectPath: string, project
 			}
 		}
 	};
-	testInjector.resolve("fs").writeJson(path.join(projectPath, "package.json"), packageJsonData).wait();
+	testInjector.resolve("fs").writeJson(path.join(projectPath, "package.json"), packageJsonData);
 }
 
 function expectOption(args: string[], option: string, value: string, message?: string): void {
@@ -280,7 +280,7 @@ describe("Cocoapods support", () => {
 					}
 				}
 			};
-			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData).wait();
+			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData);
 
 			let platformsFolderPath = path.join(projectPath, "platforms", "ios");
 			fs.createDirectory(platformsFolderPath);
@@ -344,7 +344,7 @@ describe("Cocoapods support", () => {
 					}
 				}
 			};
-			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData).wait();
+			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData);
 
 			let platformsFolderPath = path.join(projectPath, "platforms", "ios");
 			fs.createDirectory(platformsFolderPath);

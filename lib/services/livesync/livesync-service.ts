@@ -30,7 +30,7 @@ class LiveSyncService implements ILiveSyncService {
 	private ensureAndroidFrameworkVersion(platformData: IPlatformData): IFuture<void> { // TODO: this can be moved inside command or canExecute function
 		return (() => {
 			this.$projectDataService.initialize(this.$projectData.projectDir);
-			let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
+			let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).version;
 
 			if (platformData.normalizedPlatformName.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
 				if (semver.lt(frameworkVersion, "1.2.1")) {

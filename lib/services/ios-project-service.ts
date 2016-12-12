@@ -78,16 +78,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		};
 	}
 
-	public getAppResourcesDestinationDirectoryPath(): IFuture<string> {
-		return (() => {
-			let frameworkVersion = this.getFrameworkVersion(this.platformData.frameworkPackageName).wait();
+	public getAppResourcesDestinationDirectoryPath(): string {
+		let frameworkVersion = this.getFrameworkVersion(this.platformData.frameworkPackageName);
 
-			if (semver.lt(frameworkVersion, "1.3.0")) {
-				return path.join(this.platformData.projectRoot, this.$projectData.projectName, "Resources", "icons");
-			}
+		if (semver.lt(frameworkVersion, "1.3.0")) {
+			return path.join(this.platformData.projectRoot, this.$projectData.projectName, "Resources", "icons");
+		}
 
-			return path.join(this.platformData.projectRoot, this.$projectData.projectName, "Resources");
-		}).future<string>()();
+		return path.join(this.platformData.projectRoot, this.$projectData.projectName, "Resources");
 	}
 
 	public validate(): IFuture<void> {
@@ -250,7 +248,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			basicArgs = basicArgs.concat(this.xcbuildProjectArgs(projectRoot));
 
 			// Starting from tns-ios 1.4 the xcconfig file is referenced in the project template
-			let frameworkVersion = this.getFrameworkVersion(this.platformData.frameworkPackageName).wait();
+			let frameworkVersion = this.getFrameworkVersion(this.platformData.frameworkPackageName);
 			if (semver.lt(frameworkVersion, "1.4.0")) {
 				basicArgs.push("-xcconfig", path.join(projectRoot, this.$projectData.projectName, "build.xcconfig"));
 			}
@@ -500,47 +498,43 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 	}
 
-	public prepareProject(): IFuture<void> {
-		return (() => {
-			let project = this.createPbxProj();
+	public prepareProject(): void {
+		let project = this.createPbxProj();
 
-			this.provideLaunchScreenIfMissing();
+		this.provideLaunchScreenIfMissing();
 
-			let resources = project.pbxGroupByName("Resources");
+		let resources = project.pbxGroupByName("Resources");
 
-			if (resources) {
-				let references = project.pbxFileReferenceSection();
+		if (resources) {
+			let references = project.pbxFileReferenceSection();
 
-				let xcodeProjectImages = _.map(<any[]>resources.children, resource => this.replace(references[resource.value].name));
-				this.$logger.trace("Images from Xcode project");
-				this.$logger.trace(xcodeProjectImages);
+			let xcodeProjectImages = _.map(<any[]>resources.children, resource => this.replace(references[resource.value].name));
+			this.$logger.trace("Images from Xcode project");
+			this.$logger.trace(xcodeProjectImages);
 
-				let appResourcesImages = this.$fs.readDirectory(this.getAppResourcesDestinationDirectoryPath().wait());
-				this.$logger.trace("Current images from App_Resources");
-				this.$logger.trace(appResourcesImages);
+			let appResourcesImages = this.$fs.readDirectory(this.getAppResourcesDestinationDirectoryPath());
+			this.$logger.trace("Current images from App_Resources");
+			this.$logger.trace(appResourcesImages);
 
-				let imagesToAdd = _.difference(appResourcesImages, xcodeProjectImages);
-				this.$logger.trace(`New images to add into xcode project: ${imagesToAdd.join(", ")}`);
-				_.each(imagesToAdd, image => project.addResourceFile(path.relative(this.platformData.projectRoot, path.join(this.getAppResourcesDestinationDirectoryPath().wait(), image))));
+			let imagesToAdd = _.difference(appResourcesImages, xcodeProjectImages);
+			this.$logger.trace(`New images to add into xcode project: ${imagesToAdd.join(", ")}`);
+			_.each(imagesToAdd, image => project.addResourceFile(path.relative(this.platformData.projectRoot, path.join(this.getAppResourcesDestinationDirectoryPath(), image))));
 
-				let imagesToRemove = _.difference(xcodeProjectImages, appResourcesImages);
-				this.$logger.trace(`Images to remove from xcode project: ${imagesToRemove.join(", ")}`);
-				_.each(imagesToRemove, image => project.removeResourceFile(path.join(this.getAppResourcesDestinationDirectoryPath().wait(), image)));
+			let imagesToRemove = _.difference(xcodeProjectImages, appResourcesImages);
+			this.$logger.trace(`Images to remove from xcode project: ${imagesToRemove.join(", ")}`);
+			_.each(imagesToRemove, image => project.removeResourceFile(path.join(this.getAppResourcesDestinationDirectoryPath(), image)));
 
-				this.savePbxProj(project);
-			}
-		}).future<void>()();
+			this.savePbxProj(project);
+		}
 	}
 
-	public prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
-		return (() => {
-			let platformFolder = path.join(appResourcesDirectoryPath, this.platformData.normalizedPlatformName);
-			let filterFile = (filename: string) => this.$fs.deleteFile(path.join(platformFolder, filename));
+	public prepareAppResources(appResourcesDirectoryPath: string): void {
+		let platformFolder = path.join(appResourcesDirectoryPath, this.platformData.normalizedPlatformName);
+		let filterFile = (filename: string) => this.$fs.deleteFile(path.join(platformFolder, filename));
 
-			filterFile(this.platformData.configurationFileName);
+		filterFile(this.platformData.configurationFileName);
 
-			this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath().wait());
-		}).future<void>()();
+		this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath());
 	}
 
 	public processConfigurationFilesFromAppResources(): IFuture<void> {

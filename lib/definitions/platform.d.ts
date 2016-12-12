@@ -19,7 +19,13 @@ interface IPlatformService {
 	 */
 	getPreparedPlatforms(): string[];
 
-	removePlatforms(platforms: string[]): IFuture<void>;
+	/**
+	 * Remove platforms from specified project (`<project dir>/platforms/<platform>` dir).
+	 * @param {string[]} platforms Platforms to be removed.
+	 * @returns {void}
+	 */
+	removePlatforms(platforms: string[]): void;
+
 	updatePlatforms(platforms: string[]): IFuture<void>;
 	preparePlatform(platform: string, force?: boolean, skipModulesAndResources?: boolean): IFuture<boolean>;
 	buildPlatform(platform: string, buildConfig?: IBuildConfig, forceBuild?: boolean): IFuture<void>;

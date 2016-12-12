@@ -60,14 +60,14 @@ export class UpdateCommand implements ICommand {
 			this.$projectDataService.initialize(this.$projectData.projectDir);
 			for (let platform of availablePlatforms) {
 				let platformData = this.$platformsData.getPlatformData(platform);
-				let platformVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
+				let platformVersion = this.$projectDataService.getValue(platformData.frameworkPackageName);
 				if (platformVersion) {
 					packagePlatforms.push(platform);
-					this.$projectDataService.removeProperty(platformData.frameworkPackageName).wait();
+					this.$projectDataService.removeProperty(platformData.frameworkPackageName);
 				}
 			}
 
-			this.$platformService.removePlatforms(platforms).wait();
+			this.$platformService.removePlatforms(platforms);
 			this.$pluginsService.remove("tns-core-modules").wait();
 			this.$pluginsService.remove("tns-core-modules-widgets").wait();
 

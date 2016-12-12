@@ -75,7 +75,7 @@ export class ProjectChangesInfo {
 
 		if (this.hasChanges) {
 			this.prepareInfo.time = new Date().toString();
-			this.$fs.writeJson(buildInfoFile, this.prepareInfo).wait();
+			this.$fs.writeJson(buildInfoFile, this.prepareInfo);
 		}
 	}
 

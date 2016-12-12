@@ -92,7 +92,7 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	writeJson(filename: string, data: any, space?: string, encoding?: string): IFuture<void> {
+	writeJson(filename: string, data: any, space?: string, encoding?: string): void {
 		return undefined;
 	}
 
@@ -282,8 +282,8 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 			fastLivesyncFileExtensions: []
 		};
 	}
-	getAppResourcesDestinationDirectoryPath(): IFuture<string> {
-		return Future.fromResult("");
+	getAppResourcesDestinationDirectoryPath(): string {
+		return "";
 	}
 	validate(): IFuture<void> {
 		return Future.fromResult();
@@ -300,9 +300,8 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	afterCreateProject(projectRoot: string): void {
 		return null;
 	}
-	prepareProject(): IFuture<void> {
-		return Future.fromResult();
-	}
+	prepareProject(): void { }
+
 	buildProject(projectRoot: string): IFuture<void> {
 		return Future.fromResult();
 	}
@@ -318,9 +317,8 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean): IFuture<boolean> {
 		return Future.fromResult(true);
 	}
-	prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
-		return Future.fromResult();
-	}
+	prepareAppResources(appResourcesDirectoryPath: string): void { }
+
 	preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return Future.fromResult();
 	}
@@ -350,17 +348,11 @@ export class ProjectDataService implements IProjectDataService {
 		return Future.fromResult({});
 	}
 
-	setValue(key: string, value: any): IFuture<void> {
-		return Future.fromResult();
-	}
+	setValue(key: string, value: any): void { }
 
-	removeProperty(propertyName: string): IFuture<void> {
-		return Future.fromResult();
-	}
+	removeProperty(propertyName: string): void { }
 
-	removeDependency(dependencyName: string): IFuture<void> {
-		return Future.fromResult();
-	}
+	removeDependency(dependencyName: string): void { }
 }
 
 export class ProjectHelperStub implements IProjectHelper {

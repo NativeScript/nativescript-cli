@@ -119,7 +119,7 @@ function createProjectFile(testInjector: IInjector): string {
 		}
 	};
 
-	testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), packageJsonData).wait();
+	testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), packageJsonData);
 	return tempFolder;
 }
 
@@ -213,7 +213,7 @@ describe("Plugins service", () => {
 				let projectData = require(projectFilePath);
 				projectData.dependencies = {};
 				projectData.dependencies[pluginName] = "^1.0.0";
-				fs.writeJson(projectFilePath, projectData).wait();
+				fs.writeJson(projectFilePath, projectData);
 
 				let pluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = () => {
@@ -250,7 +250,7 @@ describe("Plugins service", () => {
 					},
 				};
 				let fs = testInjector.resolve("fs");
-				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData).wait();
+				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
 
 				// Adds android platform
 				fs.createDirectory(path.join(projectFolder, "platforms"));
@@ -377,7 +377,7 @@ describe("Plugins service", () => {
 					},
 				};
 				let fs = testInjector.resolve("fs");
-				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData).wait();
+				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
 
 				let pluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = () => {
@@ -422,7 +422,7 @@ describe("Plugins service", () => {
 					}
 				};
 				let fs = testInjector.resolve("fs");
-				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData).wait();
+				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
 
 				let pluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = () => {
@@ -464,7 +464,7 @@ describe("Plugins service", () => {
 					}
 				};
 				let fs = testInjector.resolve("fs");
-				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData).wait();
+				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
 
 				let pluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = () => {
@@ -504,7 +504,7 @@ describe("Plugins service", () => {
 				}
 			};
 			let fs = testInjector.resolve("fs");
-			fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData).wait();
+			fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
 
 			// Adds AndroidManifest.xml file in platforms/android folder
 			createAndroidManifestFile(projectFolder, fs);

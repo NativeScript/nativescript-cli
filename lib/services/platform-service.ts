@@ -132,7 +132,7 @@ export class PlatformService implements IPlatformService {
 			if (customTemplateOptions) {
 				frameworkPackageNameData.template = customTemplateOptions.selectedTemplate;
 			}
-			this.$projectDataService.setValue(platformData.frameworkPackageName, frameworkPackageNameData).wait();
+			this.$projectDataService.setValue(platformData.frameworkPackageName, frameworkPackageNameData);
 
 			return coreModuleName;
 
@@ -144,7 +144,7 @@ export class PlatformService implements IPlatformService {
 			if (!selectedTemplate) {
 				// read data from package.json's nativescript key
 				// check the nativescript.tns-<platform>.template value
-				let nativescriptPlatformData = this.$projectDataService.getValue(frameworkPackageName).wait();
+				let nativescriptPlatformData = this.$projectDataService.getValue(frameworkPackageName);
 				selectedTemplate = nativescriptPlatformData && nativescriptPlatformData.template;
 			}
 
@@ -235,19 +235,23 @@ export class PlatformService implements IPlatformService {
 			if (changeInfo.appFilesChanged) {
 				this.copyAppFiles(platform).wait();
 			}
+
 			if (changeInfo.appResourcesChanged) {
-				this.copyAppResources(platform).wait();
-				platformData.platformProjectService.prepareProject().wait();
+				this.copyAppResources(platform);
+				platformData.platformProjectService.prepareProject();
 			}
+
 			if (changeInfo.modulesChanged) {
 				this.copyTnsModules(platform).wait();
 			}
 
 			let directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			let excludedDirs = [constants.APP_RESOURCES_FOLDER_NAME];
+
 			if (!changeInfo.modulesChanged) {
 				excludedDirs.push(constants.TNS_MODULES_FOLDER_NAME);
 			}
+
 			this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs);
 
 			if (changeInfo.configChanged || changeInfo.modulesChanged) {
@@ -278,19 +282,17 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	private copyAppResources(platform: string): IFuture<void> {
-		return (() => {
-			let platformData = this.$platformsData.getPlatformData(platform);
-			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-			let appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
-			if (this.$fs.exists(appResourcesDirectoryPath)) {
-				platformData.platformProjectService.prepareAppResources(appResourcesDirectoryPath).wait();
-				let appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait();
-				this.$fs.ensureDirectoryExists(appResourcesDestination);
-				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), appResourcesDestination);
-				this.$fs.deleteDirectory(appResourcesDirectoryPath);
-			}
-		}).future<void>()();
+	private copyAppResources(platform: string): void {
+		let platformData = this.$platformsData.getPlatformData(platform);
+		let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+		let appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
+		if (this.$fs.exists(appResourcesDirectoryPath)) {
+			platformData.platformProjectService.prepareAppResources(appResourcesDirectoryPath);
+			let appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath();
+			this.$fs.ensureDirectoryExists(appResourcesDestination);
+			shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), appResourcesDestination);
+			this.$fs.deleteDirectory(appResourcesDirectoryPath);
+		}
 	}
 
 	private copyTnsModules(platform: string): IFuture<void> {
@@ -393,22 +395,19 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	public removePlatforms(platforms: string[]): IFuture<void> {
-		return (() => {
-			this.$projectDataService.initialize(this.$projectData.projectDir);
+	public removePlatforms(platforms: string[]): void {
+		this.$projectDataService.initialize(this.$projectData.projectDir);
 
-			_.each(platforms, platform => {
-				this.validatePlatformInstalled(platform);
-				let platformData = this.$platformsData.getPlatformData(platform);
+		_.each(platforms, platform => {
+			this.validatePlatformInstalled(platform);
+			let platformData = this.$platformsData.getPlatformData(platform);
 
-				let platformDir = path.join(this.$projectData.platformsDir, platform);
-				this.$fs.deleteDirectory(platformDir);
-				this.$projectDataService.removeProperty(platformData.frameworkPackageName).wait();
+			let platformDir = path.join(this.$projectData.platformsDir, platform);
+			this.$fs.deleteDirectory(platformDir);
+			this.$projectDataService.removeProperty(platformData.frameworkPackageName);
 
-				this.$logger.out(`Platform ${platform} successfully removed.`);
-			});
-
-		}).future<void>()();
+			this.$logger.out(`Platform ${platform} successfully removed.`);
+		});
 	}
 
 	public updatePlatforms(platforms: string[]): IFuture<void> {
@@ -601,7 +600,7 @@ export class PlatformService implements IPlatformService {
 			let platformData = this.$platformsData.getPlatformData(platform);
 
 			this.$projectDataService.initialize(this.$projectData.projectDir);
-			let data = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
+			let data = this.$projectDataService.getValue(platformData.frameworkPackageName);
 			let currentVersion = data && data.version ? data.version : "0.2.0";
 
 			let newVersion = version === constants.PackageVersion.NEXT ?
@@ -635,7 +634,7 @@ export class PlatformService implements IPlatformService {
 	private updatePlatformCore(platformData: IPlatformData, currentVersion: string, newVersion: string, canUpdate: boolean): IFuture<void> {
 		return (() => {
 			let packageName = platformData.normalizedPlatformName.toLowerCase();
-			this.removePlatforms([packageName]).wait();
+			this.removePlatforms([packageName]);
 			packageName = newVersion ? `${packageName}@${newVersion}` : packageName;
 			this.addPlatform(packageName).wait();
 			this.$logger.out("Successfully updated to version ", newVersion);

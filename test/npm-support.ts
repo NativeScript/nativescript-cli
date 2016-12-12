@@ -107,7 +107,7 @@ function createProject(testInjector: IInjector, dependencies?: any): string {
 	packageJsonData["dependencies"] = dependencies;
 	packageJsonData["devDependencies"] = {};
 
-	testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), packageJsonData).wait();
+	testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), packageJsonData);
 	return tempFolder;
 }
 
@@ -143,11 +143,11 @@ function setupProject(dependencies?: any): IFuture<any> {
 				projectRoot: projectFolder,
 				configurationFileName: "AndroidManifest.xml",
 				platformProjectService: {
-					prepareProject: () => Future.fromResult(),
-					prepareAppResources: () => Future.fromResult(),
+					prepareProject: (): any => null,
+					prepareAppResources: (): any => null,
 					afterPrepareAllPlugins: () => Future.fromResult(),
 					beforePrepareAllPlugins: () => Future.fromResult(),
-					getAppResourcesDestinationDirectoryPath: () => Future.fromResult(path.join(androidFolderPath, "src", "main", "res")),
+					getAppResourcesDestinationDirectoryPath: () => path.join(androidFolderPath, "src", "main", "res"),
 					processConfigurationFilesFromAppResources: () => Future.fromResult(),
 					ensureConfigurationFileInAppResources: () => Future.fromResult(),
 					interpolateConfigurationFile: () => Future.fromResult(),
@@ -177,7 +177,7 @@ function addDependencies(testInjector: IInjector, projectFolder: string, depende
 			let currentDevDependencies = packageJsonData.devDependencies;
 			_.extend(currentDevDependencies, devDependencies);
 		}
-		fs.writeJson(packageJsonPath, packageJsonData).wait();
+		fs.writeJson(packageJsonPath, packageJsonData);
 	}).future<void>()();
 }
 

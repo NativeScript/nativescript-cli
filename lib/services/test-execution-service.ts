@@ -62,7 +62,7 @@ class TestExecutionService implements ITestExecutionService {
 						if (!this.$platformService.preparePlatform(platform).wait()) {
 							this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 						}
-						this.detourEntryPoint(projectFilesPath).wait();
+						this.detourEntryPoint(projectFilesPath);
 
 						this.liveSyncProject(platform);
 
@@ -153,13 +153,11 @@ class TestExecutionService implements ITestExecutionService {
 
 	allowedParameters: ICommandParameter[] = [];
 
-	private detourEntryPoint(projectFilesPath: string): IFuture<void> {
-		return (() => {
-			let packageJsonPath = path.join(projectFilesPath, 'package.json');
-			let packageJson = this.$fs.readJson(packageJsonPath);
-			packageJson.main = TestExecutionService.MAIN_APP_NAME;
-			this.$fs.writeJson(packageJsonPath, packageJson).wait();
-		}).future<void>()();
+	private detourEntryPoint(projectFilesPath: string): void {
+		let packageJsonPath = path.join(projectFilesPath, 'package.json');
+		let packageJson = this.$fs.readJson(packageJsonPath);
+		packageJson.main = TestExecutionService.MAIN_APP_NAME;
+		this.$fs.writeJson(packageJsonPath, packageJson);
 	}
 
 	private generateConfig(port: string, options: any): string {

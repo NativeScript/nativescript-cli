@@ -48,19 +48,17 @@ export class PluginsService implements IPluginsService {
 				let pluginData = this.convertToPluginData(realNpmPackageJson);
 
 				// Validate
-				let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => {
-					return (() => {
-						this.isPluginDataValidForPlatform(pluginData, platform).wait();
-					}).future<void>()();
+				let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData): void => {
+					this.isPluginDataValidForPlatform(pluginData, platform);
 				};
-				this.executeForAllInstalledPlatforms(action).wait();
+				this.executeForAllInstalledPlatforms(action);
 
 				try {
 					this.$pluginVariablesService.savePluginVariablesInProjectFile(pluginData).wait();
 				} catch (err) {
 					// Revert package.json
 					this.$projectDataService.initialize(this.$projectData.projectDir);
-					this.$projectDataService.removeProperty(this.$pluginVariablesService.getPluginVariablePropertyName(pluginData.name)).wait();
+					this.$projectDataService.removeProperty(this.$pluginVariablesService.getPluginVariablePropertyName(pluginData.name));
 					this.$npm.uninstall(plugin, PluginsService.NPM_CONFIG, this.$projectData.projectDir).wait();
 
 					throw err;
@@ -77,29 +75,25 @@ export class PluginsService implements IPluginsService {
 
 	public remove(pluginName: string): IFuture<void> {
 		return (() => {
-			let removePluginNativeCodeAction = (modulesDestinationPath: string, platform: string, platformData: IPlatformData) => {
-				return (() => {
+			let removePluginNativeCodeAction = (modulesDestinationPath: string, platform: string, platformData: IPlatformData): void => {
 					let pluginData = this.convertToPluginData(this.getNodeModuleData(pluginName));
 
 					platformData.platformProjectService.removePluginNativeCode(pluginData);
-				}).future<void>()();
 			};
 
-			this.$pluginVariablesService.removePluginVariablesFromProjectFile(pluginName.toLowerCase()).wait();
-			this.executeForAllInstalledPlatforms(removePluginNativeCodeAction).wait();
+			this.$pluginVariablesService.removePluginVariablesFromProjectFile(pluginName.toLowerCase());
+			this.executeForAllInstalledPlatforms(removePluginNativeCodeAction);
 
 			this.executeNpmCommand(PluginsService.UNINSTALL_COMMAND_NAME, pluginName).wait();
 
 			let showMessage = true;
-			let action = (modulesDestinationPath: string, platform: string, platformData: IPlatformData) => {
-				return (() => {
-					shelljs.rm("-rf", path.join(modulesDestinationPath, pluginName));
+			let action = (modulesDestinationPath: string, platform: string, platformData: IPlatformData): void => {
+				shelljs.rm("-rf", path.join(modulesDestinationPath, pluginName));
 
-					this.$logger.out(`Successfully removed plugin ${pluginName} for ${platform}.`);
-					showMessage = false;
-				}).future<void>()();
+				this.$logger.out(`Successfully removed plugin ${pluginName} for ${platform}.`);
+				showMessage = false;
 			};
-			this.executeForAllInstalledPlatforms(action).wait();
+			this.executeForAllInstalledPlatforms(action);
 
 			if (showMessage) {
 				this.$logger.out(`Succsessfully removed plugin ${pluginName}`);
@@ -138,7 +132,7 @@ export class PluginsService implements IPluginsService {
 			return;
 		}
 
-		if (!this.isPluginDataValidForPlatform(pluginData, platform).wait()) {
+		if (!this.isPluginDataValidForPlatform(pluginData, platform)) {
 			return;
 		}
 
@@ -284,49 +278,42 @@ export class PluginsService implements IPluginsService {
 		return npmCommandResult.split("@")[0]; // returns plugin name
 	}
 
-	private executeForAllInstalledPlatforms(action: (_pluginDestinationPath: string, pl: string, _platformData: IPlatformData) => IFuture<void>): IFuture<void> {
-		return (() => {
-			let availablePlatforms = _.keys(this.$platformsData.availablePlatforms);
-			_.each(availablePlatforms, platform => {
-				let isPlatformInstalled = this.$fs.exists(path.join(this.$projectData.platformsDir, platform.toLowerCase()));
-				if (isPlatformInstalled) {
-					let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
-					let pluginDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
-					action(pluginDestinationPath, platform.toLowerCase(), platformData).wait();
-				}
-			});
-		}).future<void>()();
-	}
-
-	private getInstalledFrameworkVersion(platform: string): IFuture<string> {
-		return (() => {
-			let platformData = this.$platformsData.getPlatformData(platform);
-			this.$projectDataService.initialize(this.$projectData.projectDir);
-			let frameworkData = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
-			return frameworkData.version;
-		}).future<string>()();
-	}
-
-	private isPluginDataValidForPlatform(pluginData: IPluginData, platform: string): IFuture<boolean> {
-		return (() => {
-			let isValid = true;
-
-			let installedFrameworkVersion = this.getInstalledFrameworkVersion(platform).wait();
-			let pluginPlatformsData = pluginData.platformsData;
-			if (pluginPlatformsData) {
-				let pluginVersion = (<any>pluginPlatformsData)[platform];
-				if (!pluginVersion) {
-					this.$logger.warn(`${pluginData.name} is not supported for ${platform}.`);
-					isValid = false;
-				} else if (semver.gt(pluginVersion, installedFrameworkVersion)) {
-					this.$logger.warn(`${pluginData.name} ${pluginVersion} for ${platform} is not compatible with the currently installed framework version ${installedFrameworkVersion}.`);
-					isValid = false;
-				}
+	private executeForAllInstalledPlatforms(action: (_pluginDestinationPath: string, pl: string, _platformData: IPlatformData) => void): void {
+		let availablePlatforms = _.keys(this.$platformsData.availablePlatforms);
+		_.each(availablePlatforms, platform => {
+			let isPlatformInstalled = this.$fs.exists(path.join(this.$projectData.platformsDir, platform.toLowerCase()));
+			if (isPlatformInstalled) {
+				let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
+				let pluginDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
+				action(pluginDestinationPath, platform.toLowerCase(), platformData);
 			}
+		});
+	}
 
-			return isValid;
+	private getInstalledFrameworkVersion(platform: string): string {
+		let platformData = this.$platformsData.getPlatformData(platform);
+		this.$projectDataService.initialize(this.$projectData.projectDir);
+		let frameworkData = this.$projectDataService.getValue(platformData.frameworkPackageName);
+		return frameworkData.version;
+	}
 
-		}).future<boolean>()();
+	private isPluginDataValidForPlatform(pluginData: IPluginData, platform: string): boolean {
+		let isValid = true;
+
+		let installedFrameworkVersion = this.getInstalledFrameworkVersion(platform);
+		let pluginPlatformsData = pluginData.platformsData;
+		if (pluginPlatformsData) {
+			let pluginVersion = (<any>pluginPlatformsData)[platform];
+			if (!pluginVersion) {
+				this.$logger.warn(`${pluginData.name} is not supported for ${platform}.`);
+				isValid = false;
+			} else if (semver.gt(pluginVersion, installedFrameworkVersion)) {
+				this.$logger.warn(`${pluginData.name} ${pluginVersion} for ${platform} is not compatible with the currently installed framework version ${installedFrameworkVersion}.`);
+				isValid = false;
+			}
+		}
+
+		return isValid;
 	}
 }
 $injector.register("pluginsService", PluginsService);

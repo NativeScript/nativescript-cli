@@ -182,7 +182,7 @@ class DoctorService implements IDoctorService {
 			"name": "nativescript-check-cocoapods",
 			"version": "0.0.1"
 		};
-		this.$fs.writeJson(path.join(projDir, "package.json"), packageJsonData).wait();
+		this.$fs.writeJson(path.join(projDir, "package.json"), packageJsonData);
 
 		let spinner = new clui.Spinner("Installing iOS runtime.");
 		try {

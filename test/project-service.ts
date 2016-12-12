@@ -152,7 +152,7 @@ describe("Project Service Tests", () => {
 				"license": "MIT",
 				"readme": "dummy",
 				"repository": "dummy"
-			}).wait();
+			});
 			npmInstallationManager.install("tns-template-hello-world", defaultTemplateDir, {dependencyType: "save"}).wait();
 			defaultTemplatePath = path.join(defaultTemplateDir, "node_modules", "tns-template-hello-world");
 			fs.deleteDirectory(path.join(defaultTemplatePath, "node_modules"));
@@ -165,7 +165,7 @@ describe("Project Service Tests", () => {
 				"license": "MIT",
 				"readme": "dummy",
 				"repository": "dummy"
-			}).wait();
+			});
 			npmInstallationManager.install("tns-template-hello-world", defaultSpecificVersionTemplateDir, {version: "1.4.0", dependencyType: "save"}).wait();
 			defaultSpecificVersionTemplatePath = path.join(defaultSpecificVersionTemplateDir, "node_modules", "tns-template-hello-world");
 			fs.deleteDirectory(path.join(defaultSpecificVersionTemplatePath, "node_modules"));
@@ -178,7 +178,7 @@ describe("Project Service Tests", () => {
 				"license": "MIT",
 				"readme": "dummy",
 				"repository": "dummy"
-			}).wait();
+			});
 			npmInstallationManager.install("tns-template-hello-world-ng", angularTemplateDir, {dependencyType: "save"}).wait();
 			angularTemplatePath = path.join(angularTemplateDir, "node_modules", "tns-template-hello-world-ng");
 			fs.deleteDirectory(path.join(angularTemplatePath, "node_modules"));
@@ -191,7 +191,7 @@ describe("Project Service Tests", () => {
 				"license": "MIT",
 				"readme": "dummy",
 				"repository": "dummy"
-			}).wait();
+			});
 			npmInstallationManager.install("tns-template-hello-world-ts", typescriptTemplateDir, {dependencyType: "save"}).wait();
 			typescriptTemplatePath = path.join(typescriptTemplateDir, "node_modules", "tns-template-hello-world-ts");
 			fs.deleteDirectory(path.join(typescriptTemplatePath, "node_modules"));
@@ -518,7 +518,7 @@ describe("project upgrade procedure tests", () => {
 			"repository": "dummy"
 		};
 		let tnsProjectFilePath = path.join(tempFolder, ".tnsproject");
-		fs.writeJson(tnsProjectFilePath, tnsProjectData).wait();
+		fs.writeJson(tnsProjectFilePath, tnsProjectData);
 
 		testInjector.resolve("projectData"); // This should trigger upgrade procedure
 
@@ -553,10 +553,10 @@ describe("project upgrade procedure tests", () => {
 			"repository": "dummy"
 		};
 		let tnsProjectFilePath = path.join(tempFolder, ".tnsproject");
-		fs.writeJson(tnsProjectFilePath, tnsProjectData).wait();
+		fs.writeJson(tnsProjectFilePath, tnsProjectData);
 
 		let packageJsonFilePath = path.join(tempFolder, "package.json");
-		fs.writeJson(packageJsonFilePath, packageJsonData).wait();
+		fs.writeJson(packageJsonFilePath, packageJsonData);
 
 		testInjector.resolve("projectData"); // This should trigger upgrade procedure
 
@@ -593,8 +593,8 @@ describe("project upgrade procedure tests", () => {
 			"repository": "dummy"
 		};
 
-		fs.writeJson(path.join(tempFolder, ".tnsproject"), tnsProjectData).wait();
-		fs.writeJson(path.join(tempFolder, "package.json"), packageJsonData).wait();
+		fs.writeJson(path.join(tempFolder, ".tnsproject"), tnsProjectData);
+		fs.writeJson(path.join(tempFolder, "package.json"), packageJsonData);
 		testInjector.resolve("projectData"); // This should trigger upgrade procedure
 
 		let packageJsonFilePath = path.join(tempFolder, "package.json");

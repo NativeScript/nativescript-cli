@@ -76,14 +76,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this._platformData;
 	}
 
-	public getAppResourcesDestinationDirectoryPath(frameworkVersion?: string): IFuture<string> {
-		return (() => {
-			if (this.canUseGradle(frameworkVersion).wait()) {
-				return path.join(this.platformData.projectRoot, "src", "main", "res");
-			}
+	public getAppResourcesDestinationDirectoryPath(frameworkVersion?: string): string {
+		if (this.canUseGradle(frameworkVersion)) {
+			return path.join(this.platformData.projectRoot, "src", "main", "res");
+		}
 
-			return path.join(this.platformData.projectRoot, "res");
-		}).future<string>()();
+		return path.join(this.platformData.projectRoot, "res");
 	}
 
 	public validate(): IFuture<void> {
@@ -125,7 +123,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				this.copy(this.platformData.projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
 			}
 
-			this.cleanResValues(targetSdkVersion, frameworkVersion).wait();
+			this.cleanResValues(targetSdkVersion, frameworkVersion);
 
 			let npmConfig = {
 				"save": true,
@@ -165,33 +163,32 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this.$fs.exists(gradlew);
 	}
 
-	private cleanResValues(targetSdkVersion: number, frameworkVersion: string): IFuture<void> {
-		return (() => {
-			let resDestinationDir = this.getAppResourcesDestinationDirectoryPath(frameworkVersion).wait();
-			let directoriesInResFolder = this.$fs.readDirectory(resDestinationDir);
-			let directoriesToClean = directoriesInResFolder
-				.map(dir => {
-					return {
-						dirName: dir,
-						sdkNum: parseInt(dir.substr(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX.length))
-					};
-				})
-				.filter(dir => dir.dirName.match(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX)
-					&& dir.sdkNum
-					&& (!targetSdkVersion || (targetSdkVersion < dir.sdkNum)))
-				.map(dir => path.join(resDestinationDir, dir.dirName));
-			this.$logger.trace("Directories to clean:");
-			this.$logger.trace(directoriesToClean);
-			_.map(directoriesToClean, dir => this.$fs.deleteDirectory(dir));
-		}).future<void>()();
+	private cleanResValues(targetSdkVersion: number, frameworkVersion: string): void {
+		let resDestinationDir = this.getAppResourcesDestinationDirectoryPath(frameworkVersion);
+		let directoriesInResFolder = this.$fs.readDirectory(resDestinationDir);
+		let directoriesToClean = directoriesInResFolder
+			.map(dir => {
+				return {
+					dirName: dir,
+					sdkNum: parseInt(dir.substr(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX.length))
+				};
+			})
+			.filter(dir => dir.dirName.match(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX)
+				&& dir.sdkNum
+				&& (!targetSdkVersion || (targetSdkVersion < dir.sdkNum)))
+			.map(dir => path.join(resDestinationDir, dir.dirName));
+		this.$logger.trace("Directories to clean:");
+		this.$logger.trace(directoriesToClean);
+		_.map(directoriesToClean, dir => this.$fs.deleteDirectory(dir));
 	}
 
+	// TODO: Remove IFuture, reason: writeJson - cannot until other implementation has async calls.
 	public interpolateData(): IFuture<void> {
 		return (() => {
 			// Interpolate the apilevel and package
 			this.interpolateConfigurationFile().wait();
 
-			let stringsFilePath = path.join(this.getAppResourcesDestinationDirectoryPath().wait(), 'values', 'strings.xml');
+			let stringsFilePath = path.join(this.getAppResourcesDestinationDirectoryPath(), 'values', 'strings.xml');
 			shell.sed('-i', /__NAME__/, this.$projectData.projectName, stringsFilePath);
 			shell.sed('-i', /__TITLE_ACTIVITY__/, this.$projectData.projectName, stringsFilePath);
 
@@ -245,7 +242,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
-			if (this.canUseGradle().wait()) {
+			if (this.canUseGradle()) {
 				let buildOptions = this.getBuildOptions();
 				if (this.$logger.getLevel() === "TRACE") {
 					buildOptions.unshift("--stacktrace");
@@ -303,9 +300,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return [".jar", ".dat"];
 	}
 
-	public prepareProject(): IFuture<void> {
-		return Future.fromResult();
-	}
+	public prepareProject(): void {
+		// Intentionally left empty.
+	 }
 
 	public ensureConfigurationFileInAppResources(): IFuture<void> {
 		return (() => {
@@ -321,15 +318,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}).future<void>()();
 	}
 
-	public prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
-		return (() => {
-			let resourcesDirPath = path.join(appResourcesDirectoryPath, this.platformData.normalizedPlatformName);
-			let valuesDirRegExp = /^values/;
-			let resourcesDirs = this.$fs.readDirectory(resourcesDirPath).filter(resDir => !resDir.match(valuesDirRegExp));
-			_.each(resourcesDirs, resourceDir => {
-				this.$fs.deleteDirectory(path.join(this.getAppResourcesDestinationDirectoryPath().wait(), resourceDir));
-			});
-		}).future<void>()();
+	public prepareAppResources(appResourcesDirectoryPath: string): void {
+		let resourcesDirPath = path.join(appResourcesDirectoryPath, this.platformData.normalizedPlatformName);
+		let valuesDirRegExp = /^values/;
+		let resourcesDirs = this.$fs.readDirectory(resourcesDirPath).filter(resDir => !resDir.match(valuesDirRegExp));
+		_.each(resourcesDirs, resourceDir => {
+			this.$fs.deleteDirectory(path.join(this.getAppResourcesDestinationDirectoryPath(), resourceDir));
+		});
 	}
 
 	public preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
@@ -434,20 +429,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	private _canUseGradle: boolean;
-	private canUseGradle(frameworkVersion?: string): IFuture<boolean> {
-		return (() => {
-			if (!this._canUseGradle) {
-				if (!frameworkVersion) {
-					this.$projectDataService.initialize(this.$projectData.projectDir);
-					let frameworkInfoInProjectFile = this.$projectDataService.getValue(this.platformData.frameworkPackageName).wait();
-					frameworkVersion = frameworkInfoInProjectFile && frameworkInfoInProjectFile.version;
-				}
-
-				this._canUseGradle = !frameworkVersion || semver.gte(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE);
+	private canUseGradle(frameworkVersion?: string): boolean {
+		if (!this._canUseGradle) {
+			if (!frameworkVersion) {
+				this.$projectDataService.initialize(this.$projectData.projectDir);
+				let frameworkInfoInProjectFile = this.$projectDataService.getValue(this.platformData.frameworkPackageName);
+				frameworkVersion = frameworkInfoInProjectFile && frameworkInfoInProjectFile.version;
 			}
 
-			return this._canUseGradle;
-		}).future<boolean>()();
+			this._canUseGradle = !frameworkVersion || semver.gte(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE);
+		}
+
+		return this._canUseGradle;
 	}
 
 	private copy(projectRoot: string, frameworkDir: string, files: string, cpArg: string): void {

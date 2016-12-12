@@ -22,11 +22,9 @@ export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 		return nativeLibraries;
 	}
 
-	protected getFrameworkVersion(runtimePackageName: string): IFuture<string> {
-		return (() => {
-			this.$projectDataService.initialize(this.$projectData.projectDir);
-			let frameworkVersion = this.$projectDataService.getValue(runtimePackageName).wait().version;
-			return frameworkVersion;
-		}).future<string>()();
+	protected getFrameworkVersion(runtimePackageName: string): string {
+		this.$projectDataService.initialize(this.$projectData.projectDir);
+		let frameworkVersion = this.$projectDataService.getValue(runtimePackageName).version;
+		return frameworkVersion;
 	}
 }

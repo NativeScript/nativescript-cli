@@ -31,7 +31,7 @@ export class ProjectService implements IProjectService {
 				this.$errors.fail("Path already exists and is not empty %s", projectDir);
 			}
 
-			this.createPackageJson(projectDir, projectId).wait();
+			this.createPackageJson(projectDir, projectId);
 
 			let customAppPath = this.getCustomAppPath();
 			if (customAppPath) {
@@ -76,7 +76,7 @@ export class ProjectService implements IProjectService {
 			try {
 				//TODO: plamen5kov: move copy of template and npm uninstall in prepareTemplate logic
 				this.createProjectCore(projectDir, appPath, projectId).wait();
-				this.mergeProjectAndTemplateProperties(projectDir, appPath).wait(); //merging dependencies from template (dev && prod)
+				this.mergeProjectAndTemplateProperties(projectDir, appPath); //merging dependencies from template (dev && prod)
 				this.$npm.install(projectDir, projectDir, { "ignore-scripts": this.$options.ignoreScripts }).wait();
 				selectedTemplate = selectedTemplate || "";
 				let templateName = (constants.RESERVED_TEMPLATE_NAMES[selectedTemplate.toLowerCase()] || selectedTemplate/*user template*/) || constants.RESERVED_TEMPLATE_NAMES["default"];
@@ -93,28 +93,27 @@ export class ProjectService implements IProjectService {
 		}).future<void>()();
 	}
 
-	private mergeProjectAndTemplateProperties(projectDir: string, templatePath: string): IFuture<void> {
-		return (() => {
-			let templatePackageJsonPath = path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME);
-			if (this.$fs.exists(templatePackageJsonPath)) {
-				let projectPackageJsonPath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
-				let projectPackageJsonData = this.$fs.readJson(projectPackageJsonPath);
-				this.$logger.trace("Initial project package.json data: ", projectPackageJsonData);
-				let templatePackageJsonData = this.$fs.readJson(templatePackageJsonPath);
-				if (projectPackageJsonData.dependencies || templatePackageJsonData.dependencies) {
-					projectPackageJsonData.dependencies = this.mergeDependencies(projectPackageJsonData.dependencies, templatePackageJsonData.dependencies);
-				}
+	private mergeProjectAndTemplateProperties(projectDir: string, templatePath: string): void {
+		let templatePackageJsonPath = path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME);
 
-				if (projectPackageJsonData.devDependencies || templatePackageJsonData.devDependencies) {
-					projectPackageJsonData.devDependencies = this.mergeDependencies(projectPackageJsonData.devDependencies, templatePackageJsonData.devDependencies);
-				}
-
-				this.$logger.trace("New project package.json data: ", projectPackageJsonData);
-				this.$fs.writeJson(projectPackageJsonPath, projectPackageJsonData).wait();
-			} else {
-				this.$logger.trace(`Template ${templatePath} does not have ${constants.PACKAGE_JSON_FILE_NAME} file.`);
+		if (this.$fs.exists(templatePackageJsonPath)) {
+			let projectPackageJsonPath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
+			let projectPackageJsonData = this.$fs.readJson(projectPackageJsonPath);
+			this.$logger.trace("Initial project package.json data: ", projectPackageJsonData);
+			let templatePackageJsonData = this.$fs.readJson(templatePackageJsonPath);
+			if (projectPackageJsonData.dependencies || templatePackageJsonData.dependencies) {
+				projectPackageJsonData.dependencies = this.mergeDependencies(projectPackageJsonData.dependencies, templatePackageJsonData.dependencies);
 			}
-		}).future<void>()();
+
+			if (projectPackageJsonData.devDependencies || templatePackageJsonData.devDependencies) {
+				projectPackageJsonData.devDependencies = this.mergeDependencies(projectPackageJsonData.devDependencies, templatePackageJsonData.devDependencies);
+			}
+
+			this.$logger.trace("New project package.json data: ", projectPackageJsonData);
+			this.$fs.writeJson(projectPackageJsonPath, projectPackageJsonData);
+		} else {
+			this.$logger.trace(`Template ${templatePath} does not have ${constants.PACKAGE_JSON_FILE_NAME} file.`);
+		}
 	}
 
 	private mergeDependencies(projectDependencies: IStringDictionary, templateDependencies: IStringDictionary): IStringDictionary {
@@ -154,12 +153,9 @@ export class ProjectService implements IProjectService {
 		}).future<void>()();
 	}
 
-	private createPackageJson(projectDir: string, projectId: string): IFuture<void> {
-		return (() => {
-
-			this.$projectDataService.initialize(projectDir);
-			this.$projectDataService.setValue("id", projectId).wait();
-		}).future<void>()();
+	private createPackageJson(projectDir: string, projectId: string): void {
+		this.$projectDataService.initialize(projectDir);
+		this.$projectDataService.setValue("id", projectId);
 	}
 
 	private getCustomAppPath(): string {

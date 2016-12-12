@@ -53,7 +53,7 @@ function createProjectFile(testInjector: IInjector): IFuture<string> {
 			"name": "myProject",
 			"nativescript": { }
 		};
-		testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), projectData).wait();
+		testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), projectData);
 
 		return tempFolder;
 	}).future<string>()();
@@ -244,7 +244,7 @@ describe("Plugin Variables service", () => {
 			data["nativescript"]["myTestPlugin-variables"] = {
 				"FB_APP_NAME": "myFacebookAppName"
 			};
-			fs.writeJson(packageJsonFilePath, data).wait();
+			fs.writeJson(packageJsonFilePath, data);
 
 			let pluginVariables = { "FB_APP_NAME": { } };
 			let pluginData = createPluginData(pluginVariables);
@@ -283,7 +283,7 @@ describe("Plugin Variables service", () => {
 			data["nativescript"]["myTestPlugin-variables"] = {
 				"FB_APP_NAME": "myFacebookAppName"
 			};
-			fs.writeJson(packageJsonFilePath, data).wait();
+			fs.writeJson(packageJsonFilePath, data);
 
 			let pluginVariables = { "FB_APP_NAME": { } };
 			let pluginData = createPluginData(pluginVariables);
@@ -322,7 +322,7 @@ describe("Plugin Variables service", () => {
 				"FB_APP_NAME": "myFacebookAppName",
 				"FB_APP_URL": "myFacebookAppURl"
 			};
-			fs.writeJson(packageJsonFilePath, data).wait();
+			fs.writeJson(packageJsonFilePath, data);
 
 			let pluginVariables = { "FB_APP_NAME": { }, "FB_APP_URL": { } };
 			let pluginData = createPluginData(pluginVariables);

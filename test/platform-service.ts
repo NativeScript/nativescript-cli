@@ -8,14 +8,14 @@ import * as hostInfoLib from "../lib/common/host-info";
 import * as ProjectFilesManagerLib from "../lib/common/services/project-files-manager";
 import * as path from "path";
 import Future = require("fibers/future");
-import {assert} from "chai";
-import {DeviceAppDataFactory} from "../lib/common/mobile/device-app-data/device-app-data-factory";
-import {LocalToDevicePathDataFactory} from "../lib/common/mobile/local-to-device-path-data-factory";
-import {MobileHelper} from "../lib/common/mobile/mobile-helper";
-import {ProjectFilesProvider} from "../lib/providers/project-files-provider";
-import {DeviceAppDataProvider} from "../lib/providers/device-app-data-provider";
-import {MobilePlatformsCapabilities} from "../lib/mobile-platforms-capabilities";
-import {DevicePlatformsConstants} from "../lib/common/mobile/device-platforms-constants";
+import { assert } from "chai";
+import { DeviceAppDataFactory } from "../lib/common/mobile/device-app-data/device-app-data-factory";
+import { LocalToDevicePathDataFactory } from "../lib/common/mobile/local-to-device-path-data-factory";
+import { MobileHelper } from "../lib/common/mobile/mobile-helper";
+import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
+import { DeviceAppDataProvider } from "../lib/providers/device-app-data-provider";
+import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilities";
+import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
 import * as ChildProcessLib from "../lib/common/child-process";
 
@@ -169,15 +169,15 @@ describe('Platform Service Tests', () => {
 	describe("remove platform unit tests", () => {
 		it("should fail when platforms are not added", () => {
 			testInjector.resolve("fs").exists = () => false;
-			(() => platformService.removePlatforms(["android"]).wait()).should.throw();
-			(() => platformService.removePlatforms(["ios"]).wait()).should.throw();
+			(() => platformService.removePlatforms(["android"])).should.throw();
+			(() => platformService.removePlatforms(["ios"])).should.throw();
 		});
 		it("shouldn't fail when platforms are added", () => {
 			testInjector.resolve("fs").exists = () => false;
 			platformService.addPlatforms(["android"]).wait();
 
 			testInjector.resolve("fs").exists = () => true;
-			platformService.removePlatforms(["android"]).wait();
+			platformService.removePlatforms(["android"]);
 		});
 	});
 
@@ -252,12 +252,12 @@ describe('Platform Service Tests', () => {
 					normalizedPlatformName: platformToTest,
 					projectRoot: testDirData.tempFolder,
 					platformProjectService: {
-						prepareProject: () => Future.fromResult(),
+						prepareProject: (): any => null,
 						validate: () => Future.fromResult(),
 						createProject: (projectRoot: string, frameworkDir: string) => Future.fromResult(),
 						interpolateData: (projectRoot: string) => Future.fromResult(),
 						afterCreateProject: (projectRoot: string): any => null,
-						getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
+						getAppResourcesDestinationDirectoryPath: () => "",
 						processConfigurationFilesFromAppResources: () => Future.fromResult(),
 						ensureConfigurationFileInAppResources: () => Future.fromResult(),
 						interpolateConfigurationFile: () => Future.fromResult(),
@@ -270,7 +270,7 @@ describe('Platform Service Tests', () => {
 			projectData.projectDir = testDirData.tempFolder;
 
 			platformService = testInjector.resolve("platformService");
-			let options : IOptions = testInjector.resolve("options");
+			let options: IOptions = testInjector.resolve("options");
 			options.release = release;
 			platformService.preparePlatform(platformToTest).wait();
 
@@ -326,12 +326,12 @@ describe('Platform Service Tests', () => {
 					normalizedPlatformName: "Android",
 					projectRoot: testDirData.tempFolder,
 					platformProjectService: {
-						prepareProject: () => Future.fromResult(),
+						prepareProject: (): any => null,
 						validate: () => Future.fromResult(),
 						createProject: (projectRoot: string, frameworkDir: string) => Future.fromResult(),
 						interpolateData: (projectRoot: string) => Future.fromResult(),
 						afterCreateProject: (projectRoot: string): any => null,
-						getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
+						getAppResourcesDestinationDirectoryPath: () => "",
 						processConfigurationFilesFromAppResources: () => Future.fromResult(),
 						ensureConfigurationFileInAppResources: () => Future.fromResult(),
 						interpolateConfigurationFile: () => Future.fromResult(),

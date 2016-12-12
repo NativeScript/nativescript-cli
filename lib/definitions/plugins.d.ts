@@ -52,9 +52,9 @@ interface IPluginVariablesService {
 	/**
 	 * Removes plugin variables from project package.json file.
 	 * @param  {string}		pluginName Name of the plugin.
-	 * @return {IFuture<void>}
+	 * @return {void}
 	 */
-	removePluginVariablesFromProjectFile(pluginName: string): IFuture<void>;
+	removePluginVariablesFromProjectFile(pluginName: string): void;
 
 	/**
 	 * Replaces all plugin variables with their corresponding values.

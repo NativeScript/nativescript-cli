@@ -81,7 +81,7 @@ export class NpmPluginPrepare {
 			prepareData[d.name] = true;
 		});
 		this.$fs.createDirectory(this.preparedPlatformsDir(platform));
-		this.$fs.writeJson(this.preparedPlatformsFile(platform), prepareData, "    ", "utf8").wait();
+		this.$fs.writeJson(this.preparedPlatformsFile(platform), prepareData, "    ", "utf8");
 	}
 
 	private preparedPlatformsDir(platform: string): string {
