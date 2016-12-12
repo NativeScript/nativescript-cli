@@ -7,13 +7,13 @@ import * as chai from "chai";
 export class LoggerStub implements ILogger {
 	setLevel(level: string): void { }
 	getLevel(): string { return undefined; }
-	fatal(...args: string[]): void {}
-	error(...args: string[]): void {}
-	warn(...args: string[]): void {}
-	warnWithLabel(...args: string[]): void {}
-	info(...args: string[]): void {}
-	debug(...args: string[]): void {}
-	trace(...args: string[]): void {}
+	fatal(...args: string[]): void { }
+	error(...args: string[]): void { }
+	warn(...args: string[]): void { }
+	warnWithLabel(...args: string[]): void { }
+	info(...args: string[]): void { }
+	debug(...args: string[]): void { }
+	trace(...args: string[]): void { }
 
 	public output = "";
 
@@ -48,7 +48,7 @@ export class FileSystemStub implements IFileSystem {
 		return true;
 	}
 
-	deleteFile(path:string): void {
+	deleteFile(path: string): void {
 		return undefined;
 	}
 
@@ -56,7 +56,7 @@ export class FileSystemStub implements IFileSystem {
 		return Future.fromResult();
 	}
 
-	getFileSize(path:string): number {
+	getFileSize(path: string): number {
 		return undefined;
 	}
 
@@ -64,27 +64,27 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	createDirectory(path:string):void {
+	createDirectory(path: string): void {
 		return undefined;
 	}
 
-	readDirectory(path:string): string[] {
+	readDirectory(path: string): string[] {
 		return undefined;
 	}
 
-	readFile(filename:string): NodeBuffer | string {
+	readFile(filename: string): NodeBuffer | string {
 		return undefined;
 	}
 
-	readText(filename:string, encoding?:string): string {
+	readText(filename: string, encoding?: string): string {
 		return undefined;
 	}
 
-	readJson(filename:string, encoding?:string): any {
+	readJson(filename: string, encoding?: string): any {
 		return {};
 	}
 
-	writeFile(filename: string, data: any, encoding?: string): IFuture<void> {
+	writeFile(filename: string, data: any, encoding?: string): void {
 		return undefined;
 	}
 
@@ -96,17 +96,17 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	copyFile(sourceFileName:string, destinationFileName:string):IFuture<void> {
+	copyFile(sourceFileName: string, destinationFileName: string): IFuture<void> {
 		return undefined;
 	}
 
 	openFile(filename: string): void { }
 
-	createReadStream(path:string, options?:{flags?: string; encoding?: string; fd?: string; mode?: number; bufferSize?: number}): any {
+	createReadStream(path: string, options?: { flags?: string; encoding?: string; fd?: string; mode?: number; bufferSize?: number }): any {
 		return undefined;
 	}
 
-	createWriteStream(path:string, options?:{flags?: string; encoding?: string; string?: string}): any {
+	createWriteStream(path: string, options?: { flags?: string; encoding?: string; string?: string }): any {
 		return undefined;
 	}
 
@@ -180,8 +180,8 @@ export class ErrorsStub implements IErrors {
 		new (require("../lib/common/errors").Errors)(); // we need the side effect of require'ing errors
 	}
 
-	fail(formatStr:string, ...args: any[]): void;
-	fail(opts:{formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean}, ...args: any[]): void;
+	fail(formatStr: string, ...args: any[]): void;
+	fail(opts: { formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean }, ...args: any[]): void;
 
 	fail(...args: any[]) {
 		throw args;
@@ -191,7 +191,7 @@ export class ErrorsStub implements IErrors {
 		throw new Error(message);
 	}
 
-	beginCommand(action:() => IFuture<boolean>, printHelpCommand: () => IFuture<boolean>): IFuture<boolean> {
+	beginCommand(action: () => IFuture<boolean>, printHelpCommand: () => IFuture<boolean>): IFuture<boolean> {
 		throw new Error("not supported");
 	}
 
@@ -282,7 +282,7 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 			fastLivesyncFileExtensions: []
 		};
 	}
-	getAppResourcesDestinationDirectoryPath(): IFuture<string>{
+	getAppResourcesDestinationDirectoryPath(): IFuture<string> {
 		return Future.fromResult("");
 	}
 	validate(): IFuture<void> {
@@ -312,8 +312,8 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	isPlatformPrepared(projectRoot: string): boolean {
 		return false;
 	}
-	canUpdatePlatform(installedModulePath: string): IFuture<boolean> {
-		return Future.fromResult(false);
+	canUpdatePlatform(installedModulePath: string): boolean {
+		return false;
 	}
 	updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean): IFuture<boolean> {
 		return Future.fromResult(true);
@@ -324,9 +324,8 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return Future.fromResult();
 	}
-	removePluginNativeCode(pluginData: IPluginData): IFuture<void> {
-		return Future.fromResult();
-	}
+	removePluginNativeCode(pluginData: IPluginData): void { }
+
 	afterPrepareAllPlugins(): IFuture<void> {
 		return Future.fromResult();
 	}
@@ -382,7 +381,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 	get defaultTemplatePath(): IFuture<string> {
 		return Future.fromResult("");
 	}
-	setProjectDir(projectDir: string):void {
+	setProjectDir(projectDir: string): void {
 	}
 	prepareTemplate(templateName: string): IFuture<string> {
 		return Future.fromResult("");
@@ -407,11 +406,11 @@ export class LockFile {
 	}
 
 	lock(): IFuture<void> {
-		return (() => {}).future<void>()();
+		return (() => { }).future<void>()();
 	}
 
 	unlock(): IFuture<void> {
-	 	return (() => {}).future<void>()();
+		return (() => { }).future<void>()();
 	}
 }
 
@@ -419,7 +418,7 @@ export class PrompterStub implements IPrompter {
 	private strings: IDictionary<string> = {};
 	private passwords: IDictionary<string> = {};
 
-	expect(options?: { strings: IDictionary<string>, passwords: IDictionary<string> } ) {
+	expect(options?: { strings: IDictionary<string>, passwords: IDictionary<string> }) {
 		if (options) {
 			this.strings = options.strings || this.strings;
 			this.passwords = options.passwords || this.passwords;
@@ -534,14 +533,14 @@ export class ChildProcessStub {
 	public lastCommandArgs: string[] = [];
 
 	public spawn(command: string, args?: string[], options?: any): any {
-		this.spawnCount ++;
+		this.spawnCount++;
 		this.lastCommand = command;
 		this.lastCommandArgs = args;
 		return null;
 	}
 
 	public spawnFromEvent(command: string, args: string[], event: string, options?: any, spawnFromEventOptions?: ISpawnFromEventOptions): IFuture<ISpawnResult> {
-		this.spawnFromEventCount ++;
+		this.spawnFromEventCount++;
 		this.lastCommand = command;
 		this.lastCommandArgs = args;
 		return Future.fromResult(null);

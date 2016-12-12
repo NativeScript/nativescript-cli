@@ -183,7 +183,7 @@ function createAndroidManifestFile(projectFolder: string, fs: IFileSystem): void
 
 	fs.createDirectory(path.join(projectFolder, "platforms"));
 	fs.createDirectory(path.join(projectFolder, "platforms", "android"));
-	fs.writeFile(path.join(projectFolder, "platforms", "android", "AndroidManifest.xml"), manifest).wait();
+	fs.writeFile(path.join(projectFolder, "platforms", "android", "AndroidManifest.xml"), manifest);
 }
 
 describe("Plugins service", () => {
@@ -544,7 +544,7 @@ describe("Plugins service", () => {
 				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
 				'<uses-permission android:name="android.permission.READ_CONTACTS"/>';
 			let pluginConfigurationFilePath = path.join(pluginPlatformsDirPath, "AndroidManifest.xml");
-			fs.writeFile(pluginConfigurationFilePath, xml).wait();
+			fs.writeFile(pluginConfigurationFilePath, xml);
 
 			// Expected error message. The assertion happens in mockBeginCommand
 			let expectedErrorMessage = `Exception: Invalid xml file ${pluginConfigurationFilePath}. Additional technical information: element parse error: Exception: Invalid xml file ` +

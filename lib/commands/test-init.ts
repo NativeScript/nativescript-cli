@@ -55,7 +55,7 @@ class TestInitCommand implements ICommand {
 					.join(', ')
 			});
 
-			this.$fs.writeFile(path.join(projectDir, 'karma.conf.js'), karmaConf).wait();
+			this.$fs.writeFile(path.join(projectDir, 'karma.conf.js'), karmaConf);
 
 			let exampleFilePath = this.$resources.resolvePath(`test/example.${frameworkToInstall}.js`);
 

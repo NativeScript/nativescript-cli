@@ -48,7 +48,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				ipaFileSize = this.$fs.getFileSize(ipaFileLocation),
 				metadata = this.getITMSMetadataXml(iOSApplication.adamId, ipaFileName, ipaFileHash, ipaFileSize);
 
-			this.$fs.writeFile(path.join(innerDirectory, ITMSConstants.ApplicationMetadataFile), metadata).wait();
+			this.$fs.writeFile(path.join(innerDirectory, ITMSConstants.ApplicationMetadataFile), metadata);
 
 			this.$childProcess.spawnFromEvent(itmsTransporterPath, ["-m", "upload", "-f", itmsDirectory, "-u", quoteString(data.username), "-p", quoteString(data.password), "-v", loggingLevel], "close", { stdio: "inherit" }).wait();
 		}).future<void>()();

@@ -239,7 +239,7 @@ describe('Platform Service Tests', () => {
 			_.each(destinationDirectories, directoryPath => {
 				_.each(platformSpecificFiles, filePath => {
 					let fileFullPath = path.join(directoryPath, filePath);
-					fs.writeFile(fileFullPath, "testData").wait();
+					fs.writeFile(fileFullPath, "testData");
 				});
 			});
 
@@ -315,7 +315,7 @@ describe('Platform Service Tests', () => {
 
 			// generate invalid xml
 			let fileFullPath = path.join(testDirData.appFolderPath, "file.xml");
-			fs.writeFile(fileFullPath, "<xml><unclosedTag></xml>").wait();
+			fs.writeFile(fileFullPath, "<xml><unclosedTag></xml>");
 
 			let platformsData = testInjector.resolve("platformsData");
 			platformsData.platformsNames = ["android"];

@@ -81,7 +81,7 @@ export class PluginsService implements IPluginsService {
 				return (() => {
 					let pluginData = this.convertToPluginData(this.getNodeModuleData(pluginName));
 
-					platformData.platformProjectService.removePluginNativeCode(pluginData).wait();
+					platformData.platformProjectService.removePluginNativeCode(pluginData);
 				}).future<void>()();
 			};
 

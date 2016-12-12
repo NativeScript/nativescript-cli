@@ -225,8 +225,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return null;
 	}
 
-	public canUpdatePlatform(newInstalledModuleDir: string): IFuture<boolean> {
-		return Future.fromResult(true);
+	public canUpdatePlatform(newInstalledModuleDir: string): boolean {
+		return true;
 	}
 
 	public updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean, addPlatform?: Function, removePlatforms?: (platforms: string[]) => IFuture<void>): IFuture<boolean> {
@@ -372,20 +372,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}).future<void>()();
 	}
 
-	// TODO: Remove IFuture, reason: fs.deleteDirectory - blocked as the other implementation of the interface has async operations.
-	public removePluginNativeCode(pluginData: IPluginData): IFuture<void> {
-		return (() => {
-			try {
-				this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "configurations", pluginData.name));
-				this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "src", pluginData.name));
-			} catch (e) {
-				if (e.code === "ENOENT") {
-					this.$logger.debug("No native code jars found: " + e.message);
-				} else {
-					throw e;
-				}
+	public removePluginNativeCode(pluginData: IPluginData): void {
+		try {
+			this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "configurations", pluginData.name));
+			this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "src", pluginData.name));
+		} catch (e) {
+			if (e.code === "ENOENT") {
+				this.$logger.debug("No native code jars found: " + e.message);
+			} else {
+				throw e;
 			}
-		}).future<void>()();
+		}
 	}
 
 	public afterPrepareAllPlugins(): IFuture<void> {

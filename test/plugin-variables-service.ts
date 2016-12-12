@@ -217,7 +217,7 @@ describe("Plugin Variables service", () => {
 
 			let fs: IFileSystem = testInjector.resolve("fs");
 			let filePath = path.join(tempFolder, "myfile");
-			fs.writeFile(filePath, "").wait();
+			fs.writeFile(filePath, "");
 
 			let pluginVariablesService = testInjector.resolve("pluginVariablesService");
 
@@ -256,7 +256,7 @@ describe("Plugin Variables service", () => {
 					'</application>' +
 				'</manifest>';
 			let filePath = path.join(tempFolder, "myfile");
-			fs.writeFile(filePath, pluginConfigurationFileContent).wait();
+			fs.writeFile(filePath, pluginConfigurationFileContent);
 
 			pluginVariablesService.interpolatePluginVariables(pluginData, filePath).wait();
 
@@ -295,7 +295,7 @@ describe("Plugin Variables service", () => {
 					'</application>' +
 				'</manifest>';
 			let filePath = path.join(tempFolder, "myfile");
-			fs.writeFile(filePath, pluginConfigurationFileContent).wait();
+			fs.writeFile(filePath, pluginConfigurationFileContent);
 
 			pluginVariablesService.interpolatePluginVariables(pluginData, filePath).wait();
 
@@ -335,7 +335,7 @@ describe("Plugin Variables service", () => {
 					'</application>' +
 				'</manifest>';
 			let filePath = path.join(tempFolder, "myfile");
-			fs.writeFile(filePath, pluginConfigurationFileContent).wait();
+			fs.writeFile(filePath, pluginConfigurationFileContent);
 
 			pluginVariablesService.interpolatePluginVariables(pluginData, filePath).wait();
 

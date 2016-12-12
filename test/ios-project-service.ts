@@ -6,25 +6,25 @@ import * as ErrorsLib from "../lib/common/errors";
 import * as FileSystemLib from "../lib/common/file-system";
 import * as HostInfoLib from "../lib/common/host-info";
 import * as iOSProjectServiceLib from "../lib/services/ios-project-service";
-import {IOSProjectService} from "../lib/services/ios-project-service";
+import { IOSProjectService } from "../lib/services/ios-project-service";
 import * as LoggerLib from "../lib/common/logger";
 import * as OptionsLib from "../lib/options";
 import * as yok from "../lib/common/yok";
-import {DevicesService} from "../lib/common/mobile/mobile-core/devices-service";
-import {MobileHelper} from "../lib/common/mobile/mobile-helper";
-import {Messages} from "../lib/common/messages/messages";
-import {MobilePlatformsCapabilities} from "../lib/mobile-platforms-capabilities";
-import {DeviceLogProvider} from "../lib/common/mobile/device-log-provider";
-import {LogFilter} from "../lib/common/mobile/log-filter";
-import {LoggingLevels} from "../lib/common/mobile/logging-levels";
-import {DeviceDiscovery} from "../lib/common/mobile/mobile-core/device-discovery";
-import {IOSDeviceDiscovery} from "../lib/common/mobile/mobile-core/ios-device-discovery";
-import {AndroidDeviceDiscovery} from "../lib/common/mobile/mobile-core/android-device-discovery";
-import {PluginVariablesService} from "../lib/services/plugin-variables-service";
-import {PluginVariablesHelper} from "../lib/common/plugin-variables-helper";
-import {Utils} from "../lib/common/utils";
-import {CocoaPodsService} from "../lib/services/cocoapods-service";
-import {assert} from "chai";
+import { DevicesService } from "../lib/common/mobile/mobile-core/devices-service";
+import { MobileHelper } from "../lib/common/mobile/mobile-helper";
+import { Messages } from "../lib/common/messages/messages";
+import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilities";
+import { DeviceLogProvider } from "../lib/common/mobile/device-log-provider";
+import { LogFilter } from "../lib/common/mobile/log-filter";
+import { LoggingLevels } from "../lib/common/mobile/logging-levels";
+import { DeviceDiscovery } from "../lib/common/mobile/mobile-core/device-discovery";
+import { IOSDeviceDiscovery } from "../lib/common/mobile/mobile-core/ios-device-discovery";
+import { AndroidDeviceDiscovery } from "../lib/common/mobile/mobile-core/android-device-discovery";
+import { PluginVariablesService } from "../lib/services/plugin-variables-service";
+import { PluginVariablesHelper } from "../lib/common/plugin-variables-helper";
+import { Utils } from "../lib/common/utils";
+import { CocoaPodsService } from "../lib/services/cocoapods-service";
+import { assert } from "chai";
 import temp = require("temp");
 
 temp.track();
@@ -304,7 +304,7 @@ describe("Cocoapods support", () => {
 			let pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
 			let pluginPodfilePath = path.join(pluginPlatformsFolderPath, "Podfile");
 			let pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
-			fs.writeFile(pluginPodfilePath, pluginPodfileContent).wait();
+			fs.writeFile(pluginPodfilePath, pluginPodfileContent);
 
 			let pluginData = {
 				pluginPlatformsFolderPath(platform: string): string {
@@ -374,7 +374,7 @@ describe("Cocoapods support", () => {
 			let pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
 			let pluginPodfilePath = path.join(pluginPlatformsFolderPath, "Podfile");
 			let pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
-			fs.writeFile(pluginPodfilePath, pluginPodfileContent).wait();
+			fs.writeFile(pluginPodfilePath, pluginPodfileContent);
 
 			let pluginData = {
 				pluginPlatformsFolderPath(platform: string): string {
@@ -397,7 +397,7 @@ describe("Cocoapods support", () => {
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
 
-			iOSProjectService.removePluginNativeCode(pluginData).wait();
+			iOSProjectService.removePluginNativeCode(pluginData);
 
 			assert.isFalse(fs.exists(projectPodfilePath));
 		});
@@ -422,10 +422,10 @@ describe("Static libraries support", () => {
 	it("checks validation of header files", () => {
 		let iOSProjectService = testInjector.resolve("iOSProjectService");
 		fs.ensureDirectoryExists(staticLibraryHeadersPath);
-		_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), "").wait(); });
+		_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), ""); });
 
 		// Add all header files.
-		fs.writeFile(path.join(staticLibraryHeadersPath, libraryName + ".a"), "").wait();
+		fs.writeFile(path.join(staticLibraryHeadersPath, libraryName + ".a"), "");
 
 		let error: any;
 		try {
@@ -440,7 +440,7 @@ describe("Static libraries support", () => {
 	it("checks generation of modulemaps", () => {
 		let iOSProjectService = testInjector.resolve("iOSProjectService");
 		fs.ensureDirectoryExists(staticLibraryHeadersPath);
-		_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), "").wait(); });
+		_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), ""); });
 
 		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);
 		// Read the generated modulemap and verify it.

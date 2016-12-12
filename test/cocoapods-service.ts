@@ -2,7 +2,6 @@ import * as yok from "../lib/common/yok";
 import {assert} from "chai";
 import {CocoaPodsService} from "../lib/services/cocoapods-service";
 import {EOL} from "os";
-import Future = require("fibers/future");
 
 interface IMergePodfileHooksTestCase {
 	input: string;
@@ -39,7 +38,6 @@ describe("Cocoapods service", () => {
 			fs.readText = () => podfileContent;
 			fs.writeFile = (pathToFile: string, content: any) => {
 				newPodfileContent = content;
-				return Future.fromResult();
 			};
 		};
 
@@ -169,7 +167,7 @@ end`,
 			it(testCase.testCaseDescription, () => {
 				mockFileSystem(testInjector, testCase.input);
 
-				cocoapodsService.mergePodfileHookContent("post_install", "").wait();
+				cocoapodsService.mergePodfileHookContent("post_install", "");
 
 				assert.deepEqual(changeNewLineCharacter(newPodfileContent), changeNewLineCharacter(testCase.output));
 			});

@@ -44,22 +44,20 @@ export class PluginVariablesService implements IPluginVariablesService {
 					this.ensurePluginVariableValue(pluginVariableData.value, `Unable to find the value for ${pluginVariableData.name} plugin variable into project package.json file. Verify that your package.json file is correct and try again.`);
 					pluginConfigurationFileContent = this.interpolateCore(pluginVariableData.name, pluginVariableData.value, pluginConfigurationFileContent);
 				}).future<void>()()).wait();
-			this.$fs.writeFile(pluginConfigurationFilePath, pluginConfigurationFileContent).wait();
+			this.$fs.writeFile(pluginConfigurationFilePath, pluginConfigurationFileContent);
 		}).future<void>()();
 	}
 
-	public interpolateAppIdentifier(pluginConfigurationFilePath: string): IFuture<void> {
-		return (() => {
-			let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath);
-			let newContent = this.interpolateCore("nativescript.id", this.$projectData.projectId, pluginConfigurationFileContent);
-			this.$fs.writeFile(pluginConfigurationFilePath, newContent).wait();
-		}).future<void>()();
+	public interpolateAppIdentifier(pluginConfigurationFilePath: string): void {
+		let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath);
+		let newContent = this.interpolateCore("nativescript.id", this.$projectData.projectId, pluginConfigurationFileContent);
+		this.$fs.writeFile(pluginConfigurationFilePath, newContent);
 	}
 
 	public interpolate(pluginData: IPluginData, pluginConfigurationFilePath: string): IFuture<void> {
 		return (() => {
 			this.interpolatePluginVariables(pluginData, pluginConfigurationFilePath).wait();
-			this.interpolateAppIdentifier(pluginConfigurationFilePath).wait();
+			this.interpolateAppIdentifier(pluginConfigurationFilePath);
 		}).future<void>()();
 	}
 

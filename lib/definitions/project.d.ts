@@ -89,9 +89,22 @@ interface IPlatformProjectService {
 	 */
 	isPlatformPrepared(projectRoot: string): boolean;
 
-	canUpdatePlatform(newInstalledModuleDir: string): IFuture<boolean>;
+	/**
+	 * Checks if current platform can be updated to a newer versions.
+	 * @param {string} newInstalledModuleDir Path to the native project.
+	 * @return {boolean} True if platform can be updated. false otherwise.
+	 */
+	canUpdatePlatform(newInstalledModuleDir: string): boolean;
+
 	preparePluginNativeCode(pluginData: IPluginData, options?: any): IFuture<void>;
-	removePluginNativeCode(pluginData: IPluginData): IFuture<void>;
+
+	/**
+	 * Removes native code of a plugin (CocoaPods, jars, libs, src).
+	 * @param {IPluginData} Plugins data describing the plugin which should be cleaned.
+	 * @returns {void}
+	 */
+	removePluginNativeCode(pluginData: IPluginData): void;
+
 	afterPrepareAllPlugins(): IFuture<void>;
 	beforePrepareAllPlugins(dependencies?: IDictionary<IDependencyData>): IFuture<void>;
 	getAppResourcesDestinationDirectoryPath(): IFuture<string>;
@@ -134,7 +147,7 @@ interface ICocoaPodsService {
 	 * Merges the content of hooks with the provided name if there are more than one hooks with this name in the Podfile.
 	 * @param {string} hookName The name of the hook.
 	 * @param {string} pathToPodfile The path to the Podfile.
-	 * @return {IFuture<void>}
+	 * @return {void}
 	 */
-	mergePodfileHookContent(sectionName: string, pathToPodfile: string): IFuture<void>
+	mergePodfileHookContent(sectionName: string, pathToPodfile: string): void
 }

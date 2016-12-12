@@ -339,7 +339,7 @@ export class PlatformService implements IPlatformService {
 			}
 			if (shouldBuild || forceBuild) {
 				this.buildPlatformCore(platform, buildConfig).wait();
-				this.$fs.writeFile(buildInfoFile, this._prepareInfo.time).wait();
+				this.$fs.writeFile(buildInfoFile, this._prepareInfo.time);
 			}
 		}).future<void>()();
 	}
@@ -611,7 +611,7 @@ export class PlatformService implements IPlatformService {
 			let cachedPackageData = this.$fs.readJson(path.join(installedModuleDir, "package.json"));
 			newVersion = (cachedPackageData && cachedPackageData.version) || newVersion;
 
-			let canUpdate = platformData.platformProjectService.canUpdatePlatform(installedModuleDir).wait();
+			let canUpdate = platformData.platformProjectService.canUpdatePlatform(installedModuleDir);
 			this.$npm.uninstall(platformData.frameworkPackageName, { save: true }, this.$projectData.projectDir).wait();
 			if (canUpdate) {
 				if (!semver.valid(newVersion)) {

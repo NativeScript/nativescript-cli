@@ -193,7 +193,7 @@ class DoctorService implements IDoctorService {
 			this.$fs.writeFile(
 				path.join(iosDir, "Podfile"),
 				`${this.$cocoapodsService.getPodfileHeader(DoctorService.PROJECT_NAME_PLACEHOLDER)}pod 'AFNetworking', '~> 1.0'${this.$cocoapodsService.getPodfileFooter()}`
-			).wait();
+			);
 
 			spinner.message("Verifying CocoaPods. This may take some time, please be patient.");
 			spinner.start();
