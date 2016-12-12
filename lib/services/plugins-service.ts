@@ -143,7 +143,7 @@ export class PluginsService implements IPluginsService {
 		}
 
 		//prepare platform speciffic files, .map and .ts files
-		this.$projectFilesManager.processPlatformSpecificFiles(pluginScriptsDestinationPath, platform).wait();
+		this.$projectFilesManager.processPlatformSpecificFiles(pluginScriptsDestinationPath, platform);
 	}
 
 	private preparePluginNativeCode(pluginData: IPluginData, platform: string): void {

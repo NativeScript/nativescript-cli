@@ -116,7 +116,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 			if (canTransferDirectory) {
 				let tempDir = temp.mkdirSync("tempDir");
 				shell.cp("-Rf", path.join(projectFilesPath, "*"), tempDir);
-				this.$projectFilesManager.processPlatformSpecificFiles(tempDir, deviceAppData.platform).wait();
+				this.$projectFilesManager.processPlatformSpecificFiles(tempDir, deviceAppData.platform);
 				deviceAppData.device.fileSystem.transferDirectory(deviceAppData, localToDevicePaths, tempDir).wait();
 			} else {
 				this.$liveSyncProvider.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, isFullSync).wait();

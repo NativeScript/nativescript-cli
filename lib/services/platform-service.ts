@@ -248,7 +248,7 @@ export class PlatformService implements IPlatformService {
 			if (!changeInfo.modulesChanged) {
 				excludedDirs.push(constants.TNS_MODULES_FOLDER_NAME);
 			}
-			this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs).wait();
+			this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs);
 
 			if (changeInfo.configChanged || changeInfo.modulesChanged) {
 				this.applyBaseConfigOption(platformData).wait();
