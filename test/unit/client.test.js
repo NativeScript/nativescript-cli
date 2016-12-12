@@ -86,6 +86,11 @@ describe('Client', () => {
       }).toThrow(/Invalid timeout. Timeout must be a number./);
     });
 
+    it(`should set default timeout to ${defaultTimeout}ms`, function() {
+      const client = new Client();
+      expect(client.defaultTimeout).toEqual(defaultTimeout);
+    });
+
     it(`should use ${defaultTimeout}ms when defaultTimeout is less than 0`, function() {
       const timeout = -1;
       const client = new Client();
