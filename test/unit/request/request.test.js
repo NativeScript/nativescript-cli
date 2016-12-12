@@ -1,4 +1,5 @@
 import Request from '../../../src/request';
+import { Client } from '../../../src/client';
 import expect from 'expect';
 
 describe('Request', function() {
@@ -12,8 +13,9 @@ describe('Request', function() {
     });
 
     it('should set timeout with client default timeout', function() {
-      const request = new Request();
-      expect(request.timeout).toEqual(this.client.defaultTimeout);
+      const client = new Client({ defaultTimeout: 10000 });
+      const request = new Request({ client: client });
+      expect(request.timeout).toEqual(client.defaultTimeout);
     });
 
     it('should set timeout with passed value', function() {
