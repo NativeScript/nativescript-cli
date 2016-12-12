@@ -42,12 +42,7 @@ export class MobileIdentityConnect extends Identity {
       .then(() => {
         if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
           // Step 1: Request a code
-          return this.requestCodeWithPopup(clientId, redirectUri, options)
-            .catch((error) => {
-              if (error instanceof PopupError) {
-                throw new MobileIdentityConnectError('AuthorizationGrant.AuthorizationCodeLoginPage is not supported on this platform.');
-              }
-            });
+          return this.requestCodeWithPopup(clientId, redirectUri, options);
         } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
           // Step 1a: Request a temp login url
           return this.requestTempLoginUrl(clientId, redirectUri, options)
