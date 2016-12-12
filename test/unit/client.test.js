@@ -80,7 +80,7 @@ describe('Client', () => {
   describe('defaultTimeout', function() {
     it('should throw an Error if it is not a Number', function() {
       expect(() => {
-        const timeout = randomString();
+        const timeout = 'foo';
         const client = new Client();
         client.defaultTimeout = timeout;
       }).toThrow(/Invalid timeout. Timeout must be a number./);
