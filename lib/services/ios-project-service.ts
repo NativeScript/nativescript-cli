@@ -11,6 +11,10 @@ import { PlistSession } from "plist-merge-patch";
 import {EOL} from "os";
 import * as temp from "temp";
 import * as plist from "plist";
+import { cert, provision } from "ios-mobileprovision-finder";
+import { Xcode } from "pbxproj-dom/xcode";
+
+type XcodeSigningStyle = "Manual" | "Automatic";
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
@@ -300,10 +304,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			let xcodeBuildVersion = this.getXcodeVersion();
 			if (helpers.versionCompare(xcodeBuildVersion, "8.0") >= 0) {
-				let teamId = this.getDevelopmentTeam();
-				if (teamId) {
-					args = args.concat("DEVELOPMENT_TEAM=" + teamId);
-				}
+				buildConfig = this.getBuildConfig(projectRoot, buildConfig).wait();
 			}
 
 			if (buildConfig && buildConfig.codeSignIdentity) {
@@ -312,6 +313,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			if (buildConfig && buildConfig.mobileProvisionIdentifier) {
 				args.push(`PROVISIONING_PROFILE=${buildConfig.mobileProvisionIdentifier}`);
+			}
+
+			if (buildConfig && buildConfig.teamIdentifier) {
+				args.push(`DEVELOPMENT_TEAM=${buildConfig.teamIdentifier}`);
 			}
 
 			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
@@ -1010,6 +1015,69 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return xcodeBuildVersion;
 	}
 
+	private getBuildConfig(projectRoot: string, buildConfig: IiOSBuildConfig): IFuture<IiOSBuildConfig> {
+		return (() => {
+			// TRICKY: I am not sure why we totally disregard the buildConfig parameter here.
+			buildConfig = buildConfig || {};
+
+			if (this.$options.teamId) {
+				buildConfig.teamIdentifier = this.$options.teamId;
+			} else {
+				buildConfig = this.readXCConfigSigning().wait();
+				if (!buildConfig.codeSignIdentity && !buildConfig.mobileProvisionIdentifier && !buildConfig.teamIdentifier) {
+					buildConfig = this.readBuildConfigFromPlatforms().wait();
+				}
+			}
+
+			let signingStyle: XcodeSigningStyle;
+			if (buildConfig.codeSignIdentity || buildConfig.mobileProvisionIdentifier) {
+				signingStyle = "Manual";
+			} else if (buildConfig.teamIdentifier) {
+				signingStyle = "Automatic";
+			} else if (helpers.isInteractive()) {
+				let signingStyles = [
+					"Manual - Select existing provisioning profile for use",
+					"Automatic - Select Team ID for signing and let Xcode select managed provisioning profile"
+				];
+				let signingStyleIndex = signingStyles.indexOf(this.$prompter.promptForChoice("Select codesiging style", signingStyles).wait());
+				signingStyle = new Array<XcodeSigningStyle>("Manual", "Automatic")[signingStyleIndex];
+
+				switch(signingStyle) {
+					case "Manual":
+						let profile = this.getProvisioningProfile().wait();
+						if (!profile) {
+							this.$errors.failWithoutHelp("No matching provisioning profile found.");
+						}
+						this.persistProvisioningProfiles(profile.UUID).wait();
+						this.$logger.info("Apply provisioning profile: " + profile.Name + " (" + profile.TeamName + ") " + profile.Type + " UUID: " + profile.UUID);
+						buildConfig.mobileProvisionIdentifier = profile.UUID;
+						buildConfig.teamIdentifier = profile.TeamIdentifier[0];
+						break;
+					case "Automatic":
+						buildConfig.teamIdentifier = this.getDevelopmentTeam().wait();
+						this.persistDevelopmentTeam(buildConfig.teamIdentifier).wait();
+						break;
+				}
+			}
+
+			if (signingStyle) {
+				const pbxprojPath = path.join(projectRoot, this.$projectData.projectName + ".xcodeproj", "project.pbxproj");
+				const xcode = Xcode.open(pbxprojPath);
+				switch(signingStyle) {
+					case "Manual":
+						xcode.setManualSigningStyle(this.$projectData.projectName);
+						break;
+					case "Automatic":
+						xcode.setAutomaticSigningStyle(this.$projectData.projectName, buildConfig.teamIdentifier);
+						break;
+				}
+				xcode.save();
+			}
+
+			return buildConfig;
+		}).future<IiOSBuildConfig>()();
+	}
+
 	private getDevelopmentTeams(): Array<{ id: string, name: string }> {
 		let dir = path.join(process.env.HOME, "Library/MobileDevice/Provisioning Profiles/");
 		let files = this.$fs.readDirectory(dir).wait();
@@ -1045,39 +1113,78 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return null;
 	}
 
-	private readTeamId(): string {
-		let xcconfigFile = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, "build.xcconfig");
-		if (this.$fs.exists(xcconfigFile).wait()) {
-			let text = this.$fs.readText(xcconfigFile).wait();
-			let teamId: string;
-			text.split(/\r?\n/).forEach((line) => {
-				line = line.replace(/\/(\/)[^\n]*$/, "");
-				if (line.indexOf("DEVELOPMENT_TEAM") >= 0) {
-					teamId = line.split("=")[1].trim();
-					if (teamId[teamId.length - 1] === ';') {
-						teamId = teamId.slice(0, -1);
-					}
-				}
-			});
-			if (teamId) {
-				return teamId;
+	private readXCConfigSigning(): IFuture<IiOSBuildConfig> {
+		return (() => {
+			const result: IiOSBuildConfig = {};
+			let xcconfigFile = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, "build.xcconfig");
+			if (this.$fs.exists(xcconfigFile).wait()) {
+				let text = this.$fs.readText(xcconfigFile).wait();
+				text.split(/\r?\n/).forEach((line) => {
+					line = line.replace(/\/(\/)[^\n]*$/, "");
+					const read = (name: string) => {
+						if (line.indexOf(name) >= 0) {
+							let value = line.substr(line.lastIndexOf("=") + 1).trim();
+							if (value.charAt(value.length - 1) === ';') {
+								value = value.substr(0, value.length - 1).trim();
+							}
+							return value;
+						}
+						return undefined;
+					};
+					result.teamIdentifier = read("DEVELOPMENT_TEAM") || result.teamIdentifier;
+					result.codeSignIdentity = read("CODE_SIGN_IDENTITY") || result.codeSignIdentity;
+					result.mobileProvisionIdentifier = read("PROVISIONING_PROFILE[sdk=iphoneos*]") || result.mobileProvisionIdentifier;
+				});
 			}
-		}
-		let fileName = path.join(this.platformData.projectRoot, "teamid");
-		if (this.$fs.exists(fileName).wait()) {
-			return this.$fs.readText(fileName).wait();
-		}
-		return null;
+			return result;
+		}).future<provision.MobileProvision>()();
 	}
 
-	private getDevelopmentTeam(): string {
-		let teamId: string;
-		if (this.$options.teamId) {
-			teamId = this.$options.teamId;
-		} else {
-			teamId = this.readTeamId();
-		}
-		if (!teamId) {
+	private getProvisioningProfile(): IFuture<provision.MobileProvision> {
+		return (() => {
+			let profile: provision.MobileProvision;
+
+			const allCertificates = cert.read();
+			const allProfiles = provision.read();
+			const query: provision.Query = {
+				Certificates: allCertificates.valid,
+				AppId: this.$projectData.projectId,
+				Type: "Development"
+			};
+
+			if (this.$options.device) {
+				query.ProvisionedDevices = [this.$options.device];
+			} else {
+				this.$devicesService.initialize().wait();
+				let deviceUDIDs = _(this.$devicesService.getDeviceInstances())
+					.filter(d => this.$mobileHelper.isiOSPlatform(d.deviceInfo.platform))
+					.map(d => d.deviceInfo.identifier)
+					.toJSON();
+				query.ProvisionedDevices = deviceUDIDs;
+			}
+
+			const result = provision.select(allProfiles, query);
+			const choiceMap = result.eligable.reduce((acc, p) => {
+				acc[`'${p.Name}' (${p.TeamName}) ${p.Type}`] = p;
+				return acc;
+			}, <{ [display: string]: provision.MobileProvision }>{});
+
+			const choices = Object.keys(choiceMap);
+			if (choices.length > 0) {
+				const choice = this.$prompter.promptForChoice(
+					`Select provisioning profiles (found ${result.eligable.length} eligable, and ${result.nonEligable.length} non-eligable)`,
+					choices
+				).wait();
+				profile = choiceMap[choice];
+			}
+
+			return profile;
+		}).future<provision.MobileProvision>()();
+	}
+
+	private getDevelopmentTeam(): IFuture<string> {
+		return (() => {
+			let teamId: string;
 			let teams = this.getDevelopmentTeams();
 			this.$logger.warn("Xcode 8 requires a team id to be specified when building for device.");
 			this.$logger.warn("You can specify the team id by setting the DEVELOPMENT_TEAM setting in build.xcconfig file located in App_Resources folder of your app, or by using the --teamId option when calling run, debug or livesync commnads.");
@@ -1091,27 +1198,75 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				}
 				let choice = this.$prompter.promptForChoice('Found multiple development teams, select one:', choices).wait();
 				teamId = teams[choices.indexOf(choice)].id;
-
-				let choicesPersist = [
-					"Yes, set the DEVELOPMENT_TEAM setting in build.xcconfig file.",
-					"Yes, persist the team id in platforms folder.",
-					"No, don't persist this setting."
-				];
-				let choicePersist = this.$prompter.promptForChoice("Do you want to make teamId: " + teamId + " a persistent choice for your app?", choicesPersist).wait();
-				switch (choicesPersist.indexOf(choicePersist)) {
-					case 0:
-						let xcconfigFile = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, "build.xcconfig");
-						this.$fs.appendFile(xcconfigFile, "\nDEVELOPMENT_TEAM = " + teamId + "\n").wait();
-						break;
-					case 1:
-						this.$fs.writeFile(path.join(this.platformData.projectRoot, "teamid"), teamId);
-						break;
-					default:
-						break;
-				}
 			}
-		}
-		return teamId;
+			return teamId;
+		}).future<string>()();
+	}
+
+	private persistProvisioningProfiles(uuid: string): IFuture<void> {
+		return (() => {
+			let choicesPersist = [
+				"Yes, set the PROVISIONING_PROFILE[sdk=iphoneos*] setting in build.xcconfig file.",
+				"Yes, persist the mobileprovision uuid in platforms folder.",
+				"No, don't persist this setting."
+			];
+			let choicePersist = this.$prompter.promptForChoice("Do you want to make mobileprovision: " + uuid + " a persistent choice for your app?", choicesPersist).wait();
+			switch (choicesPersist.indexOf(choicePersist)) {
+				case 0:
+					let xcconfigFile = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, "build.xcconfig");
+					this.$fs.appendFile(xcconfigFile, "\nPROVISIONING_PROFILE[sdk=iphoneos*] = " + uuid + "\n").wait();
+					break;
+				case 1:
+					this.$fs.writeFile(path.join(this.platformData.projectRoot, "mobileprovision"), uuid).wait();
+					const teamidPath = path.join(this.platformData.projectRoot, "teamid");
+					if (this.$fs.exists(teamidPath).wait()) {
+						this.$fs.deleteFile(teamidPath).wait();
+					}
+					break;
+				default:
+					break;
+			}
+		}).future<void>()();
+	}
+
+	private persistDevelopmentTeam(teamId: string): IFuture<void> {
+		return (() => {
+			let choicesPersist = [
+				"Yes, set the DEVELOPMENT_TEAM setting in build.xcconfig file.",
+				"Yes, persist the team id in platforms folder.",
+				"No, don't persist this setting."
+			];
+			let choicePersist = this.$prompter.promptForChoice("Do you want to make teamId: " + teamId + " a persistent choice for your app?", choicesPersist).wait();
+			switch (choicesPersist.indexOf(choicePersist)) {
+				case 0:
+					let xcconfigFile = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, "build.xcconfig");
+					this.$fs.appendFile(xcconfigFile, "\nDEVELOPMENT_TEAM = " + teamId + "\n").wait();
+					break;
+				case 1:
+					this.$fs.writeFile(path.join(this.platformData.projectRoot, "teamid"), teamId).wait();
+					const mobileprovisionPath = path.join(this.platformData.projectRoot, "mobileprovision");
+					if (this.$fs.exists(mobileprovisionPath).wait()) {
+						this.$fs.deleteFile(mobileprovisionPath).wait();
+					}
+					break;
+				default:
+					break;
+			}
+		}).future<void>()();
+	}
+
+	private readBuildConfigFromPlatforms(): IFuture<IiOSBuildConfig> {
+		return (() => {
+			let mobileprovisionPath = path.join(this.platformData.projectRoot, "mobileprovision");
+			if (this.$fs.exists(mobileprovisionPath).wait()) {
+				return { mobileProvisionIdentifier: this.$fs.readText(mobileprovisionPath).wait() };
+			}
+			let teamidPath = path.join(this.platformData.projectRoot, "teamid");
+			if (this.$fs.exists(teamidPath).wait()) {
+				return { teamIdentifier: this.$fs.readText(teamidPath).wait() };
+			}
+			return <IiOSBuildConfig>{};
+		}).future<IiOSBuildConfig>()();
 	}
 }
 
