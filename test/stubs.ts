@@ -122,7 +122,7 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	getLsStats(path: string): IFuture<IFsStats> {
+	getLsStats(path: string): IFsStats {
 		return undefined;
 	}
 

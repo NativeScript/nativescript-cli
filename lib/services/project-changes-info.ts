@@ -102,7 +102,7 @@ export class ProjectChangesInfo {
 			if (fileStats.mtime.getTime() > mtime) {
 				return true;
 			}
-			let lFileStats = this.$fs.getLsStats(filePath).wait();
+			let lFileStats = this.$fs.getLsStats(filePath);
 			if (lFileStats.mtime.getTime() > mtime) {
 				return true;
 			}
