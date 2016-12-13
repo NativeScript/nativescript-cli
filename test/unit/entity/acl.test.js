@@ -140,7 +140,7 @@ describe('Acl', function() {
   });
 
   describe('addReader()', function() {
-    it('should not add exiting reader', function() {
+    it('should not add existing reader', function() {
       const user = randomString();
       const readers = [user];
       const acl = new Acl({ _acl: { r: readers } });
@@ -157,7 +157,7 @@ describe('Acl', function() {
   });
 
   describe('addReaderGroup()', function() {
-    it('should not add exiting reader group', function() {
+    it('should not add existing reader group', function() {
       const group = randomString();
       const readerGroups = [group];
       const acl = new Acl({ _acl: { groups: { r: readerGroups } } });
@@ -165,7 +165,7 @@ describe('Acl', function() {
       expect(acl.readerGroups).toEqual(readerGroups);
     });
 
-    it('should not add exiting reader group', function() {
+    it('should not add existing reader group', function() {
       const group = randomString();
       const acl = new Acl({ _acl: {} });
       acl.addReaderGroup(group);
@@ -174,7 +174,7 @@ describe('Acl', function() {
   });
 
   describe('addWriter()', function() {
-    it('should not add exiting writer', function() {
+    it('should not add existing writer', function() {
       const user = randomString();
       const writers = [user];
       const acl = new Acl({ _acl: { w: writers } });
@@ -191,7 +191,7 @@ describe('Acl', function() {
   });
 
   describe('addWriterGroup()', function() {
-    it('should not add exiting writer group', function() {
+    it('should not add existing writer group', function() {
       const group = randomString();
       const writerGroups = [group];
       const acl = new Acl({ _acl: { groups: { w: writerGroups } } });
@@ -199,7 +199,7 @@ describe('Acl', function() {
       expect(acl.writerGroups).toEqual(writerGroups);
     });
 
-    it('should not add exiting reader group', function() {
+    it('should not add existing reader group', function() {
       const group = randomString();
       const acl = new Acl({ _acl: {} });
       acl.addWriterGroup(group);
