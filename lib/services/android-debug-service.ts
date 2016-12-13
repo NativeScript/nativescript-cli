@@ -236,11 +236,6 @@ class AndroidDebugService implements IDebugService {
 
 	private startDebuggerClient(port: Number): IFuture<void> {
 		return (() => {
-			//let nodeInspectorModuleFilePath = require.resolve("node-inspector");
-			//let nodeInspectorModuleDir = path.dirname(nodeInspectorModuleFilePath);
-			//let nodeInspectorFullPath = path.join(nodeInspectorModuleDir, "bin", "inspector");
-			//this._debuggerClientProcess = this.$childProcess.spawn(process.argv[0], [nodeInspectorFullPath, "--debug-port", port.toString()], { stdio: "ignore", detached: true });
-			//this.$processService.attachToProcessExitSignals(this, this.debugStop);
 			this.$logger.info(`To start debugging, open the following URL in Chrome:\nchrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:${port}\n`);
 		}).future<void>()();
 	}
