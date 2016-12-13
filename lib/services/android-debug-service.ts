@@ -1,12 +1,9 @@
-import * as path from "path";
 import * as net from "net";
 import Future = require("fibers/future");
 import { sleep } from "../common/helpers";
 import {ChildProcess} from "child_process";
 
 class AndroidDebugService implements IDebugService {
-	private static DEFAULT_NODE_INSPECTOR_URL = "http://127.0.0.1:8080/debug";
-
 	private _device: Mobile.IAndroidDevice = null;
 	private _debuggerClientProcess: ChildProcess;
 
@@ -78,8 +75,10 @@ class AndroidDebugService implements IDebugService {
 			let port = -1;
 			let forwardsResult = this.device.adb.executeCommand(["forward", "--list"]).wait();
 
+			let unixSocketName = `${packageName}-inspectorServer`;
+
 			//matches 123a188909e6czzc tcp:40001 localabstract:org.nativescript.testUnixSockets-debug
-			let regexp = new RegExp(`(?:${deviceId} tcp:)([\\d]+)(?= localabstract:${packageName}-debug)`, "g");
+			let regexp = new RegExp(`(?:${deviceId} tcp:)([\\d]+)(?= localabstract:${unixSocketName})`, "g");
 			let match = regexp.exec(forwardsResult);
 			if (match) {
 				port = parseInt(match[1]);
@@ -92,7 +91,7 @@ class AndroidDebugService implements IDebugService {
 				}
 				port = candidatePort;
 
-				this.unixSocketForward(port, packageName + "-debug").wait();
+				this.unixSocketForward(port, `${unixSocketName}`).wait();
 			}
 
 			return port;
@@ -159,7 +158,6 @@ class AndroidDebugService implements IDebugService {
 			if (this.$options.client) {
 				let port = this.getForwardedLocalDebugPortForPackageName(deviceId, packageName).wait();
 				this.startDebuggerClient(port).wait();
-				this.openDebuggerClient(AndroidDebugService.DEFAULT_NODE_INSPECTOR_URL + "?port=" + port);
 			}
 		}).future<void>()();
 	}
@@ -238,11 +236,12 @@ class AndroidDebugService implements IDebugService {
 
 	private startDebuggerClient(port: Number): IFuture<void> {
 		return (() => {
-			let nodeInspectorModuleFilePath = require.resolve("node-inspector");
-			let nodeInspectorModuleDir = path.dirname(nodeInspectorModuleFilePath);
-			let nodeInspectorFullPath = path.join(nodeInspectorModuleDir, "bin", "inspector");
-			this._debuggerClientProcess = this.$childProcess.spawn(process.argv[0], [nodeInspectorFullPath, "--debug-port", port.toString()], { stdio: "ignore", detached: true });
-			this.$processService.attachToProcessExitSignals(this, this.debugStop);
+			//let nodeInspectorModuleFilePath = require.resolve("node-inspector");
+			//let nodeInspectorModuleDir = path.dirname(nodeInspectorModuleFilePath);
+			//let nodeInspectorFullPath = path.join(nodeInspectorModuleDir, "bin", "inspector");
+			//this._debuggerClientProcess = this.$childProcess.spawn(process.argv[0], [nodeInspectorFullPath, "--debug-port", port.toString()], { stdio: "ignore", detached: true });
+			//this.$processService.attachToProcessExitSignals(this, this.debugStop);
+			this.$logger.info(`To start debugging, open the following URL in Chrome:\nchrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:${port}\n`);
 		}).future<void>()();
 	}
 
@@ -253,20 +252,5 @@ class AndroidDebugService implements IDebugService {
 		}
 	}
 
-	private openDebuggerClient(url: string): void {
-		let defaultDebugUI = "chrome";
-		if (this.$hostInfo.isDarwin) {
-			defaultDebugUI = "Google Chrome";
-		}
-		if (this.$hostInfo.isLinux) {
-			defaultDebugUI = "google-chrome";
-		}
-
-		let debugUI = this.$config.ANDROID_DEBUG_UI || defaultDebugUI;
-		let child = this.$opener.open(url, debugUI);
-		if (!child) {
-			this.$errors.failWithoutHelp(`Unable to open ${debugUI}.`);
-		}
-	}
 }
 $injector.register("androidDebugService", AndroidDebugService);
