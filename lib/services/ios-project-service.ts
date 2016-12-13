@@ -1001,9 +1001,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			if (this.$options.teamId) {
 				buildConfig.teamIdentifier = this.$options.teamId;
 			} else {
-				buildConfig = this.readXCConfigSigning().wait();
+				buildConfig = this.readXCConfigSigning();
 				if (!buildConfig.codeSignIdentity && !buildConfig.mobileProvisionIdentifier && !buildConfig.teamIdentifier) {
-					buildConfig = this.readBuildConfigFromPlatforms().wait();
+					buildConfig = this.readBuildConfigFromPlatforms();
 				}
 			}
 
@@ -1091,31 +1091,29 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return null;
 	}
 
-	private readXCConfigSigning(): IFuture<IiOSBuildConfig> {
-		return (() => {
-			const result: IiOSBuildConfig = {};
-			let xcconfigFile = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, "build.xcconfig");
-			if (this.$fs.exists(xcconfigFile).wait()) {
-				let text = this.$fs.readText(xcconfigFile).wait();
-				text.split(/\r?\n/).forEach((line) => {
-					line = line.replace(/\/(\/)[^\n]*$/, "");
-					const read = (name: string) => {
-						if (line.indexOf(name) >= 0) {
-							let value = line.substr(line.lastIndexOf("=") + 1).trim();
-							if (value.charAt(value.length - 1) === ';') {
-								value = value.substr(0, value.length - 1).trim();
-							}
-							return value;
+	private readXCConfigSigning(): IiOSBuildConfig {
+		const result: IiOSBuildConfig = {};
+		let xcconfigFile = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, "build.xcconfig");
+		if (this.$fs.exists(xcconfigFile)) {
+			let text = this.$fs.readText(xcconfigFile);
+			text.split(/\r?\n/).forEach((line) => {
+				line = line.replace(/\/(\/)[^\n]*$/, "");
+				const read = (name: string) => {
+					if (line.indexOf(name) >= 0) {
+						let value = line.substr(line.lastIndexOf("=") + 1).trim();
+						if (value.charAt(value.length - 1) === ';') {
+							value = value.substr(0, value.length - 1).trim();
 						}
-						return undefined;
-					};
-					result.teamIdentifier = read("DEVELOPMENT_TEAM") || result.teamIdentifier;
-					result.codeSignIdentity = read("CODE_SIGN_IDENTITY") || result.codeSignIdentity;
-					result.mobileProvisionIdentifier = read("PROVISIONING_PROFILE[sdk=iphoneos*]") || result.mobileProvisionIdentifier;
-				});
-			}
-			return result;
-		}).future<provision.MobileProvision>()();
+						return value;
+					}
+					return undefined;
+				};
+				result.teamIdentifier = read("DEVELOPMENT_TEAM") || result.teamIdentifier;
+				result.codeSignIdentity = read("CODE_SIGN_IDENTITY") || result.codeSignIdentity;
+				result.mobileProvisionIdentifier = read("PROVISIONING_PROFILE[sdk=iphoneos*]") || result.mobileProvisionIdentifier;
+			});
+		}
+		return result;
 	}
 
 	private getProvisioningProfile(): IFuture<provision.MobileProvision> {
@@ -1192,13 +1190,13 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			switch (choicesPersist.indexOf(choicePersist)) {
 				case 0:
 					let xcconfigFile = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, "build.xcconfig");
-					this.$fs.appendFile(xcconfigFile, "\nPROVISIONING_PROFILE[sdk=iphoneos*] = " + uuid + "\n").wait();
+					this.$fs.appendFile(xcconfigFile, "\nPROVISIONING_PROFILE[sdk=iphoneos*] = " + uuid + "\n");
 					break;
 				case 1:
-					this.$fs.writeFile(path.join(this.platformData.projectRoot, "mobileprovision"), uuid).wait();
+					this.$fs.writeFile(path.join(this.platformData.projectRoot, "mobileprovision"), uuid);
 					const teamidPath = path.join(this.platformData.projectRoot, "teamid");
-					if (this.$fs.exists(teamidPath).wait()) {
-						this.$fs.deleteFile(teamidPath).wait();
+					if (this.$fs.exists(teamidPath)) {
+						this.$fs.deleteFile(teamidPath);
 					}
 					break;
 				default:
@@ -1218,13 +1216,13 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			switch (choicesPersist.indexOf(choicePersist)) {
 				case 0:
 					let xcconfigFile = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, "build.xcconfig");
-					this.$fs.appendFile(xcconfigFile, "\nDEVELOPMENT_TEAM = " + teamId + "\n").wait();
+					this.$fs.appendFile(xcconfigFile, "\nDEVELOPMENT_TEAM = " + teamId + "\n");
 					break;
 				case 1:
-					this.$fs.writeFile(path.join(this.platformData.projectRoot, "teamid"), teamId).wait();
+					this.$fs.writeFile(path.join(this.platformData.projectRoot, "teamid"), teamId);
 					const mobileprovisionPath = path.join(this.platformData.projectRoot, "mobileprovision");
-					if (this.$fs.exists(mobileprovisionPath).wait()) {
-						this.$fs.deleteFile(mobileprovisionPath).wait();
+					if (this.$fs.exists(mobileprovisionPath)) {
+						this.$fs.deleteFile(mobileprovisionPath);
 					}
 					break;
 				default:
@@ -1233,18 +1231,16 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}).future<void>()();
 	}
 
-	private readBuildConfigFromPlatforms(): IFuture<IiOSBuildConfig> {
-		return (() => {
-			let mobileprovisionPath = path.join(this.platformData.projectRoot, "mobileprovision");
-			if (this.$fs.exists(mobileprovisionPath).wait()) {
-				return { mobileProvisionIdentifier: this.$fs.readText(mobileprovisionPath).wait() };
-			}
-			let teamidPath = path.join(this.platformData.projectRoot, "teamid");
-			if (this.$fs.exists(teamidPath).wait()) {
-				return { teamIdentifier: this.$fs.readText(teamidPath).wait() };
-			}
-			return <IiOSBuildConfig>{};
-		}).future<IiOSBuildConfig>()();
+	private readBuildConfigFromPlatforms(): IiOSBuildConfig {
+		let mobileprovisionPath = path.join(this.platformData.projectRoot, "mobileprovision");
+		if (this.$fs.exists(mobileprovisionPath)) {
+			return { mobileProvisionIdentifier: this.$fs.readText(mobileprovisionPath) };
+		}
+		let teamidPath = path.join(this.platformData.projectRoot, "teamid");
+		if (this.$fs.exists(teamidPath)) {
+			return { teamIdentifier: this.$fs.readText(teamidPath) };
+		}
+		return <IiOSBuildConfig>{};
 	}
 }
 
