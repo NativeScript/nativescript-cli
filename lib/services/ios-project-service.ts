@@ -558,15 +558,15 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				this.platformData.configurationFileName
 			);
 	}
-	public ensureConfigurationFileInAppResources(): IFuture<void> {
-		return Future.fromResult();
+	public ensureConfigurationFileInAppResources(): void {
+		return null;
 	}
 
 	private mergeInfoPlists(): IFuture<void> {
 		return (() => {
 			let projectDir = this.$projectData.projectDir;
 			let infoPlistPath = this.$options.baseConfig || path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);
-			this.ensureConfigurationFileInAppResources().wait();
+			this.ensureConfigurationFileInAppResources();
 
 			if (!this.$fs.exists(infoPlistPath)) {
 				this.$logger.trace("Info.plist: No app/App_Resources/iOS/Info.plist found, falling back to pre-1.6.0 Info.plist behavior.");

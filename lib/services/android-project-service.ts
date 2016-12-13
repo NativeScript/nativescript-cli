@@ -302,20 +302,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public prepareProject(): void {
 		// Intentionally left empty.
-	 }
+	}
 
-	public ensureConfigurationFileInAppResources(): IFuture<void> {
-		return (() => {
-			let originalAndroidManifestFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, this.platformData.configurationFileName);
+	public ensureConfigurationFileInAppResources(): void {
+		let originalAndroidManifestFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, this.platformData.configurationFileName);
 
-			let manifestExists = this.$fs.exists(originalAndroidManifestFilePath);
-			if (!manifestExists) {
-				this.$logger.warn('No manifest found in ' + originalAndroidManifestFilePath);
-				return;
-			}
-			// Overwrite the AndroidManifest from runtime.
-			this.$fs.copyFile(originalAndroidManifestFilePath, this.platformData.configurationFilePath).wait();
-		}).future<void>()();
+		let manifestExists = this.$fs.exists(originalAndroidManifestFilePath);
+		if (!manifestExists) {
+			this.$logger.warn('No manifest found in ' + originalAndroidManifestFilePath);
+			return;
+		}
+		// Overwrite the AndroidManifest from runtime.
+		this.$fs.copyFile(originalAndroidManifestFilePath, this.platformData.configurationFilePath);
 	}
 
 	public prepareAppResources(appResourcesDirectoryPath: string): void {

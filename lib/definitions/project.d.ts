@@ -152,10 +152,12 @@ interface IPlatformProjectService {
 
 	deploy(deviceIdentifier: string): IFuture<void>;
 	processConfigurationFilesFromAppResources(): IFuture<void>;
+
 	/**
 	 * Ensures there is configuration file (AndroidManifest.xml, Info.plist) in app/App_Resources.
+	 * @returns {void}
 	 */
-	ensureConfigurationFileInAppResources(): IFuture<void>;
+	ensureConfigurationFileInAppResources(): void;
 }
 
 interface IAndroidProjectPropertiesManager {

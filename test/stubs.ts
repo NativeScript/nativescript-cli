@@ -96,7 +96,7 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	copyFile(sourceFileName: string, destinationFileName: string): IFuture<void> {
+	copyFile(sourceFileName: string, destinationFileName: string): void {
 		return undefined;
 	}
 
@@ -332,8 +332,8 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	processConfigurationFilesFromAppResources(): IFuture<void> {
 		return Future.fromResult();
 	}
-	ensureConfigurationFileInAppResources(): IFuture<void> {
-		return Future.fromResult();
+	ensureConfigurationFileInAppResources(): void {
+		return null;
 	}
 }
 

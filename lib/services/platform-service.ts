@@ -122,11 +122,11 @@ export class PlatformService implements IPlatformService {
 			let customTemplateOptions = this.getPathToPlatformTemplate(this.$options.platformTemplate, platformData.frameworkPackageName).wait();
 			let pathToTemplate = customTemplateOptions && customTemplateOptions.pathToTemplate;
 			platformData.platformProjectService.createProject(path.resolve(frameworkDir), installedVersion, pathToTemplate).wait();
-			platformData.platformProjectService.ensureConfigurationFileInAppResources().wait();
+			platformData.platformProjectService.ensureConfigurationFileInAppResources();
 			platformData.platformProjectService.interpolateData().wait();
 			platformData.platformProjectService.afterCreateProject(platformData.projectRoot);
 
-			this.applyBaseConfigOption(platformData).wait();
+			this.applyBaseConfigOption(platformData);
 
 			let frameworkPackageNameData: any = { version: installedVersion };
 			if (customTemplateOptions) {
@@ -255,7 +255,7 @@ export class PlatformService implements IPlatformService {
 			this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs);
 
 			if (changeInfo.configChanged || changeInfo.modulesChanged) {
-				this.applyBaseConfigOption(platformData).wait();
+				this.applyBaseConfigOption(platformData);
 				platformData.platformProjectService.processConfigurationFilesFromAppResources().wait();
 			}
 
@@ -268,7 +268,7 @@ export class PlatformService implements IPlatformService {
 	private copyAppFiles(platform: string): IFuture<void> {
 		return (() => {
 			let platformData = this.$platformsData.getPlatformData(platform);
-			platformData.platformProjectService.ensureConfigurationFileInAppResources().wait();
+			platformData.platformProjectService.ensureConfigurationFileInAppResources();
 			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
 			// Copy app folder to native project
@@ -376,23 +376,21 @@ export class PlatformService implements IPlatformService {
 		return packageFile;
 	}
 
-	public copyLastOutput(platform: string, targetPath: string, settings: { isForDevice: boolean }): IFuture<void> {
-		return (() => {
-			platform = platform.toLowerCase();
-			targetPath = path.resolve(targetPath);
+	public copyLastOutput(platform: string, targetPath: string, settings: { isForDevice: boolean }): void {
+		platform = platform.toLowerCase();
+		targetPath = path.resolve(targetPath);
 
-			let packageFile = this.lastOutputPath(platform, settings);
+		let packageFile = this.lastOutputPath(platform, settings);
 
-			this.$fs.ensureDirectoryExists(path.dirname(targetPath));
+		this.$fs.ensureDirectoryExists(path.dirname(targetPath));
 
-			if (this.$fs.exists(targetPath) && this.$fs.getFsStats(targetPath).isDirectory()) {
-				let sourceFileName = path.basename(packageFile);
-				this.$logger.trace(`Specified target path: '${targetPath}' is directory. Same filename will be used: '${sourceFileName}'.`);
-				targetPath = path.join(targetPath, sourceFileName);
-			}
-			this.$fs.copyFile(packageFile, targetPath).wait();
-			this.$logger.info(`Copied file '${packageFile}' to '${targetPath}'.`);
-		}).future<void>()();
+		if (this.$fs.exists(targetPath) && this.$fs.getFsStats(targetPath).isDirectory()) {
+			let sourceFileName = path.basename(packageFile);
+			this.$logger.trace(`Specified target path: '${targetPath}' is directory. Same filename will be used: '${sourceFileName}'.`);
+			targetPath = path.join(targetPath, sourceFileName);
+		}
+		this.$fs.copyFile(packageFile, targetPath);
+		this.$logger.info(`Copied file '${packageFile}' to '${targetPath}'.`);
 	}
 
 	public removePlatforms(platforms: string[]): void {
@@ -641,14 +639,12 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	private applyBaseConfigOption(platformData: IPlatformData): IFuture<void> {
-		return (() => {
-			if (this.$options.baseConfig) {
-				let newConfigFile = path.resolve(this.$options.baseConfig);
-				this.$logger.trace(`Replacing '${platformData.configurationFilePath}' with '${newConfigFile}'.`);
-				this.$fs.copyFile(newConfigFile, platformData.configurationFilePath).wait();
-			}
-		}).future<void>()();
+	private applyBaseConfigOption(platformData: IPlatformData): void {
+		if (this.$options.baseConfig) {
+			let newConfigFile = path.resolve(this.$options.baseConfig);
+			this.$logger.trace(`Replacing '${platformData.configurationFilePath}' with '${newConfigFile}'.`);
+			this.$fs.copyFile(newConfigFile, platformData.configurationFilePath);
+		}
 	}
 }
 $injector.register("platformService", PlatformService);

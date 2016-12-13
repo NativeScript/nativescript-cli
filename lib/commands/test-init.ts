@@ -60,7 +60,7 @@ class TestInitCommand implements ICommand {
 			let exampleFilePath = this.$resources.resolvePath(`test/example.${frameworkToInstall}.js`);
 
 			if (shouldCreateSampleTests && this.$fs.exists(exampleFilePath)) {
-				this.$fs.copyFile(exampleFilePath, path.join(testsDir, 'example.js')).wait();
+				this.$fs.copyFile(exampleFilePath, path.join(testsDir, 'example.js'));
 				this.$logger.info('\nExample test file created in app/tests/'.yellow);
 			} else {
 				this.$logger.info('\nPlace your test files under app/tests/'.yellow);

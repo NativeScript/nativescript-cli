@@ -259,7 +259,7 @@ describe('Platform Service Tests', () => {
 						afterCreateProject: (projectRoot: string): any => null,
 						getAppResourcesDestinationDirectoryPath: () => "",
 						processConfigurationFilesFromAppResources: () => Future.fromResult(),
-						ensureConfigurationFileInAppResources: () => Future.fromResult(),
+						ensureConfigurationFileInAppResources: (): any => null,
 						interpolateConfigurationFile: () => Future.fromResult(),
 						isPlatformPrepared: (projectRoot: string) => false
 					}
@@ -333,7 +333,7 @@ describe('Platform Service Tests', () => {
 						afterCreateProject: (projectRoot: string): any => null,
 						getAppResourcesDestinationDirectoryPath: () => "",
 						processConfigurationFilesFromAppResources: () => Future.fromResult(),
-						ensureConfigurationFileInAppResources: () => Future.fromResult(),
+						ensureConfigurationFileInAppResources: (): any => null,
 						interpolateConfigurationFile: () => Future.fromResult(),
 						isPlatformPrepared: (projectRoot: string) => false
 					}

@@ -42,7 +42,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 
 			this.$fs.createDirectory(innerDirectory);
 
-			this.$fs.copyFile(data.ipaFilePath, ipaFileLocation).wait();
+			this.$fs.copyFile(data.ipaFilePath, ipaFileLocation);
 
 			let ipaFileHash = this.$fs.getFileShasum(ipaFileLocation, {algorithm: "md5"}).wait(),
 				ipaFileSize = this.$fs.getFileSize(ipaFileLocation),

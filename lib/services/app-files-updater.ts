@@ -87,7 +87,7 @@ export class AppFilesUpdater {
 				return this.fs.createDirectory(destinationPath);
 			}
 
-			return this.fs.copyFile(source, destinationPath).wait();
+			return this.fs.copyFile(source, destinationPath);
 		});
 	}
 }

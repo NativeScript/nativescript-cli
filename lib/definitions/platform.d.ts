@@ -50,7 +50,15 @@ interface IPlatformService {
 	 */
 	getLatestApplicationPackageForEmulator(platformData: IPlatformData): IApplicationPackage;
 
-	copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}): IFuture<void>;
+	/**
+	 * Copies latest build output to a specified location.
+	 * @param {string} platform Mobile platform - Android, iOS.
+	 * @param {string} targetPath Destination where the build artifact should be copied.
+	 * @param {{isForDevice: boolean}} settings Defines if the searched artifact should be for simulator.
+	 * @returns {void}
+	 */
+	copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}): void;
+
 	lastOutputPath(platform: string, settings: { isForDevice: boolean }): string;
 	ensurePlatformInstalled(platform: string): IFuture<void>;
 }
