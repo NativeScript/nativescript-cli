@@ -7,7 +7,6 @@ import Promise from 'es6-promise';
 import path from 'path';
 import url from 'url';
 import isString from 'lodash/isString';
-import assign from 'lodash/assign';
 const authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 const invalidatePathname = process.env.KINVEY_MIC_INVALIDATE_PATHNAME || '/oauth/invalidate';
@@ -40,10 +39,12 @@ export class MobileIdentityConnect extends Identity {
     return true;
   }
 
-  login(redirectUri, options = {}) {
-    options = assign({ authorizationGrant: AuthorizationGrant.AuthorizationCodeAPI }, options);
+  isSupported() {
+    return true;
+  }
+
+  login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
     const clientId = this.client.appKey;
-    const authorizationGrant = options.authorizationGrant;
 
     const promise = Promise.resolve()
       .then(() => {

@@ -1,7 +1,7 @@
-import { MIC, AuthorizationGrant } from 'src/identity';
-import { InsufficientCredentialsError, MobileIdentityConnectError } from 'src/errors';
-import { Client } from 'src/client';
-import { randomString } from 'src/utils';
+import { MobileIdentityConnect, AuthorizationGrant } from '../../../src/identity';
+import { InsufficientCredentialsError, MobileIdentityConnectError } from '../../../src/errors';
+import { Client } from '../../../src/client';
+import { randomString } from '../../../src/utils';
 import assign from 'lodash/assign';
 import expect from 'expect';
 import nock from 'nock';
@@ -21,33 +21,19 @@ describe('MobileIdentityConnect', function() {
 
   describe('identity', function() {
     it('should return MobileIdentityConnect', function() {
-      expect(MIC.identity).toEqual('kinveyAuth');
-      expect(new MIC().identity).toEqual('kinveyAuth');
+      expect(MobileIdentityConnect.identity).toEqual('kinveyAuth');
+      expect(new MobileIdentityConnect().identity).toEqual('kinveyAuth');
     });
   });
 
   describe('isSupported()', function() {
     it('should return true', function() {
-      expect(MIC.isSupported()).toEqual(true);
-      expect(new MIC().isSupported()).toEqual(true);
+      expect(MobileIdentityConnect.isSupported()).toEqual(true);
+      expect(new MobileIdentityConnect().isSupported()).toEqual(true);
     });
   });
 
   describe('login()', function() {
-    it('should throw an error for AuthorizationGrant.AuthorizationCodeLoginPage', function() {
-      const mic = new MIC();
-      return mic.login(redirectUri, {
-        authorizationGrant: AuthorizationGrant.AuthorizationCodeLoginPage
-      })
-        .catch((error) => {
-          expect(error).toBeA(MobileIdentityConnectError);
-          expect(error.name).toEqual('MobileIdentityConnectError');
-          expect(error.message).toEqual(
-            'AuthorizationGrant.AuthorizationCodeLoginPage is not supported on this platform.'
-          );
-        });
-    });
-
     describe('AuthorizationGrant.AuthorizationCodeAPI', function() {
       it('should fail with invalid credentials', function() {
         const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
@@ -79,8 +65,8 @@ describe('MobileIdentityConnect', function() {
             'Content-Type': 'application/json; charset=utf-8'
           });
 
-        const mic = new MIC();
-        return mic.login(redirectUri, {
+        const mic = new MobileIdentityConnect();
+        return mic.login(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
           username: username,
           password: password
         })
@@ -115,8 +101,8 @@ describe('MobileIdentityConnect', function() {
             'Content-Type': 'application/json; charset=utf-8'
           });
 
-        const mic = new MIC();
-        return mic.login(redirectUri, {
+        const mic = new MobileIdentityConnect();
+        return mic.login(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
           username: username,
           password: password
         })
@@ -170,14 +156,14 @@ describe('MobileIdentityConnect', function() {
             'Content-Type': 'application/json; charset=utf-8'
           });
 
-        const mic = new MIC();
-        return mic.login(redirectUri, {
+        const mic = new MobileIdentityConnect();
+        return mic.login(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
           username: username,
           password: password
         })
           .then((response) => {
             expect(response).toEqual(assign(token, {
-              identity: MIC.identity,
+              identity: MobileIdentityConnect.identity,
               client_id: this.client.appKey,
               redirect_uri: redirectUri,
               protocol: this.client.micProtocol,
