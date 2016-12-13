@@ -425,9 +425,7 @@ describe('Platform Service Tests', () => {
 				let cleanCommand = testInjector.resolveCommand("platform|clean");
 
 				platformService.removePlatforms = (platforms: string[]) => {
-					return (() => {
-						platformActions.push({ action: "removePlatforms", platforms });
-					}).future<void>()();
+					platformActions.push({ action: "removePlatforms", platforms });
 				};
 
 				platformService.addPlatforms = (platforms: string[]) => {

@@ -14,18 +14,17 @@ function createTestInjector(configuration?: {shouldNpmInstallThrow: boolean, npm
 	injector.register("errors", stubs.ErrorsStub);
 	injector.register("logger", stubs.LoggerStub);
 	injector.register("fs", {
-		readDirectory: (dirPath: string) => {
+		readDirectory: (dirPath: string): string[] => {
 			if(dirPath.toLowerCase().indexOf("node_modules") !== -1) {
-				return Future.fromResult(configuration.npmInstallationDirNodeModulesContents);
+				return configuration.npmInstallationDirNodeModulesContents;
 			}
-			return Future.fromResult(configuration.npmInstallationDirContents);
+			return configuration.npmInstallationDirContents;
 		},
 
 		deleteDirectory: (directory: string) => {
 			if(directory.indexOf("node_modules") !== -1) {
 				isDeleteDirectoryCalledForNodeModulesDir = true;
 			}
-			return Future.fromResult();
 		}
 
 	});

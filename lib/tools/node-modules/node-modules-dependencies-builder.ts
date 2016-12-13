@@ -12,12 +12,12 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
         this.resolvedDependencies = [];
     }
 
-    public getProductionDependencies(projectPath: string): any {
+    public getProductionDependencies(projectPath: string): any[] {
         this.projectPath = projectPath;
         this.rootNodeModulesPath = path.join(this.projectPath, "node_modules");
 
         let projectPackageJsonpath = path.join(this.projectPath, "package.json");
-        let packageJsonContent = this.$fs.readJson(projectPackageJsonpath).wait();
+        let packageJsonContent = this.$fs.readJson(projectPackageJsonpath);
 
         _.keys(packageJsonContent.dependencies).forEach(dependencyName => {
             let depth = 0;
@@ -74,7 +74,7 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
         let packageJsonExists = fs.lstatSync(packageJsonPath).isFile();
 
         if (packageJsonExists) {
-            let packageJsonContents = this.$fs.readJson(packageJsonPath).wait();
+            let packageJsonContents = this.$fs.readJson(packageJsonPath);
 
             if (!!packageJsonContents.nativescript) {
                 // add `nativescript` property, necessary for resolving plugins
@@ -100,7 +100,7 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
     }
 
     private moduleExists(modulePath: string): boolean {
-       try {
+        try {
             let exists = fs.lstatSync(modulePath);
             if (exists.isSymbolicLink()) {
                 exists = fs.lstatSync(fs.realpathSync(modulePath));

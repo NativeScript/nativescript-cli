@@ -28,15 +28,15 @@ export class InitService implements IInitService {
 		return (() => {
 			let projectData: any = {};
 
-			if (this.$fs.exists(this.projectFilePath).wait()) {
-				projectData = this.$fs.readJson(this.projectFilePath).wait();
+			if (this.$fs.exists(this.projectFilePath)) {
+				projectData = this.$fs.readJson(this.projectFilePath);
 			}
 
 			let projectDataBackup = _.extend({}, projectData);
 
 			if (!projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE]) {
 				projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE] = {};
-				this.$fs.writeJson(this.projectFilePath, projectData).wait(); // We need to create package.json file here in order to prevent "No project found at or above and neither was a --path specified." when resolving platformsData
+				this.$fs.writeJson(this.projectFilePath, projectData); // We need to create package.json file here in order to prevent "No project found at or above and neither was a --path specified." when resolving platformsData
 			}
 
 			try {
@@ -67,9 +67,9 @@ export class InitService implements IInitService {
 				let tnsCoreModulesVersionInPackageJson = this.useDefaultValue ? projectData.dependencies[constants.TNS_CORE_MODULES_NAME] : null;
 				projectData.dependencies[constants.TNS_CORE_MODULES_NAME] = this.$options.tnsModulesVersion || tnsCoreModulesVersionInPackageJson || this.getVersionData(constants.TNS_CORE_MODULES_NAME).wait()["version"];
 
-				this.$fs.writeJson(this.projectFilePath, projectData).wait();
+				this.$fs.writeJson(this.projectFilePath, projectData);
 			} catch (err) {
-				this.$fs.writeJson(this.projectFilePath, projectDataBackup).wait();
+				this.$fs.writeJson(this.projectFilePath, projectDataBackup);
 				throw err;
 			}
 

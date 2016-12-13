@@ -182,7 +182,7 @@ class DoctorService implements IDoctorService {
 			"name": "nativescript-check-cocoapods",
 			"version": "0.0.1"
 		};
-		this.$fs.writeJson(path.join(projDir, "package.json"), packageJsonData).wait();
+		this.$fs.writeJson(path.join(projDir, "package.json"), packageJsonData);
 
 		let spinner = new clui.Spinner("Installing iOS runtime.");
 		try {
@@ -193,7 +193,7 @@ class DoctorService implements IDoctorService {
 			this.$fs.writeFile(
 				path.join(iosDir, "Podfile"),
 				`${this.$cocoapodsService.getPodfileHeader(DoctorService.PROJECT_NAME_PLACEHOLDER)}pod 'AFNetworking', '~> 1.0'${this.$cocoapodsService.getPodfileFooter()}`
-			).wait();
+			);
 
 			spinner.message("Verifying CocoaPods. This may take some time, please be patient.");
 			spinner.start();
@@ -212,7 +212,7 @@ class DoctorService implements IDoctorService {
 				return true;
 			}
 
-			return !(this.$fs.exists(path.join(iosDir, `${DoctorService.PROJECT_NAME_PLACEHOLDER}.xcworkspace`)).wait());
+			return !(this.$fs.exists(path.join(iosDir, `${DoctorService.PROJECT_NAME_PLACEHOLDER}.xcworkspace`)));
 		} catch (err) {
 			this.$logger.trace(`verifyCocoaPods error: ${err}`);
 			return true;

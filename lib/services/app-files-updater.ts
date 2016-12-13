@@ -2,7 +2,6 @@ import * as path from "path";
 import * as minimatch from "minimatch";
 import * as constants from "../constants";
 import * as fs from "fs";
-import Future = require("fibers/future");
 
 export class AppFilesUpdater {
 	constructor(
@@ -39,15 +38,15 @@ export class AppFilesUpdater {
 	}
 
 	protected readDestinationDir(): string[] {
-		if (this.fs.exists(this.appDestinationDirectoryPath).wait()) {
-			return this.fs.readDirectory(this.appDestinationDirectoryPath).wait();
+		if (this.fs.exists(this.appDestinationDirectoryPath)) {
+			return this.fs.readDirectory(this.appDestinationDirectoryPath);
 		} else {
 			return [];
 		}
 	}
 
 	protected deleteDestinationItem(directoryItem: string): void {
-		this.fs.deleteDirectory(path.join(this.appDestinationDirectoryPath, directoryItem)).wait();
+		this.fs.deleteDirectory(path.join(this.appDestinationDirectoryPath, directoryItem));
 	}
 
 	protected readSourceDir(): string[] {
@@ -76,18 +75,19 @@ export class AppFilesUpdater {
 	}
 
 	protected copyAppSourceFiles(sourceFiles: string[]): void {
-		let copyFileFutures = sourceFiles.map(source => {
+		sourceFiles.map(source => {
 			let destinationPath = path.join(this.appDestinationDirectoryPath, path.relative(this.appSourceDirectoryPath, source));
-            let exists = fs.lstatSync(source);
-            if (exists.isSymbolicLink()) {
+
+			let exists = fs.lstatSync(source);
+			if (exists.isSymbolicLink()) {
 				source = fs.realpathSync(source);
-                exists = fs.lstatSync(source);
-            }
+				exists = fs.lstatSync(source);
+			}
 			if (exists.isDirectory()) {
 				return this.fs.createDirectory(destinationPath);
 			}
+
 			return this.fs.copyFile(source, destinationPath);
 		});
-		Future.wait(copyFileFutures);
 	}
 }

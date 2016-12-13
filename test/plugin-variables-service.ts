@@ -53,7 +53,7 @@ function createProjectFile(testInjector: IInjector): IFuture<string> {
 			"name": "myProject",
 			"nativescript": { }
 		};
-		testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), projectData).wait();
+		testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), projectData);
 
 		return tempFolder;
 	}).future<string>()();
@@ -123,7 +123,7 @@ describe("Plugin Variables service", () => {
 			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
-			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json")).wait();
+			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
 			assert.equal(pluginVariableValue, projectFileContent[staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][`${pluginData.name}-variables`]["MY_APP_ID"]);
 		});
 		it("does not fail when default value is specified", () => {
@@ -139,7 +139,7 @@ describe("Plugin Variables service", () => {
 			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
-			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json")).wait();
+			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
 			assert.equal(defaultPluginValue, projectFileContent[staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][`${pluginData.name}-variables`]["MY_TEST_PLUGIN_VARIABLE"]);
 		});
 	});
@@ -167,7 +167,7 @@ describe("Plugin Variables service", () => {
 			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
-			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json")).wait();
+			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
 			assert.equal(pluginVariableValue, projectFileContent[staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][`${pluginData.name}-variables`]["APP_URL"]);
 		});
 		it("does not prompt for plugin variable value when default value is specified", () => {
@@ -183,7 +183,7 @@ describe("Plugin Variables service", () => {
 			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
-			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json")).wait();
+			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
 			assert.equal(defaultPluginValue, projectFileContent[staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][`${pluginData.name}-variables`]["APP_NAME"]);
 		});
 		it("does not prompt for plugin variable value when --var option is specified", () => {
@@ -203,7 +203,7 @@ describe("Plugin Variables service", () => {
 			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
-			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json")).wait();
+			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
 			assert.equal(pluginVariableValue, projectFileContent[staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][`${pluginData.name}-variables`]["USERNAME"]);
 		});
 	});
@@ -217,7 +217,7 @@ describe("Plugin Variables service", () => {
 
 			let fs: IFileSystem = testInjector.resolve("fs");
 			let filePath = path.join(tempFolder, "myfile");
-			fs.writeFile(filePath, "").wait();
+			fs.writeFile(filePath, "");
 
 			let pluginVariablesService = testInjector.resolve("pluginVariablesService");
 
@@ -240,11 +240,11 @@ describe("Plugin Variables service", () => {
 
 			// Write plugin variables values to package.json file
 			let packageJsonFilePath = path.join(projectData.projectDir, "package.json");
-			let data = fs.readJson(packageJsonFilePath).wait();
+			let data = fs.readJson(packageJsonFilePath);
 			data["nativescript"]["myTestPlugin-variables"] = {
 				"FB_APP_NAME": "myFacebookAppName"
 			};
-			fs.writeJson(packageJsonFilePath, data).wait();
+			fs.writeJson(packageJsonFilePath, data);
 
 			let pluginVariables = { "FB_APP_NAME": { } };
 			let pluginData = createPluginData(pluginVariables);
@@ -256,11 +256,11 @@ describe("Plugin Variables service", () => {
 					'</application>' +
 				'</manifest>';
 			let filePath = path.join(tempFolder, "myfile");
-			fs.writeFile(filePath, pluginConfigurationFileContent).wait();
+			fs.writeFile(filePath, pluginConfigurationFileContent);
 
 			pluginVariablesService.interpolatePluginVariables(pluginData, filePath).wait();
 
-			let result = fs.readText(filePath).wait();
+			let result = fs.readText(filePath);
 			let expectedResult = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
 					'<application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >' +
@@ -279,11 +279,11 @@ describe("Plugin Variables service", () => {
 
 			// Write plugin variables values to package.json file
 			let packageJsonFilePath = path.join(projectData.projectDir, "package.json");
-			let data = fs.readJson(packageJsonFilePath).wait();
+			let data = fs.readJson(packageJsonFilePath);
 			data["nativescript"]["myTestPlugin-variables"] = {
 				"FB_APP_NAME": "myFacebookAppName"
 			};
-			fs.writeJson(packageJsonFilePath, data).wait();
+			fs.writeJson(packageJsonFilePath, data);
 
 			let pluginVariables = { "FB_APP_NAME": { } };
 			let pluginData = createPluginData(pluginVariables);
@@ -295,11 +295,11 @@ describe("Plugin Variables service", () => {
 					'</application>' +
 				'</manifest>';
 			let filePath = path.join(tempFolder, "myfile");
-			fs.writeFile(filePath, pluginConfigurationFileContent).wait();
+			fs.writeFile(filePath, pluginConfigurationFileContent);
 
 			pluginVariablesService.interpolatePluginVariables(pluginData, filePath).wait();
 
-			let result = fs.readText(filePath).wait();
+			let result = fs.readText(filePath);
 			let expectedResult = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
 					'<application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >' +
@@ -317,12 +317,12 @@ describe("Plugin Variables service", () => {
 			let fs: IFileSystem = testInjector.resolve("fs");
 
 			let packageJsonFilePath = path.join(projectData.projectDir, "package.json");
-			let data = fs.readJson(packageJsonFilePath).wait();
+			let data = fs.readJson(packageJsonFilePath);
 			data["nativescript"]["myTestPlugin-variables"] = {
 				"FB_APP_NAME": "myFacebookAppName",
 				"FB_APP_URL": "myFacebookAppURl"
 			};
-			fs.writeJson(packageJsonFilePath, data).wait();
+			fs.writeJson(packageJsonFilePath, data);
 
 			let pluginVariables = { "FB_APP_NAME": { }, "FB_APP_URL": { } };
 			let pluginData = createPluginData(pluginVariables);
@@ -335,11 +335,11 @@ describe("Plugin Variables service", () => {
 					'</application>' +
 				'</manifest>';
 			let filePath = path.join(tempFolder, "myfile");
-			fs.writeFile(filePath, pluginConfigurationFileContent).wait();
+			fs.writeFile(filePath, pluginConfigurationFileContent);
 
 			pluginVariablesService.interpolatePluginVariables(pluginData, filePath).wait();
 
-			let result = fs.readText(filePath).wait();
+			let result = fs.readText(filePath);
 			let expectedResult = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
 					'<application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >' +

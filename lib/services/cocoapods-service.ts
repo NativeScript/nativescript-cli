@@ -16,54 +16,52 @@ export class CocoaPodsService implements ICocoaPodsService {
 		return `${EOL}end`;
 	}
 
-	public mergePodfileHookContent(hookName: string, pathToPodfile: string): IFuture<void> {
-		return (() => {
-			if (!this.$fs.exists(pathToPodfile).wait()) {
-				throw new Error(`The Podfile ${pathToPodfile} does not exist.`);
+	public mergePodfileHookContent(hookName: string, pathToPodfile: string): void {
+		if (!this.$fs.exists(pathToPodfile)) {
+			throw new Error(`The Podfile ${pathToPodfile} does not exist.`);
+		}
+
+		let podfileContent = this.$fs.readText(pathToPodfile);
+		let hookStart = `${hookName} do`;
+
+		let hookDefinitionRegExp = new RegExp(`${hookStart} *(\\|(\\w+)\\|)?`, "g");
+		let newFunctionNameIndex = 1;
+		let newFunctions: IRubyFunction[] = [];
+
+		let replacedContent = podfileContent.replace(hookDefinitionRegExp, (substring: string, firstGroup: string, secondGroup: string, index: number): string => {
+			let newFunctionName = `${hookName}${newFunctionNameIndex++}`;
+			let newDefinition = `def ${newFunctionName}`;
+
+			let rubyFunction: IRubyFunction = { functionName: newFunctionName };
+			// firstGroup is the block parameter, secondGroup is the block parameter name.
+			if (firstGroup && secondGroup) {
+				newDefinition = `${newDefinition} (${secondGroup})`;
+				rubyFunction.functionParameters = secondGroup;
 			}
 
-			let podfileContent = this.$fs.readText(pathToPodfile).wait();
-			let hookStart = `${hookName} do`;
+			newFunctions.push(rubyFunction);
+			return newDefinition;
+		});
 
-			let hookDefinitionRegExp = new RegExp(`${hookStart} *(\\|(\\w+)\\|)?`, "g");
-			let newFunctionNameIndex = 1;
-			let newFunctions: IRubyFunction[] = [];
+		if (newFunctions.length > 1) {
+			// Execute all methods in the hook and pass the parameter to them.
+			let blokParameterName = "installer";
+			let mergedHookContent = `${hookStart} |${blokParameterName}|${EOL}`;
 
-			let replacedContent = podfileContent.replace(hookDefinitionRegExp, (substring: string, firstGroup: string, secondGroup: string, index: number): string => {
-				let newFunctionName = `${hookName}${newFunctionNameIndex++}`;
-				let newDefinition = `def ${newFunctionName}`;
-
-				let rubyFunction: IRubyFunction = { functionName: newFunctionName };
-				// firstGroup is the block parameter, secondGroup is the block parameter name.
-				if (firstGroup && secondGroup) {
-					newDefinition = `${newDefinition} (${secondGroup})`;
-					rubyFunction.functionParameters = secondGroup;
+			_.each(newFunctions, (rubyFunction: IRubyFunction) => {
+				let functionExecution = rubyFunction.functionName;
+				if (rubyFunction.functionParameters && rubyFunction.functionParameters.length) {
+					functionExecution = `${functionExecution} ${blokParameterName}`;
 				}
 
-				newFunctions.push(rubyFunction);
-				return newDefinition;
+				mergedHookContent = `${mergedHookContent}  ${functionExecution}${EOL}`;
 			});
 
-			if (newFunctions.length > 1) {
-				// Execute all methods in the hook and pass the parameter to them.
-				let blokParameterName = "installer";
-				let mergedHookContent = `${hookStart} |${blokParameterName}|${EOL}`;
+			mergedHookContent = `${mergedHookContent}end`;
 
-				_.each(newFunctions, (rubyFunction: IRubyFunction) => {
-					let functionExecution = rubyFunction.functionName;
-					if (rubyFunction.functionParameters && rubyFunction.functionParameters.length) {
-						functionExecution = `${functionExecution} ${blokParameterName}`;
-					}
-
-					mergedHookContent = `${mergedHookContent}  ${functionExecution}${EOL}`;
-				});
-
-				mergedHookContent = `${mergedHookContent}end`;
-
-				let newPodfileContent = `${replacedContent}${EOL}${mergedHookContent}`;
-				this.$fs.writeFile(pathToPodfile, newPodfileContent).wait();
-			}
-		}).future<void>()();
+			let newPodfileContent = `${replacedContent}${EOL}${mergedHookContent}`;
+			this.$fs.writeFile(pathToPodfile, newPodfileContent);
+		}
 	}
 }
 

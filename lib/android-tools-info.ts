@@ -42,7 +42,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 				this.showWarningsAsErrors = options.showWarningsAsErrors;
 			}
 			if (!this.pathToAndroidExecutable) {
-				if (this.validateAndroidHomeEnvVariable(this.androidHome).wait()) {
+				if (this.validateAndroidHomeEnvVariable(this.androidHome)) {
 					let androidPath = path.join(this.androidHome, "tools", this.androidExecutableName);
 					if (!this.trySetAndroidPath(androidPath).wait() && !this.trySetAndroidPath(this.androidExecutableName).wait()) {
 						this.printMessage(`Unable to find "${this.androidExecutableName}" executable file. Make sure you have set ANDROID_HOME environment variable correctly.`);
@@ -100,7 +100,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			let detectedErrors = false;
 			this.showWarningsAsErrors = options && options.showWarningsAsErrors;
 			let toolsInfoData = this.getToolsInfo().wait();
-			let isAndroidHomeValid = this.validateAndroidHomeEnvVariable(toolsInfoData.androidHomeEnvVar).wait();
+			let isAndroidHomeValid = this.validateAndroidHomeEnvVariable(toolsInfoData.androidHomeEnvVar);
 			if (!toolsInfoData.compileSdkVersion) {
 				this.printMessage(`Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later.`,
 					"Run `$ android` to manage your Android SDK versions.");
@@ -258,32 +258,30 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		}).future<number>()();
 	}
 
-	private getMatchingDir(pathToDir: string, versionRange: string): IFuture<string> {
-		return ((): string => {
-			let selectedVersion: string;
-			if (this.$fs.exists(pathToDir).wait()) {
-				let subDirs = this.$fs.readDirectory(pathToDir).wait();
-				this.$logger.trace(`Directories found in ${pathToDir} are ${subDirs.join(", ")}`);
+	private getMatchingDir(pathToDir: string, versionRange: string): string {
+		let selectedVersion: string;
+		if (this.$fs.exists(pathToDir)) {
+			let subDirs = this.$fs.readDirectory(pathToDir);
+			this.$logger.trace(`Directories found in ${pathToDir} are ${subDirs.join(", ")}`);
 
-				let subDirsVersions = subDirs
-					.map(dirName => {
-						let dirNameGroups = dirName.match(AndroidToolsInfo.VERSION_REGEX);
-						if (dirNameGroups) {
-							return dirNameGroups[1];
-						}
+			let subDirsVersions = subDirs
+				.map(dirName => {
+					let dirNameGroups = dirName.match(AndroidToolsInfo.VERSION_REGEX);
+					if (dirNameGroups) {
+						return dirNameGroups[1];
+					}
 
-						return null;
-					})
-					.filter(dirName => !!dirName);
-				this.$logger.trace(`Versions found in ${pathToDir} are ${subDirsVersions.join(", ")}`);
-				let version = semver.maxSatisfying(subDirsVersions, versionRange);
-				if (version) {
-					selectedVersion = _.find(subDirs, dir => dir.indexOf(version) !== -1);
-				}
+					return null;
+				})
+				.filter(dirName => !!dirName);
+			this.$logger.trace(`Versions found in ${pathToDir} are ${subDirsVersions.join(", ")}`);
+			let version = semver.maxSatisfying(subDirsVersions, versionRange);
+			if (version) {
+				selectedVersion = _.find(subDirs, dir => dir.indexOf(version) !== -1);
 			}
-			this.$logger.trace("Selected version is: ", selectedVersion);
-			return selectedVersion;
-		}).future<string>()();
+		}
+		this.$logger.trace("Selected version is: ", selectedVersion);
+		return selectedVersion;
 	}
 
 	private getBuildToolsRange(): string {
@@ -296,7 +294,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			if (this.androidHome) {
 				let pathToBuildTools = path.join(this.androidHome, "build-tools");
 				let buildToolsRange = this.getBuildToolsRange();
-				buildToolsVersion = this.getMatchingDir(pathToBuildTools, buildToolsRange).wait();
+				buildToolsVersion = this.getMatchingDir(pathToBuildTools, buildToolsRange);
 			}
 
 			return buildToolsVersion;
@@ -321,7 +319,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			let requiredAppCompatRange = this.getAppCompatRange().wait();
 			if (this.androidHome && requiredAppCompatRange) {
 				let pathToAppCompat = path.join(this.androidHome, "extras", "android", "m2repository", "com", "android", "support", "appcompat-v7");
-				selectedAppCompatVersion = this.getMatchingDir(pathToAppCompat, requiredAppCompatRange).wait();
+				selectedAppCompatVersion = this.getMatchingDir(pathToAppCompat, requiredAppCompatRange);
 			}
 
 			this.$logger.trace(`Selected AppCompat version is: ${selectedAppCompatVersion}`);
@@ -366,25 +364,23 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	}
 
 	private _cachedAndroidHomeValidationResult: boolean = null;
-	private validateAndroidHomeEnvVariable(androidHomeEnvVar: string): IFuture<boolean> {
-		return ((): boolean => {
-			if (this._cachedAndroidHomeValidationResult === null) {
-				this._cachedAndroidHomeValidationResult = true;
-				let expectedDirectoriesInAndroidHome = ["build-tools", "tools", "platform-tools", "extras"];
-				if (!androidHomeEnvVar || !this.$fs.exists(androidHomeEnvVar).wait()) {
-					this.printMessage("The ANDROID_HOME environment variable is not set or it points to a non-existent directory. You will not be able to perform any build-related operations for Android.",
-						"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory.");
-					this._cachedAndroidHomeValidationResult = false;
-				} else if (!_.some(expectedDirectoriesInAndroidHome.map(dir => this.$fs.exists(path.join(androidHomeEnvVar, dir)).wait()))) {
-					this.printMessage("The ANDROID_HOME environment variable points to incorrect directory. You will not be able to perform any build-related operations for Android.",
-						"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory, " +
-						"where you will find `tools` and `platform-tools` directories.");
-					this._cachedAndroidHomeValidationResult = false;
-				}
+	private validateAndroidHomeEnvVariable(androidHomeEnvVar: string): boolean {
+		if (this._cachedAndroidHomeValidationResult === null) {
+			this._cachedAndroidHomeValidationResult = true;
+			let expectedDirectoriesInAndroidHome = ["build-tools", "tools", "platform-tools", "extras"];
+			if (!androidHomeEnvVar || !this.$fs.exists(androidHomeEnvVar)) {
+				this.printMessage("The ANDROID_HOME environment variable is not set or it points to a non-existent directory. You will not be able to perform any build-related operations for Android.",
+					"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory.");
+				this._cachedAndroidHomeValidationResult = false;
+			} else if (!_.some(expectedDirectoriesInAndroidHome.map(dir => this.$fs.exists(path.join(androidHomeEnvVar, dir))))) {
+				this.printMessage("The ANDROID_HOME environment variable points to incorrect directory. You will not be able to perform any build-related operations for Android.",
+					"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory, " +
+					"where you will find `tools` and `platform-tools` directories.");
+				this._cachedAndroidHomeValidationResult = false;
 			}
+		}
 
-			return this._cachedAndroidHomeValidationResult;
-		}).future<boolean>()();
+		return this._cachedAndroidHomeValidationResult;
 	}
 }
 $injector.register("androidToolsInfo", AndroidToolsInfo);

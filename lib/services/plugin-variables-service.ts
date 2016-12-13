@@ -17,49 +17,45 @@ export class PluginVariablesService implements IPluginVariablesService {
 	public savePluginVariablesInProjectFile(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let values = Object.create(null);
-			this.executeForAllPluginVariables(pluginData, (pluginVariableData: IPluginVariableData) =>
-				(() => {
-					let pluginVariableValue = this.getPluginVariableValue(pluginVariableData).wait();
-					this.ensurePluginVariableValue(pluginVariableValue, `Unable to find value for ${pluginVariableData.name} plugin variable from ${pluginData.name} plugin. Ensure the --var option is specified or the plugin variable has default value.`);
-					values[pluginVariableData.name] = pluginVariableValue;
-				}).future<void>()()).wait();
+			this.executeForAllPluginVariables(pluginData, (pluginVariableData: IPluginVariableData) => {
+				let pluginVariableValue = this.getPluginVariableValue(pluginVariableData).wait();
+				this.ensurePluginVariableValue(pluginVariableValue, `Unable to find value for ${pluginVariableData.name} plugin variable from ${pluginData.name} plugin. Ensure the --var option is specified or the plugin variable has default value.`);
+				values[pluginVariableData.name] = pluginVariableValue;
+			});
 
-			if(!_.isEmpty(values)) {
+			if (!_.isEmpty(values)) {
 				this.$projectDataService.initialize(this.$projectData.projectDir);
-				this.$projectDataService.setValue(this.getPluginVariablePropertyName(pluginData.name), values).wait();
+				this.$projectDataService.setValue(this.getPluginVariablePropertyName(pluginData.name), values);
 			}
 		}).future<void>()();
 	}
 
-	public removePluginVariablesFromProjectFile(pluginName: string): IFuture<void> {
+	public removePluginVariablesFromProjectFile(pluginName: string): void {
 		this.$projectDataService.initialize(this.$projectData.projectDir);
-		return this.$projectDataService.removeProperty(this.getPluginVariablePropertyName(pluginName));
+		this.$projectDataService.removeProperty(this.getPluginVariablePropertyName(pluginName));
 	}
 
 	public interpolatePluginVariables(pluginData: IPluginData, pluginConfigurationFilePath: string): IFuture<void> {
 		return (() => {
-			let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath).wait();
-			this.executeForAllPluginVariables(pluginData, (pluginVariableData: IPluginVariableData) =>
-				(() => {
-					this.ensurePluginVariableValue(pluginVariableData.value, `Unable to find the value for ${pluginVariableData.name} plugin variable into project package.json file. Verify that your package.json file is correct and try again.`);
-					pluginConfigurationFileContent = this.interpolateCore(pluginVariableData.name, pluginVariableData.value, pluginConfigurationFileContent);
-				}).future<void>()()).wait();
-			this.$fs.writeFile(pluginConfigurationFilePath, pluginConfigurationFileContent).wait();
+			let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath);
+			this.executeForAllPluginVariables(pluginData, (pluginVariableData: IPluginVariableData) => {
+				this.ensurePluginVariableValue(pluginVariableData.value, `Unable to find the value for ${pluginVariableData.name} plugin variable into project package.json file. Verify that your package.json file is correct and try again.`);
+				pluginConfigurationFileContent = this.interpolateCore(pluginVariableData.name, pluginVariableData.value, pluginConfigurationFileContent);
+			});
+			this.$fs.writeFile(pluginConfigurationFilePath, pluginConfigurationFileContent);
 		}).future<void>()();
 	}
 
-	public interpolateAppIdentifier(pluginConfigurationFilePath: string): IFuture<void> {
-		return (() => {
-			let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath).wait();
-			let newContent = this.interpolateCore("nativescript.id", this.$projectData.projectId, pluginConfigurationFileContent);
-			this.$fs.writeFile(pluginConfigurationFilePath, newContent).wait();
-		}).future<void>()();
+	public interpolateAppIdentifier(pluginConfigurationFilePath: string): void {
+		let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath);
+		let newContent = this.interpolateCore("nativescript.id", this.$projectData.projectId, pluginConfigurationFileContent);
+		this.$fs.writeFile(pluginConfigurationFilePath, newContent);
 	}
 
 	public interpolate(pluginData: IPluginData, pluginConfigurationFilePath: string): IFuture<void> {
 		return (() => {
 			this.interpolatePluginVariables(pluginData, pluginConfigurationFilePath).wait();
-			this.interpolateAppIdentifier(pluginConfigurationFilePath).wait();
+			this.interpolateAppIdentifier(pluginConfigurationFilePath);
 		}).future<void>()();
 	}
 
@@ -68,7 +64,7 @@ export class PluginVariablesService implements IPluginVariablesService {
 	}
 
 	private ensurePluginVariableValue(pluginVariableValue: string, errorMessage: string): void {
-		if(!pluginVariableValue) {
+		if (!pluginVariableValue) {
 			this.$errors.failWithoutHelp(errorMessage);
 		}
 	}
@@ -77,11 +73,11 @@ export class PluginVariablesService implements IPluginVariablesService {
 		return (() => {
 			let pluginVariableName = pluginVariableData.name;
 			let value = this.$pluginVariablesHelper.getPluginVariableFromVarOption(pluginVariableName);
-			if(value) {
+			if (value) {
 				value = value[pluginVariableName];
 			} else {
 				value = pluginVariableData.defaultValue;
-				if(!value && helpers.isInteractive() ) {
+				if (!value && helpers.isInteractive()) {
 					let promptSchema = {
 						name: pluginVariableName,
 						type: "input",
@@ -97,26 +93,22 @@ export class PluginVariablesService implements IPluginVariablesService {
 		}).future<string>()();
 	}
 
-	private executeForAllPluginVariables(pluginData: IPluginData, action: (pluginVariableData: IPluginVariableData) => IFuture<void>): IFuture<void> {
-		return (() => {
-			let pluginVariables = pluginData.pluginVariables;
-			let pluginVariablesNames = _.keys(pluginVariables);
-			_.each(pluginVariablesNames, pluginVariableName => action(this.createPluginVariableData(pluginData, pluginVariableName).wait()).wait());
-		}).future<void>()();
+	private executeForAllPluginVariables(pluginData: IPluginData, action: (pluginVariableData: IPluginVariableData) => void): void {
+		let pluginVariables = pluginData.pluginVariables;
+		let pluginVariablesNames = _.keys(pluginVariables);
+		_.each(pluginVariablesNames, pluginVariableName => action(this.createPluginVariableData(pluginData, pluginVariableName)));
 	}
 
-	private createPluginVariableData(pluginData: IPluginData, pluginVariableName: string): IFuture<IPluginVariableData> {
-		return (() => {
-			let variableData = pluginData.pluginVariables[pluginVariableName];
+	private createPluginVariableData(pluginData: IPluginData, pluginVariableName: string): IPluginVariableData {
+		let variableData = pluginData.pluginVariables[pluginVariableName];
 
-			variableData.name = pluginVariableName;
+		variableData.name = pluginVariableName;
 
-			this.$projectDataService.initialize(this.$projectData.projectDir);
-			let pluginVariableValues = this.$projectDataService.getValue(this.getPluginVariablePropertyName(pluginData.name)).wait();
-			variableData.value = pluginVariableValues ? pluginVariableValues[pluginVariableName] : undefined;
+		this.$projectDataService.initialize(this.$projectData.projectDir);
+		let pluginVariableValues = this.$projectDataService.getValue(this.getPluginVariablePropertyName(pluginData.name));
+		variableData.value = pluginVariableValues ? pluginVariableValues[pluginVariableName] : undefined;
 
-			return variableData;
-		}).future<IPluginVariableData>()();
+		return variableData;
 	}
 }
 $injector.register("pluginVariablesService", PluginVariablesService);

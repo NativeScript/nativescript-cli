@@ -40,15 +40,15 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				bundleId = this.getBundleIdentifier(data.ipaFilePath).wait(),
 				iOSApplication = this.getiOSApplication(data.username, data.password, bundleId).wait();
 
-			this.$fs.createDirectory(innerDirectory).wait();
+			this.$fs.createDirectory(innerDirectory);
 
-			this.$fs.copyFile(data.ipaFilePath, ipaFileLocation).wait();
+			this.$fs.copyFile(data.ipaFilePath, ipaFileLocation);
 
 			let ipaFileHash = this.$fs.getFileShasum(ipaFileLocation, {algorithm: "md5"}).wait(),
-				ipaFileSize = this.$fs.getFileSize(ipaFileLocation).wait(),
+				ipaFileSize = this.$fs.getFileSize(ipaFileLocation),
 				metadata = this.getITMSMetadataXml(iOSApplication.adamId, ipaFileName, ipaFileHash, ipaFileSize);
 
-			this.$fs.writeFile(path.join(innerDirectory, ITMSConstants.ApplicationMetadataFile), metadata).wait();
+			this.$fs.writeFile(path.join(innerDirectory, ITMSConstants.ApplicationMetadataFile), metadata);
 
 			this.$childProcess.spawnFromEvent(itmsTransporterPath, ["-m", "upload", "-f", itmsDirectory, "-u", quoteString(data.username), "-p", quoteString(data.password), "-v", loggingLevel], "close", { stdio: "inherit" }).wait();
 		}).future<void>()();
@@ -116,7 +116,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				if (!ipaFileFullPath) {
 					this._bundleIdentifier = this.$projectData.projectId;
 				} else {
-					if (!this.$fs.exists(ipaFileFullPath).wait() || path.extname(ipaFileFullPath) !== ".ipa") {
+					if (!this.$fs.exists(ipaFileFullPath) || path.extname(ipaFileFullPath) !== ".ipa") {
 						this.$errors.failWithoutHelp(`Cannot use specified ipa file ${ipaFileFullPath}. File either does not exist or is not an ipa file.`);
 					}
 
@@ -126,7 +126,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 					this.$fs.unzip(ipaFileFullPath, destinationDir).wait();
 
 					let payloadDir = path.join(destinationDir, "Payload");
-					let allApps = this.$fs.readDirectory(payloadDir).wait();
+					let allApps = this.$fs.readDirectory(payloadDir);
 
 					this.$logger.debug("ITMSTransporter .ipa Payload files:");
 					allApps.forEach(f => this.$logger.debug(" - " + f));
@@ -172,7 +172,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				this._itmsTransporterPath = path.join(result, ITMSConstants.iTMSDirectoryName, "bin", ITMSConstants.iTMSExecutableName);
 			}
 
-			if(!this.$fs.exists(this._itmsTransporterPath).wait()) {
+			if(!this.$fs.exists(this._itmsTransporterPath)) {
 				this.$errors.failWithoutHelp('iTMS Transporter not found on this machine - make sure your Xcode installation is not damaged.');
 			}
 

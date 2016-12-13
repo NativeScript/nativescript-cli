@@ -53,16 +53,16 @@ class TestExecutionService implements ITestExecutionService {
 						this.$options.debugBrk = configOptions.debugBrk;
 						this.$options.debugTransport = configOptions.debugTransport;
 						let configJs = this.generateConfig(this.$options.port.toString(), configOptions);
-						this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs).wait();
+						this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
 
 						let socketIoJsUrl = `http://localhost:${this.$options.port}/socket.io/socket.io.js`;
 						let socketIoJs = this.$httpClient.httpRequest(socketIoJsUrl).wait().body;
-						this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs).wait();
+						this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
 
 						if (!this.$platformService.preparePlatform(platform).wait()) {
 							this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 						}
-						this.detourEntryPoint(projectFilesPath).wait();
+						this.detourEntryPoint(projectFilesPath);
 
 						this.liveSyncProject(platform);
 
@@ -103,6 +103,7 @@ class TestExecutionService implements ITestExecutionService {
 
 		let karmaConfig = this.getKarmaConfiguration(platform),
 			karmaRunner = this.$childProcess.fork(path.join(__dirname, "karma-execution.js"));
+
 		karmaRunner.on("message", (karmaData: any) => {
 			fiberBootstrap.run(() => {
 				this.$logger.trace("## Unit-testing: Parent process received message", karmaData);
@@ -111,13 +112,13 @@ class TestExecutionService implements ITestExecutionService {
 					port = karmaData.url.port;
 					let socketIoJsUrl = `http://${karmaData.url.host}/socket.io/socket.io.js`;
 					let socketIoJs = this.$httpClient.httpRequest(socketIoJsUrl).wait().body;
-					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs).wait();
+					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
 				}
 
 				if (karmaData.launcherConfig) {
 					let configOptions: IKarmaConfigOptions = JSON.parse(karmaData.launcherConfig);
 					let configJs = this.generateConfig(port, configOptions);
-					this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs).wait();
+					this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
 				}
 
 				// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
@@ -152,13 +153,11 @@ class TestExecutionService implements ITestExecutionService {
 
 	allowedParameters: ICommandParameter[] = [];
 
-	private detourEntryPoint(projectFilesPath: string): IFuture<void> {
-		return (() => {
-			let packageJsonPath = path.join(projectFilesPath, 'package.json');
-			let packageJson = this.$fs.readJson(packageJsonPath).wait();
-			packageJson.main = TestExecutionService.MAIN_APP_NAME;
-			this.$fs.writeJson(packageJsonPath, packageJson).wait();
-		}).future<void>()();
+	private detourEntryPoint(projectFilesPath: string): void {
+		let packageJsonPath = path.join(projectFilesPath, 'package.json');
+		let packageJson = this.$fs.readJson(packageJsonPath);
+		packageJson.main = TestExecutionService.MAIN_APP_NAME;
+		this.$fs.writeJson(packageJsonPath, packageJson);
 	}
 
 	private generateConfig(port: string, options: any): string {

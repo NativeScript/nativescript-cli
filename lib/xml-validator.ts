@@ -5,35 +5,31 @@ export class XmlValidator implements IXmlValidator {
 	constructor(private $fs: IFileSystem,
 				private $logger: ILogger) { }
 
-	public validateXmlFiles(sourceFiles: string[]): IFuture<boolean> {
-		return (() => {
-			let xmlHasErrors = false;
-			sourceFiles
-				.filter(file => _.endsWith(file, constants.XML_FILE_EXTENSION))
-				.forEach(file => {
-					let errorOutput = this.getXmlFileErrors(file).wait();
-					let hasErrors = !!errorOutput;
-					xmlHasErrors = xmlHasErrors || hasErrors;
-					if (hasErrors) {
-						this.$logger.info(`${file} has syntax errors.`.red.bold);
-						this.$logger.out(errorOutput.yellow);
-					}
-				});
-			return !xmlHasErrors;
-		}).future<boolean>()();
+	public validateXmlFiles(sourceFiles: string[]): boolean {
+		let xmlHasErrors = false;
+		sourceFiles
+			.filter(file => _.endsWith(file, constants.XML_FILE_EXTENSION))
+			.forEach(file => {
+				let errorOutput = this.getXmlFileErrors(file);
+				let hasErrors = !!errorOutput;
+				xmlHasErrors = xmlHasErrors || hasErrors;
+				if (hasErrors) {
+					this.$logger.info(`${file} has syntax errors.`.red.bold);
+					this.$logger.out(errorOutput.yellow);
+				}
+			});
+		return !xmlHasErrors;
 	}
 
-	public getXmlFileErrors(sourceFile: string): IFuture<string> {
-		return ((): string => {
-			let errorOutput = "";
-			let fileContents = this.$fs.readText(sourceFile).wait();
-			let domErrorHandler = (level:any, msg:string) => {
-				errorOutput += level + EOL + msg + EOL;
-			};
-			this.getDomParser(domErrorHandler).parseFromString(fileContents, "text/xml");
+	public getXmlFileErrors(sourceFile: string): string {
+		let errorOutput = "";
+		let fileContents = this.$fs.readText(sourceFile);
+		let domErrorHandler = (level:any, msg:string) => {
+			errorOutput += level + EOL + msg + EOL;
+		};
+		this.getDomParser(domErrorHandler).parseFromString(fileContents, "text/xml");
 
-			return errorOutput || null;
-		}).future<string>()();
+		return errorOutput || null;
 	}
 
 	private getDomParser(errorHandler: (level:any, msg:string) => void): any {

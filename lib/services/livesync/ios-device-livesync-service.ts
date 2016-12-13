@@ -116,10 +116,10 @@ class IOSLiveSyncService implements IDeviceLiveSyncService {
 		}).future<void>()();
 	}
 
-	private liveEdit(localToDevicePaths: Mobile.ILocalToDevicePathData[]) {
+	private liveEdit(localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<void> {
 		return (() => {
 			_.each(localToDevicePaths, localToDevicePath => {
-				let content = this.$fs.readText(localToDevicePath.getLocalPath()).wait();
+				let content = this.$fs.readText(localToDevicePath.getLocalPath());
 				let message = JSON.stringify({
 					method: "Debugger.setScriptSource",
 					params: {

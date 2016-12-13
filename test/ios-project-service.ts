@@ -6,25 +6,25 @@ import * as ErrorsLib from "../lib/common/errors";
 import * as FileSystemLib from "../lib/common/file-system";
 import * as HostInfoLib from "../lib/common/host-info";
 import * as iOSProjectServiceLib from "../lib/services/ios-project-service";
-import {IOSProjectService} from "../lib/services/ios-project-service";
+import { IOSProjectService } from "../lib/services/ios-project-service";
 import * as LoggerLib from "../lib/common/logger";
 import * as OptionsLib from "../lib/options";
 import * as yok from "../lib/common/yok";
-import {DevicesService} from "../lib/common/mobile/mobile-core/devices-service";
-import {MobileHelper} from "../lib/common/mobile/mobile-helper";
-import {Messages} from "../lib/common/messages/messages";
-import {MobilePlatformsCapabilities} from "../lib/mobile-platforms-capabilities";
-import {DeviceLogProvider} from "../lib/common/mobile/device-log-provider";
-import {LogFilter} from "../lib/common/mobile/log-filter";
-import {LoggingLevels} from "../lib/common/mobile/logging-levels";
-import {DeviceDiscovery} from "../lib/common/mobile/mobile-core/device-discovery";
-import {IOSDeviceDiscovery} from "../lib/common/mobile/mobile-core/ios-device-discovery";
-import {AndroidDeviceDiscovery} from "../lib/common/mobile/mobile-core/android-device-discovery";
-import {PluginVariablesService} from "../lib/services/plugin-variables-service";
-import {PluginVariablesHelper} from "../lib/common/plugin-variables-helper";
-import {Utils} from "../lib/common/utils";
-import {CocoaPodsService} from "../lib/services/cocoapods-service";
-import {assert} from "chai";
+import { DevicesService } from "../lib/common/mobile/mobile-core/devices-service";
+import { MobileHelper } from "../lib/common/mobile/mobile-helper";
+import { Messages } from "../lib/common/messages/messages";
+import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilities";
+import { DeviceLogProvider } from "../lib/common/mobile/device-log-provider";
+import { LogFilter } from "../lib/common/mobile/log-filter";
+import { LoggingLevels } from "../lib/common/mobile/logging-levels";
+import { DeviceDiscovery } from "../lib/common/mobile/mobile-core/device-discovery";
+import { IOSDeviceDiscovery } from "../lib/common/mobile/mobile-core/ios-device-discovery";
+import { AndroidDeviceDiscovery } from "../lib/common/mobile/mobile-core/android-device-discovery";
+import { PluginVariablesService } from "../lib/services/plugin-variables-service";
+import { PluginVariablesHelper } from "../lib/common/plugin-variables-helper";
+import { Utils } from "../lib/common/utils";
+import { CocoaPodsService } from "../lib/services/cocoapods-service";
+import { assert } from "chai";
 import temp = require("temp");
 
 temp.track();
@@ -99,7 +99,7 @@ function createPackageJson(testInjector: IInjector, projectPath: string, project
 			}
 		}
 	};
-	testInjector.resolve("fs").writeJson(path.join(projectPath, "package.json"), packageJsonData).wait();
+	testInjector.resolve("fs").writeJson(path.join(projectPath, "package.json"), packageJsonData);
 }
 
 function expectOption(args: string[], option: string, value: string, message?: string): void {
@@ -234,7 +234,7 @@ describe("iOSProjectService", () => {
 
 				assert.ok(plist);
 
-				let plistContent = fs.readFile(plist).wait().toString();
+				let plistContent = fs.readText(plist);
 				// There may be better way to equal property lists
 				assert.equal(plistContent, expectedPlistContent, "Mismatch in exportOptionsPlist content");
 
@@ -280,10 +280,10 @@ describe("Cocoapods support", () => {
 					}
 				}
 			};
-			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData).wait();
+			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData);
 
 			let platformsFolderPath = path.join(projectPath, "platforms", "ios");
-			fs.createDirectory(platformsFolderPath).wait();
+			fs.createDirectory(platformsFolderPath);
 
 			let iOSProjectService = testInjector.resolve("iOSProjectService");
 			iOSProjectService.prepareFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
@@ -304,7 +304,7 @@ describe("Cocoapods support", () => {
 			let pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
 			let pluginPodfilePath = path.join(pluginPlatformsFolderPath, "Podfile");
 			let pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
-			fs.writeFile(pluginPodfilePath, pluginPodfileContent).wait();
+			fs.writeFile(pluginPodfilePath, pluginPodfileContent);
 
 			let pluginData = {
 				pluginPlatformsFolderPath(platform: string): string {
@@ -315,9 +315,9 @@ describe("Cocoapods support", () => {
 			iOSProjectService.preparePluginNativeCode(pluginData).wait();
 
 			let projectPodfilePath = path.join(platformsFolderPath, "Podfile");
-			assert.isTrue(fs.exists(projectPodfilePath).wait());
+			assert.isTrue(fs.exists(projectPodfilePath));
 
-			let actualProjectPodfileContent = fs.readText(projectPodfilePath).wait();
+			let actualProjectPodfileContent = fs.readText(projectPodfilePath);
 			let expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
 				`# Begin Podfile - ${pluginPodfilePath} `,
@@ -344,10 +344,10 @@ describe("Cocoapods support", () => {
 					}
 				}
 			};
-			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData).wait();
+			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData);
 
 			let platformsFolderPath = path.join(projectPath, "platforms", "ios");
-			fs.createDirectory(platformsFolderPath).wait();
+			fs.createDirectory(platformsFolderPath);
 
 			let iOSProjectService = testInjector.resolve("iOSProjectService");
 			iOSProjectService.prepareFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
@@ -374,7 +374,7 @@ describe("Cocoapods support", () => {
 			let pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
 			let pluginPodfilePath = path.join(pluginPlatformsFolderPath, "Podfile");
 			let pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
-			fs.writeFile(pluginPodfilePath, pluginPodfileContent).wait();
+			fs.writeFile(pluginPodfilePath, pluginPodfileContent);
 
 			let pluginData = {
 				pluginPlatformsFolderPath(platform: string): string {
@@ -385,9 +385,9 @@ describe("Cocoapods support", () => {
 			iOSProjectService.preparePluginNativeCode(pluginData).wait();
 
 			let projectPodfilePath = path.join(platformsFolderPath, "Podfile");
-			assert.isTrue(fs.exists(projectPodfilePath).wait());
+			assert.isTrue(fs.exists(projectPodfilePath));
 
-			let actualProjectPodfileContent = fs.readText(projectPodfilePath).wait();
+			let actualProjectPodfileContent = fs.readText(projectPodfilePath);
 			let expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
 				`# Begin Podfile - ${pluginPodfilePath} `,
@@ -397,9 +397,9 @@ describe("Cocoapods support", () => {
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
 
-			iOSProjectService.removePluginNativeCode(pluginData).wait();
+			iOSProjectService.removePluginNativeCode(pluginData);
 
-			assert.isFalse(fs.exists(projectPodfilePath).wait());
+			assert.isFalse(fs.exists(projectPodfilePath));
 		});
 	}
 });
@@ -421,11 +421,11 @@ describe("Static libraries support", () => {
 
 	it("checks validation of header files", () => {
 		let iOSProjectService = testInjector.resolve("iOSProjectService");
-		fs.ensureDirectoryExists(staticLibraryHeadersPath).wait();
-		_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), "").wait(); });
+		fs.ensureDirectoryExists(staticLibraryHeadersPath);
+		_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), ""); });
 
 		// Add all header files.
-		fs.writeFile(path.join(staticLibraryHeadersPath, libraryName + ".a"), "").wait();
+		fs.writeFile(path.join(staticLibraryHeadersPath, libraryName + ".a"), "");
 
 		let error: any;
 		try {
@@ -439,24 +439,24 @@ describe("Static libraries support", () => {
 
 	it("checks generation of modulemaps", () => {
 		let iOSProjectService = testInjector.resolve("iOSProjectService");
-		fs.ensureDirectoryExists(staticLibraryHeadersPath).wait();
-		_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), "").wait(); });
+		fs.ensureDirectoryExists(staticLibraryHeadersPath);
+		_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), ""); });
 
 		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);
 		// Read the generated modulemap and verify it.
-		let modulemap = fs.readFile(path.join(staticLibraryHeadersPath, "module.modulemap")).wait();
+		let modulemap = fs.readFile(path.join(staticLibraryHeadersPath, "module.modulemap"));
 		let headerCommands = _.map(headers, value => `header "${value}"`);
 		let modulemapExpectation = `module ${libraryName} { explicit module ${libraryName} { ${headerCommands.join(" ")} } }`;
 
 		assert.equal(modulemap, modulemapExpectation);
 
 		// Delete all header files. And try to regenerate modulemap.
-		_.each(headers, header => { fs.deleteFile(path.join(staticLibraryHeadersPath, header)).wait(); });
+		_.each(headers, header => { fs.deleteFile(path.join(staticLibraryHeadersPath, header)); });
 		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);
 
 		let error: any;
 		try {
-			modulemap = fs.readFile(path.join(staticLibraryHeadersPath, "module.modulemap")).wait();
+			modulemap = fs.readFile(path.join(staticLibraryHeadersPath, "module.modulemap"));
 		} catch (err) {
 			error = err;
 		}

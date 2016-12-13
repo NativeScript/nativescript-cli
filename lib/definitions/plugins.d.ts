@@ -5,7 +5,12 @@ interface IPluginsService {
 	prepare(pluginData: IDependencyData, platform: string): IFuture<void>;
 	getAllInstalledPlugins(): IFuture<IPluginData[]>;
 	ensureAllDependenciesAreInstalled(): IFuture<void>;
-	getDependenciesFromPackageJson(): IFuture<IPackageJsonDepedenciesResult>
+
+	/**
+	 * Returns all dependencies and devDependencies from pacakge.json file.
+	 * @returns {IPackageJsonDepedenciesResult}
+	 */
+	getDependenciesFromPackageJson(): IPackageJsonDepedenciesResult;
 }
 
 interface IPackageJsonDepedenciesResult {
@@ -43,12 +48,14 @@ interface IPluginVariablesService {
 	 * @return {IFuture<void>}
 	 */
 	savePluginVariablesInProjectFile(pluginData: IPluginData): IFuture<void>;
+
 	/**
 	 * Removes plugin variables from project package.json file.
 	 * @param  {string}		pluginName Name of the plugin.
-	 * @return {IFuture<void>}
+	 * @return {void}
 	 */
-	removePluginVariablesFromProjectFile(pluginName: string): IFuture<void>;
+	removePluginVariablesFromProjectFile(pluginName: string): void;
+
 	/**
 	 * Replaces all plugin variables with their corresponding values.
 	 * @param {IPluginData}		pluginData for the plugin.
@@ -56,16 +63,19 @@ interface IPluginVariablesService {
 	 * @return {IFuture<void>}
 	 */
 	interpolatePluginVariables(pluginData: IPluginData, pluginConfigurationFilePath: string): IFuture<void>;
+
 	/**
 	 * Replaces {nativescript.id} expression with the application identifier from package.json.
 	 * @param {pluginConfigurationFilePath}	pluginConfigurationFilePath for the plugin.
-	 * @return {IFuture<void>}
+	 * @return {void}
 	 */
-	interpolateAppIdentifier(pluginConfigurationFilePath: string): IFuture<void>;
+	interpolateAppIdentifier(pluginConfigurationFilePath: string): void;
+
 	/**
 	 * Replaces both plugin variables and appIdentifier
 	 */
 	interpolate(pluginData: IPluginData, pluginConfigurationFilePath: string): IFuture<void>;
+
 	/**
 	 * Returns the
 	 * @param {string}		pluginName for the plugin.

@@ -28,7 +28,7 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 		if (parsedFilePath.indexOf(platformSpecificAppResourcesDirectoryPath) > -1) {
 			let appResourcesRelativePath = path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME,
 				platformData.normalizedPlatformName), parsedFilePath);
-			mappedFilePath = path.join(platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait(), appResourcesRelativePath);
+			mappedFilePath = path.join(platformData.platformProjectService.getAppResourcesDestinationDirectoryPath(), appResourcesRelativePath);
 		}
 
 		return mappedFilePath;

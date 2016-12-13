@@ -3,13 +3,11 @@ export class EmulatorSettingsService implements Mobile.IEmulatorSettingsService 
 
 	constructor(private $injector: IInjector) { }
 
-	public canStart(platform: string): IFuture<boolean> {
-		return (() => {
-			let platformService = this.$injector.resolve("platformService"); // this should be resolved here due to cyclic dependency
+	public canStart(platform: string): boolean {
+		let platformService = this.$injector.resolve("platformService"); // this should be resolved here due to cyclic dependency
 
-			let installedPlatforms = platformService.getInstalledPlatforms().wait();
-			return _.includes(installedPlatforms, platform.toLowerCase());
-		}).future<boolean>()();
+		let installedPlatforms = platformService.getInstalledPlatforms();
+		return _.includes(installedPlatforms, platform.toLowerCase());
 	}
 
 	public get minVersion(): number {

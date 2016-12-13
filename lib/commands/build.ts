@@ -7,7 +7,7 @@ export class BuildCommandBase {
 			let platform = args[0].toLowerCase();
 			this.$platformService.buildPlatform(platform, null, true).wait();
 			if(this.$options.copyTo) {
-				this.$platformService.copyLastOutput(platform, this.$options.copyTo, {isForDevice: this.$options.forDevice}).wait();
+				this.$platformService.copyLastOutput(platform, this.$options.copyTo, {isForDevice: this.$options.forDevice});
 			}
 		}).future<void>()();
 	}

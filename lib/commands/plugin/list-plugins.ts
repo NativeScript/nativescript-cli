@@ -8,7 +8,7 @@ export class ListPluginsCommand implements ICommand {
 
 	public execute(args: string[]): IFuture<void> {
 		return (() => {
-			let installedPlugins: IPackageJsonDepedenciesResult = this.$pluginsService.getDependenciesFromPackageJson().wait();
+			let installedPlugins: IPackageJsonDepedenciesResult = this.$pluginsService.getDependenciesFromPackageJson();
 
 			let headers: string[] = ["Plugin", "Version"];
 			let dependenciesData: string[][] = this.createTableCells(installedPlugins.dependencies);

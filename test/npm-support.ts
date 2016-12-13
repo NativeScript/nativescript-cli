@@ -107,7 +107,7 @@ function createProject(testInjector: IInjector, dependencies?: any): string {
 	packageJsonData["dependencies"] = dependencies;
 	packageJsonData["devDependencies"] = {};
 
-	testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), packageJsonData).wait();
+	testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), packageJsonData);
 	return tempFolder;
 }
 
@@ -120,15 +120,15 @@ function setupProject(dependencies?: any): IFuture<any> {
 
 		// Creates app folder
 		let appFolderPath = path.join(projectFolder, "app");
-		fs.createDirectory(appFolderPath).wait();
+		fs.createDirectory(appFolderPath);
 		let appResourcesFolderPath = path.join(appFolderPath, "App_Resources");
-		fs.createDirectory(appResourcesFolderPath).wait();
-		fs.createDirectory(path.join(appResourcesFolderPath, "Android")).wait();
-		fs.createDirectory(path.join(appFolderPath, "tns_modules")).wait();
+		fs.createDirectory(appResourcesFolderPath);
+		fs.createDirectory(path.join(appResourcesFolderPath, "Android"));
+		fs.createDirectory(path.join(appFolderPath, "tns_modules"));
 
 		// Creates platforms/android folder
 		let androidFolderPath = path.join(projectFolder, "platforms", "android");
-		fs.ensureDirectoryExists(androidFolderPath).wait();
+		fs.ensureDirectoryExists(androidFolderPath);
 
 		// Mock platform data
 		let appDestinationFolderPath = path.join(androidFolderPath, "assets");
@@ -143,15 +143,15 @@ function setupProject(dependencies?: any): IFuture<any> {
 				projectRoot: projectFolder,
 				configurationFileName: "AndroidManifest.xml",
 				platformProjectService: {
-					prepareProject: () => Future.fromResult(),
-					prepareAppResources: () => Future.fromResult(),
+					prepareProject: (): any => null,
+					prepareAppResources: (): any => null,
 					afterPrepareAllPlugins: () => Future.fromResult(),
 					beforePrepareAllPlugins: () => Future.fromResult(),
-					getAppResourcesDestinationDirectoryPath: () => Future.fromResult(path.join(androidFolderPath, "src", "main", "res")),
+					getAppResourcesDestinationDirectoryPath: () => path.join(androidFolderPath, "src", "main", "res"),
 					processConfigurationFilesFromAppResources: () => Future.fromResult(),
-					ensureConfigurationFileInAppResources: () => Future.fromResult(),
+					ensureConfigurationFileInAppResources: (): any => null,
 					interpolateConfigurationFile: () => Future.fromResult(),
-					isPlatformPrepared: (projectRoot: string) => Future.fromResult<boolean>(false)
+					isPlatformPrepared: (projectRoot: string) => false
 				}
 			};
 		};
@@ -168,7 +168,7 @@ function addDependencies(testInjector: IInjector, projectFolder: string, depende
 	return (() => {
 		let fs = testInjector.resolve("fs");
 		let packageJsonPath = path.join(projectFolder, "package.json");
-		let packageJsonData = fs.readJson(packageJsonPath).wait();
+		let packageJsonData = fs.readJson(packageJsonPath);
 
 		let currentDependencies = packageJsonData.dependencies;
 		_.extend(currentDependencies, dependencies);
@@ -177,7 +177,7 @@ function addDependencies(testInjector: IInjector, projectFolder: string, depende
 			let currentDevDependencies = packageJsonData.devDependencies;
 			_.extend(currentDevDependencies, devDependencies);
 		}
-		fs.writeJson(packageJsonPath, packageJsonData).wait();
+		fs.writeJson(packageJsonPath, packageJsonData);
 	}).future<void>()();
 }
 
@@ -227,7 +227,7 @@ describe("Npm support tests", () => {
 		// Assert
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
 		let scopedDependencyPath = path.join(tnsModulesFolderPath, "@reactivex", "rxjs");
-		assert.isTrue(fs.exists(scopedDependencyPath).wait());
+		assert.isTrue(fs.exists(scopedDependencyPath));
 	});
 
 	it("Ensures that scoped dependencies are prepared correctly when are not in root level", () => {
@@ -262,15 +262,15 @@ describe("Npm support tests", () => {
 		try {
 			options.bundle = false;
 			preparePlatform(testInjector).wait();
-			assert.isTrue(fs.exists(tnsModulesFolderPath).wait(), "tns_modules created first");
+			assert.isTrue(fs.exists(tnsModulesFolderPath), "tns_modules created first");
 
 			options.bundle = true;
 			preparePlatform(testInjector).wait();
-			assert.isFalse(fs.exists(tnsModulesFolderPath).wait(), "tns_modules deleted when bundling");
+			assert.isFalse(fs.exists(tnsModulesFolderPath), "tns_modules deleted when bundling");
 
 			options.bundle = false;
 			preparePlatform(testInjector).wait();
-			assert.isTrue(fs.exists(tnsModulesFolderPath).wait(), "tns_modules recreated");
+			assert.isTrue(fs.exists(tnsModulesFolderPath), "tns_modules recreated");
 		} finally {
 			options.bundle = false;
 		}
@@ -299,30 +299,30 @@ describe("Flatten npm modules tests", () => {
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
 
 		let gulpFolderPath = path.join(tnsModulesFolderPath, "gulp");
-		assert.isFalse(fs.exists(gulpFolderPath).wait());
+		assert.isFalse(fs.exists(gulpFolderPath));
 
 		let gulpJscsFolderPath = path.join(tnsModulesFolderPath, "gulp-jscs");
-		assert.isFalse(fs.exists(gulpJscsFolderPath).wait());
+		assert.isFalse(fs.exists(gulpJscsFolderPath));
 
 		let gulpJshint = path.join(tnsModulesFolderPath, "gulp-jshint");
-		assert.isFalse(fs.exists(gulpJshint).wait());
+		assert.isFalse(fs.exists(gulpJshint));
 
 		// Get  all gulp dependencies
-		let gulpJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp", packageJsonName)).wait();
+		let gulpJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp", packageJsonName));
 		_.each(_.keys(gulpJsonContent.dependencies), dependency => {
-			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
+			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)));
 		});
 
 		// Get all gulp-jscs dependencies
-		let gulpJscsJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jscs", packageJsonName)).wait();
+		let gulpJscsJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jscs", packageJsonName));
 		_.each(_.keys(gulpJscsJsonContent.dependencies), dependency => {
-			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
+			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)));
 		});
 
 		// Get all gulp-jshint dependencies
-		let gulpJshintJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jshint", packageJsonName)).wait();
+		let gulpJshintJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jshint", packageJsonName));
 		_.each(_.keys(gulpJshintJsonContent.dependencies), dependency => {
-			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
+			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)));
 		});
 	});
 });
