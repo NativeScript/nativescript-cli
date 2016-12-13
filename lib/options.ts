@@ -36,7 +36,8 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			tsc: {type: OptionType.Boolean },
 			bundle: {type: OptionType.Boolean },
 			all: {type: OptionType.Boolean },
-			teamId: { type: OptionType.String }
+			teamId: { type: OptionType.String },
+			debug: { type: OptionType.Boolean }
 		},
 		path.join($hostInfo.isWindows ? process.env.AppData : path.join(osenv.home(), ".local/share"), ".nativescript-cli"),
 			$errors, $staticConfig);
