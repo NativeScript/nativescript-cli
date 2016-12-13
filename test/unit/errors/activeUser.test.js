@@ -63,15 +63,9 @@ describe('ActiveUserError', () => {
   });
 
   describe('kinveyRequestId', () => {
-    it('should return undefined as the default value', () => {
+    it('should return undefined', () => {
       const error = new ActiveUserError();
       expect(error.kinveyRequestId).toEqual(undefined);
-    });
-
-    it('should return 1', () => {
-      const kinveyRequestId = 1;
-      const error = new ActiveUserError(null, null, null, kinveyRequestId);
-      expect(error.kinveyRequestId).toEqual(kinveyRequestId);
     });
   });
 });
