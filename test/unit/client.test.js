@@ -1,6 +1,7 @@
 import { Client } from 'src/client';
 import { randomString } from 'src/utils';
 import expect from 'expect';
+const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 60000;
 
 describe('Client', () => {
   describe('constructor', () => {
@@ -59,6 +60,12 @@ describe('Client', () => {
       const client = new Client({ appVersion: appVersion });
       expect(client.appVersion).toEqual(appVersion);
     });
+
+    it('should be able to provide a defaultTimeout', () => {
+      const timeout = 1;
+      const client = new Client({ defaultTimeout: timeout });
+      expect(client.defaultTimeout).toEqual(timeout);
+    });
   });
 
   describe('appVersion', function() {
@@ -67,6 +74,35 @@ describe('Client', () => {
       const client = new Client();
       client.appVersion = appVersion;
       expect(client.appVersion).toEqual(appVersion);
+    });
+  });
+
+  describe('defaultTimeout', function() {
+    it('should throw an Error if it is not a Number', function() {
+      expect(() => {
+        const timeout = 'foo';
+        const client = new Client();
+        client.defaultTimeout = timeout;
+      }).toThrow(/Invalid timeout. Timeout must be a number./);
+    });
+
+    it(`should set default timeout to ${defaultTimeout}ms`, function() {
+      const client = new Client();
+      expect(client.defaultTimeout).toEqual(defaultTimeout);
+    });
+
+    it(`should use ${defaultTimeout}ms when defaultTimeout is less than 0`, function() {
+      const timeout = -1;
+      const client = new Client();
+      client.defaultTimeout = timeout;
+      expect(client.defaultTimeout).toEqual(defaultTimeout);
+    });
+
+    it('should set the defaultTimeout to 1', function() {
+      const timeout = 1;
+      const client = new Client();
+      client.defaultTimeout = timeout;
+      expect(client.defaultTimeout).toEqual(timeout);
     });
   });
 });

@@ -1,5 +1,6 @@
 import { NoResponseError, KinveyError } from '../../errors';
 import { Client } from '../../client';
+import { isDefined } from '../../utils';
 import Response from './response';
 import Headers from './headers';
 import qs from 'qs';
@@ -7,7 +8,6 @@ import appendQuery from 'append-query';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
-const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 10000;
 
 /**
  * @private
@@ -37,7 +37,7 @@ export default class Request {
     this.headers = options.headers || new Headers();
     this.url = options.url || '';
     this.body = options.body || options.data;
-    this.timeout = options.timeout || defaultTimeout;
+    this.timeout = isDefined(options.timeout) ? options.timeout : this.client.defaultTimeout;
     this.followRedirect = options.followRedirect === true;
     this.cache = options.cache === true;
     this.executing = false;
@@ -76,7 +76,7 @@ export default class Request {
         this._method = method;
         break;
       default:
-        throw new Error('Invalid request method. Only GET, POST, PATCH, PUT, and DELETE are allowed.');
+        throw new KinveyError('Invalid request method. Only GET, POST, PATCH, PUT, and DELETE are allowed.');
     }
   }
 
@@ -121,7 +121,13 @@ export default class Request {
   }
 
   set timeout(timeout) {
-    this._timeout = isNumber(timeout) ? timeout : defaultTimeout;
+    timeout = parseInt(timeout, 10);
+
+    if (isNumber(timeout) === false || isNaN(timeout)) {
+      throw new KinveyError(null, 'Invalid timeout. Timeout must be a number.');
+    }
+
+    this._timeout = timeout;
   }
 
   get followRedirect() {

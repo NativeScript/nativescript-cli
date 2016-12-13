@@ -1,8 +1,11 @@
 import { CacheRequest } from './request';
 import { KinveyError } from './errors';
+import { Log, isDefined } from './utils';
 import url from 'url';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
+import isNumber from 'lodash/isNumber';
+const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 60000;
 let sharedInstance = null;
 
 /**
@@ -108,6 +111,11 @@ export class Client {
      * @type {?string}
      */
     this.appVersion = options.appVersion;
+
+    /**
+     * @type {?number}
+     */
+    this.defaultTimeout = isDefined(options.defaultTimeout) ? options.defaultTimeout : defaultTimeout;
   }
 
   /**
@@ -189,6 +197,25 @@ export class Client {
     }
 
     this._appVersion = appVersion;
+  }
+
+  get defaultTimeout() {
+    return this._defaultTimeout;
+  }
+
+  set defaultTimeout(timeout) {
+    timeout = parseInt(timeout, 10);
+
+    if (isNumber(timeout) === false || isNaN(timeout)) {
+      throw new KinveyError(null, 'Invalid timeout. Timeout must be a number.');
+    }
+
+    if (timeout < 0) {
+      Log.info(`Default timeout is less than 0. Setting default timeout to ${defaultTimeout}ms.`);
+      timeout = defaultTimeout;
+    }
+
+    this._defaultTimeout = timeout;
   }
 
   /**

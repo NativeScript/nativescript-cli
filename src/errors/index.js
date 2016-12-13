@@ -19,6 +19,7 @@ import ParameterValueOutOfRangeError from './src/parameterValueOutOfRange';
 import QueryError from './src/query';
 import ServerError from './src/server';
 import SyncError from './src/sync';
+import TimeoutError from './src/timeout';
 
 // Export
 export {
@@ -42,7 +43,8 @@ export {
   ParameterValueOutOfRangeError,
   QueryError,
   ServerError,
-  SyncError
+  SyncError,
+  TimeoutError
 };
 
 // Export default
