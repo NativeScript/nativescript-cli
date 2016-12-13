@@ -2,7 +2,8 @@ import { RequestMethod } from './request';
 import { KinveyRequest } from './network';
 import LocalRequest from './local';
 import Response, { StatusCode } from './response';
-import { NotFoundError } from '../../errors';
+import { KinveyError, NotFoundError } from '../../errors';
+import { isDefined } from '../../utils';
 import Query from '../../query';
 import Promise from 'es6-promise';
 import keyBy from 'lodash/keyBy';
@@ -41,7 +42,7 @@ export default class DeltaFetchRequest extends KinveyRequest {
       case RequestMethod.PUT:
       case RequestMethod.DELETE:
       default:
-        throw new Error('Invalid request Method. Only RequestMethod.GET is allowed.');
+        throw new KinveyError(null, 'Invalid request Method. Only RequestMethod.GET is allowed.');
     }
   }
 
@@ -95,7 +96,7 @@ export default class DeltaFetchRequest extends KinveyRequest {
                 const networkDocument = networkDocuments[id];
 
                 if (networkDocument) {
-                  if (networkDocument._kmd && cacheDocument._kmd
+                  if (isDefined(networkDocument._kmd) && isDefined(cacheDocument._kmd)
                       && networkDocument._kmd.lmt === cacheDocument._kmd.lmt) {
                     delete deltaSet[id];
                   } else {
@@ -157,7 +158,8 @@ export default class DeltaFetchRequest extends KinveyRequest {
 
               if (this.query) {
                 const query = new Query(result(this.query, 'toJSON', this.query));
-                query.skip(0).limit(0);
+                query.skip = 0;
+                query.limit = 0;
                 response.data = query.process(response.data);
               }
 

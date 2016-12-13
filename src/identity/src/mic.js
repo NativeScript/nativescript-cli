@@ -35,6 +35,14 @@ export class MobileIdentityConnect extends Identity {
     return SocialIdentity.MobileIdentityConnect;
   }
 
+  static isSupported() {
+    return true;
+  }
+
+  isSupported() {
+    return true;
+  }
+
   login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
     const clientId = this.client.appKey;
 
@@ -202,7 +210,7 @@ export class MobileIdentityConnect extends Identity {
         return url.parse(location, true).query.code;
       }
 
-      throw new KinveyError(`Unable to authorize user with username ${options.username}.`,
+      throw new MobileIdentityConnectError(`Unable to authorize user with username ${options.username}.`,
         'A location header was not provided with a code to exchange for an auth token.');
     });
 

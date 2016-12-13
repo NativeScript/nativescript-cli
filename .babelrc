@@ -1,6 +1,9 @@
 {
   "plugins": [
-    "inline-dotenv"
+    "inline-dotenv",
+    ["module-alias", [
+      { "src": "./src", "expose": "src" }
+    ]]
   ],
   "presets": [
     "es2015",

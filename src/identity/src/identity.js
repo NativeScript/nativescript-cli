@@ -37,6 +37,10 @@ export default class Identity {
     }
   }
 
+  static isSupported() {
+    return !!hello;
+  }
+
   isSupported() {
     return !!hello;
   }

@@ -1,4 +1,4 @@
-import { ActiveUserError, KinveyError } from '../../../src/errors';
+import { ActiveUserError, KinveyError } from 'src/errors';
 import expect from 'expect';
 
 describe('ActiveUserError', () => {

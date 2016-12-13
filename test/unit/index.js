@@ -1,5 +1,6 @@
 import { TestUser as User } from './mocks';
-import Kinvey from '../../src/kinvey';
+import Kinvey from 'src/kinvey';
+import { randomString } from 'src/utils';
 import nock from 'nock';
 
 // Record for nock
@@ -7,9 +8,16 @@ import nock from 'nock';
 
 // Init Kinvey
 before(function() {
+  // return Kinvey.initialize({
+  //   appKey: 'kid_HkTD2CJc',
+  //   appSecret: 'cd7f658ed0a548dd8dfadf5a1787568b'
+  // }).then(() => {
+  //   this.client = Kinvey.client;
+  // });
+
   return Kinvey.initialize({
-    appKey: 'kid_HkTD2CJc',
-    appSecret: 'cd7f658ed0a548dd8dfadf5a1787568b'
+    appKey: randomString(),
+    appSecret: randomString()
   }).then(() => {
     this.client = Kinvey.client;
   });

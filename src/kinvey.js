@@ -5,7 +5,7 @@ import { Log } from './utils';
 import Aggregation from './aggregation';
 import DataStore, { DataStoreType, FileStore, UserStore } from './datastore';
 import { Acl, Metadata, User } from './entity';
-import { AuthorizationGrant, SocialIdentity } from './identity';
+import { AuthorizationGrant } from './identity';
 import { AuthType, RequestMethod, KinveyRequest } from './request';
 import {
   ActiveUserError,
@@ -217,7 +217,6 @@ Kinvey.Group = Aggregation;
 Kinvey.Log = Log;
 Kinvey.Metadata = Metadata;
 Kinvey.Query = Query;
-Kinvey.SocialIdentity = SocialIdentity;
 Kinvey.User = User;
 Kinvey.Users = UserStore;
 Kinvey.UserStore = UserStore;

@@ -1,9 +1,9 @@
 import { TestUser } from './mocks';
-import Kinvey from '../../src/kinvey';
-import { Client } from '../../src/client';
-import { User } from '../../src/entity';
-import { randomString } from '../../src/utils';
-import { KinveyError } from '../../src/errors';
+import Kinvey from 'src/kinvey';
+import { Client } from 'src/client';
+import { User } from 'src/entity';
+import { randomString } from 'src/utils';
+import { KinveyError } from 'src/errors';
 import expect from 'expect';
 import nock from 'nock';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
@@ -92,7 +92,6 @@ describe('Kinvey', function () {
       expect(Kinvey.Log).toNotEqual(undefined);
       expect(Kinvey.Metadata).toNotEqual(undefined);
       expect(Kinvey.Query).toNotEqual(undefined);
-      expect(Kinvey.SocialIdentity).toNotEqual(undefined);
       expect(Kinvey.User).toNotEqual(undefined);
       expect(Kinvey.Users).toNotEqual(undefined);
       expect(Kinvey.UserStore).toNotEqual(undefined);
@@ -191,7 +190,6 @@ describe('Kinvey', function () {
         expect(Kinvey.Files).toNotEqual(undefined);
         expect(Kinvey.Metadata).toNotEqual(undefined);
         expect(Kinvey.Query).toNotEqual(undefined);
-        expect(Kinvey.SocialIdentity).toNotEqual(undefined);
         expect(Kinvey.User).toNotEqual(undefined);
       });
     });

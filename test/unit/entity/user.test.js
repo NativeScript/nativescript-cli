@@ -1,6 +1,6 @@
 import { TestUser as User } from '../mocks';
-import { randomString } from '../../../src/utils';
-import { ActiveUserError, KinveyError } from '../../../src/errors';
+import { randomString } from 'src/utils';
+import { ActiveUserError, KinveyError } from 'src/errors';
 import { TestUser } from '../mocks';
 import expect from 'expect';
 import nock from 'nock';

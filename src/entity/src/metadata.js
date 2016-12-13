@@ -1,5 +1,6 @@
 import { KinveyError } from '../../errors';
-import clone from 'lodash/clone';
+import { isDefined } from '../../utils';
+import cloneDeep from 'lodash/clone';
 import isPlainObject from 'lodash/isPlainObject';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
@@ -18,12 +19,12 @@ export default class Metadata {
      * @private
      * @type {Object}
      */
-    this.kmd = clone(entity[kmdAttribute] || {});
+    this.kmd = cloneDeep(entity[kmdAttribute] || {});
   }
 
   get createdAt() {
     if (this.kmd.ect) {
-      return Date.parse(this.kmd.ect);
+      return new Date(this.kmd.ect);
     }
 
     return undefined;
@@ -34,12 +35,16 @@ export default class Metadata {
   }
 
   get emailVerification() {
-    return this.kmd.emailVerification.status;
+    if (isDefined(this.kmd.emailVerification)) {
+      return this.kmd.emailVerification.status;
+    }
+
+    return undefined;
   }
 
   get lastModified() {
     if (this.kmd.lmt) {
-      return Date.parse(this.kmd.lmt);
+      return new Date(this.kmd.lmt);
     }
 
     return undefined;
@@ -53,19 +58,11 @@ export default class Metadata {
     return this.kmd.authtoken;
   }
 
-  set authtoken(authtoken) {
-    this.kmd.authtoken = authtoken;
-  }
-
   isLocal() {
     return !!this.kmd.local;
   }
 
   toPlainObject() {
     return this.kmd;
-  }
-
-  toJSON() {
-    return this.toPlainObject();
   }
 }
