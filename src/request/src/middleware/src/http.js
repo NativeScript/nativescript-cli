@@ -1,3 +1,4 @@
+import { TimeoutError } from '../../../../errors';
 import Middleware from './middleware';
 import Promise from 'es6-promise';
 import agent from 'superagent';
@@ -25,6 +26,12 @@ export default class HttpMiddleware extends Middleware {
           }
 
           if (!response) {
+            if (error) {
+              if (error.code === 'ECONNABORTED') {
+                return reject(new TimeoutError(undefined, undefined, error.code));
+              }
+            }
+
             return reject(error);
           }
 
