@@ -69,7 +69,7 @@ export class Doctor {
 				});
 			}
 
-			if (!sysInfoData.cocoapodVer) {
+			if (!sysInfoData.cocoaPodsVer) {
 				result.push({
 					warning: "WARNING: CocoaPods is not installed or is not configured properly.",
 					additionalInformation: "You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
@@ -77,7 +77,7 @@ export class Doctor {
 				});
 			}
 
-			if (sysInfoData.xcodeVer && sysInfoData.cocoapodVer) {
+			if (sysInfoData.xcodeVer && sysInfoData.cocoaPodsVer) {
 				let isCocoaPodsWorkingCorrectly = await this.sysInfo.isCocoaPodsWorkingCorrectly();
 				if (!isCocoaPodsWorkingCorrectly) {
 					result.push({
@@ -87,7 +87,7 @@ export class Doctor {
 				}
 			}
 
-			if (sysInfoData.cocoapodVer && semver.valid(sysInfoData.cocoapodVer) && semver.lt(sysInfoData.cocoapodVer, Doctor.MIN_SUPPORTED_POD_VERSION)) {
+			if (sysInfoData.cocoaPodsVer && semver.valid(sysInfoData.cocoaPodsVer) && semver.lt(sysInfoData.cocoaPodsVer, Doctor.MIN_SUPPORTED_POD_VERSION)) {
 				result.push({
 					warning: `WARNING: Your current CocoaPods version is earlier than ${Doctor.MIN_SUPPORTED_POD_VERSION}.`,
 					additionalInformation: "You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL

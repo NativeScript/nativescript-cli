@@ -29,7 +29,7 @@ export class SysInfo {
 	private nodeGypVerCache: string;
 	private xCodeprojGemLocationCache: string;
 	private iTunesInstalledCache: boolean = null;
-	private cocoapodVerCache: string;
+	private cocoaPodsVerCache: string;
 	private osCache: string;
 	private adbVerCache: string;
 	private androidInstalledCache: boolean = null;
@@ -75,7 +75,7 @@ export class SysInfo {
 		return this.javaCompilerVerCache;
 	}
 
-	public async getXCodeVersion(): Promise<string> {
+	public async getXcodeVersion(): Promise<string> {
 		if (!this.xCodeVerCache && this.hostInfo.isDarwin) {
 			const output = await this.execCommand("xcodebuild -version");
 			const xcodeVersionMatch = output && output.match(SysInfo.XCODE_VERSION_REGEXP);
@@ -110,7 +110,7 @@ export class SysInfo {
 		return this.nodeGypVerCache;
 	}
 
-	public async getXCodeProjGemLocation(): Promise<string> {
+	public async getXcodeprojGemLocation(): Promise<string> {
 		if (!this.xCodeprojGemLocationCache && this.hostInfo.isDarwin) {
 			const output = await this.execCommand("gem which xcodeproj");
 			this.xCodeprojGemLocationCache = output ? output.trim() : null;
@@ -139,19 +139,19 @@ export class SysInfo {
 		return !!this.iTunesInstalledCache;
 	}
 
-	public async getCocoapodVersion(): Promise<string> {
-		if (!this.cocoapodVerCache && this.hostInfo.isDarwin) {
+	public async getCocoaPodsVersion(): Promise<string> {
+		if (!this.cocoaPodsVerCache && this.hostInfo.isDarwin) {
 			if (this.hostInfo.isDarwin) {
 				const output = await this.execCommand("pod --version");
 				// Output of pod --version could contain some warnings. Find the version in it.
-				const cocoapodVersionMatch = output && output.match(SysInfo.VERSION_REGEXP);
-				if (cocoapodVersionMatch && cocoapodVersionMatch[0]) {
-					this.cocoapodVerCache = cocoapodVersionMatch[0].trim();
+				const cocoaPodsVersionMatch = output && output.match(SysInfo.VERSION_REGEXP);
+				if (cocoaPodsVersionMatch && cocoaPodsVersionMatch[0]) {
+					this.cocoaPodsVerCache = cocoaPodsVersionMatch[0].trim();
 				}
 			}
 		}
 
-		return this.cocoapodVerCache;
+		return this.cocoaPodsVerCache;
 	}
 
 	public async getOs(): Promise<string> {
@@ -242,10 +242,10 @@ export class SysInfo {
 			result.dotNetVer = await this.hostInfo.dotNetVersion();
 			result.javaVer = await this.getJavaVersion();
 			result.javacVersion = await this.getJavaCompilerVersion();
-			result.xcodeVer = await this.getXCodeVersion();
-			result.xcodeprojGemLocation = await this.getXCodeProjGemLocation();
+			result.xcodeVer = await this.getXcodeVersion();
+			result.xcodeprojGemLocation = await this.getXcodeprojGemLocation();
 			result.itunesInstalled = await this.isITunesInstalled();
-			result.cocoapodVer = await this.getCocoapodVersion();
+			result.cocoaPodsVer = await this.getCocoaPodsVersion();
 			result.adbVer = await this.getAdbVersion();
 			result.androidInstalled = await this.isAndroidInstalled();
 			result.monoVer = await this.getMonoVersion();
