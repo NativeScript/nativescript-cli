@@ -578,21 +578,6 @@ export default class SyncManager {
       });
   }
 
-  sync(query, options = {}) {
-    return this.push(null, options)
-      .then((push) => {
-        const promise = this.pull(query, options)
-          .then((pull) => {
-            const result = {
-              push: push,
-              pull: pull
-            };
-            return result;
-          });
-        return promise;
-      });
-  }
-
   /**
    * Clear the sync table. A query can be provided to
    * only clear a subset of the sync table.

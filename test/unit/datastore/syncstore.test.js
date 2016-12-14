@@ -1037,4 +1037,39 @@ describe('SyncStore', function() {
       expect(syncCount).toEqual(0);
     });
   });
+
+  describe('sync()', function() {
+    it('should push pending entities, then pull new entities', async function() {
+      const store = new SyncStore(collection);
+      let entity = {
+        prop: randomString()
+      };
+      entity = await store.save(entity);
+      const pendingCount = await store.syncCount();
+      expect(pendingCount).toEqual(1);
+
+      nock(store.client.baseUrl)
+        .post(store.pathname, () => true)
+        .query(true)
+        .reply(200, entity, {
+          'content-type': 'application/json'
+        });
+
+      nock(store.client.baseUrl)
+        .get(store.pathname, () => true)
+        .query(true)
+        .reply(200, [entity], {
+          'content-type': 'application/json'
+        });
+
+      const result = await store.sync();
+      expect(result.pull).toEqual([entity]);
+      expect(result.push).toEqual([{ _id: entity._id, entity: entity }]);
+
+      const syncCount = await store.syncCount();
+      expect(syncCount).toEqual(0);
+
+
+    });
+  });
 });
