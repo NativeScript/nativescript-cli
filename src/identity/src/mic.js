@@ -2,7 +2,7 @@ import Popup from './popup';
 import Identity from './identity';
 import { SocialIdentity } from './enums';
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
-import { KinveyError, MobileIdentityConnectError, PopupError } from '../../errors';
+import { KinveyError, MobileIdentityConnectError } from '../../errors';
 import Promise from 'es6-promise';
 import path from 'path';
 import url from 'url';
