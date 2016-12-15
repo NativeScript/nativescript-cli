@@ -997,11 +997,13 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return (() => {
 			// TRICKY: I am not sure why we totally disregard the buildConfig parameter here.
 			buildConfig = buildConfig || {};
+			let isXCConfigDefined = false;
 
 			if (this.$options.teamId) {
 				buildConfig.teamIdentifier = this.$options.teamId;
 			} else {
 				buildConfig = this.readXCConfigSigning();
+				isXCConfigDefined = true;
 				if (!buildConfig.codeSignIdentity && !buildConfig.mobileProvisionIdentifier && !buildConfig.teamIdentifier) {
 					buildConfig = this.readBuildConfigFromPlatforms();
 				}
@@ -1013,6 +1015,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			} else if (buildConfig.teamIdentifier) {
 				signingStyle = "Automatic";
 			} else if (helpers.isInteractive()) {
+				isXCConfigDefined = false;
 				let signingStyles = [
 					"Manual - Select existing provisioning profile for use",
 					"Automatic - Select Team ID for signing and let Xcode select managed provisioning profile"
@@ -1038,7 +1041,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				}
 			}
 
-			if (signingStyle) {
+			if (signingStyle && !isXCConfigDefined) {
 				const pbxprojPath = path.join(projectRoot, this.$projectData.projectName + ".xcodeproj", "project.pbxproj");
 				const xcode = Xcode.open(pbxprojPath);
 				switch(signingStyle) {
@@ -1050,6 +1053,11 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 						break;
 				}
 				xcode.save();
+			}
+
+			if (isXCConfigDefined) {
+				delete buildConfig.mobileProvisionIdentifier;
+				delete buildConfig.teamIdentifier;
 			}
 
 			return buildConfig;
