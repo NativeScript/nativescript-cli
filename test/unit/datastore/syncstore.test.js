@@ -48,31 +48,45 @@ describe('SyncStore', function() {
 
   describe('find()', function() {
     const entity1 = {
-      _id: '57b48371319a67493dc50dba',
+      _id: randomString(),
       title: 'Opela',
+      isbn: 2,
       author: 'Maria Crawford',
-      isbn: '887420007-2',
       summary: 'Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros.\n\nVestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.',
       _acl: {
         creator: 'kid_HkTD2CJc'
       },
       _kmd: {
-        lmt: '2016-08-17T15:32:01.741Z',
-        ect: '2016-08-17T15:32:01.741Z'
+        lmt: new Date().toISOString(),
+        ect: new Date().toISOString()
       }
     };
     const entity2 = {
-      _id: '57b48371b262874d7e2f0a99',
+      _id: randomString(),
       title: 'Treeflex',
+      isbn: 1,
       author: 'Harry Larson',
-      isbn: '809087960-8',
       summary: 'Aenean fermentum. Donec ut mauris eget massa tempor convallis. Nulla neque libero, convallis eget, eleifend luctus, ultricies eu, nibh.',
       _acl: {
         creator: 'kid_HkTD2CJc'
       },
       _kmd: {
-        lmt: '2016-08-17T15:32:01.744Z',
-        ect: '2016-08-17T15:32:01.744Z'
+        lmt: new Date().toISOString(),
+        ect: new Date().toISOString()
+      }
+    };
+    const entity3 = {
+      _id: randomString(),
+      title: 'Random',
+      author: 'Bruce Lee',
+      isbn: 1,
+      summary: 'Loren ipsum dolor si...',
+      _acl: {
+        creator: 'kid_HkTD2CJc'
+      },
+      _kmd: {
+        lmt: new Date().toISOString(),
+        ect: new Date().toISOString()
       }
     };
 
@@ -80,13 +94,11 @@ describe('SyncStore', function() {
       // Kinvey API response
       nock(this.client.apiHostname, { encodedQueryParams: true })
         .get(`/appdata/${this.client.appKey}/${collection}`)
-        .reply(200, [entity1, entity2], {
+        .reply(200, [entity1, entity2, entity3], {
           'content-type': 'application/json',
           'x-kinvey-request-id': 'a6b7712a0bca42b8a98c82de1fe0f5cf',
           'x-kinvey-api-version': '4'
         });
-
-
 
       // Pull data into cache
       const store = new SyncStore(collection);
@@ -102,7 +114,41 @@ describe('SyncStore', function() {
     it('should return all the entities in cache', async function() {
       const store = new SyncStore(collection);
       const entities = await store.find().toPromise();
-      expect(entities).toEqual([entity1, entity2]);
+      expect(entities).toEqual([entity1, entity2, entity3]);
+    });
+
+    it('should execute a limit query on cache', async function() {
+      const store = new SyncStore(collection);
+      const query = new Query();
+      query.limit = 1;
+      const entities = await store.find(query).toPromise();    
+      expect(entities.length).toEqual(1);
+      expect(entities).toEqual([entity1]);
+    });
+
+    it('should execute a skip query on cache', async function() {
+      const store = new SyncStore(collection);
+      const query = new Query();
+      query.skip = 1;
+      const entities = await store.find(query).toPromise();
+      expect(entities).toEqual([entity2, entity3]);
+    });
+
+    it('should execute a sort ascending query on cache', async function() {
+      const store = new SyncStore(collection);
+      const query = new Query();
+      query.ascending('summary');
+      const entities = await store.find(query).toPromise();
+      expect(entities).toEqual([entity2, entity3, entity1]);
+    });
+
+    it('should execute a sort query with multiple fields on cache', async function() {
+      const store = new SyncStore(collection);
+      const query = new Query();
+      query.ascending('isbn');
+      query.descending('summary');
+      const entities = await store.find(query).toPromise();    
+      expect(entities).toEqual([entity3, entity2, entity1]);
     });
 
     it('should throw an error if the query argument is not an instance of the Query class', async function() {
