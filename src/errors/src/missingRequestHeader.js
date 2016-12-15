@@ -1,7 +1,7 @@
-import KinveyError from './kinvey';
+import BaseError from './base';
 
-export default class MissingRequestHeaderError extends KinveyError {
-  constructor(message = 'The request is missing a required header.', debug, code) {
-    super('MissingRequestHeaderError', message, debug, code);
+export default class MissingRequestHeaderError extends BaseError {
+  constructor(message = 'The request is missing a required header.', debug, code, kinveyRequestId) {
+    super('MissingRequestHeaderError', message, debug, code, kinveyRequestId);
   }
 }

@@ -1,4 +1,4 @@
-import { ActiveUserError, KinveyError } from 'src/errors';
+import { ActiveUserError, BaseError } from '../../../src/errors';
 import expect from 'expect';
 
 describe('ActiveUserError', () => {
@@ -8,9 +8,9 @@ describe('ActiveUserError', () => {
       expect(error instanceof ActiveUserError).toEqual(true);
     });
 
-    it('should be an instance of KinveyError', () => {
+    it('should be an instance of BaseError', () => {
       const error = new ActiveUserError();
-      expect(error instanceof KinveyError).toEqual(true);
+      expect(error instanceof BaseError).toEqual(true);
     });
 
     it('should be an instance of Error', () => {
@@ -53,12 +53,19 @@ describe('ActiveUserError', () => {
   describe('code', () => {
     it('should return the default code -1', () => {
       const error = new ActiveUserError();
-      expect(error.debug).toEqual('');
+      expect(error.code).toEqual(-1);
     });
 
     it('should return the custom code 309', () => {
       const error = new ActiveUserError(undefined, undefined, 309);
       expect(error.code).toEqual(309);
+    });
+  });
+
+  describe('kinveyRequestId', () => {
+    it('should return undefined', () => {
+      const error = new ActiveUserError();
+      expect(error.kinveyRequestId).toEqual(undefined);
     });
   });
 });

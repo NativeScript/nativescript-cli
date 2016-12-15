@@ -1,7 +1,7 @@
-import KinveyError from './kinvey';
+import BaseError from './base';
 
-export default class SyncError extends KinveyError {
-  constructor(message = 'An error occurred during sync.', debug, code) {
-    super('SyncError', message, debug, code);
+export default class SyncError extends BaseError {
+  constructor(message = 'An error occurred during sync.', debug, code, kinveyRequestId) {
+    super('SyncError', message, debug, code, kinveyRequestId);
   }
 }

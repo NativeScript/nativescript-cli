@@ -16,6 +16,7 @@ import {
   ParameterValueOutOfRangeError,
   ServerError
 } from '../../errors';
+import { isDefined } from '../../utils';
 
 /**
  * @private
@@ -74,16 +75,24 @@ export default class Response {
     const message = data.message || data.description;
     const debug = data.debug;
     const code = this.statusCode;
+    const kinveyRequestId = this.headers.get('X-Kinvey-Request-ID');
+    let error;
 
     if (code === StatusCode.Unauthorized) {
-      return new InsufficientCredentialsError(message, debug, code);
+      error = new InsufficientCredentialsError(message, debug, code, kinveyRequestId);
     } else if (code === StatusCode.NotFound) {
-      return new NotFoundError(message, debug, code);
+      error = new NotFoundError(message, debug, code, kinveyRequestId);
     } else if (code === StatusCode.ServerError) {
-      return new ServerError(message, debug, code);
+      error = new ServerError(message, debug, code, kinveyRequestId);
+    } else {
+      error = new KinveyError(message, debug, code, kinveyRequestId);
     }
 
-    return new KinveyError(name, message, debug, code);
+    if (isDefined(name)) {
+      error.name = name;
+    }
+
+    return error;
   }
 
   isSuccess() {
@@ -107,40 +116,48 @@ export class KinveyResponse extends Response {
     const message = data.message || data.description;
     const debug = data.debug;
     const code = this.statusCode;
+    const kinveyRequestId = this.headers.get('X-Kinvey-Request-ID');
+    let error;
 
     if (name === 'FeatureUnavailableError') {
-      return new FeatureUnavailableError(message, debug, code);
+      error = new FeatureUnavailableError(message, debug, code, kinveyRequestId);
     } else if (name === 'IncompleteRequestBodyError') {
-      return new IncompleteRequestBodyError(message, debug, code);
+      error = new IncompleteRequestBodyError(message, debug, code, kinveyRequestId);
     } else if (name === 'InsufficientCredentials') {
-      return new InsufficientCredentialsError(message, debug, code);
+      error = new InsufficientCredentialsError(message, debug, code, kinveyRequestId);
     } else if (name === 'InvalidCredentials') {
-      return new InvalidCredentialsError(message, debug, code);
+      error = new InvalidCredentialsError(message, debug, code, kinveyRequestId);
     } else if (name === 'InvalidIdentifierError') {
-      return new InvalidIdentifierError(message, debug, code);
+      error = new InvalidIdentifierError(message, debug, code, kinveyRequestId);
     } else if (name === 'InvalidQuerySyntaxError') {
-      return new InvalidQuerySyntaxError(message, debug, code);
+      error = new InvalidQuerySyntaxError(message, debug, code, kinveyRequestId);
     } else if (name === 'JSONParseError') {
-      return new JSONParseError(message, debug, code);
+      error = new JSONParseError(message, debug, code, kinveyRequestId);
     } else if (name === 'MissingQueryError') {
-      return new MissingQueryError(message, debug, code);
+      error = new MissingQueryError(message, debug, code, kinveyRequestId);
     } else if (name === 'MissingRequestHeaderError') {
-      return new MissingRequestHeaderError(message, debug, code);
+      error = new MissingRequestHeaderError(message, debug, code, kinveyRequestId);
     } else if (name === 'MissingRequestParameterError') {
-      return new MissingRequestParameterError(message, debug, code);
+      error = new MissingRequestParameterError(message, debug, code, kinveyRequestId);
     } else if (name === 'EntityNotFound'
         || name === 'CollectionNotFound'
         || name === 'AppNotFound'
         || name === 'UserNotFound'
         || name === 'BlobNotFound'
         || name === 'DocumentNotFound') {
-      return new NotFoundError(message, debug, code);
+      error = new NotFoundError(message, debug, code, kinveyRequestId);
     } else if (name === 'ParameterValueOutOfRangeError') {
-      return new ParameterValueOutOfRangeError(message, debug, code);
+      error = new ParameterValueOutOfRangeError(message, debug, code, kinveyRequestId);
     } else if (name === 'ServerError') {
-      return new ServerError(message, debug, code);
+      error = new ServerError(message, debug, code, kinveyRequestId);
+    } else {
+      return super.error;
     }
 
-    return super.error;
+    if (isDefined(name)) {
+      error.name = name;
+    }
+
+    return error;
   }
 }

@@ -1,7 +1,7 @@
-import KinveyError from './kinvey';
+import BaseError from './base';
 
-export default class JSONParseError extends KinveyError {
-  constructor(message = 'Unable to parse the JSON in the request.', debug, code) {
-    super('JSONParseError', message, debug, code);
+export default class JSONParseError extends BaseError {
+  constructor(message = 'Unable to parse the JSON in the request.', debug, code, kinveyRequestId) {
+    super('JSONParseError', message, debug, code, kinveyRequestId);
   }
 }
