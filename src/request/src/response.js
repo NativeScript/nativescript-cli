@@ -70,7 +70,6 @@ export default class Response {
     }
 
     const data = this.data || {};
-    const name = data.name || data.error;
     const message = data.message || data.description;
     const debug = data.debug;
     const code = this.statusCode;
@@ -84,7 +83,7 @@ export default class Response {
       return new ServerError(message, debug, code, kinveyRequestId);
     }
 
-    return new KinveyError(name, message, debug, code, kinveyRequestId);
+    return new KinveyError(message, debug, code, kinveyRequestId);
   }
 
   isSuccess() {
