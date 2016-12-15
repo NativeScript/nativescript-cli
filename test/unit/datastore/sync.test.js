@@ -32,8 +32,6 @@ describe('Sync', function () {
       const count = await sync.count();
       expect(count).toEqual(2);
     });
-
-    it('should return the count that matches the query');
   });
 
   describe('addCreateOperation()', function() {
