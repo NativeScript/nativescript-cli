@@ -37,7 +37,7 @@ export default class Query {
     options = assign({
       fields: [],
       filter: {},
-      sort: {},
+      sort: null,
       limit: null,
       skip: 0
     }, options);
@@ -769,47 +769,46 @@ export default class Query {
 
         return item;
       });
+    }
 
-      // Sorting.
-      data = data.sort((a, b) => {
-        const fields = Object.keys(json.sort);
-        forEach(fields, (field) => {
-          // Find field in objects.
-          const aField = nested(a, field);
-          const bField = nested(b, field);
+    // Sorting.
+    if (isDefined(json.sort)) {
+      data.sort((a, b) => {
+        for (const field in json.sort) {
+          if (json.sort.hasOwnProperty(field)) {
+            // Find field in objects.
+            const aField = nested(a, field);
+            const bField = nested(b, field);
 
-          // Elements which do not contain the field should always be sorted
-          // lower.
-          if (isDefined(aField) && !isDefined(bField)) {
-            return -1;
+            // Elements which do not contain the field should always be sorted
+            // lower.
+            if (isDefined(aField) && !isDefined(bField)) {
+              return -1;
+            }
+            else if (isDefined(bField) && !isDefined(aField)) {
+              return 1;
+            }
+            // Sort on the current field. The modifier adjusts the sorting order
+            // (ascending (-1), or descending(1)). If the fields are equal,
+            // continue sorting based on the next field (if any).
+            else if (aField !== bField) {
+              const modifier = json.sort[field]; // 1 or -1.
+              return (aField < bField ? -1 : 1) * modifier;
+            }
           }
-
-          if (isDefined(bField) && !isDefined(aField)) {
-            return 1;
-          }
-
-          // Sort on the current field. The modifier adjusts the sorting order
-          // (ascending (-1), or descending(1)). If the fields are equal,
-          // continue sorting based on the next field (if any).
-          if (aField !== bField) {
-            const modifier = json.sort[field]; // 1 or -1.
-            return (aField < bField ? -1 : 1) * modifier;
-          }
-
-          return 0;
-        });
+        }
 
         return 0;
       });
+    }
 
-      // Limit and skip.
-      if (isNumber(json.skip)) {
-        if (isNumber(json.limit)) {
-          return data.slice(json.skip, json.skip + json.limit);
-        }
-
-        return data.slice(json.skip);
+    // Limit and skip.
+    if (isNumber(json.skip)) {
+      if (isNumber(json.limit) && json.limit > 0) {
+        return data.slice(json.skip, json.skip + json.limit);
       }
+
+      return data.slice(json.skip);
     }
 
     return data;
