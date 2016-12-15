@@ -30,11 +30,6 @@ export class TnsModulesCopy {
 				allFiles.filter(file => minimatch(file, matchPattern, { nocase: true })).map(file => this.$fs.deleteFile(file));
 
 				shelljs.rm("-rf", path.join(tnsCoreModulesResourcePath, "node_modules"));
-
-				// TODO: The following two lines are necessary to temporarily work around hardcoded
-				// path dependencies in iOS livesync logic. Should be addressed ASAP
-				shelljs.cp("-Rf", path.join(tnsCoreModulesResourcePath, "*"), this.outputRoot);
-				shelljs.rm("-rf", tnsCoreModulesResourcePath);
 			}
 		}
 	}
