@@ -207,7 +207,7 @@ export class Client {
     timeout = parseInt(timeout, 10);
 
     if (isNumber(timeout) === false || isNaN(timeout)) {
-      throw new KinveyError(null, 'Invalid timeout. Timeout must be a number.');
+      throw new KinveyError('Invalid timeout. Timeout must be a number.');
     }
 
     if (timeout < 0) {
