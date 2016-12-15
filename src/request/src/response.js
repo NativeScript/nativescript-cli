@@ -16,6 +16,7 @@ import {
   ParameterValueOutOfRangeError,
   ServerError
 } from '../../errors';
+import { isDefined } from '../../utils';
 
 /**
  * @private
@@ -70,6 +71,7 @@ export default class Response {
     }
 
     const data = this.data || {};
+    const name = data.name || data.error;
     const message = data.message || data.description;
     const debug = data.debug;
     const code = this.statusCode;
@@ -86,7 +88,10 @@ export default class Response {
       error = new KinveyError(message, debug, code, kinveyRequestId);
     }
 
-    error.name = name;
+    if (isDefined(name)) {
+      error.name = name;
+    }
+
     return error;
   }
 
@@ -149,7 +154,10 @@ export class KinveyResponse extends Response {
       return super.error;
     }
 
-    error.name = name;
+    if (isDefined(name)) {
+      error.name = name;
+    }
+
     return error;
   }
 }
