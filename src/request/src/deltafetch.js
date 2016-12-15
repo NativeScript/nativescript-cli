@@ -42,7 +42,7 @@ export default class DeltaFetchRequest extends KinveyRequest {
       case RequestMethod.PUT:
       case RequestMethod.DELETE:
       default:
-        throw new KinveyError(null, 'Invalid request Method. Only RequestMethod.GET is allowed.');
+        throw new KinveyError('Invalid request Method. Only RequestMethod.GET is allowed.');
     }
   }
 
