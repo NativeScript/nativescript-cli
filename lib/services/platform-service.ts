@@ -469,6 +469,7 @@ export class PlatformService implements IPlatformService {
 	}
 
 	public emulatePlatform(platform: string): IFuture<void> {
+		this.$options.emulator = true;
 		if (this.$options.availableDevices) {
 			return $injector.resolveCommand("device").execute([platform]);
 		}
