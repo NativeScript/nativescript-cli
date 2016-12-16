@@ -4,7 +4,7 @@
 
 **Merged pull requests:**
 - Added `error.kinveyRequestId` as a property to error objects. This property is set to the `X-Kinvey-Request-Id` header value of a Kinvey API response. It is `undefined` by default. [#84](https://github.com/Kinvey/js-sdk/pull/84)
-- Added a global get/set default timeout property on the client. The default timeout is 60 seconds. You can change the default timeout for all requests by passing a default timeout when you initialize the SDK. [#85](https://github.com/Kinvey/js-sdk/pull/85)
+- Added a global get/set default timeout property on the client. The library sets the default timeout to a value of 60 seconds. You can change this value by passing a default timeout when you initialize the SDK. [#85](https://github.com/Kinvey/js-sdk/pull/85)
 
 ```
 Kinvey.initialize({
@@ -14,9 +14,9 @@ Kinvey.initialize({
 });
 ```
 
-- Delta fetch requests now work with a queries. [#83](https://github.com/Kinvey/js-sdk/pull/83)
+- Delta fetch requests now works with queries. [#83](https://github.com/Kinvey/js-sdk/pull/83)
 - Fixed a check with `instanceof` in Mobile Identity Connect that caused a `TypeError` to be thrown. [#87](https://github.com/Kinvey/js-sdk/pull/87)
-- Entities will now be persisted when calling `store.sync` on a data store instance. [#88](https://github.com/Kinvey/js-sdk/pull/88) for more details.
+- Entities will now be persisted when calling `store.sync` on a data store instance. [#88](https://github.com/Kinvey/js-sdk/pull/88)
 - Fixed issues that caused inconsistencies with Error objects. [#89](https://github.com/Kinvey/js-sdk/pull/89)
 - Sort, limit, and skip now work correctly when querying the local cache. [#90](https://github.com/Kinvey/js-sdk/pull/90)
 
