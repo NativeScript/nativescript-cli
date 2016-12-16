@@ -67,7 +67,7 @@ var Query = function () {
     options = (0, _assign2.default)({
       fields: [],
       filter: {},
-      sort: {},
+      sort: null,
       limit: null,
       skip: 0
     }, options);
@@ -449,39 +449,36 @@ var Query = function () {
 
           return item;
         });
+      }
 
-        data = data.sort(function (a, b) {
-          var fields = Object.keys(json.sort);
-          (0, _forEach2.default)(fields, function (field) {
-            var aField = (0, _utils.nested)(a, field);
-            var bField = (0, _utils.nested)(b, field);
+      if ((0, _utils.isDefined)(json.sort)) {
+        data.sort(function (a, b) {
+          for (var field in json.sort) {
+            if (json.sort.hasOwnProperty(field)) {
+              var aField = (0, _utils.nested)(a, field);
+              var bField = (0, _utils.nested)(b, field);
 
-            if ((0, _utils.isDefined)(aField) && !(0, _utils.isDefined)(bField)) {
-              return -1;
+              if ((0, _utils.isDefined)(aField) && !(0, _utils.isDefined)(bField)) {
+                return -1;
+              } else if ((0, _utils.isDefined)(bField) && !(0, _utils.isDefined)(aField)) {
+                return 1;
+              } else if (aField !== bField) {
+                  var modifier = json.sort[field];
+                  return (aField < bField ? -1 : 1) * modifier;
+                }
             }
-
-            if ((0, _utils.isDefined)(bField) && !(0, _utils.isDefined)(aField)) {
-              return 1;
-            }
-
-            if (aField !== bField) {
-              var modifier = json.sort[field];
-              return (aField < bField ? -1 : 1) * modifier;
-            }
-
-            return 0;
-          });
+          }
 
           return 0;
         });
+      }
 
-        if ((0, _isNumber2.default)(json.skip)) {
-          if ((0, _isNumber2.default)(json.limit)) {
-            return data.slice(json.skip, json.skip + json.limit);
-          }
-
-          return data.slice(json.skip);
+      if ((0, _isNumber2.default)(json.skip)) {
+        if ((0, _isNumber2.default)(json.limit) && json.limit > 0) {
+          return data.slice(json.skip, json.skip + json.limit);
         }
+
+        return data.slice(json.skip);
       }
 
       return data;

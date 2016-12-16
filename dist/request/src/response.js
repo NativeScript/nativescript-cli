@@ -19,6 +19,8 @@ var _assign2 = _interopRequireDefault(_assign);
 
 var _errors = require('../../errors');
 
+var _utils = require('../../utils');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -88,16 +90,24 @@ var Response = function () {
       var message = data.message || data.description;
       var debug = data.debug;
       var code = this.statusCode;
+      var kinveyRequestId = this.headers.get('X-Kinvey-Request-ID');
+      var error = void 0;
 
       if (code === StatusCode.Unauthorized) {
-        return new _errors.InsufficientCredentialsError(message, debug, code);
+        error = new _errors.InsufficientCredentialsError(message, debug, code, kinveyRequestId);
       } else if (code === StatusCode.NotFound) {
-        return new _errors.NotFoundError(message, debug, code);
+        error = new _errors.NotFoundError(message, debug, code, kinveyRequestId);
       } else if (code === StatusCode.ServerError) {
-        return new _errors.ServerError(message, debug, code);
+        error = new _errors.ServerError(message, debug, code, kinveyRequestId);
+      } else {
+        error = new _errors.KinveyError(message, debug, code, kinveyRequestId);
       }
 
-      return new _errors.KinveyError(name, message, debug, code);
+      if ((0, _utils.isDefined)(name)) {
+        error.name = name;
+      }
+
+      return error;
     }
   }]);
 
@@ -127,36 +137,44 @@ var KinveyResponse = exports.KinveyResponse = function (_Response) {
       var message = data.message || data.description;
       var debug = data.debug;
       var code = this.statusCode;
+      var kinveyRequestId = this.headers.get('X-Kinvey-Request-ID');
+      var error = void 0;
 
       if (name === 'FeatureUnavailableError') {
-        return new _errors.FeatureUnavailableError(message, debug, code);
+        error = new _errors.FeatureUnavailableError(message, debug, code, kinveyRequestId);
       } else if (name === 'IncompleteRequestBodyError') {
-        return new _errors.IncompleteRequestBodyError(message, debug, code);
+        error = new _errors.IncompleteRequestBodyError(message, debug, code, kinveyRequestId);
       } else if (name === 'InsufficientCredentials') {
-        return new _errors.InsufficientCredentialsError(message, debug, code);
+        error = new _errors.InsufficientCredentialsError(message, debug, code, kinveyRequestId);
       } else if (name === 'InvalidCredentials') {
-        return new _errors.InvalidCredentialsError(message, debug, code);
+        error = new _errors.InvalidCredentialsError(message, debug, code, kinveyRequestId);
       } else if (name === 'InvalidIdentifierError') {
-        return new _errors.InvalidIdentifierError(message, debug, code);
+        error = new _errors.InvalidIdentifierError(message, debug, code, kinveyRequestId);
       } else if (name === 'InvalidQuerySyntaxError') {
-        return new _errors.InvalidQuerySyntaxError(message, debug, code);
+        error = new _errors.InvalidQuerySyntaxError(message, debug, code, kinveyRequestId);
       } else if (name === 'JSONParseError') {
-        return new _errors.JSONParseError(message, debug, code);
+        error = new _errors.JSONParseError(message, debug, code, kinveyRequestId);
       } else if (name === 'MissingQueryError') {
-        return new _errors.MissingQueryError(message, debug, code);
+        error = new _errors.MissingQueryError(message, debug, code, kinveyRequestId);
       } else if (name === 'MissingRequestHeaderError') {
-        return new _errors.MissingRequestHeaderError(message, debug, code);
+        error = new _errors.MissingRequestHeaderError(message, debug, code, kinveyRequestId);
       } else if (name === 'MissingRequestParameterError') {
-        return new _errors.MissingRequestParameterError(message, debug, code);
+        error = new _errors.MissingRequestParameterError(message, debug, code, kinveyRequestId);
       } else if (name === 'EntityNotFound' || name === 'CollectionNotFound' || name === 'AppNotFound' || name === 'UserNotFound' || name === 'BlobNotFound' || name === 'DocumentNotFound') {
-        return new _errors.NotFoundError(message, debug, code);
+        error = new _errors.NotFoundError(message, debug, code, kinveyRequestId);
       } else if (name === 'ParameterValueOutOfRangeError') {
-        return new _errors.ParameterValueOutOfRangeError(message, debug, code);
+        error = new _errors.ParameterValueOutOfRangeError(message, debug, code, kinveyRequestId);
       } else if (name === 'ServerError') {
-        return new _errors.ServerError(message, debug, code);
+        error = new _errors.ServerError(message, debug, code, kinveyRequestId);
+      } else {
+        return _get(KinveyResponse.prototype.__proto__ || Object.getPrototypeOf(KinveyResponse.prototype), 'error', this);
       }
 
-      return _get(KinveyResponse.prototype.__proto__ || Object.getPrototypeOf(KinveyResponse.prototype), 'error', this);
+      if ((0, _utils.isDefined)(name)) {
+        error.name = name;
+      }
+
+      return error;
     }
   }]);
 

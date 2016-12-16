@@ -128,6 +128,11 @@ var Identity = function () {
       }
     }
   }], [{
+    key: 'isSupported',
+    value: function isSupported() {
+      return !!hello;
+    }
+  }, {
     key: 'login',
     value: function login(clientId, options) {
       var social = new this(options);

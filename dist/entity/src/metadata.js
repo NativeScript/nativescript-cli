@@ -8,6 +8,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _errors = require('../../errors');
 
+var _utils = require('../../utils');
+
 var _clone = require('lodash/clone');
 
 var _clone2 = _interopRequireDefault(_clone);
@@ -46,15 +48,10 @@ var Metadata = function () {
       return this.kmd;
     }
   }, {
-    key: 'toJSON',
-    value: function toJSON() {
-      return this.toPlainObject();
-    }
-  }, {
     key: 'createdAt',
     get: function get() {
       if (this.kmd.ect) {
-        return Date.parse(this.kmd.ect);
+        return new Date(this.kmd.ect);
       }
 
       return undefined;
@@ -67,13 +64,17 @@ var Metadata = function () {
   }, {
     key: 'emailVerification',
     get: function get() {
-      return this.kmd.emailVerification.status;
+      if ((0, _utils.isDefined)(this.kmd.emailVerification)) {
+        return this.kmd.emailVerification.status;
+      }
+
+      return undefined;
     }
   }, {
     key: 'lastModified',
     get: function get() {
       if (this.kmd.lmt) {
-        return Date.parse(this.kmd.lmt);
+        return new Date(this.kmd.lmt);
       }
 
       return undefined;
@@ -87,9 +88,6 @@ var Metadata = function () {
     key: 'authtoken',
     get: function get() {
       return this.kmd.authtoken;
-    },
-    set: function set(authtoken) {
-      this.kmd.authtoken = authtoken;
     }
   }]);
 

@@ -130,7 +130,6 @@ Kinvey.Group = _aggregation2.default;
 Kinvey.Log = _utils.Log;
 Kinvey.Metadata = _entity.Metadata;
 Kinvey.Query = _query2.default;
-Kinvey.SocialIdentity = _identity.SocialIdentity;
 Kinvey.User = _entity.User;
 Kinvey.Users = _datastore.UserStore;
 Kinvey.UserStore = _datastore.UserStore;

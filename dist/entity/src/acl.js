@@ -8,19 +8,27 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _errors = require('../../errors');
 
-var _clone = require('lodash/clone');
+var _utils = require('../../utils');
 
-var _clone2 = _interopRequireDefault(_clone);
+var _cloneDeep = require('lodash/cloneDeep');
+
+var _cloneDeep2 = _interopRequireDefault(_cloneDeep);
 
 var _isPlainObject = require('lodash/isPlainObject');
 
 var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 
+var _isArray = require('lodash/isArray');
+
+var _isArray2 = _interopRequireDefault(_isArray);
+
+var _assign = require('lodash/assign');
+
+var _assign2 = _interopRequireDefault(_assign);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var aclAttribute = process && process.env && process.env.KINVEY_ACL_ATTRIBUTE || '_acl' || '_acl';
 
 var Acl = function () {
   function Acl() {
@@ -32,13 +40,13 @@ var Acl = function () {
       throw new _errors.KinveyError('entity argument must be an object');
     }
 
-    this.acl = (0, _clone2.default)(entity[aclAttribute]);
+    this.acl = (0, _cloneDeep2.default)(entity._acl);
   }
 
   _createClass(Acl, [{
     key: 'addReader',
     value: function addReader(user) {
-      var r = this.acl.r || [];
+      var r = this.readers;
 
       if (r.indexOf(user) === -1) {
         r.push(user);
@@ -50,21 +58,19 @@ var Acl = function () {
   }, {
     key: 'addReaderGroup',
     value: function addReaderGroup(group) {
-      var groups = this.acl.groups || {};
-      var r = groups.r || [];
+      var groups = this.readerGroups;
 
-      if (r.indexOf(group) === -1) {
-        r.push(group);
+      if (groups.indexOf(group) === -1) {
+        groups.push(group);
       }
 
-      groups.r = r;
-      this.acl.groups = groups;
+      this.acl.groups = (0, _assign2.default)({}, this.acl.groups, { r: groups });
       return this;
     }
   }, {
     key: 'addWriter',
     value: function addWriter(user) {
-      var w = this.acl.w || [];
+      var w = this.writers;
 
       if (w.indexOf(user) === -1) {
         w.push(user);
@@ -76,35 +82,41 @@ var Acl = function () {
   }, {
     key: 'addWriterGroup',
     value: function addWriterGroup(group) {
-      var groups = this.acl.groups || {};
-      var w = groups.w || [];
+      var groups = this.writerGroups;
 
-      if (w.indexOf(group) === -1) {
-        w.push(group);
+      if (groups.indexOf(group) === -1) {
+        groups.push(group);
       }
 
-      groups.w = w;
-      this.acl.groups = groups;
+      this.acl.groups = (0, _assign2.default)({}, this.acl.groups, { w: groups });
       return this;
     }
   }, {
     key: 'isGloballyReadable',
     value: function isGloballyReadable() {
-      return this.acl.gr || false;
+      if (this.acl.gr === true) {
+        return this.acl.gr;
+      }
+
+      return false;
     }
   }, {
     key: 'isGloballyWritable',
     value: function isGloballyWritable() {
-      return this.acl.gw || false;
+      if (this.acl.gw === true) {
+        return this.acl.gw;
+      }
+
+      return false;
     }
   }, {
     key: 'removeReader',
     value: function removeReader(user) {
-      var r = this.acl.r || [];
-      var pos = r.indexOf(user);
+      var r = this.readers;
+      var index = r.indexOf(user);
 
-      if (pos !== -1) {
-        r.splice(pos, 1);
+      if (index !== -1) {
+        r.splice(index, 1);
       }
 
       this.acl.r = r;
@@ -113,26 +125,24 @@ var Acl = function () {
   }, {
     key: 'removeReaderGroup',
     value: function removeReaderGroup(group) {
-      var groups = this.acl.groups || {};
-      var r = groups.r || [];
-      var pos = r.indexOf(group);
+      var groups = this.readerGroups;
+      var index = groups.indexOf(group);
 
-      if (pos !== -1) {
-        r.splice(pos, 1);
+      if (index !== -1) {
+        groups.splice(index, 1);
       }
 
-      groups.r = r;
-      this.acl.groups = groups;
+      this.acl.groups = (0, _assign2.default)({}, this.acl.groups, { r: groups });
       return this;
     }
   }, {
     key: 'removeWriter',
     value: function removeWriter(user) {
-      var w = this.acl.w || [];
-      var pos = w.indexOf(user);
+      var w = this.writers;
+      var index = w.indexOf(user);
 
-      if (pos !== -1) {
-        w.splice(pos, 1);
+      if (index !== -1) {
+        w.splice(index, 1);
       }
 
       this.acl.w = w;
@@ -141,27 +151,20 @@ var Acl = function () {
   }, {
     key: 'removeWriterGroup',
     value: function removeWriterGroup(group) {
-      var groups = this.acl.groups || {};
-      var w = groups.w || [];
-      var pos = w.indexOf(group);
+      var groups = this.writerGroups;
+      var index = groups.indexOf(group);
 
-      if (pos !== -1) {
-        w.splice(pos, 1);
+      if (index !== -1) {
+        groups.splice(index, 1);
       }
 
-      groups.w = w;
-      this.acl.groups = groups;
+      this.acl.groups = (0, _assign2.default)({}, this.acl.groups, { w: groups });
       return this;
     }
   }, {
     key: 'toPlainObject',
     value: function toPlainObject() {
       return this.acl;
-    }
-  }, {
-    key: 'toJSON',
-    value: function toJSON() {
-      return this.toPlainObject();
     }
   }, {
     key: 'creator',
@@ -171,32 +174,40 @@ var Acl = function () {
   }, {
     key: 'readers',
     get: function get() {
-      return this.acl.r || [];
+      return (0, _isArray2.default)(this.acl.r) ? this.acl.r : [];
     }
   }, {
     key: 'writers',
     get: function get() {
-      return this.acl.w || [];
+      return (0, _isArray2.default)(this.acl.w) ? this.acl.w : [];
     }
   }, {
     key: 'readerGroups',
     get: function get() {
-      return this.acl.groups ? this.acl.groups.r : [];
+      return (0, _utils.isDefined)(this.acl.groups) && (0, _isArray2.default)(this.acl.groups.r) ? this.acl.groups.r : [];
     }
   }, {
     key: 'writerGroups',
     get: function get() {
-      return this.acl.groups ? this.acl.groups.w : [];
+      return (0, _utils.isDefined)(this.acl.groups) && (0, _isArray2.default)(this.acl.groups.w) ? this.acl.groups.w : [];
     }
   }, {
     key: 'globallyReadable',
     set: function set(gr) {
-      this.acl.gr = gr || false;
+      if (gr === true) {
+        this.acl.gr = gr;
+      } else {
+        this.acl.gr = false;
+      }
     }
   }, {
     key: 'globallyWritable',
     set: function set(gw) {
-      this.acl.gw = gw || false;
+      if (gw === true) {
+        this.acl.gw = gw;
+      } else {
+        this.acl.gw = false;
+      }
     }
   }]);
 
