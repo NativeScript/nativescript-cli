@@ -30,7 +30,7 @@ interface IPlatformService {
 	preparePlatform(platform: string, force?: boolean, skipModulesAndResources?: boolean): IFuture<boolean>;
 	buildPlatform(platform: string, buildConfig?: IBuildConfig, forceBuild?: boolean): IFuture<void>;
 	deployPlatform(platform: string): IFuture<void>;
-	runPlatform(platform: string): IFuture<void>;
+	startApplication(platform: string): IFuture<void>;
 	emulatePlatform(platform: string): IFuture<void>;
 	cleanDestinationApp(platform: string): IFuture<void>;
 	validatePlatformInstalled(platform: string): void;

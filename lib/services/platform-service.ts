@@ -456,13 +456,12 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	public runPlatform(platform: string): IFuture<void> {
+	public startApplication(platform: string): IFuture<void> {
 		if (this.$options.avd) {
 			this.$logger.warn(`Option --avd is no longer supported. Please use --device instead!`);
 			return Future.fromResult();
 		}
 		return (() => {
-			this.deployPlatform(platform).wait();
 			let action = (device: Mobile.IDevice) => device.applicationManager.startApplication(this.$projectData.projectId);
 			this.$devicesService.execute(action, this.getCanExecuteAction(platform)).wait();
 		}).future<void>()();
@@ -473,7 +472,8 @@ export class PlatformService implements IPlatformService {
 		if (this.$options.availableDevices) {
 			return $injector.resolveCommand("device").execute([platform]);
 		}
-		return this.runPlatform(platform);
+		this.deployPlatform(platform).wait();
+		return this.startApplication(platform);
 	}
 
 	private getPackageFileKey(device: Mobile.IDevice): string {
