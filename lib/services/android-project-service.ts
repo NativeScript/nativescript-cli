@@ -12,7 +12,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private static VALUES_DIRNAME = "values";
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
 	private static ANDROID_PLATFORM_NAME = "android";
-	private static MIN_RUNTIME_VERSION_WITH_GRADLE = "1.3.0";
+	private static MIN_RUNTIME_VERSION_WITH_GRADLE = "1.5.0";
 	private static REQUIRED_DEV_DEPENDENCIES = [
 		{ name: "babel-traverse", version: "^6.4.5" },
 		{ name: "babel-types", version: "^6.4.5" },
@@ -118,10 +118,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 			this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle gradle.properties build-tools", "-Rf");
 
-			if (this.useGradleWrapper(frameworkDir)) {
-				this.copy(this.platformData.projectRoot, frameworkDir, "gradle", "-R");
-				this.copy(this.platformData.projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
-			}
+			this.copy(this.platformData.projectRoot, frameworkDir, "gradle", "-R");
+			this.copy(this.platformData.projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
 
 			this.cleanResValues(targetSdkVersion, frameworkVersion);
 
@@ -156,11 +154,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			});
 
 		}).future<any>()();
-	}
-
-	private useGradleWrapper(frameworkDir: string): boolean {
-		let gradlew = path.join(frameworkDir, "gradlew");
-		return this.$fs.exists(gradlew);
 	}
 
 	private cleanResValues(targetSdkVersion: number, frameworkVersion: string): void {
@@ -228,7 +221,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean, addPlatform?: Function, removePlatforms?: (platforms: string[]) => IFuture<void>): IFuture<boolean> {
 		return (() => {
-			// TODO: plamen5kov: drop support for project older than 1.3.0(MIN_RUNTIME_VERSION_WITH_GRADLE)
 			if (semver.eq(newVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
 				let platformLowercase = this.platformData.normalizedPlatformName.toLowerCase();
 				removePlatforms([platformLowercase.split("@")[0]]).wait();
@@ -249,7 +241,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					buildOptions.unshift("--debug");
 				}
 				buildOptions.unshift("buildapk");
-				let gradleBin = this.useGradleWrapper(projectRoot) ? path.join(projectRoot, "gradlew") : "gradle";
+				let gradleBin = path.join(projectRoot, "gradlew");
 				if (this.$hostInfo.isWindows) {
 					gradleBin += ".bat"; // cmd command line parsing rules are weird. Avoid issues with quotes. See https://github.com/apache/cordova-android/blob/master/bin/templates/cordova/lib/builders/GradleBuilder.js for another approach
 				}
@@ -399,7 +391,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			buildOptions.unshift("clean");
 
 			let projectRoot = this.platformData.projectRoot;
-			let gradleBin = this.useGradleWrapper(projectRoot) ? path.join(projectRoot, "gradlew") : "gradle";
+			let gradleBin = path.join(projectRoot, "gradlew");
 			if (this.$hostInfo.isWindows) {
 				gradleBin += ".bat";
 			}
