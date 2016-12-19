@@ -63,7 +63,10 @@ export class ProjectDataService implements IProjectDataService {
 					"description": "NativeScript Application",
 					"license": "SEE LICENSE IN <your-license-filename>",
 					"readme": "NativeScript Application",
-					"repository": "<fill-your-repository-here>"
+					"repository": "<fill-your-repository-here>",
+					"devDependencies": {
+						"nativescript-dev-android-snapshot": "^0.*.*"
+					}
 				}).wait();
 			}
 
