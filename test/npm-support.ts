@@ -124,6 +124,7 @@ function setupProject(dependencies?: any): IFuture<any> {
 		let appResourcesFolderPath = path.join(appFolderPath, "App_Resources");
 		fs.createDirectory(appResourcesFolderPath);
 		fs.createDirectory(path.join(appResourcesFolderPath, "Android"));
+		fs.createDirectory(path.join(appResourcesFolderPath, "Android", "mockdir"));
 		fs.createDirectory(path.join(appFolderPath, "tns_modules"));
 
 		// Creates platforms/android folder
