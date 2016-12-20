@@ -76,7 +76,9 @@ export class ProjectService implements IProjectService {
 			try {
 				//TODO: plamen5kov: move copy of template and npm uninstall in prepareTemplate logic
 				this.createProjectCore(projectDir, appPath, projectId).wait();
-				this.mergeProjectAndTemplateProperties(projectDir, appPath); //merging dependencies from template (dev && prod)
+				let templatePackageJsonData = this.getDataFromJson(appPath);
+				this.mergeProjectAndTemplateProperties(projectDir, templatePackageJsonData); //merging dependencies from template (dev && prod)
+				this.removeMergedDependencies(projectDir, templatePackageJsonData);
 				this.$npm.install(projectDir, projectDir, { "ignore-scripts": this.$options.ignoreScripts }).wait();
 				selectedTemplate = selectedTemplate || "";
 				let templateName = (constants.RESERVED_TEMPLATE_NAMES[selectedTemplate.toLowerCase()] || selectedTemplate/*user template*/) || constants.RESERVED_TEMPLATE_NAMES["default"];
@@ -93,26 +95,43 @@ export class ProjectService implements IProjectService {
 		}).future<void>()();
 	}
 
-	private mergeProjectAndTemplateProperties(projectDir: string, templatePath: string): void {
+	private getDataFromJson(templatePath: string): any {
 		let templatePackageJsonPath = path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME);
+		if(this.$fs.exists(templatePackageJsonPath)) {
+			let templatePackageJsonData = this.$fs.readJson(templatePackageJsonPath);
+			return templatePackageJsonData;
+		} else {
+			this.$logger.trace(`Template ${templatePath} does not have ${constants.PACKAGE_JSON_FILE_NAME} file.`);
+		}
+		return null;
+	}
 
-		if (this.$fs.exists(templatePackageJsonPath)) {
+	private removeMergedDependencies(projectDir: string, templatePackageJsonData: any) : void {
+		let extractedTemplatePackageJsonPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.PACKAGE_JSON_FILE_NAME);
+		for(let key in templatePackageJsonData) {
+			if(constants.PackageJsonKeysToKeep.indexOf(key) === -1) {
+				delete templatePackageJsonData[key];
+			}
+		}
+
+		this.$logger.trace("Deleting unnecessary information from template json.");
+		this.$fs.writeJson(extractedTemplatePackageJsonPath, templatePackageJsonData);
+	}
+
+	private mergeProjectAndTemplateProperties(projectDir: string, templatePackageJsonData: any): void {
+		if(templatePackageJsonData) {
 			let projectPackageJsonPath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
 			let projectPackageJsonData = this.$fs.readJson(projectPackageJsonPath);
 			this.$logger.trace("Initial project package.json data: ", projectPackageJsonData);
-			let templatePackageJsonData = this.$fs.readJson(templatePackageJsonPath);
-			if (projectPackageJsonData.dependencies || templatePackageJsonData.dependencies) {
+			if(projectPackageJsonData.dependencies || templatePackageJsonData.dependencies) {
 				projectPackageJsonData.dependencies = this.mergeDependencies(projectPackageJsonData.dependencies, templatePackageJsonData.dependencies);
 			}
 
 			if (projectPackageJsonData.devDependencies || templatePackageJsonData.devDependencies) {
 				projectPackageJsonData.devDependencies = this.mergeDependencies(projectPackageJsonData.devDependencies, templatePackageJsonData.devDependencies);
 			}
-
 			this.$logger.trace("New project package.json data: ", projectPackageJsonData);
 			this.$fs.writeJson(projectPackageJsonPath, projectPackageJsonData);
-		} else {
-			this.$logger.trace(`Template ${templatePath} does not have ${constants.PACKAGE_JSON_FILE_NAME} file.`);
 		}
 	}
 
