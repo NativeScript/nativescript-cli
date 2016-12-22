@@ -16,16 +16,20 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var KinveyError = function (_BaseError) {
-  _inherits(KinveyError, _BaseError);
+var TimeoutError = function (_BaseError) {
+  _inherits(TimeoutError, _BaseError);
 
-  function KinveyError(message, debug, code, kinveyRequestId) {
-    _classCallCheck(this, KinveyError);
+  function TimeoutError() {
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'The request timed out.';
+    var debug = arguments[1];
+    var code = arguments[2];
 
-    return _possibleConstructorReturn(this, (KinveyError.__proto__ || Object.getPrototypeOf(KinveyError)).call(this, 'KinveyError', message, debug, code, kinveyRequestId));
+    _classCallCheck(this, TimeoutError);
+
+    return _possibleConstructorReturn(this, (TimeoutError.__proto__ || Object.getPrototypeOf(TimeoutError)).call(this, 'TimeoutError', message, debug, code));
   }
 
-  return KinveyError;
+  return TimeoutError;
 }(_base2.default);
 
-exports.default = KinveyError;
+exports.default = TimeoutError;

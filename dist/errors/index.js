@@ -3,11 +3,15 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.SyncError = exports.ServerError = exports.QueryError = exports.ParameterValueOutOfRangeError = exports.NotFoundError = exports.NoResponseError = exports.NoNetworkConnectionError = exports.NoActiveUserError = exports.MissingRequestParameterError = exports.MissingRequestHeaderError = exports.MissingQueryError = exports.KinveyError = exports.JSONParseError = exports.InvalidQuerySyntaxError = exports.InvalidIdentifierError = exports.InvalidCredentialsError = exports.InsufficientCredentialsError = exports.IncompleteRequestBodyError = exports.FeatureUnavailableError = exports.ActiveUserError = undefined;
+exports.TimeoutError = exports.SyncError = exports.ServerError = exports.QueryError = exports.ParameterValueOutOfRangeError = exports.NotFoundError = exports.NoResponseError = exports.NoNetworkConnectionError = exports.NoActiveUserError = exports.MobileIdentityConnectError = exports.MissingRequestParameterError = exports.MissingRequestHeaderError = exports.MissingQueryError = exports.KinveyError = exports.JSONParseError = exports.InvalidQuerySyntaxError = exports.InvalidIdentifierError = exports.InvalidCredentialsError = exports.InsufficientCredentialsError = exports.IncompleteRequestBodyError = exports.FeatureUnavailableError = exports.BaseError = exports.ActiveUserError = undefined;
 
 var _activeUser = require('./src/activeUser');
 
 var _activeUser2 = _interopRequireDefault(_activeUser);
+
+var _base = require('./src/base');
+
+var _base2 = _interopRequireDefault(_base);
 
 var _featureUnavailable = require('./src/featureUnavailable');
 
@@ -53,6 +57,10 @@ var _missingRequestParameter = require('./src/missingRequestParameter');
 
 var _missingRequestParameter2 = _interopRequireDefault(_missingRequestParameter);
 
+var _mobileIdentityConnect = require('./src/mobileIdentityConnect');
+
+var _mobileIdentityConnect2 = _interopRequireDefault(_mobileIdentityConnect);
+
 var _noActiveUser = require('./src/noActiveUser');
 
 var _noActiveUser2 = _interopRequireDefault(_noActiveUser);
@@ -85,9 +93,14 @@ var _sync = require('./src/sync');
 
 var _sync2 = _interopRequireDefault(_sync);
 
+var _timeout = require('./src/timeout');
+
+var _timeout2 = _interopRequireDefault(_timeout);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.ActiveUserError = _activeUser2.default;
+exports.BaseError = _base2.default;
 exports.FeatureUnavailableError = _featureUnavailable2.default;
 exports.IncompleteRequestBodyError = _incompleteRequestBody2.default;
 exports.InsufficientCredentialsError = _insufficientCredentials2.default;
@@ -99,6 +112,7 @@ exports.KinveyError = _kinvey2.default;
 exports.MissingQueryError = _missingQuery2.default;
 exports.MissingRequestHeaderError = _missingRequestHeader2.default;
 exports.MissingRequestParameterError = _missingRequestParameter2.default;
+exports.MobileIdentityConnectError = _mobileIdentityConnect2.default;
 exports.NoActiveUserError = _noActiveUser2.default;
 exports.NoNetworkConnectionError = _noNetworkConnection2.default;
 exports.NoResponseError = _noResponse2.default;
@@ -107,4 +121,5 @@ exports.ParameterValueOutOfRangeError = _parameterValueOutOfRange2.default;
 exports.QueryError = _query2.default;
 exports.ServerError = _server2.default;
 exports.SyncError = _sync2.default;
+exports.TimeoutError = _timeout2.default;
 exports.default = _kinvey2.default;

@@ -66,6 +66,11 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Identity)
   }
 
   _createClass(MobileIdentityConnect, [{
+    key: 'isSupported',
+    value: function isSupported() {
+      return true;
+    }
+  }, {
     key: 'login',
     value: function login(redirectUri) {
       var _this2 = this;
@@ -77,11 +82,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Identity)
 
       var promise = _es6Promise2.default.resolve().then(function () {
         if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
-          return _this2.requestCodeWithPopup(clientId, redirectUri, options).catch(function (error) {
-            if (error instanceof _errors.PopupError) {
-              throw new _errors.MobileIdentityConnectError('AuthorizationGrant.AuthorizationCodeLoginPage is not supported on this platform.');
-            }
-          });
+          return _this2.requestCodeWithPopup(clientId, redirectUri, options);
         } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
           return _this2.requestTempLoginUrl(clientId, redirectUri, options).then(function (url) {
             return _this2.requestCodeWithUrl(url, clientId, redirectUri, options);
@@ -248,7 +249,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Identity)
           return _url2.default.parse(location, true).query.code;
         }
 
-        throw new _errors.KinveyError('Unable to authorize user with username ' + options.username + '.', 'A location header was not provided with a code to exchange for an auth token.');
+        throw new _errors.MobileIdentityConnectError('Unable to authorize user with username ' + options.username + '.', 'A location header was not provided with a code to exchange for an auth token.');
       });
 
       return promise;
@@ -310,6 +311,11 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Identity)
       return _enums.SocialIdentity.MobileIdentityConnect;
     }
   }], [{
+    key: 'isSupported',
+    value: function isSupported() {
+      return true;
+    }
+  }, {
     key: 'identity',
     get: function get() {
       return _enums.SocialIdentity.MobileIdentityConnect;

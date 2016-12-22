@@ -11,6 +11,8 @@ var _errors = require('../../errors');
 
 var _client = require('../../client');
 
+var _utils = require('../../utils');
+
 var _response = require('./response');
 
 var _response2 = _interopRequireDefault(_response);
@@ -43,8 +45,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var defaultTimeout = process && process.env && process.env.KINVEY_DEFAULT_TIMEOUT || '10000' || 10000;
-
 var RequestMethod = {
   GET: 'GET',
   POST: 'POST',
@@ -70,7 +70,7 @@ var Request = function () {
     this.headers = options.headers || new _headers2.default();
     this.url = options.url || '';
     this.body = options.body || options.data;
-    this.timeout = options.timeout || defaultTimeout;
+    this.timeout = (0, _utils.isDefined)(options.timeout) ? options.timeout : this.client.defaultTimeout;
     this.followRedirect = options.followRedirect === true;
     this.cache = options.cache === true;
     this.executing = false;
@@ -155,7 +155,7 @@ var Request = function () {
           this._method = method;
           break;
         default:
-          throw new Error('Invalid request method. Only GET, POST, PATCH, PUT, and DELETE are allowed.');
+          throw new _errors.KinveyError('Invalid request method. Only GET, POST, PATCH, PUT, and DELETE are allowed.');
       }
     }
   }, {
@@ -198,7 +198,13 @@ var Request = function () {
       return this._timeout;
     },
     set: function set(timeout) {
-      this._timeout = (0, _isNumber2.default)(timeout) ? timeout : defaultTimeout;
+      timeout = parseInt(timeout, 10);
+
+      if ((0, _isNumber2.default)(timeout) === false || isNaN(timeout)) {
+        throw new _errors.KinveyError('Invalid timeout. Timeout must be a number.');
+      }
+
+      this._timeout = timeout;
     }
   }, {
     key: 'followRedirect',

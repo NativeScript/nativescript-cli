@@ -11,6 +11,8 @@ var _request = require('./request');
 
 var _errors = require('./errors');
 
+var _utils = require('./utils');
+
 var _url = require('url');
 
 var _url2 = _interopRequireDefault(_url);
@@ -23,10 +25,15 @@ var _isString = require('lodash/isString');
 
 var _isString2 = _interopRequireDefault(_isString);
 
+var _isNumber = require('lodash/isNumber');
+
+var _isNumber2 = _interopRequireDefault(_isNumber);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var defaultTimeout = process && process.env && process.env.KINVEY_DEFAULT_TIMEOUT || '60000' || 60000;
 var _sharedInstance = null;
 
 var Client = exports.Client = function () {
@@ -80,6 +87,8 @@ var Client = exports.Client = function () {
     this.encryptionKey = options.encryptionKey;
 
     this.appVersion = options.appVersion;
+
+    this.defaultTimeout = (0, _utils.isDefined)(options.defaultTimeout) ? options.defaultTimeout : defaultTimeout;
   }
 
   _createClass(Client, [{
@@ -157,6 +166,25 @@ var Client = exports.Client = function () {
       }
 
       this._appVersion = appVersion;
+    }
+  }, {
+    key: 'defaultTimeout',
+    get: function get() {
+      return this._defaultTimeout;
+    },
+    set: function set(timeout) {
+      timeout = parseInt(timeout, 10);
+
+      if ((0, _isNumber2.default)(timeout) === false || isNaN(timeout)) {
+        throw new _errors.KinveyError('Invalid timeout. Timeout must be a number.');
+      }
+
+      if (timeout < 0) {
+        _utils.Log.info('Default timeout is less than 0. Setting default timeout to ' + defaultTimeout + 'ms.');
+        timeout = defaultTimeout;
+      }
+
+      this._defaultTimeout = timeout;
     }
   }], [{
     key: 'init',

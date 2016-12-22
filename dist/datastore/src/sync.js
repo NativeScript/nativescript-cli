@@ -547,27 +547,9 @@ var SyncManager = function () {
       });
     }
   }, {
-    key: 'sync',
-    value: function sync(query) {
-      var _this4 = this;
-
-      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-      return this.push(null, options).then(function (push) {
-        var promise = _this4.pull(query, options).then(function (pull) {
-          var result = {
-            push: push,
-            pull: pull
-          };
-          return result;
-        });
-        return promise;
-      });
-    }
-  }, {
     key: 'clear',
     value: function clear() {
-      var _this5 = this;
+      var _this4 = this;
 
       var query = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : new _query2.default();
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -594,9 +576,9 @@ var SyncManager = function () {
         var request = new _request5.CacheRequest({
           method: _request5.RequestMethod.DELETE,
           url: _url2.default.format({
-            protocol: _this5.client.protocol,
-            host: _this5.client.host,
-            pathname: _this5.pathname
+            protocol: _this4.client.protocol,
+            host: _this4.client.host,
+            pathname: _this4.pathname
           }),
           properties: options.properties,
           body: entities,

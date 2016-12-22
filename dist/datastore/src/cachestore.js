@@ -778,8 +778,19 @@ var CacheStore = function (_NetworkStore) {
   }, {
     key: 'sync',
     value: function sync(query, options) {
+      var _this12 = this;
+
       options = (0, _assign2.default)({ useDeltaFetch: this.useDeltaFetch }, options);
-      return this.syncManager.sync(query, options);
+      return this.push(null, options).then(function (push) {
+        var promise = _this12.pull(query, options).then(function (pull) {
+          var result = {
+            push: push,
+            pull: pull
+          };
+          return result;
+        });
+        return promise;
+      });
     }
   }, {
     key: 'clearSync',

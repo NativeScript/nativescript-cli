@@ -26,6 +26,8 @@ var _response2 = _interopRequireDefault(_response);
 
 var _errors = require('../../errors');
 
+var _utils = require('../../utils');
+
 var _query3 = require('../../query');
 
 var _query4 = _interopRequireDefault(_query3);
@@ -136,7 +138,7 @@ var DeltaFetchRequest = function (_KinveyRequest) {
                   var networkDocument = networkDocuments[id];
 
                   if (networkDocument) {
-                    if (networkDocument._kmd && cacheDocument._kmd && networkDocument._kmd.lmt === cacheDocument._kmd.lmt) {
+                    if ((0, _utils.isDefined)(networkDocument._kmd) && (0, _utils.isDefined)(cacheDocument._kmd) && networkDocument._kmd.lmt === cacheDocument._kmd.lmt) {
                       delete deltaSet[id];
                     } else {
                       delete cacheDocuments[id];
@@ -195,7 +197,8 @@ var DeltaFetchRequest = function (_KinveyRequest) {
 
                 if (_this2.query) {
                   var _query2 = new _query4.default((0, _result2.default)(_this2.query, 'toJSON', _this2.query));
-                  _query2.skip(0).limit(0);
+                  _query2.skip = 0;
+                  _query2.limit = 0;
                   response.data = _query2.process(response.data);
                 }
 
@@ -245,7 +248,7 @@ var DeltaFetchRequest = function (_KinveyRequest) {
         case _request2.RequestMethod.PUT:
         case _request2.RequestMethod.DELETE:
         default:
-          throw new Error('Invalid request Method. Only RequestMethod.GET is allowed.');
+          throw new _errors.KinveyError('Invalid request Method. Only RequestMethod.GET is allowed.');
       }
     }
   }]);
