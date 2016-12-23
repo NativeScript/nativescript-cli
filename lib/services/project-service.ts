@@ -158,8 +158,6 @@ export class ProjectService implements IProjectService {
 			this.$fs.createDirectory(appDestinationPath);
 
 			shelljs.cp('-R', path.join(appSourcePath, "*"), appDestinationPath);
-			// Copy hidden files.
-			shelljs.cp('-R', path.join(appSourcePath, ".*"), appDestinationPath);
 
 			this.$fs.createDirectory(path.join(projectDir, "platforms"));
 

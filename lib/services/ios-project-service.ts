@@ -119,12 +119,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 		}).future<void>()();
 	}
-
+	//TODO: plamen5kov: revisit this method, might have unnecessary/obsolete logic
 	public interpolateData(): IFuture<void> {
 		return (() => {
-			let infoPlistFilePath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, `${IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER}-Info.plist`);
-			this.interpolateConfigurationFile(infoPlistFilePath).wait();
-
 			let projectRootFilePath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
 			// Starting with NativeScript for iOS 1.6.0, the project Info.plist file resides not in the platform project,
 			// but in the hello-world app template as a platform specific resource.
@@ -156,9 +153,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	public interpolateConfigurationFile(configurationFilePath?: string): IFuture<void> {
-		return (() => {
-			shell.sed('-i', "__CFBUNDLEIDENTIFIER__", this.$projectData.projectId, configurationFilePath || this.platformData.configurationFilePath);
-		}).future<void>()();
+		return Future.fromResult();
 	}
 
 	public afterCreateProject(projectRoot: string): void {
