@@ -50,6 +50,29 @@ describe('Query', function() {
         return query.process([]);
       }).toThrow(/This query is not able to run locally./);
     });
+
+    it('throw an error when a data is not ann array', function() {
+      expect(() => {
+        const query = new Query();        
+        return query.process({});
+      }).toThrow(/data argument must be of type: Array./);
+    });
+
+    it('should process a fields query', function() {
+      const entities = [{
+        name : 'Name1',
+        desc : 'Desc1'
+      },
+      {
+        name : 'Name2',
+        desc : 'Desc2'
+      }];
+
+      const query = new Query();
+      query.fields = ['desc'];
+
+      expect(query.process(entities)).toEqual([{desc:'Desc1'}, {desc:'Desc2'}]);
+    });
   });
 
   describe('comparators', function() {
