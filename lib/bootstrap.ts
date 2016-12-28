@@ -123,3 +123,5 @@ $injector.requireCommand("post-install-cli", "./commands/post-install");
 $injector.requireCommand("update", "./commands/update");
 
 $injector.require("iOSLogFilter", "./services/ios-log-filter");
+
+$injector.require("emulatorInfoService", "./services/emulator-info-service");
