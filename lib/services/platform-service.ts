@@ -37,6 +37,7 @@ export class PlatformService implements IPlatformService {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		private $projectChangesService: IProjectChangesService,
+		private $emulatorPlatformService: IEmulatorPlatformService,
 		private $childProcess: IChildProcess) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
@@ -425,6 +426,7 @@ export class PlatformService implements IPlatformService {
 					this.$logger.out(`Successfully started on device with identifier '${device.deviceInfo.identifier}'.`);
 				}).future<void>()();
 			};
+			this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device }).wait();
 			this.$devicesService.execute(action, this.getCanExecuteAction(platform)).wait();
 		}).future<void>()();
 	}
@@ -435,9 +437,19 @@ export class PlatformService implements IPlatformService {
 			return Future.fromResult();
 		}
 		if (this.$options.availableDevices) {
-			return $injector.resolveCommand("device").execute([platform]);
+			return this.$emulatorPlatformService.listAvailableEmulators(platform);
+		}
+		if (this.$options.device) {
+			let info = this.$emulatorPlatformService.getEmulatorInfo(platform, this.$options.device).wait();
+			if (info) {
+				if (!info.isRunning) {
+					this.$emulatorPlatformService.startEmulator(info).wait();
+				}
+				this.$options.device = null;
+			}
 		}
 		this.$options.emulator = true;
+		this.deployPlatform(platform).wait();
 		return this.runPlatform(platform);
 	}
 
