@@ -1,21 +1,118 @@
 import * as path from "path";
 let Table = require("cli-table");
+import Future = require("fibers/future");
+import * as fiberBootstrap from "../common/fiber-bootstrap";
 
 class EmulatorInfoService implements IEmulatorInfoService {
+
+    private _iosEmulators: IEmulatorInfo[] = null;
+    private _androidEmulators: IEmulatorInfo[] = null;
 
     constructor(
         private $mobileHelper: Mobile.IMobileHelper,
         private $childProcess: IChildProcess,
+        private $devicesService: Mobile.IDevicesService,
+        private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+        private $dispatcher: IFutureDispatcher,
+        private $options: IOptions,
         private $logger: ILogger) {}
+
+    public startEmulator(info: IEmulatorInfo): IFuture<void> {
+        if (info.isRunning) {
+            return Future.fromResult();
+        }
+        if (info.platform.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
+            this.$options.avd = this.$options.device;
+            this.$options.device = null;
+            let platformsData: IPlatformsData = $injector.resolve("platformsData");
+            let platformData = platformsData.getPlatformData(info.platform);
+    		let emulatorServices = platformData.emulatorServices;
+ 			emulatorServices.checkAvailability();
+ 			emulatorServices.checkDependencies().wait();
+ 			emulatorServices.startEmulator().wait();
+ 			this.$options.avd = null;
+            return Future.fromResult();
+        }
+        this.stopEmulator(info.platform).wait();
+        let future = new Future<void>();
+        this.$childProcess.exec(`open -a Simulator --args -CurrentDeviceUDID ${info.id}`).wait();
+        let timeoutFunc = () => {
+            fiberBootstrap.run(() => {
+                info = this.getEmulatorInfo("ios", info.id).wait();
+                if (info.isRunning) {
+                    this.$devicesService.initialize({ platform: info.platform, deviceId: info.id }).wait();
+                    let device = this.$devicesService.getDeviceByIdentifier(info.id);
+                    device.applicationManager.checkForApplicationUpdates().wait();
+                    future.return();
+                    return;
+                }
+                setTimeout(timeoutFunc, 500);
+            });
+        }
+        timeoutFunc();
+        return future;
+    }
+
+    public stopEmulator(platform: string): IFuture<void> {
+        return this.$childProcess.exec("pkill -9 -f Simulator");
+    }
+    
+    public getEmulatorInfo(platform: string, idOrName: string): IFuture<IEmulatorInfo> {
+        return (() => {
+            if (platform.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
+                let androidEmulators = this.getAndroidEmulators().wait();
+                let found = androidEmulators.filter((info:IEmulatorInfo) => info.id === idOrName);
+                if (found.length > 0) {
+                    return found[0];
+                }
+                this.$devicesService.initialize({platform: platform, deviceId: null, skipInferPlatform: true}).wait();
+                let info:IEmulatorInfo = null;
+                let action = (device:Mobile.IDevice) => {
+                    return (() => {
+                        if (device.deviceInfo.identifier === idOrName) {
+                            info = {
+                                id: device.deviceInfo.identifier,
+                                name: device.deviceInfo.displayName,
+                                version: device.deviceInfo.version,
+                                platform: "Android",
+                                type: "emulator",
+                                isRunning: true
+                            }
+                        }
+                    }).future<void>()();
+                };
+                this.$devicesService.execute(action, undefined, {allowNoDevices: true}).wait();
+                return info;
+            }
+            let emulators = this.getiOSEmulators().wait();
+            let sdk: string = null;
+            let versionStart = idOrName.indexOf("(");
+            if (versionStart > 0) {
+                sdk = idOrName.substring(versionStart+1, idOrName.indexOf(")", versionStart)).trim();
+                idOrName = idOrName.substring(0, versionStart-1).trim();
+            }
+            let found = emulators.filter((info:IEmulatorInfo) => {
+            let sdkMatch = sdk ? info.version === sdk : true;
+            return sdkMatch && info.id == idOrName || info.name === idOrName;
+            });
+            return found.length>0 ? found[0] : null;
+        }).future<IEmulatorInfo>()();
+    }
 
     public listAvailableEmulators(platform: string): IFuture<void> {
 		return (() => {
             let emulators: IEmulatorInfo[] = [];
             if (!platform || this.$mobileHelper.isiOSPlatform(platform)) {
-                emulators = emulators.concat(this.getiOSEmulators());
+                let iosEmulators = this.getiOSEmulators().wait();
+                if (iosEmulators) {
+                    emulators = emulators.concat(iosEmulators);
+                }
 			}
             if (!platform || this.$mobileHelper.isAndroidPlatform(platform)) {
-                emulators = emulators.concat(this.getAndroidEmulators());
+                let androidEmulators = this.getAndroidEmulators().wait();
+                if (androidEmulators) {
+                    emulators = emulators.concat(androidEmulators);
+                }
 			}
             this.outputEmulators("\nAvailable emulators", emulators);
             this.$logger.out("\nConnected devices & emulators");
@@ -23,20 +120,82 @@ class EmulatorInfoService implements IEmulatorInfoService {
 		}).future<void>()();
     }
 
-    public containsEmulator(platform: string, emulator: string): boolean {
-        if (!platform || this.$mobileHelper.isiOSPlatform(platform)) {
-            let emulators = this.getiOSEmulators();
-            if (_.find(emulators, (emulatorInfo) => emulatorInfo.id === emulator)) {
-                return true;
+    public getiOSEmulators(): IFuture<IEmulatorInfo[]> {
+        return (()=>{
+            let output = this.$childProcess.exec("xcrun simctl list --json").wait();
+            let list = JSON.parse(output);
+            let emulators: IEmulatorInfo[] = [];
+            for (let osName in list["devices"]) {
+                if (osName.indexOf("iOS") === -1) {
+                    continue;
+                }
+                let os = list["devices"][osName];
+                let version = this.parseiOSVersion(osName);
+                for (let device of os) {
+                    if (device["availability"] !== "(available)") {
+                        continue;
+                    }
+                    let emulatorInfo: IEmulatorInfo = {
+                        id: device["udid"],
+                        name: device["name"],
+                        isRunning: device["state"] === "Booted",
+                        type: "simulator",
+                        version: version,
+                        platform: "iOS"
+                    }
+                    emulators.push(emulatorInfo);
+                }
             }
-        }
-        if (!platform || this.$mobileHelper.isAndroidPlatform(platform)) {
-            let emulators = this.getAndroidEmulators();
-            if (_.find(emulators, (emulatorInfo) => emulatorInfo.id === emulator)) {
-                return true;
+            return emulators;
+        }).future<IEmulatorInfo[]>()();
+    }
+
+    public getAndroidEmulators(): IFuture<IEmulatorInfo[]> {
+        return (() => {
+            if (this._androidEmulators === null) {
+                this._androidEmulators = this.getAndroidEmulatorsCore().wait();
             }
-        }
-        return false;
+            return this._androidEmulators;
+        }).future<IEmulatorInfo[]>()();
+    }
+
+    private getAndroidEmulatorsCore(): IFuture<IEmulatorInfo[]> {
+        return (() => {
+            let androidPath = path.join(process.env.ANDROID_HOME, "tools", "android");
+            let text:string = this.$childProcess.exec(`${androidPath} list avd`).wait();
+            let notLoadedIndex = text.indexOf("The following");
+            if (notLoadedIndex > 0) {
+                text = text.substring(0, notLoadedIndex);
+            }
+            let textBlocks = text.split("---------");
+            let emulators: IEmulatorInfo[] = [];
+            for (let block of textBlocks) {
+                let lines = block.split("\n");
+                let info:IEmulatorInfo = { name: "", version: "", id: "",  platform: "Android", type: "Emulator" };
+                for (let line of lines) {
+                    if (line.indexOf("Target") >= 0) {
+                        info.version = line.substring(line.indexOf(":")+1).replace("Android", "").trim();
+                    }
+                    if (line.indexOf("Name") >= 0) {
+                        info.id = line.substring(line.indexOf(":")+1).trim();
+                    }
+                    if (line.indexOf("Device") >= 0) {
+                        info.name = line.substring(line.indexOf(":")+1).trim();
+                    }
+                    info.isRunning = false;
+                }
+                emulators.push(info);
+            }
+            return emulators;
+        }).future<IEmulatorInfo[]>()();
+    }
+
+    private parseiOSVersion(osName: string): string {
+        osName = osName.replace("com.apple.CoreSimulator.SimRuntime.iOS-", "");
+        osName = osName.replace(/-/g, ".");
+        osName = osName.replace("iOS", "");
+        osName = osName.trim();
+        return osName;
     }
 
     private outputEmulators(title: string, emulators: IEmulatorInfo[]) {
@@ -47,64 +206,6 @@ class EmulatorInfoService implements IEmulatorInfoService {
             table.push([info.name, info.platform, info.version, info.id]);
         }
         this.$logger.out(table.toString());
-    }
-
-    private getiOSEmulators(): IEmulatorInfo[] {
-        let text: string = this.$childProcess.exec("instruments -s devices").wait();
-        let lines = text.split("\n");
-        let emulators: IEmulatorInfo[] = [];
-        for (let line of lines) {
-            if (line.indexOf("Simulator") === -1) {
-                continue;
-            }
-            let idIndex = line.indexOf("[");
-            let endOfName = line.lastIndexOf("(", idIndex);
-            if (endOfName !== -1) {
-                let name = line.substring(0, endOfName-1);
-                let versionIndex = name.indexOf("+") > 0 ? line.indexOf("(") : endOfName;
-                let endOfVersion = line.indexOf(")", versionIndex);
-                name = line.substring(0, endOfVersion+1).trim();
-                let version = line.substring(versionIndex+1, endOfVersion);
-                let endIdIndex = line.indexOf("]", idIndex);
-                let id = line.substring(idIndex+1, endIdIndex);
-                emulators.push({
-                    name: name,
-                    version: version,
-                    id: id,
-                    platform: "iOS",
-                    type: "Simulator"
-                });
-            }
-        }
-        return emulators;
-    }
-
-    private getAndroidEmulators(): IEmulatorInfo[] {
-        let androidPath = path.join(process.env.ANDROID_HOME, "tools", "android");
-        let text:string = this.$childProcess.exec(`${androidPath} list avd`).wait();
-        let notLoadedIndex = text.indexOf("The following");
-        if (notLoadedIndex > 0) {
-            text = text.substring(0, notLoadedIndex);
-        }
-        let textBlocks = text.split("---------");
-        let emulators: IEmulatorInfo[] = [];
-        for (let block of textBlocks) {
-            let lines = block.split("\n");
-            let info:IEmulatorInfo = { name: "", version: "", id: "",  platform: "Android", type: "Emulator" };
-            for (let line of lines) {
-                if (line.indexOf("Target") >= 0) {
-                    info.version = line.substring(line.indexOf(":")+1).replace("Android", "").trim();
-                }
-                if (line.indexOf("Name") >= 0) {
-                    info.id = line.substring(line.indexOf(":")+1).trim();
-                }
-                if (line.indexOf("Device") >= 0) {
-                    info.name = line.substring(line.indexOf(":")+1).trim();
-                }
-            }
-            emulators.push(info);
-        }
-        return emulators;
     }
 
     private createTable(headers: string[], data: string[][]): any {

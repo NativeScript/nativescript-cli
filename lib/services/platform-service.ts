@@ -470,31 +470,20 @@ export class PlatformService implements IPlatformService {
 	}
 
 	public emulatePlatform(platform: string): IFuture<void> {
-		this.$options.emulator = true;
-		if (this.$options.availableDevices) {
-			return $injector.resolveCommand("devices").execute([platform]);
-		}
-		if (this.$options.device) {
-			try {
-				this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device }).wait();
-			} catch(e) {
-				if (this.$emulatorInfoService.containsEmulator(platform, this.$options.device)) {
-					if (platform.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
-						this.$options.avd = this.$options.device;
-						this.$options.device = null;
-					}
-					let platformData = this.$platformsData.getPlatformData(platform);
-					let emulatorServices = platformData.emulatorServices;
-					emulatorServices.checkAvailability();
-					emulatorServices.checkDependencies().wait();
-					emulatorServices.startEmulator().wait();
-					this.$options.avd = null;
-				} else {
-					throw e;
+			this.$options.emulator = true;
+			if (this.$options.availableDevices) {
+				return $injector.resolveCommand("devices").execute([platform]);
+			}
+			if (this.$options.device) {
+				let info = this.$emulatorInfoService.getEmulatorInfo(platform, this.$options.device).wait();
+				if (!info) {
+					this.$errors.fail("Could not find the specified emulator!");
+				}
+				if (!info.isRunning) {
+					this.$emulatorInfoService.startEmulator(info).wait();
 				}
 			}
-		}
-		return this.runPlatform(platform);
+			return this.runPlatform(platform);
 	}
 
 	private getPackageFileKey(device: Mobile.IDevice): string {
