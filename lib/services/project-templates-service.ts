@@ -26,7 +26,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 					realTemplatePath = this.prepareNativeScriptTemplate(constants.RESERVED_TEMPLATE_NAMES[name], version, projectDir).wait();
 				} else {
 					// Use the original template name, specified by user as it may be case-sensitive.
-					realTemplatePath = this.prepareNativeScriptTemplate(originalTemplateName, version, projectDir).wait();
+					realTemplatePath = this.prepareNativeScriptTemplate(name, version, projectDir).wait();
 				}
 			} else {
 				realTemplatePath = this.prepareNativeScriptTemplate(constants.RESERVED_TEMPLATE_NAMES["default"], null/*version*/, projectDir).wait();
