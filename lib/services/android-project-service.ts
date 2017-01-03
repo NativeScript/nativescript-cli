@@ -190,7 +190,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
 			let userAppGradleFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, "app.gradle");
-			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, userAppGradleFilePath);
+			try {
+				shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, userAppGradleFilePath);
+			} catch(e) {
+				this.$errors.failWithoutHelp(` Error: ${e}.\nIt's possible you're using an old template. You can try updating it and try again.`);
+			}
 		}).future<void>()();
 	}
 
