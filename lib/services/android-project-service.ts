@@ -359,8 +359,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public removePluginNativeCode(pluginData: IPluginData): void {
 		try {
-			this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "configurations", pluginData.name));
-			this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "src", pluginData.name));
+			// check whether the dependency that's being removed has native code
+			let pluginConfigDir = path.join(this.platformData.projectRoot, "configurations", pluginData.name);
+			if (this.$fs.exists(pluginConfigDir)) {
+				this.cleanProject(this.platformData.projectRoot, []).wait();
+			}
 		} catch (e) {
 			if (e.code === "ENOENT") {
 				this.$logger.debug("No native code jars found: " + e.message);
@@ -388,16 +391,23 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			let buildOptions = this.getBuildOptions();
 
-			buildOptions.unshift("clean");
-
 			let projectRoot = this.platformData.projectRoot;
+			this.cleanProject(projectRoot, buildOptions).wait();
+		}
+		return Future.fromResult();
+	}
+
+	private cleanProject(projectRoot: string, options: string[]): IFuture<void> {
+		return (() => {
+			options.unshift("clean");
+
 			let gradleBin = path.join(projectRoot, "gradlew");
 			if (this.$hostInfo.isWindows) {
 				gradleBin += ".bat";
 			}
-			this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
-		}
-		return Future.fromResult();
+
+			this.spawn(gradleBin, options, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
+		}).future<void>()();
 	}
 
 	public deploy(deviceIdentifier: string): IFuture<void> {
