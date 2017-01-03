@@ -34,7 +34,8 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $options: IOptions,
-		private $adb: Mobile.IAndroidDebugBridge) { }
+		private $adb: Mobile.IAndroidDebugBridge,
+		protected $staticConfig: Config.IStaticConfig) { }
 
 	public getPathToAndroidExecutable(options?: { showWarningsAsErrors: boolean }): IFuture<string> {
 		return ((): string => {
@@ -163,7 +164,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			}
 			let additionalMessage = "You will not be able to build your projects for Android." + EOL
 				+ "To be able to build for Android, verify that you have installed The Java Development Kit (JDK) and configured it according to system requirements as" + EOL +
-				" described in https://github.com/NativeScript/nativescript-cli#system-requirements.";
+				" described in " + this.$staticConfig.SYS_REQUIREMENTS_LINK;
 			let matchingVersion = (installedJavaVersion || "").match(AndroidToolsInfo.VERSION_REGEX);
 			if (matchingVersion && matchingVersion[1]) {
 				if (semver.lt(matchingVersion[1], AndroidToolsInfo.MIN_JAVA_VERSION)) {
