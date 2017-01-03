@@ -43,7 +43,7 @@ describe('Query', function() {
   });
 
   describe('process()', function() {
-    it('throw an error when a query is not supported local', function() {
+    it('throw an error when a query is not supported locally', function() {
       expect(() => {
         const query = new Query();
         query.near('loc', [0, 0]);
@@ -72,6 +72,15 @@ describe('Query', function() {
       query.fields = ['desc'];
 
       expect(query.process(entities)).toEqual([{desc:'Desc1'}, {desc:'Desc2'}]);
+    });
+  });
+
+  describe('matches()', function() {
+    it('throw an error for unsupported ignoreCase option', function() {
+      expect(() => {
+        const query = new Query();
+        return query.matches('field', '/^abc/', {ignoreCase: true});        
+      }).toThrow(/ignoreCase flag is not supported./);
     });
   });
 
