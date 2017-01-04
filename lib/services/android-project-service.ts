@@ -116,7 +116,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			} else {
 				this.copy(this.platformData.projectRoot, frameworkDir, "src", "-R");
 			}
-			this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle gradle.properties build-tools", "-Rf");
+			this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle build-tools", "-Rf");
+
+			try {
+				this.copy(this.platformData.projectRoot, frameworkDir, "gradle.properties", "-Rf");
+			} catch(e) {
+				this.$logger.warn(`\n${e}\nIt's possible, the final .apk file will contain all architectures instead of the ones described in the abiFilters!\nYou can fix this by using the latest android platform.`);
+			}
 
 			this.copy(this.platformData.projectRoot, frameworkDir, "gradle", "-R");
 			this.copy(this.platformData.projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
