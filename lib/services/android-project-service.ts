@@ -199,7 +199,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			try {
 				shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, userAppGradleFilePath);
 			} catch(e) {
-				this.$errors.failWithoutHelp(` Error: ${e}.\nIt's possible you're using an old template. You can try updating it and try again.`);
+				this.$logger.warn(`\n${e}.\nIt's possible you're using an old template.`);
 			}
 		}).future<void>()();
 	}
