@@ -15,8 +15,6 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		return ((): string => {
 			let realTemplatePath: string;
 			if(originalTemplateName) {
-				let templateName = originalTemplateName.toLowerCase();
-
 				// support <reserved_name>@<version> syntax
 				let data = originalTemplateName.split("@"),
 					name = data[0],
