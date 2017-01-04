@@ -5,4 +5,3 @@ export default class InvalidCredentialsError extends BaseError {
     super('InvalidCredentialsError', message, debug, code, kinveyRequestId);
   }
 }
-

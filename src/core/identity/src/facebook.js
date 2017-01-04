@@ -160,4 +160,3 @@ export class Facebook extends Identity {
     return Promise.resolve();
   }
 }
-
