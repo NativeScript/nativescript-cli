@@ -9,7 +9,6 @@ import Query from '../../query';
 import Aggregation from '../../aggregation';
 import Promise from 'es6-promise';
 import { isDefined } from '../../utils';
-import { CacheRack } from './rack';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const activeUserCollectionName = process.env.KINVEY_USER_ACTIVE_COLLECTION_NAME || 'kinvey_active_user';
 const activeUsers = {};
@@ -22,7 +21,12 @@ export default class LocalRequest extends Request {
     super(options);
     this.aggregation = options.aggregation;
     this.query = options.query;
-    this.rack = new CacheRack();
+
+    if (isDefined(global._KinveyCacheRack) === false) {
+      throw new Error('_KinveyCacheRack is not defined. Unable to create a CacheRequest.');
+    }
+
+    this.rack = new global._KinveyCacheRack();
   }
 
   get query() {
