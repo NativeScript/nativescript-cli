@@ -165,6 +165,25 @@ describe('NetworkStore', function() {
     });
   });
 
+  describe('count()', function() {
+
+    beforeEach(function() {
+      // Kinvey API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .get(`/appdata/${this.client.appKey}/${collection}/_count`)
+        .reply(200, {"count": 1}, {
+          'content-type': 'application/json',
+          'x-kinvey-request-id': 'a6b7712a0bca42b8a98c82de1fe0f5cf',
+          'x-kinvey-api-version': '4'
+        });
+    });
+
+    it('should return the count for the collection', async function(){
+      const store = new NetworkStore(collection);
+      const count = await store.count().toPromise();
+      expect(count).toEqual(1);
+    });
+  });
   describe('group()', function() {
     it('return the count of all unique properties on the collection', async function() {
       // Kinvey API response

@@ -2,6 +2,32 @@ import Query from 'src/query';
 import expect from 'expect';
 
 describe('Query', function() {
+
+  describe('constructor', function(){
+    it('should throw error when fields is not an array', function(){
+      expect(() => {
+        const query = new Query();
+        query.fields = {};
+        return query;
+      }).toThrow(/fields must be an Array/);
+    });
+
+    it('should parse a limit from string', function() {
+      const query = new Query();
+      query.limit = '3';
+      
+      expect(query.limit).toEqual(3);
+    });
+
+    it('should parse a skip from string', function() {
+      const query = new Query();
+      query.skip = '10';
+      
+      expect(query.skip).toEqual(10);
+    });
+
+  });
+
   describe('isSupportedOffline()', function() {
     it('should be false when trying to filter geo queries', function() {
       const query = new Query();
@@ -17,13 +43,152 @@ describe('Query', function() {
   });
 
   describe('process()', function() {
-    it('throw an error when a query is not supported local', function() {
+    it('throw an error when a query is not supported locally', function() {
       expect(() => {
         const query = new Query();
         query.near('loc', [0, 0]);
         return query.process([]);
       }).toThrow(/This query is not able to run locally./);
     });
+
+    it('throw an error when a data is not ann array', function() {
+      expect(() => {
+        const query = new Query();        
+        return query.process({});
+      }).toThrow(/data argument must be of type: Array./);
+    });
+
+    it('should process a fields query', function() {
+      const entities = [{
+        name : 'Name1',
+        desc : 'Desc1'
+      },
+      {
+        name : 'Name2',
+        desc : 'Desc2'
+      }];
+
+      const query = new Query();
+      query.fields = ['desc'];
+
+      expect(query.process(entities)).toEqual([{desc:'Desc1'}, {desc:'Desc2'}]);
+    });
+  });
+
+  describe('matches()', function() {
+    it('throw an error for unsupported ignoreCase option', function() {
+      expect(() => {
+        const query = new Query();
+        return query.matches('field', '/^abc/', {ignoreCase: true});        
+      }).toThrow(/ignoreCase flag is not supported./);
+    });
+  });
+
+  describe('comparators', function() {
+    it('should add a $gt filter', function() {
+      const query = new Query();
+      query.greaterThan('field', 1);
+      const queryString = query.toQueryString();
+      expect(queryString).toInclude({ query: '{"field":{"$gt":1}}' });
+    });
+
+    it('throw an error when $gt comparator is not a string or number', function() {
+      expect(() => {
+        const query = new Query();
+        query.greaterThan('field', {});
+        return query.process([]);
+      }).toThrow(/You must supply a number or string./);
+    });
+
+    it('should add a $gte filter', function() {
+      const query = new Query();
+      query.greaterThanOrEqualTo('field', 1);
+      const queryString = query.toQueryString();
+      expect(queryString).toInclude({ query: '{"field":{"$gte":1}}' });
+    });
+
+    it('throw an error when $gte comparator is not a string or number', function() {
+      expect(() => {
+        const query = new Query();
+        query.greaterThanOrEqualTo('field', {});
+        return query.process([]);
+      }).toThrow(/You must supply a number or string./);
+    });
+
+    it('should add a $lt filter', function() {
+      const query = new Query();
+      query.lessThan('field', 1);
+      const queryString = query.toQueryString();
+      expect(queryString).toInclude({ query: '{"field":{"$lt":1}}' });
+    });
+
+    it('throw an error when $lt comparator is not a string or number', function() {
+      expect(() => {
+        const query = new Query();
+        query.lessThan('field', {});
+        return query.process([]);
+      }).toThrow(/You must supply a number or string./);
+    });
+
+    it('should add a $lte filter', function() {
+      const query = new Query();
+      query.lessThanOrEqualTo('field', 1);
+      const queryString = query.toQueryString();
+      expect(queryString).toInclude({ query: '{"field":{"$lte":1}}' });
+    });
+
+    it('throw an error when $lte comparator is not a string or number', function() {
+      expect(() => {
+        const query = new Query();
+        query.lessThanOrEqualTo('field', {});
+        return query.process([]);
+      }).toThrow(/You must supply a number or string./);
+    });
+
+    it('should add a $ne filter', function() {
+      const query = new Query();
+      query.notEqualTo('field', 1);
+      const queryString = query.toQueryString();
+      expect(queryString).toInclude({ query: '{"field":{"$ne":1}}' });
+    });
+
+  });
+
+  describe('logical operators', function(){
+
+    it('should add a $and filter', function() {
+      const query1 = new Query();
+      query1.equalTo('field1','value1');
+
+      const query2 = new Query();
+      query2.equalTo('field2', 'value2');
+
+      const queryString = query1.and(query2).toQueryString();
+      expect(queryString).toInclude({ query: '{"$and":[{"field1":"value1"},{"field2":"value2"}]}' });
+    });
+
+    it('should add a $or filter', function() {
+      const query1 = new Query();
+      query1.equalTo('field1','value1');
+
+      const query2 = new Query();
+      query2.equalTo('field2', 'value2');
+
+      const queryString = query1.or(query2).toQueryString();
+      expect(queryString).toInclude({ query: '{"$or":[{"field1":"value1"},{"field2":"value2"}]}' });
+    });
+
+    it('should add a $nor filter', function() {
+      const query1 = new Query();
+      query1.equalTo('field1','value1');
+
+      const query2 = new Query();
+      query2.equalTo('field2', 'value2');
+
+      const queryString = query1.nor(query2).toQueryString();
+      expect(queryString).toInclude({ query: '{"$nor":[{"field1":"value1"},{"field2":"value2"}]}' });
+    });
+
   });
 
   describe('toQueryString()', function() {

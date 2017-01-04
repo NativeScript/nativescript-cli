@@ -481,7 +481,7 @@ export default class Query {
     }
 
     if ((regExp.ignoreCase || options.ignoreCase) && options.ignoreCase !== false) {
-      throw new QueryError('ignoreCase glag is not supported.');
+      throw new QueryError('ignoreCase flag is not supported.');
     }
 
     if (regExp.source.indexOf('^') !== 0) {
