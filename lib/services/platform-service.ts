@@ -36,6 +36,7 @@ export class PlatformService implements IPlatformService {
 		private $sysInfo: ISysInfo,
 		private $staticConfig: Config.IStaticConfig,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $emulatorInfoService: IEmulatorInfoService,
 		private $childProcess: IChildProcess) { }
 
 	private _prepareInfo: IPrepareInfo;
@@ -469,11 +470,20 @@ export class PlatformService implements IPlatformService {
 	}
 
 	public emulatePlatform(platform: string): IFuture<void> {
-		this.$options.emulator = true;
-		if (this.$options.availableDevices) {
-			return $injector.resolveCommand("device").execute([platform]);
-		}
-		return this.runPlatform(platform);
+			this.$options.emulator = true;
+			if (this.$options.availableDevices) {
+				return $injector.resolveCommand("devices").execute([platform]);
+			}
+			if (this.$options.device) {
+				let info = this.$emulatorInfoService.getEmulatorInfo(platform, this.$options.device).wait();
+				if (!info) {
+					this.$errors.fail("Could not find the specified emulator!");
+				}
+				if (!info.isRunning) {
+					this.$emulatorInfoService.startEmulator(info).wait();
+				}
+			}
+			return this.runPlatform(platform);
 	}
 
 	private getPackageFileKey(device: Mobile.IDevice): string {
