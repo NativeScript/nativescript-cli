@@ -1,5 +1,5 @@
-import { Metadata } from 'src/entity';
-import { randomString } from 'src/utils';
+import { Metadata } from 'core/entity';
+import { randomString } from 'common/utils';
 import expect from 'expect';
 
 describe('Metadata', function() {

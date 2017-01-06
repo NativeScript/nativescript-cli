@@ -1,9 +1,9 @@
 import { TestUser } from './mocks';
-import Kinvey from 'src/kinvey';
-import { Client } from 'src/client';
-import { User } from 'src/entity';
-import { randomString } from 'src/utils';
-import { KinveyError } from 'src/errors';
+import Kinvey from 'core/kinvey';
+import { Client } from 'core/client';
+import { User } from 'core/entity';
+import { randomString } from 'common/utils';
+import { KinveyError } from 'common/errors';
 import expect from 'expect';
 import nock from 'nock';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';

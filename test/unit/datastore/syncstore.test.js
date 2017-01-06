@@ -1,8 +1,8 @@
-import { SyncStore } from 'src/datastore';
-import { Client } from 'src/client';
-import Query from 'src/query';
-import { KinveyError, NotFoundError } from 'src/errors';
-import { randomString } from 'src/utils';
+import { SyncStore } from 'core/datastore';
+import { Client } from 'core/client';
+import Query from 'core/query';
+import { KinveyError, NotFoundError } from 'common/errors';
+import { randomString } from 'common/utils';
 import nock from 'nock';
 import expect from 'expect';
 const collection = 'Books';
@@ -121,7 +121,7 @@ describe('SyncStore', function() {
       const store = new SyncStore(collection);
       const query = new Query();
       query.limit = 1;
-      const entities = await store.find(query).toPromise();    
+      const entities = await store.find(query).toPromise();
       expect(entities.length).toEqual(1);
       expect(entities).toEqual([entity1]);
     });
@@ -147,7 +147,7 @@ describe('SyncStore', function() {
       const query = new Query();
       query.ascending('isbn');
       query.descending('summary');
-      const entities = await store.find(query).toPromise();    
+      const entities = await store.find(query).toPromise();
       expect(entities).toEqual([entity3, entity2, entity1]);
     });
 

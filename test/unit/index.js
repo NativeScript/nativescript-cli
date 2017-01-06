@@ -1,6 +1,6 @@
 import { TestUser as User } from './mocks';
 import Kinvey from 'src/kinvey';
-import { randomString } from 'src/utils';
+import { randomString } from 'common/utils';
 import nock from 'nock';
 
 // Record for nock

@@ -1,6 +1,6 @@
 import { CustomEndpoint } from 'src/endpoint';
 import { Client } from 'src/client';
-import { KinveyError, NotFoundError } from 'src/errors';
+import { KinveyError, NotFoundError } from 'common/errors';
 import nock from 'nock';
 import expect from 'expect';
 

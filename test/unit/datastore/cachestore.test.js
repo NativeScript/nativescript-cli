@@ -1,8 +1,8 @@
-import { CacheStore, SyncStore } from 'src/datastore';
-import { Client } from 'src/client';
-import Query from 'src/query';
-import { KinveyError, NotFoundError } from 'src/errors';
-import { randomString } from 'src/utils';
+import { CacheStore, SyncStore } from 'core/datastore';
+import { Client } from 'core/client';
+import Query from 'core/query';
+import { KinveyError, NotFoundError } from 'common/errors';
+import { randomString } from 'common/utils';
 import nock from 'nock';
 import expect from 'expect';
 const collection = 'Books';

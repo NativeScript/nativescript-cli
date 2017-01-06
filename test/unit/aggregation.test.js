@@ -1,6 +1,6 @@
 import Aggregation from 'src/aggregation';
 import { SyncStore } from 'src/datastore';
-import { isDefined, randomString } from 'src/utils';
+import { isDefined, randomString } from 'common/utils';
 import nock from 'nock';
 import expect from 'expect';
 const collection = 'books';

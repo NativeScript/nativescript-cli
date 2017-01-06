@@ -1,7 +1,7 @@
 import { AuthType, DeltaFetchRequest, RequestMethod } from 'src/request';
-import { KinveyError } from 'src/errors';
+import { KinveyError } from 'common/errors';
 import { SyncStore } from 'src/datastore'
-import { randomString } from 'src/utils';
+import { randomString } from 'common/utils';
 import Query from 'src/query';
 import nock from 'nock';
 import expect from 'expect';
