@@ -1,6 +1,6 @@
 import { TestUser as User } from '../mocks';
-import { randomString } from 'common/utils';
-import { ActiveUserError, KinveyError } from 'common/errors';
+import { randomString } from 'src/utils';
+import { ActiveUserError, KinveyError } from 'src/errors';
 import { TestUser } from '../mocks';
 import Query from 'src/query';
 import expect from 'expect';

@@ -1,5 +1,5 @@
-import { Acl } from 'core/entity';
-import { randomString } from 'common/utils';
+import { Acl } from 'src/entity';
+import { randomString } from 'src/utils';
 import expect from 'expect';
 
 describe('Acl', function() {

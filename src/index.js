@@ -1,3 +1,3 @@
-import Kinvey from 'core/kinvey';
+import Kinvey from './kinvey';
 
 module.exports = Kinvey;

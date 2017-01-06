@@ -1,6 +1,6 @@
-import Request, { KinveyRequest } from 'core/request';
-import { Client } from 'core/client';
-import { TimeoutError } from 'common/errors';
+import Request, { KinveyRequest } from 'src/request';
+import Client from 'src/client';
+import { TimeoutError } from 'src/errors';
 import url from 'url';
 import nock from 'nock';
 import expect from 'expect';

@@ -3,11 +3,8 @@
     "inline-dotenv",
     ["module-resolver", {
       "alias": {
-        "common": "./src/common",
-        "core": "./src/core",
         "package.json": "./package.json",
-        "src": "./src/core",
-        "utils": "./src/common/utils"
+        "src": "./src"
       }
     }]
   ],
