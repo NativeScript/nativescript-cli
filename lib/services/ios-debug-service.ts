@@ -159,7 +159,7 @@ class IOSDebugService implements IDebugService {
 				// we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
 				let action: IFuture<void>;
 				if (this.$config.debugLivesync) {
-					action = this.$platformService.runPlatform(this.platform);
+					action = this.$platformService.startApplication(this.platform);
 				} else {
 					action = this.$platformService.deployPlatform(this.platform);
 				}

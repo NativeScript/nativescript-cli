@@ -4,11 +4,11 @@ export class RunCommandBase {
 		protected $options: IOptions) { }
 
 	public executeCore(args: string[]): IFuture<void> {
+		this.$platformService.deployPlatform(args[0]).wait();
 		if (this.$options.watch) {
-			this.$platformService.deployPlatform(args[0]).wait();
 			return this.$usbLiveSyncService.liveSync(args[0]);
 		} else {
-			return this.$platformService.runPlatform(args[0]);
+			return this.$platformService.startApplication(args[0]);
 		}
 	}
 }
