@@ -28,7 +28,7 @@ export class InstallCommand implements ICommand {
 			this.$projectDataService.initialize(this.$projectData.projectDir);
 			_.each(this.$platformsData.platformsNames, platform => {
 				let platformData = this.$platformsData.getPlatformData(platform);
-				let frameworkPackageData = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
+				let frameworkPackageData = this.$projectDataService.getValue(platformData.frameworkPackageName);
 				if (frameworkPackageData && frameworkPackageData.version) {
 					try {
 						this.$platformService.addPlatforms([`${platform}@${frameworkPackageData.version}`]).wait();
@@ -49,7 +49,7 @@ export class InstallCommand implements ICommand {
 			let projectDir = this.$projectData.projectDir;
 
 			let devPrefix = 'nativescript-dev-';
-			if (!this.$fs.exists(moduleName).wait() && moduleName.indexOf(devPrefix) !== 0) {
+			if (!this.$fs.exists(moduleName) && moduleName.indexOf(devPrefix) !== 0) {
 				moduleName = devPrefix + moduleName;
 			}
 

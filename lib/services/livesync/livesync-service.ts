@@ -30,7 +30,7 @@ class LiveSyncService implements ILiveSyncService {
 	private ensureAndroidFrameworkVersion(platformData: IPlatformData): IFuture<void> { // TODO: this can be moved inside command or canExecute function
 		return (() => {
 			this.$projectDataService.initialize(this.$projectData.projectDir);
-			let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
+			let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).version;
 
 			if (platformData.normalizedPlatformName.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
 				if (semver.lt(frameworkVersion, "1.2.1")) {
@@ -62,7 +62,7 @@ class LiveSyncService implements ILiveSyncService {
 			} else {
 				this.$devicesService.initialize({ skipInferPlatform: true }).wait();
 				this.$devicesService.stopDeviceDetectionInterval().wait();
-				for(let installedPlatform of this.$platformService.getInstalledPlatforms().wait()) {
+				for(let installedPlatform of this.$platformService.getInstalledPlatforms()) {
 					if (this.$devicesService.getDevicesForPlatform(installedPlatform).length === 0) {
 						this.$devicesService.startEmulator(installedPlatform).wait();
 					}
@@ -123,7 +123,7 @@ class LiveSyncService implements ILiveSyncService {
 	private partialSync(syncWorkingDirectory: string, onChangedActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => void )[]): void {
 		let that = this;
 
-		let gazeWatcher = gaze("**/*", { cwd: syncWorkingDirectory }, function (err: any, watcher: any) {
+		let gazeWatcher = gaze("**/*", { cwd: syncWorkingDirectory, follow: true }, function (err: any, watcher: any) {
 			this.on('all', (event: string, filePath: string) => {
 				fiberBootstrap.run(() => {
 					that.$dispatcher.dispatch(() => (() => {

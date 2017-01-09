@@ -10,8 +10,9 @@ export class AnalyticsService extends AnalyticsServiceBase implements IAnalytics
 		$prompter: IPrompter,
 		$userSettingsService: UserSettings.IUserSettingsService,
 		$analyticsSettingsService: IAnalyticsSettingsService,
-		$progressIndicator: IProgressIndicator) {
-		super($logger, $options, $staticConfig, $errors, $prompter, $userSettingsService, $analyticsSettingsService, $progressIndicator);
+		$progressIndicator: IProgressIndicator,
+		$osInfo: IOsInfo) {
+		super($logger, $options, $staticConfig, $errors, $prompter, $userSettingsService, $analyticsSettingsService, $progressIndicator, $osInfo);
 	}
 
 	protected checkConsentCore(trackFeatureUsage: boolean): IFuture<void> {

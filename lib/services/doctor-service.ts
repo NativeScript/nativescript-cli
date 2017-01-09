@@ -6,7 +6,7 @@ let clui = require("clui");
 
 class DoctorService implements IDoctorService {
 	private static PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
-	private static MIN_SUPPORTED_POD_VERSION = "0.38.2";
+	private static MIN_SUPPORTED_POD_VERSION = "1.0.0";
 	private static DarwinSetupScriptLocation = path.join(__dirname, "..", "..", "setup", "mac-startup-shell-script.sh");
 	private static DarwinSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-os-x";
 	private static WindowsSetupScriptExecutable = "powershell.exe";
@@ -178,17 +178,22 @@ class DoctorService implements IDoctorService {
 		let temp = require("temp");
 		temp.track();
 		let projDir = temp.mkdirSync("nativescript-check-cocoapods");
+		let packageJsonData = {
+			"name": "nativescript-check-cocoapods",
+			"version": "0.0.1"
+		};
+		this.$fs.writeJson(path.join(projDir, "package.json"), packageJsonData);
 
 		let spinner = new clui.Spinner("Installing iOS runtime.");
 		try {
 			spinner.start();
-			this.$npm.install("tns-ios", projDir, { "ignore-scripts": true, production: true }).wait();
+			this.$npm.install("tns-ios", projDir, { "ignore-scripts": true, production: true, save: true}).wait();
 			spinner.stop();
 			let iosDir = path.join(projDir, "node_modules", "tns-ios", "framework");
 			this.$fs.writeFile(
 				path.join(iosDir, "Podfile"),
 				`${this.$cocoapodsService.getPodfileHeader(DoctorService.PROJECT_NAME_PLACEHOLDER)}pod 'AFNetworking', '~> 1.0'${this.$cocoapodsService.getPodfileFooter()}`
-			).wait();
+			);
 
 			spinner.message("Verifying CocoaPods. This may take some time, please be patient.");
 			spinner.start();
@@ -207,7 +212,7 @@ class DoctorService implements IDoctorService {
 				return true;
 			}
 
-			return !(this.$fs.exists(path.join(iosDir, `${DoctorService.PROJECT_NAME_PLACEHOLDER}.xcworkspace`)).wait());
+			return !(this.$fs.exists(path.join(iosDir, `${DoctorService.PROJECT_NAME_PLACEHOLDER}.xcworkspace`)));
 		} catch (err) {
 			this.$logger.trace(`verifyCocoaPods error: ${err}`);
 			return true;

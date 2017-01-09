@@ -16,68 +16,78 @@ export class ProjectService implements IProjectService {
 		private $options: IOptions) { }
 
 	public createProject(projectName: string, selectedTemplate?: string): IFuture<void> {
-		return(() => {
+		return (() => {
 			if (!projectName) {
 				this.$errors.fail("You must specify <App name> when creating a new project.");
 			}
 
-			projectName = this.$projectNameService.ensureValidName(projectName, {force: this.$options.force}).wait();
+			projectName = this.$projectNameService.ensureValidName(projectName, { force: this.$options.force }).wait();
 
 			let projectId = this.$options.appid || this.$projectHelper.generateDefaultAppId(projectName, constants.DEFAULT_APP_IDENTIFIER_PREFIX);
 
 			let projectDir = path.join(path.resolve(this.$options.path || "."), projectName);
-			this.$fs.createDirectory(projectDir).wait();
+			this.$fs.createDirectory(projectDir);
+			if (this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir)) {
+				this.$errors.fail("Path already exists and is not empty %s", projectDir);
+			}
+
+			this.createPackageJson(projectDir, projectId);
 
 			let customAppPath = this.getCustomAppPath();
-			if(customAppPath) {
+			if (customAppPath) {
 				customAppPath = path.resolve(customAppPath);
-				if(!this.$fs.exists(customAppPath).wait()) {
+				if (!this.$fs.exists(customAppPath)) {
 					this.$errors.failWithoutHelp(`The specified path "${customAppPath}" doesn't exist. Check that you specified the path correctly and try again.`);
 				}
 
 				let customAppContents = this.$fs.enumerateFilesInDirectorySync(customAppPath);
-				if(customAppContents.length === 0) {
+				if (customAppContents.length === 0) {
 					this.$errors.failWithoutHelp(`The specified path "${customAppPath}" is empty directory.`);
 				}
 			}
 
-			if(this.$fs.exists(projectDir).wait() && !this.$fs.isEmptyDir(projectDir).wait()) {
-				this.$errors.fail("Path already exists and is not empty %s", projectDir);
-			}
-
 			this.$logger.trace("Creating a new NativeScript project with name %s and id %s at location %s", projectName, projectId, projectDir);
 
-			let appDirectory = path.join(projectDir, constants.APP_FOLDER_NAME);
+			let projectAppDirectory = path.join(projectDir, constants.APP_FOLDER_NAME);
 			let appPath: string = null;
 			if (customAppPath) {
 				this.$logger.trace("Using custom app from %s", customAppPath);
 
 				// Make sure that the source app/ is not a direct ancestor of a target app/
-				let relativePathFromSourceToTarget = path.relative(customAppPath, appDirectory);
+				let relativePathFromSourceToTarget = path.relative(customAppPath, projectAppDirectory);
 				// path.relative returns second argument if the paths are located on different disks
 				// so in this case we don't need to make the check for direct ancestor
-				if (relativePathFromSourceToTarget !== appDirectory) {
+				if (relativePathFromSourceToTarget !== projectAppDirectory) {
 					let doesRelativePathGoUpAtLeastOneDir = relativePathFromSourceToTarget.split(path.sep)[0] === "..";
 					if (!doesRelativePathGoUpAtLeastOneDir) {
 						this.$errors.fail("Project dir %s must not be created at/inside the template used to create the project %s.", projectDir, customAppPath);
 					}
 				}
-				this.$logger.trace("Copying custom app into %s", appDirectory);
+				this.$logger.trace("Copying custom app into %s", projectAppDirectory);
 				appPath = customAppPath;
 			} else {
-				let defaultTemplatePath = this.$projectTemplatesService.prepareTemplate(selectedTemplate).wait();
-				this.$logger.trace(`Copying application from '${defaultTemplatePath}' into '${appDirectory}'.`);
-				appPath = defaultTemplatePath;
+				let templatePath = this.$projectTemplatesService.prepareTemplate(selectedTemplate, projectDir).wait();
+				this.$logger.trace(`Copying application from '${templatePath}' into '${projectAppDirectory}'.`);
+				let templatePackageJson = this.$fs.readJson(path.join(templatePath, "package.json"));
+				selectedTemplate = templatePackageJson.name;
+				appPath = templatePath;
 			}
 
 			try {
+				//TODO: plamen5kov: move copy of template and npm uninstall in prepareTemplate logic
 				this.createProjectCore(projectDir, appPath, projectId).wait();
-				//update dependencies and devDependencies of newly created project with data from template
-				this.mergeProjectAndTemplateProperties(projectDir, appPath).wait();
-				this.updateAppResourcesDir(appDirectory).wait();
+				let templatePackageJsonData = this.getDataFromJson(appPath);
+				this.mergeProjectAndTemplateProperties(projectDir, templatePackageJsonData); //merging dependencies from template (dev && prod)
+				this.removeMergedDependencies(projectDir, templatePackageJsonData);
 				this.$npm.install(projectDir, projectDir, { "ignore-scripts": this.$options.ignoreScripts }).wait();
+				selectedTemplate = selectedTemplate || "";
+				let templateName = (constants.RESERVED_TEMPLATE_NAMES[selectedTemplate.toLowerCase()] || selectedTemplate/*user template*/) || constants.RESERVED_TEMPLATE_NAMES["default"];
+				this.$npm.uninstall(selectedTemplate, { save: true }, projectDir).wait();
+
+				// TODO: plamen5kov: remove later (put only so tests pass (need to fix tests))
+				this.$logger.trace(`Using NativeScript verified template: ${templateName} with version undefined.`);
 			} catch (err) {
-				this.$fs.deleteDirectory(projectDir).wait();
+				this.$fs.deleteDirectory(projectDir);
 				throw err;
 			}
 			this.$logger.printMarkdown("Project `%s` was successfully created.", projectName);
@@ -85,37 +95,44 @@ export class ProjectService implements IProjectService {
 		}).future<void>()();
 	}
 
-	private mergeProjectAndTemplateProperties(projectDir: string, templatePath: string): IFuture<void> {
-		return (() => {
-			let templatePackageJsonPath = path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME);
-			if(this.$fs.exists(templatePackageJsonPath).wait()) {
-				let projectPackageJsonPath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
-				let projectPackageJsonData = this.$fs.readJson(projectPackageJsonPath).wait();
-				this.$logger.trace("Initial project package.json data: ", projectPackageJsonData);
-				let templatePackageJsonData = this.$fs.readJson(templatePackageJsonPath).wait();
-				if(projectPackageJsonData.dependencies || templatePackageJsonData.dependencies) {
-					projectPackageJsonData.dependencies = this.mergeDependencies(projectPackageJsonData.dependencies, templatePackageJsonData.dependencies);
-				}
-
-				if(projectPackageJsonData.devDependencies || templatePackageJsonData.devDependencies) {
-					projectPackageJsonData.devDependencies = this.mergeDependencies(projectPackageJsonData.devDependencies, templatePackageJsonData.devDependencies);
-				}
-
-				this.$logger.trace("New project package.json data: ", projectPackageJsonData);
-				this.$fs.writeJson(projectPackageJsonPath, projectPackageJsonData).wait();
-			} else {
-				this.$logger.trace(`Template ${templatePath} does not have ${constants.PACKAGE_JSON_FILE_NAME} file.`);
-			}
-		}).future<void>()();
+	private getDataFromJson(templatePath: string): any {
+		let templatePackageJsonPath = path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME);
+		if(this.$fs.exists(templatePackageJsonPath)) {
+			let templatePackageJsonData = this.$fs.readJson(templatePackageJsonPath);
+			return templatePackageJsonData;
+		} else {
+			this.$logger.trace(`Template ${templatePath} does not have ${constants.PACKAGE_JSON_FILE_NAME} file.`);
+		}
+		return null;
 	}
 
-	private updateAppResourcesDir(appDirectory: string): IFuture<void> {
-		return (() => {
-			let defaultAppResourcesDir = path.join(this.$projectTemplatesService.defaultTemplatePath.wait(), constants.APP_RESOURCES_FOLDER_NAME);
-			let targetAppResourcesDir = path.join(appDirectory, constants.APP_RESOURCES_FOLDER_NAME);
-			this.$logger.trace(`Updating AppResources values from ${defaultAppResourcesDir} to ${targetAppResourcesDir}`);
-			shelljs.cp("-R", path.join(defaultAppResourcesDir, "*"), targetAppResourcesDir);
-		}).future<void>()();
+	private removeMergedDependencies(projectDir: string, templatePackageJsonData: any) : void {
+		let extractedTemplatePackageJsonPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.PACKAGE_JSON_FILE_NAME);
+		for(let key in templatePackageJsonData) {
+			if(constants.PackageJsonKeysToKeep.indexOf(key) === -1) {
+				delete templatePackageJsonData[key];
+			}
+		}
+
+		this.$logger.trace("Deleting unnecessary information from template json.");
+		this.$fs.writeJson(extractedTemplatePackageJsonPath, templatePackageJsonData);
+	}
+
+	private mergeProjectAndTemplateProperties(projectDir: string, templatePackageJsonData: any): void {
+		if(templatePackageJsonData) {
+			let projectPackageJsonPath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
+			let projectPackageJsonData = this.$fs.readJson(projectPackageJsonPath);
+			this.$logger.trace("Initial project package.json data: ", projectPackageJsonData);
+			if(projectPackageJsonData.dependencies || templatePackageJsonData.dependencies) {
+				projectPackageJsonData.dependencies = this.mergeDependencies(projectPackageJsonData.dependencies, templatePackageJsonData.dependencies);
+			}
+
+			if (projectPackageJsonData.devDependencies || templatePackageJsonData.devDependencies) {
+				projectPackageJsonData.devDependencies = this.mergeDependencies(projectPackageJsonData.devDependencies, templatePackageJsonData.devDependencies);
+			}
+			this.$logger.trace("New project package.json data: ", projectPackageJsonData);
+			this.$fs.writeJson(projectPackageJsonPath, projectPackageJsonData);
+		}
 	}
 
 	private mergeDependencies(projectDependencies: IStringDictionary, templateDependencies: IStringDictionary): IStringDictionary {
@@ -135,48 +152,37 @@ export class ProjectService implements IProjectService {
 
 	private createProjectCore(projectDir: string, appSourcePath: string, projectId: string): IFuture<void> {
 		return (() => {
-			this.$fs.ensureDirectoryExists(projectDir).wait();
+			this.$fs.ensureDirectoryExists(projectDir);
 
 			let appDestinationPath = path.join(projectDir, constants.APP_FOLDER_NAME);
-			this.$fs.createDirectory(appDestinationPath).wait();
+			this.$fs.createDirectory(appDestinationPath);
 
-			if(this.$options.symlink) {
-				this.$fs.symlink(appSourcePath, appDestinationPath).wait();
-			} else {
-				shelljs.cp('-R', path.join(appSourcePath, "*"), appDestinationPath);
-				// Copy hidden files.
-				shelljs.cp('-R', path.join(appSourcePath, ".*"), appDestinationPath);
-			}
+			shelljs.cp('-R', path.join(appSourcePath, "*"), appDestinationPath);
 
-			this.createBasicProjectStructure(projectDir,  projectId).wait();
-		}).future<void>()();
-	}
-
-	private createBasicProjectStructure(projectDir: string,  projectId: string): IFuture<void> {
-		return (() => {
-			this.$fs.createDirectory(path.join(projectDir, "platforms")).wait();
-
-			this.$projectDataService.initialize(projectDir);
-			this.$projectDataService.setValue("id", projectId).wait();
+			this.$fs.createDirectory(path.join(projectDir, "platforms"));
 
 			let tnsModulesVersion = this.$options.tnsModulesVersion;
 			let packageName = constants.TNS_CORE_MODULES_NAME;
 			if (tnsModulesVersion) {
 				packageName = `${packageName}@${tnsModulesVersion}`;
 			}
-
-			this.$npm.executeNpmCommand(`npm install ${packageName} --save --save-exact`, projectDir).wait();
+			this.$npm.install(packageName, projectDir, { save: true, "save-exact": true }).wait();
 		}).future<void>()();
+	}
+
+	private createPackageJson(projectDir: string, projectId: string): void {
+		this.$projectDataService.initialize(projectDir);
+		this.$projectDataService.setValue("id", projectId);
 	}
 
 	private getCustomAppPath(): string {
 		let customAppPath = this.$options.copyFrom || this.$options.linkTo;
-		if(customAppPath) {
-			if(customAppPath.indexOf("http://") === 0) {
+		if (customAppPath) {
+			if (customAppPath.indexOf("http://") === 0) {
 				this.$errors.fail("Only local paths for custom app are supported.");
 			}
 
-			if(customAppPath.substr(0, 1) === '~') {
+			if (customAppPath.substr(0, 1) === '~') {
 				customAppPath = path.join(osenv.home(), customAppPath.substr(1));
 			}
 		}

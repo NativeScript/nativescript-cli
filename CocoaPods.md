@@ -15,7 +15,7 @@ You need to install CocoaPods. If you haven't yet, you can do so by running:
 ```bash
 $ sudo gem install cocoapods
 ```
-> **NOTE:** All operations and code in this article are verified against CocoaPods 0.38.2.
+> **NOTE:** The minimum required version of CocoaPods is 1.0.0.
 
 To check your current version, run the following command.
 

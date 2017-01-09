@@ -1,5 +1,4 @@
 import * as constants from "../../../lib/constants";
-import * as fs from "fs";
 import * as path from "path";
 import * as shelljs from "shelljs";
 import Future = require("fibers/future");
@@ -57,7 +56,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 								relativePath = path.relative(projectDir, resolvedPath);
 							let stat = match.statCache[resolvedPath] || match.statCache[relativePath];
 							if (!stat) {
-								match.statCache[resolvedPath] = stat = this.$fs.getFsStats(resolvedPath).wait();
+								match.statCache[resolvedPath] = stat = this.$fs.getFsStats(resolvedPath);
 							}
 
 							if (stat.mtime <= lastModifiedTime) {
@@ -98,12 +97,12 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 				future.wait();
 			}
 
-			if (isNodeModulesModified && this.$fs.exists(absoluteOutputPath).wait()) {
-				let currentPreparedTnsModules = this.$fs.readDirectory(absoluteOutputPath).wait();
+			if (isNodeModulesModified && this.$fs.exists(absoluteOutputPath)) {
+				let currentPreparedTnsModules = this.$fs.readDirectory(absoluteOutputPath);
 				let tnsModulesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_CORE_MODULES_NAME);
-				let tnsModulesInApp = this.$fs.readDirectory(tnsModulesPath).wait();
+				let tnsModulesInApp = this.$fs.readDirectory(tnsModulesPath);
 				let modulesToDelete = _.difference(currentPreparedTnsModules, tnsModulesInApp);
-				_.each(modulesToDelete, moduleName => this.$fs.deleteDirectory(path.join(absoluteOutputPath, moduleName)).wait());
+				_.each(modulesToDelete, moduleName => this.$fs.deleteDirectory(path.join(absoluteOutputPath, moduleName)));
 			}
 
 			if (!lastModifiedTime || isNodeModulesModified) {
@@ -115,7 +114,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 	}
 
 	private expandScopedModules(nodeModulesPath: string, nodeModules: IStringDictionary): void {
-		let nodeModulesDirectories = this.$fs.exists(nodeModulesPath).wait() ? this.$fs.readDirectory(nodeModulesPath).wait() : [];
+		let nodeModulesDirectories = this.$fs.exists(nodeModulesPath) ? this.$fs.readDirectory(nodeModulesPath) : [];
 		_.each(nodeModulesDirectories, nodeModuleDirectoryName => {
 			let isNpmScope = /^@/.test(nodeModuleDirectoryName);
 			let nodeModuleFullPath = path.join(nodeModulesPath, nodeModuleDirectoryName);
@@ -129,7 +128,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 
 	public prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date): IFuture<void> {
 		return (() => {
-			if (!fs.existsSync(absoluteOutputPath)) {
+			if (!this.$fs.exists(absoluteOutputPath)) {
 				// Force copying if the destination doesn't exist.
 				lastModifiedTime = null;
 			}

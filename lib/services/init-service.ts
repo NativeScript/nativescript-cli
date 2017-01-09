@@ -28,15 +28,15 @@ export class InitService implements IInitService {
 		return (() => {
 			let projectData: any = {};
 
-			if (this.$fs.exists(this.projectFilePath).wait()) {
-				projectData = this.$fs.readJson(this.projectFilePath).wait();
+			if (this.$fs.exists(this.projectFilePath)) {
+				projectData = this.$fs.readJson(this.projectFilePath);
 			}
 
 			let projectDataBackup = _.extend({}, projectData);
 
 			if (!projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE]) {
 				projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE] = {};
-				this.$fs.writeJson(this.projectFilePath, projectData).wait(); // We need to create package.json file here in order to prevent "No project found at or above and neither was a --path specified." when resolving platformsData
+				this.$fs.writeJson(this.projectFilePath, projectData); // We need to create package.json file here in order to prevent "No project found at or above and neither was a --path specified." when resolving platformsData
 			}
 
 			try {
@@ -67,9 +67,9 @@ export class InitService implements IInitService {
 				let tnsCoreModulesVersionInPackageJson = this.useDefaultValue ? projectData.dependencies[constants.TNS_CORE_MODULES_NAME] : null;
 				projectData.dependencies[constants.TNS_CORE_MODULES_NAME] = this.$options.tnsModulesVersion || tnsCoreModulesVersionInPackageJson || this.getVersionData(constants.TNS_CORE_MODULES_NAME).wait()["version"];
 
-				this.$fs.writeJson(this.projectFilePath, projectData).wait();
+				this.$fs.writeJson(this.projectFilePath, projectData);
 			} catch (err) {
-				this.$fs.writeJson(this.projectFilePath, projectDataBackup).wait();
+				this.$fs.writeJson(this.projectFilePath, projectDataBackup);
 				throw err;
 			}
 
@@ -109,13 +109,14 @@ export class InitService implements IInitService {
 				return this.buildVersionData(latestVersion);
 			}
 
-			let data = this.$npm.view(packageName, "versions").wait();
+			let data:any = this.$npm.view(packageName, "versions").wait();
 			let versions = _.filter(data[latestVersion].versions, (version: string) => semver.gte(version, InitService.MIN_SUPPORTED_FRAMEWORK_VERSIONS[packageName]));
 			if (versions.length === 1) {
 				this.$logger.info(`Only ${versions[0]} version is available for ${packageName}.`);
 				return this.buildVersionData(versions[0]);
 			}
 			let sortedVersions = versions.sort(helpers.versionCompare).reverse();
+			//TODO: plamen5kov: don't offer versions from next (they are not available)
 			let version = this.$prompter.promptForChoice(`${packageName} version:`, sortedVersions).wait();
 			return this.buildVersionData(version);
 		}).future<IStringDictionary>()();

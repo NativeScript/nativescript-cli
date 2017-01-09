@@ -2,7 +2,6 @@ import * as path from "path";
 import * as shelljs from "shelljs";
 import * as constants from "../../constants";
 import * as minimatch from "minimatch";
-import Future = require("fibers/future");
 
 export interface ILocalDependencyData extends IDependencyData {
 	directory: string;
@@ -28,15 +27,9 @@ export class TnsModulesCopy {
 				// Remove .ts files
 				let allFiles = this.$fs.enumerateFilesInDirectorySync(tnsCoreModulesResourcePath);
 				let matchPattern = this.$options.release ? "**/*.ts" : "**/*.d.ts";
-				let deleteFilesFutures = allFiles.filter(file => minimatch(file, matchPattern, { nocase: true })).map(file => this.$fs.deleteFile(file));
-				Future.wait(deleteFilesFutures);
+				allFiles.filter(file => minimatch(file, matchPattern, { nocase: true })).map(file => this.$fs.deleteFile(file));
 
 				shelljs.rm("-rf", path.join(tnsCoreModulesResourcePath, "node_modules"));
-
-				// TODO: The following two lines are necessary to temporarily work around hardcoded
-				// path dependencies in iOS livesync logic. Should be addressed ASAP
-				shelljs.cp("-Rf", path.join(tnsCoreModulesResourcePath, "*"), this.outputRoot);
-				shelljs.rm("-rf", tnsCoreModulesResourcePath);
 			}
 		}
 	}
@@ -82,8 +75,8 @@ export class NpmPluginPrepare {
 		_.values(dependencies).forEach(d => {
 			prepareData[d.name] = true;
 		});
-		this.$fs.createDirectory(this.preparedPlatformsDir(platform)).wait();
-		this.$fs.writeJson(this.preparedPlatformsFile(platform), prepareData, "    ", "utf8").wait();
+		this.$fs.createDirectory(this.preparedPlatformsDir(platform));
+		this.$fs.writeJson(this.preparedPlatformsFile(platform), prepareData, "    ", "utf8");
 	}
 
 	private preparedPlatformsDir(platform: string): string {
@@ -102,10 +95,10 @@ export class NpmPluginPrepare {
 	}
 
 	protected getPreviouslyPreparedDependencies(platform: string): IDictionary<boolean> {
-		if (!this.$fs.exists(this.preparedPlatformsFile(platform)).wait()) {
+		if (!this.$fs.exists(this.preparedPlatformsFile(platform))) {
 			return {};
 		}
-		return this.$fs.readJson(this.preparedPlatformsFile(platform), "utf8").wait();
+		return this.$fs.readJson(this.preparedPlatformsFile(platform), "utf8");
 	}
 
 	private allPrepared(dependencies: IDictionary<IDependencyData>, platform: string): boolean {

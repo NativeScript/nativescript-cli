@@ -41,26 +41,26 @@ class TestInitCommand implements ICommand {
 
 			let testsDir = path.join(projectDir, 'app/tests');
 			let shouldCreateSampleTests = true;
-			if (this.$fs.exists(testsDir).wait()) {
+			if (this.$fs.exists(testsDir)) {
 				this.$logger.info('app/tests/ directory already exists, will not create an example test project.');
 				shouldCreateSampleTests = false;
 			}
 
-			this.$fs.ensureDirectoryExists(testsDir).wait();
+			this.$fs.ensureDirectoryExists(testsDir);
 
-			let karmaConfTemplate = this.$resources.readText('test/karma.conf.js').wait();
+			let karmaConfTemplate = this.$resources.readText('test/karma.conf.js');
 			let karmaConf = _.template(karmaConfTemplate)({
 				frameworks: [frameworkToInstall].concat(dependencies)
 					.map(fw => `'${fw}'`)
 					.join(', ')
 			});
 
-			this.$fs.writeFile(path.join(projectDir, 'karma.conf.js'), karmaConf).wait();
+			this.$fs.writeFile(path.join(projectDir, 'karma.conf.js'), karmaConf);
 
 			let exampleFilePath = this.$resources.resolvePath(`test/example.${frameworkToInstall}.js`);
 
-			if (shouldCreateSampleTests && this.$fs.exists(exampleFilePath).wait()) {
-				this.$fs.copyFile(exampleFilePath, path.join(testsDir, 'example.js')).wait();
+			if (shouldCreateSampleTests && this.$fs.exists(exampleFilePath)) {
+				this.$fs.copyFile(exampleFilePath, path.join(testsDir, 'example.js'));
 				this.$logger.info('\nExample test file created in app/tests/'.yellow);
 			} else {
 				this.$logger.info('\nPlace your test files under app/tests/'.yellow);

@@ -1,28 +1,22 @@
 interface INodePackageManager {
-	getCache(): string;
-	load(config?: any): IFuture<void>;
 	install(packageName: string, pathToSave: string, config?: any): IFuture<any>;
 	uninstall(packageName: string, config?: any, path?: string): IFuture<any>;
-	cache(packageName: string, version: string, cache?: any): IFuture<IDependencyData>;
-	cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void>;
-	view(packageName: string, propertyName: string): IFuture<any>;
-	executeNpmCommand(npmCommandName: string, currentWorkingDirectory: string): IFuture<any>;
-	search(filter: string[], silent: boolean): IFuture<any>;
+	view(packageName: string, config: any): IFuture<any>;
+	search(filter: string[], config: any): IFuture<any>;
 }
 
 interface INpmInstallationManager {
-	getCacheRootPath(): string;
-	addToCache(packageName: string, version: string): IFuture<any>;
-	cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void>;
-	install(packageName: string, options?: INpmInstallOptions): IFuture<string>;
+	install(packageName: string, packageDir: string, options?: INpmInstallOptions): IFuture<any>;
 	getLatestVersion(packageName: string): IFuture<string>;
+	getNextVersion(packageName: string): IFuture<string>;
 	getLatestCompatibleVersion(packageName: string): IFuture<string>;
-	getCachedPackagePath(packageName: string, version: string): string;
+	getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string): IFuture<string>;
 }
 
 interface INpmInstallOptions {
 	pathToSave?: string;
 	version?: string;
+	dependencyType?: string;
 }
 
 interface IDependencyData {
@@ -81,7 +75,7 @@ interface IOptions extends ICommonOptions {
 	frameworkName: string;
 	frameworkPath: string;
 	frameworkVersion: string;
-	ignoreScripts: boolean;
+	ignoreScripts: boolean; //npm flag
 	disableNpmInstall: boolean;
 	ipa: string;
 	keyStoreAlias: string;
@@ -95,14 +89,14 @@ interface IOptions extends ICommonOptions {
 	bundle: boolean;
 	platformTemplate: string;
 	port: Number;
-	production: boolean;
+	production: boolean; //npm flag
 	sdk: string;
-	symlink: boolean;
 	tnsModulesVersion: string;
 	teamId: string;
 	rebuild: boolean;
 	syncAllFiles: boolean;
 	liveEdit: boolean;
+	chrome: boolean;
 }
 
 interface IInitService {
@@ -233,8 +227,8 @@ interface IAndroidToolsInfoData {
 }
 
 interface ISocketProxyFactory {
-	createSocketProxy(factory: () => any): IFuture<any>;
-	stopServer(): void;
+	createTCPSocketProxy(factory: () => any): any;
+	createWebSocketProxy(factory: () => any): any;
 }
 
 interface IiOSNotification {
@@ -263,16 +257,16 @@ interface IXmlValidator {
 	/**
 	 * Checks the passed xml files for errors and if such exists, print them on the stdout.
 	 * @param {string[]} sourceFiles Files to be checked. Only the ones that ends with .xml are filtered.
-	 * @return {IFuture<boolean>} true in case there are no errors in specified files and false in case there's at least one error.
+	 * @return {boolean} true in case there are no errors in specified files and false in case there's at least one error.
 	 */
-	validateXmlFiles(sourceFiles: string[]): IFuture<boolean>;
+	validateXmlFiles(sourceFiles: string[]): boolean;
 
 	/**
 	 * Checks the passed xml file for errors and returns them as a result.
 	 * @param {string} sourceFile File to be checked.
-	 * @return {IFuture<string>} The errors detected (as a single string) or null in case there are no errors.
+	 * @return {string} The errors detected (as a single string) or null in case there are no errors.
 	 */
-	getXmlFileErrors(sourceFile: string): IFuture<string>;
+	getXmlFileErrors(sourceFile: string): string;
 }
 
 /**
@@ -369,4 +363,3 @@ interface IXcprojInfo {
 	 */
 	xcprojAvailable: boolean;
 }
-

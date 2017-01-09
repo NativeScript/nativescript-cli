@@ -2,13 +2,12 @@ export class BuildCommandBase {
 	constructor(protected $options: IOptions,
 		private $platformService: IPlatformService) { }
 
-	executeCore(args: string[], buildConfig?: IBuildConfig): IFuture<void> {
+	executeCore(args: string[]): IFuture<void> {
 		return (() => {
 			let platform = args[0].toLowerCase();
-			this.$platformService.preparePlatform(platform, true).wait();
-			this.$platformService.buildPlatform(platform, buildConfig).wait();
+			this.$platformService.buildPlatform(platform, null, true).wait();
 			if(this.$options.copyTo) {
-				this.$platformService.copyLastOutput(platform, this.$options.copyTo, {isForDevice: this.$options.forDevice}).wait();
+				this.$platformService.copyLastOutput(platform, this.$options.copyTo, {isForDevice: this.$options.forDevice});
 			}
 		}).future<void>()();
 	}

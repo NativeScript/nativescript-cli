@@ -4,7 +4,7 @@ export class RemovePlatformCommand implements ICommand {
 
 	execute(args: string[]): IFuture<void> {
 		return (() => {
-			this.$platformService.removePlatforms(args).wait();
+			this.$platformService.removePlatforms(args);
 		}).future<void>()();
 	}
 

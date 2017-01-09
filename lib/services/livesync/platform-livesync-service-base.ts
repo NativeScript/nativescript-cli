@@ -38,7 +38,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 			return;
 		}
 
-		let fileHash = this.$fs.exists(filePath).wait() && this.$fs.getFsStats(filePath).wait().isFile() ? this.$fs.getFileShasum(filePath).wait() : "";
+		let fileHash = this.$fs.exists(filePath) && this.$fs.getFsStats(filePath).isFile() ? this.$fs.getFileShasum(filePath).wait() : "";
 		if (fileHash === this.fileHashes[filePath]) {
 			this.$logger.trace(`Skipping livesync for ${filePath} file with ${fileHash} hash.`);
 			return;
@@ -116,7 +116,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 			if (canTransferDirectory) {
 				let tempDir = temp.mkdirSync("tempDir");
 				shell.cp("-Rf", path.join(projectFilesPath, "*"), tempDir);
-				this.$projectFilesManager.processPlatformSpecificFiles(tempDir, deviceAppData.platform).wait();
+				this.$projectFilesManager.processPlatformSpecificFiles(tempDir, deviceAppData.platform);
 				deviceAppData.device.fileSystem.transferDirectory(deviceAppData, localToDevicePaths, tempDir).wait();
 			} else {
 				this.$liveSyncProvider.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, isFullSync).wait();

@@ -86,7 +86,7 @@ describe("Debugger tests", () => {
 		let androidProjectService: IPlatformProjectService = testInjector.resolve("androidProjectService");
 		let spawnFromEventCount = childProcess.spawnFromEventCount;
 		androidProjectService.beforePrepareAllPlugins().wait();
-		assert.isTrue(childProcess.lastCommand === "gradle");
+		assert.isTrue(childProcess.lastCommand.indexOf("gradle") !== -1);
 		assert.isTrue(childProcess.lastCommandArgs[0] === "clean");
 		assert.isTrue(spawnFromEventCount === 0);
 		assert.isTrue(spawnFromEventCount + 1 === childProcess.spawnFromEventCount);

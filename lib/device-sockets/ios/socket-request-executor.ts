@@ -7,15 +7,17 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 		private $iOSNotification: IiOSNotification,
 		private $iOSNotificationService: IiOSNotificationService,
 		private $logger: ILogger,
-		private $projectData: IProjectData,
-		private $socketProxyFactory: ISocketProxyFactory) { }
+		private $projectData: IProjectData) { }
 
 	public executeAttachRequest(device: Mobile.IiOSDevice, timeout: number): IFuture<void> {
 		return (() => {
 			let npc = new iOSProxyServices.NotificationProxyClient(device, this.$injector);
 
-			let [alreadyConnected, readyForAttach, attachAvailable] = [this.$iOSNotification.alreadyConnected, this.$iOSNotification.readyForAttach, this.$iOSNotification.attachAvailable]
-				.map((notification) => this.$iOSNotificationService.awaitNotification(npc, notification, timeout));
+			let data = [this.$iOSNotification.alreadyConnected, this.$iOSNotification.readyForAttach, this.$iOSNotification.attachAvailable]
+				.map((notification) => this.$iOSNotificationService.awaitNotification(npc, notification, timeout)),
+				alreadyConnected = data[0],
+				readyForAttach = data[1],
+				attachAvailable = data[2];
 
 			npc.postNotificationAndAttachForData(this.$iOSNotification.attachAvailabilityQuery);
 

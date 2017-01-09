@@ -7,13 +7,10 @@ language: node_js
 node_js:
 - '4'
 git:
-  submodules: false
+  submodules: true
 before_script:
-- sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
-- git submodule update --init --recursive
 - npm install grunt
 - node_modules/.bin/grunt enableScripts:false
-- npm install
 - grunt rebuild
 - ./bin/nativescript error-reporting disable # force ~/.local dir creation -- some tests rely on it
 - ./bin/nativescript usage-reporting disable
@@ -44,5 +41,5 @@ deploy:
     email: nativescript@telerik.com
     on:
       branch: master
-    api_key: 
+    api_key:
       secure: Ugq6m/y4P5gF15zffYzTKhusn1Csu3ymYLdD+yXgyK3hek9Ms5PKTz4MKgPinlViRCBoQV2fGh0JsCikawIpmQyD+M+FRDKlP2GcXPhFmSN1wVEloxTCwe7H6m7Kl9mo+MJOTS0BN7waCc6yTJBJPxo5nwFgz+DT2srIYndA2h4=

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 NativeScript Command-Line Interface
 ================
 Master Branch [![Build Status](https://travis-ci.org/NativeScript/nativescript-cli.svg?branch=build)][2].
@@ -629,27 +630,16 @@ License
 ===
 
 This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE" target="_blank">here</a>.
+=======
+# What is NativeScript
+NativeScript is a cross-platform JavaScript framework that lets you develop native iOS and Android apps from a single code base. The framework provides JavaScript access to the native APIs, user interface, and rendering engines of iOS and Android. By using JavaScript or TypeScript, you can create one project that builds into an iOS or Android app with completely native user experience.
 
-[Back to Top][1]
+# What is NativeScript Command Line Interface (CLI)
+The NativeScript CLI lets you create, build, and deploy NativeScript-based projects on iOS and Android devices.
+>>>>>>> master
 
-[1]: #telerik-nativescript-command-line-interface
-[2]: https://travis-ci.org/NativeScript/nativescript-cli
-[3]: http://docs.telerik.com/platform/appbuilder/nativescript/index
-[4]: http://www.telerik.com/nativescript
-[6]: https://github.com/nativescript/docs/wiki
-[7]: https://github.com/nativescript/docs
-[8]: http://www.telerik.com/nativescript/faq
-[9]: http://developer.telerik.com/featured/nativescript-a-technical-overview/
-[10]: http://developer.telerik.com/featured/nativescript-android/
-[11]: http://blogs.telerik.com/valentinstoychev/posts.aspx/14-06-12/announcing-nativescript---cross-platform-framework-for-building-native-mobile-applications
-[12]: https://developer.apple.com/xcode/downloads/
-[13]: https://rubygems.org/gems/xcodeproj/versions/0.28.2
-[Chocolatey]: https://chocolatey.org/
-[JDK 8]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
-[Android SDK 22]: http://developer.android.com/sdk/index.html
-[Genymotion]: https://www.genymotion.com/#!/
-[CocoaPods]: https://guides.cocoapods.org/using/getting-started.html#getting-started
-[xcproj]: https://github.com/0xced/xcproj#installation
-[Android SDK Build-tools 23.0.0]: http://developer.android.com/sdk/index.html
-[Android Support Repository]: http://developer.android.com/sdk/index.html
-![](https://ga-beacon.appspot.com/UA-111455-24/nativescript/nativescript-cli?pixel)
+# Get started
+To learn more about how to use NativeScript, please follow our [getting started article](http://docs.nativescript.org). To see what commands are available in the CLI please type `tns --help` in the console after installing the CLI.
+
+# License
+Apache 2.0

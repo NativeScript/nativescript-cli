@@ -2,7 +2,6 @@ import { Yok } from "../lib/common/yok";
 import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
 import { assert } from "chai";
 import * as path from "path";
-import Future = require("fibers/future");
 
 let projectDir = "projectDir",
 	appDestinationDirectoryPath = "appDestinationDirectoryPath",
@@ -21,7 +20,7 @@ function createTestInjector(): IInjector {
 				appDestinationDirectoryPath: appDestinationDirectoryPath,
 				normalizedPlatformName: platform.toLowerCase(),
 				platformProjectService: {
-					getAppResourcesDestinationDirectoryPath: () => Future.fromResult(appResourcesDestinationDirectoryPath)
+					getAppResourcesDestinationDirectoryPath: () => appResourcesDestinationDirectoryPath
 				}
 			};
 		},

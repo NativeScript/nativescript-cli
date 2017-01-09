@@ -9,6 +9,7 @@ import * as OptionsLib from "../lib/options";
 import * as StaticConfigLib from "../lib/config";
 import Future = require("fibers/future");
 import * as yok from "../lib/common/yok";
+import ChildProcessLib = require("../lib/common/child-process");
 
 function createTestInjector(): IInjector {
 	let testInjector = new yok.Yok();
@@ -21,6 +22,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("fs", FsLib.FileSystem);
 	testInjector.register("hostInfo", HostInfoLib.HostInfo);
 	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
+	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 
 	testInjector.register("npmInstallationManager", NpmInstallationManagerLib.NpmInstallationManager);
 
@@ -29,21 +31,15 @@ function createTestInjector(): IInjector {
 
 function mockNpm(testInjector: IInjector, versions: string[], latestVersion: string) {
 	testInjector.register("npm", {
-		view: (packageName: string, propertyName: string) => {
-			return (() => {
-				if(propertyName === "versions") {
-					let result = Object.create(null);
-					result[latestVersion] = {
-						"versions": versions
-					};
-
-					return result;
+		view: (packageName: string, config: any) => {
+			return(() => {
+				if(config.versions) {
+					return versions;
 				}
 
-				throw new Error(`Unable to find propertyName ${propertyName}.`);
+				throw new Error(`Unable to find propertyName ${config}.`);
 			}).future<any>()();
-		},
-		load: () => Future.fromResult()
+		}
 	});
 }
 

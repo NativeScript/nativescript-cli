@@ -4,7 +4,7 @@ export class CleanCommand implements ICommand {
 
 	public execute(args: string[]): IFuture<void> {
 		return (() => {
-			this.$platformService.removePlatforms(args).wait();
+			this.$platformService.removePlatforms(args);
 			this.$platformService.addPlatforms(args).wait();
 		}).future<void>()();
 	}
