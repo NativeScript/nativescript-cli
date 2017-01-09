@@ -227,6 +227,13 @@ export class PlatformService implements IPlatformService {
 		}).future<boolean>()();
 	}
 
+	public validateOptions(platform: string): IFuture<boolean> {
+		return (() => {
+			let platformData = this.$platformsData.getPlatformData(platform);
+			return platformData.platformProjectService.validateOptions().wait();
+		}).future<boolean>()();
+	}
+
 	@helpers.hook('prepare')
 	private preparePlatformCore(platform: string, changesInfo?: IProjectChangesInfo): IFuture<void> {
 		return (() => {

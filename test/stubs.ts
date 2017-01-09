@@ -281,6 +281,9 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	getAppResourcesDestinationDirectoryPath(): string {
 		return "";
 	}
+	validateOptions(): IFuture<boolean> {
+		return Future.fromResult(true);
+	}
 	validate(): IFuture<void> {
 		return Future.fromResult();
 	}
@@ -572,6 +575,10 @@ export class CommandsService implements ICommandsService {
 }
 
 export class PlatformServiceStub implements IPlatformService {
+
+	public validateOptions(): IFuture<boolean> {
+		return Future.fromResult(true);
+	}
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return Future.fromResult();

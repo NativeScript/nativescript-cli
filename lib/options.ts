@@ -17,6 +17,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			copyFrom: { type: OptionType.String },
 			linkTo: { type: OptionType.String },
 			forDevice: { type: OptionType.Boolean },
+			provision: { type: OptionType.Object },
 			client: { type: OptionType.Boolean, default: true },
 			production: { type: OptionType.Boolean },
 			debugTransport: { type: OptionType.Boolean },

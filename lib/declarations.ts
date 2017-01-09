@@ -96,6 +96,7 @@ interface IOptions extends ICommonOptions {
 	liveEdit: boolean;
 	chrome: boolean;
 	clean: boolean;
+	provision: any;
 }
 
 interface IInitService {

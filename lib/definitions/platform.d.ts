@@ -77,6 +77,11 @@ interface IPlatformService {
 	installApplication(device: Mobile.IDevice): IFuture<void>;
 
 	/**
+	 * Gets first chance to validate the options provided as command line arguments.
+	 */
+	validateOptions(platform: string): IFuture<boolean>;
+
+	/**
 	 * Executes prepare, build and installOnPlatform when necessary to ensure that the latest version of the app is installed on specified platform.
 	 * - When --clean option is specified it builds the app on every change. If not, build is executed only when there are native changes.
 	 * @param {string} platform The platform to deploy.

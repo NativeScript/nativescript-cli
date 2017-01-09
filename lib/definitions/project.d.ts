@@ -103,6 +103,11 @@ interface IPlatformProjectService {
 	 */
 	afterCreateProject(projectRoot: string): void;
 
+	/**
+	 * Gets first chance to validate the options provided as command line arguments.
+	 */
+	validateOptions(): IFuture<boolean>;
+
 	buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void>;
 
 	/**
