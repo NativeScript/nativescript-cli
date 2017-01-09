@@ -232,7 +232,6 @@ class TestExecutionService implements ITestExecutionService {
 				platform: platform,
 				appIdentifier: this.$projectData.projectId,
 				projectFilesPath: projectFilesPath,
-				forceExecuteFullSync: true, // Always restart the application when change is detected, so tests will be rerun.
 				syncWorkingDirectory: path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME),
 				excludedProjectDirsAndFiles: this.$options.release ? constants.LIVESYNC_EXCLUDED_FILE_PATTERNS : []
 			};

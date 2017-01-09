@@ -6,7 +6,7 @@ export class DeployOnDeviceCommand implements ICommand {
 				private $mobileHelper: Mobile.IMobileHelper) { }
 
 	execute(args: string[]): IFuture<void> {
-		return this.$platformService.deployPlatform(args[0]);
+		return this.$platformService.deployPlatform(args[0], true);
 	}
 
 	public canExecute(args: string[]): IFuture<boolean> {

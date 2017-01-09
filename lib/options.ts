@@ -38,10 +38,11 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			bundle: { type: OptionType.Boolean },
 			all: { type: OptionType.Boolean },
 			teamId: { type: OptionType.String },
-			rebuild: { type: OptionType.Boolean, default: true },
 			syncAllFiles: { type: OptionType.Boolean },
 			liveEdit: { type: OptionType.Boolean },
-			chrome: { type: OptionType.Boolean }
+			chrome: { type: OptionType.Boolean },
+			clean: { type: OptionType.Boolean },
+			watch: { type: OptionType.Boolean, default: true }
 		},
 			path.join($hostInfo.isWindows ? process.env.AppData : path.join(osenv.home(), ".local/share"), ".nativescript-cli"),
 			$errors, $staticConfig);

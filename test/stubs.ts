@@ -482,8 +482,6 @@ export class LiveSyncServiceStub implements ILiveSyncService {
 	public liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): IFuture<void> {
 		return Future.fromResult();
 	}
-
-	public forceExecuteFullSync: boolean;
 }
 
 export class AndroidToolsInfoStub implements IAndroidToolsInfo {
@@ -532,5 +530,133 @@ export class ChildProcessStub {
 		this.lastCommand = command;
 		this.lastCommandArgs = args;
 		return Future.fromResult(null);
+	}
+}
+
+export class ProjectChangesService implements IProjectChangesService {
+	public checkForChanges(platform: string): IProjectChangesInfo {
+		return <IProjectChangesInfo>{};
+	}
+
+	public getPrepareInfo(platform: string): IPrepareInfo {
+		return null;
+	}
+
+	public savePrepareInfo(platform: string): void {
+	}
+
+	public getPrepareInfoFilePath(platform: string): string {
+		return "";
+	}
+
+	public get currentChanges(): IProjectChangesInfo {
+		return <IProjectChangesInfo>{};
+	}
+}
+
+export class CommandsService implements ICommandsService {
+	public allCommands(opts: {includeDevCommands: boolean}): string[] {
+		return [];
+	}
+
+	public tryExecuteCommand(commandName: string, commandArguments: string[]): IFuture<void> {
+		return Future.fromResult();
+	}
+	public executeCommandUnchecked(commandName: string, commandArguments: string[]): IFuture<boolean> {
+		return Future.fromResult(true);
+	}
+
+	public completeCommand(): IFuture<boolean> {
+		return Future.fromResult(true);
+	}
+}
+
+export class PlatformServiceStub implements IPlatformService {
+
+	public addPlatforms(platforms: string[]): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public getInstalledPlatforms(): string[] {
+		return [];
+	}
+
+	public getAvailablePlatforms(): string[] {
+		return [];
+	}
+
+	public getPreparedPlatforms(): string[] {
+		return [];
+	}
+
+	public removePlatforms(platforms: string[]): void {
+
+	}
+
+	public updatePlatforms(platforms: string[]): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public preparePlatform(platform: string, changesInfo?: IProjectChangesInfo): IFuture<boolean> {
+		return Future.fromResult(true);
+	}
+
+	public shouldBuild(platform: string, buildConfig?: IBuildConfig): IFuture<boolean> {
+		return Future.fromResult(true);
+	}
+
+	public buildPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public shouldInstall(device: Mobile.IDevice): boolean {
+		return true;
+	}
+
+	public installApplication(device: Mobile.IDevice): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public deployPlatform(platform: string, forceInstall?: boolean): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public runPlatform(platform: string): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public emulatePlatform(platform: string): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public cleanDestinationApp(platform: string): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public validatePlatformInstalled(platform: string): void {
+
+	}
+
+	public validatePlatform(platform: string): void {
+
+	}
+
+	public getLatestApplicationPackageForDevice(platformData: IPlatformData): IApplicationPackage {
+		return null;
+	}
+
+	public getLatestApplicationPackageForEmulator(platformData: IPlatformData): IApplicationPackage {
+		return null;
+	}
+
+	public copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}): void {
+	}
+
+	public lastOutputPath(platform: string, settings: { isForDevice: boolean }): string {
+		return "";
+	}
+
+	public readFile(device: Mobile.IDevice, deviceFilePath: string): IFuture<string> {
+		return Future.fromResult("");
 	}
 }

@@ -18,6 +18,7 @@ import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilitie
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
 import * as ChildProcessLib from "../lib/common/child-process";
+import ProjectChangesLib = require("../lib/services/project-changes-service");
 
 require("should");
 let temp = require("temp");
@@ -78,6 +79,7 @@ function createTestInjector() {
 		}
 	});
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
+	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
 
 	return testInjector;
 }
