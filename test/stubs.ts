@@ -1,6 +1,5 @@
 /* tslint:disable:no-empty */
 
-import Future = require("fibers/future");
 import * as util from "util";
 import * as chai from "chai";
 
@@ -28,7 +27,7 @@ export class LoggerStub implements ILogger {
 	}
 
 	printInfoMessageOnSameLine(message: string): void { }
-	printMsgWithTimeout(message: string, timeout: number): IFuture<void> {
+	async printMsgWithTimeout(message: string, timeout: number): Promise<void> {
 		return null;
 	}
 
@@ -36,11 +35,11 @@ export class LoggerStub implements ILogger {
 }
 
 export class FileSystemStub implements IFileSystem {
-	zipFiles(zipFile: string, files: string[], zipPathCallback: (path: string) => string): IFuture<void> {
+	async zipFiles(zipFile: string, files: string[], zipPathCallback: (path: string) => string): Promise<void> {
 		return undefined;
 	}
 
-	unzip(zipFile: string, destination: string): IFuture<void> {
+	async unzip(zipFile: string, destination: string): Promise<void> {
 		return undefined;
 	}
 
@@ -52,15 +51,15 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	deleteDirectory(directory: string): IFuture<void> {
-		return Future.fromResult();
+	async deleteDirectory(directory: string): Promise<void> {
+		return Promise.resolve();
 	}
 
 	getFileSize(path: string): number {
 		return undefined;
 	}
 
-	futureFromEvent(eventEmitter: any, event: string): IFuture<any> {
+	async futureFromEvent(eventEmitter: any, event: string): Promise<any> {
 		return undefined;
 	}
 
@@ -140,7 +139,7 @@ export class FileSystemStub implements IFileSystem {
 
 	symlink(sourcePath: string, destinationPath: string): void { }
 
-	setCurrentUserAsOwner(path: string, owner: string): IFuture<void> {
+	async setCurrentUserAsOwner(path: string, owner: string): Promise<void> {
 		return undefined;
 	}
 
@@ -152,11 +151,11 @@ export class FileSystemStub implements IFileSystem {
 		return false;
 	}
 
-	getFileShasum(fileName: string): IFuture<string> {
+	async getFileShasum(fileName: string): Promise<string> {
 		return undefined;
 	}
 
-	readStdin(): IFuture<string> {
+	async readStdin(): Promise<string> {
 		return undefined;
 	}
 
@@ -187,7 +186,7 @@ export class ErrorsStub implements IErrors {
 		throw new Error(message);
 	}
 
-	beginCommand(action: () => IFuture<boolean>, printHelpCommand: () => IFuture<boolean>): IFuture<boolean> {
+	async beginCommand(action: () => Promise<boolean>, printHelpCommand: () => Promise<boolean>): Promise<boolean> {
 		throw new Error("not supported");
 	}
 
@@ -204,24 +203,24 @@ export class ErrorsStub implements IErrors {
 }
 
 export class NpmInstallationManagerStub implements INpmInstallationManager {
-	install(packageName: string, pathToSave?: string, version?: string): IFuture<string> {
-		return Future.fromResult("");
+	async install(packageName: string, pathToSave?: string, version?: string): Promise<string> {
+		return Promise.resolve("");
 	}
 
-	getLatestVersion(packageName: string): IFuture<string> {
-		return Future.fromResult("");
+	async getLatestVersion(packageName: string): Promise<string> {
+		return Promise.resolve("");
 	}
 
-	getNextVersion(packageName: string): IFuture<string> {
-		return Future.fromResult("");
+	async getNextVersion(packageName: string): Promise<string> {
+		return Promise.resolve("");
 	}
 
-	getLatestCompatibleVersion(packageName: string): IFuture<string> {
-		return Future.fromResult("");
+	async getLatestCompatibleVersion(packageName: string): Promise<string> {
+		return Promise.resolve("");
 	}
 
-	getInspectorFromCache(name: string, projectDir: string): IFuture<string> {
-		return Future.fromResult("");
+	async getInspectorFromCache(name: string, projectDir: string): Promise<string> {
+		return Promise.resolve("");
 	}
 }
 
@@ -281,31 +280,33 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	getAppResourcesDestinationDirectoryPath(): string {
 		return "";
 	}
-	validateOptions(): IFuture<boolean> {
-		return Future.fromResult(true);
+	validateOptions(): Promise<boolean> {
+		return Promise.resolve(true);
 	}
-	validate(): IFuture<void> {
-		return Future.fromResult();
+	validate(): Promise<void> {
+		return Promise.resolve();
 	}
-	createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
-		return Future.fromResult();
+	async createProject(projectRoot: string, frameworkDir: string): Promise<void> {
+		return Promise.resolve();
 	}
-	interpolateData(): IFuture<void> {
-		return Future.fromResult();
+	async interpolateData(): Promise<void> {
+		return Promise.resolve();
 	}
-	interpolateConfigurationFile(): IFuture<void> {
-		return Future.fromResult();
+	async interpolateConfigurationFile(): Promise<void> {
+		return Promise.resolve();
 	}
 	afterCreateProject(projectRoot: string): void {
 		return null;
 	}
-	prepareProject(): void { }
-
-	buildProject(projectRoot: string): IFuture<void> {
-		return Future.fromResult();
+	prepareProject(): Promise<void> {
+		return Promise.resolve();
 	}
-	buildForDeploy(projectRoot: string): IFuture<void> {
-		return Future.fromResult();
+
+	async buildProject(projectRoot: string): Promise<void> {
+		return Promise.resolve();
+	}
+	async buildForDeploy(projectRoot: string): Promise<void> {
+		return Promise.resolve();
 	}
 	isPlatformPrepared(projectRoot: string): boolean {
 		return false;
@@ -313,27 +314,28 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	canUpdatePlatform(installedModulePath: string): boolean {
 		return false;
 	}
-	updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean): IFuture<boolean> {
-		return Future.fromResult(true);
+	async updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean): Promise<boolean> {
+		return Promise.resolve(true);
 	}
 	prepareAppResources(appResourcesDirectoryPath: string): void { }
 
-	preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
-		return Future.fromResult();
+	async preparePluginNativeCode(pluginData: IPluginData): Promise<void> {
+		return Promise.resolve();
 	}
-	removePluginNativeCode(pluginData: IPluginData): void { }
 
-	afterPrepareAllPlugins(): IFuture<void> {
-		return Future.fromResult();
+	async removePluginNativeCode(pluginData: IPluginData): Promise<void> { }
+
+	async afterPrepareAllPlugins(): Promise<void> {
+		return Promise.resolve();
 	}
-	beforePrepareAllPlugins(): IFuture<void> {
-		return Future.fromResult();
+	async beforePrepareAllPlugins(): Promise<void> {
+		return Promise.resolve();
 	}
-	deploy(deviceIdentifier: string): IFuture<void> {
-		return Future.fromResult();
+	async deploy(deviceIdentifier: string): Promise<void> {
+		return Promise.resolve();
 	}
-	processConfigurationFilesFromAppResources(): IFuture<void> {
-		return Future.fromResult();
+	async processConfigurationFilesFromAppResources(): Promise<void> {
+		return Promise.resolve();
 	}
 	ensureConfigurationFileInAppResources(): void {
 		return null;
@@ -343,8 +345,8 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 export class ProjectDataService implements IProjectDataService {
 	initialize(projectDir: string): void { }
 
-	getValue(propertyName: string): IFuture<any> {
-		return Future.fromResult({});
+	async getValue(propertyName: string): Promise<any> {
+		return Promise.resolve({});
 	}
 
 	setValue(key: string, value: any): void { }
@@ -369,22 +371,17 @@ export class ProjectHelperStub implements IProjectHelper {
 }
 
 export class ProjectTemplatesService implements IProjectTemplatesService {
-	get defaultTemplatePath(): IFuture<string> {
-		return Future.fromResult("");
-	}
-	setProjectDir(projectDir: string): void {
-	}
-	prepareTemplate(templateName: string): IFuture<string> {
-		return Future.fromResult("");
+	async prepareTemplate(templateName: string): Promise<string> {
+		return Promise.resolve("");
 	}
 }
 
 export class HooksServiceStub implements IHooksService {
-	executeBeforeHooks(commandName: string): IFuture<void> {
-		return Future.fromResult();
+	async executeBeforeHooks(commandName: string): Promise<void> {
+		return Promise.resolve();
 	}
-	executeAfterHooks(commandName: string): IFuture<void> {
-		return Future.fromResult();
+	async executeAfterHooks(commandName: string): Promise<void> {
+		return Promise.resolve();
 	}
 
 	hookArgsName = "hookArgs";
@@ -392,16 +389,14 @@ export class HooksServiceStub implements IHooksService {
 
 export class LockFile {
 
-	check(): IFuture<boolean> {
-		return (() => { return false; }).future<boolean>()();
+	async check(): Promise<boolean> {
+		return false;
 	}
 
-	lock(): IFuture<void> {
-		return (() => { }).future<void>()();
+	async lock(): Promise<void> {
 	}
 
-	unlock(): IFuture<void> {
-		return (() => { }).future<void>()();
+	async unlock(): Promise<void> {
 	}
 }
 
@@ -416,29 +411,25 @@ export class PrompterStub implements IPrompter {
 		}
 	}
 
-	get(schemas: IPromptSchema[]): IFuture<any> {
+	async get(schemas: IPromptSchema[]): Promise<any> {
 		throw unreachable();
 	}
-	getPassword(prompt: string, options?: IAllowEmpty): IFuture<string> {
+	async getPassword(prompt: string, options?: IAllowEmpty): Promise<string> {
 		chai.assert.ok(prompt in this.passwords, `PrompterStub didn't expect to give password for: ${prompt}`);
 		let result = this.passwords[prompt];
 		delete this.passwords[prompt];
-		return (() => {
-			return result;
-		}).future<string>()();
+		return result;
 	}
-	getString(prompt: string, options?: IPrompterOptions): IFuture<string> {
+	async getString(prompt: string, options?: IPrompterOptions): Promise<string> {
 		chai.assert.ok(prompt in this.strings, `PrompterStub didn't expect to be asked for: ${prompt}`);
 		let result = this.strings[prompt];
 		delete this.strings[prompt];
-		return (() => {
-			return result;
-		}).future<string>()();
+		return result;
 	}
-	promptForChoice(promptMessage: string, choices: any[]): IFuture<string> {
+	async promptForChoice(promptMessage: string, choices: any[]): Promise<string> {
 		throw unreachable();
 	}
-	confirm(prompt: string, defaultAction?: () => boolean): IFuture<boolean> {
+	async confirm(prompt: string, defaultAction?: () => boolean): Promise<boolean> {
 		throw unreachable();
 	}
 	dispose(): void {
@@ -466,52 +457,52 @@ function unexpected(msg: string): Error {
 }
 
 export class DebugServiceStub implements IDebugService {
-	public debug(shouldBreak?: boolean): IFuture<void> {
-		return Future.fromResult();
+	public async debug(shouldBreak?: boolean): Promise<void> {
+		return;
 	}
 
-	public debugStart(): IFuture<void> {
-		return Future.fromResult();
+	public async debugStart(): Promise<void> {
+		return;
 	}
 
-	public debugStop(): IFuture<void> {
-		return Future.fromResult();
+	public async debugStop(): Promise<void> {
+		return;
 	}
 
 	public platform: string;
 }
 
 export class LiveSyncServiceStub implements ILiveSyncService {
-	public liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): IFuture<void> {
-		return Future.fromResult();
+	public async liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>): Promise<void> {
+		return;
 	}
 }
 
 export class AndroidToolsInfoStub implements IAndroidToolsInfo {
-	public getToolsInfo(): IFuture<IAndroidToolsInfoData> {
+	public async getToolsInfo(): Promise<IAndroidToolsInfoData> {
 		let infoData: IAndroidToolsInfoData = Object.create(null);
 		infoData.androidHomeEnvVar = "";
 		infoData.compileSdkVersion = 23;
 		infoData.buildToolsVersion = "23";
 		infoData.targetSdkVersion = 23;
 		infoData.supportRepositoryVersion = "23";
-		return Future.fromResult(infoData);
+		return infoData;
 	}
 
-	public validateInfo(options?: { showWarningsAsErrors: boolean, validateTargetSdk: boolean }): IFuture<boolean> {
-		return Future.fromResult(true);
+	public async validateInfo(options?: { showWarningsAsErrors: boolean, validateTargetSdk: boolean }): Promise<boolean> {
+		return true;
 	}
 
-	public validateJavacVersion(installedJavaVersion: string, options?: { showWarningsAsErrors: boolean }): IFuture<boolean> {
-		return Future.fromResult(true);
+	public async validateJavacVersion(installedJavaVersion: string, options?: { showWarningsAsErrors: boolean }): Promise<boolean> {
+		return true;
 	}
 
-	public getPathToAndroidExecutable(options?: { showWarningsAsErrors: boolean }): IFuture<string> {
-		return Future.fromResult("");
+	public async getPathToAndroidExecutable(options?: { showWarningsAsErrors: boolean }): Promise<string> {
+		return "";
 	}
 
-	getPathToAdbFromAndroidHome(): IFuture<string> {
-		return Future.fromResult("");
+	async getPathToAdbFromAndroidHome(): Promise<string> {
+		return Promise.resolve("");
 	}
 }
 
@@ -528,11 +519,11 @@ export class ChildProcessStub {
 		return null;
 	}
 
-	public spawnFromEvent(command: string, args: string[], event: string, options?: any, spawnFromEventOptions?: ISpawnFromEventOptions): IFuture<ISpawnResult> {
+	public async spawnFromEvent(command: string, args: string[], event: string, options?: any, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult> {
 		this.spawnFromEventCount++;
 		this.lastCommand = command;
 		this.lastCommandArgs = args;
-		return Future.fromResult(null);
+		return null;
 	}
 }
 
@@ -558,30 +549,30 @@ export class ProjectChangesService implements IProjectChangesService {
 }
 
 export class CommandsService implements ICommandsService {
-	public allCommands(opts: {includeDevCommands: boolean}): string[] {
+	public allCommands(opts: { includeDevCommands: boolean }): string[] {
 		return [];
 	}
 
-	public tryExecuteCommand(commandName: string, commandArguments: string[]): IFuture<void> {
-		return Future.fromResult();
+	public tryExecuteCommand(commandName: string, commandArguments: string[]): Promise<void> {
+		return Promise.resolve();
 	}
-	public executeCommandUnchecked(commandName: string, commandArguments: string[]): IFuture<boolean> {
-		return Future.fromResult(true);
+	public executeCommandUnchecked(commandName: string, commandArguments: string[]): Promise<boolean> {
+		return Promise.resolve(true);
 	}
 
-	public completeCommand(): IFuture<boolean> {
-		return Future.fromResult(true);
+	public completeCommand(): Promise<boolean> {
+		return Promise.resolve(true);
 	}
 }
 
 export class PlatformServiceStub implements IPlatformService {
 
-	public validateOptions(): IFuture<boolean> {
-		return Future.fromResult(true);
+	public validateOptions(): Promise<boolean> {
+		return Promise.resolve(true);
 	}
 
-	public addPlatforms(platforms: string[]): IFuture<void> {
-		return Future.fromResult();
+	public addPlatforms(platforms: string[]): Promise<void> {
+		return Promise.resolve();
 	}
 
 	public getInstalledPlatforms(): string[] {
@@ -600,44 +591,44 @@ export class PlatformServiceStub implements IPlatformService {
 
 	}
 
-	public updatePlatforms(platforms: string[]): IFuture<void> {
-		return Future.fromResult();
+	public updatePlatforms(platforms: string[]): Promise<void> {
+		return Promise.resolve();
 	}
 
-	public preparePlatform(platform: string, changesInfo?: IProjectChangesInfo): IFuture<boolean> {
-		return Future.fromResult(true);
+	public preparePlatform(platform: string, changesInfo?: IProjectChangesInfo): Promise<boolean> {
+		return Promise.resolve(true);
 	}
 
-	public shouldBuild(platform: string, buildConfig?: IBuildConfig): IFuture<boolean> {
-		return Future.fromResult(true);
+	public shouldBuild(platform: string, buildConfig?: IBuildConfig): Promise<boolean> {
+		return Promise.resolve(true);
 	}
 
-	public buildPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
-		return Future.fromResult();
+	public buildPlatform(platform: string, buildConfig?: IBuildConfig): Promise<void> {
+		return Promise.resolve();
 	}
 
-	public shouldInstall(device: Mobile.IDevice): boolean {
+	public async shouldInstall(device: Mobile.IDevice): Promise<boolean> {
 		return true;
 	}
 
-	public installApplication(device: Mobile.IDevice): IFuture<void> {
-		return Future.fromResult();
+	public installApplication(device: Mobile.IDevice): Promise<void> {
+		return Promise.resolve();
 	}
 
-	public deployPlatform(platform: string, forceInstall?: boolean): IFuture<void> {
-		return Future.fromResult();
+	public deployPlatform(platform: string, forceInstall?: boolean): Promise<void> {
+		return Promise.resolve();
 	}
 
-	public runPlatform(platform: string): IFuture<void> {
-		return Future.fromResult();
+	public runPlatform(platform: string): Promise<void> {
+		return Promise.resolve();
 	}
 
-	public emulatePlatform(platform: string): IFuture<void> {
-		return Future.fromResult();
+	public emulatePlatform(platform: string): Promise<void> {
+		return Promise.resolve();
 	}
 
-	public cleanDestinationApp(platform: string): IFuture<void> {
-		return Future.fromResult();
+	public cleanDestinationApp(platform: string): Promise<void> {
+		return Promise.resolve();
 	}
 
 	public validatePlatformInstalled(platform: string): void {
@@ -656,36 +647,36 @@ export class PlatformServiceStub implements IPlatformService {
 		return null;
 	}
 
-	public copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}): void {
+	public copyLastOutput(platform: string, targetPath: string, settings: { isForDevice: boolean }): void {
 	}
 
 	public lastOutputPath(platform: string, settings: { isForDevice: boolean }): string {
 		return "";
 	}
 
-	public readFile(device: Mobile.IDevice, deviceFilePath: string): IFuture<string> {
-		return Future.fromResult("");
+	public readFile(device: Mobile.IDevice, deviceFilePath: string): Promise<string> {
+		return Promise.resolve("");
 	}
 }
 
 export class EmulatorPlatformService implements IEmulatorPlatformService {
-	public listAvailableEmulators(platform: string): IFuture<void> {
-		return Future.fromResult();
+	public listAvailableEmulators(platform: string): Promise<void> {
+		return Promise.resolve();
 	}
 
-	public getEmulatorInfo(platform: string, nameOfId: string): IFuture<IEmulatorInfo> {
-		return Future.fromResult(null);
+	public getEmulatorInfo(platform: string, nameOfId: string): Promise<IEmulatorInfo> {
+		return Promise.resolve(null);
 	}
 
-    public getiOSEmulators(): IFuture<IEmulatorInfo[]> {
-		return Future.fromResult(null);
+	public getiOSEmulators(): Promise<IEmulatorInfo[]> {
+		return Promise.resolve(null);
 	}
 
-    public getAndroidEmulators(): IFuture<IEmulatorInfo[]> {
-		return Future.fromResult(null);
+	public getAndroidEmulators(): Promise<IEmulatorInfo[]> {
+		return Promise.resolve(null);
 	}
 
-    public startEmulator(info: IEmulatorInfo): IFuture<void> {
-		return Future.fromResult();
+	public startEmulator(info: IEmulatorInfo): Promise<void> {
+		return Promise.resolve();
 	}
 }

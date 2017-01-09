@@ -9,9 +9,7 @@ export class ProjectDataService implements IProjectDataService {
 	private projectFileIndent: string;
 
 	constructor(private $fs: IFileSystem,
-		private $staticConfig: IStaticConfig,
-		private $errors: IErrors,
-		private $logger: ILogger) {
+		private $staticConfig: IStaticConfig) {
 	}
 
 	public initialize(projectDir: string): void {

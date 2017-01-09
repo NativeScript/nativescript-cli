@@ -8,22 +8,20 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 		private $staticConfig: IStaticConfig,
 		private $logger: ILogger) { }
 
-	public canDoRequest(): IFuture<boolean> {
-		return (() => { return true; }).future<boolean>()();
+	public async canDoRequest(): Promise<boolean> {
+		return true;
 	}
 
-	public getUserId(): IFuture<string> {
-		return (() => {
-			let currentUserId = this.$userSettingsService.getSettingValue<string>("USER_ID").wait();
-			if(!currentUserId) {
-				currentUserId = createGUID(false);
+	public async getUserId(): Promise<string> {
+		let currentUserId = await this.$userSettingsService.getSettingValue<string>("USER_ID");
+		if (!currentUserId) {
+			currentUserId = createGUID(false);
 
-				this.$logger.trace(`Setting new USER_ID: ${currentUserId}.`);
-				this.$userSettingsService.saveSetting<string>("USER_ID", currentUserId).wait();
-			}
+			this.$logger.trace(`Setting new USER_ID: ${currentUserId}.`);
+			await this.$userSettingsService.saveSetting<string>("USER_ID", currentUserId);
+		}
 
-			return currentUserId;
-		}).future<string>()();
+		return currentUserId;
 	}
 
 	public getClientName(): string {
@@ -34,18 +32,18 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 		return "http://www.telerik.com/company/privacy-policy";
 	}
 
-	public getUserSessionsCount(projectName: string): IFuture<number> {
-		return (() => {
-			let oldSessionCount = this.$userSettingsService.getSettingValue<number>(AnalyticsSettingsService.SESSIONS_STARTED_OBSOLETE_KEY).wait();
-			if(oldSessionCount) {
-				// remove the old property for sessions count
-				this.$userSettingsService.removeSetting(AnalyticsSettingsService.SESSIONS_STARTED_OBSOLETE_KEY).wait();
-			}
-			return this.$userSettingsService.getSettingValue<number>(this.getSessionsProjectKey(projectName)).wait() || oldSessionCount || 0;
-		}).future<number>()();
+	public async getUserSessionsCount(projectName: string): Promise<number> {
+		let oldSessionCount = await this.$userSettingsService.getSettingValue<number>(AnalyticsSettingsService.SESSIONS_STARTED_OBSOLETE_KEY);
+
+		if (oldSessionCount) {
+			// remove the old property for sessions count
+			await this.$userSettingsService.removeSetting(AnalyticsSettingsService.SESSIONS_STARTED_OBSOLETE_KEY);
+		}
+
+		return await this.$userSettingsService.getSettingValue<number>(this.getSessionsProjectKey(projectName)) || oldSessionCount || 0;
 	}
 
-	public setUserSessionsCount(count: number, projectName: string): IFuture<void> {
+	public async setUserSessionsCount(count: number, projectName: string): Promise<void> {
 		return this.$userSettingsService.saveSetting<number>(this.getSessionsProjectKey(projectName), count);
 	}
 

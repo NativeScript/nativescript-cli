@@ -69,7 +69,7 @@ export class AppFilesUpdater {
 		}
 
 		if (this.options.bundle) {
-			sourceFiles = sourceFiles.filter(file => minimatch(file, "**/App_Resources/**", {nocase: true}));
+			sourceFiles = sourceFiles.filter(file => minimatch(file, "**/App_Resources/**", { nocase: true }));
 		}
 		return sourceFiles;
 	}

@@ -7,8 +7,6 @@ import * as helpers from "../../common/helpers";
 export class SocketProxyFactory implements ISocketProxyFactory {
 	constructor(private $logger: ILogger,
 		private $config: IConfiguration,
-		private $projectData: IProjectData,
-		private $projectDataService: IProjectDataService,
 		private $options: IOptions) { }
 
 	public createTCPSocketProxy(factory: () => net.Socket): any {
@@ -61,7 +59,7 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 
 		let socketFileLocation = temp.path({ suffix: ".sock" });
 		server.listen(socketFileLocation);
-		if(!this.$options.client) {
+		if (!this.$options.client) {
 			this.$logger.info("socket-file-location: " + socketFileLocation);
 		}
 

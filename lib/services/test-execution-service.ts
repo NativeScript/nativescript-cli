@@ -1,8 +1,6 @@
 import * as constants from "../constants";
 import * as path from 'path';
-import Future = require('fibers/future');
 import * as os from 'os';
-import * as fiberBootstrap from "../common/fiber-bootstrap";
 
 interface IKarmaConfigOptions {
 	debugBrk: boolean;
@@ -20,7 +18,6 @@ class TestExecutionService implements ITestExecutionService {
 		private $platformsData: IPlatformsData,
 		private $liveSyncProvider: ILiveSyncProvider,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $resources: IResourceLoader,
 		private $httpClient: Server.IHttpClient,
 		private $config: IConfiguration,
 		private $logger: ILogger,
@@ -36,58 +33,51 @@ class TestExecutionService implements ITestExecutionService {
 
 	public platform: string;
 
-	public startTestRunner(platform: string): IFuture<void> {
-		return (() => {
-			this.platform = platform;
-			this.$options.justlaunch = true;
-			let blockingOperationFuture = new Future<void>();
-			process.on('message', (launcherConfig: any) => {
-				fiberBootstrap.run(() => {
-					try {
-						let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
-						let projectDir = this.$projectData.projectDir;
-						this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device }).wait();
-						let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+	public async startTestRunner(platform: string): Promise<void> {
+		this.platform = platform;
+		this.$options.justlaunch = true;
+		await new Promise<void>((resolve, reject) => {
+			process.on('message', async (launcherConfig: any) => {
+				try {
+					let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
+					let projectDir = this.$projectData.projectDir;
+					await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
+					let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
-						let configOptions: IKarmaConfigOptions = JSON.parse(launcherConfig);
-						this.$options.debugBrk = configOptions.debugBrk;
-						this.$options.debugTransport = configOptions.debugTransport;
-						let configJs = this.generateConfig(this.$options.port.toString(), configOptions);
-						this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
+					let configOptions: IKarmaConfigOptions = JSON.parse(launcherConfig);
+					this.$options.debugBrk = configOptions.debugBrk;
+					this.$options.debugTransport = configOptions.debugTransport;
+					let configJs = this.generateConfig(this.$options.port.toString(), configOptions);
+					this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
 
-						let socketIoJsUrl = `http://localhost:${this.$options.port}/socket.io/socket.io.js`;
-						let socketIoJs = this.$httpClient.httpRequest(socketIoJsUrl).wait().body;
-						this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
+					let socketIoJsUrl = `http://localhost:${this.$options.port}/socket.io/socket.io.js`;
+					let socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
+					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
 
-						if (!this.$platformService.preparePlatform(platform).wait()) {
-							this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
-						}
-						this.detourEntryPoint(projectFilesPath);
-
-						this.liveSyncProject(platform);
-
-						if (this.$options.debugBrk) {
-							this.$logger.info('Starting debugger...');
-							let debugService: IDebugService = this.$injector.resolve(`${platform}DebugService`);
-							debugService.debugStart().wait();
-						}
-						blockingOperationFuture.return();
-					} catch (err) {
-						// send the error to the real future
-						blockingOperationFuture.throw(err);
+					if (!await this.$platformService.preparePlatform(platform)) {
+						this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 					}
-				});
+					this.detourEntryPoint(projectFilesPath);
+
+					this.liveSyncProject(platform);
+
+					if (this.$options.debugBrk) {
+						this.$logger.info('Starting debugger...');
+						let debugService: IDebugService = this.$injector.resolve(`${platform}DebugService`);
+						await debugService.debugStart();
+					}
+					resolve();
+				} catch (err) {
+					reject(err);
+				}
 			});
 
 			// Tell the parent that we are ready to receive the data.
 			process.send("ready");
-			blockingOperationFuture.wait();
-		}).future<void>()();
+		});
 	}
 
-	public startKarmaServer(platform: string): IFuture<void> {
-		let karmaFuture = new Future<void>();
-
+	public async startKarmaServer(platform: string): Promise<void> {
 		platform = platform.toLowerCase();
 		this.platform = platform;
 
@@ -96,22 +86,20 @@ class TestExecutionService implements ITestExecutionService {
 		}
 
 		// We need the dependencies installed here, so we can start the Karma server.
-		this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
+		await this.$pluginsService.ensureAllDependenciesAreInstalled();
 
 		let projectDir = this.$projectData.projectDir;
-		this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device }).wait();
+		await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
 
 		let karmaConfig = this.getKarmaConfiguration(platform),
-			karmaRunner = this.$childProcess.fork(path.join(__dirname, "karma-execution.js"));
-
-		karmaRunner.on("message", (karmaData: any) => {
-			fiberBootstrap.run(() => {
+			karmaRunner = this.$childProcess.fork(path.join(__dirname, "karma-execution.js")),
+			launchKarmaTests = async (karmaData: any) => {
 				this.$logger.trace("## Unit-testing: Parent process received message", karmaData);
 				let port: string;
 				if (karmaData.url) {
 					port = karmaData.url.port;
 					let socketIoJsUrl = `http://${karmaData.url.host}/socket.io/socket.io.js`;
-					let socketIoJs = this.$httpClient.httpRequest(socketIoJsUrl).wait().body;
+					let socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
 				}
 
@@ -123,32 +111,39 @@ class TestExecutionService implements ITestExecutionService {
 
 				// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
 				// so it will be sent to device.
-				if (!this.$platformService.preparePlatform(platform).wait()) {
+				if (!await this.$platformService.preparePlatform(platform)) {
 					this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 				}
 
 				if (this.$options.debugBrk) {
-					this.getDebugService(platform).debug().wait();
+					await this.getDebugService(platform).debug();
 				} else {
-					this.liveSyncProject(platform).wait();
+					await this.liveSyncProject(platform);
+				}
+			};
+
+		karmaRunner.on("message", (karmaData: any) => {
+			launchKarmaTests(karmaData)
+				.catch((result) => {
+					this.$logger.error(result);
+					process.exit(ErrorCodes.KARMA_FAIL);
+				});
+		});
+
+		return new Promise<void>((resolve, reject) => {
+			karmaRunner.on("exit", (exitCode: number) => {
+				if (exitCode !== 0) {
+					//End our process with a non-zero exit code
+					const testError = <any>new Error("Test run failed.");
+					testError.suppressCommandHelp = true;
+					reject(testError);
+				} else {
+					resolve();
 				}
 			});
+
+			karmaRunner.send({ karmaConfig: karmaConfig });
 		});
-
-		karmaRunner.on("exit", (exitCode: number) => {
-			if (exitCode !== 0) {
-				//End our process with a non-zero exit code
-				const testError = <any>new Error("Test run failed.");
-				testError.suppressCommandHelp = true;
-				karmaFuture.throw(testError);
-			} else {
-				karmaFuture.return();
-			}
-		});
-
-		karmaRunner.send({ karmaConfig: karmaConfig });
-
-		return karmaFuture;
 	}
 
 	allowedParameters: ICommandParameter[] = [];
@@ -223,22 +218,20 @@ class TestExecutionService implements ITestExecutionService {
 		return karmaConfig;
 	}
 
-	private liveSyncProject(platform: string): IFuture<void> {
-		return (() => {
-			let platformData = this.$platformsData.getPlatformData(platform.toLowerCase()),
-				projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+	private async liveSyncProject(platform: string): Promise<void> {
+		let platformData = this.$platformsData.getPlatformData(platform.toLowerCase()),
+			projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
-			let liveSyncData: ILiveSyncData = {
-				platform: platform,
-				appIdentifier: this.$projectData.projectId,
-				projectFilesPath: projectFilesPath,
-				syncWorkingDirectory: path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME),
-				excludedProjectDirsAndFiles: this.$options.release ? constants.LIVESYNC_EXCLUDED_FILE_PATTERNS : []
-			};
+		let liveSyncData: ILiveSyncData = {
+			platform: platform,
+			appIdentifier: this.$projectData.projectId,
+			projectFilesPath: projectFilesPath,
+			syncWorkingDirectory: path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME),
+			excludedProjectDirsAndFiles: this.$options.release ? constants.LIVESYNC_EXCLUDED_FILE_PATTERNS : []
+		};
 
-			let liveSyncService = this.$injector.resolve(this.$liveSyncProvider.platformSpecificLiveSyncServices[platform.toLowerCase()], { _liveSyncData: liveSyncData });
-			liveSyncService.fullSync().wait();
-		}).future<void>()();
+		let liveSyncService = this.$injector.resolve(this.$liveSyncProvider.platformSpecificLiveSyncServices[platform.toLowerCase()], { _liveSyncData: liveSyncData });
+		await liveSyncService.fullSync();
 	}
 }
 $injector.register('testExecutionService', TestExecutionService);

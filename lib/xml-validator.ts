@@ -3,7 +3,7 @@ import * as constants from "./constants";
 
 export class XmlValidator implements IXmlValidator {
 	constructor(private $fs: IFileSystem,
-				private $logger: ILogger) { }
+		private $logger: ILogger) { }
 
 	public validateXmlFiles(sourceFiles: string[]): boolean {
 		let xmlHasErrors = false;
@@ -24,7 +24,7 @@ export class XmlValidator implements IXmlValidator {
 	public getXmlFileErrors(sourceFile: string): string {
 		let errorOutput = "";
 		let fileContents = this.$fs.readText(sourceFile);
-		let domErrorHandler = (level:any, msg:string) => {
+		let domErrorHandler = (level: any, msg: string) => {
 			errorOutput += level + EOL + msg + EOL;
 		};
 		this.getDomParser(domErrorHandler).parseFromString(fileContents, "text/xml");
@@ -32,10 +32,10 @@ export class XmlValidator implements IXmlValidator {
 		return errorOutput || null;
 	}
 
-	private getDomParser(errorHandler: (level:any, msg:string) => void): any {
+	private getDomParser(errorHandler: (level: any, msg: string) => void): any {
 		let DomParser = require("xmldom").DOMParser;
 		let parser = new DomParser({
-			locator:{},
+			locator: {},
 			errorHandler: errorHandler
 		});
 

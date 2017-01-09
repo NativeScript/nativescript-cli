@@ -14,72 +14,61 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		private $staticConfig: IStaticConfig) {
 	}
 
-	public getLatestVersion(packageName: string): IFuture<string> {
-		return (() => {
-			return this.getVersion(packageName, constants.PackageVersion.LATEST).wait();
-		}).future<string>()();
+	public async getLatestVersion(packageName: string): Promise<string> {
+		return await this.getVersion(packageName, constants.PackageVersion.LATEST);
 	}
 
-	public getNextVersion(packageName: string): IFuture<string> {
-		return (() => {
-			return this.getVersion(packageName, constants.PackageVersion.NEXT).wait();
-		}).future<string>()();
+	public async getNextVersion(packageName: string): Promise<string> {
+		return await this.getVersion(packageName, constants.PackageVersion.NEXT);
 	}
 
-	public getLatestCompatibleVersion(packageName: string): IFuture<string> {
-		return (() => {
+	public async getLatestCompatibleVersion(packageName: string): Promise<string> {
 
-			let cliVersionRange = `~${this.$staticConfig.version}`;
-			let latestVersion = this.getLatestVersion(packageName).wait();
-			if (semver.satisfies(latestVersion, cliVersionRange)) {
-				return latestVersion;
+		let cliVersionRange = `~${this.$staticConfig.version}`;
+		let latestVersion = await this.getLatestVersion(packageName);
+		if (semver.satisfies(latestVersion, cliVersionRange)) {
+			return latestVersion;
+		}
+		let data = await this.$npm.view(packageName, { json: true, "versions": true });
+
+		return semver.maxSatisfying(data, cliVersionRange) || latestVersion;
+	}
+
+	public async install(packageName: string, projectDir: string, opts?: INpmInstallOptions): Promise<any> {
+
+		try {
+			let packageToInstall = this.$options.frameworkPath || packageName;
+			let pathToSave = projectDir;
+			let version = (opts && opts.version) || null;
+			let dependencyType = (opts && opts.dependencyType) || null;
+
+			return await this.installCore(packageToInstall, pathToSave, version, dependencyType);
+		} catch (error) {
+			this.$logger.debug(error);
+			this.$errors.fail("%s. Error: %s", NpmInstallationManager.NPM_LOAD_FAILED, error);
+		}
+	}
+
+	public async getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string): Promise<string> {
+		let inspectorPath = path.join(projectDir, "node_modules", inspectorNpmPackageName);
+
+		// local installation takes precedence over cache
+		if (!this.inspectorAlreadyInstalled(inspectorPath)) {
+			let cachepath = (await this.$childProcess.exec("npm get cache")).trim();
+			let version = await this.getLatestCompatibleVersion(inspectorNpmPackageName);
+			let pathToPackageInCache = path.join(cachepath, inspectorNpmPackageName, version);
+			let pathToUnzippedInspector = path.join(pathToPackageInCache, "package");
+
+			if (!this.$fs.exists(pathToPackageInCache)) {
+				await this.$childProcess.exec(`npm cache add ${inspectorNpmPackageName}@${version}`);
+				let inspectorTgzPathInCache = path.join(pathToPackageInCache, "package.tgz");
+				await this.$childProcess.exec(`tar -xf ${inspectorTgzPathInCache} -C ${pathToPackageInCache}`);
+				await this.$childProcess.exec(`npm install --prefix ${pathToUnzippedInspector}`);
 			}
-			let data = this.$npm.view(packageName, { json: true, "versions": true }).wait();
-
-			return semver.maxSatisfying(data, cliVersionRange) || latestVersion;
-		}).future<string>()();
-	}
-
-	public install(packageName: string, projectDir: string, opts?: INpmInstallOptions): IFuture<any> {
-		return (() => {
-
-			try {
-				let packageToInstall = this.$options.frameworkPath || packageName;
-				let pathToSave = projectDir;
-				let version = (opts && opts.version) || null;
-				let dependencyType = (opts && opts.dependencyType) || null;
-
-				return this.installCore(packageToInstall, pathToSave, version, dependencyType).wait();
-			} catch (error) {
-				this.$logger.debug(error);
-				this.$errors.fail("%s. Error: %s", NpmInstallationManager.NPM_LOAD_FAILED, error);
-			}
-
-		}).future<string>()();
-	}
-
-	public getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string): IFuture<string> {
-		return (() => {
-			let inspectorPath = path.join(projectDir, "node_modules", inspectorNpmPackageName);
-
-			// local installation takes precedence over cache
-			if (!this.inspectorAlreadyInstalled(inspectorPath)) {
-				let cachepath = this.$childProcess.exec("npm get cache").wait().trim();
-				let version = this.getLatestCompatibleVersion(inspectorNpmPackageName).wait();
-				let pathToPackageInCache = path.join(cachepath, inspectorNpmPackageName, version);
-				let pathToUnzippedInspector = path.join(pathToPackageInCache, "package");
-
-				if (!this.$fs.exists(pathToPackageInCache)) {
-					this.$childProcess.exec(`npm cache add ${inspectorNpmPackageName}@${version}`).wait();
-					let inspectorTgzPathInCache = path.join(pathToPackageInCache, "package.tgz");
-					this.$childProcess.exec(`tar -xf ${inspectorTgzPathInCache} -C ${pathToPackageInCache}`).wait();
-					this.$childProcess.exec(`npm install --prefix ${pathToUnzippedInspector}`).wait();
-				}
-				this.$logger.out("Using inspector from cache.");
-				return pathToUnzippedInspector;
-			}
-			return inspectorPath;
-		}).future<string>()();
+			this.$logger.out("Using inspector from cache.");
+			return pathToUnzippedInspector;
+		}
+		return inspectorPath;
 	}
 
 	private inspectorAlreadyInstalled(pathToInspector: string): Boolean {
@@ -89,28 +78,26 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		return false;
 	}
 
-	private installCore(packageName: string, pathToSave: string, version: string, dependencyType: string): IFuture<string> {
-		return (() => {
-			const possiblePackageName = path.resolve(packageName);
-			if (this.$fs.exists(possiblePackageName)) {
-				packageName = possiblePackageName;
-			}
-			if (packageName.indexOf(".tgz") >= 0) {
-				version = null;
-			}
-			// check if the packageName is url or local file and if it is, let npm install deal with the version
-			if (this.isURL(packageName) || this.$fs.exists(packageName)) {
-				version = null;
-			} else {
-				version = version || this.getLatestCompatibleVersion(packageName).wait();
-			}
+	private async installCore(packageName: string, pathToSave: string, version: string, dependencyType: string): Promise<string> {
+		const possiblePackageName = path.resolve(packageName);
+		if (this.$fs.exists(possiblePackageName)) {
+			packageName = possiblePackageName;
+		}
+		if (packageName.indexOf(".tgz") >= 0) {
+			version = null;
+		}
+		// check if the packageName is url or local file and if it is, let npm install deal with the version
+		if (this.isURL(packageName) || this.$fs.exists(packageName)) {
+			version = null;
+		} else {
+			version = version || await this.getLatestCompatibleVersion(packageName);
+		}
 
-			let installedModuleNames = this.npmInstall(packageName, pathToSave, version, dependencyType).wait();
-			let installedPackageName = installedModuleNames[0];
+		let installedModuleNames = await this.npmInstall(packageName, pathToSave, version, dependencyType);
+		let installedPackageName = installedModuleNames[0];
 
-			let pathToInstalledPackage = path.join(pathToSave, "node_modules", installedPackageName);
-			return pathToInstalledPackage;
-		}).future<string>()();
+		let pathToInstalledPackage = path.join(pathToSave, "node_modules", installedPackageName);
+		return pathToInstalledPackage;
 	}
 
 	private isURL(str: string) {
@@ -119,33 +106,29 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		return str.length < 2083 && url.test(str);
 	}
 
-	private npmInstall(packageName: string, pathToSave: string, version: string, dependencyType: string): IFuture<any> {
-		return (() => {
-			this.$logger.out("Installing ", packageName);
+	private async npmInstall(packageName: string, pathToSave: string, version: string, dependencyType: string): Promise<any> {
+		this.$logger.out("Installing ", packageName);
 
-			packageName = packageName + (version ? `@${version}` : "");
+		packageName = packageName + (version ? `@${version}` : "");
 
-			let npmOptions: any = { silent: true };
+		let npmOptions: any = { silent: true };
 
-			if (dependencyType) {
-				npmOptions[dependencyType] = true;
-			}
+		if (dependencyType) {
+			npmOptions[dependencyType] = true;
+		}
 
-			return this.$npm.install(packageName, pathToSave, npmOptions).wait();
-		}).future<any>()();
+		return await this.$npm.install(packageName, pathToSave, npmOptions);
 	}
 
 	/**
 	 * This function must not be used with packageName being a URL or local file,
 	 * because npm view doens't work with those
 	 */
-	private getVersion(packageName: string, version: string): IFuture<string> {
-		return (() => {
-			let data: any = this.$npm.view(packageName, { json: true, "dist-tags": true }).wait();
-			this.$logger.trace("Using version %s. ", data[version]);
+	private async getVersion(packageName: string, version: string): Promise<string> {
+		let data: any = await this.$npm.view(packageName, { json: true, "dist-tags": true });
+		this.$logger.trace("Using version %s. ", data[version]);
 
-			return data[version];
-		}).future<string>()();
+		return data[version];
 	}
 }
 $injector.register("npmInstallationManager", NpmInstallationManager);

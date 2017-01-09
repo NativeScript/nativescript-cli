@@ -1,4 +1,3 @@
-import Future = require("fibers/future");
 import * as path from "path";
 import * as ChildProcessLib from "../lib/common/child-process";
 import * as ConfigLib from "../lib/config";
@@ -30,12 +29,12 @@ import temp = require("temp");
 temp.track();
 
 class IOSSimulatorDiscoveryMock extends DeviceDiscovery {
-	public startLookingForDevices(): IFuture<void> {
-		return Future.fromResult();
+	public async startLookingForDevices(): Promise<void> {
+		return;
 	}
 
-	public checkForDevices(): IFuture<void> {
-		return Future.fromResult();
+	public async checkForDevices(): Promise<void> {
+		return;
 	}
 }
 
@@ -119,7 +118,7 @@ function readOption(args: string[], option: string): string {
 
 describe("iOSProjectService", () => {
 	describe("archive", () => {
-		function setupArchive(options?: { archivePath?: string }): { run: () => void, assert: () => void } {
+		async function setupArchive(options?: { archivePath?: string }): Promise<{ run: () => Promise<void>, assert: () => void }> {
 			let hasCustomArchivePath = options && options.archivePath;
 
 			let projectName = "projectDirectory";
@@ -149,33 +148,33 @@ describe("iOSProjectService", () => {
 				expectOption(args, "-project", path.join(projectPath, "platforms", "ios", projectName + ".xcodeproj"), "Path to Xcode project is wrong.");
 				expectOption(args, "-scheme", projectName, "The provided scheme is wrong.");
 
-				return Future.fromResult();
+				return Promise.resolve();
 			};
 
 			let resultArchivePath: string;
 
 			return {
-				run() {
+				run: async (): Promise<void> => {
 					if (hasCustomArchivePath) {
-						resultArchivePath = iOSProjectService.archive({ archivePath: options.archivePath }).wait();
+						resultArchivePath = await iOSProjectService.archive({ archivePath: options.archivePath });
 					} else {
-						resultArchivePath = iOSProjectService.archive().wait();
+						resultArchivePath = await iOSProjectService.archive();
 					}
 				},
-				assert() {
+				assert: () => {
 					assert.ok(xcodebuildExeced, "Expected xcodebuild archive to be executed");
 					assert.equal(resultArchivePath, archivePath, "iOSProjectService.archive expected to return the path to the archive");
 				}
 			};
 		}
-		it("by default exports xcodearchive to platforms/ios/build/archive/<projname>.xcarchive", () => {
-			let setup = setupArchive();
-			setup.run();
+		it("by default exports xcodearchive to platforms/ios/build/archive/<projname>.xcarchive", async () => {
+			let setup = await setupArchive();
+			await setup.run();
 			setup.assert();
 		});
-		it("can pass archivePath to xcodebuild -archivePath", () => {
-			let setup = setupArchive({ archivePath: "myarchive.xcarchive" });
-			setup.run();
+		it("can pass archivePath to xcodebuild -archivePath", async () => {
+			let setup = await setupArchive({ archivePath: "myarchive.xcarchive" });
+			await setup.run();
 			setup.assert();
 		});
 	});
@@ -209,7 +208,7 @@ describe("iOSProjectService", () => {
 </dict>
 </plist>`;
 
-		function testExportArchive(options: { teamID?: string }, expectedPlistContent: string): void {
+		async function testExportArchive(options: { teamID?: string }, expectedPlistContent: string): Promise<void> {
 			let projectName = "projectDirectory";
 			let projectPath = temp.mkdirSync(projectName);
 
@@ -239,10 +238,10 @@ describe("iOSProjectService", () => {
 				// There may be better way to equal property lists
 				assert.equal(plistContent, expectedPlistContent, "Mismatch in exportOptionsPlist content");
 
-				return Future.fromResult();
+				return Promise.resolve();
 			};
 
-			let resultIpa = iOSProjectService.exportArchive({ archivePath, teamID: options.teamID }).wait();
+			let resultIpa = await iOSProjectService.exportArchive({ archivePath, teamID: options.teamID });
 			let expectedIpa = path.join(projectPath, "platforms", "ios", "build", "archive", projectName + ".ipa");
 
 			assert.equal(resultIpa, expectedIpa, "Expected IPA at the specified location");
@@ -250,12 +249,12 @@ describe("iOSProjectService", () => {
 			assert.ok(xcodebuildExeced, "Expected xcodebuild to be executed");
 		}
 
-		it("calls xcodebuild -exportArchive to produce .IPA", () => {
-			testExportArchive({}, noTeamPlist);
+		it("calls xcodebuild -exportArchive to produce .IPA", async () => {
+			await testExportArchive({}, noTeamPlist);
 		});
 
-		it("passes the --team-id option down the xcodebuild -exportArchive throug the -exportOptionsPlist", () => {
-			testExportArchive({ teamID: "MyTeam" }, myTeamPlist);
+		it("passes the --team-id option down the xcodebuild -exportArchive throug the -exportOptionsPlist", async () => {
+			await testExportArchive({ teamID: "MyTeam" }, myTeamPlist);
 		});
 	});
 });
@@ -264,7 +263,7 @@ describe("Cocoapods support", () => {
 	if (require("os").platform() !== "darwin") {
 		console.log("Skipping Cocoapods tests. They cannot work on windows");
 	} else {
-		it("adds plugin with Podfile", () => {
+		it("adds plugin with Podfile", async () => {
 			let projectName = "projectDirectory";
 			let projectPath = temp.mkdirSync(projectName);
 
@@ -287,11 +286,11 @@ describe("Cocoapods support", () => {
 			fs.createDirectory(platformsFolderPath);
 
 			let iOSProjectService = testInjector.resolve("iOSProjectService");
-			iOSProjectService.prepareFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
-				return Future.fromResult();
+			iOSProjectService.prepareFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> => {
+				return Promise.resolve();
 			};
-			iOSProjectService.prepareStaticLibs = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
-				return Future.fromResult();
+			iOSProjectService.prepareStaticLibs = (pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> => {
+				return Promise.resolve();
 			};
 			iOSProjectService.createPbxProj = () => {
 				return {
@@ -299,7 +298,7 @@ describe("Cocoapods support", () => {
 					pbxXCBuildConfigurationSection: () => { return {}; },
 				};
 			};
-			iOSProjectService.savePbxProj = (): IFuture<void> => Future.fromResult();
+			iOSProjectService.savePbxProj = (): Promise<void> => Promise.resolve();
 
 			let pluginPath = temp.mkdirSync("pluginDirectory");
 			let pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
@@ -313,7 +312,7 @@ describe("Cocoapods support", () => {
 				}
 			};
 
-			iOSProjectService.preparePluginNativeCode(pluginData).wait();
+			await iOSProjectService.preparePluginNativeCode(pluginData);
 
 			let projectPodfilePath = path.join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath));
@@ -328,7 +327,7 @@ describe("Cocoapods support", () => {
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
 		});
-		it("adds and removes plugin with Podfile", () => {
+		it("adds and removes plugin with Podfile", async () => {
 			let projectName = "projectDirectory2";
 			let projectPath = temp.mkdirSync(projectName);
 
@@ -351,17 +350,17 @@ describe("Cocoapods support", () => {
 			fs.createDirectory(platformsFolderPath);
 
 			let iOSProjectService = testInjector.resolve("iOSProjectService");
-			iOSProjectService.prepareFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
-				return Future.fromResult();
+			iOSProjectService.prepareFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> => {
+				return Promise.resolve();
 			};
-			iOSProjectService.prepareStaticLibs = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
-				return Future.fromResult();
+			iOSProjectService.prepareStaticLibs = (pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> => {
+				return Promise.resolve();
 			};
-			iOSProjectService.removeFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
-				return Future.fromResult();
+			iOSProjectService.removeFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> => {
+				return Promise.resolve();
 			};
-			iOSProjectService.removeStaticLibs = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
-				return Future.fromResult();
+			iOSProjectService.removeStaticLibs = (pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> => {
+				return Promise.resolve();
 			};
 			iOSProjectService.createPbxProj = () => {
 				return {
@@ -369,7 +368,7 @@ describe("Cocoapods support", () => {
 					pbxXCBuildConfigurationSection: () => { return {}; },
 				};
 			};
-			iOSProjectService.savePbxProj = (): IFuture<void> => Future.fromResult();
+			iOSProjectService.savePbxProj = (): Promise<void> => Promise.resolve();
 
 			let pluginPath = temp.mkdirSync("pluginDirectory");
 			let pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
@@ -383,7 +382,7 @@ describe("Cocoapods support", () => {
 				}
 			};
 
-			iOSProjectService.preparePluginNativeCode(pluginData).wait();
+			await iOSProjectService.preparePluginNativeCode(pluginData);
 
 			let projectPodfilePath = path.join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath));
@@ -398,7 +397,7 @@ describe("Cocoapods support", () => {
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
 
-			iOSProjectService.removePluginNativeCode(pluginData);
+			await iOSProjectService.removePluginNativeCode(pluginData);
 
 			assert.isFalse(fs.exists(projectPodfilePath));
 		});
@@ -420,7 +419,7 @@ describe("Static libraries support", () => {
 	let staticLibraryPath = path.join(path.join(temp.mkdirSync("pluginDirectory"), "platforms", "ios"));
 	let staticLibraryHeadersPath = path.join(staticLibraryPath, "include", libraryName);
 
-	it("checks validation of header files", () => {
+	it("checks validation of header files", async () => {
 		let iOSProjectService = testInjector.resolve("iOSProjectService");
 		fs.ensureDirectoryExists(staticLibraryHeadersPath);
 		_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), ""); });
@@ -430,7 +429,7 @@ describe("Static libraries support", () => {
 
 		let error: any;
 		try {
-			iOSProjectService.validateStaticLibrary(path.join(staticLibraryPath, libraryName + ".a")).wait();
+			await iOSProjectService.validateStaticLibrary(path.join(staticLibraryPath, libraryName + ".a"));
 		} catch (err) {
 			error = err;
 		}

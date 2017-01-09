@@ -1,4 +1,3 @@
---ui mocha-fibers
 --recursive
 --reporter spec
 --require test/test-bootstrap.js

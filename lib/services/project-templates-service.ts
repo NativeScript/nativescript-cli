@@ -6,39 +6,36 @@ temp.track();
 export class ProjectTemplatesService implements IProjectTemplatesService {
 
 	public constructor(private $errors: IErrors,
-						private $fs: IFileSystem,
-						private $logger: ILogger,
-						private $npm: INodePackageManager,
-						private $npmInstallationManager: INpmInstallationManager) { }
+		private $fs: IFileSystem,
+		private $logger: ILogger,
+		private $npmInstallationManager: INpmInstallationManager) { }
 
-	public prepareTemplate(originalTemplateName: string, projectDir: string): IFuture<string> {
-		return ((): string => {
-			let realTemplatePath: string;
-			if(originalTemplateName) {
-				// support <reserved_name>@<version> syntax
-				let data = originalTemplateName.split("@"),
-					name = data[0],
-					version = data[1];
+	public async prepareTemplate(originalTemplateName: string, projectDir: string): Promise<string> {
+		let realTemplatePath: string;
+		if (originalTemplateName) {
+			// support <reserved_name>@<version> syntax
+			let data = originalTemplateName.split("@"),
+				name = data[0],
+				version = data[1];
 
-				if(constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()]) {
-					realTemplatePath = this.prepareNativeScriptTemplate(constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()], version, projectDir).wait();
-				} else {
-					// Use the original template name, specified by user as it may be case-sensitive.
-					realTemplatePath = this.prepareNativeScriptTemplate(name, version, projectDir).wait();
-				}
+			if (constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()]) {
+				realTemplatePath = await this.prepareNativeScriptTemplate(constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()], version, projectDir);
 			} else {
-				realTemplatePath = this.prepareNativeScriptTemplate(constants.RESERVED_TEMPLATE_NAMES["default"], null/*version*/, projectDir).wait();
+				// Use the original template name, specified by user as it may be case-sensitive.
+				realTemplatePath = await this.prepareNativeScriptTemplate(name, version, projectDir);
 			}
+		} else {
+			realTemplatePath = await this.prepareNativeScriptTemplate(constants.RESERVED_TEMPLATE_NAMES["default"], null/*version*/, projectDir);
+		}
 
-			if(realTemplatePath) {
-				//this removes dependencies from templates so they are not copied to app folder
-				this.$fs.deleteDirectory(path.join(realTemplatePath, constants.NODE_MODULES_FOLDER_NAME));
-				return realTemplatePath;
-			}
+		if (realTemplatePath) {
+			//this removes dependencies from templates so they are not copied to app folder
+			this.$fs.deleteDirectory(path.join(realTemplatePath, constants.NODE_MODULES_FOLDER_NAME));
+			return realTemplatePath;
+		}
 
-			this.$errors.failWithoutHelp("Unable to find the template in temp directory. " +
-				`Please open an issue at https://github.com/NativeScript/nativescript-cli/issues and send the output of the same command executed with --log trace.`);
-		}).future<string>()();
+		this.$errors.failWithoutHelp("Unable to find the template in temp directory. " +
+			`Please open an issue at https://github.com/NativeScript/nativescript-cli/issues and send the output of the same command executed with --log trace.`);
 	}
 
 	/**
@@ -49,9 +46,9 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 	 * @param {string} version The version of the template specified by user.
 	 * @return {string} Path to the directory where the template is installed.
 	 */
-	private prepareNativeScriptTemplate(templateName: string, version?: string, projectDir?: string): IFuture<string> {
+	private async prepareNativeScriptTemplate(templateName: string, version?: string, projectDir?: string): Promise<string> {
 		this.$logger.trace(`Using NativeScript verified template: ${templateName} with version ${version}.`);
-		return this.$npmInstallationManager.install(templateName, projectDir, {version: version, dependencyType: "save"});
+		return this.$npmInstallationManager.install(templateName, projectDir, { version: version, dependencyType: "save" });
 	}
 }
 $injector.register("projectTemplatesService", ProjectTemplatesService);

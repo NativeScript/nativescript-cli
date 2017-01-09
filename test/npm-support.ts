@@ -25,7 +25,6 @@ import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilitie
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
 import { LockFile } from "../lib/lockfile";
-import Future = require("fibers/future");
 import ProjectChangesLib = require("../lib/services/project-changes-service");
 
 import path = require("path");
@@ -113,97 +112,93 @@ function createProject(testInjector: IInjector, dependencies?: any): string {
 	return tempFolder;
 }
 
-function setupProject(dependencies?: any): IFuture<any> {
-	return (() => {
-		let testInjector = createTestInjector();
-		let projectFolder = createProject(testInjector, dependencies);
+async function setupProject(dependencies?: any): Promise<any> {
+	let testInjector = createTestInjector();
+	let projectFolder = createProject(testInjector, dependencies);
 
-		let fs = testInjector.resolve("fs");
+	let fs = testInjector.resolve("fs");
 
-		// Creates app folder
-		let appFolderPath = path.join(projectFolder, "app");
-		fs.createDirectory(appFolderPath);
-		let appResourcesFolderPath = path.join(appFolderPath, "App_Resources");
-		fs.createDirectory(appResourcesFolderPath);
-		fs.createDirectory(path.join(appResourcesFolderPath, "Android"));
-		fs.createDirectory(path.join(appResourcesFolderPath, "Android", "mockdir"));
-		fs.createDirectory(path.join(appFolderPath, "tns_modules"));
+	// Creates app folder
+	let appFolderPath = path.join(projectFolder, "app");
+	fs.createDirectory(appFolderPath);
+	let appResourcesFolderPath = path.join(appFolderPath, "App_Resources");
+	fs.createDirectory(appResourcesFolderPath);
+	fs.createDirectory(path.join(appResourcesFolderPath, "Android"));
+	fs.createDirectory(path.join(appResourcesFolderPath, "Android", "mockdir"));
+	fs.createDirectory(path.join(appFolderPath, "tns_modules"));
 
-		// Creates platforms/android folder
-		let androidFolderPath = path.join(projectFolder, "platforms", "android");
-		fs.ensureDirectoryExists(androidFolderPath);
+	// Creates platforms/android folder
+	let androidFolderPath = path.join(projectFolder, "platforms", "android");
+	fs.ensureDirectoryExists(androidFolderPath);
 
-		// Mock platform data
-		let appDestinationFolderPath = path.join(androidFolderPath, "assets");
-		let platformsData = testInjector.resolve("platformsData");
+	// Mock platform data
+	let appDestinationFolderPath = path.join(androidFolderPath, "assets");
+	let platformsData = testInjector.resolve("platformsData");
 
-		platformsData.getPlatformData = (platform: string) => {
-			return {
-				appDestinationDirectoryPath: appDestinationFolderPath,
-				appResourcesDestinationDirectoryPath: path.join(appDestinationFolderPath, "app", "App_Resources"),
-				frameworkPackageName: "tns-android",
-				normalizedPlatformName: "Android",
-				projectRoot: projectFolder,
-				configurationFileName: "AndroidManifest.xml",
-				platformProjectService: {
-					prepareProject: (): any => null,
-					prepareAppResources: (): any => null,
-					afterPrepareAllPlugins: () => Future.fromResult(),
-					beforePrepareAllPlugins: () => Future.fromResult(),
-					getAppResourcesDestinationDirectoryPath: () => path.join(androidFolderPath, "src", "main", "res"),
-					processConfigurationFilesFromAppResources: () => Future.fromResult(),
-					ensureConfigurationFileInAppResources: (): any => null,
-					interpolateConfigurationFile: () => Future.fromResult(),
-					isPlatformPrepared: (projectRoot: string) => false
-				}
-			};
-		};
-
+	platformsData.getPlatformData = (platform: string) => {
 		return {
-			testInjector: testInjector,
-			projectFolder: projectFolder,
-			appDestinationFolderPath: appDestinationFolderPath,
+			appDestinationDirectoryPath: appDestinationFolderPath,
+			appResourcesDestinationDirectoryPath: path.join(appDestinationFolderPath, "app", "App_Resources"),
+			frameworkPackageName: "tns-android",
+			normalizedPlatformName: "Android",
+			projectRoot: projectFolder,
+			configurationFileName: "AndroidManifest.xml",
+			platformProjectService: {
+				prepareProject: (): any => null,
+				prepareAppResources: (): any => null,
+				afterPrepareAllPlugins: () => Promise.resolve(),
+				beforePrepareAllPlugins: () => Promise.resolve(),
+				getAppResourcesDestinationDirectoryPath: () => path.join(androidFolderPath, "src", "main", "res"),
+				processConfigurationFilesFromAppResources: () => Promise.resolve(),
+				ensureConfigurationFileInAppResources: (): any => null,
+				interpolateConfigurationFile: () => Promise.resolve(),
+				isPlatformPrepared: (projectRoot: string) => false
+			}
 		};
-	}).future<any>()();
+	};
+
+	return {
+		testInjector: testInjector,
+		projectFolder: projectFolder,
+		appDestinationFolderPath: appDestinationFolderPath,
+	};
 }
 
-function addDependencies(testInjector: IInjector, projectFolder: string, dependencies: any, devDependencies?: any): IFuture<void> {
-	return (() => {
-		let fs = testInjector.resolve("fs");
-		let packageJsonPath = path.join(projectFolder, "package.json");
-		let packageJsonData = fs.readJson(packageJsonPath);
+async function addDependencies(testInjector: IInjector, projectFolder: string, dependencies: any, devDependencies?: any): Promise<void> {
+	let fs = testInjector.resolve("fs");
+	let packageJsonPath = path.join(projectFolder, "package.json");
+	let packageJsonData = fs.readJson(packageJsonPath);
 
-		let currentDependencies = packageJsonData.dependencies;
-		_.extend(currentDependencies, dependencies);
+	let currentDependencies = packageJsonData.dependencies;
+	_.extend(currentDependencies, dependencies);
 
-		if (devDependencies) {
-			let currentDevDependencies = packageJsonData.devDependencies;
-			_.extend(currentDevDependencies, devDependencies);
-		}
-		fs.writeJson(packageJsonPath, packageJsonData);
-	}).future<void>()();
+	if (devDependencies) {
+		let currentDevDependencies = packageJsonData.devDependencies;
+		_.extend(currentDevDependencies, devDependencies);
+	}
+	fs.writeJson(packageJsonPath, packageJsonData);
 }
 
-function preparePlatform(testInjector: IInjector): IFuture<void> {
+async function preparePlatform(testInjector: IInjector): Promise<void> {
 	let platformService = testInjector.resolve("platformService");
 	return platformService.preparePlatform("android");
 }
 
 describe("Npm support tests", () => {
 	let testInjector: IInjector, projectFolder: string, appDestinationFolderPath: string;
-	beforeEach(() => {
-		let projectSetup = setupProject().wait();
+	beforeEach(async () => {
+		let projectSetup = await setupProject();
 		testInjector = projectSetup.testInjector;
 		projectFolder = projectSetup.projectFolder;
 		appDestinationFolderPath = projectSetup.appDestinationFolderPath;
 	});
-	it("Ensures that the installed dependencies are prepared correctly", () => {
+	it("Ensures that the installed dependencies are prepared correctly", async () => {
 		let fs: IFileSystem = testInjector.resolve("fs");
 		// Setup
-		addDependencies(testInjector, projectFolder, { "bplist": "0.0.4" }).wait();
+		await addDependencies(testInjector, projectFolder, { "bplist": "0.0.4" });
 
 		// Act
-		preparePlatform(testInjector).wait();
+		await preparePlatform(testInjector);
 
 		// Assert
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
@@ -217,33 +212,33 @@ describe("Npm support tests", () => {
 		assert.isTrue(results.filter((val) => _.endsWith(val, "bplist-creator")).length === 1);
 		assert.isTrue(results.filter((val) => _.endsWith(val, "bplist-parser")).length === 1);
 	});
-	it("Ensures that scoped dependencies are prepared correctly", () => {
+	it("Ensures that scoped dependencies are prepared correctly", async () => {
 		// Setup
 		let fs = testInjector.resolve("fs");
 		let scopedName = "@reactivex/rxjs";
 		let dependencies: any = {};
 		dependencies[scopedName] = "0.0.0-prealpha.3";
 		// Do not pass dependencies object as the sinopia cannot work with scoped dependencies. Instead move them manually.
-		addDependencies(testInjector, projectFolder, dependencies).wait();
+		await addDependencies(testInjector, projectFolder, dependencies);
 		// Act
-		preparePlatform(testInjector).wait();
+		await preparePlatform(testInjector);
 		// Assert
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
 		let scopedDependencyPath = path.join(tnsModulesFolderPath, "@reactivex", "rxjs");
 		assert.isTrue(fs.exists(scopedDependencyPath));
 	});
 
-	it("Ensures that scoped dependencies are prepared correctly when are not in root level", () => {
+	it("Ensures that scoped dependencies are prepared correctly when are not in root level", async () => {
 		// Setup
 		let customPluginName = "plugin-with-scoped-dependency";
 		let customPluginDirectory = temp.mkdirSync("custom-plugin-directory");
 
 		let fs: IFileSystem = testInjector.resolve("fs");
-		fs.unzip(path.join("resources", "test", `${customPluginName}.zip`), customPluginDirectory).wait();
+		await fs.unzip(path.join("resources", "test", `${customPluginName}.zip`), customPluginDirectory);
 
-		addDependencies(testInjector, projectFolder, { "plugin-with-scoped-dependency": `file:${path.join(customPluginDirectory, customPluginName)}` }).wait();
+		await addDependencies(testInjector, projectFolder, { "plugin-with-scoped-dependency": `file:${path.join(customPluginDirectory, customPluginName)}` });
 		// Act
-		preparePlatform(testInjector).wait();
+		await preparePlatform(testInjector);
 		// Assert
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
 		let results = fs.enumerateFilesInDirectorySync(tnsModulesFolderPath, (file, stat) => {
@@ -257,22 +252,22 @@ describe("Npm support tests", () => {
 		assert.isTrue(filteredResults.length === 1);
 	});
 
-	it("Ensures that tns_modules absent when bundling", () => {
+	it("Ensures that tns_modules absent when bundling", async () => {
 		let fs = testInjector.resolve("fs");
 		let options = testInjector.resolve("options");
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
 
 		try {
 			options.bundle = false;
-			preparePlatform(testInjector).wait();
+			await preparePlatform(testInjector);
 			assert.isTrue(fs.exists(tnsModulesFolderPath), "tns_modules created first");
 
 			options.bundle = true;
-			preparePlatform(testInjector).wait();
+			await preparePlatform(testInjector);
 			assert.isFalse(fs.exists(tnsModulesFolderPath), "tns_modules deleted when bundling");
 
 			options.bundle = false;
-			preparePlatform(testInjector).wait();
+			await preparePlatform(testInjector);
 			assert.isTrue(fs.exists(tnsModulesFolderPath), "tns_modules recreated");
 		} finally {
 			options.bundle = false;
@@ -281,8 +276,8 @@ describe("Npm support tests", () => {
 });
 
 describe("Flatten npm modules tests", () => {
-	it("Doesn't handle the dependencies of devDependencies", () => {
-		let projectSetup = setupProject({}).wait();
+	it("Doesn't handle the dependencies of devDependencies", async () => {
+		let projectSetup = await setupProject({});
 		let testInjector = projectSetup.testInjector;
 		let projectFolder = projectSetup.projectFolder;
 		let appDestinationFolderPath = projectSetup.appDestinationFolderPath;
@@ -293,9 +288,9 @@ describe("Flatten npm modules tests", () => {
 			"gulp-jshint": "1.11.0"
 		};
 
-		addDependencies(testInjector, projectFolder, {}, devDependencies).wait();
+		await addDependencies(testInjector, projectFolder, {}, devDependencies);
 
-		preparePlatform(testInjector).wait();
+		await preparePlatform(testInjector);
 
 		// Assert
 		let fs = testInjector.resolve("fs");

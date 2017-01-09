@@ -1,11 +1,11 @@
 export class GenerateHelpCommand implements ICommand {
-	constructor(private $htmlHelpService: IHtmlHelpService) {
-	}
-
 	public allowedParameters: ICommandParameter[] = [];
 
-	public execute(args: string[]): IFuture<void> {
+	constructor(private $htmlHelpService: IHtmlHelpService) { }
+
+	public async execute(args: string[]): Promise<void> {
 		return this.$htmlHelpService.generateHtmlPages();
 	}
 }
+
 $injector.registerCommand("dev-generate-help", GenerateHelpCommand);

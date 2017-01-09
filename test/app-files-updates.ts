@@ -1,5 +1,5 @@
-import {assert} from "chai";
-import {AppFilesUpdater} from "../lib/services/app-files-updater";
+import { assert } from "chai";
+import { AppFilesUpdater } from "../lib/services/app-files-updater";
 
 require("should");
 
@@ -30,7 +30,7 @@ describe("App files cleanup", () => {
 	it("cleans up entire app when not bundling", () => {
 		const updater = new CleanUpAppFilesUpdater([
 			"file1", "dir1/file2", "App_Resources/Android/blah.png"
-		], {bundle: false});
+		], { bundle: false });
 		updater.clean();
 		assert.deepEqual(["file1", "dir1/file2", "App_Resources/Android/blah.png"], updater.deletedDestinationItems);
 	});
@@ -38,7 +38,7 @@ describe("App files cleanup", () => {
 	it("does not clean up destination when bundling", () => {
 		const updater = new CleanUpAppFilesUpdater([
 			"file1", "dir1/file2", "App_Resources/Android/blah.png"
-		], {bundle: true});
+		], { bundle: true });
 		updater.clean();
 		assert.deepEqual([], updater.deletedDestinationItems);
 	});
@@ -67,7 +67,7 @@ describe("App files copy", () => {
 	it("copies all app files when not bundling", () => {
 		const updater = new CopyAppFilesUpdater([
 			"file1", "dir1/file2", "App_Resources/Android/blah.png"
-		], {bundle: false});
+		], { bundle: false });
 		updater.copy();
 		assert.deepEqual(["file1", "dir1/file2", "App_Resources/Android/blah.png"], updater.copiedDestinationItems);
 	});
@@ -75,7 +75,7 @@ describe("App files copy", () => {
 	it("skips copying non-App_Resource files when bundling", () => {
 		const updater = new CopyAppFilesUpdater([
 			"file1", "dir1/file2", "App_Resources/Android/blah.png"
-		], {bundle: true});
+		], { bundle: true });
 		updater.copy();
 		assert.deepEqual(["App_Resources/Android/blah.png"], updater.copiedDestinationItems);
 	});

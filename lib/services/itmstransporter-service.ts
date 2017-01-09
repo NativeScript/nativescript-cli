@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as temp from "temp";
-import {EOL} from "os";
-import {ITMSConstants} from "../constants";
-import {ItunesConnectApplicationTypes} from "../constants";
-import {quoteString, versionCompare} from "../common/helpers";
+import { EOL } from "os";
+import { ITMSConstants } from "../constants";
+import { ItunesConnectApplicationTypes } from "../constants";
+import { quoteString, versionCompare } from "../common/helpers";
 
 export class ITMSTransporterService implements IITMSTransporterService {
 	private _itmsTransporterPath: string = null;
@@ -24,61 +24,57 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		return this.$injector.resolve("projectData");
 	}
 
-	public upload(data: IITMSData): IFuture<void> {
-		return (() => {
-			if (!this.$hostInfo.isDarwin) {
-				this.$errors.failWithoutHelp("iOS publishing is only available on Mac OS X.");
-			}
+	public async upload(data: IITMSData): Promise<void> {
+		if (!this.$hostInfo.isDarwin) {
+			this.$errors.failWithoutHelp("iOS publishing is only available on Mac OS X.");
+		}
 
-			temp.track();
-			let itmsTransporterPath = this.getITMSTransporterPath().wait(),
-				ipaFileName = "app.ipa",
-				itmsDirectory = temp.mkdirSync("itms-"),
-				innerDirectory = path.join(itmsDirectory, "mybundle.itmsp"),
-				ipaFileLocation = path.join(innerDirectory, ipaFileName),
-				loggingLevel = data.verboseLogging ? ITMSConstants.VerboseLoggingLevels.Verbose : ITMSConstants.VerboseLoggingLevels.Informational,
-				bundleId = this.getBundleIdentifier(data.ipaFilePath).wait(),
-				iOSApplication = this.getiOSApplication(data.username, data.password, bundleId).wait();
+		temp.track();
+		let itmsTransporterPath = await this.getITMSTransporterPath(),
+			ipaFileName = "app.ipa",
+			itmsDirectory = temp.mkdirSync("itms-"),
+			innerDirectory = path.join(itmsDirectory, "mybundle.itmsp"),
+			ipaFileLocation = path.join(innerDirectory, ipaFileName),
+			loggingLevel = data.verboseLogging ? ITMSConstants.VerboseLoggingLevels.Verbose : ITMSConstants.VerboseLoggingLevels.Informational,
+			bundleId = await this.getBundleIdentifier(data.ipaFilePath),
+			iOSApplication = await this.getiOSApplication(data.username, data.password, bundleId);
 
-			this.$fs.createDirectory(innerDirectory);
+		this.$fs.createDirectory(innerDirectory);
 
-			this.$fs.copyFile(data.ipaFilePath, ipaFileLocation);
+		this.$fs.copyFile(data.ipaFilePath, ipaFileLocation);
 
-			let ipaFileHash = this.$fs.getFileShasum(ipaFileLocation, {algorithm: "md5"}).wait(),
-				ipaFileSize = this.$fs.getFileSize(ipaFileLocation),
-				metadata = this.getITMSMetadataXml(iOSApplication.adamId, ipaFileName, ipaFileHash, ipaFileSize);
+		let ipaFileHash = await this.$fs.getFileShasum(ipaFileLocation, { algorithm: "md5" }),
+			ipaFileSize = this.$fs.getFileSize(ipaFileLocation),
+			metadata = this.getITMSMetadataXml(iOSApplication.adamId, ipaFileName, ipaFileHash, ipaFileSize);
 
-			this.$fs.writeFile(path.join(innerDirectory, ITMSConstants.ApplicationMetadataFile), metadata);
+		this.$fs.writeFile(path.join(innerDirectory, ITMSConstants.ApplicationMetadataFile), metadata);
 
-			this.$childProcess.spawnFromEvent(itmsTransporterPath, ["-m", "upload", "-f", itmsDirectory, "-u", quoteString(data.username), "-p", quoteString(data.password), "-v", loggingLevel], "close", { stdio: "inherit" }).wait();
-		}).future<void>()();
+		await this.$childProcess.spawnFromEvent(itmsTransporterPath, ["-m", "upload", "-f", itmsDirectory, "-u", quoteString(data.username), "-p", quoteString(data.password), "-v", loggingLevel], "close", { stdio: "inherit" });
 	}
 
-	public getiOSApplications(credentials: ICredentials): IFuture<IiTunesConnectApplication[]> {
-		return ((): IiTunesConnectApplication[] => {
-			if (!this._itunesConnectApplications) {
-				let requestBody = this.getContentDeliveryRequestBody(credentials),
-					contentDeliveryResponse = this.$httpClient.httpRequest({
-							url: "https://contentdelivery.itunes.apple.com/WebObjects/MZLabelService.woa/json/MZITunesProducerService",
-							method: "POST",
-							body: requestBody
-						}).wait(),
-					contentDeliveryBody: IContentDeliveryBody = JSON.parse(contentDeliveryResponse.body);
+	public async getiOSApplications(credentials: ICredentials): Promise<IiTunesConnectApplication[]> {
+		if (!this._itunesConnectApplications) {
+			let requestBody = this.getContentDeliveryRequestBody(credentials),
+				contentDeliveryResponse = await this.$httpClient.httpRequest({
+					url: "https://contentdelivery.itunes.apple.com/WebObjects/MZLabelService.woa/json/MZITunesProducerService",
+					method: "POST",
+					body: requestBody
+				}),
+				contentDeliveryBody: IContentDeliveryBody = JSON.parse(contentDeliveryResponse.body);
 
-				if (!contentDeliveryBody.result.Success || !contentDeliveryBody.result.Applications) {
-					let errorMessage = ["Unable to connect to iTunes Connect"];
-					if (contentDeliveryBody.result.Errors && contentDeliveryBody.result.Errors.length) {
-						errorMessage = errorMessage.concat(contentDeliveryBody.result.Errors);
-					}
-
-					this.$errors.failWithoutHelp(errorMessage.join(EOL));
+			if (!contentDeliveryBody.result.Success || !contentDeliveryBody.result.Applications) {
+				let errorMessage = ["Unable to connect to iTunes Connect"];
+				if (contentDeliveryBody.result.Errors && contentDeliveryBody.result.Errors.length) {
+					errorMessage = errorMessage.concat(contentDeliveryBody.result.Errors);
 				}
 
-				this._itunesConnectApplications = contentDeliveryBody.result.Applications.filter(app => app.type === ItunesConnectApplicationTypes.iOS);
+				this.$errors.failWithoutHelp(errorMessage.join(EOL));
 			}
 
-			return this._itunesConnectApplications;
-		}).future<IiTunesConnectApplication[]>()();
+			this._itunesConnectApplications = contentDeliveryBody.result.Applications.filter(app => app.type === ItunesConnectApplicationTypes.iOS);
+		}
+
+		return this._itunesConnectApplications;
 	}
 
 	/**
@@ -88,21 +84,19 @@ export class ITMSTransporterService implements IITMSTransporterService {
 	 * @param  {string}                             bundleId Application's Bundle Identifier
 	 * @return {IFuture<IiTunesConnectApplication>}          The iTunes Connect application.
 	 */
-	private getiOSApplication(username: string, password: string, bundleId: string) : IFuture<IiTunesConnectApplication> {
-		return (():IiTunesConnectApplication => {
-			let iOSApplications = this.getiOSApplications({username, password}).wait();
-			if (!iOSApplications || !iOSApplications.length) {
-				this.$errors.failWithoutHelp(`Cannot find any registered applications for Apple ID ${username} in iTunes Connect.`);
-			}
+	private async getiOSApplication(username: string, password: string, bundleId: string): Promise<IiTunesConnectApplication> {
+		let iOSApplications = await this.getiOSApplications({ username, password });
+		if (!iOSApplications || !iOSApplications.length) {
+			this.$errors.failWithoutHelp(`Cannot find any registered applications for Apple ID ${username} in iTunes Connect.`);
+		}
 
-			let iOSApplication = _.find(iOSApplications, app => app.bundleId === bundleId);
+		let iOSApplication = _.find(iOSApplications, app => app.bundleId === bundleId);
 
-			if (!iOSApplication) {
-				this.$errors.failWithoutHelp(`Cannot find registered applications that match the specified identifier ${bundleId} in iTunes Connect.`);
-			}
+		if (!iOSApplication) {
+			this.$errors.failWithoutHelp(`Cannot find registered applications that match the specified identifier ${bundleId} in iTunes Connect.`);
+		}
 
-			return iOSApplication;
-		}).future<IiTunesConnectApplication>()();
+		return iOSApplication;
 	}
 
 	/**
@@ -110,74 +104,70 @@ export class ITMSTransporterService implements IITMSTransporterService {
 	 * @param  {string}          ipaFileFullPath Optional full path to .ipa file
 	 * @return {IFuture<string>}                 Application's bundle identifier.
 	 */
-	private getBundleIdentifier(ipaFileFullPath?: string): IFuture<string> {
-		return ((): string => {
-			if (!this._bundleIdentifier) {
-				if (!ipaFileFullPath) {
-					this._bundleIdentifier = this.$projectData.projectId;
-				} else {
-					if (!this.$fs.exists(ipaFileFullPath) || path.extname(ipaFileFullPath) !== ".ipa") {
-						this.$errors.failWithoutHelp(`Cannot use specified ipa file ${ipaFileFullPath}. File either does not exist or is not an ipa file.`);
-					}
-
-					this.$logger.trace("--ipa set - extracting .ipa file to get app's bundle identifier");
-					temp.track();
-					let destinationDir = temp.mkdirSync("ipa-");
-					this.$fs.unzip(ipaFileFullPath, destinationDir).wait();
-
-					let payloadDir = path.join(destinationDir, "Payload");
-					let allApps = this.$fs.readDirectory(payloadDir);
-
-					this.$logger.debug("ITMSTransporter .ipa Payload files:");
-					allApps.forEach(f => this.$logger.debug(" - " + f));
-
-					allApps = allApps.filter(f => path.extname(f).toLowerCase() === ".app");
-					if (allApps.length > 1) {
-						this.$errors.failWithoutHelp("In the .ipa the ITMSTransporter is uploading there is more than one .app file. We don't know which one to upload.");
-					} else if (allApps.length <= 0) {
-						this.$errors.failWithoutHelp("In the .ipa the ITMSTransporter is uploading there must be at least one .app file.");
-					}
-					let appFile = path.join(payloadDir, allApps[0]);
-
-					let plistObject = this.$bplistParser.parseFile(path.join(appFile, "Info.plist")).wait();
-					let bundleId = plistObject && plistObject[0] && plistObject[0].CFBundleIdentifier;
-					if (!bundleId) {
-						this.$errors.failWithoutHelp(`Unable to determine bundle identifier from ${ipaFileFullPath}.`);
-					}
-
-					this.$logger.trace(`bundle identifier determined to be ${bundleId}`);
-					this._bundleIdentifier = bundleId;
+	private async getBundleIdentifier(ipaFileFullPath?: string): Promise<string> {
+		if (!this._bundleIdentifier) {
+			if (!ipaFileFullPath) {
+				this._bundleIdentifier = this.$projectData.projectId;
+			} else {
+				if (!this.$fs.exists(ipaFileFullPath) || path.extname(ipaFileFullPath) !== ".ipa") {
+					this.$errors.failWithoutHelp(`Cannot use specified ipa file ${ipaFileFullPath}. File either does not exist or is not an ipa file.`);
 				}
-			}
 
-			return this._bundleIdentifier;
-		}).future<string>()();
+				this.$logger.trace("--ipa set - extracting .ipa file to get app's bundle identifier");
+				temp.track();
+				let destinationDir = temp.mkdirSync("ipa-");
+				await this.$fs.unzip(ipaFileFullPath, destinationDir);
+
+				let payloadDir = path.join(destinationDir, "Payload");
+				let allApps = this.$fs.readDirectory(payloadDir);
+
+				this.$logger.debug("ITMSTransporter .ipa Payload files:");
+				allApps.forEach(f => this.$logger.debug(" - " + f));
+
+				allApps = allApps.filter(f => path.extname(f).toLowerCase() === ".app");
+				if (allApps.length > 1) {
+					this.$errors.failWithoutHelp("In the .ipa the ITMSTransporter is uploading there is more than one .app file. We don't know which one to upload.");
+				} else if (allApps.length <= 0) {
+					this.$errors.failWithoutHelp("In the .ipa the ITMSTransporter is uploading there must be at least one .app file.");
+				}
+				let appFile = path.join(payloadDir, allApps[0]);
+
+				let plistObject = await this.$bplistParser.parseFile(path.join(appFile, "Info.plist"));
+				let bundleId = plistObject && plistObject[0] && plistObject[0].CFBundleIdentifier;
+				if (!bundleId) {
+					this.$errors.failWithoutHelp(`Unable to determine bundle identifier from ${ipaFileFullPath}.`);
+				}
+
+				this.$logger.trace(`bundle identifier determined to be ${bundleId}`);
+				this._bundleIdentifier = bundleId;
+			}
+		}
+
+		return this._bundleIdentifier;
 	}
 
-	private getITMSTransporterPath(): IFuture<string> {
-		return ((): string => {
-			if (!this._itmsTransporterPath) {
-				let xcodePath = this.$xcodeSelectService.getContentsDirectoryPath().wait(),
-					xcodeVersion = this.$xcodeSelectService.getXcodeVersion().wait(),
-					result = path.join(xcodePath, "Applications", "Application Loader.app", "Contents");
+	private async getITMSTransporterPath(): Promise<string> {
+		if (!this._itmsTransporterPath) {
+			let xcodePath = await this.$xcodeSelectService.getContentsDirectoryPath(),
+				xcodeVersion = await this.$xcodeSelectService.getXcodeVersion(),
+				result = path.join(xcodePath, "Applications", "Application Loader.app", "Contents");
 
-				xcodeVersion.patch = xcodeVersion.patch || "0";
-				// iTMS Transporter's path has been modified in Xcode 6.3
-				// https://github.com/nomad/shenzhen/issues/243
-				if (xcodeVersion.major && xcodeVersion.minor &&
-					versionCompare(xcodeVersion, "6.3.0") < 0) {
-						result = path.join(result, "MacOS");
-				}
-
-				this._itmsTransporterPath = path.join(result, ITMSConstants.iTMSDirectoryName, "bin", ITMSConstants.iTMSExecutableName);
+			xcodeVersion.patch = xcodeVersion.patch || "0";
+			// iTMS Transporter's path has been modified in Xcode 6.3
+			// https://github.com/nomad/shenzhen/issues/243
+			if (xcodeVersion.major && xcodeVersion.minor &&
+				versionCompare(xcodeVersion, "6.3.0") < 0) {
+				result = path.join(result, "MacOS");
 			}
 
-			if(!this.$fs.exists(this._itmsTransporterPath)) {
-				this.$errors.failWithoutHelp('iTMS Transporter not found on this machine - make sure your Xcode installation is not damaged.');
-			}
+			this._itmsTransporterPath = path.join(result, ITMSConstants.iTMSDirectoryName, "bin", ITMSConstants.iTMSExecutableName);
+		}
 
-			return this._itmsTransporterPath;
-		}).future<string>()();
+		if (!this.$fs.exists(this._itmsTransporterPath)) {
+			this.$errors.failWithoutHelp('iTMS Transporter not found on this machine - make sure your Xcode installation is not damaged.');
+		}
+
+		return this._itmsTransporterPath;
 	}
 
 	private getContentDeliveryRequestBody(credentials: ICredentials): string {
@@ -186,17 +176,17 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		// and if only one of these ends up missing the API returns
 		// a response with 200 status code and an error
 		return JSON.stringify({
-					id: "1", // magic number
-					jsonrpc: "2.0",
-					method: "lookupSoftwareApplications",
-					params: {
-						Username: credentials.username,
-						Password: credentials.password,
-						Version: "2.9.1 (441)",
-						Application: "Application Loader",
-						OSIdentifier: "Mac OS X 10.8.5 (x86_64)"
-					}
-				});
+			id: "1", // magic number
+			jsonrpc: "2.0",
+			method: "lookupSoftwareApplications",
+			params: {
+				Username: credentials.username,
+				Password: credentials.password,
+				Version: "2.9.1 (441)",
+				Application: "Application Loader",
+				OSIdentifier: "Mac OS X 10.8.5 (x86_64)"
+			}
+		});
 	}
 
 	private getITMSMetadataXml(appleId: string, ipaFileName: string, ipaFileHash: string, ipaFileSize: number): string {

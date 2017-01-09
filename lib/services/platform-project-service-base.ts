@@ -1,7 +1,7 @@
 export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 	constructor(protected $fs: IFileSystem,
-		    protected $projectData: IProjectData,
-			protected $projectDataService: IProjectDataService) {
+		protected $projectData: IProjectData,
+		protected $projectDataService: IProjectDataService) {
 	}
 
 	public getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string {
@@ -12,11 +12,11 @@ export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 		let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, platform),
 			nativeLibraries: string[] = [];
 
-		if(pluginPlatformsFolderPath && this.$fs.exists(pluginPlatformsFolderPath)) {
+		if (pluginPlatformsFolderPath && this.$fs.exists(pluginPlatformsFolderPath)) {
 			let platformsContents = this.$fs.readDirectory(pluginPlatformsFolderPath);
 			nativeLibraries = _(platformsContents)
-							.filter(platformItemName => filter(platformItemName, pluginPlatformsFolderPath))
-							.value();
+				.filter(platformItemName => filter(platformItemName, pluginPlatformsFolderPath))
+				.value();
 		}
 
 		return nativeLibraries;

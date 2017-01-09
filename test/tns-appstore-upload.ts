@@ -1,9 +1,8 @@
-import {suite, test/*, only */} from "mocha-typescript";
-import {PublishIOS} from "../lib/commands/appstore-upload";
-import {PrompterStub, LoggerStub} from "./stubs";
+import { suite, test/*, only */ } from "mocha-typescript";
+import { PublishIOS } from "../lib/commands/appstore-upload";
+import { PrompterStub, LoggerStub } from "./stubs";
 import * as chai from "chai";
 import * as yok from "../lib/common/yok";
-import future = require("fibers/future");
 
 @suite("tns appstore")
 class AppStore {
@@ -69,7 +68,7 @@ class AppStore {
 		this.command = this.injector.resolveCommand("appstore");
 	}
 
-	initInjector(services?: { commands?: {[service:string]: any}, services?: {[service:string]: any}}) {
+	initInjector(services?: { commands?: { [service: string]: any }, services?: { [service: string]: any } }) {
 		this.injector = new yok.Yok();
 		if (services) {
 			for (let cmd in services.commands) {
@@ -101,7 +100,7 @@ class AppStore {
 		this.platformService.preparePlatform = (platform: string) => {
 			chai.assert.equal(platform, "iOS");
 			this.preparePlatformCalls++;
-			return future.fromResult(true);
+			return Promise.resolve(true);
 		};
 	}
 
@@ -110,13 +109,13 @@ class AppStore {
 		this.iOSProjectService.archive = (projectRoot: string) => {
 			this.archiveCalls++;
 			chai.assert.equal(projectRoot, "/Users/person/git/MyProject");
-			return future.fromResult("/Users/person/git/MyProject/platforms/ios/archive/MyProject.xcarchive");
+			return Promise.resolve("/Users/person/git/MyProject/platforms/ios/archive/MyProject.xcarchive");
 		};
 	}
 
 	expectExportArchive(expectedOptions?: { teamID?: string }) {
 		this.expectedExportArchiveCalls = 1;
-		this.iOSProjectService.exportArchive = (options?: { teamID?: string, archivePath?: string } ) => {
+		this.iOSProjectService.exportArchive = (options?: { teamID?: string, archivePath?: string }) => {
 			this.exportArchiveCalls++;
 			chai.assert.equal(options.archivePath, "/Users/person/git/MyProject/platforms/ios/archive/MyProject.xcarchive", "Expected xcarchive path to be the one that we just archived.");
 			if (expectedOptions && expectedOptions.teamID) {
@@ -124,7 +123,7 @@ class AppStore {
 			} else {
 				chai.assert.isUndefined(options.teamID, "Expected teamID in exportArchive to be undefined");
 			}
-			return future.fromResult("/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa");
+			return Promise.resolve("/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa");
 		};
 	}
 
@@ -136,37 +135,37 @@ class AppStore {
 			chai.assert.equal(options.username, AppStore.itunesconnect.user);
 			chai.assert.equal(options.password, AppStore.itunesconnect.pass);
 			chai.assert.equal(options.verboseLogging, false);
-			return future.fromResult();
+			return Promise.resolve();
 		};
 	}
 
 	@test("without args, prompts for itunesconnect credentionals, prepares, archives and uploads")
-	noArgs() {
+	async noArgs() {
 		this.expectItunesPrompt();
 		this.expectPreparePlatform();
 		this.expectArchive();
 		this.expectExportArchive();
 		this.expectITMSTransporterUpload();
 
-		this.command.execute([]).wait();
+		await this.command.execute([]);
 
 		this.assert();
 	}
 
 	@test("with command line itunesconnect credentionals, prepares, archives and uploads")
-	itunesconnectArgs() {
+	async itunesconnectArgs() {
 		this.expectPreparePlatform();
 		this.expectArchive();
 		this.expectExportArchive();
 		this.expectITMSTransporterUpload();
 
-		this.command.execute([AppStore.itunesconnect.user, AppStore.itunesconnect.pass]).wait();
+		await this.command.execute([AppStore.itunesconnect.user, AppStore.itunesconnect.pass]);
 
 		this.assert();
 	}
 
 	@test("passes --team-id to xcodebuild exportArchive")
-	teamIdOption() {
+	async teamIdOption() {
 		this.expectItunesPrompt();
 		this.expectPreparePlatform();
 		this.expectArchive();
@@ -175,7 +174,7 @@ class AppStore {
 
 		this.options.teamId = "MyTeamID";
 
-		this.command.execute([]).wait();
+		await this.command.execute([]);
 
 		this.assert();
 	}

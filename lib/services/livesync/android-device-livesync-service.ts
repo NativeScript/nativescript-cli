@@ -1,6 +1,5 @@
-import {DeviceAndroidDebugBridge} from "../../common/mobile/android/device-android-debug-bridge";
-import {AndroidDeviceHashService} from "../../common/mobile/android/android-device-hash-service";
-import Future = require("fibers/future");
+import { DeviceAndroidDebugBridge } from "../../common/mobile/android/device-android-debug-bridge";
+import { AndroidDeviceHashService } from "../../common/mobile/android/android-device-hash-service";
 import * as helpers from "../../common/helpers";
 import * as path from "path";
 import * as net from "net";
@@ -10,9 +9,7 @@ class AndroidLiveSyncService implements IDeviceLiveSyncService {
 	private device: Mobile.IAndroidDevice;
 
 	constructor(_device: Mobile.IDevice,
-		private $fs: IFileSystem,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $options: IOptions,
 		private $injector: IInjector,
 		private $projectData: IProjectData,
 		private $androidDebugService: IDebugService,
@@ -24,8 +21,8 @@ class AndroidLiveSyncService implements IDeviceLiveSyncService {
 		return this.$androidDebugService;
 	}
 
-	public refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean): IFuture<void> {
-		let canExecuteFastSync = !forceExecuteFullSync && !_.some(localToDevicePaths, (localToDevicePath:any) => !this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), deviceAppData.platform));
+	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean): Promise<void> {
+		let canExecuteFastSync = !forceExecuteFullSync && !_.some(localToDevicePaths, (localToDevicePath: any) => !this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), deviceAppData.platform));
 
 		if (canExecuteFastSync) {
 			return this.reloadPage(deviceAppData, localToDevicePaths);
@@ -34,92 +31,86 @@ class AndroidLiveSyncService implements IDeviceLiveSyncService {
 		return this.restartApplication(deviceAppData);
 	}
 
-	private restartApplication(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
-		return (() => {
-			this.device.adb.executeShellCommand(["chmod", "777", deviceAppData.deviceProjectRootPath, `/data/local/tmp/${deviceAppData.appIdentifier}`]).wait();
+	private async restartApplication(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
+		await this.device.adb.executeShellCommand(["chmod", "777", await deviceAppData.getDeviceProjectRootPath(), `/data/local/tmp/${deviceAppData.appIdentifier}`]);
 
-			let devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;
-			let devicePath = this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb");
-			this.device.adb.executeShellCommand(["rm", "-rf", devicePath]).wait();
+		let devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;
+		let devicePath = this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb");
+		await this.device.adb.executeShellCommand(["rm", "-rf", devicePath]);
 
-			this.device.applicationManager.restartApplication(deviceAppData.appIdentifier).wait();
-		}).future<void>()();
+		await this.device.applicationManager.restartApplication(deviceAppData.appIdentifier);
 	}
 
-	public beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
-		return (() => {
-			let deviceRootPath = this.getDeviceRootPath(deviceAppData.appIdentifier),
-				deviceRootDir = path.dirname(deviceRootPath),
-				deviceRootBasename = path.basename(deviceRootPath),
-				listResult = this.device.adb.executeShellCommand(["ls", "-l", deviceRootDir]).wait(),
-				regex = new RegExp(`^-.*${deviceRootBasename}$`, "m"),
-				matchingFile = (listResult || "").match(regex);
+	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
+		let deviceRootPath = this.getDeviceRootPath(deviceAppData.appIdentifier),
+			deviceRootDir = path.dirname(deviceRootPath),
+			deviceRootBasename = path.basename(deviceRootPath),
+			listResult = await this.device.adb.executeShellCommand(["ls", "-l", deviceRootDir]),
+			regex = new RegExp(`^-.*${deviceRootBasename}$`, "m"),
+			matchingFile = (listResult || "").match(regex);
 
-			// Check if there is already a file with deviceRootBasename. If so, delete it as it breaks LiveSyncing.
-			if (matchingFile && matchingFile[0] && _.startsWith(matchingFile[0], '-')) {
-				this.device.adb.executeShellCommand(["rm", "-f", deviceRootPath]).wait();
-			}
+		// Check if there is already a file with deviceRootBasename. If so, delete it as it breaks LiveSyncing.
+		if (matchingFile && matchingFile[0] && _.startsWith(matchingFile[0], '-')) {
+			await this.device.adb.executeShellCommand(["rm", "-f", deviceRootPath]);
+		}
 
-			this.device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, "fullsync"),
-				this.$mobileHelper.buildDevicePath(deviceRootPath, "sync"),
-				this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync")]).wait();
-		}).future<void>()();
+		this.device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, "fullsync"),
+			this.$mobileHelper.buildDevicePath(deviceRootPath, "sync"),
+			await this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync")]);
 	}
 
-	private reloadPage(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<void> {
-		return (() => {
-			this.device.adb.executeCommand(["forward", `tcp:${AndroidLiveSyncService.BACKEND_PORT.toString()}`, `localabstract:${deviceAppData.appIdentifier}-livesync`]).wait();
-			if (!this.sendPageReloadMessage().wait()) {
-				this.restartApplication(deviceAppData).wait();
-			}
-		}).future<void>()();
+	private async reloadPage(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
+		await this.device.adb.executeCommand(["forward", `tcp:${AndroidLiveSyncService.BACKEND_PORT.toString()}`, `localabstract:${deviceAppData.appIdentifier}-livesync`]);
+		if (!await this.sendPageReloadMessage()) {
+			await this.restartApplication(deviceAppData);
+		}
 	}
 
-	public removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<void> {
-		return (() => {
-			let deviceRootPath = this.getDeviceRootPath(appIdentifier);
-			_.each(localToDevicePaths, localToDevicePathData => {
-				let relativeUnixPath = _.trimStart(helpers.fromWindowsRelativePathToUnix(localToDevicePathData.getRelativeToProjectBasePath()), "/");
-				let deviceFilePath = this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync", relativeUnixPath);
-				this.device.adb.executeShellCommand(["mkdir", "-p", path.dirname(deviceFilePath), "&&", "touch", deviceFilePath]).wait();
-			});
+	public async removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
+		let deviceRootPath = this.getDeviceRootPath(appIdentifier);
+		_.each(localToDevicePaths, localToDevicePathData => {
+			let relativeUnixPath = _.trimStart(helpers.fromWindowsRelativePathToUnix(localToDevicePathData.getRelativeToProjectBasePath()), "/");
+			let deviceFilePath = this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync", relativeUnixPath);
+			this.device.adb.executeShellCommand(["mkdir", "-p", path.dirname(deviceFilePath), "&& await ", "touch", deviceFilePath]);
+		});
 
-			this.deviceHashService.removeHashes(localToDevicePaths).wait();
-		}).future<void>()();
+		await this.deviceHashService.removeHashes(localToDevicePaths);
 	}
 
-	public afterInstallApplicationAction(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<boolean> {
-		return (() => {
-			 this.deviceHashService.uploadHashFileToDevice(localToDevicePaths).wait();
-			 return false;
-		}).future<boolean>()();
+	public async afterInstallApplicationAction(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<boolean> {
+		await this.deviceHashService.uploadHashFileToDevice(localToDevicePaths);
+		return false;
 	}
 
 	private getDeviceRootPath(appIdentifier: string): string {
 		return `/data/local/tmp/${appIdentifier}`;
 	}
 
-	private sendPageReloadMessage(): IFuture<boolean> {
-		let future = new Future<boolean>();
-		let socket = new net.Socket();
-		socket.connect(AndroidLiveSyncService.BACKEND_PORT, '127.0.0.1', () => {
-			socket.write(new Buffer([0, 0, 0, 1, 1]));
+	private async sendPageReloadMessage(): Promise<boolean> {
+		return new Promise<boolean>((resolve, reject) => {
+			let isResolved = false;
+			let socket = new net.Socket();
+
+			socket.connect(AndroidLiveSyncService.BACKEND_PORT, '127.0.0.1', () => {
+				socket.write(new Buffer([0, 0, 0, 1, 1]));
+			});
+			socket.on("data", (data: any) => {
+				socket.destroy();
+				resolve(true);
+			});
+			socket.on("error", () => {
+				if (!isResolved) {
+					isResolved = true;
+					resolve(false);
+				}
+			});
+			socket.on("close", () => {
+				if (!isResolved) {
+					isResolved = true;
+					resolve(false);
+				}
+			});
 		});
-		socket.on("data", (data: any) => {
-			socket.destroy();
-			future.return(true);
-		});
-		socket.on("error", () => {
-			if (!future.isResolved()) {
-				future.return(false);
-			}
-		});
-		socket.on("close", () => {
-			if (!future.isResolved()) {
-				future.return(false);
-			}
-		});
-		return future;
 	}
 
 	private _deviceHashService: Mobile.IAndroidDeviceHashService;

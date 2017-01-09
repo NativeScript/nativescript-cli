@@ -7,7 +7,6 @@ import * as optionsLib from "../lib/options";
 import * as hostInfoLib from "../lib/common/host-info";
 import * as ProjectFilesManagerLib from "../lib/common/services/project-files-manager";
 import * as path from "path";
-import Future = require("fibers/future");
 import { assert } from "chai";
 import { DeviceAppDataFactory } from "../lib/common/mobile/device-app-data/device-app-data-factory";
 import { LocalToDevicePathDataFactory } from "../lib/common/mobile/local-to-device-path-data-factory";
@@ -47,17 +46,15 @@ function createTestInjector() {
 	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
 	testInjector.register("nodeModulesBuilder", {
 		prepareNodeModules: () => {
-			return Future.fromResult();
+			return Promise.resolve();
 		}
 	});
 	testInjector.register("pluginsService", {
 		getAllInstalledPlugins: () => {
-			return (() => {
-				return <any>[];
-			}).future<IPluginData[]>()();
+			return <any>[];
 		},
 		ensureAllDependenciesAreInstalled: () => {
-			return Future.fromResult();
+			return Promise.resolve();
 		}
 	});
 	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
@@ -72,10 +69,8 @@ function createTestInjector() {
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("xmlValidator", XmlValidator);
 	testInjector.register("npm", {
-		uninstall: () => {
-			return (() => {
-				return true;
-			}).future<any>()();
+		uninstall: async () => {
+			return true;
 		}
 	});
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
@@ -95,26 +90,26 @@ describe('Platform Service Tests', () => {
 
 	describe("add platform unit tests", () => {
 		describe("#add platform()", () => {
-			it("should not fail if platform is not normalized", () => {
+			it("should not fail if platform is not normalized", async () => {
 				let fs = testInjector.resolve("fs");
 				fs.exists = () => false;
 
-				platformService.addPlatforms(["Android"]).wait();
-				platformService.addPlatforms(["ANDROID"]).wait();
-				platformService.addPlatforms(["AnDrOiD"]).wait();
-				platformService.addPlatforms(["androiD"]).wait();
+				await platformService.addPlatforms(["Android"]);
+				await platformService.addPlatforms(["ANDROID"]);
+				await platformService.addPlatforms(["AnDrOiD"]);
+				await platformService.addPlatforms(["androiD"]);
 
-				platformService.addPlatforms(["iOS"]).wait();
-				platformService.addPlatforms(["IOS"]).wait();
-				platformService.addPlatforms(["IoS"]).wait();
-				platformService.addPlatforms(["iOs"]).wait();
+				await platformService.addPlatforms(["iOS"]);
+				await platformService.addPlatforms(["IOS"]);
+				await platformService.addPlatforms(["IoS"]);
+				await platformService.addPlatforms(["iOs"]);
 			});
-			it("should fail if platform is already installed", () => {
+			it("should fail if platform is already installed", async () => {
 				// By default fs.exists returns true, so the platforms directory should exists
-				(() => platformService.addPlatforms(["android"]).wait()).should.throw();
-				(() => platformService.addPlatforms(["ios"]).wait()).should.throw();
+				await assert.isRejected(platformService.addPlatforms(["android"]));
+				await assert.isRejected(platformService.addPlatforms(["ios"]));
 			});
-			it("should fail if npm is unavalible", () => {
+			it("should fail if npm is unavalible", async () => {
 				let fs = testInjector.resolve("fs");
 				fs.exists = () => false;
 
@@ -123,14 +118,14 @@ describe('Platform Service Tests', () => {
 				npmInstallationManager.install = () => { throw new Error(errorMessage); };
 
 				try {
-					platformService.addPlatforms(["android"]).wait();
+					await platformService.addPlatforms(["android"]);
 				} catch (err) {
 					assert.equal(errorMessage, err.message);
 				}
 			});
 		});
 		describe("#add platform(ios)", () => {
-			it("should call validate method", () => {
+			it("should call validate method", async () => {
 				let fs = testInjector.resolve("fs");
 				fs.exists = () => false;
 
@@ -142,14 +137,14 @@ describe('Platform Service Tests', () => {
 				};
 
 				try {
-					platformService.addPlatforms(["ios"]).wait();
+					await platformService.addPlatforms(["ios"]);
 				} catch (err) {
 					assert.equal(errorMessage, err.message);
 				}
 			});
 		});
 		describe("#add platform(android)", () => {
-			it("should fail if java, ant or android are not installed", () => {
+			it("should fail if java, ant or android are not installed", async () => {
 				let fs = testInjector.resolve("fs");
 				fs.exists = () => false;
 
@@ -161,7 +156,7 @@ describe('Platform Service Tests', () => {
 				};
 
 				try {
-					platformService.addPlatforms(["android"]).wait();
+					await platformService.addPlatforms(["android"]);
 				} catch (err) {
 					assert.equal(errorMessage, err.message);
 				}
@@ -175,9 +170,9 @@ describe('Platform Service Tests', () => {
 			(() => platformService.removePlatforms(["android"])).should.throw();
 			(() => platformService.removePlatforms(["ios"])).should.throw();
 		});
-		it("shouldn't fail when platforms are added", () => {
+		it("shouldn't fail when platforms are added", async () => {
 			testInjector.resolve("fs").exists = () => false;
-			platformService.addPlatforms(["android"]).wait();
+			await platformService.addPlatforms(["android"]);
 
 			testInjector.resolve("fs").exists = () => true;
 			platformService.removePlatforms(["android"]);
@@ -187,17 +182,17 @@ describe('Platform Service Tests', () => {
 	// TODO: Commented as it doesn't seem correct. Check what's the case and why it's been expected to fail.
 	// describe("list platform unit tests", () => {
 	// 	it("fails when platforms are not added", () => {
-	// 		assert.throws(() => platformService.getAvailablePlatforms().wait());
+	// 		assert.throws(async () => await  platformService.getAvailablePlatforms());
 	// 	});
 	// });
 
 	describe("update Platform", () => {
 		describe("#updatePlatform(platform)", () => {
-			it("should fail when the versions are the same", () => {
+			it("should fail when the versions are the same", async () => {
 				let npmInstallationManager: INpmInstallationManager = testInjector.resolve("npmInstallationManager");
-				npmInstallationManager.getLatestVersion = () => (() => "0.2.0").future<string>()();
+				npmInstallationManager.getLatestVersion = async () => "0.2.0";
 
-				(() => platformService.updatePlatforms(["android"]).wait()).should.throw();
+				await assert.isRejected(platformService.updatePlatforms(["android"]));
 			});
 		});
 	});
@@ -229,7 +224,7 @@ describe('Platform Service Tests', () => {
 			return { tempFolder, appFolderPath, app1FolderPath, appDestFolderPath, appResourcesFolderPath };
 		}
 
-		function testPreparePlatform(platformToTest: string, release?: boolean) {
+		async function testPreparePlatform(platformToTest: string, release?: boolean) {
 			let testDirData = prepareDirStructure();
 
 			// Add platform specific files to app and app1 folders
@@ -256,14 +251,14 @@ describe('Platform Service Tests', () => {
 					projectRoot: testDirData.tempFolder,
 					platformProjectService: {
 						prepareProject: (): any => null,
-						validate: () => Future.fromResult(),
-						createProject: (projectRoot: string, frameworkDir: string) => Future.fromResult(),
-						interpolateData: (projectRoot: string) => Future.fromResult(),
+						validate: () => Promise.resolve(),
+						createProject: (projectRoot: string, frameworkDir: string) => Promise.resolve(),
+						interpolateData: (projectRoot: string) => Promise.resolve(),
 						afterCreateProject: (projectRoot: string): any => null,
 						getAppResourcesDestinationDirectoryPath: () => "",
-						processConfigurationFilesFromAppResources: () => Future.fromResult(),
+						processConfigurationFilesFromAppResources: () => Promise.resolve(),
 						ensureConfigurationFileInAppResources: (): any => null,
-						interpolateConfigurationFile: () => Future.fromResult(),
+						interpolateConfigurationFile: () => Promise.resolve(),
 						isPlatformPrepared: (projectRoot: string) => false
 					}
 				};
@@ -275,7 +270,7 @@ describe('Platform Service Tests', () => {
 			platformService = testInjector.resolve("platformService");
 			let options: IOptions = testInjector.resolve("options");
 			options.release = release;
-			platformService.preparePlatform(platformToTest).wait();
+			await platformService.preparePlatform(platformToTest);
 
 			let test1FileName = platformToTest.toLowerCase() === "ios" ? "test1.js" : "test2.js";
 			let test2FileName = platformToTest.toLowerCase() === "ios" ? "test2.js" : "test1.js";
@@ -296,23 +291,23 @@ describe('Platform Service Tests', () => {
 			}
 		}
 
-		it("should process only files in app folder when preparing for iOS platform", () => {
-			testPreparePlatform("iOS");
+		it("should process only files in app folder when preparing for iOS platform", async () => {
+			await testPreparePlatform("iOS");
 		});
 
-		it("should process only files in app folder when preparing for Android platform", () => {
-			testPreparePlatform("Android");
+		it("should process only files in app folder when preparing for Android platform", async () => {
+			await testPreparePlatform("Android");
 		});
 
-		it("should process only files in app folder when preparing for iOS platform", () => {
-			testPreparePlatform("iOS", true);
+		it("should process only files in app folder when preparing for iOS platform", async () => {
+			await testPreparePlatform("iOS", true);
 		});
 
-		it("should process only files in app folder when preparing for Android platform", () => {
-			testPreparePlatform("Android", true);
+		it("should process only files in app folder when preparing for Android platform", async () => {
+			await testPreparePlatform("Android", true);
 		});
 
-		it("invalid xml is caught", () => {
+		it("invalid xml is caught", async () => {
 			require("colors");
 			let testDirData = prepareDirStructure();
 
@@ -330,14 +325,14 @@ describe('Platform Service Tests', () => {
 					projectRoot: testDirData.tempFolder,
 					platformProjectService: {
 						prepareProject: (): any => null,
-						validate: () => Future.fromResult(),
-						createProject: (projectRoot: string, frameworkDir: string) => Future.fromResult(),
-						interpolateData: (projectRoot: string) => Future.fromResult(),
+						validate: () => Promise.resolve(),
+						createProject: (projectRoot: string, frameworkDir: string) => Promise.resolve(),
+						interpolateData: (projectRoot: string) => Promise.resolve(),
 						afterCreateProject: (projectRoot: string): any => null,
 						getAppResourcesDestinationDirectoryPath: () => "",
-						processConfigurationFilesFromAppResources: () => Future.fromResult(),
+						processConfigurationFilesFromAppResources: () => Promise.resolve(),
 						ensureConfigurationFileInAppResources: (): any => null,
-						interpolateConfigurationFile: () => Future.fromResult(),
+						interpolateConfigurationFile: () => Promise.resolve(),
 						isPlatformPrepared: (projectRoot: string) => false
 					}
 				};
@@ -351,7 +346,7 @@ describe('Platform Service Tests', () => {
 			let warnings: string = "";
 			try {
 				testInjector.resolve("$logger").warn = (text: string) => warnings += text;
-				platformService.preparePlatform("android").wait();
+				await platformService.preparePlatform("android");
 			} finally {
 				testInjector.resolve("$logger").warn = oldLoggerWarner;
 			}

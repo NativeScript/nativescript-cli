@@ -1,5 +1,5 @@
 export class PlatformsData implements IPlatformsData {
-	private platformsData : { [index: string]: any } = {};
+	private platformsData: { [index: string]: any } = {};
 
 	constructor($androidProjectService: IPlatformProjectService,
 		$iOSProjectService: IPlatformProjectService) {

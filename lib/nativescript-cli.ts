@@ -1,13 +1,11 @@
 require("./bootstrap");
-import * as fiber from "fibers";
-import Future = require("fibers/future");
 import * as shelljs from "shelljs";
 shelljs.config.silent = true;
 shelljs.config.fatal = true;
-import {installUncaughtExceptionListener} from "./common/errors";
+import { installUncaughtExceptionListener } from "./common/errors";
 installUncaughtExceptionListener(process.exit);
 
-fiber(() => {
+(async () => {
 	let config: Config.IConfig = $injector.resolve("$config");
 	let err: IErrors = $injector.resolve("$errors");
 	err.printCallStack = config.DEBUG;
@@ -18,11 +16,10 @@ fiber(() => {
 	messages.pathsToMessageJsonFiles = [/* Place client-specific json message file paths here */];
 
 	if (process.argv[2] === "completion") {
-		commandDispatcher.completeCommand().wait();
+		await commandDispatcher.completeCommand();
 	} else {
-		commandDispatcher.dispatchCommand().wait();
+		await commandDispatcher.dispatchCommand();
 	}
 
 	$injector.dispose();
-	Future.assertNoFutureLeftBehind();
-}).run();
+})();

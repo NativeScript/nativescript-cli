@@ -3,7 +3,7 @@
 // Definitions by: Alex Varju <https://github.com/varju/>, Maxime LUCE <https://github.com/SomaticIT/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
-interface Object {
+interface ShouldObject {
   should: ShouldAssertion;
 }
 

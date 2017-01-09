@@ -1,5 +1,5 @@
 import * as path from "path";
-import {NODE_MODULES_FOLDER_NAME} from "../constants";
+import { NODE_MODULES_FOLDER_NAME } from "../constants";
 
 const prepareInfoFileName = ".nsprepareinfo";
 
@@ -14,16 +14,16 @@ class ProjectChangesInfo implements IProjectChangesInfo {
 
 	public get hasChanges(): boolean {
 		return this.packageChanged ||
-		       this.appFilesChanged ||
-			   this.appResourcesChanged ||
-			   this.modulesChanged ||
-			   this.configChanged;
+			this.appFilesChanged ||
+			this.appResourcesChanged ||
+			this.modulesChanged ||
+			this.configChanged;
 	}
 
 	public get changesRequireBuild(): boolean {
 		return this.packageChanged ||
-		       this.appResourcesChanged ||
-			   this.nativeChanged;
+			this.appResourcesChanged ||
+			this.nativeChanged;
 	}
 }
 
@@ -184,7 +184,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 			if (changed) {
 				if (processFunc) {
-					this._newFiles ++;
+					this._newFiles++;
 					let filePathRelative = path.relative(this.$projectData.projectDir, filePath);
 					if (processFunc.call(this, filePathRelative)) {
 						return true;
@@ -212,7 +212,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		}
 		if (_.startsWith(file, NODE_MODULES_FOLDER_NAME)) {
 			let filePath = file;
-			while(filePath !== NODE_MODULES_FOLDER_NAME) {
+			while (filePath !== NODE_MODULES_FOLDER_NAME) {
 				filePath = path.dirname(filePath);
 				let fullFilePath = path.join(projectDir, path.join(filePath, "package.json"));
 				if (this.$fs.exists(fullFilePath)) {
