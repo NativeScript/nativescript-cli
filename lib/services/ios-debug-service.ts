@@ -203,7 +203,8 @@ class IOSDebugService implements IDebugService {
 			if (this.$options.chrome) {
 				this._socketProxy = this.$socketProxyFactory.createWebSocketProxy(factory);
 
-				this.$logger.info(`To start debugging, open the following URL in Chrome:\nchrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:${this._socketProxy.options.port}\n`);
+				let commitSHA = "02e6bde1bbe34e43b309d4ef774b1168d25fd024"; // corresponds to 55.0.2883 Chrome version
+				this.$logger.info(`To start debugging, open the following URL in Chrome:\nchrome-devtools://devtools/remote/serve_file/@${commitSHA}/inspector.html?experiments=true&ws=localhost:${this._socketProxy.options.port}\n`.cyan);
 			} else {
 				this._socketProxy = this.$socketProxyFactory.createTCPSocketProxy(factory);
 				this.openAppInspector(this._socketProxy.address()).wait();
