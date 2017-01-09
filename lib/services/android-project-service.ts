@@ -75,6 +75,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this._platformData;
 	}
 
+	public validateOptions(): IFuture<boolean> {
+		return Future.fromResult(true);
+	}
+
 	public getAppResourcesDestinationDirectoryPath(frameworkVersion?: string): string {
 		if (this.canUseGradle(frameworkVersion)) {
 			return path.join(this.platformData.projectRoot, "src", "main", "res");

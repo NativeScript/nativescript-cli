@@ -23,7 +23,7 @@ export class DeployOnDeviceCommand implements ICommand {
 				this.$errors.fail("When producing a release build, you need to specify all --key-store-* options.");
 			}
 
-			return true;
+			return this.$platformService.validateOptions(args[0]).wait();
 		}).future<boolean>()();
 	}
 

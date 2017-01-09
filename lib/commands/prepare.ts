@@ -9,6 +9,10 @@ export class PrepareCommand implements ICommand {
 		}).future<void>()();
 	}
 
+	public canExecute(args: string[]): IFuture<boolean> {
+		return this.$platformService.validateOptions(args[0]);
+	}
+
 	allowedParameters = [this.$platformCommandParameter];
 }
 $injector.registerCommand("prepare", PrepareCommand);
