@@ -1,4 +1,5 @@
 import * as net from "net";
+import * as os from "os";
 import Future = require("fibers/future");
 import { sleep } from "../common/helpers";
 import {ChildProcess} from "child_process";
@@ -236,7 +237,7 @@ class AndroidDebugService implements IDebugService {
 
 	private startDebuggerClient(port: Number): IFuture<void> {
 		return (() => {
-			this.$logger.info(`To start debugging, open the following URL in Chrome:\nchrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:${port}\n`);
+			this.$logger.info(`To start debugging, open the following URL in Chrome:${os.EOL}chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:${port}${os.EOL}`.cyan);
 		}).future<void>()();
 	}
 
