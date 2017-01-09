@@ -2,6 +2,7 @@ import * as iOSDevice from "../common/mobile/ios/device/ios-device";
 import * as net from "net";
 import * as path from "path";
 import * as log4js from "log4js";
+import * as os from "os";
 import {ChildProcess} from "child_process";
 import byline = require("byline");
 
@@ -195,7 +196,8 @@ class IOSDebugService implements IDebugService {
 			if (this.$options.chrome) {
 				this._socketProxy = this.$socketProxyFactory.createWebSocketProxy(factory);
 
-				this.$logger.info(`To start debugging, open the following URL in Chrome:\nchrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:${this._socketProxy.options.port}\n`);
+				const commitSHA = "02e6bde1bbe34e43b309d4ef774b1168d25fd024"; // corresponds to 55.0.2883 Chrome version
+				this.$logger.info(`To start debugging, open the following URL in Chrome:${os.EOL}chrome-devtools://devtools/remote/serve_file/@${commitSHA}/inspector.html?experiments=true&ws=localhost:${this._socketProxy.options.port}${os.EOL}`.cyan);
 			} else {
 				this._socketProxy = this.$socketProxyFactory.createTCPSocketProxy(factory);
 				this.openAppInspector(this._socketProxy.address()).wait();
