@@ -141,7 +141,7 @@ function createTestInjector() {
 	testInjector.register("npm", {});
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
-
+	testInjector.register("emulatorPlatformService", stubs.EmulatorPlatformService);
 	return testInjector;
 }
 

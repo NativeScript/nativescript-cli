@@ -667,3 +667,25 @@ export class PlatformServiceStub implements IPlatformService {
 		return Future.fromResult("");
 	}
 }
+
+export class EmulatorPlatformService implements IEmulatorPlatformService {
+	public listAvailableEmulators(platform: string): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public getEmulatorInfo(platform: string, nameOfId: string): IFuture<IEmulatorInfo> {
+		return Future.fromResult(null);
+	}
+
+    public getiOSEmulators(): IFuture<IEmulatorInfo[]> {
+		return Future.fromResult(null);
+	}
+
+    public getAndroidEmulators(): IFuture<IEmulatorInfo[]> {
+		return Future.fromResult(null);
+	}
+
+    public startEmulator(info: IEmulatorInfo): IFuture<void> {
+		return Future.fromResult();
+	}
+}
