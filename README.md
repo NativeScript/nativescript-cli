@@ -48,7 +48,7 @@ You are now ready to start building your awesome apps! Next we recommend diving 
 `npm run build`
 
 ## Release
-[TravisCI](https://travis-ci.org/Kinvey/javascript-sdk) will deploy the pacakge to [NPM](https://www.npmjs.com/package/kinvey-javascript-sdk).
+[TravisCI](https://travis-ci.org/Kinvey/javascript-sdk) will deploy the package to [NPM](https://www.npmjs.com/package/kinvey-javascript-sdk).
 
 1. Checkout the master branch.
 2. Update the CHANGELOG.md.
