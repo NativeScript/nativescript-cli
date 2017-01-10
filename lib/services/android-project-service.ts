@@ -428,7 +428,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
 			let deviceRootPath = `/data/local/tmp/${this.$projectData.projectId}`;
 			adb.executeShellCommand(["rm", "-rf", deviceRootPath]).wait();
-			adb.executeShellCommand(["mkdir", deviceRootPath]);
+			adb.executeShellCommand(["mkdir", deviceRootPath]).wait();
 		}).future<void>()();
 	}
 
