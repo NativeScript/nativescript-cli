@@ -51,6 +51,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("iOSEmulatorServices", {});
 	testInjector.register("cocoapodsService", CocoaPodsService);
 	testInjector.register("iOSProjectService", iOSProjectServiceLib.IOSProjectService);
+	testInjector.register("iOSProvisionService", {});
 	testInjector.register("logger", LoggerLib.Logger);
 	testInjector.register("options", OptionsLib.Options);
 	testInjector.register("projectData", {

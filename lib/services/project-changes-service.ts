@@ -76,6 +76,16 @@ export class ProjectChangesService implements IProjectChangesService {
 				]);
 			}
 		}
+		if (platform.toLowerCase() === this.$devicePlatformsConstants.iOS.toLowerCase()) {
+			const nextCommandProvisionUUID = this.$options.provision;
+			// We should consider reading here the provisioning profile UUID from the xcodeproj and xcconfig.
+			const prevProvisionUUID = this._prepareInfo.iOSProvisioningProfileUUID;
+			if (nextCommandProvisionUUID !== prevProvisionUUID) {
+				this._changesInfo.nativeChanged = true;
+				this._changesInfo.configChanged = true;
+				this._prepareInfo.iOSProvisioningProfileUUID = nextCommandProvisionUUID;
+			}
+		}
 		if (this.$options.bundle !== this._prepareInfo.bundle || this.$options.release !== this._prepareInfo.release) {
 			this._changesInfo.appFilesChanged = true;
 			this._changesInfo.appResourcesChanged = true;

@@ -4,6 +4,8 @@ interface IPrepareInfo {
 	release: boolean;
 	changesRequireBuild: boolean;
 	changesRequireBuildTime: string;
+
+	iOSProvisioningProfileUUID?: string;
 }
 
 interface IProjectChangesInfo {

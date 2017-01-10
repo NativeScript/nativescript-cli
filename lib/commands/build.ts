@@ -1,6 +1,7 @@
 export class BuildCommandBase {
 	constructor(protected $options: IOptions,
-		private $platformService: IPlatformService) { }
+		protected $platformsData: IPlatformsData,
+		protected $platformService: IPlatformService) { }
 
 	executeCore(args: string[]): IFuture<void> {
 		return (() => {
@@ -17,9 +18,9 @@ export class BuildCommandBase {
 
 export class BuildIosCommand extends BuildCommandBase implements  ICommand {
 	constructor(protected $options: IOptions,
-				private $platformsData: IPlatformsData,
+				$platformsData: IPlatformsData,
 				$platformService: IPlatformService) {
-		super($options, $platformService);
+		super($options, $platformsData, $platformService);
 	}
 
 	public allowedParameters: ICommandParameter[] = [];
@@ -27,15 +28,19 @@ export class BuildIosCommand extends BuildCommandBase implements  ICommand {
 	public execute(args: string[]): IFuture<void> {
 		return this.executeCore([this.$platformsData.availablePlatforms.iOS]);
 	}
+
+	public canExecute(args: string[]): IFuture<boolean> {
+		return this.$platformService.validateOptions(this.$platformsData.availablePlatforms.iOS);
+	}
 }
 $injector.registerCommand("build|ios", BuildIosCommand);
 
 export class BuildAndroidCommand extends BuildCommandBase implements  ICommand {
 	constructor(protected $options: IOptions,
-				private $platformsData: IPlatformsData,
+				$platformsData: IPlatformsData,
 				private $errors: IErrors,
 				$platformService: IPlatformService) {
-		super($options, $platformService);
+		super($options, $platformsData, $platformService);
 	}
 
 	public execute(args: string[]): IFuture<void> {
@@ -49,7 +54,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements  ICommand {
 			if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 				this.$errors.fail("When producing a release build, you need to specify all --key-store-* options.");
 			}
-			return args.length === 0;
+			return args.length === 0 && this.$platformService.validateOptions(this.$platformsData.availablePlatforms.Android).wait();
 		}).future<boolean>()();
 	}
 }

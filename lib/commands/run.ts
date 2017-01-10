@@ -1,6 +1,6 @@
 export class RunCommandBase {
-	constructor(private $platformService: IPlatformService,
-		private $usbLiveSyncService: ILiveSyncService,
+	constructor(protected $platformService: IPlatformService,
+		protected $usbLiveSyncService: ILiveSyncService,
 		protected $options: IOptions) { }
 
 	public executeCore(args: string[]): IFuture<void> {
@@ -16,7 +16,8 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 	constructor($platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		$usbLiveSyncService: ILiveSyncService,
-		$options: IOptions) {
+		$options: IOptions,
+		private $injector: IInjector) {
 		super($platformService, $usbLiveSyncService, $options);
 	}
 
@@ -24,6 +25,10 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 
 	public execute(args: string[]): IFuture<void> {
 		return this.executeCore([this.$platformsData.availablePlatforms.iOS]);
+	}
+
+	public canExecute(args: string[]): IFuture<boolean> {
+		return this.$platformService.validateOptions(this.$platformsData.availablePlatforms.iOS);
 	}
 }
 $injector.registerCommand("run|ios", RunIosCommand);
@@ -48,7 +53,7 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 			if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 				this.$errors.fail("When producing a release build, you need to specify all --key-store-* options.");
 			}
-			return args.length === 0;
+			return args.length === 0 && this.$platformService.validateOptions(this.$platformsData.availablePlatforms.Android).wait();
 		}).future<boolean>()();
 	}
 }
