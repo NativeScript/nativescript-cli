@@ -7,8 +7,9 @@
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $config: IConfiguration,
 		private $usbLiveSyncService: ILiveSyncService,
-		private $platformService: IPlatformService,
-		protected $options: IOptions) { }
+		protected $platformService: IPlatformService,
+		protected $options: IOptions,
+		protected $platformsData: IPlatformsData) { }
 
 	execute(args: string[]): IFuture<void> {
 		if (this.$options.start) {
@@ -67,8 +68,16 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 		$config: IConfiguration,
 		$usbLiveSyncService: ILiveSyncService,
 		$platformService: IPlatformService,
-		$options: IOptions) {
-		super($iOSDebugService, $devicesService, $injector, $logger, $childProcess, $devicePlatformsConstants, $config, $usbLiveSyncService, $platformService, $options);
+		$options: IOptions,
+		$platformsData: IPlatformsData) {
+
+		super($iOSDebugService, $devicesService, $injector, $logger, $childProcess, $devicePlatformsConstants, $config, $usbLiveSyncService, $platformService, $options, $platformsData);
+	}
+
+	canExecute(args: string[]): IFuture<boolean> {
+		return (() => {
+			return super.canExecute(args).wait() && this.$platformService.validateOptions(this.$platformsData.availablePlatforms.iOS).wait();
+		}).future<boolean>()();
 	}
 }
 $injector.registerCommand("debug|ios", DebugIOSCommand);
@@ -83,8 +92,16 @@ export class DebugAndroidCommand extends DebugPlatformCommand {
 		$config: IConfiguration,
 		$usbLiveSyncService: ILiveSyncService,
 		$platformService: IPlatformService,
-		$options: IOptions) {
-		super($androidDebugService, $devicesService, $injector, $logger, $childProcess, $devicePlatformsConstants, $config, $usbLiveSyncService, $platformService, $options);
+		$options: IOptions,
+		$platformsData: IPlatformsData) {
+
+		super($androidDebugService, $devicesService, $injector, $logger, $childProcess, $devicePlatformsConstants, $config, $usbLiveSyncService, $platformService, $options, $platformsData);
+	}
+
+	canExecute(args: string[]): IFuture<boolean> {
+		return (() => {
+			return super.canExecute(args).wait() && this.$platformService.validateOptions(this.$platformsData.availablePlatforms.Android).wait();
+		}).future<boolean>()();
 	}
 }
 $injector.registerCommand("debug|android", DebugAndroidCommand);

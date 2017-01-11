@@ -227,10 +227,22 @@ export class PlatformService implements IPlatformService {
 		}).future<boolean>()();
 	}
 
-	public validateOptions(platform: string): IFuture<boolean> {
+	public validateOptions(platform?: string): IFuture<boolean> {
 		return (() => {
-			let platformData = this.$platformsData.getPlatformData(platform);
-			return platformData.platformProjectService.validateOptions().wait();
+			if (platform) {
+				platform = this.$mobileHelper.normalizePlatformName(platform);
+				this.$logger.trace("Validate options for platform: " + platform);
+				let platformData = this.$platformsData.getPlatformData(platform);
+				return platformData.platformProjectService.validateOptions().wait();
+			} else {
+				let valid = true;
+				for (let availablePlatform in this.$platformsData.availablePlatforms) {
+					this.$logger.trace("Validate options for platform: " + availablePlatform);
+					let platformData = this.$platformsData.getPlatformData(availablePlatform);
+					valid = valid && platformData.platformProjectService.validateOptions().wait();
+				}
+				return valid;
+			}
 		}).future<boolean>()();
 	}
 

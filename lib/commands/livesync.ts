@@ -13,16 +13,16 @@ export class LivesyncCommand implements ICommand {
 
 	public canExecute(args: string[]): IFuture<boolean> {
 		return (() => {
-			if(args.length >= 2) {
+			if (args.length >= 2) {
 				this.$errors.fail("Invalid number of arguments.");
 			}
 
 			let platform = args[0];
-			if(platform) {
-				 return _.includes(this.$mobileHelper.platformNames, this.$mobileHelper.normalizePlatformName(platform));
+			if (platform) {
+				return _.includes(this.$mobileHelper.platformNames, this.$mobileHelper.normalizePlatformName(platform)) && this.$platformService.validateOptions(args[0]).wait();
+			} else {
+				return this.$platformService.validateOptions().wait();
 			}
-
-			return true;
 		}).future<boolean>()();
 	}
 
