@@ -348,7 +348,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				if (signing && signing.style === "Manual") {
 					for(let config in signing.configurations) {
 						let options = signing.configurations[config];
-						if (options.name !== this.$options.provision && options.name !== this.$options.provision) {
+						if (options.name !== this.$options.provision && options.uuid !== this.$options.provision) {
 							shouldUpdateXcode = true;
 							break;
 						}

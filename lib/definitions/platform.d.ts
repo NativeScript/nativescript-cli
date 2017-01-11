@@ -78,8 +78,10 @@ interface IPlatformService {
 
 	/**
 	 * Gets first chance to validate the options provided as command line arguments.
+	 * If no platform is provided or a falsy (null, undefined, "", false...) platform is provided,
+	 * the options will be validated for all available platforms.
 	 */
-	validateOptions(platform: string): IFuture<boolean>;
+	validateOptions(platform?: string): IFuture<boolean>;
 
 	/**
 	 * Executes prepare, build and installOnPlatform when necessary to ensure that the latest version of the app is installed on specified platform.

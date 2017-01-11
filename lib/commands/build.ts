@@ -30,7 +30,9 @@ export class BuildIosCommand extends BuildCommandBase implements  ICommand {
 	}
 
 	public canExecute(args: string[]): IFuture<boolean> {
-		return this.$platformService.validateOptions(this.$platformsData.availablePlatforms.iOS);
+		return (() => {
+			return args.length === 0 && this.$platformService.validateOptions(this.$platformsData.availablePlatforms.iOS).wait();
+		}).future<boolean>()();
 	}
 }
 $injector.registerCommand("build|ios", BuildIosCommand);

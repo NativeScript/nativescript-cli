@@ -48,6 +48,12 @@ function createTestInjector(): IInjector {
 	testInjector.register("adb", AndroidDebugBridge);
 	testInjector.register("androidDebugBridgeResultHandler", AndroidDebugBridgeResultHandler);
 	testInjector.register("platformService", stubs.PlatformServiceStub);
+	testInjector.register("platformsData", {
+		availablePlatforms: {
+			Android: "Android",
+			iOS: "iOS"
+		}
+	});
 
 	return testInjector;
 }
