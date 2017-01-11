@@ -102,6 +102,7 @@ $androidExecutable = [io.path]::combine($env:ANDROID_HOME, "tools", "android")
 echo y | cmd /c "$androidExecutable" update sdk --filter "platform-tools" --all --no-ui
 echo y | cmd /c "$androidExecutable" update sdk --filter "tools" --all --no-ui
 echo y | cmd /c "$androidExecutable" update sdk --filter "android-23" --all --no-ui
+echo y | cmd /c "$androidExecutable" update sdk --filter "build-tools-25.0.2" --all --no-ui
 echo y | cmd /c "$androidExecutable" update sdk --filter "build-tools-23.0.3" --all --no-ui
 echo y | cmd /c "$androidExecutable" update sdk --filter "extra-android-m2repository" --all --no-ui
 
