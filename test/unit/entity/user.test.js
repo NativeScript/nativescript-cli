@@ -1,6 +1,6 @@
-import { TestUser as User } from '../mocks';
+import { User } from 'src/entity';
 import { randomString } from 'src/utils';
-import { ActiveUserError, KinveyError } from 'src/errors';
+import { ActiveUserError, InvalidCredentialsError, KinveyError } from 'src/errors';
 import { TestUser } from '../mocks';
 import expect from 'expect';
 import nock from 'nock';
@@ -12,13 +12,14 @@ describe('User', function() {
       return User.logout();
     });
 
-    it('should throw an error if an active user already exists', async function() {
-      try {
-        await User.login(randomString(), randomString());
-        await User.login(randomString(), randomString());
-      } catch (error) {
-        expect(error).toBeA(ActiveUserError);
-      }
+    it('should throw an error if an active user already exists', function() {
+      return TestUser.login(randomString(), randomString())
+        .then(() => {
+          return TestUser.login(randomString(), randomString());
+        })
+        .catch((error) => {
+          expect(error).toBeA(ActiveUserError);
+        });
     });
 
     it('should throw an error if a username is not provided', async function() {
@@ -51,6 +52,27 @@ describe('User', function() {
       } catch (error) {
         expect(error).toBeA(KinveyError);
       }
+    });
+
+    it('should throw an error if the username and/or password is invalid', function() {
+      let user = new User();
+      const username = randomString();
+      const password = randomString();
+
+      // Kinvey API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .post(`${user.pathname}/login`, { username: username, password: password })
+        .reply(401, {
+          name: 'InvalidCredentials',
+          message: 'Invalid credentials. Please retry your request with correct credentials'
+        }, {
+          'Content-Type': 'application/json; charset=utf-8'
+        });
+
+      return user.login(username, password)
+        .catch((error) => {
+          expect(error).toBeA(InvalidCredentialsError);
+        });
     });
 
     it('should login a user', async function() {
