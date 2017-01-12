@@ -250,7 +250,7 @@ var Query = function () {
       }
 
       if ((regExp.ignoreCase || options.ignoreCase) && options.ignoreCase !== false) {
-        throw new _errors.QueryError('ignoreCase glag is not supported.');
+        throw new _errors.QueryError('ignoreCase flag is not supported.');
       }
 
       if (regExp.source.indexOf('^') !== 0) {

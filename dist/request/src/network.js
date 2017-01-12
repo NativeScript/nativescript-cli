@@ -5,6 +5,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.KinveyRequest = exports.Properties = exports.AuthType = undefined;
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _set = function set(object, property, value, receiver) { var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent !== null) { set(parent, property, value, receiver); } } else if ("value" in desc && desc.writable) { desc.value = value; } else { var setter = desc.set; if (setter !== undefined) { setter.call(receiver, value); } } return value; };
@@ -301,7 +303,9 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
         return response;
       }).catch(function (error) {
         if (error instanceof _errors.InvalidCredentialsError && retry === true) {
-          return _local2.default.getActiveUser(_this5.client).then(function (activeUser) {
+          var _ret = function () {
+            var activeUser = _local2.default.getActiveUser(_this5.client);
+
             if (!(0, _utils.isDefined)(activeUser)) {
               throw error;
             }
@@ -335,40 +339,44 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
                   properties: _this5.properties
                 });
 
-                return refreshMICRequest.execute().then(function (response) {
-                  return response.data;
-                }).then(function (newSession) {
-                  var data = {};
-                  data._socialIdentity = {};
-                  data._socialIdentity[session.identity] = newSession;
-
-                  var loginRequest = new KinveyRequest({
-                    method: _request.RequestMethod.POST,
-                    authType: AuthType.App,
-                    url: _url2.default.format({
-                      protocol: _this5.client.protocol,
-                      host: _this5.client.host,
-                      pathname: '/' + usersNamespace + '/' + _this5.client.appKey + '/login'
-                    }),
-                    properties: _this5.properties,
-                    body: data,
-                    timeout: _this5.timeout,
-                    client: _this5.client
-                  });
-                  return loginRequest.execute().then(function (response) {
+                return {
+                  v: refreshMICRequest.execute().then(function (response) {
                     return response.data;
-                  });
-                }).then(function (user) {
-                  user._socialIdentity[session.identity] = (0, _defaults2.default)(user._socialIdentity[session.identity], session);
-                  return _local2.default.setActiveUser(_this5.client, user);
-                }).then(function () {
-                  return _this5.execute(rawResponse, false);
-                });
+                  }).then(function (newSession) {
+                    var data = {};
+                    data._socialIdentity = {};
+                    data._socialIdentity[session.identity] = newSession;
+
+                    var loginRequest = new KinveyRequest({
+                      method: _request.RequestMethod.POST,
+                      authType: AuthType.App,
+                      url: _url2.default.format({
+                        protocol: _this5.client.protocol,
+                        host: _this5.client.host,
+                        pathname: '/' + usersNamespace + '/' + _this5.client.appKey + '/login'
+                      }),
+                      properties: _this5.properties,
+                      body: data,
+                      timeout: _this5.timeout,
+                      client: _this5.client
+                    });
+                    return loginRequest.execute().then(function (response) {
+                      return response.data;
+                    });
+                  }).then(function (user) {
+                    user._socialIdentity[session.identity] = (0, _defaults2.default)(user._socialIdentity[session.identity], session);
+                    return _local2.default.setActiveUser(_this5.client, user);
+                  }).then(function () {
+                    return _this5.execute(rawResponse, false);
+                  })
+                };
               }
             }
 
             throw error;
-          });
+          }();
+
+          if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
         }
 
         throw error;
