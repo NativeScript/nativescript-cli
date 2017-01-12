@@ -314,7 +314,7 @@ export class PlatformService implements IPlatformService {
 
 	public shouldBuild(platform: string, buildConfig?: IBuildConfig): IFuture<boolean> {
 		return (() => {
-			if (this.$options.release || this.$projectChangesService.currentChanges.changesRequireBuild) {
+			if (this.$projectChangesService.currentChanges.changesRequireBuild) {
 				return true;
 			}
 			let platformData = this.$platformsData.getPlatformData(platform);
