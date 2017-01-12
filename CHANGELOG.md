@@ -1,8 +1,15 @@
 ## Changelog
+## [3.3.4](https://github.com/Kinvey/kinvey-nodejs/tree/v3.3.4) (2017-01-12)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.3.3...v3.3.4)<br/>
+
+**Changes**
+- Improved test coverage. [#92](https://github.com/Kinvey/js-sdk/pull/92)
+- Fixed a bug that would produce a `TypeError` for a failed login or any network request that resulted in an `InvalidCredentialsError` [#95](https://github.com/Kinvey/js-sdk/pull/95)
+
 ## [3.3.3](https://github.com/Kinvey/kinvey-nodejs/tree/v3.3.3) (2016-12-16)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.3.2...v3.3.3)<br/>
 
-**Merged pull requests:**
+**Changes**
 - Added `error.kinveyRequestId` as a property to error objects. This property is set to the `X-Kinvey-Request-Id` header value of a Kinvey API response. It is `undefined` by default. [#84](https://github.com/Kinvey/js-sdk/pull/84)
 - Added a global get/set default timeout property on the client. The library sets the default timeout to a value of 60 seconds. You can change this value by passing a default timeout when you initialize the SDK. [#85](https://github.com/Kinvey/js-sdk/pull/85)
 
