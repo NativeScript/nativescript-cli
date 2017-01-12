@@ -109,6 +109,9 @@ class LiveSyncService implements ILiveSyncService {
 				this.$hooksService.executeBeforeHooks('watch').wait();
 				this.partialSync(liveSyncData[0].syncWorkingDirectory, watchForChangeActions);
 			}
+			if (this.$options.justlaunch) {
+				process.kill(process.pid);
+			}
 		}).future<void>()();
 	}
 
