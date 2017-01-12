@@ -165,7 +165,7 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
     public getAndroidEmulators(): IFuture<IEmulatorInfo[]> {
         return (() => {
             let androidPath = path.join(process.env.ANDROID_HOME, "tools", "android");
-            let text:string = this.$childProcess.exec(`${androidPath} list avd`).wait();
+            let text:string = this.$childProcess.exec(`"${androidPath}" list avd`).wait();
             let notLoadedIndex = text.indexOf("The following");
             if (notLoadedIndex > 0) {
                 text = text.substring(0, notLoadedIndex);
