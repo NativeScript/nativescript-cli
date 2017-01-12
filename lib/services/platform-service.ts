@@ -458,6 +458,7 @@ export class PlatformService implements IPlatformService {
 		if (this.$options.availableDevices) {
 			return this.$emulatorPlatformService.listAvailableEmulators(platform);
 		}
+		this.$options.emulator = true;
 		if (this.$options.device) {
 			let info = this.$emulatorPlatformService.getEmulatorInfo(platform, this.$options.device).wait();
 			if (info) {
@@ -465,9 +466,17 @@ export class PlatformService implements IPlatformService {
 					this.$emulatorPlatformService.startEmulator(info).wait();
 				}
 				this.$options.device = null;
+			} else {
+				this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device }).wait();
+				let found: Mobile.IDeviceInfo[] = [];
+				if (this.$devicesService.hasDevices) {
+					found = this.$devicesService.getDevices().filter((device:Mobile.IDeviceInfo) => device.identifier === this.$options.device);
+				}
+				if (found.length === 0) {
+					this.$errors.fail("Cannot find device with name: %s", this.$options.device);
+				}
 			}
 		}
-		this.$options.emulator = true;
 		this.deployPlatform(platform).wait();
 		return this.runPlatform(platform);
 	}
