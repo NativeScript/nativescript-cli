@@ -126,7 +126,10 @@ export class NodePackageManager implements INodePackageManager {
 	private getFlagsString(config: any, asArray: boolean) : any{
 		let array:Array<string> = [];
 		for(let flag in config) {
-			if(config[flag]) {
+			if (flag === "global") {
+				array.push(`--${flag}`);
+				array.push(`${config[flag]}`);
+			} else if(config[flag]) {
 				if(flag==="dist-tags" || flag==="versions") {
 					array.push(` ${flag}`);
 					continue;
