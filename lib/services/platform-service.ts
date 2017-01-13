@@ -438,6 +438,9 @@ export class PlatformService implements IPlatformService {
 
 	public runPlatform(platform: string): IFuture<void> {
 		return (() => {
+			if (this.$options.justlaunch) {
+				this.$options.watch = false;
+			}
 			this.$logger.out("Starting...");
 			let action = (device: Mobile.IDevice) => {
 				return (() => {
