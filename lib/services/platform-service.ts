@@ -399,6 +399,7 @@ export class PlatformService implements IPlatformService {
 			} else {
 				this.$logger.out("Skipping package build. No changes detected on the native side. This will be fast!");
 			}
+
 			if (forceInstall || shouldBuild || (await this.shouldInstall(device))) {
 				await this.installApplication(device);
 			} else {
@@ -409,11 +410,17 @@ export class PlatformService implements IPlatformService {
 	}
 
 	public async runPlatform(platform: string): Promise<void> {
+		if (this.$options.justlaunch) {
+			this.$options.watch = false;
+		}
+
 		this.$logger.out("Starting...");
+
 		let action = async (device: Mobile.IDevice) => {
 			await device.applicationManager.startApplication(this.$projectData.projectId);
 			this.$logger.out(`Successfully started on device with identifier '${device.deviceInfo.identifier}'.`);
 		};
+
 		await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
 		await this.$devicesService.execute(action, this.getCanExecuteAction(platform));
 	}
