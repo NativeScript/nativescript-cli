@@ -1,6 +1,6 @@
 
 interface IProjectService {
-	createProject(projectName: string, selectedTemplate?: string): IFuture<void>;
+	createProject(projectName: string, selectedTemplate?: string): Promise<void>;
 }
 
 interface IProjectData {
@@ -59,7 +59,7 @@ interface IProjectTemplatesService {
 	 * @param {string} templateName The name of the template.
 	 * @return {string} Path to the directory where extracted template can be found.
 	 */
-	prepareTemplate(templateName: string, projectDir: string): IFuture<string>;
+	prepareTemplate(templateName: string, projectDir: string): Promise<string>;
 }
 
 interface IPlatformProjectServiceBase {
@@ -91,10 +91,10 @@ interface IiOSBuildConfig extends IBuildConfig {
 
 interface IPlatformProjectService {
 	platformData: IPlatformData;
-	validate(): IFuture<void>;
-	createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): IFuture<void>;
-	interpolateData(): IFuture<void>;
-	interpolateConfigurationFile(configurationFilePath?: string): IFuture<void>;
+	validate(): Promise<void>;
+	createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): Promise<void>;
+	interpolateData(): Promise<void>;
+	interpolateConfigurationFile(configurationFilePath?: string): Promise<void>;
 
 	/**
 	 * Executes additional actions after native project is created.
@@ -106,15 +106,15 @@ interface IPlatformProjectService {
 	/**
 	 * Gets first chance to validate the options provided as command line arguments.
 	 */
-	validateOptions(): IFuture<boolean>;
+	validateOptions(): Promise<boolean>;
 
-	buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void>;
+	buildProject(projectRoot: string, buildConfig?: IBuildConfig): Promise<void>;
 
 	/**
 	 * Prepares images in Native project (for iOS).
 	 * @returns {void}
 	 */
-	prepareProject(): void;
+	prepareProject(): Promise<void>;
 
 	/**
 	 * Prepares App_Resources in the native project by clearing data from other platform and applying platform specific rules.
@@ -137,17 +137,17 @@ interface IPlatformProjectService {
 	 */
 	canUpdatePlatform(newInstalledModuleDir: string): boolean;
 
-	preparePluginNativeCode(pluginData: IPluginData, options?: any): IFuture<void>;
+	preparePluginNativeCode(pluginData: IPluginData, options?: any): Promise<void>;
 
 	/**
 	 * Removes native code of a plugin (CocoaPods, jars, libs, src).
 	 * @param {IPluginData} Plugins data describing the plugin which should be cleaned.
 	 * @returns {void}
 	 */
-	removePluginNativeCode(pluginData: IPluginData): void;
+	removePluginNativeCode(pluginData: IPluginData): Promise<void>;
 
-	afterPrepareAllPlugins(): IFuture<void>;
-	beforePrepareAllPlugins(dependencies?: IDictionary<IDependencyData>): IFuture<void>;
+	afterPrepareAllPlugins(): Promise<void>;
+	beforePrepareAllPlugins(dependencies?: IDictionary<IDependencyData>): Promise<void>;
 
 	/**
 	 * Gets the path wheren App_Resources should be copied.
@@ -155,8 +155,8 @@ interface IPlatformProjectService {
 	 */
 	getAppResourcesDestinationDirectoryPath(): string;
 
-	deploy(deviceIdentifier: string): IFuture<void>;
-	processConfigurationFilesFromAppResources(): IFuture<void>;
+	deploy(deviceIdentifier: string): Promise<void>;
+	processConfigurationFilesFromAppResources(): Promise<void>;
 
 	/**
 	 * Ensures there is configuration file (AndroidManifest.xml, Info.plist) in app/App_Resources.
@@ -166,14 +166,14 @@ interface IPlatformProjectService {
 }
 
 interface IAndroidProjectPropertiesManager {
-	getProjectReferences(): IFuture<ILibRef[]>;
-	addProjectReference(referencePath: string): IFuture<void>;
-	removeProjectReference(referencePath: string): IFuture<void>;
+	getProjectReferences(): Promise<ILibRef[]>;
+	addProjectReference(referencePath: string): Promise<void>;
+	removeProjectReference(referencePath: string): Promise<void>;
 }
 
 interface ITestExecutionService {
-	startTestRunner(platform: string): IFuture<void>;
-	startKarmaServer(platform: string): IFuture<void>;
+	startTestRunner(platform: string): Promise<void>;
+	startKarmaServer(platform: string): Promise<void>;
 }
 
 /**

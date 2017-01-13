@@ -1,6 +1,6 @@
 import * as path from "path";
-import {StaticConfigBase} from "./common/static-config-base";
-import {ConfigBase} from "./common/config-base";
+import { StaticConfigBase } from "./common/static-config-base";
+import { ConfigBase } from "./common/config-base";
 
 export class Configuration extends ConfigBase implements IConfiguration { // User specific config
 	CI_LOGGER = false;
@@ -77,15 +77,13 @@ export class StaticConfig extends StaticConfigBase implements IStaticConfig {
 		return path.join(__dirname, "bootstrap");
 	}
 
-	public getAdbFilePath(): IFuture<string> {
-		return (() => {
-			if (!this._adbFilePath) {
-				let androidToolsInfo: IAndroidToolsInfo = this.$injector.resolve("androidToolsInfo");
-				this._adbFilePath = androidToolsInfo.getPathToAdbFromAndroidHome().wait() || super.getAdbFilePath().wait();
-			}
+	public async getAdbFilePath(): Promise<string> {
+		if (!this._adbFilePath) {
+			let androidToolsInfo: IAndroidToolsInfo = this.$injector.resolve("androidToolsInfo");
+			this._adbFilePath = await androidToolsInfo.getPathToAdbFromAndroidHome() || await super.getAdbFilePath();
+		}
 
-			return this._adbFilePath;
-		}).future<string>()();
+		return this._adbFilePath;
 	}
 }
 $injector.register("staticConfig", StaticConfig);

@@ -1,4 +1,4 @@
-import {assert} from "chai";
+import { assert } from "chai";
 import * as ConfigLib from "../lib/config";
 import * as ErrorsLib from "../lib/common/errors";
 import * as FsLib from "../lib/common/file-system";
@@ -7,7 +7,6 @@ import * as LoggerLib from "../lib/common/logger";
 import * as NpmInstallationManagerLib from "../lib/npm-installation-manager";
 import * as OptionsLib from "../lib/options";
 import * as StaticConfigLib from "../lib/config";
-import Future = require("fibers/future");
 import * as yok from "../lib/common/yok";
 import ChildProcessLib = require("../lib/common/child-process");
 
@@ -16,7 +15,7 @@ function createTestInjector(): IInjector {
 
 	testInjector.register("config", ConfigLib.Configuration);
 	testInjector.register("logger", LoggerLib.Logger);
-	testInjector.register("lockfile", { });
+	testInjector.register("lockfile", {});
 	testInjector.register("errors", ErrorsLib.Errors);
 	testInjector.register("options", OptionsLib.Options);
 	testInjector.register("fs", FsLib.FileSystem);
@@ -31,14 +30,12 @@ function createTestInjector(): IInjector {
 
 function mockNpm(testInjector: IInjector, versions: string[], latestVersion: string) {
 	testInjector.register("npm", {
-		view: (packageName: string, config: any) => {
-			return(() => {
-				if(config.versions) {
-					return versions;
-				}
+		view: async (packageName: string, config: any): Promise<string[]> => {
+			if (config.versions) {
+				return versions;
+			}
 
-				throw new Error(`Unable to find propertyName ${config}.`);
-			}).future<any>()();
+			throw new Error(`Unable to find propertyName ${config}.`);
 		}
 	});
 }
@@ -67,35 +64,35 @@ interface ITestData {
 
 describe("Npm installation manager tests", () => {
 	let testData: IDictionary<ITestData> = {
-		"when there's only one available version and it matches CLI's version":	{
+		"when there's only one available version and it matches CLI's version": {
 			versions: ["1.4.0"],
 			packageLatestVersion: "1.4.0",
 			cliVersion: "1.4.0",
 			expectedResult: "1.4.0"
 		},
 
-		"when there's only one available version and it is higher than match CLI's version":	{
+		"when there's only one available version and it is higher than match CLI's version": {
 			versions: ["1.4.0"],
 			packageLatestVersion: "1.4.0",
 			cliVersion: "1.2.0",
 			expectedResult: "1.4.0"
 		},
 
-		"when there's only one available version and it is lower than CLI's version":	{
+		"when there's only one available version and it is lower than CLI's version": {
 			versions: ["1.4.0"],
 			packageLatestVersion: "1.4.0",
 			cliVersion: "1.6.0",
 			expectedResult: "1.4.0"
 		},
 
-		"when there are multiple package versions and the latest one matches ~<cli-version>":{
+		"when there are multiple package versions and the latest one matches ~<cli-version>": {
 			versions: ["1.2.0", "1.3.0", "1.3.1", "1.3.2", "1.3.3", "1.4.0"],
 			packageLatestVersion: "1.3.3",
 			cliVersion: "1.3.0",
 			expectedResult: "1.3.3"
 		},
 
-		"when there are multiple package versions and the latest one matches ~<cli-version> when there are newer matching versions but they are not under latest tag":{
+		"when there are multiple package versions and the latest one matches ~<cli-version> when there are newer matching versions but they are not under latest tag": {
 			versions: ["1.2.0", "1.3.0", "1.3.1", "1.3.2", "1.3.3", "1.4.0"],
 			packageLatestVersion: "1.3.2",
 			cliVersion: "1.3.0",
@@ -153,7 +150,7 @@ describe("Npm installation manager tests", () => {
 	};
 
 	_.each(testData, (currentTestData: ITestData, testName: string) => {
-		it(`returns correct latest compatible version, ${testName}`, () => {
+		it(`returns correct latest compatible version, ${testName}`, async () => {
 			let testInjector = createTestInjector();
 
 			mockNpm(testInjector, currentTestData.versions, currentTestData.packageLatestVersion);
@@ -164,9 +161,9 @@ describe("Npm installation manager tests", () => {
 
 			// Mock npmInstallationManager.getLatestVersion
 			let npmInstallationManager = testInjector.resolve("npmInstallationManager");
-			npmInstallationManager.getLatestVersion = (packageName: string) => Future.fromResult(currentTestData.packageLatestVersion);
+			npmInstallationManager.getLatestVersion = (packageName: string) => Promise.resolve(currentTestData.packageLatestVersion);
 
-			let actualLatestCompatibleVersion = npmInstallationManager.getLatestCompatibleVersion("").wait();
+			let actualLatestCompatibleVersion = await npmInstallationManager.getLatestCompatibleVersion("");
 			assert.equal(actualLatestCompatibleVersion, currentTestData.expectedResult);
 		});
 	});

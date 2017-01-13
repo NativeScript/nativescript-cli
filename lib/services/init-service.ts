@@ -24,57 +24,56 @@ export class InitService implements IInitService {
 		private $npm: INodePackageManager,
 		private $npmInstallationManager: INpmInstallationManager) { }
 
-	public initialize(): IFuture<void> {
-		return (() => {
-			let projectData: any = {};
+	public async initialize(): Promise<void> {
+		let projectData: any = {};
 
-			if (this.$fs.exists(this.projectFilePath)) {
-				projectData = this.$fs.readJson(this.projectFilePath);
+		if (this.$fs.exists(this.projectFilePath)) {
+			projectData = this.$fs.readJson(this.projectFilePath);
+		}
+
+		let projectDataBackup = _.extend({}, projectData);
+
+		if (!projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE]) {
+			projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE] = {};
+			this.$fs.writeJson(this.projectFilePath, projectData); // We need to create package.json file here in order to prevent "No project found at or above and neither was a --path specified." when resolving platformsData
+		}
+
+		try {
+
+			projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE]["id"] = await this.getProjectId();
+
+			if (this.$options.frameworkName && this.$options.frameworkVersion) {
+				let currentPlatformData = projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][this.$options.frameworkName] || {};
+
+				projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][this.$options.frameworkName] = _.extend(currentPlatformData, this.buildVersionData(this.$options.frameworkVersion));
+			} else {
+				let $platformsData = this.$injector.resolve("platformsData");
+				for (let platform of $platformsData.platformsNames) {
+					let platformData: IPlatformData = $platformsData.getPlatformData(platform);
+					if (!platformData.targetedOS || (platformData.targetedOS && _.includes(platformData.targetedOS, process.platform))) {
+						let currentPlatformData = projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][platformData.frameworkPackageName] || {};
+
+						projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][platformData.frameworkPackageName] = _.extend(currentPlatformData, await this.getVersionData(platformData.frameworkPackageName));
+					}
+				};
 			}
 
-			let projectDataBackup = _.extend({}, projectData);
-
-			if (!projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE]) {
-				projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE] = {};
-				this.$fs.writeJson(this.projectFilePath, projectData); // We need to create package.json file here in order to prevent "No project found at or above and neither was a --path specified." when resolving platformsData
+			let dependencies = projectData.dependencies;
+			if (!dependencies) {
+				projectData.dependencies = Object.create(null);
 			}
 
-			try {
+			// In case console is interactive and --force is not specified, do not read the version from package.json, show all available versions to the user.
+			let tnsCoreModulesVersionInPackageJson = this.useDefaultValue ? projectData.dependencies[constants.TNS_CORE_MODULES_NAME] : null;
+			projectData.dependencies[constants.TNS_CORE_MODULES_NAME] = this.$options.tnsModulesVersion || tnsCoreModulesVersionInPackageJson || (await this.getVersionData(constants.TNS_CORE_MODULES_NAME))["version"];
 
-				projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE]["id"] = this.getProjectId().wait();
+			this.$fs.writeJson(this.projectFilePath, projectData);
+		} catch (err) {
+			this.$fs.writeJson(this.projectFilePath, projectDataBackup);
+			throw err;
+		}
 
-				if (this.$options.frameworkName && this.$options.frameworkVersion) {
-					let currentPlatformData = projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][this.$options.frameworkName] || {};
-
-					projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][this.$options.frameworkName] = _.extend(currentPlatformData, this.buildVersionData(this.$options.frameworkVersion));
-				} else {
-					let $platformsData = this.$injector.resolve("platformsData");
-					_.each($platformsData.platformsNames, platform => {
-						let platformData: IPlatformData = $platformsData.getPlatformData(platform);
-						if (!platformData.targetedOS || (platformData.targetedOS && _.includes(platformData.targetedOS, process.platform))) {
-							let currentPlatformData = projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][platformData.frameworkPackageName] || {};
-
-							projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][platformData.frameworkPackageName] = _.extend(currentPlatformData, this.getVersionData(platformData.frameworkPackageName).wait());
-						}
-					});
-				}
-
-				let dependencies = projectData.dependencies;
-				if (!dependencies) {
-					projectData.dependencies = Object.create(null);
-				}
-				// In case console is interactive and --force is not specified, do not read the version from package.json, show all available versions to the user.
-				let tnsCoreModulesVersionInPackageJson = this.useDefaultValue ? projectData.dependencies[constants.TNS_CORE_MODULES_NAME] : null;
-				projectData.dependencies[constants.TNS_CORE_MODULES_NAME] = this.$options.tnsModulesVersion || tnsCoreModulesVersionInPackageJson || this.getVersionData(constants.TNS_CORE_MODULES_NAME).wait()["version"];
-
-				this.$fs.writeJson(this.projectFilePath, projectData);
-			} catch (err) {
-				this.$fs.writeJson(this.projectFilePath, projectDataBackup);
-				throw err;
-			}
-
-			this.$logger.out("Project successfully initialized.");
-		}).future<void>()();
+		this.$logger.out("Project successfully initialized.");
 	}
 
 	private get projectFilePath(): string {
@@ -86,40 +85,36 @@ export class InitService implements IInitService {
 		return this._projectFilePath;
 	}
 
-	private getProjectId(): IFuture<string> {
-		return (() => {
-			if (this.$options.appid) {
-				return this.$options.appid;
-			}
+	private async getProjectId(): Promise<string> {
+		if (this.$options.appid) {
+			return this.$options.appid;
+		}
 
-			let defaultAppId = this.$projectHelper.generateDefaultAppId(path.basename(path.dirname(this.projectFilePath)), constants.DEFAULT_APP_IDENTIFIER_PREFIX);
-			if (this.useDefaultValue) {
-				return defaultAppId;
-			}
+		let defaultAppId = this.$projectHelper.generateDefaultAppId(path.basename(path.dirname(this.projectFilePath)), constants.DEFAULT_APP_IDENTIFIER_PREFIX);
+		if (this.useDefaultValue) {
+			return defaultAppId;
+		}
 
-			return this.$prompter.getString("Id:", { defaultAction: () => defaultAppId }).wait();
-		}).future<string>()();
+		return await this.$prompter.getString("Id:", { defaultAction: () => defaultAppId });
 	}
 
-	private getVersionData(packageName: string): IFuture<IStringDictionary> {
-		return (() => {
-			let latestVersion = this.$npmInstallationManager.getLatestCompatibleVersion(packageName).wait();
+	private async getVersionData(packageName: string): Promise<IStringDictionary> {
+		let latestVersion = await this.$npmInstallationManager.getLatestCompatibleVersion(packageName);
 
-			if (this.useDefaultValue) {
-				return this.buildVersionData(latestVersion);
-			}
+		if (this.useDefaultValue) {
+			return this.buildVersionData(latestVersion);
+		}
 
-			let data:any = this.$npm.view(packageName, "versions").wait();
-			let versions = _.filter(data[latestVersion].versions, (version: string) => semver.gte(version, InitService.MIN_SUPPORTED_FRAMEWORK_VERSIONS[packageName]));
-			if (versions.length === 1) {
-				this.$logger.info(`Only ${versions[0]} version is available for ${packageName}.`);
-				return this.buildVersionData(versions[0]);
-			}
-			let sortedVersions = versions.sort(helpers.versionCompare).reverse();
-			//TODO: plamen5kov: don't offer versions from next (they are not available)
-			let version = this.$prompter.promptForChoice(`${packageName} version:`, sortedVersions).wait();
-			return this.buildVersionData(version);
-		}).future<IStringDictionary>()();
+		let data: any = await this.$npm.view(packageName, "versions");
+		let versions = _.filter(data[latestVersion].versions, (version: string) => semver.gte(version, InitService.MIN_SUPPORTED_FRAMEWORK_VERSIONS[packageName]));
+		if (versions.length === 1) {
+			this.$logger.info(`Only ${versions[0]} version is available for ${packageName}.`);
+			return this.buildVersionData(versions[0]);
+		}
+		let sortedVersions = versions.sort(helpers.versionCompare).reverse();
+		//TODO: plamen5kov: don't offer versions from next (they are not available)
+		let version = await this.$prompter.promptForChoice(`${packageName} version:`, sortedVersions);
+		return this.buildVersionData(version);
 	}
 
 	private buildVersionData(version: string): IStringDictionary {

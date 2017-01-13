@@ -2,7 +2,6 @@ import * as constants from "../../constants";
 import * as helpers from "../../common/helpers";
 import * as path from "path";
 import * as semver from "semver";
-import * as fiberBootstrap from "../../common/fiber-bootstrap";
 let choki = require("chokidar");
 
 class LiveSyncService implements ILiveSyncService {
@@ -16,7 +15,6 @@ class LiveSyncService implements ILiveSyncService {
 		private $projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
 		private $injector: IInjector,
-		private $liveSyncProvider: ILiveSyncProvider,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $devicesService: Mobile.IDevicesService,
 		private $options: IOptions,
@@ -25,66 +23,70 @@ class LiveSyncService implements ILiveSyncService {
 		private $hooksService: IHooksService,
 		private $processService: IProcessService) { }
 
-	private ensureAndroidFrameworkVersion(platformData: IPlatformData): IFuture<void> { // TODO: this can be moved inside command or canExecute function
-		return (() => {
-			this.$projectDataService.initialize(this.$projectData.projectDir);
-			let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).version;
+	private async ensureAndroidFrameworkVersion(platformData: IPlatformData): Promise<void> { // TODO: this can be moved inside command or canExecute function
+		this.$projectDataService.initialize(this.$projectData.projectDir);
+		let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).version;
 
-			if (platformData.normalizedPlatformName.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
-				if (semver.lt(frameworkVersion, "1.2.1")) {
-					let shouldUpdate = this.$prompter.confirm("You need Android Runtime 1.2.1 or later for LiveSync to work properly. Do you want to update your runtime now?").wait();
-					if (shouldUpdate) {
-						this.$platformService.updatePlatforms([this.$devicePlatformsConstants.Android.toLowerCase()]).wait();
-					} else {
-						return;
-					}
+		if (platformData.normalizedPlatformName.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
+			if (semver.lt(frameworkVersion, "1.2.1")) {
+				let shouldUpdate = await this.$prompter.confirm("You need Android Runtime 1.2.1 or later for LiveSync to work properly. Do you want to update your runtime now?");
+				if (shouldUpdate) {
+					await this.$platformService.updatePlatforms([this.$devicePlatformsConstants.Android.toLowerCase()]);
+				} else {
+					return;
 				}
 			}
-		}).future<void>()();
+		}
 	}
 
 	public get isInitialized(): boolean { // This function is used from https://github.com/NativeScript/nativescript-dev-typescript/blob/master/lib/before-prepare.js#L4
 		return this._isInitialized;
 	}
 
-	public liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => IFuture<void>): IFuture<void> {
-		return (() => {
+	public async liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => Promise<void>): Promise<void> {
 			if (this.$options.justlaunch) {
 				this.$options.watch = false;
 			}
-			let liveSyncData: ILiveSyncData[] = [];
-			if (platform) {
-				this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device  }).wait();
-				liveSyncData.push(this.prepareLiveSyncData(platform));
-			} else if (this.$options.device) {
-				this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device }).wait();
-				platform = this.$devicesService.getDeviceByIdentifier(this.$options.device).deviceInfo.platform;
-				liveSyncData.push(this.prepareLiveSyncData(platform));
-			} else {
-				this.$devicesService.initialize({ skipInferPlatform: true }).wait();
-				this.$devicesService.stopDeviceDetectionInterval().wait();
-				for(let installedPlatform of this.$platformService.getInstalledPlatforms()) {
-					if (this.$devicesService.getDevicesForPlatform(installedPlatform).length === 0) {
-						this.$devicesService.startEmulator(installedPlatform).wait();
-					}
-					liveSyncData.push(this.prepareLiveSyncData(installedPlatform));
-				}
-			}
-            if (liveSyncData.length === 0) {
-				this.$errors.fail("There are no platforms installed in this project. Please specify platform or install one by using `tns platform add` command!");
-            }
-			this._isInitialized = true; // If we want before-prepare hooks to work properly, this should be set after preparePlatform function
+		let liveSyncData: ILiveSyncData[] = [];
 
-			this.liveSyncCore(liveSyncData, applicationReloadAction).wait();
-		}).future<void>()();
+		if (platform) {
+			await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
+			liveSyncData.push(await this.prepareLiveSyncData(platform));
+		} else if (this.$options.device) {
+			await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
+			platform = this.$devicesService.getDeviceByIdentifier(this.$options.device).deviceInfo.platform;
+			liveSyncData.push(await this.prepareLiveSyncData(platform));
+		} else {
+			await this.$devicesService.initialize({ skipInferPlatform: true });
+
+			await this.$devicesService.stopDeviceDetectionInterval();
+
+			for (let installedPlatform of this.$platformService.getInstalledPlatforms()) {
+				if (this.$devicesService.getDevicesForPlatform(installedPlatform).length === 0) {
+					await this.$devicesService.startEmulator(installedPlatform);
+				}
+
+				liveSyncData.push(await this.prepareLiveSyncData(installedPlatform));
+			}
+		}
+
+		if (liveSyncData.length === 0) {
+			this.$errors.fail("There are no platforms installed in this project. Please specify platform or install one by using `tns platform add` command!");
+		}
+
+		this._isInitialized = true; // If we want before-prepare hooks to work properly, this should be set after preparePlatform function
+
+		await this.liveSyncCore(liveSyncData, applicationReloadAction);
 	}
 
-	private prepareLiveSyncData(platform: string): ILiveSyncData {
+	private async prepareLiveSyncData(platform: string): Promise<ILiveSyncData> {
 		platform = platform || this.$devicesService.platform;
 		let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
+
 		if (this.$mobileHelper.isAndroidPlatform(platform)) {
-			this.ensureAndroidFrameworkVersion(platformData).wait();
+			await this.ensureAndroidFrameworkVersion(platformData);
 		}
+
 		let liveSyncData: ILiveSyncData = {
 			platform: platform,
 			appIdentifier: this.$projectData.projectId,
@@ -97,47 +99,46 @@ class LiveSyncService implements ILiveSyncService {
 	}
 
 	@helpers.hook('livesync')
-	private liveSyncCore(liveSyncData: ILiveSyncData[], applicationReloadAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): IFuture<void> {
-		return (() => {
-			let watchForChangeActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => void)[] = [];
-			_.each(liveSyncData, (dataItem) => {
-				let service: IPlatformLiveSyncService = this.$injector.resolve("platformLiveSyncService", { _liveSyncData: dataItem });
-				watchForChangeActions.push((event: string, filePath: string, dispatcher: IFutureDispatcher) => {
-					service.partialSync(event, filePath, dispatcher, applicationReloadAction);
-				});
-				service.fullSync(applicationReloadAction).wait();
-			});
+	private async liveSyncCore(liveSyncData: ILiveSyncData[], applicationReloadAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>): Promise<void> {
+		let watchForChangeActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => Promise<void>)[] = [];
 
-			if(this.$options.watch && !this.$options.justlaunch) {
-				this.$hooksService.executeBeforeHooks('watch').wait();
-				this.partialSync(liveSyncData[0].syncWorkingDirectory, watchForChangeActions);
-			}
-		}).future<void>()();
+		for (let dataItem of liveSyncData) {
+			let service: IPlatformLiveSyncService = this.$injector.resolve("platformLiveSyncService", { _liveSyncData: dataItem });
+			watchForChangeActions.push((event: string, filePath: string, dispatcher: IFutureDispatcher) =>
+				service.partialSync(event, filePath, dispatcher, applicationReloadAction));
+
+			await service.fullSync();
+		}
+
+		if (this.$options.watch && !this.$options.justlaunch) {
+			await this.$hooksService.executeBeforeHooks('watch');
+			await this.partialSync(liveSyncData[0].syncWorkingDirectory, watchForChangeActions);
+		}
 	}
 
-	private partialSync(syncWorkingDirectory: string, onChangedActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => void )[]): void {
+	private partialSync(syncWorkingDirectory: string, onChangedActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => Promise<void>)[]): void {
 		let that = this;
 		let pattern = ["app", "package.json", "node_modules"];
 		let watcher = choki.watch(pattern, { ignoreInitial: true, cwd: syncWorkingDirectory }).on("all", (event: string, filePath: string) => {
-			fiberBootstrap.run(() => {
-				that.$dispatcher.dispatch(() => (() => {
-					try {
-						filePath = path.join(syncWorkingDirectory, filePath);
-						for (let i = 0; i < onChangedActions.length; i++) {
-							onChangedActions[i](event, filePath, that.$dispatcher);
-						}
-					} catch (err) {
-						that.$logger.info(`Unable to sync file ${filePath}. Error is:${err.message}`.red.bold);
-						that.$logger.info("Try saving it again or restart the livesync operation.");
+			that.$dispatcher.dispatch(async () => {
+				try {
+					filePath = path.join(syncWorkingDirectory, filePath);
+					for (let i = 0; i < onChangedActions.length; i++) {
+						await onChangedActions[i](event, filePath, that.$dispatcher);
 					}
-				}).future<void>()());
+				} catch (err) {
+					that.$logger.info(`Unable to sync file ${filePath}. Error is:${err.message}`.red.bold);
+					that.$logger.info("Try saving it again or restart the livesync operation.");
+				}
 			});
 		});
 
 		this.$processService.attachToProcessExitSignals(this, () => {
 			watcher.close(pattern);
 		});
+
 		this.$dispatcher.run();
 	}
 }
+
 $injector.register("usbLiveSyncService", LiveSyncService);

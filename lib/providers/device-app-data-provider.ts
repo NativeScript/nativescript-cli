@@ -1,13 +1,12 @@
 import * as deviceAppDataBaseLib from "../common/mobile/device-app-data/device-app-data-base";
-import Future = require("fibers/future");
 import * as path from "path";
-import {AndroidDeviceHashService} from "../common/mobile/android/android-device-hash-service";
-import {DeviceAndroidDebugBridge} from "../common/mobile/android/device-android-debug-bridge";
+import { AndroidDeviceHashService } from "../common/mobile/android/android-device-hash-service";
+import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
 
 const SYNC_DIR_NAME = "sync";
 const FULLSYNC_DIR_NAME = "fullsync";
 
-export class IOSAppIdentifier extends deviceAppDataBaseLib.DeviceAppDataBase implements Mobile.IDeviceAppData  {
+export class IOSAppIdentifier extends deviceAppDataBaseLib.DeviceAppDataBase implements Mobile.IDeviceAppData {
 	private static DEVICE_PROJECT_ROOT_PATH = "Library/Application Support/LiveSync/app";
 	private _deviceProjectRootPath: string = null;
 
@@ -18,7 +17,7 @@ export class IOSAppIdentifier extends deviceAppDataBaseLib.DeviceAppDataBase imp
 		super(_appIdentifier);
 	}
 
-	public get deviceProjectRootPath(): string {
+	public async getDeviceProjectRootPath(): Promise<string> {
 		if (!this._deviceProjectRootPath) {
 			if (this.device.isEmulator) {
 				let applicationPath = this.$iOSSimResolver.iOSSim.getApplicationPath(this.device.deviceInfo.identifier, this.appIdentifier);
@@ -28,7 +27,7 @@ export class IOSAppIdentifier extends deviceAppDataBaseLib.DeviceAppDataBase imp
 			}
 		}
 
-		return this.getDeviceProjectRootPath(this._deviceProjectRootPath);
+		return this._getDeviceProjectRootPath(this._deviceProjectRootPath);
 	}
 
 	public get deviceSyncZipPath(): string {
@@ -39,8 +38,8 @@ export class IOSAppIdentifier extends deviceAppDataBaseLib.DeviceAppDataBase imp
 		}
 	}
 
-	public isLiveSyncSupported(): IFuture<boolean> {
-		return Future.fromResult(true);
+	public async isLiveSyncSupported(): Promise<boolean> {
+		return true;
 	}
 }
 
@@ -55,26 +54,24 @@ export class AndroidAppIdentifier extends deviceAppDataBaseLib.DeviceAppDataBase
 
 	private _deviceProjectRootPath: string;
 
-	public get deviceProjectRootPath(): string {
-		if(!this._deviceProjectRootPath) {
-			let syncFolderName = this.getSyncFolderName().wait();
+	public async getDeviceProjectRootPath(): Promise<string> {
+		if (!this._deviceProjectRootPath) {
+			let syncFolderName = await this.getSyncFolderName();
 			this._deviceProjectRootPath = `/data/local/tmp/${this.appIdentifier}/${syncFolderName}`;
 		}
 
 		return this._deviceProjectRootPath;
 	}
 
-	public isLiveSyncSupported(): IFuture<boolean> {
-		return Future.fromResult(true);
+	public async isLiveSyncSupported(): Promise<boolean> {
+		return true;
 	}
 
-	private getSyncFolderName(): IFuture<string> {
-		return ((): string =>{
-			let adb =  this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
-			let deviceHashService = this.$injector.resolve(AndroidDeviceHashService, {adb: adb, appIdentifier: this.appIdentifier});
-			let hashFile = this.$options.force ? null : deviceHashService.doesShasumFileExistsOnDevice().wait();
-			return this.$options.watch || hashFile ? SYNC_DIR_NAME : FULLSYNC_DIR_NAME;
-		}).future<string>()();
+	private async getSyncFolderName(): Promise<string> {
+		let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
+		let deviceHashService: AndroidDeviceHashService = this.$injector.resolve(AndroidDeviceHashService, { adb: adb, appIdentifier: this.appIdentifier });
+		let hashFile = this.$options.force ? null : await deviceHashService.doesShasumFileExistsOnDevice();
+		return this.$options.watch || hashFile ? SYNC_DIR_NAME : FULLSYNC_DIR_NAME;
 	}
 }
 

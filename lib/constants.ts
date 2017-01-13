@@ -1,27 +1,27 @@
-export let APP_FOLDER_NAME = "app";
-export let APP_RESOURCES_FOLDER_NAME = "App_Resources";
-export let PROJECT_FRAMEWORK_FOLDER_NAME = "framework";
-export let NATIVESCRIPT_KEY_NAME = "nativescript";
-export let NODE_MODULES_FOLDER_NAME = "node_modules";
-export let TNS_MODULES_FOLDER_NAME = "tns_modules";
-export let TNS_CORE_MODULES_NAME = "tns-core-modules";
-export let TNS_ANDROID_RUNTIME_NAME = "tns-android";
-export let TNS_IOS_RUNTIME_NAME = "tns-ios";
-export let PACKAGE_JSON_FILE_NAME = "package.json";
-export let NODE_MODULE_CACHE_PATH_KEY_NAME = "node-modules-cache-path";
-export let DEFAULT_APP_IDENTIFIER_PREFIX = "org.nativescript";
-export var LIVESYNC_EXCLUDED_DIRECTORIES = ["app_resources"];
-export var TESTING_FRAMEWORKS = ['jasmine', 'mocha', 'qunit'];
-export let TEST_RUNNER_NAME = "nativescript-unit-test-runner";
-export let LIVESYNC_EXCLUDED_FILE_PATTERNS = ["**/*.js.map", "**/*.ts"];
-export let XML_FILE_EXTENSION = ".xml";
+export const APP_FOLDER_NAME = "app";
+export const APP_RESOURCES_FOLDER_NAME = "App_Resources";
+export const PROJECT_FRAMEWORK_FOLDER_NAME = "framework";
+export const NATIVESCRIPT_KEY_NAME = "nativescript";
+export const NODE_MODULES_FOLDER_NAME = "node_modules";
+export const TNS_MODULES_FOLDER_NAME = "tns_modules";
+export const TNS_CORE_MODULES_NAME = "tns-core-modules";
+export const TNS_ANDROID_RUNTIME_NAME = "tns-android";
+export const TNS_IOS_RUNTIME_NAME = "tns-ios";
+export const PACKAGE_JSON_FILE_NAME = "package.json";
+export const NODE_MODULE_CACHE_PATH_KEY_NAME = "node-modules-cache-path";
+export const DEFAULT_APP_IDENTIFIER_PREFIX = "org.nativescript";
+export const LIVESYNC_EXCLUDED_DIRECTORIES = ["app_resources"];
+export const TESTING_FRAMEWORKS = ['jasmine', 'mocha', 'qunit'];
+export const TEST_RUNNER_NAME = "nativescript-unit-test-runner";
+export const LIVESYNC_EXCLUDED_FILE_PATTERNS = ["**/*.js.map", "**/*.ts"];
+export const XML_FILE_EXTENSION = ".xml";
 
 export class PackageVersion {
 	static NEXT = "next";
 	static LATEST = "latest";
 }
 
-export let PackageJsonKeysToKeep : Array<String> = ["name", "main", "android", "version"];
+export const PackageJsonKeysToKeep: Array<String> = ["name", "main", "android", "version"];
 
 export class SaveOptions {
 	static PRODUCTION = "save";
@@ -40,7 +40,7 @@ export class ReleaseType {
 	static PRERELEASE = "prerelease";
 }
 
-export let RESERVED_TEMPLATE_NAMES: IStringDictionary = {
+export const RESERVED_TEMPLATE_NAMES: IStringDictionary = {
 	"default": "tns-template-hello-world",
 	"tsc": "tns-template-hello-world-ts",
 	"typescript": "tns-template-hello-world-ts",
@@ -63,7 +63,7 @@ class ItunesConnectApplicationTypesClass implements IiTunesConnectApplicationTyp
 	public Mac = "Mac OS X App";
 }
 
-export let ItunesConnectApplicationTypes = new ItunesConnectApplicationTypesClass();
+export const ItunesConnectApplicationTypes = new ItunesConnectApplicationTypesClass();
 
-export let ANGULAR_NAME = "angular";
-export let TYPESCRIPT_NAME = "typescript";
+export const ANGULAR_NAME = "angular";
+export const TYPESCRIPT_NAME = "typescript";

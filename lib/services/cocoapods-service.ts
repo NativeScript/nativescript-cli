@@ -1,4 +1,4 @@
-import {EOL} from "os";
+import { EOL } from "os";
 
 interface IRubyFunction {
 	functionName: string;

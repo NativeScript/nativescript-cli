@@ -1,6 +1,5 @@
 import * as path from "path";
 import * as shell from "shelljs";
-import Future = require("fibers/future");
 import * as constants from "../constants";
 import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
@@ -32,13 +31,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		$projectData: IProjectData,
 		$projectDataService: IProjectDataService,
 		private $sysInfo: ISysInfo,
-		private $mobileHelper: Mobile.IMobileHelper,
 		private $injector: IInjector,
 		private $pluginVariablesService: IPluginVariablesService,
-		private $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $projectTemplatesService: IProjectTemplatesService,
-		private $xmlValidator: IXmlValidator,
 		private $config: IConfiguration,
 		private $npm: INodePackageManager) {
 		super($fs, $projectData, $projectDataService);
@@ -75,8 +70,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this._platformData;
 	}
 
-	public validateOptions(): IFuture<boolean> {
-		return Future.fromResult(true);
+	public validateOptions(): Promise<boolean> {
+		return Promise.resolve(true);
 	}
 
 	public getAppResourcesDestinationDirectoryPath(frameworkVersion?: string): string {
@@ -87,82 +82,79 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return path.join(this.platformData.projectRoot, "res");
 	}
 
-	public validate(): IFuture<void> {
-		return (() => {
-			this.validatePackageName(this.$projectData.projectId);
-			this.validateProjectName(this.$projectData.projectName);
+	public async validate(): Promise<void> {
+		this.validatePackageName(this.$projectData.projectId);
+		this.validateProjectName(this.$projectData.projectName);
 
-			// this call will fail in case `android` is not set correctly.
-			this.$androidToolsInfo.getPathToAndroidExecutable({ showWarningsAsErrors: true }).wait();
-			let javaCompilerVersion = this.$sysInfo.getJavaCompilerVersion().wait();
-			this.$androidToolsInfo.validateJavacVersion(javaCompilerVersion, { showWarningsAsErrors: true }).wait();
-		}).future<void>()();
+		// this call will fail in case `android` is not set correctly.
+		await this.$androidToolsInfo.getPathToAndroidExecutable({ showWarningsAsErrors: true });
+
+		let javaCompilerVersion = await this.$sysInfo.getJavaCompilerVersion();
+
+		await this.$androidToolsInfo.validateJavacVersion(javaCompilerVersion, { showWarningsAsErrors: true });
 	}
 
-	public createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): IFuture<void> {
-		return (() => {
-			if (semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
-				this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
-			}
+	public async createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): Promise<void> {
+		if (semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
+			this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
+		}
 
-			this.$fs.ensureDirectoryExists(this.platformData.projectRoot);
-			this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true }).wait();
-			let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
-			let targetSdkVersion = androidToolsInfo.targetSdkVersion;
-			this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
-			this.copy(this.platformData.projectRoot, frameworkDir, "libs", "-R");
+		this.$fs.ensureDirectoryExists(this.platformData.projectRoot);
+		await this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
+		let androidToolsInfo = await this.$androidToolsInfo.getToolsInfo();
+		let targetSdkVersion = androidToolsInfo.targetSdkVersion;
+		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
+		this.copy(this.platformData.projectRoot, frameworkDir, "libs", "-R");
 
-			if (pathToTemplate) {
-				let mainPath = path.join(this.platformData.projectRoot, "src", "main");
-				this.$fs.createDirectory(mainPath);
-				shell.cp("-R", path.join(path.resolve(pathToTemplate), "*"), mainPath);
+		if (pathToTemplate) {
+			let mainPath = path.join(this.platformData.projectRoot, "src", "main");
+			this.$fs.createDirectory(mainPath);
+			shell.cp("-R", path.join(path.resolve(pathToTemplate), "*"), mainPath);
+		} else {
+			this.copy(this.platformData.projectRoot, frameworkDir, "src", "-R");
+		}
+		this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle build-tools", "-Rf");
+
+		try {
+			this.copy(this.platformData.projectRoot, frameworkDir, "gradle.properties", "-Rf");
+		} catch (e) {
+			this.$logger.warn(`\n${e}\nIt's possible, the final .apk file will contain all architectures instead of the ones described in the abiFilters!\nYou can fix this by using the latest android platform.`);
+		}
+
+		this.copy(this.platformData.projectRoot, frameworkDir, "gradle", "-R");
+		this.copy(this.platformData.projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
+
+		this.cleanResValues(targetSdkVersion, frameworkVersion);
+
+		let npmConfig = {
+			"save": true,
+			"save-dev": true,
+			"save-exact": true,
+			"silent": true
+		};
+
+		let projectPackageJson: any = this.$fs.readJson(this.$projectData.projectFilePath);
+
+		for (let dependency of AndroidProjectService.REQUIRED_DEV_DEPENDENCIES) {
+			let dependencyVersionInProject = (projectPackageJson.dependencies && projectPackageJson.dependencies[dependency.name]) ||
+				(projectPackageJson.devDependencies && projectPackageJson.devDependencies[dependency.name]);
+
+			if (!dependencyVersionInProject) {
+				await this.$npm.install(`${dependency.name}@${dependency.version}`, this.$projectData.projectDir, npmConfig);
 			} else {
-				this.copy(this.platformData.projectRoot, frameworkDir, "src", "-R");
-			}
-			this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle build-tools", "-Rf");
+				let cleanedVerson = semver.clean(dependencyVersionInProject);
 
-			try {
-				this.copy(this.platformData.projectRoot, frameworkDir, "gradle.properties", "-Rf");
-			} catch(e) {
-				this.$logger.warn(`\n${e}\nIt's possible, the final .apk file will contain all architectures instead of the ones described in the abiFilters!\nYou can fix this by using the latest android platform.`);
-			}
-
-			this.copy(this.platformData.projectRoot, frameworkDir, "gradle", "-R");
-			this.copy(this.platformData.projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
-
-			this.cleanResValues(targetSdkVersion, frameworkVersion);
-
-			let npmConfig = {
-				"save": true,
-				"save-dev": true,
-				"save-exact": true,
-				"silent": true
-			};
-
-			let projectPackageJson: any = this.$fs.readJson(this.$projectData.projectFilePath);
-
-			_.each(AndroidProjectService.REQUIRED_DEV_DEPENDENCIES, (dependency: any) => {
-				let dependencyVersionInProject = (projectPackageJson.dependencies && projectPackageJson.dependencies[dependency.name]) ||
-					(projectPackageJson.devDependencies && projectPackageJson.devDependencies[dependency.name]);
-
-				if (!dependencyVersionInProject) {
-					this.$npm.install(`${dependency.name}@${dependency.version}`, this.$projectData.projectDir, npmConfig).wait();
-				} else {
-					let cleanedVerson = semver.clean(dependencyVersionInProject);
-
-					// The plugin version is not valid. Check node_modules for the valid version.
-					if (!cleanedVerson) {
-						let pathToPluginPackageJson = path.join(this.$projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, dependency.name, constants.PACKAGE_JSON_FILE_NAME);
-						dependencyVersionInProject = this.$fs.exists(pathToPluginPackageJson) && this.$fs.readJson(pathToPluginPackageJson).version;
-					}
-
-					if (!semver.satisfies(dependencyVersionInProject || cleanedVerson, dependency.version)) {
-						this.$errors.failWithoutHelp(`Your project have installed ${dependency.name} version ${cleanedVerson} but Android platform requires version ${dependency.version}.`);
-					}
+				// The plugin version is not valid. Check node_modules for the valid version.
+				if (!cleanedVerson) {
+					let pathToPluginPackageJson = path.join(this.$projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, dependency.name, constants.PACKAGE_JSON_FILE_NAME);
+					dependencyVersionInProject = this.$fs.exists(pathToPluginPackageJson) && this.$fs.readJson(pathToPluginPackageJson).version;
 				}
-			});
 
-		}).future<any>()();
+				if (!semver.satisfies(dependencyVersionInProject || cleanedVerson, dependency.version)) {
+					this.$errors.failWithoutHelp(`Your project have installed ${dependency.name} version ${cleanedVerson} but Android platform requires version ${dependency.version}.`);
+				}
+			}
+		};
 	}
 
 	private cleanResValues(targetSdkVersion: number, frameworkVersion: string): void {
@@ -179,40 +171,39 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				&& dir.sdkNum
 				&& (!targetSdkVersion || (targetSdkVersion < dir.sdkNum)))
 			.map(dir => path.join(resDestinationDir, dir.dirName));
+
 		this.$logger.trace("Directories to clean:");
+
 		this.$logger.trace(directoriesToClean);
+
 		_.map(directoriesToClean, dir => this.$fs.deleteDirectory(dir));
 	}
 
-	// TODO: Remove IFuture, reason: writeJson - cannot until other implementation has async calls.
-	public interpolateData(): IFuture<void> {
-		return (() => {
-			// Interpolate the apilevel and package
-			this.interpolateConfigurationFile().wait();
+	public async interpolateData(): Promise<void> {
+		// Interpolate the apilevel and package
+		await this.interpolateConfigurationFile();
 
-			let stringsFilePath = path.join(this.getAppResourcesDestinationDirectoryPath(), 'values', 'strings.xml');
-			shell.sed('-i', /__NAME__/, this.$projectData.projectName, stringsFilePath);
-			shell.sed('-i', /__TITLE_ACTIVITY__/, this.$projectData.projectName, stringsFilePath);
+		let stringsFilePath = path.join(this.getAppResourcesDestinationDirectoryPath(), 'values', 'strings.xml');
+		shell.sed('-i', /__NAME__/, this.$projectData.projectName, stringsFilePath);
+		shell.sed('-i', /__TITLE_ACTIVITY__/, this.$projectData.projectName, stringsFilePath);
 
-			let gradleSettingsFilePath = path.join(this.platformData.projectRoot, "settings.gradle");
-			shell.sed('-i', /__PROJECT_NAME__/, this.getProjectNameFromId(), gradleSettingsFilePath);
+		let gradleSettingsFilePath = path.join(this.platformData.projectRoot, "settings.gradle");
+		shell.sed('-i', /__PROJECT_NAME__/, this.getProjectNameFromId(), gradleSettingsFilePath);
 
-			// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
-			let userAppGradleFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, "app.gradle");
-			try {
-				shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, userAppGradleFilePath);
-			} catch(e) {
-				this.$logger.warn(`\n${e}.\nCheck if you're using an outdated template and update it.`);
-			}
-		}).future<void>()();
+		// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
+		let userAppGradleFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, "app.gradle");
+
+		try {
+			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, userAppGradleFilePath);
+		} catch (e) {
+			this.$logger.warn(`\n${e}.\nCheck if you're using an outdated template and update it.`);
+		}
 	}
 
-	public interpolateConfigurationFile(): IFuture<void> {
-		return (() => {
-			let manifestPath = this.platformData.configurationFilePath;
-			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, manifestPath);
-			shell.sed('-i', /__APILEVEL__/, this.$options.sdk || this.$androidToolsInfo.getToolsInfo().wait().compileSdkVersion.toString(), manifestPath);
-		}).future<void>()();
+	public async interpolateConfigurationFile(): Promise<void> {
+		let manifestPath = this.platformData.configurationFilePath;
+		shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, manifestPath);
+		shell.sed('-i', /__APILEVEL__/, this.$options.sdk || (await this.$androidToolsInfo.getToolsInfo()).compileSdkVersion.toString(), manifestPath);
 	}
 
 	private getProjectNameFromId(): string {
@@ -232,43 +223,40 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return true;
 	}
 
-	public updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean, addPlatform?: Function, removePlatforms?: (platforms: string[]) => IFuture<void>): IFuture<boolean> {
-		return (() => {
-			if (semver.eq(newVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
-				let platformLowercase = this.platformData.normalizedPlatformName.toLowerCase();
-				removePlatforms([platformLowercase.split("@")[0]]).wait();
-				addPlatform(platformLowercase).wait();
-				return false;
-			}
+	public async updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean, addPlatform?: Function, removePlatforms?: (platforms: string[]) => Promise<void>): Promise<boolean> {
+		if (semver.eq(newVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
+			let platformLowercase = this.platformData.normalizedPlatformName.toLowerCase();
+			await removePlatforms([platformLowercase.split("@")[0]]);
+			await addPlatform(platformLowercase);
+			return false;
+		}
 
-			return true;
-		}).future<boolean>()();
+		return true;
 	}
 
-	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
-		return (() => {
-			if (this.canUseGradle()) {
-				let buildOptions = this.getBuildOptions();
-				if (this.$logger.getLevel() === "TRACE") {
-					buildOptions.unshift("--stacktrace");
-					buildOptions.unshift("--debug");
-				}
-				buildOptions.unshift("buildapk");
-				let gradleBin = path.join(projectRoot, "gradlew");
-				if (this.$hostInfo.isWindows) {
-					gradleBin += ".bat"; // cmd command line parsing rules are weird. Avoid issues with quotes. See https://github.com/apache/cordova-android/blob/master/bin/templates/cordova/lib/builders/GradleBuilder.js for another approach
-				}
-				this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
-			} else {
-				this.$errors.failWithoutHelp("Cannot complete build because this project is ANT-based." + EOL +
-					"Run `tns platform remove android && tns platform add android` to switch to Gradle and try again.");
+	public async buildProject(projectRoot: string, buildConfig?: IBuildConfig): Promise<void> {
+		if (this.canUseGradle()) {
+			let buildOptions = await this.getBuildOptions();
+			if (this.$logger.getLevel() === "TRACE") {
+				buildOptions.unshift("--stacktrace");
+				buildOptions.unshift("--debug");
 			}
-		}).future<void>()();
+			buildOptions.unshift("buildapk");
+			let gradleBin = path.join(projectRoot, "gradlew");
+			if (this.$hostInfo.isWindows) {
+				gradleBin += ".bat"; // cmd command line parsing rules are weird. Avoid issues with quotes. See https://github.com/apache/cordova-android/blob/master/bin/templates/cordova/lib/builders/GradleBuilder.js for another approach
+			}
+			await this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot });
+		} else {
+			this.$errors.failWithoutHelp("Cannot complete build because this project is ANT-based." + EOL +
+				"Run `tns platform remove android && tns platform add android` to switch to Gradle and try again.");
+		}
 	}
 
-	public getBuildOptions(): Array<string> {
-		this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true }).wait();
-		let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
+	private async getBuildOptions(): Promise<Array<string>> {
+		await this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
+
+		let androidToolsInfo = await this.$androidToolsInfo.getToolsInfo();
 		let compileSdk = androidToolsInfo.compileSdkVersion;
 		let targetSdk = this.getTargetFromAndroidManifest() || compileSdk;
 		let buildToolsVersion = androidToolsInfo.buildToolsVersion;
@@ -293,7 +281,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return buildOptions;
 	}
 
-	public buildForDeploy(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
+	public async buildForDeploy(projectRoot: string, buildConfig?: IBuildConfig): Promise<void> {
 		return this.buildProject(projectRoot, buildConfig);
 	}
 
@@ -305,7 +293,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return [".jar", ".dat"];
 	}
 
-	public prepareProject(): void {
+	public async prepareProject(): Promise<void> {
 		// Intentionally left empty.
 	}
 
@@ -313,6 +301,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		let originalAndroidManifestFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, this.platformData.configurationFileName);
 
 		let manifestExists = this.$fs.exists(originalAndroidManifestFilePath);
+
 		if (!manifestExists) {
 			this.$logger.warn('No manifest found in ' + originalAndroidManifestFilePath);
 			return;
@@ -330,52 +319,48 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		});
 	}
 
-	public preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
-		return (() => {
-			let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
-			this.processResourcesFromPlugin(pluginData, pluginPlatformsFolderPath).wait();
-		}).future<void>()();
+	public async preparePluginNativeCode(pluginData: IPluginData): Promise<void> {
+		let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
+		await this.processResourcesFromPlugin(pluginData, pluginPlatformsFolderPath);
 	}
 
-	public processConfigurationFilesFromAppResources(): IFuture<void> {
-		return Future.fromResult();
+	public async processConfigurationFilesFromAppResources(): Promise<void> {
+		return;
 	}
 
-	private processResourcesFromPlugin(pluginData: IPluginData, pluginPlatformsFolderPath: string): IFuture<void> {
-		return (() => {
-			let configurationsDirectoryPath = path.join(this.platformData.projectRoot, "configurations");
-			this.$fs.ensureDirectoryExists(configurationsDirectoryPath);
+	private async processResourcesFromPlugin(pluginData: IPluginData, pluginPlatformsFolderPath: string): Promise<void> {
+		let configurationsDirectoryPath = path.join(this.platformData.projectRoot, "configurations");
+		this.$fs.ensureDirectoryExists(configurationsDirectoryPath);
 
-			let pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginData.name);
-			if (this.$fs.exists(pluginPlatformsFolderPath)) {
-				this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath);
+		let pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginData.name);
+		if (this.$fs.exists(pluginPlatformsFolderPath)) {
+			this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath);
 
-				// Copy all resources from plugin
-				let resourcesDestinationDirectoryPath = path.join(this.platformData.projectRoot, "src", pluginData.name);
-				this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath);
-				shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
+			// Copy all resources from plugin
+			let resourcesDestinationDirectoryPath = path.join(this.platformData.projectRoot, "src", pluginData.name);
+			this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath);
+			shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
 
-				(this.$fs.enumerateFilesInDirectorySync(resourcesDestinationDirectoryPath, file => this.$fs.getFsStats(file).isDirectory() || path.extname(file) === constants.XML_FILE_EXTENSION) || [])
-					.forEach(file => {
-						this.$logger.trace(`Interpolate data for plugin file: ${file}`);
-						this.$pluginVariablesService.interpolate(pluginData, file).wait();
-					});
+			const filesForInterpolation = this.$fs.enumerateFilesInDirectorySync(resourcesDestinationDirectoryPath, file => this.$fs.getFsStats(file).isDirectory() || path.extname(file) === constants.XML_FILE_EXTENSION) || [];
+			for (let file of filesForInterpolation) {
+				this.$logger.trace(`Interpolate data for plugin file: ${file}`);
+				await this.$pluginVariablesService.interpolate(pluginData, file);
 			}
+		}
 
-			// Copy include.gradle file
-			let includeGradleFilePath = path.join(pluginPlatformsFolderPath, "include.gradle");
-			if (this.$fs.exists(includeGradleFilePath)) {
-				shell.cp("-f", includeGradleFilePath, pluginConfigurationDirectoryPath);
-			}
-		}).future<void>()();
+		// Copy include.gradle file
+		let includeGradleFilePath = path.join(pluginPlatformsFolderPath, "include.gradle");
+		if (this.$fs.exists(includeGradleFilePath)) {
+			shell.cp("-f", includeGradleFilePath, pluginConfigurationDirectoryPath);
+		}
 	}
 
-	public removePluginNativeCode(pluginData: IPluginData): void {
+	public async removePluginNativeCode(pluginData: IPluginData): Promise<void> {
 		try {
 			// check whether the dependency that's being removed has native code
 			let pluginConfigDir = path.join(this.platformData.projectRoot, "configurations", pluginData.name);
 			if (this.$fs.exists(pluginConfigDir)) {
-				this.cleanProject(this.platformData.projectRoot, []).wait();
+				await this.cleanProject(this.platformData.projectRoot, []);
 			}
 		} catch (e) {
 			if (e.code === "ENOENT") {
@@ -386,11 +371,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public afterPrepareAllPlugins(): IFuture<void> {
-		return Future.fromResult();
+	public async afterPrepareAllPlugins(): Promise<void> {
+		return;
 	}
 
-	public beforePrepareAllPlugins(dependencies?: IDictionary<IDependencyData>): IFuture<void> {
+	public async beforePrepareAllPlugins(dependencies?: IDictionary<IDependencyData>): Promise<void> {
 		if (!this.$config.debugLivesync) {
 			if (dependencies) {
 				let platformDir = path.join(this.$projectData.platformsDir, "android");
@@ -398,38 +383,33 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				let checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
 				if (this.$fs.exists(checkV8dependants)) {
 					let stringifiedDependencies = JSON.stringify(dependencies);
-					this.spawn('node', [checkV8dependants, stringifiedDependencies, this.$projectData.platformsDir], { stdio: "inherit" }).wait();
+					await this.spawn('node', [checkV8dependants, stringifiedDependencies, this.$projectData.platformsDir], { stdio: "inherit" });
 				}
 			}
 
-			let buildOptions = this.getBuildOptions();
+			let buildOptions = await this.getBuildOptions();
 
 			let projectRoot = this.platformData.projectRoot;
-			this.cleanProject(projectRoot, buildOptions).wait();
+
+			await this.cleanProject(projectRoot, buildOptions);
 		}
-		return Future.fromResult();
 	}
 
-	private cleanProject(projectRoot: string, options: string[]): IFuture<void> {
-		return (() => {
-			options.unshift("clean");
+	private async cleanProject(projectRoot: string, options: string[]): Promise<void> {
+		options.unshift("clean");
 
-			let gradleBin = path.join(projectRoot, "gradlew");
-			if (this.$hostInfo.isWindows) {
-				gradleBin += ".bat";
-			}
+		let gradleBin = path.join(projectRoot, "gradlew");
+		if (this.$hostInfo.isWindows) {
+			gradleBin += ".bat";
+		}
 
-			this.spawn(gradleBin, options, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
-		}).future<void>()();
+		await this.spawn(gradleBin, options, { stdio: "inherit", cwd: this.platformData.projectRoot });
 	}
 
-	public deploy(deviceIdentifier: string): IFuture<void> {
-		return (() => {
-			let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
-			let deviceRootPath = `/data/local/tmp/${this.$projectData.projectId}`;
-			adb.executeShellCommand(["rm", "-rf", deviceRootPath]).wait();
-			adb.executeShellCommand(["mkdir", deviceRootPath]).wait();
-		}).future<void>()();
+	public async deploy(deviceIdentifier: string): Promise<void> {
+		let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
+		let deviceRootPath = `/data/local/tmp/${this.$projectData.projectId}`;
+		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
 	}
 
 	private _canUseGradle: boolean;
@@ -452,7 +432,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		shell.cp(cpArg, paths, projectRoot);
 	}
 
-	private spawn(command: string, args: string[], opts?: any): IFuture<ISpawnResult> {
+	private async spawn(command: string, args: string[], opts?: any): Promise<ISpawnResult> {
 		return this.$childProcess.spawnFromEvent(command, args, "close", opts || { stdio: "inherit" });
 	}
 
@@ -495,4 +475,5 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return versionInManifest;
 	}
 }
+
 $injector.register("androidProjectService", AndroidProjectService);

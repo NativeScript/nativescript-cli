@@ -1,25 +1,22 @@
 export class UpdatePlatformCommand implements ICommand {
+	public allowedParameters: ICommandParameter[] = [];
+
 	constructor(private $platformService: IPlatformService,
-		private $errors:IErrors) { }
+		private $errors: IErrors) { }
 
-	execute(args: string[]): IFuture<void> {
-		return (() => {
-			this.$platformService.updatePlatforms(args).wait();
-		}).future<void>()();
+	public async execute(args: string[]): Promise<void> {
+		await this.$platformService.updatePlatforms(args);
 	}
 
-	canExecute(args: string[]): IFuture<boolean> {
-		return (() => {
-			if(!args || args.length === 0) {
-				this.$errors.fail("No platform specified. Please specify platforms to update.");
-			}
+	public async canExecute(args: string[]): Promise<boolean> {
+		if (!args || args.length === 0) {
+			this.$errors.fail("No platform specified. Please specify platforms to update.");
+		}
 
-			_.each(args, arg => this.$platformService.validatePlatform(arg.split("@")[0]));
+		_.each(args, arg => this.$platformService.validatePlatform(arg.split("@")[0]));
 
-			return true;
-		}).future<boolean>()();
+		return true;
 	}
-
-	allowedParameters: ICommandParameter[] = [];
 }
+
 $injector.registerCommand("platform|update", UpdatePlatformCommand);

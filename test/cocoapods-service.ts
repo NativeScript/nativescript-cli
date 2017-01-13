@@ -1,7 +1,7 @@
 import * as yok from "../lib/common/yok";
-import {assert} from "chai";
-import {CocoaPodsService} from "../lib/services/cocoapods-service";
-import {EOL} from "os";
+import { assert } from "chai";
+import { CocoaPodsService } from "../lib/services/cocoapods-service";
+import { EOL } from "os";
 
 interface IMergePodfileHooksTestCase {
 	input: string;

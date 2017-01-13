@@ -1,36 +1,35 @@
-import {Yok} from '../lib/common/yok';
-import future = require("fibers/future");
+import { Yok } from '../lib/common/yok';
 import * as stubs from './stubs';
-import {NodePackageManager} from "../lib/node-package-manager";
-import {NpmInstallationManager} from "../lib/npm-installation-manager";
-import {FileSystem} from "../lib/common/file-system";
-import {ProjectData} from "../lib/project-data";
-import {ChildProcess} from "../lib/common/child-process";
-import {PlatformService} from '../lib/services/platform-service';
-import {Options} from "../lib/options";
-import {CommandsService} from "../lib/common/services/commands-service";
-import {StaticConfig} from "../lib/config";
-import {HostInfo} from "../lib/common/host-info";
-import {Errors} from "../lib/common/errors";
-import {ProjectHelper} from "../lib/common/project-helper";
-import {PlatformsData} from "../lib/platforms-data";
-import {ProjectDataService} from "../lib/services/project-data-service";
-import {ProjectFilesManager} from "../lib/common/services/project-files-manager";
-import {ResourceLoader} from "../lib/common/resource-loader";
-import {PluginsService} from "../lib/services/plugins-service";
-import {AddPluginCommand} from "../lib/commands/plugin/add-plugin";
-import {MessagesService} from "../lib/common/services/messages-service";
-import {NodeModulesBuilder} from "../lib/tools/node-modules/node-modules-builder";
-import {AndroidProjectService} from "../lib/services/android-project-service";
-import {AndroidToolsInfo} from "../lib/android-tools-info";
-import {assert} from "chai";
-import {DeviceAppDataFactory} from "../lib/common/mobile/device-app-data/device-app-data-factory";
-import {LocalToDevicePathDataFactory} from "../lib/common/mobile/local-to-device-path-data-factory";
-import {MobileHelper} from "../lib/common/mobile/mobile-helper";
-import {ProjectFilesProvider} from "../lib/providers/project-files-provider";
-import {DeviceAppDataProvider} from "../lib/providers/device-app-data-provider";
-import {MobilePlatformsCapabilities} from "../lib/mobile-platforms-capabilities";
-import {DevicePlatformsConstants} from "../lib/common/mobile/device-platforms-constants";
+import { NodePackageManager } from "../lib/node-package-manager";
+import { NpmInstallationManager } from "../lib/npm-installation-manager";
+import { FileSystem } from "../lib/common/file-system";
+import { ProjectData } from "../lib/project-data";
+import { ChildProcess } from "../lib/common/child-process";
+import { PlatformService } from '../lib/services/platform-service';
+import { Options } from "../lib/options";
+import { CommandsService } from "../lib/common/services/commands-service";
+import { StaticConfig } from "../lib/config";
+import { HostInfo } from "../lib/common/host-info";
+import { Errors } from "../lib/common/errors";
+import { ProjectHelper } from "../lib/common/project-helper";
+import { PlatformsData } from "../lib/platforms-data";
+import { ProjectDataService } from "../lib/services/project-data-service";
+import { ProjectFilesManager } from "../lib/common/services/project-files-manager";
+import { ResourceLoader } from "../lib/common/resource-loader";
+import { PluginsService } from "../lib/services/plugins-service";
+import { AddPluginCommand } from "../lib/commands/plugin/add-plugin";
+import { MessagesService } from "../lib/common/services/messages-service";
+import { NodeModulesBuilder } from "../lib/tools/node-modules/node-modules-builder";
+import { AndroidProjectService } from "../lib/services/android-project-service";
+import { AndroidToolsInfo } from "../lib/android-tools-info";
+import { assert } from "chai";
+import { DeviceAppDataFactory } from "../lib/common/mobile/device-app-data/device-app-data-factory";
+import { LocalToDevicePathDataFactory } from "../lib/common/mobile/local-to-device-path-data-factory";
+import { MobileHelper } from "../lib/common/mobile/mobile-helper";
+import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
+import { DeviceAppDataProvider } from "../lib/providers/device-app-data-provider";
+import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilities";
+import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
 import StaticConfigLib = require("../lib/config");
 import * as path from "path";
@@ -76,14 +75,14 @@ function createTestInjector() {
 
 	testInjector.register("pluginsService", PluginsService);
 	testInjector.register("analyticsService", {
-		trackException: () => { return future.fromResult(); },
-		checkConsent: () => { return future.fromResult(); },
-		trackFeature: () => { return future.fromResult(); }
+		trackException: () => { return Promise.resolve(); },
+		checkConsent: () => { return Promise.resolve(); },
+		trackFeature: () => { return Promise.resolve(); }
 	});
 	testInjector.register("projectFilesManager", ProjectFilesManager);
 	testInjector.register("pluginVariablesService", {
-		savePluginVariablesInProjectFile: (pluginData: IPluginData) => future.fromResult(),
-		interpolatePluginVariables: (pluginData: IPluginData, pluginConfigurationFileContent: string) => future.fromResult(pluginConfigurationFileContent)
+		savePluginVariablesInProjectFile: (pluginData: IPluginData) => Promise.resolve(),
+		interpolatePluginVariables: (pluginData: IPluginData, pluginConfigurationFileContent: string) => Promise.resolve(pluginConfigurationFileContent)
 	});
 	testInjector.register("npmInstallationManager", NpmInstallationManager);
 
@@ -95,7 +94,7 @@ function createTestInjector() {
 	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("projectTemplatesService", {
-		defaultTemplate: future.fromResult("")
+		defaultTemplate: Promise.resolve("")
 	});
 	testInjector.register("xmlValidator", XmlValidator);
 	testInjector.register("config", StaticConfigLib.Configuration);
@@ -125,38 +124,34 @@ function createProjectFile(testInjector: IInjector): string {
 
 function mockBeginCommand(testInjector: IInjector, expectedErrorMessage: string) {
 	let errors = testInjector.resolve("errors");
-	errors.beginCommand = (action: () => IFuture<boolean>): IFuture<void> => {
-		return (() => {
-			try {
-				return action().wait();
-			} catch (err) {
-				isErrorThrown = true;
-				assert.equal(err.toString(), expectedErrorMessage);
-			}
-		}).future<void>()();
+	errors.beginCommand = async (action: () => Promise<boolean>): Promise<boolean> => {
+		try {
+			return await action();
+		} catch (err) {
+			isErrorThrown = true;
+			assert.equal(err.toString(), expectedErrorMessage);
+		}
 	};
 }
 
-function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: string, expectedErrorMessage: string, command?: string) {
+async function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: string, expectedErrorMessage: string, command?: string) {
 	createProjectFile(testInjector);
 
 	let pluginsService = testInjector.resolve("pluginsService");
 	pluginsService.getAllInstalledPlugins = () => {
-		return (() => {
-			return [{
-				name: ""
-			}];
-		}).future<IPluginData[]>()();
+		return [{
+			name: ""
+		}];
 	};
 	pluginsService.ensureAllDependenciesAreInstalled = () => {
-		return future.fromResult();
+		return Promise.resolve();
 	};
 
 	mockBeginCommand(testInjector, "Exception: " + expectedErrorMessage);
 
 	isErrorThrown = false;
 	let commandsService = testInjector.resolve(CommandsService);
-	commandsService.tryExecuteCommand(`plugin|${command}`, [plugin]).wait();
+	await commandsService.tryExecuteCommand(`plugin|${command}`, [plugin]);
 
 	assert.isTrue(isErrorThrown);
 }
@@ -196,14 +191,14 @@ describe("Plugins service", () => {
 	});
 
 	_.each(commands, command => {
-		describe(`plugin ${command}}`, () => {
-			it("fails when no param is specified to plugin install command", () => {
-				addPluginWhenExpectingToFail(testInjector, null, "You must specify plugin name.", command);
+		describe(`plugin ${command}`, () => {
+			it("fails when no param is specified to plugin install command", async () => {
+				await addPluginWhenExpectingToFail(testInjector, null, "You must specify plugin name.", command);
 			});
-			it("fails when invalid nativescript plugin name is specified", () => {
-				addPluginWhenExpectingToFail(testInjector, "lodash", "lodash is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.", command);
+			it("fails when invalid nativescript plugin name is specified", async () => {
+				await addPluginWhenExpectingToFail(testInjector, "lodash", "lodash is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.", command);
 			});
-			it("fails when the plugin is already installed", () => {
+			it("fails when the plugin is already installed", async () => {
 				let pluginName = "plugin1";
 				let projectFolder = createProjectFile(testInjector);
 				let fs = testInjector.resolve("fs");
@@ -217,22 +212,20 @@ describe("Plugins service", () => {
 
 				let pluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = () => {
-					return (() => {
-						return [{
-							name: "plugin1"
-						}];
-					}).future<IPluginData[]>()();
+					return [{
+						name: "plugin1"
+					}];
 				};
 
 				mockBeginCommand(testInjector, "Exception: " + 'Plugin "plugin1" is already installed.');
 
 				isErrorThrown = false;
 				let commandsService = testInjector.resolve(CommandsService);
-				commandsService.tryExecuteCommand(`plugin|${command}`, [pluginName]).wait();
+				await commandsService.tryExecuteCommand(`plugin|${command}`, [pluginName]);
 
 				assert.isTrue(isErrorThrown);
 			});
-			it("fails when the plugin does not support the installed framework", () => {
+			it("fails when the plugin does not support the installed framework", async () => {
 				let isWarningMessageShown = false;
 				let expectedWarningMessage = "mySamplePlugin 1.5.0 for android is not compatible with the currently installed framework version 1.4.0.";
 
@@ -267,11 +260,9 @@ describe("Plugins service", () => {
 				// Mock pluginsService
 				let pluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = () => {
-					return (() => {
-						return [{
-							name: ""
-						}];
-					}).future<IPluginData[]>()();
+					return [{
+						name: ""
+					}];
 				};
 
 				// Mock platformsData
@@ -284,25 +275,23 @@ describe("Plugins service", () => {
 					};
 				};
 
-				pluginsService.add(pluginFolderPath).wait();
+				await pluginsService.add(pluginFolderPath);
 
 				assert.isTrue(isWarningMessageShown);
 			});
-			it("adds plugin by name", () => {
+			it("adds plugin by name", async () => {
 				let pluginName = "plugin1";
 				let projectFolder = createProjectFile(testInjector);
 
 				let pluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = () => {
-					return (() => {
-						return [{
-							name: ""
-						}];
-					}).future<IPluginData[]>()();
+					return [{
+						name: ""
+					}];
 				};
 
 				let commandsService = testInjector.resolve(CommandsService);
-				commandsService.tryExecuteCommand(`plugin|${command}`, [pluginName]).wait();
+				await commandsService.tryExecuteCommand(`plugin|${command}`, [pluginName]);
 
 				let fs = testInjector.resolve("fs");
 
@@ -325,21 +314,19 @@ describe("Plugins service", () => {
 				let expectedDependenciesExact = { "plugin1": "1.0.3" };
 				assert.isTrue(_.isEqual(actualDependencies, expectedDependencies) || _.isEqual(actualDependencies, expectedDependenciesExact));
 			});
-			it("adds plugin by name and version", () => {
+			it("adds plugin by name and version", async () => {
 				let pluginName = "plugin1";
 				let projectFolder = createProjectFile(testInjector);
 
 				let pluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = () => {
-					return (() => {
-						return [{
-							name: ""
-						}];
-					}).future<IPluginData[]>()();
+					return [{
+						name: ""
+					}];
 				};
 
 				let commandsService = testInjector.resolve(CommandsService);
-				commandsService.tryExecuteCommand(`plugin|${command}`, [pluginName + "@1.0.0"]).wait();
+				await commandsService.tryExecuteCommand(`plugin|${command}`, [pluginName + "@1.0.0"]);
 
 				let fs = testInjector.resolve("fs");
 
@@ -362,7 +349,7 @@ describe("Plugins service", () => {
 				let expectedDependenciesExact = { "plugin1": "1.0.0" };
 				assert.isTrue(_.isEqual(actualDependencies, expectedDependencies) || _.isEqual(actualDependencies, expectedDependenciesExact));
 			});
-			it("adds plugin by local path", () => {
+			it("adds plugin by local path", async () => {
 				// Creates a plugin in tempFolder
 				let pluginName = "mySamplePlugin";
 				let projectFolder = createProjectFile(testInjector);
@@ -381,15 +368,13 @@ describe("Plugins service", () => {
 
 				let pluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = () => {
-					return (() => {
-						return [{
-							name: ""
-						}];
-					}).future<IPluginData[]>()();
+					return [{
+						name: ""
+					}];
 				};
 
 				let commandsService = testInjector.resolve(CommandsService);
-				commandsService.tryExecuteCommand(`plugin|${command}`, [pluginFolderPath]).wait();
+				await commandsService.tryExecuteCommand(`plugin|${command}`, [pluginFolderPath]);
 
 				// Assert that the all plugin's content is successfully added to node_modules folder
 				let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
@@ -404,7 +389,7 @@ describe("Plugins service", () => {
 			it("adds plugin by github url", () => {
 				// TODO: add test
 			});
-			it("doesn't install dev dependencies when --production option is specified", () => {
+			it("doesn't install dev dependencies when --production option is specified", async () => {
 				// Creates a plugin in tempFolder
 				let pluginName = "mySamplePlugin";
 				let projectFolder = createProjectFile(testInjector);
@@ -426,11 +411,9 @@ describe("Plugins service", () => {
 
 				let pluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = () => {
-					return (() => {
-						return [{
-							name: ""
-						}];
-					}).future<IPluginData[]>()();
+					return [{
+						name: ""
+					}];
 				};
 
 				// Mock options
@@ -438,12 +421,12 @@ describe("Plugins service", () => {
 				options.production = true;
 
 				let commandsService = testInjector.resolve(CommandsService);
-				commandsService.tryExecuteCommand(`plugin|${command}`, [pluginFolderPath]).wait();
+				await commandsService.tryExecuteCommand(`plugin|${command}`, [pluginFolderPath]);
 
 				let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
 				assert.isFalse(fs.exists(path.join(nodeModulesFolderPath, pluginName, "node_modules", "grunt")));
 			});
-			it("install dev dependencies when --production option is not specified", () => {
+			it("install dev dependencies when --production option is not specified", async () => {
 				// Creates a plugin in tempFolder
 				let pluginName = "mySamplePlugin";
 				let projectFolder = createProjectFile(testInjector);
@@ -468,11 +451,9 @@ describe("Plugins service", () => {
 
 				let pluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = () => {
-					return (() => {
-						return [{
-							name: ""
-						}];
-					}).future<IPluginData[]>()();
+					return [{
+						name: ""
+					}];
 				};
 
 				// Mock options
@@ -480,7 +461,7 @@ describe("Plugins service", () => {
 				options.production = false;
 
 				let commandsService = testInjector.resolve(CommandsService);
-				commandsService.tryExecuteCommand(`plugin|${command}`, [pluginFolderPath]).wait();
+				await commandsService.tryExecuteCommand(`plugin|${command}`, [pluginFolderPath]);
 			});
 		});
 	});
@@ -490,7 +471,7 @@ describe("Plugins service", () => {
 			testInjector = createTestInjector();
 			testInjector.registerCommand("plugin|add", AddPluginCommand);
 		});
-		it("fails if the plugin contains incorrect xml", () => {
+		it("fails if the plugin contains incorrect xml", async () => {
 			let pluginName = "mySamplePlugin";
 			let projectFolder = createProjectFile(testInjector);
 			let pluginFolderPath = path.join(projectFolder, pluginName);
@@ -512,11 +493,9 @@ describe("Plugins service", () => {
 			// Mock plugins service
 			let pluginsService = testInjector.resolve("pluginsService");
 			pluginsService.getAllInstalledPlugins = () => {
-				return (() => {
-					return [{
-						name: ""
-					}];
-				}).future<IPluginData[]>()();
+				return [{
+					name: ""
+				}];
 			};
 
 			let appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
@@ -530,7 +509,7 @@ describe("Plugins service", () => {
 					configurationFileName: "AndroidManifest.xml",
 					normalizedPlatformName: "Android",
 					platformProjectService: {
-						preparePluginNativeCode: (pluginData: IPluginData) => future.fromResult()
+						preparePluginNativeCode: (pluginData: IPluginData) => Promise.resolve()
 					}
 				};
 			};
@@ -552,7 +531,7 @@ describe("Plugins service", () => {
 				`\n@#[line:1,col:39].` +
 				`\n@#[line:1,col:39].`;
 			mockBeginCommand(testInjector, expectedErrorMessage);
-			pluginsService.prepare(pluginJsonData, "android").wait();
+			await pluginsService.prepare(pluginJsonData, "android");
 		});
 	});
 });

@@ -1,14 +1,12 @@
-import Future = require("fibers/future");
-
 export class CommandsServiceProvider implements ICommandsServiceProvider {
 	public dynamicCommandsPrefix = "";
 
-	public getDynamicCommands(): IFuture<string[]> {
-		return Future.fromResult([]);
+	public async getDynamicCommands(): Promise<string[]> {
+		return [];
 	}
 
-	public generateDynamicCommands(): IFuture<void> {
-		return Future.fromResult();
+	public async generateDynamicCommands(): Promise<void> {
+		return ;
 	}
 
 	public registerDynamicSubCommands(): void {

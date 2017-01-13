@@ -1,25 +1,22 @@
 export class AddPlatformCommand implements ICommand {
+	public allowedParameters: ICommandParameter[] = [];
+
 	constructor(private $platformService: IPlatformService,
 		private $errors: IErrors) { }
 
-	execute(args: string[]): IFuture<void> {
-		return (() => {
-			this.$platformService.addPlatforms(args).wait();
-		}).future<void>()();
+	public async execute(args: string[]): Promise<void> {
+		await this.$platformService.addPlatforms(args);
 	}
 
-	allowedParameters: ICommandParameter[] = [];
+	public async canExecute(args: string[]): Promise<boolean> {
+		if (!args || args.length === 0) {
+			this.$errors.fail("No platform specified. Please specify a platform to add");
+		}
 
-	canExecute(args: string[]): IFuture<boolean> {
-		return (() => {
-			if(!args || args.length === 0) {
-				this.$errors.fail("No platform specified. Please specify a platform to add");
-			}
+		_.each(args, arg => this.$platformService.validatePlatform(arg));
 
-			_.each(args, arg => this.$platformService.validatePlatform(arg));
-
-			return true;
-		}).future<boolean>()();
+		return true;
 	}
 }
+
 $injector.registerCommand("platform|add", AddPlatformCommand);

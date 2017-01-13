@@ -1,5 +1,5 @@
 interface IPlatformService {
-	addPlatforms(platforms: string[]): IFuture<void>;
+	addPlatforms(platforms: string[]): Promise<void>;
 
 	/**
 	 * Gets list of all installed platforms (the ones for which <project dir>/platforms/<platform> exists).
@@ -26,7 +26,7 @@ interface IPlatformService {
 	 */
 	removePlatforms(platforms: string[]): void;
 
-	updatePlatforms(platforms: string[]): IFuture<void>;
+	updatePlatforms(platforms: string[]): Promise<void>;
 
 	/**
 	 * Ensures that the specified platform and its dependencies are installed.
@@ -36,7 +36,7 @@ interface IPlatformService {
 	 * @param {string} platform The platform to be prepared.
 	 * @returns {boolean} true indicates that the platform was prepared.
 	 */
-	preparePlatform(platform: string, changesInfo?: IProjectChangesInfo): IFuture<boolean>;
+	preparePlatform(platform: string, changesInfo?: IProjectChangesInfo): Promise<boolean>;
 
 	/**
 	 * Determines whether a build is necessary. A build is necessary when one of the following is true:
@@ -46,7 +46,7 @@ interface IPlatformService {
 	 * @param {IBuildConfig} buildConfig Indicates whether the build is for device or emulator.
 	 * @returns {boolean} true indicates that the platform should be build.
 	 */
-	shouldBuild(platform: string, buildConfig?: IBuildConfig): IFuture<boolean>;
+	shouldBuild(platform: string, buildConfig?: IBuildConfig): Promise<boolean>;
 
 	/**
 	 * Builds the native project for the specified platform for device or emulator.
@@ -56,16 +56,16 @@ interface IPlatformService {
 	 * @param {IBuildConfig} buildConfig Indicates whether the build is for device or emulator.
 	 * @returns {void}
 	 */
-	buildPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
+	buildPlatform(platform: string, buildConfig?: IBuildConfig): Promise<void>;
 
 	/**
 	 * Determines whether installation is necessary. It is necessary when one of the following is true:
 	 * - the application is not installed.
 	 * - the .nsbuildinfo file located in application root folder is different than the local .nsbuildinfo file
 	 * @param {Mobile.IDevice} device The device where the application should be installed.
-	 * @returns {boolean} true indicates that the application should be installed.
+	 * @returns {Promise<boolean>} true indicates that the application should be installed.
 	 */
-	shouldInstall(device: Mobile.IDevice): boolean;
+	shouldInstall(device: Mobile.IDevice): Promise<boolean>;
 
 	/**
 	 * Installs the application on specified device.
@@ -74,14 +74,14 @@ interface IPlatformService {
 	 * @param {Mobile.IDevice} device The device where the application should be installed.
 	 * @returns {void}
 	 */
-	installApplication(device: Mobile.IDevice): IFuture<void>;
+	installApplication(device: Mobile.IDevice): Promise<void>;
 
 	/**
 	 * Gets first chance to validate the options provided as command line arguments.
 	 * If no platform is provided or a falsy (null, undefined, "", false...) platform is provided,
 	 * the options will be validated for all available platforms.
 	 */
-	validateOptions(platform?: string): IFuture<boolean>;
+	validateOptions(platform?: string): Promise<boolean>;
 
 	/**
 	 * Executes prepare, build and installOnPlatform when necessary to ensure that the latest version of the app is installed on specified platform.
@@ -90,23 +90,23 @@ interface IPlatformService {
 	 * @param {boolean} forceInstall When true, installs the application unconditionally.
 	 * @returns {void}
 	 */
-	deployPlatform(platform: string, forceInstall?: boolean): IFuture<void>;
+	deployPlatform(platform: string, forceInstall?: boolean): Promise<void>;
 
 	/**
 	 * Runs the application on specified platform. Assumes that the application is already build and installed. Fails if this is not true.
 	 * @param {string} platform The platform where to start the application.
 	 * @returns {void}
 	 */
-	runPlatform(platform: string): IFuture<void>;
+	runPlatform(platform: string): Promise<void>;
 
 	/**
 	 * The emulate command. In addition to `run --emulator` command, it handles the `--available-devices` option to show the available devices.
 	 * @param {string} platform The platform to emulate.
 	 * @returns {void}
 	 */
-	emulatePlatform(platform: string): IFuture<void>;
+	emulatePlatform(platform: string): Promise<void>;
 
-	cleanDestinationApp(platform: string): IFuture<void>;
+	cleanDestinationApp(platform: string): Promise<void>;
 	validatePlatformInstalled(platform: string): void;
 	validatePlatform(platform: string): void;
 
@@ -141,7 +141,7 @@ interface IPlatformService {
 	 * @param {string} deviceFilePath The file path.
 	 * @returns {string} The contents of the file or null when there is no such file.
 	 */
-	readFile(device: Mobile.IDevice, deviceFilePath: string): IFuture<string>;
+	readFile(device: Mobile.IDevice, deviceFilePath: string): Promise<string>;
 }
 
 interface IPlatformData {
@@ -172,7 +172,7 @@ interface IPlatformsData {
 }
 
 interface INodeModulesBuilder {
-	prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date): IFuture<void>;
+	prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date): Promise<void>;
 	cleanNodeModules(absoluteOutputPath: string, platform: string): void;
 }
 

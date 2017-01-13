@@ -18,113 +18,103 @@ class VersionsService implements IVersionsService {
 		this.projectData = this.getProjectData();
 	}
 
-	public getNativescriptCliVersion(): IFuture<IVersionInformation> {
-		return (() => {
-			let currentCliVersion = this.$staticConfig.version;
-			let latestCliVersion = this.$npmInstallationManager.getLatestVersion(constants.NATIVESCRIPT_KEY_NAME).wait();
+	public async getNativescriptCliVersion(): Promise<IVersionInformation> {
+		let currentCliVersion = this.$staticConfig.version;
+		let latestCliVersion = await this.$npmInstallationManager.getLatestVersion(constants.NATIVESCRIPT_KEY_NAME);
 
-			return {
-				componentName: constants.NATIVESCRIPT_KEY_NAME,
-				currentVersion: currentCliVersion,
-				latestVersion: latestCliVersion
+		return {
+			componentName: constants.NATIVESCRIPT_KEY_NAME,
+			currentVersion: currentCliVersion,
+			latestVersion: latestCliVersion
+		};
+	}
+
+	public async getTnsCoreModulesVersion(): Promise<IVersionInformation> {
+		let latestTnsCoreModulesVersion = await this.$npmInstallationManager.getLatestVersion(constants.TNS_CORE_MODULES_NAME);
+		let nativescriptCoreModulesInfo: IVersionInformation = {
+			componentName: constants.TNS_CORE_MODULES_NAME,
+			latestVersion: latestTnsCoreModulesVersion
+		};
+
+		if (this.projectData) {
+			let nodeModulesPath = path.join(this.projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME);
+			let tnsCoreModulesPath = path.join(nodeModulesPath, constants.TNS_CORE_MODULES_NAME);
+			if (!this.$fs.exists(nodeModulesPath) ||
+				!this.$fs.exists(tnsCoreModulesPath)) {
+				await this.$pluginsService.ensureAllDependenciesAreInstalled();
+			}
+
+			let currentTnsCoreModulesVersion = this.$fs.readJson(path.join(tnsCoreModulesPath, constants.PACKAGE_JSON_FILE_NAME)).version;
+			nativescriptCoreModulesInfo.currentVersion = currentTnsCoreModulesVersion;
+		}
+
+		return nativescriptCoreModulesInfo;
+	}
+
+	public async getRuntimesVersions(): Promise<IVersionInformation[]> {
+		let runtimes: string[] = [
+			constants.TNS_ANDROID_RUNTIME_NAME,
+			constants.TNS_IOS_RUNTIME_NAME
+		];
+
+		let projectConfig: any;
+
+		if (this.projectData) {
+			projectConfig = this.$fs.readJson(this.projectData.projectFilePath);
+		}
+
+		let runtimesVersions: IVersionInformation[] = await Promise.all(runtimes.map(async (runtime: string) => {
+			let latestRuntimeVersion = await this.$npmInstallationManager.getLatestVersion(runtime);
+			let runtimeInformation: IVersionInformation = {
+				componentName: runtime,
+				latestVersion: latestRuntimeVersion
 			};
-		}).future<IVersionInformation>()();
-	}
 
-	public getTnsCoreModulesVersion(): IFuture<IVersionInformation> {
-		return (() => {
-			let latestTnsCoreModulesVersion = this.$npmInstallationManager.getLatestVersion(constants.TNS_CORE_MODULES_NAME).wait();
-			let nativescriptCoreModulesInfo: IVersionInformation = {
-				componentName: constants.TNS_CORE_MODULES_NAME,
-				latestVersion: latestTnsCoreModulesVersion
-			};
-
-			if (this.projectData) {
-				let nodeModulesPath = path.join(this.projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME);
-				let tnsCoreModulesPath = path.join(nodeModulesPath, constants.TNS_CORE_MODULES_NAME);
-				if (!this.$fs.exists(nodeModulesPath) ||
-					!this.$fs.exists(tnsCoreModulesPath)) {
-					this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
+			if (projectConfig) {
+				let projectRuntimeInformation = projectConfig.nativescript && projectConfig.nativescript[runtime];
+				if (projectRuntimeInformation) {
+					let runtimeVersionInProject = projectRuntimeInformation.version;
+					runtimeInformation.currentVersion = runtimeVersionInProject;
 				}
-
-				let currentTnsCoreModulesVersion = this.$fs.readJson(path.join(tnsCoreModulesPath, constants.PACKAGE_JSON_FILE_NAME)).version;
-				nativescriptCoreModulesInfo.currentVersion = currentTnsCoreModulesVersion;
 			}
 
-			return nativescriptCoreModulesInfo;
-		}).future<IVersionInformation>()();
+			return runtimeInformation;
+		}));
+
+		return runtimesVersions;
 	}
 
-	public getRuntimesVersions(): IFuture<IVersionInformation[]> {
-		return (() => {
-			let runtimes: string[] = [
-				constants.TNS_ANDROID_RUNTIME_NAME,
-				constants.TNS_IOS_RUNTIME_NAME
-			];
+	public async getComponentsForUpdate(): Promise<IVersionInformation[]> {
+		let allComponents: IVersionInformation[] = await this.getAllComponentsVersions();
+		let componentsForUpdate: IVersionInformation[] = [];
 
-			let projectConfig: any;
-
-			if (this.projectData) {
-				projectConfig = this.$fs.readJson(this.projectData.projectFilePath);
+		_.forEach(allComponents, (component: IVersionInformation) => {
+			if (component.currentVersion && this.hasUpdate(component)) {
+				componentsForUpdate.push(component);
 			}
+		});
 
-			let runtimesVersions: IVersionInformation[] = runtimes.map((runtime: string) => {
-				let latestRuntimeVersion = this.$npmInstallationManager.getLatestVersion(runtime).wait();
-				let runtimeInformation: IVersionInformation = {
-					componentName: runtime,
-					latestVersion: latestRuntimeVersion
-				};
-
-				if (projectConfig) {
-					let projectRuntimeInformation = projectConfig.nativescript && projectConfig.nativescript[runtime];
-					if (projectRuntimeInformation) {
-						let runtimeVersionInProject = projectRuntimeInformation.version;
-						runtimeInformation.currentVersion = runtimeVersionInProject;
-					}
-				}
-
-				return runtimeInformation;
-			});
-
-			return runtimesVersions;
-		}).future<IVersionInformation[]>()();
+		return componentsForUpdate;
 	}
 
-	public getComponentsForUpdate(): IFuture<IVersionInformation[]> {
-		return (() => {
-			let allComponents: IVersionInformation[] = this.getAllComponentsVersions().wait();
-			let componentsForUpdate: IVersionInformation[] = [];
+	public async getAllComponentsVersions(): Promise<IVersionInformation[]> {
+		let allComponents: IVersionInformation[] = [];
 
-			_.forEach(allComponents, (component: IVersionInformation) => {
-				if (component.currentVersion && this.hasUpdate(component)) {
-					componentsForUpdate.push(component);
-				}
-			});
+		let nativescriptCliInformation: IVersionInformation = await this.getNativescriptCliVersion();
+		if (nativescriptCliInformation) {
+			allComponents.push(nativescriptCliInformation);
+		}
 
-			return componentsForUpdate;
-		}).future<IVersionInformation[]>()();
-	}
+		let nativescriptCoreModulesInformation: IVersionInformation = await this.getTnsCoreModulesVersion();
+		if (nativescriptCoreModulesInformation) {
+			allComponents.push(nativescriptCoreModulesInformation);
+		}
 
-	public getAllComponentsVersions(): IFuture<IVersionInformation[]> {
-		return (() => {
-			let allComponents: IVersionInformation[] = [];
+		let runtimesVersions: IVersionInformation[] = await this.getRuntimesVersions();
 
-			let nativescriptCliInformation: IVersionInformation = this.getNativescriptCliVersion().wait();
-			if (nativescriptCliInformation) {
-				allComponents.push(nativescriptCliInformation);
-			}
+		allComponents = allComponents.concat(runtimesVersions);
 
-			let nativescriptCoreModulesInformation: IVersionInformation = this.getTnsCoreModulesVersion().wait();
-			if (nativescriptCoreModulesInformation) {
-				allComponents.push(nativescriptCoreModulesInformation);
-			}
-
-			let runtimesVersions: IVersionInformation[] = this.getRuntimesVersions().wait();
-
-			allComponents = allComponents.concat(runtimesVersions);
-
-			return allComponents;
-		}).future<IVersionInformation[]>()();
+		return allComponents;
 	}
 
 	public createTableWithVersionsInformation(versionsInformation: IVersionInformation[]): any {

@@ -1,40 +1,37 @@
 import { createTable } from "../common/helpers";
-import {StringCommandParameter} from "../common/command-params";
+import { StringCommandParameter } from "../common/command-params";
 
 export class ListiOSApps implements ICommand {
+	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector)];
+
 	constructor(private $injector: IInjector,
 		private $itmsTransporterService: IITMSTransporterService,
 		private $logger: ILogger,
-		private $prompter: IPrompter,
-		private $stringParameterBuilder: IStringParameterBuilder) { }
+		private $prompter: IPrompter) { }
 
-	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector)];
+	public async execute(args: string[]): Promise<void> {
+		let username = args[0],
+			password = args[1];
 
-	public execute(args: string[]): IFuture<void> {
-		return (() => {
-			let username = args[0],
-				password = args[1];
+		if (!username) {
+			username = await this.$prompter.getString("Apple ID", { allowEmpty: false });
+		}
 
-			if(!username) {
-				username = this.$prompter.getString("Apple ID", { allowEmpty: false }).wait();
-			}
+		if (!password) {
+			password = await this.$prompter.getPassword("Apple ID password");
+		}
 
-			if(!password) {
-				password = this.$prompter.getPassword("Apple ID password").wait();
-			}
+		let iOSApplications = await this.$itmsTransporterService.getiOSApplications({ username, password });
 
-			let iOSApplications = this.$itmsTransporterService.getiOSApplications({username, password}).wait();
+		if (!iOSApplications || !iOSApplications.length) {
+			this.$logger.out("Seems you don't have any applications yet.");
+		} else {
+			let table: any = createTable(["Application Name", "Bundle Identifier", "Version"], iOSApplications.map(element => {
+				return [element.name, element.bundleId, element.version];
+			}));
 
-			if (!iOSApplications || !iOSApplications.length) {
-				this.$logger.out("Seems you don't have any applications yet.");
-			} else {
-				let table: any = createTable(["Application Name", "Bundle Identifier", "Version"], iOSApplications.map(element => {
-					return [element.name, element.bundleId, element.version];
-				}));
-
-				this.$logger.out(table.toString());
-			}
-		}).future<void>()();
+			this.$logger.out(table.toString());
+		}
 	}
 }
 

@@ -6,7 +6,6 @@ import * as xcode from "xcode";
 import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
-import Future = require("fibers/future");
 import { PlistSession } from "plist-merge-patch";
 import { EOL } from "os";
 import * as temp from "temp";
@@ -33,7 +32,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
-		private $iOSSimResolver: Mobile.IiOSSimResolver,
 		private $options: IOptions,
 		private $injector: IInjector,
 		$projectDataService: IProjectDataService,
@@ -77,15 +75,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		};
 	}
 
-	public validateOptions(): IFuture<boolean> {
-		return (() => {
-			if (this.$options.provision === true) {
-				this.$iOSProvisionService.list().wait();
-				this.$errors.failWithoutHelp("Please provide provisioning profile uuid or name with the --provision option.");
-				return false;
-			}
-			return true;
-		}).future<boolean>()();
+	public async validateOptions(): Promise<boolean> {
+		if (this.$options.provision === true) {
+			await this.$iOSProvisionService.list();
+			this.$errors.failWithoutHelp("Please provide provisioning profile uuid or name with the --provision option.");
+			return false;
+		}
+
+		return true;
 	}
 
 	public getAppResourcesDestinationDirectoryPath(): string {
@@ -98,72 +95,66 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return path.join(this.platformData.projectRoot, this.$projectData.projectName, "Resources");
 	}
 
-	public validate(): IFuture<void> {
-		return (() => {
-			try {
-				this.$childProcess.exec("which xcodebuild").wait();
-			} catch (error) {
-				this.$errors.fail("Xcode is not installed. Make sure you have Xcode installed and added to your PATH");
-			}
+	public async validate(): Promise<void> {
+		try {
+			await this.$childProcess.exec("which xcodebuild");
+		} catch (error) {
+			this.$errors.fail("Xcode is not installed. Make sure you have Xcode installed and added to your PATH");
+		}
 
-			let xcodeBuildVersion = this.getXcodeVersion();
-			if (helpers.versionCompare(xcodeBuildVersion, IOSProjectService.XCODEBUILD_MIN_VERSION) < 0) {
-				this.$errors.fail("NativeScript can only run in Xcode version %s or greater", IOSProjectService.XCODEBUILD_MIN_VERSION);
-			}
-
-		}).future<void>()();
+		let xcodeBuildVersion = await this.getXcodeVersion();
+		if (helpers.versionCompare(xcodeBuildVersion, IOSProjectService.XCODEBUILD_MIN_VERSION) < 0) {
+			this.$errors.fail("NativeScript can only run in Xcode version %s or greater", IOSProjectService.XCODEBUILD_MIN_VERSION);
+		}
 	}
 
-	// TODO: Remove IFuture, reason: readDirectory - unable until androidProjectService has async operations.
-	public createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): IFuture<void> {
-		return (() => {
-			this.$fs.ensureDirectoryExists(path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
-			if (pathToTemplate) {
-				// Copy everything except the template from the runtime
-				this.$fs.readDirectory(frameworkDir)
-					.filter(dirName => dirName.indexOf(IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER) === -1)
-					.forEach(dirName => shell.cp("-R", path.join(frameworkDir, dirName), this.platformData.projectRoot));
-				shell.cp("-rf", path.join(pathToTemplate, "*"), this.platformData.projectRoot);
-			} else {
-				shell.cp("-R", path.join(frameworkDir, "*"), this.platformData.projectRoot);
-			}
-		}).future<void>()();
+	// TODO: Remove Promise, reason: readDirectory - unable until androidProjectService has async operations.
+	public async createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): Promise<void> {
+		this.$fs.ensureDirectoryExists(path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
+		if (pathToTemplate) {
+			// Copy everything except the template from the runtime
+			this.$fs.readDirectory(frameworkDir)
+				.filter(dirName => dirName.indexOf(IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER) === -1)
+				.forEach(dirName => shell.cp("-R", path.join(frameworkDir, dirName), this.platformData.projectRoot));
+			shell.cp("-rf", path.join(pathToTemplate, "*"), this.platformData.projectRoot);
+		} else {
+			shell.cp("-R", path.join(frameworkDir, "*"), this.platformData.projectRoot);
+		}
+
 	}
+
 	//TODO: plamen5kov: revisit this method, might have unnecessary/obsolete logic
-	public interpolateData(): IFuture<void> {
-		return (() => {
-			let projectRootFilePath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
-			// Starting with NativeScript for iOS 1.6.0, the project Info.plist file resides not in the platform project,
-			// but in the hello-world app template as a platform specific resource.
-			if (this.$fs.exists(path.join(projectRootFilePath, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + "-Info.plist"))) {
-				this.replaceFileName("-Info.plist", projectRootFilePath);
-			}
-			this.replaceFileName("-Prefix.pch", projectRootFilePath);
+	public async interpolateData(): Promise<void> {
+		let projectRootFilePath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
+		// Starting with NativeScript for iOS 1.6.0, the project Info.plist file resides not in the platform project,
+		// but in the hello-world app template as a platform specific resource.
+		if (this.$fs.exists(path.join(projectRootFilePath, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + "-Info.plist"))) {
+			this.replaceFileName("-Info.plist", projectRootFilePath);
+		}
+		this.replaceFileName("-Prefix.pch", projectRootFilePath);
 
-			let xcschemeDirPath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + IOSProjectService.XCODE_PROJECT_EXT_NAME, "xcshareddata/xcschemes");
-			let xcschemeFilePath = path.join(xcschemeDirPath, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + IOSProjectService.XCODE_SCHEME_EXT_NAME);
+		let xcschemeDirPath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + IOSProjectService.XCODE_PROJECT_EXT_NAME, "xcshareddata/xcschemes");
+		let xcschemeFilePath = path.join(xcschemeDirPath, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + IOSProjectService.XCODE_SCHEME_EXT_NAME);
 
-			if (this.$fs.exists(xcschemeFilePath)) {
-				this.$logger.debug("Found shared scheme at xcschemeFilePath, renaming to match project name.");
-				this.$logger.debug("Checkpoint 0");
-				this.replaceFileContent(xcschemeFilePath);
-				this.$logger.debug("Checkpoint 1");
-				this.replaceFileName(IOSProjectService.XCODE_SCHEME_EXT_NAME, xcschemeDirPath);
-				this.$logger.debug("Checkpoint 2");
-			} else {
-				this.$logger.debug("Copying xcscheme from template not found at " + xcschemeFilePath);
-			}
+		if (this.$fs.exists(xcschemeFilePath)) {
+			this.$logger.debug("Found shared scheme at xcschemeFilePath, renaming to match project name.");
+			this.$logger.debug("Checkpoint 0");
+			this.replaceFileContent(xcschemeFilePath);
+			this.$logger.debug("Checkpoint 1");
+			this.replaceFileName(IOSProjectService.XCODE_SCHEME_EXT_NAME, xcschemeDirPath);
+			this.$logger.debug("Checkpoint 2");
+		} else {
+			this.$logger.debug("Copying xcscheme from template not found at " + xcschemeFilePath);
+		}
 
-			this.replaceFileName(IOSProjectService.XCODE_PROJECT_EXT_NAME, this.platformData.projectRoot);
+		this.replaceFileName(IOSProjectService.XCODE_PROJECT_EXT_NAME, this.platformData.projectRoot);
 
-			let pbxprojFilePath = this.pbxProjPath;
-			this.replaceFileContent(pbxprojFilePath);
-
-		}).future<void>()();
+		let pbxprojFilePath = this.pbxProjPath;
+		this.replaceFileContent(pbxprojFilePath);
 	}
 
-	public interpolateConfigurationFile(configurationFilePath?: string): IFuture<void> {
-		return Future.fromResult();
+	public interpolateConfigurationFile(configurationFilePath?: string): Promise<void> {
+		return Promise.resolve();
 	}
 
 	public afterCreateProject(projectRoot: string): void {
@@ -175,40 +166,37 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	 * Archive the Xcode project to .xcarchive.
 	 * Returns the path to the .xcarchive.
 	 */
-	public archive(options?: { archivePath?: string }): IFuture<string> {
-		return (() => {
-			let projectRoot = this.platformData.projectRoot;
-			let archivePath = options && options.archivePath ? path.resolve(options.archivePath) : path.join(projectRoot, "/build/archive/", this.$projectData.projectName + ".xcarchive");
-			let args = ["archive", "-archivePath", archivePath]
-				.concat(this.xcbuildProjectArgs(projectRoot, "scheme"));
-			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
-			return archivePath;
-		}).future<string>()();
+	public async archive(options?: { archivePath?: string }): Promise<string> {
+		let projectRoot = this.platformData.projectRoot;
+		let archivePath = options && options.archivePath ? path.resolve(options.archivePath) : path.join(projectRoot, "/build/archive/", this.$projectData.projectName + ".xcarchive");
+		let args = ["archive", "-archivePath", archivePath]
+			.concat(this.xcbuildProjectArgs(projectRoot, "scheme"));
+		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' });
+		return archivePath;
 	}
 
 	/**
 	 * Exports .xcarchive for AppStore distribution.
 	 */
-	public exportArchive(options: { archivePath: string, exportDir?: string, teamID?: string }): IFuture<string> {
-		return (() => {
-			let projectRoot = this.platformData.projectRoot;
-			let archivePath = options.archivePath;
-			// The xcodebuild exportPath expects directory and writes the <project-name>.ipa at that directory.
-			let exportPath = path.resolve(options.exportDir || path.join(projectRoot, "/build/archive"));
-			let exportFile = path.join(exportPath, this.$projectData.projectName + ".ipa");
+	public async exportArchive(options: { archivePath: string, exportDir?: string, teamID?: string }): Promise<string> {
+		let projectRoot = this.platformData.projectRoot;
+		let archivePath = options.archivePath;
+		// The xcodebuild exportPath expects directory and writes the <project-name>.ipa at that directory.
+		let exportPath = path.resolve(options.exportDir || path.join(projectRoot, "/build/archive"));
+		let exportFile = path.join(exportPath, this.$projectData.projectName + ".ipa");
 
-			// These are the options that you can set in the Xcode UI when exporting for AppStore deployment.
-			let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
+		// These are the options that you can set in the Xcode UI when exporting for AppStore deployment.
+		let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
 `;
-			if (options && options.teamID) {
-				plistTemplate += `    <key>teamID</key>
+		if (options && options.teamID) {
+			plistTemplate += `    <key>teamID</key>
     <string>${options.teamID}</string>
 `;
-			}
-			plistTemplate += `    <key>method</key>
+		}
+		plistTemplate += `    <key>method</key>
     <string>app-store</string>
     <key>uploadBitcode</key>
     <false/>
@@ -217,20 +205,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 </dict>
 </plist>`;
 
-			// Save the options...
-			temp.track();
-			let exportOptionsPlist = temp.path({ prefix: "export-", suffix: ".plist" });
-			this.$fs.writeFile(exportOptionsPlist, plistTemplate);
+		// Save the options...
+		temp.track();
+		let exportOptionsPlist = temp.path({ prefix: "export-", suffix: ".plist" });
+		this.$fs.writeFile(exportOptionsPlist, plistTemplate);
 
-			let args = ["-exportArchive",
-				"-archivePath", archivePath,
-				"-exportPath", exportPath,
-				"-exportOptionsPlist", exportOptionsPlist
-			];
-			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
+		let args = ["-exportArchive",
+			"-archivePath", archivePath,
+			"-exportPath", exportPath,
+			"-exportOptionsPlist", exportOptionsPlist
+		];
+		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' });
 
-			return exportFile;
-		}).future<string>()();
+		return exportFile;
 	}
 
 	private xcbuildProjectArgs(projectRoot: string, product?: "scheme" | "target"): string[] {
@@ -243,251 +230,237 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 	}
 
-	public buildProject(projectRoot: string, buildConfig?: IiOSBuildConfig): IFuture<void> {
-		return (() => {
-			let basicArgs = [
-				"-configuration", this.$options.release ? "Release" : "Debug",
-				"build",
-				'SHARED_PRECOMPS_DIR=' + path.join(projectRoot, 'build', 'sharedpch')
-			];
-			basicArgs = basicArgs.concat(this.xcbuildProjectArgs(projectRoot));
+	public async buildProject(projectRoot: string, buildConfig?: IiOSBuildConfig): Promise<void> {
+		let basicArgs = [
+			"-configuration", this.$options.release ? "Release" : "Debug",
+			"build",
+			'SHARED_PRECOMPS_DIR=' + path.join(projectRoot, 'build', 'sharedpch')
+		];
+		basicArgs = basicArgs.concat(this.xcbuildProjectArgs(projectRoot));
 
-			// Starting from tns-ios 1.4 the xcconfig file is referenced in the project template
-			let frameworkVersion = this.getFrameworkVersion(this.platformData.frameworkPackageName);
-			if (semver.lt(frameworkVersion, "1.4.0")) {
-				basicArgs.push("-xcconfig", path.join(projectRoot, this.$projectData.projectName, "build.xcconfig"));
-			}
+		// Starting from tns-ios 1.4 the xcconfig file is referenced in the project template
+		let frameworkVersion = this.getFrameworkVersion(this.platformData.frameworkPackageName);
+		if (semver.lt(frameworkVersion, "1.4.0")) {
+			basicArgs.push("-xcconfig", path.join(projectRoot, this.$projectData.projectName, "build.xcconfig"));
+		}
 
-			// if (this.$logger.getLevel() === "INFO") {
-			// 	let xcodeBuildVersion = this.getXcodeVersion();
-			// 	if (helpers.versionCompare(xcodeBuildVersion, "8.0") >= 0) {
-			// 		basicArgs.push("-quiet");
-			// 	}
-			// }
+		// if (this.$logger.getLevel() === "INFO") {
+		// 	let xcodeBuildVersion = this.getXcodeVersion();
+		// 	if (helpers.versionCompare(xcodeBuildVersion, "8.0") >= 0) {
+		// 		basicArgs.push("-quiet");
+		// 	}
+		// }
 
-			let buildForDevice = this.$options.forDevice || (buildConfig && buildConfig.buildForDevice);
-			if (buildForDevice) {
-				this.buildForDevice(projectRoot, basicArgs, buildConfig).wait();
-			} else {
-				this.buildForSimulator(projectRoot, basicArgs, buildConfig).wait();
-			}
-		}).future<void>()();
+		let buildForDevice = this.$options.forDevice || (buildConfig && buildConfig.buildForDevice);
+		if (buildForDevice) {
+			await this.buildForDevice(projectRoot, basicArgs, buildConfig);
+		} else {
+			await this.buildForSimulator(projectRoot, basicArgs, buildConfig);
+		}
+
 	}
 
-	private buildForDevice(projectRoot: string, args: string[], buildConfig?: IiOSBuildConfig): IFuture<void> {
-		return (() => {
-			let defaultArchitectures = [
-				'ARCHS=armv7 arm64',
-				'VALID_ARCHS=armv7 arm64'
-			];
+	private async buildForDevice(projectRoot: string, args: string[], buildConfig?: IiOSBuildConfig): Promise<void> {
+		let defaultArchitectures = [
+			'ARCHS=armv7 arm64',
+			'VALID_ARCHS=armv7 arm64'
+		];
 
-			// build only for device specific architecture
-			if (!this.$options.release && !(buildConfig && buildConfig.architectures)) {
-				this.$devicesService.initialize({ platform: this.$devicePlatformsConstants.iOS.toLowerCase(), deviceId: this.$options.device }).wait();
-				let instances = this.$devicesService.getDeviceInstances();
-				let devicesArchitectures = _(instances)
-					.filter(d => this.$mobileHelper.isiOSPlatform(d.deviceInfo.platform) && d.deviceInfo.activeArchitecture)
-					.map(d => d.deviceInfo.activeArchitecture)
-					.uniq()
-					.value();
-				if (devicesArchitectures.length > 0) {
-					let architectures = [
-						`ARCHS=${devicesArchitectures.join(" ")}`,
-						`VALID_ARCHS=${devicesArchitectures.join(" ")}`
-					];
-					if (devicesArchitectures.length > 1) {
-						architectures.push('ONLY_ACTIVE_ARCH=NO');
-					}
-					if (!buildConfig) {
-						buildConfig = {};
-					}
-					buildConfig.architectures = architectures;
+		// build only for device specific architecture
+		if (!this.$options.release && !(buildConfig && buildConfig.architectures)) {
+			await this.$devicesService.initialize({ platform: this.$devicePlatformsConstants.iOS.toLowerCase(), deviceId: this.$options.device });
+			let instances = this.$devicesService.getDeviceInstances();
+			let devicesArchitectures = _(instances)
+				.filter(d => this.$mobileHelper.isiOSPlatform(d.deviceInfo.platform) && d.deviceInfo.activeArchitecture)
+				.map(d => d.deviceInfo.activeArchitecture)
+				.uniq()
+				.value();
+			if (devicesArchitectures.length > 0) {
+				let architectures = [
+					`ARCHS=${devicesArchitectures.join(" ")}`,
+					`VALID_ARCHS=${devicesArchitectures.join(" ")}`
+				];
+				if (devicesArchitectures.length > 1) {
+					architectures.push('ONLY_ACTIVE_ARCH=NO');
 				}
+				if (!buildConfig) {
+					buildConfig = {};
+				}
+				buildConfig.architectures = architectures;
 			}
-			args = args.concat((buildConfig && buildConfig.architectures) || defaultArchitectures);
+		}
 
-			args = args.concat([
-				"-sdk", "iphoneos",
-				"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "device")
-			]);
+		args = args.concat((buildConfig && buildConfig.architectures) || defaultArchitectures);
 
-			let xcodeBuildVersion = this.getXcodeVersion();
-			if (helpers.versionCompare(xcodeBuildVersion, "8.0") >= 0) {
-				this.setupAutomaticSigning(projectRoot, buildConfig).wait();
-			}
+		args = args.concat([
+			"-sdk", "iphoneos",
+			"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "device")
+		]);
 
-			if (buildConfig && buildConfig.codeSignIdentity) {
-				args.push(`CODE_SIGN_IDENTITY=${buildConfig.codeSignIdentity}`);
-			}
+		let xcodeBuildVersion = await this.getXcodeVersion();
+		if (helpers.versionCompare(xcodeBuildVersion, "8.0") >= 0) {
+			await this.setupAutomaticSigning(projectRoot, buildConfig);
+		}
 
-			if (buildConfig && buildConfig.mobileProvisionIdentifier) {
-				args.push(`PROVISIONING_PROFILE=${buildConfig.mobileProvisionIdentifier}`);
-			}
+		if (buildConfig && buildConfig.codeSignIdentity) {
+			args.push(`CODE_SIGN_IDENTITY=${buildConfig.codeSignIdentity}`);
+		}
 
-			if (buildConfig && buildConfig.teamIdentifier) {
-				args.push(`DEVELOPMENT_TEAM=${buildConfig.teamIdentifier}`);
-			}
+		if (buildConfig && buildConfig.mobileProvisionIdentifier) {
+			args.push(`PROVISIONING_PROFILE=${buildConfig.mobileProvisionIdentifier}`);
+		}
 
-			// this.$logger.out("xcodebuild...");
-			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
-			// this.$logger.out("xcodebuild build succeded.");
+		if (buildConfig && buildConfig.teamIdentifier) {
+			args.push(`DEVELOPMENT_TEAM=${buildConfig.teamIdentifier}`);
+		}
 
-			this.createIpa(projectRoot).wait();
+		// this.$logger.out("xcodebuild...");
+		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' });
+		// this.$logger.out("xcodebuild build succeded.");
 
-		}).future<void>()();
+		await this.createIpa(projectRoot);
 	}
 
-	private setupManualSigning(projectRoot: string, buildConfig?: IiOSBuildConfig): IFuture<void> {
-		return (() => {
-			if (this.$options.provision) {
-				const pbxprojPath = path.join(projectRoot, this.$projectData.projectName + ".xcodeproj", "project.pbxproj");
-				const xcode = Xcode.open(pbxprojPath);
-				const signing = xcode.getSigning(this.$projectData.projectName);
-
-				let shouldUpdateXcode = false;
-				if (signing && signing.style === "Manual") {
-					for(let config in signing.configurations) {
-						let options = signing.configurations[config];
-						if (options.name !== this.$options.provision && options.uuid !== this.$options.provision) {
-							shouldUpdateXcode = true;
-							break;
-						}
-					}
-				} else {
-					shouldUpdateXcode = true;
-				}
-
-				if (shouldUpdateXcode) {
-					// This is slow, it read through 260 mobileprovision files on my machine and does quite some checking whether provisioning profiles and devices will match.
-					// That's why we try to avoid id by checking in the Xcode first.
-					const pickStart = Date.now();
-					const mobileprovision = this.$iOSProvisionService.pick(this.$options.provision).wait();
-					const pickEnd = Date.now();
-					this.$logger.trace("Searched and " + (mobileprovision ? "found" : "failed to find ") + " matching provisioning profile. (" + (pickEnd - pickStart) + "ms.)");
-					if (!mobileprovision) {
-						this.$errors.failWithoutHelp("Failed to find mobile provision with UUID or Name: " + this.$options.provision);
-					}
-
-					xcode.setManualSigningStyle(this.$projectData.projectName, {
-						team: mobileprovision.TeamIdentifier && mobileprovision.TeamIdentifier.length > 0 ? mobileprovision.TeamIdentifier[0] : undefined,
-						uuid: mobileprovision.UUID,
-						name: mobileprovision.Name,
-						identity: mobileprovision.Type === "Development" ? "iPhone Developer" : "iPhone Distribution"
-					});
-					xcode.save();
-
-					// this.cache(uuid);
-					this.$logger.trace("Set Manual signing style and provisioning profile.");
-				} else {
-					this.$logger.trace("The specified provisioning profile allready set in the Xcode.");
-				}
-			} else {
-				// read uuid from Xcode and cache...
-			}
-		}).future<void>()();
-	}
-
-	private setupAutomaticSigning(projectRoot: string, buildConfig?: IiOSBuildConfig): IFuture<void> {
-		return (() => {
+	private async setupManualSigning(projectRoot: string, buildConfig?: IiOSBuildConfig): Promise<void> {
+		if (this.$options.provision) {
 			const pbxprojPath = path.join(projectRoot, this.$projectData.projectName + ".xcodeproj", "project.pbxproj");
 			const xcode = Xcode.open(pbxprojPath);
 			const signing = xcode.getSigning(this.$projectData.projectName);
 
-			if (!this.$options.provision && !(signing && signing.style === "Manual" && !this.$options.teamId)) {
-				if (buildConfig) {
-					delete buildConfig.teamIdentifier;
+			let shouldUpdateXcode = false;
+			if (signing && signing.style === "Manual") {
+				for (let config in signing.configurations) {
+					let options = signing.configurations[config];
+					if (options.name !== this.$options.provision && options.uuid !== this.$options.provision) {
+						shouldUpdateXcode = true;
+						break;
+					}
+				}
+			} else {
+				shouldUpdateXcode = true;
+			}
+
+			if (shouldUpdateXcode) {
+				// This is slow, it read through 260 mobileprovision files on my machine and does quite some checking whether provisioning profiles and devices will match.
+				// That's why we try to avoid id by checking in the Xcode first.
+				const pickStart = Date.now();
+				const mobileprovision = await this.$iOSProvisionService.pick(this.$options.provision);
+				const pickEnd = Date.now();
+				this.$logger.trace("Searched and " + (mobileprovision ? "found" : "failed to find ") + " matching provisioning profile. (" + (pickEnd - pickStart) + "ms.)");
+				if (!mobileprovision) {
+					this.$errors.failWithoutHelp("Failed to find mobile provision with UUID or Name: " + this.$options.provision);
 				}
 
-				const teamId = this.getDevelopmentTeam();
-
-				xcode.setAutomaticSigningStyle(this.$projectData.projectName, teamId);
+				xcode.setManualSigningStyle(this.$projectData.projectName, {
+					team: mobileprovision.TeamIdentifier && mobileprovision.TeamIdentifier.length > 0 ? mobileprovision.TeamIdentifier[0] : undefined,
+					uuid: mobileprovision.UUID,
+					name: mobileprovision.Name,
+					identity: mobileprovision.Type === "Development" ? "iPhone Developer" : "iPhone Distribution"
+				});
 				xcode.save();
-				this.$logger.trace("Set Automatic signing style and team.");
+
+				// this.cache(uuid);
+				this.$logger.trace("Set Manual signing style and provisioning profile.");
+			} else {
+				this.$logger.trace("The specified provisioning profile allready set in the Xcode.");
 			}
-		}).future<void>()();
+		} else {
+			// read uuid from Xcode and cache...
+		}
 	}
 
-	private buildForSimulator(projectRoot: string, args: string[], buildConfig?: IiOSBuildConfig): IFuture<void> {
-		return (() => {
-			args = args.concat([
-				"-sdk", "iphonesimulator",
-				"ARCHS=i386 x86_64",
-				"VALID_ARCHS=i386 x86_64",
-				"ONLY_ACTIVE_ARCH=NO",
-				"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
-				"CODE_SIGN_IDENTITY="
-			]);
+	private async setupAutomaticSigning(projectRoot: string, buildConfig?: IiOSBuildConfig): Promise<void> {
+		const pbxprojPath = path.join(projectRoot, this.$projectData.projectName + ".xcodeproj", "project.pbxproj");
+		const xcode = Xcode.open(pbxprojPath);
+		const signing = xcode.getSigning(this.$projectData.projectName);
 
-			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
+		if (!this.$options.provision && !(signing && signing.style === "Manual" && !this.$options.teamId)) {
+			if (buildConfig) {
+				delete buildConfig.teamIdentifier;
+			}
 
-		}).future<void>()();
+			const teamId = await this.getDevelopmentTeam();
+
+			xcode.setAutomaticSigningStyle(this.$projectData.projectName, teamId);
+			xcode.save();
+			this.$logger.trace("Set Automatic signing style and team.");
+		}
+
 	}
 
-	private createIpa(projectRoot: string): IFuture<void> {
-		return (() => {
-			let buildOutputPath = path.join(projectRoot, "build", "device");
-			let xcrunArgs = [
-				"-sdk", "iphoneos",
-				"PackageApplication",
-				path.join(buildOutputPath, this.$projectData.projectName + ".app"),
-				"-o", path.join(buildOutputPath, this.$projectData.projectName + ".ipa")
-			];
-			// if (this.$logger.getLevel() !== "INFO") {
-				xcrunArgs.push("-verbose");
-			// }
-			// this.$logger.out("Packaging project...");
-			this.$childProcess.spawnFromEvent("xcrun", xcrunArgs, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
-			// this.$logger.out("Project package succeeded.");
-		}).future<void>()();
+	private async buildForSimulator(projectRoot: string, args: string[], buildConfig?: IiOSBuildConfig): Promise<void> {
+		args = args.concat([
+			"-sdk", "iphonesimulator",
+			"ARCHS=i386 x86_64",
+			"VALID_ARCHS=i386 x86_64",
+			"ONLY_ACTIVE_ARCH=NO",
+			"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
+			"CODE_SIGN_IDENTITY="
+		]);
+
+		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' });
+	}
+
+	private async createIpa(projectRoot: string): Promise<void> {
+		let buildOutputPath = path.join(projectRoot, "build", "device");
+		let xcrunArgs = [
+			"-sdk", "iphoneos",
+			"PackageApplication",
+			path.join(buildOutputPath, this.$projectData.projectName + ".app"),
+			"-o", path.join(buildOutputPath, this.$projectData.projectName + ".ipa")
+		];
+		// if (this.$logger.getLevel() !== "INFO") {
+		xcrunArgs.push("-verbose");
+		// }
+		// this.$logger.out("Packaging project...");
+		await this.$childProcess.spawnFromEvent("xcrun", xcrunArgs, "exit", { cwd: this.$options, stdio: 'inherit' });
+		// this.$logger.out("Project package succeeded.");
 	}
 
 	public isPlatformPrepared(projectRoot: string): boolean {
 		return this.$fs.exists(path.join(projectRoot, this.$projectData.projectName, constants.APP_FOLDER_NAME));
 	}
 
-	public deploy(deviceIdentifier: string): IFuture<void> {
-		return Future.fromResult();
+	public deploy(deviceIdentifier: string): Promise<void> {
+		return Promise.resolve();
 	}
 
-	private addFramework(frameworkPath: string): IFuture<void> {
-		return (() => {
-			this.validateFramework(frameworkPath).wait();
+	private async addFramework(frameworkPath: string): Promise<void> {
+		await this.validateFramework(frameworkPath);
 
-			let project = this.createPbxProj();
-			let frameworkName = path.basename(frameworkPath, path.extname(frameworkPath));
-			let frameworkBinaryPath = path.join(frameworkPath, frameworkName);
-			let isDynamic = _.includes(this.$childProcess.spawnFromEvent("otool", ["-Vh", frameworkBinaryPath], "close").wait().stdout, " DYLIB ");
+		let project = this.createPbxProj();
+		let frameworkName = path.basename(frameworkPath, path.extname(frameworkPath));
+		let frameworkBinaryPath = path.join(frameworkPath, frameworkName);
+		let isDynamic = _.includes((await this.$childProcess.spawnFromEvent("otool", ["-Vh", frameworkBinaryPath], "close")).stdout, " DYLIB ");
 
-			let frameworkAddOptions: xcode.Options = { customFramework: true };
+		let frameworkAddOptions: xcode.Options = { customFramework: true };
 
-			if (isDynamic) {
-				frameworkAddOptions["embed"] = true;
-			}
+		if (isDynamic) {
+			frameworkAddOptions["embed"] = true;
+		}
 
-			let frameworkRelativePath = '$(SRCROOT)/' + this.getLibSubpathRelativeToProjectPath(frameworkPath);
-			project.addFramework(frameworkRelativePath, frameworkAddOptions);
-			this.savePbxProj(project);
-		}).future<void>()();
+		let frameworkRelativePath = '$(SRCROOT)/' + this.getLibSubpathRelativeToProjectPath(frameworkPath);
+		project.addFramework(frameworkRelativePath, frameworkAddOptions);
+		this.savePbxProj(project);
+
 	}
 
-	private addStaticLibrary(staticLibPath: string): IFuture<void> {
-		return (() => {
-			this.validateStaticLibrary(staticLibPath).wait();
-			// Copy files to lib folder.
-			let libraryName = path.basename(staticLibPath, ".a");
-			let headersSubpath = path.join(path.dirname(staticLibPath), "include", libraryName);
+	private async addStaticLibrary(staticLibPath: string): Promise<void> {
+		await this.validateStaticLibrary(staticLibPath);
+		// Copy files to lib folder.
+		let libraryName = path.basename(staticLibPath, ".a");
+		let headersSubpath = path.join(path.dirname(staticLibPath), "include", libraryName);
 
-			// Add static library to project file and setup header search paths
-			let project = this.createPbxProj();
-			let relativeStaticLibPath = this.getLibSubpathRelativeToProjectPath(staticLibPath);
-			project.addFramework(relativeStaticLibPath);
+		// Add static library to project file and setup header search paths
+		let project = this.createPbxProj();
+		let relativeStaticLibPath = this.getLibSubpathRelativeToProjectPath(staticLibPath);
+		project.addFramework(relativeStaticLibPath);
 
-			let relativeHeaderSearchPath = path.join(this.getLibSubpathRelativeToProjectPath(headersSubpath));
-			project.addToHeaderSearchPaths({ relativePath: relativeHeaderSearchPath });
+		let relativeHeaderSearchPath = path.join(this.getLibSubpathRelativeToProjectPath(headersSubpath));
+		project.addToHeaderSearchPaths({ relativePath: relativeHeaderSearchPath });
 
-			this.generateModulemap(headersSubpath, libraryName);
-			this.savePbxProj(project);
-		}).future<void>()();
+		this.generateModulemap(headersSubpath, libraryName);
+		this.savePbxProj(project);
 	}
 
 	public canUpdatePlatform(installedModuleDir: string): boolean {
@@ -588,10 +561,10 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 	}
 
-	public prepareProject(): void {
+	public async prepareProject(): Promise<void> {
 		if (this.$options.provision) {
 			let projectRoot = path.join(this.$projectData.platformsDir, "ios");
-			this.setupManualSigning(projectRoot).wait();
+			await this.setupManualSigning(projectRoot);
 		}
 
 		let project = this.createPbxProj();
@@ -632,15 +605,14 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath());
 	}
 
-	public processConfigurationFilesFromAppResources(): IFuture<void> {
-		return (() => {
-			this.mergeInfoPlists().wait();
-			this.mergeProjectXcconfigFiles().wait();
-			_(this.getAllInstalledPlugins().wait())
-				.map(pluginData => this.$pluginVariablesService.interpolatePluginVariables(pluginData, this.platformData.configurationFilePath).wait())
-				.value();
-			this.$pluginVariablesService.interpolateAppIdentifier(this.platformData.configurationFilePath);
-		}).future<void>()();
+	public async processConfigurationFilesFromAppResources(): Promise<void> {
+		await this.mergeInfoPlists();
+		await this.mergeProjectXcconfigFiles();
+		for (let pluginData of await this.getAllInstalledPlugins()) {
+			await this.$pluginVariablesService.interpolatePluginVariables(pluginData, this.platformData.configurationFilePath);
+		}
+
+		this.$pluginVariablesService.interpolateAppIdentifier(this.platformData.configurationFilePath);
 	}
 
 	private getInfoPlistPath(): string {
@@ -653,48 +625,48 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				this.platformData.configurationFileName
 			);
 	}
+
 	public ensureConfigurationFileInAppResources(): void {
 		return null;
 	}
 
-	private mergeInfoPlists(): IFuture<void> {
-		return (() => {
-			let projectDir = this.$projectData.projectDir;
-			let infoPlistPath = this.$options.baseConfig || path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);
-			this.ensureConfigurationFileInAppResources();
+	private async mergeInfoPlists(): Promise<void> {
+		let projectDir = this.$projectData.projectDir;
+		let infoPlistPath = this.$options.baseConfig || path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);
+		this.ensureConfigurationFileInAppResources();
 
-			if (!this.$fs.exists(infoPlistPath)) {
-				this.$logger.trace("Info.plist: No app/App_Resources/iOS/Info.plist found, falling back to pre-1.6.0 Info.plist behavior.");
+		if (!this.$fs.exists(infoPlistPath)) {
+			this.$logger.trace("Info.plist: No app/App_Resources/iOS/Info.plist found, falling back to pre-1.6.0 Info.plist behavior.");
+			return;
+		}
+
+		let session = new PlistSession({ log: (txt: string) => this.$logger.trace("Info.plist: " + txt) });
+		let makePatch = (plistPath: string) => {
+			if (!this.$fs.exists(plistPath)) {
+				this.$logger.trace("No plist found at: " + plistPath);
 				return;
 			}
 
-			let session = new PlistSession({ log: (txt: string) => this.$logger.trace("Info.plist: " + txt) });
-			let makePatch = (plistPath: string) => {
-				if (!this.$fs.exists(plistPath)) {
-					this.$logger.trace("No plist found at: " + plistPath);
-					return;
-				}
+			this.$logger.trace("Schedule merge plist at: " + plistPath);
+			session.patch({
+				name: path.relative(projectDir, plistPath),
+				read: () => this.$fs.readText(plistPath)
+			});
+		};
 
-				this.$logger.trace("Schedule merge plist at: " + plistPath);
-				session.patch({
-					name: path.relative(projectDir, plistPath),
-					read: () => this.$fs.readText(plistPath)
-				});
-			};
+		let allPlugins = await this.getAllInstalledPlugins();
+		for (let plugin of allPlugins) {
+			let pluginInfoPlistPath = path.join(plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME), this.platformData.configurationFileName);
+			makePatch(pluginInfoPlistPath);
+		}
 
-			let allPlugins = this.getAllInstalledPlugins().wait();
-			for (let plugin of allPlugins) {
-				let pluginInfoPlistPath = path.join(plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME), this.platformData.configurationFileName);
-				makePatch(pluginInfoPlistPath);
-			}
+		makePatch(infoPlistPath);
 
-			makePatch(infoPlistPath);
-
-			if (this.$projectData.projectId) {
-				session.patch({
-					name: "CFBundleIdentifier from package.json nativescript.id",
-					read: () =>
-						`<?xml version="1.0" encoding="UTF-8"?>
+		if (this.$projectData.projectId) {
+			session.patch({
+				name: "CFBundleIdentifier from package.json nativescript.id",
+				read: () =>
+					`<?xml version="1.0" encoding="UTF-8"?>
 						<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 						<plist version="1.0">
 						<dict>
@@ -702,18 +674,16 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 							<string>${ this.$projectData.projectId}</string>
 						</dict>
 						</plist>`
-				});
-			}
+			});
+		}
 
-			let plistContent = session.build();
+		let plistContent = session.build();
 
-			this.$logger.trace("Info.plist: Write to: " + this.platformData.configurationFilePath);
-			this.$fs.writeFile(this.platformData.configurationFilePath, plistContent);
-
-		}).future<void>()();
+		this.$logger.trace("Info.plist: Write to: " + this.platformData.configurationFilePath);
+		this.$fs.writeFile(this.platformData.configurationFilePath, plistContent);
 	}
 
-	private getAllInstalledPlugins(): IFuture<IPluginData[]> {
+	private getAllInstalledPlugins(): Promise<IPluginData[]> {
 		return (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins();
 	}
 
@@ -761,17 +731,15 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return this.$fs.writeFile(this.pbxProjPath, project.writeSync());
 	}
 
-	public preparePluginNativeCode(pluginData: IPluginData, opts?: any): IFuture<void> {
-		return (() => {
-			let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
+	public async preparePluginNativeCode(pluginData: IPluginData, opts?: any): Promise<void> {
+		let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 
-			this.prepareFrameworks(pluginPlatformsFolderPath, pluginData).wait();
-			this.prepareStaticLibs(pluginPlatformsFolderPath, pluginData).wait();
-			this.prepareCocoapods(pluginPlatformsFolderPath);
-		}).future<void>()();
+		await this.prepareFrameworks(pluginPlatformsFolderPath, pluginData);
+		await this.prepareStaticLibs(pluginPlatformsFolderPath, pluginData);
+		await this.prepareCocoapods(pluginPlatformsFolderPath);
 	}
 
-	public removePluginNativeCode(pluginData: IPluginData): void {
+	public async removePluginNativeCode(pluginData: IPluginData): Promise<void> {
 		let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 
 		this.removeFrameworks(pluginPlatformsFolderPath, pluginData);
@@ -779,37 +747,35 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.removeCocoapods(pluginPlatformsFolderPath);
 	}
 
-	public afterPrepareAllPlugins(): IFuture<void> {
-		return (() => {
-			if (this.$fs.exists(this.projectPodFilePath)) {
-				let projectPodfileContent = this.$fs.readText(this.projectPodFilePath);
-				this.$logger.trace("Project Podfile content");
-				this.$logger.trace(projectPodfileContent);
+	public async afterPrepareAllPlugins(): Promise<void> {
+		if (this.$fs.exists(this.projectPodFilePath)) {
+			let projectPodfileContent = this.$fs.readText(this.projectPodFilePath);
+			this.$logger.trace("Project Podfile content");
+			this.$logger.trace(projectPodfileContent);
 
-				let firstPostInstallIndex = projectPodfileContent.indexOf(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME);
-				if (firstPostInstallIndex !== -1 && firstPostInstallIndex !== projectPodfileContent.lastIndexOf(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME)) {
-					this.$cocoapodsService.mergePodfileHookContent(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME, this.projectPodFilePath);
-				}
-
-				let xcuserDataPath = path.join(this.xcodeprojPath, "xcuserdata");
-				let sharedDataPath = path.join(this.xcodeprojPath, "xcshareddata");
-
-				if (!this.$fs.exists(xcuserDataPath) && !this.$fs.exists(sharedDataPath)) {
-					this.$logger.info("Creating project scheme...");
-
-					this.checkIfXcodeprojIsRequired().wait();
-
-					let createSchemeRubyScript = `ruby -e "require 'xcodeproj'; xcproj = Xcodeproj::Project.open('${this.$projectData.projectName}.xcodeproj'); xcproj.recreate_user_schemes; xcproj.save"`;
-					this.$childProcess.exec(createSchemeRubyScript, { cwd: this.platformData.projectRoot }).wait();
-				}
-
-				this.executePodInstall().wait();
+			let firstPostInstallIndex = projectPodfileContent.indexOf(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME);
+			if (firstPostInstallIndex !== -1 && firstPostInstallIndex !== projectPodfileContent.lastIndexOf(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME)) {
+				this.$cocoapodsService.mergePodfileHookContent(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME, this.projectPodFilePath);
 			}
-		}).future<void>()();
+
+			let xcuserDataPath = path.join(this.xcodeprojPath, "xcuserdata");
+			let sharedDataPath = path.join(this.xcodeprojPath, "xcshareddata");
+
+			if (!this.$fs.exists(xcuserDataPath) && !this.$fs.exists(sharedDataPath)) {
+				this.$logger.info("Creating project scheme...");
+
+				await this.checkIfXcodeprojIsRequired();
+
+				let createSchemeRubyScript = `ruby -e "require 'xcodeproj'; xcproj = Xcodeproj::Project.open('${this.$projectData.projectName}.xcodeproj'); xcproj.recreate_user_schemes; xcproj.save"`;
+				await this.$childProcess.exec(createSchemeRubyScript, { cwd: this.platformData.projectRoot });
+			}
+
+			await this.executePodInstall();
+		}
 	}
 
-	public beforePrepareAllPlugins(): IFuture<void> {
-		return Future.fromResult();
+	public beforePrepareAllPlugins(): Promise<void> {
+		return Promise.resolve();
 	}
 
 	private getAllLibsForPluginWithFileExtension(pluginData: IPluginData, fileExtension: string): string[] {
@@ -825,35 +791,32 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return path.join(newModulesDir, constants.PROJECT_FRAMEWORK_FOLDER_NAME, `${IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER}.xcodeproj`, "project.pbxproj");
 	}
 
-	private validateFramework(libraryPath: string): IFuture<void> {
-		return (() => {
-			let infoPlistPath = path.join(libraryPath, "Info.plist");
-			if (!this.$fs.exists(infoPlistPath)) {
-				this.$errors.failWithoutHelp("The bundle at %s does not contain an Info.plist file.", libraryPath);
-			}
+	private async validateFramework(libraryPath: string): Promise<void> {
+		let infoPlistPath = path.join(libraryPath, "Info.plist");
+		if (!this.$fs.exists(infoPlistPath)) {
+			this.$errors.failWithoutHelp("The bundle at %s does not contain an Info.plist file.", libraryPath);
+		}
 
-			let packageType = this.$childProcess.spawnFromEvent("/usr/libexec/PlistBuddy", ["-c", "Print :CFBundlePackageType", infoPlistPath], "close").wait().stdout.trim();
-			if (packageType !== "FMWK") {
-				this.$errors.failWithoutHelp("The bundle at %s does not appear to be a dynamic framework.", libraryPath);
-			}
-		}).future<void>()();
+		let packageType = (await this.$childProcess.spawnFromEvent("/usr/libexec/PlistBuddy", ["-c", "Print :CFBundlePackageType", infoPlistPath], "close")).stdout.trim();
+		if (packageType !== "FMWK") {
+			this.$errors.failWithoutHelp("The bundle at %s does not appear to be a dynamic framework.", libraryPath);
+		}
+
 	}
 
-	private validateStaticLibrary(libraryPath: string): IFuture<void> {
-		return (() => {
-			if (path.extname(libraryPath) !== ".a") {
-				this.$errors.failWithoutHelp(`The bundle at ${libraryPath} does not contain a valid static library in the '.a' file format.`);
+	private async validateStaticLibrary(libraryPath: string): Promise<void> {
+		if (path.extname(libraryPath) !== ".a") {
+			this.$errors.failWithoutHelp(`The bundle at ${libraryPath} does not contain a valid static library in the '.a' file format.`);
+		}
+
+		let expectedArchs = ["armv7", "arm64", "i386"];
+		let archsInTheFatFile = await this.$childProcess.exec("lipo -i " + libraryPath);
+
+		expectedArchs.forEach(expectedArch => {
+			if (archsInTheFatFile.indexOf(expectedArch) < 0) {
+				this.$errors.failWithoutHelp(`The static library at ${libraryPath} is not built for one or more of the following required architectures: ${expectedArchs.join(", ")}. The static library must be built for all required architectures.`);
 			}
-
-			let expectedArchs = ["armv7", "arm64", "i386"];
-			let archsInTheFatFile = this.$childProcess.exec("lipo -i " + libraryPath).wait();
-
-			expectedArchs.forEach(expectedArch => {
-				if (archsInTheFatFile.indexOf(expectedArch) < 0) {
-					this.$errors.failWithoutHelp(`The static library at ${libraryPath} is not built for one or more of the following required architectures: ${expectedArchs.join(", ")}. The static library must be built for all required architectures.`);
-				}
-			});
-		}).future<void>()();
+		});
 	}
 
 	private replaceFileContent(file: string): void {
@@ -869,58 +832,56 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.$fs.rename(path.join(fileRootLocation, oldFileName), path.join(fileRootLocation, newFileName));
 	}
 
-	private executePodInstall(): IFuture<any> {
-		return (() => {
-			// Check availability
-			try {
-				this.$childProcess.exec("gem which cocoapods").wait();
-				this.$childProcess.exec("gem which xcodeproj").wait();
-			} catch (e) {
-				this.$errors.failWithoutHelp("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
+	private async executePodInstall(): Promise<any> {
+		// Check availability
+		try {
+			await this.$childProcess.exec("gem which cocoapods");
+			await this.$childProcess.exec("gem which xcodeproj");
+		} catch (e) {
+			this.$errors.failWithoutHelp("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
+		}
+
+		await this.$xcprojService.verifyXcproj(true);
+
+		this.$logger.info("Installing pods...");
+		let podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
+		let childProcess = await this.$childProcess.spawnFromEvent(podTool, ["install"], "close", { cwd: this.platformData.projectRoot, stdio: ['pipe', process.stdout, 'pipe'] });
+		if (childProcess.stderr) {
+			let warnings = childProcess.stderr.match(/(\u001b\[(?:\d*;){0,5}\d*m[\s\S]+?\u001b\[(?:\d*;){0,5}\d*m)|(\[!\].*?\n)|(.*?warning.*)/gi);
+			_.each(warnings, (warning: string) => {
+				this.$logger.warnWithLabel(warning.replace("\n", ""));
+			});
+
+			let errors = childProcess.stderr;
+			_.each(warnings, warning => {
+				errors = errors.replace(warning, "");
+			});
+
+			if (errors.trim()) {
+				this.$errors.failWithoutHelp(`Pod install command failed. Error output: ${errors}`);
 			}
+		}
 
-			this.$xcprojService.verifyXcproj(true).wait();
+		if ((await this.$xcprojService.getXcprojInfo()).shouldUseXcproj) {
+			await this.$childProcess.spawnFromEvent("xcproj", ["--project", this.xcodeprojPath, "touch"], "close");
+		}
 
-			this.$logger.info("Installing pods...");
-			let podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
-			let childProcess = this.$childProcess.spawnFromEvent(podTool, ["install"], "close", { cwd: this.platformData.projectRoot, stdio: ['pipe', process.stdout, 'pipe'] }).wait();
-			if (childProcess.stderr) {
-				let warnings = childProcess.stderr.match(/(\u001b\[(?:\d*;){0,5}\d*m[\s\S]+?\u001b\[(?:\d*;){0,5}\d*m)|(\[!\].*?\n)|(.*?warning.*)/gi);
-				_.each(warnings, (warning: string) => {
-					this.$logger.warnWithLabel(warning.replace("\n", ""));
-				});
-
-				let errors = childProcess.stderr;
-				_.each(warnings, warning => {
-					errors = errors.replace(warning, "");
-				});
-
-				if (errors.trim()) {
-					this.$errors.failWithoutHelp(`Pod install command failed. Error output: ${errors}`);
-				}
-			}
-
-			if (this.$xcprojService.getXcprojInfo().wait().shouldUseXcproj) {
-				this.$childProcess.spawnFromEvent("xcproj", ["--project", this.xcodeprojPath, "touch"], "close").wait();
-			}
-
-			return childProcess;
-		}).future<any>()();
+		return childProcess;
 	}
 
-	private prepareFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
-		return (() => {
-			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".framework"), fileName => this.addFramework(path.join(pluginPlatformsFolderPath, fileName)).wait());
-		}).future<void>()();
+	private async prepareFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> {
+		for (let fileName of this.getAllLibsForPluginWithFileExtension(pluginData, ".framework")) {
+			await this.addFramework(path.join(pluginPlatformsFolderPath, fileName));
+		}
 	}
 
-	private prepareStaticLibs(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
-		return (() => {
-			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".a"), fileName => this.addStaticLibrary(path.join(pluginPlatformsFolderPath, fileName)).wait());
-		}).future<void>()();
+	private async prepareStaticLibs(pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> {
+		for (let fileName of this.getAllLibsForPluginWithFileExtension(pluginData, ".a")) {
+			await this.addStaticLibrary(path.join(pluginPlatformsFolderPath, fileName));
+		}
 	}
 
-	private prepareCocoapods(pluginPlatformsFolderPath: string, opts?: any): void {
+	private async prepareCocoapods(pluginPlatformsFolderPath: string, opts?: any): Promise<void> {
 		let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
 		if (this.$fs.exists(pluginPodFilePath)) {
 			let pluginPodFileContent = this.$fs.readText(pluginPodFilePath),
@@ -948,7 +909,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 
 		if (opts && opts.executePodInstall && this.$fs.exists(pluginPodFilePath)) {
-			this.executePodInstall().wait();
+			await this.executePodInstall();
 		}
 	}
 
@@ -1014,68 +975,62 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.$fs.writeFile(path.join(headersFolderPath, "module.modulemap"), modulemap);
 	}
 
-	private mergeXcconfigFiles(pluginFile: string, projectFile: string): IFuture<void> {
-		return (() => {
-			if (!this.$fs.exists(projectFile)) {
-				this.$fs.writeFile(projectFile, "");
-			}
+	private async mergeXcconfigFiles(pluginFile: string, projectFile: string): Promise<void> {
+		if (!this.$fs.exists(projectFile)) {
+			this.$fs.writeFile(projectFile, "");
+		}
 
-			this.checkIfXcodeprojIsRequired().wait();
-			let escapedProjectFile = projectFile.replace(/'/g, "\\'"),
-				escapedPluginFile = pluginFile.replace(/'/g, "\\'"),
-				mergeScript = `require 'xcodeproj'; Xcodeproj::Config.new('${escapedProjectFile}').merge(Xcodeproj::Config.new('${escapedPluginFile}')).save_as(Pathname.new('${escapedProjectFile}'))`;
-			this.$childProcess.exec(`ruby -e "${mergeScript}"`).wait();
-		}).future<void>()();
+		await this.checkIfXcodeprojIsRequired();
+		let escapedProjectFile = projectFile.replace(/'/g, "\\'"),
+			escapedPluginFile = pluginFile.replace(/'/g, "\\'"),
+			mergeScript = `require 'xcodeproj'; Xcodeproj::Config.new('${escapedProjectFile}').merge(Xcodeproj::Config.new('${escapedPluginFile}')).save_as(Pathname.new('${escapedProjectFile}'))`;
+		await this.$childProcess.exec(`ruby -e "${mergeScript}"`);
 	}
 
-	private mergeProjectXcconfigFiles(): IFuture<void> {
-		return (() => {
-			this.$fs.deleteFile(this.$options.release ? this.pluginsReleaseXcconfigFilePath : this.pluginsDebugXcconfigFilePath);
+	private async mergeProjectXcconfigFiles(): Promise<void> {
+		this.$fs.deleteFile(this.$options.release ? this.pluginsReleaseXcconfigFilePath : this.pluginsDebugXcconfigFilePath);
 
-			let allPlugins: IPluginData[] = (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins().wait();
-			for (let plugin of allPlugins) {
-				let pluginPlatformsFolderPath = plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
-				let pluginXcconfigFilePath = path.join(pluginPlatformsFolderPath, "build.xcconfig");
-				if (this.$fs.exists(pluginXcconfigFilePath)) {
-					this.mergeXcconfigFiles(pluginXcconfigFilePath, this.$options.release ? this.pluginsReleaseXcconfigFilePath : this.pluginsDebugXcconfigFilePath).wait();
-				}
+		let allPlugins: IPluginData[] = await (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins();
+		for (let plugin of allPlugins) {
+			let pluginPlatformsFolderPath = plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
+			let pluginXcconfigFilePath = path.join(pluginPlatformsFolderPath, "build.xcconfig");
+			if (this.$fs.exists(pluginXcconfigFilePath)) {
+				await this.mergeXcconfigFiles(pluginXcconfigFilePath, this.$options.release ? this.pluginsReleaseXcconfigFilePath : this.pluginsDebugXcconfigFilePath);
 			}
+		}
 
-			let appResourcesXcconfigPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, "build.xcconfig");
-			if (this.$fs.exists(appResourcesXcconfigPath)) {
-				this.mergeXcconfigFiles(appResourcesXcconfigPath, this.$options.release ? this.pluginsReleaseXcconfigFilePath : this.pluginsDebugXcconfigFilePath).wait();
-			}
+		let appResourcesXcconfigPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, "build.xcconfig");
+		if (this.$fs.exists(appResourcesXcconfigPath)) {
+			await this.mergeXcconfigFiles(appResourcesXcconfigPath, this.$options.release ? this.pluginsReleaseXcconfigFilePath : this.pluginsDebugXcconfigFilePath);
+		}
 
-			let podFilesRootDirName = path.join("Pods", "Target Support Files", `Pods-${this.$projectData.projectName}`);
-			let podFolder = path.join(this.platformData.projectRoot, podFilesRootDirName);
-			if (this.$fs.exists(podFolder)) {
-				if (this.$options.release) {
-					this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, podFilesRootDirName, `Pods-${this.$projectData.projectName}.release.xcconfig`), this.pluginsReleaseXcconfigFilePath).wait();
-				} else {
-					this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, podFilesRootDirName, `Pods-${this.$projectData.projectName}.debug.xcconfig`), this.pluginsDebugXcconfigFilePath).wait();
-				}
+		let podFilesRootDirName = path.join("Pods", "Target Support Files", `Pods-${this.$projectData.projectName}`);
+		let podFolder = path.join(this.platformData.projectRoot, podFilesRootDirName);
+		if (this.$fs.exists(podFolder)) {
+			if (this.$options.release) {
+				await this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, podFilesRootDirName, `Pods-${this.$projectData.projectName}.release.xcconfig`), this.pluginsReleaseXcconfigFilePath);
+			} else {
+				await this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, podFilesRootDirName, `Pods-${this.$projectData.projectName}.debug.xcconfig`), this.pluginsDebugXcconfigFilePath);
 			}
-		}).future<void>()();
+		}
 	}
 
-	private checkIfXcodeprojIsRequired(): IFuture<void> {
-		return (() => {
-			let xcprojInfo = this.$xcprojService.getXcprojInfo().wait();
-			if (xcprojInfo.shouldUseXcproj && !xcprojInfo.xcprojAvailable) {
-				let errorMessage = `You are using CocoaPods version ${xcprojInfo.cocoapodVer} which does not support Xcode ${xcprojInfo.xcodeVersion.major}.${xcprojInfo.xcodeVersion.minor} yet.${EOL}${EOL}You can update your cocoapods by running $sudo gem install cocoapods from a terminal.${EOL}${EOL}In order for the NativeScript CLI to be able to work correctly with this setup you need to install xcproj command line tool and add it to your PATH. Xcproj can be installed with homebrew by running $ brew install xcproj from the terminal`;
+	private async checkIfXcodeprojIsRequired(): Promise<boolean> {
+		let xcprojInfo = await this.$xcprojService.getXcprojInfo();
+		if (xcprojInfo.shouldUseXcproj && !xcprojInfo.xcprojAvailable) {
+			let errorMessage = `You are using CocoaPods version ${xcprojInfo.cocoapodVer} which does not support Xcode ${xcprojInfo.xcodeVersion.major}.${xcprojInfo.xcodeVersion.minor} yet.${EOL}${EOL}You can update your cocoapods by running $sudo gem install cocoapods from a terminal.${EOL}${EOL}In order for the NativeScript CLI to be able to work correctly with this setup you need to install xcproj command line tool and add it to your PATH. Xcproj can be installed with homebrew by running $ brew install xcproj from the terminal`;
 
-				this.$errors.failWithoutHelp(errorMessage);
+			this.$errors.failWithoutHelp(errorMessage);
 
-				return true;
-			}
-		}).future<void>()();
+			return true;
+		}
 	}
 
-	private getXcodeVersion(): string {
+	private async getXcodeVersion(): Promise<string> {
 		let xcodeBuildVersion = "";
 
 		try {
-			xcodeBuildVersion = this.$childProcess.exec("xcodebuild -version | head -n 1 | sed -e 's/Xcode //'").wait();
+			xcodeBuildVersion = await this.$childProcess.exec("xcodebuild -version | head -n 1 | sed -e 's/Xcode //'");
 		} catch (error) {
 			this.$errors.fail("xcodebuild execution failed. Make sure that you have latest Xcode and tools installed.");
 		}
@@ -1088,7 +1043,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return xcodeBuildVersion;
 	}
 
-	private getDevelopmentTeams(): Array<{id:string, name: string}> {
+	private getDevelopmentTeams(): Array<{ id: string, name: string }> {
 		let dir = path.join(process.env.HOME, "Library/MobileDevice/Provisioning Profiles/");
 		let files = this.$fs.readDirectory(dir);
 		let teamIds: any = {};
@@ -1101,10 +1056,12 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				teamIds[teamId] = teamName;
 			}
 		}
-		let teamIdsArray = new Array<{id:string, name: string}>();
+
+		let teamIdsArray = new Array<{ id: string, name: string }>();
 		for (let teamId in teamIds) {
-			teamIdsArray.push({ id:teamId, name:teamIds[teamId] });
+			teamIdsArray.push({ id: teamId, name: teamIds[teamId] });
 		}
+
 		return teamIdsArray;
 	}
 
@@ -1112,7 +1069,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		let findStr = "<key>" + name + "</key>";
 		let index = text.indexOf(findStr);
 		if (index > 0) {
-			index = text.indexOf("<string>", index+findStr.length);
+			index = text.indexOf("<string>", index + findStr.length);
 			if (index > 0) {
 				index += "<string>".length;
 				let endIndex = text.indexOf("</string>", index);
@@ -1120,6 +1077,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				return result;
 			}
 		}
+
 		return null;
 	}
 
@@ -1132,7 +1090,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				line = line.replace(/\/(\/)[^\n]*$/, "");
 				if (line.indexOf("DEVELOPMENT_TEAM") >= 0) {
 					teamId = line.split("=")[1].trim();
-					if (teamId[teamId.length-1] === ';') {
+					if (teamId[teamId.length - 1] === ';') {
 						teamId = teamId.slice(0, -1);
 					}
 				}
@@ -1141,20 +1099,23 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				return teamId;
 			}
 		}
+
 		let fileName = path.join(this.platformData.projectRoot, "teamid");
 		if (this.$fs.exists(fileName)) {
 			return this.$fs.readText(fileName);
 		}
+
 		return null;
 	}
 
-	private getDevelopmentTeam(): string {
+	private async getDevelopmentTeam(): Promise<string> {
 		let teamId: string;
 		if (this.$options.teamId) {
 			teamId = this.$options.teamId;
 		} else {
 			teamId = this.readTeamId();
 		}
+
 		if (!teamId) {
 			let teams = this.getDevelopmentTeams();
 			this.$logger.warn("Xcode 8 requires a team id to be specified when building for device.");
@@ -1167,7 +1128,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				for (let team of teams) {
 					choices.push(team.name + " (" + team.id + ")");
 				}
-				let choice = this.$prompter.promptForChoice('Found multiple development teams, select one:', choices).wait();
+				let choice = await this.$prompter.promptForChoice('Found multiple development teams, select one:', choices);
 				teamId = teams[choices.indexOf(choice)].id;
 
 				let choicesPersist = [
@@ -1175,7 +1136,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 					"Yes, persist the team id in platforms folder.",
 					"No, don't persist this setting."
 				];
-				let choicePersist = this.$prompter.promptForChoice("Do you want to make teamId: "+teamId+" a persistent choice for your app?", choicesPersist).wait();
+				let choicePersist = await this.$prompter.promptForChoice("Do you want to make teamId: " + teamId + " a persistent choice for your app?", choicesPersist);
 				switch (choicesPersist.indexOf(choicePersist)) {
 					case 0:
 						let xcconfigFile = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, "build.xcconfig");

@@ -1,10 +1,11 @@
 export class InfoCommand implements ICommand {
-	constructor(private $infoService: IInfoService) { }
-
 	public allowedParameters: ICommandParameter[] = [];
 
-	public execute(args: string[]): IFuture<void> {
+	constructor(private $infoService: IInfoService) { }
+
+	public async execute(args: string[]): Promise<void> {
 		return this.$infoService.printComponentsInfo();
 	}
 }
+
 $injector.registerCommand("info", InfoCommand);

@@ -1,10 +1,10 @@
 interface IPluginsService {
-	add(plugin: string): IFuture<void>; // adds plugin by name, github url, local path and et.
-	remove(pluginName: string): IFuture<void>; // removes plugin only by name
-	getAvailable(filter: string[]): IFuture<IDictionary<any>>; // gets all available plugins
-	prepare(pluginData: IDependencyData, platform: string): IFuture<void>;
-	getAllInstalledPlugins(): IFuture<IPluginData[]>;
-	ensureAllDependenciesAreInstalled(): IFuture<void>;
+	add(plugin: string): Promise<void>; // adds plugin by name, github url, local path and et.
+	remove(pluginName: string): Promise<void>; // removes plugin only by name
+	getAvailable(filter: string[]): Promise<IDictionary<any>>; // gets all available plugins
+	prepare(pluginData: IDependencyData, platform: string): Promise<void>;
+	getAllInstalledPlugins(): Promise<IPluginData[]>;
+	ensureAllDependenciesAreInstalled(): Promise<void>;
 
 	/**
 	 * Returns all dependencies and devDependencies from pacakge.json file.
@@ -45,9 +45,9 @@ interface IPluginVariablesService {
 	/**
 	 * Saves plugin variables in project package.json file.
 	 * @param  {IPluginData}		pluginData for the plugin.
-	 * @return {IFuture<void>}
+	 * @return {Promise<void>}
 	 */
-	savePluginVariablesInProjectFile(pluginData: IPluginData): IFuture<void>;
+	savePluginVariablesInProjectFile(pluginData: IPluginData): Promise<void>;
 
 	/**
 	 * Removes plugin variables from project package.json file.
@@ -60,9 +60,9 @@ interface IPluginVariablesService {
 	 * Replaces all plugin variables with their corresponding values.
 	 * @param {IPluginData}		pluginData for the plugin.
 	 * @param {pluginConfigurationFilePath}		pluginConfigurationFilePath for the plugin.
-	 * @return {IFuture<void>}
+	 * @return {Promise<void>}
 	 */
-	interpolatePluginVariables(pluginData: IPluginData, pluginConfigurationFilePath: string): IFuture<void>;
+	interpolatePluginVariables(pluginData: IPluginData, pluginConfigurationFilePath: string): Promise<void>;
 
 	/**
 	 * Replaces {nativescript.id} expression with the application identifier from package.json.
@@ -74,12 +74,12 @@ interface IPluginVariablesService {
 	/**
 	 * Replaces both plugin variables and appIdentifier
 	 */
-	interpolate(pluginData: IPluginData, pluginConfigurationFilePath: string): IFuture<void>;
+	interpolate(pluginData: IPluginData, pluginConfigurationFilePath: string): Promise<void>;
 
 	/**
 	 * Returns the
 	 * @param {string}		pluginName for the plugin.
-	 * @return {IFuture<string>}		returns the changed plugin configuration file content.
+	 * @return {Promise<string>}		returns the changed plugin configuration file content.
 	 */
 	getPluginVariablePropertyName(pluginName: string): string;
 

@@ -3,18 +3,16 @@ import * as stubs from "./stubs";
 import { CreateProjectCommand } from "../lib/commands/create-project";
 import { StringParameterBuilder } from "../lib/common/command-params";
 import * as constants from "../lib/constants";
-import {assert} from "chai";
+import { assert } from "chai";
 
 let selectedTemplateName: string;
 let isProjectCreated: boolean;
 let dummyArgs = ["dummyArgsString"];
 
 class ProjectServiceMock implements IProjectService {
-	createProject(projectName: string, selectedTemplate?: string): IFuture<void> {
-		return (() => {
-			selectedTemplateName = selectedTemplate;
-			isProjectCreated = true;
-		}).future<void>()();
+	async createProject(projectName: string, selectedTemplate?: string): Promise<void> {
+		selectedTemplateName = selectedTemplate;
+		isProjectCreated = true;
 	}
 }
 
@@ -57,78 +55,74 @@ describe("Project commands tests", () => {
 	});
 
 	describe("#CreateProjectCommand", () => {
-		it("should not fail when using only --ng.", () => {
+		it("should not fail when using only --ng.", async () => {
 			options.ng = true;
 
-			createProjectCommand.execute(dummyArgs).wait();
+			await createProjectCommand.execute(dummyArgs);
 
 			assert.isTrue(isProjectCreated);
 		});
 
-		it("should not fail when using only --tsc.", () => {
+		it("should not fail when using only --tsc.", async () => {
 			options.tsc = true;
 
-			createProjectCommand.execute(dummyArgs).wait();
+			await createProjectCommand.execute(dummyArgs);
 
 			assert.isTrue(isProjectCreated);
 		});
 
-		it("should not fail when using only --template.", () => {
+		it("should not fail when using only --template.", async () => {
 			options.template = "ng";
 
-			createProjectCommand.execute(dummyArgs).wait();
+			await createProjectCommand.execute(dummyArgs);
 
 			assert.isTrue(isProjectCreated);
 		});
 
-		it("should set the template name correctly when used --ng.", () => {
+		it("should set the template name correctly when used --ng.", async () => {
 			options.ng = true;
 
-			createProjectCommand.execute(dummyArgs).wait();
+			await createProjectCommand.execute(dummyArgs);
 
 			assert.deepEqual(selectedTemplateName, constants.ANGULAR_NAME);
 		});
 
-		it("should set the template name correctly when used --tsc.", () => {
+		it("should set the template name correctly when used --tsc.", async () => {
 			options.tsc = true;
 
-			createProjectCommand.execute(dummyArgs).wait();
+			await createProjectCommand.execute(dummyArgs);
 
 			assert.deepEqual(selectedTemplateName, constants.TYPESCRIPT_NAME);
 		});
 
-		it("should not set the template name when --ng is not used.", () => {
+		it("should not set the template name when --ng is not used.", async () => {
 			options.ng = false;
 
-			createProjectCommand.execute(dummyArgs).wait();
+			await createProjectCommand.execute(dummyArgs);
 
 			assert.isUndefined(selectedTemplateName);
 		});
 
-		it("should not set the template name when --tsc is not used.", () => {
+		it("should not set the template name when --tsc is not used.", async () => {
 			options.tsc = false;
 
-			createProjectCommand.execute(dummyArgs).wait();
+			await createProjectCommand.execute(dummyArgs);
 
 			assert.isUndefined(selectedTemplateName);
 		});
 
-		it("should fail when --ng and --template are used simultaneously.", () => {
+		it("should fail when --ng and --template are used simultaneously.", async () => {
 			options.ng = true;
 			options.template = "ng";
 
-			assert.throws(() => {
-				createProjectCommand.execute(dummyArgs).wait();
-			});
+			await assert.isRejected(createProjectCommand.execute(dummyArgs));
 		});
 
-		it("should fail when --tsc and --template are used simultaneously.", () => {
+		it("should fail when --tsc and --template are used simultaneously.", async () => {
 			options.tsc = true;
 			options.template = "tsc";
 
-			assert.throws(() => {
-				createProjectCommand.execute(dummyArgs).wait();
-			});
+			await assert.isRejected(createProjectCommand.execute(dummyArgs));
 		});
 	});
 });

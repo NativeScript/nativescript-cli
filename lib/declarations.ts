@@ -1,16 +1,16 @@
 interface INodePackageManager {
-	install(packageName: string, pathToSave: string, config?: any): IFuture<any>;
-	uninstall(packageName: string, config?: any, path?: string): IFuture<any>;
-	view(packageName: string, config: any): IFuture<any>;
-	search(filter: string[], config: any): IFuture<any>;
+	install(packageName: string, pathToSave: string, config?: any): Promise<any>;
+	uninstall(packageName: string, config?: any, path?: string): Promise<any>;
+	view(packageName: string, config: any): Promise<any>;
+	search(filter: string[], config: any): Promise<any>;
 }
 
 interface INpmInstallationManager {
-	install(packageName: string, packageDir: string, options?: INpmInstallOptions): IFuture<any>;
-	getLatestVersion(packageName: string): IFuture<string>;
-	getNextVersion(packageName: string): IFuture<string>;
-	getLatestCompatibleVersion(packageName: string): IFuture<string>;
-	getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string): IFuture<string>;
+	install(packageName: string, packageDir: string, options?: INpmInstallOptions): Promise<any>;
+	getLatestVersion(packageName: string): Promise<string>;
+	getNextVersion(packageName: string): Promise<string>;
+	getLatestCompatibleVersion(packageName: string): Promise<string>;
+	getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string): Promise<string>;
 }
 
 interface INpmInstallOptions {
@@ -41,23 +41,23 @@ interface IApplicationPackage {
 }
 
 interface ILockFile {
-	lock(): IFuture<void>;
-	unlock(): IFuture<void>;
-	check(): IFuture<boolean>;
+	lock(): void;
+	unlock(): void;
+	check(): boolean;
 }
 
 interface IOpener {
-    open(target: string, appname: string): void;
+	open(target: string, appname: string): void;
 }
 
 interface ILiveSyncService {
-	liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => IFuture<void>): IFuture<void>;
+	liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => Promise<void>): Promise<void>;
 }
 
 interface IPlatformLiveSyncService {
-	fullSync(postAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): IFuture<void>;
-	partialSync(event: string, filePath: string, dispatcher: IFutureDispatcher, afterFileSyncAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): void;
-	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], isFullSync: boolean): IFuture<void>;
+	fullSync(postAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>): Promise<void>;
+	partialSync(event: string, filePath: string, dispatcher: IFutureDispatcher, afterFileSyncAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>): Promise<void>;
+	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], isFullSync: boolean): Promise<void>;
 }
 
 interface IOptions extends ICommonOptions {
@@ -100,11 +100,11 @@ interface IOptions extends ICommonOptions {
 }
 
 interface IInitService {
-	initialize(): IFuture<void>;
+	initialize(): Promise<void>;
 }
 
 interface IInfoService {
-	printComponentsInfo(): IFuture<void>;
+	printComponentsInfo(): Promise<void>;
 }
 
 /**
@@ -138,15 +138,15 @@ interface IITMSTransporterService {
 	/**
 	 * Uploads an .ipa package to iTunes Connect.
 	 * @param  {IITMSData}     data Data needed to upload the package
-	 * @return {IFuture<void>}
+	 * @return {Promise<void>}
 	 */
-	upload(data: IITMSData): IFuture<void>;
+	upload(data: IITMSData): Promise<void>;
 	/**
 	 * Queries Apple's content delivery API to get the user's registered iOS applications.
 	 * @param  {ICredentials}                               credentials Credentials for authentication with iTunes Connect.
-	 * @return {IFuture<IItunesConnectApplication[]>}          The user's iOS applications.
+	 * @return {Promise<IItunesConnectApplication[]>}          The user's iOS applications.
 	 */
-	getiOSApplications(credentials: ICredentials): IFuture<IiTunesConnectApplication[]>;
+	getiOSApplications(credentials: ICredentials): Promise<IiTunesConnectApplication[]>;
 }
 
 /**
@@ -158,14 +158,14 @@ interface IAndroidToolsInfo {
 	 * and ANDROID_HOME environement variable.
 	 * @return {IAndroidToolsInfoData} Information about installed Android Tools and SDKs.
 	 */
-	getToolsInfo(): IFuture<IAndroidToolsInfoData>;
+	getToolsInfo(): Promise<IAndroidToolsInfoData>;
 
 	/**
 	 * Validates the information about required Android tools and SDK versions.
 	 * @param {any} options Defines if the warning messages should treated as error and if the targetSdk value should be validated as well.
 	 * @return {boolean} True if there are detected issues, false otherwise.
 	 */
-	validateInfo(options?: { showWarningsAsErrors: boolean, validateTargetSdk: boolean }): IFuture<boolean>;
+	validateInfo(options?: { showWarningsAsErrors: boolean, validateTargetSdk: boolean }): Promise<boolean>;
 
 	/**
 	 * Validates the information about required JAVA version.
@@ -173,7 +173,7 @@ interface IAndroidToolsInfo {
 	 * @param {any} options Defines if the warning messages should treated as error.
 	 * @return {boolean} True if there are detected issues, false otherwise.
 	 */
-	validateJavacVersion(installedJavaVersion: string, options?: { showWarningsAsErrors: boolean }): IFuture<boolean>;
+	validateJavacVersion(installedJavaVersion: string, options?: { showWarningsAsErrors: boolean }): Promise<boolean>;
 
 	/**
 	 * Returns the path to `android` executable. It should be `$ANDROID_HOME/tools/android`.
@@ -181,13 +181,13 @@ interface IAndroidToolsInfo {
 	 * @param {any} options Defines if the warning messages should treated as error.
 	 * @return {string} Path to the `android` executable.
 	 */
-	getPathToAndroidExecutable(options?: { showWarningsAsErrors: boolean }): IFuture<string>;
+	getPathToAndroidExecutable(options?: { showWarningsAsErrors: boolean }): Promise<string>;
 
 	/**
 	 * Gets the path to `adb` executable from ANDROID_HOME. It should be `$ANDROID_HOME/platform-tools/adb` in case it exists.
 	 * @return {string} Path to the `adb` executable. In case it does not exists, null is returned.
 	 */
-	getPathToAdbFromAndroidHome(): IFuture<string>;
+	getPathToAdbFromAndroidHome(): Promise<string>;
 }
 
 /**
@@ -242,12 +242,12 @@ interface IiOSNotification {
 }
 
 interface IiOSNotificationService {
-	awaitNotification(npc: Mobile.INotificationProxyClient, notification: string, timeout: number): IFuture<string>;
+	awaitNotification(npc: Mobile.INotificationProxyClient, notification: string, timeout: number): Promise<string>;
 }
 
 interface IiOSSocketRequestExecutor {
-	executeLaunchRequest(device: Mobile.IiOSDevice, timeout: number, readyForAttachTimeout: number, shouldBreak?: boolean): IFuture<void>;
-	executeAttachRequest(device: Mobile.IiOSDevice, timeout: number): IFuture<void>;
+	executeLaunchRequest(device: Mobile.IiOSDevice, timeout: number, readyForAttachTimeout: number, shouldBreak?: boolean): Promise<void>;
+	executeAttachRequest(device: Mobile.IiOSDevice, timeout: number): Promise<void>;
 }
 
 /**
@@ -275,33 +275,33 @@ interface IXmlValidator {
 interface IVersionsService {
 	/**
 	 * Gets version information about nativescript-cli.
-	 * @return {IFuture<IVersionInformation>} The version information.
+	 * @return {Promise<IVersionInformation>} The version information.
 	 */
-	getNativescriptCliVersion(): IFuture<IVersionInformation>;
+	getNativescriptCliVersion(): Promise<IVersionInformation>;
 
 	/**
 	 * Gets version information about tns-core-modules.
-	 * @return {IFuture<IVersionInformation>} The version information.
+	 * @return {Promise<IVersionInformation>} The version information.
 	 */
-	getTnsCoreModulesVersion(): IFuture<IVersionInformation>;
+	getTnsCoreModulesVersion(): Promise<IVersionInformation>;
 
 	/**
 	 * Gets versions information about nativescript runtimes.
-	 * @return {IFuture<IVersionInformation[]>} The version information.
+	 * @return {Promise<IVersionInformation[]>} The version information.
 	 */
-	getRuntimesVersions(): IFuture<IVersionInformation[]>;
+	getRuntimesVersions(): Promise<IVersionInformation[]>;
 
 	/**
 	 * Gets versions information about the nativescript components with new.
-	 * @return {IFuture<IVersionInformation[]>} The version information.
+	 * @return {Promise<IVersionInformation[]>} The version information.
 	 */
-	getComponentsForUpdate(): IFuture<IVersionInformation[]>;
+	getComponentsForUpdate(): Promise<IVersionInformation[]>;
 
 	/**
 	 * Gets versions information about all nativescript components.
-	 * @return {IFuture<IVersionInformation[]>} The version information.
+	 * @return {Promise<IVersionInformation[]>} The version information.
 	 */
-	getAllComponentsVersions(): IFuture<IVersionInformation[]>;
+	getAllComponentsVersions(): Promise<IVersionInformation[]>;
 
 	/**
 	 * Creates table with versions information.
@@ -319,9 +319,9 @@ interface IProjectNameService {
 	 * Ensures the passed project name is valid. If the project name is not valid prompts for actions.
 	 * @param {string} project name to be checked.
 	 * @param {IOptions} current command options.
-	 * @return {IFuture<strng>} returns the selected name of the project.
+	 * @return {Promise<strng>} returns the selected name of the project.
 	 */
-	ensureValidName(projectName: string, validateOptions?: { force: boolean }): IFuture<string>;
+	ensureValidName(projectName: string, validateOptions?: { force: boolean }): Promise<string>;
 }
 
 /**
@@ -332,14 +332,14 @@ interface IXcprojService {
 	 * Checks whether the system needs xcproj to execute ios builds successfully.
 	 * In case the system does need xcproj but does not have it, prints an error message.
 	 * @param {boolean} whether to fail with error message or not
-	 * @return {IFuture<boolean>} whether an error occurred or not.
+	 * @return {Promise<boolean>} whether an error occurred or not.
 	 */
-	verifyXcproj(shouldFail: boolean): IFuture<boolean>;
+	verifyXcproj(shouldFail: boolean): Promise<boolean>;
 	/**
 	 * Collects information about xcproj.
-	 * @return {IFuture<XcprojInfo>} collected info about xcproj.
+	 * @return {Promise<XcprojInfo>} collected info about xcproj.
 	 */
-	getXcprojInfo(): IFuture<IXcprojInfo>;
+	getXcprojInfo(): Promise<IXcprojInfo>;
 }
 
 /**

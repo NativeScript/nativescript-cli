@@ -1,8 +1,7 @@
-import {Yok} from "../lib/common/yok";
-import {ProjectNameService} from "../lib/services/project-name-service";
-import {assert} from "chai";
-import {ErrorsStub, LoggerStub} from "./stubs";
-import Future = require("fibers/future");
+import { Yok } from "../lib/common/yok";
+import { ProjectNameService } from "../lib/services/project-name-service";
+import { assert } from "chai";
+import { ErrorsStub, LoggerStub } from "./stubs";
 
 let mockProjectNameValidator = {
 	validate: () => true
@@ -19,8 +18,8 @@ function createTestInjector(): IInjector {
 	testInjector.register("errors", ErrorsStub);
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("prompter", {
-		confirm: (message: string): IFuture<boolean> => Future.fromResult(true),
-		getString: (message: string): IFuture<string> => Future.fromResult(dummyString)
+		confirm: (message: string): Promise<boolean> => Promise.resolve(true),
+		getString: (message: string): Promise<string> => Promise.resolve(dummyString)
 	});
 
 	return testInjector;
@@ -37,39 +36,37 @@ describe("Project Name Service Tests", () => {
 		projectNameService = testInjector.resolve("projectNameService");
 	});
 
-	it("returns correct name when valid name is entered", () => {
-		let actualProjectName = projectNameService.ensureValidName(validProjectName).wait();
+	it("returns correct name when valid name is entered", async () => {
+		let actualProjectName = await projectNameService.ensureValidName(validProjectName);
 
 		assert.deepEqual(actualProjectName, validProjectName);
 	});
 
 	_.each(invalidProjectNames, invalidProjectName => {
-		it(`returns correct name when "${invalidProjectName}" is entered several times and then valid name is entered`, () => {
+		it(`returns correct name when "${invalidProjectName}" is entered several times and then valid name is entered`, async () => {
 			let prompter = testInjector.resolve("prompter");
-			prompter.confirm = (message: string): IFuture<boolean> => Future.fromResult(false);
+			prompter.confirm = (message: string): Promise<boolean> => Promise.resolve(false);
 
 			let incorrectInputsLimit = 5;
 			let incorrectInputsCount = 0;
 
-			prompter.getString = (message: string): IFuture<string> => {
-				return (() => {
-					if (incorrectInputsCount < incorrectInputsLimit) {
-						incorrectInputsCount++;
+			prompter.getString = async (message: string): Promise<string> => {
+				if (incorrectInputsCount < incorrectInputsLimit) {
+					incorrectInputsCount++;
 
-						return invalidProjectName;
-					} else {
-						return validProjectName;
-					}
-				}).future<string>()();
+					return invalidProjectName;
+				} else {
+					return validProjectName;
+				}
 			};
 
-			let actualProjectName = projectNameService.ensureValidName(invalidProjectName).wait();
+			let actualProjectName = await projectNameService.ensureValidName(invalidProjectName);
 
 			assert.deepEqual(actualProjectName, validProjectName);
 		});
 
-		it(`returns the invalid name when "${invalidProjectName}" is entered and --force flag is present`, () => {
-			let actualProjectName = projectNameService.ensureValidName(validProjectName, { force: true }).wait();
+		it(`returns the invalid name when "${invalidProjectName}" is entered and --force flag is present`, async () => {
+			let actualProjectName = await projectNameService.ensureValidName(validProjectName, { force: true });
 
 			assert.deepEqual(actualProjectName, validProjectName);
 		});
