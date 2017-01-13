@@ -49,6 +49,9 @@ class LiveSyncService implements ILiveSyncService {
 
 	public liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => IFuture<void>): IFuture<void> {
 		return (() => {
+			if (this.$options.justlaunch) {
+				this.$options.watch = false;
+			}
 			let liveSyncData: ILiveSyncData[] = [];
 			if (platform) {
 				this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device  }).wait();
@@ -108,9 +111,6 @@ class LiveSyncService implements ILiveSyncService {
 			if(this.$options.watch && !this.$options.justlaunch) {
 				this.$hooksService.executeBeforeHooks('watch').wait();
 				this.partialSync(liveSyncData[0].syncWorkingDirectory, watchForChangeActions);
-			}
-			if (this.$options.justlaunch) {
-				process.kill(process.pid);
 			}
 		}).future<void>()();
 	}
