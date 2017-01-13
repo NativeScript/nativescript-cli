@@ -8,6 +8,7 @@ export class UpdateCommand implements ICommand {
 		private $platformsData: IPlatformsData,
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
+		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $errors: IErrors) { }
@@ -22,7 +23,10 @@ export class UpdateCommand implements ICommand {
 				shelljs.mkdir(tmpDir);
 				shelljs.cp(path.join(this.$projectData.projectDir, "package.json"), tmpDir);
 				for (let folder of folders) {
-					shelljs.cp("-rf", path.join(this.$projectData.projectDir, folder), tmpDir);
+					let folderToCopy = path.join(this.$projectData.projectDir, folder);
+					if (this.$fs.exists(folderToCopy)) {
+						shelljs.cp("-rf", folderToCopy, tmpDir);
+					}
 				}
 			} catch(error) {
 				this.$logger.error("Could not backup project folders!");
@@ -35,7 +39,10 @@ export class UpdateCommand implements ICommand {
 				shelljs.cp("-f", path.join(tmpDir, "package.json"), this.$projectData.projectDir);
 				for (let folder of folders) {
 					shelljs.rm("-rf", path.join(this.$projectData.projectDir, folder));
-					shelljs.cp("-fr", path.join(tmpDir, folder), this.$projectData.projectDir);
+					let folderToCopy = path.join(tmpDir, folder);
+					if (this.$fs.exists(folderToCopy)) {
+						shelljs.cp("-fr", folderToCopy, this.$projectData.projectDir);
+					}
 				}
 				this.$logger.error("Could not update the project!");
 			} finally {
