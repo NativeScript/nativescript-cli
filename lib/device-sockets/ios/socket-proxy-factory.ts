@@ -117,7 +117,9 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 
 			webSocket.on("close", () => {
 				this.$logger.info('Frontend socket closed!');
-				process.exit(0);
+				if (!this.$options.watch) {
+					process.exit(0);
+				}
 			});
 
 		});
