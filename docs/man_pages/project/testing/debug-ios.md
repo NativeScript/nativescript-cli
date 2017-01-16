@@ -8,12 +8,9 @@ Deploy on device, run the app and stop at the first code statement | `$ tns debu
 Deploy in the iOS Simulator, run the app and stop at the first code statement | `$ tns debug ios --debug-brk --emulator [<Emulator Options>] [--no-client]`
 Attach the debug tools to a running app on device | `$ tns debug ios --start [--device <Device ID>] [--no-client]`
 Attach the debug tools to a running app in the iOS Simulator | `$ tns debug ios --start --emulator [<Emulator Options>] [--no-client]`
-Livesync on device, run the app, start Safari Web Inspector and attach the debugger | `$ tns debug ios --no-rebuild`
-Livesync on device, run the app and stop at the first code statement | `$ tns debug ios --no-rebuild --debug-brk [--device <Device ID>] [--no-client]`
-Livesync in the iOS Simulator, run the app and stop at the first code statement | `$ tns debug ios --no-rebuild --debug-brk --emulator [<Emulator Options>] [--no-client]`
-Livesync on device/simulator, run the app, start and attach the debugger. Refresh everything automatically upon changes | `$ tns debug ios --watch [--debug-brk]`
 
-Debugs your project on a connected device or in the iOS Simulator. <% if(isHtml) { %>Any debugging traffic is forwarded on port 8080 from the device to the local machine.<% } %>
+Prepares, builds and deploys the project when necessary. Debugs your project on a connected device or in the iOS Simulator. <% if(isHtml) { %>Any debugging traffic is forwarded on port 8080 from the device to the local machine.<% } %>
+While debugging, prints the output from the application in the console and watches for changes in your code. Once a change is detected, it synchronizes the change with all selected devices and restarts/refreshes the application.
 
 <% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on OS X systems. To view the complete help for this command, run `$ tns help debug ios`<% } %>
 
@@ -21,13 +18,14 @@ Debugs your project on a connected device or in the iOS Simulator. <% if(isHtml)
 <% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system. <% if(isHtml) { %>For more information, see [Obtaining Signing Identities and Downloading Provisioning Profiles](https://developer.apple.com/library/mac/recipes/xcode_help-accounts_preferences/articles/obtain_certificates_and_provisioning_profiles.html).<% } %>
 
 ### Options
+* `--device` - Specifies a connected device on which to run the app.
+* `--emulator` - Indicates that you want to debug your app in the iOS simulator.
 * `--debug-brk` - Prepares, builds and deploys the application package on a device or in an emulator, runs the app, launches the developer tools of your Safari browser and stops at the first code statement.
 * `--start` - Attaches the debug tools to a deployed and running app and launches the developer tools of your Safari browser.
-* `--emulator` - Indicates that you want to debug your app in the iOS simulator.
 * `--no-client` - If set, the NativeScript CLI attaches the debug tools but does not launch the developer tools in Safari.
 * `--timeout` - Sets the number of seconds that NativeScript CLI will wait for the debugger to boot. If not set, the default timeout is 90 seconds.
-* `--no-rebuild` - Livesyncs to device/emulator when possible. Otherwise builds and deploys the application.
-* `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device and the debugger is restarted. This option is available only when using `--no-rebuild`.
+* `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
+* `--clean` - If set, forces rebuilding the native application.
 
 ### Attributes
 * `<Device ID>` is the index or name of the target device as listed by `$ tns device`
@@ -55,9 +53,6 @@ Command | Description
 [emulate android](emulate-android.html) | Builds the specified project and runs it in a native Android emulator.
 [emulate ios](emulate-ios.html) | Builds the specified project and runs it in the native iOS Simulator.
 [emulate](emulate.html) | You must run the emulate command with a related command.
-[livesync](livesync.html) | Synchronizes the latest changes in your project to devices.
-[livesync ios](livesync-ios.html) | Synchronizes the latest changes in your project to iOS devices or the iOS Simulator.
-[livesync android](livesync-android.html) | Synchronizes the latest changes in your project to Android devices.
 [run android](run-android.html) | Runs your project on a connected Android device or in a native Android emulator, if configured.
 [run ios](run-ios.html) | Runs your project on a connected iOS device or in the iOS Simulator, if configured.
 [run](run.html) | Runs your project on a connected device or in the native emulator for the selected platform.

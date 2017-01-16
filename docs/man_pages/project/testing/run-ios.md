@@ -7,18 +7,19 @@ Run on all connected devices | `$ tns run ios [--release] [--justlaunch]`
 Run on a selected connected device | `$ tns run ios [--device <Device ID>] [--release] [--justlaunch]`
 Start an emulator and run the app inside it | `$ tns run ios --emulator [<Emulator Options>] [--release]`
 
-Runs your project on a connected iOS device or in the iOS Simulator, if configured. This is shorthand for prepare, build, and deploy. While your app is running, prints the output from the application in the console.
+Runs your project on a connected iOS device or in the iOS Simulator, if configured. This is shorthand for prepare, build and deploy. While your app is running, prints the output from the application in the console and watches for changes in your code. Once a change is detected, it synchronizes the change with all selected devices and restarts/refreshes the application.
 
 <% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on OS X systems. To view the complete help for this command, run `$ tns help run ios`<% } %>
 <% if((isConsole && isMacOS) || isHtml) { %>
 <% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system. <% if(isHtml) { %>For more information, see [Obtaining Signing Identities and Downloading Provisioning Profiles](https://developer.apple.com/library/mac/recipes/xcode_help-accounts_preferences/articles/obtain_certificates_and_provisioning_profiles.html).<% } %>
 
 ### Options
-* `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device.
+* `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--device` - Specifies a connected device on which to run the app.
 * `--emulator` - If set, runs the app in a native emulator for the target platform, if configured. When set, you can also set any other valid combination of emulator options as listed by `$ tns help emulate ios`. You cannot use `--device` and `--emulator` simultaneously.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
 * `--justlaunch` - If set, does not print the application output in the console.
+* `--clean` - If set, forces rebuilding the native application.
 
 ### Attributes
 * `<Device ID>` is the index or name of the target device as listed by `$ tns device ios`
@@ -50,9 +51,6 @@ Command | Description
 [emulate android](emulate-android.html) | Builds the specified project and runs it in a native Android emulator.
 [emulate ios](emulate-ios.html) | Builds the specified project and runs it in the native iOS Simulator.
 [emulate](emulate.html) | You must run the emulate command with a related command.
-[livesync](livesync.html) | Synchronizes the latest changes in your project to devices.
-[livesync ios](livesync-ios.html) | Synchronizes the latest changes in your project to iOS devices or the iOS Simulator.
-[livesync android](livesync-android.html) | Synchronizes the latest changes in your project to Android devices.
 [run android](run-android.html) | Runs your project on a connected Android device or in a native Android emulator, if configured.
 [run](run.html) | Runs your project on a connected device or in the native emulator for the selected platform.
 [test init](test-init.html) | Configures your project for unit testing with a selected framework.

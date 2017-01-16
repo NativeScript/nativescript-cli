@@ -10,26 +10,21 @@ Deploy in Genymotion, run the app and stop at the first code statement | `$ tns 
 Attach the debug tools to a running app on device | `$ tns debug android --start [--device <Device ID>] [--debug-port <port>] [--timeout <timeout>]`
 Attach the debug tools to a running app in the native emulator | `$ tns debug android --start --emulator [<Emulator Options>] [--timeout <timeout>]`
 Attach the debug tools to a running app in Genymotion | `$ tns debug android --start --geny <Geny Name> [--print-app-output] [--timeout <timeout>]`
-Livesync on device, run the app start Chrome DevTools, and attach the debugger | `$ tns debug android --no-rebuild`
-Livesync on device, run the app and stop at the first code statement | `$ tns debug android --no-rebuild --debug-brk [--device <Device ID>] [--debug-port <port>] [--timeout <timeout>]`
-Livesync in the native emulator, run the app and stop at the first code statement | `$ tns debug android --no-rebuild --debug-brk --emulator [<Emulator Options>] [--timeout <timeout>]`
-Livesync in Genymotion, run the app and stop at the first code statement | `$ tns debug android --no-rebuild --debug-brk --geny <Geny Name> [--timeout <timeout>]`
-Livesync on device/emulator, run the app, start and attach the debugger. Refresh everything automatically upon changes | `$ tns debug android --watch [--debug-brk]`
 Detach the debug tools | `$ tns debug android --stop`
 
-Debugs your project on a connected device, in a native emulator or in Genymotion.
+Prepares, builds and deploys the project when necessary. Debugs your project on a connected device, in a native emulator or in Genymotion.
+While debugging, prints the output from the application in the console and watches for changes in your code. Once a change is detected, it synchronizes the change with all selected devices and restarts/refreshes the application.
 
 ### Options
 * `--device` - Specifies a connected device on which to debug the app.
 * `--emulator` - Specifies that you want to debug the app in the native Android emulator from the Android SDK.
-* `--geny` - Specifies a Genymotion emulator on which you want to debug your app.
 * `--debug-brk` - Prepares, builds and deploys the application package on a device or in an emulator, launches the Chrome DevTools of your Chrome browser and stops at the first code statement.
 * `--start` - Attaches the debug tools to a deployed and running app.
 * `--stop` - Detaches the debug tools.
 * `--debug-port` - Sets a new port on which to attach the debug tools.
 * `--timeout` - Sets the number of seconds that the NativeScript CLI will wait for the debugger to boot. If not set, the default timeout is 90 seconds.
-* `--no-rebuild` - Livesyncs to device/emulator when possible. Otherwise builds and deploys the application.
-* `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device and the debugger is restarted. This option is available only when using `--no-rebuild`.
+* `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
+* `--clean` - If set, forces rebuilding the native application.
 
 ### Attributes
 * `<Device ID>` is the index or name of the target device as listed by `$ tns device`
@@ -38,7 +33,7 @@ Debugs your project on a connected device, in a native emulator or in Genymotion
 * `<GenyName>` is the name of the Genymotion virtual device that you want to use as listed by `$ genyshell -c "devices list"`
 
 <% if(isHtml) { %>
-###Prerequisites
+### Prerequisites
 
 * You must have Chrome installed on your system.<br/>If you are using a non-standard named Chrome app on an OS X system (for example, a nightly Canary update), you need to set this name in the `ANDROID_DEBUG_UI_MAC` setting in the NativeScript [config.json](file:///<%= #{config.getConfigPath(config)} %>).
 
@@ -55,9 +50,6 @@ Command | Description
 [emulate android](emulate-android.html) | Builds the specified project and runs it in a native Android emulator.
 [emulate ios](emulate-ios.html) | Builds the specified project and runs it in the native iOS Simulator.
 [emulate](emulate.html) | You must run the emulate command with a related command.
-[livesync](livesync.html) | Synchronizes the latest changes in your project to devices.
-[livesync ios](livesync-ios.html) | Synchronizes the latest changes in your project to iOS devices or the iOS Simulator.
-[livesync android](livesync-android.html) | Synchronizes the latest changes in your project to Android devices.
 [run android](run-android.html) | Runs your project on a connected Android device or in a native Android emulator, if configured.
 [run ios](run-ios.html) | Runs your project on a connected iOS device or in the iOS Simulator, if configured.
 [run](run.html) | Runs your project on a connected device or in the native emulator for the selected platform.

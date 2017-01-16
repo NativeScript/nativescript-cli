@@ -7,6 +7,11 @@ export class LivesyncCommand implements ICommand {
 		private $errors: IErrors) { }
 
 	public execute(args: string[]): IFuture<void> {
+
+		if (!this.$options.help && args[0]) {
+			this.$logger.warn("This command is deprecated. It will be removed in version 2.6.0 of NativeScript CLI. Use the \"run\" command instead.");
+		}
+
 		this.$platformService.deployPlatform(args[0]).wait();
 		return this.$usbLiveSyncService.liveSync(args[0]);
 	}
@@ -16,7 +21,6 @@ export class LivesyncCommand implements ICommand {
 			if (args.length >= 2) {
 				this.$errors.fail("Invalid number of arguments.");
 			}
-
 			let platform = args[0];
 			if (platform) {
 				return _.includes(this.$mobileHelper.platformNames, this.$mobileHelper.normalizePlatformName(platform)) && this.$platformService.validateOptions(args[0]).wait();
