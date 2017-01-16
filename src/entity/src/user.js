@@ -889,6 +889,18 @@ export default class User {
   }
 
   /**
+   * Find users.
+   *
+   * @param {Query} [query] Query used to filter entities.
+   * @param {Object} [options] Options
+   * @param {boolean} [options.discover] Discover users.
+   * @return {Observable} Observable.
+   */
+  static find(query, options = {}) {
+    return store.find(query, options);
+  }
+
+  /**
    * Check if a username already exists.
    *
    * @param {string} username Username

@@ -1,5 +1,6 @@
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
 import { KinveyError } from '../../errors';
+import { KinveyObservable, isDefined } from '../../utils';
 import NetworkStore from './networkstore';
 import Promise from 'es6-promise';
 import url from 'url';
@@ -30,6 +31,49 @@ class UserStore extends NetworkStore {
    */
   create() {
     return Promise.reject(new KinveyError('Please use `User.signup()` to create a user.'));
+  }
+
+  /**
+   * Find all users. A query can be optionally provided to return
+   * a subset of all users or omitted to return all users.
+   *
+   * @param {Query} [query] Query used to filter entities.
+   * @param {Object} [options] Options
+   * @param {Boolean} [options.discover] Discover users.
+   * @return {Observable} Observable.
+   */
+  find(query, options = {}) {
+    // If `options.discover`, use
+    // [User Discovery](http://devcenter.kinvey.com/guides/users#lookup)
+    // instead of querying the user namespace directly.
+    if (options.discover === true) {
+      const stream = KinveyObservable.create((observer) => {
+        const request = new KinveyRequest({
+          method: RequestMethod.POST,
+          authType: AuthType.Default,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: `${this.pathname}/_lookup`,
+            query: options.query
+          }),
+          properties: options.properties,
+          body: isDefined(query) ? query.toPlainObject().filter : null,
+          timeout: options.timeout,
+          client: this.client
+        });
+
+        // Execute the request
+        return request.execute()
+          .then(response => response.data)
+          .then(data => observer.next(data))
+          .then(() => observer.complete())
+          .catch(error => observer.error(error));
+      });
+      return stream;
+    }
+
+    return super.find(query, options);
   }
 
   /**
