@@ -405,7 +405,8 @@ export class PlatformService implements IPlatformService {
 			if (!this.$options.release) {
 				let deviceFilePath = this.getDeviceBuildInfoFilePath(device);
 				let buildInfoFilePath = this.getBuildOutputPath(device.deviceInfo.platform, platformData, { buildForDevice: !device.isEmulator });
-				device.fileSystem.putFile(path.join(buildInfoFilePath, buildInfoFileName), deviceFilePath).wait();
+				let appIdentifier = this.$projectData.projectId;
+				device.fileSystem.putFile(path.join(buildInfoFilePath, buildInfoFileName), deviceFilePath, appIdentifier).wait();
 			}
 			this.$logger.out(`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`);
 		}).future<void>()();
@@ -494,10 +495,7 @@ export class PlatformService implements IPlatformService {
 
 	private getDeviceBuildInfoFilePath(device: Mobile.IDevice): string {
 		let deviceAppData = this.$deviceAppDataFactory.create(this.$projectData.projectId, device.deviceInfo.platform, device);
-		let deviceRootPath = deviceAppData.deviceProjectRootPath;
-		if (device.deviceInfo.platform.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
-			deviceRootPath = path.dirname(deviceRootPath);
-		}
+		let deviceRootPath = path.dirname(deviceAppData.deviceProjectRootPath);
 		return path.join(deviceRootPath, buildInfoFileName);
 	}
 
@@ -770,7 +768,7 @@ export class PlatformService implements IPlatformService {
 			temp.track();
 			let uniqueFilePath = temp.path({ suffix: ".tmp" });
 			try {
-				device.fileSystem.getFile(deviceFilePath, uniqueFilePath).wait();
+				device.fileSystem.getFile(deviceFilePath, this.$projectData.projectId, uniqueFilePath).wait();
 			} catch (e) {
 				return null;
 			}

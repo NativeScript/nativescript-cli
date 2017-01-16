@@ -43,7 +43,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 					if (this.shouldTransferAllFiles(platform, deviceAppData)) {
 						localToDevicePaths = this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, null, this.liveSyncData.excludedProjectDirsAndFiles);
 						this.transferFiles(deviceAppData, localToDevicePaths, this.liveSyncData.projectFilesPath, true).wait();
-						device.fileSystem.putFile(this.$projectChangesService.getPrepareInfoFilePath(platform), this.getLiveSyncInfoFilePath(deviceAppData)).wait();
+						device.fileSystem.putFile(this.$projectChangesService.getPrepareInfoFilePath(platform), this.getLiveSyncInfoFilePath(deviceAppData), appIdentifier).wait();
 					}
 
 					if (postAction) {
@@ -194,7 +194,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 				if (!afterFileSyncAction) {
 					this.refreshApplication(deviceAppData, localToDevicePaths, isFullSync).wait();
 				}
-				device.fileSystem.putFile(this.$projectChangesService.getPrepareInfoFilePath(device.deviceInfo.platform), this.getLiveSyncInfoFilePath(deviceAppData)).wait();
+				device.fileSystem.putFile(this.$projectChangesService.getPrepareInfoFilePath(device.deviceInfo.platform), this.getLiveSyncInfoFilePath(deviceAppData), this.liveSyncData.appIdentifier).wait();
 				this.finishLivesync(deviceAppData).wait();
 				if (afterFileSyncAction) {
 					afterFileSyncAction(deviceAppData, localToDevicePaths).wait();
@@ -219,10 +219,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 	}
 
 	private getLiveSyncInfoFilePath(deviceAppData: Mobile.IDeviceAppData) {
-		let deviceRootPath = deviceAppData.deviceProjectRootPath;
-		if (deviceAppData.device.deviceInfo.platform.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
-			deviceRootPath = path.dirname(deviceRootPath);
-		}
+		let deviceRootPath = path.dirname(deviceAppData.deviceProjectRootPath);
 		let deviceFilePath = path.join(deviceRootPath, livesyncInfoFileName);
 		return deviceFilePath;
 	}
