@@ -16,7 +16,7 @@ class TestExecutionService implements ITestExecutionService {
 		private $projectData: IProjectData,
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
-		private $liveSyncProvider: ILiveSyncProvider,
+		private $usbLiveSyncService: ILiveSyncService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $httpClient: Server.IHttpClient,
 		private $config: IConfiguration,
@@ -59,7 +59,8 @@ class TestExecutionService implements ITestExecutionService {
 					}
 					this.detourEntryPoint(projectFilesPath);
 
-					this.liveSyncProject(platform);
+					await this.$platformService.deployPlatform(platform);
+					await this.$usbLiveSyncService.liveSync(platform);
 
 					if (this.$options.debugBrk) {
 						this.$logger.info('Starting debugger...');
@@ -118,7 +119,8 @@ class TestExecutionService implements ITestExecutionService {
 				if (this.$options.debugBrk) {
 					await this.getDebugService(platform).debug();
 				} else {
-					await this.liveSyncProject(platform);
+					await this.$platformService.deployPlatform(platform);
+					await this.$usbLiveSyncService.liveSync(platform);
 				}
 			};
 
@@ -216,22 +218,6 @@ class TestExecutionService implements ITestExecutionService {
 		this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
 
 		return karmaConfig;
-	}
-
-	private async liveSyncProject(platform: string): Promise<void> {
-		let platformData = this.$platformsData.getPlatformData(platform.toLowerCase()),
-			projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-
-		let liveSyncData: ILiveSyncData = {
-			platform: platform,
-			appIdentifier: this.$projectData.projectId,
-			projectFilesPath: projectFilesPath,
-			syncWorkingDirectory: path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME),
-			excludedProjectDirsAndFiles: this.$options.release ? constants.LIVESYNC_EXCLUDED_FILE_PATTERNS : []
-		};
-
-		let liveSyncService = this.$injector.resolve(this.$liveSyncProvider.platformSpecificLiveSyncServices[platform.toLowerCase()], { _liveSyncData: liveSyncData });
-		await liveSyncService.fullSync();
 	}
 }
 $injector.register('testExecutionService', TestExecutionService);
