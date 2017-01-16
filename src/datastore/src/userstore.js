@@ -1,6 +1,7 @@
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
 import { KinveyError } from '../../errors';
 import { KinveyObservable, isDefined } from '../../utils';
+import Query from '../../query';
 import NetworkStore from './networkstore';
 import Promise from 'es6-promise';
 import url from 'url';
@@ -48,6 +49,11 @@ class UserStore extends NetworkStore {
     // instead of querying the user namespace directly.
     if (options.discover === true) {
       const stream = KinveyObservable.create((observer) => {
+        // Check that the query is valid
+        if (isDefined(query) && !(query instanceof Query)) {
+          return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
+        }
+
         const request = new KinveyRequest({
           method: RequestMethod.POST,
           authType: AuthType.Default,
