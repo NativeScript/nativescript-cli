@@ -5,10 +5,16 @@ export class RunCommandBase {
 
 	public executeCore(args: string[]): IFuture<void> {
 		this.$platformService.deployPlatform(args[0]).wait();
+
+		if (this.$options.bundle) {
+			this.$options.watch = false;
+		}
+
 		if (this.$options.release) {
 			return this.$platformService.runPlatform(args[0]);
 		}
-	 	return this.$usbLiveSyncService.liveSync(args[0]);
+
+		return this.$usbLiveSyncService.liveSync(args[0]);
 	}
 }
 
