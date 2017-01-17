@@ -711,7 +711,7 @@ export default class User {
    * @param {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  static update(data, options) {
+  static update(data, options = {}) {
     const activeUser = User.getActiveUser(options.client);
 
     if (isDefined(activeUser)) {
