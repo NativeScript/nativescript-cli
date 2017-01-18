@@ -400,7 +400,7 @@ export class KinveyRequest extends NetworkRequest {
             throw error;
           }
 
-          const socialIdentities = activeUser._socialIdentity;
+          const socialIdentities = isDefined(activeUser._socialIdentity) ? activeUser._socialIdentity : {};
           const sessionKey = Object.keys(socialIdentities)
             .find(sessionKey => socialIdentities[sessionKey].identity === SocialIdentity.MobileIdentityConnect);
           const session = socialIdentities[sessionKey];

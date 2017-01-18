@@ -691,18 +691,17 @@ export default class User {
   update(data, options) {
     data = assign(this.data, data);
     return store.update(data, options)
-      .then(() => {
-        this.data = data;
-        return this.isActive();
-      })
-      .then((isActive) => {
-        if (isActive) {
-          return CacheRequest.setActiveUser(this.client, this.data);
+      .then((data) => {
+        if (this.isActive()) {
+          return CacheRequest.setActiveUser(this.client, data);
         }
 
-        return this;
+        return data;
       })
-      .then(() => this);
+      .then((data) => {
+        this.data = data;
+        return this;
+      });
   }
 
   /**
@@ -712,7 +711,7 @@ export default class User {
    * @param {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  static update(data, options) {
+  static update(data, options = {}) {
     const activeUser = User.getActiveUser(options.client);
 
     if (isDefined(activeUser)) {

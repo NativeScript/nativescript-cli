@@ -4,6 +4,7 @@ import { ActiveUserError, InvalidCredentialsError, KinveyError } from 'src/error
 import { TestUser } from '../mocks';
 import expect from 'expect';
 import nock from 'nock';
+import assign from 'lodash/assign';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 describe('User', function() {
@@ -298,6 +299,66 @@ describe('User', function() {
 
       const response = await User.forgotUsername(email);
       expect(response).toEqual({});
+    });
+  });
+
+  describe('update()', function() {
+    it('should throw an error if the user does not have an _id', function() {
+      const user = new User({ email: randomString() });
+      return user.update({ email: randomString })
+        .catch((error) => {
+          expect(error).toBeA(KinveyError);
+          expect(error.message).toEqual('User must have an _id.');
+        });
+    });
+
+    it('should update the active user', function() {
+      return TestUser.logout()
+        .then(() => {
+          return TestUser.login(randomString(), randomString());
+        })
+        .then((user) => {
+          const email = randomString();
+          const requestData = assign(user.data, { email: email })
+          const responseData = assign(requestData, { _kmd: { authtoken: randomString() } });
+
+          // Kinvey API response
+          nock(this.client.apiHostname, { encodedQueryParams: true })
+            .put(`${user.pathname}/${user._id}`, requestData)
+            .reply(200, responseData);
+
+          return user.update({ email: email })
+            .then(() => {
+              const activeUser = User.getActiveUser();
+              expect(activeUser.data).toEqual(responseData);
+            });
+        });
+    });
+
+    it('should update a user and not the active user', function() {
+      return TestUser.logout()
+        .then(() => {
+          return TestUser.login(randomString(), randomString());
+        })
+        .then((activeUser) => {
+          const user = new User({ _id: randomString(), email: randomString() });
+          const email = randomString();
+          const requestData = assign(user.data, { email: email })
+          const responseData = assign(requestData, { _kmd: { authtoken: randomString() } });
+
+          // Kinvey API response
+          nock(this.client.apiHostname, { encodedQueryParams: true })
+            .put(`${user.pathname}/${user._id}`, requestData)
+            .reply(200, responseData);
+
+          return user.update({ email: email })
+            .then(() => {
+              expect(user.data).toEqual(responseData);
+              expect(user._kmd.authtoken).toEqual(responseData._kmd.authtoken);
+              expect(activeUser.data).toNotEqual(responseData);
+              expect(activeUser._kmd.authtoken).toNotEqual(responseData._kmd.authtoken);
+            });
+        });
     });
   });
 });
