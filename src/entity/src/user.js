@@ -289,7 +289,7 @@ export default class User {
    * @param {Object} [options={}] Options
    * @return {Promise<User>} The user.
    */
-  static login(username, password, options) {
+  static login(username, password, options = {}) {
     const user = new this({}, options);
     return user.login(username, password, options);
   }
@@ -340,7 +340,7 @@ export default class User {
    * @param {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  connectIdentity(identity, session, options) {
+  connectIdentity(identity, session, options = {}) {
     const isActive = this.isActive();
     const data = {};
     const socialIdentity = data[socialIdentityAttribute] || {};
@@ -370,7 +370,7 @@ export default class User {
    * @param {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  static connectIdentity(identity, session, options) {
+  static connectIdentity(identity, session, options = {}) {
     const user = new this({}, options);
     return user.connectIdentity(identity, session, options);
   }
@@ -385,7 +385,7 @@ export default class User {
    * @param {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  connectWithIdentity(identity, session, options) {
+  connectWithIdentity(identity, session, options = {}) {
     return this.connectIdentity(identity, session, options);
   }
 
@@ -395,7 +395,7 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  connectFacebook(clientId, options) {
+  connectFacebook(clientId, options = {}) {
     const facebook = new Facebook({ client: this.client });
     return facebook.login(clientId, options)
       .then(session => this.connectIdentity(Facebook.identity, session, options));
@@ -407,7 +407,7 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  static connectFacebook(clientId, options) {
+  static connectFacebook(clientId, options = {}) {
     const user = new this({}, options);
     return user.connectFacebook(clientId, options);
   }
@@ -418,7 +418,7 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  disconnectFacebook(options) {
+  disconnectFacebook(options = {}) {
     return this.disconnectIdentity(Facebook.identity, options);
   }
 
@@ -428,7 +428,7 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  connectGoogle(clientId, options) {
+  connectGoogle(clientId, options = {}) {
     const google = new Google({ client: this.client });
     return google.login(clientId, options)
       .then(session => this.connectIdentity(Google.identity, session, options));
@@ -440,7 +440,7 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  static connectGoogle(clientId, options) {
+  static connectGoogle(clientId, options = {}) {
     const user = new this({}, options);
     return user.connectGoogle(clientId, options);
   }
@@ -451,7 +451,7 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  disconnectGoogle(options) {
+  disconnectGoogle(options = {}) {
     return this.disconnectIdentity(Google.identity, options);
   }
 
@@ -461,7 +461,7 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  googleconnectLinkedIn(clientId, options) {
+  googleconnectLinkedIn(clientId, options = {}) {
     const linkedIn = new LinkedIn({ client: this.client });
     return linkedIn.login(clientId, options)
       .then(session => this.connectIdentity(LinkedIn.identity, session, options));
@@ -473,7 +473,7 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  static connectLinkedIn(clientId, options) {
+  static connectLinkedIn(clientId, options = {}) {
     const user = new this({}, options);
     return user.connectLinkedIn(clientId, options);
   }
@@ -484,7 +484,7 @@ export default class User {
    * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The user.
    */
-  disconnectLinkedIn(options) {
+  disconnectLinkedIn(options = {}) {
     return this.disconnectIdentity(LinkedIn.identity, options);
   }
 
@@ -496,7 +496,7 @@ export default class User {
    * @param  {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  disconnectIdentity(identity, options) {
+  disconnectIdentity(identity, options = {}) {
     let promise = Promise.resolve();
 
     if (identity === Facebook.identity) {
@@ -644,7 +644,7 @@ export default class User {
    *                                       being signed up.
    * @return {Promise<User>} The user.
    */
-  static signup(data, options) {
+  static signup(data, options = {}) {
     const user = new this({}, options);
     return user.signup(data, options);
   }
@@ -659,7 +659,7 @@ export default class User {
    *                                       being signed up.
    * @return {Promise<User>} The user.
    */
-  signupWithIdentity(identity, session, options) {
+  signupWithIdentity(identity, session, options = {}) {
     const data = {};
     data[socialIdentityAttribute] = {};
     data[socialIdentityAttribute][identity] = session;
@@ -676,7 +676,7 @@ export default class User {
    *                                       being signed up.
    * @return {Promise<User>} The user.
    */
-  static signupWithIdentity(identity, session, options) {
+  static signupWithIdentity(identity, session, options = {}) {
     const user = new this({}, options);
     return user.signupWithIdentity(identity, session, options);
   }
@@ -688,7 +688,7 @@ export default class User {
    * @param {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  update(data, options) {
+  update(data, options = {}) {
     data = assign(this.data, data);
     return store.update(data, options)
       .then((data) => {
@@ -768,7 +768,7 @@ export default class User {
    * @param {Object} [options={}] Options
    * @return {Promise<User>} The user.
    */
-  static me(options) {
+  static me(options = {}) {
     const activeUser = User.getActiveUser(options.client);
 
     if (activeUser) {
@@ -888,13 +888,24 @@ export default class User {
   }
 
   /**
+   * Lookup users.
+   *
+   * @param {Query} [query] Query used to filter entities.
+   * @param {Object} [options] Options
+   * @return {Observable} Observable.
+   */
+  static lookup(query, options = {}) {
+    return store.lookup(query, options);
+  }
+
+  /**
    * Check if a username already exists.
    *
    * @param {string} username Username
    * @param {Object} [options] Options
    * @return {boolean} True if the username already exists otherwise false.
    */
-  static exists(username, options) {
+  static exists(username, options = {}) {
     return store.exists(username, options);
   }
 
@@ -905,7 +916,7 @@ export default class User {
    * @param {Object} [options] Options
    * @return {Promise<Object>} The response.
    */
-  static restore(id, options) {
+  static restore(id, options = {}) {
     return store.restore(id, options);
   }
 }

@@ -2,6 +2,7 @@ import { User } from 'src/entity';
 import { randomString } from 'src/utils';
 import { ActiveUserError, InvalidCredentialsError, KinveyError } from 'src/errors';
 import { TestUser } from '../mocks';
+import Query from 'src/query';
 import expect from 'expect';
 import nock from 'nock';
 import assign from 'lodash/assign';
@@ -299,6 +300,92 @@ describe('User', function() {
 
       const response = await User.forgotUsername(email);
       expect(response).toEqual({});
+    });
+  });
+
+  describe('lookup()', function() {
+    it('should throw an error if the query argument is not an instance of the Query class', function() {
+      return User.find({}, { discover: true })
+        .toPromise()
+        .catch((error) => {
+          expect(error).toBeA(KinveyError);
+        });
+    });
+
+    it('should return an array of users', function() {
+      const USERS = [{
+        _id: randomString(),
+        username: randomString(),
+        _acl: {
+          creator: randomString()
+        },
+        _kmd: {
+          lmt: new Date().toISOString(),
+          ect: new Date().toISOString()
+        }
+      }, {
+        _id: randomString(),
+        username: randomString(),
+        _acl: {
+          creator: randomString()
+        },
+        _kmd: {
+          lmt: new Date().toISOString(),
+          ect: new Date().toISOString()
+        }
+      }];
+
+      // Kinvey API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .post(`/user/${this.client.appKey}/_lookup`)
+        .reply(200, USERS);
+
+      return User.lookup()
+        .toPromise()
+        .then((users) => {
+          expect(users).toEqual(USERS);
+        });
+    });
+
+    it('should return an array of users matching the query', function() {
+      const USERS = [{
+        _id: randomString(),
+        username: 'foo',
+        _acl: {
+          creator: randomString()
+        },
+        _kmd: {
+          lmt: new Date().toISOString(),
+          ect: new Date().toISOString()
+        }
+      }, {
+        _id: randomString(),
+        username: 'foo',
+        _acl: {
+          creator: randomString()
+        },
+        _kmd: {
+          lmt: new Date().toISOString(),
+          ect: new Date().toISOString()
+        }
+      }];
+      const query = new Query();
+      query.equalTo('username', 'foo');
+
+      // Kinvey API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .post(`/user/${this.client.appKey}/_lookup`, query.toPlainObject().filter)
+        .reply(200, USERS);
+
+      return User.lookup(query)
+        .toPromise()
+        .then((users) => {
+          expect(users).toEqual(USERS);
+
+          users.forEach(function(user) {
+            expect(user.username).toEqual('foo');
+          });
+        });
     });
   });
 

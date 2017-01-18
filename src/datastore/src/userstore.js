@@ -1,5 +1,7 @@
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
 import { KinveyError } from '../../errors';
+import { KinveyObservable, isDefined } from '../../utils';
+import Query from '../../query';
 import NetworkStore from './networkstore';
 import Promise from 'es6-promise';
 import url from 'url';
@@ -22,6 +24,46 @@ class UserStore extends NetworkStore {
    */
   get pathname() {
     return `/${usersNamespace}/${this.client.appKey}`;
+  }
+
+  /**
+   * Lookup users.
+   * [User Discovery](http://devcenter.kinvey.com/guides/users#lookup)
+   *
+   * @param {Query} [query] Query used to filter entities.
+   * @param {Object} [options] Options
+   * @return {Observable} Observable.
+   */
+  lookup(query, options = {}) {
+    const stream = KinveyObservable.create((observer) => {
+      // Check that the query is valid
+      if (isDefined(query) && !(query instanceof Query)) {
+        return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
+      }
+
+      const request = new KinveyRequest({
+        method: RequestMethod.POST,
+        authType: AuthType.Default,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: `${this.pathname}/_lookup`,
+          query: options.query
+        }),
+        properties: options.properties,
+        body: isDefined(query) ? query.toPlainObject().filter : null,
+        timeout: options.timeout,
+        client: this.client
+      });
+
+      // Execute the request
+      return request.execute()
+        .then(response => response.data)
+        .then(data => observer.next(data))
+        .then(() => observer.complete())
+        .catch(error => observer.error(error));
+    });
+    return stream;
   }
 
   /**
