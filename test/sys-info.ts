@@ -212,7 +212,7 @@ describe("SysInfo unit tests", () => {
 				let result = await sysInfo.getSysInfo();
 				assertCommonValues(result);
 				assert.deepEqual(result.xcodeVer, null);
-				assert.deepEqual(result.cocoapodVer, null);
+				assert.deepEqual(result.cocoaPodsVer, null);
 			});
 
 			it("on Mac", async () => {
@@ -220,7 +220,7 @@ describe("SysInfo unit tests", () => {
 				let result = await sysInfo.getSysInfo();
 				assertCommonValues(result);
 				assert.deepEqual(result.xcodeVer, "6.4.0");
-				assert.deepEqual(result.cocoapodVer, childProcessResult.podVersion.result.stdout);
+				assert.deepEqual(result.cocoaPodsVer, childProcessResult.podVersion.result.stdout);
 			});
 
 			it("on Linux", async () => {
@@ -228,7 +228,7 @@ describe("SysInfo unit tests", () => {
 				let result = await sysInfo.getSysInfo();
 				assertCommonValues(result);
 				assert.deepEqual(result.xcodeVer, null);
-				assert.deepEqual(result.cocoapodVer, null);
+				assert.deepEqual(result.cocoaPodsVer, null);
 			});
 		});
 
@@ -238,27 +238,27 @@ describe("SysInfo unit tests", () => {
 				childProcessResult.podVersion = { shouldThrowError: true };
 				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
 				let result = await sysInfo.getSysInfo();
-				assert.deepEqual(result.cocoapodVer, null);
+				assert.deepEqual(result.cocoaPodsVer, null);
 			});
 
 			it("is null when OS is not Mac", async () => {
 				sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion: "4.5.1" });
 				let result = await sysInfo.getSysInfo();
-				assert.deepEqual(result.cocoapodVer, null);
+				assert.deepEqual(result.cocoaPodsVer, null);
 			});
 
 			it("is correct when cocoapods output has warning after version output", async () => {
 				childProcessResult.podVersion = { result: setStdOut("0.38.2\nWARNING:\n") };
 				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
 				let result = await sysInfo.getSysInfo();
-				assert.deepEqual(result.cocoapodVer, "0.38.2");
+				assert.deepEqual(result.cocoaPodsVer, "0.38.2");
 			});
 
 			it("is correct when cocoapods output has warnings before version output", async () => {
 				childProcessResult.podVersion = { result: setStdOut("WARNING\nWARNING2\n0.38.2") };
 				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
 				let result = await sysInfo.getSysInfo();
-				assert.deepEqual(result.cocoapodVer, "0.38.2");
+				assert.deepEqual(result.cocoaPodsVer, "0.38.2");
 			});
 		});
 
@@ -294,7 +294,7 @@ describe("SysInfo unit tests", () => {
 					assert.deepEqual(result.monoVer, null);
 					assert.deepEqual(result.gradleVer, null);
 					assert.deepEqual(result.gitVer, null);
-					assert.deepEqual(result.cocoapodVer, null);
+					assert.deepEqual(result.cocoaPodsVer, null);
 				};
 
 				it("on Windows", () => {
