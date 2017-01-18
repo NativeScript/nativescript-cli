@@ -223,7 +223,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 		if (deviceAppData.device.deviceInfo.platform.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
 			deviceRootPath = path.dirname(deviceRootPath);
 		}
-		let deviceFilePath = path.join(deviceRootPath, livesyncInfoFileName);
+		let deviceFilePath = path.join(deviceRootPath, livesyncInfoFileName + this.$projectData.projectId);
 		return deviceFilePath;
 	}
 

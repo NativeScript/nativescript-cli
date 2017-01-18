@@ -498,7 +498,7 @@ export class PlatformService implements IPlatformService {
 		if (device.deviceInfo.platform.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
 			deviceRootPath = path.dirname(deviceRootPath);
 		}
-		return path.join(deviceRootPath, buildInfoFileName);
+		return path.join(deviceRootPath, buildInfoFileName + this.$projectData.projectId);
 	}
 
 	private getDeviceBuildInfo(device: Mobile.IDevice): IFuture<IBuildInfo> {
