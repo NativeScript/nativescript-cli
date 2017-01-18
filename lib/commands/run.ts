@@ -5,9 +5,15 @@ export class RunCommandBase {
 
 	public async executeCore(args: string[]): Promise<void> {
 		await this.$platformService.deployPlatform(args[0]);
+
+		if (this.$options.bundle) {
+			this.$options.watch = false;
+		}
+
 		if (this.$options.release) {
 			return this.$platformService.runPlatform(args[0]);
 		}
+
 		return this.$usbLiveSyncService.liveSync(args[0]);
 	}
 }
