@@ -692,7 +692,7 @@ export default class User {
     data = assign(this.data, data);
     return store.update(data, options)
       .then((data) => {
-        if (this.isActive() === true) {
+        if (this.isActive()) {
           return CacheRequest.setActiveUser(this.client, data);
         }
 
