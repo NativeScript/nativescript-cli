@@ -106,7 +106,7 @@ class AndroidDebugService implements IDebugService {
 		return (() => {
 			let packageFile = "";
 
-			if (!this.$options.start && !this.$options.emulator && !this.$options.getPort) {
+			if (!this.$options.start && !this.$options.emulator) {
 				let cachedDeviceOption = this.$options.forDevice;
 				this.$options.forDevice = true;
 				this.$options.forDevice = !!cachedDeviceOption;
@@ -127,9 +127,9 @@ class AndroidDebugService implements IDebugService {
 		return (() => {
 			this.device = device;
 
-			if (this.$options.getPort) {
-				this.printDebugPort(device.deviceInfo.identifier, packageName).wait();
-			} else if (this.$options.start) {
+			this.printDebugPort(device.deviceInfo.identifier, packageName).wait();
+
+			if (this.$options.start) {
 				this.attachDebugger(device.deviceInfo.identifier, packageName).wait();
 			} else if (this.$options.stop) {
 				this.detachDebugger(packageName).wait();

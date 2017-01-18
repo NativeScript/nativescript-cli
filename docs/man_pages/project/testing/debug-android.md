@@ -15,7 +15,6 @@ Livesync on device, run the app and stop at the first code statement | `$ tns de
 Livesync in the native emulator, run the app and stop at the first code statement | `$ tns debug android --no-rebuild --debug-brk --emulator [<Emulator Options>] [--timeout <timeout>]`
 Livesync in Genymotion, run the app and stop at the first code statement | `$ tns debug android --no-rebuild --debug-brk --geny <Geny Name> [--timeout <timeout>]`
 Livesync on device/emulator, run the app, start and attach the debugger. Refresh everything automatically upon changes | `$ tns debug android --watch [--debug-brk]`
-Retrieve the device port on which you are debugging | `$ tns debug android [--device <Device ID>] --get-port`
 Detach the debug tools | `$ tns debug android --stop`
 
 Debugs your project on a connected device, in a native emulator or in Genymotion.
@@ -27,7 +26,6 @@ Debugs your project on a connected device, in a native emulator or in Genymotion
 * `--debug-brk` - Prepares, builds and deploys the application package on a device or in an emulator, launches the Chrome DevTools of your Chrome browser and stops at the first code statement.
 * `--start` - Attaches the debug tools to a deployed and running app.
 * `--stop` - Detaches the debug tools.
-* `--get-port` - Retrieves the port on which you are debugging your application.
 * `--debug-port` - Sets a new port on which to attach the debug tools.
 * `--timeout` - Sets the number of seconds that the NativeScript CLI will wait for the debugger to boot. If not set, the default timeout is 90 seconds.
 * `--no-rebuild` - Livesyncs to device/emulator when possible. Otherwise builds and deploys the application.
