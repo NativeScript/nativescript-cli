@@ -299,7 +299,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		let xcodeBuildVersion = await this.getXcodeVersion();
 		if (helpers.versionCompare(xcodeBuildVersion, "8.0") >= 0) {
-			await this.setupAutomaticSigning(projectRoot, buildConfig);
+			await this.setupSigningForDevice(projectRoot, buildConfig);
 		}
 
 		if (buildConfig && buildConfig.codeSignIdentity) {
@@ -321,7 +321,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		await this.createIpa(projectRoot);
 	}
 
-	private async setupManualSigning(projectRoot: string, buildConfig?: IiOSBuildConfig): Promise<void> {
+	private async setupSigningFromProvision(projectRoot: string, buildConfig?: IiOSBuildConfig): Promise<void> {
 		if (this.$options.provision) {
 			const pbxprojPath = path.join(projectRoot, this.$projectData.projectName + ".xcodeproj", "project.pbxproj");
 			const xcode = Xcode.open(pbxprojPath);
@@ -369,12 +369,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 	}
 
-	private async setupAutomaticSigning(projectRoot: string, buildConfig?: IiOSBuildConfig): Promise<void> {
+	private async setupSigningForDevice(projectRoot: string, buildConfig?: IiOSBuildConfig): Promise<void> {
 		const pbxprojPath = path.join(projectRoot, this.$projectData.projectName + ".xcodeproj", "project.pbxproj");
 		const xcode = Xcode.open(pbxprojPath);
 		const signing = xcode.getSigning(this.$projectData.projectName);
 
-		if (!this.$options.provision && !(signing && signing.style === "Manual" && !this.$options.teamId)) {
+		if ((this.readXCConfigProvisioningProfile() || this.readXCConfigProvisioningProfileForIPhoneOs()) && (!signing || signing.style !== "Manual")) {
+			xcode.setManualSigningStyle(this.$projectData.projectName);
+			xcode.save();
+		} else if (!this.$options.provision && !(signing && signing.style === "Manual" && !this.$options.teamId)) {
 			if (buildConfig) {
 				delete buildConfig.teamIdentifier;
 			}
@@ -385,7 +388,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			xcode.save();
 			this.$logger.trace("Set Automatic signing style and team.");
 		}
-
 	}
 
 	private async buildForSimulator(projectRoot: string, args: string[], buildConfig?: IiOSBuildConfig): Promise<void> {
@@ -564,7 +566,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	public async prepareProject(): Promise<void> {
 		if (this.$options.provision) {
 			let projectRoot = path.join(this.$projectData.platformsDir, "ios");
-			await this.setupManualSigning(projectRoot);
+			await this.setupSigningFromProvision(projectRoot);
 		}
 
 		let project = this.createPbxProj();
@@ -1081,14 +1083,14 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return null;
 	}
 
-	private readTeamId(): string {
+	private readXCConfig(flag: string): string {
 		let xcconfigFile = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, "build.xcconfig");
 		if (this.$fs.exists(xcconfigFile)) {
 			let text = this.$fs.readText(xcconfigFile);
 			let teamId: string;
 			text.split(/\r?\n/).forEach((line) => {
 				line = line.replace(/\/(\/)[^\n]*$/, "");
-				if (line.indexOf("DEVELOPMENT_TEAM") >= 0) {
+				if (line.indexOf(flag) >= 0) {
 					teamId = line.split("=")[1].trim();
 					if (teamId[teamId.length - 1] === ';') {
 						teamId = teamId.slice(0, -1);
@@ -1106,6 +1108,18 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 
 		return null;
+	}
+
+	private readTeamId(): string {
+		return this.readXCConfig("DEVELOPMENT_TEAM");
+	}
+
+	private readXCConfigProvisioningProfile(): string {
+		return this.readXCConfig("PROVISIONING_PROFILE");
+	}
+
+	private readXCConfigProvisioningProfileForIPhoneOs(): string {
+		return this.readXCConfig("PROVISIONING_PROFILE[sdk=iphoneos*]");
 	}
 
 	private async getDevelopmentTeam(): Promise<string> {
