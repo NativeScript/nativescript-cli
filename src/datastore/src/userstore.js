@@ -93,7 +93,7 @@ class UserStore extends NetworkStore {
     }
 
     if (!data._id) {
-      return Promise.ject(new KinveyError('User must have an _id.'));
+      return Promise.reject(new KinveyError('User must have an _id.'));
     }
 
     return super.update(data, options);
