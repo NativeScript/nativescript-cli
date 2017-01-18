@@ -354,7 +354,9 @@ describe('User', function() {
           return user.update({ email: email })
             .then(() => {
               expect(user.data).toEqual(responseData);
+              expect(user._kmd.authtoken).toEqual(responseData._kmd.authtoken);
               expect(activeUser.data).toNotEqual(responseData);
+              expect(activeUser._kmd.authtoken).toNotEqual(responseData._kmd.authtoken);
             });
         });
     });
