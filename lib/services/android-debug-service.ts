@@ -112,9 +112,8 @@ class AndroidDebugService implements IDebugService {
 	private async debugOnDevice(): Promise<void> {
 		let packageFile = "";
 
-		if (!this.$options.start && !this.$options.emulator && !this.$options.getPort) {
+		if (!this.$options.start && !this.$options.emulator) {
 			let cachedDeviceOption = this.$options.forDevice;
-			this.$options.forDevice = true;
 
 			this.$options.forDevice = !!cachedDeviceOption;
 
@@ -133,9 +132,9 @@ class AndroidDebugService implements IDebugService {
 	private async debugCore(device: Mobile.IAndroidDevice, packageFile: string, packageName: string): Promise<void> {
 		this.device = device;
 
-		if (this.$options.getPort) {
-			await this.printDebugPort(device.deviceInfo.identifier, packageName);
-		} else if (this.$options.start) {
+		await this.printDebugPort(device.deviceInfo.identifier, packageName);
+
+		if (this.$options.start) {
 			await this.attachDebugger(device.deviceInfo.identifier, packageName);
 		} else if (this.$options.stop) {
 			await this.detachDebugger(packageName);
@@ -231,7 +230,7 @@ class AndroidDebugService implements IDebugService {
 	}
 
 	private startDebuggerClient(port: Number): void {
-			this.$logger.info(`To start debugging, open the following URL in Chrome:${os.EOL}chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:${port}${os.EOL}`.cyan);
+		this.$logger.info(`To start debugging, open the following URL in Chrome:${os.EOL}chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:${port}${os.EOL}`.cyan);
 	}
 
 	private stopDebuggerClient(): void {
