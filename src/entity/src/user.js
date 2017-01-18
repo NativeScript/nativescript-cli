@@ -889,17 +889,6 @@ export default class User {
   }
 
   /**
-   * Find users.
-   *
-   * @param {Query} [query] Query used to filter entities.
-   * @param {Object} [options] Options
-   * @return {Observable} Observable.
-   */
-  static find(query, options = {}) {
-    return store.find(query, options);
-  }
-
-  /**
    * Lookup users.
    *
    * @param {Query} [query] Query used to filter entities.
