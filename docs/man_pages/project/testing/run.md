@@ -9,7 +9,7 @@ Runs your project on all connected devices or in native emulators for the select
 
 <% if((isConsole && isMacOS) || isHtml) { %>### Attributes
 `<Platform>` is the target mobile platform on which you want to run your project. You can set the following target platforms.
-* `android` - Runs your project on a connected Android device, in the native emulator or in Genymotion.
+* `android` - Runs your project on a connected Android device, in the native emulator.
 * `ios` - Runs your project on a connected iOS device or in the iOS Simulator.<% } %>
 
 <% if(isHtml) { %>

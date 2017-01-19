@@ -6,13 +6,11 @@ Usage | Synopsis
 Deploy on device, run the app start Chrome DevTools, and attach the debugger | `$ tns debug android`
 Deploy on device, run the app and stop at the first code statement | `$ tns debug android --debug-brk [--device <Device ID>] [--debug-port <port>] [--timeout <timeout>]`
 Deploy in the native emulator, run the app and stop at the first code statement | `$ tns debug android --debug-brk --emulator [<Emulator Options>] [--timeout <timeout>]`
-Deploy in Genymotion, run the app and stop at the first code statement | `$ tns debug android --debug-brk --geny <Geny Name> [--timeout <timeout>]`
 Attach the debug tools to a running app on device | `$ tns debug android --start [--device <Device ID>] [--debug-port <port>] [--timeout <timeout>]`
 Attach the debug tools to a running app in the native emulator | `$ tns debug android --start --emulator [<Emulator Options>] [--timeout <timeout>]`
-Attach the debug tools to a running app in Genymotion | `$ tns debug android --start --geny <Geny Name> [--print-app-output] [--timeout <timeout>]`
 Detach the debug tools | `$ tns debug android --stop`
 
-Prepares, builds and deploys the project when necessary. Debugs your project on a connected device, in a native emulator or in Genymotion.
+Prepares, builds and deploys the project when necessary. Debugs your project on a connected device or emulator.
 While debugging, prints the output from the application in the console and watches for changes in your code. Once a change is detected, it synchronizes the change with all selected devices and restarts/refreshes the application.
 
 ### Options
@@ -30,7 +28,6 @@ While debugging, prints the output from the application in the console and watch
 * `<Device ID>` is the index or name of the target device as listed by `$ tns device`
 * `<Port>` is an accessible port on the device to which you want to attach the debugging tools.
 * `<Emulator Options>` is any valid combination of options as listed by `$ tns help emulate android`
-* `<GenyName>` is the name of the Genymotion virtual device that you want to use as listed by `$ genyshell -c "devices list"`
 
 <% if(isHtml) { %>
 ### Prerequisites

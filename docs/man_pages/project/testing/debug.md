@@ -9,7 +9,7 @@ Debugs your project on a connected device or in a native emulator. <% if(isMacOS
 
 <% if((isConsole && isMacOS) || isHtml) { %>### Attributes
 `<Platform>` is the target mobile platform for which you want to debug your project. You can set the following target platforms.
-* `android` - Debugs your project on a connected Android device, native Android emulator or Genymotion emulator.
+* `android` - Debugs your project on a connected Android device or Android emulator.
 * `ios` - Debugs your project on a connected iOS device or in a native iOS emulator.<% } %>
 
 <% if(isHtml) { %>
