@@ -9,7 +9,7 @@ export class LivesyncCommand implements ICommand {
 	public execute(args: string[]): IFuture<void> {
 
 		if (!this.$options.help && args[0]) {
-			this.$logger.warn("This command is deprecated. It will be removed in version 2.6.0 of NativeScript CLI. Use the \"run\" command instead.");
+			this.$logger.warn('This command is deprecated. It will be removed in the next version of NativeScript CLI. Use "$ tns run" command instead.');
 		}
 
 		this.$platformService.deployPlatform(args[0]).wait();
