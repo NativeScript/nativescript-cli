@@ -5,11 +5,11 @@ Usage | Synopsis
 ---|---
 <% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns run <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns run android`<% } %>
 
-Runs your project on a connected device or in the native emulator for the selected platform.<% if(isMacOS) { %>You must specify the target platform on which you want to run your project.<% } %><% if(isConsole && (isLinux || isWindows)) { %>You must run `$ tns run android`<% } %>
+Runs your project on all connected devices or in native emulators for the selected platform.<% if(isMacOS) { %> You must specify the target platform on which you want to run your project.<% } %><% if(isConsole && (isLinux || isWindows)) { %>You must run `$ tns run android`<% } %> The command will prepare, build and deploy the app when necessary. By default listens for changes in your code, synchronizes those changes and refreshes all selected devices.
 
 <% if((isConsole && isMacOS) || isHtml) { %>### Attributes
 `<Platform>` is the target mobile platform on which you want to run your project. You can set the following target platforms.
-* `android` - Runs your project on a connected Android device, in the native emulator or in Genymotion.
+* `android` - Runs your project on a connected Android device, in the native emulator.
 * `ios` - Runs your project on a connected iOS device or in the iOS Simulator.<% } %>
 
 <% if(isHtml) { %>
@@ -33,9 +33,6 @@ Command | Description
 [emulate android](emulate-android.html) | Builds the specified project and runs it in a native Android emulator.
 [emulate ios](emulate-ios.html) | Builds the specified project and runs it in the native iOS Simulator.
 [emulate](emulate.html) | You must run the emulate command with a related command.
-[livesync](livesync.html) | Synchronizes the latest changes in your project to devices.
-[livesync ios](livesync-ios.html) | Synchronizes the latest changes in your project to iOS devices or the iOS Simulator.
-[livesync android](livesync-android.html) | Synchronizes the latest changes in your project to Android devices.
 [run android](run-android.html) | Runs your project on a connected Android device or in a native Android emulator, if configured.
 [run ios](run-ios.html) | Runs your project on a connected iOS device or in the iOS Simulator, if configured.
 [test init](test-init.html) | Configures your project for unit testing with a selected framework.
