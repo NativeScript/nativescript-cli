@@ -7,6 +7,8 @@ General | `$ tns livesync [<Platform>]`
 
 Synchronizes the latest changes in your project to devices.
 
+`This command is deprecated. It will be removed in the next version of NativeScript CLI. Use the "run" command instead.`
+
 ### Attributes
 `<Platform>` is the target mobile platform to which you want to synchronize your changes. <% if(isHtml) { %>If you have connected only Android or only iOS devices, you can omit setting the target platform. If you have connected devices of multiple platforms, you must specify the target platform. <% } %>You can set the following target platforms.
 * `android` - Synchronizes the latest changes in your project to connected Android devices.

@@ -4,9 +4,15 @@ export class LivesyncCommand implements ICommand {
 	constructor(private $usbLiveSyncService: ILiveSyncService,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $platformService: IPlatformService,
-		private $errors: IErrors) { }
+		private $errors: IErrors,
+		private $logger: ILogger,
+		private $options: IOptions) { }
 
 	public async execute(args: string[]): Promise<void> {
+		if (!this.$options.help && args[0]) {
+			this.$logger.warn('This command is deprecated. It will be removed in the next version of NativeScript CLI. Use "$ tns run" command instead.');
+		}
+
 		await this.$platformService.deployPlatform(args[0]);
 		return this.$usbLiveSyncService.liveSync(args[0]);
 	}

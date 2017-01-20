@@ -6,7 +6,7 @@ Usage | Synopsis
 Deploy on Android | `$ tns deploy android [--device <Device ID>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release]`
 <% if(isMacOS) { %>Deploy on iOS | `$ tns deploy ios [--device <Device ID>] [--release]`<% } %>
 
-Builds and deploys the project to a connected physical or virtual device. <% if(isMacOS) { %>You must specify the target platform on which you want to deploy.<% } %>
+Prepares, builds and deploys the project to a connected physical or virtual device. <% if(isMacOS) { %>You must specify the target platform on which you want to deploy.<% } %> It will deploy the app on all connected devices targeting the selected platform.
 
 <% if(isMacOS) { %>
 <% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system. <% if(isHtml) { %>For more information, see [Obtaining Signing Identities and Downloading Provisioning Profiles](https://developer.apple.com/library/mac/recipes/xcode_help-accounts_preferences/articles/obtain_certificates_and_provisioning_profiles.html).<% } %>
@@ -24,7 +24,7 @@ Builds and deploys the project to a connected physical or virtual device. <% if(
 * `--key-store-alias-password` - Provides the password for the alias specified with `--key-store-alias-password`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 
 ### Attributes
-* `<Device ID>` is the index or name of the target device as listed by `$ tns device`
+* `<Device ID>` is the index or name of the target device as listed by `$ tns devices`
 
 <% if(isHtml) { %>
 ### Command Limitations
@@ -47,9 +47,6 @@ Command | Description
 [emulate android](emulate-android.html) | Builds the specified project and runs it in a native Android emulator.
 [emulate ios](emulate-ios.html) | Builds the specified project and runs it in the native iOS Simulator.
 [emulate](emulate.html) | You must run the emulate command with a related command.
-[livesync](livesync.html) | Synchronizes the latest changes in your project to devices.
-[livesync ios](livesync-ios.html) | Synchronizes the latest changes in your project to iOS devices or the iOS Simulator.
-[livesync android](livesync-android.html) | Synchronizes the latest changes in your project to Android devices.
 [run android](run-android.html) | Runs your project on a connected Android device or in a native Android emulator, if configured.
 [run ios](run-ios.html) | Runs your project on a connected iOS device or in the iOS Simulator, if configured.
 [run](run.html) | Runs your project on a connected device or in the native emulator for the selected platform.
