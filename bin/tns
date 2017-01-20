@@ -6,7 +6,7 @@ var path = require("path"),
 	pathToLib = path.join(__dirname, "..", "lib"),
 	pathToCommon = path.join(pathToLib, "common");
 
-require(path.join(pathToCommon, "verify-node-version")).verifyNodeVersion(node, "NativeScript");
+require(path.join(pathToCommon, "verify-node-version")).verifyNodeVersion(node, "NativeScript", [ "^4.0.0" ]);
 
 var pathToCliExecutable = path.join(pathToLib, "nativescript-cli.js");
 
@@ -27,7 +27,7 @@ if (nodeArgs.length) {
 
 	var nodeProcess = childProcess.spawn(process.execPath, args, { stdio: "inherit" });
 
-	nodeProcess.on("close", function(code) {
+	nodeProcess.on("close", function (code) {
 		// We need this handler so if command fails, we'll exit with same exit code as CLI.
 		process.exit(code);
 	});
