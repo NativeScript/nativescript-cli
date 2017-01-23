@@ -105,5 +105,5 @@ class NetworkRack extends Rack {
     this.use(new ParseMiddleware());
   }
 }
-const newtworkRack = new NetworkRack();
-export { newtworkRack as NetworkRack };
+const networkRack = new NetworkRack();
+export { networkRack as NetworkRack };
