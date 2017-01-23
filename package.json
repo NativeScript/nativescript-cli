@@ -8,7 +8,7 @@
   },
   "license": "Apache-2.0",
   "author": "Kinvey, Inc.",
-  "main": "./lib/index.js",
+  "main": "./dist/index.js",
   "es6": true,
   "contributors": [
     "Thomas Conner <thomas@kinvey.com>"
@@ -19,7 +19,7 @@
   },
   "scripts": {
     "build": "npm run clean && npm run transpile",
-    "clean": "del lib coverage",
+    "clean": "del dist coverage",
     "cover": "istanbul cover _mocha -- --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test/unit",
     "docs": "esdoc -c esdoc.json",
     "lint": "npm run lint:src",
@@ -29,8 +29,8 @@
     "postversion": "git push && git push --tags",
     "test": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test/unit",
     "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test/unit",
-    "transpile": "BABEL_ENV=production babel --no-comments --out-dir lib src",
-    "version": "npm run build && git add -A lib"
+    "transpile": "BABEL_ENV=production babel --no-comments --out-dir dist src",
+    "version": "npm run build && git add -A dist"
   },
   "dependencies": {
     "append-query": "1.1.0",
