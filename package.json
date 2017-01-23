@@ -83,6 +83,7 @@
   "devDependencies": {
     "@types/chai": "3.4.34",
     "@types/chai-as-promised": "0.0.29",
+    "@types/source-map": "0.5.0",
     "chai": "3.5.0",
     "chai-as-promised": "6.0.0",
     "grunt": "1.0.1",
