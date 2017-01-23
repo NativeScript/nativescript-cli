@@ -1,6 +1,6 @@
-import { TestUser as User } from '../mocks';
+import { User } from 'src/entity';
 import { randomString } from 'src/utils';
-import { ActiveUserError, KinveyError } from 'src/errors';
+import { ActiveUserError, InvalidCredentialsError, KinveyError } from 'src/errors';
 import { TestUser } from '../mocks';
 import Query from 'src/query';
 import expect from 'expect';
@@ -305,7 +305,7 @@ describe('User', function() {
 
   describe('lookup()', function() {
     it('should throw an error if the query argument is not an instance of the Query class', function() {
-      return User.find({}, { discover: true })
+      return User.lookup({}, { discover: true })
         .toPromise()
         .catch((error) => {
           expect(error).toBeA(KinveyError);
