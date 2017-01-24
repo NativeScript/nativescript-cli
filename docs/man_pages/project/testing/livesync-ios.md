@@ -9,6 +9,8 @@ Synchronize changes to the iOS Simulator | `$ tns livesync ios --emulator [--wat
 
 Synchronizes the latest changes in your project to iOS devices or the iOS Simulator.
 
+`This command is deprecated. It will be removed in the next version of NativeScript CLI. Use the "run" command instead.`
+
 ### Options
 * `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device.
 * `--device` - Specifies the serial number or the index of the connected device to which you want to synchronize changes. To list all connected devices, grouped by platform, run `$ tns device`. You cannot set `--device` and `--emulator` simultaneously.

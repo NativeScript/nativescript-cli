@@ -377,13 +377,19 @@ export class PlatformService implements IPlatformService {
 		} else {
 			packageFile = this.getLatestApplicationPackageForDevice(platformData).packageName;
 		}
+
 		await platformData.platformProjectService.deploy(device.deviceInfo.identifier);
+
 		await device.applicationManager.reinstallApplication(this.$projectData.projectId, packageFile);
+
 		if (!this.$options.release) {
 			let deviceFilePath = await this.getDeviceBuildInfoFilePath(device);
 			let buildInfoFilePath = this.getBuildOutputPath(device.deviceInfo.platform, platformData, { buildForDevice: !device.isEmulator });
-			await device.fileSystem.putFile(path.join(buildInfoFilePath, buildInfoFileName), deviceFilePath);
+			let appIdentifier = this.$projectData.projectId;
+
+			await device.fileSystem.putFile(path.join(buildInfoFilePath, buildInfoFileName), deviceFilePath, appIdentifier);
 		}
+
 		this.$logger.out(`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`);
 	}
 
@@ -399,21 +405,29 @@ export class PlatformService implements IPlatformService {
 			} else {
 				this.$logger.out("Skipping package build. No changes detected on the native side. This will be fast!");
 			}
+
 			if (forceInstall || shouldBuild || (await this.shouldInstall(device))) {
 				await this.installApplication(device);
 			} else {
 				this.$logger.out("Skipping install.");
 			}
 		};
+
 		await this.$devicesService.execute(action, this.getCanExecuteAction(platform));
 	}
 
 	public async runPlatform(platform: string): Promise<void> {
+		if (this.$options.justlaunch) {
+			this.$options.watch = false;
+		}
+
 		this.$logger.out("Starting...");
+
 		let action = async (device: Mobile.IDevice) => {
 			await device.applicationManager.startApplication(this.$projectData.projectId);
 			this.$logger.out(`Successfully started on device with identifier '${device.deviceInfo.identifier}'.`);
 		};
+
 		await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
 		await this.$devicesService.execute(action, this.getCanExecuteAction(platform));
 	}
@@ -464,11 +478,7 @@ export class PlatformService implements IPlatformService {
 
 	private async getDeviceBuildInfoFilePath(device: Mobile.IDevice): Promise<string> {
 		let deviceAppData = this.$deviceAppDataFactory.create(this.$projectData.projectId, device.deviceInfo.platform, device);
-		let deviceRootPath = await deviceAppData.getDeviceProjectRootPath();
-		if (device.deviceInfo.platform.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
-			deviceRootPath = path.dirname(deviceRootPath);
-		}
-
+		let deviceRootPath = path.dirname(await deviceAppData.getDeviceProjectRootPath());
 		return path.join(deviceRootPath, buildInfoFileName);
 	}
 
@@ -729,15 +739,17 @@ export class PlatformService implements IPlatformService {
 		temp.track();
 		let uniqueFilePath = temp.path({ suffix: ".tmp" });
 		try {
-			await device.fileSystem.getFile(deviceFilePath, uniqueFilePath);
+			await device.fileSystem.getFile(deviceFilePath, this.$projectData.projectId, uniqueFilePath);
 		} catch (e) {
 			return null;
 		}
+
 		if (this.$fs.exists(uniqueFilePath)) {
 			let text = this.$fs.readText(uniqueFilePath);
 			shell.rm(uniqueFilePath);
 			return text;
 		}
+
 		return null;
 	}
 }
