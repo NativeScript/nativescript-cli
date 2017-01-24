@@ -101,7 +101,7 @@ export class FileSystemStub implements IFileSystem {
 
 	openFile(filename: string): void { }
 
-	createReadStream(path: string, options?: { flags?: string; encoding?: string; fd?: string; mode?: number; bufferSize?: number }): any {
+	createReadStream(path: string, options?: { flags?: string; encoding?: string; fd?: number; mode?: number; bufferSize?: number }): any {
 		return undefined;
 	}
 
