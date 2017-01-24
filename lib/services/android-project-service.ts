@@ -410,7 +410,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return Future.fromResult();
 	}
 
-	private cleanProject(projectRoot: string, options: string[]): IFuture<void> {
+	public cleanProject(projectRoot: string, options: string[]): IFuture<void> {
 		return (() => {
 			options.unshift("clean");
 
