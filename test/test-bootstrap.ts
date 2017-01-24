@@ -1,13 +1,18 @@
 import * as shelljs from "shelljs";
+import { use } from "chai";
+
 shelljs.config.silent = true;
 shelljs.config.fatal = true;
-global._ = require("lodash");
-global.$injector = require("../lib/common/yok").injector;
-import { use } from "chai";
+
+const cliGlobal = <ICliGlobal>global;
+
+cliGlobal._ = require("lodash");
+cliGlobal.$injector = require("../lib/common/yok").injector;
+
 use(require("chai-as-promised"));
 
 $injector.register("analyticsService", {
-	trackException: (): {wait(): void} => {
+	trackException: (): { wait(): void } => {
 		return {
 			wait: () => undefined
 		};
