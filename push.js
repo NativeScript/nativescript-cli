@@ -1,6 +1,8 @@
 import { AuthType, RequestMethod, KinveyRequest } from 'kinvey-node-sdk/dist/request';
 import { Client } from 'kinvey-node-sdk/dist/client';
 import { User } from 'kinvey-node-sdk/dist/entity';
+import { isDefined } from 'kinvey-node-sdk/dist/utils';
+import { KinveyError } from 'kinvey-node-sdk/dist/errors';
 import Device from './device';
 import { EventEmitter } from 'events';
 import localStorage from 'local-storage';
@@ -47,11 +49,17 @@ class Push extends EventEmitter {
     return Device.ready()
       .then(() => {
         if (this.isSupported() === false) {
-          throw new Error('Kinvey currently only supports push notifications on iOS and Android platforms.');
+          throw new KinveyError('Kinvey currently only supports push notifications on iOS and Android platforms.');
         }
 
-        if (typeof global.PushNotification === 'undefined') {
-          throw new Error('PhoneGap Push Notification Plugin is not installed.',
+        if (isDefined(global.device) === false) {
+          throw new KinveyError('Cordova Device Plugin is not installed.',
+            'Please refer to http://devcenter.kinvey.com/phonegap/guides/push#ProjectSetUp for help with'
+            + ' setting up your project.');
+        }
+
+        if (isDefined(global.PushNotification) === false) {
+          throw new KinveyError('PhoneGap Push Notification Plugin is not installed.',
             'Please refer to http://devcenter.kinvey.com/phonegap/guides/push#ProjectSetUp for help with'
             + ' setting up your project.');
         }
@@ -72,13 +80,13 @@ class Push extends EventEmitter {
           });
 
           this.phonegapPush.on('error', (error) => {
-            reject(new Error('An error occurred registering this device for push notifications.', error));
+            reject(new KinveyError('An error occurred registering this device for push notifications.', error));
           });
         });
       })
       .then((deviceId) => {
-        if (typeof deviceId === 'undefined') {
-          throw new Error('Unable to retrieve the device id to register this device for push notifications.');
+        if (isDefined(deviceId) === false) {
+          throw new KinveyError('Unable to retrieve the device id to register this device for push notifications.');
         }
 
         const user = User.getActiveUser(this.client);
@@ -132,11 +140,17 @@ class Push extends EventEmitter {
       })
       .then(() => {
         const user = User.getActiveUser(this.client);
-        const key = user ? `${this.pathname}_${user._id}` : `${this.pathname}__${options.userId}`;
+        const key = user ? `${this.pathname}_${user._id}` : `${this.pathname}_${options.userId}`;
         return localStorage.get(key);
       })
-      .then(({ deviceId }) => {
-        if (typeof deviceId === 'undefined') {
+      .then((pushConfig) => {
+        let deviceId;
+
+        if (isDefined(pushConfig)) {
+          deviceId = pushConfig.deviceId;
+        }
+
+        if (isDefined(deviceId) === false) {
           return null;
         }
 
@@ -154,12 +168,13 @@ class Push extends EventEmitter {
             platform: global.device.platform.toLowerCase(),
             framework: 'phonegap',
             deviceId: deviceId,
-            userId: user ? null : options.userId
+            userId: user ? undefined : options.userId
           },
           timeout: options.timeout,
           client: this.client
         });
-        return request.execute();
+        return request.execute()
+          .then(response => response.data);
       })
       .then((data) => {
         const user = User.getActiveUser(this.client);
@@ -171,4 +186,5 @@ class Push extends EventEmitter {
 }
 
 // Export
+export { Push };
 export default new Push();
