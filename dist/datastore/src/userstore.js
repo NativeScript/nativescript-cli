@@ -12,6 +12,12 @@ var _request = require('../../request');
 
 var _errors = require('../../errors');
 
+var _utils = require('../../utils');
+
+var _query = require('../../query');
+
+var _query2 = _interopRequireDefault(_query);
+
 var _networkstore = require('./networkstore');
 
 var _networkstore2 = _interopRequireDefault(_networkstore);
@@ -49,6 +55,45 @@ var UserStore = function (_NetworkStore) {
   }
 
   _createClass(UserStore, [{
+    key: 'lookup',
+    value: function lookup(query) {
+      var _this2 = this;
+
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+      var stream = _utils.KinveyObservable.create(function (observer) {
+        if ((0, _utils.isDefined)(query) && !(query instanceof _query2.default)) {
+          return observer.error(new _errors.KinveyError('Invalid query. It must be an instance of the Query class.'));
+        }
+
+        var request = new _request.KinveyRequest({
+          method: _request.RequestMethod.POST,
+          authType: _request.AuthType.Default,
+          url: _url2.default.format({
+            protocol: _this2.client.protocol,
+            host: _this2.client.host,
+            pathname: _this2.pathname + '/_lookup',
+            query: options.query
+          }),
+          properties: options.properties,
+          body: (0, _utils.isDefined)(query) ? query.toPlainObject().filter : null,
+          timeout: options.timeout,
+          client: _this2.client
+        });
+
+        return request.execute().then(function (response) {
+          return response.data;
+        }).then(function (data) {
+          return observer.next(data);
+        }).then(function () {
+          return observer.complete();
+        }).catch(function (error) {
+          return observer.error(error);
+        });
+      });
+      return stream;
+    }
+  }, {
     key: 'create',
     value: function create() {
       return _es6Promise2.default.reject(new _errors.KinveyError('Please use `User.signup()` to create a user.'));
@@ -67,7 +112,7 @@ var UserStore = function (_NetworkStore) {
       }
 
       if (!data._id) {
-        return _es6Promise2.default.ject(new _errors.KinveyError('User must have an _id.'));
+        return _es6Promise2.default.reject(new _errors.KinveyError('User must have an _id.'));
       }
 
       return _get(UserStore.prototype.__proto__ || Object.getPrototypeOf(UserStore.prototype), 'update', this).call(this, data, options);

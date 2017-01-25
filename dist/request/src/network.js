@@ -310,7 +310,7 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
               throw error;
             }
 
-            var socialIdentities = activeUser._socialIdentity;
+            var socialIdentities = (0, _utils.isDefined)(activeUser._socialIdentity) ? activeUser._socialIdentity : {};
             var sessionKey = Object.keys(socialIdentities).find(function (sessionKey) {
               return socialIdentities[sessionKey].identity === _identity.SocialIdentity.MobileIdentityConnect;
             });
