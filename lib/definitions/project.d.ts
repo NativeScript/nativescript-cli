@@ -163,6 +163,12 @@ interface IPlatformProjectService {
 	 * @returns {void}
 	 */
 	ensureConfigurationFileInAppResources(): void;
+
+	/**
+	 * Removes build artifacts specific to the platform
+	 * @returns {void}
+	 */
+	cleanProject(projectRoot: string, options: string[]): IFuture<void>
 }
 
 interface IAndroidProjectPropertiesManager {

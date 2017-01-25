@@ -338,6 +338,9 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	ensureConfigurationFileInAppResources(): void {
 		return null;
 	}
+	cleanProject(projectRoot: string, options: string[]): IFuture<void> {
+		return Future.fromResult();
+	}
 }
 
 export class ProjectDataService implements IProjectDataService {

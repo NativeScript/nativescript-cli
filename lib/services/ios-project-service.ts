@@ -653,8 +653,13 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				this.platformData.configurationFileName
 			);
 	}
+
 	public ensureConfigurationFileInAppResources(): void {
 		return null;
+	}
+
+	public cleanProject(projectRoot: string, options: string[]): IFuture<void> {
+		return Future.fromResult();
 	}
 
 	private mergeInfoPlists(): IFuture<void> {
