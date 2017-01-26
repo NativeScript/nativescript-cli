@@ -17,7 +17,8 @@ export class IOSProvisionService {
 
 	public pick(uuidOrName: string): IFuture<mobileprovision.provision.MobileProvision> {
 		return (() => {
-			const { match } = this.queryProvisioningProfilesAndDevices().wait();
+			const match = this.queryProvisioningProfilesAndDevices().wait().match;
+
 			return match.eligable.find(prov => prov.UUID === uuidOrName)
 				|| match.eligable.find(prov => prov.Name === uuidOrName)
 				|| match.nonEligable.find(prov => prov.UUID === uuidOrName)
@@ -27,7 +28,9 @@ export class IOSProvisionService {
 
 	public list(): IFuture<void> {
 		return (() => {
-			const { devices, match } = this.queryProvisioningProfilesAndDevices().wait();
+			const data = this.queryProvisioningProfilesAndDevices().wait(),
+				devices = data.devices,
+				match = data.match;
 
 			function formatSupportedDeviceCount(prov: mobileprovision.provision.MobileProvision) {
 				if (devices.length > 0 && prov.Type === "Development") {
