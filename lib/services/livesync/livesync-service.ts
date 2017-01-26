@@ -107,7 +107,7 @@ class LiveSyncService implements ILiveSyncService {
 			watchForChangeActions.push((event: string, filePath: string, dispatcher: IFutureDispatcher) =>
 				service.partialSync(event, filePath, dispatcher, applicationReloadAction));
 
-			await service.fullSync();
+			await service.fullSync(applicationReloadAction);
 		}
 
 		if (this.$options.watch && !this.$options.justlaunch) {
