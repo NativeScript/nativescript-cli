@@ -1,5 +1,71 @@
 NativeScript CLI Changelog
 ================
+2.5.0 (2017, February 1)
+==
+### New
+* [Implemented #2330](https://github.com/NativeScript/nativescript-cli/issues/2330) and [#1366](https://github.com/NativeScript/nativescript-cli/issues/1366): Run command syncs and watches for changes
+* [Implemented #2277](https://github.com/NativeScript/nativescript-cli/issues/2277): Fast livesync of images
+* [Implemented #2276](https://github.com/NativeScript/nativescript-cli/issues/2276): Support plugin development when using the watch option
+* [Implemented #2260]( https://github.com/NativeScript/nativescript-cli/issues/2260): Deprecate support for Node.js 4.x feature
+* [Implemented #2112]( https://github.com/NativeScript/nativescript-cli/issues/2112): Update webpack plugin to run as a npm script feature
+* [Implemented #1906]( https://github.com/NativeScript/nativescript-cli/issues/1906): TNS Doctor Android tools detection feature 
+* [Implemented #1845](https://github.com/NativeScript/nativescript-cli/issues/1845): Remove NPM as a dependency, use the NPM installed on users' machine feature
+
+### Fixed
+
+**Install and setup issues**
+
+* [Fixed #2302](https://github.com/NativeScript/nativescript-cli/issues/2302): App runs in Xcode and CLI but not on test flight
+* [Fixed #1922](https://github.com/NativeScript/nativescript-cli/issues/1922): TNS doctor does not detect if JDK is not installed and throws an error 
+* [Fixed #2312](https://github.com/NativeScript/nativescript-cli/issues/2312): Creating app w/ nativescript@next is not deploying App_Resources folder
+* [Fixed #2308](https://github.com/NativeScript/nativescript-cli/issues/2308): Using nativescript@next brings multiple libraries into node_modules
+* [Fixed #2301](https://github.com/NativeScript/nativescript-cli/issues/2301): Rework logic of handling 2 package.json files after tns create
+* [Fixed #2299](https://github.com/NativeScript/nativescript-cli/issues/2299): tns create TestApp --ng (or --tsc) takes too long
+* [Fixed #2257](https://github.com/NativeScript/nativescript-cli/issues/2257): {N} doesn't include @namespace node_modules
+
+**Build, Prepare, Run issues**
+
+* [Fixed #2213](https://github.com/NativeScript/nativescript-cli/issues/2213): When switching build configurations plugin platform files are copied into assets
+* [Fixed #2177](https://github.com/NativeScript/nativescript-cli/issues/2177): Prepare does not flatten scoped dependencies
+* [Fixed #2150](https://github.com/NativeScript/nativescript-cli/issues/2150): TNS run command broken with using --watch 
+* [Fixed #1740](https://github.com/NativeScript/nativescript-cli/issues/1740): Dev Dependencies (like Gulp, etc) getting built and build is failing because of which Gulp * [Fixed #](): integration is not working currently. 
+* [Fixed #2270](https://github.com/NativeScript/nativescript-cli/issues/2270): App is not rebuilt after removing plugin with native dependencies bug
+* [Fixed #2253](https://github.com/NativeScript/nativescript-cli/issues/2253): Prepare command with bundle option doesn't copy files
+
+**Livesync issues**
+
+* [Fixed #2341](https://github.com/NativeScript/nativescript-cli/issues/2341): LiveSync after {N} update uses old app on the device
+* [Fixed #2325](https://github.com/NativeScript/nativescript-cli/issues/2325): tns livesync ios --watch --emulator doesn't watch html or sass changes, only ts
+* [Fixed #2221](https://github.com/NativeScript/nativescript-cli/issues/2221): Provision to watch files in symlinked directories for livesync command
+* [Fixed #2267](https://github.com/NativeScript/nativescript-cli/issues/2267): Cannot run livesync with ios simulator
+
+**Emulate/ Device issues**
+
+* [Fixed #1522](https://github.com/NativeScript/nativescript-cli/issues/1522): Cannot specify emulator device while debugging 
+* [Fixed #2345](https://github.com/NativeScript/nativescript-cli/issues/2345): Option --device {DeviceName} not working for emulate/run/debug/deploy bug
+* [Fixed #2344](https://github.com/NativeScript/nativescript-cli/issues/2344): Emulate command not working for iOS
+
+**Debug issues**
+
+* [Fixed #2315](https://github.com/NativeScript/nativescript-cli/issues/2315): tns debug ios --watch fails on newly created app if there is already deployed app with the same app id
+* [Fixed #2292](https://github.com/NativeScript/nativescript-cli/issues/2292): "tns debug {platform} --watch" inconvenient behavior
+
+**Console logging issues**
+
+* [Fixed #2385](https://github.com/NativeScript/nativescript-cli/issues/2385): console line breaks in terminal are non existent Android bug
+* [Fixed #2266](https://github.com/NativeScript/nativescript-cli/issues/2266): CLI crashes/stops responding after ~80 console.logs
+
+**Other issues**
+* [Fixed #1594](https://github.com/NativeScript/nativescript-cli/issues/1594): CLI does not respect shelljs errors
+* [Fixed #2395](https://github.com/NativeScript/nativescript-cli/issues/2395): Error occurs when --justlaunch option used
+* [Fixed #2379](https://github.com/NativeScript/nativescript-cli/issues/2379): Next release will be not backward compatbile with old proejcts.
+* [Fixed #2370](https://github.com/NativeScript/nativescript-cli/issues/2370): Error: ENOENT: no such file or directory, chmod 'C:\Users\NSBUIL~1\AppData\Local\Temp\nsbuilduser\KillSwitches\cli'
+* [Fixed #2240](https://github.com/NativeScript/nativescript-cli/issues/2240): Hooks inside app folder for template-hello-world-ng on tns create
+* [Fixed #2228](https://github.com/NativeScript/nativescript-cli/issues/2228): Homebrew as root is no longer supported
+* [Fixed #2227]( https://github.com/NativeScript/nativescript-cli/issues/2227): Remove use of lib/iOS folder for native plugins
+* [Fixed #282]( https://github.com/NativeScript/nativescript-cli/issues/282): "tns platform add android --path TNSApp --symlink" does not work on Windows
+* [Fixed #1802](https://github.com/NativeScript/nativescript-cli/issues/1802): semver copied to platforms/android even though it's a dev dependency 
+
 2.4.2 (2016, December 8)
 ==
 ### Fixed
