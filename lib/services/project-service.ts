@@ -30,7 +30,7 @@ export class ProjectService implements IProjectService {
 		this.createPackageJson(projectDir, projectId);
 
 		this.$logger.trace(`Creating a new NativeScript project with name ${projectName} and id ${projectId} at location ${projectDir}`);
-		if(!selectedTemplate) {
+		if (!selectedTemplate) {
 			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["default"];
 		}
 		let templatePath = await this.$projectTemplatesService.prepareTemplate(selectedTemplate, projectDir);
@@ -78,7 +78,6 @@ export class ProjectService implements IProjectService {
 		this.$fs.createDirectory(path.join(projectDir, "platforms"));
 	}
 
-
 	private removeMergedDependencies(projectDir: string, templatePackageJsonData: any): void {
 		let extractedTemplatePackageJsonPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.PACKAGE_JSON_FILE_NAME);
 		for (let key in templatePackageJsonData) {
@@ -105,8 +104,7 @@ export class ProjectService implements IProjectService {
 			}
 			this.$logger.trace("New project package.json data: ", projectPackageJsonData);
 			this.$fs.writeJson(projectPackageJsonPath, projectPackageJsonData);
-		}
-		else {
+		} else {
 			this.$errors.failWithoutHelp(`Couldn't find package.json data in installed template`);
 		}
 	}

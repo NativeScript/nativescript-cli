@@ -39,7 +39,7 @@ class ProjectIntegrationTest {
 
 	public async createProject(projectName: string, template?: string): Promise<void> {
 		let projectService = this.testInjector.resolve("projectService");
-		if(!template) {
+		if (!template) {
 			template = constants.RESERVED_TEMPLATE_NAMES["default"];
 		}
 		return projectService.createProject(projectName, template);
