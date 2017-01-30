@@ -27,7 +27,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		let cliVersionRange = `~${this.$staticConfig.version}`;
 		let latestVersion = await this.getLatestVersion(packageName);
 		if (semver.satisfies(latestVersion, cliVersionRange)) {
-			return latestVersion;
+			return Promise.resolve(latestVersion);
 		}
 		let data = await this.$npm.view(packageName, { json: true, "versions": true });
 

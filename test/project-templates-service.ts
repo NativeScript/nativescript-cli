@@ -4,6 +4,7 @@ import { ProjectTemplatesService } from "../lib/services/project-templates-servi
 import { assert } from "chai";
 import * as path from "path";
 import temp = require("temp");
+import * as constants from "../lib/constants";
 
 let isDeleteDirectoryCalledForNodeModulesDir = false;
 let nativeScriptValidatedTemplatePath = "nsValidatedTemplatePath";
@@ -92,7 +93,7 @@ describe("project-templates-service", () => {
 				testInjector = createTestInjector({ shouldNpmInstallThrow: false, npmInstallationDirContents: [], npmInstallationDirNodeModulesContents: [] });
 				projectTemplatesService = testInjector.resolve("projectTemplatesService");
 				let tempFolder = temp.mkdirSync("preparetemplate");
-				let actualPathToTemplate = await projectTemplatesService.prepareTemplate(undefined, tempFolder);
+				let actualPathToTemplate = await projectTemplatesService.prepareTemplate(constants.RESERVED_TEMPLATE_NAMES["default"], tempFolder);
 				assert.strictEqual(path.basename(actualPathToTemplate), nativeScriptValidatedTemplatePath);
 				assert.strictEqual(isDeleteDirectoryCalledForNodeModulesDir, true, "When correct path is returned, template's node_modules directory should be deleted.");
 			});

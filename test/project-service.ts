@@ -39,6 +39,9 @@ class ProjectIntegrationTest {
 
 	public async createProject(projectName: string, template?: string): Promise<void> {
 		let projectService = this.testInjector.resolve("projectService");
+		if(!template) {
+			template = constants.RESERVED_TEMPLATE_NAMES["default"];
+		}
 		return projectService.createProject(projectName, template);
 	}
 
@@ -67,7 +70,7 @@ class ProjectIntegrationTest {
 		let tnsCoreModulesRecord = packageJsonContent["dependencies"][constants.TNS_CORE_MODULES_NAME];
 		assert.isTrue(tnsCoreModulesRecord !== null);
 
-		let sourceDir = projectSourceDirectory || options.copyFrom;
+		let sourceDir = projectSourceDirectory || options.template;
 
 		let expectedFiles = fs.enumerateFilesInDirectorySync(sourceDir);
 		let actualFiles = fs.enumerateFilesInDirectorySync(appDirectoryPath);
@@ -436,7 +439,7 @@ describe("Project Service Tests", () => {
 				options.path = tempFolder;
 
 				await projectIntegrationTest.createProject(projectName);
-				options.copyFrom = defaultTemplatePath;
+				options.template = defaultTemplatePath;
 
 				await projectIntegrationTest.assertProject(tempFolder, projectName, `org.nativescript.${projectName}`, null);
 			});
