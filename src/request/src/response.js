@@ -26,10 +26,11 @@ const StatusCode = {
   Ok: 200,
   Created: 201,
   Empty: 204,
-  RedirectTemporarily: 301,
-  RedirectPermanently: 302,
+  MovedPermanently: 301,
+  Found: 302,
   NotModified: 304,
-  ResumeIncomplete: 308,
+  TemporaryRedirect: 307,
+  PermanentRedirect: 308,
   Unauthorized: 401,
   NotFound: 404,
   ServerError: 500
@@ -97,8 +98,11 @@ export default class Response {
 
   isSuccess() {
     return (this.statusCode >= 200 && this.statusCode < 300)
-      || this.statusCode === StatusCode.RedirectPermanently
-      || this.statusCode === StatusCode.NotModified;
+      || this.statusCode === StatusCode.MovedPermanently
+      || this.statusCode === StatusCode.Found
+      || this.statusCode === StatusCode.NotModified
+      || this.statusCode === StatusCode.TemporaryRedirect
+      || this.statusCode === StatusCode.PermanentRedirect;
   }
 }
 

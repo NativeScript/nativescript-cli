@@ -37,6 +37,55 @@ describe('KinveyRequest', () => {
         });
     });
 
+    it('should redirect', function() {
+      // Setup API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .get('/foo')
+        .reply(307, {}, {
+          Location: 'http://echo.jsontest.com/key/value/one/two'
+        });
+
+      const request = new KinveyRequest({
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: '/foo'
+        })
+      });
+      return request.execute()
+        .then((response) => {
+          expect(response.statusCode).toEqual(200);
+          expect(response.data).toEqual({
+            one: 'two',
+            key: 'value'
+          });
+        });
+    });
+
+    it('should not redirect', function() {
+      // Setup API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .get('/foo')
+        .reply(307, {}, {
+          Location: 'http://echo.jsontest.com/key/value/one/two'
+        });
+
+      const request = new KinveyRequest({
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: '/foo'
+        }),
+        followRedirect: false
+      });
+      return request.execute()
+        .then((response) => {
+          expect(response.statusCode).toEqual(307);
+          expect(response.data).toEqual({});
+          expect(response.headers.get('Location')).toEqual('http://echo.jsontest.com/key/value/one/two');
+        });
+    });
+
     it('should throw a ServerError', function() {
       const kinveyRequestId = randomString();
 
