@@ -1,4 +1,11 @@
 ## Changelog
+## [3.3.5](https://github.com/Kinvey/kinvey-nodejs/tree/v3.3.5) (2017-01-25)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.3.4...v3.3.5)<br/>
+
+**Changes**
+- Add `User.lookup()` API to be able to perform [user discovery](http://devcenter.kinvey.com/nodejs/guides/users#lookup). [#96](https://github.com/Kinvey/js-sdk/pull/96)
+- Fix a bug that causes any requests sent to the backend after updating a user to respond with a `401` status code. [#101](https://github.com/Kinvey/js-sdk/pull/101)
+
 ## [3.3.4](https://github.com/Kinvey/kinvey-nodejs/tree/v3.3.4) (2017-01-12)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.3.3...v3.3.4)<br/>
 
