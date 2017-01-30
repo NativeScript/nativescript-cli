@@ -83,7 +83,7 @@ export default class User {
    * @param {Metadata|Object} metadata The metadata.
    */
   set metadata(metadata) {
-    this.data[kmdAttribute] = result(metadata, 'toPlainObjecta', metadata);
+    this.data[kmdAttribute] = result(metadata, 'toPlainObject', metadata);
   }
 
   /**

@@ -1,6 +1,6 @@
 import Request, { KinveyRequest } from 'src/request';
-import Client from 'src/client';
-import { TimeoutError } from 'src/errors';
+import { ServerError, TimeoutError } from 'src/errors';
+import { randomString } from 'src/utils';
 import url from 'url';
 import nock from 'nock';
 import expect from 'expect';
@@ -15,27 +15,72 @@ describe('KinveyRequest', () => {
   });
 
   describe('execute()', () => {
-    it('should timeout', function() {
-      const defaultTimeout = 1000;
-      const client = new Client({
-        defaultTimeout: defaultTimeout
-      });
+    it('should return the response', function() {
+      const reply = { foo: randomString() };
 
-      // Setup nock response
-      nock(client.apiHostname, { encodedQueryParams: true })
+      // Setup API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
         .get('/foo')
-        .delay(defaultTimeout + 1)
-        .reply(200, null, {
-          'Content-Type': 'application/json; charset=utf-8'
+        .reply(200, reply);
+
+      const request = new KinveyRequest({
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: '/foo'
+        })
+      });
+      return request.execute()
+        .then((response) => {
+          expect(response.statusCode).toEqual(200);
+          expect(response.data).toEqual(reply);
+        });
+    });
+
+    it('should throw a ServerError', function() {
+      const kinveyRequestId = randomString();
+
+      // Setup API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .get('/foo')
+        .reply(500, {
+          message: 'An error has occurred on the server.',
+          debug: 'Please retry the request again.'
+        }, {
+          'X-Kinvey-Request-ID': kinveyRequestId
         });
 
       const request = new KinveyRequest({
         url: url.format({
-          protocol: client.apiProtocol,
-          host: client.apiHost,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: '/foo'
-        }),
-        client: client
+        })
+      });
+      return request.execute()
+        .catch((error) => {
+          expect(error).toBeA(ServerError);
+          expect(error.name).toEqual('ServerError');
+          expect(error.message).toEqual('An error has occurred on the server.');
+          expect(error.debug).toEqual('Please retry the request again.');
+          expect(error.code).toEqual(500);
+          expect(error.kinveyRequestId).toEqual(kinveyRequestId);
+        });
+    });
+
+    it('should throw a TimeoutError', function() {
+      // Setup API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .get('/foo')
+        .socketDelay(2000)
+        .reply(200);
+
+      const request = new KinveyRequest({
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: '/foo'
+        })
       });
       return request.execute()
         .catch((error) => {

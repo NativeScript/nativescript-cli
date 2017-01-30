@@ -2,6 +2,7 @@ import Middleware from './middleware';
 import Promise from 'es6-promise';
 import httpRequest from 'request';
 import { isDefined } from 'src/utils';
+import { TimeoutError } from 'src/errors';
 import pkg from 'package.json';
 
 function deviceInformation() {
@@ -46,16 +47,20 @@ export default class HttpMiddleware extends Middleware {
         timeout: timeout
       }, (error, response, body) => {
         if (isDefined(response) === false) {
-          reject(error);
-        } else {
-          resolve({
-            response: {
-              statusCode: response.statusCode,
-              headers: response.headers,
-              data: body
-            }
-          });
+          if (error.code === 'ESOCKETTIMEDOUT' || error.code === 'ETIMEDOUT') {
+            return reject(new TimeoutError('The request timed out.'));
+          }
+
+          return reject(error);
         }
+
+        return resolve({
+          response: {
+            statusCode: response.statusCode,
+            headers: response.headers,
+            data: body
+          }
+        });
       });
     });
     return promise;
