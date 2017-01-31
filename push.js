@@ -1,16 +1,16 @@
-import { AuthType, RequestMethod, KinveyRequest } from 'kinvey-node-sdk/dist/request';
+import { AuthType, CacheRequest, RequestMethod, KinveyRequest } from 'kinvey-node-sdk/dist/request';
 import { Client } from 'kinvey-node-sdk/dist/client';
 import { User } from 'kinvey-node-sdk/dist/entity';
 import { isDefined } from 'kinvey-node-sdk/dist/utils';
-import { KinveyError } from 'kinvey-node-sdk/dist/errors';
+import { KinveyError, NotFoundError } from 'kinvey-node-sdk/dist/errors';
 import Device from './device';
 import { EventEmitter } from 'events';
-import localStorage from 'local-storage';
 import Promise from 'es6-promise';
 import url from 'url';
+const APP_DATA_NAMESPACE = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const PUSH_NAMESPACE = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 const NOTIFICATION_EVENT = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
-
+let phonegapPush;
 
 class Push extends EventEmitter {
   get pathname() {
@@ -64,28 +64,47 @@ class Push extends EventEmitter {
             + ' setting up your project.');
         }
 
-        return new Promise((resolve, reject) => {
-          this.phonegapPush = global.PushNotification.init(options);
+        return new Promise((resolve) => {
+          if (phonegapPush) {
+            return phonegapPush.unregister(() => {
+              resolve();
+            }, () => {
+              resolve();
+            });
+          }
 
-          this.phonegapPush.on(NOTIFICATION_EVENT, (data) => {
+          return resolve();
+        });
+      })
+      .then(() => {
+        return new Promise((resolve, reject) => {
+          phonegapPush = global.PushNotification.init(options);
+
+          phonegapPush.on(NOTIFICATION_EVENT, (data) => {
             this.emit(NOTIFICATION_EVENT, data);
           });
 
-          this.phonegapPush.on('registration', (data) => {
+          phonegapPush.on('registration', (data) => {
             resolve(data.registrationId);
           });
 
-          this.phonegapPush.on('error', (error) => {
+          phonegapPush.on('error', (error) => {
             reject(new KinveyError('An error occurred registering this device for push notifications.', error));
           });
         });
       })
       .then((deviceId) => {
+        const user = User.getActiveUser(this.client);
+
         if (isDefined(deviceId) === false) {
           throw new KinveyError('Unable to retrieve the device id to register this device for push notifications.');
         }
 
-        const user = User.getActiveUser(this.client);
+        if (isDefined(user) === false && isDefined(options.userId) === false) {
+          throw new KinveyError('Unable to register this device for push notificaitons.',
+            'You must login a user or provide a userId to assign the device token.');
+        }
+
         const request = new KinveyRequest({
           method: RequestMethod.POST,
           url: url.format({
@@ -105,12 +124,31 @@ class Push extends EventEmitter {
           client: this.client
         });
         return request.execute()
-          .then(response => response.data)
-          .then((data) => {
-            const key = user ? `${this.pathname}_${user._id}` : `${this.pathname}_${options.userId}`;
-            localStorage.set(key, { deviceId: deviceId });
-            return data;
-          });
+          .then(() => deviceId);
+      })
+      .then((deviceId) => {
+        const user = User.getActiveUser(this.client);
+        let _id = options.userId;
+
+        if (isDefined(user)) {
+          _id = user._id;
+        }
+
+        const request = new CacheRequest({
+          method: RequestMethod.PUT,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/__device`
+          }),
+          data: {
+            _id: _id,
+            deviceId: deviceId
+          },
+          client: this.client
+        });
+        return request.execute()
+          .then(() => deviceId);
       });
   }
 
@@ -122,9 +160,8 @@ class Push extends EventEmitter {
         }
 
         return new Promise((resolve) => {
-          if (this.phonegapPush) {
-            return this.phonegapPush.unregister(() => {
-              this.phonegapPush = null;
+          if (phonegapPush) {
+            return phonegapPush.unregister(() => {
               resolve();
             }, () => {
               resolve();
@@ -136,21 +173,54 @@ class Push extends EventEmitter {
       })
       .then(() => {
         const user = User.getActiveUser(this.client);
-        const key = user ? `${this.pathname}_${user._id}` : `${this.pathname}_${options.userId}`;
-        return localStorage.get(key);
+        let _id = options.userId;
+
+        if (isDefined(user) === false && isDefined(options.userId) === false) {
+          throw new KinveyError('Unable to unregister this device for push notificaitons.',
+            'You must login a user or provide a userId to unassign the device token.');
+        }
+
+        if (isDefined(user)) {
+          _id = user._id;
+        }
+
+        const request = new CacheRequest({
+          method: RequestMethod.GET,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/__device/${_id}`
+          }),
+          client: this.client
+        });
+        return request.execute()
+          .catch((error) => {
+            if (error instanceof NotFoundError) {
+              return {};
+            }
+
+            throw error;
+          })
+          .then((response) => {
+            if (isDefined(response)) {
+              return response.data;
+            }
+
+            return null;
+          });
       })
-      .then((pushConfig) => {
+      .then((device) => {
+        const user = User.getActiveUser(this.client);
         let deviceId;
 
-        if (isDefined(pushConfig)) {
-          deviceId = pushConfig.deviceId;
+        if (isDefined(device)) {
+          deviceId = device.deviceId;
         }
 
         if (isDefined(deviceId) === false) {
           return null;
         }
 
-        const user = User.getActiveUser(this.client);
         const request = new KinveyRequest({
           method: RequestMethod.POST,
           url: url.format({
@@ -172,11 +242,33 @@ class Push extends EventEmitter {
         return request.execute()
           .then(response => response.data);
       })
-      .then((data) => {
+      .then(() => {
         const user = User.getActiveUser(this.client);
-        const key = user ? `${this.pathname}_${user._id}` : `${this.pathname}_${options.userId}`;
-        localStorage.remove(key);
-        return data;
+        let _id = options.userId;
+
+        if (isDefined(user)) {
+          _id = user._id;
+        }
+
+        const request = new CacheRequest({
+          method: RequestMethod.DELETE,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/__device/${_id}`
+          }),
+          client: this.client
+        });
+
+        return request.execute()
+          .catch((error) => {
+            if (error instanceof NotFoundError) {
+              return {};
+            }
+
+            throw error;
+          })
+          .then(() => null);
       });
   }
 }
