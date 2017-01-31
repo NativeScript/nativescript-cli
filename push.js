@@ -8,13 +8,13 @@ import { EventEmitter } from 'events';
 import localStorage from 'local-storage';
 import Promise from 'es6-promise';
 import url from 'url';
-const pushNamespace = process.env.KINVEY_PUSH_NAMESPACE || 'push';
-const notificationEvent = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
+const PUSH_NAMESPACE = process.env.KINVEY_PUSH_NAMESPACE || 'push';
+const NOTIFICATION_EVENT = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
 
 
 class Push extends EventEmitter {
   get pathname() {
-    return `/${pushNamespace}/${this.client.appKey}`;
+    return `/${PUSH_NAMESPACE}/${this.client.appKey}`;
   }
 
   get client() {
@@ -38,11 +38,11 @@ class Push extends EventEmitter {
   }
 
   onNotification(listener) {
-    return this.on(notificationEvent, listener);
+    return this.on(NOTIFICATION_EVENT, listener);
   }
 
   onceNotification(listener) {
-    return this.once(notificationEvent, listener);
+    return this.once(NOTIFICATION_EVENT, listener);
   }
 
   register(options = {}) {
@@ -64,15 +64,11 @@ class Push extends EventEmitter {
             + ' setting up your project.');
         }
 
-        return this.unregister(options)
-          .catch(() => null);
-      })
-      .then(() => {
         return new Promise((resolve, reject) => {
           this.phonegapPush = global.PushNotification.init(options);
 
-          this.phonegapPush.on(notificationEvent, (data) => {
-            this.emit(notificationEvent, data);
+          this.phonegapPush.on(NOTIFICATION_EVENT, (data) => {
+            this.emit(NOTIFICATION_EVENT, data);
           });
 
           this.phonegapPush.on('registration', (data) => {
