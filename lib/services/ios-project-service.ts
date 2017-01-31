@@ -430,7 +430,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private async addFramework(frameworkPath: string): Promise<void> {
 		await this.validateFramework(frameworkPath);
 
-		let project = this.createPbxProj();
 		let frameworkName = path.basename(frameworkPath, path.extname(frameworkPath));
 		let frameworkBinaryPath = path.join(frameworkPath, frameworkName);
 		let isDynamic = _.includes((await this.$childProcess.spawnFromEvent("otool", ["-Vh", frameworkBinaryPath], "close")).stdout, " DYLIB ");
@@ -442,6 +441,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 
 		let frameworkRelativePath = '$(SRCROOT)/' + this.getLibSubpathRelativeToProjectPath(frameworkPath);
+		let project = this.createPbxProj();
 		project.addFramework(frameworkRelativePath, frameworkAddOptions);
 		this.savePbxProj(project);
 
