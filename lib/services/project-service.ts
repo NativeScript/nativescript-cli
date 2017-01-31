@@ -33,13 +33,14 @@ export class ProjectService implements IProjectService {
 		if (!selectedTemplate) {
 			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["default"];
 		}
-		let templatePath = await this.$projectTemplatesService.prepareTemplate(selectedTemplate, projectDir);
-		await this.extractTemplate(projectDir, templatePath);
-
-		let packageName = constants.TNS_CORE_MODULES_NAME;
-		await this.$npm.install(packageName, projectDir, { save: true, "save-exact": true });
 
 		try {
+			let templatePath = await this.$projectTemplatesService.prepareTemplate(selectedTemplate, projectDir);
+			await this.extractTemplate(projectDir, templatePath);
+
+			let packageName = constants.TNS_CORE_MODULES_NAME;
+			await this.$npm.install(packageName, projectDir, { save: true, "save-exact": true });
+
 			let templatePackageJsonData = this.getDataFromJson(templatePath);
 			this.mergeProjectAndTemplateProperties(projectDir, templatePackageJsonData); //merging dependencies from template (dev && prod)
 			this.removeMergedDependencies(projectDir, templatePackageJsonData);
