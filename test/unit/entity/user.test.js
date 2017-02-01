@@ -1,6 +1,7 @@
 import { User } from 'src/entity';
 import { randomString } from 'src/utils';
 import { ActiveUserError, InvalidCredentialsError, KinveyError } from 'src/errors';
+import { CacheRequest } from 'src/request';
 import { TestUser } from '../mocks';
 import Query from 'src/query';
 import expect from 'expect';
@@ -77,7 +78,7 @@ describe('User', function() {
         });
     });
 
-    it('should login a user', async function() {
+    it('should login a user', function() {
       let user = new User();
       const username = randomString();
       const password = randomString();
@@ -89,6 +90,7 @@ describe('User', function() {
           authtoken: randomString()
         },
         username: username,
+        password: password,
         _acl: {
           creator: randomString()
         }
@@ -102,18 +104,20 @@ describe('User', function() {
         });
 
       // Logout the test user
-      await TestUser.logout();
+      return TestUser.logout()
+        .then(() => {
+          return user.login(username, password);
+        })
+        .then((user) => {
+          expect(user._id).toEqual(reply._id);
+          expect(user.authtoken).toEqual(reply._kmd.authtoken);
+          expect(user.username).toEqual(reply.username);
+          expect(user.data.password).toEqual(undefined);
+          expect(user.isActive()).toEqual(true);
 
-      // Login
-      user = await user.login(username, password);
-
-      // Expectations
-      expect(user._id).toEqual(reply._id);
-      expect(user.authtoken).toEqual(reply._kmd.authtoken);
-      expect(user.username).toEqual(reply.username);
-
-      const isActive = await user.isActive();
-      expect(isActive).toEqual(true);
+          const storedUser = CacheRequest.getActiveUser(this.client);
+          expect(storedUser.password).toEqual(undefined);
+        });
     });
 
     it('should login a user by providing credentials as an object', async function() {
