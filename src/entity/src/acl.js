@@ -1,6 +1,5 @@
 import { KinveyError } from 'src/errors';
 import { isDefined } from 'src/utils';
-import cloneDeep from 'lodash/cloneDeep';
 import isPlainObject from 'lodash/isPlainObject';
 import isArray from 'lodash/isArray';
 import assign from 'lodash/assign';
@@ -13,8 +12,8 @@ import assign from 'lodash/assign';
  * var acl = new Kinvey.Acl(entity);
  */
 export default class Acl {
-  constructor(entity = {}) {
-    if (!isPlainObject(entity)) {
+  constructor(entity) {
+    if (isPlainObject(entity) === false) {
       throw new KinveyError('entity argument must be an object');
     }
 
@@ -24,7 +23,8 @@ export default class Acl {
      * @private
      * @type {Object}
      */
-    this.acl = cloneDeep(entity._acl);
+    entity._acl = entity._acl || {};
+    this.acl = entity._acl;
   }
 
   get creator() {
