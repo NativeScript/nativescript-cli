@@ -1,14 +1,12 @@
 import { KinveyError } from 'src/errors';
 import { isDefined } from 'src/utils';
-import cloneDeep from 'lodash/clone';
 import isPlainObject from 'lodash/isPlainObject';
-const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 /**
  * The Metadata class is used to as a wrapper for accessing the `_kmd` properties of an entity.
  */
 export default class Metadata {
-  constructor(entity = {}) {
+  constructor(entity) {
     if (!isPlainObject(entity)) {
       throw new KinveyError('entity argument must be an object');
     }
@@ -19,7 +17,7 @@ export default class Metadata {
      * @private
      * @type {Object}
      */
-    this.kmd = cloneDeep(entity[kmdAttribute] || {});
+    this.kmd = entity._kmd || {};
   }
 
   get createdAt() {
@@ -59,7 +57,7 @@ export default class Metadata {
   }
 
   isLocal() {
-    return !!this.kmd.local;
+    return this.kmd.local === true;
   }
 
   toPlainObject() {
