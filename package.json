@@ -8,7 +8,7 @@
     "tns": "./bin/tns",
     "nativescript": "./bin/tns"
   },
-  "main": "./lib/nativescript-cli.js",
+  "main": "./lib/nativescript-cli-lib.js",
   "scripts": {
     "test": "node test-scripts/istanbul.js",
     "postinstall": "node postinstall.js",
