@@ -12,14 +12,14 @@ describe('Acl', function() {
       }).toThrow(KinveyError, /entity argument must be an object/);
     });
 
-    it('should create empty acl when the entity does not contain an acl property', function() {
+    it('should create an empty acl when the entity does not contain an _acl property', function() {
       const entity = {};
       const acl = new Acl(entity);
       expect(acl.toPlainObject()).toEqual({});
       expect(entity._acl).toEqual({});
     });
 
-    it('should create use acl property on the entity', function() {
+    it('should use the _acl property on the entity', function() {
       const aclProp = { r: [] };
       const entity = { _acl: aclProp };
       const acl = new Acl(entity);
