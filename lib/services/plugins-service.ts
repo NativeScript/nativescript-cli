@@ -110,7 +110,7 @@ export class PluginsService implements IPluginsService {
 		let appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
 		if (appFolderExists) {
 			this.preparePluginScripts(pluginData, platform);
-			this.preparePluginNativeCode(pluginData, platform);
+			await this.preparePluginNativeCode(pluginData, platform);
 
 			// Show message
 			this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
