@@ -1,8 +1,33 @@
 import { Acl } from 'src/entity';
 import { randomString } from 'src/utils';
+import { KinveyError } from 'src/errors';
 import expect from 'expect';
 
 describe('Acl', function() {
+  describe('constructor', function() {
+    it('should throw an error if an entity is not provided', function() {
+      expect(() => {
+        const acl = new Acl();
+        return acl;
+      }).toThrow(KinveyError, /entity argument must be an object/);
+    });
+
+    it('should create empty acl when the entity does not contain an acl property', function() {
+      const entity = {};
+      const acl = new Acl(entity);
+      expect(acl.toPlainObject()).toEqual({});
+      expect(entity._acl).toEqual({});
+    });
+
+    it('should create use acl property on the entity', function() {
+      const aclProp = { r: [] };
+      const entity = { _acl: aclProp };
+      const acl = new Acl(entity);
+      expect(acl.toPlainObject()).toEqual(aclProp);
+      expect(entity._acl).toEqual(aclProp);
+    });
+  });
+
   describe('creator', function() {
     it('should be creator value', function() {
       const creator = randomString();
@@ -149,10 +174,12 @@ describe('Acl', function() {
     });
 
     it('should add a reader', function() {
+      const entity = { _acl: {} };
       const user = randomString();
-      const acl = new Acl({ _acl: {} });
+      const acl = new Acl(entity);
       acl.addReader(user);
       expect(acl.readers).toEqual([user]);
+      expect(entity._acl.r).toEqual([user]);
     });
   });
 
