@@ -1,8 +1,33 @@
 import { Metadata } from 'src/entity';
 import { randomString } from 'src/utils';
+import { KinveyError } from 'src/errors';
 import expect from 'expect';
 
 describe('Metadata', function() {
+  describe('constructor', function() {
+    it('should throw an error if an entity is not provided', function() {
+      expect(() => {
+        const metadata = new Metadata();
+        return metadata;
+      }).toThrow(KinveyError, /entity argument must be an object/);
+    });
+
+    it('should create an empty metadata when the entity does not contain an _kmd property', function() {
+      const entity = {};
+      const metadata = new Metadata(entity);
+      expect(metadata.toPlainObject()).toEqual({});
+      expect(entity._kmd).toEqual(undefined);
+    });
+
+    it('should use the _kmd property on the entity', function() {
+      const kmdProp = { lmt: randomString() };
+      const entity = { _kmd: kmdProp };
+      const metadata = new Metadata(entity);
+      expect(metadata.toPlainObject()).toEqual(kmdProp);
+      expect(entity._kmd).toEqual(kmdProp);
+    });
+  });
+
   describe('createdAt', function() {
     it('should return undefined for entity create time', function() {
       const metadata = new Metadata({ _kmd: {} });
