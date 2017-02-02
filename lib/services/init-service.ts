@@ -65,7 +65,7 @@ export class InitService implements IInitService {
 
 			// In case console is interactive and --force is not specified, do not read the version from package.json, show all available versions to the user.
 			let tnsCoreModulesVersionInPackageJson = this.useDefaultValue ? projectData.dependencies[constants.TNS_CORE_MODULES_NAME] : null;
-			projectData.dependencies[constants.TNS_CORE_MODULES_NAME] = this.$options.tnsModulesVersion || tnsCoreModulesVersionInPackageJson || (await this.getVersionData(constants.TNS_CORE_MODULES_NAME))["version"];
+			projectData.dependencies[constants.TNS_CORE_MODULES_NAME] = tnsCoreModulesVersionInPackageJson || (await this.getVersionData(constants.TNS_CORE_MODULES_NAME))["version"];
 
 			this.$fs.writeJson(this.projectFilePath, projectData);
 		} catch (err) {

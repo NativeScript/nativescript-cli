@@ -65,7 +65,6 @@ interface IOptions extends ICommonOptions {
 	baseConfig: string;
 	client: boolean;
 	compileSdk: number;
-	copyFrom: string;
 	copyTo: string;
 	debugTransport: boolean;
 	emulator: boolean;
@@ -81,7 +80,6 @@ interface IOptions extends ICommonOptions {
 	keyStoreAliasPassword: string;
 	keyStorePassword: string;
 	keyStorePath: string;
-	linkTo: string;
 	ng: boolean;
 	tsc: boolean;
 	androidTypings: boolean;
@@ -90,7 +88,6 @@ interface IOptions extends ICommonOptions {
 	port: Number;
 	production: boolean; //npm flag
 	sdk: string;
-	tnsModulesVersion: string;
 	teamId: string;
 	syncAllFiles: boolean;
 	liveEdit: boolean;

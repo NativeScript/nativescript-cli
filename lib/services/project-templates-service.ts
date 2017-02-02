@@ -5,37 +5,28 @@ temp.track();
 
 export class ProjectTemplatesService implements IProjectTemplatesService {
 
-	public constructor(private $errors: IErrors,
-		private $fs: IFileSystem,
+	public constructor(private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $npmInstallationManager: INpmInstallationManager) { }
 
 	public async prepareTemplate(originalTemplateName: string, projectDir: string): Promise<string> {
 		let realTemplatePath: string;
-		if (originalTemplateName) {
-			// support <reserved_name>@<version> syntax
-			let data = originalTemplateName.split("@"),
-				name = data[0],
-				version = data[1];
+		// support <reserved_name>@<version> syntax
+		let data = originalTemplateName.split("@"),
+			name = data[0],
+			version = data[1];
 
-			if (constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()]) {
-				realTemplatePath = await this.prepareNativeScriptTemplate(constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()], version, projectDir);
-			} else {
-				// Use the original template name, specified by user as it may be case-sensitive.
-				realTemplatePath = await this.prepareNativeScriptTemplate(name, version, projectDir);
-			}
+		if (constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()]) {
+			realTemplatePath = await this.prepareNativeScriptTemplate(constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()], version, projectDir);
 		} else {
-			realTemplatePath = await this.prepareNativeScriptTemplate(constants.RESERVED_TEMPLATE_NAMES["default"], null/*version*/, projectDir);
+			// Use the original template name, specified by user as it may be case-sensitive.
+			realTemplatePath = await this.prepareNativeScriptTemplate(originalTemplateName, version, projectDir);
 		}
 
-		if (realTemplatePath) {
-			//this removes dependencies from templates so they are not copied to app folder
-			this.$fs.deleteDirectory(path.join(realTemplatePath, constants.NODE_MODULES_FOLDER_NAME));
-			return realTemplatePath;
-		}
+		//this removes dependencies from templates so they are not copied to app folder
+		this.$fs.deleteDirectory(path.join(realTemplatePath, constants.NODE_MODULES_FOLDER_NAME));
 
-		this.$errors.failWithoutHelp("Unable to find the template in temp directory. " +
-			`Please open an issue at https://github.com/NativeScript/nativescript-cli/issues and send the output of the same command executed with --log trace.`);
+		return realTemplatePath;
 	}
 
 	/**
