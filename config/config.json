@@ -6,6 +6,6 @@
 	"TYPESCRIPT_COMPILER_OPTIONS": {},
 	"CI_LOGGER": false,
 	"ANDROID_DEBUG_UI_MAC": "Google Chrome",
-	"USE_POD_SANDBOX": true,
+	"USE_POD_SANDBOX": false,
 	"DISABLE_HOOKS": false
 }
