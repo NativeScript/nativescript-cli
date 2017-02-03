@@ -7,22 +7,23 @@ import isPlainObject from 'lodash/isPlainObject';
  */
 export default class Metadata {
   constructor(entity) {
-    if (!isPlainObject(entity)) {
+    if (isPlainObject(entity) === false) {
       throw new KinveyError('entity argument must be an object');
     }
 
     /**
-     * The kmd properties.
+     * The entity.
      *
      * @private
      * @type {Object}
      */
-    this.kmd = entity._kmd || {};
+    entity._kmd = entity._kmd || {};
+    this.entity = entity;
   }
 
   get createdAt() {
-    if (this.kmd.ect) {
-      return new Date(this.kmd.ect);
+    if (this.entity._kmd.ect) {
+      return new Date(this.entity._kmd.ect);
     }
 
     return undefined;
@@ -33,16 +34,16 @@ export default class Metadata {
   }
 
   get emailVerification() {
-    if (isDefined(this.kmd.emailVerification)) {
-      return this.kmd.emailVerification.status;
+    if (isDefined(this.entity._kmd.emailVerification)) {
+      return this.entity._kmd.emailVerification.status;
     }
 
     return undefined;
   }
 
   get lastModified() {
-    if (this.kmd.lmt) {
-      return new Date(this.kmd.lmt);
+    if (this.entity._kmd.lmt) {
+      return new Date(this.entity._kmd.lmt);
     }
 
     return undefined;
@@ -53,14 +54,14 @@ export default class Metadata {
   }
 
   get authtoken() {
-    return this.kmd.authtoken;
+    return this.entity._kmd.authtoken;
   }
 
   isLocal() {
-    return this.kmd.local === true;
+    return this.entity._kmd.local === true;
   }
 
   toPlainObject() {
-    return this.kmd;
+    return this.entity._kmd;
   }
 }

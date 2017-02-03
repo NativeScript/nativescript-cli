@@ -16,7 +16,7 @@ describe('Metadata', function() {
       const entity = {};
       const metadata = new Metadata(entity);
       expect(metadata.toPlainObject()).toEqual({});
-      expect(entity._kmd).toEqual(undefined);
+      expect(entity._kmd).toEqual({});
     });
 
     it('should use the _kmd property on the entity', function() {
