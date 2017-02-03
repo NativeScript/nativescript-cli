@@ -23,7 +23,14 @@ export class CreateProjectCommand implements ICommand {
 			selectedTemplate = this.$options.template;
 		}
 
-		await this.$projectService.createProject(args[0], selectedTemplate);
+		await this.$projectService.createProject({
+			projectName: args[0],
+			template: selectedTemplate,
+			appId: this.$options.appid,
+			pathToProject: this.$options.path,
+			force: this.$options.force,
+			ignoreScripts: this.$options.ignoreScripts
+		});
 	}
 }
 

@@ -1,6 +1,7 @@
 import * as constants from "../constants";
 import * as path from "path";
 import * as shelljs from "shelljs";
+import { exportedPromise } from "../common/decorators";
 
 export class ProjectService implements IProjectService {
 
@@ -11,22 +12,29 @@ export class ProjectService implements IProjectService {
 		private $projectDataService: IProjectDataService,
 		private $projectHelper: IProjectHelper,
 		private $projectNameService: IProjectNameService,
-		private $projectTemplatesService: IProjectTemplatesService,
-		private $options: IOptions) { }
+		private $projectTemplatesService: IProjectTemplatesService) { }
 
-	public async createProject(projectName: string, selectedTemplate?: string): Promise<void> {
+	@exportedPromise("projectService")
+	public async createProject(projectOptions: IProjectSettings): Promise<void> {
+		let projectName = projectOptions.projectName,
+			selectedTemplate = projectOptions.template;
+
 		if (!projectName) {
 			this.$errors.fail("You must specify <App name> when creating a new project.");
 		}
-		projectName = await this.$projectNameService.ensureValidName(projectName, { force: this.$options.force });
 
-		let projectDir = path.join(path.resolve(this.$options.path || "."), projectName);
+		projectName = await this.$projectNameService.ensureValidName(projectName, { force: projectOptions.force });
+
+		const selectedPath = path.resolve(projectOptions.pathToProject || ".");
+		const projectDir = path.join(selectedPath, projectName);
+
 		this.$fs.createDirectory(projectDir);
+
 		if (this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir)) {
 			this.$errors.fail("Path already exists and is not empty %s", projectDir);
 		}
 
-		let projectId = this.$options.appid || this.$projectHelper.generateDefaultAppId(projectName, constants.DEFAULT_APP_IDENTIFIER_PREFIX);
+		let projectId = projectOptions.appId || this.$projectHelper.generateDefaultAppId(projectName, constants.DEFAULT_APP_IDENTIFIER_PREFIX);
 		this.createPackageJson(projectDir, projectId);
 
 		this.$logger.trace(`Creating a new NativeScript project with name ${projectName} and id ${projectId} at location ${projectDir}`);
@@ -45,7 +53,7 @@ export class ProjectService implements IProjectService {
 			this.mergeProjectAndTemplateProperties(projectDir, templatePackageJsonData); //merging dependencies from template (dev && prod)
 			this.removeMergedDependencies(projectDir, templatePackageJsonData);
 
-			await this.$npm.install(projectDir, projectDir, { "ignore-scripts": this.$options.ignoreScripts });
+			await this.$npm.install(projectDir, projectDir, { "ignore-scripts": projectOptions.ignoreScripts });
 
 			let templatePackageJson = this.$fs.readJson(path.join(templatePath, "package.json"));
 			await this.$npm.uninstall(templatePackageJson.name, { save: true }, projectDir);
