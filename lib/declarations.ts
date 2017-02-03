@@ -304,7 +304,8 @@ interface IiOSNotification {
 }
 
 interface IiOSNotificationService {
-	awaitNotification(npc: Mobile.INotificationProxyClient, notification: string, timeout: number): Promise<string>;
+	awaitNotification(deviceIdentifier: string, notification: string, timeout: number): Promise<string>;
+	postNotification(deviceIdentifier: string, notification: string): Promise<void>;
 }
 
 interface IiOSSocketRequestExecutor {

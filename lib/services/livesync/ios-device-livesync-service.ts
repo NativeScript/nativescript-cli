@@ -10,11 +10,10 @@ class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 	private socket: net.Socket;
 	private device: Mobile.IiOSDevice;
 
-	constructor(_device: Mobile.IDevice,
+	constructor(_device: Mobile.IiOSDevice,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $iOSNotification: IiOSNotification,
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
-		private $injector: IInjector,
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $iOSDebugService: IDebugService,
@@ -22,7 +21,7 @@ class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 		private $liveSyncProvider: ILiveSyncProvider,
 		private $processService: IProcessService) {
 
-		this.device = <Mobile.IiOSDevice>(_device);
+		this.device = _device;
 	}
 
 	public get debugService(): IDebugService {
@@ -49,7 +48,7 @@ class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 		} else {
 			let timeout = 9000;
 			await this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, timeout, projectId);
-			this.socket = this.device.connectToPort(IOSLiveSyncService.BACKEND_PORT);
+			this.socket = await this.device.connectToPort(IOSLiveSyncService.BACKEND_PORT);
 		}
 
 		this.attachEventHandlers();
@@ -88,8 +87,7 @@ class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 	}
 
 	private async restartApplication(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
-		let projectData: IProjectData = this.$injector.resolve("projectData");
-		return this.device.applicationManager.restartApplication(deviceAppData.appIdentifier, projectData.projectName);
+		return this.device.applicationManager.restartApplication(deviceAppData.appIdentifier);
 	}
 
 	private async reloadPage(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {

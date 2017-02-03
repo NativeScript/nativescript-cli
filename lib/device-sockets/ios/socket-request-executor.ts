@@ -1,22 +1,18 @@
-import * as iOSProxyServices from "../../common/mobile/ios/device/ios-proxy-services";
-
 export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 	constructor(private $errors: IErrors,
-		private $injector: IInjector,
 		private $iOSNotification: IiOSNotification,
 		private $iOSNotificationService: IiOSNotificationService,
 		private $logger: ILogger) { }
 
 	public async executeAttachRequest(device: Mobile.IiOSDevice, timeout: number, projectId: string): Promise<void> {
-		let npc = new iOSProxyServices.NotificationProxyClient(device, this.$injector);
 
 		let data = [this.$iOSNotification.getAlreadyConnected(projectId), this.$iOSNotification.getReadyForAttach(projectId), this.$iOSNotification.getAttachAvailable(projectId)]
-			.map((notification) => this.$iOSNotificationService.awaitNotification(npc, notification, timeout)),
+			.map((notification) => this.$iOSNotificationService.awaitNotification(device.deviceInfo.identifier, notification, timeout)),
 			alreadyConnected = data[0],
 			readyForAttach = data[1],
 			attachAvailable = data[2];
 
-		npc.postNotificationAndAttachForData(this.$iOSNotification.getAttachAvailabilityQuery(projectId));
+		await this.$iOSNotificationService.postNotification(device.deviceInfo.identifier, this.$iOSNotification.getAttachAvailabilityQuery(projectId));
 
 		let receivedNotification: string;
 		try {
@@ -30,37 +26,39 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 				this.$errors.failWithoutHelp("A client is already connected.");
 				break;
 			case this.$iOSNotification.getAttachAvailable(projectId):
-				await this.executeAttachAvailable(npc, timeout, projectId);
+				await this.executeAttachAvailable(device.deviceInfo.identifier, timeout);
 				break;
 			case this.$iOSNotification.getReadyForAttach(projectId):
 				break;
 		}
 	}
 
-	public async executeLaunchRequest(device: Mobile.IiOSDevice, timeout: number, readyForAttachTimeout: number, projectId: string, shouldBreak?: boolean): Promise<void> {
-		let npc = new iOSProxyServices.NotificationProxyClient(device, this.$injector);
-
+	public async executeLaunchRequest(deviceIdentifier: string, timeout: number, readyForAttachTimeout: number, shouldBreak?: boolean): Promise<void> {
 		try {
-			await this.$iOSNotificationService.awaitNotification(npc, this.$iOSNotification.getAppLaunching(projectId), timeout);
-			process.nextTick(() => {
+			await this.$iOSNotificationService.awaitNotification(deviceIdentifier, this.$iOSNotification.appLaunching, timeout);
 				if (shouldBreak) {
-					npc.postNotificationAndAttachForData(this.$iOSNotification.getWaitForDebug(projectId));
-				}
+				await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.waitForDebug);
+			}
 
-				npc.postNotificationAndAttachForData(this.$iOSNotification.getAttachRequest(projectId));
-			});
+			// We need to send the ObserveNotification ReadyForAttach before we post the AttachRequest.
+			const readyForAttachPromise = this.$iOSNotificationService.awaitNotification(deviceIdentifier, this.$iOSNotification.readyForAttach, readyForAttachTimeout);
 
-			await this.$iOSNotificationService.awaitNotification(npc, this.$iOSNotification.getReadyForAttach(projectId), readyForAttachTimeout);
+			await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.attachRequest);
+			await readyForAttachPromise;
 		} catch (e) {
-			this.$logger.trace(`Timeout error: ${e}`);
-			this.$errors.failWithoutHelp("Timeout waiting for response from NativeScript runtime.");
+			this.$logger.trace("Launch request error:");
+			this.$logger.trace(e);
+			this.$errors.failWithoutHelp("Error while waiting for response from NativeScript runtime.");
 		}
 	}
 
-	private async executeAttachAvailable(npc: Mobile.INotificationProxyClient, timeout: number, projectId: string): Promise<void> {
-		process.nextTick(() => npc.postNotificationAndAttachForData(this.$iOSNotification.getAttachRequest(projectId)));
+	private async executeAttachAvailable(deviceIdentifier: string, timeout: number): Promise<void> {
 		try {
-			await this.$iOSNotificationService.awaitNotification(npc, this.$iOSNotification.getReadyForAttach(projectId), timeout);
+			// We should create this promise here because we need to send the ObserveNotification on the device
+			// before we send the PostNotification.
+			const readyForAttachPromise = this.$iOSNotificationService.awaitNotification(deviceIdentifier, this.$iOSNotification.readyForAttach, timeout);
+			await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.attachRequest);
+			await readyForAttachPromise;
 		} catch (e) {
 			this.$errors.failWithoutHelp(`The application ${projectId} timed out when performing the socket handshake.`);
 		}

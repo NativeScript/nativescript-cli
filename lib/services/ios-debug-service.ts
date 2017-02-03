@@ -158,8 +158,8 @@ class IOSDebugService implements IDebugService {
 
 	private async debugBrkCore(device: Mobile.IiOSDevice, projectData: IProjectData, shouldBreak?: boolean): Promise<void> {
 		let timeout = this.$utils.getMilliSecondsTimeout(TIMEOUT_SECONDS);
-		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device, timeout, timeout, projectData.projectId, shouldBreak);
-		await this.wireDebuggerClient(projectData, device);
+		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device.deviceInfo.identifier, timeout, timeout, shouldBreak);
+		await this.wireDebuggerClient(device);
 	}
 
 	private async deviceStart(projectData: IProjectData): Promise<void> {
@@ -174,11 +174,14 @@ class IOSDebugService implements IDebugService {
 	}
 
 	private async wireDebuggerClient(projectData: IProjectData, device?: Mobile.IiOSDevice): Promise<void> {
-		let factory = () => {
-			let socket = device ? device.connectToPort(inspectorBackendPort) : net.connect(inspectorBackendPort);
+		const factoryPromise = async () => {
+			let socket = device ? await device.connectToPort(inspectorBackendPort) : net.connect(inspectorBackendPort);
 			this._sockets.push(socket);
 			return socket;
 		};
+
+		const socket = await factoryPromise();
+		const factory = () => socket;
 
 		if (this.$options.chrome) {
 			this._socketProxy = this.$socketProxyFactory.createWebSocketProxy(factory);
