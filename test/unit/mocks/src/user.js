@@ -1,6 +1,5 @@
 import { User } from 'src/entity';
 import { randomString } from 'src/utils';
-import Promise from 'es6-promise';
 import nock from 'nock';
 import url from 'url';
 

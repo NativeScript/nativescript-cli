@@ -8,7 +8,6 @@ import {
 import { KinveyError } from 'src/errors';
 import NetworkStore from './networkstore';
 import { Log } from 'src/utils';
-import Promise from 'es6-promise';
 import url from 'url';
 import map from 'lodash/map';
 import assign from 'lodash/assign';

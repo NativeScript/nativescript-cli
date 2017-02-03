@@ -1,6 +1,5 @@
 import { NotFoundError } from 'src/errors';
 import MemoryAdapter from './src/memory';
-import Promise from 'es6-promise';
 import Queue from 'promise-queue';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';

@@ -3,7 +3,6 @@ import { KinveyError } from 'src/errors';
 import { KinveyObservable, isDefined } from '../../utils';
 import Query from '../../query';
 import NetworkStore from './networkstore';
-import Promise from 'es6-promise';
 import url from 'url';
 import isArray from 'lodash/isArray';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';

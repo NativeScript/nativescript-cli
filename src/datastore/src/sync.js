@@ -8,7 +8,6 @@ import {
 import { InsufficientCredentialsError, SyncError } from 'src/errors';
 import Client from 'src/client';
 import Query from 'src/query';
-import Promise from 'es6-promise';
 import url from 'url';
 import map from 'lodash/map';
 import result from 'lodash/result';

@@ -1,5 +1,4 @@
 import { Observable } from 'rxjs/Observable';
-import Promise from 'es6-promise';
 
 /**
  * @private

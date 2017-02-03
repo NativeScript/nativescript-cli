@@ -6,7 +6,6 @@ import { KinveyError, NotFoundError, ActiveUserError } from 'src/errors';
 import DataStore, { UserStore as store } from 'src/datastore';
 import { Facebook, Google, LinkedIn, MobileIdentityConnect } from 'src/identity';
 import { Log, isDefined } from 'src/utils';
-import Promise from 'es6-promise';
 import url from 'url';
 import assign from 'lodash/assign';
 import result from 'lodash/result';

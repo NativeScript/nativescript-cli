@@ -1,5 +1,4 @@
 import AsciiTree from './asciitree';
-import Promise from 'es6-promise';
 
 export default class Middleware {
   constructor(name = 'Middleware') {
