@@ -5,25 +5,24 @@ temp.track();
 
 export class ProjectTemplatesService implements IProjectTemplatesService {
 
-	public constructor(private $fs: IFileSystem,
+	public constructor(private $analyticsService: IAnalyticsService,
+		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $npmInstallationManager: INpmInstallationManager) { }
 
 	public async prepareTemplate(originalTemplateName: string, projectDir: string): Promise<string> {
-		let realTemplatePath: string;
 		// support <reserved_name>@<version> syntax
 		let data = originalTemplateName.split("@"),
 			name = data[0],
 			version = data[1];
 
-		if (constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()]) {
-			realTemplatePath = await this.prepareNativeScriptTemplate(constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()], version, projectDir);
-		} else {
-			// Use the original template name, specified by user as it may be case-sensitive.
-			realTemplatePath = await this.prepareNativeScriptTemplate(originalTemplateName, version, projectDir);
-		}
+		const templateName = constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()] || name;
 
-		//this removes dependencies from templates so they are not copied to app folder
+		await this.$analyticsService.track("Template used for project creation", templateName);
+
+		const realTemplatePath = await this.prepareNativeScriptTemplate(templateName, version, projectDir);
+
+		// this removes dependencies from templates so they are not copied to app folder
 		this.$fs.deleteDirectory(path.join(realTemplatePath, constants.NODE_MODULES_FOLDER_NAME));
 
 		return realTemplatePath;

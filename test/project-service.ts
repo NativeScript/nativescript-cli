@@ -114,6 +114,7 @@ class ProjectIntegrationTest {
 		this.testInjector.register("fs", FileSystem);
 		this.testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
 		this.testInjector.register("staticConfig", StaticConfig);
+		this.testInjector.register("analyticsService", { track: async () => undefined });
 
 		this.testInjector.register("npmInstallationManager", NpmInstallationManager);
 		this.testInjector.register("npm", NpmLib.NodePackageManager);
@@ -436,6 +437,7 @@ function createTestInjector() {
 	testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
 
 	testInjector.register("staticConfig", StaticConfig);
+	testInjector.register("analyticsService", { track: async () => undefined });
 
 	testInjector.register("npmInstallationManager", NpmInstallationManager);
 	testInjector.register("httpClient", HttpClientLib.HttpClient);
