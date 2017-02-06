@@ -80,6 +80,10 @@ function createTestInjector(): IInjector {
 	testInjector.register("config", StaticConfigLib.Configuration);
 	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
 	testInjector.register("emulatorPlatformService", stubs.EmulatorPlatformService);
+	testInjector.register("analyticsService", {
+		track: () => Future.fromResult()
+	});
+
 	return testInjector;
 }
 

@@ -12,6 +12,7 @@ let clui = require("clui");
 const buildInfoFileName = ".nsbuildinfo";
 
 export class PlatformService implements IPlatformService {
+	private _trackedProjectFilePath: string = null;
 
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $errors: IErrors,
@@ -38,7 +39,8 @@ export class PlatformService implements IPlatformService {
 		private $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		private $projectChangesService: IProjectChangesService,
 		private $emulatorPlatformService: IEmulatorPlatformService,
-		private $childProcess: IChildProcess) { }
+		private $childProcess: IChildProcess,
+		private $analyticsService: IAnalyticsService) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -196,6 +198,8 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			this.validatePlatform(platform);
 
+			this.trackProjectType().wait();
+
 			//We need dev-dependencies here, so before-prepare hooks will be executed correctly.
 			try {
 				this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
@@ -348,7 +352,7 @@ export class PlatformService implements IPlatformService {
 			}
 			let platformData = this.$platformsData.getPlatformData(platform);
 			let forDevice = !buildConfig || buildConfig.buildForDevice;
-			let outputPath =  forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath;
+			let outputPath = forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath;
 			if (!this.$fs.exists(outputPath)) {
 				return true;
 			}
@@ -372,9 +376,24 @@ export class PlatformService implements IPlatformService {
 		}).future<boolean>()();
 	}
 
+	public trackProjectType(): IFuture<void> {
+		return (() => {
+			// Track each project once per process.
+			// In long living process, where we may work with multiple projects, we would like to track the information for each of them.
+			if (this.$projectData && (this.$projectData.projectFilePath !== this._trackedProjectFilePath)) {
+				this._trackedProjectFilePath = this.$projectData.projectFilePath;
+
+				this.$analyticsService.track("Working with project type", this.$projectData.projectType).wait();
+			}
+		}).future<void>()();
+	}
+
 	public buildPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			this.$logger.out("Building project...");
+
+			this.trackProjectType().wait();
+
 			let platformData = this.$platformsData.getPlatformData(platform);
 			platformData.platformProjectService.buildProject(platformData.projectRoot, buildConfig).wait();
 			let prepareInfo = this.$projectChangesService.getPrepareInfo(platform);
@@ -449,6 +468,8 @@ export class PlatformService implements IPlatformService {
 
 	public runPlatform(platform: string): IFuture<void> {
 		return (() => {
+			this.trackProjectType().wait();
+
 			if (this.$options.justlaunch) {
 				this.$options.watch = false;
 			}
@@ -484,7 +505,7 @@ export class PlatformService implements IPlatformService {
 				this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device }).wait();
 				let found: Mobile.IDeviceInfo[] = [];
 				if (this.$devicesService.hasDevices) {
-					found = this.$devicesService.getDevices().filter((device:Mobile.IDeviceInfo) => device.identifier === this.$options.device);
+					found = this.$devicesService.getDevices().filter((device: Mobile.IDeviceInfo) => device.identifier === this.$options.device);
 				}
 				if (found.length === 0) {
 					this.$errors.fail("Cannot find device with name: %s", this.$options.device);
@@ -514,7 +535,7 @@ export class PlatformService implements IPlatformService {
 			let deviceFilePath = this.getDeviceBuildInfoFilePath(device);
 			try {
 				return JSON.parse(this.readFile(device, deviceFilePath).wait());
-			} catch(e) {
+			} catch (e) {
 				return null;
 			};
 		}).future<IBuildInfo>()();
@@ -527,7 +548,7 @@ export class PlatformService implements IPlatformService {
 			try {
 				let buildInfoTime = this.$fs.readJson(buildInfoFile);
 				return buildInfoTime;
-			} catch(e) {
+			} catch (e) {
 				return null;
 			}
 		}

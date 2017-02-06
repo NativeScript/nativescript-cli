@@ -21,6 +21,7 @@ import { XmlValidator } from "../lib/xml-validator";
 import * as ChildProcessLib from "../lib/common/child-process";
 import {CleanCommand} from "../lib/commands/platform-clean";
 import ProjectChangesLib = require("../lib/services/project-changes-service");
+import Future = require("fibers/future");
 
 let isCommandExecuted = true;
 
@@ -142,6 +143,10 @@ function createTestInjector() {
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
 	testInjector.register("emulatorPlatformService", stubs.EmulatorPlatformService);
+	testInjector.register("analyticsService", {
+		track: () => Future.fromResult()
+	});
+
 	return testInjector;
 }
 
