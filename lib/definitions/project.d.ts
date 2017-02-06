@@ -1,6 +1,49 @@
+/**
+ * Describes available settings when creating new NativeScript application.
+ */
+interface IProjectSettings {
+	/**
+	 * Name of the newly created application.
+	 */
+	projectName: string;
+
+	/**
+	 * Selected template from which to create the project. If not specified, defaults to hello-world template.
+	 * Template can be any npm package, local dir, github url, .tgz file.
+	 * If it is set to `angular` or `ng`, default NativeScript Angular Hello World template will be used.
+	 * If it is set to `typescript` or `tsc`, default NativeScript TypeScript Hello World template will be used.
+	 */
+	template?: string;
+
+	/**
+	 * Application identifier for the newly created application. If not specified, defaults to org.nativescript.<projectName>.
+	 */
+	appId?: string;
+
+	/**
+	 * Path where the project will be created. If not specified, defaults to current working dir.
+	 */
+	pathToProject?: string;
+
+	/**
+	 * Defines if invalid application name can be used for project creation.
+	 */
+	force?: boolean;
+
+	/**
+	 * Defines whether the `npm install` command should be executed with `--ignore-scripts` option.
+	 * When it is passed, all scripts (postinstall for example) will not be executed.
+	 */
+	ignoreScripts?: boolean;
+}
 
 interface IProjectService {
-	createProject(projectName: string, selectedTemplate?: string): Promise<void>;
+	/**
+	 * Creates new NativeScript application.
+	 * @param {any} projectSettings Options describing new project - its name, appId, path and template from which to be created.
+	 * @returns {Promise<void>}
+	 */
+	createProject(projectSettings: IProjectSettings): Promise<void>;
 }
 
 interface IProjectData {

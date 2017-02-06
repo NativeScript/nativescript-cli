@@ -37,15 +37,15 @@ class ProjectIntegrationTest {
 		this.createTestInjector();
 	}
 
-	public async createProject(projectName: string, template?: string): Promise<void> {
-		let projectService = this.testInjector.resolve("projectService");
-		if (!template) {
-			template = constants.RESERVED_TEMPLATE_NAMES["default"];
+	public async createProject(projectOptions: IProjectSettings): Promise<void> {
+		let projectService: IProjectService = this.testInjector.resolve("projectService");
+		if (!projectOptions.template) {
+			projectOptions.template = constants.RESERVED_TEMPLATE_NAMES["default"];
 		}
-		return projectService.createProject(projectName, template);
+		return projectService.createProject(projectOptions);
 	}
 
-	public async assertProject(tempFolder: string, projectName: string, appId: string, projectSourceDirectory?: string): Promise<void> {
+	public async assertProject(tempFolder: string, projectName: string, appId: string, projectSourceDirectory: string): Promise<void> {
 		let fs: IFileSystem = this.testInjector.resolve("fs");
 		let projectDir = path.join(tempFolder, projectName);
 		let appDirectoryPath = path.join(projectDir, "app");
@@ -53,7 +53,6 @@ class ProjectIntegrationTest {
 		let tnsProjectFilePath = path.join(projectDir, "package.json");
 		let tnsModulesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_CORE_MODULES_NAME);
 		let packageJsonContent = fs.readJson(tnsProjectFilePath);
-		let options = this.testInjector.resolve("options");
 
 		assert.isTrue(fs.exists(appDirectoryPath));
 		assert.isTrue(fs.exists(platformsDirectoryPath));
@@ -70,11 +69,14 @@ class ProjectIntegrationTest {
 		let tnsCoreModulesRecord = packageJsonContent["dependencies"][constants.TNS_CORE_MODULES_NAME];
 		assert.isTrue(tnsCoreModulesRecord !== null);
 
-		let sourceDir = projectSourceDirectory || options.template;
+		let sourceDir = projectSourceDirectory;
 
-		let expectedFiles = fs.enumerateFilesInDirectorySync(sourceDir);
+		// Hidden files (starting with dots ".") are not copied.
+		let expectedFiles = fs.enumerateFilesInDirectorySync(sourceDir, (file, stat) => stat.isDirectory() || !_.startsWith(path.basename(file), ".") );
 		let actualFiles = fs.enumerateFilesInDirectorySync(appDirectoryPath);
+
 		assert.isTrue(actualFiles.length >= expectedFiles.length, "Files in created project must be at least as files in app dir.");
+
 		_.each(expectedFiles, file => {
 			let relativeToProjectDir = helpers.getRelativeToRootPath(sourceDir, file);
 			let filePathInApp = path.join(appDirectoryPath, relativeToProjectDir);
@@ -199,11 +201,8 @@ describe("Project Service Tests", () => {
 			let projectIntegrationTest = new ProjectIntegrationTest();
 			let tempFolder = temp.mkdirSync("project");
 			let projectName = "myapp";
-			let options = projectIntegrationTest.testInjector.resolve("options");
 
-			options.path = tempFolder;
-
-			await projectIntegrationTest.createProject(projectName);
+			await projectIntegrationTest.createProject({ projectName: projectName, pathToProject: tempFolder });
 			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", defaultTemplatePath);
 		});
 
@@ -211,10 +210,8 @@ describe("Project Service Tests", () => {
 			let projectIntegrationTest = new ProjectIntegrationTest();
 			let tempFolder = temp.mkdirSync("project");
 			let projectName = "myapp";
-			let options = projectIntegrationTest.testInjector.resolve("options");
 
-			options.path = tempFolder;
-			await projectIntegrationTest.createProject(projectName, "default");
+			await projectIntegrationTest.createProject({ projectName: projectName, template: "default", pathToProject: tempFolder });
 			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", defaultTemplatePath);
 		});
 
@@ -222,99 +219,95 @@ describe("Project Service Tests", () => {
 			let projectIntegrationTest = new ProjectIntegrationTest();
 			let tempFolder = temp.mkdirSync("project");
 			let projectName = "myapp";
-			let options = projectIntegrationTest.testInjector.resolve("options");
 
-			options.path = tempFolder;
-			await projectIntegrationTest.createProject(projectName, "default@1.4.0");
+			await projectIntegrationTest.createProject({ projectName: projectName, template: "default@1.4.0", pathToProject: tempFolder });
 			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", defaultSpecificVersionTemplatePath);
 		});
 
-		// it("creates valid project from typescript template", () => {
-		// 	let projectIntegrationTest = new ProjectIntegrationTest();
-		// 	let tempFolder = temp.mkdirSync("projectTypescript");
-		// 	let projectName = "myapp";
-		// 	let options = projectIntegrationTest.testInjector.resolve("options");
+		it("creates valid project from typescript template", async () => {
+			let projectIntegrationTest = new ProjectIntegrationTest();
+			let tempFolder = temp.mkdirSync("projectTypescript");
+			let projectName = "myapp";
 
-		// 	options.path = tempFolder;
-		// 	projectIntegrationTest.createProject(projectName, "typescript");
+			await projectIntegrationTest.createProject({ projectName: projectName, template: "typescript", pathToProject: tempFolder });
 
-		// 	await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", typescriptTemplatePath);
-		// });
+			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", typescriptTemplatePath);
+		});
 
-		// it("creates valid project from tsc template", () => {
-		// 	let projectIntegrationTest = new ProjectIntegrationTest();
-		// 	let tempFolder = temp.mkdirSync("projectTsc");
-		// 	let projectName = "myapp";
-		// 	let options = projectIntegrationTest.testInjector.resolve("options");
+		it("creates valid project from tsc template", async () => {
+			let projectIntegrationTest = new ProjectIntegrationTest();
+			let tempFolder = temp.mkdirSync("projectTsc");
+			let projectName = "myapp";
 
-		// 	options.path = tempFolder;
-		// 	await projectIntegrationTest.createProject(projectName, "tsc");
+			await projectIntegrationTest.createProject({ projectName: projectName, template: "tsc", pathToProject: tempFolder });
+			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", typescriptTemplatePath);
+		});
 
-		// 	await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", typescriptTemplatePath);
-		// });
+		it("creates valid project from angular template", async () => {
+			let projectIntegrationTest = new ProjectIntegrationTest();
+			let tempFolder = temp.mkdirSync("projectAngular");
+			let projectName = "myapp";
 
-		// it("creates valid project from angular template", () => {
-		// 	let projectIntegrationTest = new ProjectIntegrationTest();
-		// 	let tempFolder = temp.mkdirSync("projectAngular");
-		// 	let projectName = "myapp";
-		// 	let options = projectIntegrationTest.testInjector.resolve("options");
+			await projectIntegrationTest.createProject({ projectName: projectName, template: "angular", pathToProject: tempFolder });
 
-		// 	options.path = tempFolder;
-		// 	await projectIntegrationTest.createProject(projectName, "angular");
+			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", angularTemplatePath);
+		});
 
-		// 	await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", angularTemplatePath);
-		// });
+		it("creates valid project from ng template", async () => {
+			let projectIntegrationTest = new ProjectIntegrationTest();
+			let tempFolder = temp.mkdirSync("projectNg");
+			let projectName = "myapp";
 
-		// it("creates valid project from ng template", () => {
-		// 	let projectIntegrationTest = new ProjectIntegrationTest();
-		// 	let tempFolder = temp.mkdirSync("projectNg");
-		// 	let projectName = "myapp";
-		// 	let options = projectIntegrationTest.testInjector.resolve("options");
+			await projectIntegrationTest.createProject({ projectName: projectName, template: "ng", pathToProject: tempFolder });
 
-		// 	options.path = tempFolder;
-		// 	await projectIntegrationTest.createProject(projectName, "ng");
+			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", angularTemplatePath);
+		});
 
-		// 	await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", angularTemplatePath);
-		// });
-
-		// it("creates valid project from local directory template", () => {
-		// 	let projectIntegrationTest = new ProjectIntegrationTest();
-		// 	let tempFolder = temp.mkdirSync("projectLocalDir");
-		// 	let projectName = "myapp";
-		// 	let options = projectIntegrationTest.testInjector.resolve("options");
-
-		// 	options.path = tempFolder;
-		// 	let tempDir = temp.mkdirSync("template");
-		// 	let fs: IFileSystem = projectIntegrationTest.testInjector.resolve("fs");
-		// 	fs.writeJson(path.join(tempDir, "package.json"), {
-		// 		name: "myCustomTemplate",
-		// 		version: "1.0.0",
-		// 		dependencies: {
-		// 			"lodash": "3.10.1"
-		// 		},
-		// 		devDependencies: {
-		// 			"minimist": "1.2.0"
-		// 		},
-		// 		"description": "dummy",
-		// 		"license": "MIT",
-		// 		"readme": "dummy",
-		// 		"repository": "dummy"
-		// 	});
-		// 	fs.createDirectory(path.join(tempDir, "app", "App_Resources", "Android")); //copy App_Resources from somewhere
-		// 	fs.createDirectory(path.join(tempDir, "app", "App_Resources", "iOS"));
-
-		// 	await projectIntegrationTest.createProject(projectName, tempDir);
-		// 	await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", tempDir);
-		// });
-
-		it("creates valid project from tarball", async () => {
+		it("creates valid project from local directory template", async () => {
 			let projectIntegrationTest = new ProjectIntegrationTest();
 			let tempFolder = temp.mkdirSync("projectLocalDir");
 			let projectName = "myapp";
 			let options = projectIntegrationTest.testInjector.resolve("options");
 
 			options.path = tempFolder;
-			await projectIntegrationTest.createProject(projectName, "https://github.com/NativeScript/template-hello-world/tarball/master");
+			let tempDir = temp.mkdirSync("template");
+			let fs: IFileSystem = projectIntegrationTest.testInjector.resolve("fs");
+			fs.writeJson(path.join(tempDir, "package.json"), {
+				name: "myCustomTemplate",
+				version: "1.0.0",
+				dependencies: {
+					"lodash": "3.10.1"
+				},
+				devDependencies: {
+					"minimist": "1.2.0"
+				},
+				"description": "dummy",
+				"license": "MIT",
+				"readme": "dummy",
+				"repository": "dummy"
+			});
+
+			fs.createDirectory(path.join(tempDir, "App_Resources", "Android")); //copy App_Resources from somewhere
+			fs.createDirectory(path.join(tempDir, "App_Resources", "iOS"));
+			// `npm i <path-to-local-dir>` does not copy empty dirs, so the package installed in node_modules will not have App_Resources/Android and App_Resources/iOS dir.
+			fs.writeFile(path.join(tempDir, "App_Resources", "Android", "some-resource"), null);
+			fs.writeFile(path.join(tempDir, "App_Resources", "iOS", "some-resource"), null);
+
+			await projectIntegrationTest.createProject({ projectName: projectName, template: tempDir, pathToProject: tempFolder });
+			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", tempDir);
+		});
+
+		it("creates valid project from tarball", async () => {
+			let projectIntegrationTest = new ProjectIntegrationTest();
+			let tempFolder = temp.mkdirSync("projectLocalDir");
+			let projectName = "myapp";
+
+			await projectIntegrationTest.createProject({
+				projectName: projectName,
+				template: "https://github.com/NativeScript/template-hello-world/tarball/master",
+				pathToProject: tempFolder
+			});
+
 			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", defaultTemplatePath);
 		});
 
@@ -322,10 +315,13 @@ describe("Project Service Tests", () => {
 			let projectIntegrationTest = new ProjectIntegrationTest();
 			let tempFolder = temp.mkdirSync("projectLocalDir");
 			let projectName = "myapp";
-			let options = projectIntegrationTest.testInjector.resolve("options");
 
-			options.path = tempFolder;
-			await projectIntegrationTest.createProject(projectName, "https://github.com/NativeScript/template-hello-world.git");
+			await projectIntegrationTest.createProject({
+				projectName: projectName,
+				template: "https://github.com/NativeScript/template-hello-world.git",
+				pathToProject: tempFolder
+			});
+
 			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", defaultTemplatePath);
 		});
 
@@ -333,14 +329,9 @@ describe("Project Service Tests", () => {
 			let projectIntegrationTest = new ProjectIntegrationTest();
 			let tempFolder = temp.mkdirSync("project1");
 			let projectName = "myapp";
-			let options = projectIntegrationTest.testInjector.resolve("options");
 
-			options.path = tempFolder;
-
-			options.appid = "my.special.id";
-
-			await projectIntegrationTest.createProject(projectName);
-			await projectIntegrationTest.assertProject(tempFolder, projectName, options.appid, defaultTemplatePath);
+			await projectIntegrationTest.createProject({ projectName: projectName, pathToProject: tempFolder, appId: "my.special.id" });
+			await projectIntegrationTest.assertProject(tempFolder, projectName, "my.special.id", defaultTemplatePath);
 		});
 
 		describe("project name validation tests", () => {
@@ -366,11 +357,7 @@ describe("Project Service Tests", () => {
 
 			it("creates project when is interactive and incorrect name is specified and the --force option is set", async () => {
 				let projectName = invalidProjectName;
-
-				options.force = true;
-				options.path = tempFolder;
-
-				await projectIntegrationTest.createProject(projectName);
+				await projectIntegrationTest.createProject({ projectName: projectName, pathToProject: tempFolder, force: true });
 				await projectIntegrationTest.assertProject(tempFolder, projectName, `org.nativescript.${projectName}`, defaultTemplatePath);
 			});
 
@@ -378,9 +365,7 @@ describe("Project Service Tests", () => {
 				let projectName = invalidProjectName;
 				prompter.confirm = (message: string): Promise<boolean> => Promise.resolve(true);
 
-				options.path = tempFolder;
-
-				await projectIntegrationTest.createProject(projectName);
+				await projectIntegrationTest.createProject({ projectName: projectName, pathToProject: tempFolder });
 				await projectIntegrationTest.assertProject(tempFolder, projectName, `org.nativescript.${projectName}`, defaultTemplatePath);
 			});
 
@@ -389,9 +374,7 @@ describe("Project Service Tests", () => {
 
 				prompter.confirm = (message: string): Promise<boolean> => Promise.resolve(false);
 
-				options.path = tempFolder;
-
-				await projectIntegrationTest.createProject(projectName);
+				await projectIntegrationTest.createProject({ projectName: projectName, pathToProject: tempFolder });
 				assert.isTrue(hasPromptedForString);
 			});
 
@@ -415,9 +398,7 @@ describe("Project Service Tests", () => {
 					return projectName;
 				};
 
-				options.path = tempFolder;
-
-				await projectIntegrationTest.createProject(projectName);
+				await projectIntegrationTest.createProject({ projectName: projectName, pathToProject: tempFolder });
 				assert.isTrue(hasPromptedForString);
 			});
 
@@ -425,23 +406,16 @@ describe("Project Service Tests", () => {
 				let projectName = invalidProjectName;
 				helpers.isInteractive = () => false;
 
-				options.force = false;
-				options.path = tempFolder;
-
-				await assert.isRejected(projectIntegrationTest.createProject(projectName));
+				await assert.isRejected(projectIntegrationTest.createProject({ projectName: projectName, pathToProject: tempFolder, force: false }));
 			});
 
 			it("creates project when is not interactive and incorrect name is specified and the --force option is set", async () => {
 				let projectName = invalidProjectName;
 				helpers.isInteractive = () => false;
 
-				options.force = true;
-				options.path = tempFolder;
+				await projectIntegrationTest.createProject({ projectName: projectName, pathToProject: tempFolder, force: true });
 
-				await projectIntegrationTest.createProject(projectName);
-				options.template = defaultTemplatePath;
-
-				await projectIntegrationTest.assertProject(tempFolder, projectName, `org.nativescript.${projectName}`, null);
+				await projectIntegrationTest.assertProject(tempFolder, projectName, `org.nativescript.${projectName}`, defaultTemplatePath);
 			});
 		});
 

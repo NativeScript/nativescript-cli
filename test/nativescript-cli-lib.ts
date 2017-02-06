@@ -12,13 +12,34 @@ describe("nativescript-cli-lib", () => {
 		assert.deepEqual(jsonContent.main, expectedEntryPoint);
 	});
 
-	it("resolves publicly available module - deviceEmitter, when it is required", () => {
-		const pathToEntryPoint = path.join(__dirname, "..", "lib", "nativescript-cli-lib.js").replace(/\\/g, "\\\\");
-		// HACK: If we try to require the entry point directly, the below code will fail as mocha requires all test files before starting the tests.
-		// When the files are required, $injector.register adds each dependency to $injector's cache.
-		// For example $injector.register("errors", Errors) will add the errors module with its resolver (Errors) to $injector's cache.
-		// Calling $injector.require("errors", <path to errors file>), that's executed in our bootstrap, will fail, as the module errors is already in the cache.
-		// In order to workaround this problem, start new process and assert there. This way all files will not be required in it and $injector.require(...) will work correctly.
-		childProcess.execSync(`"${process.execPath}" ${nodeArgs.join(" ")} -e "var assert = require('chai').assert; var result = require('${pathToEntryPoint}'); assert.ok(result.deviceEmitter);"`);
+	const publicApi: any = {
+		deviceEmitter: null,
+		projectService: ["createProject"]
+	};
+
+	const pathToEntryPoint = path.join(__dirname, "..", "lib", "nativescript-cli-lib.js").replace(/\\/g, "\\\\");
+
+	_.each(publicApi, (methods: string[], moduleName: string) => {
+
+		it(`resolves publicly available module - ${moduleName}${methods && methods.length ? " and its publicly available methods: " + methods.join(", ") : ""}`, () => {
+			// HACK: If we try to require the entry point directly, the below code will fail as mocha requires all test files before starting the tests.
+			// When the files are required, $injector.register adds each dependency to $injector's cache.
+			// For example $injector.register("errors", Errors) will add the errors module with its resolver (Errors) to $injector's cache.
+			// Calling $injector.require("errors", <path to errors file>), that's executed in our bootstrap, will fail, as the module errors is already in the cache.
+			// In order to workaround this problem, start new process and assert there. This way all files will not be required in it and $injector.require(...) will work correctly.
+			let testMethod = `"${process.execPath}" ${nodeArgs.join(" ")} -e "` +
+				"var assert = require('chai').assert;" +
+				`var result = require('${pathToEntryPoint}');` +
+				`assert.ok(result.${moduleName});`;
+
+			_.each(methods, method => {
+				testMethod += `assert.ok(result.${moduleName}.${method});`;
+			});
+
+			testMethod += '"'; // Really important - close the " of node -e ""
+
+			childProcess.execSync(testMethod);
+		});
+
 	});
 });
