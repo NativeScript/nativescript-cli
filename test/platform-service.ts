@@ -76,6 +76,9 @@ function createTestInjector() {
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
 	testInjector.register("emulatorPlatformService", stubs.EmulatorPlatformService);
+	testInjector.register("analyticsService", {
+		track: async () => undefined
+	});
 
 	return testInjector;
 }

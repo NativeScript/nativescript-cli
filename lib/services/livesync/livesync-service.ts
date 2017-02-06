@@ -102,6 +102,8 @@ class LiveSyncService implements ILiveSyncService {
 
 	@helpers.hook('livesync')
 	private async liveSyncCore(liveSyncData: ILiveSyncData[], applicationReloadAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>): Promise<void> {
+		await this.$platformService.trackProjectType();
+
 		let watchForChangeActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => Promise<void>)[] = [];
 
 		for (let dataItem of liveSyncData) {

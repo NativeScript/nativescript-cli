@@ -154,8 +154,10 @@ describe("Project Service Tests", () => {
 				"readme": "dummy",
 				"repository": "dummy"
 			});
-			await npmInstallationManager.install("tns-template-hello-world", defaultTemplateDir, { dependencyType: "save" });
-			defaultTemplatePath = path.join(defaultTemplateDir, "node_modules", "tns-template-hello-world");
+
+			await npmInstallationManager.install(constants.RESERVED_TEMPLATE_NAMES["default"], defaultTemplateDir, { dependencyType: "save" });
+			defaultTemplatePath = path.join(defaultTemplateDir, "node_modules", constants.RESERVED_TEMPLATE_NAMES["default"]);
+
 			fs.deleteDirectory(path.join(defaultTemplatePath, "node_modules"));
 
 			let defaultSpecificVersionTemplateDir = temp.mkdirSync("defaultTemplateSpeciffic");
@@ -167,8 +169,10 @@ describe("Project Service Tests", () => {
 				"readme": "dummy",
 				"repository": "dummy"
 			});
-			await npmInstallationManager.install("tns-template-hello-world", defaultSpecificVersionTemplateDir, { version: "1.4.0", dependencyType: "save" });
-			defaultSpecificVersionTemplatePath = path.join(defaultSpecificVersionTemplateDir, "node_modules", "tns-template-hello-world");
+
+			await npmInstallationManager.install(constants.RESERVED_TEMPLATE_NAMES["default"], defaultSpecificVersionTemplateDir, { version: "1.4.0", dependencyType: "save" });
+			defaultSpecificVersionTemplatePath = path.join(defaultSpecificVersionTemplateDir, "node_modules", constants.RESERVED_TEMPLATE_NAMES["default"]);
+
 			fs.deleteDirectory(path.join(defaultSpecificVersionTemplatePath, "node_modules"));
 
 			let angularTemplateDir = temp.mkdirSync("angularTemplate");
@@ -180,8 +184,10 @@ describe("Project Service Tests", () => {
 				"readme": "dummy",
 				"repository": "dummy"
 			});
-			await npmInstallationManager.install("tns-template-hello-world-ng", angularTemplateDir, { dependencyType: "save" });
-			angularTemplatePath = path.join(angularTemplateDir, "node_modules", "tns-template-hello-world-ng");
+
+			await npmInstallationManager.install(constants.RESERVED_TEMPLATE_NAMES["angular"], angularTemplateDir, { dependencyType: "save" });
+			angularTemplatePath = path.join(angularTemplateDir, "node_modules", constants.RESERVED_TEMPLATE_NAMES["angular"]);
+
 			fs.deleteDirectory(path.join(angularTemplatePath, "node_modules"));
 
 			let typescriptTemplateDir = temp.mkdirSync("typescriptTemplate");
@@ -193,8 +199,10 @@ describe("Project Service Tests", () => {
 				"readme": "dummy",
 				"repository": "dummy"
 			});
-			await npmInstallationManager.install("tns-template-hello-world-ts", typescriptTemplateDir, { dependencyType: "save" });
-			typescriptTemplatePath = path.join(typescriptTemplateDir, "node_modules", "tns-template-hello-world-ts");
+
+			await npmInstallationManager.install(constants.RESERVED_TEMPLATE_NAMES["typescript"], typescriptTemplateDir, { dependencyType: "save" });
+			typescriptTemplatePath = path.join(typescriptTemplateDir, "node_modules", constants.RESERVED_TEMPLATE_NAMES["typescript"]);
+
 			fs.deleteDirectory(path.join(typescriptTemplatePath, "node_modules"));
 		});
 
