@@ -124,11 +124,11 @@ class LiveSyncService implements ILiveSyncService {
 		let productionDependencies = dependenciesBuilder.getProductionDependencies(this.$projectData.projectDir);
 		let pattern = ["app"];
 
-		if(this.$options.syncAllFiles) {
+		if (this.$options.syncAllFiles) {
 			pattern.push("package.json");
 
 			// watch only production node_module/packages same one prepare uses
-			for(let index in productionDependencies) {
+			for (let index in productionDependencies) {
 				pattern.push("node_modules/" + productionDependencies[index].name);
 			}
 		}
