@@ -1,6 +1,5 @@
 import { KinveyError } from 'src/errors';
 import { isDefined } from 'src/utils';
-import cloneDeep from 'lodash/cloneDeep';
 import isPlainObject from 'lodash/isPlainObject';
 import isArray from 'lodash/isArray';
 import assign from 'lodash/assign';
@@ -13,53 +12,54 @@ import assign from 'lodash/assign';
  * var acl = new Kinvey.Acl(entity);
  */
 export default class Acl {
-  constructor(entity = {}) {
-    if (!isPlainObject(entity)) {
+  constructor(entity) {
+    if (isPlainObject(entity) === false) {
       throw new KinveyError('entity argument must be an object');
     }
 
     /**
-     * The kmd properties.
+     * The entity.
      *
      * @private
      * @type {Object}
      */
-    this.acl = cloneDeep(entity._acl);
+    entity._acl = entity._acl || {};
+    this.entity = entity;
   }
 
   get creator() {
-    return this.acl.creator;
+    return this.entity._acl.creator;
   }
 
   get readers() {
-    return isArray(this.acl.r) ? this.acl.r : [];
+    return isArray(this.entity._acl.r) ? this.entity._acl.r : [];
   }
 
   get writers() {
-    return isArray(this.acl.w) ? this.acl.w : [];
+    return isArray(this.entity._acl.w) ? this.entity._acl.w : [];
   }
 
   get readerGroups() {
-    return isDefined(this.acl.groups) && isArray(this.acl.groups.r) ? this.acl.groups.r : [];
+    return isDefined(this.entity._acl.groups) && isArray(this.entity._acl.groups.r) ? this.entity._acl.groups.r : [];
   }
 
   get writerGroups() {
-    return isDefined(this.acl.groups) && isArray(this.acl.groups.w) ? this.acl.groups.w : [];
+    return isDefined(this.entity._acl.groups) && isArray(this.entity._acl.groups.w) ? this.entity._acl.groups.w : [];
   }
 
   set globallyReadable(gr) {
     if (gr === true) {
-      this.acl.gr = gr;
+      this.entity._acl.gr = gr;
     } else {
-      this.acl.gr = false;
+      this.entity._acl.gr = false;
     }
   }
 
   set globallyWritable(gw) {
     if (gw === true) {
-      this.acl.gw = gw;
+      this.entity._acl.gw = gw;
     } else {
-      this.acl.gw = false;
+      this.entity._acl.gw = false;
     }
   }
 
@@ -70,7 +70,7 @@ export default class Acl {
       r.push(user);
     }
 
-    this.acl.r = r;
+    this.entity._acl.r = r;
     return this;
   }
 
@@ -81,7 +81,7 @@ export default class Acl {
       groups.push(group);
     }
 
-    this.acl.groups = assign({}, this.acl.groups, { r: groups });
+    this.entity._acl.groups = assign({}, this.entity._acl.groups, { r: groups });
     return this;
   }
 
@@ -92,7 +92,7 @@ export default class Acl {
       w.push(user);
     }
 
-    this.acl.w = w;
+    this.entity._acl.w = w;
     return this;
   }
 
@@ -103,21 +103,21 @@ export default class Acl {
       groups.push(group);
     }
 
-    this.acl.groups = assign({}, this.acl.groups, { w: groups });
+    this.entity._acl.groups = assign({}, this.entity._acl.groups, { w: groups });
     return this;
   }
 
   isGloballyReadable() {
-    if (this.acl.gr === true) {
-      return this.acl.gr;
+    if (this.entity._acl.gr === true) {
+      return this.entity._acl.gr;
     }
 
     return false;
   }
 
   isGloballyWritable() {
-    if (this.acl.gw === true) {
-      return this.acl.gw;
+    if (this.entity._acl.gw === true) {
+      return this.entity._acl.gw;
     }
 
     return false;
@@ -131,7 +131,7 @@ export default class Acl {
       r.splice(index, 1);
     }
 
-    this.acl.r = r;
+    this.entity._acl.r = r;
     return this;
   }
 
@@ -143,7 +143,7 @@ export default class Acl {
       groups.splice(index, 1);
     }
 
-    this.acl.groups = assign({}, this.acl.groups, { r: groups });
+    this.entity._acl.groups = assign({}, this.entity._acl.groups, { r: groups });
     return this;
   }
 
@@ -155,7 +155,7 @@ export default class Acl {
       w.splice(index, 1);
     }
 
-    this.acl.w = w;
+    this.entity._acl.w = w;
     return this;
   }
 
@@ -167,11 +167,11 @@ export default class Acl {
       groups.splice(index, 1);
     }
 
-    this.acl.groups = assign({}, this.acl.groups, { w: groups });
+    this.entity._acl.groups = assign({}, this.entity._acl.groups, { w: groups });
     return this;
   }
 
   toPlainObject() {
-    return this.acl;
+    return this.entity._acl;
   }
 }
