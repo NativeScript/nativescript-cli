@@ -3,11 +3,12 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.CustomEndpoint = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _client = require('./client');
+
+var _client2 = _interopRequireDefault(_client);
 
 var _request = require('./request');
 
@@ -27,7 +28,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var rpcNamespace = process && process.env && process.env.KINVEY_RPC_NAMESPACE || 'rpc' || 'rpc';
 
-var CustomEndpoint = exports.CustomEndpoint = function () {
+var CustomEndpoint = function () {
   function CustomEndpoint() {
     _classCallCheck(this, CustomEndpoint);
 
@@ -39,7 +40,7 @@ var CustomEndpoint = exports.CustomEndpoint = function () {
     value: function execute(endpoint, args) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-      var client = options.client || _client.Client.sharedInstance();
+      var client = options.client || _client2.default.sharedInstance();
 
       if (!endpoint) {
         return Promise.reject(new _errors.KinveyError('An endpoint argument is required.'));
@@ -70,3 +71,5 @@ var CustomEndpoint = exports.CustomEndpoint = function () {
 
   return CustomEndpoint;
 }();
+
+exports.default = CustomEndpoint;

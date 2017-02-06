@@ -1,12 +1,12 @@
-import { Client } from './client';
-import { CustomEndpoint } from './endpoint';
+import Client from './client';
+import CustomEndpoint from './endpoint';
 import Query from './query';
-import { Log } from './utils';
+import { Log } from 'src/utils';
 import Aggregation from './aggregation';
 import DataStore, { DataStoreType, FileStore, UserStore } from './datastore';
 import { Acl, Metadata, User } from './entity';
 import { AuthorizationGrant } from './identity';
-import { AuthType, RequestMethod, KinveyRequest } from './request';
+import { AuthType, CacheRack, NetworkRack, Rack, RequestMethod, KinveyRequest } from './request';
 import {
   ActiveUserError,
   FeatureUnavailableError,
@@ -30,7 +30,7 @@ import {
   QueryError,
   ServerError,
   SyncError
-} from './errors';
+} from 'src/errors';
 import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
@@ -244,6 +244,11 @@ Kinvey.PopupError = PopupError;
 Kinvey.QueryError = QueryError;
 Kinvey.ServerError = ServerError;
 Kinvey.SyncError = SyncError;
+
+// Add Racks
+Kinvey.CacheRack = CacheRack;
+Kinvey.NetworkRack = NetworkRack;
+Kinvey.Rack = Rack;
 
 // Export
 export default Kinvey;

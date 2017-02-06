@@ -1,10 +1,10 @@
 import { RequestMethod } from './request';
 import { KinveyRequest } from './network';
-import LocalRequest from './local';
+import CacheRequest from './cache';
 import Response, { StatusCode } from './response';
-import { KinveyError, NotFoundError } from '../../errors';
-import { isDefined } from '../../utils';
-import Query from '../../query';
+import { KinveyError, NotFoundError } from 'src/errors';
+import { isDefined } from 'src/utils';
+import Query from 'src/query';
 import Promise from 'es6-promise';
 import keyBy from 'lodash/keyBy';
 import reduce from 'lodash/reduce';
@@ -47,7 +47,7 @@ export default class DeltaFetchRequest extends KinveyRequest {
   }
 
   execute() {
-    const request = new LocalRequest({
+    const request = new CacheRequest({
       method: RequestMethod.GET,
       url: this.url,
       headers: this.headers,

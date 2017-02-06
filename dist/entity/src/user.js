@@ -8,6 +8,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _client = require('../../client');
 
+var _client2 = _interopRequireDefault(_client);
+
 var _acl = require('./acl');
 
 var _acl2 = _interopRequireDefault(_acl);
@@ -77,7 +79,7 @@ var User = function () {
 
     this.data = data;
 
-    this.client = options.client || _client.Client.sharedInstance();
+    this.client = options.client || _client2.default.sharedInstance();
   }
 
   _createClass(User, [{
@@ -532,7 +534,7 @@ var User = function () {
   }], [{
     key: 'getActiveUser',
     value: function getActiveUser() {
-      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
+      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client2.default.sharedInstance();
 
       var data = _request.CacheRequest.getActiveUser(client);
 
@@ -658,7 +660,7 @@ var User = function () {
         return _es6Promise2.default.reject(new _errors.KinveyError('The provided username is not a string.'));
       }
 
-      var client = options.client || _client.Client.sharedInstance();
+      var client = options.client || _client2.default.sharedInstance();
       var request = new _request.KinveyRequest({
         method: _request.RequestMethod.POST,
         authType: _request.AuthType.App,
@@ -688,7 +690,7 @@ var User = function () {
         return _es6Promise2.default.reject(new _errors.KinveyError('The provided email is not a string.'));
       }
 
-      var client = options.client || _client.Client.sharedInstance();
+      var client = options.client || _client2.default.sharedInstance();
       var request = new _request.KinveyRequest({
         method: _request.RequestMethod.POST,
         authType: _request.AuthType.App,
@@ -719,7 +721,7 @@ var User = function () {
         return _es6Promise2.default.reject(new _errors.KinveyError('The provided username is not a string.'));
       }
 
-      var client = options.client || _client.Client.sharedInstance();
+      var client = options.client || _client2.default.sharedInstance();
       var request = new _request.KinveyRequest({
         method: _request.RequestMethod.POST,
         authType: _request.AuthType.App,

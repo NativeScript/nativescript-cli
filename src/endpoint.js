@@ -1,6 +1,6 @@
-import { Client } from './client';
+import Client from './client';
 import { RequestMethod, AuthType, KinveyRequest } from './request';
-import { KinveyError } from './errors';
+import { KinveyError } from 'src/errors';
 import url from 'url';
 import isString from 'lodash/isString';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
@@ -8,7 +8,7 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 /**
  * Executes a custom endpoint on the Kinvey backend.
  */
-export class CustomEndpoint {
+export default class CustomEndpoint {
   constructor() {
     throw new KinveyError('Not allowed to create an instance of the `CustomEndpoint` class.',
       'Please use `CustomEndpoint.execute()` function.');

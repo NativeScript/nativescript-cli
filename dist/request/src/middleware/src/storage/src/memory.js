@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _errors = require('./errors');
+var _errors = require('../../../../../../errors');
 
 var _fastMemoryCache = require('fast-memory-cache');
 
@@ -40,6 +40,8 @@ var _isArray = require('lodash/isArray');
 
 var _isArray2 = _interopRequireDefault(_isArray);
 
+var _utils = require('../../../../../../utils');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -51,11 +53,11 @@ var Memory = function () {
   function Memory(name) {
     _classCallCheck(this, Memory);
 
-    if (!name) {
+    if ((0, _utils.isDefined)(name) === false) {
       throw new Error('A name for the collection is required to use the memory persistence adapter.', name);
     }
 
-    if (!(0, _isString2.default)(name)) {
+    if ((0, _isString2.default)(name) === false) {
       throw new Error('The name of the collection must be a string to use the memory persistence adapter', name);
     }
 
@@ -156,14 +158,13 @@ var Memory = function () {
       this.cache.clear();
       return _es6Promise2.default.resolve(null);
     }
-  }], [{
-    key: 'isSupported',
-    value: function isSupported() {
-      return _es6Promise2.default.resolve(true);
-    }
   }]);
 
   return Memory;
 }();
 
-exports.default = Memory;
+exports.default = {
+  load: function load(name) {
+    return new Memory(name);
+  }
+};

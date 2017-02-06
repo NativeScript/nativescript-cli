@@ -1,4 +1,4 @@
-import { Client } from 'src/client';
+import Client from 'src/client';
 import { randomString } from 'src/utils';
 import expect from 'expect';
 const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 60000;

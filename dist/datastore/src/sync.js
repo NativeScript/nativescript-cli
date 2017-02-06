@@ -15,6 +15,8 @@ var _errors = require('../../errors');
 
 var _client = require('../../client');
 
+var _client2 = _interopRequireDefault(_client);
+
 var _query = require('../../query');
 
 var _query2 = _interopRequireDefault(_query);
@@ -74,7 +76,7 @@ var SyncManager = function () {
 
     this.collection = collection;
 
-    this.client = options.client || _client.Client.sharedInstance();
+    this.client = options.client || _client2.default.sharedInstance();
   }
 
   _createClass(SyncManager, [{

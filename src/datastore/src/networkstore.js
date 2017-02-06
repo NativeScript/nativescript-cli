@@ -1,9 +1,9 @@
-import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod } from '../../request';
-import { KinveyError } from '../../errors';
-import Query from '../../query';
-import { Client } from '../../client';
-import { KinveyObservable, Log, isDefined } from '../../utils';
-import Aggregation from '../../aggregation';
+import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod } from 'src/request';
+import { KinveyError } from 'src/errors';
+import Query from 'src/query';
+import Client from 'src/client';
+import { KinveyObservable, Log, isDefined } from 'src/utils';
+import Aggregation from 'src/aggregation';
 import Promise from 'es6-promise';
 import isString from 'lodash/isString';
 import url from 'url';

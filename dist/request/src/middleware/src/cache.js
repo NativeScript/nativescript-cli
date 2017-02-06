@@ -38,6 +38,11 @@ var CacheMiddleware = function (_Middleware) {
   }
 
   _createClass(CacheMiddleware, [{
+    key: 'loadStorage',
+    value: function loadStorage(name) {
+      return new _storage2.default(name);
+    }
+  }, {
     key: 'handle',
     value: function handle(request) {
       var method = request.method,
@@ -46,7 +51,7 @@ var CacheMiddleware = function (_Middleware) {
           collection = request.collection,
           entityId = request.entityId;
 
-      var storage = new _storage2.default(appKey);
+      var storage = this.loadStorage(appKey);
       var promise = void 0;
 
       if (method === 'GET') {

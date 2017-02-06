@@ -1,7 +1,7 @@
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
-import { isDefined } from '../../utils';
+import { isDefined } from 'src/utils';
 
 export default class Headers {
   constructor(headers = {}) {

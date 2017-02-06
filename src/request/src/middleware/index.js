@@ -3,15 +3,15 @@ import HttpMiddleware from './src/http';
 import Middleware from './src/middleware';
 import ParseMiddleware from './src/parse';
 import SerializeMiddleware from './src/serialize';
+import Storage, { MemoryAdapter } from './src/storage';
 
-// Export
 export {
   CacheMiddleware,
   HttpMiddleware,
-  Middleware,
+  MemoryAdapter,
   ParseMiddleware,
-  SerializeMiddleware
+  SerializeMiddleware,
+  Storage
 };
 
-// Export default
 export default Middleware;

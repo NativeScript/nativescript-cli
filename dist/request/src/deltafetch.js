@@ -16,9 +16,9 @@ var _request2 = require('./request');
 
 var _network = require('./network');
 
-var _local = require('./local');
+var _cache = require('./cache');
 
-var _local2 = _interopRequireDefault(_local);
+var _cache2 = _interopRequireDefault(_cache);
 
 var _response = require('./response');
 
@@ -88,7 +88,7 @@ var DeltaFetchRequest = function (_KinveyRequest) {
     value: function execute() {
       var _this2 = this;
 
-      var request = new _local2.default({
+      var request = new _cache2.default({
         method: _request2.RequestMethod.GET,
         url: this.url,
         headers: this.headers,

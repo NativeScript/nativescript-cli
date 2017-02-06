@@ -8,4 +8,3 @@ export default class InsufficientCredentialsError extends BaseError {
     super('InsufficientCredentialsError', message, debug, code, kinveyRequestId);
   }
 }
-

@@ -17,9 +17,9 @@ var _request = require('./request');
 
 var _request2 = _interopRequireDefault(_request);
 
-var _local = require('./local');
+var _cache = require('./cache');
 
-var _local2 = _interopRequireDefault(_local);
+var _cache2 = _interopRequireDefault(_cache);
 
 var _headers = require('./headers');
 
@@ -41,13 +41,9 @@ var _errors = require('../../errors');
 
 var _identity = require('../../identity');
 
-var _rack = require('./rack');
-
 var _es6Promise = require('es6-promise');
 
 var _es6Promise2 = _interopRequireDefault(_es6Promise);
-
-var _device = require('./device');
 
 var _url = require('url');
 
@@ -73,6 +69,8 @@ var _isEmpty = require('lodash/isEmpty');
 
 var _isEmpty2 = _interopRequireDefault(_isEmpty);
 
+var _rack = require('./rack');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -96,7 +94,7 @@ var NetworkRequest = function (_Request) {
 
     var _this = _possibleConstructorReturn(this, (NetworkRequest.__proto__ || Object.getPrototypeOf(NetworkRequest)).call(this, options));
 
-    _this.rack = new _rack.NetworkRack();
+    _this.rack = _rack.NetworkRack;
     return _this;
   }
 
@@ -155,7 +153,7 @@ var Auth = {
     return _es6Promise2.default.resolve(null);
   },
   session: function session(client) {
-    var activeUser = _local2.default.getActiveUser(client);
+    var activeUser = _cache2.default.getActiveUser(client);
 
     if (!(0, _utils.isDefined)(activeUser)) {
       return _es6Promise2.default.reject(new _errors.NoActiveUserError('There is not an active user. Please login a user and retry the request.'));
@@ -304,7 +302,7 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
       }).catch(function (error) {
         if (error instanceof _errors.InvalidCredentialsError && retry === true) {
           var _ret = function () {
-            var activeUser = _local2.default.getActiveUser(_this5.client);
+            var activeUser = _cache2.default.getActiveUser(_this5.client);
 
             if (!(0, _utils.isDefined)(activeUser)) {
               throw error;
@@ -365,7 +363,7 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
                     });
                   }).then(function (user) {
                     user._socialIdentity[session.identity] = (0, _defaults2.default)(user._socialIdentity[session.identity], session);
-                    return _local2.default.setActiveUser(_this5.client, user);
+                    return _cache2.default.setActiveUser(_this5.client, user);
                   }).then(function () {
                     return _this5.execute(rawResponse, false);
                   })
@@ -469,8 +467,6 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
       } else {
         headers.remove('X-Kinvey-Custom-Request-Properties');
       }
-
-      headers.set('X-Kinvey-Device-Information', (0, _device.deviceInformation)());
 
       return headers;
     },

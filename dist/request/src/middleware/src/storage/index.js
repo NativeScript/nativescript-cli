@@ -3,10 +3,11 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.MemoryAdapter = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _errors = require('./src/errors');
+var _errors = require('../../../../../errors');
 
 var _memory = require('./src/memory');
 
@@ -28,6 +29,8 @@ var _isArray = require('lodash/isArray');
 
 var _isArray2 = _interopRequireDefault(_isArray);
 
+var _utils = require('../../../../../utils');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -35,10 +38,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 _promiseQueue2.default.configure(_es6Promise2.default);
 var queue = new _promiseQueue2.default(1, Infinity);
 
-var StorageAdapter = {
-  Memory: 'Memory'
-};
-Object.freeze(StorageAdapter);
+exports.MemoryAdapter = _memory2.default;
 
 var Storage = function () {
   function Storage(name) {
@@ -56,16 +56,18 @@ var Storage = function () {
   }
 
   _createClass(Storage, [{
-    key: 'getAdapter',
-    value: function getAdapter() {
+    key: 'loadAdapter',
+    value: function loadAdapter() {
       var _this = this;
 
-      return _memory2.default.isSupported().then(function (isMemorySupported) {
-        if (isMemorySupported) {
-          return new _memory2.default(_this.name);
+      return _es6Promise2.default.resolve().then(function () {
+        return _memory2.default.load(_this.name);
+      }).then(function (adapter) {
+        if ((0, _utils.isDefined)(adapter) === false) {
+          throw new Error('Unable to load a storage adapter.');
         }
 
-        throw new Error('No storage adapter is available.');
+        return adapter;
       });
     }
   }, {
@@ -86,7 +88,7 @@ var Storage = function () {
   }, {
     key: 'find',
     value: function find(collection) {
-      return this.getAdapter().then(function (adapter) {
+      return this.loadAdapter().then(function (adapter) {
         return adapter.find(collection);
       }).catch(function (error) {
         if (error instanceof _errors.NotFoundError || error.code === 404) {
@@ -102,11 +104,11 @@ var Storage = function () {
   }, {
     key: 'findById',
     value: function findById(collection, id) {
-      if (!(0, _isString2.default)(id)) {
+      if ((0, _isString2.default)(id) === false) {
         return _es6Promise2.default.reject(new Error('id must be a string', id));
       }
 
-      return this.getAdapter().then(function (adapter) {
+      return this.loadAdapter().then(function (adapter) {
         return adapter.findById(collection, id);
       });
     }
@@ -143,7 +145,7 @@ var Storage = function () {
           return entity;
         });
 
-        return _this2.getAdapter().then(function (adapter) {
+        return _this2.loadAdapter().then(function (adapter) {
           return adapter.save(collection, entities);
         }).then(function (entities) {
           if (singular && entities.length > 0) {
@@ -184,7 +186,7 @@ var Storage = function () {
           return _es6Promise2.default.reject(new Error('id must be a string', id));
         }
 
-        return _this4.getAdapter().then(function (adapter) {
+        return _this4.loadAdapter().then(function (adapter) {
           return adapter.removeById(collection, id);
         });
       });
@@ -195,7 +197,7 @@ var Storage = function () {
       var _this5 = this;
 
       return queue.add(function () {
-        return _this5.getAdapter().then(function (adapter) {
+        return _this5.loadAdapter().then(function (adapter) {
           return adapter.clear();
         });
       });

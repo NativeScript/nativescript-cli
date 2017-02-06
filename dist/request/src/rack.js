@@ -11,6 +11,8 @@ var _get = function get(object, property, receiver) { if (object === null) objec
 
 var _middleware = require('./middleware');
 
+var _middleware2 = _interopRequireDefault(_middleware);
+
 var _es6Promise = require('es6-promise');
 
 var _es6Promise2 = _interopRequireDefault(_es6Promise);
@@ -22,6 +24,12 @@ var _reduce2 = _interopRequireDefault(_reduce);
 var _isFunction = require('lodash/isFunction');
 
 var _isFunction2 = _interopRequireDefault(_isFunction);
+
+var _utils = require('../../utils');
+
+var _values = require('lodash/values');
+
+var _values2 = _interopRequireDefault(_values);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -50,8 +58,8 @@ var Rack = function (_Middleware) {
   _createClass(Rack, [{
     key: 'use',
     value: function use(middleware) {
-      if (middleware) {
-        if (middleware instanceof _middleware.Middleware) {
+      if ((0, _utils.isDefined)(middleware)) {
+        if (middleware instanceof _middleware2.default) {
           this.middlewares.push(middleware);
           return;
         }
@@ -73,7 +81,7 @@ var Rack = function (_Middleware) {
         return _es6Promise2.default.reject(new Error('Request is undefined. Please provide a valid request.'));
       }
 
-      return (0, _reduce2.default)(this.middlewares, function (promise, middleware) {
+      return (0, _reduce2.default)((0, _values2.default)(this.middlewares), function (promise, middleware) {
         return promise.then(function (_ref) {
           var request = _ref.request,
               response = _ref.response;
@@ -123,9 +131,8 @@ var Rack = function (_Middleware) {
       var level = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
 
       var root = _get(Rack.prototype.__proto__ || Object.getPrototypeOf(Rack.prototype), 'generateTree', this).call(this, level);
-      var middlewares = this.middlewares;
 
-      middlewares.forEach(function (middleware) {
+      (0, _values2.default)(this.middlewares).forEach(function (middleware) {
         root.nodes.push(middleware.generateTree(level + 1));
       });
 
@@ -134,11 +141,11 @@ var Rack = function (_Middleware) {
   }]);
 
   return Rack;
-}(_middleware.Middleware);
+}(_middleware2.default);
 
 exports.default = Rack;
 
-var CacheRack = exports.CacheRack = function (_Rack) {
+var CacheRack = function (_Rack) {
   _inherits(CacheRack, _Rack);
 
   function CacheRack() {
@@ -155,7 +162,10 @@ var CacheRack = exports.CacheRack = function (_Rack) {
   return CacheRack;
 }(Rack);
 
-var NetworkRack = exports.NetworkRack = function (_Rack2) {
+var cacheRack = new CacheRack();
+exports.CacheRack = cacheRack;
+
+var NetworkRack = function (_Rack2) {
   _inherits(NetworkRack, _Rack2);
 
   function NetworkRack() {
@@ -173,3 +183,6 @@ var NetworkRack = exports.NetworkRack = function (_Rack2) {
 
   return NetworkRack;
 }(Rack);
+
+var newtworkRack = new NetworkRack();
+exports.NetworkRack = newtworkRack;

@@ -1,6 +1,6 @@
 import { CacheRequest } from './request';
-import { KinveyError } from './errors';
-import { Log, isDefined } from './utils';
+import { KinveyError } from 'src/errors';
+import { Log, isDefined } from 'src/utils';
 import url from 'url';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
@@ -12,7 +12,7 @@ let sharedInstance = null;
  * The Client class stores information about your application on the Kinvey platform. You can create mutiple clients
  * to send requests to different environments on the Kinvey platform.
  */
-export class Client {
+export default class Client {
   /**
    * Creates a new instance of the Client class.
    *

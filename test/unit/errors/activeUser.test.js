@@ -1,4 +1,4 @@
-import { ActiveUserError, BaseError } from '../../../src/errors';
+import { ActiveUserError, BaseError } from 'src/errors';
 import expect from 'expect';
 
 describe('ActiveUserError', () => {

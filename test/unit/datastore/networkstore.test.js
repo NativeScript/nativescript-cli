@@ -1,5 +1,5 @@
 import { NetworkStore } from 'src/datastore';
-import { Client } from 'src/client';
+import Client from 'src/client';
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
 import { KinveyError, NotFoundError } from 'src/errors';

@@ -1,14 +1,14 @@
 import Request, { RequestMethod } from './request';
-import { Client } from '../../client';
+import Client from 'src/client';
 import { KinveyResponse } from './response';
 import UrlPattern from 'url-pattern';
 import url from 'url';
 import localStorage from 'local-storage';
-import { KinveyError } from '../../errors';
-import Query from '../../query';
-import Aggregation from '../../aggregation';
+import { KinveyError } from 'src/errors';
+import Query from 'src/query';
+import Aggregation from 'src/aggregation';
 import Promise from 'es6-promise';
-import { isDefined } from '../../utils';
+import { isDefined } from 'src/utils';
 import { CacheRack } from './rack';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const activeUserCollectionName = process.env.KINVEY_USER_ACTIVE_COLLECTION_NAME || 'kinvey_active_user';
@@ -17,12 +17,12 @@ const activeUsers = {};
 /**
  * @private
  */
-export default class LocalRequest extends Request {
+export default class CacheRequest extends Request {
   constructor(options = {}) {
     super(options);
     this.aggregation = options.aggregation;
     this.query = options.query;
-    this.rack = new CacheRack();
+    this.rack = CacheRack;
   }
 
   get query() {
@@ -105,7 +105,7 @@ export default class LocalRequest extends Request {
   }
 
   static loadActiveUser(client = Client.sharedInstance()) {
-    const request = new LocalRequest({
+    const request = new CacheRequest({
       method: RequestMethod.GET,
       url: url.format({
         protocol: client.protocol,
@@ -121,9 +121,9 @@ export default class LocalRequest extends Request {
         }
 
         // Try local storage (legacy)
-        const legacyActiveUser = LocalRequest.loadActiveUserLegacy(client);
+        const legacyActiveUser = CacheRequest.loadActiveUserLegacy(client);
         if (isDefined(legacyActiveUser)) {
-          return LocalRequest.setActiveUser(client, legacyActiveUser);
+          return CacheRequest.setActiveUser(client, legacyActiveUser);
         }
 
         return null;
@@ -136,7 +136,7 @@ export default class LocalRequest extends Request {
   }
 
   static loadActiveUserLegacy(client = Client.sharedInstance()) {
-    const activeUser = LocalRequest.getActiveUserLegacy(client);
+    const activeUser = CacheRequest.getActiveUserLegacy(client);
     activeUsers[client.appKey] = activeUser;
     return activeUser;
   }
@@ -155,17 +155,17 @@ export default class LocalRequest extends Request {
 
   static setActiveUser(client = Client.sharedInstance(), user) {
     let promise = Promise.resolve(null);
-    const activeUser = LocalRequest.getActiveUser(client);
+    const activeUser = CacheRequest.getActiveUser(client);
 
     if (isDefined(activeUser)) {
       // Delete from local storage (legacy)
-      LocalRequest.setActiveUserLegacy(client, null);
+      CacheRequest.setActiveUserLegacy(client, null);
 
       // Delete from memory
       activeUsers[client.appKey] = null;
 
       // Delete from cache
-      const request = new LocalRequest({
+      const request = new CacheRequest({
         method: RequestMethod.DELETE,
         url: url.format({
           protocol: client.protocol,
@@ -187,10 +187,10 @@ export default class LocalRequest extends Request {
         activeUsers[client.appKey] = user;
 
         // Save to local storage (legacy)
-        LocalRequest.setActiveUserLegacy(client, user);
+        CacheRequest.setActiveUserLegacy(client, user);
 
         // Save to cache
-        const request = new LocalRequest({
+        const request = new CacheRequest({
           method: RequestMethod.POST,
           url: url.format({
             protocol: client.protocol,

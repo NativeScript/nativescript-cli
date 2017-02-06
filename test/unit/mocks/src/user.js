@@ -39,13 +39,23 @@ export default class TestUser extends User {
     return super.login(username, password, options);
   }
 
+  static login(username, password, options) {
+    const user = new TestUser({}, options);
+    return user.login(username, password, options);
+  }
+
   logout(options) {
     // Setup nock response
     nock(this.client.apiHostname, { encodedQueryParams: true })
       .post(`${this.pathname}/_logout`)
-      .reply(204, '', {});
+      .reply(204);
 
     // Logout
     return super.logout(options);
+  }
+
+  static logout(options) {
+    const user = new TestUser({}, options);
+    return user.logout(options);
   }
 }

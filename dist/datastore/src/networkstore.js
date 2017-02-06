@@ -18,6 +18,8 @@ var _query2 = _interopRequireDefault(_query);
 
 var _client = require('../../client');
 
+var _client2 = _interopRequireDefault(_client);
+
 var _utils = require('../../utils');
 
 var _aggregation = require('../../aggregation');
@@ -472,10 +474,10 @@ var NetworkStore = function () {
         return this._client;
       }
 
-      return _client.Client.sharedInstance();
+      return _client2.default.sharedInstance();
     },
     set: function set(client) {
-      if (client instanceof _client.Client) {
+      if (client instanceof _client2.default) {
         this._client = client;
       } else {
         this._client = null;

@@ -1,6 +1,6 @@
-import { CacheRequest, RequestMethod } from '../../request';
-import { KinveyError } from '../../errors';
-import { Client } from '../../client';
+import { CacheRequest, RequestMethod } from 'src/request';
+import { KinveyError } from 'src/errors';
+import Client from 'src/client';
 import NetworkStore from './networkstore';
 import CacheStore from './cachestore';
 import SyncStore from './syncstore';

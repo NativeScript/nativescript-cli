@@ -1,19 +1,16 @@
-import { NotFoundError } from './src/errors';
-import Memory from './src/memory';
+import { NotFoundError } from 'src/errors';
+import MemoryAdapter from './src/memory';
 import Promise from 'es6-promise';
 import Queue from 'promise-queue';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
+import { isDefined } from 'src/utils';
 Queue.configure(Promise);
 const queue = new Queue(1, Infinity);
 
-/**
- * Enum for Storage Adapters.
- */
-const StorageAdapter = {
-  Memory: 'Memory'
+export {
+  MemoryAdapter
 };
-Object.freeze(StorageAdapter);
 
 export default class Storage {
   constructor(name) {
@@ -28,14 +25,15 @@ export default class Storage {
     this.name = name;
   }
 
-  getAdapter() {
-    return Memory.isSupported()
-      .then((isMemorySupported) => {
-        if (isMemorySupported) {
-          return new Memory(this.name);
+  loadAdapter() {
+    return Promise.resolve()
+      .then(() => MemoryAdapter.load(this.name))
+      .then((adapter) => {
+        if (isDefined(adapter) === false) {
+          throw new Error('Unable to load a storage adapter.');
         }
 
-        throw new Error('No storage adapter is available.');
+        return adapter;
       });
   }
 
@@ -52,7 +50,7 @@ export default class Storage {
   }
 
   find(collection) {
-    return this.getAdapter()
+    return this.loadAdapter()
       .then(adapter => adapter.find(collection))
       .catch((error) => {
         if (error instanceof NotFoundError || error.code === 404) {
@@ -65,11 +63,11 @@ export default class Storage {
   }
 
   findById(collection, id) {
-    if (!isString(id)) {
+    if (isString(id) === false) {
       return Promise.reject(new Error('id must be a string', id));
     }
 
-    return this.getAdapter()
+    return this.loadAdapter()
       .then(adapter => adapter.findById(collection, id));
   }
 
@@ -100,7 +98,7 @@ export default class Storage {
         return entity;
       });
 
-      return this.getAdapter()
+      return this.loadAdapter()
         .then(adapter => adapter.save(collection, entities))
         .then((entities) => {
           if (singular && entities.length > 0) {
@@ -134,12 +132,15 @@ export default class Storage {
         return Promise.reject(new Error('id must be a string', id));
       }
 
-      return this.getAdapter()
+      return this.loadAdapter()
         .then(adapter => adapter.removeById(collection, id));
     });
   }
 
   clear() {
-    return queue.add(() => this.getAdapter().then(adapter => adapter.clear()));
+    return queue.add(() => {
+      return this.loadAdapter()
+        .then(adapter => adapter.clear());
+    });
   }
 }

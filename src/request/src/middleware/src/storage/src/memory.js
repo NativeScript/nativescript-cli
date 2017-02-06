@@ -1,4 +1,4 @@
-import { NotFoundError } from './errors';
+import { NotFoundError } from 'src/errors';
 import MemoryCache from 'fast-memory-cache';
 import Promise from 'es6-promise';
 import keyBy from 'lodash/keyBy';
@@ -7,16 +7,17 @@ import values from 'lodash/values';
 import find from 'lodash/find';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
+import { isDefined } from 'src/utils';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const caches = {};
 
-export default class Memory {
+class Memory {
   constructor(name) {
-    if (!name) {
+    if (isDefined(name) === false) {
       throw new Error('A name for the collection is required to use the memory persistence adapter.', name);
     }
 
-    if (!isString(name)) {
+    if (isString(name) === false) {
       throw new Error('The name of the collection must be a string to use the memory persistence adapter', name);
     }
 
@@ -108,8 +109,10 @@ export default class Memory {
     this.cache.clear();
     return Promise.resolve(null);
   }
-
-  static isSupported() {
-    return Promise.resolve(true);
-  }
 }
+
+export default {
+  load(name) {
+    return new Memory(name);
+  }
+};

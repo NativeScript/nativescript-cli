@@ -1,9 +1,9 @@
 import CacheStore from './cachestore';
-import { CacheRequest, RequestMethod } from '../../request';
-import { KinveyError } from '../../errors';
-import Query from '../../query';
-import Aggregation from '../../aggregation';
-import { KinveyObservable } from '../../utils';
+import { CacheRequest, RequestMethod } from 'src/request';
+import { KinveyError } from 'src/errors';
+import Query from 'src/query';
+import Aggregation from 'src/aggregation';
+import { KinveyObservable } from 'src/utils';
 import url from 'url';
 
 /**

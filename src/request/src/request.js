@@ -1,6 +1,6 @@
-import { NoResponseError, KinveyError } from '../../errors';
-import { Client } from '../../client';
-import { isDefined } from '../../utils';
+import { NoResponseError, KinveyError } from 'src/errors';
+import Client from 'src/client';
+import { isDefined } from 'src/utils';
 import Response from './response';
 import Headers from './headers';
 import qs from 'qs';
@@ -189,4 +189,3 @@ export default class Request {
     };
   }
 }
-

@@ -1,11 +1,11 @@
 import NetworkStore from './networkstore';
-import { CacheRequest, AuthType, RequestMethod } from '../../request';
-import { KinveyError } from '../../errors';
-import Query from '../../query';
-import Aggregation from '../../aggregation';
+import { CacheRequest, AuthType, RequestMethod } from 'src/request';
+import { KinveyError } from 'src/errors';
+import Query from 'src/query';
+import Aggregation from 'src/aggregation';
 import SyncManager from './sync';
-import { Metadata } from '../../entity';
-import { KinveyObservable } from '../../utils';
+import { Metadata } from 'src/entity';
+import { KinveyObservable } from 'src/utils';
 import differenceBy from 'lodash/differenceBy';
 import assign from 'lodash/assign';
 import keyBy from 'lodash/keyBy';

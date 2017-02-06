@@ -1,5 +1,5 @@
-import { AuthType, RequestMethod, KinveyRequest } from '../../request';
-import { KinveyError } from '../../errors';
+import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
+import { KinveyError } from 'src/errors';
 import { KinveyObservable, isDefined } from '../../utils';
 import Query from '../../query';
 import NetworkStore from './networkstore';

@@ -1,21 +1,20 @@
 import Request, { RequestMethod } from './request';
-import LocalRequest from './local';
+import CacheRequest from './cache';
 import Headers from './headers';
 import { KinveyResponse } from './response';
-import Query from '../../query';
-import Aggregation from '../../aggregation';
-import { isDefined } from '../../utils';
-import { InvalidCredentialsError, NoActiveUserError, KinveyError } from '../../errors';
-import { SocialIdentity } from '../../identity';
-import { NetworkRack } from './rack';
+import Query from 'src/query';
+import Aggregation from 'src/aggregation';
+import { isDefined } from 'src/utils';
+import { InvalidCredentialsError, NoActiveUserError, KinveyError } from 'src/errors';
+import { SocialIdentity } from 'src/identity';
 import Promise from 'es6-promise';
-import { deviceInformation } from './device';
 import url from 'url';
 import qs from 'qs';
 import appendQuery from 'append-query';
 import assign from 'lodash/assign';
 import defaults from 'lodash/defaults';
 import isEmpty from 'lodash/isEmpty';
+import { NetworkRack } from './rack';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const defaultApiVersion = process.env.KINVEY_DEFAULT_API_VERSION || 4;
@@ -24,7 +23,7 @@ const customPropertiesMaxBytesAllowed = process.env.KINVEY_MAX_HEADER_BYTES || 2
 export default class NetworkRequest extends Request {
   constructor(options = {}) {
     super(options);
-    this.rack = new NetworkRack();
+    this.rack = NetworkRack;
   }
 }
 
@@ -121,7 +120,7 @@ const Auth = {
    * @returns {Object}
    */
   session(client) {
-    const activeUser = LocalRequest.getActiveUser(client);
+    const activeUser = CacheRequest.getActiveUser(client);
 
     if (!isDefined(activeUser)) {
       return Promise.reject(
@@ -274,9 +273,6 @@ export class KinveyRequest extends NetworkRequest {
       headers.remove('X-Kinvey-Custom-Request-Properties');
     }
 
-    // Add the X-Kinvey-Device-Information header
-    headers.set('X-Kinvey-Device-Information', deviceInformation());
-
     // Return the headers
     return headers;
   }
@@ -394,7 +390,7 @@ export class KinveyRequest extends NetworkRequest {
       })
       .catch((error) => {
         if (error instanceof InvalidCredentialsError && retry === true) {
-          const activeUser = LocalRequest.getActiveUser(this.client);
+          const activeUser = CacheRequest.getActiveUser(this.client);
 
           if (!isDefined(activeUser)) {
             throw error;
@@ -456,7 +452,7 @@ export class KinveyRequest extends NetworkRequest {
                 })
                 .then((user) => {
                   user._socialIdentity[session.identity] = defaults(user._socialIdentity[session.identity], session);
-                  return LocalRequest.setActiveUser(this.client, user);
+                  return CacheRequest.setActiveUser(this.client, user);
                 })
                 .then(() => this.execute(rawResponse, false));
             }

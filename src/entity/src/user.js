@@ -1,11 +1,11 @@
-import { Client } from '../../client';
+import Client from 'src/client';
 import Acl from './acl';
 import Metadata from './metadata';
-import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from '../../request';
-import { KinveyError, NotFoundError, ActiveUserError } from '../../errors';
-import DataStore, { UserStore as store } from '../../datastore';
-import { Facebook, Google, LinkedIn, MobileIdentityConnect } from '../../identity';
-import { Log, isDefined } from '../../utils';
+import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from 'src/request';
+import { KinveyError, NotFoundError, ActiveUserError } from 'src/errors';
+import DataStore, { UserStore as store } from 'src/datastore';
+import { Facebook, Google, LinkedIn, MobileIdentityConnect } from 'src/identity';
+import { Log, isDefined } from 'src/utils';
 import Promise from 'es6-promise';
 import url from 'url';
 import assign from 'lodash/assign';
@@ -83,7 +83,7 @@ export default class User {
    * @param {Metadata|Object} metadata The metadata.
    */
   set metadata(metadata) {
-    this.data[kmdAttribute] = result(metadata, 'toPlainObjecta', metadata);
+    this.data[kmdAttribute] = result(metadata, 'toPlainObject', metadata);
   }
 
   /**

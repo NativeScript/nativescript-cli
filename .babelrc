@@ -1,9 +1,12 @@
 {
   "plugins": [
     "inline-dotenv",
-    ["module-alias", [
-      { "src": "./src", "expose": "src" }
-    ]]
+    ["module-resolver", {
+      "alias": {
+        "package.json": "./package.json",
+        "src": "./src"
+      }
+    }]
   ],
   "presets": [
     "es2015",

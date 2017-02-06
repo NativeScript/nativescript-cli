@@ -5,10 +5,10 @@ import {
   AuthType,
   RequestMethod,
   Headers
-} from '../../request';
-import { KinveyError } from '../../errors';
+} from 'src/request';
+import { KinveyError } from 'src/errors';
 import NetworkStore from './networkstore';
-import { Log } from '../../utils';
+import { Log } from 'src/utils';
 import Promise from 'es6-promise';
 import url from 'url';
 import map from 'lodash/map';

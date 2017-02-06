@@ -8,6 +8,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _client = require('../../client');
 
+var _client2 = _interopRequireDefault(_client);
+
 var _errors = require('../../errors');
 
 var _es6Promise = require('es6-promise');
@@ -38,7 +40,7 @@ var Identity = function () {
 
     _classCallCheck(this, Identity);
 
-    this.client = options.client || _client.Client.sharedInstance();
+    this.client = options.client || _client2.default.sharedInstance();
   }
 
   _createClass(Identity, [{

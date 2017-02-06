@@ -1,5 +1,5 @@
-import Request from '../../../src/request';
-import { Client } from '../../../src/client';
+import Request from 'src/request';
+import Client from 'src/client';
 import expect from 'expect';
 
 describe('Request', function() {

@@ -1,13 +1,14 @@
-import {
+import Middleware, {
   CacheMiddleware,
   HttpMiddleware,
-  Middleware,
   ParseMiddleware,
   SerializeMiddleware
 } from './middleware';
 import Promise from 'es6-promise';
 import reduce from 'lodash/reduce';
 import isFunction from 'lodash/isFunction';
+import { isDefined } from 'src/utils';
+import values from 'lodash/values';
 
 export default class Rack extends Middleware {
   constructor(name = 'Rack') {
@@ -18,7 +19,7 @@ export default class Rack extends Middleware {
   }
 
   use(middleware) {
-    if (middleware) {
+    if (isDefined(middleware)) {
       if (middleware instanceof Middleware) {
         this.middlewares.push(middleware);
         return;
@@ -37,7 +38,7 @@ export default class Rack extends Middleware {
       return Promise.reject(new Error('Request is undefined. Please provide a valid request.'));
     }
 
-    return reduce(this.middlewares,
+    return reduce(values(this.middlewares),
       (promise, middleware) => promise.then(({ request, response }) => {
         if (this.canceled === true) {
           return Promise.reject(new Error('Cancelled'));
@@ -45,8 +46,7 @@ export default class Rack extends Middleware {
 
         this.activeMiddleware = middleware;
         return middleware.handle(request || req, response);
-      }),
-      Promise.resolve({ request: req }))
+      }), Promise.resolve({ request: req }))
       .then(({ response }) => {
         if (this.canceled === true) {
           return Promise.reject(new Error('Cancelled'));
@@ -79,9 +79,8 @@ export default class Rack extends Middleware {
 
   generateTree(level = 0) {
     const root = super.generateTree(level);
-    const middlewares = this.middlewares;
 
-    middlewares.forEach((middleware) => {
+    values(this.middlewares).forEach((middleware) => {
       root.nodes.push(middleware.generateTree(level + 1));
     });
 
@@ -89,14 +88,16 @@ export default class Rack extends Middleware {
   }
 }
 
-export class CacheRack extends Rack {
+class CacheRack extends Rack {
   constructor(name = 'Cache Rack') {
     super(name);
     this.use(new CacheMiddleware());
   }
 }
+const cacheRack = new CacheRack();
+export { cacheRack as CacheRack };
 
-export class NetworkRack extends Rack {
+class NetworkRack extends Rack {
   constructor(name = 'Network Rack') {
     super(name);
     this.use(new SerializeMiddleware());
@@ -104,3 +105,5 @@ export class NetworkRack extends Rack {
     this.use(new ParseMiddleware());
   }
 }
+const networkRack = new NetworkRack();
+export { networkRack as NetworkRack };

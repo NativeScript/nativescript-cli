@@ -1,56 +1,75 @@
-import { TimeoutError } from '../../../../errors';
 import Middleware from './middleware';
 import Promise from 'es6-promise';
-import agent from 'superagent';
+import httpRequest from 'request';
+import { isDefined } from 'src/utils';
+import { TimeoutError } from 'src/errors';
+import pkg from 'package.json';
+
+function deviceInformation() {
+  const platform = process.title;
+  const version = process.version;
+  const manufacturer = process.platform;
+
+  // Return the device information string.
+  const parts = [`js-${pkg.name}/${pkg.version}`];
+
+  return parts.concat([platform, version, manufacturer]).map((part) => {
+    if (part) {
+      return part.toString().replace(/\s/g, '_').toLowerCase();
+    }
+
+    return 'unknown';
+  }).join(' ');
+}
 
 export default class HttpMiddleware extends Middleware {
   constructor(name = 'Http Middleware') {
     super(name);
   }
 
+  get deviceInformation() {
+    return deviceInformation();
+  }
+
   handle(request) {
     const promise = new Promise((resolve, reject) => {
       const { url, method, headers, body, timeout, followRedirect } = request;
-      const redirects = followRedirect === true ? 5 : 0;
 
-      this.httpRequest = agent(method, url)
-        .set(headers)
-        .send(body)
-        .timeout(timeout)
-        .redirects(redirects)
-        .end((error, response) => {
-          this.httpRequest = undefined;
+      // Add the X-Kinvey-Device-Information header
+      headers['X-Kinvey-Device-Information'] = this.deviceInformation;
 
-          if (error) {
-            response = error.response;
+      httpRequest({
+        method: method,
+        url: url,
+        headers: headers,
+        body: body,
+        followRedirect: followRedirect,
+        timeout: timeout
+      }, (error, response, body) => {
+        if (isDefined(response) === false) {
+          if (error.code === 'ESOCKETTIMEDOUT' || error.code === 'ETIMEDOUT') {
+            return reject(new TimeoutError('The request timed out.'));
           }
 
-          if (!response) {
-            if (error) {
-              if (error.code === 'ECONNABORTED') {
-                return reject(new TimeoutError(undefined, undefined, error.code));
-              }
-            }
+          return reject(error);
+        }
 
-            return reject(error);
+        return resolve({
+          response: {
+            statusCode: response.statusCode,
+            headers: response.headers,
+            data: body
           }
-
-          return resolve({
-            response: {
-              statusCode: response.statusCode,
-              headers: response.headers,
-              data: response.body
-            }
-          });
         });
+      });
     });
     return promise;
   }
 
   cancel() {
-    if (typeof this.httpRequest !== 'undefined') {
-      this.httpRequest.abort();
-    }
+    // if (typeof this.httpRequest !== 'undefined') {
+    //   this.httpRequest.abort();
+    // }
 
     return Promise.resolve();
   }

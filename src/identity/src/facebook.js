@@ -2,8 +2,8 @@
 import Popup from './popup';
 import Identity from './identity';
 import { SocialIdentity } from './enums';
-import { KinveyError } from '../../errors';
-import { randomString } from '../../utils';
+import { KinveyError } from 'src/errors';
+import { randomString } from 'src/utils';
 import Promise from 'es6-promise';
 import assign from 'lodash/assign';
 import querystring from 'querystring';
@@ -160,4 +160,3 @@ export class Facebook extends Identity {
     return Promise.resolve();
   }
 }
-

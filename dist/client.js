@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Client = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -36,7 +35,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var defaultTimeout = process && process.env && process.env.KINVEY_DEFAULT_TIMEOUT || '60000' || 60000;
 var _sharedInstance = null;
 
-var Client = exports.Client = function () {
+var Client = function () {
   function Client() {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
@@ -216,3 +215,5 @@ var Client = exports.Client = function () {
 
   return Client;
 }();
+
+exports.default = Client;

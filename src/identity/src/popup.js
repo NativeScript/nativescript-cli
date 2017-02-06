@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { PopupError } from '../../errors';
+import { PopupError } from 'src/errors';
 
 export default class Popup extends EventEmitter {
   open() {

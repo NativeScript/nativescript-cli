@@ -16,6 +16,8 @@ var _request2 = _interopRequireDefault(_request);
 
 var _client = require('../../client');
 
+var _client2 = _interopRequireDefault(_client);
+
 var _response = require('./response');
 
 var _urlPattern = require('url-pattern');
@@ -60,28 +62,28 @@ var usersNamespace = process && process.env && process.env.KINVEY_USERS_NAMESPAC
 var activeUserCollectionName = process && process.env && process.env.KINVEY_USER_ACTIVE_COLLECTION_NAME || undefined || 'kinvey_active_user';
 var activeUsers = {};
 
-var LocalRequest = function (_Request) {
-  _inherits(LocalRequest, _Request);
+var CacheRequest = function (_Request) {
+  _inherits(CacheRequest, _Request);
 
-  function LocalRequest() {
+  function CacheRequest() {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-    _classCallCheck(this, LocalRequest);
+    _classCallCheck(this, CacheRequest);
 
-    var _this = _possibleConstructorReturn(this, (LocalRequest.__proto__ || Object.getPrototypeOf(LocalRequest)).call(this, options));
+    var _this = _possibleConstructorReturn(this, (CacheRequest.__proto__ || Object.getPrototypeOf(CacheRequest)).call(this, options));
 
     _this.aggregation = options.aggregation;
     _this.query = options.query;
-    _this.rack = new _rack.CacheRack();
+    _this.rack = _rack.CacheRack;
     return _this;
   }
 
-  _createClass(LocalRequest, [{
+  _createClass(CacheRequest, [{
     key: 'execute',
     value: function execute() {
       var _this2 = this;
 
-      return _get(LocalRequest.prototype.__proto__ || Object.getPrototypeOf(LocalRequest.prototype), 'execute', this).call(this).then(function (response) {
+      return _get(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'execute', this).call(this).then(function (response) {
         if (!(response instanceof _response.KinveyResponse)) {
           response = new _response.KinveyResponse({
             statusCode: response.statusCode,
@@ -108,7 +110,7 @@ var LocalRequest = function (_Request) {
   }, {
     key: 'toPlainObject',
     value: function toPlainObject() {
-      var obj = _get(LocalRequest.prototype.__proto__ || Object.getPrototypeOf(LocalRequest.prototype), 'toPlainObject', this).call(this);
+      var obj = _get(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'toPlainObject', this).call(this);
       obj.appKey = this.appKey;
       obj.collection = this.collection;
       obj.entityId = this.entityId;
@@ -142,10 +144,10 @@ var LocalRequest = function (_Request) {
   }, {
     key: 'url',
     get: function get() {
-      return _get(LocalRequest.prototype.__proto__ || Object.getPrototypeOf(LocalRequest.prototype), 'url', this);
+      return _get(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'url', this);
     },
     set: function set(urlString) {
-      _set(LocalRequest.prototype.__proto__ || Object.getPrototypeOf(LocalRequest.prototype), 'url', urlString, this);
+      _set(CacheRequest.prototype.__proto__ || Object.getPrototypeOf(CacheRequest.prototype), 'url', urlString, this);
       var pathname = global.escape(_url2.default.parse(urlString).pathname);
       var pattern = new _urlPattern2.default('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:entityId)(/)');
 
@@ -161,9 +163,9 @@ var LocalRequest = function (_Request) {
   }], [{
     key: 'loadActiveUser',
     value: function loadActiveUser() {
-      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
+      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client2.default.sharedInstance();
 
-      var request = new LocalRequest({
+      var request = new CacheRequest({
         method: _request.RequestMethod.GET,
         url: _url2.default.format({
           protocol: client.protocol,
@@ -178,9 +180,9 @@ var LocalRequest = function (_Request) {
           return users[0];
         }
 
-        var legacyActiveUser = LocalRequest.loadActiveUserLegacy(client);
+        var legacyActiveUser = CacheRequest.loadActiveUserLegacy(client);
         if ((0, _utils.isDefined)(legacyActiveUser)) {
-          return LocalRequest.setActiveUser(client, legacyActiveUser);
+          return CacheRequest.setActiveUser(client, legacyActiveUser);
         }
 
         return null;
@@ -194,23 +196,23 @@ var LocalRequest = function (_Request) {
   }, {
     key: 'loadActiveUserLegacy',
     value: function loadActiveUserLegacy() {
-      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
+      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client2.default.sharedInstance();
 
-      var activeUser = LocalRequest.getActiveUserLegacy(client);
+      var activeUser = CacheRequest.getActiveUserLegacy(client);
       activeUsers[client.appKey] = activeUser;
       return activeUser;
     }
   }, {
     key: 'getActiveUser',
     value: function getActiveUser() {
-      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
+      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client2.default.sharedInstance();
 
       return activeUsers[client.appKey];
     }
   }, {
     key: 'getActiveUserLegacy',
     value: function getActiveUserLegacy() {
-      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
+      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client2.default.sharedInstance();
 
       try {
         return _localStorage2.default.get(client.appKey + 'kinvey_user');
@@ -221,18 +223,18 @@ var LocalRequest = function (_Request) {
   }, {
     key: 'setActiveUser',
     value: function setActiveUser() {
-      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
+      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client2.default.sharedInstance();
       var user = arguments[1];
 
       var promise = _es6Promise2.default.resolve(null);
-      var activeUser = LocalRequest.getActiveUser(client);
+      var activeUser = CacheRequest.getActiveUser(client);
 
       if ((0, _utils.isDefined)(activeUser)) {
-        LocalRequest.setActiveUserLegacy(client, null);
+        CacheRequest.setActiveUserLegacy(client, null);
 
         activeUsers[client.appKey] = null;
 
-        var request = new LocalRequest({
+        var request = new CacheRequest({
           method: _request.RequestMethod.DELETE,
           url: _url2.default.format({
             protocol: client.protocol,
@@ -252,9 +254,9 @@ var LocalRequest = function (_Request) {
 
         activeUsers[client.appKey] = user;
 
-        LocalRequest.setActiveUserLegacy(client, user);
+        CacheRequest.setActiveUserLegacy(client, user);
 
-        var request = new LocalRequest({
+        var request = new CacheRequest({
           method: _request.RequestMethod.POST,
           url: _url2.default.format({
             protocol: client.protocol,
@@ -273,7 +275,7 @@ var LocalRequest = function (_Request) {
   }, {
     key: 'setActiveUserLegacy',
     value: function setActiveUserLegacy() {
-      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client.Client.sharedInstance();
+      var client = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _client2.default.sharedInstance();
       var user = arguments[1];
 
       try {
@@ -290,7 +292,7 @@ var LocalRequest = function (_Request) {
     }
   }]);
 
-  return LocalRequest;
+  return CacheRequest;
 }(_request2.default);
 
-exports.default = LocalRequest;
+exports.default = CacheRequest;

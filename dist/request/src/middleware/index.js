@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.SerializeMiddleware = exports.ParseMiddleware = exports.Middleware = exports.HttpMiddleware = exports.CacheMiddleware = undefined;
+exports.Storage = exports.SerializeMiddleware = exports.ParseMiddleware = exports.MemoryAdapter = exports.HttpMiddleware = exports.CacheMiddleware = undefined;
 
 var _cache = require('./src/cache');
 
@@ -25,11 +25,16 @@ var _serialize = require('./src/serialize');
 
 var _serialize2 = _interopRequireDefault(_serialize);
 
+var _storage = require('./src/storage');
+
+var _storage2 = _interopRequireDefault(_storage);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.CacheMiddleware = _cache2.default;
 exports.HttpMiddleware = _http2.default;
-exports.Middleware = _middleware2.default;
+exports.MemoryAdapter = _storage.MemoryAdapter;
 exports.ParseMiddleware = _parse2.default;
 exports.SerializeMiddleware = _serialize2.default;
+exports.Storage = _storage2.default;
 exports.default = _middleware2.default;
