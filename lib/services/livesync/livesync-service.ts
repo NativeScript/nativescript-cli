@@ -2,6 +2,8 @@ import * as constants from "../../constants";
 import * as helpers from "../../common/helpers";
 import * as path from "path";
 import * as semver from "semver";
+import { NodeModulesDependenciesBuilder } from "../../tools/node-modules/node-modules-dependencies-builder";
+
 let choki = require("chokidar");
 
 class LiveSyncService implements ILiveSyncService {
@@ -118,7 +120,19 @@ class LiveSyncService implements ILiveSyncService {
 
 	private partialSync(syncWorkingDirectory: string, onChangedActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => Promise<void>)[]): void {
 		let that = this;
-		let pattern = ["app", "package.json", "node_modules"];
+		let dependenciesBuilder = this.$injector.resolve(NodeModulesDependenciesBuilder, {});
+		let productionDependencies = dependenciesBuilder.getProductionDependencies(this.$projectData.projectDir);
+		let pattern = ["app"];
+
+		if (this.$options.syncAllFiles) {
+			pattern.push("package.json");
+
+			// watch only production node_module/packages same one prepare uses
+			for (let index in productionDependencies) {
+				pattern.push("node_modules/" + productionDependencies[index].name);
+			}
+		}
+
 		let watcher = choki.watch(pattern, { ignoreInitial: true, cwd: syncWorkingDirectory, ignored: '**/*.DS_Store' }).on("all", (event: string, filePath: string) => {
 			that.$dispatcher.dispatch(async () => {
 				try {
