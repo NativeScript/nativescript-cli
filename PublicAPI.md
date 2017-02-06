@@ -92,7 +92,7 @@ const projectSettings = {
     pathToProject: "/home/my-user/project-dir"
 };
 
-tns.createProject(projectSettings)
+tns.projectService.createProject(projectSettings)
 	.then(() => console.log("Project successfully created."))
     .catch((err) => console.log("Unable to create project, reason: ", err);
 </pre>
@@ -105,7 +105,7 @@ const projectSettings: IProjectSettings = {
     pathToProject: "/home/my-user/project-dir"
 };
 
-tns.createProject(projectSettings)
+tns.projectService.createProject(projectSettings)
 	.then(() => console.log("Project successfully created."))
     .catch((err) => console.log("Unable to create project, reason: ", err);
 </pre>

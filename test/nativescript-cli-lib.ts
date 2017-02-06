@@ -21,7 +21,7 @@ describe("nativescript-cli-lib", () => {
 
 	_.each(publicApi, (methods: string[], moduleName: string) => {
 
-		it(`resolves publicly available module - ${moduleName} and its publicly available methods`, () => {
+		it(`resolves publicly available module - ${moduleName}${methods && methods.length ? " and its publicly available methods: " + methods.join(", ") : ""}`, () => {
 			// HACK: If we try to require the entry point directly, the below code will fail as mocha requires all test files before starting the tests.
 			// When the files are required, $injector.register adds each dependency to $injector's cache.
 			// For example $injector.register("errors", Errors) will add the errors module with its resolver (Errors) to $injector's cache.
