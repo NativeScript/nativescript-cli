@@ -235,6 +235,8 @@ export class ProjectDataStub implements IProjectData {
 	dependencies: any;
 	appDirectoryPath: string;
 	appResourcesDirectoryPath: string;
+	devDependencies: IStringDictionary;
+	projectType: string;
 }
 
 export class PlatformsDataStub implements IPlatformsData {
@@ -656,6 +658,10 @@ export class PlatformServiceStub implements IPlatformService {
 
 	public readFile(device: Mobile.IDevice, deviceFilePath: string): Promise<string> {
 		return Promise.resolve("");
+	}
+
+	public async trackProjectType(): Promise<void> {
+		return null;
 	}
 }
 

@@ -142,6 +142,14 @@ interface IPlatformService {
 	 * @returns {string} The contents of the file or null when there is no such file.
 	 */
 	readFile(device: Mobile.IDevice, deviceFilePath: string): Promise<string>;
+
+	/**
+	 * Sends information to analytics for current project type.
+	 * The information is sent once per process for each project.
+	 * In long living process, where the project may change, each of the projects will be tracked after it's being opened.
+	 * @returns {Promise<void>}
+	 */
+	trackProjectType(): Promise<void>;
 }
 
 interface IPlatformData {

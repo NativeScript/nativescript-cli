@@ -17,6 +17,8 @@ export class PlatformService implements IPlatformService {
 		return this.$hooksService;
 	}
 
+	private _trackedProjectFilePath: string = null;
+
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
@@ -38,7 +40,8 @@ export class PlatformService implements IPlatformService {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		private $projectChangesService: IProjectChangesService,
-		private $emulatorPlatformService: IEmulatorPlatformService) { }
+		private $emulatorPlatformService: IEmulatorPlatformService,
+		private $analyticsService: IAnalyticsService) { }
 
 	public async addPlatforms(platforms: string[]): Promise<void> {
 		let platformsDir = this.$projectData.platformsDir;
@@ -186,6 +189,8 @@ export class PlatformService implements IPlatformService {
 	public async preparePlatform(platform: string): Promise<boolean> {
 		this.validatePlatform(platform);
 
+		await this.trackProjectType();
+
 		//We need dev-dependencies here, so before-prepare hooks will be executed correctly.
 		try {
 			await this.$pluginsService.ensureAllDependenciesAreInstalled();
@@ -314,7 +319,7 @@ export class PlatformService implements IPlatformService {
 	}
 
 	public async shouldBuild(platform: string, buildConfig?: IBuildConfig): Promise<boolean> {
-			if (this.$projectChangesService.currentChanges.changesRequireBuild) {
+		if (this.$projectChangesService.currentChanges.changesRequireBuild) {
 			return true;
 		}
 		let platformData = this.$platformsData.getPlatformData(platform);
@@ -342,8 +347,21 @@ export class PlatformService implements IPlatformService {
 		return prepareInfo.changesRequireBuildTime !== buildInfo.prepareTime;
 	}
 
+	public async trackProjectType(): Promise<void> {
+		// Track each project once per process.
+		// In long living process, where we may work with multiple projects, we would like to track the information for each of them.
+		if (this.$projectData && (this.$projectData.projectFilePath !== this._trackedProjectFilePath)) {
+			this._trackedProjectFilePath = this.$projectData.projectFilePath;
+
+			await this.$analyticsService.track("Working with project type", this.$projectData.projectType);
+		}
+	}
+
 	public async buildPlatform(platform: string, buildConfig?: IBuildConfig): Promise<void> {
 		this.$logger.out("Building project...");
+
+		await this.trackProjectType();
+
 		let platformData = this.$platformsData.getPlatformData(platform);
 		await platformData.platformProjectService.buildProject(platformData.projectRoot, buildConfig);
 		let prepareInfo = this.$projectChangesService.getPrepareInfo(platform);
@@ -417,6 +435,8 @@ export class PlatformService implements IPlatformService {
 	}
 
 	public async runPlatform(platform: string): Promise<void> {
+		await this.trackProjectType();
+
 		if (this.$options.justlaunch) {
 			this.$options.watch = false;
 		}
