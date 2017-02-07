@@ -138,6 +138,7 @@ class LiveSyncService implements ILiveSyncService {
 			fiberBootstrap.run(() => {
 				that.$dispatcher.dispatch(() => (() => {
 					try {
+						that.$logger.trace(`Event '${event}' triggered for path: '${filePath}'`);
 						filePath = path.join(syncWorkingDirectory, filePath);
 						for (let i = 0; i < onChangedActions.length; i++) {
 							onChangedActions[i](event, filePath, that.$dispatcher);

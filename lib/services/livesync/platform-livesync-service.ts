@@ -65,9 +65,9 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 			return;
 		}
 
-		if (event === "add" || event === "change") {
+		if (event === "add" || event === "addDir"|| event === "change") {
 			this.batchSync(filePath, dispatcher, afterFileSyncAction);
-		} else if (event === "unlink") {
+		} else if (event === "unlink" || event === "unlinkDir") {
 			this.syncRemovedFile(filePath, afterFileSyncAction).wait();
 		}
 	}
@@ -134,6 +134,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 							for (let platform in this.batch) {
 								let batch = this.batch[platform];
 								batch.syncFiles(((filesToSync:string[]) => {
+									console.log("syncing ", filesToSync);
 									this.$platformService.preparePlatform(this.liveSyncData.platform).wait();
 									let canExecute = this.getCanExecuteAction(this.liveSyncData.platform, this.liveSyncData.appIdentifier);
 									let deviceFileAction = (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => this.transferFiles(deviceAppData, localToDevicePaths, this.liveSyncData.projectFilesPath, !filePath);
