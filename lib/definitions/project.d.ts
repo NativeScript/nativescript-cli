@@ -10,8 +10,10 @@ interface IProjectData {
 	projectFilePath: string;
 	projectId?: string;
 	dependencies: any;
+	devDependencies: IStringDictionary;
 	appDirectoryPath: string;
 	appResourcesDirectoryPath: string;
+	projectType: string;
 }
 
 interface IProjectDataService {

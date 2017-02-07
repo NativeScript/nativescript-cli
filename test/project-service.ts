@@ -112,6 +112,7 @@ class ProjectIntegrationTest {
 		this.testInjector.register("fs", FileSystem);
 		this.testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
 		this.testInjector.register("staticConfig", StaticConfig);
+		this.testInjector.register("analyticsService", { track: () => Future.fromResult() });
 
 		this.testInjector.register("npmInstallationManager", NpmInstallationManager);
 		this.testInjector.register("npm", NpmLib.NodePackageManager);
@@ -134,12 +135,12 @@ class ProjectIntegrationTest {
 
 describe("Project Service Tests", () => {
 	describe("project service integration tests", () => {
-		let defaultTemplatePath:string;
-		let defaultSpecificVersionTemplatePath:string;
-		let angularTemplatePath:string;
+		let defaultTemplatePath: string;
+		let defaultSpecificVersionTemplatePath: string;
+		let angularTemplatePath: string;
 		let typescriptTemplatePath: string;
 
-		before(function() {
+		before(function () {
 			let projectIntegrationTest = new ProjectIntegrationTest();
 			let fs: IFileSystem = projectIntegrationTest.testInjector.resolve("fs");
 			let npmInstallationManager: INpmInstallationManager = projectIntegrationTest.testInjector.resolve("npmInstallationManager");
@@ -153,8 +154,8 @@ describe("Project Service Tests", () => {
 				"readme": "dummy",
 				"repository": "dummy"
 			});
-			npmInstallationManager.install("tns-template-hello-world", defaultTemplateDir, {dependencyType: "save"}).wait();
-			defaultTemplatePath = path.join(defaultTemplateDir, "node_modules", "tns-template-hello-world");
+			npmInstallationManager.install(constants.RESERVED_TEMPLATE_NAMES["default"], defaultTemplateDir, { dependencyType: "save" }).wait();
+			defaultTemplatePath = path.join(defaultTemplateDir, "node_modules", constants.RESERVED_TEMPLATE_NAMES["default"]);
 			fs.deleteDirectory(path.join(defaultTemplatePath, "node_modules"));
 
 			let defaultSpecificVersionTemplateDir = temp.mkdirSync("defaultTemplateSpeciffic");
@@ -166,8 +167,8 @@ describe("Project Service Tests", () => {
 				"readme": "dummy",
 				"repository": "dummy"
 			});
-			npmInstallationManager.install("tns-template-hello-world", defaultSpecificVersionTemplateDir, {version: "1.4.0", dependencyType: "save"}).wait();
-			defaultSpecificVersionTemplatePath = path.join(defaultSpecificVersionTemplateDir, "node_modules", "tns-template-hello-world");
+			npmInstallationManager.install(constants.RESERVED_TEMPLATE_NAMES["default"], defaultSpecificVersionTemplateDir, { version: "1.4.0", dependencyType: "save" }).wait();
+			defaultSpecificVersionTemplatePath = path.join(defaultSpecificVersionTemplateDir, "node_modules", constants.RESERVED_TEMPLATE_NAMES["default"]);
 			fs.deleteDirectory(path.join(defaultSpecificVersionTemplatePath, "node_modules"));
 
 			let angularTemplateDir = temp.mkdirSync("angularTemplate");
@@ -179,8 +180,8 @@ describe("Project Service Tests", () => {
 				"readme": "dummy",
 				"repository": "dummy"
 			});
-			npmInstallationManager.install("tns-template-hello-world-ng", angularTemplateDir, {dependencyType: "save"}).wait();
-			angularTemplatePath = path.join(angularTemplateDir, "node_modules", "tns-template-hello-world-ng");
+			npmInstallationManager.install(constants.RESERVED_TEMPLATE_NAMES["angular"], angularTemplateDir, { dependencyType: "save" }).wait();
+			angularTemplatePath = path.join(angularTemplateDir, "node_modules", constants.RESERVED_TEMPLATE_NAMES["angular"]);
 			fs.deleteDirectory(path.join(angularTemplatePath, "node_modules"));
 
 			let typescriptTemplateDir = temp.mkdirSync("typescriptTemplate");
@@ -192,8 +193,8 @@ describe("Project Service Tests", () => {
 				"readme": "dummy",
 				"repository": "dummy"
 			});
-			npmInstallationManager.install("tns-template-hello-world-ts", typescriptTemplateDir, {dependencyType: "save"}).wait();
-			typescriptTemplatePath = path.join(typescriptTemplateDir, "node_modules", "tns-template-hello-world-ts");
+			npmInstallationManager.install(constants.RESERVED_TEMPLATE_NAMES["typescript"], typescriptTemplateDir, { dependencyType: "save" }).wait();
+			typescriptTemplatePath = path.join(typescriptTemplateDir, "node_modules", constants.RESERVED_TEMPLATE_NAMES["typescript"]);
 			fs.deleteDirectory(path.join(typescriptTemplatePath, "node_modules"));
 		});
 
@@ -447,7 +448,7 @@ describe("Project Service Tests", () => {
 				projectIntegrationTest.createProject(projectName).wait();
 				options.copyFrom = defaultTemplatePath;
 
-				projectIntegrationTest.assertProject(tempFolder, projectName, `org.nativescript.${projectName}`,null).wait();
+				projectIntegrationTest.assertProject(tempFolder, projectName, `org.nativescript.${projectName}`, null).wait();
 			});
 		});
 
@@ -468,6 +469,7 @@ function createTestInjector() {
 	testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
 
 	testInjector.register("staticConfig", StaticConfig);
+	testInjector.register("analyticsService", { track: () => Future.fromResult() });
 
 	testInjector.register("npmInstallationManager", NpmInstallationManager);
 	testInjector.register("httpClient", HttpClientLib.HttpClient);

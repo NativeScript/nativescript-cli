@@ -2,8 +2,32 @@ import * as constants from "./constants";
 import * as path from "path";
 import { EOL } from "os";
 
+interface IProjectType {
+	type: string;
+	requiredDependencies?: string[];
+	isDefaultProjectType?: boolean;
+}
+
 export class ProjectData implements IProjectData {
 	private static OLD_PROJECT_FILE_NAME = ".tnsproject";
+
+	/**
+	 * NOTE: Order of the elements is important as the TypeScript dependencies are commonly included in Angular project as well.
+	 */
+	private static PROJECT_TYPES: IProjectType[] = [
+		{
+			type: "Pure JavaScript",
+			isDefaultProjectType: true
+		},
+		{
+			type: "Angular",
+			requiredDependencies: ["@angular/core", "nativescript-angular"]
+		},
+		{
+			type: "Pure TypeScript",
+			requiredDependencies: ["typescript", "nativescript-dev-typescript"]
+		}
+	];
 
 	public projectDir: string;
 	public platformsDir: string;
@@ -13,6 +37,8 @@ export class ProjectData implements IProjectData {
 	public appDirectoryPath: string;
 	public appResourcesDirectoryPath: string;
 	public dependencies: any;
+	public devDependencies: IStringDictionary;
+	public projectType: string;
 
 	constructor(private $fs: IFileSystem,
 		private $errors: IErrors,
@@ -48,6 +74,8 @@ export class ProjectData implements IProjectData {
 				if (data) {
 					this.projectId = data.id;
 					this.dependencies = fileContent.dependencies;
+					this.devDependencies = fileContent.devDependencies;
+					this.projectType = this.getProjectType();
 				} else { // This is the case when we have package.json file but nativescipt key is not presented in it
 					this.tryToUpgradeProject();
 				}
@@ -55,6 +83,21 @@ export class ProjectData implements IProjectData {
 		} else { // This is the case when no project file found
 			this.tryToUpgradeProject();
 		}
+	}
+
+	private getProjectType(): string {
+		let detectedProjectType = _.find(ProjectData.PROJECT_TYPES, (projectType) => projectType.isDefaultProjectType).type;
+
+		const deps: string[] = _.keys(this.dependencies).concat(_.keys(this.devDependencies));
+
+		_.each(ProjectData.PROJECT_TYPES, projectType => {
+			if (_.some(projectType.requiredDependencies, requiredDependency => deps.indexOf(requiredDependency) !== -1)) {
+				detectedProjectType = projectType.type;
+				return false;
+			}
+		});
+
+		return detectedProjectType;
 	}
 
 	private throwNoProjectFoundError(): void {
