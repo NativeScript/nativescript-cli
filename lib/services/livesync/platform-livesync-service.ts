@@ -58,9 +58,9 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 			return;
 		}
 
-		if (event === "add" || event === "change") {
+		if (event === "add" || event === "addDir"|| event === "change") {
 			this.batchSync(filePath, dispatcher, afterFileSyncAction);
-		} else if (event === "unlink") {
+		} else if (event === "unlink" || event === "unlinkDir") {
 			await this.syncRemovedFile(filePath, afterFileSyncAction);
 		}
 	}

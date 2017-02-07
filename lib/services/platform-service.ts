@@ -211,6 +211,9 @@ export class PlatformService implements IPlatformService {
 
 		await this.ensurePlatformInstalled(platform);
 		let changesInfo = this.$projectChangesService.checkForChanges(platform);
+
+		this.$logger.trace("Changes info in prepare platform:", changesInfo);
+
 		if (changesInfo.hasChanges) {
 			await this.preparePlatformCore(platform, changesInfo);
 			this.$projectChangesService.savePrepareInfo(platform);
