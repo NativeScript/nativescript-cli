@@ -2,7 +2,9 @@ import {
   AuthType,
   RequestMethod,
   KinveyRequest,
+  CacheRequest,
   KinveyError,
+  NotFoundError,
   Client,
   User,
   isDefined
