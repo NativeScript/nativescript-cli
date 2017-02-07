@@ -1,12 +1,15 @@
-import { AuthType, RequestMethod, KinveyRequest } from 'kinvey-node-sdk/dist/request';
-import { Client } from 'kinvey-node-sdk/dist/client';
-import { User } from 'kinvey-node-sdk/dist/entity';
-import { isDefined } from 'kinvey-node-sdk/dist/utils';
-import { KinveyError } from 'kinvey-node-sdk/dist/errors';
+import {
+  AuthType,
+  RequestMethod,
+  KinveyRequest,
+  KinveyError,
+  Client,
+  User,
+  isDefined
+} from 'kinvey-node-sdk/dist/export';
 import Device from './device';
 import { EventEmitter } from 'events';
 import localStorage from 'local-storage';
-import Promise from 'es6-promise';
 import url from 'url';
 const PUSH_NAMESPACE = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 const NOTIFICATION_EVENT = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
