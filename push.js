@@ -101,7 +101,7 @@ class Push extends EventEmitter {
         }
 
         if (isDefined(user) === false && isDefined(options.userId) === false) {
-          throw new KinveyError('Unable to register this device for push notificaitons.',
+          throw new KinveyError('Unable to register this device for push notifications.',
             'You must login a user or provide a userId to assign the device token.');
         }
 
