@@ -58,7 +58,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 			return;
 		}
 
-		if (event === "add" || event === "addDir"|| event === "change") {
+		if (event === "add" || event === "addDir" || event === "change") {
 			this.batchSync(filePath, dispatcher, afterFileSyncAction);
 		} else if (event === "unlink" || event === "unlinkDir") {
 			await this.syncRemovedFile(filePath, afterFileSyncAction);
@@ -172,8 +172,21 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 				isFullSync = true;
 			} else {
 				deviceAppData = this.$deviceAppDataFactory.create(this.liveSyncData.appIdentifier, this.$mobileHelper.normalizePlatformName(this.liveSyncData.platform), device);
-				let mappedFiles = filesToSync.map((file: string) => this.$projectFilesProvider.mapFilePath(file, device.deviceInfo.platform));
+				const mappedFiles = filesToSync.map((file: string) => this.$projectFilesProvider.mapFilePath(file, device.deviceInfo.platform));
+
+				// Some plugins modify platforms dir on afterPrepare (check nativescript-dev-sass) - we want to sync only existing file.
+				const existingFiles = mappedFiles.filter(m => this.$fs.exists(m));
+
+				this.$logger.trace("Will execute livesync for files: ", existingFiles);
+
+				const skippedFiles = _.difference(mappedFiles, existingFiles);
+
+				if (skippedFiles.length) {
+					this.$logger.trace("The following files will not be synced as they do not exist:", skippedFiles);
+				}
+
 				localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, this.liveSyncData.projectFilesPath, mappedFiles, this.liveSyncData.excludedProjectDirsAndFiles);
+
 				await fileSyncAction(deviceAppData, localToDevicePaths);
 			}
 
