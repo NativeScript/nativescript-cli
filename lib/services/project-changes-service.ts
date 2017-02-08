@@ -179,7 +179,7 @@ export class ProjectChangesService implements IProjectChangesService {
 
 			let fileStats = this.$fs.getFsStats(filePath);
 
-			let changed = fileStats.mtime.getTime() > this._outputProjectMtime || fileStats.ctime.getTime() > this._outputProjectMtime
+			let changed = fileStats.mtime.getTime() > this._outputProjectMtime || fileStats.ctime.getTime() > this._outputProjectMtime;
 
 			if (!changed) {
 				let lFileStats = this.$fs.getLsStats(filePath);
