@@ -1,4 +1,12 @@
 ## Changelog
+## [3.4.0](https://github.com/Kinvey/kinvey-nodejs/tree/v3.4.0) (2017-02-08)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.3.5...v3.4.0)<br/>
+
+**Changes**
+- Refactor source to export all modules, expose Rack API, and to clean up code. [#94](https://github.com/Kinvey/js-sdk/pull/94)
+- Remove password hash from stored user object. [#102](https://github.com/Kinvey/js-sdk/pull/102)
+- Fix errors with using `Kinvey.ACL` on an entity that does not contain an `_acl` property. [#103](https://github.com/Kinvey/js-sdk/pull/103)
+
 ## [3.3.5](https://github.com/Kinvey/kinvey-nodejs/tree/v3.3.5) (2017-01-25)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.3.4...v3.3.5)<br/>
 
