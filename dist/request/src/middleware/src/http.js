@@ -20,6 +20,8 @@ var _request2 = _interopRequireDefault(_request);
 
 var _utils = require('../../../../utils');
 
+var _errors = require('../../../../errors');
+
 var _package = require('../../../../../package.json');
 
 var _package2 = _interopRequireDefault(_package);
@@ -83,16 +85,20 @@ var HttpMiddleware = function (_Middleware) {
           timeout: timeout
         }, function (error, response, body) {
           if ((0, _utils.isDefined)(response) === false) {
-            reject(error);
-          } else {
-            resolve({
-              response: {
-                statusCode: response.statusCode,
-                headers: response.headers,
-                data: body
-              }
-            });
+            if (error.code === 'ESOCKETTIMEDOUT' || error.code === 'ETIMEDOUT') {
+              return reject(new _errors.TimeoutError('The request timed out.'));
+            }
+
+            return reject(error);
           }
+
+          return resolve({
+            response: {
+              statusCode: response.statusCode,
+              headers: response.headers,
+              data: body
+            }
+          });
         });
       });
       return promise;

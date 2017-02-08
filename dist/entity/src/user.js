@@ -164,6 +164,8 @@ var User = function () {
           data._socialIdentity = (0, _assign2.default)({}, credentials._socialIdentity, data._socialIdentity);
         }
 
+        delete data.password;
+
         _this.data = data;
         return _request.CacheRequest.setActiveUser(_this.client, _this.data);
       }).then(function () {
@@ -469,8 +471,10 @@ var User = function () {
 
         return data;
       }).then(function (data) {
+        delete data.password;
+
         _this11.data = data;
-        return _request.CacheRequest.setActiveUser(_this11.client, data);
+        return _request.CacheRequest.setActiveUser(_this11.client, _this11.data);
       }).then(function () {
         return _this11;
       });
@@ -491,7 +495,7 @@ var User = function () {
       return new _metadata2.default(this.data);
     },
     set: function set(metadata) {
-      this.data[kmdAttribute] = (0, _result2.default)(metadata, 'toPlainObjecta', metadata);
+      this.data[kmdAttribute] = (0, _result2.default)(metadata, 'toPlainObject', metadata);
     }
   }, {
     key: '_kmd',

@@ -252,6 +252,8 @@ var CacheRequest = function (_Request) {
           return null;
         }
 
+        delete user.password;
+
         activeUsers[client.appKey] = user;
 
         CacheRequest.setActiveUserLegacy(client, user);

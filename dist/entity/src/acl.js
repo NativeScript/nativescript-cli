@@ -10,10 +10,6 @@ var _errors = require('../../errors');
 
 var _utils = require('../../utils');
 
-var _cloneDeep = require('lodash/cloneDeep');
-
-var _cloneDeep2 = _interopRequireDefault(_cloneDeep);
-
 var _isPlainObject = require('lodash/isPlainObject');
 
 var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
@@ -31,16 +27,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Acl = function () {
-  function Acl() {
-    var entity = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
+  function Acl(entity) {
     _classCallCheck(this, Acl);
 
-    if (!(0, _isPlainObject2.default)(entity)) {
+    if ((0, _isPlainObject2.default)(entity) === false) {
       throw new _errors.KinveyError('entity argument must be an object');
     }
 
-    this.acl = (0, _cloneDeep2.default)(entity._acl);
+    entity._acl = entity._acl || {};
+    this.entity = entity;
   }
 
   _createClass(Acl, [{
@@ -52,7 +47,7 @@ var Acl = function () {
         r.push(user);
       }
 
-      this.acl.r = r;
+      this.entity._acl.r = r;
       return this;
     }
   }, {
@@ -64,7 +59,7 @@ var Acl = function () {
         groups.push(group);
       }
 
-      this.acl.groups = (0, _assign2.default)({}, this.acl.groups, { r: groups });
+      this.entity._acl.groups = (0, _assign2.default)({}, this.entity._acl.groups, { r: groups });
       return this;
     }
   }, {
@@ -76,7 +71,7 @@ var Acl = function () {
         w.push(user);
       }
 
-      this.acl.w = w;
+      this.entity._acl.w = w;
       return this;
     }
   }, {
@@ -88,14 +83,14 @@ var Acl = function () {
         groups.push(group);
       }
 
-      this.acl.groups = (0, _assign2.default)({}, this.acl.groups, { w: groups });
+      this.entity._acl.groups = (0, _assign2.default)({}, this.entity._acl.groups, { w: groups });
       return this;
     }
   }, {
     key: 'isGloballyReadable',
     value: function isGloballyReadable() {
-      if (this.acl.gr === true) {
-        return this.acl.gr;
+      if (this.entity._acl.gr === true) {
+        return this.entity._acl.gr;
       }
 
       return false;
@@ -103,8 +98,8 @@ var Acl = function () {
   }, {
     key: 'isGloballyWritable',
     value: function isGloballyWritable() {
-      if (this.acl.gw === true) {
-        return this.acl.gw;
+      if (this.entity._acl.gw === true) {
+        return this.entity._acl.gw;
       }
 
       return false;
@@ -119,7 +114,7 @@ var Acl = function () {
         r.splice(index, 1);
       }
 
-      this.acl.r = r;
+      this.entity._acl.r = r;
       return this;
     }
   }, {
@@ -132,7 +127,7 @@ var Acl = function () {
         groups.splice(index, 1);
       }
 
-      this.acl.groups = (0, _assign2.default)({}, this.acl.groups, { r: groups });
+      this.entity._acl.groups = (0, _assign2.default)({}, this.entity._acl.groups, { r: groups });
       return this;
     }
   }, {
@@ -145,7 +140,7 @@ var Acl = function () {
         w.splice(index, 1);
       }
 
-      this.acl.w = w;
+      this.entity._acl.w = w;
       return this;
     }
   }, {
@@ -158,55 +153,55 @@ var Acl = function () {
         groups.splice(index, 1);
       }
 
-      this.acl.groups = (0, _assign2.default)({}, this.acl.groups, { w: groups });
+      this.entity._acl.groups = (0, _assign2.default)({}, this.entity._acl.groups, { w: groups });
       return this;
     }
   }, {
     key: 'toPlainObject',
     value: function toPlainObject() {
-      return this.acl;
+      return this.entity._acl;
     }
   }, {
     key: 'creator',
     get: function get() {
-      return this.acl.creator;
+      return this.entity._acl.creator;
     }
   }, {
     key: 'readers',
     get: function get() {
-      return (0, _isArray2.default)(this.acl.r) ? this.acl.r : [];
+      return (0, _isArray2.default)(this.entity._acl.r) ? this.entity._acl.r : [];
     }
   }, {
     key: 'writers',
     get: function get() {
-      return (0, _isArray2.default)(this.acl.w) ? this.acl.w : [];
+      return (0, _isArray2.default)(this.entity._acl.w) ? this.entity._acl.w : [];
     }
   }, {
     key: 'readerGroups',
     get: function get() {
-      return (0, _utils.isDefined)(this.acl.groups) && (0, _isArray2.default)(this.acl.groups.r) ? this.acl.groups.r : [];
+      return (0, _utils.isDefined)(this.entity._acl.groups) && (0, _isArray2.default)(this.entity._acl.groups.r) ? this.entity._acl.groups.r : [];
     }
   }, {
     key: 'writerGroups',
     get: function get() {
-      return (0, _utils.isDefined)(this.acl.groups) && (0, _isArray2.default)(this.acl.groups.w) ? this.acl.groups.w : [];
+      return (0, _utils.isDefined)(this.entity._acl.groups) && (0, _isArray2.default)(this.entity._acl.groups.w) ? this.entity._acl.groups.w : [];
     }
   }, {
     key: 'globallyReadable',
     set: function set(gr) {
       if (gr === true) {
-        this.acl.gr = gr;
+        this.entity._acl.gr = gr;
       } else {
-        this.acl.gr = false;
+        this.entity._acl.gr = false;
       }
     }
   }, {
     key: 'globallyWritable',
     set: function set(gw) {
       if (gw === true) {
-        this.acl.gw = gw;
+        this.entity._acl.gw = gw;
       } else {
-        this.acl.gw = false;
+        this.entity._acl.gw = false;
       }
     }
   }]);

@@ -184,5 +184,5 @@ var NetworkRack = function (_Rack2) {
   return NetworkRack;
 }(Rack);
 
-var newtworkRack = new NetworkRack();
-exports.NetworkRack = newtworkRack;
+var networkRack = new NetworkRack();
+exports.NetworkRack = networkRack;

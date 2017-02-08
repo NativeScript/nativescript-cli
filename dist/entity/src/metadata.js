@@ -10,10 +10,6 @@ var _errors = require('../../errors');
 
 var _utils = require('../../utils');
 
-var _clone = require('lodash/clone');
-
-var _clone2 = _interopRequireDefault(_clone);
-
 var _isPlainObject = require('lodash/isPlainObject');
 
 var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
@@ -22,36 +18,33 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var kmdAttribute = process && process.env && process.env.KINVEY_KMD_ATTRIBUTE || '_kmd' || '_kmd';
-
 var Metadata = function () {
-  function Metadata() {
-    var entity = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
+  function Metadata(entity) {
     _classCallCheck(this, Metadata);
 
-    if (!(0, _isPlainObject2.default)(entity)) {
+    if ((0, _isPlainObject2.default)(entity) === false) {
       throw new _errors.KinveyError('entity argument must be an object');
     }
 
-    this.kmd = (0, _clone2.default)(entity[kmdAttribute] || {});
+    entity._kmd = entity._kmd || {};
+    this.entity = entity;
   }
 
   _createClass(Metadata, [{
     key: 'isLocal',
     value: function isLocal() {
-      return !!this.kmd.local;
+      return this.entity._kmd.local === true;
     }
   }, {
     key: 'toPlainObject',
     value: function toPlainObject() {
-      return this.kmd;
+      return this.entity._kmd;
     }
   }, {
     key: 'createdAt',
     get: function get() {
-      if (this.kmd.ect) {
-        return new Date(this.kmd.ect);
+      if (this.entity._kmd.ect) {
+        return new Date(this.entity._kmd.ect);
       }
 
       return undefined;
@@ -64,8 +57,8 @@ var Metadata = function () {
   }, {
     key: 'emailVerification',
     get: function get() {
-      if ((0, _utils.isDefined)(this.kmd.emailVerification)) {
-        return this.kmd.emailVerification.status;
+      if ((0, _utils.isDefined)(this.entity._kmd.emailVerification)) {
+        return this.entity._kmd.emailVerification.status;
       }
 
       return undefined;
@@ -73,8 +66,8 @@ var Metadata = function () {
   }, {
     key: 'lastModified',
     get: function get() {
-      if (this.kmd.lmt) {
-        return new Date(this.kmd.lmt);
+      if (this.entity._kmd.lmt) {
+        return new Date(this.entity._kmd.lmt);
       }
 
       return undefined;
@@ -87,7 +80,7 @@ var Metadata = function () {
   }, {
     key: 'authtoken',
     get: function get() {
-      return this.kmd.authtoken;
+      return this.entity._kmd.authtoken;
     }
   }]);
 
