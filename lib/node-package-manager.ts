@@ -23,8 +23,9 @@ export class NodePackageManager implements INodePackageManager {
 				config = config || {};
 				config["ignore-scripts"] = true;
 			}
+			let packageJsonPath = path.join(pathToSave, "package.json");
 
-			let jsonContentBefore = this.$fs.readJson(path.join(pathToSave, "package.json"));
+			let jsonContentBefore = this.$fs.readJson(packageJsonPath);
 			let dependenciesBefore = _.keys(jsonContentBefore.dependencies).concat(_.keys(jsonContentBefore.devDependencies));
 
 			let flags = this.getFlagsString(config, true);

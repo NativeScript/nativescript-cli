@@ -134,6 +134,13 @@ export class PlatformService implements IPlatformService {
 			}
 			this.$projectDataService.setValue(platformData.frameworkPackageName, frameworkPackageNameData);
 
+			if (pathToTemplate) {
+				let installedTemplateName = path.basename(pathToTemplate);
+				if (coreModuleName !== installedTemplateName) {
+					this.$npm.uninstall(installedTemplateName, { save: true }).wait();
+				}
+			}
+
 			return coreModuleName;
 
 		}).future<string>()();
@@ -149,7 +156,6 @@ export class PlatformService implements IPlatformService {
 			}
 
 			if (selectedTemplate) {
-				let tempDir = temp.mkdirSync("platform-template");
 				try {
 					/*
 					 * Output of npm.install is array of arrays. For example:
@@ -160,8 +166,8 @@ export class PlatformService implements IPlatformService {
 					 *	'..\\..\\..\\android-platform-template' ] ]
 					 * Project successfully created.
 					 */
-					let pathToTemplate = this.$npm.install(selectedTemplate, tempDir).wait()[0];
-					return { selectedTemplate, pathToTemplate };
+					let templateName = this.$npm.install(selectedTemplate, this.$projectData.projectDir, { save: true }).wait()[0];
+					return { selectedTemplate, pathToTemplate: path.join(this.$projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, templateName) };
 				} catch (err) {
 					this.$logger.trace("Error while trying to install specified template: ", err);
 					this.$errors.failWithoutHelp(`Unable to install platform template ${selectedTemplate}. Make sure the specified value is valid.`);
@@ -348,7 +354,7 @@ export class PlatformService implements IPlatformService {
 			}
 			let platformData = this.$platformsData.getPlatformData(platform);
 			let forDevice = !buildConfig || buildConfig.buildForDevice;
-			let outputPath =  forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath;
+			let outputPath = forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath;
 			if (!this.$fs.exists(outputPath)) {
 				return true;
 			}
@@ -484,7 +490,7 @@ export class PlatformService implements IPlatformService {
 				this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device }).wait();
 				let found: Mobile.IDeviceInfo[] = [];
 				if (this.$devicesService.hasDevices) {
-					found = this.$devicesService.getDevices().filter((device:Mobile.IDeviceInfo) => device.identifier === this.$options.device);
+					found = this.$devicesService.getDevices().filter((device: Mobile.IDeviceInfo) => device.identifier === this.$options.device);
 				}
 				if (found.length === 0) {
 					this.$errors.fail("Cannot find device with name: %s", this.$options.device);
@@ -514,7 +520,7 @@ export class PlatformService implements IPlatformService {
 			let deviceFilePath = this.getDeviceBuildInfoFilePath(device);
 			try {
 				return JSON.parse(this.readFile(device, deviceFilePath).wait());
-			} catch(e) {
+			} catch (e) {
 				return null;
 			};
 		}).future<IBuildInfo>()();
@@ -527,7 +533,7 @@ export class PlatformService implements IPlatformService {
 			try {
 				let buildInfoTime = this.$fs.readJson(buildInfoFile);
 				return buildInfoTime;
-			} catch(e) {
+			} catch (e) {
 				return null;
 			}
 		}
