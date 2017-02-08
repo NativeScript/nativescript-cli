@@ -275,6 +275,10 @@ export default class User {
           data._socialIdentity = assign({}, credentials._socialIdentity, data._socialIdentity);
         }
 
+        // Remove sensitive data
+        delete data.password;
+
+        // Store the active user
         this.data = data;
         return CacheRequest.setActiveUser(this.client, this.data);
       })
@@ -756,8 +760,12 @@ export default class User {
         return data;
       })
       .then((data) => {
+        // Remove sensitive data
+        delete data.password;
+
+        // Store the active user
         this.data = data;
-        return CacheRequest.setActiveUser(this.client, data);
+        return CacheRequest.setActiveUser(this.client, this.data);
       })
       .then(() => this);
   }

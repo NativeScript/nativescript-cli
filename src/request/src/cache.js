@@ -183,6 +183,9 @@ export default class CacheRequest extends Request {
           return null;
         }
 
+        // Remove sensitive data from user
+        delete user.password;
+
         // Save to memory
         activeUsers[client.appKey] = user;
 
