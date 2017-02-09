@@ -15,6 +15,7 @@ import url from 'url';
 const APP_DATA_NAMESPACE = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const PUSH_NAMESPACE = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 const NOTIFICATION_EVENT = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
+const DEVICE_COLLECTION = '__device';
 let phonegapPush;
 
 class Push extends EventEmitter {
@@ -144,7 +145,7 @@ class Push extends EventEmitter {
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
-            pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/__device`
+            pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/${DEVICE_COLLECTION}`
           }),
           data: {
             _id: _id,
@@ -194,7 +195,7 @@ class Push extends EventEmitter {
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
-            pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/__device/${_id}`
+            pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/${DEVICE_COLLECTION}/${_id}`
           }),
           client: this.client
         });
@@ -260,7 +261,7 @@ class Push extends EventEmitter {
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
-            pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/__device/${_id}`
+            pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/${DEVICE_COLLECTION}/${_id}`
           }),
           client: this.client
         });
