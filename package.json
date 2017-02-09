@@ -66,7 +66,7 @@
     "ref": "https://github.com/icenium/ref/tarball/v1.3.2.2",
     "ref-struct": "https://github.com/telerik/ref-struct/tarball/v1.0.2.4",
     "semver": "5.0.1",
-    "shelljs": "0.7.5",
+    "shelljs": "0.7.6",
     "source-map": "0.5.6",
     "tabtab": "https://github.com/Icenium/node-tabtab/tarball/master",
     "temp": "0.8.3",
