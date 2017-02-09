@@ -264,4 +264,13 @@ declare module NativeScriptDoctor {
 		/** Additional information for the warning. */
 		additionalInformation: string;
 	}
+
+	/**
+	 * Describes the constants used in the module.
+	 */
+	interface IConstants {
+		ANDROID_PLATFORM_NAME: string;
+		IOS_PLATFORM_NAME: string;
+		SUPPORTED_PLATFORMS: string[];
+	}
 }

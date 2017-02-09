@@ -43,7 +43,7 @@ export class SysInfo {
 		private fileSystem: FileSystem,
 		private helpers: Helpers,
 		private hostInfo: HostInfo,
-		private winreg: WinReg) { }
+		private winReg: WinReg) { }
 
 	public async getJavaVersion(): Promise<string> {
 		if (!this.javaVerCache) {
@@ -324,12 +324,12 @@ export class SysInfo {
 		let productName: string;
 		let currentVersion: string;
 		let currentBuild: string;
-		const hive = this.winreg.registryKeys.HKLM;
+		const hive = this.winReg.registryKeys.HKLM;
 		const key = "\\Software\\Microsoft\\Windows NT\\CurrentVersion";
 
-		productName = await this.winreg.getRegistryValue("ProductName", hive, key);
-		currentVersion = await this.winreg.getRegistryValue("CurrentVersion", hive, key);
-		currentBuild = await this.winreg.getRegistryValue("CurrentBuild", hive, key);
+		productName = await this.winReg.getRegistryValue("ProductName", hive, key);
+		currentVersion = await this.winReg.getRegistryValue("CurrentVersion", hive, key);
+		currentBuild = await this.winReg.getRegistryValue("CurrentBuild", hive, key);
 
 		return `${productName} ${currentVersion}.${currentBuild}`;
 	}
