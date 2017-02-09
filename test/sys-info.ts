@@ -2,7 +2,6 @@ import * as assert from "assert";
 import * as path from "path";
 import { SysInfo } from "../lib/sys-info";
 import { ChildProcess } from "../lib/wrappers/child-process";
-import { ISysInfoData } from "../typings/nativescript-doctor";
 
 const JavaHomeName = "JAVA_HOME";
 const AndroidHomeName = "ANDROID_HOME";
@@ -198,7 +197,7 @@ describe("SysInfo unit tests", () => {
 		});
 
 		describe("returns correct results when everything is installed", () => {
-			let assertCommonValues = (result: ISysInfoData) => {
+			let assertCommonValues = (result: NativeScriptDoctor.ISysInfoData) => {
 				assert.deepEqual(result.npmVer, childProcessResult.npmV.result.stdout);
 				assert.deepEqual(result.javaVer, "1.8.0");
 				assert.deepEqual(result.javacVersion, "1.8.0_60");

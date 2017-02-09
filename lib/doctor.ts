@@ -5,7 +5,6 @@ import { HostInfo } from "./host-info";
 import { AndroidLocalBuildRequirements } from "./local-build-requirements/android-local-build-requirements";
 import { IosLocalBuildRequirements } from "./local-build-requirements/ios-local-build-requirements";
 import { Helpers } from "./helpers";
-import { IWarning } from "../typings/nativescript-doctor";
 import * as semver from "semver";
 
 export class Doctor {
@@ -29,8 +28,8 @@ export class Doctor {
 		return false;
 	}
 
-	public async getWarnings(): Promise<IWarning[]> {
-		const result: IWarning[] = [];
+	public async getWarnings(): Promise<NativeScriptDoctor.IWarning[]> {
+		const result: NativeScriptDoctor.IWarning[] = [];
 		const sysInfoData = await this.sysInfo.getSysInfo();
 
 		if (!sysInfoData.adbVer) {

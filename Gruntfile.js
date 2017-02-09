@@ -4,17 +4,17 @@ module.exports = function (grunt) {
 			options: grunt.file.readJSON("tsconfig.json").compilerOptions,
 
 			devlib: {
-				src: ["lib/**/*.ts"],
+				src: ["lib/**/*.ts", "typings/**/*.ts"],
 				reference: "lib/.d.ts"
 			},
 
 			devall: {
-				src: ["lib/**/*.ts", "test/**/*.ts"],
+				src: ["lib/**/*.ts", "test/**/*.ts", "typings/**/*.ts"],
 				reference: "lib/.d.ts"
 			},
 
 			release_build: {
-				src: ["lib/**/*.ts", "test/**/*.ts"],
+				src: ["lib/**/*.ts", "test/**/*.ts", "typings/**/*.ts"],
 				reference: "lib/.d.ts",
 				options: {
 					sourceMap: false,
@@ -26,7 +26,7 @@ module.exports = function (grunt) {
 		tslint: {
 			build: {
 				files: {
-					src: ["lib/**/*.ts", "test/**/*.ts", "!**/*.d.ts"]
+					src: ["lib/**/*.ts", "test/**/*.ts", "typings/**/*.ts", "!**/*.d.ts"]
 				},
 				options: {
 					configuration: grunt.file.readJSON("./tslint.json")

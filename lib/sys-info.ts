@@ -5,7 +5,6 @@ import { ExecOptions } from "child_process";
 import { WinReg } from "./winreg";
 import { Helpers } from "./helpers";
 import { platform } from "os";
-import { ISysInfoData } from "../typings/nativescript-doctor";
 import * as path from "path";
 import * as osenv from "osenv";
 import * as temp from "temp";
@@ -36,7 +35,7 @@ export class SysInfo {
 	private monoVerCache: string;
 	private gitVerCache: string;
 	private gradleVerCache: string;
-	private sysInfoCache: ISysInfoData;
+	private sysInfoCache: NativeScriptDoctor.ISysInfoData;
 	private isCocoaPodsWorkingCorrectlyCache: boolean = null;
 	private nativeScriptCliVersion: string;
 
@@ -219,15 +218,15 @@ export class SysInfo {
 			const output = await this.execCommand("gradle -v");
 			const matches = SysInfo.GRADLE_VERSION_REGEXP.exec(output);
 
-			this.gradleVerCache = matches && matches[1];
+		this.gradleVerCache = matches && matches[1];
 		}
 
 		return this.gradleVerCache;
 	}
 
-	public async getSysInfo(): Promise<ISysInfoData> {
+	public async getSysInfo(): Promise<NativeScriptDoctor.ISysInfoData> {
 		if (!this.sysInfoCache) {
-			const result: ISysInfoData = Object.create(null);
+			const result: NativeScriptDoctor.ISysInfoData = Object.create(null);
 
 			// os stuff
 			result.platform = platform();
