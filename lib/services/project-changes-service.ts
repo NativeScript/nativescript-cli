@@ -176,12 +176,16 @@ export class ProjectChangesService implements IProjectChangesService {
 			if (filePath === skipDir) {
 				continue;
 			}
+
 			let fileStats = this.$fs.getFsStats(filePath);
-			let changed = fileStats.mtime.getTime() > this._outputProjectMtime;
+
+			let changed = fileStats.mtime.getTime() > this._outputProjectMtime || fileStats.ctime.getTime() > this._outputProjectMtime;
+
 			if (!changed) {
 				let lFileStats = this.$fs.getLsStats(filePath);
-				changed = lFileStats.mtime.getTime() > this._outputProjectMtime;
+				changed = lFileStats.mtime.getTime() > this._outputProjectMtime || lFileStats.ctime.getTime() > this._outputProjectMtime;
 			}
+
 			if (changed) {
 				if (processFunc) {
 					this._newFiles ++;
@@ -193,6 +197,7 @@ export class ProjectChangesService implements IProjectChangesService {
 					return true;
 				}
 			}
+
 			if (fileStats.isDirectory()) {
 				if (this.containsNewerFiles(filePath, skipDir, processFunc)) {
 					return true;

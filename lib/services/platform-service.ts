@@ -220,6 +220,9 @@ export class PlatformService implements IPlatformService {
 
 			this.ensurePlatformInstalled(platform).wait();
 			let changesInfo = this.$projectChangesService.checkForChanges(platform);
+
+			this.$logger.trace("Changes info in prepare platform:", changesInfo);
+
 			if (changesInfo.hasChanges) {
 				// android build artifacts need to be cleaned up when switching from release to debug builds
 				if (platform.toLowerCase() === "android") {
