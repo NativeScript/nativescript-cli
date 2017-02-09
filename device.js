@@ -42,8 +42,8 @@ if (Device.isPhoneGap()) {
   Device.ready().then(() => {
     if (typeof global.device === 'undefined') {
       throw new Error('Cordova Device Plugin is not installed.'
-        + ' Please refer to devcenter.kinvey.com/phonegap-v3.0/guides/getting-started for help with'
-        + ' setting up your project.');
+        + ' Please refer to https://cordova.apache.org/docs/en/latest/reference/cordova-plugin-device/index.html for help with'
+        + ' installing the Cordova Device Plugin.');
     }
   });
 }
