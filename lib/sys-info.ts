@@ -38,6 +38,7 @@ export class SysInfo {
 	private gradleVerCache: string;
 	private sysInfoCache: ISysInfoData;
 	private isCocoaPodsWorkingCorrectlyCache: boolean = null;
+	private nativeScriptCliVersion: string;
 
 	constructor(private childProcess: ChildProcess,
 		private fileSystem: FileSystem,
@@ -252,6 +253,7 @@ export class SysInfo {
 			result.gitVer = await this.getGitVersion();
 			result.gradleVer = await this.getGradleVersion();
 			result.isCocoaPodsWorkingCorrectly = await this.isCocoaPodsWorkingCorrectly();
+			result.nativeScriptCliVersion = await this.getNativeScriptCliVersion();
 
 			this.sysInfoCache = result;
 		}
@@ -282,6 +284,15 @@ export class SysInfo {
 		}
 
 		return !!this.isCocoaPodsWorkingCorrectlyCache;
+	}
+
+	public async getNativeScriptCliVersion(): Promise<string> {
+		if (!this.nativeScriptCliVersion) {
+			const output = await this.execCommand("tns --version");
+			this.nativeScriptCliVersion = output.trim();
+		}
+
+		return this.nativeScriptCliVersion;
 	}
 
 	private async exec(cmd: string, execOptions?: ExecOptions): Promise<IProcessInfo> {

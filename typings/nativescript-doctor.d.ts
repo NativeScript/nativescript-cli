@@ -97,6 +97,12 @@ declare module NativeScriptDoctor {
 		isCocoaPodsWorkingCorrectly(): Promise<boolean>;
 
 		/**
+		 * Returns the version of the globally installed NativeScript CLI.
+		 * @return {Promise<string>} Returns the version of the globally installed NativeScript CLI.
+		 */
+		getNativeScriptCliVersion(): Promise<string>;
+
+		/**
 		 * Returns the whole system information.
 		 * @return {Promise<ISysInfoData>} The system information.
 		 */
@@ -244,6 +250,12 @@ declare module NativeScriptDoctor {
 		 * @type {boolean}
 		 */
 		isCocoaPodsWorkingCorrectly: boolean;
+
+		/**
+		 * NativeScript CLI version string, as returned by `tns --version`.
+		 * @type {string}
+		 */
+		nativeScriptCliVersion: string;
 	}
 
 	/**
