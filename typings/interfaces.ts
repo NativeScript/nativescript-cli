@@ -100,6 +100,18 @@ declare module NativeScriptDoctor {
 		getNativeScriptCliVersion(): Promise<string>;
 
 		/**
+		 * Checks if xcproj is required to build projects and if it is installed.
+		 * @return {Promise<IXcprojInfo>} Returns the collected information aboud xcproj.
+		 */
+		getXcprojInfo(): Promise<IXcprojInfo>;
+
+		/**
+		 * Checks if the current version of CocoaPods is compatible with the installed Xcode.
+		 * @return {boolean} true if an update us require.
+		 */
+		isCocoaPodsUpdateRequired(): Promise<boolean>;
+
+		/**
 		 * Returns the whole system information.
 		 * @return {Promise<ISysInfoData>} The system information.
 		 */
@@ -253,16 +265,52 @@ declare module NativeScriptDoctor {
 		 * @type {string}
 		 */
 		nativeScriptCliVersion: string;
+
+		/**
+		 * Information about xcproj.
+		 * @type {string}
+		 */
+		xcprojInfo: IXcprojInfo
+
+		/**
+		 * true if the system requires xcproj to build projects successfully and the CocoaPods version is not compatible with the Xcode.
+		 */
+		isCocoaPodsUpdateRequired: boolean;
 	}
 
 	/**
 	 * Describes warning returned from nativescript-doctor check.
 	 */
 	interface IWarning {
-		/** The warning. */
+		/** The warning.
+		 * @type {string}
+		 */
 		warning: string;
-		/** Additional information for the warning. */
+
+		/** Additional information for the warning.
+		 * @type {string}
+		 */
 		additionalInformation: string;
+
+		/** The platforms which are affected by this warning.
+		 * @type {string[]}
+		 */
+		platforms: string[];
+	}
+
+	/**
+	 * Describes information about xcproj brew formula.
+	 */
+	interface IXcprojInfo {
+		/**
+		 * Determines whether the system needs xcproj to execute ios builds sucessfully.
+		 */
+		shouldUseXcproj: boolean;
+
+		/**
+		 * Determines whether xcproj can be called from the command line.
+		 */
+		xcprojAvailable: boolean;
 	}
 
 	/**
