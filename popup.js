@@ -16,8 +16,8 @@ export default class Popup extends HTML5Popup {
     // Check that the InAppBrowser plugin is installed if this is a PhoneGap environment
     if (typeof global.cordova !== 'undefined' && typeof global.cordova.InAppBrowser === 'undefined') {
       throw new Error('Cordova InAppBrowser Plugin is not installed.'
-        + ' Please refer to https://cordova.apache.org/docs/en/latest/reference/cordova-plugin-inappbrowser'
-        + ' for help with installing the InAppBrowser plugin.');
+        + ' Please refer to https://cordova.apache.org/docs/en/latest/reference/cordova-plugin-inappbrowser/index.html'
+        + ' for help with installing the Cordova InAppBrowser Plugin.');
     }
 
     // loadStartCallback
