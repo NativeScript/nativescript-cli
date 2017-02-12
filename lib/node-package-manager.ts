@@ -38,7 +38,7 @@ export class NodePackageManager implements INodePackageManager {
 			}
 		}
 		try {
-			let spawnResult: ISpawnResult = await this.$childProcess.spawnFromEvent(this.getNpmExecutableName(), params, "close", { cwd: pwd });
+			let spawnResult: ISpawnResult = await this.$childProcess.spawnFromEvent(this.getNpmExecutableName(), params, "close", { cwd: pwd, stdio: "inherit" });
 			this.$logger.out(spawnResult.stdout);
 		} catch (err) {
 			if (err.message && err.message.indexOf("EPEERINVALID") !== -1) {
