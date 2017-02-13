@@ -22,7 +22,8 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 		private $projectFilesProvider: IProjectFilesProvider,
 		private $platformService: IPlatformService,
 		private $projectChangesService: IProjectChangesService,
-		private $liveSyncProvider: ILiveSyncProvider) {
+		private $liveSyncProvider: ILiveSyncProvider,
+		private $fs: IFileSystem) {
 		this.liveSyncData = _liveSyncData;
 	}
 
