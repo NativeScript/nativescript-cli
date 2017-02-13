@@ -140,6 +140,7 @@ class LiveSyncService implements ILiveSyncService {
 				try {
 					filePath = path.join(syncWorkingDirectory, filePath);
 					for (let i = 0; i < onChangedActions.length; i++) {
+						that.$logger.trace(`Event '${event}' triggered for path: '${filePath}'`);
 						await onChangedActions[i](event, filePath, that.$dispatcher);
 					}
 				} catch (err) {
