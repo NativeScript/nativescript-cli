@@ -1,6 +1,8 @@
 import Request, { KinveyRequest } from 'src/request';
-import { ServerError, TimeoutError } from 'src/errors';
+import { InvalidCredentialsError, ServerError, TimeoutError } from 'src/errors';
 import { randomString } from 'src/utils';
+import { AuthorizationGrant } from 'src/identity';
+import { TestUser } from '../mocks';
 import url from 'url';
 import nock from 'nock';
 import expect from 'expect';
@@ -137,6 +139,144 @@ describe('KinveyRequest', () => {
           expect(error.name).toEqual('TimeoutError');
           expect(error.message).toEqual('The request timed out.');
         });
+    });
+
+    describe('InvalidCredentialsError', function() {
+      it('should throw the error if no session exists', function() {
+        // Setup API response
+        nock(this.client.apiHostname, { encodedQueryParams: true })
+          .get('/foo')
+          .reply(401, {
+            name: 'InvalidCredentials',
+            message: 'Invalid credentials. Please retry your request with correct credentials.'
+          });
+
+        const request = new KinveyRequest({
+          url: url.format({
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
+            pathname: '/foo'
+          })
+        });
+        return request.execute()
+          .catch((error) => {
+            expect(error).toBeA(InvalidCredentialsError);
+            expect(error.name).toEqual('InvalidCredentialsError');
+            expect(error.message).toEqual('Invalid credentials. Please retry your request with correct credentials.');
+            expect(error.debug).toEqual('');
+            expect(error.code).toEqual(401);
+          });
+      });
+
+      it('should throw the error if unable to refresh the session', function() {
+        const redirectUri = 'http://localhost:3000';
+        return TestUser.loginWithMIC(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
+          username: randomString(),
+          password: randomString()
+        })
+          .then((user) => {
+            const refreshToken = user.data._socialIdentity.kinveyAuth.refresh_token;
+
+            // Setup API response
+            nock(this.client.apiHostname, { encodedQueryParams: true })
+              .get('/foo')
+              .reply(401, {
+                name: 'InvalidCredentials',
+                message: 'Invalid credentials. Please retry your request with correct credentials.'
+              });
+
+            nock(this.client.micHostname, { encodedQueryParams: true })
+              .post(
+                '/oauth/token',
+                `grant_type=refresh_token&client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&refresh_token=${refreshToken}`
+              )
+              .reply(500, {
+                message: 'An error occurred while refreshing the session. Please retry the request.'
+              });
+
+            const request = new KinveyRequest({
+              url: url.format({
+                protocol: this.client.apiProtocol,
+                host: this.client.apiHost,
+                pathname: '/foo'
+              })
+            });
+            return request.execute()
+              .catch((error) => {
+                expect(error).toBeA(InvalidCredentialsError);
+                expect(error.name).toEqual('InvalidCredentialsError');
+                expect(error.message).toEqual('Invalid credentials. Please retry your request with correct credentials.');
+                expect(error.debug).toEqual('');
+                expect(error.code).toEqual(401);
+              });
+          });
+      });
+
+      it('should refresh the session and send the original request', function() {
+        const redirectUri = 'http://localhost:3000';
+        return TestUser.loginWithMIC(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
+          username: randomString(),
+          password: randomString()
+        })
+          .then((user) => {
+            const refreshToken = user.data._socialIdentity.kinveyAuth.refresh_token;
+            const newSession = {
+              access_token: randomString(),
+              token_type: 'bearer',
+              expires_in: 3599,
+              refresh_token: randomString()
+            };
+            const reply = { foo: 'bar' };
+
+            // Setup API response
+            nock(this.client.apiHostname, { encodedQueryParams: true })
+              .get('/foo')
+              .reply(401, {
+                name: 'InvalidCredentials',
+                message: 'Invalid credentials. Please retry your request with correct credentials.'
+              });
+
+            nock(this.client.micHostname, { encodedQueryParams: true })
+              .post(
+                '/oauth/token',
+                `grant_type=refresh_token&client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&refresh_token=${refreshToken}`
+              )
+              .reply(200, newSession);
+
+            nock(this.client.apiHostname, { encodedQueryParams: true })
+              .post(`/user/${this.client.appKey}/login`, { _socialIdentity: { kinveyAuth: newSession } })
+              .reply(200, {
+                _id: randomString(),
+                _kmd: {
+                  lmt: new Date().toISOString(),
+                  ect: new Date().toISOString(),
+                  authtoken: randomString()
+                },
+                _acl: {
+                  creator: randomString()
+                },
+                _socialIdentity: {
+                  kinveyAuth: newSession
+                }
+              });
+
+            nock(this.client.apiHostname, { encodedQueryParams: true })
+              .get('/foo')
+              .reply(200, reply);
+
+            const request = new KinveyRequest({
+              url: url.format({
+                protocol: this.client.apiProtocol,
+                host: this.client.apiHost,
+                pathname: '/foo'
+              })
+            });
+            return request.execute()
+              .then((response) => {
+                expect(response.data).toEqual(reply);
+              });
+          });
+      });
     });
   });
 });
