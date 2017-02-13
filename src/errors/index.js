@@ -17,6 +17,7 @@ import NoNetworkConnectionError from './src/noNetworkConnection';
 import NoResponseError from './src/noResponse';
 import NotFoundError from './src/notFound';
 import ParameterValueOutOfRangeError from './src/parameterValueOutOfRange';
+import PopupError from './src/popup';
 import QueryError from './src/query';
 import ServerError from './src/server';
 import SyncError from './src/sync';
@@ -43,6 +44,7 @@ export {
   NoResponseError,
   NotFoundError,
   ParameterValueOutOfRangeError,
+  PopupError,
   QueryError,
   ServerError,
   SyncError,
