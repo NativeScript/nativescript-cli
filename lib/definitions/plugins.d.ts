@@ -5,6 +5,7 @@ interface IPluginsService {
 	prepare(pluginData: IDependencyData, platform: string): Promise<void>;
 	getAllInstalledPlugins(): Promise<IPluginData[]>;
 	ensureAllDependenciesAreInstalled(): Promise<void>;
+	getInstalledFrameworkVersion(platform: string): string;
 
 	/**
 	 * Returns all dependencies and devDependencies from pacakge.json file.

@@ -18,9 +18,13 @@ export class ProjectDataService implements IProjectDataService {
 		}
 	}
 
-	public getValue(propertyName: string): any {
+	public getValue(propertyName: string, key?: string): any {
 		this.loadProjectFile();
-		return this.projectData ? this.projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][propertyName] : null;
+		let rootKey: string = this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE;
+		if (key) {
+			rootKey = key;
+		}
+		return this.projectData ? this.projectData[rootKey][propertyName] : null;
 	}
 
 	public setValue(key: string, value: any): void {

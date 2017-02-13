@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as shelljs from "shelljs";
+import * as constants from "../constants";
 
 export class UpdateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -13,7 +14,7 @@ export class UpdateCommand implements ICommand {
 		private $logger: ILogger) { }
 
 	public async execute(args: string[]): Promise<void> {
-		let folders = ["lib", "hooks", "platforms", "node_modules"];
+		let folders = ["hooks", "platforms", "node_modules"];
 		let tmpDir = path.join(this.$projectData.projectDir, ".tmp_backup");
 
 		try {
@@ -63,7 +64,7 @@ export class UpdateCommand implements ICommand {
 		this.$projectDataService.initialize(this.$projectData.projectDir);
 		for (let platform of availablePlatforms) {
 			let platformData = this.$platformsData.getPlatformData(platform);
-			let platformVersion = this.$projectDataService.getValue(platformData.frameworkPackageName);
+			let platformVersion = this.$projectDataService.getValue(platformData.frameworkPackageName, constants.DEV_DEPENDENCIES);
 			if (platformVersion) {
 				packagePlatforms.push(platform);
 				this.$projectDataService.removeProperty(platformData.frameworkPackageName);
