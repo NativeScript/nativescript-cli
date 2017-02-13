@@ -2,7 +2,6 @@ import * as assert from "assert";
 import * as path from "path";
 import { SysInfo } from "../lib/sys-info";
 import { ChildProcess } from "../lib/wrappers/child-process";
-import { ISysInfoData } from "../typings/nativescript-doctor";
 
 const JavaHomeName = "JAVA_HOME";
 const AndroidHomeName = "ANDROID_HOME";
@@ -26,6 +25,7 @@ interface IChildProcessResults {
 	gitVersion: IChildProcessResultDescription;
 	podVersion: IChildProcessResultDescription;
 	pod: IChildProcessResultDescription;
+	nativeScriptCliVersion: IChildProcessResultDescription;
 }
 
 interface IHostInfoMockOptions {
@@ -54,7 +54,8 @@ function createChildProcessResults(childProcessResult: IChildProcessResults): ID
 		'android.bat': childProcessResult.androidInstalled, // for Windows
 		"mono --version": childProcessResult.monoVersion,
 		"git --version": childProcessResult.gitVersion,
-		"gradle -v": childProcessResult.gradleVersion
+		"gradle -v": childProcessResult.gradleVersion,
+		"tns --version": childProcessResult.nativeScriptCliVersion
 	};
 }
 
@@ -182,7 +183,8 @@ describe("SysInfo unit tests", () => {
 				gradleVersion: { result: setStdOut("Gradle 2.8") },
 				gitVersion: { result: setStdOut("git version 1.9.5") },
 				podVersion: { result: setStdOut("0.38.2") },
-				pod: { result: setStdOut("success") }
+				pod: { result: setStdOut("success") },
+				nativeScriptCliVersion: { result: setStdOut("2.5.0") }
 			};
 
 			delete process.env[JavaHomeName];
@@ -195,7 +197,7 @@ describe("SysInfo unit tests", () => {
 		});
 
 		describe("returns correct results when everything is installed", () => {
-			let assertCommonValues = (result: ISysInfoData) => {
+			let assertCommonValues = (result: NativeScriptDoctor.ISysInfoData) => {
 				assert.deepEqual(result.npmVer, childProcessResult.npmV.result.stdout);
 				assert.deepEqual(result.javaVer, "1.8.0");
 				assert.deepEqual(result.javacVersion, "1.8.0_60");
@@ -205,6 +207,7 @@ describe("SysInfo unit tests", () => {
 				assert.deepEqual(result.monoVer, "1.0.6");
 				assert.deepEqual(result.gradleVer, "2.8");
 				assert.deepEqual(result.gitVer, "1.9.5");
+				assert.deepEqual(result.nativeScriptCliVersion, childProcessResult.nativeScriptCliVersion.result.stdout);
 			};
 
 			it("on Windows", async () => {
@@ -277,7 +280,8 @@ describe("SysInfo unit tests", () => {
 					gradleVersion: { shouldThrowError: true },
 					gitVersion: { shouldThrowError: true },
 					podVersion: { shouldThrowError: true },
-					pod: { shouldThrowError: true }
+					pod: { shouldThrowError: true },
+					nativeScriptCliVersion: { shouldThrowError: true }
 				};
 			});
 

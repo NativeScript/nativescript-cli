@@ -5,10 +5,9 @@ import { HostInfo } from "./host-info";
 import { AndroidLocalBuildRequirements } from "./local-build-requirements/android-local-build-requirements";
 import { IosLocalBuildRequirements } from "./local-build-requirements/ios-local-build-requirements";
 import { Helpers } from "./helpers";
-import { IWarning } from "../typings/nativescript-doctor";
 import * as semver from "semver";
 
-export class Doctor {
+export class Doctor implements NativeScriptDoctor.IDoctor {
 	private static MIN_SUPPORTED_POD_VERSION = "0.38.2";
 
 	constructor(private androidLocalBuildRequirements: AndroidLocalBuildRequirements,
@@ -29,8 +28,8 @@ export class Doctor {
 		return false;
 	}
 
-	public async getWarnings(): Promise<IWarning[]> {
-		const result: IWarning[] = [];
+	public async getWarnings(): Promise<NativeScriptDoctor.IWarning[]> {
+		const result: NativeScriptDoctor.IWarning[] = [];
 		const sysInfoData = await this.sysInfo.getSysInfo();
 
 		if (!sysInfoData.adbVer) {
@@ -39,7 +38,8 @@ export class Doctor {
 				additionalInformation: "For Android-related operations, the AppBuilder CLI will use a built-in version of adb." + EOL
 				+ "To avoid possible issues with the native Android emulator, Genymotion or connected" + EOL
 				+ "Android devices, verify that you have installed the latest Android SDK and" + EOL
-				+ "its dependencies as described in http://developer.android.com/sdk/index.html#Requirements" + EOL
+				+ "its dependencies as described in http://developer.android.com/sdk/index.html#Requirements" + EOL,
+				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			});
 		}
 
@@ -48,7 +48,8 @@ export class Doctor {
 				warning: "WARNING: The Android SDK is not installed or is not configured properly.",
 				additionalInformation: "You will not be able to run your apps in the native emulator. To be able to run apps" + EOL
 				+ "in the native Android emulator, verify that you have installed the latest Android SDK " + EOL
-				+ "and its dependencies as described in http://developer.android.com/sdk/index.html#Requirements" + EOL
+				+ "and its dependencies as described in http://developer.android.com/sdk/index.html#Requirements" + EOL,
+				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			});
 		}
 
@@ -57,7 +58,8 @@ export class Doctor {
 				result.push({
 					warning: "WARNING: Xcode is not installed or is not configured properly.",
 					additionalInformation: "You will not be able to build your projects for iOS or run them in the iOS Simulator." + EOL
-					+ "To be able to build for iOS and run apps in the native emulator, verify that you have installed Xcode." + EOL
+					+ "To be able to build for iOS and run apps in the native emulator, verify that you have installed Xcode." + EOL,
+					platforms: [Constants.IOS_PLATFORM_NAME]
 				});
 			}
 
@@ -65,7 +67,8 @@ export class Doctor {
 				result.push({
 					warning: "WARNING: xcodeproj gem is not installed or is not configured properly.",
 					additionalInformation: "You will not be able to build your projects for iOS." + EOL
-					+ "To be able to build for iOS and run apps in the native emulator, verify that you have installed xcodeproj." + EOL
+					+ "To be able to build for iOS and run apps in the native emulator, verify that you have installed xcodeproj." + EOL,
+					platforms: [Constants.IOS_PLATFORM_NAME]
 				});
 			}
 
@@ -73,7 +76,16 @@ export class Doctor {
 				result.push({
 					warning: "WARNING: CocoaPods is not installed or is not configured properly.",
 					additionalInformation: "You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
-					+ "To be able to build such projects, verify that you have installed CocoaPods."
+					+ "To be able to build such projects, verify that you have installed CocoaPods.",
+					platforms: [Constants.IOS_PLATFORM_NAME]
+				});
+			}
+
+			if (sysInfoData.cocoaPodsVer && sysInfoData.isCocoaPodsUpdateRequired) {
+				result.push({
+					warning: "WARNING: CocoaPods update required.",
+					additionalInformation: `You are using CocoaPods version ${sysInfoData.cocoaPodsVer} which does not support Xcode ${sysInfoData.xcodeVer} yet.${EOL}${EOL}You can update your cocoapods by running $sudo gem install cocoapods from a terminal.${EOL}${EOL}In order for the NativeScript CLI to be able to work correctly with this setup you need to install xcproj command line tool and add it to your PATH.Xcproj can be installed with homebrew by running $ brew install xcproj from the terminal`,
+					platforms: [Constants.IOS_PLATFORM_NAME]
 				});
 			}
 
@@ -82,7 +94,8 @@ export class Doctor {
 				if (!isCocoaPodsWorkingCorrectly) {
 					result.push({
 						warning: "WARNING: There was a problem with CocoaPods",
-						additionalInformation: "Verify that CocoaPods are configured properly."
+						additionalInformation: "Verify that CocoaPods are configured properly.",
+						platforms: [Constants.IOS_PLATFORM_NAME]
 					});
 				}
 			}
@@ -91,13 +104,15 @@ export class Doctor {
 				result.push({
 					warning: `WARNING: Your current CocoaPods version is earlier than ${Doctor.MIN_SUPPORTED_POD_VERSION}.`,
 					additionalInformation: "You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
-					+ `To be able to build such projects, verify that you have at least ${Doctor.MIN_SUPPORTED_POD_VERSION} version installed.`
+					+ `To be able to build such projects, verify that you have at least ${Doctor.MIN_SUPPORTED_POD_VERSION} version installed.`,
+					platforms: [Constants.IOS_PLATFORM_NAME]
 				});
 			}
 		} else {
 			result.push({
 				warning: "NOTE: You can develop for iOS only on Mac OS X systems.",
-				additionalInformation: "To be able to work with iOS devices and projects, you need Mac OS X Mavericks or later." + EOL
+				additionalInformation: "To be able to work with iOS devices and projects, you need Mac OS X Mavericks or later." + EOL,
+				platforms: [Constants.IOS_PLATFORM_NAME]
 			});
 		}
 
@@ -108,7 +123,8 @@ export class Doctor {
 				+ "to perform some Android-related operations. To ensure that you can develop and" + EOL
 				+ "test your apps for Android, verify that you have installed the JDK as" + EOL
 				+ "described in http://docs.oracle.com/javase/8/docs/technotes/guides/install/install_overview.html (for JDK 8)" + EOL
-				+ "or http://docs.oracle.com/javase/7/docs/webnotes/install/ (for JDK 7)." + EOL
+				+ "or http://docs.oracle.com/javase/7/docs/webnotes/install/ (for JDK 7)." + EOL,
+				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			});
 		}
 
@@ -117,7 +133,8 @@ export class Doctor {
 				warning: "WARNING: Git is not installed or not configured properly.",
 				additionalInformation: "You will not be able to create and work with Screen Builder projects." + EOL
 				+ "To be able to work with Screen Builder projects, download and install Git as described" + EOL
-				+ "in https://git-scm.com/downloads and add the git executable to your PATH." + EOL
+				+ "in https://git-scm.com/downloads and add the git executable to your PATH." + EOL,
+				platforms: Constants.SUPPORTED_PLATFORMS
 			});
 		}
 
@@ -134,7 +151,7 @@ export class Doctor {
 		}
 
 		if (!this.isPlatformSupported(platform)) {
-			throw new Error(`Platform ${platform} is not supported. The supported platforms are: ${Constants.SUPPORTED_PLATFORMS.join(", ")}`);
+			throw new Error(`Platform ${platform} is not supported.The supported platforms are: ${Constants.SUPPORTED_PLATFORMS.join(", ")} `);
 		}
 	}
 }

@@ -5,12 +5,12 @@ import { ExecOptions } from "child_process";
 import { WinReg } from "./winreg";
 import { Helpers } from "./helpers";
 import { platform } from "os";
-import { ISysInfoData } from "../typings/nativescript-doctor";
 import * as path from "path";
 import * as osenv from "osenv";
 import * as temp from "temp";
+import * as semver from "semver";
 
-export class SysInfo {
+export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	// Different java has different format for `java -version` command.
 	private static JAVA_VERSION_REGEXP = /(?:openjdk|java) version \"((?:\d+\.)+(?:\d+))/i;
 
@@ -36,14 +36,17 @@ export class SysInfo {
 	private monoVerCache: string;
 	private gitVerCache: string;
 	private gradleVerCache: string;
-	private sysInfoCache: ISysInfoData;
+	private sysInfoCache: NativeScriptDoctor.ISysInfoData;
 	private isCocoaPodsWorkingCorrectlyCache: boolean = null;
+	private nativeScriptCliVersionCache: string;
+	private xcprojInfoCache: NativeScriptDoctor.IXcprojInfo;
+	private isCocoaPodsUpdateRequiredCache: boolean = null;
 
 	constructor(private childProcess: ChildProcess,
 		private fileSystem: FileSystem,
 		private helpers: Helpers,
 		private hostInfo: HostInfo,
-		private winreg: WinReg) { }
+		private winReg: WinReg) { }
 
 	public async getJavaVersion(): Promise<string> {
 		if (!this.javaVerCache) {
@@ -224,9 +227,9 @@ export class SysInfo {
 		return this.gradleVerCache;
 	}
 
-	public async getSysInfo(): Promise<ISysInfoData> {
+	public async getSysInfo(): Promise<NativeScriptDoctor.ISysInfoData> {
 		if (!this.sysInfoCache) {
-			const result: ISysInfoData = Object.create(null);
+			const result: NativeScriptDoctor.ISysInfoData = Object.create(null);
 
 			// os stuff
 			result.platform = platform();
@@ -252,6 +255,8 @@ export class SysInfo {
 			result.gitVer = await this.getGitVersion();
 			result.gradleVer = await this.getGradleVersion();
 			result.isCocoaPodsWorkingCorrectly = await this.isCocoaPodsWorkingCorrectly();
+			result.nativeScriptCliVersion = await this.getNativeScriptCliVersion();
+			result.isCocoaPodsUpdateRequired = await this.isCocoaPodsUpdateRequired();
 
 			this.sysInfoCache = result;
 		}
@@ -284,6 +289,50 @@ export class SysInfo {
 		return !!this.isCocoaPodsWorkingCorrectlyCache;
 	}
 
+	public async getNativeScriptCliVersion(): Promise<string> {
+		if (!this.nativeScriptCliVersionCache) {
+			const output = await this.execCommand("tns --version");
+			this.nativeScriptCliVersionCache = output ? output.trim() : output;
+		}
+
+		return this.nativeScriptCliVersionCache;
+	}
+
+	public async getXcprojInfo(): Promise<NativeScriptDoctor.IXcprojInfo> {
+		if (!this.xcprojInfoCache) {
+			const cocoaPodsVersion = await this.getCocoaPodsVersion();
+			const xcodeVersion = await this.getXcodeVersion();
+
+			// CocoaPods with version lower than 1.0.0 don't support Xcode 7.3 yet
+			// https://github.com/CocoaPods/CocoaPods/issues/2530#issuecomment-210470123
+			// as a result of this all .pbxprojects touched by CocoaPods get converted to XML plist format
+			const shouldUseXcproj = cocoaPodsVersion && !!(semver.lt(cocoaPodsVersion, "1.0.0") && semver.gte(xcodeVersion, "7.3.0"));
+			let xcprojAvailable: boolean;
+
+			if (shouldUseXcproj) {
+				// If that's the case we can use xcproj gem to convert them back to ASCII plist format
+				xcprojAvailable = !!(await this.exec("xcproj --version"))
+			}
+
+			this.xcprojInfoCache = { shouldUseXcproj, xcprojAvailable };
+		}
+
+		return this.xcprojInfoCache;
+	}
+
+	public async isCocoaPodsUpdateRequired(): Promise<boolean> {
+		if (this.isCocoaPodsUpdateRequiredCache === null) {
+			let xcprojInfo = await this.getXcprojInfo();
+			if (xcprojInfo.shouldUseXcproj && !xcprojInfo.xcprojAvailable) {
+				this.isCocoaPodsUpdateRequiredCache = true;
+			} else {
+				this.isCocoaPodsUpdateRequiredCache = false;
+			}
+		}
+
+		return this.isCocoaPodsUpdateRequiredCache;
+	}
+
 	private async exec(cmd: string, execOptions?: ExecOptions): Promise<IProcessInfo> {
 		if (cmd) {
 			try {
@@ -314,12 +363,12 @@ export class SysInfo {
 		let productName: string;
 		let currentVersion: string;
 		let currentBuild: string;
-		const hive = this.winreg.registryKeys.HKLM;
+		const hive = this.winReg.registryKeys.HKLM;
 		const key = "\\Software\\Microsoft\\Windows NT\\CurrentVersion";
 
-		productName = await this.winreg.getRegistryValue("ProductName", hive, key);
-		currentVersion = await this.winreg.getRegistryValue("CurrentVersion", hive, key);
-		currentBuild = await this.winreg.getRegistryValue("CurrentBuild", hive, key);
+		productName = await this.winReg.getRegistryValue("ProductName", hive, key);
+		currentVersion = await this.winReg.getRegistryValue("CurrentVersion", hive, key);
+		currentBuild = await this.winReg.getRegistryValue("CurrentBuild", hive, key);
 
 		return `${productName} ${currentVersion}.${currentBuild}`;
 	}
