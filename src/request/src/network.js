@@ -425,7 +425,7 @@ export class KinveyRequest extends NetworkRequest {
                 properties: this.properties
               });
 
-              return refreshMICRequest.execute()
+              return refreshMICRequest.execute(false, false)
                 .then(response => response.data)
                 .then((newSession) => {
                   // Login the user with the new mic session
@@ -447,14 +447,17 @@ export class KinveyRequest extends NetworkRequest {
                     timeout: this.timeout,
                     client: this.client
                   });
-                  return loginRequest.execute()
+                  return loginRequest.execute(false, false)
                     .then(response => response.data);
                 })
                 .then((user) => {
                   user._socialIdentity[session.identity] = defaults(user._socialIdentity[session.identity], session);
                   return CacheRequest.setActiveUser(this.client, user);
                 })
-                .then(() => this.execute(rawResponse, false));
+                .then(() => this.execute(rawResponse, false))
+                .catch(() => {
+                  throw error;
+                });
             }
           }
 
