@@ -50,10 +50,20 @@ Library that helps identifying if the environment can be used for development of
 	 * Describes warning returned from nativescript-doctor check.
 	 */
 	interface IWarning {
-		/** The warning. */
+		/** The warning.
+		 * @type {string}
+		 */
 		warning: string;
-		/** Additional information for the warning. */
+
+		/** Additional information for the warning.
+		 * @type {string}
+		 */
 		additionalInformation: string;
+
+		/** The platforms which are affected by this warning.
+		 * @type {string[]}
+		 */
+		platforms: string[];
 	}
 	```
 
@@ -108,6 +118,15 @@ Library that helps identifying if the environment can be used for development of
 		const isCocoaPodsWorkingCorrectly = await sysInfo.isCocoaPodsWorkingCorrectly();
 		console.log("is cocoapods working correctly: ", isCocoaPodsWorkingCorrectly);
 
+		const nativeScriptCliVersion = await sysInfo.getNativeScriptCliVersion();
+		console.log("{N} CLI version: ", nativeScriptCliVersion);
+
+		const xcprojInfo = await sysInfo.getXcprojInfo();
+		console.log("xcproj info: ", xcprojInfo);
+
+		const isCocoaPodsUpdateRequired = await sysInfo.isCocoaPodsUpdateRequired();
+		console.log("is CocoaPods update required: ", isCocoaPodsUpdateRequired);
+
 		const sysInfoData = await sysInfo.getSysInfo();
 		console.log("sysInfo: ", sysInfoData);
 	}
@@ -115,7 +134,7 @@ Library that helps identifying if the environment can be used for development of
 	main();
 
 	```
-	
+
 	- Interfaces:
 	```TypeScript
 	/**
@@ -138,7 +157,7 @@ Library that helps identifying if the environment can be used for development of
 		 * Returns the currently installed version of Xcode.
 		 * @return {Promise<string>} Returns the currently installed version of Xcode or null if Xcode is not installed or executed on Linux or Windows.
 		 */
-		getXCodeVersion(): Promise<string>;
+		getXcodeVersion(): Promise<string>;
 
 		/**
 		 * Returns the currently installed Node.js version.
@@ -156,7 +175,7 @@ Library that helps identifying if the environment can be used for development of
 		 * Returns the xcodeproj gem location.
 		 * @return {Promise<string>} Returns the xcodeproj gem location. If the the xcodeproj gem is not installed it will return null.
 		 */
-		getXCodeProjGemLocation(): Promise<string>;
+		getXcodeprojGemLocation(): Promise<string>;
 
 		/**
 		 * Checks if iTunes is installed.
@@ -211,6 +230,24 @@ Library that helps identifying if the environment can be used for development of
 		 * @return {Promise<boolean>} Returns true if CocoaPods is working correctly.
 		 */
 		isCocoaPodsWorkingCorrectly(): Promise<boolean>;
+
+		/**
+		 * Returns the version of the globally installed NativeScript CLI.
+		 * @return {Promise<string>} Returns the version of the globally installed NativeScript CLI.
+		 */
+		getNativeScriptCliVersion(): Promise<string>;
+
+		/**
+		 * Checks if xcproj is required to build projects and if it is installed.
+		 * @return {Promise<IXcprojInfo>} Returns the collected information aboud xcproj.
+		 */
+		getXcprojInfo(): Promise<IXcprojInfo>;
+
+		/**
+		 * Checks if the current version of CocoaPods is compatible with the installed Xcode.
+		 * @return {boolean} true if an update us require.
+		 */
+		isCocoaPodsUpdateRequired(): Promise<boolean>;
 
 		/**
 		 * Returns the whole system information.
@@ -342,5 +379,63 @@ Library that helps identifying if the environment can be used for development of
 		 * @type {boolean}
 		 */
 		isCocoaPodsWorkingCorrectly: boolean;
+
+		/**
+		 * NativeScript CLI version string, as returned by `tns --version`.
+		 * @type {string}
+		 */
+		nativeScriptCliVersion: string;
+
+		/**
+		 * Information about xcproj.
+		 * @type {string}
+		 */
+		xcprojInfo: IXcprojInfo
+
+		/**
+		 * true if the system requires xcproj to build projects successfully and the CocoaPods version is not compatible with the Xcode.
+		 */
+		isCocoaPodsUpdateRequired: boolean;
+	}
+
+	/**
+	 * Describes information about xcproj brew formula.
+	 */
+	interface IXcprojInfo {
+		/**
+		 * Determines whether the system needs xcproj to execute ios builds sucessfully.
+		 */
+		shouldUseXcproj: boolean;
+
+		/**
+		 * Determines whether xcproj can be called from the command line.
+		 */
+		xcprojAvailable: boolean;
+	}
+	```
+
+* Module `constants`:
+	- Usage:
+	```TypeScript
+	import { constants } from "nativescript-doctor"
+
+	function main() {
+		for(let constantName in constants) {
+			console.log(`${constantName}: ${constants[constantName]}`);
+		}
+	}
+
+	main();
+	```
+
+	- Interfaces:
+	```TypeScript
+	/**
+	 * Describes the constants used in the module.
+	 */
+	interface IConstants {
+		ANDROID_PLATFORM_NAME: string;
+		IOS_PLATFORM_NAME: string;
+		SUPPORTED_PLATFORMS: string[];
 	}
 	```
