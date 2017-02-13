@@ -395,6 +395,16 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
+	public async stopServices(): Promise<ISpawnResult> {
+		let projectRoot = this.platformData.projectRoot;
+		let gradleBin = path.join(projectRoot, "gradlew");
+		if (this.$hostInfo.isWindows) {
+			gradleBin += ".bat";
+		}
+
+		return this.$childProcess.spawnFromEvent(gradleBin, ["--stop", "--quiet"], "close", { stdio: "inherit", cwd: projectRoot });
+	}
+
 	private async cleanProject(projectRoot: string, options: string[]): Promise<void> {
 		options.unshift("clean");
 

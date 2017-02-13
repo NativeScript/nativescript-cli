@@ -168,10 +168,25 @@ describe('Platform Service Tests', () => {
 	});
 
 	describe("remove platform unit tests", () => {
-		it("should fail when platforms are not added", () => {
+		it.only("should fail when platforms are not added", async () =>  {
+			const ExpectedErrorsCaught = 2;
+			let errorsCaught = 0;
+
 			testInjector.resolve("fs").exists = () => false;
-			(() => platformService.removePlatforms(["android"])).should.throw();
-			(() => platformService.removePlatforms(["ios"])).should.throw();
+
+			try {
+				await platformService.removePlatforms(["android"]);
+			} catch (e) {
+				errorsCaught++;
+			}
+
+			try {
+				await platformService.removePlatforms(["ios"]);
+			} catch (e) {
+				errorsCaught++;
+			}
+
+			assert.isTrue(errorsCaught === ExpectedErrorsCaught);
 		});
 		it("shouldn't fail when platforms are added", async () => {
 			testInjector.resolve("fs").exists = () => false;

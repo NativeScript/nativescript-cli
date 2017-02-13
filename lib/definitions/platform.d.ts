@@ -24,7 +24,7 @@ interface IPlatformService {
 	 * @param {string[]} platforms Platforms to be removed.
 	 * @returns {void}
 	 */
-	removePlatforms(platforms: string[]): void;
+	removePlatforms(platforms: string[]): Promise<void>;
 
 	updatePlatforms(platforms: string[]): Promise<void>;
 

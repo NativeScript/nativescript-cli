@@ -408,7 +408,7 @@ describe('Platform Service Tests', () => {
 				testInjector.registerCommand("platform|clean", CleanCommand);
 				let cleanCommand = testInjector.resolveCommand("platform|clean");
 
-				platformService.removePlatforms = (platforms: string[]) => {
+				platformService.removePlatforms = async (platforms: string[]) => {
 					platformActions.push({ action: "removePlatforms", platforms });
 				};
 

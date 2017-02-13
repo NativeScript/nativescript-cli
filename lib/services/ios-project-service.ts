@@ -632,6 +632,10 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return null;
 	}
 
+	public async stopServices(): Promise<ISpawnResult> {
+		return Promise.resolve({stderr: "", stdout: "", exitCode: 0});
+	}
+
 	private async mergeInfoPlists(): Promise<void> {
 		let projectDir = this.$projectData.projectDir;
 		let infoPlistPath = this.$options.baseConfig || path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);

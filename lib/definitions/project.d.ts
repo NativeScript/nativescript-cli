@@ -208,6 +208,13 @@ interface IPlatformProjectService {
 	 * @returns {void}
 	 */
 	ensureConfigurationFileInAppResources(): void;
+
+	/**
+	 * Stops all running processes that might hold a lock on the filesystem.
+	 * Android: Gradle daemon processes are terminated.
+	 * @returns {void}
+	 */
+	stopServices(): Promise<ISpawnResult>;
 }
 
 interface IAndroidProjectPropertiesManager {

@@ -342,6 +342,9 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	ensureConfigurationFileInAppResources(): void {
 		return null;
 	}
+	async stopServices(): Promise<ISpawnResult> {
+		return Promise.resolve({stderr: "", stdout: "", exitCode: 0});
+	}
 }
 
 export class ProjectDataService implements IProjectDataService {
@@ -589,7 +592,7 @@ export class PlatformServiceStub implements IPlatformService {
 		return [];
 	}
 
-	public removePlatforms(platforms: string[]): void {
+	public async removePlatforms(platforms: string[]): Promise<void> {
 
 	}
 
