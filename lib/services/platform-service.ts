@@ -91,9 +91,10 @@ export class PlatformService implements IPlatformService {
 		}
 
 		let spinner = new clui.Spinner("Installing " + packageToInstall);
+		let projectDir = this.$projectData.projectDir;
 		try {
 			spinner.start();
-			let downloadedPackagePath = await this.$npmInstallationManager.install(packageToInstall, this.$projectData.projectDir, npmOptions);
+			let downloadedPackagePath = await this.$npmInstallationManager.install(packageToInstall, projectDir, npmOptions);
 			let frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
 			frameworkDir = path.resolve(frameworkDir);
 

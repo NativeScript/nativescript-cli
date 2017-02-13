@@ -3,12 +3,9 @@ import * as semver from "semver";
 import * as constants from "./constants";
 
 export class NpmInstallationManager implements INpmInstallationManager {
-	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
-
 	constructor(private $npm: INodePackageManager,
 		private $childProcess: IChildProcess,
 		private $logger: ILogger,
-		private $errors: IErrors,
 		private $options: IOptions,
 		private $fs: IFileSystem,
 		private $staticConfig: IStaticConfig) {
@@ -35,7 +32,6 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	}
 
 	public async install(packageName: string, projectDir: string, opts?: INpmInstallOptions): Promise<any> {
-
 		try {
 			let packageToInstall = this.$options.frameworkPath || packageName;
 			let pathToSave = projectDir;
@@ -45,7 +41,8 @@ export class NpmInstallationManager implements INpmInstallationManager {
 			return await this.installCore(packageToInstall, pathToSave, version, dependencyType);
 		} catch (error) {
 			this.$logger.debug(error);
-			this.$errors.fail("%s. Error: %s", NpmInstallationManager.NPM_LOAD_FAILED, error);
+
+			throw new Error(error);
 		}
 	}
 
