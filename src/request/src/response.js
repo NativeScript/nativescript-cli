@@ -158,9 +158,9 @@ export class KinveyResponse extends Response {
       return super.error;
     }
 
-    if (isDefined(name)) {
-      error.name = name;
-    }
+    // if (isDefined(name)) {
+    //   error.name = name;
+    // }
 
     return error;
   }
