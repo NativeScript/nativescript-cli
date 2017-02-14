@@ -1,4 +1,8 @@
 import ActiveUserError from './src/activeUser';
+import APIVersionNotAvailableError from './src/apiVersionNotAvailable';
+import APIVersionNotImplementedError from './src/apiVersionNotImplemented';
+import AppProblemError from './src/appProblem';
+import BadRequestError from './src/badRequest';
 import BaseError from './src/base';
 import BLError from './src/bl';
 import CORSDisabledError from './src/corsDisabled';
@@ -35,6 +39,10 @@ import WritesToCollectionDisallowedError from './src/writesToCollectionDisallowe
 // Export
 export {
   ActiveUserError,
+  APIVersionNotAvailableError,
+  APIVersionNotImplementedError,
+  AppProblemError,
+  BadRequestError,
   BaseError,
   BLError,
   CORSDisabledError,
