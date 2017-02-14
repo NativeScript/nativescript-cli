@@ -2,6 +2,7 @@ import syncBatchLib = require("../../common/services/livesync/sync-batch");
 import * as path from "path";
 import * as minimatch from "minimatch";
 import * as util from "util";
+import * as helpers from "../../common/helpers";
 
 const livesyncInfoFileName = ".nslivesyncinfo";
 
@@ -223,7 +224,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 
 	private async getLiveSyncInfoFilePath(deviceAppData: Mobile.IDeviceAppData): Promise<string> {
 		let deviceRootPath = path.dirname(await deviceAppData.getDeviceProjectRootPath());
-		let deviceFilePath = path.join(deviceRootPath, livesyncInfoFileName);
+		let deviceFilePath =helpers.fromWindowsRelativePathToUnix(path.join(deviceRootPath, livesyncInfoFileName));
 		return deviceFilePath;
 	}
 
