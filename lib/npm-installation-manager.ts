@@ -3,8 +3,6 @@ import * as semver from "semver";
 import * as constants from "./constants";
 
 export class NpmInstallationManager implements INpmInstallationManager {
-	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
-
 	constructor(private $npm: INodePackageManager,
 		private $childProcess: IChildProcess,
 		private $logger: ILogger,
@@ -52,7 +50,8 @@ export class NpmInstallationManager implements INpmInstallationManager {
 				return this.installCore(packageToInstall, pathToSave, version, dependencyType).wait();
 			} catch (error) {
 				this.$logger.debug(error);
-				this.$errors.fail("%s. Error: %s", NpmInstallationManager.NPM_LOAD_FAILED, error);
+
+				throw new Error(error);
 			}
 
 		}).future<string>()();

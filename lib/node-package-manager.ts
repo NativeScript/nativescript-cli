@@ -24,7 +24,8 @@ export class NodePackageManager implements INodePackageManager {
 				config["ignore-scripts"] = true;
 			}
 
-			let jsonContentBefore = this.$fs.readJson(path.join(pathToSave, "package.json"));
+			let packageJsonPath = path.join(pathToSave, "package.json");
+			let jsonContentBefore = this.$fs.readJson(packageJsonPath);
 			let dependenciesBefore = _.keys(jsonContentBefore.dependencies).concat(_.keys(jsonContentBefore.devDependencies));
 
 			let flags = this.getFlagsString(config, true);
@@ -54,6 +55,8 @@ export class NodePackageManager implements INodePackageManager {
 					this.$logger.warn(err.message);
 				} else {
 					// All other errors should be handled by the caller code.
+					// Revert package.json contents to preserve valid state
+					this.$fs.writeJson(packageJsonPath, jsonContentBefore);
 					throw err;
 				}
 			}
