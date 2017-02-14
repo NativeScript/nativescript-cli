@@ -282,17 +282,20 @@ declare module NativeScriptDoctor {
 	 * Describes warning returned from nativescript-doctor check.
 	 */
 	interface IWarning {
-		/** The warning.
+		/**
+		 * The warning.
 		 * @type {string}
 		 */
 		warning: string;
 
-		/** Additional information for the warning.
+		/**
+		 * Additional information for the warning.
 		 * @type {string}
 		 */
 		additionalInformation: string;
 
-		/** The platforms which are affected by this warning.
+		/**
+		 * The platforms which are affected by this warning.
 		 * @type {string[]}
 		 */
 		platforms: string[];
