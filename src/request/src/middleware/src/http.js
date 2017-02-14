@@ -2,7 +2,7 @@ import Middleware from './middleware';
 import Promise from 'es6-promise';
 import httpRequest from 'request';
 import { isDefined } from 'src/utils';
-import { TimeoutError } from 'src/errors';
+import { NoNetworkConnectionError, TimeoutError } from 'src/errors';
 import pkg from 'package.json';
 
 function deviceInformation() {
@@ -48,7 +48,9 @@ export default class HttpMiddleware extends Middleware {
       }, (error, response, body) => {
         if (isDefined(response) === false) {
           if (error.code === 'ESOCKETTIMEDOUT' || error.code === 'ETIMEDOUT') {
-            return reject(new TimeoutError('The request timed out.'));
+            return reject(new TimeoutError('The network request timed out.'));
+          } else if (error.code === 'ENOENT') {
+            return reject(new NoNetworkConnectionError('You do not have a network connection.'));
           }
 
           return reject(error);
