@@ -168,7 +168,7 @@ describe('Platform Service Tests', () => {
 	});
 
 	describe("remove platform unit tests", () => {
-		it.only("should fail when platforms are not added", async () =>  {
+		it("should fail when platforms are not added", async () =>  {
 			const ExpectedErrorsCaught = 2;
 			let errorsCaught = 0;
 
