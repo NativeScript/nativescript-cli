@@ -224,6 +224,7 @@ export class PlatformService implements IPlatformService {
 				});
 			}
 
+			this.ensurePlatformInstalled(platform).wait();
 			return this.preparePlatformCore(platform).wait();
 		}).future<boolean>()();
 	}
@@ -232,7 +233,6 @@ export class PlatformService implements IPlatformService {
 	private preparePlatformCore(platform: string): IFuture<boolean> {
 		return (() => {
 			platform = platform.toLowerCase();
-			this.ensurePlatformInstalled(platform).wait();
 
 			let platformData = this.$platformsData.getPlatformData(platform);
 			platformData.platformProjectService.ensureConfigurationFileInAppResources().wait();
@@ -322,7 +322,7 @@ export class PlatformService implements IPlatformService {
 			// Replace placeholders in configuration files
 			platformData.platformProjectService.interpolateConfigurationFile().wait();
 
-			this.$logger.out("Project successfully prepared ("+platform+")");
+			this.$logger.out("Project successfully prepared (" + platform + ")");
 			return true;
 		}).future<boolean>()();
 	}
@@ -337,14 +337,14 @@ export class PlatformService implements IPlatformService {
 	}
 
 	public prepareAndExecute(platform: string, executeAction: () => IFuture<void>): IFuture<void> {
- 		return (() => {
- 			platform = platform.toLowerCase();
- 			if (!this.preparePlatform(platform).wait()) {
- 				this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
- 			}
- 			executeAction().wait();
- 		}).future<void>()();
- 	}
+		return (() => {
+			platform = platform.toLowerCase();
+			if (!this.preparePlatform(platform).wait()) {
+				this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
+			}
+			executeAction().wait();
+		}).future<void>()();
+	}
 
 	public buildForDeploy(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
