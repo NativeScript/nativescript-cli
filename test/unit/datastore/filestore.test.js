@@ -1,10 +1,14 @@
 import { FileStore as store } from 'src/datastore';
-import { KinveyError, NotFoundError, ServerError } from 'src/errors';
+import { NotFoundError, ServerError } from 'src/errors';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import fs from 'fs';
 import path from 'path';
 import nock from 'nock';
 import expect from 'expect';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+chai.use(chaiAsPromised);
+chai.should();
 
 describe('FileStore', function() {
   describe('upload()', function() {
@@ -120,7 +124,7 @@ describe('FileStore', function() {
           'content-length': '2503'
         });
 
-      return store.upload(file, {
+      const promise = store.upload(file, {
         filename: 'kinvey.png',
         public: true,
         mimeType: 'image/png'
@@ -128,7 +132,9 @@ describe('FileStore', function() {
         .then((data) => {
           expect(data).toIncludeKey('_data');
           expect(nock.isDone()).toEqual(true);
+          return data;
         });
+      return promise.should.be.fulfilled;
     });
 
     it('should resume a file upload when a 308 status code is received', function() {
@@ -258,7 +264,7 @@ describe('FileStore', function() {
           'content-length': '2503'
         });
 
-      return store.upload(file, {
+      const promise = store.upload(file, {
         filename: 'kinvey.png',
         public: true,
         mimeType: 'image/png'
@@ -267,6 +273,7 @@ describe('FileStore', function() {
           expect(data).toIncludeKey('_data');
           expect(nock.isDone()).toEqual(true);
         });
+      return promise.should.be.fulfilled;
     });
 
     it('should resume a file upload when a 5xx status code is received', function() {
@@ -410,7 +417,7 @@ describe('FileStore', function() {
           'content-length': '2503'
         });
 
-      return store.upload(file, {
+      const promise = store.upload(file, {
         filename: 'kinvey.png',
         public: true,
         mimeType: 'image/png'
@@ -419,6 +426,7 @@ describe('FileStore', function() {
           expect(data).toIncludeKey('_data');
           expect(nock.isDone()).toEqual(true);
         });
+      return promise.should.be.fulfilled;
     });
 
     it('should fail to upload a file when a 5xx status code is received mutiple times', function() {
@@ -506,7 +514,7 @@ describe('FileStore', function() {
           'x-guploader-uploadid': 'AEnB2UrINxWGypPdSCcTkbOIa7WQOnXKJjsuNvR7uiwsLM_nYqU4BkwjhN3CVZM2Ix7ATZt-cf0oRGhE6e8yd0Dd7YaZKFsK7Q'
         });
 
-      return store.upload(file, {
+      const promise = store.upload(file, {
         filename: 'kinvey.png',
         public: true,
         mimeType: 'image/png'
@@ -516,8 +524,9 @@ describe('FileStore', function() {
         .catch((error) => {
           expect(error).toBeA(ServerError);
           expect(error.code).toEqual(500);
-          expect(nock.isDone()).toEqual(true);
+          throw error;
         });
+      return promise.should.be.rejected;
     });
 
     it('should fail to upload a file when a 4xx status code is received', function() {
@@ -597,12 +606,11 @@ describe('FileStore', function() {
           predefinedAcl: 'publicRead',
           upload_id: 'AEnB2UrXv4rk9Nosi5pA8Esyq1art9RuqxKz_mnKfWInUetzy86yQ3cFrboL1drhp1sCHT5EKdyPNXr0bHS9g6ZDUEG4h-7xgg'
         })
-        .times(15)
         .reply(404, 'NotFoundError', {
           'x-guploader-uploadid': 'AEnB2UrINxWGypPdSCcTkbOIa7WQOnXKJjsuNvR7uiwsLM_nYqU4BkwjhN3CVZM2Ix7ATZt-cf0oRGhE6e8yd0Dd7YaZKFsK7Q'
         });
 
-      return store.upload(file, {
+      const promise = store.upload(file, {
         filename: 'kinvey.png',
         public: true,
         mimeType: 'image/png'
@@ -612,8 +620,9 @@ describe('FileStore', function() {
         .catch((error) => {
           expect(error).toBeA(NotFoundError);
           expect(error.code).toEqual(404);
-          expect(nock.isDone()).toEqual(true);
+          throw error;
         });
+      return promise.should.be.rejected;
     });
   });
 });
