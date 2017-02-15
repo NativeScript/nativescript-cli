@@ -155,4 +155,5 @@ if gets.chomp.downcase == "y"
   end
 end
 
-puts "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .profile/.zprofile. Restart the terminal to use them."
+puts "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .bash_profile/.zprofile"
+puts "Restart the terminal or run `source ~/.bash_profile` to use them."
