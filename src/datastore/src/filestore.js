@@ -1,7 +1,6 @@
 import {
   NetworkRequest,
   KinveyRequest,
-  StatusCode,
   AuthType,
   RequestMethod,
   Headers
