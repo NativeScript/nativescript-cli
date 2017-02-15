@@ -308,11 +308,13 @@ class FileStore extends NetworkStore {
         // Check if we should try uploading the remaining
         // portion of the file
         if (response.statusCode === 308) {
-          Log.debug('File upload was incomplete. Trying to upload the remaining protion of the file.');
+          Log.debug('File upload was incomplete.'
+            + ' The server responded with a status code 308.'
+            + ' Trying to upload the remaining portion of the file.');
           options.start = getStartIndex(response.headers.get('range'), metadata.size);
           return this.uploadToGCS(uploadUrl, headers, file, metadata, options);
         } else if (response.statusCode >= 500 && response.statusCode < 600) {
-          Log.debug('File upload error.', response.statusCode);
+          Log.debug('File upload error.', response.statusCode, response.data);
 
           // Calculate the exponential backoff
           const backoff = Math.pow(2, options.count) + randomInt(1000, 1);
