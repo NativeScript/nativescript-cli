@@ -78,9 +78,7 @@ end
 def install_environment_variable(name, value)
   ENV[name] = value
  
-  if File.exist?(File.expand_path("~/.bash_profile"))
-    execute("echo \"export #{name}=#{value}\" >> ~/.bash_profile", "Unable to set #{name}")
-  end
+  execute("echo \"export #{name}=#{value}\" >> ~/.bash_profile", "Unable to set #{name}")
   
   if File.exist?(File.expand_path("~/.zshrc"))
     execute("echo \"export #{name}=#{value}\" >> ~/.zprofile", "Unable to set #{name}")
