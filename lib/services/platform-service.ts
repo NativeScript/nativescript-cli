@@ -531,7 +531,7 @@ export class PlatformService implements IPlatformService {
 	private getDeviceBuildInfoFilePath(device: Mobile.IDevice): string {
 		let deviceAppData = this.$deviceAppDataFactory.create(this.$projectData.projectId, device.deviceInfo.platform, device);
 		let deviceRootPath = path.dirname(deviceAppData.deviceProjectRootPath);
-		return path.join(deviceRootPath, buildInfoFileName);
+		return helpers.fromWindowsRelativePathToUnix(path.join(deviceRootPath, buildInfoFileName));
 	}
 
 	private getDeviceBuildInfo(device: Mobile.IDevice): IFuture<IBuildInfo> {
