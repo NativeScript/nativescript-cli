@@ -8,7 +8,7 @@ import expect from 'expect';
 
 describe('FileStore', function() {
   describe('upload()', function() {
-    it('should upload a file', async function() {
+    it('should upload a file', function() {
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -120,12 +120,15 @@ describe('FileStore', function() {
           'content-length': '2503'
         });
 
-      const data = await store.upload(file, {
+      return store.upload(file, {
         filename: 'kinvey.png',
         public: true,
         mimeType: 'image/png'
-      });
-      expect(data).toIncludeKey('_data');
+      })
+        .then((data) => {
+          expect(data).toIncludeKey('_data');
+          expect(nock.isDone()).toEqual(true);
+        });
     });
 
     it('should resume a file upload when a 308 status code is received', async function() {
