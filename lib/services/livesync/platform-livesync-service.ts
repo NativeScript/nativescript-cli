@@ -224,7 +224,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 
 	private async getLiveSyncInfoFilePath(deviceAppData: Mobile.IDeviceAppData): Promise<string> {
 		let deviceRootPath = path.dirname(await deviceAppData.getDeviceProjectRootPath());
-		let deviceFilePath =helpers.fromWindowsRelativePathToUnix(path.join(deviceRootPath, livesyncInfoFileName));
+		let deviceFilePath = helpers.fromWindowsRelativePathToUnix(path.join(deviceRootPath, livesyncInfoFileName));
 		return deviceFilePath;
 	}
 
