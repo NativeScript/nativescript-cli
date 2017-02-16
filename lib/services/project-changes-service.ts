@@ -33,6 +33,7 @@ export class ProjectChangesService implements IProjectChangesService {
 	private _prepareInfo: IPrepareInfo;
 	private _newFiles: number = 0;
 	private _outputProjectMtime: number;
+	private _outputProjectCTime: number;
 
 	constructor(
 		private $platformsData: IPlatformsData,
@@ -140,6 +141,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			let platformData = this.$platformsData.getPlatformData(platform);
 			let prepareInfoFile = path.join(platformData.projectRoot, prepareInfoFileName);
 			this._outputProjectMtime = this.$fs.getFsStats(prepareInfoFile).mtime.getTime();
+			this._outputProjectCTime = this.$fs.getFsStats(prepareInfoFile).ctime.getTime();
 			return false;
 		}
 		this._prepareInfo = {
@@ -150,6 +152,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			changesRequireBuildTime: null
 		};
 		this._outputProjectMtime = 0;
+		this._outputProjectCTime = 0;
 		this._changesInfo.appFilesChanged = true;
 		this._changesInfo.appResourcesChanged = true;
 		this._changesInfo.modulesChanged = true;
@@ -161,7 +164,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		for (let file of files) {
 			if (this.$fs.exists(file)) {
 				let fileStats = this.$fs.getFsStats(file);
-				if (fileStats.mtime.getTime() > this._outputProjectMtime) {
+				if (fileStats.mtime.getTime() >= this._outputProjectMtime || fileStats.ctime.getTime() >= this._outputProjectCTime) {
 					return true;
 				}
 			}
@@ -179,11 +182,10 @@ export class ProjectChangesService implements IProjectChangesService {
 
 			let fileStats = this.$fs.getFsStats(filePath);
 
-			let changed = fileStats.mtime.getTime() > this._outputProjectMtime || fileStats.ctime.getTime() > this._outputProjectMtime;
-
+			let changed = fileStats.mtime.getTime() >= this._outputProjectMtime || fileStats.ctime.getTime() >= this._outputProjectCTime;
 			if (!changed) {
 				let lFileStats = this.$fs.getLsStats(filePath);
-				changed = lFileStats.mtime.getTime() > this._outputProjectMtime || lFileStats.ctime.getTime() > this._outputProjectMtime;
+				changed = lFileStats.mtime.getTime() >= this._outputProjectMtime || lFileStats.ctime.getTime() >= this._outputProjectCTime;
 			}
 
 			if (changed) {
