@@ -503,7 +503,7 @@ export class PlatformService implements IPlatformService {
 	private async getDeviceBuildInfoFilePath(device: Mobile.IDevice): Promise<string> {
 		let deviceAppData = this.$deviceAppDataFactory.create(this.$projectData.projectId, device.deviceInfo.platform, device);
 		let deviceRootPath = path.dirname(await deviceAppData.getDeviceProjectRootPath());
-		return path.join(deviceRootPath, buildInfoFileName);
+		return helpers.fromWindowsRelativePathToUnix(path.join(deviceRootPath, buildInfoFileName));
 	}
 
 	private async getDeviceBuildInfo(device: Mobile.IDevice): Promise<IBuildInfo> {
