@@ -26,8 +26,7 @@ class LiveSyncService implements ILiveSyncService {
 		private $processService: IProcessService) { }
 
 	private async ensureAndroidFrameworkVersion(platformData: IPlatformData): Promise<void> { // TODO: this can be moved inside command or canExecute function
-		this.$projectDataService.initialize(this.$projectData.projectDir);
-		let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).version;
+		const frameworkVersion = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName).version;
 
 		if (platformData.normalizedPlatformName.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
 			if (semver.lt(frameworkVersion, "1.2.1")) {

@@ -12,7 +12,8 @@ export class ProjectService implements IProjectService {
 		private $projectDataService: IProjectDataService,
 		private $projectHelper: IProjectHelper,
 		private $projectNameService: IProjectNameService,
-		private $projectTemplatesService: IProjectTemplatesService) { }
+		private $projectTemplatesService: IProjectTemplatesService,
+		private $staticConfig: IStaticConfig) { }
 
 	@exportedPromise("projectService")
 	public async createProject(projectOptions: IProjectSettings): Promise<void> {
@@ -61,6 +62,7 @@ export class ProjectService implements IProjectService {
 			this.$fs.deleteDirectory(projectDir);
 			throw err;
 		}
+
 		this.$logger.printMarkdown("Project `%s` was successfully created.", projectName);
 	}
 
@@ -72,6 +74,7 @@ export class ProjectService implements IProjectService {
 		} else {
 			this.$logger.trace(`Template ${templatePath} does not have ${constants.PACKAGE_JSON_FILE_NAME} file.`);
 		}
+
 		return null;
 	}
 
@@ -134,8 +137,16 @@ export class ProjectService implements IProjectService {
 	}
 
 	private createPackageJson(projectDir: string, projectId: string): void {
-		this.$projectDataService.initialize(projectDir);
-		this.$projectDataService.setValue("id", projectId);
+		const projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
+
+		this.$fs.writeJson(projectFilePath, {
+			"description": "NativeScript Application",
+			"license": "SEE LICENSE IN <your-license-filename>",
+			"readme": "NativeScript Application",
+			"repository": "<fill-your-repository-here>"
+		});
+
+		this.$projectDataService.setNSValue(projectDir, "id", projectId);
 	}
 }
 $injector.register("projectService", ProjectService);

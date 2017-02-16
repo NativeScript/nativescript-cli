@@ -60,13 +60,12 @@ export class UpdateCommand implements ICommand {
 		let availablePlatforms = this.$platformService.getAvailablePlatforms();
 		let packagePlatforms: string[] = [];
 
-		this.$projectDataService.initialize(this.$projectData.projectDir);
 		for (let platform of availablePlatforms) {
 			let platformData = this.$platformsData.getPlatformData(platform);
-			let platformVersion = this.$projectDataService.getValue(platformData.frameworkPackageName);
+			const platformVersion = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
 			if (platformVersion) {
 				packagePlatforms.push(platform);
-				this.$projectDataService.removeProperty(platformData.frameworkPackageName);
+				this.$projectDataService.removeNSProperty(this.$projectData.projectDir, platformData.frameworkPackageName);
 			}
 		}
 

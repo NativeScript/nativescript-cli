@@ -60,36 +60,38 @@ interface IProjectData {
 }
 
 interface IProjectDataService {
-	initialize(projectDir: string): void;
-
 	/**
 	 * Returns a value from `nativescript` key in project's package.json.
+	 * @param {string} projectDir The project directory - the place where the root package.json is located.
 	 * @param {string} propertyName The name of the property to be checked in `nativescript` key.
 	 * @returns {any} The value of the property.
 	 */
-	getValue(propertyName: string): any;
+	getNSValue(projectDir: string, propertyName: string): any;
 
 	/**
 	 * Sets a value in the `nativescript` key in a project's package.json.
+	 * @param {string} projectDir The project directory - the place where the root package.json is located.
 	 * @param {string} key Key to be added to `nativescript` key in project's package.json.
 	 * @param {any} value Value of the key to be added to `nativescript` key in project's package.json.
 	 * @returns {void}
 	 */
-	setValue(key: string, value: any): void;
+	setNSValue(projectDir: string, key: string, value: any): void;
 
 	/**
 	 * Removes a property from `nativescript` key in project's package.json.
+	 * @param {string} projectDir The project directory - the place where the root package.json is located.
 	 * @param {string} propertyName The name of the property to be removed from `nativescript` key.
 	 * @returns {void}
 	 */
-	removeProperty(propertyName: string): void;
+	removeNSProperty(projectDir: string, propertyName: string): void;
 
 	/**
 	 * Removes dependency from package.json
+	 * @param {string} projectDir The project directory - the place where the root package.json is located.
 	 * @param {string} dependencyName Name of the dependency that has to be removed.
 	 * @returns {void}
 	 */
-	removeDependency(dependencyName: string): void;
+	removeDependency(projectDir: string, dependencyName: string): void;
 }
 
 /**
