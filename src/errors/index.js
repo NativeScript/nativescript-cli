@@ -1,12 +1,22 @@
 import ActiveUserError from './src/activeUser';
+import APIVersionNotAvailableError from './src/apiVersionNotAvailable';
+import APIVersionNotImplementedError from './src/apiVersionNotImplemented';
+import AppProblemError from './src/appProblem';
+import BadRequestError from './src/badRequest';
 import BaseError from './src/base';
+import BLError from './src/bl';
+import CORSDisabledError from './src/corsDisabled';
+import DuplicateEndUsersError from './src/duplicateEndUsers';
 import FeatureUnavailableError from './src/featureUnavailable';
 import IncompleteRequestBodyError from './src/incompleteRequestBody';
+import IndirectCollectionAccessDisallowedError from './src/indirectCollectionAccessDisallowed';
 import InsufficientCredentialsError from './src/insufficientCredentials';
 import InvalidCredentialsError from './src/invalidCredentials';
 import InvalidIdentifierError from './src/invalidIdentifier';
 import InvalidQuerySyntaxError from './src/invalidQuerySyntax';
 import JSONParseError from './src/jsonParse';
+import KinveyInternalErrorRetry from './src/kinveyInternalErrorRetry';
+import KinveyInternalErrorStop from './src/kinveyInternalErrorStop';
 import KinveyError from './src/kinvey';
 import MissingQueryError from './src/missingQuery';
 import MissingRequestHeaderError from './src/missingRequestHeader';
@@ -20,20 +30,33 @@ import ParameterValueOutOfRangeError from './src/parameterValueOutOfRange';
 import PopupError from './src/popup';
 import QueryError from './src/query';
 import ServerError from './src/server';
+import StaleRequestError from './src/staleRequest';
 import SyncError from './src/sync';
 import TimeoutError from './src/timeout';
+import UserAlreadyExistsError from './src/userAlreadyExists';
+import WritesToCollectionDisallowedError from './src/writesToCollectionDisallowed';
 
 // Export
 export {
   ActiveUserError,
+  APIVersionNotAvailableError,
+  APIVersionNotImplementedError,
+  AppProblemError,
+  BadRequestError,
   BaseError,
+  BLError,
+  CORSDisabledError,
+  DuplicateEndUsersError,
   FeatureUnavailableError,
   IncompleteRequestBodyError,
+  IndirectCollectionAccessDisallowedError,
   InsufficientCredentialsError,
   InvalidCredentialsError,
   InvalidIdentifierError,
   InvalidQuerySyntaxError,
   JSONParseError,
+  KinveyInternalErrorRetry,
+  KinveyInternalErrorStop,
   KinveyError,
   MissingQueryError,
   MissingRequestHeaderError,
@@ -47,8 +70,11 @@ export {
   PopupError,
   QueryError,
   ServerError,
+  StaleRequestError,
   SyncError,
-  TimeoutError
+  TimeoutError,
+  UserAlreadyExistsError,
+  WritesToCollectionDisallowedError,
 };
 
 // Export default

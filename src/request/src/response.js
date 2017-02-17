@@ -1,22 +1,34 @@
 import Headers from './headers';
 import assign from 'lodash/assign';
 import {
+  APIVersionNotAvailableError,
+  APIVersionNotImplementedError,
+  AppProblemError,
+  BadRequestError,
+  BLError,
+  CORSDisabledError,
+  DuplicateEndUsersError,
   FeatureUnavailableError,
   IncompleteRequestBodyError,
+  IndirectCollectionAccessDisallowedError,
   InsufficientCredentialsError,
   InvalidCredentialsError,
   InvalidIdentifierError,
   InvalidQuerySyntaxError,
   JSONParseError,
   KinveyError,
+  KinveyInternalErrorRetry,
+  KinveyInternalErrorStop,
   MissingQueryError,
   MissingRequestHeaderError,
   MissingRequestParameterError,
   NotFoundError,
   ParameterValueOutOfRangeError,
-  ServerError
+  ServerError,
+  StaleRequestError,
+  UserAlreadyExistsError,
+  WritesToCollectionDisallowedError
 } from 'src/errors';
-import { isDefined } from 'src/utils';
 
 /**
  * @private
@@ -72,7 +84,6 @@ export default class Response {
     }
 
     const data = this.data || {};
-    const name = data.name || data.error;
     const message = data.message || data.description;
     const debug = data.debug;
     const code = this.statusCode;
@@ -87,10 +98,6 @@ export default class Response {
       error = new ServerError(message, debug, code, kinveyRequestId);
     } else {
       error = new KinveyError(message, debug, code, kinveyRequestId);
-    }
-
-    if (isDefined(name)) {
-      error.name = name;
     }
 
     return error;
@@ -123,25 +130,51 @@ export class KinveyResponse extends Response {
     const kinveyRequestId = this.headers.get('X-Kinvey-Request-ID');
     let error;
 
-    if (name === 'FeatureUnavailableError') {
+    if (name === 'APIVersionNotAvailable') {
+      error = new APIVersionNotAvailableError(message, debug, code, kinveyRequestId);
+    } else if (name === 'APIVersionNotImplemented') {
+      error = new APIVersionNotImplementedError(message, debug, code, kinveyRequestId);
+    } else if (name === 'AppProblem') {
+      error = new AppProblemError(message, debug, code, kinveyRequestId);
+    } else if (name === 'AppProblem') {
+      error = new AppProblemError(message, debug, code, kinveyRequestId);
+    } else if (name === 'BadRequest') {
+      error = new BadRequestError(message, debug, code, kinveyRequestId);
+    } else if (name === 'BLInternalError'
+      || name === 'BLRuntimeError'
+      || name === 'BLSyntaxError'
+      || name === 'BLTimeoutError'
+      || name === 'BLViolationError') {
+      error = new BLError(message, debug, code, kinveyRequestId);
+    } else if (name === 'CORSDisabled') {
+      error = new CORSDisabledError(message, debug, code, kinveyRequestId);
+    } else if (name === 'DuplicateEndUsers') {
+      error = new DuplicateEndUsersError(message, debug, code, kinveyRequestId);
+    } else if (name === 'FeatureUnavailable') {
       error = new FeatureUnavailableError(message, debug, code, kinveyRequestId);
-    } else if (name === 'IncompleteRequestBodyError') {
+    } else if (name === 'IncompleteRequestBody') {
       error = new IncompleteRequestBodyError(message, debug, code, kinveyRequestId);
+    } else if (name === 'IndirectCollectionAccessDisallowed') {
+      error = new IndirectCollectionAccessDisallowedError(message, debug, code, kinveyRequestId);
     } else if (name === 'InsufficientCredentials') {
       error = new InsufficientCredentialsError(message, debug, code, kinveyRequestId);
     } else if (name === 'InvalidCredentials') {
       error = new InvalidCredentialsError(message, debug, code, kinveyRequestId);
-    } else if (name === 'InvalidIdentifierError') {
+    } else if (name === 'InvalidIdentifier') {
       error = new InvalidIdentifierError(message, debug, code, kinveyRequestId);
-    } else if (name === 'InvalidQuerySyntaxError') {
+    } else if (name === 'InvalidQuerySyntax') {
       error = new InvalidQuerySyntaxError(message, debug, code, kinveyRequestId);
     } else if (name === 'JSONParseError') {
       error = new JSONParseError(message, debug, code, kinveyRequestId);
-    } else if (name === 'MissingQueryError') {
+    } else if (name === 'KinveyInternalErrorRetry') {
+      error = new KinveyInternalErrorRetry(message, debug, code, kinveyRequestId);
+    } else if (name === 'KinveyInternalErrorStop') {
+      error = new KinveyInternalErrorStop(message, debug, code, kinveyRequestId);
+    } else if (name === 'MissingQuery') {
       error = new MissingQueryError(message, debug, code, kinveyRequestId);
-    } else if (name === 'MissingRequestHeaderError') {
+    } else if (name === 'MissingRequestHeader') {
       error = new MissingRequestHeaderError(message, debug, code, kinveyRequestId);
-    } else if (name === 'MissingRequestParameterError') {
+    } else if (name === 'MissingRequestParameter') {
       error = new MissingRequestParameterError(message, debug, code, kinveyRequestId);
     } else if (name === 'EntityNotFound'
         || name === 'CollectionNotFound'
@@ -150,17 +183,19 @@ export class KinveyResponse extends Response {
         || name === 'BlobNotFound'
         || name === 'DocumentNotFound') {
       error = new NotFoundError(message, debug, code, kinveyRequestId);
-    } else if (name === 'ParameterValueOutOfRangeError') {
+    } else if (name === 'ParameterValueOutOfRange') {
       error = new ParameterValueOutOfRangeError(message, debug, code, kinveyRequestId);
     } else if (name === 'ServerError') {
       error = new ServerError(message, debug, code, kinveyRequestId);
+    } else if (name === 'StaleRequest') {
+      error = new StaleRequestError(message, debug, code, kinveyRequestId);
+    } else if (name === 'UserAlreadyExists') {
+      error = new UserAlreadyExistsError(message, debug, code, kinveyRequestId);
+    } else if (name === 'WritesToCollectionDisallowed') {
+      error = new WritesToCollectionDisallowedError(message, debug, code, kinveyRequestId);
     } else {
       return super.error;
     }
-
-    // if (isDefined(name)) {
-    //   error.name = name;
-    // }
 
     return error;
   }
