@@ -1,5 +1,17 @@
 NativeScript CLI Changelog
 ================
+2.5.1 (2017, February 17)
+==
+
+### Fixed
+
+* [Fixed #2476](https://github.com/NativeScript/nativescript-cli/issues/2476): `tns run ios` unable to sync files on iOS Simulator
+* [Fixed #2491](https://github.com/NativeScript/nativescript-cli/issues/2491): "ERROR Error: Could not find module" after 2.5 upgrade 
+* [Fixed #2472](https://github.com/NativeScript/nativescript-cli/issues/2472): Livesync watches .DS_Store files 
+* [Fixed #2469](https://github.com/NativeScript/nativescript-cli/issues/2469): `tns run` can get stuck in a loop since 2.5
+* [Fixed #2512](https://github.com/NativeScript/nativescript-cli/issues/2512): Run should not watch hidden files
+* [Fixed #2521](https://github.com/NativeScript/nativescript-cli/issues/2521): Enable requesting user input during plugin installation
+
 2.5.0 (2017, February 1)
 ==
 ### New
