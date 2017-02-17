@@ -1,14 +1,18 @@
 import { FileStore as store } from 'src/datastore';
-import { KinveyError, NotFoundError, ServerError } from 'src/errors';
+import { NotFoundError, ServerError } from 'src/errors';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import fs from 'fs';
 import path from 'path';
 import nock from 'nock';
 import expect from 'expect';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+chai.use(chaiAsPromised);
+chai.should();
 
 describe('FileStore', function() {
   describe('upload()', function() {
-    it('should upload a file', async function() {
+    it('should upload a file', function() {
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -120,15 +124,20 @@ describe('FileStore', function() {
           'content-length': '2503'
         });
 
-      const data = await store.upload(file, {
+      const promise = store.upload(file, {
         filename: 'kinvey.png',
         public: true,
         mimeType: 'image/png'
-      });
-      expect(data).toIncludeKey('_data');
+      })
+        .then((data) => {
+          expect(data).toIncludeKey('_data');
+          expect(nock.isDone()).toEqual(true);
+          return data;
+        });
+      return promise.should.be.fulfilled;
     });
 
-    it('should resume a file upload when a 308 status code is received', async function() {
+    it('should resume a file upload when a 308 status code is received', function() {
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -255,15 +264,19 @@ describe('FileStore', function() {
           'content-length': '2503'
         });
 
-      const data = await store.upload(file, {
+      const promise = store.upload(file, {
         filename: 'kinvey.png',
         public: true,
         mimeType: 'image/png'
-      });
-      expect(data).toIncludeKey('_data');
+      })
+        .then((data) => {
+          expect(data).toIncludeKey('_data');
+          expect(nock.isDone()).toEqual(true);
+        });
+      return promise.should.be.fulfilled;
     });
 
-    it('should resume a file upload when a 5xx status code is received', async function() {
+    it('should resume a file upload when a 5xx status code is received', function() {
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -404,15 +417,19 @@ describe('FileStore', function() {
           'content-length': '2503'
         });
 
-      const data = await store.upload(file, {
+      const promise = store.upload(file, {
         filename: 'kinvey.png',
         public: true,
         mimeType: 'image/png'
-      });
-      expect(data).toIncludeKey('_data');
+      })
+        .then((data) => {
+          expect(data).toIncludeKey('_data');
+          expect(nock.isDone()).toEqual(true);
+        });
+      return promise.should.be.fulfilled;
     });
 
-    it('should fail to upload a file when a 5xx status code is received mutiple times', async function() {
+    it('should fail to upload a file when a 5xx status code is received mutiple times', function() {
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -497,21 +514,22 @@ describe('FileStore', function() {
           'x-guploader-uploadid': 'AEnB2UrINxWGypPdSCcTkbOIa7WQOnXKJjsuNvR7uiwsLM_nYqU4BkwjhN3CVZM2Ix7ATZt-cf0oRGhE6e8yd0Dd7YaZKFsK7Q'
         });
 
-      try {
-        await store.upload(file, {
-          filename: 'kinvey.png',
-          public: true,
-          mimeType: 'image/png'
-        }, {
-          maxBackoff: 250
+      const promise = store.upload(file, {
+        filename: 'kinvey.png',
+        public: true,
+        mimeType: 'image/png'
+      }, {
+        maxBackoff: 250
+      })
+        .catch((error) => {
+          expect(error).toBeA(ServerError);
+          expect(error.code).toEqual(500);
+          throw error;
         });
-      } catch (error) {
-        expect(error).toBeA(ServerError);
-        expect(error.code).toEqual(500);
-      }
+      return promise.should.be.rejected;
     });
 
-    it('should fail to upload a file when a 4xx status code is received', async function() {
+    it('should fail to upload a file when a 4xx status code is received', function() {
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -588,23 +606,23 @@ describe('FileStore', function() {
           predefinedAcl: 'publicRead',
           upload_id: 'AEnB2UrXv4rk9Nosi5pA8Esyq1art9RuqxKz_mnKfWInUetzy86yQ3cFrboL1drhp1sCHT5EKdyPNXr0bHS9g6ZDUEG4h-7xgg'
         })
-        .times(15)
         .reply(404, 'NotFoundError', {
           'x-guploader-uploadid': 'AEnB2UrINxWGypPdSCcTkbOIa7WQOnXKJjsuNvR7uiwsLM_nYqU4BkwjhN3CVZM2Ix7ATZt-cf0oRGhE6e8yd0Dd7YaZKFsK7Q'
         });
 
-      try {
-        await store.upload(file, {
-          filename: 'kinvey.png',
-          public: true,
-          mimeType: 'image/png'
-        }, {
-          maxBackoff: 250
+      const promise = store.upload(file, {
+        filename: 'kinvey.png',
+        public: true,
+        mimeType: 'image/png'
+      }, {
+        maxBackoff: 250
+      })
+        .catch((error) => {
+          expect(error).toBeA(NotFoundError);
+          expect(error.code).toEqual(404);
+          throw error;
         });
-      } catch (error) {
-        expect(error).toBeA(NotFoundError);
-        expect(error.code).toEqual(404);
-      }
+      return promise.should.be.rejected;
     });
   });
 });

@@ -1,7 +1,6 @@
 import {
   NetworkRequest,
   KinveyRequest,
-  StatusCode,
   AuthType,
   RequestMethod,
   Headers
@@ -256,17 +255,17 @@ class FileStore extends NetworkStore {
           .then((statusCheckResponse) => {
             Log.debug('File upload status check response', statusCheckResponse);
 
-            // Upload the file
             if (statusCheckResponse.isSuccess() === false) {
-              if (statusCheckResponse.statusCode !== StatusCode.ResumeIncomplete) {
-                throw statusCheckResponse.error;
-              }
-
-              options.start = getStartIndex(statusCheckResponse.headers.get('range'), metadata.size);
-              return this.uploadToGCS(uploadUrl, headers, file, metadata, options);
+              throw statusCheckResponse.error;
             }
 
-            return file;
+            if (statusCheckResponse.statusCode !== 308) {
+              return file;
+            }
+
+            // Upload the file
+            options.start = getStartIndex(statusCheckResponse.headers.get('range'), metadata.size);
+            return this.uploadToGCS(uploadUrl, headers, file, metadata, options);
           })
           .then((file) => {
             data._data = file;
@@ -306,38 +305,36 @@ class FileStore extends NetworkStore {
       .then((response) => {
         Log.debug('File upload response', response);
 
-        // If the request was not successful uploading the file
-        // then check if we should try uploading the remaining
+        // Check if we should try uploading the remaining
         // portion of the file
-        if (response.isSuccess() === false) {
-          if (response.statusCode === StatusCode.ResumeIncomplete) {
-            Log.debug('File upload was incomplete. Trying to upload the remaining protion of the file.');
-            options.start = getStartIndex(response.headers.get('range'), metadata.size);
-            return this.uploadToGCS(uploadUrl, headers, file, metadata, options);
-          } else if (response.statusCode >= 500 && response.statusCode < 600) {
-            Log.debug('File upload error.', response.statusCode);
+        if (response.statusCode === 308) {
+          Log.debug('File upload was incomplete.'
+            + ' The server responded with a status code 308.'
+            + ' Trying to upload the remaining portion of the file.');
+          options.start = getStartIndex(response.headers.get('range'), metadata.size);
+          return this.uploadToGCS(uploadUrl, headers, file, metadata, options);
+        } else if (response.statusCode >= 500 && response.statusCode < 600) {
+          Log.debug('File upload error.', response.statusCode, response.data);
 
-            // Calculate the exponential backoff
-            const backoff = Math.pow(2, options.count) + randomInt(1000, 1);
+          // Calculate the exponential backoff
+          const backoff = Math.pow(2, options.count) + randomInt(1000, 1);
 
-            // Throw the error if we have excedded the max backoff
-            if (backoff >= options.maxBackoff) {
-              throw response.error;
-            }
-
-            Log.debug(`File upload will try again in ${backoff} seconds.`);
-
-
-            // Upload the remaining protion of the file after the backoff time has passed
-            return new Promise((resolve) => {
-              setTimeout(() => {
-                options.count += 1;
-                resolve(this.uploadToGCS(uploadUrl, headers, file, metadata, options));
-              }, backoff);
-            });
+          // Throw the error if we have excedded the max backoff
+          if (backoff >= options.maxBackoff) {
+            throw response.error;
           }
 
-          // Throw the error because we do not know how to handle it
+          Log.debug(`File upload will try again in ${backoff} seconds.`);
+
+
+          // Upload the remaining protion of the file after the backoff time has passed
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              options.count += 1;
+              resolve(this.uploadToGCS(uploadUrl, headers, file, metadata, options));
+            }, backoff);
+          });
+        } else if (response.isSuccess() === false) {
           throw response.error;
         }
 
