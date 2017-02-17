@@ -1,7 +1,6 @@
-import { TestUser } from './mocks';
 import Kinvey from 'src/kinvey';
 import Client from 'src/client';
-import { User } from 'src/entity';
+import { User, UserMock } from 'src/entity';
 import { randomString } from 'src/utils';
 import { KinveyError } from 'src/errors';
 import expect from 'expect';
@@ -135,7 +134,7 @@ describe('Kinvey', function () {
         appKey: appKey,
         appSecret: appSecret
       })
-        .then(() => TestUser.login(randomString(), randomString())) // Login a user
+        .then(() => UserMock.login(randomString(), randomString())) // Login a user
         .then(() => {
           // Initialize Kinvey again
           return Kinvey.initialize({
@@ -145,9 +144,9 @@ describe('Kinvey', function () {
         })
         .then((activeUser) => {
           expect(activeUser).toBeA(User);
-          expect(activeUser._id).toEqual(TestUser.getActiveUser()._id);
+          expect(activeUser._id).toEqual(UserMock.getActiveUser()._id);
         })
-        .then(() => TestUser.logout()) // Logout
+        .then(() => UserMock.logout()) // Logout
     });
 
     it('should set default MIC host name when a custom one is not provided', function() {
@@ -205,7 +204,7 @@ describe('Kinvey', function () {
       };
 
       // Logout the active user
-      return TestUser.logout()
+      return UserMock.logout()
         .then(() => {
           // Kinvey API Response
           nock(this.client.baseUrl)

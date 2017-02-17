@@ -1,8 +1,7 @@
-import { User } from 'src/entity';
+import { User, UserMock } from 'src/entity';
 import { randomString } from 'src/utils';
 import { ActiveUserError, InvalidCredentialsError, KinveyError } from 'src/errors';
 import { CacheRequest } from 'src/request';
-import { TestUser } from '../mocks';
 import Query from 'src/query';
 import expect from 'expect';
 import nock from 'nock';
@@ -16,9 +15,9 @@ describe('User', function() {
     });
 
     it('should throw an error if an active user already exists', function() {
-      return TestUser.login(randomString(), randomString())
+      return UserMock.login(randomString(), randomString())
         .then(() => {
-          return TestUser.login(randomString(), randomString());
+          return UserMock.login(randomString(), randomString());
         })
         .catch((error) => {
           expect(error).toBeA(ActiveUserError);
@@ -104,7 +103,7 @@ describe('User', function() {
         });
 
       // Logout the test user
-      return TestUser.logout()
+      return UserMock.logout()
         .then(() => {
           return user.login(username, password);
         })
@@ -145,7 +144,7 @@ describe('User', function() {
         });
 
       // Logout the test user
-      await TestUser.logout();
+      await UserMock.logout();
 
       // Login
       user = await user.login({
@@ -191,7 +190,7 @@ describe('User', function() {
         });
 
       // Logout the test user
-      await TestUser.logout();
+      await UserMock.logout();
 
       // Login
       user = await user.login({
@@ -404,9 +403,9 @@ describe('User', function() {
     });
 
     it('should update the active user', function() {
-      return TestUser.logout()
+      return UserMock.logout()
         .then(() => {
-          return TestUser.login(randomString(), randomString());
+          return UserMock.login(randomString(), randomString());
         })
         .then((user) => {
           const email = randomString();
@@ -427,9 +426,9 @@ describe('User', function() {
     });
 
     it('should update a user and not the active user', function() {
-      return TestUser.logout()
+      return UserMock.logout()
         .then(() => {
-          return TestUser.login(randomString(), randomString());
+          return UserMock.login(randomString(), randomString());
         })
         .then((activeUser) => {
           const user = new User({ _id: randomString(), email: randomString() });
