@@ -1,10 +1,10 @@
 {
-  "name": "kinvey-node-sdk",
+  "name": "kinvey-js-sdk",
   "version": "3.4.0",
-  "description": "Kinvey JavaScript SDK for NodeJS applications.",
+  "description": "Kinvey JavaScript SDK for developing JavaScript applications. This is the core code used to create specific bundles for all other JavaScript platforms.",
   "homepage": "http://www.kinvey.com",
   "bugs": {
-    "url": "https://github.com/Kinvey/kinvey-nodejs/issues"
+    "url": "https://github.com/Kinvey/js-sdk/issues"
   },
   "license": "Apache-2.0",
   "author": "Kinvey, Inc.",
@@ -15,7 +15,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:Kinvey/kinvey-nodejs"
+    "url": "git@github.com:Kinvey/js-sdk"
   },
   "scripts": {
     "build": "npm run clean && npm run transpile",
@@ -81,6 +81,7 @@
   },
   "keywords": [
     "Kinvey",
-    "NodeJS"
+    "JavaScript",
+    "SDK"
   ]
 }

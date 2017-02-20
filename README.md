@@ -13,37 +13,6 @@ The JS SDK is used as a way to share common code for platform specific SDK shims
 
 Refer to the Kinvey [DevCenter](http://devcenter.kinvey.com/) for documentation on using Kinvey.
 
-## How to use
-
-#### 1. Sign up for Kinvey
-To use the SDK, sign up for Kinvey if you have not already done so. Go to the [sign up](https://console.kinvey.com/#signup) page, and follow the steps provided.
-
-#### 2. Install the SDK
-You can install the module using npm:
-
-```bash
-npm install kinvey-node-sdk --save
-```
-
-#### 3. Configure the SDK
-Import the library in your code using `require`.
-
-```javascript
-var Kinvey = require('kinvey-node-sdk');
-```
-
-Next, use `Kinvey.init` to configure your app. Replace `<appKey>` and `<appSecret>` with your apps app key and secret. You can find these for your app using the [Kinvey Console App](https://console.kinvey.com).
-
-```javascript
-Kinvey.init({
-  appKey: '<appKey>',
-  appSecret: '<appSecret>'
-});
-```
-
-## What’s next?
-You are now ready to start building your awesome apps! Next we recommend diving into the [User guide](http://devcenter.kinvey.com/node/guides/users) or [Data store guide](http://devcenter.kinvey.com/node/guides/datastore) to learn more about our service, or explore the [sample apps](http://devcenter.kinvey.com/node/samples) to go straight to working projects.
-
 ## Build
 `npm run build`
 
