@@ -211,6 +211,30 @@ describe('User', function() {
     });
   });
 
+  describe('logout()', function() {
+    beforeEach(function() {
+      return TestUser.login(randomString(), randomString());
+    });
+
+    it('should logout the active user', function() {
+      return TestUser.logout()
+        .then(() => {
+          expect(TestUser.getActiveUser()).toEqual(null);
+        });
+    });
+
+    it('should logout when there is not an active user', function() {
+      return TestUser.logout()
+        .then(() => {
+          expect(TestUser.getActiveUser()).toEqual(null);
+        })
+        .then(() => TestUser.logout())
+        .then(() => {
+          expect(TestUser.getActiveUser()).toEqual(null);
+        });
+    });
+  });
+
   describe('verifyEmail()', function() {
     it('should throw an error if a username is not provided', async function() {
       try {

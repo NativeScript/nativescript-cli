@@ -12,7 +12,7 @@ export default class TestUser extends User {
       return new TestUser(activeUser.data);
     }
 
-    return Promise.resolve(null);
+    return null;
   }
 
   login(username, password, options) {
@@ -117,8 +117,13 @@ export default class TestUser extends User {
     return super.logout(options);
   }
 
-  static logout(options) {
-    const user = new TestUser({}, options);
-    return user.logout(options);
+  static logout(options = {}) {
+    const user = TestUser.getActiveUser(options.client);
+
+    if (user) {
+      return user.logout(options);
+    }
+
+    return Promise.resolve(null);
   }
 }
