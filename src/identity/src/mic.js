@@ -3,7 +3,6 @@ import Identity from './identity';
 import { SocialIdentity } from './enums';
 import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
 import { KinveyError, MobileIdentityConnectError } from 'src/errors';
-import Promise from 'es6-promise';
 import path from 'path';
 import url from 'url';
 import isString from 'lodash/isString';

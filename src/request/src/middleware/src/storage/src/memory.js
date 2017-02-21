@@ -1,6 +1,5 @@
 import { NotFoundError } from 'src/errors';
 import MemoryCache from 'fast-memory-cache';
-import Promise from 'es6-promise';
 import keyBy from 'lodash/keyBy';
 import forEach from 'lodash/forEach';
 import values from 'lodash/values';

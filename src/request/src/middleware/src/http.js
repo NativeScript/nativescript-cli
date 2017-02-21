@@ -1,5 +1,4 @@
 import Middleware from './middleware';
-import Promise from 'es6-promise';
 import httpRequest from 'request';
 import { isDefined } from 'src/utils';
 import { NoNetworkConnectionError, TimeoutError } from 'src/errors';

@@ -4,7 +4,6 @@ import Identity from './identity';
 import { SocialIdentity } from './enums';
 import { KinveyError } from 'src/errors';
 import { randomString } from 'src/utils';
-import Promise from 'es6-promise';
 import assign from 'lodash/assign';
 import querystring from 'querystring';
 import url from 'url';
