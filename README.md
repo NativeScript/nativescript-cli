@@ -8,10 +8,15 @@ The JS SDK is used as a way to share common code for platform specific SDK shims
 * [Angular 2](https://github.com/Kinvey/angular2-sdk)
 * [Backbone](https://github.com/Kinvey/backbone-sdk)
 * [HTML5](https://github.com/Kinvey/html5-sdk)
+* [NodeJS](https://github.com/Kinvey/node-sdk)
 * [PhoneGap](https://github.com/Kinvey/phonegap-sdk)
 * [Titanium](https://github.com/Kinvey/titanium-sdk)
 
 Refer to the Kinvey [DevCenter](http://devcenter.kinvey.com/) for documentation on using Kinvey.
+
+## How to use
+
+Please visit one the platform specific SDK shims and read the README with help on how to use the SDK.
 
 ## Build
 `npm run build`
