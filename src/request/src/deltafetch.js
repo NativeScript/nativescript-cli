@@ -5,7 +5,6 @@ import Response, { StatusCode } from './response';
 import { KinveyError, NotFoundError } from 'src/errors';
 import { isDefined } from 'src/utils';
 import Query from 'src/query';
-import Promise from 'es6-promise';
 import keyBy from 'lodash/keyBy';
 import reduce from 'lodash/reduce';
 import result from 'lodash/result';

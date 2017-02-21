@@ -4,7 +4,6 @@ import Middleware, {
   ParseMiddleware,
   SerializeMiddleware
 } from './middleware';
-import Promise from 'es6-promise';
 import reduce from 'lodash/reduce';
 import isFunction from 'lodash/isFunction';
 import { isDefined } from 'src/utils';

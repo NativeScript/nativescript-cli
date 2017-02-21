@@ -7,7 +7,6 @@ import localStorage from 'local-storage';
 import { KinveyError } from 'src/errors';
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
-import Promise from 'es6-promise';
 import { isDefined } from 'src/utils';
 import { CacheRack } from './rack';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
