@@ -571,19 +571,21 @@ export class PlatformService implements IPlatformService {
 		this.$logger.info(`Copied file '${packageFile}' to '${targetPath}'.`);
 	}
 
-	public removePlatforms(platforms: string[]): void {
+	public async removePlatforms(platforms: string[]): Promise<void> {
 		this.$projectDataService.initialize(this.$projectData.projectDir);
 
-		_.each(platforms, platform => {
+		for (let platform of platforms) {
 			this.validatePlatformInstalled(platform);
 			let platformData = this.$platformsData.getPlatformData(platform);
+
+			await this.$platformsData.getPlatformData(platform).platformProjectService.stopServices();
 
 			let platformDir = path.join(this.$projectData.platformsDir, platform);
 			this.$fs.deleteDirectory(platformDir);
 			this.$projectDataService.removeProperty(platformData.frameworkPackageName);
 
 			this.$logger.out(`Platform ${platform} successfully removed.`);
-		});
+		}
 	}
 
 	public async updatePlatforms(platforms: string[]): Promise<void> {
@@ -745,7 +747,7 @@ export class PlatformService implements IPlatformService {
 
 	private async updatePlatformCore(platformData: IPlatformData, currentVersion: string, newVersion: string, canUpdate: boolean): Promise<void> {
 		let packageName = platformData.normalizedPlatformName.toLowerCase();
-		this.removePlatforms([packageName]);
+		await this.removePlatforms([packageName]);
 		packageName = newVersion ? `${packageName}@${newVersion}` : packageName;
 		await this.addPlatform(packageName);
 		this.$logger.out("Successfully updated to version ", newVersion);
