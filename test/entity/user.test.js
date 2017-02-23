@@ -2,10 +2,12 @@ import { User, UserMock } from 'src/entity';
 import { randomString } from 'src/utils';
 import { ActiveUserError, InvalidCredentialsError, KinveyError } from 'src/errors';
 import { CacheRequest } from 'src/request';
+import { CacheStore, SyncStore } from 'src/datastore';
 import Query from 'src/query';
 import expect from 'expect';
 import nock from 'nock';
 import assign from 'lodash/assign';
+import localStorage from 'local-storage';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 describe('User', function() {
@@ -207,6 +209,99 @@ describe('User', function() {
 
       const isActive = user.isActive();
       expect(isActive).toEqual(true);
+    });
+  });
+
+  describe('logout()', function() {
+    beforeEach(function() {
+      return UserMock.logout()
+        .then(() => {
+          return UserMock.login(randomString(), randomString());
+        });
+    });
+
+    beforeEach(function() {
+      const entity1 = {
+        _id: randomString(),
+        title: 'Opela',
+        author: 'Maria Crawford',
+        isbn: '887420007-2',
+        summary: 'Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros.\n\nVestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.',
+        _acl: {
+          creator: randomString()
+        },
+        _kmd: {
+          lmt: '2016-08-17T15:32:01.741Z',
+          ect: '2016-08-17T15:32:01.741Z'
+        }
+      };
+      const entity2 = {
+        _id: randomString(),
+        title: 'Treeflex',
+        author: 'Harry Larson',
+        isbn: '809087960-8',
+        summary: 'Aenean fermentum. Donec ut mauris eget massa tempor convallis. Nulla neque libero, convallis eget, eleifend luctus, ultricies eu, nibh.',
+        _acl: {
+          creator: randomString()
+        },
+        _kmd: {
+          lmt: '2016-08-17T15:32:01.744Z',
+          ect: '2016-08-17T15:32:01.744Z'
+        }
+      };
+
+      // Kinvey API response
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+        .get(`/appdata/${this.client.appKey}/foo`)
+        .reply(200, [entity1, entity2], {
+          'content-type': 'application/json'
+        });
+
+      // Pull data into cache
+      const store = new CacheStore('foo');
+      return store.pull()
+        .then((entities) => {
+          expect(entities).toEqual([entity1, entity2]);
+        });
+    });
+
+    afterEach(function() {
+      const store = new SyncStore('foo');
+      return store.find().toPromise()
+        .then((entities) => {
+          expect(entities).toEqual([]);
+        });
+    });
+
+    afterEach(function() {
+      const store = new SyncStore('kinvey_sync');
+      return store.find().toPromise()
+        .then((entities) => {
+          expect(entities).toEqual([]);
+        });
+    });
+
+    afterEach(function() {
+      const user = localStorage.get(`${this.client.appKey}kinvey_user`);
+      expect(user).toEqual(null);
+    });
+
+    it('should logout the active user', function() {
+      return UserMock.logout()
+        .then(() => {
+          expect(UserMock.getActiveUser()).toEqual(null);
+        });
+    });
+
+    it('should logout when there is not an active user', function() {
+      return UserMock.logout()
+        .then(() => {
+          expect(UserMock.getActiveUser()).toEqual(null);
+        })
+        .then(() => UserMock.logout())
+        .then(() => {
+          expect(UserMock.getActiveUser()).toEqual(null);
+        });
     });
   });
 

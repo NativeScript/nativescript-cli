@@ -12,7 +12,7 @@ export default class UserMock extends User {
       return new UserMock(activeUser.data);
     }
 
-    return Promise.resolve(null);
+    return null;
   }
 
   login(username, password, options) {
@@ -114,8 +114,13 @@ export default class UserMock extends User {
     return super.logout(options);
   }
 
-  static logout(options) {
-    const user = new UserMock({}, options);
-    return user.logout(options);
+  static logout(options = {}) {
+    const user = UserMock.getActiveUser(options.client);
+
+    if (user) {
+      return user.logout(options);
+    }
+
+    return Promise.resolve(null);
   }
 }
