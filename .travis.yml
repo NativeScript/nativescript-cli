@@ -3,6 +3,7 @@ node_js:
 - '6'
 before_deploy: npm run build
 deploy:
+  skip_cleanup: true
   provider: npm
   email: thomas.conner@me.com
   api_key:
