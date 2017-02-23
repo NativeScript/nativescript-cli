@@ -8,6 +8,7 @@ import Rack, { CacheRack, NetworkRack } from './src/rack';
 import Middleware, {
   CacheMiddleware,
   HttpMiddleware,
+  HttpMockMiddleware,
   MemoryAdapter,
   ParseMiddleware,
   SerializeMiddleware,
@@ -23,6 +24,7 @@ export {
   DeltaFetchRequest,
   Headers,
   HttpMiddleware,
+  HttpMockMiddleware,
   KinveyRequest,
   KinveyResponse,
   MemoryAdapter,

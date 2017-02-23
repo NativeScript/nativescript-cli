@@ -1,50 +1,47 @@
-import { User } from 'src/entity';
+/* eslint-disable max-len */
 import { randomString } from 'src/utils';
-import Promise from 'es6-promise';
 import nock from 'nock';
 import url from 'url';
+import User from './user';
 
-export default class TestUser extends User {
+export default class UserMock extends User {
   static getActiveUser(client) {
     const activeUser = super.getActiveUser(client);
 
     if (activeUser) {
-      return new TestUser(activeUser.data);
+      return new UserMock(activeUser.data);
     }
 
     return null;
   }
 
   login(username, password, options) {
-    return super.logout(options)
-      .then(() => {
-        const reply = {
-          _id: randomString(),
-          _kmd: {
-            lmt: new Date().toISOString(),
-            ect: new Date().toISOString(),
-            authtoken: randomString()
-          },
-          username: username,
-          _acl: {
-            creator: randomString()
-          }
-        };
+    const reply = {
+      _id: randomString(),
+      _kmd: {
+        lmt: new Date().toISOString(),
+        ect: new Date().toISOString(),
+        authtoken: randomString()
+      },
+      username: username,
+      _acl: {
+        creator: randomString()
+      }
+    };
 
-        // Setup nock response
-        nock(this.client.apiHostname, { encodedQueryParams: true })
-          .post(`${this.pathname}/login`, { username: username, password: password })
-          .reply(200, reply, {
-            'content-type': 'application/json; charset=utf-8'
-          });
-
-        // Login
-        return super.login(username, password, options);
+    // Setup nock response
+    nock(this.client.apiHostname, { encodedQueryParams: true })
+      .post(`${this.pathname}/login`, { username: username, password: password })
+      .reply(200, reply, {
+        'content-type': 'application/json; charset=utf-8'
       });
+
+    // Login
+    return super.login(username, password, options);
   }
 
   static login(username, password, options) {
-    const user = new TestUser({}, options);
+    const user = new UserMock({}, options);
     return user.login(username, password, options);
   }
 
@@ -118,7 +115,7 @@ export default class TestUser extends User {
   }
 
   static logout(options = {}) {
-    const user = TestUser.getActiveUser(options.client);
+    const user = UserMock.getActiveUser(options.client);
 
     if (user) {
       return user.logout(options);

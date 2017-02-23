@@ -7,7 +7,6 @@ import Aggregation from 'src/aggregation';
 import { isDefined } from 'src/utils';
 import { InvalidCredentialsError, NoActiveUserError, KinveyError } from 'src/errors';
 import { SocialIdentity } from 'src/identity';
-import Promise from 'es6-promise';
 import url from 'url';
 import qs from 'qs';
 import appendQuery from 'append-query';

@@ -2,7 +2,7 @@ import Request, { KinveyRequest } from 'src/request';
 import { InvalidCredentialsError, ServerError, TimeoutError } from 'src/errors';
 import { randomString } from 'src/utils';
 import { AuthorizationGrant } from 'src/identity';
-import { TestUser } from '../mocks';
+import { UserMock } from 'src/entity';
 import url from 'url';
 import nock from 'nock';
 import expect from 'expect';
@@ -170,7 +170,7 @@ describe('KinveyRequest', () => {
 
       it('should throw the error if unable to refresh the session', function() {
         const redirectUri = 'http://localhost:3000';
-        return TestUser.loginWithMIC(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
+        return UserMock.loginWithMIC(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
           username: randomString(),
           password: randomString()
         })
@@ -214,7 +214,7 @@ describe('KinveyRequest', () => {
 
       it('should refresh the session and send the original request', function() {
         const redirectUri = 'http://localhost:3000';
-        return TestUser.loginWithMIC(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
+        return UserMock.loginWithMIC(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
           username: randomString(),
           password: randomString()
         })

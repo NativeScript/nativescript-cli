@@ -1,5 +1,4 @@
 import Middleware from './middleware';
-import Promise from 'es6-promise';
 
 export default class ParseMiddleware extends Middleware {
   constructor(name = 'Parse Middleware') {

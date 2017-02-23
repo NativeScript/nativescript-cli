@@ -4,7 +4,6 @@ import Query from 'src/query';
 import Client from 'src/client';
 import { KinveyObservable, Log, isDefined } from 'src/utils';
 import Aggregation from 'src/aggregation';
-import Promise from 'es6-promise';
 import isString from 'lodash/isString';
 import url from 'url';
 import map from 'lodash/map';
