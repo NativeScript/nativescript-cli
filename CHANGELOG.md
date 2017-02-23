@@ -1,5 +1,17 @@
 ## Changelog
-## [3.4.0](https://github.com/Kinvey/kinvey-nodejs/tree/v3.4.0) (2017-02-08)
+## [3.4.1](https://github.com/Kinvey/js-sdk/tree/v3.4.1) (2017-02-23)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.4.0...v3.4.1)<br/>
+
+**Changes**
+- Correctly refresh MIC sessions. [#104](https://github.com/Kinvey/js-sdk/pull/104)
+- Add missing error objects. [#105](https://github.com/Kinvey/js-sdk/pull/105)
+- Fix bug that prevented files from being uploaded to GCS. [#106](https://github.com/Kinvey/js-sdk/pull/106)
+- Remove es6-promise dependency. [#107](https://github.com/Kinvey/js-sdk/pull/107)
+- Remove core http middleware. [#109](https://github.com/Kinvey/js-sdk/pull/109)
+- Add more unit tests for user logout. [#110](https://github.com/Kinvey/js-sdk/pull/110)
+- Rename package name and update README. [#111](https://github.com/Kinvey/js-sdk/pull/111)
+
+## [3.4.0](https://github.com/Kinvey/js-sdk/tree/v3.4.0) (2017-02-08)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.3.5...v3.4.0)<br/>
 
 **Changes**
@@ -7,21 +19,21 @@
 - Remove password hash from stored user object. [#102](https://github.com/Kinvey/js-sdk/pull/102)
 - Fix errors with using `Kinvey.ACL` on an entity that does not contain an `_acl` property. [#103](https://github.com/Kinvey/js-sdk/pull/103)
 
-## [3.3.5](https://github.com/Kinvey/kinvey-nodejs/tree/v3.3.5) (2017-01-25)
+## [3.3.5](https://github.com/Kinvey/js-sdk/tree/v3.3.5) (2017-01-25)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.3.4...v3.3.5)<br/>
 
 **Changes**
 - Add `User.lookup()` API to be able to perform [user discovery](http://devcenter.kinvey.com/nodejs/guides/users#lookup). [#96](https://github.com/Kinvey/js-sdk/pull/96)
 - Fix a bug that causes any requests sent to the backend after updating a user to respond with a `401` status code. [#101](https://github.com/Kinvey/js-sdk/pull/101)
 
-## [3.3.4](https://github.com/Kinvey/kinvey-nodejs/tree/v3.3.4) (2017-01-12)
+## [3.3.4](https://github.com/Kinvey/js-sdk/tree/v3.3.4) (2017-01-12)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.3.3...v3.3.4)<br/>
 
 **Changes**
 - Improved test coverage. [#92](https://github.com/Kinvey/js-sdk/pull/92)
 - Fixed a bug that would produce a `TypeError` for a failed login or any network request that resulted in an `InvalidCredentialsError` [#95](https://github.com/Kinvey/js-sdk/pull/95)
 
-## [3.3.3](https://github.com/Kinvey/kinvey-nodejs/tree/v3.3.3) (2016-12-16)
+## [3.3.3](https://github.com/Kinvey/js-sdk/tree/v3.3.3) (2016-12-16)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.3.2...v3.3.3)<br/>
 
 **Changes**
@@ -42,7 +54,7 @@ Kinvey.initialize({
 - Fixed issues that caused inconsistencies with Error objects. [#89](https://github.com/Kinvey/js-sdk/pull/89)
 - Sort, limit, and skip now work correctly when querying the local cache. [#90](https://github.com/Kinvey/js-sdk/pull/90)
 
-## [3.3.2](https://github.com/Kinvey/kinvey-nodejs/tree/v3.3.2) (2016-12-03)
+## [3.3.2](https://github.com/Kinvey/js-sdk/tree/v3.3.2) (2016-12-03)
 
 **Bug fixes:**
 
@@ -53,7 +65,7 @@ Kinvey.initialize({
 
 - Add unit tests for aggregations.
 
-## [3.3.1](https://github.com/Kinvey/kinvey-nodejs/tree/v3.3.1) (2016-12-02)
+## [3.3.1](https://github.com/Kinvey/js-sdk/tree/v3.3.1) (2016-12-02)
 
 **Bug fixes:**
 
@@ -61,7 +73,7 @@ Kinvey.initialize({
 - Merge `user._socialIdentity` recuresively when using an identity to login a user.
 - Fix typo of `complete` in `NetworkStore`.
 
-## [3.3.0](https://github.com/Kinvey/kinvey-nodejs/tree/v3.3.0) (2016-11-22)
+## [3.3.0](https://github.com/Kinvey/js-sdk/tree/v3.3.0) (2016-11-22)
 
 **Enhancements:**
 
@@ -78,14 +90,14 @@ Kinvey.initialize({
 
 - `Kinvey.initialize` should be used instead of `Kinvey.init`.
 
-## [3.2.2](https://github.com/Kinvey/kinvey-nodejs/tree/v3.2.2) (2016-10-25)
+## [3.2.2](https://github.com/Kinvey/js-sdk/tree/v3.2.2) (2016-10-25)
 
 **Bug fixes:**
 
 - Import `UserStore` from the correct path.
 - Add missing group function to data stores.
 
-## [3.2.1](https://github.com/Kinvey/kinvey-nodejs/tree/v3.2.1) (2016-10-06)
+## [3.2.1](https://github.com/Kinvey/js-sdk/tree/v3.2.1) (2016-10-06)
 
 **Implemented enhancements:**
 
@@ -96,7 +108,7 @@ Kinvey.initialize({
 - Removed `async`/`await` syntax.
 - Prevent delta fetch from loading all entities when they are not needed.
 
-## [3.2.0](https://github.com/Kinvey/kinvey-nodejs/tree/v3.2.0) (2016-09-27)
+## [3.2.0](https://github.com/Kinvey/js-sdk/tree/tree/v3.2.0) (2016-09-27)
 [Full Changelog](https://github.com/Kinvey/kinvey-nodejs/compare/3.1.0...3.2.0)<br/>
 
 **Implemented enhancements:**
