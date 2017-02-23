@@ -345,6 +345,9 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	async stopServices(): Promise<ISpawnResult> {
 		return Promise.resolve({stderr: "", stdout: "", exitCode: 0});
 	}
+	async cleanProject(projectRoot: string, options: string[]): Promise<void> {
+		return Promise.resolve();
+	}
 }
 
 export class ProjectDataService implements IProjectDataService {

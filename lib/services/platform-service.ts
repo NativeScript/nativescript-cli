@@ -216,6 +216,16 @@ export class PlatformService implements IPlatformService {
 		this.$logger.trace("Changes info in prepare platform:", changesInfo);
 
 		if (changesInfo.hasChanges) {
+			// android build artifacts need to be cleaned up when switching from release to debug builds
+			if (platform.toLowerCase() === "android") {
+				let previousPrepareInfo = this.$projectChangesService.getPrepareInfo(platform);
+				// clean up prepared plugins when not building for release
+				if (previousPrepareInfo && previousPrepareInfo.release !== this.$options.release) {
+					let platformData = this.$platformsData.getPlatformData(platform);
+					await platformData.platformProjectService.cleanProject(platformData.projectRoot, []);
+				}
+			}
+
 			await this.preparePlatformCore(platform, changesInfo);
 			this.$projectChangesService.savePrepareInfo(platform);
 		} else {
