@@ -2,7 +2,7 @@ import Request, { KinveyRequest } from 'src/request';
 import { InvalidCredentialsError, ServerError, TimeoutError } from 'src/errors';
 import { randomString } from 'src/utils';
 import { AuthorizationGrant } from 'src/identity';
-import { UserMock } from 'src/entity';
+import { UserMock } from 'test/mocks';
 import url from 'url';
 import nock from 'nock';
 import expect from 'expect';

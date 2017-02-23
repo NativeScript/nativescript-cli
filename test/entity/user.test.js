@@ -1,4 +1,5 @@
-import { User, UserMock } from 'src/entity';
+import { User } from 'src/entity';
+import { UserMock } from 'test/mocks';
 import { randomString } from 'src/utils';
 import { ActiveUserError, InvalidCredentialsError, KinveyError } from 'src/errors';
 import { CacheRequest } from 'src/request';

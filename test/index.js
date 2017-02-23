@@ -1,14 +1,15 @@
-import { UserMock } from 'src/entity';
-import Kinvey from 'src/kinvey';
+import { HttpMiddlewareMock, UserMock } from 'test/mocks';
+import { NetworkRack } from 'src/request';
 import { randomString } from 'src/utils';
-import { SerializeMiddleware, HttpMockMiddleware, ParseMiddleware } from 'src/request';
+import Kinvey from 'src/kinvey';
+import { SerializeMiddleware, ParseMiddleware } from 'src/request';
 import nock from 'nock';
 
 // Setup network rack
-Kinvey.NetworkRack.reset();
-Kinvey.NetworkRack.use(new SerializeMiddleware());
-Kinvey.NetworkRack.use(new HttpMockMiddleware());
-Kinvey.NetworkRack.use(new ParseMiddleware());
+NetworkRack.reset();
+NetworkRack.use(new SerializeMiddleware());
+NetworkRack.use(new HttpMiddlewareMock());
+NetworkRack.use(new ParseMiddleware());
 
 // Record for nock
 // nock.recorder.rec();
