@@ -4,7 +4,8 @@
     ["module-resolver", {
       "alias": {
         "package.json": "./package.json",
-        "src": "./src"
+        "src": "./src",
+        "test": "./test"
       }
     }]
   ],
