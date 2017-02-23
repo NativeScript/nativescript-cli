@@ -280,14 +280,6 @@ describe('User', function() {
     });
 
     afterEach(function() {
-      const store = new SyncStore('kinvey_sync');
-      return store.find().toPromise()
-        .then((entities) => {
-          expect(entities).toEqual([]);
-        });
-    });
-
-    afterEach(function() {
       const user = localStorage.get(`${this.client.appKey}kinvey_user`);
       expect(user).toEqual(null);
     });
