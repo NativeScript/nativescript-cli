@@ -1,8 +1,8 @@
 import httpRequest from 'request';
+import { Middleware } from 'src/request';
 import { isDefined } from 'src/utils';
 import { NoNetworkConnectionError, TimeoutError } from 'src/errors';
 import pkg from 'package.json';
-import Middleware from './middleware';
 
 function deviceInformation() {
   const platform = process.title;

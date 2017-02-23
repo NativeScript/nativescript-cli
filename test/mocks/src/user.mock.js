@@ -1,8 +1,8 @@
 /* eslint-disable max-len */
 import { randomString } from 'src/utils';
+import { User } from 'src/entity';
 import nock from 'nock';
 import url from 'url';
-import User from './user';
 
 export default class UserMock extends User {
   static getActiveUser(client) {
