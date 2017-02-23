@@ -1,6 +1,7 @@
 language: node_js
 node_js:
 - '6'
+before_deploy: npm run build
 deploy:
   provider: npm
   email: thomas.conner@me.com
