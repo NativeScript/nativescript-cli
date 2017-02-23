@@ -405,7 +405,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this.$childProcess.spawnFromEvent(gradleBin, ["--stop", "--quiet"], "close", { stdio: "inherit", cwd: projectRoot });
 	}
 
-	private async cleanProject(projectRoot: string, options: string[]): Promise<void> {
+	public async cleanProject(projectRoot: string, options: string[]): Promise<void> {
 		options.unshift("clean");
 
 		let gradleBin = path.join(projectRoot, "gradlew");

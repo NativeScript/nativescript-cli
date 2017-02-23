@@ -215,6 +215,12 @@ interface IPlatformProjectService {
 	 * @returns {void}
 	 */
 	stopServices(): Promise<ISpawnResult>;
+
+	/**
+	 * Removes build artifacts specific to the platform
+	 * @returns {void}
+	 */
+	cleanProject(projectRoot: string, options: string[]): Promise<void>
 }
 
 interface IAndroidProjectPropertiesManager {
