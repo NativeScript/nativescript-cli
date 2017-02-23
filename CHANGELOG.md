@@ -1,4 +1,10 @@
 ## Changelog
+## [3.4.2](https://github.com/Kinvey/js-sdk/tree/v3.4.2) (2017-02-23)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.4.1...v3.4.2)<br/>
+
+**Changes**
+- Move mocked classes to the test directory. Fixes a bug that would cause the package to not work when installed from NPM.
+
 ## [3.4.1](https://github.com/Kinvey/js-sdk/tree/v3.4.1) (2017-02-23)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.4.0...v3.4.1)<br/>
 
