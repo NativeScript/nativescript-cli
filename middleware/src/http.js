@@ -1,4 +1,4 @@
-import { HttpMiddleware } from 'kinvey-phonegap-sdk/dist/middleware';
+import { HttpMiddleware as PhoneGapHttpMiddleware } from 'kinvey-phonegap-sdk/dist/middleware';
 import pkg from 'package.json';
 
 // Helper function to detect the browser name and version.
@@ -78,7 +78,7 @@ export function deviceInformation() {
   }).join(' ');
 }
 
-export default class AngularHttpMiddleware extends HttpMiddleware {
+export default class HttpMiddleware extends PhoneGapHttpMiddleware {
   get deviceInformation() {
     return deviceInformation();
   }

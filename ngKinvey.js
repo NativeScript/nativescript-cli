@@ -1,7 +1,7 @@
 import Kinvey from 'kinvey-phonegap-sdk';
-import { ParseMiddleware, SerializeMiddleware } from 'kinvey-node-sdk/dist/export';
+import { ParseMiddleware, SerializeMiddleware } from 'kinvey-js-sdk/dist/export';
+import angular from 'angular';
 import { HttpMiddleware } from './middleware';
-import angular from 'angular'; // eslint-disable-line import/no-unresolved
 
 // Setup racks
 Kinvey.NetworkRack.reset();
