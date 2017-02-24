@@ -1,5 +1,5 @@
 import Kinvey from 'kinvey-html5-sdk';
-import { ParseMiddleware, SerializeMiddleware } from 'kinvey-node-sdk/dist/export';
+import { ParseMiddleware, SerializeMiddleware } from 'kinvey-js-sdk/dist/export';
 import { HttpMiddleware } from './middleware';
 import Push from './push';
 

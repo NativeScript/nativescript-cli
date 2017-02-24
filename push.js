@@ -8,7 +8,7 @@ import {
   Client,
   User,
   isDefined
-} from 'kinvey-node-sdk/dist/export';
+} from 'kinvey-js-sdk/dist/export';
 import Device from './device';
 import { EventEmitter } from 'events';
 import url from 'url';
