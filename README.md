@@ -73,9 +73,12 @@ Library that helps identifying if the environment can be used for development of
 * Module `sysInfo`:
 	- Usage:
 	```TypeScript
-	import { sysInfo } from "nativescript-doctor";
+	import { sysInfo, setShouldCacheSysInfo } from "nativescript-doctor";
 
 	async function main() {
+		// The default value is true. If set to false the result of each check for each element
+		// of the sys info will not be cached.
+		setShouldCacheSysInfo(false);
 		const javaVersion = await sysInfo.getJavaVersion();
 		console.log("java: ", javaVersion);
 
@@ -257,6 +260,13 @@ Library that helps identifying if the environment can be used for development of
 		 * @return {Promise<ISysInfoData>} The system information.
 		 */
 		getSysInfo(): Promise<ISysInfoData>;
+
+		/**
+		 * If set to true each method will cache it's result. The default value is true.
+		 * @param {boolean} shouldCache The cache switch.
+		 * @return {void}
+		 */
+		setShouldCacheSysInfo(shouldCache: boolean): void;
 	}
 
 	interface ISysInfoData {
@@ -393,7 +403,7 @@ Library that helps identifying if the environment can be used for development of
 		 * Information about xcproj.
 		 * @type {string}
 		 */
-		xcprojInfo: IXcprojInfo
+		xcprojInfo: IXcprojInfo;
 
 		/**
 		 * true if the system requires xcproj to build projects successfully and the CocoaPods version is not compatible with the Xcode.
