@@ -1,5 +1,12 @@
 NativeScript CLI Changelog
 ================
+2.5.2 (2017, February 24)
+==
+
+### Fixed
+
+* [Fixed #2564](https://github.com/NativeScript/nativescript-cli/issues/2564): Add support for Node.js 7.6.0
+
 2.5.1 (2017, February 17)
 ==
 
