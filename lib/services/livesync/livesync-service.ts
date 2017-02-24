@@ -14,7 +14,7 @@ class LiveSyncService implements ILiveSyncService {
 		private $platformsData: IPlatformsData,
 		private $platformService: IPlatformService,
 		private $projectData: IProjectData,
-		private $projectDataService: IProjectDataService,
+		private $pluginsService: IPluginsService,
 		private $prompter: IPrompter,
 		private $injector: IInjector,
 		private $mobileHelper: Mobile.IMobileHelper,
@@ -26,8 +26,7 @@ class LiveSyncService implements ILiveSyncService {
 		private $processService: IProcessService) { }
 
 	private async ensureAndroidFrameworkVersion(platformData: IPlatformData): Promise<void> { // TODO: this can be moved inside command or canExecute function
-		this.$projectDataService.initialize(this.$projectData.projectDir);
-		let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).version;
+		let frameworkVersion = this.$pluginsService.getInstalledFrameworkVersion(platformData.normalizedPlatformName);
 
 		if (platformData.normalizedPlatformName.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
 			if (semver.lt(frameworkVersion, "1.2.1")) {
@@ -46,9 +45,9 @@ class LiveSyncService implements ILiveSyncService {
 	}
 
 	public async liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => Promise<void>): Promise<void> {
-			if (this.$options.justlaunch) {
-				this.$options.watch = false;
-			}
+		if (this.$options.justlaunch) {
+			this.$options.watch = false;
+		}
 		let liveSyncData: ILiveSyncData[] = [];
 
 		if (platform) {

@@ -1,4 +1,5 @@
 import { EOL } from "os";
+import * as constants from "../constants";
 
 export class InstallCommand implements ICommand {
 	public enableHooks = false;
@@ -26,7 +27,7 @@ export class InstallCommand implements ICommand {
 		this.$projectDataService.initialize(this.$projectData.projectDir);
 		for (let platform of this.$platformsData.platformsNames) {
 			let platformData = this.$platformsData.getPlatformData(platform);
-			let frameworkPackageData = this.$projectDataService.getValue(platformData.frameworkPackageName);
+			let frameworkPackageData = this.$projectDataService.getValue(platformData.frameworkPackageName, constants.DEV_DEPENDENCIES);
 			if (frameworkPackageData && frameworkPackageData.version) {
 				try {
 					await this.$platformService.addPlatforms([`${platform}@${frameworkPackageData.version}`]);

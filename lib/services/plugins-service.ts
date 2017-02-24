@@ -273,11 +273,10 @@ export class PluginsService implements IPluginsService {
 		};
 	}
 
-	private getInstalledFrameworkVersion(platform: string): string {
-		let platformData = this.$platformsData.getPlatformData(platform);
-		this.$projectDataService.initialize(this.$projectData.projectDir);
-		let frameworkData = this.$projectDataService.getValue(platformData.frameworkPackageName);
-		return frameworkData.version;
+	public getInstalledFrameworkVersion(platform: string): string {
+		let pathToInstalledFrameworkPackageJson = path.join(this.$projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, constants.FRAMEWORK_TO_PACKAGE[platform.toLowerCase()], constants.PACKAGE_JSON_FILE_NAME);
+		let jsonContent = this.$fs.readJson(pathToInstalledFrameworkPackageJson);
+		return jsonContent.version;
 	}
 
 	private isPluginDataValidForPlatform(pluginData: IPluginData, platform: string): boolean {

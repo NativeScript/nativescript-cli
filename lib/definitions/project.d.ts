@@ -67,7 +67,7 @@ interface IProjectDataService {
 	 * @param {string} propertyName The name of the property to be checked in `nativescript` key.
 	 * @returns {any} The value of the property.
 	 */
-	getValue(propertyName: string): any;
+	getValue(propertyName: string, key?: string): any;
 
 	/**
 	 * Sets a value in the `nativescript` key in a project's package.json.

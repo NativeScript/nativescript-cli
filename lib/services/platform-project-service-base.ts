@@ -1,3 +1,5 @@
+import * as constants from "../constants";
+
 export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 	constructor(protected $fs: IFileSystem,
 		protected $projectData: IProjectData,
@@ -24,7 +26,7 @@ export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 
 	protected getFrameworkVersion(runtimePackageName: string): string {
 		this.$projectDataService.initialize(this.$projectData.projectDir);
-		let frameworkVersion = this.$projectDataService.getValue(runtimePackageName).version;
+		let frameworkVersion = this.$projectDataService.getValue(runtimePackageName, constants.DEV_DEPENDENCIES).version;
 		return frameworkVersion;
 	}
 }

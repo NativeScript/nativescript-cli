@@ -112,9 +112,9 @@ function createProjectFile(testInjector: IInjector): string {
 		"version": "0.1.0",
 		"nativescript": {
 			"id": "org.nativescript.Test",
-			"tns-android": {
-				"version": "1.4.0"
-			}
+		},
+		"devDependencies": {
+			"tns-android": "1.4.0"
 		}
 	};
 

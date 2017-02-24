@@ -82,7 +82,7 @@ export class PlatformService implements IPlatformService {
 		let packageToInstall = "";
 		let npmOptions: IStringDictionary = {
 			pathToSave: path.join(this.$projectData.platformsDir, platform),
-			dependencyType: "save"
+			dependencyType: "save-dev"
 		};
 
 		if (!this.$options.frameworkPath) {
@@ -98,8 +98,7 @@ export class PlatformService implements IPlatformService {
 			let frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
 			frameworkDir = path.resolve(frameworkDir);
 
-			let coreModuleName = await this.addPlatformCore(platformData, frameworkDir);
-			await this.$npm.uninstall(coreModuleName, { save: true }, this.$projectData.projectDir);
+			await this.addPlatformCore(platformData, frameworkDir);
 		} catch (err) {
 			this.$fs.deleteDirectory(platformPath);
 			throw err;
@@ -130,17 +129,15 @@ export class PlatformService implements IPlatformService {
 		if (customTemplateOptions) {
 			frameworkPackageNameData.template = customTemplateOptions.selectedTemplate;
 		}
-		this.$projectDataService.setValue(platformData.frameworkPackageName, frameworkPackageNameData);
 
 		return coreModuleName;
-
 	}
 
 	private async getPathToPlatformTemplate(selectedTemplate: string, frameworkPackageName: string): Promise<any> {
 		if (!selectedTemplate) {
 			// read data from package.json's nativescript key
 			// check the nativescript.tns-<platform>.template value
-			let nativescriptPlatformData = this.$projectDataService.getValue(frameworkPackageName);
+			let nativescriptPlatformData = this.$projectDataService.getValue(frameworkPackageName, constants.DEV_DEPENDENCIES);
 			selectedTemplate = nativescriptPlatformData && nativescriptPlatformData.template;
 		}
 
@@ -593,6 +590,7 @@ export class PlatformService implements IPlatformService {
 			let platformDir = path.join(this.$projectData.platformsDir, platform);
 			this.$fs.deleteDirectory(platformDir);
 			this.$projectDataService.removeProperty(platformData.frameworkPackageName);
+			this.$npm.uninstall(platformData.frameworkPackageName, {"save-dev": true});
 
 			this.$logger.out(`Platform ${platform} successfully removed.`);
 		}
@@ -725,7 +723,7 @@ export class PlatformService implements IPlatformService {
 		let platformData = this.$platformsData.getPlatformData(platform);
 
 		this.$projectDataService.initialize(this.$projectData.projectDir);
-		let data = this.$projectDataService.getValue(platformData.frameworkPackageName);
+		let data = this.$projectDataService.getValue(platformData.frameworkPackageName, constants.DEV_DEPENDENCIES);
 		let currentVersion = data && data.version ? data.version : "0.2.0";
 
 		let newVersion = version === constants.PackageVersion.NEXT ?

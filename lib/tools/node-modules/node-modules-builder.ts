@@ -126,6 +126,14 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 		let dependenciesBuilder = this.$injector.resolve(NodeModulesDependenciesBuilder, {});
 		let productionDependencies = dependenciesBuilder.getProductionDependencies(this.$projectData.projectDir);
 
+		let prodDependenciesArr = [];
+		for (let i in productionDependencies) {
+			prodDependenciesArr.push(productionDependencies[i].name);
+		}
+
+		let prodDependenciesFilePath = path.join(this.$projectData.projectDir, "platforms", "android", "productionDependencies.json");
+		this.$fs.writeJson(prodDependenciesFilePath, prodDependenciesArr);
+
 		if (!this.$options.bundle) {
 			const tnsModulesCopy = this.$injector.resolve(TnsModulesCopy, {
 				outputRoot: absoluteOutputPath

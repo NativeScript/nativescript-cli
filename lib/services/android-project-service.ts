@@ -427,7 +427,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		if (!this._canUseGradle) {
 			if (!frameworkVersion) {
 				this.$projectDataService.initialize(this.$projectData.projectDir);
-				let frameworkInfoInProjectFile = this.$projectDataService.getValue(this.platformData.frameworkPackageName);
+				let frameworkInfoInProjectFile = this.$projectDataService.getValue(this.platformData.frameworkPackageName, constants.DEV_DEPENDENCIES);
 				frameworkVersion = frameworkInfoInProjectFile && frameworkInfoInProjectFile.version;
 			}
 

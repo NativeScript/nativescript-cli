@@ -15,6 +15,11 @@ export const TESTING_FRAMEWORKS = ['jasmine', 'mocha', 'qunit'];
 export const TEST_RUNNER_NAME = "nativescript-unit-test-runner";
 export const LIVESYNC_EXCLUDED_FILE_PATTERNS = ["**/*.js.map", "**/*.ts"];
 export const XML_FILE_EXTENSION = ".xml";
+export const DEV_DEPENDENCIES = "devDependencies";
+export const FRAMEWORK_TO_PACKAGE:IStringDictionary = {
+	"android": TNS_ANDROID_RUNTIME_NAME,
+	"ios": TNS_IOS_RUNTIME_NAME
+};
 
 export class PackageVersion {
 	static NEXT = "next";
