@@ -1,5 +1,4 @@
 import { Constants } from "./constants";
-import { SysInfo } from "./sys-info";
 import { EOL } from "os";
 import { HostInfo } from "./host-info";
 import { AndroidLocalBuildRequirements } from "./local-build-requirements/android-local-build-requirements";
@@ -14,7 +13,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		private helpers: Helpers,
 		private hostInfo: HostInfo,
 		private iOSLocalBuildRequirements: IosLocalBuildRequirements,
-		private sysInfo: SysInfo) { }
+		private sysInfo: NativeScriptDoctor.ISysInfo) { }
 
 	public async canExecuteLocalBuild(platform: string): Promise<boolean> {
 		this.validatePlatform(platform);

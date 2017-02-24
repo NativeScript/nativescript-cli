@@ -116,6 +116,13 @@ declare module NativeScriptDoctor {
 		 * @return {Promise<ISysInfoData>} The system information.
 		 */
 		getSysInfo(): Promise<ISysInfoData>;
+
+		/**
+		 * If set to true each method will cache it's result. The default value is true.
+		 * @param {boolean} shouldCache The cache switch.
+		 * @return {void}
+		 */
+		setShouldCacheSysInfo(shouldCache: boolean): void;
 	}
 
 	/**
@@ -270,7 +277,7 @@ declare module NativeScriptDoctor {
 		 * Information about xcproj.
 		 * @type {string}
 		 */
-		xcprojInfo: IXcprojInfo
+		xcprojInfo: IXcprojInfo;
 
 		/**
 		 * true if the system requires xcproj to build projects successfully and the CocoaPods version is not compatible with the Xcode.

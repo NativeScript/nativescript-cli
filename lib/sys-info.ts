@@ -41,6 +41,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private nativeScriptCliVersionCache: string;
 	private xcprojInfoCache: NativeScriptDoctor.IXcprojInfo;
 	private isCocoaPodsUpdateRequiredCache: boolean = null;
+	private shouldCache: boolean = true;
 
 	constructor(private childProcess: ChildProcess,
 		private fileSystem: FileSystem,
@@ -48,82 +49,76 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		private hostInfo: HostInfo,
 		private winReg: WinReg) { }
 
-	public async getJavaVersion(): Promise<string> {
-		if (!this.javaVerCache) {
+	public getJavaVersion(): Promise<string> {
+		return this.getValueForProperty(() => this.javaVerCache, async (): Promise<string> => {
 			try {
 				const spawnResult = await this.childProcess.spawnFromEvent("java", ["-version"], "exit");
 				const matches = spawnResult && SysInfo.JAVA_VERSION_REGEXP.exec(spawnResult.stderr);
-				this.javaVerCache = matches && matches[1];
+				return matches && matches[1];
 			} catch (err) {
-				this.javaVerCache = null;
+				return null;
 			}
-		}
-
-		return this.javaVerCache;
+		});
 	}
 
-	public async getJavaCompilerVersion(): Promise<string> {
-		if (!this.javaCompilerVerCache) {
+	public getJavaCompilerVersion(): Promise<string> {
+		return this.getValueForProperty(() => this.javaCompilerVerCache, async (): Promise<string> => {
 			const javaCompileExecutableName = "javac";
 			const javaHome = process.env.JAVA_HOME;
 			const pathToJavaCompilerExecutable = javaHome ? path.join(javaHome, "bin", javaCompileExecutableName) : javaCompileExecutableName;
 			try {
 				const output = await this.childProcess.exec(`"${pathToJavaCompilerExecutable}" -version`);
-				this.javaCompilerVerCache = SysInfo.JAVA_COMPILER_VERSION_REGEXP.exec(output.stderr)[1];
+				return SysInfo.JAVA_COMPILER_VERSION_REGEXP.exec(output.stderr)[1];
 			} catch (err) {
-				this.javaCompilerVerCache = null;
+				return null;
 			}
-		}
-
-		return this.javaCompilerVerCache;
+		});
 	}
 
-	public async getXcodeVersion(): Promise<string> {
-		if (!this.xCodeVerCache && this.hostInfo.isDarwin) {
-			const output = await this.execCommand("xcodebuild -version");
-			const xcodeVersionMatch = output && output.match(SysInfo.XCODE_VERSION_REGEXP);
+	public getXcodeVersion(): Promise<string> {
+		return this.getValueForProperty(() => this.xCodeVerCache, async (): Promise<string> => {
+			if (this.hostInfo.isDarwin) {
+				const output = await this.execCommand("xcodebuild -version");
+				const xcodeVersionMatch = output && output.match(SysInfo.XCODE_VERSION_REGEXP);
 
-			if (xcodeVersionMatch) {
-				this.xCodeVerCache = this.getVersionFromString(output);
+				if (xcodeVersionMatch) {
+					return this.getVersionFromString(output);
+				}
 			}
-		}
-
-		return this.xCodeVerCache;
+		});
 	}
 
 	public async getNodeVersion(): Promise<string> {
 		return this.getVersionFromString(process.version);
 	}
 
-	public async getNpmVersion(): Promise<string> {
-		if (!this.npmVerCache) {
+	public getNpmVersion(): Promise<string> {
+		return this.getValueForProperty(() => this.npmVerCache, async (): Promise<string> => {
 			const output = await this.execCommand("npm -v");
-			this.npmVerCache = output ? output.split("\n")[0] : null;
-		}
-
-		return this.npmVerCache;
+			return output ? output.split("\n")[0] : null;
+		});
 	}
 
-	public async getNodeGypVersion(): Promise<string> {
-		if (!this.nodeGypVerCache) {
+	public getNodeGypVersion(): Promise<string> {
+		return this.getValueForProperty(() => this.nodeGypVerCache, async (): Promise<string> => {
 			const output = await this.execCommand("node-gyp -v");
-			this.nodeGypVerCache = output ? this.getVersionFromString(output) : null;
-		}
-
-		return this.nodeGypVerCache;
+			return output ? this.getVersionFromString(output) : null;
+		});
 	}
 
-	public async getXcodeprojGemLocation(): Promise<string> {
-		if (!this.xCodeprojGemLocationCache && this.hostInfo.isDarwin) {
+	public getXcodeprojGemLocation(): Promise<string> {
+		return this.getValueForProperty(() => this.xCodeprojGemLocationCache, async (): Promise<string> => {
 			const output = await this.execCommand("gem which xcodeproj");
-			this.xCodeprojGemLocationCache = output ? output.trim() : null;
-		}
-
-		return this.xCodeprojGemLocationCache;
+			return output ? output.trim() : null;
+		});
 	}
 
-	public async isITunesInstalled(): Promise<boolean> {
-		if (this.iTunesInstalledCache === null && !this.hostInfo.isLinux) {
+	public isITunesInstalled(): Promise<boolean> {
+		return this.getValueForProperty(() => this.iTunesInstalledCache, async (): Promise<boolean> => {
+			if (this.hostInfo.isLinux) {
+				return false;
+			}
+
 			let coreFoundationDir: string;
 			let mobileDeviceDir: string;
 
@@ -136,47 +131,41 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				mobileDeviceDir = "/System/Library/PrivateFrameworks/MobileDevice.framework/MobileDevice";
 			}
 
-			this.iTunesInstalledCache = await this.fileSystem.exists(coreFoundationDir) && await this.fileSystem.exists(mobileDeviceDir);
-		}
-
-		return !!this.iTunesInstalledCache;
+			return await this.fileSystem.exists(coreFoundationDir) && await this.fileSystem.exists(mobileDeviceDir);
+		});
 	}
 
-	public async getCocoaPodsVersion(): Promise<string> {
-		if (!this.cocoaPodsVerCache && this.hostInfo.isDarwin) {
+	public getCocoaPodsVersion(): Promise<string> {
+		return this.getValueForProperty(() => this.cocoaPodsVerCache, async (): Promise<string> => {
 			if (this.hostInfo.isDarwin) {
-				const output = await this.execCommand("pod --version");
-				// Output of pod --version could contain some warnings. Find the version in it.
-				const cocoaPodsVersionMatch = output && output.match(SysInfo.VERSION_REGEXP);
-				if (cocoaPodsVersionMatch && cocoaPodsVersionMatch[0]) {
-					this.cocoaPodsVerCache = cocoaPodsVersionMatch[0].trim();
+				if (this.hostInfo.isDarwin) {
+					const output = await this.execCommand("pod --version");
+					// Output of pod --version could contain some warnings. Find the version in it.
+					const cocoaPodsVersionMatch = output && output.match(SysInfo.VERSION_REGEXP);
+					if (cocoaPodsVersionMatch && cocoaPodsVersionMatch[0]) {
+						return cocoaPodsVersionMatch[0].trim();
+					}
 				}
 			}
-		}
-
-		return this.cocoaPodsVerCache;
+		});
 	}
 
-	public async getOs(): Promise<string> {
-		if (!this.osCache) {
-			this.osCache = await (this.hostInfo.isWindows ? this.winVer() : this.unixVer());
-		}
-
-		return this.osCache;
+	public getOs(): Promise<string> {
+		return this.getValueForProperty(() => this.osCache, async (): Promise<string> => {
+			return await (this.hostInfo.isWindows ? this.winVer() : this.unixVer());
+		});
 	}
 
-	public async getAdbVersion(): Promise<string> {
-		if (!this.adbVerCache) {
+	public getAdbVersion(): Promise<string> {
+		return this.getValueForProperty(() => this.adbVerCache, async (): Promise<string> => {
 			const output = await this.execCommand("adb version");
-			this.adbVerCache = output ? this.getVersionFromString(output) : null;
-		}
-
-		return this.adbVerCache;
+			return output ? this.getVersionFromString(output) : null;
+		});
 	}
 
 	// `android -h` returns exit code 1 on successful invocation (Mac OS X for now, possibly Linux).
-	public async isAndroidInstalled(): Promise<boolean> {
-		if (this.androidInstalledCache === null) {
+	public isAndroidInstalled(): Promise<boolean> {
+		return this.getValueForProperty(() => this.androidInstalledCache, async (): Promise<boolean> => {
 			let pathToAndroid = "android";
 			if (this.hostInfo.isWindows) {
 				pathToAndroid = `${pathToAndroid}.bat`;
@@ -187,49 +176,42 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				const output = await this.childProcess.spawnFromEvent(pathToAndroid, ["-h"], "close", { ignoreError: true });
 				if (output) {
 					output.stdout = output.stdout || '';
-					this.androidInstalledCache = output.stdout.indexOf("android") >= 0;
+					return output.stdout.indexOf("android") >= 0;
 				}
 			} catch (err) {
-				this.androidInstalledCache = null;
+				return null;
 			}
-		}
-
-		return !!this.androidInstalledCache;
+		});
 	}
 
-	public async getMonoVersion(): Promise<string> {
-		if (!this.monoVerCache) {
+	public getMonoVersion(): Promise<string> {
+		return this.getValueForProperty(() => this.monoVerCache, async (): Promise<string> => {
 			const output = await this.execCommand("mono --version");
 			const match = this.monoVerRegExp.exec(output);
-			this.monoVerCache = match ? match[1] : null;
-		}
-
-		return this.monoVerCache;
+			return match ? match[1] : null;
+		});
 	}
 
-	public async getGitVersion(): Promise<string> {
-		if (!this.gitVerCache) {
+	public getGitVersion(): Promise<string> {
+		return this.getValueForProperty(() => this.gitVerCache, async (): Promise<string> => {
 			const output = await this.execCommand("git --version");
 			const matches = SysInfo.GIT_VERSION_REGEXP.exec(output);
-			this.gitVerCache = matches && matches[1];
-		}
+			return matches && matches[1];
 
-		return this.gitVerCache;
+		});
 	}
 
-	public async getGradleVersion(): Promise<string> {
-		if (!this.gradleVerCache) {
+	public getGradleVersion(): Promise<string> {
+		return this.getValueForProperty(() => this.gradleVerCache, async (): Promise<string> => {
 			const output = await this.execCommand("gradle -v");
 			const matches = SysInfo.GRADLE_VERSION_REGEXP.exec(output);
 
-			this.gradleVerCache = matches && matches[1];
-		}
-
-		return this.gradleVerCache;
+			return matches && matches[1];
+		});
 	}
 
-	public async getSysInfo(): Promise<NativeScriptDoctor.ISysInfoData> {
-		if (!this.sysInfoCache) {
+	public getSysInfo(): Promise<NativeScriptDoctor.ISysInfoData> {
+		return this.getValueForProperty(() => this.sysInfoCache, async (): Promise<NativeScriptDoctor.ISysInfoData> => {
 			const result: NativeScriptDoctor.ISysInfoData = Object.create(null);
 
 			// os stuff
@@ -259,48 +241,46 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			result.nativeScriptCliVersion = await this.getNativeScriptCliVersion();
 			result.isCocoaPodsUpdateRequired = await this.isCocoaPodsUpdateRequired();
 
-			this.sysInfoCache = result;
-		}
-
-		return this.sysInfoCache;
+			return result;
+		});
 	}
 
-	public async isCocoaPodsWorkingCorrectly(): Promise<boolean> {
-		if (this.isCocoaPodsWorkingCorrectlyCache === null && this.hostInfo.isDarwin) {
-			temp.track();
-			const tempDirectory = temp.mkdirSync("nativescript-check-cocoapods");
-			const pathToXCodeProjectZip = path.join(__dirname, "..", "resources", "cocoapods-verification", "cocoapods.zip");
+	public isCocoaPodsWorkingCorrectly(): Promise<boolean> {
+		return this.getValueForProperty(() => this.isCocoaPodsWorkingCorrectlyCache, async (): Promise<boolean> => {
+			if (this.hostInfo.isDarwin) {
+				temp.track();
+				const tempDirectory = temp.mkdirSync("nativescript-check-cocoapods");
+				const pathToXCodeProjectZip = path.join(__dirname, "..", "resources", "cocoapods-verification", "cocoapods.zip");
 
-			await this.fileSystem.extractZip(pathToXCodeProjectZip, tempDirectory);
+				await this.fileSystem.extractZip(pathToXCodeProjectZip, tempDirectory);
 
-			const xcodeProjectDir = path.join(tempDirectory, "cocoapods");
+				const xcodeProjectDir = path.join(tempDirectory, "cocoapods");
 
-			try {
-				let spawnResult = await this.childProcess.spawnFromEvent("pod", ["install"], "exit", { spawnOptions: { cwd: xcodeProjectDir } });
-				if (spawnResult.exitCode) {
-					this.isCocoaPodsWorkingCorrectlyCache = false;
-				} else {
-					this.isCocoaPodsWorkingCorrectlyCache = await this.fileSystem.exists(path.join(xcodeProjectDir, "cocoapods.xcworkspace"));
+				try {
+					let spawnResult = await this.childProcess.spawnFromEvent("pod", ["install"], "exit", { spawnOptions: { cwd: xcodeProjectDir } });
+					if (spawnResult.exitCode) {
+						return false;
+					} else {
+						return await this.fileSystem.exists(path.join(xcodeProjectDir, "cocoapods.xcworkspace"));
+					}
+				} catch (err) {
+					return null;
 				}
-			} catch (err) {
-				this.isCocoaPodsWorkingCorrectlyCache = null;
+			} else {
+				return false;
 			}
-		}
-
-		return !!this.isCocoaPodsWorkingCorrectlyCache;
+		});
 	}
 
-	public async getNativeScriptCliVersion(): Promise<string> {
-		if (!this.nativeScriptCliVersionCache) {
+	public getNativeScriptCliVersion(): Promise<string> {
+		return this.getValueForProperty(() => this.nativeScriptCliVersionCache, async (): Promise<string> => {
 			const output = await this.execCommand("tns --version");
-			this.nativeScriptCliVersionCache = output ? output.trim() : output;
-		}
-
-		return this.nativeScriptCliVersionCache;
+			return output ? output.trim() : output;
+		});
 	}
 
-	public async getXcprojInfo(): Promise<NativeScriptDoctor.IXcprojInfo> {
-		if (!this.xcprojInfoCache) {
+	public getXcprojInfo(): Promise<NativeScriptDoctor.IXcprojInfo> {
+		return this.getValueForProperty(() => this.xcprojInfoCache, async (): Promise<NativeScriptDoctor.IXcprojInfo> => {
 			const cocoaPodsVersion = await this.getCocoaPodsVersion();
 			const xcodeVersion = await this.getXcodeVersion();
 
@@ -312,26 +292,43 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 			if (shouldUseXcproj) {
 				// If that's the case we can use xcproj gem to convert them back to ASCII plist format
-				xcprojAvailable = !!(await this.exec("xcproj --version"))
+				xcprojAvailable = !!(await this.exec("xcproj --version"));
 			}
 
-			this.xcprojInfoCache = { shouldUseXcproj, xcprojAvailable };
-		}
-
-		return this.xcprojInfoCache;
+			return { shouldUseXcproj, xcprojAvailable };
+		});
 	}
 
-	public async isCocoaPodsUpdateRequired(): Promise<boolean> {
-		if (this.isCocoaPodsUpdateRequiredCache === null) {
+	public isCocoaPodsUpdateRequired(): Promise<boolean> {
+		return this.getValueForProperty(() => this.isCocoaPodsUpdateRequiredCache, async (): Promise<boolean> => {
 			let xcprojInfo = await this.getXcprojInfo();
 			if (xcprojInfo.shouldUseXcproj && !xcprojInfo.xcprojAvailable) {
-				this.isCocoaPodsUpdateRequiredCache = true;
+				return true;
 			} else {
-				this.isCocoaPodsUpdateRequiredCache = false;
+				return false;
 			}
-		}
+		});
+	}
 
-		return this.isCocoaPodsUpdateRequiredCache;
+	public setShouldCacheSysInfo(shouldCache: boolean): void {
+		this.shouldCache = shouldCache;
+	}
+
+	private async getValueForProperty<T>(property: Function, getValueMethod: () => Promise<T>): Promise<T> {
+		if (this.shouldCache) {
+			const propertyName = this.helpers.getPropertyName(property);
+			const cachedValue: T = (<any>this)[propertyName];
+
+			if (cachedValue === undefined || cachedValue === null) {
+				const result = await getValueMethod();
+				(<any>this)[propertyName] = result;
+				return result;
+			} else {
+				return cachedValue;
+			}
+		} else {
+			return await getValueMethod();
+		}
 	}
 
 	private async exec(cmd: string, execOptions?: ExecOptions): Promise<IProcessInfo> {

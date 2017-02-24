@@ -1,10 +1,12 @@
 import * as assert from "assert";
 import * as path from "path";
 import { SysInfo } from "../lib/sys-info";
+import { Helpers } from "../lib/helpers";
 import { ChildProcess } from "../lib/wrappers/child-process";
 
 const JavaHomeName = "JAVA_HOME";
 const AndroidHomeName = "ANDROID_HOME";
+const helpers = new Helpers();
 
 interface IChildProcessResultDescription {
 	result?: any;
@@ -98,7 +100,7 @@ function mockSysInfo(childProcessResult: IChildProcessResults, hostInfoOptions?:
 		extractZip: () => Promise.resolve()
 	};
 
-	return new SysInfo(childProcess, fileSystem, null, hostInfo, winreg);
+	return new SysInfo(childProcess, fileSystem, helpers, hostInfo, winreg);
 }
 
 function setStdOut(value: string): { stdout: string } {
@@ -133,7 +135,7 @@ describe("SysInfo unit tests", () => {
 				}
 			};
 
-			sysInfo = new SysInfo(childProcess, null, null, null, null);
+			sysInfo = new SysInfo(childProcess, null, helpers, null, null);
 		});
 
 		it("java version.", async () => {

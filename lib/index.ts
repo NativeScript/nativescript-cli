@@ -14,14 +14,19 @@ const winReg = new WinReg();
 const hostInfo = new HostInfo(winReg);
 const fileSystem = new FileSystem();
 const helpers = new Helpers();
-const sysInfo = new SysInfo(childProcess, fileSystem, helpers, hostInfo, winReg);
+
+const sysInfo: NativeScriptDoctor.ISysInfo = new SysInfo(childProcess, fileSystem, helpers, hostInfo, winReg);
 
 const androidLocalBuildRequirements = new AndroidLocalBuildRequirements(sysInfo);
 const iOSLocalBuildRequirements = new IosLocalBuildRequirements(sysInfo, hostInfo);
-const doctor = new Doctor(androidLocalBuildRequirements, helpers, hostInfo, iOSLocalBuildRequirements, sysInfo);
+
+const doctor: NativeScriptDoctor.IDoctor = new Doctor(androidLocalBuildRequirements, helpers, hostInfo, iOSLocalBuildRequirements, sysInfo);
+
+const setShouldCacheSysInfo = sysInfo.setShouldCacheSysInfo.bind(sysInfo);
 
 export {
 	sysInfo,
 	doctor,
-	constants
+	constants,
+	setShouldCacheSysInfo
 };

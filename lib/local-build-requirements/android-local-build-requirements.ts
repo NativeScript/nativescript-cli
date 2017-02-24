@@ -1,7 +1,5 @@
-import { SysInfo } from "../sys-info";
-
 export class AndroidLocalBuildRequirements {
-	constructor(private sysInfo: SysInfo) { }
+	constructor(private sysInfo: NativeScriptDoctor.ISysInfo) { }
 
 	public async checkRequirements(): Promise<boolean> {
 		if (!await this.sysInfo.isAndroidInstalled() ||

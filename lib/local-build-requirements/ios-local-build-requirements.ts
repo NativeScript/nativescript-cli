@@ -1,8 +1,7 @@
-import { SysInfo } from "../sys-info";
 import { HostInfo } from "../host-info";
 
 export class IosLocalBuildRequirements {
-	constructor(private sysInfo: SysInfo,
+	constructor(private sysInfo: NativeScriptDoctor.ISysInfo,
 		private hostInfo: HostInfo) { }
 
 	public async checkRequirements(): Promise<boolean> {
