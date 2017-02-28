@@ -1,4 +1,8 @@
-import { Kinvey } from 'kinvey-javascript-sdk-core';
+import PhoneGapKinvey from 'kinvey-phonegap-sdk';
 
-// Export
-export default Kinvey;
+@NgModule()
+export class KinveyModule {
+  constructor() {
+    return PhoneGapKinvey;
+  }
+}
