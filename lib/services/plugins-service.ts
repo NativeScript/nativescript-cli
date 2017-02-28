@@ -56,8 +56,7 @@ export class PluginsService implements IPluginsService {
 				await this.$pluginVariablesService.savePluginVariablesInProjectFile(pluginData);
 			} catch (err) {
 				// Revert package.json
-				this.$projectDataService.initialize(this.$projectData.projectDir);
-				this.$projectDataService.removeProperty(this.$pluginVariablesService.getPluginVariablePropertyName(pluginData.name));
+				this.$projectDataService.removeNSProperty(this.$projectData.projectDir, this.$pluginVariablesService.getPluginVariablePropertyName(pluginData.name));
 				await this.$npm.uninstall(plugin, PluginsService.NPM_CONFIG, this.$projectData.projectDir);
 
 				throw err;
@@ -275,8 +274,7 @@ export class PluginsService implements IPluginsService {
 
 	private getInstalledFrameworkVersion(platform: string): string {
 		let platformData = this.$platformsData.getPlatformData(platform);
-		this.$projectDataService.initialize(this.$projectData.projectDir);
-		let frameworkData = this.$projectDataService.getValue(platformData.frameworkPackageName);
+		const frameworkData = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
 		return frameworkData.version;
 	}
 

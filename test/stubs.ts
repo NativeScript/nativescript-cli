@@ -351,15 +351,13 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 }
 
 export class ProjectDataService implements IProjectDataService {
-	initialize(projectDir: string): void { }
-
-	async getValue(propertyName: string): Promise<any> {
-		return Promise.resolve({});
+	getNSValue(propertyName: string): any {
+		return {};
 	}
 
-	setValue(key: string, value: any): void { }
+	setNSValue(key: string, value: any): void { }
 
-	removeProperty(propertyName: string): void { }
+	removeNSProperty(propertyName: string): void { }
 
 	removeDependency(dependencyName: string): void { }
 }

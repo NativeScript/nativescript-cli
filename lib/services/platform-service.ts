@@ -116,7 +116,6 @@ export class PlatformService implements IPlatformService {
 		let installedVersion = coreModuleData.version;
 		let coreModuleName = coreModuleData.name;
 
-		this.$projectDataService.initialize(this.$projectData.projectDir);
 		let customTemplateOptions = await this.getPathToPlatformTemplate(this.$options.platformTemplate, platformData.frameworkPackageName);
 		let pathToTemplate = customTemplateOptions && customTemplateOptions.pathToTemplate;
 		await platformData.platformProjectService.createProject(path.resolve(frameworkDir), installedVersion, pathToTemplate);
@@ -130,7 +129,8 @@ export class PlatformService implements IPlatformService {
 		if (customTemplateOptions) {
 			frameworkPackageNameData.template = customTemplateOptions.selectedTemplate;
 		}
-		this.$projectDataService.setValue(platformData.frameworkPackageName, frameworkPackageNameData);
+
+		this.$projectDataService.setNSValue(this.$projectData.projectDir, platformData.frameworkPackageName, frameworkPackageNameData);
 
 		return coreModuleName;
 
@@ -140,7 +140,7 @@ export class PlatformService implements IPlatformService {
 		if (!selectedTemplate) {
 			// read data from package.json's nativescript key
 			// check the nativescript.tns-<platform>.template value
-			let nativescriptPlatformData = this.$projectDataService.getValue(frameworkPackageName);
+			const nativescriptPlatformData = this.$projectDataService.getNSValue(this.$projectData.projectDir, frameworkPackageName);
 			selectedTemplate = nativescriptPlatformData && nativescriptPlatformData.template;
 		}
 
@@ -582,8 +582,6 @@ export class PlatformService implements IPlatformService {
 	}
 
 	public async removePlatforms(platforms: string[]): Promise<void> {
-		this.$projectDataService.initialize(this.$projectData.projectDir);
-
 		for (let platform of platforms) {
 			this.validatePlatformInstalled(platform);
 			let platformData = this.$platformsData.getPlatformData(platform);
@@ -592,7 +590,7 @@ export class PlatformService implements IPlatformService {
 
 			let platformDir = path.join(this.$projectData.platformsDir, platform);
 			this.$fs.deleteDirectory(platformDir);
-			this.$projectDataService.removeProperty(platformData.frameworkPackageName);
+			this.$projectDataService.removeNSProperty(this.$projectData.projectDir, platformData.frameworkPackageName);
 
 			this.$logger.out(`Platform ${platform} successfully removed.`);
 		}
@@ -724,8 +722,7 @@ export class PlatformService implements IPlatformService {
 	private async updatePlatform(platform: string, version: string): Promise<void> {
 		let platformData = this.$platformsData.getPlatformData(platform);
 
-		this.$projectDataService.initialize(this.$projectData.projectDir);
-		let data = this.$projectDataService.getValue(platformData.frameworkPackageName);
+		let data = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
 		let currentVersion = data && data.version ? data.version : "0.2.0";
 
 		let newVersion = version === constants.PackageVersion.NEXT ?

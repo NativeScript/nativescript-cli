@@ -426,8 +426,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private canUseGradle(frameworkVersion?: string): boolean {
 		if (!this._canUseGradle) {
 			if (!frameworkVersion) {
-				this.$projectDataService.initialize(this.$projectData.projectDir);
-				let frameworkInfoInProjectFile = this.$projectDataService.getValue(this.platformData.frameworkPackageName);
+				const frameworkInfoInProjectFile = this.$projectDataService.getNSValue(this.$projectData.projectDir, this.platformData.frameworkPackageName);
 				frameworkVersion = frameworkInfoInProjectFile && frameworkInfoInProjectFile.version;
 			}
 
