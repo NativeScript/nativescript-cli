@@ -6,7 +6,6 @@ export class CleanCommand implements ICommand {
 
 	public async execute(args: string[]): Promise<void> {
 		this.$platformService.removePlatforms(args);
-		await this.$platformService.addPlatforms(args);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

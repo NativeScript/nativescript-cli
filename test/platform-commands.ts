@@ -403,7 +403,7 @@ describe('Platform Service Tests', () => {
 				assert.isFalse(isCommandExecuted);
 			});
 
-			it("will call removePlatform and addPlatform on the platformService passing the provided platforms", async () => {
+			it("will call removePlatform on the platformService passing the provided platforms", async () => {
 				let platformActions: { action: string, platforms: string[] }[] = [];
 				testInjector.registerCommand("platform|clean", CleanCommand);
 				let cleanCommand = testInjector.resolveCommand("platform|clean");
@@ -412,17 +412,10 @@ describe('Platform Service Tests', () => {
 					platformActions.push({ action: "removePlatforms", platforms });
 				};
 
-				platformService.addPlatforms = async (platforms: string[]) => {
-
-					platformActions.push({ action: "addPlatforms", platforms });
-
-				};
-
 				await cleanCommand.execute(["ios"]);
 
 				let expectedPlatformActions = [
 					{ action: "removePlatforms", platforms: ["ios"] },
-					{ action: "addPlatforms", platforms: ["ios"] },
 				];
 
 				assert.deepEqual(platformActions, expectedPlatformActions, "Expected `remove ios`, `add ios` calls to the platformService.");
