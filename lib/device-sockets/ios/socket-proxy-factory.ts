@@ -78,7 +78,7 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 		// We store the socket that connects us to the device in the upgrade request object itself and later on retrieve it
 		// in the connection callback.
 
-		let server = ws.createServer(<any>{
+		let server = new ws.Server(<any>{
 			port: localPort,
 			verifyClient: (info: any, callback: Function) => {
 				this.$logger.info("Frontend client connected.");
