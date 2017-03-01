@@ -1,8 +1,7 @@
-import PhoneGapKinvey from 'kinvey-phonegap-sdk';
+import Kinvey from 'kinvey-html5-sdk';
 
-@NgModule()
 export class KinveyModule {
   constructor() {
-    return PhoneGapKinvey;
+    return Kinvey;
   }
 }
