@@ -26,9 +26,9 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * Remove platforms from specified project (`<project dir>/platforms/<platform>` dir).
 	 * @param {string[]} platforms Platforms to be removed.
 	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @returns {void}
+	 * @returns {Promise<void>}
 	 */
-	removePlatforms(platforms: string[], projectData: IProjectData): void;
+	removePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
 
 	updatePlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData): Promise<void>;
 

@@ -7,8 +7,8 @@ export class RemovePlatformCommand implements ICommand {
 			this.$projectData.initializeProjectData();
 		}
 
-	public async execute(args: string[]): Promise<void> {
-		this.$platformService.removePlatforms(args, this.$projectData);
+	public execute(args: string[]): Promise<void> {
+		return this.$platformService.removePlatforms(args, this.$projectData);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

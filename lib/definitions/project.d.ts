@@ -115,10 +115,6 @@ interface IProjectTemplatesService {
 	prepareTemplate(templateName: string, projectDir: string): Promise<string>;
 }
 
-interface Ceco extends NodeJS.EventEmitter {
-
-}
-
 interface IPlatformProjectServiceBase {
 	getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string;
 }
@@ -241,15 +237,19 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	/**
 	 * Stops all running processes that might hold a lock on the filesystem.
 	 * Android: Gradle daemon processes are terminated.
+	 * @param {string} projectRoot The root directory of the native project.
 	 * @returns {void}
 	 */
-	stopServices(): Promise<ISpawnResult>;
+	stopServices(projectRoot: string): Promise<ISpawnResult>;
 
 	/**
 	 * Removes build artifacts specific to the platform
+	 * @param {string} projectRoot The root directory of the native project.
+	 * @param {string[]} options Options that can be passed to clean command.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	cleanProject(projectRoot: string, options: string[]): Promise<void>
+	cleanProject(projectRoot: string, options: string[], projectData: IProjectData): Promise<void>
 }
 
 interface IAndroidProjectPropertiesManager {

@@ -72,7 +72,7 @@ export class UpdateCommand implements ICommand {
 			}
 		}
 
-		this.$platformService.removePlatforms(platforms, this.$projectData);
+		await this.$platformService.removePlatforms(platforms, this.$projectData);
 		await this.$pluginsService.remove("tns-core-modules", this.$projectData);
 		await this.$pluginsService.remove("tns-core-modules-widgets", this.$projectData);
 

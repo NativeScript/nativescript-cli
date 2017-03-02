@@ -199,7 +199,7 @@ describe('Platform Service Tests', () => {
 			await platformService.addPlatforms(["android"], "", projectData);
 
 			testInjector.resolve("fs").exists = () => true;
-			platformService.removePlatforms(["android"], projectData);
+			await platformService.removePlatforms(["android"], projectData);
 		});
 	});
 

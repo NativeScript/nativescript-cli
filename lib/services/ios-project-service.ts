@@ -326,7 +326,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			args,
 			"exit",
 			{ stdio: buildConfig.buildOutputStdio || "inherit", cwd: this.getPlatformData(projectData).projectRoot },
-			{ emitOptions: { shouldEmit: true, eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
+			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
 		// this.$logger.out("xcodebuild build succeded.");
 
 		await this.createIpa(projectRoot, projectData, buildConfig.buildOutputStdio);
@@ -413,7 +413,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit",
 			{ stdio: buildOutputStdio || "inherit", cwd: this.getPlatformData(projectData).projectRoot },
-			{ emitOptions: { shouldEmit: true, eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
+			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
 	}
 
 	private async createIpa(projectRoot: string, projectData: IProjectData, buildOutputStdio?: string): Promise<void> {
@@ -430,7 +430,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		// this.$logger.out("Packaging project...");
 		await this.$childProcess.spawnFromEvent("xcrun", xcrunArgs, "exit",
 			{ stdio: buildOutputStdio || "inherit", cwd: this.getPlatformData(projectData).projectRoot },
-			{ emitOptions: { shouldEmit: true, eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
+			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
 		// this.$logger.out("Project package succeeded.");
 	}
 
@@ -647,7 +647,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	public async stopServices(): Promise<ISpawnResult> {
-		return Promise.resolve({stderr: "", stdout: "", exitCode: 0});
+		return { stderr: "", stdout: "", exitCode: 0 };
 	}
 
 	public async cleanProject(projectRoot: string, options: string[]): Promise<void> {

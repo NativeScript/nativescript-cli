@@ -117,7 +117,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		let installedVersion = coreModuleData.version;
 		let coreModuleName = coreModuleData.name;
 
-		let customTemplateOptions = await this.getPathToPlatformTemplate(platformTemplate, platformData.frameworkPackageName);
+		let customTemplateOptions = await this.getPathToPlatformTemplate(platformTemplate, platformData.frameworkPackageName, projectData.projectDir);
 		let pathToTemplate = customTemplateOptions && customTemplateOptions.pathToTemplate;
 		await platformData.platformProjectService.createProject(path.resolve(frameworkDir), installedVersion, projectData, pathToTemplate);
 		platformData.platformProjectService.ensureConfigurationFileInAppResources(projectData);
@@ -129,17 +129,17 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			frameworkPackageNameData.template = customTemplateOptions.selectedTemplate;
 		}
 
-		this.$projectDataService.setNSValue(this.$projectData.projectDir, platformData.frameworkPackageName, frameworkPackageNameData);
+		this.$projectDataService.setNSValue(projectData.projectDir, platformData.frameworkPackageName, frameworkPackageNameData);
 
 		return coreModuleName;
 
 	}
 
-	private async getPathToPlatformTemplate(selectedTemplate: string, frameworkPackageName: string): Promise<{ selectedTemplate: string, pathToTemplate: string }> {
+	private async getPathToPlatformTemplate(selectedTemplate: string, frameworkPackageName: string, projectDir: string): Promise<{ selectedTemplate: string, pathToTemplate: string }> {
 		if (!selectedTemplate) {
 			// read data from package.json's nativescript key
 			// check the nativescript.tns-<platform>.template value
-			const nativescriptPlatformData = this.$projectDataService.getNSValue(this.$projectData.projectDir, frameworkPackageName);
+			const nativescriptPlatformData = this.$projectDataService.getNSValue(projectDir, frameworkPackageName);
 			selectedTemplate = nativescriptPlatformData && nativescriptPlatformData.template;
 		}
 
@@ -217,16 +217,16 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		if (changesInfo.hasChanges) {
 			// android build artifacts need to be cleaned up when switching from release to debug builds
 			if (platform.toLowerCase() === "android") {
-				let previousPrepareInfo = this.$projectChangesService.getPrepareInfo(platform);
+				let previousPrepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
 				// clean up prepared plugins when not building for release
-				if (previousPrepareInfo && previousPrepareInfo.release !== this.$options.release) {
-					let platformData = this.$platformsData.getPlatformData(platform);
-					await platformData.platformProjectService.cleanProject(platformData.projectRoot, []);
+				if (previousPrepareInfo && previousPrepareInfo.release !== appFilesUpdaterOptions.release) {
+					let platformData = this.$platformsData.getPlatformData(platform, projectData);
+					await platformData.platformProjectService.cleanProject(platformData.projectRoot, [], projectData);
 				}
 			}
 
-			await this.preparePlatformCore(platform, changesInfo);
-			this.$projectChangesService.savePrepareInfo(platform);
+			await this.preparePlatformCore(platform, appFilesUpdaterOptions, projectData, provision);
+			this.$projectChangesService.savePrepareInfo(platform, projectData);
 		} else {
 			this.$logger.out("Skipping prepare.");
 		}
@@ -586,7 +586,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			this.validatePlatformInstalled(platform, projectData);
 			let platformData = this.$platformsData.getPlatformData(platform, projectData);
 
-			await this.$platformsData.getPlatformData(platform).platformProjectService.stopServices();
+			await platformData.platformProjectService.stopServices(platformData.projectRoot);
 
 			let platformDir = path.join(projectData.platformsDir, platform);
 			this.$fs.deleteDirectory(platformDir);
