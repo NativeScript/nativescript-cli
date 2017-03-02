@@ -1,3 +1,5 @@
+import * as constants from "../../common/constants";
+
 export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 	constructor(private $errors: IErrors,
 		private $iOSNotification: IiOSNotification,
@@ -5,18 +7,20 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 		private $logger: ILogger) { }
 
 	public async executeAttachRequest(device: Mobile.IiOSDevice, timeout: number, projectId: string): Promise<void> {
+		const deviceIdentifier = device.deviceInfo.identifier;
 
-		let data = [this.$iOSNotification.getAlreadyConnected(projectId), this.$iOSNotification.getReadyForAttach(projectId), this.$iOSNotification.getAttachAvailable(projectId)]
-			.map((notification) => this.$iOSNotificationService.awaitNotification(device.deviceInfo.identifier, notification, timeout)),
-			alreadyConnected = data[0],
-			readyForAttach = data[1],
-			attachAvailable = data[2];
+		const observeNotificationPromises = [
+			await this.$iOSNotificationService.subscribeForNotification(deviceIdentifier, this.$iOSNotification.alreadyConnected, timeout),
+			await this.$iOSNotificationService.subscribeForNotification(deviceIdentifier, this.$iOSNotification.readyForAttach, timeout),
+			await this.$iOSNotificationService.subscribeForNotification(deviceIdentifier, this.$iOSNotification.attachAvailable, timeout)
+		];
 
-		await this.$iOSNotificationService.postNotification(device.deviceInfo.identifier, this.$iOSNotification.getAttachAvailabilityQuery(projectId));
+		// Trigger the notifications update.
+		await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.attachAvailabilityQuery, constants.IOS_POST_NOTIFICATION_COMMAND_TYPE);
 
 		let receivedNotification: string;
 		try {
-			receivedNotification = await Promise.race([alreadyConnected, readyForAttach, attachAvailable]);
+			receivedNotification = await Promise.race(observeNotificationPromises);
 		} catch (e) {
 			this.$errors.failWithoutHelp(`The application ${projectId} does not appear to be running on ${device.deviceInfo.displayName} or is not built with debugging enabled.`);
 		}
@@ -26,24 +30,29 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 				this.$errors.failWithoutHelp("A client is already connected.");
 				break;
 			case this.$iOSNotification.getAttachAvailable(projectId):
-				await this.executeAttachAvailable(device.deviceInfo.identifier, timeout);
+				await this.executeAttachAvailable(deviceIdentifier, timeout);
 				break;
 			case this.$iOSNotification.getReadyForAttach(projectId):
 				break;
+			default:
+				this.$logger.trace("Response from attach availability query:");
+				this.$logger.trace(receivedNotification);
+				this.$errors.failWithoutHelp("No notification received while executing attach request.");
 		}
 	}
 
 	public async executeLaunchRequest(deviceIdentifier: string, timeout: number, readyForAttachTimeout: number, shouldBreak?: boolean): Promise<void> {
 		try {
-			await this.$iOSNotificationService.awaitNotification(deviceIdentifier, this.$iOSNotification.appLaunching, timeout);
+			const appLaunchingPromise = await this.$iOSNotificationService.subscribeForNotification(deviceIdentifier, this.$iOSNotification.appLaunching, timeout);
+			await appLaunchingPromise;
 				if (shouldBreak) {
-				await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.waitForDebug);
+				await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.waitForDebug, constants.IOS_POST_NOTIFICATION_COMMAND_TYPE);
 			}
 
 			// We need to send the ObserveNotification ReadyForAttach before we post the AttachRequest.
-			const readyForAttachPromise = this.$iOSNotificationService.awaitNotification(deviceIdentifier, this.$iOSNotification.readyForAttach, readyForAttachTimeout);
+			const readyForAttachPromise = await this.$iOSNotificationService.subscribeForNotification(deviceIdentifier, this.$iOSNotification.readyForAttach, readyForAttachTimeout);
 
-			await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.attachRequest);
+			await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.attachRequest, constants.IOS_POST_NOTIFICATION_COMMAND_TYPE);
 			await readyForAttachPromise;
 		} catch (e) {
 			this.$logger.trace("Launch request error:");
@@ -56,7 +65,7 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 		try {
 			// We should create this promise here because we need to send the ObserveNotification on the device
 			// before we send the PostNotification.
-			const readyForAttachPromise = this.$iOSNotificationService.awaitNotification(deviceIdentifier, this.$iOSNotification.readyForAttach, timeout);
+			const readyForAttachPromise = await this.$iOSNotificationService.subscribeForNotification(deviceIdentifier, this.$iOSNotification.readyForAttach, timeout);
 			await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.attachRequest);
 			await readyForAttachPromise;
 		} catch (e) {

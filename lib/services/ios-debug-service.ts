@@ -181,7 +181,12 @@ class IOSDebugService implements IDebugService {
 		};
 
 		const socket = await factoryPromise();
-		const factory = () => socket;
+		const factory = () => {
+			process.nextTick(() => {
+				socket.emit("connect");
+			});
+			return socket;
+		};
 
 		if (this.$options.chrome) {
 			this._socketProxy = this.$socketProxyFactory.createWebSocketProxy(factory);

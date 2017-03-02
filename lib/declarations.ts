@@ -304,8 +304,9 @@ interface IiOSNotification {
 }
 
 interface IiOSNotificationService {
-	awaitNotification(deviceIdentifier: string, notification: string, timeout: number): Promise<string>;
-	postNotification(deviceIdentifier: string, notification: string): Promise<void>;
+	awaitNotification(deviceIdentifier: string, socket: number, timeout: number): Promise<string>;
+	postNotification(deviceIdentifier: string, notification: string, commandType?: string): Promise<string>;
+	subscribeForNotification(deviceIdentifier: string, notification: string, timeout: number): Promise<Promise<string>>;
 }
 
 interface IiOSSocketRequestExecutor {
