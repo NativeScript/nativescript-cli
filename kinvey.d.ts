@@ -2,27 +2,24 @@
 // Project: https://github.com/Kinvey/angular2-sdk
 // Definitions by: Thomas P. Conner <https://github.com/thomasconner/>
 
-export class Kinvey {
-  constructor();
-}
+// Client
+declare class Client {}
 
 /*~ Kinvey namespace */
 export namespace Kinvey {
-  export function initialize(config: {}): any;
-
-  // Client
-  class Client {}
+  var appVersion: string;
+  function initialize(config: {}): any;
 
   // Acl
   class Acl {
     constructor(entity: {})
-    // get creator(): string;
-    // get readers(): Array<string>;
-    // get writers(): Array<string>;
-    // get readerGroups(): Array<string>;
-    // get writerGroups(): Array<string>;
-    // set globallyReadable(gr: boolean);
-    // set globallyWritable(gw: boolean);
+    readonly creator: string;
+    readonly readers: Array<string>;
+    readonly writers: Array<string>;
+    readonly readerGroups: Array<string>;
+    readonly writerGroups: Array<string>;
+    globallyReadable: boolean;
+    globallyWritable: boolean;
     addReader(user: string): this;
     addReaderGroup(group: string[]): this;
     addWriter(user: string): this;
@@ -124,6 +121,9 @@ export namespace Kinvey {
     isLocal(): boolean;
     toPlainObject(): {};
   }
+
+  // Push
+  class Push {}
 
   // Query
   class Query {
