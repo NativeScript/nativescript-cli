@@ -9,14 +9,13 @@ let glob = require("glob");
 
 export class NodeModulesBuilder implements INodeModulesBuilder {
 	constructor(private $fs: IFileSystem,
-		private $projectData: IProjectData,
 		private $injector: IInjector,
 		private $lockfile: ILockFile,
 		private $options: IOptions
 	) { }
 
-	public async getChangedNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime?: Date): Promise<any> {
-		let projectDir = this.$projectData.projectDir;
+	public async getChangedNodeModules(absoluteOutputPath: string, platform: string, projectData: IProjectData, lastModifiedTime?: Date): Promise<any> {
+		let projectDir = projectData.projectDir;
 		let isNodeModulesModified = false;
 		let nodeModulesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME);
 		let nodeModules: any = {};
@@ -117,14 +116,14 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 		});
 	}
 
-	public async prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date): Promise<void> {
+	public async prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData): Promise<void> {
 		if (!this.$fs.exists(absoluteOutputPath)) {
 			// Force copying if the destination doesn't exist.
 			lastModifiedTime = null;
 		}
 
 		let dependenciesBuilder = this.$injector.resolve(NodeModulesDependenciesBuilder, {});
-		let productionDependencies = dependenciesBuilder.getProductionDependencies(this.$projectData.projectDir);
+		let productionDependencies = dependenciesBuilder.getProductionDependencies(projectData.projectDir);
 
 		if (!this.$options.bundle) {
 			const tnsModulesCopy = this.$injector.resolve(TnsModulesCopy, {
@@ -136,7 +135,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 		}
 
 		const npmPluginPrepare: NpmPluginPrepare = this.$injector.resolve(NpmPluginPrepare);
-		await npmPluginPrepare.preparePlugins(productionDependencies, platform);
+		await npmPluginPrepare.preparePlugins(productionDependencies, platform, projectData);
 	}
 
 	public cleanNodeModules(absoluteOutputPath: string, platform: string): void {

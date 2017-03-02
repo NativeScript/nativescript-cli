@@ -57,6 +57,12 @@ interface IProjectData {
 	appDirectoryPath: string;
 	appResourcesDirectoryPath: string;
 	projectType: string;
+	/**
+	 * Initializes project data with the given project directory. If none supplied defaults to --path option or cwd.
+	 * @param {string} projectDir Project root directory.
+	 * @returns {void}
+	 */
+	initializeProjectData(projectDir? :string): void;
 }
 
 interface IProjectDataService {
@@ -109,19 +115,29 @@ interface IProjectTemplatesService {
 	prepareTemplate(templateName: string, projectDir: string): Promise<string>;
 }
 
+interface Ceco extends NodeJS.EventEmitter {
+
+}
+
 interface IPlatformProjectServiceBase {
 	getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string;
 }
 
-interface IBuildConfig {
-	buildForDevice?: boolean;
+interface IBuildForDevice {
+	buildForDevice: boolean;
+}
+
+interface IBuildConfig extends IAndroidBuildOptionsSettings, IBuildForDevice {
+	projectDir: string;
+	clean?: boolean;
 	architectures?: string[];
+	buildOutputStdio?: string;
 }
 
 /**
  * Describes iOS-specific build configuration properties
  */
-interface IiOSBuildConfig extends IBuildConfig {
+interface IiOSBuildConfig extends IBuildConfig, IRelease, IDeviceIdentifier, IProvision, ITeamIdentifier {
 	/**
 	 * Identifier of the mobile provision which will be used for the build. If not set a provision will be selected automatically if possible.
 	 */
@@ -136,80 +152,91 @@ interface IiOSBuildConfig extends IBuildConfig {
 	teamIdentifier?: string;
 }
 
-interface IPlatformProjectService {
-	platformData: IPlatformData;
-	validate(): Promise<void>;
-	createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): Promise<void>;
-	interpolateData(): Promise<void>;
-	interpolateConfigurationFile(configurationFilePath?: string): Promise<void>;
+interface IPlatformProjectService extends NodeJS.EventEmitter {
+	getPlatformData(projectData: IProjectData): IPlatformData;
+	validate(projectData: IProjectData): Promise<void>;
+	createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, pathToTemplate?: string): Promise<void>;
+	interpolateData(projectData: IProjectData): Promise<void>;
+	interpolateConfigurationFile(projectData: IProjectData, sdk?: string): Promise<void>;
 
 	/**
 	 * Executes additional actions after native project is created.
 	 * @param {string} projectRoot Path to the real NativeScript project.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	afterCreateProject(projectRoot: string): void;
+	afterCreateProject(projectRoot: string, projectData: IProjectData): void;
 
 	/**
 	 * Gets first chance to validate the options provided as command line arguments.
+	 * @param {string} projectId Project identifier - for example org.nativescript.test.
+	 * @param {any} provision UUID of the provisioning profile used in iOS option validation.
+	 * @returns {void}
 	 */
-	validateOptions(): Promise<boolean>;
+	validateOptions(projectId?: string, provision?: any): Promise<boolean>;
 
-	buildProject(projectRoot: string, buildConfig?: IBuildConfig): Promise<void>;
+	buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void>;
 
 	/**
 	 * Prepares images in Native project (for iOS).
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @param {any} provision UUID of the provisioning profile used in iOS project preparation.
 	 * @returns {void}
 	 */
-	prepareProject(): Promise<void>;
+	prepareProject(projectData: IProjectData, provision: any): Promise<void>;
 
 	/**
 	 * Prepares App_Resources in the native project by clearing data from other platform and applying platform specific rules.
 	 * @param {string} appResourcesDirectoryPath The place in the native project where the App_Resources are copied first.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	prepareAppResources(appResourcesDirectoryPath: string): void;
+	prepareAppResources(appResourcesDirectoryPath: string, projectData: IProjectData): void;
 
 	/**
 	 * Defines if current platform is prepared (i.e. if <project dir>/platforms/<platform> dir exists).
 	 * @param {string} projectRoot The project directory (path where root's package.json is located).
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {boolean} True in case platform is prepare (i.e. if <project dir>/platforms/<platform> dir exists), false otherwise.
 	 */
-	isPlatformPrepared(projectRoot: string): boolean;
+	isPlatformPrepared(projectRoot: string, projectData: IProjectData): boolean;
 
 	/**
 	 * Checks if current platform can be updated to a newer versions.
 	 * @param {string} newInstalledModuleDir Path to the native project.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @return {boolean} True if platform can be updated. false otherwise.
 	 */
-	canUpdatePlatform(newInstalledModuleDir: string): boolean;
+	canUpdatePlatform(newInstalledModuleDir: string, projectData: IProjectData): boolean;
 
 	preparePluginNativeCode(pluginData: IPluginData, options?: any): Promise<void>;
 
 	/**
 	 * Removes native code of a plugin (CocoaPods, jars, libs, src).
 	 * @param {IPluginData} Plugins data describing the plugin which should be cleaned.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	removePluginNativeCode(pluginData: IPluginData): Promise<void>;
+	removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void>;
 
-	afterPrepareAllPlugins(): Promise<void>;
-	beforePrepareAllPlugins(dependencies?: IDictionary<IDependencyData>): Promise<void>;
+	afterPrepareAllPlugins(projectData: IProjectData): Promise<void>;
+	beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDictionary<IDependencyData>): Promise<void>;
 
 	/**
 	 * Gets the path wheren App_Resources should be copied.
 	 * @returns {string} Path to native project, where App_Resources should be copied.
 	 */
-	getAppResourcesDestinationDirectoryPath(): string;
+	getAppResourcesDestinationDirectoryPath(projectData: IProjectData): string;
 
-	deploy(deviceIdentifier: string): Promise<void>;
-	processConfigurationFilesFromAppResources(): Promise<void>;
+	deploy(deviceIdentifier: string, projectData: IProjectData): Promise<void>;
+	processConfigurationFilesFromAppResources(release: boolean, projectData: IProjectData): Promise<void>;
 
 	/**
 	 * Ensures there is configuration file (AndroidManifest.xml, Info.plist) in app/App_Resources.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	ensureConfigurationFileInAppResources(): void;
+	ensureConfigurationFileInAppResources(projectData: IProjectData): void;
 
 	/**
 	 * Stops all running processes that might hold a lock on the filesystem.
@@ -232,8 +259,8 @@ interface IAndroidProjectPropertiesManager {
 }
 
 interface ITestExecutionService {
-	startTestRunner(platform: string): Promise<void>;
-	startKarmaServer(platform: string): Promise<void>;
+	startTestRunner(platform: string, projectData: IProjectData): Promise<void>;
+	startKarmaServer(platform: string, projectData: IProjectData): Promise<void>;
 }
 
 /**

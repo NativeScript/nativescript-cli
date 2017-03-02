@@ -10,7 +10,6 @@ class AndroidDebugService implements IDebugService {
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
-		private $projectData: IProjectData,
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $errors: IErrors,
@@ -29,18 +28,18 @@ class AndroidDebugService implements IDebugService {
 		this._device = newDevice;
 	}
 
-	public async debug(): Promise<void> {
+	public async debug(projectData: IProjectData): Promise<void> {
 		return this.$options.emulator
-			? this.debugOnEmulator()
-			: this.debugOnDevice();
+			? this.debugOnEmulator(projectData)
+			: this.debugOnDevice(projectData);
 	}
 
-	private async debugOnEmulator(): Promise<void> {
+	private async debugOnEmulator(projectData: IProjectData): Promise<void> {
 		// Assure we've detected the emulator as device
 		// For example in case deployOnEmulator had stated new emulator instance
 		// we need some time to detect it. Let's force detection.
 		await this.$androidDeviceDiscovery.startLookingForDevices();
-		await this.debugOnDevice();
+		await this.debugOnDevice(projectData);
 	}
 
 	private isPortAvailable(candidatePort: number): Promise<boolean> {
@@ -109,7 +108,7 @@ class AndroidDebugService implements IDebugService {
 		return this.device.adb.executeCommand(["forward", `tcp:${local}`, `localabstract:${remote}`]);
 	}
 
-	private async debugOnDevice(): Promise<void> {
+	private async debugOnDevice(projectData: IProjectData): Promise<void> {
 		let packageFile = "";
 
 		if (!this.$options.start && !this.$options.emulator) {
@@ -117,14 +116,14 @@ class AndroidDebugService implements IDebugService {
 
 			this.$options.forDevice = !!cachedDeviceOption;
 
-			let platformData = this.$platformsData.getPlatformData(this.platform);
+			let platformData = this.$platformsData.getPlatformData(this.platform, projectData);
 			packageFile = this.$platformService.getLatestApplicationPackageForDevice(platformData).packageName;
 			this.$logger.out("Using ", packageFile);
 		}
 
 		await this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device });
 
-		let action = (device: Mobile.IAndroidDevice): Promise<void> => this.debugCore(device, packageFile, this.$projectData.projectId);
+		let action = (device: Mobile.IAndroidDevice): Promise<void> => this.debugCore(device, packageFile, projectData.projectId);
 
 		await this.$devicesService.execute(action);
 	}
@@ -168,14 +167,14 @@ class AndroidDebugService implements IDebugService {
 			await this.device.applicationManager.uninstallApplication(packageName);
 			await this.device.applicationManager.installApplication(packageFile);
 		}
-		await this.debugStartCore();
+		await this.debugStartCore(packageName);
 	}
 
-	public async debugStart(): Promise<void> {
+	public async debugStart(projectData: IProjectData): Promise<void> {
 		await this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device });
 		let action = (device: Mobile.IAndroidDevice): Promise<void> => {
 			this.device = device;
-			return this.debugStartCore();
+			return this.debugStartCore(projectData.projectId);
 		};
 
 		await this.$devicesService.execute(action);
@@ -186,9 +185,7 @@ class AndroidDebugService implements IDebugService {
 		return;
 	}
 
-	private async debugStartCore(): Promise<void> {
-		let packageName = this.$projectData.projectId;
-
+	private async debugStartCore(packageName: string): Promise<void> {
 		// Arguments passed to executeShellCommand must be in array ([]), but it turned out adb shell "arg with intervals" still works correctly.
 		// As we need to redirect output of a command on the device, keep using only one argument.
 		// We could rewrite this with two calls - touch and rm -f , but -f flag is not available on old Android, so rm call will fail when file does not exist.

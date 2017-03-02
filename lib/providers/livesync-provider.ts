@@ -32,9 +32,13 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 		};
 	}
 
-	public async buildForDevice(device: Mobile.IDevice): Promise<string> {
-		this.$platformService.buildPlatform(device.deviceInfo.platform, { buildForDevice: ! await device.isEmulator });
-		let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform);
+	public async buildForDevice(device: Mobile.IDevice, projectData: IProjectData): Promise<string> {
+		await this.$platformService.buildPlatform(device.deviceInfo.platform, {
+			buildForDevice: !device.isEmulator,
+			projectDir: this.$options.path,
+			release: this.$options.release
+		}, projectData);
+		let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 		if (device.isEmulator) {
 			return this.$platformService.getLatestApplicationPackageForEmulator(platformData).packageName;
 		}
@@ -42,12 +46,13 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 		return this.$platformService.getLatestApplicationPackageForDevice(platformData).packageName;
 	}
 
-	public async preparePlatformForSync(platform: string): Promise<void> {
-		await this.$platformService.preparePlatform(platform);
+	public async preparePlatformForSync(platform: string, provision: any, projectData: IProjectData): Promise<void> {
+		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+		await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, provision);
 	}
 
-	public canExecuteFastSync(filePath: string, platform: string): boolean {
-		let platformData = this.$platformsData.getPlatformData(platform);
+	public canExecuteFastSync(filePath: string, projectData: IProjectData, platform: string): boolean {
+		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		let fastSyncFileExtensions = LiveSyncProvider.FAST_SYNC_FILE_EXTENSIONS.concat(platformData.fastLivesyncFileExtensions);
 		return _.includes(fastSyncFileExtensions, path.extname(filePath));
 	}

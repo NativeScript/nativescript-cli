@@ -61,26 +61,26 @@ export class NpmPluginPrepare {
 	) {
 	}
 
-	protected async beforePrepare(dependencies: IDictionary<IDependencyData>, platform: string): Promise<void> {
-		await this.$platformsData.getPlatformData(platform).platformProjectService.beforePrepareAllPlugins(dependencies);
+	protected async beforePrepare(dependencies: IDictionary<IDependencyData>, platform: string, projectData: IProjectData): Promise<void> {
+		await this.$platformsData.getPlatformData(platform, projectData).platformProjectService.beforePrepareAllPlugins(projectData, dependencies);
 	}
 
-	protected async afterPrepare(dependencies: IDictionary<IDependencyData>, platform: string): Promise<void> {
-		await this.$platformsData.getPlatformData(platform).platformProjectService.afterPrepareAllPlugins();
-		this.writePreparedDependencyInfo(dependencies, platform);
+	protected async afterPrepare(dependencies: IDictionary<IDependencyData>, platform: string, projectData: IProjectData): Promise<void> {
+		await this.$platformsData.getPlatformData(platform, projectData).platformProjectService.afterPrepareAllPlugins(projectData);
+		this.writePreparedDependencyInfo(dependencies, platform, projectData);
 	}
 
-	private writePreparedDependencyInfo(dependencies: IDictionary<IDependencyData>, platform: string): void {
+	private writePreparedDependencyInfo(dependencies: IDictionary<IDependencyData>, platform: string, projectData: IProjectData): void {
 		let prepareData: IDictionary<boolean> = {};
 		_.values(dependencies).forEach(d => {
 			prepareData[d.name] = true;
 		});
-		this.$fs.createDirectory(this.preparedPlatformsDir(platform));
-		this.$fs.writeJson(this.preparedPlatformsFile(platform), prepareData, "    ", "utf8");
+		this.$fs.createDirectory(this.preparedPlatformsDir(platform, projectData));
+		this.$fs.writeJson(this.preparedPlatformsFile(platform, projectData), prepareData, "    ", "utf8");
 	}
 
-	private preparedPlatformsDir(platform: string): string {
-		const platformRoot = this.$platformsData.getPlatformData(platform).projectRoot;
+	private preparedPlatformsDir(platform: string, projectData: IProjectData): string {
+		const platformRoot = this.$platformsData.getPlatformData(platform, projectData).projectRoot;
 		if (/android/i.test(platform)) {
 			return path.join(platformRoot, "build", "intermediates");
 		} else if (/ios/i.test(platform)) {
@@ -90,20 +90,20 @@ export class NpmPluginPrepare {
 		}
 	}
 
-	private preparedPlatformsFile(platform: string): string {
-		return path.join(this.preparedPlatformsDir(platform), "prepared-platforms.json");
+	private preparedPlatformsFile(platform: string, projectData: IProjectData): string {
+		return path.join(this.preparedPlatformsDir(platform, projectData), "prepared-platforms.json");
 	}
 
-	protected getPreviouslyPreparedDependencies(platform: string): IDictionary<boolean> {
-		if (!this.$fs.exists(this.preparedPlatformsFile(platform))) {
+	protected getPreviouslyPreparedDependencies(platform: string, projectData: IProjectData): IDictionary<boolean> {
+		if (!this.$fs.exists(this.preparedPlatformsFile(platform, projectData))) {
 			return {};
 		}
-		return this.$fs.readJson(this.preparedPlatformsFile(platform), "utf8");
+		return this.$fs.readJson(this.preparedPlatformsFile(platform, projectData), "utf8");
 	}
 
-	private allPrepared(dependencies: IDictionary<IDependencyData>, platform: string): boolean {
+	private allPrepared(dependencies: IDictionary<IDependencyData>, platform: string, projectData: IProjectData): boolean {
 		let result = true;
-		const previouslyPrepared = this.getPreviouslyPreparedDependencies(platform);
+		const previouslyPrepared = this.getPreviouslyPreparedDependencies(platform, projectData);
 		_.values(dependencies).forEach(d => {
 			if (!previouslyPrepared[d.name]) {
 				result = false;
@@ -112,20 +112,20 @@ export class NpmPluginPrepare {
 		return result;
 	}
 
-	public async preparePlugins(dependencies: IDictionary<IDependencyData>, platform: string): Promise<void> {
-		if (_.isEmpty(dependencies) || this.allPrepared(dependencies, platform)) {
+	public async preparePlugins(dependencies: IDictionary<IDependencyData>, platform: string, projectData: IProjectData): Promise<void> {
+		if (_.isEmpty(dependencies) || this.allPrepared(dependencies, platform, projectData)) {
 			return;
 		}
 
-		await this.beforePrepare(dependencies, platform);
+		await this.beforePrepare(dependencies, platform, projectData);
 		for (let dependencyKey in dependencies) {
 			const dependency = dependencies[dependencyKey];
 			let isPlugin = !!dependency.nativescript;
 			if (isPlugin) {
-				await this.$pluginsService.prepare(dependency, platform);
+				await this.$pluginsService.prepare(dependency, platform, projectData);
 			}
 		}
 
-		await this.afterPrepare(dependencies, platform);
+		await this.afterPrepare(dependencies, platform, projectData);
 	}
 }

@@ -41,7 +41,7 @@ class VersionsService implements IVersionsService {
 			let tnsCoreModulesPath = path.join(nodeModulesPath, constants.TNS_CORE_MODULES_NAME);
 			if (!this.$fs.exists(nodeModulesPath) ||
 				!this.$fs.exists(tnsCoreModulesPath)) {
-				await this.$pluginsService.ensureAllDependenciesAreInstalled();
+				await this.$pluginsService.ensureAllDependenciesAreInstalled(this.projectData);
 			}
 
 			let currentTnsCoreModulesVersion = this.$fs.readJson(path.join(tnsCoreModulesPath, constants.PACKAGE_JSON_FILE_NAME)).version;
@@ -142,7 +142,9 @@ class VersionsService implements IVersionsService {
 
 	private getProjectData(): IProjectData {
 		try {
-			return this.$injector.resolve("projectData");
+			let projectData: IProjectData = this.$injector.resolve("projectData");
+			projectData.initializeProjectData();
+			return projectData;
 		} catch (error) {
 			return null;
 		}

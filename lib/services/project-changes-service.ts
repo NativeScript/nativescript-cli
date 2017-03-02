@@ -37,7 +37,6 @@ export class ProjectChangesService implements IProjectChangesService {
 
 	constructor(
 		private $platformsData: IPlatformsData,
-		private $projectData: IProjectData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $options: IOptions,
 		private $fs: IFileSystem) {
@@ -47,26 +46,26 @@ export class ProjectChangesService implements IProjectChangesService {
 		return this._changesInfo;
 	}
 
-	public checkForChanges(platform: string): IProjectChangesInfo {
-		let platformData = this.$platformsData.getPlatformData(platform);
+	public checkForChanges(platform: string, projectData: IProjectData): IProjectChangesInfo {
+		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		this._changesInfo = new ProjectChangesInfo();
-		if (!this.ensurePrepareInfo(platform)) {
+		if (!this.ensurePrepareInfo(platform, projectData)) {
 			this._newFiles = 0;
-			this._changesInfo.appFilesChanged = this.containsNewerFiles(this.$projectData.appDirectoryPath, this.$projectData.appResourcesDirectoryPath);
-			this._changesInfo.packageChanged = this.filesChanged([path.join(this.$projectData.projectDir, "package.json")]);
-			this._changesInfo.appResourcesChanged = this.containsNewerFiles(this.$projectData.appResourcesDirectoryPath, null);
+			this._changesInfo.appFilesChanged = this.containsNewerFiles(projectData.appDirectoryPath, projectData.appResourcesDirectoryPath, projectData);
+			this._changesInfo.packageChanged = this.filesChanged([path.join(projectData.projectDir, "package.json")]);
+			this._changesInfo.appResourcesChanged = this.containsNewerFiles(projectData.appResourcesDirectoryPath, null, projectData);
 			/*done because currently all node_modules are traversed, a possible improvement could be traversing only the production dependencies*/
 			this._changesInfo.nativeChanged = this.containsNewerFiles(
-				path.join(this.$projectData.projectDir, NODE_MODULES_FOLDER_NAME),
-				path.join(this.$projectData.projectDir, NODE_MODULES_FOLDER_NAME, "tns-ios-inspector"),
+				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME),
+				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME, "tns-ios-inspector"),
+				projectData,
 				this.fileChangeRequiresBuild);
 			if (this._newFiles > 0) {
 				this._changesInfo.modulesChanged = true;
 			}
-			let platformResourcesDir = path.join(this.$projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
+			let platformResourcesDir = path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
 			if (platform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
-				this._changesInfo.configChanged = this.filesChanged([
-					this.$options.baseConfig || path.join(platformResourcesDir, platformData.configurationFileName),
+				this._changesInfo.configChanged = this.filesChanged([path.join(platformResourcesDir, platformData.configurationFileName),
 					path.join(platformResourcesDir, "LaunchScreen.storyboard"),
 					path.join(platformResourcesDir, "build.xcconfig")
 				]);
@@ -111,14 +110,14 @@ export class ProjectChangesService implements IProjectChangesService {
 		return this._changesInfo;
 	}
 
-	public getPrepareInfoFilePath(platform: string): string {
-		let platformData = this.$platformsData.getPlatformData(platform);
+	public getPrepareInfoFilePath(platform: string, projectData: IProjectData): string {
+		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		let prepareInfoFilePath = path.join(platformData.projectRoot, prepareInfoFileName);
 		return prepareInfoFilePath;
 	}
 
-	public getPrepareInfo(platform: string): IPrepareInfo {
-		let prepareInfoFilePath = this.getPrepareInfoFilePath(platform);
+	public getPrepareInfo(platform: string, projectData: IProjectData): IPrepareInfo {
+		let prepareInfoFilePath = this.getPrepareInfoFilePath(platform, projectData);
 		let prepareInfo: IPrepareInfo = null;
 		if (this.$fs.exists(prepareInfoFilePath)) {
 			try {
@@ -130,15 +129,15 @@ export class ProjectChangesService implements IProjectChangesService {
 		return prepareInfo;
 	}
 
-	public savePrepareInfo(platform: string): void {
-		let prepareInfoFilePath = this.getPrepareInfoFilePath(platform);
+	public savePrepareInfo(platform: string, projectData: IProjectData): void {
+		let prepareInfoFilePath = this.getPrepareInfoFilePath(platform, projectData);
 		this.$fs.writeJson(prepareInfoFilePath, this._prepareInfo);
 	}
 
-	private ensurePrepareInfo(platform: string): boolean {
-		this._prepareInfo = this.getPrepareInfo(platform);
+	private ensurePrepareInfo(platform: string, projectData: IProjectData): boolean {
+		this._prepareInfo = this.getPrepareInfo(platform, projectData);
 		if (this._prepareInfo) {
-			let platformData = this.$platformsData.getPlatformData(platform);
+			let platformData = this.$platformsData.getPlatformData(platform, projectData);
 			let prepareInfoFile = path.join(platformData.projectRoot, prepareInfoFileName);
 			this._outputProjectMtime = this.$fs.getFsStats(prepareInfoFile).mtime.getTime();
 			this._outputProjectCTime = this.$fs.getFsStats(prepareInfoFile).ctime.getTime();
@@ -172,7 +171,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		return false;
 	}
 
-	private containsNewerFiles(dir: string, skipDir: string, processFunc?: (filePath: string) => boolean): boolean {
+	private containsNewerFiles(dir: string, skipDir: string, projectData: IProjectData, processFunc?: (filePath: string, projectData: IProjectData) => boolean): boolean {
 		let files = this.$fs.readDirectory(dir);
 		for (let file of files) {
 			let filePath = path.join(dir, file);
@@ -191,8 +190,8 @@ export class ProjectChangesService implements IProjectChangesService {
 			if (changed) {
 				if (processFunc) {
 					this._newFiles++;
-					let filePathRelative = path.relative(this.$projectData.projectDir, filePath);
-					if (processFunc.call(this, filePathRelative)) {
+					let filePathRelative = path.relative(projectData.projectDir, filePath);
+					if (processFunc.call(this, filePathRelative, projectData)) {
 						return true;
 					}
 				} else {
@@ -201,7 +200,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 
 			if (fileStats.isDirectory()) {
-				if (this.containsNewerFiles(filePath, skipDir, processFunc)) {
+				if (this.containsNewerFiles(filePath, skipDir, projectData, processFunc)) {
 					return true;
 				}
 			}
@@ -209,12 +208,12 @@ export class ProjectChangesService implements IProjectChangesService {
 		return false;
 	}
 
-	private fileChangeRequiresBuild(file: string) {
+	private fileChangeRequiresBuild(file: string, projectData: IProjectData) {
 		if (path.basename(file) === "package.json") {
 			return true;
 		}
-		let projectDir = this.$projectData.projectDir;
-		if (_.startsWith(path.join(projectDir, file), this.$projectData.appResourcesDirectoryPath)) {
+		let projectDir = projectData.projectDir;
+		if (_.startsWith(path.join(projectDir, file), projectData.appResourcesDirectoryPath)) {
 			return true;
 		}
 		if (_.startsWith(file, NODE_MODULES_FOLDER_NAME)) {

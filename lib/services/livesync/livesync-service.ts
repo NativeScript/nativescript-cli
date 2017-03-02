@@ -13,7 +13,6 @@ class LiveSyncService implements ILiveSyncService {
 		private $errors: IErrors,
 		private $platformsData: IPlatformsData,
 		private $platformService: IPlatformService,
-		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
 		private $injector: IInjector,
@@ -25,14 +24,14 @@ class LiveSyncService implements ILiveSyncService {
 		private $hooksService: IHooksService,
 		private $processService: IProcessService) { }
 
-	private async ensureAndroidFrameworkVersion(platformData: IPlatformData): Promise<void> { // TODO: this can be moved inside command or canExecute function
-		const frameworkVersion = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName).version;
+	private async ensureAndroidFrameworkVersion(platformData: IPlatformData, projectData: IProjectData): Promise<void> { // TODO: this can be moved inside command or canExecute function
+		const frameworkVersion = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName).version;
 
 		if (platformData.normalizedPlatformName.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
 			if (semver.lt(frameworkVersion, "1.2.1")) {
 				let shouldUpdate = await this.$prompter.confirm("You need Android Runtime 1.2.1 or later for LiveSync to work properly. Do you want to update your runtime now?");
 				if (shouldUpdate) {
-					await this.$platformService.updatePlatforms([this.$devicePlatformsConstants.Android.toLowerCase()]);
+					await this.$platformService.updatePlatforms([this.$devicePlatformsConstants.Android.toLowerCase()], this.$options.platformTemplate, projectData);
 				} else {
 					return;
 				}
@@ -44,7 +43,7 @@ class LiveSyncService implements ILiveSyncService {
 		return this._isInitialized;
 	}
 
-	public async liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => Promise<void>): Promise<void> {
+	public async liveSync(platform: string, projectData: IProjectData, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => Promise<void>): Promise<void> {
 			if (this.$options.justlaunch) {
 				this.$options.watch = false;
 			}
@@ -52,22 +51,22 @@ class LiveSyncService implements ILiveSyncService {
 
 		if (platform) {
 			await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
-			liveSyncData.push(await this.prepareLiveSyncData(platform));
+			liveSyncData.push(await this.prepareLiveSyncData(platform, projectData));
 		} else if (this.$options.device) {
 			await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
 			platform = this.$devicesService.getDeviceByIdentifier(this.$options.device).deviceInfo.platform;
-			liveSyncData.push(await this.prepareLiveSyncData(platform));
+			liveSyncData.push(await this.prepareLiveSyncData(platform, projectData));
 		} else {
 			await this.$devicesService.initialize({ skipInferPlatform: true });
 
 			await this.$devicesService.stopDeviceDetectionInterval();
 
-			for (let installedPlatform of this.$platformService.getInstalledPlatforms()) {
+			for (let installedPlatform of this.$platformService.getInstalledPlatforms(projectData)) {
 				if (this.$devicesService.getDevicesForPlatform(installedPlatform).length === 0) {
 					await this.$devicesService.startEmulator(installedPlatform);
 				}
 
-				liveSyncData.push(await this.prepareLiveSyncData(installedPlatform));
+				liveSyncData.push(await this.prepareLiveSyncData(installedPlatform, projectData));
 			}
 		}
 
@@ -77,22 +76,22 @@ class LiveSyncService implements ILiveSyncService {
 
 		this._isInitialized = true; // If we want before-prepare hooks to work properly, this should be set after preparePlatform function
 
-		await this.liveSyncCore(liveSyncData, applicationReloadAction);
+		await this.liveSyncCore(liveSyncData, applicationReloadAction, projectData);
 	}
 
-	private async prepareLiveSyncData(platform: string): Promise<ILiveSyncData> {
+	private async prepareLiveSyncData(platform: string, projectData: IProjectData): Promise<ILiveSyncData> {
 		platform = platform || this.$devicesService.platform;
-		let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
+		let platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
 
 		if (this.$mobileHelper.isAndroidPlatform(platform)) {
-			await this.ensureAndroidFrameworkVersion(platformData);
+			await this.ensureAndroidFrameworkVersion(platformData, projectData);
 		}
 
 		let liveSyncData: ILiveSyncData = {
 			platform: platform,
-			appIdentifier: this.$projectData.projectId,
+			appIdentifier: projectData.projectId,
 			projectFilesPath: path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME),
-			syncWorkingDirectory: this.$projectData.projectDir,
+			syncWorkingDirectory: projectData.projectDir,
 			excludedProjectDirsAndFiles: this.$options.release ? constants.LIVESYNC_EXCLUDED_FILE_PATTERNS : []
 		};
 
@@ -100,29 +99,29 @@ class LiveSyncService implements ILiveSyncService {
 	}
 
 	@helpers.hook('livesync')
-	private async liveSyncCore(liveSyncData: ILiveSyncData[], applicationReloadAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>): Promise<void> {
-		await this.$platformService.trackProjectType();
+	private async liveSyncCore(liveSyncData: ILiveSyncData[], applicationReloadAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>, projectData: IProjectData): Promise<void> {
+		await this.$platformService.trackProjectType(projectData);
 
 		let watchForChangeActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => Promise<void>)[] = [];
 
 		for (let dataItem of liveSyncData) {
 			let service: IPlatformLiveSyncService = this.$injector.resolve("platformLiveSyncService", { _liveSyncData: dataItem });
 			watchForChangeActions.push((event: string, filePath: string, dispatcher: IFutureDispatcher) =>
-				service.partialSync(event, filePath, dispatcher, applicationReloadAction));
+				service.partialSync(event, filePath, dispatcher, applicationReloadAction, projectData));
 
-			await service.fullSync(applicationReloadAction);
+			await service.fullSync(projectData, applicationReloadAction);
 		}
 
 		if (this.$options.watch && !this.$options.justlaunch) {
 			await this.$hooksService.executeBeforeHooks('watch');
-			await this.partialSync(liveSyncData[0].syncWorkingDirectory, watchForChangeActions);
+			await this.partialSync(liveSyncData[0].syncWorkingDirectory, watchForChangeActions, projectData);
 		}
 	}
 
-	private partialSync(syncWorkingDirectory: string, onChangedActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => Promise<void>)[]): void {
+	private partialSync(syncWorkingDirectory: string, onChangedActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => Promise<void>)[], projectData: IProjectData): void {
 		let that = this;
 		let dependenciesBuilder = this.$injector.resolve(NodeModulesDependenciesBuilder, {});
-		let productionDependencies = dependenciesBuilder.getProductionDependencies(this.$projectData.projectDir);
+		let productionDependencies = dependenciesBuilder.getProductionDependencies(projectData.projectDir);
 		let pattern = ["app"];
 
 		if (this.$options.syncAllFiles) {

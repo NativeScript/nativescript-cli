@@ -51,6 +51,7 @@ describe("projectData", () => {
 			projectHelper.projectDir = "projectDir";
 
 			const projectData: IProjectData = testInjector.resolve("projectData");
+			projectData.initializeProjectData();
 			assert.deepEqual(projectData.projectType, expectedProjecType);
 		};
 

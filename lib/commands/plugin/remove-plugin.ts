@@ -4,10 +4,12 @@ export class RemovePluginCommand implements ICommand {
 	constructor(private $pluginsService: IPluginsService,
 		private $errors: IErrors,
 		private $logger: ILogger,
-		private $projectData: IProjectData) { }
+		private $projectData: IProjectData) {
+			this.$projectData.initializeProjectData();
+		}
 
 	public async execute(args: string[]): Promise<void> {
-		return this.$pluginsService.remove(args[0]);
+		return this.$pluginsService.remove(args[0], this.$projectData);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -18,7 +20,7 @@ export class RemovePluginCommand implements ICommand {
 		let pluginNames: string[] = [];
 		try {
 			// try installing the plugins, so we can get information from node_modules about their native code, libs, etc.
-			let installedPlugins = await this.$pluginsService.getAllInstalledPlugins();
+			let installedPlugins = await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
 			pluginNames = installedPlugins.map(pl => pl.name);
 		} catch (err) {
 			this.$logger.trace("Error while installing plugins. Error is:", err);

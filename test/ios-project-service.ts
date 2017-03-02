@@ -126,6 +126,7 @@ describe("iOSProjectService", () => {
 
 			let testInjector = createTestInjector(projectPath, projectName);
 			let iOSProjectService = <IOSProjectService>testInjector.resolve("iOSProjectService");
+			let projectData: IProjectData = testInjector.resolve("projectData");
 
 			let childProcess = testInjector.resolve("childProcess");
 			let xcodebuildExeced = false;
@@ -156,9 +157,9 @@ describe("iOSProjectService", () => {
 			return {
 				run: async (): Promise<void> => {
 					if (hasCustomArchivePath) {
-						resultArchivePath = await iOSProjectService.archive({ archivePath: options.archivePath });
+						resultArchivePath = await iOSProjectService.archive(projectData, { archivePath: options.archivePath });
 					} else {
-						resultArchivePath = await iOSProjectService.archive();
+						resultArchivePath = await iOSProjectService.archive(projectData);
 					}
 				},
 				assert: () => {
@@ -214,6 +215,7 @@ describe("iOSProjectService", () => {
 
 			let testInjector = createTestInjector(projectPath, projectName);
 			let iOSProjectService = <IOSProjectService>testInjector.resolve("iOSProjectService");
+			let projectData: IProjectData = testInjector.resolve("projectData");
 
 			let archivePath = path.join(projectPath, "platforms", "ios", "build", "archive", projectName + ".xcarchive");
 
@@ -241,7 +243,7 @@ describe("iOSProjectService", () => {
 				return Promise.resolve();
 			};
 
-			let resultIpa = await iOSProjectService.exportArchive({ archivePath, teamID: options.teamID });
+			let resultIpa = await iOSProjectService.exportArchive(projectData, { archivePath, teamID: options.teamID });
 			let expectedIpa = path.join(projectPath, "platforms", "ios", "build", "archive", projectName + ".ipa");
 
 			assert.equal(resultIpa, expectedIpa, "Expected IPA at the specified location");
@@ -474,8 +476,9 @@ describe("Relative paths", () => {
 		let testInjector = createTestInjector(projectPath, projectName);
 		createPackageJson(testInjector, projectPath, projectName);
 		let iOSProjectService = testInjector.resolve("iOSProjectService");
+		let projectData: IProjectData = testInjector.resolve("projectData");
 
-		let result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath);
+		let result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath, projectData);
 		assert.equal(result, path.join("..", "..", "sub", "path"));
 	});
 });

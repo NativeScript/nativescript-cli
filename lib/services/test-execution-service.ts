@@ -13,7 +13,6 @@ class TestExecutionService implements ITestExecutionService {
 	private static SOCKETIO_JS_FILE_NAME = `node_modules/${constants.TEST_RUNNER_NAME}/socket.io.js`;
 
 	constructor(private $injector: IInjector,
-		private $projectData: IProjectData,
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		private $usbLiveSyncService: ILiveSyncService,
@@ -33,14 +32,14 @@ class TestExecutionService implements ITestExecutionService {
 
 	public platform: string;
 
-	public async startTestRunner(platform: string): Promise<void> {
+	public async startTestRunner(platform: string, projectData: IProjectData): Promise<void> {
 		this.platform = platform;
 		this.$options.justlaunch = true;
 		await new Promise<void>((resolve, reject) => {
 			process.on('message', async (launcherConfig: any) => {
 				try {
-					let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
-					let projectDir = this.$projectData.projectDir;
+					let platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
+					let projectDir = projectData.projectDir;
 					await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
 					let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
@@ -54,18 +53,27 @@ class TestExecutionService implements ITestExecutionService {
 					let socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
 
-					if (!await this.$platformService.preparePlatform(platform)) {
+					const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+					if (!await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, this.$options.provision)) {
 						this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 					}
 					this.detourEntryPoint(projectFilesPath);
 
-					await this.$platformService.deployPlatform(platform);
-					await this.$usbLiveSyncService.liveSync(platform);
+					const deployOptions: IDeployPlatformOptions = {
+						clean: this.$options.clean,
+						device: this.$options.device,
+						projectDir: this.$options.path,
+						emulator: this.$options.emulator,
+						platformTemplate: this.$options.platformTemplate,
+						release: this.$options.release
+					};
+					await this.$platformService.deployPlatform(platform, appFilesUpdaterOptions, deployOptions, projectData, this.$options.provision);
+					await this.$usbLiveSyncService.liveSync(platform, projectData);
 
 					if (this.$options.debugBrk) {
 						this.$logger.info('Starting debugger...');
 						let debugService: IDebugService = this.$injector.resolve(`${platform}DebugService`);
-						await debugService.debugStart();
+						await debugService.debugStart(projectData);
 					}
 					resolve();
 				} catch (err) {
@@ -78,7 +86,7 @@ class TestExecutionService implements ITestExecutionService {
 		});
 	}
 
-	public async startKarmaServer(platform: string): Promise<void> {
+	public async startKarmaServer(platform: string, projectData: IProjectData): Promise<void> {
 		platform = platform.toLowerCase();
 		this.platform = platform;
 
@@ -87,12 +95,12 @@ class TestExecutionService implements ITestExecutionService {
 		}
 
 		// We need the dependencies installed here, so we can start the Karma server.
-		await this.$pluginsService.ensureAllDependenciesAreInstalled();
+		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 
-		let projectDir = this.$projectData.projectDir;
+		let projectDir = projectData.projectDir;
 		await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
 
-		let karmaConfig = this.getKarmaConfiguration(platform),
+		let karmaConfig = this.getKarmaConfiguration(platform, projectData),
 			karmaRunner = this.$childProcess.fork(path.join(__dirname, "karma-execution.js")),
 			launchKarmaTests = async (karmaData: any) => {
 				this.$logger.trace("## Unit-testing: Parent process received message", karmaData);
@@ -110,17 +118,27 @@ class TestExecutionService implements ITestExecutionService {
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
 				}
 
+				const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
 				// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
 				// so it will be sent to device.
-				if (!await this.$platformService.preparePlatform(platform)) {
+				if (!await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, this.$options.provision)) {
 					this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 				}
 
 				if (this.$options.debugBrk) {
-					await this.getDebugService(platform).debug();
+					await this.getDebugService(platform).debug(projectData);
 				} else {
-					await this.$platformService.deployPlatform(platform);
-					await this.$usbLiveSyncService.liveSync(platform);
+					const deployOptions: IDeployPlatformOptions = {
+						clean: this.$options.clean,
+						device: this.$options.device,
+						emulator: this.$options.emulator,
+						projectDir: this.$options.path,
+						platformTemplate: this.$options.platformTemplate,
+						release: this.$options.release
+					};
+
+					await this.$platformService.deployPlatform(platform, appFilesUpdaterOptions, deployOptions, projectData, this.$options.provision);
+					await this.$usbLiveSyncService.liveSync(platform, projectData);
 				}
 			};
 
@@ -184,10 +202,10 @@ class TestExecutionService implements ITestExecutionService {
 		throw new Error(`Invalid platform ${platform}. Valid platforms are ${this.$devicePlatformsConstants.iOS} and ${this.$devicePlatformsConstants.Android}`);
 	}
 
-	private getKarmaConfiguration(platform: string): any {
+	private getKarmaConfiguration(platform: string, projectData: IProjectData): any {
 		let karmaConfig: any = {
 			browsers: [platform],
-			configFile: path.join(this.$projectData.projectDir, 'karma.conf.js'),
+			configFile: path.join(projectData.projectDir, 'karma.conf.js'),
 			_NS: {
 				log: this.$logger.getLevel(),
 				path: this.$options.path,
@@ -214,7 +232,7 @@ class TestExecutionService implements ITestExecutionService {
 			karmaConfig.browserNoActivityTimeout = 1000000000;
 		}
 
-		karmaConfig.projectDir = this.$projectData.projectDir;
+		karmaConfig.projectDir = projectData.projectDir;
 		this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
 
 		return karmaConfig;

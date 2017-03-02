@@ -28,7 +28,6 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			compileSdk: { type: OptionType.Number },
 			port: { type: OptionType.Number },
 			copyTo: { type: OptionType.String },
-			baseConfig: { type: OptionType.String },
 			platformTemplate: { type: OptionType.String },
 			ng: { type: OptionType.Boolean },
 			tsc: { type: OptionType.Boolean },
@@ -60,6 +59,9 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 				// ignore the error - it is too early to use $logger here
 			}
 		}
+
+		let that = (<any>this);
+		that.watch = !that.justlaunch;
 	}
 }
 $injector.register("options", Options);

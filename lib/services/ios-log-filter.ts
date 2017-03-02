@@ -3,13 +3,12 @@ import * as path from "path";
 
 export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 
-	private $projectData: IProjectData;
 	private partialLine: string = null;
 
 	constructor(private $fs: IFileSystem) {
 	}
 
-	public filterData(data: string, logLevel: string, pid?: string): string {
+	public filterData(data: string, logLevel: string, projectDir: string, pid?: string): string {
 
 		if (pid && data && data.indexOf(`[${pid}]`) === -1) {
 			return null;
@@ -41,15 +40,15 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 					let pidIndex = line.indexOf(searchString);
 					if (pidIndex > 0) {
 						line = line.substring(pidIndex + searchString.length, line.length);
-						this.getOriginalFileLocation(line);
-						result += this.getOriginalFileLocation(line) + "\n";
+						this.getOriginalFileLocation(line, projectDir);
+						result += this.getOriginalFileLocation(line, projectDir) + "\n";
 						continue;
 					}
 				}
 				if (skipLastLine && i === lines.length - 1) {
 					this.partialLine = line;
 				} else {
-					result += this.getOriginalFileLocation(line) + "\n";
+					result += this.getOriginalFileLocation(line, projectDir) + "\n";
 				}
 			}
 			return result;
@@ -58,7 +57,7 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 		return data;
 	}
 
-	private getOriginalFileLocation(data: string): string {
+	private getOriginalFileLocation(data: string, projectDir: string): string {
 		let fileString = "file:///";
 		let fileIndex = data.indexOf(fileString);
 
@@ -66,36 +65,27 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 			let parts = data.substring(fileIndex + fileString.length).split(":");
 			if (parts.length >= 4) {
 				let file = parts[0];
-				if (this.ensureProjectData()) {
-					let sourceMapFile = path.join(this.$projectData.projectDir, file + ".map");
-					let row = parseInt(parts[1]);
-					let column = parseInt(parts[2]);
-					if (this.$fs.exists(sourceMapFile)) {
-						let sourceMap = this.$fs.readText(sourceMapFile);
-						let smc = new sourcemap.SourceMapConsumer(sourceMap);
-						let originalPosition = smc.originalPositionFor({ line: row, column: column });
-						let sourceFile = smc.sources.length > 0 ? file.replace(smc.file, smc.sources[0]) : file;
-						data = data.substring(0, fileIndex + fileString.length)
-							+ sourceFile + ":"
-							+ originalPosition.line + ":"
-							+ originalPosition.column;
+				let sourceMapFile = path.join(projectDir, file + ".map");
+				let row = parseInt(parts[1]);
+				let column = parseInt(parts[2]);
+				if (this.$fs.exists(sourceMapFile)) {
+					let sourceMap = this.$fs.readText(sourceMapFile);
+					let smc = new sourcemap.SourceMapConsumer(sourceMap);
+					let originalPosition = smc.originalPositionFor({ line: row, column: column });
+					let sourceFile = smc.sources.length > 0 ? file.replace(smc.file, smc.sources[0]) : file;
+					data = data.substring(0, fileIndex + fileString.length)
+						+ sourceFile + ":"
+						+ originalPosition.line + ":"
+						+ originalPosition.column;
 
-						for (let i = 3; i < parts.length; i++) {
-							data += ":" + parts[i];
-						}
+					for (let i = 3; i < parts.length; i++) {
+						data += ":" + parts[i];
 					}
 				}
 			}
 		}
 
 		return data;
-	}
-
-	private ensureProjectData(): boolean {
-		if (!this.$projectData) {
-			this.$projectData = $injector.resolve("projectData");
-		}
-		return !!this.$projectData;
 	}
 }
 $injector.register("iOSLogFilter", IOSLogFilter);

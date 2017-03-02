@@ -90,13 +90,15 @@ describe("Plugin Variables service", () => {
 
 			let pluginVariables = { "MY_TEST_PLUGIN_VARIABLE": {} };
 			let pluginData = createPluginData(pluginVariables);
-			let pluginVariablesService = testInjector.resolve("pluginVariablesService");
+			let pluginVariablesService: IPluginVariablesService = testInjector.resolve("pluginVariablesService");
+			let projectData: IProjectData = testInjector.resolve("projectData");
+			projectData.initializeProjectData();
 
 			let expectedError = `Unable to find value for MY_TEST_PLUGIN_VARIABLE plugin variable from ${pluginData.name} plugin. Ensure the --var option is specified or the plugin variable has default value.`;
 			let actualError: string = null;
 
 			try {
-				await pluginVariablesService.savePluginVariablesInProjectFile(pluginData);
+				await pluginVariablesService.savePluginVariablesInProjectFile(pluginData, projectData);
 			} catch (err) {
 				actualError = err.message;
 			}
@@ -113,11 +115,12 @@ describe("Plugin Variables service", () => {
 
 			let pluginVariables = { "MY_APP_ID": {} };
 			let pluginData = createPluginData(pluginVariables);
-			let pluginVariablesService = testInjector.resolve("pluginVariablesService");
-			await pluginVariablesService.savePluginVariablesInProjectFile(pluginData);
+			let pluginVariablesService: IPluginVariablesService = testInjector.resolve("pluginVariablesService");
+			let projectData: IProjectData = testInjector.resolve("projectData");
+			projectData.initializeProjectData();
+			await pluginVariablesService.savePluginVariablesInProjectFile(pluginData, projectData);
 
 			let fs = testInjector.resolve("fs");
-			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
 			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
@@ -129,11 +132,13 @@ describe("Plugin Variables service", () => {
 			let defaultPluginValue = "myDefaultValue";
 			let pluginVariables = { "MY_TEST_PLUGIN_VARIABLE": { defaultValue: defaultPluginValue } };
 			let pluginData = createPluginData(pluginVariables);
-			let pluginVariablesService = testInjector.resolve("pluginVariablesService");
-			await pluginVariablesService.savePluginVariablesInProjectFile(pluginData);
+			let pluginVariablesService: IPluginVariablesService = testInjector.resolve("pluginVariablesService");
+			let projectData = testInjector.resolve("projectData");
+			projectData.initializeProjectData();
+
+			await pluginVariablesService.savePluginVariablesInProjectFile(pluginData, projectData);
 
 			let fs = testInjector.resolve("fs");
-			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
 			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
@@ -155,11 +160,12 @@ describe("Plugin Variables service", () => {
 
 			let pluginVariables = { "APP_URL": {} };
 			let pluginData = createPluginData(pluginVariables);
-			let pluginVariablesService = testInjector.resolve("pluginVariablesService");
-			await pluginVariablesService.savePluginVariablesInProjectFile(pluginData);
+			let pluginVariablesService: IPluginVariablesService = testInjector.resolve("pluginVariablesService");
+			let projectData = testInjector.resolve("projectData");
+			projectData.initializeProjectData();
+			await pluginVariablesService.savePluginVariablesInProjectFile(pluginData, projectData);
 
 			let fs = testInjector.resolve("fs");
-			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
 			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
@@ -171,11 +177,13 @@ describe("Plugin Variables service", () => {
 			let defaultPluginValue = "myAppNAme";
 			let pluginVariables = { "APP_NAME": { defaultValue: defaultPluginValue } };
 			let pluginData = createPluginData(pluginVariables);
-			let pluginVariablesService = testInjector.resolve("pluginVariablesService");
-			await pluginVariablesService.savePluginVariablesInProjectFile(pluginData);
+			let pluginVariablesService: IPluginVariablesService = testInjector.resolve("pluginVariablesService");
+			let projectData = testInjector.resolve("projectData");
+			projectData.initializeProjectData();
+
+			await pluginVariablesService.savePluginVariablesInProjectFile(pluginData, projectData);
 
 			let fs = testInjector.resolve("fs");
-			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
 			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
@@ -191,11 +199,12 @@ describe("Plugin Variables service", () => {
 
 			let pluginVariables = { "USERNAME": {} };
 			let pluginData = createPluginData(pluginVariables);
-			let pluginVariablesService = testInjector.resolve("pluginVariablesService");
-			await pluginVariablesService.savePluginVariablesInProjectFile(pluginData);
+			let pluginVariablesService: IPluginVariablesService = testInjector.resolve("pluginVariablesService");
+			let projectData = testInjector.resolve("projectData");
+			projectData.initializeProjectData();
+			await pluginVariablesService.savePluginVariablesInProjectFile(pluginData, projectData);
 
 			let fs = testInjector.resolve("fs");
-			let projectData = testInjector.resolve("projectData");
 			let staticConfig: IStaticConfig = testInjector.resolve("staticConfig");
 
 			let projectFileContent = fs.readJson(path.join(projectData.projectDir, "package.json"));
@@ -214,12 +223,14 @@ describe("Plugin Variables service", () => {
 			let filePath = path.join(tempFolder, "myfile");
 			fs.writeFile(filePath, "");
 
-			let pluginVariablesService = testInjector.resolve("pluginVariablesService");
+			let pluginVariablesService: IPluginVariablesService = testInjector.resolve("pluginVariablesService");
+			let projectData = testInjector.resolve("projectData");
+			projectData.initializeProjectData();
 
 			let expectedError = "Unable to find the value for MY_VAR plugin variable into project package.json file. Verify that your package.json file is correct and try again.";
 			let error: string = null;
 			try {
-				await pluginVariablesService.interpolatePluginVariables(pluginData, filePath);
+				await pluginVariablesService.interpolatePluginVariables(pluginData, filePath, projectData);
 			} catch (err) {
 				error = err.message;
 			}
@@ -231,6 +242,7 @@ describe("Plugin Variables service", () => {
 			let tempFolder = await createProjectFile(testInjector);
 
 			let projectData: IProjectData = testInjector.resolve("projectData");
+			projectData.initializeProjectData();
 			let fs: IFileSystem = testInjector.resolve("fs");
 
 			// Write plugin variables values to package.json file
@@ -243,7 +255,7 @@ describe("Plugin Variables service", () => {
 
 			let pluginVariables = { "FB_APP_NAME": {} };
 			let pluginData = createPluginData(pluginVariables);
-			let pluginVariablesService = testInjector.resolve("pluginVariablesService");
+			let pluginVariablesService: IPluginVariablesService = testInjector.resolve("pluginVariablesService");
 			let pluginConfigurationFileContent = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
 				'<application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >' +
@@ -253,7 +265,7 @@ describe("Plugin Variables service", () => {
 			let filePath = path.join(tempFolder, "myfile");
 			fs.writeFile(filePath, pluginConfigurationFileContent);
 
-			await pluginVariablesService.interpolatePluginVariables(pluginData, filePath);
+			await pluginVariablesService.interpolatePluginVariables(pluginData, filePath, projectData);
 
 			let result = fs.readText(filePath);
 			let expectedResult = '<?xml version="1.0" encoding="UTF-8"?>' +
@@ -270,6 +282,7 @@ describe("Plugin Variables service", () => {
 			let tempFolder = await createProjectFile(testInjector);
 
 			let projectData: IProjectData = testInjector.resolve("projectData");
+			projectData.initializeProjectData();
 			let fs: IFileSystem = testInjector.resolve("fs");
 
 			// Write plugin variables values to package.json file
@@ -282,7 +295,7 @@ describe("Plugin Variables service", () => {
 
 			let pluginVariables = { "FB_APP_NAME": {} };
 			let pluginData = createPluginData(pluginVariables);
-			let pluginVariablesService = testInjector.resolve("pluginVariablesService");
+			let pluginVariablesService: IPluginVariablesService = testInjector.resolve("pluginVariablesService");
 			let pluginConfigurationFileContent = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
 				'<application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >' +
@@ -292,7 +305,7 @@ describe("Plugin Variables service", () => {
 			let filePath = path.join(tempFolder, "myfile");
 			fs.writeFile(filePath, pluginConfigurationFileContent);
 
-			await pluginVariablesService.interpolatePluginVariables(pluginData, filePath);
+			await pluginVariablesService.interpolatePluginVariables(pluginData, filePath, projectData);
 
 			let result = fs.readText(filePath);
 			let expectedResult = '<?xml version="1.0" encoding="UTF-8"?>' +
@@ -309,6 +322,7 @@ describe("Plugin Variables service", () => {
 			let tempFolder = await createProjectFile(testInjector);
 
 			let projectData: IProjectData = testInjector.resolve("projectData");
+			projectData.initializeProjectData();
 			let fs: IFileSystem = testInjector.resolve("fs");
 
 			let packageJsonFilePath = path.join(projectData.projectDir, "package.json");
@@ -321,7 +335,7 @@ describe("Plugin Variables service", () => {
 
 			let pluginVariables = { "FB_APP_NAME": {}, "FB_APP_URL": {} };
 			let pluginData = createPluginData(pluginVariables);
-			let pluginVariablesService = testInjector.resolve("pluginVariablesService");
+			let pluginVariablesService: IPluginVariablesService = testInjector.resolve("pluginVariablesService");
 			let pluginConfigurationFileContent = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
 				'<application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >' +
@@ -332,7 +346,7 @@ describe("Plugin Variables service", () => {
 			let filePath = path.join(tempFolder, "myfile");
 			fs.writeFile(filePath, pluginConfigurationFileContent);
 
-			await pluginVariablesService.interpolatePluginVariables(pluginData, filePath);
+			await pluginVariablesService.interpolatePluginVariables(pluginData, filePath, projectData);
 
 			let result = fs.readText(filePath);
 			let expectedResult = '<?xml version="1.0" encoding="UTF-8"?>' +

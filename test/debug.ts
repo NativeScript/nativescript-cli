@@ -34,7 +34,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("androidProjectService", AndroidProjectService);
 	testInjector.register("androidToolsInfo", stubs.AndroidToolsInfoStub);
 	testInjector.register("hostInfo", {});
-	testInjector.register("projectData", { platformsDir: "" });
+	testInjector.register("projectData", { platformsDir: "test", initializeProjectData: () => { /* empty */ } });
 	testInjector.register("projectDataService", {});
 	testInjector.register("sysInfo", {});
 	testInjector.register("mobileHelper", {});
@@ -78,8 +78,9 @@ describe("Debugger tests", () => {
 		config.debugLivesync = true;
 		let childProcess: stubs.ChildProcessStub = testInjector.resolve("childProcess");
 		let androidProjectService: IPlatformProjectService = testInjector.resolve("androidProjectService");
+		let projectData: IProjectData = testInjector.resolve("projectData");
 		let spawnFromEventCount = childProcess.spawnFromEventCount;
-		await androidProjectService.beforePrepareAllPlugins();
+		await androidProjectService.beforePrepareAllPlugins(projectData);
 		assert.isTrue(spawnFromEventCount === 0);
 		assert.isTrue(spawnFromEventCount === childProcess.spawnFromEventCount);
 	});
@@ -89,8 +90,9 @@ describe("Debugger tests", () => {
 		config.debugLivesync = false;
 		let childProcess: stubs.ChildProcessStub = testInjector.resolve("childProcess");
 		let androidProjectService: IPlatformProjectService = testInjector.resolve("androidProjectService");
+		let projectData: IProjectData = testInjector.resolve("projectData");
 		let spawnFromEventCount = childProcess.spawnFromEventCount;
-		await androidProjectService.beforePrepareAllPlugins();
+		await androidProjectService.beforePrepareAllPlugins(projectData);
 		assert.isTrue(childProcess.lastCommand.indexOf("gradle") !== -1);
 		assert.isTrue(childProcess.lastCommandArgs[0] === "clean");
 		assert.isTrue(spawnFromEventCount === 0);

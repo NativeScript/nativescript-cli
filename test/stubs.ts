@@ -2,6 +2,7 @@
 
 import * as util from "util";
 import * as chai from "chai";
+import { EventEmitter } from "events";
 
 export class LoggerStub implements ILogger {
 	setLevel(level: string): void { }
@@ -237,12 +238,15 @@ export class ProjectDataStub implements IProjectData {
 	appResourcesDirectoryPath: string;
 	devDependencies: IStringDictionary;
 	projectType: string;
+	initializeProjectData(projectDir?: string): void {
+		this.projectDir = this.projectDir || projectDir;
+	}
 }
 
-export class PlatformsDataStub implements IPlatformsData {
+export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
 	public platformsNames: string[];
 
-	public getPlatformData(platform: string): IPlatformData {
+	public getPlatformData(platform: string, projectData: IProjectData): IPlatformData {
 		return {
 			frameworkPackageName: "",
 			platformProjectService: new PlatformProjectServiceStub(),
@@ -263,8 +267,8 @@ export class PlatformsDataStub implements IPlatformsData {
 	}
 }
 
-export class PlatformProjectServiceStub implements IPlatformProjectService {
-	get platformData(): IPlatformData {
+export class PlatformProjectServiceStub extends EventEmitter implements IPlatformProjectService {
+	getPlatformData(projectData: IProjectData): IPlatformData {
 		return {
 			frameworkPackageName: "",
 			normalizedPlatformName: "",
@@ -463,7 +467,7 @@ function unexpected(msg: string): Error {
 }
 
 export class DebugServiceStub implements IDebugService {
-	public async debug(shouldBreak?: boolean): Promise<void> {
+	public async debug(): Promise<void> {
 		return;
 	}
 
@@ -479,7 +483,7 @@ export class DebugServiceStub implements IDebugService {
 }
 
 export class LiveSyncServiceStub implements ILiveSyncService {
-	public async liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>): Promise<void> {
+	public async liveSync(platform: string, projectData: IProjectData, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => Promise<void>): Promise<void> {
 		return;
 	}
 }
@@ -571,7 +575,7 @@ export class CommandsService implements ICommandsService {
 	}
 }
 
-export class PlatformServiceStub implements IPlatformService {
+export class PlatformServiceStub extends EventEmitter implements IPlatformService {
 
 	public validateOptions(): Promise<boolean> {
 		return Promise.resolve(true);
@@ -601,11 +605,11 @@ export class PlatformServiceStub implements IPlatformService {
 		return Promise.resolve();
 	}
 
-	public preparePlatform(platform: string, changesInfo?: IProjectChangesInfo): Promise<boolean> {
+	public preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string): Promise<boolean> {
 		return Promise.resolve(true);
 	}
 
-	public shouldBuild(platform: string, buildConfig?: IBuildConfig): Promise<boolean> {
+	public shouldBuild(platform: string, projectData: IProjectData, buildConfig?: IBuildConfig): Promise<boolean> {
 		return Promise.resolve(true);
 	}
 
@@ -617,23 +621,23 @@ export class PlatformServiceStub implements IPlatformService {
 		return true;
 	}
 
-	public installApplication(device: Mobile.IDevice): Promise<void> {
+	public installApplication(device: Mobile.IDevice, options: IRelease): Promise<void> {
 		return Promise.resolve();
 	}
 
-	public deployPlatform(platform: string, forceInstall?: boolean): Promise<void> {
+	public deployPlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, deployOptions: IDeployPlatformOptions): Promise<void> {
 		return Promise.resolve();
 	}
 
-	public runPlatform(platform: string): Promise<void> {
+	public runPlatform(platform: string, runOptions: IRunPlatformOptions): Promise<void> {
 		return Promise.resolve();
 	}
 
-	public emulatePlatform(platform: string): Promise<void> {
+	public emulatePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, emulateOptions: IEmulatePlatformOptions): Promise<void> {
 		return Promise.resolve();
 	}
 
-	public cleanDestinationApp(platform: string): Promise<void> {
+	public cleanDestinationApp(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string): Promise<void> {
 		return Promise.resolve();
 	}
 

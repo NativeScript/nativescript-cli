@@ -5,7 +5,7 @@ import * as net from "net";
 
 let currentPageReloadId = 0;
 
-class IOSLiveSyncService implements IDeviceLiveSyncService {
+class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 	private static BACKEND_PORT = 18181;
 	private socket: net.Socket;
 	private device: Mobile.IiOSDevice;
@@ -33,13 +33,13 @@ class IOSLiveSyncService implements IDeviceLiveSyncService {
 		return this.$options.watch;
 	}
 
-	private async setupSocketIfNeeded(): Promise<boolean> {
+	private async setupSocketIfNeeded(projectId: string): Promise<boolean> {
 		if (this.socket) {
 			return true;
 		}
 
 		if (this.device.isEmulator) {
-			await this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.attachRequest);
+			await this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.getAttachRequest(projectId));
 			try {
 				this.socket = await helpers.connectEventuallyUntilTimeout(() => net.connect(IOSLiveSyncService.BACKEND_PORT), 5000);
 			} catch (e) {
@@ -48,7 +48,7 @@ class IOSLiveSyncService implements IDeviceLiveSyncService {
 			}
 		} else {
 			let timeout = 9000;
-			await this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, timeout);
+			await this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, timeout, projectId);
 			this.socket = this.device.connectToPort(IOSLiveSyncService.BACKEND_PORT);
 		}
 
@@ -61,7 +61,7 @@ class IOSLiveSyncService implements IDeviceLiveSyncService {
 		await Promise.all(_.map(localToDevicePaths, localToDevicePathData => this.device.fileSystem.deleteFile(localToDevicePathData.getDevicePath(), appIdentifier)));
 	}
 
-	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean): Promise<void> {
+	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean, projectId: string): Promise<void> {
 		if (forceExecuteFullSync) {
 			await this.restartApplication(deviceAppData);
 			return;
@@ -79,7 +79,7 @@ class IOSLiveSyncService implements IDeviceLiveSyncService {
 			return;
 		}
 
-		if (await this.setupSocketIfNeeded()) {
+		if (await this.setupSocketIfNeeded(projectId)) {
 			this.liveEdit(scriptFiles);
 			await this.reloadPage(deviceAppData, otherFiles);
 		} else {

@@ -2,10 +2,13 @@ export class RemovePlatformCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(private $platformService: IPlatformService,
-		private $errors: IErrors) { }
+		private $projectData: IProjectData,
+		private $errors: IErrors) {
+			this.$projectData.initializeProjectData();
+		}
 
 	public async execute(args: string[]): Promise<void> {
-		this.$platformService.removePlatforms(args);
+		this.$platformService.removePlatforms(args, this.$projectData);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -13,7 +16,7 @@ export class RemovePlatformCommand implements ICommand {
 			this.$errors.fail("No platform specified. Please specify a platform to remove");
 		}
 
-		_.each(args, arg => this.$platformService.validatePlatformInstalled(arg));
+		_.each(args, arg => this.$platformService.validatePlatformInstalled(arg, this.$projectData));
 
 		return true;
 	}

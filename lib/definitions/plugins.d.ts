@@ -1,16 +1,17 @@
 interface IPluginsService {
-	add(plugin: string): Promise<void>; // adds plugin by name, github url, local path and et.
-	remove(pluginName: string): Promise<void>; // removes plugin only by name
+	add(plugin: string, projectData: IProjectData): Promise<void>; // adds plugin by name, github url, local path and et.
+	remove(pluginName: string, projectData: IProjectData): Promise<void>; // removes plugin only by name
 	getAvailable(filter: string[]): Promise<IDictionary<any>>; // gets all available plugins
-	prepare(pluginData: IDependencyData, platform: string): Promise<void>;
-	getAllInstalledPlugins(): Promise<IPluginData[]>;
-	ensureAllDependenciesAreInstalled(): Promise<void>;
+	prepare(pluginData: IDependencyData, platform: string, projectData: IProjectData): Promise<void>;
+	getAllInstalledPlugins(projectData: IProjectData): Promise<IPluginData[]>;
+	ensureAllDependenciesAreInstalled(projectData: IProjectData): Promise<void>;
 
 	/**
 	 * Returns all dependencies and devDependencies from pacakge.json file.
+	 * @param {string} projectData Root directory of the project.
 	 * @returns {IPackageJsonDepedenciesResult}
 	 */
-	getDependenciesFromPackageJson(): IPackageJsonDepedenciesResult;
+	getDependenciesFromPackageJson(projectDir: string): IPackageJsonDepedenciesResult;
 }
 
 interface IPackageJsonDepedenciesResult {
@@ -45,36 +46,40 @@ interface IPluginVariablesService {
 	/**
 	 * Saves plugin variables in project package.json file.
 	 * @param  {IPluginData}		pluginData for the plugin.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @return {Promise<void>}
 	 */
-	savePluginVariablesInProjectFile(pluginData: IPluginData): Promise<void>;
+	savePluginVariablesInProjectFile(pluginData: IPluginData, projectData: IProjectData): Promise<void>;
 
 	/**
 	 * Removes plugin variables from project package.json file.
 	 * @param  {string}		pluginName Name of the plugin.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @return {void}
 	 */
-	removePluginVariablesFromProjectFile(pluginName: string): void;
+	removePluginVariablesFromProjectFile(pluginName: string, projectData: IProjectData): void;
 
 	/**
 	 * Replaces all plugin variables with their corresponding values.
 	 * @param {IPluginData}		pluginData for the plugin.
 	 * @param {pluginConfigurationFilePath}		pluginConfigurationFilePath for the plugin.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @return {Promise<void>}
 	 */
-	interpolatePluginVariables(pluginData: IPluginData, pluginConfigurationFilePath: string): Promise<void>;
+	interpolatePluginVariables(pluginData: IPluginData, pluginConfigurationFilePath: string, projectData: IProjectData): Promise<void>;
 
 	/**
 	 * Replaces {nativescript.id} expression with the application identifier from package.json.
 	 * @param {pluginConfigurationFilePath}	pluginConfigurationFilePath for the plugin.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @return {void}
 	 */
-	interpolateAppIdentifier(pluginConfigurationFilePath: string): void;
+	interpolateAppIdentifier(pluginConfigurationFilePath: string, projectData: IProjectData): void;
 
 	/**
 	 * Replaces both plugin variables and appIdentifier
 	 */
-	interpolate(pluginData: IPluginData, pluginConfigurationFilePath: string): Promise<void>;
+	interpolate(pluginData: IPluginData, pluginConfigurationFilePath: string, projectData: IProjectData): Promise<void>;
 
 	/**
 	 * Returns the
