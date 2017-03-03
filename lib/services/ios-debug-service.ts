@@ -158,8 +158,8 @@ class IOSDebugService implements IDebugService {
 
 	private async debugBrkCore(device: Mobile.IiOSDevice, projectData: IProjectData, shouldBreak?: boolean): Promise<void> {
 		let timeout = this.$utils.getMilliSecondsTimeout(TIMEOUT_SECONDS);
-		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device.deviceInfo.identifier, timeout, timeout, shouldBreak);
-		await this.wireDebuggerClient(device);
+		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device.deviceInfo.identifier, timeout, timeout, projectData.projectId, shouldBreak);
+		await this.wireDebuggerClient(projectData, device);
 	}
 
 	private async deviceStart(projectData: IProjectData): Promise<void> {

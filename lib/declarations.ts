@@ -310,7 +310,7 @@ interface IiOSNotificationService {
 }
 
 interface IiOSSocketRequestExecutor {
-	executeLaunchRequest(device: Mobile.IiOSDevice, timeout: number, readyForAttachTimeout: number, projectId: string, shouldBreak?: boolean): Promise<void>;
+	executeLaunchRequest(deviceIdentifier: string, timeout: number, readyForAttachTimeout: number, projectId: string, shouldBreak?: boolean): Promise<void>;
 	executeAttachRequest(device: Mobile.IiOSDevice, timeout: number, projectId: string): Promise<void>;
 }
 
