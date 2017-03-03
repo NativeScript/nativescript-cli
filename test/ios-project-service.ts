@@ -313,8 +313,9 @@ describe("Cocoapods support", () => {
 					return pluginPlatformsFolderPath;
 				}
 			};
+			let projectData: IProjectData = testInjector.resolve("projectData");
 
-			await iOSProjectService.preparePluginNativeCode(pluginData);
+			await iOSProjectService.preparePluginNativeCode(pluginData, projectData);
 
 			let projectPodfilePath = path.join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath));
@@ -383,8 +384,9 @@ describe("Cocoapods support", () => {
 					return pluginPlatformsFolderPath;
 				}
 			};
+			let projectData: IProjectData = testInjector.resolve("projectData");
 
-			await iOSProjectService.preparePluginNativeCode(pluginData);
+			await iOSProjectService.preparePluginNativeCode(pluginData, projectData);
 
 			let projectPodfilePath = path.join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath));
@@ -399,7 +401,7 @@ describe("Cocoapods support", () => {
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
 
-			await iOSProjectService.removePluginNativeCode(pluginData);
+			await iOSProjectService.removePluginNativeCode(pluginData, projectData);
 
 			assert.isFalse(fs.exists(projectPodfilePath));
 		});
