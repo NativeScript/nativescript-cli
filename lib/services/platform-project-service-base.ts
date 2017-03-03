@@ -1,7 +1,9 @@
-export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
+import { EventEmitter } from "events";
+
+export class PlatformProjectServiceBase extends EventEmitter implements IPlatformProjectServiceBase {
 	constructor(protected $fs: IFileSystem,
-		protected $projectData: IProjectData,
 		protected $projectDataService: IProjectDataService) {
+			super();
 	}
 
 	public getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string {
@@ -22,7 +24,7 @@ export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 		return nativeLibraries;
 	}
 
-	protected getFrameworkVersion(runtimePackageName: string): string {
-		return this.$projectDataService.getNSValue(this.$projectData.projectDir, runtimePackageName).version;
+	protected getFrameworkVersion(runtimePackageName: string, projectDir: string): string {
+		return this.$projectDataService.getNSValue(projectDir, runtimePackageName).version;
 	}
 }

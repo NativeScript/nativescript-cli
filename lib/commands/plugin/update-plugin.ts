@@ -1,18 +1,21 @@
 export class UpdatePluginCommand implements ICommand {
 	constructor(private $pluginsService: IPluginsService,
-		private $errors: IErrors) { }
+		private $projectData: IProjectData,
+		private $errors: IErrors) {
+			this.$projectData.initializeProjectData();
+		}
 
 	public async execute(args: string[]): Promise<void> {
 		let pluginNames = args;
 
 		if (!pluginNames || args.length === 0) {
-			let installedPlugins = await this.$pluginsService.getAllInstalledPlugins();
+			let installedPlugins = await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
 			pluginNames = installedPlugins.map(p => p.name);
 		}
 
-		for (let p of pluginNames) {
-			await this.$pluginsService.remove(p);
-			await this.$pluginsService.add(p);
+		for (let pluginName of pluginNames) {
+			await this.$pluginsService.remove(pluginName, this.$projectData);
+			await this.$pluginsService.add(pluginName, this.$projectData);
 		}
 	}
 
@@ -21,7 +24,7 @@ export class UpdatePluginCommand implements ICommand {
 			return true;
 		}
 
-		let installedPlugins = await this.$pluginsService.getAllInstalledPlugins();
+		let installedPlugins = await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
 		let installedPluginNames: string[] = installedPlugins.map(pl => pl.name);
 
 		let pluginName = args[0].toLowerCase();

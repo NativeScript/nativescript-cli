@@ -11,20 +11,19 @@ export class IOSProvisionService {
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $devicesService: Mobile.IDevicesService,
-		private $projectData: IProjectData,
 		private $mobileHelper: Mobile.IMobileHelper) {
 	}
 
-	public async pick(uuidOrName: string): Promise<mobileprovision.provision.MobileProvision> {
-		const match = (await this.queryProvisioningProfilesAndDevices()).match;
+	public async pick(uuidOrName: string, projectId: string): Promise<mobileprovision.provision.MobileProvision> {
+		const match = (await this.queryProvisioningProfilesAndDevices(projectId)).match;
 		return match.eligable.find(prov => prov.UUID === uuidOrName)
 			|| match.eligable.find(prov => prov.Name === uuidOrName)
 			|| match.nonEligable.find(prov => prov.UUID === uuidOrName)
 			|| match.nonEligable.find(prov => prov.Name === uuidOrName);
 	}
 
-	public async list(): Promise<void> {
-		const data = await this.queryProvisioningProfilesAndDevices();
+	public async list(projectId: string): Promise<void> {
+		const data = await this.queryProvisioningProfilesAndDevices(projectId);
 		const devices = data.devices;
 		const match = data.match;
 
@@ -63,14 +62,14 @@ export class IOSProvisionService {
 
 	}
 
-	private async queryProvisioningProfilesAndDevices(): Promise<{ devices: string[], match: mobileprovision.provision.Result }> {
+	private async queryProvisioningProfilesAndDevices(projectId: string): Promise<{ devices: string[], match: mobileprovision.provision.Result }> {
 		const certificates = mobileprovision.cert.read();
 		const provisions = mobileprovision.provision.read();
 
 		const query: mobileprovision.provision.Query = {
 			Certificates: certificates.valid,
 			Unique: true,
-			AppId: this.$projectData.projectId
+			AppId: projectId
 		};
 
 		let devices: string[] = [];

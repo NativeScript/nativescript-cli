@@ -5,7 +5,6 @@ import { ProjectFilesProviderBase } from "../common/services/project-files-provi
 
 export class ProjectFilesProvider extends ProjectFilesProviderBase {
 	constructor(private $platformsData: IPlatformsData,
-		private $projectData: IProjectData,
 		$mobileHelper: Mobile.IMobileHelper,
 		$options:IOptions) {
 			super($mobileHelper, $options);
@@ -13,15 +12,15 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 
 	private static INTERNAL_NONPROJECT_FILES = [ "**/*.ts" ];
 
-	public mapFilePath(filePath: string, platform: string): string {
-		let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
+	public mapFilePath(filePath: string, platform: string, projectData: IProjectData): string {
+		let platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
 		let parsedFilePath = this.getPreparedFilePath(filePath);
 		let mappedFilePath = "";
 		if (parsedFilePath.indexOf(constants.NODE_MODULES_FOLDER_NAME) > -1) {
-			let relativePath = path.relative(path.join(this.$projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME), parsedFilePath);
+			let relativePath = path.relative(path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME), parsedFilePath);
 			mappedFilePath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.TNS_MODULES_FOLDER_NAME, relativePath);
 		} else {
-			mappedFilePath = path.join(platformData.appDestinationDirectoryPath, path.relative(this.$projectData.projectDir, parsedFilePath));
+			mappedFilePath = path.join(platformData.appDestinationDirectoryPath, path.relative(projectData.projectDir, parsedFilePath));
 		}
 
 		let appResourcesDirectoryPath = path.join(constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
@@ -31,9 +30,9 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 		}
 
 		if (parsedFilePath.indexOf(platformSpecificAppResourcesDirectoryPath) > -1) {
-			let appResourcesRelativePath = path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME,
+			let appResourcesRelativePath = path.relative(path.join(projectData.projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME,
 				platformData.normalizedPlatformName), parsedFilePath);
-			mappedFilePath = path.join(platformData.platformProjectService.getAppResourcesDestinationDirectoryPath(), appResourcesRelativePath);
+			mappedFilePath = path.join(platformData.platformProjectService.getAppResourcesDestinationDirectoryPath(projectData), appResourcesRelativePath);
 		}
 
 		return mappedFilePath;

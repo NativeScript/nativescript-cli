@@ -10,13 +10,13 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 		private $options: IOptions,
 		private $logger: ILogger) { }
 
-	public async startEmulator(info: IEmulatorInfo): Promise<void> {
+	public async startEmulator(info: IEmulatorInfo, projectData: IProjectData): Promise<void> {
 		if (!info.isRunning) {
 			if (this.$mobileHelper.isAndroidPlatform(info.platform)) {
 				this.$options.avd = this.$options.device;
 				this.$options.device = null;
 				let platformsData: IPlatformsData = $injector.resolve("platformsData");
-				let platformData = platformsData.getPlatformData(info.platform);
+				let platformData = platformsData.getPlatformData(info.platform, projectData);
 				let emulatorServices = platformData.emulatorServices;
 				emulatorServices.checkAvailability();
 				await emulatorServices.checkDependencies();

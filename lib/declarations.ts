@@ -51,23 +51,73 @@ interface IOpener {
 }
 
 interface ILiveSyncService {
-	liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => Promise<void>): Promise<void>;
+	liveSync(platform: string, projectData: IProjectData, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => Promise<void>): Promise<void>;
+}
+
+interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase {
+	/**
+	 * Refreshes the application's content on a device
+	 * @param  {Mobile.IDeviceAppData} deviceAppData Information about the application and the device.
+	 * @param  {Mobile.ILocalToDevicePathData[]} localToDevicePaths Object containing a mapping of file paths from the system to the device.
+	 * @param  {boolean} forceExecuteFullSync If this is passed a full LiveSync is performed instead of an incremental one.
+	 * @param  {string} projectId Project identifier - for example org.nativescript.livesync.
+	 * @return {Promise<void>}
+	 */
+	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean, projectId: string): Promise<void>;
+	/**
+	 * Removes specified files from a connected device
+	 * @param  {string} appIdentifier Application identifier.
+	 * @param  {Mobile.ILocalToDevicePathData[]} localToDevicePaths Object containing a mapping of file paths from the system to the device.
+	 * @param  {string} projectId Project identifier - for example org.nativescript.livesync.
+	 * @return {Promise<void>}
+	 */
+	removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectId: string): Promise<void>;
+	afterInstallApplicationAction?(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectId: string): Promise<boolean>;
 }
 
 interface IPlatformLiveSyncService {
-	fullSync(postAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>): Promise<void>;
-	partialSync(event: string, filePath: string, dispatcher: IFutureDispatcher, afterFileSyncAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>): Promise<void>;
-	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], isFullSync: boolean): Promise<void>;
+	fullSync(projectData: IProjectData, postAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>): Promise<void>;
+	partialSync(event: string, filePath: string, dispatcher: IFutureDispatcher, afterFileSyncAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>, projectData: IProjectData): Promise<void>;
+	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], isFullSync: boolean, projectId: string): Promise<void>;
 }
 
-interface IOptions extends ICommonOptions {
+interface IBundle {
+	bundle: boolean;
+}
+
+interface IPlatformTemplate {
+	platformTemplate: string;
+}
+
+interface IEmulator {
+	emulator: boolean;
+}
+
+interface IClean {
+	clean: boolean;
+}
+
+interface IProvision {
+	provision: any;
+}
+
+interface ITeamIdentifier {
+	teamId: string;
+}
+
+interface IAndroidReleaseOptions {
+	keyStoreAlias?: string;
+	keyStoreAliasPassword?: string;
+	keyStorePassword?: string;
+	keyStorePath?: string;
+}
+
+interface IOptions extends ICommonOptions, IBundle, IPlatformTemplate, IEmulator, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions {
 	all: boolean;
-	baseConfig: string;
 	client: boolean;
 	compileSdk: number;
 	copyTo: string;
 	debugTransport: boolean;
-	emulator: boolean;
 	forDevice: boolean;
 	framework: string;
 	frameworkName: string;
@@ -76,24 +126,39 @@ interface IOptions extends ICommonOptions {
 	ignoreScripts: boolean; //npm flag
 	disableNpmInstall: boolean;
 	ipa: string;
-	keyStoreAlias: string;
-	keyStoreAliasPassword: string;
-	keyStorePassword: string;
-	keyStorePath: string;
-	ng: boolean;
 	tsc: boolean;
+	ng: boolean;
 	androidTypings: boolean;
-	bundle: boolean;
-	platformTemplate: string;
 	port: Number;
 	production: boolean; //npm flag
 	sdk: string;
-	teamId: string;
 	syncAllFiles: boolean;
 	liveEdit: boolean;
 	chrome: boolean;
-	clean: boolean;
-	provision: any;
+}
+
+interface IAndroidBuildOptionsSettings extends IAndroidReleaseOptions, IRelease { }
+
+interface IAppFilesUpdaterOptions extends IBundle, IRelease { }
+
+interface IPlatformBuildData extends IAppFilesUpdaterOptions, IBuildConfig { }
+
+interface IDeviceEmulator extends IEmulator, IDeviceIdentifier { }
+
+interface IRunPlatformOptions extends IJustLaunch, IDeviceEmulator { }
+
+interface IDeployPlatformOptions extends IPlatformTemplate, IRelease, IClean, IDeviceEmulator, IProvision, ITeamIdentifier {
+	projectDir: string;
+	forceInstall?: boolean;
+}
+
+interface IEmulatePlatformOptions extends IJustLaunch, IDeployPlatformOptions, IAvailableDevices, IAvd {
+}
+
+interface IUpdatePlatformOptions extends IPlatformTemplate {
+	currentVersion: string;
+	newVersion: string;
+	canUpdate: boolean;
 }
 
 interface IInitService {
@@ -229,13 +294,13 @@ interface ISocketProxyFactory {
 }
 
 interface IiOSNotification {
-	waitForDebug: string;
-	attachRequest: string;
-	appLaunching: string;
-	readyForAttach: string;
-	attachAvailabilityQuery: string;
-	alreadyConnected: string;
-	attachAvailable: string;
+	getWaitForDebug(projectId: string): string;
+	getAttachRequest(projectId: string): string;
+	getAppLaunching(projectId: string): string;
+	getReadyForAttach(projectId: string): string;
+	getAttachAvailabilityQuery(projectId: string): string;
+	getAlreadyConnected(projectId: string): string;
+	getAttachAvailable(projectId: string): string;
 }
 
 interface IiOSNotificationService {
@@ -243,8 +308,8 @@ interface IiOSNotificationService {
 }
 
 interface IiOSSocketRequestExecutor {
-	executeLaunchRequest(device: Mobile.IiOSDevice, timeout: number, readyForAttachTimeout: number, shouldBreak?: boolean): Promise<void>;
-	executeAttachRequest(device: Mobile.IiOSDevice, timeout: number): Promise<void>;
+	executeLaunchRequest(device: Mobile.IiOSDevice, timeout: number, readyForAttachTimeout: number, projectId: string, shouldBreak?: boolean): Promise<void>;
+	executeAttachRequest(device: Mobile.IiOSDevice, timeout: number, projectId: string): Promise<void>;
 }
 
 /**

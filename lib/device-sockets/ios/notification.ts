@@ -7,38 +7,36 @@ export class IOSNotification implements IiOSNotification {
 	private static ALREADY_CONNECTED_NOTIFICATION_NAME = "AlreadyConnected";
 	private static ATTACH_AVAILABLE_NOTIFICATION_NAME = "AttachAvailable";
 
-	constructor(private $projectData: IProjectData) { }
-
-	public get waitForDebug() {
-		return this.formatNotification(IOSNotification.WAIT_FOR_DEBUG_NOTIFICATION_NAME);
+	public getWaitForDebug(projectId: string) {
+		return this.formatNotification(IOSNotification.WAIT_FOR_DEBUG_NOTIFICATION_NAME, projectId);
 	}
 
-	public get attachRequest(): string {
-		return this.formatNotification(IOSNotification.ATTACH_REQUEST_NOTIFICATION_NAME);
+	public getAttachRequest(projectId: string): string {
+		return this.formatNotification(IOSNotification.ATTACH_REQUEST_NOTIFICATION_NAME, projectId);
 	}
 
-	public get appLaunching(): string {
-		return this.formatNotification(IOSNotification.APP_LAUNCHING_NOTIFICATION_NAME);
+	public getAppLaunching(projectId: string): string {
+		return this.formatNotification(IOSNotification.APP_LAUNCHING_NOTIFICATION_NAME, projectId);
 	}
 
-	public get readyForAttach(): string {
-		return this.formatNotification(IOSNotification.READY_FOR_ATTACH_NOTIFICATION_NAME);
+	public getReadyForAttach(projectId: string): string {
+		return this.formatNotification(IOSNotification.READY_FOR_ATTACH_NOTIFICATION_NAME, projectId);
 	}
 
-	public get attachAvailabilityQuery() {
-		return this.formatNotification(IOSNotification.ATTACH_AVAILABILITY_QUERY_NOTIFICATION_NAME);
+	public getAttachAvailabilityQuery(projectId: string) {
+		return this.formatNotification(IOSNotification.ATTACH_AVAILABILITY_QUERY_NOTIFICATION_NAME, projectId);
 	}
 
-	public get alreadyConnected() {
-		return this.formatNotification(IOSNotification.ALREADY_CONNECTED_NOTIFICATION_NAME);
+	public getAlreadyConnected(projectId: string) {
+		return this.formatNotification(IOSNotification.ALREADY_CONNECTED_NOTIFICATION_NAME, projectId);
 	}
 
-	public get attachAvailable() {
-		return this.formatNotification(IOSNotification.ATTACH_AVAILABLE_NOTIFICATION_NAME);
+	public getAttachAvailable(projectId: string) {
+		return this.formatNotification(IOSNotification.ATTACH_AVAILABLE_NOTIFICATION_NAME, projectId);
 	}
 
-	private formatNotification(notification: string) {
-		return `${this.$projectData.projectId}:NativeScript.Debug.${notification}`;
+	private formatNotification(notification: string, projectId: string) {
+		return `${projectId}:NativeScript.Debug.${notification}`;
 	}
 }
 $injector.register("iOSNotification", IOSNotification);

@@ -16,7 +16,9 @@ class TestInitCommand implements ICommand {
 		private $fs: IFileSystem,
 		private $resources: IResourceLoader,
 		private $pluginsService: IPluginsService,
-		private $logger: ILogger) { }
+		private $logger: ILogger) {
+			this.$projectData.initializeProjectData();
+		}
 
 	public async execute(args: string[]): Promise<void> {
 		let projectDir = this.$projectData.projectDir;
@@ -37,7 +39,7 @@ class TestInitCommand implements ICommand {
 			});
 		}
 
-		await this.$pluginsService.add('nativescript-unit-test-runner');
+		await this.$pluginsService.add('nativescript-unit-test-runner', this.$projectData);
 
 		let testsDir = path.join(projectDir, 'app/tests');
 		let shouldCreateSampleTests = true;

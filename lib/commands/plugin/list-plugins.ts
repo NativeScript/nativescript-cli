@@ -4,10 +4,13 @@ export class ListPluginsCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(private $pluginsService: IPluginsService,
-		private $logger: ILogger) { }
+		private $projectData: IProjectData,
+		private $logger: ILogger) {
+			this.$projectData.initializeProjectData();
+		}
 
 	public async execute(args: string[]): Promise<void> {
-		let installedPlugins: IPackageJsonDepedenciesResult = this.$pluginsService.getDependenciesFromPackageJson();
+		let installedPlugins: IPackageJsonDepedenciesResult = this.$pluginsService.getDependenciesFromPackageJson(this.$projectData.projectDir);
 
 		let headers: string[] = ["Plugin", "Version"];
 		let dependenciesData: string[][] = this.createTableCells(installedPlugins.dependencies);

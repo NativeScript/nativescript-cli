@@ -12,5 +12,5 @@ interface IEmulatorPlatformService {
 	getEmulatorInfo(platform: string, nameOfId: string): Promise<IEmulatorInfo>;
 	getiOSEmulators(): Promise<IEmulatorInfo[]>;
 	getAndroidEmulators(): Promise<IEmulatorInfo[]>;
-	startEmulator(info: IEmulatorInfo): Promise<void>;
+	startEmulator(info: IEmulatorInfo, projectData: IProjectData): Promise<void>;
 }

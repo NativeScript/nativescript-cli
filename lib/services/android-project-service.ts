@@ -27,8 +27,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		$fs: IFileSystem,
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
-		private $options: IOptions,
-		$projectData: IProjectData,
 		$projectDataService: IProjectDataService,
 		private $sysInfo: ISysInfo,
 		private $injector: IInjector,
@@ -36,15 +34,21 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $config: IConfiguration,
 		private $npm: INodePackageManager) {
-		super($fs, $projectData, $projectDataService);
+		super($fs, $projectDataService);
 		this._androidProjectPropertiesManagers = Object.create(null);
 	}
 
+	private _platformsDirCache: string = null;
 	private _platformData: IPlatformData = null;
-	public get platformData(): IPlatformData {
-		if (!this._platformData) {
-			let projectRoot = path.join(this.$projectData.platformsDir, "android");
-			let packageName = this.getProjectNameFromId();
+	public getPlatformData(projectData: IProjectData): IPlatformData {
+		if (!projectData && !this._platformData) {
+			throw new Error("First call of getPlatformData without providing projectData.");
+		}
+
+		if (projectData && projectData.platformsDir && this._platformsDirCache !== projectData.platformsDir) {
+			this._platformsDirCache = projectData.platformsDir;
+			let projectRoot = path.join(projectData.platformsDir, "android");
+			let packageName = this.getProjectNameFromId(projectData);
 			this._platformData = {
 				frameworkPackageName: "tns-android",
 				normalizedPlatformName: "Android",
@@ -56,8 +60,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				validPackageNamesForDevice: [
 					`${packageName}-debug.apk`,
 					`${packageName}-release.apk`,
-					`${this.$projectData.projectName}-debug.apk`,
-					`${this.$projectData.projectName}-release.apk`
+					`${projectData.projectName}-debug.apk`,
+					`${projectData.projectName}-release.apk`
 				],
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
 				configurationFileName: "AndroidManifest.xml",
@@ -74,17 +78,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return Promise.resolve(true);
 	}
 
-	public getAppResourcesDestinationDirectoryPath(frameworkVersion?: string): string {
-		if (this.canUseGradle(frameworkVersion)) {
-			return path.join(this.platformData.projectRoot, "src", "main", "res");
+	public getAppResourcesDestinationDirectoryPath(projectData: IProjectData, frameworkVersion?: string): string {
+		if (this.canUseGradle(projectData, frameworkVersion)) {
+			return path.join(this.getPlatformData(projectData).projectRoot, "src", "main", "res");
 		}
 
-		return path.join(this.platformData.projectRoot, "res");
+		return path.join(this.getPlatformData(projectData).projectRoot, "res");
 	}
 
-	public async validate(): Promise<void> {
-		this.validatePackageName(this.$projectData.projectId);
-		this.validateProjectName(this.$projectData.projectName);
+	public async validate(projectData: IProjectData): Promise<void> {
+		this.validatePackageName(projectData.projectId);
+		this.validateProjectName(projectData.projectName);
 
 		// this call will fail in case `android` is not set correctly.
 		await this.$androidToolsInfo.getPathToAndroidExecutable({ showWarningsAsErrors: true });
@@ -94,37 +98,37 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		await this.$androidToolsInfo.validateJavacVersion(javaCompilerVersion, { showWarningsAsErrors: true });
 	}
 
-	public async createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): Promise<void> {
+	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, pathToTemplate?: string): Promise<void> {
 		if (semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
 			this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
 		}
 
-		this.$fs.ensureDirectoryExists(this.platformData.projectRoot);
+		this.$fs.ensureDirectoryExists(this.getPlatformData(projectData).projectRoot);
 		await this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
 		let androidToolsInfo = await this.$androidToolsInfo.getToolsInfo();
 		let targetSdkVersion = androidToolsInfo.targetSdkVersion;
 		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
-		this.copy(this.platformData.projectRoot, frameworkDir, "libs", "-R");
+		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "libs", "-R");
 
 		if (pathToTemplate) {
-			let mainPath = path.join(this.platformData.projectRoot, "src", "main");
+			let mainPath = path.join(this.getPlatformData(projectData).projectRoot, "src", "main");
 			this.$fs.createDirectory(mainPath);
 			shell.cp("-R", path.join(path.resolve(pathToTemplate), "*"), mainPath);
 		} else {
-			this.copy(this.platformData.projectRoot, frameworkDir, "src", "-R");
+			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "src", "-R");
 		}
-		this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle build-tools", "-Rf");
+		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "build.gradle settings.gradle build-tools", "-Rf");
 
 		try {
-			this.copy(this.platformData.projectRoot, frameworkDir, "gradle.properties", "-Rf");
+			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradle.properties", "-Rf");
 		} catch (e) {
 			this.$logger.warn(`\n${e}\nIt's possible, the final .apk file will contain all architectures instead of the ones described in the abiFilters!\nYou can fix this by using the latest android platform.`);
 		}
 
-		this.copy(this.platformData.projectRoot, frameworkDir, "gradle", "-R");
-		this.copy(this.platformData.projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
+		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradle", "-R");
+		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
 
-		this.cleanResValues(targetSdkVersion, frameworkVersion);
+		this.cleanResValues(targetSdkVersion, projectData, frameworkVersion);
 
 		let npmConfig = {
 			"save": true,
@@ -133,20 +137,20 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			"silent": true
 		};
 
-		let projectPackageJson: any = this.$fs.readJson(this.$projectData.projectFilePath);
+		let projectPackageJson: any = this.$fs.readJson(projectData.projectFilePath);
 
 		for (let dependency of AndroidProjectService.REQUIRED_DEV_DEPENDENCIES) {
 			let dependencyVersionInProject = (projectPackageJson.dependencies && projectPackageJson.dependencies[dependency.name]) ||
 				(projectPackageJson.devDependencies && projectPackageJson.devDependencies[dependency.name]);
 
 			if (!dependencyVersionInProject) {
-				await this.$npm.install(`${dependency.name}@${dependency.version}`, this.$projectData.projectDir, npmConfig);
+				await this.$npm.install(`${dependency.name}@${dependency.version}`, projectData.projectDir, npmConfig);
 			} else {
 				let cleanedVerson = semver.clean(dependencyVersionInProject);
 
 				// The plugin version is not valid. Check node_modules for the valid version.
 				if (!cleanedVerson) {
-					let pathToPluginPackageJson = path.join(this.$projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, dependency.name, constants.PACKAGE_JSON_FILE_NAME);
+					let pathToPluginPackageJson = path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, dependency.name, constants.PACKAGE_JSON_FILE_NAME);
 					dependencyVersionInProject = this.$fs.exists(pathToPluginPackageJson) && this.$fs.readJson(pathToPluginPackageJson).version;
 				}
 
@@ -157,8 +161,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		};
 	}
 
-	private cleanResValues(targetSdkVersion: number, frameworkVersion: string): void {
-		let resDestinationDir = this.getAppResourcesDestinationDirectoryPath(frameworkVersion);
+	private cleanResValues(targetSdkVersion: number, projectData: IProjectData, frameworkVersion: string): void {
+		let resDestinationDir = this.getAppResourcesDestinationDirectoryPath(projectData, frameworkVersion);
 		let directoriesInResFolder = this.$fs.readDirectory(resDestinationDir);
 		let directoriesToClean = directoriesInResFolder
 			.map(dir => {
@@ -179,37 +183,37 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		_.map(directoriesToClean, dir => this.$fs.deleteDirectory(dir));
 	}
 
-	public async interpolateData(): Promise<void> {
+	public async interpolateData(projectData: IProjectData): Promise<void> {
 		// Interpolate the apilevel and package
-		await this.interpolateConfigurationFile();
+		await this.interpolateConfigurationFile(projectData);
 
-		let stringsFilePath = path.join(this.getAppResourcesDestinationDirectoryPath(), 'values', 'strings.xml');
-		shell.sed('-i', /__NAME__/, this.$projectData.projectName, stringsFilePath);
-		shell.sed('-i', /__TITLE_ACTIVITY__/, this.$projectData.projectName, stringsFilePath);
+		let stringsFilePath = path.join(this.getAppResourcesDestinationDirectoryPath(projectData), 'values', 'strings.xml');
+		shell.sed('-i', /__NAME__/, projectData.projectName, stringsFilePath);
+		shell.sed('-i', /__TITLE_ACTIVITY__/, projectData.projectName, stringsFilePath);
 
-		let gradleSettingsFilePath = path.join(this.platformData.projectRoot, "settings.gradle");
-		shell.sed('-i', /__PROJECT_NAME__/, this.getProjectNameFromId(), gradleSettingsFilePath);
+		let gradleSettingsFilePath = path.join(this.getPlatformData(projectData).projectRoot, "settings.gradle");
+		shell.sed('-i', /__PROJECT_NAME__/, this.getProjectNameFromId(projectData), gradleSettingsFilePath);
 
 		// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
-		let userAppGradleFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, "app.gradle");
+		let userAppGradleFilePath = path.join(projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, "app.gradle");
 
 		try {
-			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, userAppGradleFilePath);
+			shell.sed('-i', /__PACKAGE__/, projectData.projectId, userAppGradleFilePath);
 		} catch (e) {
 			this.$logger.warn(`\n${e}.\nCheck if you're using an outdated template and update it.`);
 		}
 	}
 
-	public async interpolateConfigurationFile(): Promise<void> {
-		let manifestPath = this.platformData.configurationFilePath;
-		shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, manifestPath);
-		shell.sed('-i', /__APILEVEL__/, this.$options.sdk || (await this.$androidToolsInfo.getToolsInfo()).compileSdkVersion.toString(), manifestPath);
+	public async interpolateConfigurationFile(projectData: IProjectData, sdk?: string): Promise<void> {
+		let manifestPath = this.getPlatformData(projectData).configurationFilePath;
+		shell.sed('-i', /__PACKAGE__/, projectData.projectId, manifestPath);
+		shell.sed('-i', /__APILEVEL__/, sdk || (await this.$androidToolsInfo.getToolsInfo()).compileSdkVersion.toString(), manifestPath);
 	}
 
-	private getProjectNameFromId(): string {
+	private getProjectNameFromId(projectData: IProjectData): string {
 		let id: string;
-		if (this.$projectData && this.$projectData.projectId) {
-			id = this.$projectData.projectId.split(".")[2];
+		if (projectData && projectData.projectId) {
+			id = projectData.projectId.split(".")[2];
 		}
 
 		return id;
@@ -219,13 +223,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return null;
 	}
 
-	public canUpdatePlatform(newInstalledModuleDir: string): boolean {
+	public canUpdatePlatform(newInstalledModuleDir: string, projectData: IProjectData): boolean {
 		return true;
 	}
 
-	public async updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean, addPlatform?: Function, removePlatforms?: (platforms: string[]) => Promise<void>): Promise<boolean> {
+	public async updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean, projectData: IProjectData, addPlatform?: Function, removePlatforms?: (platforms: string[]) => Promise<void>): Promise<boolean> {
 		if (semver.eq(newVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
-			let platformLowercase = this.platformData.normalizedPlatformName.toLowerCase();
+			let platformLowercase = this.getPlatformData(projectData).normalizedPlatformName.toLowerCase();
 			await removePlatforms([platformLowercase.split("@")[0]]);
 			await addPlatform(platformLowercase);
 			return false;
@@ -234,9 +238,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return true;
 	}
 
-	public async buildProject(projectRoot: string, buildConfig?: IBuildConfig): Promise<void> {
-		if (this.canUseGradle()) {
-			let buildOptions = await this.getBuildOptions();
+	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
+		if (this.canUseGradle(projectData)) {
+			let buildOptions = await this.getBuildOptions(buildConfig, projectData);
 			if (this.$logger.getLevel() === "TRACE") {
 				buildOptions.unshift("--stacktrace");
 				buildOptions.unshift("--debug");
@@ -246,19 +250,26 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			if (this.$hostInfo.isWindows) {
 				gradleBin += ".bat"; // cmd command line parsing rules are weird. Avoid issues with quotes. See https://github.com/apache/cordova-android/blob/master/bin/templates/cordova/lib/builders/GradleBuilder.js for another approach
 			}
-			await this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot });
+
+			this.$childProcess.on(constants.BUILD_OUTPUT_EVENT_NAME, (data: any) => {
+				this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
+			});
+			await this.spawn(gradleBin,
+				buildOptions,
+				{ stdio: buildConfig.buildOutputStdio || "inherit", cwd: this.getPlatformData(projectData).projectRoot },
+				{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
 		} else {
 			this.$errors.failWithoutHelp("Cannot complete build because this project is ANT-based." + EOL +
 				"Run `tns platform remove android && tns platform add android` to switch to Gradle and try again.");
 		}
 	}
 
-	private async getBuildOptions(): Promise<Array<string>> {
+	private async getBuildOptions(settings: IAndroidBuildOptionsSettings, projectData: IProjectData): Promise<Array<string>> {
 		await this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
 
 		let androidToolsInfo = await this.$androidToolsInfo.getToolsInfo();
 		let compileSdk = androidToolsInfo.compileSdkVersion;
-		let targetSdk = this.getTargetFromAndroidManifest() || compileSdk;
+		let targetSdk = this.getTargetFromAndroidManifest(projectData) || compileSdk;
 		let buildToolsVersion = androidToolsInfo.buildToolsVersion;
 		let appCompatVersion = androidToolsInfo.supportRepositoryVersion;
 		let generateTypings = androidToolsInfo.generateTypings;
@@ -270,23 +281,23 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			`-PgenerateTypings=${generateTypings}`
 		];
 
-		if (this.$options.release) {
+		if (settings.release) {
 			buildOptions.push("-Prelease");
-			buildOptions.push(`-PksPath=${path.resolve(this.$options.keyStorePath)}`);
-			buildOptions.push(`-Palias=${this.$options.keyStoreAlias}`);
-			buildOptions.push(`-Ppassword=${this.$options.keyStoreAliasPassword}`);
-			buildOptions.push(`-PksPassword=${this.$options.keyStorePassword}`);
+			buildOptions.push(`-PksPath=${path.resolve(settings.keyStorePath)}`);
+			buildOptions.push(`-Palias=${settings.keyStoreAlias}`);
+			buildOptions.push(`-Ppassword=${settings.keyStoreAliasPassword}`);
+			buildOptions.push(`-PksPassword=${settings.keyStorePassword}`);
 		}
 
 		return buildOptions;
 	}
 
-	public async buildForDeploy(projectRoot: string, buildConfig?: IBuildConfig): Promise<void> {
-		return this.buildProject(projectRoot, buildConfig);
+	public async buildForDeploy(projectRoot: string, projectData: IProjectData, buildConfig?: IBuildConfig): Promise<void> {
+		return this.buildProject(projectRoot, projectData, buildConfig);
 	}
 
-	public isPlatformPrepared(projectRoot: string): boolean {
-		return this.$fs.exists(path.join(this.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
+	public isPlatformPrepared(projectRoot: string, projectData: IProjectData): boolean {
+		return this.$fs.exists(path.join(this.getPlatformData(projectData).appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
 	}
 
 	public getFrameworkFilesExtensions(): string[] {
@@ -297,8 +308,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		// Intentionally left empty.
 	}
 
-	public ensureConfigurationFileInAppResources(): void {
-		let originalAndroidManifestFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, this.platformData.configurationFileName);
+	public ensureConfigurationFileInAppResources(projectData: IProjectData): void {
+		let originalAndroidManifestFilePath = path.join(projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, this.getPlatformData(projectData).configurationFileName);
 
 		let manifestExists = this.$fs.exists(originalAndroidManifestFilePath);
 
@@ -307,29 +318,29 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			return;
 		}
 		// Overwrite the AndroidManifest from runtime.
-		this.$fs.copyFile(originalAndroidManifestFilePath, this.platformData.configurationFilePath);
+		this.$fs.copyFile(originalAndroidManifestFilePath, this.getPlatformData(projectData).configurationFilePath);
 	}
 
-	public prepareAppResources(appResourcesDirectoryPath: string): void {
-		let resourcesDirPath = path.join(appResourcesDirectoryPath, this.platformData.normalizedPlatformName);
+	public prepareAppResources(appResourcesDirectoryPath: string, projectData: IProjectData): void {
+		let resourcesDirPath = path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName);
 		let valuesDirRegExp = /^values/;
 		let resourcesDirs = this.$fs.readDirectory(resourcesDirPath).filter(resDir => !resDir.match(valuesDirRegExp));
 		_.each(resourcesDirs, resourceDir => {
-			this.$fs.deleteDirectory(path.join(this.getAppResourcesDestinationDirectoryPath(), resourceDir));
+			this.$fs.deleteDirectory(path.join(this.getAppResourcesDestinationDirectoryPath(projectData), resourceDir));
 		});
 	}
 
-	public async preparePluginNativeCode(pluginData: IPluginData): Promise<void> {
+	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
 		let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
-		await this.processResourcesFromPlugin(pluginData, pluginPlatformsFolderPath);
+		await this.processResourcesFromPlugin(pluginData, pluginPlatformsFolderPath, projectData);
 	}
 
 	public async processConfigurationFilesFromAppResources(): Promise<void> {
 		return;
 	}
 
-	private async processResourcesFromPlugin(pluginData: IPluginData, pluginPlatformsFolderPath: string): Promise<void> {
-		let configurationsDirectoryPath = path.join(this.platformData.projectRoot, "configurations");
+	private async processResourcesFromPlugin(pluginData: IPluginData, pluginPlatformsFolderPath: string, projectData: IProjectData): Promise<void> {
+		let configurationsDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "configurations");
 		this.$fs.ensureDirectoryExists(configurationsDirectoryPath);
 
 		let pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginData.name);
@@ -337,14 +348,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath);
 
 			// Copy all resources from plugin
-			let resourcesDestinationDirectoryPath = path.join(this.platformData.projectRoot, "src", pluginData.name);
+			let resourcesDestinationDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "src", pluginData.name);
 			this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath);
 			shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
 
 			const filesForInterpolation = this.$fs.enumerateFilesInDirectorySync(resourcesDestinationDirectoryPath, file => this.$fs.getFsStats(file).isDirectory() || path.extname(file) === constants.XML_FILE_EXTENSION) || [];
 			for (let file of filesForInterpolation) {
 				this.$logger.trace(`Interpolate data for plugin file: ${file}`);
-				await this.$pluginVariablesService.interpolate(pluginData, file);
+				await this.$pluginVariablesService.interpolate(pluginData, file, projectData);
 			}
 		}
 
@@ -355,12 +366,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public async removePluginNativeCode(pluginData: IPluginData): Promise<void> {
+	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
 		try {
 			// check whether the dependency that's being removed has native code
-			let pluginConfigDir = path.join(this.platformData.projectRoot, "configurations", pluginData.name);
+			let pluginConfigDir = path.join(this.getPlatformData(projectData).projectRoot, "configurations", pluginData.name);
 			if (this.$fs.exists(pluginConfigDir)) {
-				await this.cleanProject(this.platformData.projectRoot, []);
+				await this.cleanProject(this.getPlatformData(projectData).projectRoot, [], projectData);
 			}
 		} catch (e) {
 			if (e.code === "ENOENT") {
@@ -371,32 +382,32 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public async afterPrepareAllPlugins(): Promise<void> {
+	public async afterPrepareAllPlugins(projectData: IProjectData): Promise<void> {
 		return;
 	}
 
-	public async beforePrepareAllPlugins(dependencies?: IDictionary<IDependencyData>): Promise<void> {
+	public async beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDictionary<IDependencyData>): Promise<void> {
 		if (!this.$config.debugLivesync) {
 			if (dependencies) {
-				let platformDir = path.join(this.$projectData.platformsDir, "android");
+				let platformDir = path.join(projectData.platformsDir, "android");
 				let buildDir = path.join(platformDir, "build-tools");
 				let checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
 				if (this.$fs.exists(checkV8dependants)) {
 					let stringifiedDependencies = JSON.stringify(dependencies);
-					await this.spawn('node', [checkV8dependants, stringifiedDependencies, this.$projectData.platformsDir], { stdio: "inherit" });
+					await this.spawn('node', [checkV8dependants, stringifiedDependencies, projectData.platformsDir], { stdio: "inherit" });
 				}
 			}
 
-			let buildOptions = await this.getBuildOptions();
+			// We don't need release options here
+			let buildOptions = await this.getBuildOptions({ release: false }, projectData);
 
-			let projectRoot = this.platformData.projectRoot;
+			let projectRoot = this.getPlatformData(projectData).projectRoot;
 
-			await this.cleanProject(projectRoot, buildOptions);
+			await this.cleanProject(projectRoot, buildOptions, projectData);
 		}
 	}
 
-	public async stopServices(): Promise<ISpawnResult> {
-		let projectRoot = this.platformData.projectRoot;
+	public stopServices(projectRoot: string): Promise<ISpawnResult> {
 		let gradleBin = path.join(projectRoot, "gradlew");
 		if (this.$hostInfo.isWindows) {
 			gradleBin += ".bat";
@@ -405,7 +416,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this.$childProcess.spawnFromEvent(gradleBin, ["--stop", "--quiet"], "close", { stdio: "inherit", cwd: projectRoot });
 	}
 
-	public async cleanProject(projectRoot: string, options: string[]): Promise<void> {
+	public async cleanProject(projectRoot: string, options: string[], projectData: IProjectData): Promise<void> {
 		options.unshift("clean");
 
 		let gradleBin = path.join(projectRoot, "gradlew");
@@ -413,20 +424,20 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			gradleBin += ".bat";
 		}
 
-		await this.spawn(gradleBin, options, { stdio: "inherit", cwd: this.platformData.projectRoot });
+		await this.spawn(gradleBin, options, { stdio: "inherit", cwd: this.getPlatformData(projectData).projectRoot });
 	}
 
-	public async deploy(deviceIdentifier: string): Promise<void> {
+	public async deploy(deviceIdentifier: string, projectData: IProjectData): Promise<void> {
 		let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
-		let deviceRootPath = `/data/local/tmp/${this.$projectData.projectId}`;
+		let deviceRootPath = `/data/local/tmp/${projectData.projectId}`;
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
 	}
 
 	private _canUseGradle: boolean;
-	private canUseGradle(frameworkVersion?: string): boolean {
+	private canUseGradle(projectData: IProjectData, frameworkVersion?: string): boolean {
 		if (!this._canUseGradle) {
 			if (!frameworkVersion) {
-				const frameworkInfoInProjectFile = this.$projectDataService.getNSValue(this.$projectData.projectDir, this.platformData.frameworkPackageName);
+				const frameworkInfoInProjectFile = this.$projectDataService.getNSValue(projectData.projectDir, this.getPlatformData(projectData).frameworkPackageName);
 				frameworkVersion = frameworkInfoInProjectFile && frameworkInfoInProjectFile.version;
 			}
 
@@ -441,8 +452,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		shell.cp(cpArg, paths, projectRoot);
 	}
 
-	private async spawn(command: string, args: string[], opts?: any): Promise<ISpawnResult> {
-		return this.$childProcess.spawnFromEvent(command, args, "close", opts || { stdio: "inherit" });
+	private async spawn(command: string, args: string[], opts?: any, spawnOpts?: ISpawnFromEventOptions): Promise<ISpawnResult> {
+		return this.$childProcess.spawnFromEvent(command, args, "close", opts || { stdio: "inherit" }, spawnOpts);
 	}
 
 	private validatePackageName(packageName: string): void {
@@ -469,10 +480,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	private getTargetFromAndroidManifest(): string {
+	private getTargetFromAndroidManifest(projectData: IProjectData): string {
 		let versionInManifest: string;
-		if (this.$fs.exists(this.platformData.configurationFilePath)) {
-			let targetFromAndroidManifest: string = this.$fs.readText(this.platformData.configurationFilePath);
+		if (this.$fs.exists(this.getPlatformData(projectData).configurationFilePath)) {
+			let targetFromAndroidManifest: string = this.$fs.readText(this.getPlatformData(projectData).configurationFilePath);
 			if (targetFromAndroidManifest) {
 				let match = targetFromAndroidManifest.match(/.*?android:targetSdkVersion=\"(.*?)\"/);
 				if (match && match[1]) {

@@ -4,11 +4,26 @@ export class DeployOnDeviceCommand implements ICommand {
 	constructor(private $platformService: IPlatformService,
 		private $platformCommandParameter: ICommandParameter,
 		private $options: IOptions,
+		private $projectData: IProjectData,
 		private $errors: IErrors,
-		private $mobileHelper: Mobile.IMobileHelper) { }
+		private $mobileHelper: Mobile.IMobileHelper) {
+			this.$projectData.initializeProjectData();
+		}
 
 	public async execute(args: string[]): Promise<void> {
-		return this.$platformService.deployPlatform(args[0], true);
+		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+		const deployOptions: IDeployPlatformOptions = {
+			clean: this.$options.clean,
+			device: this.$options.device,
+			projectDir: this.$options.path,
+			emulator: this.$options.emulator,
+			platformTemplate: this.$options.platformTemplate,
+			release: this.$options.release,
+			forceInstall: true,
+			provision: this.$options.provision,
+			teamId: this.$options.teamId
+		};
+		return this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, this.$options.provision);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -24,7 +39,7 @@ export class DeployOnDeviceCommand implements ICommand {
 			this.$errors.fail("When producing a release build, you need to specify all --key-store-* options.");
 		}
 
-		return this.$platformService.validateOptions(args[0]);
+		return this.$platformService.validateOptions(this.$options.provision, this.$projectData, args[0]);
 	}
 }
 

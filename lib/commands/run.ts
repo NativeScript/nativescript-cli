@@ -1,20 +1,40 @@
 export class RunCommandBase {
 	constructor(protected $platformService: IPlatformService,
 		protected $usbLiveSyncService: ILiveSyncService,
-		protected $options: IOptions) { }
+		protected $projectData: IProjectData,
+		protected $options: IOptions) {
+			this.$projectData.initializeProjectData();
+		}
 
 	public async executeCore(args: string[]): Promise<void> {
-		await this.$platformService.deployPlatform(args[0]);
+		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+		const deployOptions: IDeployPlatformOptions = {
+			clean: this.$options.clean,
+			device: this.$options.device,
+			emulator: this.$options.emulator,
+			projectDir: this.$options.path,
+			platformTemplate: this.$options.platformTemplate,
+			release: this.$options.release,
+			provision: this.$options.provision,
+			teamId: this.$options.teamId
+		};
+		await this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, this.$options.provision);
 
 		if (this.$options.bundle) {
 			this.$options.watch = false;
 		}
 
 		if (this.$options.release) {
-			return this.$platformService.runPlatform(args[0]);
+			const deployOpts: IRunPlatformOptions = {
+				device: this.$options.device,
+				emulator: this.$options.emulator,
+				justlaunch: this.$options.justlaunch,
+			};
+
+			return this.$platformService.runPlatform(args[0], deployOpts, this.$projectData);
 		}
 
-		return this.$usbLiveSyncService.liveSync(args[0]);
+		return this.$usbLiveSyncService.liveSync(args[0], this.$projectData);
 	}
 }
 
@@ -24,8 +44,9 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 	constructor($platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		$usbLiveSyncService: ILiveSyncService,
+		$projectData: IProjectData,
 		$options: IOptions) {
-		super($platformService, $usbLiveSyncService, $options);
+		super($platformService, $usbLiveSyncService, $projectData, $options);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -33,7 +54,7 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		return args.length === 0 && await this.$platformService.validateOptions(this.$platformsData.availablePlatforms.iOS);
+		return args.length === 0 && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.iOS);
 	}
 }
 
@@ -45,9 +66,10 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 	constructor($platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		$usbLiveSyncService: ILiveSyncService,
+		$projectData: IProjectData,
 		$options: IOptions,
 		private $errors: IErrors) {
-		super($platformService, $usbLiveSyncService, $options);
+		super($platformService, $usbLiveSyncService, $projectData, $options);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -58,7 +80,7 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 		if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 			this.$errors.fail("When producing a release build, you need to specify all --key-store-* options.");
 		}
-		return args.length === 0 && await this.$platformService.validateOptions(this.$platformsData.availablePlatforms.Android);
+		return args.length === 0 && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.Android);
 	}
 }
 

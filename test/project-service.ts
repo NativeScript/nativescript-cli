@@ -469,7 +469,8 @@ describe("project upgrade procedure tests", () => {
 		let isErrorThrown = false;
 
 		try {
-			testInjector.resolve("projectData"); // This should trigger upgrade procedure
+			let projectData: IProjectData = testInjector.resolve("projectData");
+			projectData.initializeProjectData(); // This should trigger upgrade procedure
 		} catch (err) {
 			isErrorThrown = true;
 			let expectedErrorMessage = "No project found at or above '%s' and neither was a --path specified.," + tempFolder;
@@ -498,7 +499,8 @@ describe("project upgrade procedure tests", () => {
 		let tnsProjectFilePath = path.join(tempFolder, ".tnsproject");
 		fs.writeJson(tnsProjectFilePath, tnsProjectData);
 
-		testInjector.resolve("projectData"); // This should trigger upgrade procedure
+		let projectData: IProjectData = testInjector.resolve("projectData");
+		projectData.initializeProjectData(); // This should trigger upgrade procedure
 
 		let packageJsonFilePath = path.join(tempFolder, "package.json");
 		let packageJsonFileContent = require(packageJsonFilePath);
@@ -536,7 +538,8 @@ describe("project upgrade procedure tests", () => {
 		let packageJsonFilePath = path.join(tempFolder, "package.json");
 		fs.writeJson(packageJsonFilePath, packageJsonData);
 
-		testInjector.resolve("projectData"); // This should trigger upgrade procedure
+		let projectData: IProjectData = testInjector.resolve("projectData");
+		projectData.initializeProjectData(); // This should trigger upgrade procedure
 
 		let packageJsonFileContent = require(packageJsonFilePath);
 		let expectedPackageJsonContent: any = packageJsonData;

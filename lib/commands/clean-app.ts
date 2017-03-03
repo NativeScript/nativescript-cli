@@ -1,18 +1,23 @@
 export class CleanAppCommandBase {
 	constructor(protected $options: IOptions,
-		private $platformService: IPlatformService) { }
+		protected $projectData: IProjectData,
+		private $platformService: IPlatformService) {
+			this.$projectData.initializeProjectData();
+		}
 
 	public async execute(args: string[]): Promise<void> {
 		let platform = args[0].toLowerCase();
-		return this.$platformService.cleanDestinationApp(platform);
+		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+		return this.$platformService.cleanDestinationApp(platform, appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData);
 	}
 }
 
 export class CleanAppIosCommand extends CleanAppCommandBase implements ICommand {
 	constructor(protected $options: IOptions,
 		private $platformsData: IPlatformsData,
-		$platformService: IPlatformService) {
-		super($options, $platformService);
+		$platformService: IPlatformService,
+		$projectData: IProjectData) {
+		super($options, $projectData, $platformService);
 	}
 
 	public allowedParameters: ICommandParameter[] = [];
@@ -29,8 +34,9 @@ export class CleanAppAndroidCommand extends CleanAppCommandBase implements IComm
 
 	constructor(protected $options: IOptions,
 		private $platformsData: IPlatformsData,
-		$platformService: IPlatformService) {
-		super($options, $platformService);
+		$platformService: IPlatformService,
+		$projectData: IProjectData) {
+		super($options, $projectData, $platformService);
 	}
 
 	public async execute(args: string[]): Promise<void> {

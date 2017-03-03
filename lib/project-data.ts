@@ -45,12 +45,10 @@ export class ProjectData implements IProjectData {
 		private $logger: ILogger,
 		private $projectHelper: IProjectHelper,
 		private $staticConfig: IStaticConfig,
-		private $options: IOptions) {
-		this.initializeProjectData();
-	}
+		private $options: IOptions) { }
 
-	private initializeProjectData(): void {
-		let projectDir = this.$projectHelper.projectDir;
+	public initializeProjectData(projectDir? :string): void {
+		projectDir = projectDir || this.$projectHelper.projectDir;
 		// If no project found, projectDir should be null
 		if (projectDir) {
 			this.initializeProjectDataCore(projectDir);

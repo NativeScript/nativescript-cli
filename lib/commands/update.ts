@@ -4,13 +4,16 @@ import * as shelljs from "shelljs";
 export class UpdateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(private $projectData: IProjectData,
+	constructor(private $options: IOptions,
+		private $projectData: IProjectData,
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
 		private $fs: IFileSystem,
-		private $logger: ILogger) { }
+		private $logger: ILogger) {
+			this.$projectData.initializeProjectData();
+		}
 
 	public async execute(args: string[]): Promise<void> {
 		let folders = ["lib", "hooks", "platforms", "node_modules"];
@@ -56,12 +59,12 @@ export class UpdateCommand implements ICommand {
 	}
 
 	private async executeCore(args: string[], folders: string[]): Promise<void> {
-		let platforms = this.$platformService.getInstalledPlatforms();
-		let availablePlatforms = this.$platformService.getAvailablePlatforms();
+		let platforms = this.$platformService.getInstalledPlatforms(this.$projectData);
+		let availablePlatforms = this.$platformService.getAvailablePlatforms(this.$projectData);
 		let packagePlatforms: string[] = [];
 
 		for (let platform of availablePlatforms) {
-			let platformData = this.$platformsData.getPlatformData(platform);
+			let platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
 			const platformVersion = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
 			if (platformVersion) {
 				packagePlatforms.push(platform);
@@ -69,9 +72,9 @@ export class UpdateCommand implements ICommand {
 			}
 		}
 
-		this.$platformService.removePlatforms(platforms);
-		await this.$pluginsService.remove("tns-core-modules");
-		await this.$pluginsService.remove("tns-core-modules-widgets");
+		await this.$platformService.removePlatforms(platforms, this.$projectData);
+		await this.$pluginsService.remove("tns-core-modules", this.$projectData);
+		await this.$pluginsService.remove("tns-core-modules-widgets", this.$projectData);
 
 		for (let folder of folders) {
 			shelljs.rm("-fr", folder);
@@ -80,16 +83,16 @@ export class UpdateCommand implements ICommand {
 		platforms = platforms.concat(packagePlatforms);
 		if (args.length === 1) {
 			for (let platform of platforms) {
-				await this.$platformService.addPlatforms([platform + "@" + args[0]]);
+				await this.$platformService.addPlatforms([platform + "@" + args[0]], this.$options.platformTemplate, this.$projectData);
 			}
 
-			await this.$pluginsService.add("tns-core-modules@" + args[0]);
+			await this.$pluginsService.add("tns-core-modules@" + args[0], this.$projectData);
 		} else {
-			await this.$platformService.addPlatforms(platforms);
-			await this.$pluginsService.add("tns-core-modules");
+			await this.$platformService.addPlatforms(platforms, this.$options.platformTemplate, this.$projectData);
+			await this.$pluginsService.add("tns-core-modules", this.$projectData);
 		}
 
-		await this.$pluginsService.ensureAllDependenciesAreInstalled();
+		await this.$pluginsService.ensureAllDependenciesAreInstalled(this.$projectData);
 	}
 }
 

@@ -1,11 +1,15 @@
 export class AddPlatformCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(private $platformService: IPlatformService,
-		private $errors: IErrors) { }
+	constructor(private $options: IOptions,
+		private $platformService: IPlatformService,
+		private $projectData: IProjectData,
+		private $errors: IErrors) {
+		this.$projectData.initializeProjectData();
+	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$platformService.addPlatforms(args);
+		await this.$platformService.addPlatforms(args, this.$options.platformTemplate, this.$projectData);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -13,7 +17,7 @@ export class AddPlatformCommand implements ICommand {
 			this.$errors.fail("No platform specified. Please specify a platform to add");
 		}
 
-		_.each(args, arg => this.$platformService.validatePlatform(arg));
+		_.each(args, arg => this.$platformService.validatePlatform(arg, this.$projectData));
 
 		return true;
 	}

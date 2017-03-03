@@ -137,8 +137,8 @@ function mockBeginCommand(testInjector: IInjector, expectedErrorMessage: string)
 async function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: string, expectedErrorMessage: string, command?: string) {
 	createProjectFile(testInjector);
 
-	let pluginsService = testInjector.resolve("pluginsService");
-	pluginsService.getAllInstalledPlugins = () => {
+	let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+	pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 		return [{
 			name: ""
 		}];
@@ -210,8 +210,8 @@ describe("Plugins service", () => {
 				projectData.dependencies[pluginName] = "^1.0.0";
 				fs.writeJson(projectFilePath, projectData);
 
-				let pluginsService = testInjector.resolve("pluginsService");
-				pluginsService.getAllInstalledPlugins = () => {
+				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+				pluginsService.getAllInstalledPlugins = async (projData: IProjectData) => {
 					return [{
 						name: "plugin1"
 					}];
@@ -258,8 +258,10 @@ describe("Plugins service", () => {
 				};
 
 				// Mock pluginsService
-				let pluginsService = testInjector.resolve("pluginsService");
-				pluginsService.getAllInstalledPlugins = () => {
+				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+				let projectData: IProjectData = testInjector.resolve("projectData");
+				projectData.initializeProjectData();
+				pluginsService.getAllInstalledPlugins = async (projData: IProjectData) => {
 					return [{
 						name: ""
 					}];
@@ -275,7 +277,7 @@ describe("Plugins service", () => {
 					};
 				};
 
-				await pluginsService.add(pluginFolderPath);
+				await pluginsService.add(pluginFolderPath, projectData);
 
 				assert.isTrue(isWarningMessageShown);
 			});
@@ -283,8 +285,8 @@ describe("Plugins service", () => {
 				let pluginName = "plugin1";
 				let projectFolder = createProjectFile(testInjector);
 
-				let pluginsService = testInjector.resolve("pluginsService");
-				pluginsService.getAllInstalledPlugins = () => {
+				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 					return [{
 						name: ""
 					}];
@@ -318,8 +320,8 @@ describe("Plugins service", () => {
 				let pluginName = "plugin1";
 				let projectFolder = createProjectFile(testInjector);
 
-				let pluginsService = testInjector.resolve("pluginsService");
-				pluginsService.getAllInstalledPlugins = () => {
+				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 					return [{
 						name: ""
 					}];
@@ -366,8 +368,8 @@ describe("Plugins service", () => {
 				let fs = testInjector.resolve("fs");
 				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
 
-				let pluginsService = testInjector.resolve("pluginsService");
-				pluginsService.getAllInstalledPlugins = () => {
+				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 					return [{
 						name: ""
 					}];
@@ -409,8 +411,8 @@ describe("Plugins service", () => {
 				let fs = testInjector.resolve("fs");
 				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
 
-				let pluginsService = testInjector.resolve("pluginsService");
-				pluginsService.getAllInstalledPlugins = () => {
+				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 					return [{
 						name: ""
 					}];
@@ -449,8 +451,8 @@ describe("Plugins service", () => {
 				let fs = testInjector.resolve("fs");
 				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
 
-				let pluginsService = testInjector.resolve("pluginsService");
-				pluginsService.getAllInstalledPlugins = () => {
+				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 					return [{
 						name: ""
 					}];
@@ -491,8 +493,8 @@ describe("Plugins service", () => {
 			createAndroidManifestFile(projectFolder, fs);
 
 			// Mock plugins service
-			let pluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = () => {
+			let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+			pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 				return [{
 					name: ""
 				}];
@@ -516,6 +518,8 @@ describe("Plugins service", () => {
 
 			// Ensure the pluginDestinationPath folder exists
 			let pluginPlatformsDirPath = path.join(projectFolder, "node_modules", pluginName, "platforms", "android");
+			let projectData: IProjectData = testInjector.resolve("projectData");
+			projectData.initializeProjectData();
 			fs.ensureDirectoryExists(pluginPlatformsDirPath);
 
 			// Creates invalid plugin's AndroidManifest.xml file
@@ -531,7 +535,7 @@ describe("Plugins service", () => {
 				`\n@#[line:1,col:39].` +
 				`\n@#[line:1,col:39].`;
 			mockBeginCommand(testInjector, expectedErrorMessage);
-			await pluginsService.prepare(pluginJsonData, "android");
+			await pluginsService.prepare(pluginJsonData, "android", projectData);
 		});
 	});
 });

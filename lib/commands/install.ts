@@ -4,7 +4,8 @@ export class InstallCommand implements ICommand {
 	public enableHooks = false;
 	public allowedParameters: ICommandParameter[] = [this.$stringParameter];
 
-	constructor(private $platformsData: IPlatformsData,
+	constructor(private $options: IOptions,
+		private $platformsData: IPlatformsData,
 		private $platformService: IPlatformService,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
@@ -12,7 +13,9 @@ export class InstallCommand implements ICommand {
 		private $logger: ILogger,
 		private $fs: IFileSystem,
 		private $stringParameter: ICommandParameter,
-		private $npm: INodePackageManager) { }
+		private $npm: INodePackageManager) {
+			this.$projectData.initializeProjectData();
+		}
 
 	public async execute(args: string[]): Promise<void> {
 		return args[0] ? this.installModule(args[0]) : this.installProjectDependencies();
@@ -21,14 +24,14 @@ export class InstallCommand implements ICommand {
 	private async installProjectDependencies(): Promise<void> {
 		let error: string = "";
 
-		await this.$pluginsService.ensureAllDependenciesAreInstalled();
+		await this.$pluginsService.ensureAllDependenciesAreInstalled(this.$projectData);
 
 		for (let platform of this.$platformsData.platformsNames) {
-			let platformData = this.$platformsData.getPlatformData(platform);
+			let platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
 			const frameworkPackageData = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
 			if (frameworkPackageData && frameworkPackageData.version) {
 				try {
-					await this.$platformService.addPlatforms([`${platform}@${frameworkPackageData.version}`]);
+					await this.$platformService.addPlatforms([`${platform}@${frameworkPackageData.version}`], this.$options.platformTemplate, this.$projectData);
 				} catch (err) {
 					error = `${error}${EOL}${err}`;
 				}

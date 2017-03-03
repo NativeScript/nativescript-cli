@@ -4,14 +4,13 @@ import * as helpers from "../../common/helpers";
 import * as path from "path";
 import * as net from "net";
 
-class AndroidLiveSyncService implements IDeviceLiveSyncService {
+class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncService {
 	private static BACKEND_PORT = 18182;
 	private device: Mobile.IAndroidDevice;
 
 	constructor(_device: Mobile.IDevice,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $injector: IInjector,
-		private $projectData: IProjectData,
 		private $androidDebugService: IDebugService,
 		private $liveSyncProvider: ILiveSyncProvider) {
 		this.device = <Mobile.IAndroidDevice>(_device);
@@ -66,7 +65,7 @@ class AndroidLiveSyncService implements IDeviceLiveSyncService {
 		}
 	}
 
-	public async removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
+	public async removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectId: string): Promise<void> {
 		let deviceRootPath = this.getDeviceRootPath(appIdentifier);
 		_.each(localToDevicePaths, localToDevicePathData => {
 			let relativeUnixPath = _.trimStart(helpers.fromWindowsRelativePathToUnix(localToDevicePathData.getRelativeToProjectBasePath()), "/");
@@ -74,11 +73,11 @@ class AndroidLiveSyncService implements IDeviceLiveSyncService {
 			this.device.adb.executeShellCommand(["mkdir", "-p", path.dirname(deviceFilePath), "&& await ", "touch", deviceFilePath]);
 		});
 
-		await this.deviceHashService.removeHashes(localToDevicePaths);
+		await this.getDeviceHashService(projectId).removeHashes(localToDevicePaths);
 	}
 
-	public async afterInstallApplicationAction(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<boolean> {
-		await this.deviceHashService.uploadHashFileToDevice(localToDevicePaths);
+	public async afterInstallApplicationAction(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectId: string): Promise<boolean> {
+		await this.getDeviceHashService(projectId).uploadHashFileToDevice(localToDevicePaths);
 		return false;
 	}
 
@@ -114,10 +113,10 @@ class AndroidLiveSyncService implements IDeviceLiveSyncService {
 	}
 
 	private _deviceHashService: Mobile.IAndroidDeviceHashService;
-	private get deviceHashService(): Mobile.IAndroidDeviceHashService {
+	private getDeviceHashService(projectId: string): Mobile.IAndroidDeviceHashService {
 		if (!this._deviceHashService) {
 			let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
-			this._deviceHashService = this.$injector.resolve(AndroidDeviceHashService, { adb: adb, appIdentifier: this.$projectData.projectId });
+			this._deviceHashService = this.$injector.resolve(AndroidDeviceHashService, { adb: adb, appIdentifier: projectId });
 		}
 
 		return this._deviceHashService;

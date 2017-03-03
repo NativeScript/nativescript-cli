@@ -5,8 +5,8 @@ export class PlatformsData implements IPlatformsData {
 		$iOSProjectService: IPlatformProjectService) {
 
 		this.platformsData = {
-			ios: $iOSProjectService.platformData,
-			android: $androidProjectService.platformData
+			ios: $iOSProjectService,
+			android: $androidProjectService
 		};
 	}
 
@@ -14,8 +14,8 @@ export class PlatformsData implements IPlatformsData {
 		return Object.keys(this.platformsData);
 	}
 
-	public getPlatformData(platform: string): IPlatformData {
-		return this.platformsData[platform.toLowerCase()];
+	public getPlatformData(platform: string, projectData: IProjectData): IPlatformData {
+		return this.platformsData[platform.toLowerCase()].getPlatformData(projectData);
 	}
 
 	public get availablePlatforms(): any {

@@ -1,6 +1,6 @@
-import { suite, test/*, only */ } from "mocha-typescript";
+import { suite, test/*, only*/ } from "mocha-typescript";
 import { PublishIOS } from "../lib/commands/appstore-upload";
-import { PrompterStub, LoggerStub } from "./stubs";
+import { PrompterStub, LoggerStub, ProjectDataStub } from "./stubs";
 import * as chai from "chai";
 import * as yok from "../lib/common/yok";
 
@@ -16,6 +16,7 @@ class AppStore {
 	command: ICommand;
 	options: any;
 	prompter: PrompterStub;
+	projectData: ProjectDataStub;
 	platformService: any;
 	iOSPlatformData: any;
 	iOSProjectService: any;
@@ -52,6 +53,7 @@ class AppStore {
 				"logger": this.loggerService = new LoggerStub(),
 				"options": this.options = {},
 				"prompter": this.prompter = new PrompterStub(),
+				"projectData": this.projectData = new ProjectDataStub(),
 				"stringParameterBuilder": {},
 				"devicePlatformsConstants": {
 					"iOS": "iOS"
@@ -65,6 +67,7 @@ class AppStore {
 				}
 			}
 		});
+		this.projectData.initializeProjectData(this.iOSPlatformData.projectRoot);
 		this.command = this.injector.resolveCommand("appstore");
 	}
 
@@ -106,16 +109,16 @@ class AppStore {
 
 	expectArchive() {
 		this.expectedArchiveCalls = 1;
-		this.iOSProjectService.archive = (projectRoot: string) => {
+		this.iOSProjectService.archive = (projectData: IProjectData) => {
 			this.archiveCalls++;
-			chai.assert.equal(projectRoot, "/Users/person/git/MyProject");
+			chai.assert.equal(projectData.projectDir, "/Users/person/git/MyProject");
 			return Promise.resolve("/Users/person/git/MyProject/platforms/ios/archive/MyProject.xcarchive");
 		};
 	}
 
 	expectExportArchive(expectedOptions?: { teamID?: string }) {
 		this.expectedExportArchiveCalls = 1;
-		this.iOSProjectService.exportArchive = (options?: { teamID?: string, archivePath?: string }) => {
+		this.iOSProjectService.exportArchive = (projectData: IProjectData, options?: { teamID?: string, archivePath?: string }) => {
 			this.exportArchiveCalls++;
 			chai.assert.equal(options.archivePath, "/Users/person/git/MyProject/platforms/ios/archive/MyProject.xcarchive", "Expected xcarchive path to be the one that we just archived.");
 			if (expectedOptions && expectedOptions.teamID) {

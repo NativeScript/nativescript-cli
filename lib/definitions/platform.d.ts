@@ -1,32 +1,36 @@
-interface IPlatformService {
-	addPlatforms(platforms: string[]): Promise<void>;
+interface IPlatformService extends NodeJS.EventEmitter {
+	addPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData): Promise<void>;
 
 	/**
 	 * Gets list of all installed platforms (the ones for which <project dir>/platforms/<platform> exists).
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {string[]} List of currently installed platforms.
 	 */
-	getInstalledPlatforms(): string[];
+	getInstalledPlatforms(projectData: IProjectData): string[];
 
 	/**
 	 * Gets a list of all platforms that can be used on current OS, but are not installed at the moment.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {string[]} List of all available platforms.
 	 */
-	getAvailablePlatforms(): string[];
+	getAvailablePlatforms(projectData: IProjectData): string[];
 
 	/**
 	 * Returns a list of all currently prepared platforms.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {string[]} List of all prepared platforms.
 	 */
-	getPreparedPlatforms(): string[];
+	getPreparedPlatforms(projectData: IProjectData): string[];
 
 	/**
 	 * Remove platforms from specified project (`<project dir>/platforms/<platform>` dir).
 	 * @param {string[]} platforms Platforms to be removed.
-	 * @returns {void}
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @returns {Promise<void>}
 	 */
-	removePlatforms(platforms: string[]): Promise<void>;
+	removePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
 
-	updatePlatforms(platforms: string[]): Promise<void>;
+	updatePlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData): Promise<void>;
 
 	/**
 	 * Ensures that the specified platform and its dependencies are installed.
@@ -34,19 +38,24 @@ interface IPlatformService {
 	 * When finishes, prepare saves the .nsprepareinfo file in platform folder.
 	 * This file contains information about current project configuration and allows skipping unnecessary build, deploy and livesync steps.
 	 * @param {string} platform The platform to be prepared.
+	 * @param {IAppFilesUpdaterOptions} appFilesUpdaterOptions Options needed to instantiate AppFilesUpdater class.
+	 * @param {string} platformTemplate The name of the platform template.
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @param {any} provision UUID of the provisioning profile used in iOS project preparation.
 	 * @returns {boolean} true indicates that the platform was prepared.
 	 */
-	preparePlatform(platform: string, changesInfo?: IProjectChangesInfo): Promise<boolean>;
+	preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, provision: any): Promise<boolean>;
 
 	/**
 	 * Determines whether a build is necessary. A build is necessary when one of the following is true:
 	 * - there is no previous build.
 	 * - the .nsbuildinfo file in product folder points to an old prepare.
 	 * @param {string} platform The platform to build.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @param {IBuildConfig} buildConfig Indicates whether the build is for device or emulator.
 	 * @returns {boolean} true indicates that the platform should be build.
 	 */
-	shouldBuild(platform: string, buildConfig?: IBuildConfig): Promise<boolean>;
+	shouldBuild(platform: string, projectData: IProjectData, buildConfig?: IBuildConfig): Promise<boolean>;
 
 	/**
 	 * Builds the native project for the specified platform for device or emulator.
@@ -54,61 +63,74 @@ interface IPlatformService {
 	 * This file points to the prepare that was used to build the project and allows skipping unnecessary builds and deploys.
 	 * @param {string} platform The platform to build.
 	 * @param {IBuildConfig} buildConfig Indicates whether the build is for device or emulator.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	buildPlatform(platform: string, buildConfig?: IBuildConfig): Promise<void>;
+	buildPlatform(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): Promise<void>;
 
 	/**
 	 * Determines whether installation is necessary. It is necessary when one of the following is true:
 	 * - the application is not installed.
 	 * - the .nsbuildinfo file located in application root folder is different than the local .nsbuildinfo file
 	 * @param {Mobile.IDevice} device The device where the application should be installed.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {Promise<boolean>} true indicates that the application should be installed.
 	 */
-	shouldInstall(device: Mobile.IDevice): Promise<boolean>;
+	shouldInstall(device: Mobile.IDevice, projectData: IProjectData): Promise<boolean>;
 
 	/**
 	 * Installs the application on specified device.
 	 * When finishes, saves .nsbuildinfo in application root folder to indicate the prepare that was used to build the app.
 	 * * .nsbuildinfo is not persisted when building for release.
 	 * @param {Mobile.IDevice} device The device where the application should be installed.
+	 * @param {IRelease} options Whether the application was built in release configuration.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	installApplication(device: Mobile.IDevice): Promise<void>;
+	installApplication(device: Mobile.IDevice, options: IRelease, projectData: IProjectData): Promise<void>;
 
 	/**
 	 * Gets first chance to validate the options provided as command line arguments.
 	 * If no platform is provided or a falsy (null, undefined, "", false...) platform is provided,
 	 * the options will be validated for all available platforms.
 	 */
-	validateOptions(platform?: string): Promise<boolean>;
+	validateOptions(provision: any, projectData: IProjectData, platform?: string): Promise<boolean>;
 
 	/**
 	 * Executes prepare, build and installOnPlatform when necessary to ensure that the latest version of the app is installed on specified platform.
 	 * - When --clean option is specified it builds the app on every change. If not, build is executed only when there are native changes.
 	 * @param {string} platform The platform to deploy.
-	 * @param {boolean} forceInstall When true, installs the application unconditionally.
+	 * @param {IAppFilesUpdaterOptions} appFilesUpdaterOptions Options needed to instantiate AppFilesUpdater class.
+	 * @param {IDeployPlatformOptions} deployOptions Various options that can manage the deploy operation.
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @param {any} provision UUID of the provisioning profile used in iOS project preparation.
 	 * @returns {void}
 	 */
-	deployPlatform(platform: string, forceInstall?: boolean): Promise<void>;
+	deployPlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, deployOptions: IDeployPlatformOptions, projectData: IProjectData, provision: any): Promise<void>;
 
 	/**
 	 * Runs the application on specified platform. Assumes that the application is already build and installed. Fails if this is not true.
 	 * @param {string} platform The platform where to start the application.
+	 * @param {IRunPlatformOptions} runOptions Various options that help manage the run operation.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	runPlatform(platform: string): Promise<void>;
+	runPlatform(platform: string, runOptions: IRunPlatformOptions, projectData: IProjectData): Promise<void>;
 
 	/**
 	 * The emulate command. In addition to `run --emulator` command, it handles the `--available-devices` option to show the available devices.
 	 * @param {string} platform The platform to emulate.
+	 * @param {IAppFilesUpdaterOptions} appFilesUpdaterOptions Options needed to instantiate AppFilesUpdater class.
+	 * @param {IEmulatePlatformOptions} emulateOptions Various options that can manage the emulate operation.
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @param {any} provision UUID of the provisioning profile used in iOS project preparation.
 	 * @returns {void}
 	 */
-	emulatePlatform(platform: string): Promise<void>;
+	emulatePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, emulateOptions: IEmulatePlatformOptions, projectData: IProjectData, provision: any): Promise<void>;
 
-	cleanDestinationApp(platform: string): Promise<void>;
-	validatePlatformInstalled(platform: string): void;
-	validatePlatform(platform: string): void;
+	cleanDestinationApp(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData): Promise<void>;
+	validatePlatformInstalled(platform: string, projectData: IProjectData): void;
+	validatePlatform(platform: string, projectData: IProjectData): void;
 
 	/**
 	 * Returns information about the latest built application for device in the current project.
@@ -129,27 +151,30 @@ interface IPlatformService {
 	 * @param {string} platform Mobile platform - Android, iOS.
 	 * @param {string} targetPath Destination where the build artifact should be copied.
 	 * @param {{isForDevice: boolean}} settings Defines if the searched artifact should be for simulator.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}): void;
+	copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}, projectData: IProjectData): void;
 
-	lastOutputPath(platform: string, settings: { isForDevice: boolean }): string;
+	lastOutputPath(platform: string, settings: { isForDevice: boolean }, projectData: IProjectData): string;
 
 	/**
 	 * Reads contents of a file on device.
 	 * @param {Mobile.IDevice} device The device to read from.
 	 * @param {string} deviceFilePath The file path.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {string} The contents of the file or null when there is no such file.
 	 */
-	readFile(device: Mobile.IDevice, deviceFilePath: string): Promise<string>;
+	readFile(device: Mobile.IDevice, deviceFilePath: string, projectData: IProjectData): Promise<string>;
 
 	/**
 	 * Sends information to analytics for current project type.
 	 * The information is sent once per process for each project.
 	 * In long living process, where the project may change, each of the projects will be tracked after it's being opened.
+	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {Promise<void>}
 	 */
-	trackProjectType(): Promise<void>;
+	trackProjectType(projectData: IProjectData): Promise<void>;
 }
 
 interface IPlatformData {
@@ -176,11 +201,11 @@ interface IPlatformData {
 interface IPlatformsData {
 	availablePlatforms: any;
 	platformsNames: string[];
-	getPlatformData(platform: string): IPlatformData;
+	getPlatformData(platform: string, projectData: IProjectData): IPlatformData;
 }
 
 interface INodeModulesBuilder {
-	prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date): Promise<void>;
+	prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData): Promise<void>;
 	cleanNodeModules(absoluteOutputPath: string, platform: string): void;
 }
 
