@@ -165,10 +165,13 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 			let isFullSync = false;
 
 			if (this.$options.clean || this.$projectChangesService.currentChanges.changesRequireBuild) {
-				let buildConfig: IBuildConfig = {
+				let buildConfig: IiOSBuildConfig = {
 					buildForDevice: !device.isEmulator,
 					projectDir: this.$options.path,
-					release: this.$options.release
+					release: this.$options.release,
+					teamId: this.$options.teamId,
+					device: this.$options.device,
+					provision: this.$options.provision,
 				};
 				let platform = device.deviceInfo.platform;
 				if (this.$platformService.shouldBuild(platform, projectData, buildConfig)) {

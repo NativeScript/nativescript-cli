@@ -65,7 +65,9 @@ class TestExecutionService implements ITestExecutionService {
 						projectDir: this.$options.path,
 						emulator: this.$options.emulator,
 						platformTemplate: this.$options.platformTemplate,
-						release: this.$options.release
+						release: this.$options.release,
+						provision: this.$options.provision,
+						teamId: this.$options.teamId
 					};
 					await this.$platformService.deployPlatform(platform, appFilesUpdaterOptions, deployOptions, projectData, this.$options.provision);
 					await this.$usbLiveSyncService.liveSync(platform, projectData);
@@ -134,7 +136,9 @@ class TestExecutionService implements ITestExecutionService {
 						emulator: this.$options.emulator,
 						projectDir: this.$options.path,
 						platformTemplate: this.$options.platformTemplate,
-						release: this.$options.release
+						release: this.$options.release,
+						provision: this.$options.provision,
+						teamId: this.$options.teamId
 					};
 
 					await this.$platformService.deployPlatform(platform, appFilesUpdaterOptions, deployOptions, projectData, this.$options.provision);

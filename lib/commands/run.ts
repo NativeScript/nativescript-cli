@@ -14,7 +14,9 @@ export class RunCommandBase {
 			emulator: this.$options.emulator,
 			projectDir: this.$options.path,
 			platformTemplate: this.$options.platformTemplate,
-			release: this.$options.release
+			release: this.$options.release,
+			provision: this.$options.provision,
+			teamId: this.$options.teamId
 		};
 		await this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, this.$options.provision);
 

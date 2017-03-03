@@ -17,7 +17,9 @@ export class EmulateCommandBase {
 			projectDir: this.$options.path,
 			justlaunch: this.$options.justlaunch,
 			availableDevices: this.$options.availableDevices,
-			platformTemplate: this.$options.platformTemplate
+			platformTemplate: this.$options.platformTemplate,
+			provision: this.$options.provision,
+			teamId: this.$options.teamId
 		};
 		return this.$platformService.emulatePlatform(args[0], appFilesUpdaterOptions, emulateOptions, this.$projectData, this.$options.provision);
 	}

@@ -27,7 +27,9 @@
 			emulator: this.$options.emulator,
 			platformTemplate: this.$options.platformTemplate,
 			projectDir: this.$options.path,
-			release: this.$options.release
+			release: this.$options.release,
+			provision: this.$options.provision,
+			teamId: this.$options.teamId
 		};
 		await this.$platformService.deployPlatform(this.$devicesService.platform, appFilesUpdaterOptions, deployOptions, this.$projectData, this.$options.provision);
 		this.$config.debugLivesync = true;

@@ -11,10 +11,13 @@ export class BuildCommandBase {
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
 		await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData, this.$options.provision);
 		this.$options.clean = true;
-		const buildConfig: IBuildConfig = {
+		const buildConfig: IiOSBuildConfig = {
 			buildForDevice: this.$options.forDevice,
 			projectDir: this.$options.path,
 			clean: this.$options.clean,
+			teamId: this.$options.teamId,
+			device: this.$options.device,
+			provision: this.$options.provision,
 			release: this.$options.release
 		};
 		await this.$platformService.buildPlatform(platform, buildConfig, this.$projectData);

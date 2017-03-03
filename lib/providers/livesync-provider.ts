@@ -33,11 +33,16 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 	}
 
 	public async buildForDevice(device: Mobile.IDevice, projectData: IProjectData): Promise<string> {
-		await this.$platformService.buildPlatform(device.deviceInfo.platform, {
+		let buildConfig: IiOSBuildConfig = {
 			buildForDevice: !device.isEmulator,
 			projectDir: this.$options.path,
-			release: this.$options.release
-		}, projectData);
+			release: this.$options.release,
+			teamId: this.$options.teamId,
+			device: this.$options.device,
+			provision: this.$options.provision,
+		};
+
+		await this.$platformService.buildPlatform(device.deviceInfo.platform, buildConfig, projectData);
 		let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 		if (device.isEmulator) {
 			return this.$platformService.getLatestApplicationPackageForEmulator(platformData).packageName;

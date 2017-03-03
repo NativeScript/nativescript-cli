@@ -19,7 +19,9 @@ export class DeployOnDeviceCommand implements ICommand {
 			emulator: this.$options.emulator,
 			platformTemplate: this.$options.platformTemplate,
 			release: this.$options.release,
-			forceInstall: true
+			forceInstall: true,
+			provision: this.$options.provision,
+			teamId: this.$options.teamId
 		};
 		return this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, this.$options.provision);
 	}

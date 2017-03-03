@@ -431,10 +431,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.$logger.out("Searching for devices...");
 		await this.$devicesService.initialize({ platform: platform, deviceId: deployOptions.device });
 		let action = async (device: Mobile.IDevice): Promise<void> => {
-			let buildConfig: IBuildConfig = {
+			let buildConfig: IiOSBuildConfig = {
 				buildForDevice: !this.$devicesService.isiOSSimulator(device),
 				projectDir: deployOptions.projectDir,
-				release: deployOptions.release
+				release: deployOptions.release,
+				device: deployOptions.device,
+				provision: deployOptions.provision,
+				teamId: deployOptions.teamId
 			};
 			let shouldBuild = await this.shouldBuild(platform, projectData, buildConfig);
 			if (shouldBuild) {
