@@ -39,7 +39,6 @@ export class InitService implements IInitService {
 		}
 
 		try {
-
 			projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE]["id"] = await this.getProjectId();
 
 			if (this.$options.frameworkName && this.$options.frameworkVersion) {
@@ -48,8 +47,10 @@ export class InitService implements IInitService {
 				projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][this.$options.frameworkName] = _.extend(currentPlatformData, this.buildVersionData(this.$options.frameworkVersion));
 			} else {
 				let $platformsData = this.$injector.resolve("platformsData");
+				let $projectData = this.$injector.resolve("projectData");
+				$projectData.initializeProjectData(path.dirname(this.projectFilePath));
 				for (let platform of $platformsData.platformsNames) {
-					let platformData: IPlatformData = $platformsData.getPlatformData(platform);
+					let platformData: IPlatformData = $platformsData.getPlatformData(platform, $projectData);
 					if (!platformData.targetedOS || (platformData.targetedOS && _.includes(platformData.targetedOS, process.platform))) {
 						let currentPlatformData = projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][platformData.frameworkPackageName] || {};
 
