@@ -18,7 +18,11 @@ export class BuildCommandBase {
 			teamId: this.$options.teamId,
 			device: this.$options.device,
 			provision: this.$options.provision,
-			release: this.$options.release
+			release: this.$options.release,
+			keyStoreAlias: this.$options.keyStoreAlias,
+			keyStorePath: this.$options.keyStorePath,
+			keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
+			keyStorePassword: this.$options.keyStorePassword
 		};
 		await this.$platformService.buildPlatform(platform, buildConfig, this.$projectData);
 		if (this.$options.copyTo) {

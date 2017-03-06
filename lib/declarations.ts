@@ -147,7 +147,7 @@ interface IDeviceEmulator extends IEmulator, IDeviceIdentifier { }
 
 interface IRunPlatformOptions extends IJustLaunch, IDeviceEmulator { }
 
-interface IDeployPlatformOptions extends IPlatformTemplate, IRelease, IClean, IDeviceEmulator, IProvision, ITeamIdentifier {
+interface IDeployPlatformOptions extends IAndroidReleaseOptions, IPlatformTemplate, IRelease, IClean, IDeviceEmulator, IProvision, ITeamIdentifier {
 	projectDir: string;
 	forceInstall?: boolean;
 }
