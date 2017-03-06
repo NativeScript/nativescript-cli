@@ -54,7 +54,7 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 			await this.$iOSNotificationService.awaitNotification(deviceIdentifier, +appLaunchingSocket, timeout);
 
 			if (shouldBreak) {
-				await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getWaitForDebug(projectId), constants.IOS_POST_NOTIFICATION_COMMAND_TYPE);
+				await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getWaitForDebug(projectId));
 			}
 
 			// We need to send the ObserveNotification ReadyForAttach before we post the AttachRequest.
