@@ -437,7 +437,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				release: deployOptions.release,
 				device: deployOptions.device,
 				provision: deployOptions.provision,
-				teamId: deployOptions.teamId
+				teamId: deployOptions.teamId,
+				keyStoreAlias: deployOptions.keyStoreAlias,
+				keyStoreAliasPassword: deployOptions.keyStoreAliasPassword,
+				keyStorePassword: deployOptions.keyStorePassword,
+				keyStorePath: deployOptions.keyStorePath
 			};
 			let shouldBuild = await this.shouldBuild(platform, projectData, buildConfig);
 			if (shouldBuild) {

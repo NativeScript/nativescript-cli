@@ -16,7 +16,11 @@ export class RunCommandBase {
 			platformTemplate: this.$options.platformTemplate,
 			release: this.$options.release,
 			provision: this.$options.provision,
-			teamId: this.$options.teamId
+			teamId: this.$options.teamId,
+			keyStoreAlias: this.$options.keyStoreAlias,
+			keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
+			keyStorePassword: this.$options.keyStorePassword,
+			keyStorePath: this.$options.keyStorePath
 		};
 		await this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, this.$options.provision);
 
