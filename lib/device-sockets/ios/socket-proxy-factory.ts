@@ -66,8 +66,8 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 		return server;
 	}
 
-	public createWebSocketProxy(factory: () => net.Socket): ws.Server {
-		let socketFactory = (callback: (_socket: net.Socket) => void) => helpers.connectEventually(factory, callback);
+	public createWebSocketProxy(factory: () => Promise<net.Socket>): ws.Server {
+		let socketFactory = async (callback: (_socket: net.Socket) => void) => callback(await factory());
 		// NOTE: We will try to provide command line options to select ports, at least on the localhost.
 		let localPort = 8080;
 
@@ -102,10 +102,9 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 
 			webSocket.on("message", (message, flags) => {
 				let length = Buffer.byteLength(message, encoding);
-				let payload = new Buffer(length + 4);
-				payload.writeInt32BE(length, 0);
-				payload.write(message, 4, length, encoding);
-				deviceSocket.write(payload);
+				let payload = new Buffer(length);
+				payload.write(message, 0, length, encoding);
+				deviceSocket.write(payload.toString());
 			});
 
 			deviceSocket.on("end", () => {
