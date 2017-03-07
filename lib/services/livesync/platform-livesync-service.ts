@@ -48,7 +48,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 				return;
 			}
 
-			await this.refreshApplication(deviceAppData, localToDevicePaths, true, projectData.projectId);
+			await this.refreshApplication(deviceAppData, localToDevicePaths, true, projectData);
 			await this.finishLivesync(deviceAppData);
 		};
 		await this.$devicesService.execute(action, canExecute);
@@ -75,10 +75,10 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 		return isTheSamePlatformAction;
 	}
 
-	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], isFullSync: boolean, projectId: string): Promise<void> {
+	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], isFullSync: boolean, projectData: IProjectData): Promise<void> {
 		let deviceLiveSyncService = this.resolveDeviceSpecificLiveSyncService(deviceAppData.device.deviceInfo.platform, deviceAppData.device);
 		this.$logger.info("Refreshing application...");
-		await deviceLiveSyncService.refreshApplication(deviceAppData, localToDevicePaths, isFullSync, projectId);
+		await deviceLiveSyncService.refreshApplication(deviceAppData, localToDevicePaths, isFullSync, projectData);
 	}
 
 	protected async finishLivesync(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
@@ -183,7 +183,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 				isFullSync = true;
 			} else {
 				deviceAppData = this.$deviceAppDataFactory.create(this.liveSyncData.appIdentifier, this.$mobileHelper.normalizePlatformName(this.liveSyncData.platform), device);
-				const mappedFiles = filesToSync.map((file: string) => this.$projectFilesProvider.mapFilePath(file, device.deviceInfo.platform));
+				const mappedFiles = filesToSync.map((file: string) => this.$projectFilesProvider.mapFilePath(file, device.deviceInfo.platform, projectData));
 
 				// Some plugins modify platforms dir on afterPrepare (check nativescript-dev-sass) - we want to sync only existing file.
 				const existingFiles = mappedFiles.filter(m => this.$fs.exists(m));
@@ -202,7 +202,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 			}
 
 			if (!afterFileSyncAction) {
-				await this.refreshApplication(deviceAppData, localToDevicePaths, isFullSync, projectData.projectId);
+				await this.refreshApplication(deviceAppData, localToDevicePaths, isFullSync, projectData);
 			}
 
 			await device.fileSystem.putFile(this.$projectChangesService.getPrepareInfoFilePath(device.deviceInfo.platform, projectData), await this.getLiveSyncInfoFilePath(deviceAppData), this.liveSyncData.appIdentifier);

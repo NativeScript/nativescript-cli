@@ -60,10 +60,10 @@ interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase 
 	 * @param  {Mobile.IDeviceAppData} deviceAppData Information about the application and the device.
 	 * @param  {Mobile.ILocalToDevicePathData[]} localToDevicePaths Object containing a mapping of file paths from the system to the device.
 	 * @param  {boolean} forceExecuteFullSync If this is passed a full LiveSync is performed instead of an incremental one.
-	 * @param  {string} projectId Project identifier - for example org.nativescript.livesync.
+	 * @param  {IProjectData} projectData Project data.
 	 * @return {Promise<void>}
 	 */
-	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean, projectId: string): Promise<void>;
+	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean, projectData: IProjectData): Promise<void>;
 	/**
 	 * Removes specified files from a connected device
 	 * @param  {string} appIdentifier Application identifier.
@@ -78,7 +78,7 @@ interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase 
 interface IPlatformLiveSyncService {
 	fullSync(projectData: IProjectData, postAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>): Promise<void>;
 	partialSync(event: string, filePath: string, dispatcher: IFutureDispatcher, afterFileSyncAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>, projectData: IProjectData): Promise<void>;
-	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], isFullSync: boolean, projectId: string): Promise<void>;
+	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], isFullSync: boolean, projectData: IProjectData): Promise<void>;
 }
 
 interface IBundle {
