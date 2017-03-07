@@ -73,6 +73,7 @@ export namespace Kinvey {
     static collection(collection: string, type?: DataStoreType, options?: {}): DataStore;
     static clearCache(options?: {}): any;
 
+    useDeltaFetch: boolean;
     find(query?: Query, options?: {}): any;
     findById(id: string, options?: {}): any;
     group(aggregation: Aggregation, options?: {}): any;
@@ -86,15 +87,6 @@ export namespace Kinvey {
   }
   class NetworkStore extends DataStore {
     protected constructor();
-    find(query?: Query, options?: {}): any;
-    findById(id: string, options?: {}): any;
-    group(aggregation: Aggregation, options?: {}): any;
-    count(query?: Query, options?: {}): any;
-    create(entities: {}|Array<{}>, options?: {}): any;
-    update(entities: {}|Array<{}>, options?: {}): any;
-    save(entity: {}|Array<{}>, options?: {}): any;
-    remove(query?: Query, options?: {}): any;
-    removeById(id: string, options?: {}): any;
   }
   class CacheStore extends NetworkStore {
     clear(query?: Query, options?: {}): any;
@@ -198,7 +190,7 @@ export namespace Kinvey {
   }
 
   // Errors
-  class KinveyBaseError {
+  abstract class KinveyBaseError {
     name: string;
     message: string;
     debug: string;
