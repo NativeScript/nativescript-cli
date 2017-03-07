@@ -98,21 +98,21 @@ describe('Platform Service Tests', () => {
 				fs.exists = () => false;
 				let projectData: IProjectData = testInjector.resolve("projectData");
 
-				await platformService.addPlatforms(["Android"], "", projectData);
-				await platformService.addPlatforms(["ANDROID"], "", projectData);
-				await platformService.addPlatforms(["AnDrOiD"], "", projectData);
-				await platformService.addPlatforms(["androiD"], "", projectData);
+				await platformService.addPlatforms(["Android"], "", projectData, null);
+				await platformService.addPlatforms(["ANDROID"], "", projectData, null);
+				await platformService.addPlatforms(["AnDrOiD"], "", projectData, null);
+				await platformService.addPlatforms(["androiD"], "", projectData, null);
 
-				await platformService.addPlatforms(["iOS"], "", projectData);
-				await platformService.addPlatforms(["IOS"], "", projectData);
-				await platformService.addPlatforms(["IoS"], "", projectData);
-				await platformService.addPlatforms(["iOs"], "", projectData);
+				await platformService.addPlatforms(["iOS"], "", projectData, null);
+				await platformService.addPlatforms(["IOS"], "", projectData, null);
+				await platformService.addPlatforms(["IoS"], "", projectData, null);
+				await platformService.addPlatforms(["iOs"], "", projectData, null);
 			});
 			it("should fail if platform is already installed", async () => {
 				let projectData: IProjectData = testInjector.resolve("projectData");
 				// By default fs.exists returns true, so the platforms directory should exists
-				await assert.isRejected(platformService.addPlatforms(["android"], "", projectData));
-				await assert.isRejected(platformService.addPlatforms(["ios"], "", projectData));
+				await assert.isRejected(platformService.addPlatforms(["android"], "", projectData, null));
+				await assert.isRejected(platformService.addPlatforms(["ios"], "", projectData, null));
 			});
 			it("should fail if npm is unavalible", async () => {
 				let fs = testInjector.resolve("fs");
@@ -124,7 +124,7 @@ describe('Platform Service Tests', () => {
 				let projectData: IProjectData = testInjector.resolve("projectData");
 
 				try {
-					await platformService.addPlatforms(["android"], "", projectData);
+					await platformService.addPlatforms(["android"], "", projectData, null);
 				} catch (err) {
 					assert.equal(errorMessage, err.message);
 				}
@@ -144,7 +144,7 @@ describe('Platform Service Tests', () => {
 				};
 
 				try {
-					await platformService.addPlatforms(["ios"], "", projectData);
+					await platformService.addPlatforms(["ios"], "", projectData, null);
 				} catch (err) {
 					assert.equal(errorMessage, err.message);
 				}
@@ -164,7 +164,7 @@ describe('Platform Service Tests', () => {
 				let projectData: IProjectData = testInjector.resolve("projectData");
 
 				try {
-					await platformService.addPlatforms(["android"], "", projectData);
+					await platformService.addPlatforms(["android"], "", projectData, null);
 				} catch (err) {
 					assert.equal(errorMessage, err.message);
 				}
@@ -196,7 +196,7 @@ describe('Platform Service Tests', () => {
 		it("shouldn't fail when platforms are added", async () => {
 			let projectData: IProjectData = testInjector.resolve("projectData");
 			testInjector.resolve("fs").exists = () => false;
-			await platformService.addPlatforms(["android"], "", projectData);
+			await platformService.addPlatforms(["android"], "", projectData, null);
 
 			testInjector.resolve("fs").exists = () => true;
 			await platformService.removePlatforms(["android"], projectData);
@@ -217,7 +217,7 @@ describe('Platform Service Tests', () => {
 				npmInstallationManager.getLatestVersion = async () => "0.2.0";
 				let projectData: IProjectData = testInjector.resolve("projectData");
 
-				await assert.isRejected(platformService.updatePlatforms(["android"], "", projectData));
+				await assert.isRejected(platformService.updatePlatforms(["android"], "", projectData, null));
 			});
 		});
 	});

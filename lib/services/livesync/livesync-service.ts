@@ -31,7 +31,7 @@ class LiveSyncService implements ILiveSyncService {
 			if (semver.lt(frameworkVersion, "1.2.1")) {
 				let shouldUpdate = await this.$prompter.confirm("You need Android Runtime 1.2.1 or later for LiveSync to work properly. Do you want to update your runtime now?");
 				if (shouldUpdate) {
-					await this.$platformService.updatePlatforms([this.$devicePlatformsConstants.Android.toLowerCase()], this.$options.platformTemplate, projectData);
+					await this.$platformService.updatePlatforms([this.$devicePlatformsConstants.Android.toLowerCase()], this.$options.platformTemplate, projectData, null);
 				} else {
 					return;
 				}

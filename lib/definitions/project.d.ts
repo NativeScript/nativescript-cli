@@ -152,8 +152,8 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	getPlatformData(projectData: IProjectData): IPlatformData;
 	validate(projectData: IProjectData): Promise<void>;
 	createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, pathToTemplate?: string): Promise<void>;
-	interpolateData(projectData: IProjectData): Promise<void>;
-	interpolateConfigurationFile(projectData: IProjectData, sdk?: string): Promise<void>;
+	interpolateData(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
+	interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
 
 	/**
 	 * Executes additional actions after native project is created.
@@ -176,10 +176,10 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	/**
 	 * Prepares images in Native project (for iOS).
 	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @param {any} provision UUID of the provisioning profile used in iOS project preparation.
+	 * @param {any} platformSpecificData Platform specific data required for project preparation.
 	 * @returns {void}
 	 */
-	prepareProject(projectData: IProjectData, provision: any): Promise<void>;
+	prepareProject(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
 
 	/**
 	 * Prepares App_Resources in the native project by clearing data from other platform and applying platform specific rules.

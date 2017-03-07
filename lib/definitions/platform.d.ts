@@ -1,5 +1,5 @@
 interface IPlatformService extends NodeJS.EventEmitter {
-	addPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData): Promise<void>;
+	addPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, frameworkPath?: string): Promise<void>;
 
 	/**
 	 * Gets list of all installed platforms (the ones for which <project dir>/platforms/<platform> exists).
@@ -30,7 +30,7 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 */
 	removePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
 
-	updatePlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData): Promise<void>;
+	updatePlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
 
 	/**
 	 * Ensures that the specified platform and its dependencies are installed.
@@ -41,10 +41,10 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @param {IAppFilesUpdaterOptions} appFilesUpdaterOptions Options needed to instantiate AppFilesUpdater class.
 	 * @param {string} platformTemplate The name of the platform template.
 	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @param {any} provision UUID of the provisioning profile used in iOS project preparation.
+	 * @param {IPlatformSpecificData} platformSpecificData Platform specific data required for project preparation.
 	 * @returns {boolean} true indicates that the platform was prepared.
 	 */
-	preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, provision: any): Promise<boolean>;
+	preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<boolean>;
 
 	/**
 	 * Determines whether a build is necessary. A build is necessary when one of the following is true:
@@ -103,10 +103,10 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @param {IAppFilesUpdaterOptions} appFilesUpdaterOptions Options needed to instantiate AppFilesUpdater class.
 	 * @param {IDeployPlatformOptions} deployOptions Various options that can manage the deploy operation.
 	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @param {any} provision UUID of the provisioning profile used in iOS project preparation.
+	 * @param {any} platformSpecificData Platform specific data required for project preparation.
 	 * @returns {void}
 	 */
-	deployPlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, deployOptions: IDeployPlatformOptions, projectData: IProjectData, provision: any): Promise<void>;
+	deployPlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, deployOptions: IDeployPlatformOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
 
 	/**
 	 * Runs the application on specified platform. Assumes that the application is already build and installed. Fails if this is not true.
@@ -123,12 +123,12 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @param {IAppFilesUpdaterOptions} appFilesUpdaterOptions Options needed to instantiate AppFilesUpdater class.
 	 * @param {IEmulatePlatformOptions} emulateOptions Various options that can manage the emulate operation.
 	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @param {any} provision UUID of the provisioning profile used in iOS project preparation.
+	 * @param {any} platformSpecificData Platform specific data required for project preparation.
 	 * @returns {void}
 	 */
-	emulatePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, emulateOptions: IEmulatePlatformOptions, projectData: IProjectData, provision: any): Promise<void>;
+	emulatePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, emulateOptions: IEmulatePlatformOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
 
-	cleanDestinationApp(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData): Promise<void>;
+	cleanDestinationApp(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
 	validatePlatformInstalled(platform: string, projectData: IProjectData): void;
 	validatePlatform(platform: string, projectData: IProjectData): void;
 
@@ -175,6 +175,21 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @returns {Promise<void>}
 	 */
 	trackProjectType(projectData: IProjectData): Promise<void>;
+}
+
+/**
+ * Platform specific data required for project preparation.
+ */
+interface IPlatformSpecificData {
+	/**
+	 * UUID of the provisioning profile used in iOS project preparation.
+	 */
+	provision: any;
+
+	/**
+	 * Target SDK for Android.s
+	 */
+	sdk: string;
 }
 
 interface IPlatformData {

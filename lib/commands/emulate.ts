@@ -21,7 +21,7 @@ export class EmulateCommandBase {
 			provision: this.$options.provision,
 			teamId: this.$options.teamId
 		};
-		return this.$platformService.emulatePlatform(args[0], appFilesUpdaterOptions, emulateOptions, this.$projectData, this.$options.provision);
+		return this.$platformService.emulatePlatform(args[0], appFilesUpdaterOptions, emulateOptions, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 	}
 }
 

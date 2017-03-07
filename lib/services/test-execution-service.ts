@@ -54,7 +54,7 @@ class TestExecutionService implements ITestExecutionService {
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
 
 					const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
-					if (!await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, this.$options.provision)) {
+					if (!await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, { provision: this.$options.provision, sdk: this.$options.sdk })) {
 						this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 					}
 					this.detourEntryPoint(projectFilesPath);
@@ -69,7 +69,7 @@ class TestExecutionService implements ITestExecutionService {
 						provision: this.$options.provision,
 						teamId: this.$options.teamId
 					};
-					await this.$platformService.deployPlatform(platform, appFilesUpdaterOptions, deployOptions, projectData, this.$options.provision);
+					await this.$platformService.deployPlatform(platform, appFilesUpdaterOptions, deployOptions, projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 					await this.$usbLiveSyncService.liveSync(platform, projectData);
 
 					if (this.$options.debugBrk) {
@@ -123,7 +123,7 @@ class TestExecutionService implements ITestExecutionService {
 				const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
 				// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
 				// so it will be sent to device.
-				if (!await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, this.$options.provision)) {
+				if (!await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, { provision: this.$options.provision, sdk: this.$options.sdk })) {
 					this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 				}
 
@@ -141,7 +141,7 @@ class TestExecutionService implements ITestExecutionService {
 						teamId: this.$options.teamId
 					};
 
-					await this.$platformService.deployPlatform(platform, appFilesUpdaterOptions, deployOptions, projectData, this.$options.provision);
+					await this.$platformService.deployPlatform(platform, appFilesUpdaterOptions, deployOptions, projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 					await this.$usbLiveSyncService.liveSync(platform, projectData);
 				}
 			};

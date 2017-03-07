@@ -28,7 +28,7 @@ export class LivesyncCommand implements ICommand {
 			teamId: this.$options.teamId
 		};
 
-		await this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, this.$options.provision);
+		await this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 		return this.$usbLiveSyncService.liveSync(args[0], this.$projectData);
 	}
 

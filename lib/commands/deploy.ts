@@ -7,8 +7,8 @@ export class DeployOnDeviceCommand implements ICommand {
 		private $projectData: IProjectData,
 		private $errors: IErrors,
 		private $mobileHelper: Mobile.IMobileHelper) {
-			this.$projectData.initializeProjectData();
-		}
+		this.$projectData.initializeProjectData();
+	}
 
 	public async execute(args: string[]): Promise<void> {
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
@@ -27,7 +27,7 @@ export class DeployOnDeviceCommand implements ICommand {
 			keyStorePassword: this.$options.keyStorePassword,
 			keyStorePath: this.$options.keyStorePath
 		};
-		return this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, this.$options.provision);
+		return this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

@@ -22,7 +22,7 @@ export class RunCommandBase {
 			keyStorePassword: this.$options.keyStorePassword,
 			keyStorePath: this.$options.keyStorePath
 		};
-		await this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, this.$options.provision);
+		await this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 
 		if (this.$options.bundle) {
 			this.$options.watch = false;
