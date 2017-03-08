@@ -183,7 +183,8 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			}
 
 			try {
-				const output = await this.childProcess.spawnFromEvent(pathToAndroid, ["-h"], "close");
+				// On mac android -h returns exit code 1. That's why we need to ignore the error.
+				const output = await this.childProcess.spawnFromEvent(pathToAndroid, ["-h"], "close", { ignoreError: true });
 				if (output) {
 					output.stdout = output.stdout || '';
 					this.androidInstalledCache = output.stdout.indexOf("android") >= 0;
