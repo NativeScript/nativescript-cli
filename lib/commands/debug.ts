@@ -31,7 +31,7 @@
 			provision: this.$options.provision,
 			teamId: this.$options.teamId
 		};
-		await this.$platformService.deployPlatform(this.$devicesService.platform, appFilesUpdaterOptions, deployOptions, this.$projectData, this.$options.provision);
+		await this.$platformService.deployPlatform(this.$devicesService.platform, appFilesUpdaterOptions, deployOptions, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 		this.$config.debugLivesync = true;
 		let applicationReloadAction = async (deviceAppData: Mobile.IDeviceAppData): Promise<void> => {
 			let projectData: IProjectData = this.$injector.resolve("projectData");

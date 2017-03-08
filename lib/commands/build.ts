@@ -3,13 +3,13 @@ export class BuildCommandBase {
 		protected $projectData: IProjectData,
 		protected $platformsData: IPlatformsData,
 		protected $platformService: IPlatformService) {
-			this.$projectData.initializeProjectData();
-		}
+		this.$projectData.initializeProjectData();
+	}
 
 	public async executeCore(args: string[]): Promise<void> {
 		let platform = args[0].toLowerCase();
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
-		await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData, this.$options.provision);
+		await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 		this.$options.clean = true;
 		const buildConfig: IiOSBuildConfig = {
 			buildForDevice: this.$options.forDevice,

@@ -183,9 +183,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		_.map(directoriesToClean, dir => this.$fs.deleteDirectory(dir));
 	}
 
-	public async interpolateData(projectData: IProjectData): Promise<void> {
+	public async interpolateData(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
 		// Interpolate the apilevel and package
-		await this.interpolateConfigurationFile(projectData);
+		await this.interpolateConfigurationFile(projectData, platformSpecificData);
 
 		let stringsFilePath = path.join(this.getAppResourcesDestinationDirectoryPath(projectData), 'values', 'strings.xml');
 		shell.sed('-i', /__NAME__/, projectData.projectName, stringsFilePath);
@@ -204,10 +204,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public async interpolateConfigurationFile(projectData: IProjectData, sdk?: string): Promise<void> {
+	public async interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
 		let manifestPath = this.getPlatformData(projectData).configurationFilePath;
 		shell.sed('-i', /__PACKAGE__/, projectData.projectId, manifestPath);
-		shell.sed('-i', /__APILEVEL__/, sdk || (await this.$androidToolsInfo.getToolsInfo()).compileSdkVersion.toString(), manifestPath);
+		const sdk = (platformSpecificData && platformSpecificData.sdk) || (await this.$androidToolsInfo.getToolsInfo()).compileSdkVersion.toString();
+		shell.sed('-i', /__APILEVEL__/, sdk, manifestPath);
 	}
 
 	private getProjectNameFromId(projectData: IProjectData): string {

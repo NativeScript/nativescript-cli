@@ -132,7 +132,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	//TODO: plamen5kov: revisit this method, might have unnecessary/obsolete logic
-	public async interpolateData(projectData: IProjectData): Promise<void> {
+	public async interpolateData(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
 		let projectRootFilePath = path.join(this.getPlatformData(projectData).projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
 		// Starting with NativeScript for iOS 1.6.0, the project Info.plist file resides not in the platform project,
 		// but in the hello-world app template as a platform specific resource.
@@ -161,7 +161,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.replaceFileContent(pbxprojFilePath, projectData);
 	}
 
-	public interpolateConfigurationFile(projectData: IProjectData, configurationFilePath?: string): Promise<void> {
+	public interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
 		return Promise.resolve();
 	}
 
@@ -578,7 +578,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 	}
 
-	public async prepareProject(projectData: IProjectData, provision?: any): Promise<void> {
+	public async prepareProject(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
+		let provision = platformSpecificData && platformSpecificData.provision;
+
 		if (provision) {
 			let projectRoot = path.join(projectData.platformsDir, "ios");
 			await this.setupSigningFromProvision(projectRoot, provision);

@@ -19,9 +19,13 @@ export class EmulateCommandBase {
 			availableDevices: this.$options.availableDevices,
 			platformTemplate: this.$options.platformTemplate,
 			provision: this.$options.provision,
-			teamId: this.$options.teamId
+			teamId: this.$options.teamId,
+			keyStoreAlias: this.$options.keyStoreAlias,
+			keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
+			keyStorePassword: this.$options.keyStorePassword,
+			keyStorePath: this.$options.keyStorePath
 		};
-		return this.$platformService.emulatePlatform(args[0], appFilesUpdaterOptions, emulateOptions, this.$projectData, this.$options.provision);
+		return this.$platformService.emulatePlatform(args[0], appFilesUpdaterOptions, emulateOptions, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 	}
 }
 

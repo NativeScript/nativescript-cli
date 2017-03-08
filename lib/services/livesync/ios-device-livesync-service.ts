@@ -61,7 +61,7 @@ class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 		await Promise.all(_.map(localToDevicePaths, localToDevicePathData => this.device.fileSystem.deleteFile(localToDevicePathData.getDevicePath(), appIdentifier)));
 	}
 
-	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean, projectId: string): Promise<void> {
+	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean, projectData: IProjectData): Promise<void> {
 		if (forceExecuteFullSync) {
 			await this.restartApplication(deviceAppData);
 			return;
@@ -72,14 +72,14 @@ class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 		constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => scriptRelatedFiles = _.concat(scriptRelatedFiles, localToDevicePaths.filter(file => minimatch(file.getDevicePath(), pattern, { nocase: true }))));
 
 		let otherFiles = _.difference(localToDevicePaths, _.concat(scriptFiles, scriptRelatedFiles));
-		let shouldRestart = _.some(otherFiles, (localToDevicePath: Mobile.ILocalToDevicePathData) => !this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), deviceAppData.platform));
+		let shouldRestart = _.some(otherFiles, (localToDevicePath: Mobile.ILocalToDevicePathData) => !this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, deviceAppData.platform));
 
 		if (shouldRestart || (!this.$options.liveEdit && scriptFiles.length)) {
 			await this.restartApplication(deviceAppData);
 			return;
 		}
 
-		if (await this.setupSocketIfNeeded(projectId)) {
+		if (await this.setupSocketIfNeeded(projectData.projectId)) {
 			this.liveEdit(scriptFiles);
 			await this.reloadPage(deviceAppData, otherFiles);
 		} else {
