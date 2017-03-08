@@ -130,6 +130,11 @@ interface IPlatformService extends NodeJS.EventEmitter {
 
 	cleanDestinationApp(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
 	validatePlatformInstalled(platform: string, projectData: IProjectData): void;
+
+	/**
+	 * Ensures the passed platform is a valid one (from the supported ones)
+	 * and that it can be built on the current OS
+	 */
 	validatePlatform(platform: string, projectData: IProjectData): void;
 
 	/**

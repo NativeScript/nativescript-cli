@@ -3,6 +3,7 @@ import * as stubs from "./stubs";
 import * as PlatformAddCommandLib from "../lib/commands/add-platform";
 import * as PlatformRemoveCommandLib from "../lib/commands/remove-platform";
 import * as PlatformUpdateCommandLib from "../lib/commands/update-platform";
+import * as PlatformCleanCommandLib from "../lib/commands/platform-clean";
 import * as PlatformServiceLib from '../lib/services/platform-service';
 import * as StaticConfigLib from "../lib/config";
 import * as CommandsServiceLib from "../lib/common/services/commands-service";
@@ -19,7 +20,6 @@ import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilitie
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
 import * as ChildProcessLib from "../lib/common/child-process";
-import { CleanCommand } from "../lib/commands/platform-clean";
 import ProjectChangesLib = require("../lib/services/project-changes-service");
 
 let isCommandExecuted = true;
@@ -105,6 +105,7 @@ function createTestInjector() {
 	testInjector.registerCommand("platform|add", PlatformAddCommandLib.AddPlatformCommand);
 	testInjector.registerCommand("platform|remove", PlatformRemoveCommandLib.RemovePlatformCommand);
 	testInjector.registerCommand("platform|update", PlatformUpdateCommandLib.UpdatePlatformCommand);
+	testInjector.registerCommand("platform|clean", PlatformCleanCommandLib.CleanCommand);
 	testInjector.register("lockfile", {});
 	testInjector.register("resources", {});
 	testInjector.register("commandsServiceProvider", {
@@ -146,11 +147,13 @@ function createTestInjector() {
 describe('Platform Service Tests', () => {
 	let platformService: IPlatformService, testInjector: IInjector;
 	let commandsService: ICommandsService;
+	let fs: IFileSystem;
 	beforeEach(() => {
 		testInjector = createTestInjector();
 		testInjector.register("fs", stubs.FileSystemStub);
 		commandsService = testInjector.resolve("commands-service");
 		platformService = testInjector.resolve("platformService");
+		fs = testInjector.resolve("fs");
 	});
 
 	describe("platform commands tests", () => {
@@ -301,6 +304,12 @@ describe('Platform Service Tests', () => {
 		});
 
 		describe("#CleanPlatformCommand", () => {
+			beforeEach(() => {
+				fs.exists = (platform: string) => {
+					return false;
+				};
+			});
+
 			it("is not executed when platform is not passed", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (commandName: string): Promise<boolean> => {
@@ -330,18 +339,25 @@ describe('Platform Service Tests', () => {
 			});
 
 			it("is executed when platform is valid", async () => {
+				let commandsExecutedCount = 0;
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (commandName: string): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
+						commandsExecutedCount++;
 					}
 
 					return false;
 				};
 
+				fs.exists = (platform: string) => {
+					return platform === "android";
+				};
+
 				await commandsService.tryExecuteCommand("platform|add", ["android"]);
 				await commandsService.tryExecuteCommand("platform|clean", ["android"]);
 				assert.isTrue(isCommandExecuted);
+				assert.isTrue(commandsExecutedCount === 2);
 			});
 
 			it("is not executed when platform is not added", async () => {
@@ -359,9 +375,32 @@ describe('Platform Service Tests', () => {
 			});
 
 			it("is executed when all platforms are valid", async () => {
+				let commandsExecutedCount = 0;
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (commandName: string): Promise<boolean> => {
 
+					if (commandName !== "help") {
+						isCommandExecuted = true;
+						commandsExecutedCount++;
+					}
+
+					return false;
+				};
+
+				fs.exists = (platform: string) => {
+					return ["android", "ios"].indexOf(platform) !== -1;
+				};
+
+				await commandsService.tryExecuteCommand("platform|add", ["android"]);
+				await commandsService.tryExecuteCommand("platform|add", ["ios"]);
+				await commandsService.tryExecuteCommand("platform|clean", ["android", "ios"]);
+				assert.isTrue(isCommandExecuted);
+				assert.isTrue(commandsExecutedCount === 3);
+			});
+
+			it("is not executed when at least one platform is not added", async () => {
+				isCommandExecuted = false;
+				commandsService.executeCommandUnchecked = async (commandName: string): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
 					}
@@ -369,20 +408,8 @@ describe('Platform Service Tests', () => {
 					return false;
 				};
 
-				await commandsService.tryExecuteCommand("platform|add", ["android"]);
-				await commandsService.tryExecuteCommand("platform|add", ["ios"]);
-				await commandsService.tryExecuteCommand("platform|clean", ["android", "ios"]);
-				assert.isTrue(isCommandExecuted);
-			});
-
-			it("is not executed when at least on platform is not added", async () => {
-				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = async (commandName: string): Promise<boolean> => {
-					if (commandName !== "help") {
-						isCommandExecuted = true;
-					}
-
-					return false;
+				fs.exists = (platform: string) => {
+					return platform === "android";
 				};
 
 				await commandsService.tryExecuteCommand("platform|clean", ["android", "ios"]);
@@ -405,7 +432,6 @@ describe('Platform Service Tests', () => {
 
 			it("will call removePlatform and addPlatform on the platformService passing the provided platforms", async () => {
 				let platformActions: { action: string, platforms: string[] }[] = [];
-				testInjector.registerCommand("platform|clean", CleanCommand);
 				let cleanCommand = testInjector.resolveCommand("platform|clean");
 
 				platformService.removePlatforms = async (platforms: string[]) => {
