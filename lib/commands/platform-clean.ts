@@ -18,7 +18,7 @@ export class CleanCommand implements ICommand {
 			this.$errors.fail("No platform specified. Please specify a platform to clean");
 		}
 
-		_.each(args, arg => this.$platformService.validatePlatform(arg, this.$projectData));
+		_.each(args, arg => this.$platformService.validatePlatformInstalled(arg, this.$projectData));
 
 		return true;
 	}
