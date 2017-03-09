@@ -67,6 +67,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		let currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+		if (currentPlatformData && currentPlatformData[constants.VERSION_STRING]) {
+			version = currentPlatformData[constants.VERSION_STRING];
+		}
 
 		// Copy platform specific files in platforms dir
 		let platformProjectService = platformData.platformProjectService;
