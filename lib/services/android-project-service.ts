@@ -214,7 +214,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private getProjectNameFromId(projectData: IProjectData): string {
 		let id: string;
 		if (projectData && projectData.projectId) {
-			id = projectData.projectId.split(".")[2];
+			let idParts = projectData.projectId.split(".");
+			id = idParts[idParts.length - 1];
 		}
 
 		return id;
