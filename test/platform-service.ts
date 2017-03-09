@@ -2,6 +2,7 @@ import * as yok from "../lib/common/yok";
 import * as stubs from "./stubs";
 import * as PlatformServiceLib from "../lib/services/platform-service";
 import * as StaticConfigLib from "../lib/config";
+import { VERSION_STRING } from "../lib/constants";
 import * as fsLib from "../lib/common/file-system";
 import * as optionsLib from "../lib/options";
 import * as hostInfoLib from "../lib/common/host-info";
@@ -129,6 +130,45 @@ describe('Platform Service Tests', () => {
 					assert.equal(errorMessage, err.message);
 				}
 			});
+			it("should respect platform version in package.json's nativescript key", async () => {
+				const versionString = "2.5.0";
+				let fs = testInjector.resolve("fs");
+				fs.exists = () => false;
+
+				let nsValueObject: any = {};
+				nsValueObject[VERSION_STRING] = versionString;
+				let projectDataService = testInjector.resolve("projectDataService");
+				projectDataService.getNSValue = () => nsValueObject;
+
+				let npmInstallationManager = testInjector.resolve("npmInstallationManager");
+				npmInstallationManager.install = (packageName: string, packageDir: string, options: INpmInstallOptions) => {
+					assert.deepEqual(options.version, versionString);
+					return "";
+				};
+
+				let projectData: IProjectData = testInjector.resolve("projectData");
+
+				await platformService.addPlatforms(["android"], "", projectData, null);
+				await platformService.addPlatforms(["ios"], "", projectData, null);
+			});
+			it("should install latest platform if no information found in package.json's nativescript key", async () => {
+				let fs = testInjector.resolve("fs");
+				fs.exists = () => false;
+
+				let projectDataService = testInjector.resolve("projectDataService");
+				projectDataService.getNSValue = (): any => null;
+
+				let npmInstallationManager = testInjector.resolve("npmInstallationManager");
+				npmInstallationManager.install = (packageName: string, packageDir: string, options: INpmInstallOptions) => {
+					assert.deepEqual(options.version, undefined);
+					return "";
+				};
+
+				let projectData: IProjectData = testInjector.resolve("projectData");
+
+				await platformService.addPlatforms(["android"], "", projectData, null);
+				await platformService.addPlatforms(["ios"], "", projectData, null);
+			});
 		});
 		describe("#add platform(ios)", () => {
 			it("should call validate method", async () => {
@@ -173,7 +213,7 @@ describe('Platform Service Tests', () => {
 	});
 
 	describe("remove platform unit tests", () => {
-		it("should fail when platforms are not added", async () =>  {
+		it("should fail when platforms are not added", async () => {
 			const ExpectedErrorsCaught = 2;
 			let errorsCaught = 0;
 			let projectData: IProjectData = testInjector.resolve("projectData");
