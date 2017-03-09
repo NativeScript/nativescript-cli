@@ -44,9 +44,9 @@ class LiveSyncService implements ILiveSyncService {
 	}
 
 	public async liveSync(platform: string, projectData: IProjectData, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => Promise<void>): Promise<void> {
-			if (this.$options.justlaunch) {
-				this.$options.watch = false;
-			}
+		if (this.$options.justlaunch) {
+			this.$options.watch = false;
+		}
 		let liveSyncData: ILiveSyncData[] = [];
 
 		if (platform) {

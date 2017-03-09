@@ -225,7 +225,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				}
 			}
 
-			await this.preparePlatformCore(platform, appFilesUpdaterOptions, projectData, platformSpecificData);
+			await this.preparePlatformCore(platform, appFilesUpdaterOptions, projectData, platformSpecificData, changesInfo);
 			this.$projectChangesService.savePrepareInfo(platform, projectData);
 		} else {
 			this.$logger.out("Skipping prepare.");
