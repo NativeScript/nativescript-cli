@@ -174,17 +174,9 @@ class IOSDebugService implements IDebugService {
 	}
 
 	private async wireDebuggerClient(projectData: IProjectData, device?: Mobile.IiOSDevice): Promise<void> {
-		const factoryPromise = async () => {
+		const factory = async () => {
 			let socket = device ? await device.connectToPort(inspectorBackendPort) : net.connect(inspectorBackendPort);
 			this._sockets.push(socket);
-			return socket;
-		};
-
-		const socket = await factoryPromise();
-		const factory = () => {
-			process.nextTick(() => {
-				socket.emit("connect");
-			});
 			return socket;
 		};
 

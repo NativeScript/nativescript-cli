@@ -18,9 +18,12 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 			await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getAttachAvailable(projectId), constants.IOS_OBSERVE_NOTIFICATION_COMMAND_TYPE)
 		];
 
-		const observeNotificationPromises = _.map(observeNotificationSockets, s => {
-			return this.$iOSNotificationService.awaitNotification(deviceIdentifier, +s, timeout);
-		});
+		const observeNotificationPromises = _(observeNotificationSockets)
+			.uniq()
+			.map(s => {
+				return this.$iOSNotificationService.awaitNotification(deviceIdentifier, +s, timeout);
+			})
+			.value();
 
 		// Trigger the notifications update.
 		await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getAttachAvailabilityQuery(projectId));

@@ -67,7 +67,6 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 	}
 
 	public createWebSocketProxy(factory: () => Promise<net.Socket>): ws.Server {
-		let socketFactory = async (callback: (_socket: net.Socket) => void) => callback(await factory());
 		// NOTE: We will try to provide command line options to select ports, at least on the localhost.
 		let localPort = 8080;
 
@@ -80,13 +79,12 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 
 		let server = new ws.Server(<any>{
 			port: localPort,
-			verifyClient: (info: any, callback: Function) => {
+			verifyClient: async (info: any, callback: Function) => {
 				this.$logger.info("Frontend client connected.");
-				socketFactory((_socket: any) => {
-					this.$logger.info("Backend socket created.");
-					info.req["__deviceSocket"] = _socket;
-					callback(true);
-				});
+				const _socket = await factory();
+				this.$logger.info("Backend socket created.");
+				info.req["__deviceSocket"] = _socket;
+				callback(true);
 			}
 		});
 		server.on("connection", (webSocket) => {
@@ -102,9 +100,10 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 
 			webSocket.on("message", (message, flags) => {
 				let length = Buffer.byteLength(message, encoding);
-				let payload = new Buffer(length);
-				payload.write(message, 0, length, encoding);
-				deviceSocket.write(payload.toString());
+				let payload = new Buffer(length + 4);
+				payload.writeInt32BE(length, 0);
+				payload.write(message, 4, length, encoding);
+				deviceSocket.write(payload);
 			});
 
 			deviceSocket.on("end", () => {

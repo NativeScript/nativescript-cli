@@ -290,7 +290,7 @@ interface IAndroidToolsInfoData {
 
 interface ISocketProxyFactory {
 	createTCPSocketProxy(factory: () => any): any;
-	createWebSocketProxy(factory: () => any): any;
+	createWebSocketProxy(factory: () => Promise<any>): any;
 }
 
 interface IiOSNotification {
