@@ -40,7 +40,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		private $projectChangesService: IProjectChangesService,
 		private $emulatorPlatformService: IEmulatorPlatformService,
-		private $analyticsService: IAnalyticsService) {
+		private $analyticsService: IAnalyticsService,
+		private $messages: IMessages,
+		private $staticConfig: Config.IStaticConfig) {
 		super();
 	}
 
@@ -504,7 +506,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				}
 
 				if (found.length === 0) {
-					this.$errors.fail("Cannot find device with name: %s", emulateOptions.device);
+					this.$errors.fail(this.$messages.Devices.NotFoundDeviceByIdentifierErrorMessage, this.$staticConfig.CLIENT_NAME.toLowerCase());
 				}
 			}
 		}
