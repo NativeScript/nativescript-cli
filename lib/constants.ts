@@ -68,3 +68,4 @@ export const ItunesConnectApplicationTypes = new ItunesConnectApplicationTypesCl
 export const ANGULAR_NAME = "angular";
 export const TYPESCRIPT_NAME = "typescript";
 export const BUILD_OUTPUT_EVENT_NAME = "buildOutput";
+export const VERSION_STRING = "version";
