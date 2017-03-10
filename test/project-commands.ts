@@ -14,6 +14,10 @@ class ProjectServiceMock implements IProjectService {
 		selectedTemplateName = projectOptions.template;
 		isProjectCreated = true;
 	}
+
+	isValidNativeScriptProject(pathToProject?: string): boolean {
+		return true;
+	}
 }
 
 class ProjectNameValidatorMock implements IProjectNameValidator {

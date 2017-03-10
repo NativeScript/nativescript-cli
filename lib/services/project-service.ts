@@ -1,7 +1,7 @@
 import * as constants from "../constants";
 import * as path from "path";
 import * as shelljs from "shelljs";
-import { exportedPromise } from "../common/decorators";
+import { exportedPromise, exported } from "../common/decorators";
 
 export class ProjectService implements IProjectService {
 
@@ -9,6 +9,7 @@ export class ProjectService implements IProjectService {
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
+		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $projectHelper: IProjectHelper,
 		private $projectNameService: IProjectNameService,
@@ -64,6 +65,17 @@ export class ProjectService implements IProjectService {
 		}
 
 		this.$logger.printMarkdown("Project `%s` was successfully created.", projectName);
+	}
+
+	@exported("projectService")
+	public isValidNativeScriptProject(pathToProject?: string): boolean {
+		try {
+			this.$projectData.initializeProjectData(pathToProject);
+		} catch (e) {
+			return false;
+		}
+
+		return true;
 	}
 
 	private getDataFromJson(templatePath: string): any {
