@@ -42,13 +42,11 @@
     "loglevel": "1.4.1",
     "promise-queue": "2.2.3",
     "qs": "6.3.1",
+    "request": "2.79.0",
     "rxjs": "5.1.1",
     "sift": "3.2.7",
     "uid": "0.0.2",
     "url-pattern": "1.0.3"
-  },
-  "peerDependencies": {
-    "core-js": "2.4.1"
   },
   "devDependencies": {
     "app-module-path": "2.2.0",
@@ -62,7 +60,6 @@
     "babel-preset-stage-2": "^6.5.0",
     "chai": "3.5.0",
     "chai-as-promised": "6.0.0",
-    "core-js": "2.4.1",
     "del-cli": "^0.2.0",
     "esdoc": "0.5.2",
     "esdoc-es7-plugin": "0.0.3",
@@ -75,8 +72,7 @@
     "json-loader": "^0.5.4",
     "mocha": "^3.0.0",
     "nock": "9.0.6",
-    "regenerator-runtime": "^0.9.5",
-    "request": "2.79.0"
+    "regenerator-runtime": "^0.9.5"
   },
   "engines": {
     "node": "6.9.1"
