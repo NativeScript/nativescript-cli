@@ -190,7 +190,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return _.filter(this.$platformsData.platformsNames, p => { return this.isPlatformPrepared(p, projectData); });
 	}
 
-	public async preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<boolean> {
+	public async preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, filesToSync?: Array<String>): Promise<boolean> {
 		this.validatePlatform(platform, projectData);
 
 		await this.trackProjectType(projectData);
@@ -229,7 +229,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				}
 			}
 
-			await this.preparePlatformCore(platform, appFilesUpdaterOptions, projectData, platformSpecificData, changesInfo);
+			await this.preparePlatformCore(platform, appFilesUpdaterOptions, projectData, platformSpecificData, changesInfo, filesToSync);
 			this.$projectChangesService.savePrepareInfo(platform, projectData);
 		} else {
 			this.$logger.out("Skipping prepare.");
@@ -257,7 +257,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	@helpers.hook('prepare')
-	private async preparePlatformCore(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, changesInfo?: IProjectChangesInfo): Promise<void> {
+	private async preparePlatformCore(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, changesInfo?: IProjectChangesInfo, filesToSync?: Array<String>): Promise<void> {
 		this.$logger.out("Preparing project...");
 
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);

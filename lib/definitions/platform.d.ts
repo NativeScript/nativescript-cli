@@ -42,9 +42,10 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @param {string} platformTemplate The name of the platform template.
 	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @param {IPlatformSpecificData} platformSpecificData Platform specific data required for project preparation.
+	 * @param {Array} filesToSync Files about to be synced to device.
 	 * @returns {boolean} true indicates that the platform was prepared.
 	 */
-	preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<boolean>;
+	preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, filesToSync?: Array<String>): Promise<boolean>;
 
 	/**
 	 * Determines whether a build is necessary. A build is necessary when one of the following is true:
