@@ -1,5 +1,6 @@
-import Middleware from './middleware';
 import { KinveyError } from 'src/errors';
+
+import Middleware from './middleware';
 
 export default class HttpMiddleware extends Middleware {
   constructor(name = 'Http Middleware') {

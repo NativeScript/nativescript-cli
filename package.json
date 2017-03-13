@@ -35,6 +35,7 @@
     "append-query": "2.0.1",
     "core-js": "2.4.1",
     "es6-error": "4.0.2",
+    "es6-promise": "4.1.0",
     "fast-memory-cache": "2.0.4",
     "hellojs": "1.14.0",
     "local-storage": "1.4.2",
@@ -46,9 +47,6 @@
     "sift": "3.2.7",
     "uid": "0.0.2",
     "url-pattern": "1.0.3"
-  },
-  "peerDependencies": {
-    "core-js": "2.4.1"
   },
   "devDependencies": {
     "app-module-path": "2.2.0",

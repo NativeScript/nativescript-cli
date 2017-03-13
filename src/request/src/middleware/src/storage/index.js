@@ -1,9 +1,11 @@
-import { NotFoundError } from 'src/errors';
-import MemoryAdapter from './src/memory';
 import Queue from 'promise-queue';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
+
 import { isDefined } from 'src/utils';
+import { NotFoundError } from 'src/errors';
+import MemoryAdapter from './src/memory';
+
 Queue.configure(Promise);
 const queue = new Queue(1, Infinity);
 

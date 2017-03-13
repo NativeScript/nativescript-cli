@@ -1,4 +1,5 @@
 import Log from 'loglevel';
+
 const originalFactory = Log.methodFactory;
 
 /**

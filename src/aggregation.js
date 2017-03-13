@@ -4,9 +4,10 @@ import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import isFunction from 'lodash/isFunction';
 import cloneDeep from 'lodash/cloneDeep';
+
 import { KinveyError } from 'src/errors';
-import { Query } from './query';
 import { isDefined } from 'src/utils';
+import { Query } from './query';
 
 /**
  * @private
