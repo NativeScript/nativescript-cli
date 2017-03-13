@@ -9,6 +9,8 @@ import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
 
+import cloneDeep from 'lodash/cloneDeep';
+
 /**
  * @private
  * Enum for Request Methods.
@@ -106,6 +108,14 @@ export default class Request {
 
   set url(urlString) {
     this._url = urlString;
+  }
+
+  get body() {
+    return this._body;
+  }
+
+  set body(body) {
+    this._body = cloneDeep(body);
   }
 
   get data() {
