@@ -86,7 +86,7 @@ export class ProjectChangesService implements IProjectChangesService {
 				this._prepareInfo.iOSProvisioningProfileUUID = nextCommandProvisionUUID;
 			}
 		}
-		if (this.$options.bundle !== this._prepareInfo.bundle || this.$options.release !== this._prepareInfo.release) {
+		if (this.$options.bundle !== this._prepareInfo.bundle || this.$options.release) {
 			this._changesInfo.appFilesChanged = true;
 			this._changesInfo.appResourcesChanged = true;
 			this._changesInfo.modulesChanged = true;
