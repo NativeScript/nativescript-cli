@@ -21,6 +21,7 @@ import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-
 import { XmlValidator } from "../lib/xml-validator";
 import * as ChildProcessLib from "../lib/common/child-process";
 import ProjectChangesLib = require("../lib/services/project-changes-service");
+import { Messages } from "../lib/common/messages/messages";
 
 let isCommandExecuted = true;
 
@@ -140,6 +141,7 @@ function createTestInjector() {
 	testInjector.register("analyticsService", {
 		track: async () => undefined
 	});
+	testInjector.register("messages", Messages);
 
 	return testInjector;
 }
