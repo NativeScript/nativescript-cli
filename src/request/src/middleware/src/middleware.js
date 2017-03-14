@@ -1,3 +1,5 @@
+import Promise from 'es6-promise';
+
 import AsciiTree from './asciitree';
 
 export default class Middleware {

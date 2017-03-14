@@ -1,12 +1,14 @@
 /* eslint-disable camelcase */
-import Popup from './popup';
-import Identity from './identity';
-import { SocialIdentity } from './enums';
-import { KinveyError } from 'src/errors';
-import { randomString } from 'src/utils';
+import Promise from 'es6-promise';
 import assign from 'lodash/assign';
 import querystring from 'querystring';
 import url from 'url';
+
+import { KinveyError } from 'src/errors';
+import { randomString } from 'src/utils';
+import Popup from './popup';
+import Identity from './identity';
+import { SocialIdentity } from './enums';
 
 /**
  * @private
