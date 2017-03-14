@@ -44,6 +44,13 @@ interface IProjectService {
 	 * @returns {Promise<void>}
 	 */
 	createProject(projectSettings: IProjectSettings): Promise<void>;
+
+	/**
+	 * Checks if the specified project is valid NativeScript project.
+	 * @param {string} pathToProject Directory to check.
+	 * @returns {boolean} returns true if the project is valid NativeScript project.
+	 */
+	isValidNativeScriptProject(pathToProject?: string): boolean;
 }
 
 interface IProjectData {
