@@ -138,8 +138,11 @@ describe("Project Service Tests", () => {
 	describe("project service integration tests", () => {
 		let defaultTemplatePath: string;
 		let defaultSpecificVersionTemplatePath: string;
+		let noAppResourcesTemplatePath: string;
 		let angularTemplatePath: string;
 		let typescriptTemplatePath: string;
+
+		const noAppResourcesTemplateName = "tns-template-hello-world-ts";
 
 		before(async () => {
 			let projectIntegrationTest = new ProjectIntegrationTest();
@@ -205,6 +208,23 @@ describe("Project Service Tests", () => {
 			typescriptTemplatePath = path.join(typescriptTemplateDir, "node_modules", constants.RESERVED_TEMPLATE_NAMES["typescript"]);
 
 			fs.deleteDirectory(path.join(typescriptTemplatePath, "node_modules"));
+			let noAppResourcesTemplateDir = temp.mkdirSync("noAppResources");
+			fs.writeJson(path.join(noAppResourcesTemplateDir, "package.json"), {
+				"name": "blankTemplate",
+				"version": "1.0.0",
+				"description": "dummy",
+				"license": "MIT",
+				"readme": "dummy",
+				"repository": "dummy"
+			});
+
+			await npmInstallationManager.install(noAppResourcesTemplateName, noAppResourcesTemplateDir, {
+				dependencyType: "save",
+				version: "2.0.0"
+			});
+			noAppResourcesTemplatePath = path.join(noAppResourcesTemplateDir, "node_modules", noAppResourcesTemplateName);
+
+			fs.deleteDirectory(path.join(noAppResourcesTemplatePath, "node_modules"));
 		});
 
 		it("creates valid project from default template", async () => {
@@ -232,6 +252,15 @@ describe("Project Service Tests", () => {
 
 			await projectIntegrationTest.createProject({ projectName: projectName, template: "default@1.4.0", pathToProject: tempFolder });
 			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", defaultSpecificVersionTemplatePath);
+		});
+
+		it("creates valid project from a template without App_Resources", async () => {
+			let projectIntegrationTest = new ProjectIntegrationTest();
+			let tempFolder = temp.mkdirSync("project");
+			let projectName = "myapp";
+
+			await projectIntegrationTest.createProject({ projectName: projectName, template: noAppResourcesTemplateName + "@2.0.0", pathToProject: tempFolder });
+			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", noAppResourcesTemplatePath);
 		});
 
 		it("creates valid project from typescript template", async () => {
