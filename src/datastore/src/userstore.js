@@ -139,18 +139,17 @@ class UserStore extends NetworkStore {
   removeById(id, options = {}) {
     const stream = KinveyObservable.create((observer) => {
       try {
-        if (!id) {
+        if(!id) {
           observer.next(undefined);
           return observer.complete();
         }
 
-        var path = `${this.pathname}/${id}`;
-        var query = options.query;
+        let query = options.query;
 
-        if (options.hard === true){
+        if(options.hard === true){
           query = {
-            hard : true
-          }
+            hard: true
+          };
         }
 
         const request = new KinveyRequest({
@@ -159,7 +158,7 @@ class UserStore extends NetworkStore {
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
-            pathname: path,
+            pathname: `${this.pathname}/${id}`,
             query: query
           }),
           properties: options.properties,
@@ -175,7 +174,7 @@ class UserStore extends NetworkStore {
       }
     });
 
-    return stream.toPromise();    
+    return stream.toPromise();
   }
   /**
    * Restore a user that has been suspended.
