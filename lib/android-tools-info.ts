@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as semver from "semver";
-import {EOL} from "os";
+import { EOL } from "os";
 
 export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private static ANDROID_TARGET_PREFIX = "android";
@@ -15,18 +15,6 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private selectedCompileSdk: number;
 	private installedTargetsCache: string[] = null;
 	private androidHome = process.env["ANDROID_HOME"];
-	private pathToAndroidExecutable: string;
-	private _androidExecutableName: string;
-	private get androidExecutableName(): string {
-		if (!this._androidExecutableName) {
-			this._androidExecutableName = "android";
-			if (this.$hostInfo.isWindows) {
-				this._androidExecutableName += ".bat";
-			}
-		}
-
-		return this._androidExecutableName;
-	}
 
 	constructor(private $childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -34,49 +22,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $options: IOptions,
-		private $adb: Mobile.IAndroidDebugBridge,
 		protected $staticConfig: Config.IStaticConfig) { }
-
-	public getPathToAndroidExecutable(options?: { showWarningsAsErrors: boolean }): IFuture<string> {
-		return ((): string => {
-			if (options) {
-				this.showWarningsAsErrors = options.showWarningsAsErrors;
-			}
-			if (!this.pathToAndroidExecutable) {
-				if (this.validateAndroidHomeEnvVariable(this.androidHome)) {
-					let androidPath = path.join(this.androidHome, "tools", this.androidExecutableName);
-					if (!this.trySetAndroidPath(androidPath).wait() && !this.trySetAndroidPath(this.androidExecutableName).wait()) {
-						this.printMessage(`Unable to find "${this.androidExecutableName}" executable file. Make sure you have set ANDROID_HOME environment variable correctly.`);
-					}
-				} else {
-					this.$logger.trace("ANDROID_HOME environment variable is not set correctly.");
-				}
-			}
-
-			return this.pathToAndroidExecutable;
-		}).future<string>()();
-	}
-
-	private trySetAndroidPath(androidPath: string): IFuture<boolean> {
-		return ((): boolean => {
-			let isAndroidPathCorrect = true;
-			try {
-				let result = this.$adb.executeCommand(["--help"], { returnChildProcess: true }).wait();
-				if (result && result.stdout) {
-					this.$logger.trace(result.stdout);
-					this.pathToAndroidExecutable = androidPath;
-				} else {
-					this.$logger.trace(`Unable to find android executable from '${androidPath}'.`);
-					isAndroidPathCorrect = false;
-				}
-			} catch (err) {
-				this.$logger.trace(`Error occurred while checking androidExecutable from '${androidPath}'. ${err.message}`);
-				isAndroidPathCorrect = false;
-			}
-
-			return isAndroidPathCorrect;
-		}).future<boolean>()();
-	}
 
 	public getToolsInfo(): IFuture<IAndroidToolsInfoData> {
 		return ((): IAndroidToolsInfoData => {
@@ -101,10 +47,10 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			let detectedErrors = false;
 			this.showWarningsAsErrors = options && options.showWarningsAsErrors;
 			let toolsInfoData = this.getToolsInfo().wait();
-			let isAndroidHomeValid = this.validateAndroidHomeEnvVariable(toolsInfoData.androidHomeEnvVar);
+			let isAndroidHomeValid = this.validateAndroidHomeEnvVariable();
 			if (!toolsInfoData.compileSdkVersion) {
 				this.printMessage(`Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later.`,
-					"Run `$ android` to manage your Android SDK versions.");
+					`Run \`\$ ${this.getPathToSdkManagementTool()}\` to manage your Android SDK versions.`);
 				detectedErrors = true;
 			}
 
@@ -118,7 +64,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 					message = `You have to install version ${versionRangeMatches[1]}.`;
 				}
 
-				let invalidBuildToolsAdditionalMsg = 'Run `android` from your command-line to install required `Android Build Tools`.';
+				let invalidBuildToolsAdditionalMsg = `Run \`\$ ${this.getPathToSdkManagementTool()}\` from your command-line to install required \`Android Build Tools\`.`;
 				if (!isAndroidHomeValid) {
 					invalidBuildToolsAdditionalMsg += ' In case you already have them installed, make sure `ANDROID_HOME` environment variable is set correctly.';
 				}
@@ -128,7 +74,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			}
 
 			if (!toolsInfoData.supportRepositoryVersion) {
-				let invalidSupportLibAdditionalMsg = 'Run `$ android`  to manage the Android Support Repository.';
+				let invalidSupportLibAdditionalMsg = `Run \`\$ ${this.getPathToSdkManagementTool()}\` to manage the Android Support Repository.`;
 				if (!isAndroidHomeValid) {
 					invalidSupportLibAdditionalMsg += ' In case you already have it installed, make sure `ANDROID_HOME` environment variable is set correctly.';
 				}
@@ -196,6 +142,54 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 			return null;
 		}).future<string>()();
+	}
+
+	private _cachedAndroidHomeValidationResult: boolean = null;
+	public validateAndroidHomeEnvVariable(options?: { showWarningsAsErrors: boolean }): boolean {
+		if (this._cachedAndroidHomeValidationResult === null) {
+			if (options) {
+				this.showWarningsAsErrors = options.showWarningsAsErrors;
+			}
+
+			this._cachedAndroidHomeValidationResult = true;
+			let expectedDirectoriesInAndroidHome = ["build-tools", "tools", "platform-tools", "extras"];
+			if (!this.androidHome || !this.$fs.exists(this.androidHome)) {
+				this.printMessage("The ANDROID_HOME environment variable is not set or it points to a non-existent directory. You will not be able to perform any build-related operations for Android.",
+					"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory.");
+				this._cachedAndroidHomeValidationResult = false;
+			} else if (!_.some(expectedDirectoriesInAndroidHome.map(dir => this.$fs.exists(path.join(this.androidHome, dir))))) {
+				this.printMessage("The ANDROID_HOME environment variable points to incorrect directory. You will not be able to perform any build-related operations for Android.",
+					"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory, " +
+					"where you will find `tools` and `platform-tools` directories.");
+				this._cachedAndroidHomeValidationResult = false;
+			}
+		}
+
+		return this._cachedAndroidHomeValidationResult;
+	}
+
+	private _cachedPathToSdkManagementTool: string;
+	private getPathToSdkManagementTool(): string {
+		if (!this._cachedPathToSdkManagementTool) {
+			const sdkmanagerName = "sdkmanager";
+			this._cachedPathToSdkManagementTool = sdkmanagerName;
+
+			const isAndroidHomeValid = this.validateAndroidHomeEnvVariable();
+
+			if (isAndroidHomeValid) {
+				// In case ANDROID_HOME is correct, check if sdkmanager exists and if not it means the SDK has not been updated.
+				// In this case user shoud use `android` from the command-line instead of sdkmanager.
+				const pathToSdkmanager = path.join(this.androidHome, "tools", "bin", sdkmanagerName);
+				const pathToAndroidExecutable = path.join(this.androidHome, "tools", "android");
+				const pathToExecutable = this.$fs.exists(pathToSdkmanager) ? pathToSdkmanager : pathToAndroidExecutable;
+
+				this.$logger.trace(`Path to Android SDK Management tool is: ${pathToExecutable}`);
+
+				this._cachedPathToSdkManagementTool = pathToExecutable.replace(this.androidHome, this.$hostInfo.isWindows ? "%ANDROID_HOME%" : "$ANDROID_HOME");
+			}
+		}
+
+		return this._cachedPathToSdkManagementTool;
 	}
 
 	private shouldGenerateTypings(): boolean {
@@ -343,45 +337,24 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		return (() => {
 			if (!this.installedTargetsCache) {
 				try {
-					let pathToAndroidExecutable = this.getPathToAndroidExecutable().wait();
-					if (pathToAndroidExecutable) {
-						let result = this.$childProcess.spawnFromEvent(pathToAndroidExecutable, ["list", "targets"], "close", {}, { throwError: false }).wait();
-						if (result && result.stdout) {
-							this.$logger.trace(result.stdout);
-							this.installedTargetsCache = [];
-							result.stdout.replace(/id: \d+ or "(.+)"/g, (m: string, p1: string) => (this.installedTargetsCache.push(p1), m));
-						}
+					const pathToInstalledTargets = path.join(this.androidHome, "platforms");
+					if (!this.$fs.exists(pathToInstalledTargets)) {
+						throw new Error("No Android Targets installed.");
 					}
+
+					this.installedTargetsCache = this.$fs.readDirectory(pathToInstalledTargets);
+					this.$logger.trace("Installed Android Targets are: ", this.installedTargetsCache);
 				} catch (err) {
 					this.$logger.trace("Unable to get Android targets. Error is: " + err);
 				}
 			}
+
 			return this.installedTargetsCache;
 		}).future<string[]>()();
 	}
 
 	private getMaxSupportedVersion(): number {
 		return this.parseAndroidSdkString(_.last(AndroidToolsInfo.SUPPORTED_TARGETS.sort()));
-	}
-
-	private _cachedAndroidHomeValidationResult: boolean = null;
-	private validateAndroidHomeEnvVariable(androidHomeEnvVar: string): boolean {
-		if (this._cachedAndroidHomeValidationResult === null) {
-			this._cachedAndroidHomeValidationResult = true;
-			let expectedDirectoriesInAndroidHome = ["build-tools", "tools", "platform-tools", "extras"];
-			if (!androidHomeEnvVar || !this.$fs.exists(androidHomeEnvVar)) {
-				this.printMessage("The ANDROID_HOME environment variable is not set or it points to a non-existent directory. You will not be able to perform any build-related operations for Android.",
-					"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory.");
-				this._cachedAndroidHomeValidationResult = false;
-			} else if (!_.some(expectedDirectoriesInAndroidHome.map(dir => this.$fs.exists(path.join(androidHomeEnvVar, dir))))) {
-				this.printMessage("The ANDROID_HOME environment variable points to incorrect directory. You will not be able to perform any build-related operations for Android.",
-					"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory, " +
-					"where you will find `tools` and `platform-tools` directories.");
-				this._cachedAndroidHomeValidationResult = false;
-			}
-		}
-
-		return this._cachedAndroidHomeValidationResult;
 	}
 }
 $injector.register("androidToolsInfo", AndroidToolsInfo);

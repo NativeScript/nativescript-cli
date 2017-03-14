@@ -176,12 +176,11 @@ interface IAndroidToolsInfo {
 	validateJavacVersion(installedJavaVersion: string, options?: { showWarningsAsErrors: boolean }): IFuture<boolean>;
 
 	/**
-	 * Returns the path to `android` executable. It should be `$ANDROID_HOME/tools/android`.
-	 * In case ANDROID_HOME is not defined, check if `android` is part of $PATH.
+	 * Validates if ANDROID_HOME environment variable is set correctly.
 	 * @param {any} options Defines if the warning messages should treated as error.
-	 * @return {string} Path to the `android` executable.
+	 * @returns {boolean} true in case ANDROID_HOME is correctly set, false otherwise.
 	 */
-	getPathToAndroidExecutable(options?: { showWarningsAsErrors: boolean }): IFuture<string>;
+	validateAndroidHomeEnvVariable(options?: { showWarningsAsErrors: boolean }): boolean;
 
 	/**
 	 * Gets the path to `adb` executable from ANDROID_HOME. It should be `$ANDROID_HOME/platform-tools/adb` in case it exists.
