@@ -231,7 +231,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	 */
 	getAppResourcesDestinationDirectoryPath(projectData: IProjectData): string;
 
-	deploy(deviceIdentifier: string, projectData: IProjectData): Promise<void>;
+	cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void>;
 	processConfigurationFilesFromAppResources(release: boolean, projectData: IProjectData): Promise<void>;
 
 	/**

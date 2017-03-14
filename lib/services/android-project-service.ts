@@ -432,7 +432,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		await this.spawn(gradleBin, options, { stdio: "inherit", cwd: this.getPlatformData(projectData).projectRoot });
 	}
 
-	public async deploy(deviceIdentifier: string, projectData: IProjectData): Promise<void> {
+	public async cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void> {
 		let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
 		let deviceRootPath = `/data/local/tmp/${projectData.projectId}`;
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);

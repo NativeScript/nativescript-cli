@@ -443,7 +443,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			packageFile = this.getLatestApplicationPackageForDevice(platformData).packageName;
 		}
 
-		await platformData.platformProjectService.deploy(device.deviceInfo.identifier, projectData);
+		await platformData.platformProjectService.cleanDeviceTempFolder(device.deviceInfo.identifier, projectData);
 
 		await device.applicationManager.reinstallApplication(projectData.projectId, packageFile);
 

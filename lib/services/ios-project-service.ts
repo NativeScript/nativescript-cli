@@ -438,7 +438,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return this.$fs.exists(path.join(projectRoot, projectData.projectName, constants.APP_FOLDER_NAME));
 	}
 
-	public deploy(deviceIdentifier: string): Promise<void> {
+	public cleanDeviceTempFolder(deviceIdentifier: string): Promise<void> {
 		return Promise.resolve();
 	}
 
