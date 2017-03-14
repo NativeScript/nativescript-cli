@@ -1,7 +1,6 @@
 import * as constants from "../../constants";
 import * as helpers from "../../common/helpers";
 import * as path from "path";
-import * as semver from "semver";
 import { NodeModulesDependenciesBuilder } from "../../tools/node-modules/node-modules-dependencies-builder";
 
 let choki = require("chokidar");
@@ -9,14 +8,10 @@ let choki = require("chokidar");
 class LiveSyncService implements ILiveSyncService {
 	private _isInitialized = false;
 
-	constructor(private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $errors: IErrors,
+	constructor(private $errors: IErrors,
 		private $platformsData: IPlatformsData,
 		private $platformService: IPlatformService,
-		private $projectDataService: IProjectDataService,
-		private $prompter: IPrompter,
 		private $injector: IInjector,
-		private $mobileHelper: Mobile.IMobileHelper,
 		private $devicesService: Mobile.IDevicesService,
 		private $options: IOptions,
 		private $logger: ILogger,

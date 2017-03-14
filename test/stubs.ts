@@ -337,7 +337,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	async beforePrepareAllPlugins(): Promise<void> {
 		return Promise.resolve();
 	}
-	async deploy(deviceIdentifier: string): Promise<void> {
+	async cleanDeviceTempFolder(deviceIdentifier: string): Promise<void> {
 		return Promise.resolve();
 	}
 	async processConfigurationFilesFromAppResources(): Promise<void> {
@@ -637,7 +637,7 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 		return Promise.resolve();
 	}
 
-	public runPlatform(platform: string, runOptions: IRunPlatformOptions): Promise<void> {
+	public startApplication(platform: string, runOptions: IRunPlatformOptions): Promise<void> {
 		return Promise.resolve();
 	}
 
