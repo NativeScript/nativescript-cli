@@ -79,6 +79,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("utils", Utils);
 	testInjector.register("iTunesValidator", {});
 	testInjector.register("xcprojService", {});
+	testInjector.register("iosDeviceOperations", {});
 	testInjector.register("pluginVariablesService", PluginVariablesService);
 	testInjector.register("pluginVariablesHelper", PluginVariablesHelper);
 	testInjector.register("androidProcessService", {});

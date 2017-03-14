@@ -290,7 +290,7 @@ interface IAndroidToolsInfoData {
 
 interface ISocketProxyFactory {
 	createTCPSocketProxy(factory: () => any): any;
-	createWebSocketProxy(factory: () => any): any;
+	createWebSocketProxy(factory: () => Promise<any>): any;
 }
 
 interface IiOSNotification {
@@ -304,11 +304,12 @@ interface IiOSNotification {
 }
 
 interface IiOSNotificationService {
-	awaitNotification(npc: Mobile.INotificationProxyClient, notification: string, timeout: number): Promise<string>;
+	awaitNotification(deviceIdentifier: string, socket: number, timeout: number): Promise<string>;
+	postNotification(deviceIdentifier: string, notification: string, commandType?: string): Promise<string>;
 }
 
 interface IiOSSocketRequestExecutor {
-	executeLaunchRequest(device: Mobile.IiOSDevice, timeout: number, readyForAttachTimeout: number, projectId: string, shouldBreak?: boolean): Promise<void>;
+	executeLaunchRequest(deviceIdentifier: string, timeout: number, readyForAttachTimeout: number, projectId: string, shouldBreak?: boolean): Promise<void>;
 	executeAttachRequest(device: Mobile.IiOSDevice, timeout: number, projectId: string): Promise<void>;
 }
 

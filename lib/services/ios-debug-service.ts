@@ -158,7 +158,7 @@ class IOSDebugService implements IDebugService {
 
 	private async debugBrkCore(device: Mobile.IiOSDevice, projectData: IProjectData, shouldBreak?: boolean): Promise<void> {
 		let timeout = this.$utils.getMilliSecondsTimeout(TIMEOUT_SECONDS);
-		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device, timeout, timeout, projectData.projectId, shouldBreak);
+		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device.deviceInfo.identifier, timeout, timeout, projectData.projectId, shouldBreak);
 		await this.wireDebuggerClient(projectData, device);
 	}
 
@@ -174,8 +174,8 @@ class IOSDebugService implements IDebugService {
 	}
 
 	private async wireDebuggerClient(projectData: IProjectData, device?: Mobile.IiOSDevice): Promise<void> {
-		let factory = () => {
-			let socket = device ? device.connectToPort(inspectorBackendPort) : net.connect(inspectorBackendPort);
+		const factory = async () => {
+			let socket = device ? await device.connectToPort(inspectorBackendPort) : net.connect(inspectorBackendPort);
 			this._sockets.push(socket);
 			return socket;
 		};

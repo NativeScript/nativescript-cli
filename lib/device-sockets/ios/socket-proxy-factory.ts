@@ -66,8 +66,7 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 		return server;
 	}
 
-	public createWebSocketProxy(factory: () => net.Socket): ws.Server {
-		let socketFactory = (callback: (_socket: net.Socket) => void) => helpers.connectEventually(factory, callback);
+	public createWebSocketProxy(factory: () => Promise<net.Socket>): ws.Server {
 		// NOTE: We will try to provide command line options to select ports, at least on the localhost.
 		let localPort = 8080;
 
@@ -80,13 +79,12 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 
 		let server = new ws.Server(<any>{
 			port: localPort,
-			verifyClient: (info: any, callback: Function) => {
+			verifyClient: async (info: any, callback: Function) => {
 				this.$logger.info("Frontend client connected.");
-				socketFactory((_socket: any) => {
-					this.$logger.info("Backend socket created.");
-					info.req["__deviceSocket"] = _socket;
-					callback(true);
-				});
+				const _socket = await factory();
+				this.$logger.info("Backend socket created.");
+				info.req["__deviceSocket"] = _socket;
+				callback(true);
 			}
 		});
 		server.on("connection", (webSocket) => {

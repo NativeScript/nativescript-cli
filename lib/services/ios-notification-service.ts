@@ -1,25 +1,25 @@
+import * as constants from "../common/constants";
+
 export class IOSNotificationService implements IiOSNotificationService {
-	public async awaitNotification(npc: Mobile.INotificationProxyClient, notification: string, timeout: number): Promise<string> {
-		return new Promise<string>((resolve, reject) => {
+	constructor(private $iosDeviceOperations: IIOSDeviceOperations) { }
 
-			let timeoutToken = setTimeout(() => {
-				detachObserver();
-				reject(new Error(`Timeout receiving ${notification} notification.`));
-			}, timeout);
+	public async awaitNotification(deviceIdentifier: string, socket: number, timeout: number): Promise<string> {
+		const notificationResponse = await this.$iosDeviceOperations.awaitNotificationResponse([{
+			deviceId: deviceIdentifier,
+			socket: socket,
+			timeout: timeout,
+			responseCommandType: constants.IOS_RELAY_NOTIFICATION_COMMAND_TYPE,
+			responsePropertyName: "Name"
+		}]);
 
-			function notificationObserver(_notification: string) {
-				clearTimeout(timeoutToken);
-				detachObserver();
-				resolve(_notification);
-			}
+		return _.first(notificationResponse[deviceIdentifier]).response;
+	}
 
-			function detachObserver() {
-				process.nextTick(() => npc.removeObserver(notification, notificationObserver));
-			}
-
-			npc.addObserver(notification, notificationObserver);
-
-		});
+	public async postNotification(deviceIdentifier: string, notification: string, commandType?: string): Promise<string> {
+		commandType = commandType || constants.IOS_POST_NOTIFICATION_COMMAND_TYPE;
+		const response = await this.$iosDeviceOperations.postNotification([{ deviceId: deviceIdentifier, commandType: commandType, notificationName: notification }]);
+		return _.first(response[deviceIdentifier]).response;
 	}
 }
+
 $injector.register("iOSNotificationService", IOSNotificationService);
