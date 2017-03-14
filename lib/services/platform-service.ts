@@ -492,7 +492,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		await this.$devicesService.execute(action, this.getCanExecuteAction(platform, deployOptions));
 	}
 
-	public async runPlatform(platform: string, runOptions: IRunPlatformOptions, projectData: IProjectData): Promise<void> {
+	public async startApplication(platform: string, runOptions: IRunPlatformOptions, projectData: IProjectData): Promise<void> {
 		await this.trackProjectType(projectData);
 
 		this.$logger.out("Starting...");
@@ -538,7 +538,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		await this.deployPlatform(platform, appFilesUpdaterOptions, emulateOptions, projectData, platformSpecificData);
-		return this.runPlatform(platform, emulateOptions, projectData);
+		return this.startApplication(platform, emulateOptions, projectData);
 	}
 
 	private getBuildOutputPath(platform: string, platformData: IPlatformData, options: IBuildForDevice): string {

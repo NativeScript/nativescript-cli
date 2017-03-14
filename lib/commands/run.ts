@@ -35,7 +35,7 @@ export class RunCommandBase {
 				justlaunch: this.$options.justlaunch,
 			};
 
-			return this.$platformService.runPlatform(args[0], deployOpts, this.$projectData);
+			return this.$platformService.startApplication(args[0], deployOpts, this.$projectData);
 		}
 
 		return this.$usbLiveSyncService.liveSync(args[0], this.$projectData);

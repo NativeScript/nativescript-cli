@@ -118,7 +118,7 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	runPlatform(platform: string, runOptions: IRunPlatformOptions, projectData: IProjectData): Promise<void>;
+	startApplication(platform: string, runOptions: IRunPlatformOptions, projectData: IProjectData): Promise<void>;
 
 	/**
 	 * The emulate command. In addition to `run --emulator` command, it handles the `--available-devices` option to show the available devices.
