@@ -547,4 +547,48 @@ describe('User', function() {
         });
     });
   });
+
+  describe('removeById()', function() {
+
+    it('should throw a NotFoundError if the id argument is not a string', function() {
+      return User.remove(null, {})
+        .catch((error) => {
+          expect(error).toBeA(NotFoundError);          
+        });
+
+    });
+
+    it('should remove the user that matches the id argument', function() {
+      // Remove the user
+      const user = new User({ _id: randomString(), email: randomString() });
+
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+      .delete(`${user.pathname}/${user._id}`)
+      .reply(204, {}, {
+        'content-type': 'application/json'
+      });
+
+      return User.remove(user._id, {})
+      .then(()=> {
+      })
+    });
+
+    it('should remove the user that matches the id argument permanently', function() {
+      // Remove the user
+      const user = new User({ _id: randomString(), email: randomString() });
+
+      nock(this.client.apiHostname, { encodedQueryParams: true })
+      .delete(`${user.pathname}/${user._id}?hard=true`)
+      .reply(204, {}, {
+        'content-type': 'application/json'
+      });
+
+      return User.remove(user._id, {
+        hard:true
+      })
+      .then(()=> {        
+      })
+    });
+  });
+
 });

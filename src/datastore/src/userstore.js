@@ -127,6 +127,57 @@ class UserStore extends NetworkStore {
   }
 
   /**
+   * Remove a user.
+   *
+   * @deprecated Use the `remove` static function on the `User` class.
+   *
+   * @param   {string}  id               Id of the user to remove.
+   * @param   {Object}  [options]        Options
+   * @param   {boolean} [options.hard]   Boolean indicating whether user should be permanently removed from the backend (defaults to false).
+   * @return  {Promise}
+   */
+  removeById(id, options = {}) {
+    const stream = KinveyObservable.create((observer) => {
+      try {
+        if (!id) {
+          observer.next(undefined);
+          return observer.complete();
+        }
+
+        var path = `${this.pathname}/${id}`;
+        var query = options.query;
+
+        if (options.hard === true){
+          query = {
+            hard : true
+          }
+        }
+
+        const request = new KinveyRequest({
+          method: RequestMethod.DELETE,
+          authType: AuthType.Default,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: path,
+            query: query
+          }),
+          properties: options.properties,
+          timeout: options.timeout
+        });
+        return request.execute()
+          .then(response => response.data)
+          .then(data => observer.next(data))
+          .then(() => observer.complete())
+          .catch(error => observer.error(error));
+      } catch (error) {
+        return observer.error(error);
+      }
+    });
+
+    return stream.toPromise();    
+  }
+  /**
    * Restore a user that has been suspended.
    *
    * @deprecated Use the `restore` function on the `User` class.
