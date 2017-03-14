@@ -34,6 +34,8 @@ export class PublishIOS implements ICommand {
 			mobileProvisionIdentifier = args[2],
 			codeSignIdentity = args[3],
 			teamID = this.$options.teamId,
+			exportMethod = this.$options.exportMethod ? this.$options.exportMethod : null,
+			xcargs = this.$options.xcargs ? this.$options.xcargs : null,
 			ipaFilePath = this.$options.ipa ? path.resolve(this.$options.ipa) : null;
 
 		if (!username) {
@@ -75,7 +77,7 @@ export class PublishIOS implements ICommand {
 				await this.$platformService.buildPlatform(platform, iOSBuildConfig, this.$projectData);
 				ipaFilePath = this.$platformService.lastOutputPath(platform, { isForDevice: iOSBuildConfig.buildForDevice }, this.$projectData);
 			} else {
-				this.$logger.info("No .ipa, mobile provision or certificate set. Perfect! Now we'll build .xcarchive and let Xcode pick the distribution certificate and provisioning profile for you when exporting .ipa for AppStore submission.");
+				this.$logger.info("No .ipa, mobile provision or certificate set. Perfect! Now we'll build .xcarchive and let Xcode pick the distribution certificate and provisioning profile for you.");
 				await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 
 				let platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
@@ -84,7 +86,7 @@ export class PublishIOS implements ICommand {
 				let archivePath = await iOSProjectService.archive(this.$projectData);
 				this.$logger.info("Archive at: " + archivePath);
 
-				let exportPath = await iOSProjectService.exportArchive(this.$projectData, { archivePath, teamID });
+				let exportPath = await iOSProjectService.exportArchive(this.$projectData, { archivePath, teamID, exportMethod, xcargs });
 				this.$logger.info("Export at: " + exportPath);
 
 				ipaFilePath = exportPath;
