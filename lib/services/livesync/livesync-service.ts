@@ -24,21 +24,6 @@ class LiveSyncService implements ILiveSyncService {
 		private $hooksService: IHooksService,
 		private $processService: IProcessService) { }
 
-	private async ensureAndroidFrameworkVersion(platformData: IPlatformData, projectData: IProjectData): Promise<void> { // TODO: this can be moved inside command or canExecute function
-		const frameworkVersion = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName).version;
-
-		if (platformData.normalizedPlatformName.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
-			if (semver.lt(frameworkVersion, "1.2.1")) {
-				let shouldUpdate = await this.$prompter.confirm("You need Android Runtime 1.2.1 or later for LiveSync to work properly. Do you want to update your runtime now?");
-				if (shouldUpdate) {
-					await this.$platformService.updatePlatforms([this.$devicePlatformsConstants.Android.toLowerCase()], this.$options.platformTemplate, projectData, null);
-				} else {
-					return;
-				}
-			}
-		}
-	}
-
 	public get isInitialized(): boolean { // This function is used from https://github.com/NativeScript/nativescript-dev-typescript/blob/master/lib/before-prepare.js#L4
 		return this._isInitialized;
 	}
@@ -82,10 +67,6 @@ class LiveSyncService implements ILiveSyncService {
 	private async prepareLiveSyncData(platform: string, projectData: IProjectData): Promise<ILiveSyncData> {
 		platform = platform || this.$devicesService.platform;
 		let platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
-
-		if (this.$mobileHelper.isAndroidPlatform(platform)) {
-			await this.ensureAndroidFrameworkVersion(platformData, projectData);
-		}
 
 		let liveSyncData: ILiveSyncData = {
 			platform: platform,
