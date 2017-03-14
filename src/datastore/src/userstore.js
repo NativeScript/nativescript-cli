@@ -139,14 +139,14 @@ class UserStore extends NetworkStore {
   removeById(id, options = {}) {
     const stream = KinveyObservable.create((observer) => {
       try {
-        if(!id) {
+        if (!id) {
           observer.next(undefined);
           return observer.complete();
         }
 
         let query = options.query;
 
-        if(options.hard === true){
+        if (options.hard === true) {
           query = {
             hard: true
           };
