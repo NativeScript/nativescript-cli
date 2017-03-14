@@ -511,8 +511,12 @@ export class AndroidToolsInfoStub implements IAndroidToolsInfo {
 		return "";
 	}
 
-	async getPathToAdbFromAndroidHome(): Promise<string> {
+	public async getPathToAdbFromAndroidHome(): Promise<string> {
 		return Promise.resolve("");
+	}
+
+	public validateAndroidHomeEnvVariable(options?: { showWarningsAsErrors: boolean }): boolean {
+		return false;
 	}
 }
 

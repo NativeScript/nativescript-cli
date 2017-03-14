@@ -90,8 +90,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		this.validatePackageName(projectData.projectId);
 		this.validateProjectName(projectData.projectName);
 
-		// this call will fail in case `android` is not set correctly.
-		await this.$androidToolsInfo.getPathToAndroidExecutable({ showWarningsAsErrors: true });
+		this.$androidToolsInfo.validateAndroidHomeEnvVariable({ showWarningsAsErrors: true });
 
 		let javaCompilerVersion = await this.$sysInfo.getJavaCompilerVersion();
 
