@@ -178,13 +178,9 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	public async isAndroidSdkConfiguredCorrectly(): Promise<boolean> {
 		return this.getValueForProperty(() => this.isAndroidSdkConfiguredCorrectlyCache, async (): Promise<boolean> => {
-			try {
-				await this.childProcess.execFile(this.androidToolsInfo.getPathToEmulatorExecutable(), ['-help']);
-			} catch (err) {
-				return false;
-			}
+			const output = await this.childProcess.spawnFromEvent(this.androidToolsInfo.getPathToEmulatorExecutable(), ['-help'], "close", { ignoreError: true });
 
-			return true;
+			return output && output.stdout.indexOf("usage: emulator") >= 0;
 		});
 	}
 

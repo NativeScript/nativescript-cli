@@ -45,18 +45,18 @@ const androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo = {
 		return "adb";
 	},
 	getPathToEmulatorExecutable: () => {
-		return "";
+		return "emulator";
 	},
 	getToolsInfo: () => {
 		return Object.create(null);
 	},
-	validateAndroidHomeEnvVariable: () => {
+	validateAndroidHomeEnvVariable: (): any[] => {
 		return [];
 	},
-	validateInfo: () => {
+	validateInfo: (): any[] => {
 		return [];
 	},
-	validateJavacVersion: () => {
+	validateJavacVersion: (): any[] => {
 		return [];
 	}
 };
@@ -78,7 +78,8 @@ function createChildProcessResults(childProcessResult: IChildProcessResults): ID
 		"mono --version": childProcessResult.monoVersion,
 		"git --version": childProcessResult.gitVersion,
 		"gradle -v": childProcessResult.gradleVersion,
-		"tns --version": childProcessResult.nativeScriptCliVersion
+		"tns --version": childProcessResult.nativeScriptCliVersion,
+		"emulator": { shouldThrowError: false }
 	};
 }
 
@@ -110,7 +111,6 @@ function mockSysInfo(childProcessResult: IChildProcessResults, hostInfoOptions?:
 		exec: async (command: string) => {
 			return getResultFromChildProcess(childProcessResultDictionary[command], command);
 		},
-
 		spawnFromEvent: async (command: string, args: string[], event: string) => {
 			return getResultFromChildProcess(childProcessResultDictionary[command], command);
 		},
@@ -239,6 +239,10 @@ describe("SysInfo unit tests", () => {
 				assert.deepEqual(result.nativeScriptCliVersion, childProcessResult.nativeScriptCliVersion.result.stdout);
 			};
 
+			beforeEach(() => {
+				androidToolsInfo.validateAndroidHomeEnvVariable = (): any[] => [];
+			});
+
 			it("on Windows", async () => {
 				sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion: "4.5.1" });
 				let result = await sysInfo.getSysInfo();
@@ -312,6 +316,7 @@ describe("SysInfo unit tests", () => {
 					pod: { shouldThrowError: true },
 					nativeScriptCliVersion: { shouldThrowError: true }
 				};
+				androidToolsInfo.validateAndroidHomeEnvVariable = (): any[] => [1];
 			});
 
 			describe("when all of calls throw", () => {
@@ -330,19 +335,19 @@ describe("SysInfo unit tests", () => {
 					assert.deepEqual(result.cocoaPodsVer, null);
 				};
 
-				it("on Windows", () => {
+				it("on Windows", async () => {
 					sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion: "4.5.1" });
-					assertAllValuesAreNull();
+					await assertAllValuesAreNull();
 				});
 
-				it("on Mac", () => {
+				it("on Mac", async () => {
 					sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
-					assertAllValuesAreNull();
+					await assertAllValuesAreNull();
 				});
 
-				it("on Linux", () => {
+				it("on Linux", async () => {
 					sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: false, dotNetVersion: "4.5.1" });
-					assertAllValuesAreNull();
+					await assertAllValuesAreNull();
 				});
 			});
 		});
