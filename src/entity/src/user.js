@@ -921,7 +921,7 @@ export default class User {
    *
    * @param   {string}  id               Id of the user to remove.
    * @param   {Object}  [options]        Options
-   * @param   {boolean} [options.hard]   Boolean indicating whether user should be permanently removed from the backend (defaults to false).
+   * @param   {boolean} [options.hard=false]   Boolean indicating whether user should be permanently removed from the backend (defaults to false).
    * @return  {Promise}
    */
   static remove(id, options = {}) {
