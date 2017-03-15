@@ -5,6 +5,7 @@ import Query from '../../query';
 import NetworkStore from './networkstore';
 import url from 'url';
 import isArray from 'lodash/isArray';
+import isString from 'lodash/isString';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
@@ -133,45 +134,50 @@ class UserStore extends NetworkStore {
    *
    * @param   {string}  id               Id of the user to remove.
    * @param   {Object}  [options]        Options
-   * @param   {boolean} [options.hard]   Boolean indicating whether user should be permanently removed from the backend (defaults to false).
+   * @param   {boolean} [options.hard=false]   Boolean indicating whether user should be permanently removed from the backend (defaults to false).
    * @return  {Promise}
    */
   removeById(id, options = {}) {
     const stream = KinveyObservable.create((observer) => {
-      try {
-        if (!id) {
-          observer.next(undefined);
-          return observer.complete();
-        }
+      let query = options.query;
 
-        let query = options.query;
-
-        if (options.hard === true) {
-          query = {
-            hard: true
-          };
-        }
-
-        const request = new KinveyRequest({
-          method: RequestMethod.DELETE,
-          authType: AuthType.Default,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: `${this.pathname}/${id}`,
-            query: query
-          }),
-          properties: options.properties,
-          timeout: options.timeout
-        });
-        return request.execute()
-          .then(response => response.data)
-          .then(data => observer.next(data))
-          .then(() => observer.complete())
-          .catch(error => observer.error(error));
-      } catch (error) {
-        return observer.error(error);
+      if (isDefined(id) === false) {
+        return observer.error(new KinveyError(
+          'An id was not provided.',
+          'Please provide a valid id for a user that you would like to remove.'
+        ));
       }
+
+      if (isString(id) === false) {
+        return observer.error(new KinveyError(
+          'The id provided is not a string.',
+          'Please provide a valid id for a user that you would like to remove.'
+        ));
+      }
+
+      if (options.hard === true) {
+        query = {
+          hard: true
+        };
+      }
+
+      const request = new KinveyRequest({
+        method: RequestMethod.DELETE,
+        authType: AuthType.Default,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: `${this.pathname}/${id}`,
+          query: query
+        }),
+        properties: options.properties,
+        timeout: options.timeout
+      });
+      return request.execute()
+        .then(response => response.data)
+        .then(data => observer.next(data))
+        .then(() => observer.complete())
+        .catch(error => observer.error(error));
     });
 
     return stream.toPromise();
