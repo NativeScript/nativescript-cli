@@ -160,7 +160,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	validate(projectData: IProjectData): Promise<void>;
 	createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, pathToTemplate?: string): Promise<void>;
 	interpolateData(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
-	interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
+	interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): void;
 
 	/**
 	 * Executes additional actions after native project is created.

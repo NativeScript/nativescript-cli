@@ -298,8 +298,8 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	async interpolateData(): Promise<void> {
 		return Promise.resolve();
 	}
-	async interpolateConfigurationFile(): Promise<void> {
-		return Promise.resolve();
+	interpolateConfigurationFile(): void {
+		return ;
 	}
 	afterCreateProject(projectRoot: string): void {
 		return null;
@@ -489,7 +489,7 @@ export class LiveSyncServiceStub implements ILiveSyncService {
 }
 
 export class AndroidToolsInfoStub implements IAndroidToolsInfo {
-	public async getToolsInfo(): Promise<IAndroidToolsInfoData> {
+	public getToolsInfo(): IAndroidToolsInfoData {
 		let infoData: IAndroidToolsInfoData = Object.create(null);
 		infoData.androidHomeEnvVar = "";
 		infoData.compileSdkVersion = 23;
@@ -499,7 +499,7 @@ export class AndroidToolsInfoStub implements IAndroidToolsInfo {
 		return infoData;
 	}
 
-	public async validateInfo(options?: { showWarningsAsErrors: boolean, validateTargetSdk: boolean }): Promise<boolean> {
+	public validateInfo(options?: { showWarningsAsErrors: boolean, validateTargetSdk: boolean }): boolean {
 		return true;
 	}
 

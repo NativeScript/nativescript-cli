@@ -325,7 +325,7 @@ describe('Platform Service Tests', () => {
 						getAppResourcesDestinationDirectoryPath: () => "",
 						processConfigurationFilesFromAppResources: () => Promise.resolve(),
 						ensureConfigurationFileInAppResources: (): any => null,
-						interpolateConfigurationFile: () => Promise.resolve(),
+						interpolateConfigurationFile: (): void => undefined,
 						isPlatformPrepared: (projectRoot: string) => false
 					}
 				};
@@ -398,7 +398,7 @@ describe('Platform Service Tests', () => {
 						getAppResourcesDestinationDirectoryPath: () => "",
 						processConfigurationFilesFromAppResources: () => Promise.resolve(),
 						ensureConfigurationFileInAppResources: (): any => null,
-						interpolateConfigurationFile: () => Promise.resolve(),
+						interpolateConfigurationFile: (): void => undefined,
 						isPlatformPrepared: (projectRoot: string) => false
 					}
 				};

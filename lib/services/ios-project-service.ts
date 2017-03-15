@@ -161,8 +161,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.replaceFileContent(pbxprojFilePath, projectData);
 	}
 
-	public interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
-		return Promise.resolve();
+	public interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): void {
+		return undefined;
 	}
 
 	public afterCreateProject(projectRoot: string, projectData: IProjectData): void {

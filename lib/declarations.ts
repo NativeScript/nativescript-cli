@@ -220,14 +220,14 @@ interface IAndroidToolsInfo {
 	 * and ANDROID_HOME environement variable.
 	 * @return {IAndroidToolsInfoData} Information about installed Android Tools and SDKs.
 	 */
-	getToolsInfo(): Promise<IAndroidToolsInfoData>;
+	getToolsInfo(): IAndroidToolsInfoData;
 
 	/**
 	 * Validates the information about required Android tools and SDK versions.
 	 * @param {any} options Defines if the warning messages should treated as error and if the targetSdk value should be validated as well.
 	 * @return {boolean} True if there are detected issues, false otherwise.
 	 */
-	validateInfo(options?: { showWarningsAsErrors: boolean, validateTargetSdk: boolean }): Promise<boolean>;
+	validateInfo(options?: { showWarningsAsErrors: boolean, validateTargetSdk: boolean }): boolean;
 
 	/**
 	 * Validates the information about required JAVA version.

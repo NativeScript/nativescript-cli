@@ -103,8 +103,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		this.$fs.ensureDirectoryExists(this.getPlatformData(projectData).projectRoot);
-		await this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
-		let androidToolsInfo = await this.$androidToolsInfo.getToolsInfo();
+		this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
+		let androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
 		let targetSdkVersion = androidToolsInfo.targetSdkVersion;
 		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
 		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "libs", "-R");
@@ -184,7 +184,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async interpolateData(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
 		// Interpolate the apilevel and package
-		await this.interpolateConfigurationFile(projectData, platformSpecificData);
+		this.interpolateConfigurationFile(projectData, platformSpecificData);
 
 		let stringsFilePath = path.join(this.getAppResourcesDestinationDirectoryPath(projectData), 'values', 'strings.xml');
 		shell.sed('-i', /__NAME__/, projectData.projectName, stringsFilePath);
@@ -203,10 +203,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public async interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
+// TODO: Check if we can make this method sync.
+	public interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): void {
 		let manifestPath = this.getPlatformData(projectData).configurationFilePath;
 		shell.sed('-i', /__PACKAGE__/, projectData.projectId, manifestPath);
-		const sdk = (platformSpecificData && platformSpecificData.sdk) || (await this.$androidToolsInfo.getToolsInfo()).compileSdkVersion.toString();
+		const sdk = (platformSpecificData && platformSpecificData.sdk) || this.$androidToolsInfo.getToolsInfo().compileSdkVersion.toString();
 		shell.sed('-i', /__APILEVEL__/, sdk, manifestPath);
 	}
 
@@ -241,7 +242,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
 		if (this.canUseGradle(projectData)) {
-			let buildOptions = await this.getBuildOptions(buildConfig, projectData);
+			let buildOptions = this.getBuildOptions(buildConfig, projectData);
 			if (this.$logger.getLevel() === "TRACE") {
 				buildOptions.unshift("--stacktrace");
 				buildOptions.unshift("--debug");
@@ -265,10 +266,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	private async getBuildOptions(settings: IAndroidBuildOptionsSettings, projectData: IProjectData): Promise<Array<string>> {
-		await this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
+	private getBuildOptions(settings: IAndroidBuildOptionsSettings, projectData: IProjectData): Array<string> {
+		this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
 
-		let androidToolsInfo = await this.$androidToolsInfo.getToolsInfo();
+		let androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
 		let compileSdk = androidToolsInfo.compileSdkVersion;
 		let targetSdk = this.getTargetFromAndroidManifest(projectData) || compileSdk;
 		let buildToolsVersion = androidToolsInfo.buildToolsVersion;
@@ -400,7 +401,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 
 			// We don't need release options here
-			let buildOptions = await this.getBuildOptions({ release: false }, projectData);
+			let buildOptions = this.getBuildOptions({ release: false }, projectData);
 
 			let projectRoot = this.getPlatformData(projectData).projectRoot;
 

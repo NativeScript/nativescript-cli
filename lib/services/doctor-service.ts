@@ -103,7 +103,7 @@ class DoctorService implements IDoctorService {
 			this.$logger.out("To be able to work with iOS devices and projects, you need Mac OS X Mavericks or later." + EOL);
 		}
 
-		let androidToolsIssues = await this.$androidToolsInfo.validateInfo();
+		let androidToolsIssues = this.$androidToolsInfo.validateInfo();
 		let javaVersionIssue = await this.$androidToolsInfo.validateJavacVersion(sysInfo.javacVersion);
 		let doctorResult = result || androidToolsIssues || javaVersionIssue;
 
