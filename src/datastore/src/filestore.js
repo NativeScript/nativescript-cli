@@ -319,7 +319,7 @@ class FileStore extends NetworkStore {
           Log.debug('File upload error.', response.statusCode, response.data);
 
           // Calculate the exponential backoff
-          const backoff = Math.pow(2, options.count) + randomInt(1000, 1);
+          const backoff = (2 ** options.count) + randomInt(1000, 1);
 
           // Throw the error if we have excedded the max backoff
           if (backoff >= options.maxBackoff) {

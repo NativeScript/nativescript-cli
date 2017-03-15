@@ -780,18 +780,11 @@ export default class Query {
             const aField = nested(a, field);
             const bField = nested(b, field);
 
-            // Elements which do not contain the field should always be sorted
-            // lower.
-            if (isDefined(aField) && !isDefined(bField)) {
+            if (isDefined(aField) && isDefined(bField) === false) {
               return -1;
-            }
-            else if (isDefined(bField) && !isDefined(aField)) {
+            } else if (isDefined(bField) && isDefined(aField) === false) {
               return 1;
-            }
-            // Sort on the current field. The modifier adjusts the sorting order
-            // (ascending (-1), or descending(1)). If the fields are equal,
-            // continue sorting based on the next field (if any).
-            else if (aField !== bField) {
+            } else if (aField !== bField) {
               const modifier = json.sort[field]; // 1 or -1.
               return (aField < bField ? -1 : 1) * modifier;
             }

@@ -7,7 +7,7 @@ import isNumber from 'lodash/isNumber';
 import cloneDeep from 'lodash/cloneDeep';
 
 import Client from 'src/client';
-import { KinveyError } from 'src/errors';
+import { KinveyError, NoResponseError } from 'src/errors';
 import { isDefined } from 'src/utils';
 import Response from './response';
 import Headers from './headers';

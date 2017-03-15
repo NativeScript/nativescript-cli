@@ -56,7 +56,7 @@ export class MobileIdentityConnect extends Identity {
         } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
           // Step 1a: Request a temp login url
           return this.requestTempLoginUrl(clientId, redirectUri, options)
-            .then((url) => this.requestCodeWithUrl(url, clientId, redirectUri, options)); // Step 1b: Request a code
+            .then(url => this.requestCodeWithUrl(url, clientId, redirectUri, options)); // Step 1b: Request a code
         }
 
         throw new KinveyError(`The authorization grant ${authorizationGrant} is unsupported. ` +
