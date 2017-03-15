@@ -12,7 +12,7 @@ export class SysInfo extends SysInfoBase {
 		super($childProcess, $hostInfo, $iTunesValidator, $logger, $winreg, $androidEmulatorServices);
 	}
 
-	public getSysInfo(pathToPackageJson: string, androidToolsInfo?: { pathToAdb: string, pathToAndroid: string }): IFuture<ISysInfoData> {
+	public getSysInfo(pathToPackageJson: string, androidToolsInfo?: { pathToAdb: string }): IFuture<ISysInfoData> {
 		return ((): ISysInfoData => {
 			let defaultAndroidToolsInfo = {
 				pathToAdb: this.$androidToolsInfo.getPathToAdbFromAndroidHome().wait()
