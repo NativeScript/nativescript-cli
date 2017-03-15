@@ -1,5 +1,6 @@
 import Promise from 'es6-promise';
 import isArray from 'lodash/isArray';
+import isString from 'lodash/isString';
 import url from 'url';
 
 import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
@@ -129,6 +130,61 @@ class UserStore extends NetworkStore {
       .then((data = {}) => data.usernameExists === true);
   }
 
+  /**
+   * Remove a user.
+   *
+   * @deprecated Use the `remove` static function on the `User` class.
+   *
+   * @param   {string}  id               Id of the user to remove.
+   * @param   {Object}  [options]        Options
+   * @param   {boolean} [options.hard=false]   Boolean indicating whether user should be permanently removed from the backend (defaults to false).
+   * @return  {Promise}
+   */
+  removeById(id, options = {}) {
+    const stream = KinveyObservable.create((observer) => {
+      let query = options.query;
+
+      if (isDefined(id) === false) {
+        return observer.error(new KinveyError(
+          'An id was not provided.',
+          'Please provide a valid id for a user that you would like to remove.'
+        ));
+      }
+
+      if (isString(id) === false) {
+        return observer.error(new KinveyError(
+          'The id provided is not a string.',
+          'Please provide a valid id for a user that you would like to remove.'
+        ));
+      }
+
+      if (options.hard === true) {
+        query = {
+          hard: true
+        };
+      }
+
+      const request = new KinveyRequest({
+        method: RequestMethod.DELETE,
+        authType: AuthType.Default,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: `${this.pathname}/${id}`,
+          query: query
+        }),
+        properties: options.properties,
+        timeout: options.timeout
+      });
+      return request.execute()
+        .then(response => response.data)
+        .then(data => observer.next(data))
+        .then(() => observer.complete())
+        .catch(error => observer.error(error));
+    });
+
+    return stream.toPromise();
+  }
   /**
    * Restore a user that has been suspended.
    *
