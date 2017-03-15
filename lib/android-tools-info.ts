@@ -14,7 +14,9 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private showWarningsAsErrors: boolean;
 	private toolsInfo: IAndroidToolsInfoData;
 	private selectedCompileSdk: number;
-	private androidHome = process.env["ANDROID_HOME"];
+	private get androidHome(): string {
+		return process.env["ANDROID_HOME"];
+	}
 
 	constructor(private $childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -29,7 +31,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		if (!this.toolsInfo) {
 			let infoData: IAndroidToolsInfoData = Object.create(null);
 			infoData.androidHomeEnvVar = this.androidHome;
-			infoData.compileSdkVersion = this.getCompileSdk();
+			infoData.compileSdkVersion = this.getCompileSdkVersion();
 			infoData.buildToolsVersion = this.getBuildToolsVersion();
 			infoData.targetSdkVersion = this.getTargetSdk();
 			infoData.supportRepositoryVersion = this.getAndroidSupportRepositoryVersion();
@@ -163,17 +165,17 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 	@cache()
 	private getPathToSdkManagementTool(): string {
-		const sdkmanagerName = "sdkmanager";
-		let sdkManagementToolPath = sdkmanagerName;
+		const sdkManagerName = "sdkmanager";
+		let sdkManagementToolPath = sdkManagerName;
 
 		const isAndroidHomeValid = this.validateAndroidHomeEnvVariable();
 
 		if (isAndroidHomeValid) {
 			// In case ANDROID_HOME is correct, check if sdkmanager exists and if not it means the SDK has not been updated.
 			// In this case user shoud use `android` from the command-line instead of sdkmanager.
-			const pathToSdkmanager = path.join(this.androidHome, "tools", "bin", sdkmanagerName);
+			const pathToSdkManager = path.join(this.androidHome, "tools", "bin", sdkManagerName);
 			const pathToAndroidExecutable = path.join(this.androidHome, "tools", "android");
-			const pathToExecutable = this.$fs.exists(pathToSdkmanager) ? pathToSdkmanager : pathToAndroidExecutable;
+			const pathToExecutable = this.$fs.exists(pathToSdkManager) ? pathToSdkManager : pathToAndroidExecutable;
 
 			this.$logger.trace(`Path to Android SDK Management tool is: ${pathToExecutable}`);
 
@@ -208,7 +210,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		}
 	}
 
-	private getCompileSdk(): number {
+	private getCompileSdkVersion(): number {
 		if (!this.selectedCompileSdk) {
 			let userSpecifiedCompileSdk = this.$options.compileSdk;
 			if (userSpecifiedCompileSdk) {
@@ -235,7 +237,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	}
 
 	private getTargetSdk(): number {
-		let targetSdk = this.$options.sdk ? parseInt(this.$options.sdk) : this.getCompileSdk();
+		let targetSdk = this.$options.sdk ? parseInt(this.$options.sdk) : this.getCompileSdkVersion();
 		this.$logger.trace(`Selected targetSdk is: ${targetSdk}`);
 		return targetSdk;
 	}
@@ -282,7 +284,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	}
 
 	private getAppCompatRange(): string {
-		let compileSdkVersion = this.getCompileSdk();
+		let compileSdkVersion = this.getCompileSdkVersion();
 		let requiredAppCompatRange: string;
 		if (compileSdkVersion) {
 			requiredAppCompatRange = `>=${compileSdkVersion} <${compileSdkVersion + 1}`;
