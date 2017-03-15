@@ -1,13 +1,16 @@
+import Promise from 'es6-promise';
+import isString from 'lodash/isString';
+import map from 'lodash/map';
+import isArray from 'lodash/isArray';
+import url from 'url';
+
 import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod } from 'src/request';
 import { KinveyError } from 'src/errors';
 import Query from 'src/query';
 import Client from 'src/client';
 import { KinveyObservable, Log, isDefined } from 'src/utils';
 import Aggregation from 'src/aggregation';
-import isString from 'lodash/isString';
-import url from 'url';
-import map from 'lodash/map';
-import isArray from 'lodash/isArray';
+
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 /**

@@ -1,9 +1,12 @@
-import { NotFoundError } from 'src/errors';
-import MemoryAdapter from './src/memory';
+import Promise from 'es6-promise';
 import Queue from 'promise-queue';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
+
 import { isDefined } from 'src/utils';
+import { NotFoundError } from 'src/errors';
+import MemoryAdapter from './src/memory';
+
 Queue.configure(Promise);
 const queue = new Queue(1, Infinity);
 
@@ -87,7 +90,7 @@ export default class Storage {
         let id = entity._id;
         const kmd = entity._kmd || {};
 
-        if (!id) {
+        if (isDefined(id) === false) {
           id = this.generateObjectId();
           kmd.local = true;
         }

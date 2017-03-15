@@ -1,17 +1,20 @@
-import Client from 'src/client';
-import Acl from './acl';
-import Metadata from './metadata';
-import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from 'src/request';
-import { KinveyError, NotFoundError, ActiveUserError } from 'src/errors';
-import DataStore, { UserStore as store } from 'src/datastore';
-import { Facebook, Google, LinkedIn, MobileIdentityConnect } from 'src/identity';
-import { Log, isDefined } from 'src/utils';
-import url from 'url';
+import Promise from 'es6-promise';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
 import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import isEmpty from 'lodash/isEmpty';
+import url from 'url';
+
+import Client from 'src/client';
+import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from 'src/request';
+import { KinveyError, NotFoundError, ActiveUserError } from 'src/errors';
+import DataStore, { UserStore as store } from 'src/datastore';
+import { Facebook, Google, LinkedIn, MobileIdentityConnect } from 'src/identity';
+import { Log, isDefined } from 'src/utils';
+import Acl from './acl';
+import Metadata from './metadata';
+
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';

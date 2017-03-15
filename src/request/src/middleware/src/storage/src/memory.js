@@ -1,4 +1,4 @@
-import { NotFoundError } from 'src/errors';
+import Promise from 'es6-promise';
 import MemoryCache from 'fast-memory-cache';
 import keyBy from 'lodash/keyBy';
 import forEach from 'lodash/forEach';
@@ -6,7 +6,10 @@ import values from 'lodash/values';
 import find from 'lodash/find';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
+
 import { isDefined } from 'src/utils';
+import { NotFoundError } from 'src/errors';
+
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const caches = {};
 

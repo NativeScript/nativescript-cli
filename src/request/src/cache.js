@@ -1,14 +1,17 @@
-import Request, { RequestMethod } from './request';
-import Client from 'src/client';
-import { KinveyResponse } from './response';
+import Promise from 'es6-promise';
 import UrlPattern from 'url-pattern';
 import url from 'url';
 import localStorage from 'local-storage';
+
+import Client from 'src/client';
 import { KinveyError } from 'src/errors';
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
 import { isDefined } from 'src/utils';
+import Request, { RequestMethod } from './request';
+import { KinveyResponse } from './response';
 import { CacheRack } from './rack';
+
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const activeUserCollectionName = process.env.KINVEY_USER_ACTIVE_COLLECTION_NAME || 'kinvey_active_user';
 const activeUsers = {};

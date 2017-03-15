@@ -1,7 +1,10 @@
-import Client from 'src/client';
-import { KinveyError } from 'src/errors';
+import Promise from 'es6-promise';
 import localStorage from 'local-storage';
 import assign from 'lodash/assign';
+
+import Client from 'src/client';
+import { KinveyError } from 'src/errors';
+
 let hello;
 
 if (typeof window !== 'undefined') {

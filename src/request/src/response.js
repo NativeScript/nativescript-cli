@@ -1,5 +1,5 @@
-import Headers from './headers';
 import assign from 'lodash/assign';
+
 import {
   APIVersionNotAvailableError,
   APIVersionNotImplementedError,
@@ -29,6 +29,7 @@ import {
   UserAlreadyExistsError,
   WritesToCollectionDisallowedError
 } from 'src/errors';
+import Headers from './headers';
 
 /**
  * @private

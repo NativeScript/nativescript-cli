@@ -1,19 +1,22 @@
-import Request, { RequestMethod } from './request';
-import CacheRequest from './cache';
-import Headers from './headers';
-import { KinveyResponse } from './response';
-import Query from 'src/query';
-import Aggregation from 'src/aggregation';
-import { isDefined } from 'src/utils';
-import { InvalidCredentialsError, NoActiveUserError, KinveyError } from 'src/errors';
-import { SocialIdentity } from 'src/identity';
+import Promise from 'es6-promise';
 import url from 'url';
 import qs from 'qs';
 import appendQuery from 'append-query';
 import assign from 'lodash/assign';
 import defaults from 'lodash/defaults';
 import isEmpty from 'lodash/isEmpty';
+
+import Query from 'src/query';
+import Aggregation from 'src/aggregation';
+import { isDefined } from 'src/utils';
+import { InvalidCredentialsError, NoActiveUserError, KinveyError } from 'src/errors';
+import { SocialIdentity } from 'src/identity';
+import Request, { RequestMethod } from './request';
+import CacheRequest from './cache';
+import Headers from './headers';
+import { KinveyResponse } from './response';
 import { NetworkRack } from './rack';
+
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const defaultApiVersion = process.env.KINVEY_DEFAULT_API_VERSION || 4;

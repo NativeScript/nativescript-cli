@@ -1,3 +1,10 @@
+import Promise from 'es6-promise';
+import url from 'url';
+import map from 'lodash/map';
+import assign from 'lodash/assign';
+import isFunction from 'lodash/isFunction';
+import isNumber from 'lodash/isNumber';
+
 import {
   NetworkRequest,
   KinveyRequest,
@@ -6,13 +13,9 @@ import {
   Headers
 } from 'src/request';
 import { KinveyError } from 'src/errors';
-import NetworkStore from './networkstore';
 import { Log } from 'src/utils';
-import url from 'url';
-import map from 'lodash/map';
-import assign from 'lodash/assign';
-import isFunction from 'lodash/isFunction';
-import isNumber from 'lodash/isNumber';
+import NetworkStore from './networkstore';
+
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
 const MAX_BACKOFF = process.env.KINVEY_MAX_BACKOFF || 32 * 1000;
 
