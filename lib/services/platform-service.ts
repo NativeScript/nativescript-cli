@@ -49,7 +49,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	public async cleanPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, framworkPath?: string): Promise<void> {
 		for (let platform of platforms) {
 			let version: string = this.getCurrentPlatformVersion(platform, projectData);
-			let platformWithVersion: string = platform + "@" + version;
+
+			let platformWithVersion: string = platform;
+			if (version !== undefined) {
+				platformWithVersion += "@" + version;
+			}
 
 			await this.removePlatforms([platform], projectData);
 			await this.addPlatforms([platformWithVersion], platformTemplate, projectData, platformSpecificData);
