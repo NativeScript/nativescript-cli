@@ -256,6 +256,12 @@ Library that helps identifying if the environment can be used for development of
 		isCocoaPodsUpdateRequired(): Promise<boolean>;
 
 		/**
+		 * Checks if the Android SDK Tools are installed and configured correctly.
+		 * @return {Promise<boolean>} true if the Android SDK Tools are installed and configured correctly.
+		 */
+		isAndroidSdkConfiguredCorrectly(): Promise<boolean>;
+
+		/**
 		 * Returns the whole system information.
 		 * @return {Promise<ISysInfoData>} The system information.
 		 */
@@ -409,6 +415,12 @@ Library that helps identifying if the environment can be used for development of
 		 * true if the system requires xcproj to build projects successfully and the CocoaPods version is not compatible with the Xcode.
 		 */
 		isCocoaPodsUpdateRequired: boolean;
+
+		/**
+		 * true if the Android SDK Tools are installed and configured correctly.
+		 * @type {boolean}
+		 */
+		isAndroidSdkConfiguredCorrectly: boolean;
 	}
 
 	/**
@@ -424,6 +436,91 @@ Library that helps identifying if the environment can be used for development of
 		 * Determines whether xcproj can be called from the command line.
 		 */
 		xcprojAvailable: boolean;
+	}
+	```
+
+* Module `androidToolsInfo`:
+	- Usage:
+	```TypeScript
+	import { androidToolsInfo } from "nativescript-doctor"
+
+	function main() {
+		console.log("path to adb from android home: ", await androidToolsInfo.getPathToAdbFromAndroidHome());
+		console.log("path to emulator executable: ", androidToolsInfo.getPathToEmulatorExecutable());
+		console.log("android tools info: ", androidToolsInfo.getToolsInfo());
+		console.log("ANROID_HOME validation errors: ", await androidToolsInfo.validateAndroidHomeEnvVariable());
+		console.log("android tools info validation errors: ", await androidToolsInfo.validateInfo());
+		console.log("javac validation errors: ", await androidToolsInfo.validateJavacVersion(await sysInfo.getJavaCompilerVersion()));
+	}
+
+	main();
+	```
+	- Interfaces:
+	/**
+	 * Describes methods for getting and validating Android tools.
+	 */
+	interface IAndroidToolsInfo {
+		/**
+		 * Returns the Android tools info.
+		 * @return {NativeScriptDoctor.IAndroidToolsInfoData} returns the Android tools info.
+		 */
+		getToolsInfo(): NativeScriptDoctor.IAndroidToolsInfoData;
+
+		/**
+		 * Checks if the Android tools are valid.
+		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
+		 */
+		validateInfo(): NativeScriptDoctor.IWarning[];
+
+		/**
+		 * Checks if the current javac version is valid.
+		 * @param {string} installedJavaVersion The version of javac to check.
+		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
+		 */
+		validateJavacVersion(installedJavaVersion: string): NativeScriptDoctor.IWarning[];
+
+		/**
+		 * Returns the path to the adb which is located in ANDROID_HOME.
+		 * @return {Promise<string>} Path to the adb which is located in ANDROID_HOME.
+		 */
+		getPathToAdbFromAndroidHome(): Promise<string>;
+
+		/**
+		 * Checks if the ANDROID_HOME variable is set to the correct folder.
+		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
+		 */
+		validateAndroidHomeEnvVariable(): NativeScriptDoctor.IWarning[];
+
+		/**
+		 * Returns the path to the emulator executable.
+		 * @return {string} The path to the emulator executable.
+		 */
+		getPathToEmulatorExecutable(): string;
+	}
+
+	/**
+	 * Describes information about installed Android tools and SDKs.
+	 */
+	interface IAndroidToolsInfoData {
+		/**
+		 * The value of ANDROID_HOME environment variable.
+		 */
+		androidHomeEnvVar: string;
+
+		/**
+		 * The latest installed version of Android Build Tools that satisfies CLI's requirements.
+		 */
+		buildToolsVersion: string;
+
+		/**
+		 * The latest installed version of Android SDK that satisfies CLI's requirements.
+		 */
+		compileSdkVersion: number;
+
+		/**
+		 * The latest installed version of Android Support Repository that satisfies CLI's requirements.
+		 */
+		supportRepositoryVersion: string;
 	}
 	```
 
