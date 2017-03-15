@@ -1,9 +1,10 @@
-import * as path from "path";
-import * as semver from "semver";
-import { EOL } from "os";
 import { ChildProcess } from "./wrappers/child-process";
 import { FileSystem } from "./wrappers/file-system";
 import { HostInfo } from "./host-info";
+import { Constants } from "./constants";
+import { EOL } from "os";
+import * as semver from "semver";
+import * as path from "path";
 
 export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	private static ANDROID_TARGET_PREFIX = "android";
@@ -15,6 +16,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 
 	private toolsInfo: NativeScriptDoctor.IAndroidToolsInfoData;
 	private androidHome = process.env["ANDROID_HOME"];
+	private pathToEmulatorExecutable: string;
 
 	constructor(private childProcess: ChildProcess,
 		private fs: FileSystem,
@@ -34,13 +36,16 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return this.toolsInfo;
 	}
 
-	public validateInfo(): string[] {
-		const errors: string[] = [];
+	public validateInfo(): NativeScriptDoctor.IWarning[] {
+		const errors: NativeScriptDoctor.IWarning[] = [];
 		const toolsInfoData = this.getToolsInfo();
 		const isAndroidHomeValid = this.validateAndroidHomeEnvVariable();
 		if (!toolsInfoData.compileSdkVersion) {
-			errors.push(`Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later.`,
-				`Run \`\$ ${this.getPathToSdkManagementTool()}\` to manage your Android SDK versions.`);
+			errors.push({
+				warning: `Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later.`,
+				additionalInformation: `Run \`\$ ${this.getPathToSdkManagementTool()}\` to manage your Android SDK versions.`,
+				platforms: [Constants.ANDROID_PLATFORM_NAME]
+			});
 		}
 
 		if (!toolsInfoData.buildToolsVersion) {
@@ -58,7 +63,11 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 				invalidBuildToolsAdditionalMsg += ' In case you already have them installed, make sure `ANDROID_HOME` environment variable is set correctly.';
 			}
 
-			errors.push("You need to have the Android SDK Build-tools installed on your system. " + message, invalidBuildToolsAdditionalMsg);
+			errors.push({
+				warning: "You need to have the Android SDK Build-tools installed on your system. " + message,
+				additionalInformation: invalidBuildToolsAdditionalMsg,
+				platforms: [Constants.ANDROID_PLATFORM_NAME]
+			});
 		}
 
 		if (!toolsInfoData.supportRepositoryVersion) {
@@ -66,14 +75,19 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			if (!isAndroidHomeValid) {
 				invalidSupportLibAdditionalMsg += ' In case you already have it installed, make sure `ANDROID_HOME` environment variable is set correctly.';
 			}
-			errors.push(`You need to have Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later and the latest Android Support Repository installed on your system.`, invalidSupportLibAdditionalMsg);
+
+			errors.push({
+				warning: `You need to have Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later and the latest Android Support Repository installed on your system.`,
+				additionalInformation: invalidSupportLibAdditionalMsg,
+				platforms: [Constants.ANDROID_PLATFORM_NAME]
+			});
 		}
 
 		return errors;
 	}
 
-	public validateJavacVersion(installedJavaVersion: string): string[] {
-		const errors: string[] = [];
+	public validateJavacVersion(installedJavaVersion: string): NativeScriptDoctor.IWarning[] {
+		const errors: NativeScriptDoctor.IWarning[] = [];
 
 		let additionalMessage = "You will not be able to build your projects for Android." + EOL
 			+ "To be able to build for Android, verify that you have installed The Java Development Kit (JDK) and configured it according to system requirements as" + EOL +
@@ -81,10 +95,18 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		let matchingVersion = (installedJavaVersion || "").match(AndroidToolsInfo.VERSION_REGEX);
 		if (matchingVersion && matchingVersion[1]) {
 			if (semver.lt(matchingVersion[1], AndroidToolsInfo.MIN_JAVA_VERSION)) {
-				errors.push(`Javac version ${installedJavaVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION}.`, additionalMessage);
+				errors.push({
+					warning: `Javac version ${installedJavaVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION}.`,
+					additionalInformation: additionalMessage,
+					platforms: [Constants.ANDROID_PLATFORM_NAME]
+				});
 			}
 		} else {
-			errors.push("Error executing command 'javac'. Make sure you have installed The Java Development Kit (JDK) and set JAVA_HOME environment variable.", additionalMessage);
+			errors.push({
+				warning: "Error executing command 'javac'. Make sure you have installed The Java Development Kit (JDK) and set JAVA_HOME environment variable.",
+				additionalInformation: additionalMessage,
+				platforms: [Constants.ANDROID_PLATFORM_NAME]
+			});
 		}
 
 		return errors;
@@ -104,20 +126,49 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return null;
 	}
 
-	public validateAndroidHomeEnvVariable(): string[] {
-		const errors: string[] = [];
+	public validateAndroidHomeEnvVariable(): NativeScriptDoctor.IWarning[] {
+		const errors: NativeScriptDoctor.IWarning[] = [];
 		const expectedDirectoriesInAndroidHome = ["build-tools", "tools", "platform-tools", "extras"];
 
 		if (!this.androidHome || !this.fs.exists(this.androidHome)) {
-			errors.push("The ANDROID_HOME environment variable is not set or it points to a non-existent directory. You will not be able to perform any build-related operations for Android.",
-				"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory.");
+			errors.push({
+				warning: "The ANDROID_HOME environment variable is not set or it points to a non-existent directory. You will not be able to perform any build-related operations for Android.",
+				additionalInformation: "To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory.",
+				platforms: [Constants.ANDROID_PLATFORM_NAME]
+			});
 		} else if (expectedDirectoriesInAndroidHome.map(dir => this.fs.exists(path.join(this.androidHome, dir))).length === 0) {
-			errors.push("The ANDROID_HOME environment variable points to incorrect directory. You will not be able to perform any build-related operations for Android.",
-				"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory, " +
-				"where you will find `tools` and `platform-tools` directories.");
+			errors.push({
+				warning: "The ANDROID_HOME environment variable points to incorrect directory. You will not be able to perform any build-related operations for Android.",
+				additionalInformation: "To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory, " +
+				"where you will find `tools` and `platform-tools` directories.",
+				platforms: [Constants.ANDROID_PLATFORM_NAME]
+			});
 		}
 
 		return errors;
+	}
+
+	public getPathToEmulatorExecutable(): string {
+		if (!this.pathToEmulatorExecutable) {
+			const emulatorExecutableName = "emulator";
+
+			this.pathToEmulatorExecutable = emulatorExecutableName;
+
+			if (this.androidHome) {
+				// Check https://developer.android.com/studio/releases/sdk-tools.html (25.3.0)
+				// Since this version of SDK tools, the emulator is a separate package.
+				// However the emulator executable still exists in the "tools" dir.
+				const pathToEmulatorFromAndroidStudio = path.join(this.androidHome, emulatorExecutableName, emulatorExecutableName);
+
+				if (this.fs.exists(pathToEmulatorFromAndroidStudio)) {
+					this.pathToEmulatorExecutable = pathToEmulatorFromAndroidStudio;
+				} else {
+					this.pathToEmulatorExecutable = path.join(this.androidHome, "tools", emulatorExecutableName);
+				}
+			}
+		}
+
+		return this.pathToEmulatorExecutable;
 	}
 
 	private getPathToSdkManagementTool(): string {
@@ -217,7 +268,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		const sortedAndroidToolsInfo = AndroidToolsInfo.SUPPORTED_TARGETS.sort();
 
 		sortedAndroidToolsInfo.forEach(s => {
-			if (installedTargets.includes(s)) {
+			if (installedTargets.indexOf(s) >= 0) {
 				latestValidAndroidTarget = s;
 			}
 		});

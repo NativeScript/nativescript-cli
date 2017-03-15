@@ -2,6 +2,7 @@ import { ChildProcess } from "./wrappers/child-process";
 import { FileSystem } from "./wrappers/file-system";
 import { SysInfo } from "./sys-info";
 import { HostInfo } from "./host-info";
+import { AndroidToolsInfo } from "./android-tools-info";
 import { WinReg } from "./winreg";
 import { Helpers } from "./helpers";
 import { Doctor } from "./doctor";
@@ -14,13 +15,14 @@ const winReg = new WinReg();
 const hostInfo = new HostInfo(winReg);
 const fileSystem = new FileSystem();
 const helpers = new Helpers();
+const androidToolsInfo = new AndroidToolsInfo(childProcess, fileSystem, hostInfo);
 
-const sysInfo: NativeScriptDoctor.ISysInfo = new SysInfo(childProcess, fileSystem, helpers, hostInfo, winReg);
+const sysInfo: NativeScriptDoctor.ISysInfo = new SysInfo(childProcess, fileSystem, helpers, hostInfo, winReg, androidToolsInfo);
 
 const androidLocalBuildRequirements = new AndroidLocalBuildRequirements(sysInfo);
 const iOSLocalBuildRequirements = new IosLocalBuildRequirements(sysInfo, hostInfo);
 
-const doctor: NativeScriptDoctor.IDoctor = new Doctor(androidLocalBuildRequirements, helpers, hostInfo, iOSLocalBuildRequirements, sysInfo);
+const doctor: NativeScriptDoctor.IDoctor = new Doctor(androidLocalBuildRequirements, helpers, hostInfo, iOSLocalBuildRequirements, sysInfo, androidToolsInfo);
 
 const setShouldCacheSysInfo = sysInfo.setShouldCacheSysInfo.bind(sysInfo);
 
@@ -28,5 +30,6 @@ export {
 	sysInfo,
 	doctor,
 	constants,
-	setShouldCacheSysInfo
+	setShouldCacheSysInfo,
+	androidToolsInfo
 };

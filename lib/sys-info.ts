@@ -42,12 +42,14 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private xcprojInfoCache: NativeScriptDoctor.IXcprojInfo;
 	private isCocoaPodsUpdateRequiredCache: boolean = null;
 	private shouldCache: boolean = true;
+	private isAndroidSdkConfiguredCorrectlyCache: boolean = null;
 
 	constructor(private childProcess: ChildProcess,
 		private fileSystem: FileSystem,
 		private helpers: Helpers,
 		private hostInfo: HostInfo,
-		private winReg: WinReg) { }
+		private winReg: WinReg,
+		private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo) { }
 
 	public getJavaVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.javaVerCache, async (): Promise<string> => {
@@ -158,29 +160,31 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	public getAdbVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.adbVerCache, async (): Promise<string> => {
-			const output = await this.execCommand("adb version");
+			const output = await this.execCommand(`${await this.androidToolsInfo.getPathToAdbFromAndroidHome()} version`);
 			return output ? this.getVersionFromString(output) : null;
 		});
 	}
 
-	// `android -h` returns exit code 1 on successful invocation (Mac OS X for now, possibly Linux).
 	public isAndroidInstalled(): Promise<boolean> {
 		return this.getValueForProperty(() => this.androidInstalledCache, async (): Promise<boolean> => {
-			let pathToAndroid = "android";
-			if (this.hostInfo.isWindows) {
-				pathToAndroid = `${pathToAndroid}.bat`;
+			try {
+				const errors = this.androidToolsInfo.validateAndroidHomeEnvVariable();
+				return errors.length === 0;
+			} catch (err) {
+				return false;
+			}
+		});
+	}
+
+	public async isAndroidSdkConfiguredCorrectly(): Promise<boolean> {
+		return this.getValueForProperty(() => this.isAndroidSdkConfiguredCorrectlyCache, async (): Promise<boolean> => {
+			try {
+				await this.childProcess.execFile(this.androidToolsInfo.getPathToEmulatorExecutable(), ['-help']);
+			} catch (err) {
+				return false;
 			}
 
-			try {
-				// On mac android -h returns exit code 1. That's why we need to ignore the error.
-				const output = await this.childProcess.spawnFromEvent(pathToAndroid, ["-h"], "close", { ignoreError: true });
-				if (output) {
-					output.stdout = output.stdout || '';
-					return output.stdout.indexOf("android") >= 0;
-				}
-			} catch (err) {
-				return null;
-			}
+			return true;
 		});
 	}
 
@@ -240,6 +244,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			result.isCocoaPodsWorkingCorrectly = await this.isCocoaPodsWorkingCorrectly();
 			result.nativeScriptCliVersion = await this.getNativeScriptCliVersion();
 			result.isCocoaPodsUpdateRequired = await this.isCocoaPodsUpdateRequired();
+			result.isAndroidSdkConfiguredCorrectly = await this.isAndroidSdkConfiguredCorrectly();
 
 			return result;
 		});

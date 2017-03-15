@@ -40,6 +40,27 @@ interface IFileSystemMockOptions {
 	existsResult?: boolean;
 }
 
+const androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo = {
+	getPathToAdbFromAndroidHome: async () => {
+		return "adb";
+	},
+	getPathToEmulatorExecutable: () => {
+		return "";
+	},
+	getToolsInfo: () => {
+		return Object.create(null);
+	},
+	validateAndroidHomeEnvVariable: () => {
+		return [];
+	},
+	validateInfo: () => {
+		return [];
+	},
+	validateJavacVersion: () => {
+		return [];
+	}
+};
+
 function createChildProcessResults(childProcessResult: IChildProcessResults): IDictionary<IChildProcessResultDescription> {
 	return {
 		"uname -a": childProcessResult.uname,
@@ -92,6 +113,9 @@ function mockSysInfo(childProcessResult: IChildProcessResults, hostInfoOptions?:
 
 		spawnFromEvent: async (command: string, args: string[], event: string) => {
 			return getResultFromChildProcess(childProcessResultDictionary[command], command);
+		},
+		execFile: async () => {
+			return undefined;
 		}
 	};
 
@@ -100,7 +124,7 @@ function mockSysInfo(childProcessResult: IChildProcessResults, hostInfoOptions?:
 		extractZip: () => Promise.resolve()
 	};
 
-	return new SysInfo(childProcess, fileSystem, helpers, hostInfo, winreg);
+	return new SysInfo(childProcess, fileSystem, helpers, hostInfo, winreg, androidToolsInfo);
 }
 
 function setStdOut(value: string): { stdout: string } {
@@ -132,10 +156,13 @@ describe("SysInfo unit tests", () => {
 				exec: async (command: string) => {
 					execCommand = command;
 					return { stdout: "", stderr: "" };
+				},
+				execFile: async () => {
+					return undefined;
 				}
 			};
 
-			sysInfo = new SysInfo(childProcess, null, helpers, null, null);
+			sysInfo = new SysInfo(childProcess, null, helpers, null, null, androidToolsInfo);
 		});
 
 		it("java version.", async () => {

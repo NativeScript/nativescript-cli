@@ -107,9 +107,15 @@ declare module NativeScriptDoctor {
 
 		/**
 		 * Checks if the current version of CocoaPods is compatible with the installed Xcode.
-		 * @return {boolean} true if an update us require.
+		 * @return {Promise<boolean>} true if an update us require.
 		 */
 		isCocoaPodsUpdateRequired(): Promise<boolean>;
+
+		/**
+		 * Checks if the Android SDK Tools are installed and configured correctly.
+		 * @return {Promise<boolean>} true if the Android SDK Tools are installed and configured correctly.
+		 */
+		isAndroidSdkConfiguredCorrectly(): Promise<boolean>;
 
 		/**
 		 * Returns the whole system information.
@@ -281,8 +287,15 @@ declare module NativeScriptDoctor {
 
 		/**
 		 * true if the system requires xcproj to build projects successfully and the CocoaPods version is not compatible with the Xcode.
+		 * @type {boolean}
 		 */
 		isCocoaPodsUpdateRequired: boolean;
+
+		/**
+		 * true if the Android SDK Tools are installed and configured correctly.
+		 * @type {boolean}
+		 */
+		isAndroidSdkConfiguredCorrectly: boolean;
 	}
 
 	/**
@@ -344,16 +357,16 @@ declare module NativeScriptDoctor {
 
 		/**
 		 * Checks if the Android tools are valid.
-		 * @return {string[]} An array of errors from the validation checks. If there are no errors will return [].
+		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
-		validateInfo(): string[];
+		validateInfo(): NativeScriptDoctor.IWarning[];
 
 		/**
 		 * Checks if the current javac version is valid.
 		 * @param {string} installedJavaVersion The version of javac to check.
-		 * @return {string[]} An array of errors from the validation checks. If there are no errors will return [].
+		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
-		validateJavacVersion(installedJavaVersion: string): string[];
+		validateJavacVersion(installedJavaVersion: string): NativeScriptDoctor.IWarning[];
 
 		/**
 		 * Returns the path to the adb which is located in ANDROID_HOME.
@@ -363,9 +376,15 @@ declare module NativeScriptDoctor {
 
 		/**
 		 * Checks if the ANDROID_HOME variable is set to the correct folder.
-		 * @return {string[]} An array of errors from the validation checks. If there are no errors will return [].
+		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
-		validateAndroidHomeEnvVariable(): string[];
+		validateAndroidHomeEnvVariable(): NativeScriptDoctor.IWarning[];
+
+		/**
+		 * Returns the path to the emulator executable.
+		 * @return {string} The path to the emulator executable.
+		 */
+		getPathToEmulatorExecutable(): string;
 	}
 
 	/**
