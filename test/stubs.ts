@@ -690,8 +690,8 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 		return Promise.resolve(null);
 	}
 
-	public getAndroidEmulators(): Promise<IEmulatorInfo[]> {
-		return Promise.resolve(null);
+	public getAndroidEmulators(): IEmulatorInfo[] {
+		return null;
 	}
 
 	public startEmulator(info: IEmulatorInfo): Promise<void> {

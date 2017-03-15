@@ -14,7 +14,6 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private showWarningsAsErrors: boolean;
 	private toolsInfo: IAndroidToolsInfoData;
 	private selectedCompileSdk: number;
-	private installedTargetsCache: string[] = null;
 	private androidHome = process.env["ANDROID_HOME"];
 
 	constructor(private $childProcess: IChildProcess,
@@ -313,22 +312,16 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		return parseInt(androidSdkString.replace(`${AndroidToolsInfo.ANDROID_TARGET_PREFIX}-`, ""));
 	}
 
+	@cache()
 	private getInstalledTargets(): string[] {
-		if (!this.installedTargetsCache) {
-			try {
-				const pathToInstalledTargets = path.join(this.androidHome, "platforms");
-				if (!this.$fs.exists(pathToInstalledTargets)) {
-					throw new Error("No Android Targets installed.");
-				}
-
-				this.installedTargetsCache = this.$fs.readDirectory(pathToInstalledTargets);
-				this.$logger.trace("Installed Android Targets are: ", this.installedTargetsCache);
-			} catch (err) {
-				this.$logger.trace("Unable to get Android targets. Error is: " + err);
-			}
+		let installedTargets: string[] = [];
+		const pathToInstalledTargets = path.join(this.androidHome, "platforms");
+		if (!this.$fs.exists(pathToInstalledTargets)) {
+			installedTargets = this.$fs.readDirectory(pathToInstalledTargets);
+			this.$logger.trace("Installed Android Targets are: ", installedTargets);
 		}
 
-		return this.installedTargetsCache;
+		return installedTargets;
 	}
 
 	private getMaxSupportedVersion(): number {
