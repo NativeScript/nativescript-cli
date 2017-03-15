@@ -245,7 +245,7 @@ describe('SyncStore', function() {
   });
 
   describe('create()', function() {
-    it('should create an entity in cache and add it to the sync table', async function() {
+    it('should create an entity in cache and add it to the sync table', function() {
       // Create an entitiy
       const store = new SyncStore(collection);
       const entity1 = {
@@ -254,25 +254,33 @@ describe('SyncStore', function() {
         isbn: '887420007-2',
         summary: 'Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros.\n\nVestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.',
       };
-      const result = await store.create(entity1);
-      expect(result).toEqual(entity1);
+      return store.create(entity1)
+        .then((result) => {
+          expect(result._id).toExist();
+          expect(result.title).toEqual(entity1.title);
+          expect(result.author).toEqual(entity1.author);
+          expect(result.isbn).toEqual(entity1.isbn);
+          expect(result.summary).toEqual(entity1.summary);
 
-      // Check the sync entities
-      const query = new Query().equalTo('entityId', result._id);
-      const syncEntities = await store.pendingSyncEntities(query);
-      expect(syncEntities[0]).toEqual({
-        collection: collection,
-        state: { method: 'POST' },
-        entityId: result._id,
-        _id: syncEntities[0]._id,
-        _kmd: { local: true }
-      });
+          // Check the sync entities
+          const query = new Query().equalTo('entityId', result._id);
+          return store.pendingSyncEntities(query)
+            .then((syncEntities) => {
+              expect(syncEntities[0]).toEqual({
+                collection: collection,
+                state: { method: 'POST' },
+                entityId: result._id,
+                _id: syncEntities[0]._id,
+                _kmd: { local: true }
+              });
 
-      // Clear the store
-      await store.clear();
+              // Clear the store
+              return store.clear();
+            });
+        });
     });
 
-    it('should create an entity that contains an _id in cache and add it to the sync table', async function() {
+    it('should create an entity that contains an _id in cache and add it to the sync table', function() {
       // Create an entitiy
       const store = new SyncStore(collection);
       const entity1 = {
@@ -282,25 +290,33 @@ describe('SyncStore', function() {
         isbn: '887420007-2',
         summary: 'Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros.\n\nVestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.',
       };
-      const result = await store.create(entity1);
-      expect(result).toEqual(entity1);
+      return store.create(entity1)
+        .then((result) => {
+          expect(result._id).toEqual(entity1._id);
+          expect(result.title).toEqual(entity1.title);
+          expect(result.author).toEqual(entity1.author);
+          expect(result.isbn).toEqual(entity1.isbn);
+          expect(result.summary).toEqual(entity1.summary);
 
-      // Check the sync entities
-      const query = new Query().equalTo('entityId', result._id);
-      const syncEntities = await store.pendingSyncEntities(query);
-      expect(syncEntities[0]).toEqual({
-        collection: collection,
-        state: { method: 'POST' },
-        entityId: result._id,
-        _id: syncEntities[0]._id,
-        _kmd: { local: true }
-      });
+          // Check the sync entities
+          const query = new Query().equalTo('entityId', result._id);
+          return store.pendingSyncEntities(query)
+            .then((syncEntities) => {
+                expect(syncEntities[0]).toEqual({
+                  collection: collection,
+                  state: { method: 'POST' },
+                  entityId: result._id,
+                  _id: syncEntities[0]._id,
+                  _kmd: { local: true }
+                });
 
-      // Clear the store
-      await store.clear();
+                // Clear the store
+                return store.clear();
+              });
+          });
     });
 
-    it('should create an array of entities in cache and add them to the sync table', async function() {
+    it('should create an array of entities in cache and add them to the sync table', function() {
       // Create entities
       const store = new SyncStore(collection);
       const entity1 = {
@@ -315,38 +331,53 @@ describe('SyncStore', function() {
         isbn: '809087960-8',
         summary: 'Aenean fermentum. Donec ut mauris eget massa tempor convallis. Nulla neque libero, convallis eget, eleifend luctus, ultricies eu, nibh.'
       };
-      const result = await store.create([entity1, entity2]);
-      expect(result).toEqual([entity1, entity2]);
+      return store.create([entity1, entity2])
+        .then((result) => {
+          expect(result[0]._id).toExist();
+          expect(result[0].title).toEqual(entity1.title);
+          expect(result[0].author).toEqual(entity1.author);
+          expect(result[0].isbn).toEqual(entity1.isbn);
+          expect(result[0].summary).toEqual(entity1.summary);
+          expect(result[1]._id).toExist();
+          expect(result[1].title).toEqual(entity2.title);
+          expect(result[1].author).toEqual(entity2.author);
+          expect(result[1].isbn).toEqual(entity2.isbn);
+          expect(result[1].summary).toEqual(entity2.summary);
 
-      // Check the sync entities
-      let query = new Query().equalTo('entityId', result[0]._id);
-      let syncEntities = await store.pendingSyncEntities(query);
-      expect(syncEntities[0]).toEqual({
-        collection: collection,
-        state: { method: 'POST' },
-        entityId: result[0]._id,
-        _id: syncEntities[0]._id,
-        _kmd: { local: true }
-      });
+          // Check the sync entities
+          let query = new Query().equalTo('entityId', result[0]._id);
+          return store.pendingSyncEntities(query)
+            .then((syncEntities) => {
+              expect(syncEntities[0]).toEqual({
+                collection: collection,
+                state: { method: 'POST' },
+                entityId: result[0]._id,
+                _id: syncEntities[0]._id,
+                _kmd: { local: true }
+              });
 
-      // Check the sync entities
-      query = new Query().equalTo('entityId', result[1]._id);
-      syncEntities = await store.pendingSyncEntities(query);
-      expect(syncEntities[0]).toEqual({
-        collection: collection,
-        state: { method: 'POST' },
-        entityId: result[1]._id,
-        _id: syncEntities[0]._id,
-        _kmd: { local: true }
-      });
+              // Check the sync entities
+              query = new Query().equalTo('entityId', result[1]._id);
+              return store.pendingSyncEntities(query);
+            })
+            .then((syncEntities) => {
+              expect(syncEntities[0]).toEqual({
+                collection: collection,
+                state: { method: 'POST' },
+                entityId: result[1]._id,
+                _id: syncEntities[0]._id,
+                _kmd: { local: true }
+              });
 
-      // Clear the store
-      await store.clear();
+              // Clear the store
+              return store.clear();
+            });
+        });
     });
   });
 
   describe('update()', function() {
-    it('should update an entity in cache and add it to the sync table', async function() {
+    it('should update an entity in cache and add it to the sync table', function() {
       // Update an entitiy
       const store = new SyncStore(collection);
       const entity1 = {
@@ -356,25 +387,33 @@ describe('SyncStore', function() {
         isbn: '887420007-2',
         summary: 'Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros.\n\nVestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.',
       };
-      const result = await store.update(entity1);
-      expect(result).toEqual(entity1);
+      return store.update(entity1)
+        .then((result) => {
+          expect(result._id).toEqual(entity1._id);
+          expect(result.title).toEqual(entity1.title);
+          expect(result.author).toEqual(entity1.author);
+          expect(result.isbn).toEqual(entity1.isbn);
+          expect(result.summary).toEqual(entity1.summary);
 
-      // Check the sync entities
-      const query = new Query().equalTo('entityId', result._id);
-      const syncEntities = await store.pendingSyncEntities(query);
-      expect(syncEntities[0]).toEqual({
-        collection: collection,
-        state: { method: 'PUT' },
-        entityId: result._id,
-        _id: syncEntities[0]._id,
-        _kmd: { local: true }
-      });
+          // Check the sync entities
+          const query = new Query().equalTo('entityId', result._id);
+          return store.pendingSyncEntities(query)
+            .then((syncEntities) => {
+              expect(syncEntities[0]).toEqual({
+                collection: collection,
+                state: { method: 'PUT' },
+                entityId: result._id,
+                _id: syncEntities[0]._id,
+                _kmd: { local: true }
+              });
 
-      // Clear the store
-      await store.clear();
+              // Clear the store
+              return store.clear();
+            });
+        });
     });
 
-    it('should update an entity that does not contain an _id in cache and add it to the sync table', async function() {
+    it('should update an entity that does not contain an _id in cache and add it to the sync table', function() {
       // Update an entitiy
       const store = new SyncStore(collection);
       const entity1 = {
@@ -383,25 +422,33 @@ describe('SyncStore', function() {
         isbn: '887420007-2',
         summary: 'Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros.\n\nVestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.',
       };
-      const result = await store.update(entity1);
-      expect(result).toEqual(entity1);
+      return store.update(entity1)
+        .then((result) => {
+          expect(result._id).toExist();
+          expect(result.title).toEqual(entity1.title);
+          expect(result.author).toEqual(entity1.author);
+          expect(result.isbn).toEqual(entity1.isbn);
+          expect(result.summary).toEqual(entity1.summary);
 
-      // Check the sync entities
-      const query = new Query().equalTo('entityId', result._id);
-      const syncEntities = await store.pendingSyncEntities(query);
-      expect(syncEntities[0]).toEqual({
-        collection: collection,
-        state: { method: 'PUT' },
-        entityId: result._id,
-        _id: syncEntities[0]._id,
-        _kmd: { local: true }
-      });
+          // Check the sync entities
+          const query = new Query().equalTo('entityId', result._id);
+          return store.pendingSyncEntities(query)
+            .then((syncEntities) => {
+              expect(syncEntities[0]).toEqual({
+                collection: collection,
+                state: { method: 'PUT' },
+                entityId: result._id,
+                _id: syncEntities[0]._id,
+                _kmd: { local: true }
+              });
 
-      // Clear the store
-      await store.clear();
+              // Clear the store
+              return store.clear();
+            });
+        });
     });
 
-    it('should update an array of entities in cache and add them to the sync table', async function() {
+    it('should update an array of entities in cache and add them to the sync table', function() {
       // Update entities
       const store = new SyncStore(collection);
       const entity1 = {
@@ -417,33 +464,48 @@ describe('SyncStore', function() {
         isbn: '809087960-8',
         summary: 'Aenean fermentum. Donec ut mauris eget massa tempor convallis. Nulla neque libero, convallis eget, eleifend luctus, ultricies eu, nibh.'
       };
-      const result = await store.update([entity1, entity2]);
-      expect(result).toEqual([entity1, entity2]);
+      return store.update([entity1, entity2])
+        .then((result) => {
+          expect(result[0]._id).toExist();
+          expect(result[0].title).toEqual(entity1.title);
+          expect(result[0].author).toEqual(entity1.author);
+          expect(result[0].isbn).toEqual(entity1.isbn);
+          expect(result[0].summary).toEqual(entity1.summary);
+          expect(result[1]._id).toEqual(entity2._id);
+          expect(result[1].title).toEqual(entity2.title);
+          expect(result[1].author).toEqual(entity2.author);
+          expect(result[1].isbn).toEqual(entity2.isbn);
+          expect(result[1].summary).toEqual(entity2.summary);
 
-      // Check the sync entities
-      let query = new Query().equalTo('entityId', result[0]._id);
-      let syncEntities = await store.pendingSyncEntities(query);
-      expect(syncEntities[0]).toEqual({
-        collection: collection,
-        state: { method: 'PUT' },
-        entityId: result[0]._id,
-        _id: syncEntities[0]._id,
-        _kmd: { local: true }
-      });
+          // Check the sync entities
+          let query = new Query().equalTo('entityId', result[0]._id);
+          return store.pendingSyncEntities(query)
+            .then((syncEntities) => {
+              expect(syncEntities[0]).toEqual({
+                collection: collection,
+                state: { method: 'PUT' },
+                entityId: result[0]._id,
+                _id: syncEntities[0]._id,
+                _kmd: { local: true }
+              });
 
-      // Check the sync entities
-      query = new Query().equalTo('entityId', result[1]._id);
-      syncEntities = await store.pendingSyncEntities(query);
-      expect(syncEntities[0]).toEqual({
-        collection: collection,
-        state: { method: 'PUT' },
-        entityId: result[1]._id,
-        _id: syncEntities[0]._id,
-        _kmd: { local: true }
-      });
+              // Check the sync entities
+              query = new Query().equalTo('entityId', result[1]._id);
+              return store.pendingSyncEntities(query);
+            })
+            .then((syncEntities) => {
+              expect(syncEntities[0]).toEqual({
+                collection: collection,
+                state: { method: 'PUT' },
+                entityId: result[1]._id,
+                _id: syncEntities[0]._id,
+                _kmd: { local: true }
+              });
 
-      // Clear the store
-      await store.clear();
+              // Clear the store
+              return store.clear();
+            });
+        });
     });
   });
 

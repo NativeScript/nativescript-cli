@@ -87,7 +87,7 @@ export default class Storage {
         let id = entity._id;
         const kmd = entity._kmd || {};
 
-        if (!id) {
+        if (isDefined(id) === false) {
           id = this.generateObjectId();
           kmd.local = true;
         }
