@@ -581,6 +581,10 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 		return Promise.resolve(true);
 	}
 
+	public cleanPlatforms(platforms: string[]): Promise<void> {
+		return Promise.resolve();
+	}
+
 	public addPlatforms(platforms: string[]): Promise<void> {
 		return Promise.resolve();
 	}

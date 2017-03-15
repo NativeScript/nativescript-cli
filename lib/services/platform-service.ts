@@ -47,8 +47,20 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public async cleanPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, framworkPath?: string): Promise<void> {
-		await this.removePlatforms(platforms, projectData);
-		await this.addPlatforms(platforms, platformTemplate, projectData, platformSpecificData);
+		for (let platform of platforms) {
+			// TODO: Copy pasted - refactor as a common function
+			let platformData = this.$platformsData.getPlatformData(platform, projectData);
+			let currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+			let version: string;
+			if (currentPlatformData && currentPlatformData[constants.VERSION_STRING]) {
+				version = currentPlatformData[constants.VERSION_STRING];
+			};
+
+			let platformWithVersion: string = platform + "@" + version;
+
+			await this.removePlatforms([platform], projectData);
+			await this.addPlatforms([platformWithVersion], platformTemplate, projectData, platformSpecificData);
+		}
 	}
 
 	public async addPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, frameworkPath?: string): Promise<void> {
@@ -75,7 +87,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		let currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-		if (currentPlatformData && currentPlatformData[constants.VERSION_STRING]) {
+		if (version === undefined && currentPlatformData && currentPlatformData[constants.VERSION_STRING]) {
 			version = currentPlatformData[constants.VERSION_STRING];
 		}
 
