@@ -331,4 +331,65 @@ declare module NativeScriptDoctor {
 		IOS_PLATFORM_NAME: string;
 		SUPPORTED_PLATFORMS: string[];
 	}
+
+	/**
+	 * Describes methods for getting and validating Android tools.
+	 */
+	interface IAndroidToolsInfo {
+		/**
+		 * Returns the Android tools info.
+		 * @return {NativeScriptDoctor.IAndroidToolsInfoData} returns the Android tools info.
+		 */
+		getToolsInfo(): NativeScriptDoctor.IAndroidToolsInfoData;
+
+		/**
+		 * Checks if the Android tools are valid.
+		 * @return {string[]} An array of errors from the validation checks. If there are no errors will return [].
+		 */
+		validateInfo(): string[];
+
+		/**
+		 * Checks if the current javac version is valid.
+		 * @param {string} installedJavaVersion The version of javac to check.
+		 * @return {string[]} An array of errors from the validation checks. If there are no errors will return [].
+		 */
+		validateJavacVersion(installedJavaVersion: string): string[];
+
+		/**
+		 * Returns the path to the adb which is located in ANDROID_HOME.
+		 * @return {Promise<string>} Path to the adb which is located in ANDROID_HOME.
+		 */
+		getPathToAdbFromAndroidHome(): Promise<string>;
+
+		/**
+		 * Checks if the ANDROID_HOME variable is set to the correct folder.
+		 * @return {string[]} An array of errors from the validation checks. If there are no errors will return [].
+		 */
+		validateAndroidHomeEnvVariable(): string[];
+	}
+
+	/**
+	 * Describes information about installed Android tools and SDKs.
+	 */
+	interface IAndroidToolsInfoData {
+		/**
+		 * The value of ANDROID_HOME environment variable.
+		 */
+		androidHomeEnvVar: string;
+
+		/**
+		 * The latest installed version of Android Build Tools that satisfies CLI's requirements.
+		 */
+		buildToolsVersion: string;
+
+		/**
+		 * The latest installed version of Android SDK that satisfies CLI's requirements.
+		 */
+		compileSdkVersion: number;
+
+		/**
+		 * The latest installed version of Android Support Repository that satisfies CLI's requirements.
+		 */
+		supportRepositoryVersion: string;
+	}
 }
