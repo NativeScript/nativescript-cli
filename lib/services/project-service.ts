@@ -48,6 +48,8 @@ export class ProjectService implements IProjectService {
 			let templatePath = await this.$projectTemplatesService.prepareTemplate(selectedTemplate, projectDir);
 			await this.extractTemplate(projectDir, templatePath);
 
+			await this.ensureAppResourcesExist(projectDir);
+
 			let packageName = constants.TNS_CORE_MODULES_NAME;
 			await this.$npm.install(packageName, projectDir, { save: true, "save-exact": true });
 
@@ -100,6 +102,27 @@ export class ProjectService implements IProjectService {
 		shelljs.cp('-R', path.join(realTemplatePath, "*"), appDestinationPath);
 
 		this.$fs.createDirectory(path.join(projectDir, "platforms"));
+	}
+
+	private async ensureAppResourcesExist(projectDir: string): Promise<void> {
+		let appPath = path.join(projectDir, constants.APP_FOLDER_NAME),
+			appResourcesDestinationPath = path.join(appPath, constants.APP_RESOURCES_FOLDER_NAME);
+
+		if (!this.$fs.exists(appResourcesDestinationPath)) {
+			this.$fs.createDirectory(appResourcesDestinationPath);
+
+			// the template installed doesn't have App_Resources -> get from a default template
+			let defaultTemplateName = constants.RESERVED_TEMPLATE_NAMES["default"];
+			await this.$npm.install(defaultTemplateName, projectDir, { save: true, });
+			let defaultTemplateAppResourcesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME,
+				defaultTemplateName, constants.APP_RESOURCES_FOLDER_NAME);
+
+			if (this.$fs.exists(defaultTemplateAppResourcesPath)) {
+				shelljs.cp('-R', defaultTemplateAppResourcesPath, appPath);
+			}
+
+			await this.$npm.uninstall(defaultTemplateName, { save: true }, projectDir);
+		}
 	}
 
 	private removeMergedDependencies(projectDir: string, templatePackageJsonData: any): void {
