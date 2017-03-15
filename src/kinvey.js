@@ -1,12 +1,6 @@
-import Client from './client';
-import CustomEndpoint from './endpoint';
-import Query from './query';
-import { Log } from 'src/utils';
-import Aggregation from './aggregation';
-import DataStore, { DataStoreType, FileStore, UserStore } from './datastore';
-import { Acl, Metadata, User } from './entity';
-import { AuthorizationGrant } from './identity';
-import { AuthType, CacheRack, NetworkRack, Rack, RequestMethod, KinveyRequest } from './request';
+import Promise from 'es6-promise';
+import url from 'url';
+
 import {
   ActiveUserError,
   FeatureUnavailableError,
@@ -31,7 +25,16 @@ import {
   ServerError,
   SyncError
 } from 'src/errors';
-import url from 'url';
+import { Log } from 'src/utils';
+import Client from './client';
+import CustomEndpoint from './endpoint';
+import Query from './query';
+import Aggregation from './aggregation';
+import DataStore, { DataStoreType, FileStore, UserStore } from './datastore';
+import { Acl, Metadata, User } from './entity';
+import { AuthorizationGrant } from './identity';
+import { AuthType, CacheRack, NetworkRack, Rack, RequestMethod, KinveyRequest } from './request';
+
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 /**

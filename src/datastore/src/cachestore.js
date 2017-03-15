@@ -1,19 +1,20 @@
-import NetworkStore from './networkstore';
-import { CacheRequest, AuthType, RequestMethod } from 'src/request';
-import { KinveyError } from 'src/errors';
-import Query from 'src/query';
-import Aggregation from 'src/aggregation';
-import SyncManager from './sync';
-import { Metadata } from 'src/entity';
-import { KinveyObservable } from 'src/utils';
 import differenceBy from 'lodash/differenceBy';
 import assign from 'lodash/assign';
 import keyBy from 'lodash/keyBy';
-import url from 'url';
 import filter from 'lodash/filter';
 import map from 'lodash/map';
 import xorWith from 'lodash/xorWith';
 import isArray from 'lodash/isArray';
+import url from 'url';
+
+import { CacheRequest, AuthType, RequestMethod } from 'src/request';
+import { KinveyError } from 'src/errors';
+import Query from 'src/query';
+import Aggregation from 'src/aggregation';
+import { Metadata } from 'src/entity';
+import { KinveyObservable } from 'src/utils';
+import NetworkStore from './networkstore';
+import SyncManager from './sync';
 
 /**
  * The CacheStore class is used to find, create, update, remove, count and group entities. Entities are stored

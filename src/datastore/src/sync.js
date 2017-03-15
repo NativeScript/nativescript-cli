@@ -1,3 +1,10 @@
+import Promise from 'es6-promise';
+import map from 'lodash/map';
+import result from 'lodash/result';
+import isArray from 'lodash/isArray';
+import isString from 'lodash/isString';
+import url from 'url';
+
 import {
   KinveyRequest,
   RequestMethod,
@@ -8,11 +15,7 @@ import {
 import { InsufficientCredentialsError, SyncError } from 'src/errors';
 import Client from 'src/client';
 import Query from 'src/query';
-import url from 'url';
-import map from 'lodash/map';
-import result from 'lodash/result';
-import isArray from 'lodash/isArray';
-import isString from 'lodash/isString';
+
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sync';
 

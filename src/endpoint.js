@@ -1,8 +1,11 @@
-import Client from './client';
-import { RequestMethod, AuthType, KinveyRequest } from './request';
-import { KinveyError } from 'src/errors';
+import Promise from 'es6-promise';
 import url from 'url';
 import isString from 'lodash/isString';
+
+import { KinveyError } from './errors';
+import Client from './client';
+import { RequestMethod, AuthType, KinveyRequest } from './request';
+
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 /**

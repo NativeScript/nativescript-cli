@@ -1,10 +1,12 @@
-import { CacheRequest } from './request';
-import { KinveyError } from 'src/errors';
-import { Log, isDefined } from 'src/utils';
 import url from 'url';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
+
+import { KinveyError } from 'src/errors';
+import { Log, isDefined } from 'src/utils';
+import { CacheRequest } from './request';
+
 const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 60000;
 let sharedInstance = null;
 

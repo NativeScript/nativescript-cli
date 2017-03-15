@@ -1,13 +1,15 @@
+import Promise from 'es6-promise';
+import reduce from 'lodash/reduce';
+import isFunction from 'lodash/isFunction';
+import { isDefined } from 'src/utils';
+import values from 'lodash/values';
+
 import Middleware, {
   CacheMiddleware,
   HttpMiddleware,
   ParseMiddleware,
   SerializeMiddleware
 } from './middleware';
-import reduce from 'lodash/reduce';
-import isFunction from 'lodash/isFunction';
-import { isDefined } from 'src/utils';
-import values from 'lodash/values';
 
 export default class Rack extends Middleware {
   constructor(name = 'Rack') {

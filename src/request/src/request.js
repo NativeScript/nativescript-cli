@@ -1,8 +1,4 @@
-import { NoResponseError, KinveyError } from 'src/errors';
-import Client from 'src/client';
-import { isDefined } from 'src/utils';
-import Response from './response';
-import Headers from './headers';
+import Promise from 'es6-promise';
 import qs from 'qs';
 import appendQuery from 'append-query';
 import assign from 'lodash/assign';
@@ -10,6 +6,10 @@ import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
 
 import cloneDeep from 'lodash/cloneDeep';
+import Client from 'src/client';
+import { isDefined } from 'src/utils';
+import Response from './response';
+import Headers from './headers';
 
 /**
  * @private

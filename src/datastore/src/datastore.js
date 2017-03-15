@@ -1,10 +1,12 @@
+import url from 'url';
+
 import { CacheRequest, RequestMethod } from 'src/request';
 import { KinveyError } from 'src/errors';
 import Client from 'src/client';
 import NetworkStore from './networkstore';
 import CacheStore from './cachestore';
 import SyncStore from './syncstore';
-import url from 'url';
+
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 /**

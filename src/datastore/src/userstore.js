@@ -1,10 +1,13 @@
+import Promise from 'es6-promise';
+import isArray from 'lodash/isArray';
+import url from 'url';
+
 import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
 import { KinveyError } from 'src/errors';
 import { KinveyObservable, isDefined } from '../../utils';
 import Query from '../../query';
 import NetworkStore from './networkstore';
-import url from 'url';
-import isArray from 'lodash/isArray';
+
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
