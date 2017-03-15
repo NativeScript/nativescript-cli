@@ -46,6 +46,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		super();
 	}
 
+	public async cleanPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, framworkPath?: string): Promise<void> {
+		await this.removePlatforms(platforms, projectData);
+		await this.addPlatforms(platforms, platformTemplate, projectData, platformSpecificData);
+	}
+
 	public async addPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, frameworkPath?: string): Promise<void> {
 		let platformsDir = projectData.platformsDir;
 		this.$fs.ensureDirectoryExists(platformsDir);
