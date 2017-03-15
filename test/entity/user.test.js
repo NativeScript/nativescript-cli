@@ -549,13 +549,18 @@ describe('User', function() {
   });
 
   describe('removeById()', function() {
-
-    it('should throw a NotFoundError if the id argument is not a string', function() {
-      return User.remove(null, {})
+    it('should throw a KinveyError if an id is not provided', function() {
+      return User.remove()
         .catch((error) => {
-          expect(error).toBeA(NotFoundError);          
+          expect(error).toBeA(KinveyError);
         });
+    });
 
+    it('should throw a KinveyError if an id is not a string', function() {
+      return User.remove(1)
+        .catch((error) => {
+          expect(error).toBeA(KinveyError);
+        });
     });
 
     it('should remove the user that matches the id argument', function() {
@@ -563,14 +568,13 @@ describe('User', function() {
       const user = new User({ _id: randomString(), email: randomString() });
 
       nock(this.client.apiHostname, { encodedQueryParams: true })
-      .delete(`${user.pathname}/${user._id}`)
-      .reply(204, {}, {
-        'content-type': 'application/json'
-      });
+        .delete(`${user.pathname}/${user._id}`)
+        .reply(204);
 
       return User.remove(user._id, {})
-      .then(()=> {
-      })
+        .then(()=> {
+          expect(nock.isDone()).toEqual(true);
+        })
     });
 
     it('should remove the user that matches the id argument permanently', function() {
@@ -578,16 +582,13 @@ describe('User', function() {
       const user = new User({ _id: randomString(), email: randomString() });
 
       nock(this.client.apiHostname, { encodedQueryParams: true })
-      .delete(`${user.pathname}/${user._id}?hard=true`)
-      .reply(204, {}, {
-        'content-type': 'application/json'
-      });
+        .delete(`${user.pathname}/${user._id}?hard=true`)
+        .reply(204);
 
-      return User.remove(user._id, {
-        hard:true
-      })
-      .then(()=> {        
-      })
+      return User.remove(user._id, { hard: true })
+        .then(()=> {
+          expect(nock.isDone()).toEqual(true);
+        });
     });
   });
 
