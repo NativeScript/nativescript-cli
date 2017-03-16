@@ -1,15 +1,15 @@
 let sourcemap = require("source-map");
 import * as path from "path";
+import { cache } from "../common/decorators";
 
 export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 
 	private partialLine: string = null;
 
-	constructor(private $fs: IFileSystem) {
-	}
+	constructor(private $fs: IFileSystem,
+		private $projectData: IProjectData) { }
 
-	public filterData(data: string, logLevel: string, projectDir: string, pid?: string): string {
-
+	public filterData(data: string, logLevel: string, pid?: string): string {
 		if (pid && data && data.indexOf(`[${pid}]`) === -1) {
 			return null;
 		}
@@ -40,15 +40,15 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 					let pidIndex = line.indexOf(searchString);
 					if (pidIndex > 0) {
 						line = line.substring(pidIndex + searchString.length, line.length);
-						this.getOriginalFileLocation(line, projectDir);
-						result += this.getOriginalFileLocation(line, projectDir) + "\n";
+						this.getOriginalFileLocation(line);
+						result += this.getOriginalFileLocation(line) + "\n";
 						continue;
 					}
 				}
 				if (skipLastLine && i === lines.length - 1) {
 					this.partialLine = line;
 				} else {
-					result += this.getOriginalFileLocation(line, projectDir) + "\n";
+					result += this.getOriginalFileLocation(line) + "\n";
 				}
 			}
 			return result;
@@ -57,11 +57,12 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 		return data;
 	}
 
-	private getOriginalFileLocation(data: string, projectDir: string): string {
-		let fileString = "file:///";
-		let fileIndex = data.indexOf(fileString);
+	private getOriginalFileLocation(data: string): string {
+		const fileString = "file:///";
+		const fileIndex = data.indexOf(fileString);
+		const projectDir = this.getProjectDir();
 
-		if (fileIndex >= 0) {
+		if (fileIndex >= 0 && projectDir) {
 			let parts = data.substring(fileIndex + fileString.length).split(":");
 			if (parts.length >= 4) {
 				let file = parts[0];
@@ -87,5 +88,16 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 
 		return data;
 	}
+
+	@cache()
+	private getProjectDir(): string {
+		try {
+			this.$projectData.initializeProjectData();
+			return this.$projectData.projectDir;
+		} catch (err) {
+			return null;
+		}
+	}
 }
+
 $injector.register("iOSLogFilter", IOSLogFilter);
