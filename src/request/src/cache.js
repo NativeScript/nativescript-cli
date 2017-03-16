@@ -2,6 +2,7 @@ import Promise from 'es6-promise';
 import UrlPattern from 'url-pattern';
 import url from 'url';
 import localStorage from 'local-storage';
+import cloneDeep from 'lodash/cloneDeep';
 
 import Client from 'src/client';
 import { KinveyError } from 'src/errors';
@@ -25,6 +26,14 @@ export default class CacheRequest extends Request {
     this.aggregation = options.aggregation;
     this.query = options.query;
     this.rack = CacheRack;
+  }
+
+  get body() {
+    return this._body;
+  }
+
+  set body(body) {
+    this._body = cloneDeep(body);
   }
 
   get query() {
