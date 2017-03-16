@@ -33,7 +33,7 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 	}
 
 	public async buildForDevice(device: Mobile.IDevice, projectData: IProjectData): Promise<string> {
-		let buildConfig: IiOSBuildConfig = {
+		let buildConfig: IBuildConfig = {
 			buildForDevice: !device.isEmulator,
 			projectDir: this.$options.path,
 			release: this.$options.release,

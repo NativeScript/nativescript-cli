@@ -238,7 +238,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 	}
 
-	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IiOSBuildConfig): Promise<void> {
+	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
 		let basicArgs = [
 			"-configuration", buildConfig.release ? "Release" : "Debug",
 			"build",
@@ -270,7 +270,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	}
 
-	private async buildForDevice(projectRoot: string, args: string[], buildConfig: IiOSBuildConfig, projectData: IProjectData): Promise<void> {
+	private async buildForDevice(projectRoot: string, args: string[], buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {
 		let defaultArchitectures = [
 			'ARCHS=armv7 arm64',
 			'VALID_ARCHS=armv7 arm64'

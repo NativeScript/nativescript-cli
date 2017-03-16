@@ -11,7 +11,7 @@ export class BuildCommandBase {
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
 		await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 		this.$options.clean = true;
-		const buildConfig: IiOSBuildConfig = {
+		const buildConfig: IBuildConfig = {
 			buildForDevice: this.$options.forDevice,
 			projectDir: this.$options.path,
 			clean: this.$options.clean,

@@ -59,7 +59,7 @@ export class PublishIOS implements ICommand {
 			// No .ipa path provided, build .ipa on out own.
 			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
 			if (mobileProvisionIdentifier || codeSignIdentity) {
-				let iOSBuildConfig: IiOSBuildConfig = {
+				let iOSBuildConfig: IBuildConfig = {
 					projectDir: this.$options.path,
 					release: this.$options.release,
 					device: this.$options.device,

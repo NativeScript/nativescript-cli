@@ -130,7 +130,7 @@ interface IBuildForDevice {
 	buildForDevice: boolean;
 }
 
-interface IBuildConfig extends IAndroidBuildOptionsSettings, IBuildForDevice {
+interface IBuildConfig extends IAndroidBuildOptionsSettings, IiOSBuildConfig {
 	projectDir: string;
 	clean?: boolean;
 	architectures?: string[];
@@ -140,7 +140,7 @@ interface IBuildConfig extends IAndroidBuildOptionsSettings, IBuildForDevice {
 /**
  * Describes iOS-specific build configuration properties
  */
-interface IiOSBuildConfig extends IBuildConfig, IRelease, IDeviceIdentifier, IProvision, ITeamIdentifier {
+interface IiOSBuildConfig extends IBuildForDevice, IDeviceIdentifier, IProvision, ITeamIdentifier, IRelease {
 	/**
 	 * Identifier of the mobile provision which will be used for the build. If not set a provision will be selected automatically if possible.
 	 */
