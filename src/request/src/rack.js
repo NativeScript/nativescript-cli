@@ -94,6 +94,11 @@ class CacheRack extends Rack {
     super(name);
     this.use(new CacheMiddleware());
   }
+
+  useCacheMiddleware(cacheMiddleware) {
+    this.reset();
+    this.use(cacheMiddleware);
+  }
 }
 const cacheRack = new CacheRack();
 export { cacheRack as CacheRack };
@@ -103,6 +108,13 @@ class NetworkRack extends Rack {
     super(name);
     this.use(new SerializeMiddleware());
     this.use(new HttpMiddleware());
+    this.use(new ParseMiddleware());
+  }
+
+  useHttpMiddleware(httpMiddleware) {
+    this.reset();
+    this.use(new SerializeMiddleware());
+    this.use(httpMiddleware);
     this.use(new ParseMiddleware());
   }
 }
