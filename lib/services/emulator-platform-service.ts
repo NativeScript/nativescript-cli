@@ -1,4 +1,3 @@
-import * as path from "path";
 import { createTable, deferPromise } from "../common/helpers";
 
 export class EmulatorPlatformService implements IEmulatorPlatformService {
@@ -8,7 +7,8 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 		private $childProcess: IChildProcess,
 		private $devicesService: Mobile.IDevicesService,
 		private $options: IOptions,
-		private $logger: ILogger) { }
+		private $logger: ILogger,
+		private $androidEmulatorServices: Mobile.IAndroidEmulatorServices) { }
 
 	public async startEmulator(info: IEmulatorInfo, projectData: IProjectData): Promise<void> {
 		if (!info.isRunning) {
@@ -55,7 +55,7 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 
 	public async getEmulatorInfo(platform: string, idOrName: string): Promise<IEmulatorInfo> {
 		if (this.$mobileHelper.isAndroidPlatform(platform)) {
-			let androidEmulators = await this.getAndroidEmulators();
+			let androidEmulators = this.getAndroidEmulators();
 			let found = androidEmulators.filter((info: IEmulatorInfo) => info.id === idOrName);
 			if (found.length > 0) {
 				return found[0];
@@ -108,7 +108,7 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 		}
 
 		if (!platform || this.$mobileHelper.isAndroidPlatform(platform)) {
-			let androidEmulators = await this.getAndroidEmulators();
+			let androidEmulators = this.getAndroidEmulators();
 			if (androidEmulators) {
 				emulators = emulators.concat(androidEmulators);
 			}
@@ -148,37 +148,12 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 		return emulators;
 	}
 
-	public async getAndroidEmulators(): Promise<IEmulatorInfo[]> {
-		let androidPath = path.join(process.env.ANDROID_HOME, "tools", "android");
-		let text: string = await this.$childProcess.exec(`"${androidPath}" list avd`);
-		let notLoadedIndex = text.indexOf("The following");
-		if (notLoadedIndex > 0) {
-			text = text.substring(0, notLoadedIndex);
-		}
+	public getAndroidEmulators(): IEmulatorInfo[] {
+		const androidVirtualDevices: Mobile.IAvdInfo[] = this.$androidEmulatorServices.getAvds().map(avd => this.$androidEmulatorServices.getInfoFromAvd(avd));
 
-		let textBlocks = text.split("---------");
-		let emulators: IEmulatorInfo[] = [];
-		for (let block of textBlocks) {
-			let lines = block.split("\n");
-			let info: IEmulatorInfo = { name: "", version: "", id: "", platform: "Android", type: "Emulator" };
-			for (let line of lines) {
-				if (line.indexOf("Target") >= 0) {
-					info.version = line.substring(line.indexOf(":") + 1).replace("Android", "").trim();
-				}
-
-				if (line.indexOf("Name") >= 0) {
-					info.id = line.substring(line.indexOf(":") + 1).trim();
-				}
-
-				if (line.indexOf("Device") >= 0) {
-					info.name = line.substring(line.indexOf(":") + 1).trim();
-				}
-
-				info.isRunning = false;
-			}
-
-			emulators.push(info);
-		}
+		const emulators: IEmulatorInfo[] = _.map(androidVirtualDevices, avd => {
+			return { name: avd.device, version: avd.target, id: avd.name, platform: "Android", type: "Emulator", isRunning: false };
+		});
 
 		return emulators;
 	}

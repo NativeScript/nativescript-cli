@@ -288,7 +288,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			await platformData.platformProjectService.processConfigurationFilesFromAppResources(appFilesUpdaterOptions.release, projectData);
 		}
 
-		await platformData.platformProjectService.interpolateConfigurationFile(projectData, platformSpecificData);
+		platformData.platformProjectService.interpolateConfigurationFile(projectData, platformSpecificData);
 
 		this.$logger.out("Project successfully prepared (" + platform + ")");
 	}

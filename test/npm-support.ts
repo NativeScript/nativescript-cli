@@ -157,7 +157,7 @@ async function setupProject(dependencies?: any): Promise<any> {
 				getAppResourcesDestinationDirectoryPath: () => path.join(androidFolderPath, "src", "main", "res"),
 				processConfigurationFilesFromAppResources: () => Promise.resolve(),
 				ensureConfigurationFileInAppResources: (): any => null,
-				interpolateConfigurationFile: () => Promise.resolve(),
+				interpolateConfigurationFile: (): void => undefined,
 				isPlatformPrepared: (projectRoot: string) => false
 			}
 		};
