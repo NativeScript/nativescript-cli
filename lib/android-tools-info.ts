@@ -337,13 +337,14 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		return (() => {
 			if (!this.installedTargetsCache) {
 				try {
+					this.installedTargetsCache = [];
 					const pathToInstalledTargets = path.join(this.androidHome, "platforms");
-					if (!this.$fs.exists(pathToInstalledTargets)) {
+					if (this.$fs.exists(pathToInstalledTargets)) {
 						this.installedTargetsCache = this.$fs.readDirectory(pathToInstalledTargets);
 						this.$logger.trace("Installed Android Targets are: ", this.installedTargetsCache);
-					} else {
-						this.installedTargetsCache = [];
 					}
+
+					this.$logger.trace("Installed Android Targets are: ", this.installedTargetsCache);
 				} catch (err) {
 					this.$logger.trace("Unable to get Android targets. Error is: " + err);
 				}
