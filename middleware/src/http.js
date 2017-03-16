@@ -1,3 +1,4 @@
+import Promise from 'es6-promise';
 import { Middleware, isDefined, NoNetworkConnectionError, TimeoutError } from 'kinvey-js-sdk/dist/export';
 import httpRequest from 'request';
 import pkg from 'package.json';
@@ -43,7 +44,7 @@ export default class HttpMiddleware extends Middleware {
         followRedirect: followRedirect,
         timeout: timeout
       }, (error, response, body) => {
-        if (isDefined(response) === false) {
+        if (isDefined(error)) {
           if (error.code === 'ESOCKETTIMEDOUT' || error.code === 'ETIMEDOUT') {
             return reject(new TimeoutError('The network request timed out.'));
           } else if (error.code === 'ENOENT') {
