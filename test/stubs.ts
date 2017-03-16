@@ -518,6 +518,10 @@ export class AndroidToolsInfoStub implements IAndroidToolsInfo {
 	getPathToAdbFromAndroidHome(): IFuture<string> {
 		return Future.fromResult("");
 	}
+
+	public validateAndroidHomeEnvVariable(options?: { showWarningsAsErrors: boolean }): boolean {
+		return false;
+	}
 }
 
 export class ChildProcessStub {
