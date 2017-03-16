@@ -1,7 +1,8 @@
 import HTML5Popup from 'kinvey-html5-sdk/dist/popup';
-import Device from './device';
 import bind from 'lodash/bind';
 import isFunction from 'lodash/isFunction';
+
+import Device from './device';
 
 export default class Popup extends HTML5Popup {
   open(url = '/') {

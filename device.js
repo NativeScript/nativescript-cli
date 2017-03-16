@@ -1,3 +1,5 @@
+import Promise from 'es6-promise';
+
 let deviceReady;
 
 export default class Device {
