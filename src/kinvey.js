@@ -3,27 +3,41 @@ import url from 'url';
 
 import {
   ActiveUserError,
+  APIVersionNotAvailableError,
+  APIVersionNotImplementedError,
+  AppProblemError,
+  BadRequestError,
+  BLError,
+  CORSDisabledError,
+  DuplicateEndUsersError,
   FeatureUnavailableError,
   IncompleteRequestBodyError,
+  IndirectCollectionAccessDisallowedError,
   InsufficientCredentialsError,
   InvalidCredentialsError,
   InvalidIdentifierError,
   InvalidQuerySyntaxError,
   JSONParseError,
   KinveyError,
+  KinveyInternalErrorRetry,
+  KinveyInternalErrorStop,
   MissingQueryError,
   MissingRequestHeaderError,
   MissingRequestParameterError,
   MobileIdentityConnectError,
-  NoNetworkConnectionError,
   NoActiveUserError,
-  NotFoundError,
+  NoNetworkConnectionError,
   NoResponseError,
+  NotFoundError,
   ParameterValueOutOfRangeError,
   PopupError,
   QueryError,
   ServerError,
-  SyncError
+  StaleRequestError,
+  SyncError,
+  TimeoutError,
+  UserAlreadyExistsError,
+  WritesToCollectionDisallowedError
 } from 'src/errors';
 import { Log } from 'src/utils';
 import Client from './client';
@@ -226,27 +240,41 @@ Kinvey.UserStore = UserStore;
 
 // Add errors
 Kinvey.ActiveUserError = ActiveUserError;
+Kinvey.APIVersionNotAvailableError = APIVersionNotAvailableError;
+Kinvey.APIVersionNotImplementedError = APIVersionNotImplementedError;
+Kinvey.AppProblemError = AppProblemError;
+Kinvey.BadRequestError = BadRequestError;
+Kinvey.BLError = BLError;
+Kinvey.CORSDisabledError = CORSDisabledError;
+Kinvey.DuplicateEndUsersError = DuplicateEndUsersError;
 Kinvey.FeatureUnavailableError = FeatureUnavailableError;
 Kinvey.IncompleteRequestBodyError = IncompleteRequestBodyError;
+Kinvey.IndirectCollectionAccessDisallowedError = IndirectCollectionAccessDisallowedError;
 Kinvey.InsufficientCredentialsError = InsufficientCredentialsError;
 Kinvey.InvalidCredentialsError = InvalidCredentialsError;
 Kinvey.InvalidIdentifierError = InvalidIdentifierError;
 Kinvey.InvalidQuerySyntaxError = InvalidQuerySyntaxError;
 Kinvey.JSONParseError = JSONParseError;
 Kinvey.KinveyError = KinveyError;
+Kinvey.KinveyInternalErrorRetry = KinveyInternalErrorRetry;
+Kinvey.KinveyInternalErrorStop = KinveyInternalErrorStop;
 Kinvey.MissingQueryError = MissingQueryError;
 Kinvey.MissingRequestHeaderError = MissingRequestHeaderError;
 Kinvey.MissingRequestParameterError = MissingRequestParameterError;
 Kinvey.MobileIdentityConnectError = MobileIdentityConnectError;
-Kinvey.NoNetworkConnectionError = NoNetworkConnectionError;
 Kinvey.NoActiveUserError = NoActiveUserError;
-Kinvey.NotFoundError = NotFoundError;
+Kinvey.NoNetworkConnectionError = NoNetworkConnectionError;
 Kinvey.NoResponseError = NoResponseError;
+Kinvey.NotFoundError = NotFoundError;
 Kinvey.ParameterValueOutOfRangeError = ParameterValueOutOfRangeError;
 Kinvey.PopupError = PopupError;
 Kinvey.QueryError = QueryError;
 Kinvey.ServerError = ServerError;
+Kinvey.StaleRequestError = StaleRequestError;
 Kinvey.SyncError = SyncError;
+Kinvey.TimeoutError = TimeoutError;
+Kinvey.UserAlreadyExistsError = UserAlreadyExistsError;
+Kinvey.WritesToCollectionDisallowedError = WritesToCollectionDisallowedError;
 
 // Add Racks
 Kinvey.CacheRack = CacheRack;
