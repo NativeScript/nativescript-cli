@@ -1,10 +1,12 @@
 import * as assert from "assert";
 import * as path from "path";
 import { SysInfo } from "../lib/sys-info";
+import { Helpers } from "../lib/helpers";
 import { ChildProcess } from "../lib/wrappers/child-process";
 
 const JavaHomeName = "JAVA_HOME";
 const AndroidHomeName = "ANDROID_HOME";
+const helpers = new Helpers();
 
 interface IChildProcessResultDescription {
 	result?: any;
@@ -38,6 +40,27 @@ interface IFileSystemMockOptions {
 	existsResult?: boolean;
 }
 
+const androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo = {
+	getPathToAdbFromAndroidHome: async () => {
+		return "adb";
+	},
+	getPathToEmulatorExecutable: () => {
+		return "emulator";
+	},
+	getToolsInfo: () => {
+		return Object.create(null);
+	},
+	validateAndroidHomeEnvVariable: (): any[] => {
+		return [];
+	},
+	validateInfo: (): any[] => {
+		return [];
+	},
+	validateJavacVersion: (): any[] => {
+		return [];
+	}
+};
+
 function createChildProcessResults(childProcessResult: IChildProcessResults): IDictionary<IChildProcessResultDescription> {
 	return {
 		"uname -a": childProcessResult.uname,
@@ -55,7 +78,8 @@ function createChildProcessResults(childProcessResult: IChildProcessResults): ID
 		"mono --version": childProcessResult.monoVersion,
 		"git --version": childProcessResult.gitVersion,
 		"gradle -v": childProcessResult.gradleVersion,
-		"tns --version": childProcessResult.nativeScriptCliVersion
+		"tns --version": childProcessResult.nativeScriptCliVersion,
+		"emulator": { shouldThrowError: false }
 	};
 }
 
@@ -87,9 +111,11 @@ function mockSysInfo(childProcessResult: IChildProcessResults, hostInfoOptions?:
 		exec: async (command: string) => {
 			return getResultFromChildProcess(childProcessResultDictionary[command], command);
 		},
-
 		spawnFromEvent: async (command: string, args: string[], event: string) => {
 			return getResultFromChildProcess(childProcessResultDictionary[command], command);
+		},
+		execFile: async () => {
+			return undefined;
 		}
 	};
 
@@ -98,7 +124,7 @@ function mockSysInfo(childProcessResult: IChildProcessResults, hostInfoOptions?:
 		extractZip: () => Promise.resolve()
 	};
 
-	return new SysInfo(childProcess, fileSystem, null, hostInfo, winreg);
+	return new SysInfo(childProcess, fileSystem, helpers, hostInfo, winreg, androidToolsInfo);
 }
 
 function setStdOut(value: string): { stdout: string } {
@@ -130,10 +156,13 @@ describe("SysInfo unit tests", () => {
 				exec: async (command: string) => {
 					execCommand = command;
 					return { stdout: "", stderr: "" };
+				},
+				execFile: async () => {
+					return undefined;
 				}
 			};
 
-			sysInfo = new SysInfo(childProcess, null, null, null, null);
+			sysInfo = new SysInfo(childProcess, null, helpers, null, null, androidToolsInfo);
 		});
 
 		it("java version.", async () => {
@@ -210,6 +239,10 @@ describe("SysInfo unit tests", () => {
 				assert.deepEqual(result.nativeScriptCliVersion, childProcessResult.nativeScriptCliVersion.result.stdout);
 			};
 
+			beforeEach(() => {
+				androidToolsInfo.validateAndroidHomeEnvVariable = (): any[] => [];
+			});
+
 			it("on Windows", async () => {
 				sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion: "4.5.1" });
 				let result = await sysInfo.getSysInfo();
@@ -283,6 +316,7 @@ describe("SysInfo unit tests", () => {
 					pod: { shouldThrowError: true },
 					nativeScriptCliVersion: { shouldThrowError: true }
 				};
+				androidToolsInfo.validateAndroidHomeEnvVariable = (): any[] => [1];
 			});
 
 			describe("when all of calls throw", () => {
@@ -301,19 +335,19 @@ describe("SysInfo unit tests", () => {
 					assert.deepEqual(result.cocoaPodsVer, null);
 				};
 
-				it("on Windows", () => {
+				it("on Windows", async () => {
 					sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion: "4.5.1" });
-					assertAllValuesAreNull();
+					await assertAllValuesAreNull();
 				});
 
-				it("on Mac", () => {
+				it("on Mac", async () => {
 					sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
-					assertAllValuesAreNull();
+					await assertAllValuesAreNull();
 				});
 
-				it("on Linux", () => {
+				it("on Linux", async () => {
 					sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: false, dotNetVersion: "4.5.1" });
-					assertAllValuesAreNull();
+					await assertAllValuesAreNull();
 				});
 			});
 		});

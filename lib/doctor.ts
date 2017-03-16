@@ -1,5 +1,4 @@
 import { Constants } from "./constants";
-import { SysInfo } from "./sys-info";
 import { EOL } from "os";
 import { HostInfo } from "./host-info";
 import { AndroidLocalBuildRequirements } from "./local-build-requirements/android-local-build-requirements";
@@ -14,7 +13,8 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		private helpers: Helpers,
 		private hostInfo: HostInfo,
 		private iOSLocalBuildRequirements: IosLocalBuildRequirements,
-		private sysInfo: SysInfo) { }
+		private sysInfo: NativeScriptDoctor.ISysInfo,
+		private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo) { }
 
 	public async canExecuteLocalBuild(platform: string): Promise<boolean> {
 		this.validatePlatform(platform);
@@ -29,13 +29,18 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 	}
 
 	public async getWarnings(): Promise<NativeScriptDoctor.IWarning[]> {
-		const result: NativeScriptDoctor.IWarning[] = [];
+		let result: NativeScriptDoctor.IWarning[] = [];
 		const sysInfoData = await this.sysInfo.getSysInfo();
+
+		const androidHomeValidationErrors = this.androidToolsInfo.validateAndroidHomeEnvVariable();
+		if (androidHomeValidationErrors.length > 0) {
+			result = result.concat(androidHomeValidationErrors);
+		}
 
 		if (!sysInfoData.adbVer) {
 			result.push({
 				warning: "WARNING: adb from the Android SDK is not installed or is not configured properly. ",
-				additionalInformation: "For Android-related operations, the AppBuilder CLI will use a built-in version of adb." + EOL
+				additionalInformation: "For Android-related operations, the NativeScript CLI will use a built-in version of adb." + EOL
 				+ "To avoid possible issues with the native Android emulator, Genymotion or connected" + EOL
 				+ "Android devices, verify that you have installed the latest Android SDK and" + EOL
 				+ "its dependencies as described in http://developer.android.com/sdk/index.html#Requirements" + EOL,
@@ -43,7 +48,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 			});
 		}
 
-		if (!sysInfoData.androidInstalled) {
+		if (!sysInfoData.isAndroidSdkConfiguredCorrectly) {
 			result.push({
 				warning: "WARNING: The Android SDK is not installed or is not configured properly.",
 				additionalInformation: "You will not be able to run your apps in the native emulator. To be able to run apps" + EOL
@@ -51,6 +56,16 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 				+ "and its dependencies as described in http://developer.android.com/sdk/index.html#Requirements" + EOL,
 				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			});
+		}
+
+		const androidToolsInfoValidationErrors = this.androidToolsInfo.validateInfo();
+		if (androidToolsInfoValidationErrors.length > 0) {
+			result = result.concat(androidToolsInfoValidationErrors);
+		}
+
+		const javacValidationErrors = this.androidToolsInfo.validateJavacVersion(sysInfoData.javacVersion);
+		if (javacValidationErrors.length > 0) {
+			result = result.concat(javacValidationErrors);
 		}
 
 		if (this.hostInfo.isDarwin) {

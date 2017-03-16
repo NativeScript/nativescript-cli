@@ -107,15 +107,28 @@ declare module NativeScriptDoctor {
 
 		/**
 		 * Checks if the current version of CocoaPods is compatible with the installed Xcode.
-		 * @return {boolean} true if an update us require.
+		 * @return {Promise<boolean>} true if an update us require.
 		 */
 		isCocoaPodsUpdateRequired(): Promise<boolean>;
+
+		/**
+		 * Checks if the Android SDK Tools are installed and configured correctly.
+		 * @return {Promise<boolean>} true if the Android SDK Tools are installed and configured correctly.
+		 */
+		isAndroidSdkConfiguredCorrectly(): Promise<boolean>;
 
 		/**
 		 * Returns the whole system information.
 		 * @return {Promise<ISysInfoData>} The system information.
 		 */
 		getSysInfo(): Promise<ISysInfoData>;
+
+		/**
+		 * If set to true each method will cache it's result. The default value is true.
+		 * @param {boolean} shouldCache The cache switch.
+		 * @return {void}
+		 */
+		setShouldCacheSysInfo(shouldCache: boolean): void;
 	}
 
 	/**
@@ -270,12 +283,19 @@ declare module NativeScriptDoctor {
 		 * Information about xcproj.
 		 * @type {string}
 		 */
-		xcprojInfo: IXcprojInfo
+		xcprojInfo: IXcprojInfo;
 
 		/**
 		 * true if the system requires xcproj to build projects successfully and the CocoaPods version is not compatible with the Xcode.
+		 * @type {boolean}
 		 */
 		isCocoaPodsUpdateRequired: boolean;
+
+		/**
+		 * true if the Android SDK Tools are installed and configured correctly.
+		 * @type {boolean}
+		 */
+		isAndroidSdkConfiguredCorrectly: boolean;
 	}
 
 	/**
@@ -323,5 +343,72 @@ declare module NativeScriptDoctor {
 		ANDROID_PLATFORM_NAME: string;
 		IOS_PLATFORM_NAME: string;
 		SUPPORTED_PLATFORMS: string[];
+	}
+
+	/**
+	 * Describes methods for getting and validating Android tools.
+	 */
+	interface IAndroidToolsInfo {
+		/**
+		 * Returns the Android tools info.
+		 * @return {NativeScriptDoctor.IAndroidToolsInfoData} returns the Android tools info.
+		 */
+		getToolsInfo(): NativeScriptDoctor.IAndroidToolsInfoData;
+
+		/**
+		 * Checks if the Android tools are valid.
+		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
+		 */
+		validateInfo(): NativeScriptDoctor.IWarning[];
+
+		/**
+		 * Checks if the current javac version is valid.
+		 * @param {string} installedJavaVersion The version of javac to check.
+		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
+		 */
+		validateJavacVersion(installedJavaVersion: string): NativeScriptDoctor.IWarning[];
+
+		/**
+		 * Returns the path to the adb which is located in ANDROID_HOME.
+		 * @return {Promise<string>} Path to the adb which is located in ANDROID_HOME.
+		 */
+		getPathToAdbFromAndroidHome(): Promise<string>;
+
+		/**
+		 * Checks if the ANDROID_HOME variable is set to the correct folder.
+		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
+		 */
+		validateAndroidHomeEnvVariable(): NativeScriptDoctor.IWarning[];
+
+		/**
+		 * Returns the path to the emulator executable.
+		 * @return {string} The path to the emulator executable.
+		 */
+		getPathToEmulatorExecutable(): string;
+	}
+
+	/**
+	 * Describes information about installed Android tools and SDKs.
+	 */
+	interface IAndroidToolsInfoData {
+		/**
+		 * The value of ANDROID_HOME environment variable.
+		 */
+		androidHomeEnvVar: string;
+
+		/**
+		 * The latest installed version of Android Build Tools that satisfies CLI's requirements.
+		 */
+		buildToolsVersion: string;
+
+		/**
+		 * The latest installed version of Android SDK that satisfies CLI's requirements.
+		 */
+		compileSdkVersion: number;
+
+		/**
+		 * The latest installed version of Android Support Repository that satisfies CLI's requirements.
+		 */
+		supportRepositoryVersion: string;
 	}
 }

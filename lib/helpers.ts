@@ -1,6 +1,17 @@
 import { platform } from "os";
 
 export class Helpers {
+	public getPropertyName(method: Function): string {
+		if (method) {
+			let match = method.toString().match(/(?:return\s+?.*\.(.+);)|(?:=>\s*?.*\.(.+)\b)/);
+			if (match) {
+				return (match[1] || match[2]).trim();
+			}
+		}
+
+		return null;
+	}
+
 	public quoteString(value: string): string {
 		if (!value) {
 			return value;

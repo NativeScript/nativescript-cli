@@ -75,4 +75,16 @@ export class ChildProcess {
 			});
 		});
 	}
+
+	public execFile(command: string, args: string[]): Promise<any> {
+		return new Promise<any>((resolve, reject) => {
+			childProcess.execFile(command, args, (error: any, stdout: NodeBuffer) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(stdout);
+				}
+			});
+		});
+	}
 }
