@@ -1,4 +1,13 @@
 ## Changelog
+## [3.4.3](https://github.com/Kinvey/js-sdk/tree/v3.4.3) (2017-03-16)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.4.2...v3.4.3)<br/>
+
+**Changes**
+- Clone body of `CacheRequest`. [#112](https://github.com/Kinvey/js-sdk/pull/112)
+- Add back `es6-promise`. [#113](https://github.com/Kinvey/js-sdk/pull/113)
+- Add method to remove user by id. [#114](https://github.com/Kinvey/js-sdk/pull/114)
+- Update package dependencies.
+
 ## [3.4.2](https://github.com/Kinvey/js-sdk/tree/v3.4.2) (2017-02-23)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.4.1...v3.4.2)<br/>
 
