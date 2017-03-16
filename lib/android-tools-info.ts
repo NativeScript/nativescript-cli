@@ -159,8 +159,9 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 				// Since this version of SDK tools, the emulator is a separate package.
 				// However the emulator executable still exists in the "tools" dir.
 				const pathToEmulatorFromAndroidStudio = path.join(this.androidHome, emulatorExecutableName, emulatorExecutableName);
+				const realFilePath = this.hostInfo.isWindows ? `${pathToEmulatorFromAndroidStudio}.exe` : pathToEmulatorFromAndroidStudio;
 
-				if (this.fs.exists(pathToEmulatorFromAndroidStudio)) {
+				if (this.fs.exists(realFilePath)) {
 					this.pathToEmulatorExecutable = pathToEmulatorFromAndroidStudio;
 				} else {
 					this.pathToEmulatorExecutable = path.join(this.androidHome, "tools", emulatorExecutableName);

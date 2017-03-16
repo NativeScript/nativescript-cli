@@ -43,8 +43,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 				additionalInformation: "For Android-related operations, the NativeScript CLI will use a built-in version of adb." + EOL
 				+ "To avoid possible issues with the native Android emulator, Genymotion or connected" + EOL
 				+ "Android devices, verify that you have installed the latest Android SDK and" + EOL
-				+ "its dependencies as described in http://developer.android.com/sdk/index.html#Requirements" + EOL
-				+ this.getPackageManagerTip(),
+				+ "its dependencies as described in http://developer.android.com/sdk/index.html#Requirements" + EOL,
 				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			});
 		}
@@ -54,8 +53,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 				warning: "WARNING: The Android SDK is not installed or is not configured properly.",
 				additionalInformation: "You will not be able to run your apps in the native emulator. To be able to run apps" + EOL
 				+ "in the native Android emulator, verify that you have installed the latest Android SDK " + EOL
-				+ "and its dependencies as described in http://developer.android.com/sdk/index.html#Requirements" + EOL
-				+ this.getPackageManagerTip(),
+				+ "and its dependencies as described in http://developer.android.com/sdk/index.html#Requirements" + EOL,
 				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			});
 		}
@@ -169,14 +167,6 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 
 		if (!this.isPlatformSupported(platform)) {
 			throw new Error(`Platform ${platform} is not supported.The supported platforms are: ${Constants.SUPPORTED_PLATFORMS.join(", ")} `);
-		}
-	}
-
-	private getPackageManagerTip(): string {
-		if (this.hostInfo.isWindows) {
-			return "TIP: To avoid setting up the necessary environment variables, you can use the chocolatey package manager to install the Android SDK and its dependencies." + EOL;
-		} else if (this.hostInfo.isDarwin) {
-			return "TIP: To avoid setting up the necessary environment variables, you can use the Homebrew package manager to install the Android SDK and its dependencies." + EOL;
 		}
 	}
 }
