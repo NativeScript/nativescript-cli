@@ -28,21 +28,21 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private npmVerCache: string;
 	private nodeGypVerCache: string;
 	private xCodeprojGemLocationCache: string;
-	private iTunesInstalledCache: boolean = null;
+	private iTunesInstalledCache: boolean;
 	private cocoaPodsVerCache: string;
 	private osCache: string;
 	private adbVerCache: string;
-	private androidInstalledCache: boolean = null;
+	private androidInstalledCache: boolean;
 	private monoVerCache: string;
 	private gitVerCache: string;
 	private gradleVerCache: string;
 	private sysInfoCache: NativeScriptDoctor.ISysInfoData;
-	private isCocoaPodsWorkingCorrectlyCache: boolean = null;
+	private isCocoaPodsWorkingCorrectlyCache: boolean;
 	private nativeScriptCliVersionCache: string;
 	private xcprojInfoCache: NativeScriptDoctor.IXcprojInfo;
-	private isCocoaPodsUpdateRequiredCache: boolean = null;
+	private isCocoaPodsUpdateRequiredCache: boolean;
 	private shouldCache: boolean = true;
-	private isAndroidSdkConfiguredCorrectlyCache: boolean = null;
+	private isAndroidSdkConfiguredCorrectlyCache: boolean;
 
 	constructor(private childProcess: ChildProcess,
 		private fileSystem: FileSystem,
@@ -320,7 +320,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			const propertyName = this.helpers.getPropertyName(property);
 			const cachedValue: T = (<any>this)[propertyName];
 
-			if (cachedValue === undefined || cachedValue === null) {
+			if (cachedValue === undefined) {
 				const result = await getValueMethod();
 				(<any>this)[propertyName] = result;
 				return result;
