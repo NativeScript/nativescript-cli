@@ -227,7 +227,7 @@ class AndroidDebugService implements IDebugService {
 	}
 
 	private startDebuggerClient(port: Number): void {
-		this.$logger.info(`To start debugging, open the following URL in Chrome:${os.EOL}chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:${port}${os.EOL}`.cyan);
+		this.$logger.info(`To start debugging, open the following URL in Chrome:${os.EOL}chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${port}${os.EOL}`.cyan);
 	}
 
 	private stopDebuggerClient(): void {
