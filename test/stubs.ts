@@ -292,6 +292,9 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	validate(): Promise<void> {
 		return Promise.resolve();
 	}
+	validatePlugins(projectData: IProjectData) {
+		return Promise.resolve();
+	}
 	async createProject(projectRoot: string, frameworkDir: string): Promise<void> {
 		return Promise.resolve();
 	}

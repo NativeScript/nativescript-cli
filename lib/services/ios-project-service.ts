@@ -40,7 +40,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $pluginVariablesService: IPluginVariablesService,
 		private $xcprojService: IXcprojService,
-		private $iOSProvisionService: IOSProvisionService) {
+		private $iOSProvisionService: IOSProvisionService,
+		private $sysInfo: ISysInfo) {
 		super($fs, $projectDataService);
 	}
 
@@ -268,6 +269,18 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			await this.buildForSimulator(projectRoot, basicArgs, projectData, buildConfig.buildOutputStdio);
 		}
 
+	}
+
+	public async validatePlugins(projectData: IProjectData): Promise<void> {
+		let installedPlugins = await (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins(projectData);
+		for (let pluginData of installedPlugins) {
+			let pluginsFolderExists = this.$fs.exists(path.join(pluginData.pluginPlatformsFolderPath(this.$devicePlatformsConstants.iOS.toLowerCase()), "Podfile"));
+			let cocoaPodVersion = (await this.$sysInfo.getCocoapodVersion());
+			if (pluginsFolderExists && !cocoaPodVersion) {
+				this.$errors.failWithoutHelp(`${pluginData.name} has Podfile and you don't have Cocoapods installed or it is not configured correctly. Please verify Cocoapods can work on your machine.`);
+			}
+		}
+		return Promise.resolve();
 	}
 
 	private async buildForDevice(projectRoot: string, args: string[], buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {

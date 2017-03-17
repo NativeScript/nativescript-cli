@@ -178,6 +178,8 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	 */
 	validateOptions(projectId?: string, provision?: any): Promise<boolean>;
 
+	validatePlugins(projectData: IProjectData): Promise<void>;
+
 	buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void>;
 
 	/**

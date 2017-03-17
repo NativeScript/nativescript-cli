@@ -84,6 +84,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("pluginVariablesHelper", PluginVariablesHelper);
 	testInjector.register("androidProcessService", {});
 	testInjector.register("processService", {});
+	testInjector.register("sysInfo", {});
 	return testInjector;
 }
 

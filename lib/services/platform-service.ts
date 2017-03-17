@@ -35,7 +35,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $hostInfo: IHostInfo,
 		private $xmlValidator: IXmlValidator,
 		private $npm: INodePackageManager,
-		private $sysInfo: ISysInfo,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		private $projectChangesService: IProjectChangesService,
@@ -230,15 +229,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			this.$errors.failWithoutHelp(`Unable to install dependencies. Make sure your package.json is valid and all dependencies are correct. Error is: ${err.message}`);
 		}
 
-		// Need to check if any plugin requires Cocoapods to be installed.
-		if (platform === "ios") {
-			for (let pluginData of await this.$pluginsService.getAllInstalledPlugins(projectData)) {
-				if (this.$fs.exists(path.join(pluginData.pluginPlatformsFolderPath(platform), "Podfile")) &&
-					!(await this.$sysInfo.getCocoapodVersion())) {
-					this.$errors.failWithoutHelp(`${pluginData.name} has Podfile and you don't have Cocoapods installed or it is not configured correctly. Please verify Cocoapods can work on your machine.`);
-				}
-			}
-		}
+		let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		await this.$pluginsService.validate(platformData, projectData);
 
 		await this.ensurePlatformInstalled(platform, platformTemplate, projectData, platformSpecificData);
 		let changesInfo = this.$projectChangesService.checkForChanges(platform, projectData);
@@ -251,7 +243,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				let previousPrepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
 				// clean up prepared plugins when not building for release
 				if (previousPrepareInfo && previousPrepareInfo.release !== appFilesUpdaterOptions.release) {
-					let platformData = this.$platformsData.getPlatformData(platform, projectData);
 					await platformData.platformProjectService.cleanProject(platformData.projectRoot, [], projectData);
 				}
 			}
