@@ -1,4 +1,6 @@
 interface IPlatformService extends NodeJS.EventEmitter {
+	cleanPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, framework?: string): Promise<void>;
+	
 	addPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, frameworkPath?: string): Promise<void>;
 
 	/**

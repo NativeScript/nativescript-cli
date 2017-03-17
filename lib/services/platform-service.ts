@@ -46,6 +46,20 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		super();
 	}
 
+	public async cleanPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, framworkPath?: string): Promise<void> {
+		for (let platform of platforms) {
+			let version: string = this.getCurrentPlatformVersion(platform, projectData);
+
+			let platformWithVersion: string = platform;
+			if (version !== undefined) {
+				platformWithVersion += "@" + version;
+			}
+
+			await this.removePlatforms([platform], projectData);
+			await this.addPlatforms([platformWithVersion], platformTemplate, projectData, platformSpecificData);
+		}
+	}
+
 	public async addPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, frameworkPath?: string): Promise<void> {
 		let platformsDir = projectData.platformsDir;
 		this.$fs.ensureDirectoryExists(platformsDir);
@@ -53,6 +67,17 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		for (let platform of platforms) {
 			await this.addPlatform(platform.toLowerCase(), platformTemplate, projectData, platformSpecificData, frameworkPath);
 		}
+	}
+
+	private getCurrentPlatformVersion(platform: string, projectData: IProjectData) : string {
+		let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		let currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+		let version: string;
+		if (currentPlatformData && currentPlatformData[constants.VERSION_STRING]) {
+			version = currentPlatformData[constants.VERSION_STRING];
+		};
+
+		return version;
 	}
 
 	private async addPlatform(platformParam: string, platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, frameworkPath?: string): Promise<void> {
@@ -69,9 +94,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
-		let currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-		if (currentPlatformData && currentPlatformData[constants.VERSION_STRING]) {
-			version = currentPlatformData[constants.VERSION_STRING];
+
+		if (version === undefined) {
+			version = this.getCurrentPlatformVersion(platform, projectData);
 		}
 
 		// Copy platform specific files in platforms dir

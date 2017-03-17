@@ -245,6 +245,36 @@ describe('Platform Service Tests', () => {
 		});
 	});
 
+	describe("clean platform unit tests", () => {
+		it("should preserve the specified in the project nativescript version", async () => {
+			const versionString = "2.4.1";
+			let fs = testInjector.resolve("fs");
+			fs.exists = () => false;
+
+			let nsValueObject: any = {};
+			nsValueObject[VERSION_STRING] = versionString;
+			let projectDataService = testInjector.resolve("projectDataService");
+			projectDataService.getNSValue = () => nsValueObject;
+
+			let npmInstallationManager = testInjector.resolve("npmInstallationManager");
+			npmInstallationManager.install = (packageName: string, packageDir: string, options: INpmInstallOptions) => {
+				assert.deepEqual(options.version, versionString);
+				return "";
+			};
+
+			let projectData: IProjectData = testInjector.resolve("projectData");
+			platformService.removePlatforms = (platforms: string[], prjctData: IProjectData): Promise<void> => {
+				nsValueObject[VERSION_STRING] = undefined;
+				return Promise.resolve();
+			};
+
+			await platformService.cleanPlatforms(["android"], "", projectData, null);
+
+			nsValueObject[VERSION_STRING] = versionString;
+			await platformService.cleanPlatforms(["ios"], "", projectData, null);
+		});
+	});
+
 	// TODO: Commented as it doesn't seem correct. Check what's the case and why it's been expected to fail.
 	// describe("list platform unit tests", () => {
 	// 	it("fails when platforms are not added", () => {
