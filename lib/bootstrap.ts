@@ -126,3 +126,5 @@ $injector.require("projectChangesService", "./services/project-changes-service")
 $injector.require("emulatorPlatformService", "./services/emulator-platform-service");
 
 $injector.require("staticConfig", "./config");
+
+require("nativescript-cloud");
