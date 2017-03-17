@@ -39,7 +39,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	public validateInfo(): NativeScriptDoctor.IWarning[] {
 		const errors: NativeScriptDoctor.IWarning[] = [];
 		const toolsInfoData = this.getToolsInfo();
-		const isAndroidHomeValid = this.validateAndroidHomeEnvVariable();
+		const isAndroidHomeValid = this.isAndroidHomeValid();
 		if (!toolsInfoData.compileSdkVersion) {
 			errors.push({
 				warning: `Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later.`,
@@ -176,7 +176,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		const sdkmanagerName = "sdkmanager";
 		let sdkManagementToolPath = sdkmanagerName;
 
-		const isAndroidHomeValid = this.validateAndroidHomeEnvVariable();
+		const isAndroidHomeValid = this.isAndroidHomeValid();
 
 		if (isAndroidHomeValid) {
 			// In case ANDROID_HOME is correct, check if sdkmanager exists and if not it means the SDK has not been updated.
@@ -315,5 +315,10 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		}
 
 		return linkToSystemRequirements;
+	}
+
+	private isAndroidHomeValid(): boolean {
+		const errors = this.validateAndroidHomeEnvVariable();
+		return !errors && !errors.length;
 	}
 }
