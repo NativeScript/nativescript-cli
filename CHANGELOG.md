@@ -1,5 +1,12 @@
 NativeScript CLI Changelog
 ================
+2.5.3 (2017, March 21)
+==
+
+### Fixed
+
+* [Implemented #2583](https://github.com/NativeScript/nativescript-cli/issues/2583): Add support for Android SDK Tools 25.2.3
+
 2.5.2 (2017, February 24)
 ==
 
