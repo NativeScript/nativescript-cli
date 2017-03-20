@@ -164,6 +164,7 @@ var BackboneAjax = {
     var xhr = options.xhr = Backbone.ajax({
       complete    : onComplete,
       data        : body,
+      dataType    : 'json',
       headers     : headers,
       mimeType    : options.file ? 'text/plain; charset=x-user-defined' : null,
       processData : false,
