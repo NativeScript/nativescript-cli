@@ -158,7 +158,7 @@ async function setupProject(dependencies?: any): Promise<any> {
 				processConfigurationFilesFromAppResources: () => Promise.resolve(),
 				ensureConfigurationFileInAppResources: (): any => null,
 				interpolateConfigurationFile: (): void => undefined,
-				isPlatformPrepared: (projectRoot: string) => false
+				isPlatformPrepared: (projectRoot: string) => false,
 				validatePlugins: (projectData: IProjectData) => Promise.resolve()
 			}
 		};
