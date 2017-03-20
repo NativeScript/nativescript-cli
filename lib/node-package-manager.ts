@@ -97,7 +97,7 @@ export class NodePackageManager implements INodePackageManager {
 
 	public async view(packageName: string, config: Object): Promise<any> {
 		const wrappedConfig = _.extend({}, config, { json: true }); // always require view response as JSON
-		
+
 		let flags = this.getFlagsString(wrappedConfig, false);
 		let viewResult: any;
 		try {
