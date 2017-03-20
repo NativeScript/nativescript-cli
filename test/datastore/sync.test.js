@@ -4,6 +4,10 @@ import { randomString } from 'src/utils';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import nock from 'nock';
 import expect from 'expect';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+chai.use(chaiAsPromised);
+chai.should();
 const collection = 'Books';
 
 describe('Sync', function () {
@@ -200,6 +204,33 @@ describe('Sync', function () {
 
       const count = await sync.count();
       expect(count).toEqual(0);
+    });
+
+    it('should not push when an existing push is in progress', function(done) {
+      const sync = new SyncManager(collection);
+      var entity1 = { _id: randomString() };
+      var promise = sync.addDeleteOperation(entity1)
+        .then(() => {
+          // Kinvey API Response
+          nock(sync.client.baseUrl)
+            .delete(`${sync.backendPathname}/${entity1._id}`, () => true)
+            .query(true)
+            .delay(1000) // Delay the response for 1 second
+            .reply(204);
+
+          // Sync
+          sync.push()
+            .then(() => promise.should.be.rejected)
+            .then(() => done())
+            .catch(done);
+
+          // Add second sync operation
+          const entity2 = { _id: randomString() };
+          return sync.addDeleteOperation(entity2);
+        })
+        .then(() => {
+          return sync.push();
+        });
     });
   });
 });
