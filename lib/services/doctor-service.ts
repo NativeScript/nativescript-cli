@@ -105,7 +105,8 @@ class DoctorService implements IDoctorService {
 
 		let androidToolsIssues = this.$androidToolsInfo.validateInfo();
 		let javaVersionIssue = await this.$androidToolsInfo.validateJavacVersion(sysInfo.javacVersion);
-		let doctorResult = result || androidToolsIssues || javaVersionIssue;
+		let pythonIssues = await this.validatePythonPackages();
+		let doctorResult = result || androidToolsIssues || javaVersionIssue || pythonIssues;
 
 		if (!configOptions || configOptions.trackResult) {
 			await this.$analyticsService.track("DoctorEnvironmentSetup", doctorResult ? "incorrect" : "correct");
@@ -212,6 +213,26 @@ class DoctorService implements IDoctorService {
 		} finally {
 			spinner.stop();
 		}
+	}
+
+	private async validatePythonPackages(): Promise<boolean> {
+		let hasInvalidPackages = false;
+		if (this.$hostInfo.isDarwin) {
+			try {
+				let queryForSixPackage = await this.$childProcess.exec(`pip freeze | grep '^six=' | wc -l`);
+				let sixPackagesFoundCount = parseInt(queryForSixPackage);
+				if (sixPackagesFoundCount === 0) {
+					hasInvalidPackages = true;
+					this.$logger.warn("The Python 'six' package not found.");
+					this.$logger.out("This package is required by the Debugger library (LLDB) for iOS. You can install it by running 'pip install six' from the terminal.");
+				}
+			} catch (error) {
+				this.$logger.warn("Couldn't retrieve installed python packages.");
+				this.$logger.out("We cannot verify your python installation is setup correctly. Please, make sure you have both 'python' and 'pip' installed.");
+				this.$logger.trace(`Error while validating Python packages. Error is: ${error.message}`);
+			}
+		}
+		return hasInvalidPackages;
 	}
 }
 $injector.register("doctorService", DoctorService);
