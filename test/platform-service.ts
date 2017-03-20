@@ -58,7 +58,7 @@ function createTestInjector() {
 		ensureAllDependenciesAreInstalled: () => {
 			return Promise.resolve();
 		},
-		validate: async (platformData: IPlatformData, projectData: IProjectData) => {
+		validate: (platformData: IPlatformData, projectData: IProjectData) => {
 			return Promise.resolve();
 		}
 	});

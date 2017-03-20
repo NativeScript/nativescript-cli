@@ -98,7 +98,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async validatePlugins(): Promise<void> {
-		return Promise.resolve();
+		Promise.resolve();
 	}
 
 	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, pathToTemplate?: string): Promise<void> {

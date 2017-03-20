@@ -275,12 +275,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		let installedPlugins = await (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins(projectData);
 		for (let pluginData of installedPlugins) {
 			let pluginsFolderExists = this.$fs.exists(path.join(pluginData.pluginPlatformsFolderPath(this.$devicePlatformsConstants.iOS.toLowerCase()), "Podfile"));
-			let cocoaPodVersion = (await this.$sysInfo.getCocoapodVersion());
+			let cocoaPodVersion = await this.$sysInfo.getCocoapodVersion();
 			if (pluginsFolderExists && !cocoaPodVersion) {
 				this.$errors.failWithoutHelp(`${pluginData.name} has Podfile and you don't have Cocoapods installed or it is not configured correctly. Please verify Cocoapods can work on your machine.`);
 			}
 		}
-		return Promise.resolve();
+		Promise.resolve();
 	}
 
 	private async buildForDevice(projectRoot: string, args: string[], buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {
