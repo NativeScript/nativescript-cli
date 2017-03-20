@@ -130,7 +130,7 @@ interface IBuildForDevice {
 	buildForDevice: boolean;
 }
 
-interface IBuildConfig extends IAndroidBuildOptionsSettings, IBuildForDevice {
+interface IBuildConfig extends IAndroidBuildOptionsSettings, IiOSBuildConfig {
 	projectDir: string;
 	clean?: boolean;
 	architectures?: string[];
@@ -140,7 +140,7 @@ interface IBuildConfig extends IAndroidBuildOptionsSettings, IBuildForDevice {
 /**
  * Describes iOS-specific build configuration properties
  */
-interface IiOSBuildConfig extends IBuildConfig, IRelease, IDeviceIdentifier, IProvision, ITeamIdentifier {
+interface IiOSBuildConfig extends IBuildForDevice, IDeviceIdentifier, IProvision, ITeamIdentifier, IRelease {
 	/**
 	 * Identifier of the mobile provision which will be used for the build. If not set a provision will be selected automatically if possible.
 	 */
@@ -177,6 +177,8 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	 * @returns {void}
 	 */
 	validateOptions(projectId?: string, provision?: any): Promise<boolean>;
+
+	validatePlugins(projectData: IProjectData): Promise<void>;
 
 	buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void>;
 
@@ -231,7 +233,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	 */
 	getAppResourcesDestinationDirectoryPath(projectData: IProjectData): string;
 
-	deploy(deviceIdentifier: string, projectData: IProjectData): Promise<void>;
+	cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void>;
 	processConfigurationFilesFromAppResources(release: boolean, projectData: IProjectData): Promise<void>;
 
 	/**

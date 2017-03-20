@@ -97,6 +97,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		await this.$androidToolsInfo.validateJavacVersion(javaCompilerVersion, { showWarningsAsErrors: true });
 	}
 
+	public async validatePlugins(): Promise<void> {
+		Promise.resolve();
+	}
+
 	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, pathToTemplate?: string): Promise<void> {
 		if (semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
 			this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
@@ -432,7 +436,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		await this.spawn(gradleBin, options, { stdio: "inherit", cwd: this.getPlatformData(projectData).projectRoot });
 	}
 
-	public async deploy(deviceIdentifier: string, projectData: IProjectData): Promise<void> {
+	public async cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void> {
 		let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
 		let deviceRootPath = `/data/local/tmp/${projectData.projectId}`;
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);

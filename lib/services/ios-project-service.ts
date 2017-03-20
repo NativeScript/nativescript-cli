@@ -40,7 +40,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $pluginVariablesService: IPluginVariablesService,
 		private $xcprojService: IXcprojService,
-		private $iOSProvisionService: IOSProvisionService) {
+		private $iOSProvisionService: IOSProvisionService,
+		private $sysInfo: ISysInfo) {
 		super($fs, $projectDataService);
 	}
 
@@ -238,7 +239,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 	}
 
-	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IiOSBuildConfig): Promise<void> {
+	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
 		let basicArgs = [
 			"-configuration", buildConfig.release ? "Release" : "Debug",
 			"build",
@@ -270,7 +271,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	}
 
-	private async buildForDevice(projectRoot: string, args: string[], buildConfig: IiOSBuildConfig, projectData: IProjectData): Promise<void> {
+	public async validatePlugins(projectData: IProjectData): Promise<void> {
+		let installedPlugins = await (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins(projectData);
+		for (let pluginData of installedPlugins) {
+			let pluginsFolderExists = this.$fs.exists(path.join(pluginData.pluginPlatformsFolderPath(this.$devicePlatformsConstants.iOS.toLowerCase()), "Podfile"));
+			let cocoaPodVersion = await this.$sysInfo.getCocoapodVersion();
+			if (pluginsFolderExists && !cocoaPodVersion) {
+				this.$errors.failWithoutHelp(`${pluginData.name} has Podfile and you don't have Cocoapods installed or it is not configured correctly. Please verify Cocoapods can work on your machine.`);
+			}
+		}
+		Promise.resolve();
+	}
+
+	private async buildForDevice(projectRoot: string, args: string[], buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {
 		let defaultArchitectures = [
 			'ARCHS=armv7 arm64',
 			'VALID_ARCHS=armv7 arm64'
@@ -438,7 +451,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return this.$fs.exists(path.join(projectRoot, projectData.projectName, constants.APP_FOLDER_NAME));
 	}
 
-	public deploy(deviceIdentifier: string): Promise<void> {
+	public cleanDeviceTempFolder(deviceIdentifier: string): Promise<void> {
 		return Promise.resolve();
 	}
 

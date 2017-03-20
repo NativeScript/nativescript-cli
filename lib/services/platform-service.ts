@@ -35,7 +35,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $hostInfo: IHostInfo,
 		private $xmlValidator: IXmlValidator,
 		private $npm: INodePackageManager,
-		private $sysInfo: ISysInfo,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		private $projectChangesService: IProjectChangesService,
@@ -230,15 +229,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			this.$errors.failWithoutHelp(`Unable to install dependencies. Make sure your package.json is valid and all dependencies are correct. Error is: ${err.message}`);
 		}
 
-		// Need to check if any plugin requires Cocoapods to be installed.
-		if (platform === "ios") {
-			for (let pluginData of await this.$pluginsService.getAllInstalledPlugins(projectData)) {
-				if (this.$fs.exists(path.join(pluginData.pluginPlatformsFolderPath(platform), "Podfile")) &&
-					!(await this.$sysInfo.getCocoapodVersion())) {
-					this.$errors.failWithoutHelp(`${pluginData.name} has Podfile and you don't have Cocoapods installed or it is not configured correctly. Please verify Cocoapods can work on your machine.`);
-				}
-			}
-		}
+		let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		await this.$pluginsService.validate(platformData, projectData);
 
 		await this.ensurePlatformInstalled(platform, platformTemplate, projectData, platformSpecificData);
 		let changesInfo = this.$projectChangesService.checkForChanges(platform, projectData);
@@ -251,7 +243,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				let previousPrepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
 				// clean up prepared plugins when not building for release
 				if (previousPrepareInfo && previousPrepareInfo.release !== appFilesUpdaterOptions.release) {
-					let platformData = this.$platformsData.getPlatformData(platform, projectData);
 					await platformData.platformProjectService.cleanProject(platformData.projectRoot, [], projectData);
 				}
 			}
@@ -443,7 +434,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			packageFile = this.getLatestApplicationPackageForDevice(platformData).packageName;
 		}
 
-		await platformData.platformProjectService.deploy(device.deviceInfo.identifier, projectData);
+		await platformData.platformProjectService.cleanDeviceTempFolder(device.deviceInfo.identifier, projectData);
 
 		await device.applicationManager.reinstallApplication(projectData.projectId, packageFile);
 
@@ -463,7 +454,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.$logger.out("Searching for devices...");
 		await this.$devicesService.initialize({ platform: platform, deviceId: deployOptions.device });
 		let action = async (device: Mobile.IDevice): Promise<void> => {
-			let buildConfig: IiOSBuildConfig = {
+			let buildConfig: IBuildConfig = {
 				buildForDevice: !this.$devicesService.isiOSSimulator(device),
 				projectDir: deployOptions.projectDir,
 				release: deployOptions.release,
@@ -492,7 +483,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		await this.$devicesService.execute(action, this.getCanExecuteAction(platform, deployOptions));
 	}
 
-	public async runPlatform(platform: string, runOptions: IRunPlatformOptions, projectData: IProjectData): Promise<void> {
+	public async startApplication(platform: string, runOptions: IRunPlatformOptions, projectData: IProjectData): Promise<void> {
 		await this.trackProjectType(projectData);
 
 		this.$logger.out("Starting...");
@@ -538,7 +529,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		await this.deployPlatform(platform, appFilesUpdaterOptions, emulateOptions, projectData, platformSpecificData);
-		return this.runPlatform(platform, emulateOptions, projectData);
+		return this.startApplication(platform, emulateOptions, projectData);
 	}
 
 	private getBuildOutputPath(platform: string, platformData: IPlatformData, options: IBuildForDevice): string {

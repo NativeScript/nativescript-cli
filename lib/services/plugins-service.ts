@@ -98,6 +98,10 @@ export class PluginsService implements IPluginsService {
 		return this.$npm.search(filter, { "silent": silent });
 	}
 
+	public async validate(platformData: IPlatformData, projectData: IProjectData): Promise<void> {
+		return await platformData.platformProjectService.validatePlugins(projectData);
+	}
+
 	public async prepare(dependencyData: IDependencyData, platform: string, projectData: IProjectData): Promise<void> {
 		platform = platform.toLowerCase();
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);

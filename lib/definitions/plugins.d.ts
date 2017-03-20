@@ -12,6 +12,7 @@ interface IPluginsService {
 	 * @returns {IPackageJsonDepedenciesResult}
 	 */
 	getDependenciesFromPackageJson(projectDir: string): IPackageJsonDepedenciesResult;
+	validate(platformData: IPlatformData, projectData: IProjectData): Promise<void>;
 }
 
 interface IPackageJsonDepedenciesResult {

@@ -2,11 +2,18 @@ export class RunCommandBase {
 	constructor(protected $platformService: IPlatformService,
 		protected $usbLiveSyncService: ILiveSyncService,
 		protected $projectData: IProjectData,
-		protected $options: IOptions) {
+		protected $options: IOptions,
+		protected $emulatorPlatformService: IEmulatorPlatformService,
+		private $mobileHelper: Mobile.IMobileHelper) {
 			this.$projectData.initializeProjectData();
 		}
 
 	public async executeCore(args: string[]): Promise<void> {
+
+		if (this.$options.availableDevices) {
+			return this.$emulatorPlatformService.listAvailableEmulators(this.$mobileHelper.validatePlatformName(args[0]));
+		}
+
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
 		const deployOptions: IDeployPlatformOptions = {
 			clean: this.$options.clean,
@@ -22,6 +29,7 @@ export class RunCommandBase {
 			keyStorePassword: this.$options.keyStorePassword,
 			keyStorePath: this.$options.keyStorePath
 		};
+
 		await this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 
 		if (this.$options.bundle) {
@@ -35,7 +43,7 @@ export class RunCommandBase {
 				justlaunch: this.$options.justlaunch,
 			};
 
-			return this.$platformService.runPlatform(args[0], deployOpts, this.$projectData);
+			return this.$platformService.startApplication(args[0], deployOpts, this.$projectData);
 		}
 
 		return this.$usbLiveSyncService.liveSync(args[0], this.$projectData);
@@ -49,8 +57,10 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 		private $platformsData: IPlatformsData,
 		$usbLiveSyncService: ILiveSyncService,
 		$projectData: IProjectData,
-		$options: IOptions) {
-		super($platformService, $usbLiveSyncService, $projectData, $options);
+		$options: IOptions,
+		$emulatorPlatformService: IEmulatorPlatformService,
+		$mobileHelper: Mobile.IMobileHelper) {
+		super($platformService, $usbLiveSyncService, $projectData, $options, $emulatorPlatformService, $mobileHelper);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -72,8 +82,10 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 		$usbLiveSyncService: ILiveSyncService,
 		$projectData: IProjectData,
 		$options: IOptions,
+		$emulatorPlatformService: IEmulatorPlatformService,
+		$mobileHelper: Mobile.IMobileHelper,
 		private $errors: IErrors) {
-		super($platformService, $usbLiveSyncService, $projectData, $options);
+		super($platformService, $usbLiveSyncService, $projectData, $options, $emulatorPlatformService, $mobileHelper);
 	}
 
 	public async execute(args: string[]): Promise<void> {

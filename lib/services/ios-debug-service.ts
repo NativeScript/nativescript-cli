@@ -148,7 +148,7 @@ class IOSDebugService implements IDebugService {
 				justlaunch: this.$options.justlaunch
 			};
 			// we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
-			let action = this.$platformService.runPlatform(this.platform, runOptions, projectData);
+			let action = this.$platformService.startApplication(this.platform, runOptions, projectData);
 
 			await this.debugBrkCore(device, projectData, shouldBreak);
 

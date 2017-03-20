@@ -57,6 +57,9 @@ function createTestInjector() {
 		},
 		ensureAllDependenciesAreInstalled: () => {
 			return Promise.resolve();
+		},
+		validate: (platformData: IPlatformData, projectData: IProjectData) => {
+			return Promise.resolve();
 		}
 	});
 	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
