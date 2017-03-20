@@ -26,7 +26,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		if (semver.satisfies(latestVersion, cliVersionRange)) {
 			return latestVersion;
 		}
-		let data = await this.$npm.view(packageName, { json: true, "versions": true });
+		let data = await this.$npm.view(packageName, { "versions": true });
 
 		return semver.maxSatisfying(data, cliVersionRange) || latestVersion;
 	}
@@ -122,7 +122,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	 * because npm view doens't work with those
 	 */
 	private async getVersion(packageName: string, version: string): Promise<string> {
-		let data: any = await this.$npm.view(packageName, { json: true, "dist-tags": true });
+		let data: any = await this.$npm.view(packageName, { "dist-tags": true });
 		this.$logger.trace("Using version %s. ", data[version]);
 
 		return data[version];

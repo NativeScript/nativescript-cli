@@ -1,7 +1,7 @@
 interface INodePackageManager {
 	install(packageName: string, pathToSave: string, config?: any): Promise<any>;
 	uninstall(packageName: string, config?: any, path?: string): Promise<any>;
-	view(packageName: string, config: any): Promise<any>;
+	view(packageName: string, config: Object): Promise<any>;
 	search(filter: string[], config: any): Promise<any>;
 }
 

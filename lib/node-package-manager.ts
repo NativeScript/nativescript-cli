@@ -95,8 +95,10 @@ export class NodePackageManager implements INodePackageManager {
 		return this.$childProcess.exec(`npm search ${args.join(" ")}`);
 	}
 
-	public async view(packageName: string, config: any): Promise<any> {
-		let flags = this.getFlagsString(config, false);
+	public async view(packageName: string, config: Object): Promise<any> {
+		const wrappedConfig = _.extend({}, config, { json: true }); // always require view response as JSON
+		
+		let flags = this.getFlagsString(wrappedConfig, false);
 		let viewResult: any;
 		try {
 			viewResult = await this.$childProcess.exec(`npm view ${packageName} ${flags}`);
