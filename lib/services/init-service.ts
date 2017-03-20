@@ -106,8 +106,8 @@ export class InitService implements IInitService {
 			return this.buildVersionData(latestVersion);
 		}
 
-		let data: any = await this.$npm.view(packageName, "versions");
-		let versions = _.filter(data[latestVersion].versions, (version: string) => semver.gte(version, InitService.MIN_SUPPORTED_FRAMEWORK_VERSIONS[packageName]));
+		let allVersions: any = await this.$npm.view(packageName, { "versions": true });
+		let versions = _.filter(allVersions, (version: string) => semver.gte(version, InitService.MIN_SUPPORTED_FRAMEWORK_VERSIONS[packageName]));
 		if (versions.length === 1) {
 			this.$logger.info(`Only ${versions[0]} version is available for ${packageName}.`);
 			return this.buildVersionData(versions[0]);
