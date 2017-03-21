@@ -1170,6 +1170,10 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				teamId = teams[0].id;
 				this.$logger.warn("Found and using the following development team installed on your system: " + teams[0].name + " (" + teams[0].id + ")");
 			} else if (teams.length > 0) {
+				if (!helpers.isInteractive()) {
+					this.$errors.failWithoutHelp(`Unable to determine default development team. Available development teams are: ${_.map(teams, team => team.id)}. Specify team in app/App_Resources/iOS/build.xcconfig file in the following way: DEVELOPMENT_TEAM = <team id>`);
+				}
+
 				let choices: string[] = [];
 				for (let team of teams) {
 					choices.push(team.name + " (" + team.id + ")");
