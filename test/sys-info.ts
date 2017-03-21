@@ -71,6 +71,7 @@ function createChildProcessResults(childProcessResult: IChildProcessResults): ID
 		"xcodebuild -version": childProcessResult.xCodeVersion,
 		"pod --version": childProcessResult.podVersion,
 		"pod": childProcessResult.pod,
+		'adb': childProcessResult.adbVersion,
 		'adb version': childProcessResult.adbVersion,
 		"'adb' version": childProcessResult.adbVersion, // for Mac and Linux
 		'android': childProcessResult.androidInstalled,
@@ -83,9 +84,13 @@ function createChildProcessResults(childProcessResult: IChildProcessResults): ID
 	};
 }
 
-function getResultFromChildProcess(childProcessResultDescription: IChildProcessResultDescription, command: string): any {
+function getResultFromChildProcess(childProcessResultDescription: IChildProcessResultDescription, command: string, options?: ISpawnFromEventOptions): any {
 	if (childProcessResultDescription.shouldThrowError) {
-		throw new Error(`This one throws error. (${command})`);
+		if (options && options.ignoreError) {
+			return null;
+		} else {
+			throw new Error(`This one throws error. (${command})`);
+		}
 	}
 
 	return childProcessResultDescription.result;
@@ -111,8 +116,8 @@ function mockSysInfo(childProcessResult: IChildProcessResults, hostInfoOptions?:
 		exec: async (command: string) => {
 			return getResultFromChildProcess(childProcessResultDictionary[command], command);
 		},
-		spawnFromEvent: async (command: string, args: string[], event: string) => {
-			return getResultFromChildProcess(childProcessResultDictionary[command], command);
+		spawnFromEvent: async (command: string, args: string[], event: string, options: ISpawnFromEventOptions) => {
+			return getResultFromChildProcess(childProcessResultDictionary[command], command, options);
 		},
 		execFile: async () => {
 			return undefined;
