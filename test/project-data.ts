@@ -25,8 +25,6 @@ describe("projectData", () => {
 
 		testInjector.register("errors", stubs.ErrorsStub);
 
-		testInjector.register("logger", stubs.LoggerStub);
-
 		testInjector.register("options", {});
 
 		testInjector.register("projectData", ProjectData);

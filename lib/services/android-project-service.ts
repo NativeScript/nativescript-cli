@@ -262,7 +262,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			await this.spawn(gradleBin,
 				buildOptions,
 				{ stdio: buildConfig.buildOutputStdio || "inherit", cwd: this.getPlatformData(projectData).projectRoot },
-				{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
+				{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
 		} else {
 			this.$errors.failWithoutHelp("Cannot complete build because this project is ANT-based." + EOL +
 				"Run `tns platform remove android && tns platform add android` to switch to Gradle and try again.");

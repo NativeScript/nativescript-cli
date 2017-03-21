@@ -113,6 +113,32 @@ tns.projectService.createProject(projectSettings)
     </tr>
 </table>
 
+* `isValidNativeScriptProject(projectDir: string): boolean` - Checks if the specified path is a valid NativeScript project. Returns `true` in case the directory is a valid project, `false` otherwise.
+
+Sample usage:
+<table>
+	<tr>
+        <td>
+        	JavaScript
+        </td>
+        <td>
+        	TypeScript
+        </td>
+    </tr>
+    <tr>
+    	<td>
+<pre lang="javascript">
+const isValidProject = tns.projectService.isValidNativeScriptProject("/tmp/myProject");
+</pre>
+        </td>
+    	<td>
+<pre lang="typescript">
+const isValidProject = tns.projectService.isValidNativeScriptProject("/tmp/myProject");
+</pre>
+        </td>
+    </tr>
+</table>
+
 ## How to add a new method to Public API
 CLI is designed as command line tool and when it is used as a library, it does not give you access to all of the methods. This is mainly implementation detail. Most of the CLI's code is created to work in command line, not as a library, so before adding method to public API, most probably it will require some modification.
 For example the `$options` injected module contains information about all `--` options passed on the terminal. When the CLI is used as a library, the options are not populated. Before adding method to public API, make sure its implementation does not rely on `$options`.

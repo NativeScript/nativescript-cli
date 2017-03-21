@@ -339,7 +339,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			args,
 			"exit",
 			{ stdio: buildConfig.buildOutputStdio || "inherit", cwd: this.getPlatformData(projectData).projectRoot },
-			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
+			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
 		// this.$logger.out("xcodebuild build succeded.");
 
 		await this.createIpa(projectRoot, projectData, buildConfig.buildOutputStdio);
