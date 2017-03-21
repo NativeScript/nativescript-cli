@@ -75,7 +75,11 @@ class FileStore extends NetworkStore {
    * });
    */
   find(query, options = {}) {
-    options.query = options.query || {};
+    // Set defaults for options
+    options = assign({
+      query: {},
+      tls: true
+    }, options);
     options.query.tls = options.tls === true;
 
     if (isNumber(options.ttl)) {
