@@ -19,7 +19,7 @@ const androidToolsInfo = new AndroidToolsInfo(childProcess, fileSystem, hostInfo
 
 const sysInfo: NativeScriptDoctor.ISysInfo = new SysInfo(childProcess, fileSystem, helpers, hostInfo, winReg, androidToolsInfo);
 
-const androidLocalBuildRequirements = new AndroidLocalBuildRequirements(sysInfo);
+const androidLocalBuildRequirements = new AndroidLocalBuildRequirements(androidToolsInfo, sysInfo);
 const iOSLocalBuildRequirements = new IosLocalBuildRequirements(sysInfo, hostInfo);
 
 const doctor: NativeScriptDoctor.IDoctor = new Doctor(androidLocalBuildRequirements, helpers, hostInfo, iOSLocalBuildRequirements, sysInfo, androidToolsInfo);

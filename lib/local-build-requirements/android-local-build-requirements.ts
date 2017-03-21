@@ -1,8 +1,11 @@
 export class AndroidLocalBuildRequirements {
-	constructor(private sysInfo: NativeScriptDoctor.ISysInfo) { }
+	constructor(private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo,
+		private sysInfo: NativeScriptDoctor.ISysInfo) { }
 
 	public async checkRequirements(): Promise<boolean> {
-		if (!await this.sysInfo.getJavaCompilerVersion() ||
+		const androidToolsInfo = await this.androidToolsInfo.validateInfo();
+		if (androidToolsInfo.length ||
+			!await this.sysInfo.getJavaCompilerVersion() ||
 			!await this.sysInfo.getJavaVersion() ||
 			!await this.sysInfo.getAdbVersion()) {
 			return false;
