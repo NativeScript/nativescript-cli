@@ -18,6 +18,7 @@ import Query from 'src/query';
 
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sync';
+let pushInProgress = false;
 
 /**
  * @private
@@ -260,6 +261,16 @@ export default class SyncManager {
   push(query, options = {}) {
     const batchSize = 100;
     let i = 0;
+
+    // Don't push data to the backend if we are in the middle
+    // of already pushing data
+    if (pushInProgress) {
+      return Promise.reject(new SyncError('Data is already being pushed to the backend.'
+        + ' Please wait for it to complete before pushing new data to the backend.'));
+    }
+
+    // Set pushInProgress to true
+    pushInProgress = true;
 
     // Get the pending sync items
     return this.find(query)
@@ -577,6 +588,16 @@ export default class SyncManager {
 
         // Return an empty array
         return [];
+      })
+      .then((result) => {
+        // Set pushInProgress to false
+        pushInProgress = false;
+        return result;
+      })
+      .catch((error) => {
+        // Set pushInProgress to false
+        pushInProgress = false;
+        throw error;
       });
   }
 
