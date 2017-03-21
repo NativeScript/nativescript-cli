@@ -11,6 +11,6 @@ $injector.requirePublicClass("deviceLogProvider", "./common/appbuilder/device-lo
 $injector.requirePublicClass("localBuildService", "./services/local-build-service");
 $injector.require("iOSLogFilter", "./common/mobile/ios/ios-log-filter");
 
-// We need this because some services check if (!$options.justLaunch) to start the device log after some operation.
+// We need this because some services check if (!$options.justlaunch) to start the device log after some operation.
 // We don't want this behaviour when the CLI is required as library.
-$injector.resolve("options").justLaunch = true;
+$injector.resolve("options").justlaunch = true;
