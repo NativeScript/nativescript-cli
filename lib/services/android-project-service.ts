@@ -57,12 +57,19 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				emulatorServices: this.$androidEmulatorServices,
 				projectRoot: projectRoot,
 				deviceBuildOutputPath: path.join(projectRoot, "build", "outputs", "apk"),
-				validPackageNamesForDevice: [
-					`${packageName}-debug.apk`,
-					`${packageName}-release.apk`,
-					`${projectData.projectName}-debug.apk`,
-					`${projectData.projectName}-release.apk`
-				],
+				getValidPackageNames: (buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[] => {
+					if (buildOptions.isReleaseBuild) {
+						return [
+							`${packageName}-release.apk`,
+							`${projectData.projectName}-release.apk`
+						];
+					}
+
+					return [
+						`${packageName}-debug.apk`,
+						`${projectData.projectName}-debug.apk`,
+					];
+				},
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
 				configurationFileName: "AndroidManifest.xml",
 				configurationFilePath: path.join(projectRoot, "src", "main", "AndroidManifest.xml"),

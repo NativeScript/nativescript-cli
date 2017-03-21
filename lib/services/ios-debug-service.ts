@@ -96,7 +96,7 @@ class IOSDebugService implements IDebugService {
 	private async emulatorDebugBrk(projectData: IProjectData, shouldBreak?: boolean): Promise<void> {
 		let platformData = this.$platformsData.getPlatformData(this.platform, projectData);
 
-		let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData);
+		let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData, { isReleaseBuild: this.$options.release });
 
 		let args = shouldBreak ? "--nativescript-debug-brk" : "--nativescript-debug-start";
 		let child_process = await this.$iOSEmulatorServices.runApplicationOnEmulator(emulatorPackage.packageName, {

@@ -143,28 +143,30 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	/**
 	 * Returns information about the latest built application for device in the current project.
 	 * @param {IPlatformData} platformData Data describing the current platform.
+	 * @param {any} buildOptions Defines if the build is for release configuration.
 	 * @returns {IApplicationPackage} Information about latest built application.
 	 */
-	getLatestApplicationPackageForDevice(platformData: IPlatformData): IApplicationPackage;
+	getLatestApplicationPackageForDevice(platformData: IPlatformData, buildOptions: { isReleaseBuild: boolean }): IApplicationPackage;
 
 	/**
 	 * Returns information about the latest built application for simulator in the current project.
 	 * @param {IPlatformData} platformData Data describing the current platform.
+	 * @param {any} buildOptions Defines if the build is for release configuration.
 	 * @returns {IApplicationPackage} Information about latest built application.
 	 */
-	getLatestApplicationPackageForEmulator(platformData: IPlatformData): IApplicationPackage;
+	getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildOptions: { isReleaseBuild: boolean }): IApplicationPackage;
 
 	/**
 	 * Copies latest build output to a specified location.
 	 * @param {string} platform Mobile platform - Android, iOS.
 	 * @param {string} targetPath Destination where the build artifact should be copied.
-	 * @param {{isForDevice: boolean}} settings Defines if the searched artifact should be for simulator.
+	 * @param {{isForDevice: boolean, isReleaseBuild: boolean}} settings Defines if the searched artifact should be for simulator and is it built for release.
 	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}, projectData: IProjectData): void;
+	copyLastOutput(platform: string, targetPath: string, settings: { isForDevice: boolean, isReleaseBuild: boolean }, projectData: IProjectData): void;
 
-	lastOutputPath(platform: string, settings: { isForDevice: boolean }, projectData: IProjectData): string;
+	lastOutputPath(platform: string, settings: { isForDevice: boolean, isReleaseBuild: boolean }, projectData: IProjectData): string;
 
 	/**
 	 * Reads contents of a file on device.
@@ -209,8 +211,7 @@ interface IPlatformData {
 	appDestinationDirectoryPath: string;
 	deviceBuildOutputPath: string;
 	emulatorBuildOutputPath?: string;
-	validPackageNamesForDevice: string[];
-	validPackageNamesForEmulator?: string[];
+	getValidPackageNames(buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[];
 	frameworkFilesExtensions: string[];
 	frameworkDirectoriesExtensions?: string[];
 	frameworkDirectoriesNames?: string[];

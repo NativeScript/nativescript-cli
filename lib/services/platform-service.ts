@@ -364,7 +364,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		if (!this.$fs.exists(outputPath)) {
 			return true;
 		}
-		let packageNames = forDevice ? platformData.validPackageNamesForDevice : platformData.validPackageNamesForEmulator;
+		let packageNames = platformData.getValidPackageNames({ isForDevice: forDevice });
 		let packages = this.getApplicationPackages(outputPath, packageNames);
 		if (packages.length === 0) {
 			return true;
@@ -430,9 +430,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 		let packageFile = "";
 		if (this.$devicesService.isiOSSimulator(device)) {
-			packageFile = this.getLatestApplicationPackageForEmulator(platformData).packageName;
+			packageFile = this.getLatestApplicationPackageForEmulator(platformData, { isReleaseBuild: options.release }).packageName;
 		} else {
-			packageFile = this.getLatestApplicationPackageForDevice(platformData).packageName;
+			packageFile = this.getLatestApplicationPackageForDevice(platformData, { isReleaseBuild: options.release }).packageName;
 		}
 
 		await platformData.platformProjectService.cleanDeviceTempFolder(device.deviceInfo.identifier, projectData);
@@ -581,13 +581,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		appUpdater.cleanDestinationApp();
 	}
 
-	public lastOutputPath(platform: string, settings: { isForDevice: boolean }, projectData: IProjectData): string {
+	public lastOutputPath(platform: string, settings: { isForDevice: boolean, isReleaseBuild: boolean }, projectData: IProjectData): string {
 		let packageFile: string;
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		if (settings.isForDevice) {
-			packageFile = this.getLatestApplicationPackageForDevice(platformData).packageName;
+			packageFile = this.getLatestApplicationPackageForDevice(platformData, settings).packageName;
 		} else {
-			packageFile = this.getLatestApplicationPackageForEmulator(platformData).packageName;
+			packageFile = this.getLatestApplicationPackageForEmulator(platformData, settings).packageName;
 		}
 		if (!packageFile || !this.$fs.exists(packageFile)) {
 			this.$errors.failWithoutHelp("Unable to find built application. Try 'tns build %s'.", platform);
@@ -595,7 +595,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return packageFile;
 	}
 
-	public copyLastOutput(platform: string, targetPath: string, settings: { isForDevice: boolean }, projectData: IProjectData): void {
+	public copyLastOutput(platform: string, targetPath: string, settings: { isForDevice: boolean, isReleaseBuild: boolean }, projectData: IProjectData): void {
 		platform = platform.toLowerCase();
 		targetPath = path.resolve(targetPath);
 
@@ -742,12 +742,12 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return packages[0];
 	}
 
-	public getLatestApplicationPackageForDevice(platformData: IPlatformData): IApplicationPackage {
-		return this.getLatestApplicationPackage(platformData.deviceBuildOutputPath, platformData.validPackageNamesForDevice);
+	public getLatestApplicationPackageForDevice(platformData: IPlatformData, buildOptions: { isReleaseBuild: boolean }): IApplicationPackage {
+		return this.getLatestApplicationPackage(platformData.deviceBuildOutputPath, platformData.getValidPackageNames({ isForDevice: true, isReleaseBuild: buildOptions.isReleaseBuild }));
 	}
 
-	public getLatestApplicationPackageForEmulator(platformData: IPlatformData): IApplicationPackage {
-		return this.getLatestApplicationPackage(platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath, platformData.validPackageNamesForEmulator || platformData.validPackageNamesForDevice);
+	public getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildOptions: { isReleaseBuild: boolean }): IApplicationPackage {
+		return this.getLatestApplicationPackage(platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath, platformData.getValidPackageNames({ isForDevice: false, isReleaseBuild: buildOptions.isReleaseBuild }));
 	}
 
 	private async updatePlatform(platform: string, version: string, platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {

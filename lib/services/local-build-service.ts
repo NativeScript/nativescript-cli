@@ -16,7 +16,7 @@ export class LocalBuildService extends EventEmitter {
 		});
 		platformBuildOptions.buildOutputStdio = "pipe";
 		await this.$platformService.buildPlatform(platform, platformBuildOptions, this.$projectData);
-		return this.$platformService.lastOutputPath(platform, { isForDevice: platformBuildOptions.buildForDevice }, this.$projectData);
+		return this.$platformService.lastOutputPath(platform, { isForDevice: platformBuildOptions.buildForDevice, isReleaseBuild: platformBuildOptions.release }, this.$projectData);
 	}
 }
 
