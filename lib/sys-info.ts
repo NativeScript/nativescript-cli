@@ -160,7 +160,12 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	public getAdbVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.adbVerCache, async (): Promise<string> => {
-			const output = await this.childProcess.spawnFromEvent(await this.androidToolsInfo.getPathToAdbFromAndroidHome(), ["version"], "close", { ignoreError: true });
+			let output: IProcessInfo = null;
+			const pathToAdbFromAndroidHome = await this.androidToolsInfo.getPathToAdbFromAndroidHome();
+			if (pathToAdbFromAndroidHome) {
+				output = await this.childProcess.spawnFromEvent(pathToAdbFromAndroidHome, ["version"], "close", { ignoreError: true });
+			}
+
 			return output && output.stdout ? this.getVersionFromString(output.stdout) : null;
 		});
 	}
