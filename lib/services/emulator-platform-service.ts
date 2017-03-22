@@ -115,8 +115,6 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 		}
 
 		this.outputEmulators("\nAvailable emulators", emulators);
-		this.$logger.out("\nConnected devices & emulators");
-		await $injector.resolveCommand("device").execute(platform ? [platform] : []);
 	}
 
 	public async getiOSEmulators(): Promise<IEmulatorInfo[]> {

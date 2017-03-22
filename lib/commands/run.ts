@@ -3,16 +3,11 @@ export class RunCommandBase {
 		protected $usbLiveSyncService: ILiveSyncService,
 		protected $projectData: IProjectData,
 		protected $options: IOptions,
-		protected $emulatorPlatformService: IEmulatorPlatformService,
-		private $mobileHelper: Mobile.IMobileHelper) {
+		protected $emulatorPlatformService: IEmulatorPlatformService) {
 			this.$projectData.initializeProjectData();
 		}
 
 	public async executeCore(args: string[]): Promise<void> {
-
-		if (this.$options.availableDevices) {
-			return this.$emulatorPlatformService.listAvailableEmulators(this.$mobileHelper.validatePlatformName(args[0]));
-		}
 
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
 		const deployOptions: IDeployPlatformOptions = {
@@ -58,9 +53,8 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 		$usbLiveSyncService: ILiveSyncService,
 		$projectData: IProjectData,
 		$options: IOptions,
-		$emulatorPlatformService: IEmulatorPlatformService,
-		$mobileHelper: Mobile.IMobileHelper) {
-		super($platformService, $usbLiveSyncService, $projectData, $options, $emulatorPlatformService, $mobileHelper);
+		$emulatorPlatformService: IEmulatorPlatformService) {
+		super($platformService, $usbLiveSyncService, $projectData, $options, $emulatorPlatformService);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -83,9 +77,8 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 		$projectData: IProjectData,
 		$options: IOptions,
 		$emulatorPlatformService: IEmulatorPlatformService,
-		$mobileHelper: Mobile.IMobileHelper,
 		private $errors: IErrors) {
-		super($platformService, $usbLiveSyncService, $projectData, $options, $emulatorPlatformService, $mobileHelper);
+		super($platformService, $usbLiveSyncService, $projectData, $options, $emulatorPlatformService);
 	}
 
 	public async execute(args: string[]): Promise<void> {

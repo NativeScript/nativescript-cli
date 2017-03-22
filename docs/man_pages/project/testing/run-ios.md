@@ -4,8 +4,8 @@ run ios
 Usage | Synopsis
 ---|---
 Run on all connected devices | `$ tns run ios [--release] [--justlaunch]`
-Run on a selected connected device | `$ tns run ios [--device <Device ID>] [--release] [--justlaunch]`
-Start an emulator and run the app inside it | `$ tns run ios --emulator [<Emulator Options>] [--release]`
+Run on a selected connected device. Will start simulator with specified `Device Identifier`, if not already running. | `$ tns run ios [--device <Device ID>] [--release] [--justlaunch]`
+Start an emulator and run the app inside it | `$ tns run ios --emulator [--release]`
 
 Runs your project on a connected iOS device or in the iOS Simulator, if configured. This is shorthand for prepare, build and deploy. While your app is running, prints the output from the application in the console and watches for changes in your code. Once a change is detected, it synchronizes the change with all selected devices and restarts/refreshes the application.
 
@@ -14,16 +14,16 @@ Runs your project on a connected iOS device or in the iOS Simulator, if configur
 <% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system. <% if(isHtml) { %>For more information, see [Obtaining Signing Identities and Downloading Provisioning Profiles](https://developer.apple.com/library/mac/recipes/xcode_help-accounts_preferences/articles/obtain_certificates_and_provisioning_profiles.html).<% } %>
 
 ### Options
-* `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
-* `--device` - Specifies a connected device on which to run the app.
-* `--emulator` - If set, runs the app in a native emulator for the target platform, if configured. When set, you can also set any other valid combination of emulator options as listed by `$ tns help emulate ios`. You cannot use `--device` and `--emulator` simultaneously.
-* `--release` - If set, produces a release build. Otherwise, produces a debug build.
+* `--available-devices` - Shows a list of available simulators to be started and a list of already connected devices.
+* `--device` - Specifies a connected device/simulator to start and run the app.
+* `--emulator` - If set, runs the app in all available and configured ios simulators. It will start a simulator if none are already running.
 * `--justlaunch` - If set, does not print the application output in the console.
 * `--clean` - If set, forces rebuilding the native application.
+* `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
+* `--release` - If set, produces a release build. Otherwise, produces a debug build.
 
 ### Attributes
-* `<Device ID>` is the index or name of the target device as listed by `$ tns device ios`
-* `<Emulator Options>` is any valid combination of options as listed by `$ tns help emulate ios`
+* `<Device ID>` is the index or `Device Identifier` of the target device as listed by `$ tns run ios --available-devices`
 <% } %>
 <% if(isHtml) { %>
 ### Prerequisites
