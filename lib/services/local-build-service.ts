@@ -14,7 +14,7 @@ export class LocalBuildService extends EventEmitter {
 			data.projectDir = platformBuildOptions.projectDir;
 			this.emit(BUILD_OUTPUT_EVENT_NAME, data);
 		});
-		platformBuildOptions.buildOutputStdio = "pipe";
+		platformBuildOptions.buildOutputStdio = "inherit";
 		await this.$platformService.buildPlatform(platform, platformBuildOptions, this.$projectData);
 		return this.$platformService.lastOutputPath(platform, platformBuildOptions, this.$projectData);
 	}
