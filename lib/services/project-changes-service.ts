@@ -38,7 +38,6 @@ export class ProjectChangesService implements IProjectChangesService {
 	constructor(
 		private $platformsData: IPlatformsData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $options: IOptions,
 		private $fs: IFileSystem) {
 	}
 
@@ -46,10 +45,10 @@ export class ProjectChangesService implements IProjectChangesService {
 		return this._changesInfo;
 	}
 
-	public checkForChanges(platform: string, projectData: IProjectData): IProjectChangesInfo {
+	public checkForChanges(platform: string, projectData: IProjectData, buildOptions: IProjectChangesOptions): IProjectChangesInfo {
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		this._changesInfo = new ProjectChangesInfo();
-		if (!this.ensurePrepareInfo(platform, projectData)) {
+		if (!this.ensurePrepareInfo(platform, projectData, buildOptions)) {
 			this._newFiles = 0;
 			this._changesInfo.appFilesChanged = this.containsNewerFiles(projectData.appDirectoryPath, projectData.appResourcesDirectoryPath, projectData);
 			this._changesInfo.packageChanged = this.filesChanged([path.join(projectData.projectDir, "package.json")]);
@@ -77,7 +76,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 		}
 		if (platform.toLowerCase() === this.$devicePlatformsConstants.iOS.toLowerCase()) {
-			const nextCommandProvisionUUID = this.$options.provision;
+			const nextCommandProvisionUUID = buildOptions.provision;
 			// We should consider reading here the provisioning profile UUID from the xcodeproj and xcconfig.
 			const prevProvisionUUID = this._prepareInfo.iOSProvisioningProfileUUID;
 			if (nextCommandProvisionUUID !== prevProvisionUUID) {
@@ -86,13 +85,13 @@ export class ProjectChangesService implements IProjectChangesService {
 				this._prepareInfo.iOSProvisioningProfileUUID = nextCommandProvisionUUID;
 			}
 		}
-		if (this.$options.bundle !== this._prepareInfo.bundle || this.$options.release !== this._prepareInfo.release) {
+		if (buildOptions.bundle !== this._prepareInfo.bundle || buildOptions.release !== this._prepareInfo.release) {
 			this._changesInfo.appFilesChanged = true;
 			this._changesInfo.appResourcesChanged = true;
 			this._changesInfo.modulesChanged = true;
 			this._changesInfo.configChanged = true;
-			this._prepareInfo.release = this.$options.release;
-			this._prepareInfo.bundle = this.$options.bundle;
+			this._prepareInfo.release = buildOptions.release;
+			this._prepareInfo.bundle = buildOptions.bundle;
 		}
 		if (this._changesInfo.packageChanged) {
 			this._changesInfo.modulesChanged = true;
@@ -134,7 +133,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		this.$fs.writeJson(prepareInfoFilePath, this._prepareInfo);
 	}
 
-	private ensurePrepareInfo(platform: string, projectData: IProjectData): boolean {
+	private ensurePrepareInfo(platform: string, projectData: IProjectData, buildOptions: { bundle: boolean, release: boolean, provision: string }): boolean {
 		this._prepareInfo = this.getPrepareInfo(platform, projectData);
 		if (this._prepareInfo) {
 			let platformData = this.$platformsData.getPlatformData(platform, projectData);
@@ -145,8 +144,8 @@ export class ProjectChangesService implements IProjectChangesService {
 		}
 		this._prepareInfo = {
 			time: "",
-			bundle: this.$options.bundle,
-			release: this.$options.release,
+			bundle: buildOptions.bundle,
+			release: buildOptions.release,
 			changesRequireBuild: true,
 			changesRequireBuildTime: null
 		};

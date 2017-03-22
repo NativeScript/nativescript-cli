@@ -433,6 +433,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async cleanProject(projectRoot: string, options: string[], projectData: IProjectData): Promise<void> {
+		// In case options are not passed, we'll use the default ones for cleaning the project.
+		// In case we do not do this, we'll required android-23 (default in build.gradle) for cleaning the project.
+		options = options.length === 0 ? this.getBuildOptions({ release: false }, projectData) : options;
+
 		options.unshift("clean");
 
 		let gradleBin = path.join(projectRoot, "gradlew");

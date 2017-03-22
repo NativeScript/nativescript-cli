@@ -233,7 +233,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		await this.$pluginsService.validate(platformData, projectData);
 
 		await this.ensurePlatformInstalled(platform, platformTemplate, projectData, platformSpecificData);
-		let changesInfo = this.$projectChangesService.checkForChanges(platform, projectData);
+		let changesInfo = this.$projectChangesService.checkForChanges(platform, projectData, { bundle: appFilesUpdaterOptions.bundle, release: appFilesUpdaterOptions.release, provision: platformSpecificData.provision });
 
 		this.$logger.trace("Changes info in prepare platform:", changesInfo);
 
