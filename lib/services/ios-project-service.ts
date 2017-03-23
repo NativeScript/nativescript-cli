@@ -666,7 +666,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return { stderr: "", stdout: "", exitCode: 0 };
 	}
 
-	public async cleanProject(projectRoot: string, options: string[]): Promise<void> {
+	public async cleanProject(projectRoot: string): Promise<void> {
 		return Promise.resolve();
 	}
 

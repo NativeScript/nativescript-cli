@@ -5,6 +5,7 @@ import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
 import { EOL } from "os";
+import { Configurations } from "../common/constants";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static VALUES_DIRNAME = "values";
@@ -58,16 +59,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				projectRoot: projectRoot,
 				deviceBuildOutputPath: path.join(projectRoot, "build", "outputs", "apk"),
 				getValidPackageNames: (buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[] => {
-					if (buildOptions.isReleaseBuild) {
-						return [
-							`${packageName}-release.apk`,
-							`${projectData.projectName}-release.apk`
-						];
-					}
+					const buildMode = buildOptions.isReleaseBuild ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
 
 					return [
-						`${packageName}-debug.apk`,
-						`${projectData.projectName}-debug.apk`,
+						`${packageName}-${buildMode}.apk`,
+						`${projectData.projectName}-${buildMode}.apk`
 					];
 				},
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
@@ -383,7 +379,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			// check whether the dependency that's being removed has native code
 			let pluginConfigDir = path.join(this.getPlatformData(projectData).projectRoot, "configurations", pluginData.name);
 			if (this.$fs.exists(pluginConfigDir)) {
-				await this.cleanProject(this.getPlatformData(projectData).projectRoot, [], projectData);
+				await this.cleanProject(this.getPlatformData(projectData).projectRoot, projectData);
 			}
 		} catch (e) {
 			if (e.code === "ENOENT") {
@@ -414,12 +410,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				}
 			}
 
-			// We don't need release options here
-			let buildOptions = this.getBuildOptions({ release: false }, projectData);
-
 			let projectRoot = this.getPlatformData(projectData).projectRoot;
 
-			await this.cleanProject(projectRoot, buildOptions, projectData);
+			await this.cleanProject(projectRoot, projectData);
 		}
 	}
 
@@ -432,19 +425,16 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this.$childProcess.spawnFromEvent(gradleBin, ["--stop", "--quiet"], "close", { stdio: "inherit", cwd: projectRoot });
 	}
 
-	public async cleanProject(projectRoot: string, options: string[], projectData: IProjectData): Promise<void> {
-		// In case options are not passed, we'll use the default ones for cleaning the project.
-		// In case we do not do this, we'll required android-23 (default in build.gradle) for cleaning the project.
-		options = options.length === 0 ? this.getBuildOptions({ release: false }, projectData) : options;
-
-		options.unshift("clean");
+	public async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
+		const buildOptions = this.getBuildOptions({ release: false }, projectData);
+		buildOptions.unshift("clean");
 
 		let gradleBin = path.join(projectRoot, "gradlew");
 		if (this.$hostInfo.isWindows) {
 			gradleBin += ".bat";
 		}
 
-		await this.spawn(gradleBin, options, { stdio: "inherit", cwd: this.getPlatformData(projectData).projectRoot });
+		await this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.getPlatformData(projectData).projectRoot });
 	}
 
 	public async cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void> {

@@ -42,7 +42,8 @@ export class ProjectData implements IProjectData {
 		private $errors: IErrors,
 		private $projectHelper: IProjectHelper,
 		private $staticConfig: IStaticConfig,
-		private $options: IOptions) { }
+		private $options: IOptions,
+		private $logger: ILogger) { }
 
 	public initializeProjectData(projectDir?: string): void {
 		projectDir = projectDir || this.$projectHelper.projectDir;
@@ -51,15 +52,14 @@ export class ProjectData implements IProjectData {
 			const projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
 			let data: any = null;
 
-			if (projectFilePath) {
+			if (this.$fs.exists(projectFilePath)) {
 				let fileContent: any = null;
 				try {
 					fileContent = this.$fs.readJson(projectFilePath);
 					data = fileContent[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE];
 				} catch (err) {
-					this.$errors.failWithoutHelp(
-						`The project file ${this.projectFilePath} is corrupted.` + EOL +
-						"Consider restoring an earlier version from your source control or backup." + EOL +
+					this.$errors.failWithoutHelp(`The project file ${this.projectFilePath} is corrupted. ${EOL}` +
+						`Consider restoring an earlier version from your source control or backup.${EOL}` +
 						`Additional technical info: ${err.toString()}`);
 				}
 
@@ -80,8 +80,11 @@ export class ProjectData implements IProjectData {
 			}
 		}
 
+		const currentDir = path.resolve(".");
+		this.$logger.trace(`Unable to find project. projectDir: ${projectDir}, options.path: ${this.$options.path}, ${currentDir}`);
+
 		// This is the case when no project file found
-		this.$errors.fail("No project found at or above '%s' and neither was a --path specified.", projectDir || this.$options.path || path.resolve("."));
+		this.$errors.fail("No project found at or above '%s' and neither was a --path specified.", projectDir || this.$options.path || currentDir);
 	}
 
 	private getProjectType(): string {

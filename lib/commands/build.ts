@@ -26,7 +26,7 @@ export class BuildCommandBase {
 		};
 		await this.$platformService.buildPlatform(platform, buildConfig, this.$projectData);
 		if (this.$options.copyTo) {
-			this.$platformService.copyLastOutput(platform, this.$options.copyTo, { isForDevice: this.$options.forDevice, isReleaseBuild: buildConfig.release }, this.$projectData);
+			this.$platformService.copyLastOutput(platform, this.$options.copyTo, buildConfig, this.$projectData);
 		}
 	}
 }
