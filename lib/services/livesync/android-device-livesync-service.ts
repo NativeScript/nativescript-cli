@@ -67,11 +67,12 @@ class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncService {
 
 	public async removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectId: string): Promise<void> {
 		let deviceRootPath = this.getDeviceRootPath(appIdentifier);
-		_.each(localToDevicePaths, localToDevicePathData => {
+
+		for (let localToDevicePathData of localToDevicePaths) {
 			let relativeUnixPath = _.trimStart(helpers.fromWindowsRelativePathToUnix(localToDevicePathData.getRelativeToProjectBasePath()), "/");
 			let deviceFilePath = this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync", relativeUnixPath);
-			this.device.adb.executeShellCommand(["mkdir", "-p", path.dirname(deviceFilePath), "&& await ", "touch", deviceFilePath]);
-		});
+			await this.device.adb.executeShellCommand(["mkdir", "-p", path.dirname(deviceFilePath), " && ", "touch", deviceFilePath]);
+		}
 
 		await this.getDeviceHashService(projectId).removeHashes(localToDevicePaths);
 	}
