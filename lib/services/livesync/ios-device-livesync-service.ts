@@ -62,7 +62,7 @@ class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 
 	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean, projectData: IProjectData): Promise<void> {
 		if (forceExecuteFullSync) {
-			await this.restartApplication(deviceAppData);
+			await this.restartApplication(deviceAppData, projectData.projectName);
 			return;
 		}
 
@@ -74,7 +74,7 @@ class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 		let shouldRestart = _.some(otherFiles, (localToDevicePath: Mobile.ILocalToDevicePathData) => !this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, deviceAppData.platform));
 
 		if (shouldRestart || (!this.$options.liveEdit && scriptFiles.length)) {
-			await this.restartApplication(deviceAppData);
+			await this.restartApplication(deviceAppData, projectData.projectName);
 			return;
 		}
 
@@ -82,12 +82,12 @@ class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 			this.liveEdit(scriptFiles);
 			await this.reloadPage(deviceAppData, otherFiles);
 		} else {
-			await this.restartApplication(deviceAppData);
+			await this.restartApplication(deviceAppData, projectData.projectName);
 		}
 	}
 
-	private async restartApplication(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
-		return this.device.applicationManager.restartApplication(deviceAppData.appIdentifier);
+	private async restartApplication(deviceAppData: Mobile.IDeviceAppData, appName: string): Promise<void> {
+		return this.device.applicationManager.restartApplication(deviceAppData.appIdentifier, appName);
 	}
 
 	private async reloadPage(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
