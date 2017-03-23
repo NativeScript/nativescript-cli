@@ -35,7 +35,6 @@ Command | Description
 [test `<Platform>`](project/testing/test.html) | Runs the unit tests in your project on a connected physical or virtual device.
 [install](project/configuration/install.html) | Installs all platforms and dependencies described in the `package.json` file in the current directory.
 [plugin](lib-management/plugin.html) | Lets you manage the plugins for your project.
-[livesync](project/testing/livesync.html) | Synchronizes the latest changes in your project to devices.
 
 ## Publishing Commands
 Command | Description
