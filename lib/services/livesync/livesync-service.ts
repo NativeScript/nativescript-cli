@@ -37,9 +37,7 @@ class LiveSyncService implements ILiveSyncService {
 			platform = this.$devicesService.getDeviceByIdentifier(this.$options.device).deviceInfo.platform;
 			liveSyncData.push(await this.prepareLiveSyncData(platform, projectData));
 		} else {
-			await this.$devicesService.initialize({ skipInferPlatform: true });
-
-			await this.$devicesService.stopDeviceDetectionInterval();
+			await this.$devicesService.initialize({ skipInferPlatform: true, skipDeviceDetectionInterval: true });
 
 			for (let installedPlatform of this.$platformService.getInstalledPlatforms(projectData)) {
 				if (this.$devicesService.getDevicesForPlatform(installedPlatform).length === 0) {
