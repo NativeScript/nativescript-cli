@@ -79,7 +79,7 @@ class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 		}
 
 		if (await this.setupSocketIfNeeded(projectData.projectId)) {
-			this.liveEdit(scriptFiles);
+			await this.liveEdit(scriptFiles);
 			await this.reloadPage(deviceAppData, otherFiles);
 		} else {
 			await this.restartApplication(deviceAppData, projectData.projectName);
