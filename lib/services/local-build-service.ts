@@ -1,4 +1,3 @@
-// import { exportedPromise } from "../common/decorators";
 import { EventEmitter } from "events";
 import { BUILD_OUTPUT_EVENT_NAME } from "../constants";
 

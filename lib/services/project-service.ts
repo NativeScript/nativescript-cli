@@ -1,7 +1,7 @@
 import * as constants from "../constants";
 import * as path from "path";
 import * as shelljs from "shelljs";
-import { exportedPromise, exported } from "../common/decorators";
+import { exported } from "../common/decorators";
 
 export class ProjectService implements IProjectService {
 
@@ -16,7 +16,7 @@ export class ProjectService implements IProjectService {
 		private $projectTemplatesService: IProjectTemplatesService,
 		private $staticConfig: IStaticConfig) { }
 
-	@exportedPromise("projectService")
+	@exported("projectService")
 	public async createProject(projectOptions: IProjectSettings): Promise<void> {
 		let projectName = projectOptions.projectName,
 			selectedTemplate = projectOptions.template;
