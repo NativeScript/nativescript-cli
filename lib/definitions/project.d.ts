@@ -254,11 +254,10 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	/**
 	 * Removes build artifacts specific to the platform
 	 * @param {string} projectRoot The root directory of the native project.
-	 * @param {string[]} options Options that can be passed to clean command.
 	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	cleanProject(projectRoot: string, options: string[], projectData: IProjectData): Promise<void>
+	cleanProject(projectRoot: string, projectData: IProjectData): Promise<void>
 }
 
 interface IAndroidProjectPropertiesManager {

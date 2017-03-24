@@ -255,7 +255,7 @@ export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
 			normalizedPlatformName: "",
 			appDestinationDirectoryPath: "",
 			deviceBuildOutputPath: "",
-			validPackageNamesForDevice: [],
+			getValidPackageNames: (buildOptions: {isForDevice?: boolean, isReleaseBuild?: boolean}) => [],
 			frameworkFilesExtensions: [],
 			relativeToFrameworkConfigurationFilePath: "",
 			fastLivesyncFileExtensions: []
@@ -276,7 +276,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 			emulatorServices: undefined,
 			projectRoot: "",
 			deviceBuildOutputPath: "",
-			validPackageNamesForDevice: [],
+			getValidPackageNames: (buildOptions: {isForDevice?: boolean, isReleaseBuild?: boolean}) => [],
 			frameworkFilesExtensions: [],
 			appDestinationDirectoryPath: "",
 			relativeToFrameworkConfigurationFilePath: "",
@@ -352,7 +352,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	async stopServices(): Promise<ISpawnResult> {
 		return Promise.resolve({stderr: "", stdout: "", exitCode: 0});
 	}
-	async cleanProject(projectRoot: string, options: string[]): Promise<void> {
+	async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
 		return Promise.resolve();
 	}
 }
@@ -664,14 +664,14 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 		return null;
 	}
 
-	public getLatestApplicationPackageForEmulator(platformData: IPlatformData): IApplicationPackage {
+	public getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig): IApplicationPackage {
 		return null;
 	}
 
-	public copyLastOutput(platform: string, targetPath: string, settings: { isForDevice: boolean }): void {
+	public copyLastOutput(platform: string, targetPath: string, buildConfig: IBuildConfig): void {
 	}
 
-	public lastOutputPath(platform: string, settings: { isForDevice: boolean }): string {
+	public lastOutputPath(platform: string, buildConfig: IBuildConfig): string {
 		return "";
 	}
 

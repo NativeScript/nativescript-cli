@@ -5,7 +5,6 @@ import { ChildProcess } from "../lib/common/child-process";
 import * as ProjectServiceLib from "../lib/services/project-service";
 import { ProjectNameService } from "../lib/services/project-name-service";
 import * as ProjectDataServiceLib from "../lib/services/project-data-service";
-import * as ProjectDataLib from "../lib/project-data";
 import * as ProjectHelperLib from "../lib/common/project-helper";
 import { StaticConfig } from "../lib/config";
 import * as NpmLib from "../lib/node-package-manager";
@@ -72,7 +71,7 @@ class ProjectIntegrationTest {
 		let sourceDir = projectSourceDirectory;
 
 		// Hidden files (starting with dots ".") are not copied.
-		let expectedFiles = fs.enumerateFilesInDirectorySync(sourceDir, (file, stat) => stat.isDirectory() || !_.startsWith(path.basename(file), ".") );
+		let expectedFiles = fs.enumerateFilesInDirectorySync(sourceDir, (file, stat) => stat.isDirectory() || !_.startsWith(path.basename(file), "."));
 		let actualFiles = fs.enumerateFilesInDirectorySync(appDirectoryPath);
 
 		assert.isTrue(actualFiles.length >= expectedFiles.length, "Files in created project must be at least as files in app dir.");
@@ -459,158 +458,65 @@ describe("Project Service Tests", () => {
 		});
 
 	});
-});
 
-function createTestInjector() {
-	let testInjector = new yok.Yok();
+	describe("isValidNativeScriptProject", () => {
+		const getTestInjector = (): IInjector => {
+			const testInjector = new yok.Yok();
+			testInjector.register("npm", {});
+			testInjector.register("errors", {});
+			testInjector.register("fs", {});
+			testInjector.register("logger", {});
+			testInjector.register("projectDataService", {});
+			testInjector.register("projectNameService", {});
+			testInjector.register("projectTemplatesService", {});
+			testInjector.register("staticConfig", {});
+			testInjector.register("projectHelper", {});
 
-	testInjector.register("errors", stubs.ErrorsStub);
-	testInjector.register('logger', stubs.LoggerStub);
-	testInjector.register("projectService", ProjectServiceLib.ProjectService);
-	testInjector.register("projectHelper", ProjectHelperLib.ProjectHelper);
-	testInjector.register("projectTemplatesService", stubs.ProjectTemplatesService);
-	testInjector.register("projectNameValidator", mockProjectNameValidator);
-
-	testInjector.register("fs", FileSystem);
-	testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
-
-	testInjector.register("staticConfig", StaticConfig);
-	testInjector.register("analyticsService", { track: async () => undefined });
-
-	testInjector.register("npmInstallationManager", NpmInstallationManager);
-	testInjector.register("httpClient", HttpClientLib.HttpClient);
-	testInjector.register("lockfile", stubs.LockFile);
-
-	testInjector.register("childProcess", ChildProcess);
-
-	testInjector.register('projectData', ProjectDataLib.ProjectData);
-	testInjector.register("options", Options);
-	testInjector.register("hostInfo", HostInfo);
-
-	return testInjector;
-}
-
-describe("project upgrade procedure tests", () => {
-	it("should throw error when no nativescript project folder specified", () => {
-		let testInjector = createTestInjector();
-		let tempFolder = temp.mkdirSync("project upgrade");
-		let options = testInjector.resolve("options");
-		options.path = tempFolder;
-		let isErrorThrown = false;
-
-		try {
-			let projectData: IProjectData = testInjector.resolve("projectData");
-			projectData.initializeProjectData(); // This should trigger upgrade procedure
-		} catch (err) {
-			isErrorThrown = true;
-			let expectedErrorMessage = "No project found at or above '%s' and neither was a --path specified.," + tempFolder;
-			assert.equal(expectedErrorMessage, err.toString());
-		}
-
-		assert.isTrue(isErrorThrown);
-	});
-	it("should upgrade project when .tnsproject file exists but package.json file doesn't exist", () => {
-		let testInjector = createTestInjector();
-		let fs: IFileSystem = testInjector.resolve("fs");
-
-		let tempFolder = temp.mkdirSync("projectUpgradeTest2");
-		let options = testInjector.resolve("options");
-		options.path = tempFolder;
-		let tnsProjectData = {
-			"id": "org.nativescript.Test",
-			"tns-ios": {
-				"version": "1.0.0"
-			},
-			"description": "dummy",
-			"license": "MIT",
-			"readme": "dummy",
-			"repository": "dummy"
-		};
-		let tnsProjectFilePath = path.join(tempFolder, ".tnsproject");
-		fs.writeJson(tnsProjectFilePath, tnsProjectData);
-
-		let projectData: IProjectData = testInjector.resolve("projectData");
-		projectData.initializeProjectData(); // This should trigger upgrade procedure
-
-		let packageJsonFilePath = path.join(tempFolder, "package.json");
-		let packageJsonFileContent = require(packageJsonFilePath);
-		assert.isTrue(fs.exists(packageJsonFilePath));
-		assert.isFalse(fs.exists(tnsProjectFilePath));
-		assert.deepEqual(tnsProjectData, packageJsonFileContent["nativescript"]);
-	});
-	it("should upgrade project when .tnsproject and package.json exist but nativescript key is not presented in package.json file", () => {
-		let testInjector = createTestInjector();
-		let fs: IFileSystem = testInjector.resolve("fs");
-
-		let tempFolder = temp.mkdirSync("projectUpgradeTest3");
-		let options = testInjector.resolve("options");
-		options.path = tempFolder;
-		let tnsProjectData = {
-			"id": "org.nativescript.Test",
-			"tns-ios": {
-				"version": "1.0.1"
-			}
-		};
-		let packageJsonData = {
-			"name": "testModuleName",
-			"version": "0.0.0",
-			"dependencies": {
-				"myFirstDep": "0.0.1"
-			},
-			"description": "dummy",
-			"license": "MIT",
-			"readme": "dummy",
-			"repository": "dummy"
-		};
-		let tnsProjectFilePath = path.join(tempFolder, ".tnsproject");
-		fs.writeJson(tnsProjectFilePath, tnsProjectData);
-
-		let packageJsonFilePath = path.join(tempFolder, "package.json");
-		fs.writeJson(packageJsonFilePath, packageJsonData);
-
-		let projectData: IProjectData = testInjector.resolve("projectData");
-		projectData.initializeProjectData(); // This should trigger upgrade procedure
-
-		let packageJsonFileContent = require(packageJsonFilePath);
-		let expectedPackageJsonContent: any = packageJsonData;
-		expectedPackageJsonContent["nativescript"] = tnsProjectData;
-		assert.deepEqual(expectedPackageJsonContent, packageJsonFileContent);
-	});
-	it("shouldn't upgrade project when .tnsproject and package.json exist and nativescript key is presented in package.json file", () => {
-		let testInjector = createTestInjector();
-		let fs: IFileSystem = testInjector.resolve("fs");
-
-		let tempFolder = temp.mkdirSync("projectUpgradeTest4");
-		let options = testInjector.resolve("options");
-		options.path = tempFolder;
-		let tnsProjectData = {
-
-		};
-		let packageJsonData = {
-			"name": "testModuleName",
-			"version": "0.0.0",
-			"dependencies": {
-				"myFirstDep": "0.0.2"
-			},
-			"nativescript": {
-				"id": "org.nativescript.Test",
-				"tns-ios": {
-					"version": "1.0.2"
-				}
-			},
-			"description": "dummy",
-			"license": "MIT",
-			"readme": "dummy",
-			"repository": "dummy"
+			return testInjector;
 		};
 
-		fs.writeJson(path.join(tempFolder, ".tnsproject"), tnsProjectData);
-		fs.writeJson(path.join(tempFolder, "package.json"), packageJsonData);
-		testInjector.resolve("projectData"); // This should trigger upgrade procedure
+		it("returns true when initialize project data does not throw, projectDir and projectId are valid", () => {
+			const testInjector = getTestInjector();
+			testInjector.register("projectData", {
+				projectDir: "projectDir",
+				projectId: "projectId",
+				initializeProjectData: (): void => undefined
+			});
 
-		let packageJsonFilePath = path.join(tempFolder, "package.json");
-		let packageJsonFileContent = require(packageJsonFilePath);
+			const projectService: IProjectService = testInjector.resolve(ProjectServiceLib.ProjectService);
+			assert.isTrue(projectService.isValidNativeScriptProject("some-dir"));
+		});
 
-		assert.deepEqual(packageJsonData, packageJsonFileContent);
+		it("returns false when initialize project data throws", () => {
+			const testInjector = getTestInjector();
+			testInjector.register("projectData", {
+				initializeProjectData: (): void => { throw new Error("err"); }
+			});
+
+			const projectService: IProjectService = testInjector.resolve(ProjectServiceLib.ProjectService);
+			assert.isFalse(projectService.isValidNativeScriptProject("some-dir"));
+		});
+
+		it("returns false when initializeProjectData does not throw, but there's no projectDir set", () => {
+			const testInjector = getTestInjector();
+			testInjector.register("projectData", {
+				projectId: "projectId",
+				initializeProjectData: (): void => undefined
+			});
+
+			const projectService: IProjectService = testInjector.resolve(ProjectServiceLib.ProjectService);
+			assert.isFalse(projectService.isValidNativeScriptProject("some-dir"));
+		});
+
+		it("returns false when initializeProjectData does not throw, but there's no projectId set", () => {
+			const testInjector = getTestInjector();
+			testInjector.register("projectData", {
+				projectDir: "projectDir",
+				initializeProjectData: (): void => undefined
+			});
+
+			const projectService: IProjectService = testInjector.resolve(ProjectServiceLib.ProjectService);
+			assert.isFalse(projectService.isValidNativeScriptProject("some-dir"));
+		});
 	});
 });

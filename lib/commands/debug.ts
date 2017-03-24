@@ -16,11 +16,6 @@
 		}
 
 	public async execute(args: string[]): Promise<void> {
-		if (this.$options.start) {
-			return this.debugService.debug(this.$projectData);
-		}
-
-		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
 		const deployOptions: IDeployPlatformOptions = {
 			clean: this.$options.clean,
 			device: this.$options.device,
@@ -31,6 +26,15 @@
 			provision: this.$options.provision,
 			teamId: this.$options.teamId
 		};
+
+		const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
+
+		if (this.$options.start) {
+			return this.debugService.debug(this.$projectData, buildConfig);
+		}
+
+		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+
 		await this.$platformService.deployPlatform(this.$devicesService.platform, appFilesUpdaterOptions, deployOptions, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 		this.$config.debugLivesync = true;
 		let applicationReloadAction = async (deviceAppData: Mobile.IDeviceAppData): Promise<void> => {
@@ -45,7 +49,7 @@
 
 			await deviceAppData.device.applicationManager.stopApplication(applicationId);
 
-			await this.debugService.debug(this.$projectData);
+			await this.debugService.debug(this.$projectData, buildConfig);
 		};
 		return this.$usbLiveSyncService.liveSync(this.$devicesService.platform, this.$projectData, applicationReloadAction);
 	}

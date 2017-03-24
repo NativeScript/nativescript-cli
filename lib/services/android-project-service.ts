@@ -5,6 +5,7 @@ import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
 import { EOL } from "os";
+import { Configurations } from "../common/constants";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static VALUES_DIRNAME = "values";
@@ -57,12 +58,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				emulatorServices: this.$androidEmulatorServices,
 				projectRoot: projectRoot,
 				deviceBuildOutputPath: path.join(projectRoot, "build", "outputs", "apk"),
-				validPackageNamesForDevice: [
-					`${packageName}-debug.apk`,
-					`${packageName}-release.apk`,
-					`${projectData.projectName}-debug.apk`,
-					`${projectData.projectName}-release.apk`
-				],
+				getValidPackageNames: (buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[] => {
+					const buildMode = buildOptions.isReleaseBuild ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
+
+					return [
+						`${packageName}-${buildMode}.apk`,
+						`${projectData.projectName}-${buildMode}.apk`
+					];
+				},
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
 				configurationFileName: "AndroidManifest.xml",
 				configurationFilePath: path.join(projectRoot, "src", "main", "AndroidManifest.xml"),
@@ -262,7 +265,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			await this.spawn(gradleBin,
 				buildOptions,
 				{ stdio: buildConfig.buildOutputStdio || "inherit", cwd: this.getPlatformData(projectData).projectRoot },
-				{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
+				{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
 		} else {
 			this.$errors.failWithoutHelp("Cannot complete build because this project is ANT-based." + EOL +
 				"Run `tns platform remove android && tns platform add android` to switch to Gradle and try again.");
@@ -376,7 +379,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			// check whether the dependency that's being removed has native code
 			let pluginConfigDir = path.join(this.getPlatformData(projectData).projectRoot, "configurations", pluginData.name);
 			if (this.$fs.exists(pluginConfigDir)) {
-				await this.cleanProject(this.getPlatformData(projectData).projectRoot, [], projectData);
+				await this.cleanProject(this.getPlatformData(projectData).projectRoot, projectData);
 			}
 		} catch (e) {
 			if (e.code === "ENOENT") {
@@ -407,12 +410,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				}
 			}
 
-			// We don't need release options here
-			let buildOptions = this.getBuildOptions({ release: false }, projectData);
-
 			let projectRoot = this.getPlatformData(projectData).projectRoot;
 
-			await this.cleanProject(projectRoot, buildOptions, projectData);
+			await this.cleanProject(projectRoot, projectData);
 		}
 	}
 
@@ -425,15 +425,16 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this.$childProcess.spawnFromEvent(gradleBin, ["--stop", "--quiet"], "close", { stdio: "inherit", cwd: projectRoot });
 	}
 
-	public async cleanProject(projectRoot: string, options: string[], projectData: IProjectData): Promise<void> {
-		options.unshift("clean");
+	public async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
+		const buildOptions = this.getBuildOptions({ release: false }, projectData);
+		buildOptions.unshift("clean");
 
 		let gradleBin = path.join(projectRoot, "gradlew");
 		if (this.$hostInfo.isWindows) {
 			gradleBin += ".bat";
 		}
 
-		await this.spawn(gradleBin, options, { stdio: "inherit", cwd: this.getPlatformData(projectData).projectRoot });
+		await this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.getPlatformData(projectData).projectRoot });
 	}
 
 	public async cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void> {

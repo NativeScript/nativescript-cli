@@ -15,6 +15,7 @@ export const TESTING_FRAMEWORKS = ['jasmine', 'mocha', 'qunit'];
 export const TEST_RUNNER_NAME = "nativescript-unit-test-runner";
 export const LIVESYNC_EXCLUDED_FILE_PATTERNS = ["**/*.js.map", "**/*.ts"];
 export const XML_FILE_EXTENSION = ".xml";
+export const PLATFORMS_DIR_NAME = "platforms";
 
 export class PackageVersion {
 	static NEXT = "next";

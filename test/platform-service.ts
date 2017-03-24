@@ -369,7 +369,7 @@ describe('Platform Service Tests', () => {
 
 			platformService = testInjector.resolve("platformService");
 			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: release };
-			await platformService.preparePlatform(platformToTest, appFilesUpdaterOptions, "", projectData, undefined);
+			await platformService.preparePlatform(platformToTest, appFilesUpdaterOptions, "", projectData, { provision: null, sdk: null });
 
 			let test1FileName = platformToTest.toLowerCase() === "ios" ? "test1.js" : "test2.js";
 			let test2FileName = platformToTest.toLowerCase() === "ios" ? "test2.js" : "test1.js";
@@ -446,7 +446,7 @@ describe('Platform Service Tests', () => {
 			try {
 				testInjector.resolve("$logger").warn = (text: string) => warnings += text;
 				const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: false };
-				await platformService.preparePlatform("android", appFilesUpdaterOptions, "", projectData, undefined);
+				await platformService.preparePlatform("android", appFilesUpdaterOptions, "", projectData, { provision: null, sdk: null });
 			} finally {
 				testInjector.resolve("$logger").warn = oldLoggerWarner;
 			}

@@ -14,9 +14,9 @@ describe("nativescript-cli-lib", () => {
 
 	const publicApi: any = {
 		deviceEmitter: null,
-		projectService: ["createProject"],
-		localBuildService: ["build"]
-
+		projectService: ["createProject", "isValidNativeScriptProject"],
+		localBuildService: ["build"],
+		deviceLogProvider: null
 	};
 
 	const pathToEntryPoint = path.join(__dirname, "..", "lib", "nativescript-cli-lib.js").replace(/\\/g, "\\\\");

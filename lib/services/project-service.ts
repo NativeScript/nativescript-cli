@@ -73,11 +73,10 @@ export class ProjectService implements IProjectService {
 	public isValidNativeScriptProject(pathToProject?: string): boolean {
 		try {
 			this.$projectData.initializeProjectData(pathToProject);
+			return !!this.$projectData.projectDir && !!this.$projectData.projectId;
 		} catch (e) {
 			return false;
 		}
-
-		return true;
 	}
 
 	private getDataFromJson(templatePath: string): any {

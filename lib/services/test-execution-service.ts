@@ -73,9 +73,10 @@ class TestExecutionService implements ITestExecutionService {
 					await this.$usbLiveSyncService.liveSync(platform, projectData);
 
 					if (this.$options.debugBrk) {
+						const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
 						this.$logger.info('Starting debugger...');
 						let debugService: IDebugService = this.$injector.resolve(`${platform}DebugService`);
-						await debugService.debugStart(projectData);
+						await debugService.debugStart(projectData, buildConfig);
 					}
 					resolve();
 				} catch (err) {
@@ -127,20 +128,22 @@ class TestExecutionService implements ITestExecutionService {
 					this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 				}
 
-				if (this.$options.debugBrk) {
-					await this.getDebugService(platform).debug(projectData);
-				} else {
-					const deployOptions: IDeployPlatformOptions = {
-						clean: this.$options.clean,
-						device: this.$options.device,
-						emulator: this.$options.emulator,
-						projectDir: this.$options.path,
-						platformTemplate: this.$options.platformTemplate,
-						release: this.$options.release,
-						provision: this.$options.provision,
-						teamId: this.$options.teamId
-					};
+				const deployOptions: IDeployPlatformOptions = {
+					clean: this.$options.clean,
+					device: this.$options.device,
+					emulator: this.$options.emulator,
+					projectDir: this.$options.path,
+					platformTemplate: this.$options.platformTemplate,
+					release: this.$options.release,
+					provision: this.$options.provision,
+					teamId: this.$options.teamId
+				};
 
+				const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
+
+				if (this.$options.debugBrk) {
+					await this.getDebugService(platform).debug(projectData, buildConfig);
+				} else {
 					await this.$platformService.deployPlatform(platform, appFilesUpdaterOptions, deployOptions, projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 					await this.$usbLiveSyncService.liveSync(platform, projectData);
 				}

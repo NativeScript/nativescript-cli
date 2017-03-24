@@ -45,10 +45,10 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 		await this.$platformService.buildPlatform(device.deviceInfo.platform, buildConfig, projectData);
 		let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 		if (device.isEmulator) {
-			return this.$platformService.getLatestApplicationPackageForEmulator(platformData).packageName;
+			return this.$platformService.getLatestApplicationPackageForEmulator(platformData, buildConfig).packageName;
 		}
 
-		return this.$platformService.getLatestApplicationPackageForDevice(platformData).packageName;
+		return this.$platformService.getLatestApplicationPackageForDevice(platformData, buildConfig).packageName;
 	}
 
 	public async preparePlatformForSync(platform: string, provision: any, projectData: IProjectData): Promise<void> {

@@ -64,12 +64,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				projectRoot: projectRoot,
 				deviceBuildOutputPath: path.join(projectRoot, "build", "device"),
 				emulatorBuildOutputPath: path.join(projectRoot, "build", "emulator"),
-				validPackageNamesForDevice: [
-					projectData.projectName + ".ipa"
-				],
-				validPackageNamesForEmulator: [
-					projectData.projectName + ".app"
-				],
+				getValidPackageNames: (buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[] => {
+					if (buildOptions.isForDevice) {
+						return [projectData.projectName + ".ipa"];
+					}
+
+					return [projectData.projectName + ".app"];
+				},
 				frameworkFilesExtensions: [".a", ".framework", ".bin"],
 				frameworkDirectoriesExtensions: [".framework"],
 				frameworkDirectoriesNames: ["Metadata", "metadataGenerator", "NativeScript", "internal"],
@@ -339,7 +340,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			args,
 			"exit",
 			{ stdio: buildConfig.buildOutputStdio || "inherit", cwd: this.getPlatformData(projectData).projectRoot },
-			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
+			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
 		// this.$logger.out("xcodebuild build succeded.");
 
 		await this.createIpa(projectRoot, projectData, buildConfig.buildOutputStdio);
@@ -665,7 +666,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return { stderr: "", stdout: "", exitCode: 0 };
 	}
 
-	public async cleanProject(projectRoot: string, options: string[]): Promise<void> {
+	public async cleanProject(projectRoot: string): Promise<void> {
 		return Promise.resolve();
 	}
 
@@ -1170,6 +1171,10 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				teamId = teams[0].id;
 				this.$logger.warn("Found and using the following development team installed on your system: " + teams[0].name + " (" + teams[0].id + ")");
 			} else if (teams.length > 0) {
+				if (!helpers.isInteractive()) {
+					this.$errors.failWithoutHelp(`Unable to determine default development team. Available development teams are: ${_.map(teams, team => team.id)}. Specify team in app/App_Resources/iOS/build.xcconfig file in the following way: DEVELOPMENT_TEAM = <team id>`);
+				}
+
 				let choices: string[] = [];
 				for (let team of teams) {
 					choices.push(team.name + " (" + team.id + ")");

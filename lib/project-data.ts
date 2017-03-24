@@ -9,8 +9,6 @@ interface IProjectType {
 }
 
 export class ProjectData implements IProjectData {
-	private static OLD_PROJECT_FILE_NAME = ".tnsproject";
-
 	/**
 	 * NOTE: Order of the elements is important as the TypeScript dependencies are commonly included in Angular project as well.
 	 */
@@ -42,45 +40,51 @@ export class ProjectData implements IProjectData {
 
 	constructor(private $fs: IFileSystem,
 		private $errors: IErrors,
-		private $logger: ILogger,
 		private $projectHelper: IProjectHelper,
 		private $staticConfig: IStaticConfig,
-		private $options: IOptions) { }
+		private $options: IOptions,
+		private $logger: ILogger) { }
 
-	public initializeProjectData(projectDir? :string): void {
+	public initializeProjectData(projectDir?: string): void {
 		projectDir = projectDir || this.$projectHelper.projectDir;
 		// If no project found, projectDir should be null
 		if (projectDir) {
-			this.initializeProjectDataCore(projectDir);
+			const projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
 			let data: any = null;
 
-			if (this.$fs.exists(this.projectFilePath)) {
+			if (this.$fs.exists(projectFilePath)) {
 				let fileContent: any = null;
 				try {
-					fileContent = this.$fs.readJson(this.projectFilePath);
+					fileContent = this.$fs.readJson(projectFilePath);
 					data = fileContent[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE];
 				} catch (err) {
-					this.$errors.fail({
-						formatStr: "The project file %s is corrupted." + EOL +
-						"Consider restoring an earlier version from your source control or backup." + EOL +
-						"Additional technical info: %s",
-						suppressCommandHelp: true
-					},
-						this.projectFilePath, err.toString());
+					this.$errors.failWithoutHelp(`The project file ${this.projectFilePath} is corrupted. ${EOL}` +
+						`Consider restoring an earlier version from your source control or backup.${EOL}` +
+						`Additional technical info: ${err.toString()}`);
 				}
 
 				if (data) {
+					this.projectDir = projectDir;
+					this.projectName = this.$projectHelper.sanitizeName(path.basename(projectDir));
+					this.platformsDir = path.join(projectDir, constants.PLATFORMS_DIR_NAME);
+					this.projectFilePath = projectFilePath;
+					this.appDirectoryPath = path.join(projectDir, constants.APP_FOLDER_NAME);
+					this.appResourcesDirectoryPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
 					this.projectId = data.id;
 					this.dependencies = fileContent.dependencies;
 					this.devDependencies = fileContent.devDependencies;
 					this.projectType = this.getProjectType();
-				} else { // This is the case when we have package.json file but nativescipt key is not presented in it
-					this.tryToUpgradeProject();
+
+					return;
 				}
 			}
-		} else { // This is the case when no project file found
-			this.tryToUpgradeProject();
 		}
+
+		const currentDir = path.resolve(".");
+		this.$logger.trace(`Unable to find project. projectDir: ${projectDir}, options.path: ${this.$options.path}, ${currentDir}`);
+
+		// This is the case when no project file found
+		this.$errors.fail("No project found at or above '%s' and neither was a --path specified.", projectDir || this.$options.path || currentDir);
 	}
 
 	private getProjectType(): string {
@@ -96,50 +100,6 @@ export class ProjectData implements IProjectData {
 		});
 
 		return detectedProjectType;
-	}
-
-	private throwNoProjectFoundError(): void {
-		this.$errors.fail("No project found at or above '%s' and neither was a --path specified.", this.$options.path || path.resolve("."));
-	}
-
-	private tryToUpgradeProject(): void {
-		let projectDir = this.projectDir || path.resolve(this.$options.path || ".");
-		let oldProjectFilePath = path.join(projectDir, ProjectData.OLD_PROJECT_FILE_NAME);
-		if (this.$fs.exists(oldProjectFilePath)) {
-			this.upgrade(projectDir, oldProjectFilePath);
-		} else {
-			this.throwNoProjectFoundError();
-		}
-	}
-
-	private upgrade(projectDir: string, oldProjectFilePath: string): void {
-		try {
-			let oldProjectData = this.$fs.readJson(oldProjectFilePath);
-
-			let newProjectFilePath = this.projectFilePath || path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
-			let newProjectData = this.$fs.exists(newProjectFilePath) ? this.$fs.readJson(newProjectFilePath) : {};
-			newProjectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE] = oldProjectData;
-			this.$fs.writeJson(newProjectFilePath, newProjectData);
-			this.projectId = newProjectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE].id;
-
-			this.$fs.deleteFile(oldProjectFilePath);
-		} catch (err) {
-			this.$logger.out("An error occurred while upgrading your project.");
-			throw err;
-		}
-
-		this.initializeProjectDataCore(projectDir);
-
-		this.$logger.out("Successfully upgraded your project file.");
-	}
-
-	private initializeProjectDataCore(projectDir: string): void {
-		this.projectDir = projectDir;
-		this.projectName = this.$projectHelper.sanitizeName(path.basename(projectDir));
-		this.platformsDir = path.join(projectDir, "platforms");
-		this.projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
-		this.appDirectoryPath = path.join(projectDir, constants.APP_FOLDER_NAME);
-		this.appResourcesDirectoryPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
 	}
 }
 $injector.register("projectData", ProjectData);

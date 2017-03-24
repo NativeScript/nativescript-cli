@@ -19,8 +19,10 @@ interface IProjectChangesInfo {
 	changesRequireBuild: boolean;
 }
 
+interface IProjectChangesOptions extends IAppFilesUpdaterOptions, IProvision {}
+
 interface IProjectChangesService {
-	checkForChanges(platform: string, projectData: IProjectData): IProjectChangesInfo;
+	checkForChanges(platform: string, projectData: IProjectData, buildOptions: IProjectChangesOptions): IProjectChangesInfo;
 	getPrepareInfo(platform: string, projectData: IProjectData): IPrepareInfo;
 	savePrepareInfo(platform: string, projectData: IProjectData): void;
 	getPrepareInfoFilePath(platform: string, projectData: IProjectData): string;

@@ -28,18 +28,18 @@ class AndroidDebugService implements IDebugService {
 		this._device = newDevice;
 	}
 
-	public async debug(projectData: IProjectData): Promise<void> {
+	public async debug(projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
 		return this.$options.emulator
-			? this.debugOnEmulator(projectData)
-			: this.debugOnDevice(projectData);
+			? this.debugOnEmulator(projectData, buildConfig)
+			: this.debugOnDevice(projectData, buildConfig);
 	}
 
-	private async debugOnEmulator(projectData: IProjectData): Promise<void> {
+	private async debugOnEmulator(projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
 		// Assure we've detected the emulator as device
 		// For example in case deployOnEmulator had stated new emulator instance
 		// we need some time to detect it. Let's force detection.
 		await this.$androidDeviceDiscovery.startLookingForDevices();
-		await this.debugOnDevice(projectData);
+		await this.debugOnDevice(projectData, buildConfig);
 	}
 
 	private isPortAvailable(candidatePort: number): Promise<boolean> {
@@ -108,7 +108,7 @@ class AndroidDebugService implements IDebugService {
 		return this.device.adb.executeCommand(["forward", `tcp:${local}`, `localabstract:${remote}`]);
 	}
 
-	private async debugOnDevice(projectData: IProjectData): Promise<void> {
+	private async debugOnDevice(projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
 		let packageFile = "";
 
 		if (!this.$options.start && !this.$options.emulator) {
@@ -117,7 +117,7 @@ class AndroidDebugService implements IDebugService {
 			this.$options.forDevice = !!cachedDeviceOption;
 
 			let platformData = this.$platformsData.getPlatformData(this.platform, projectData);
-			packageFile = this.$platformService.getLatestApplicationPackageForDevice(platformData).packageName;
+			packageFile = this.$platformService.getLatestApplicationPackageForDevice(platformData, buildConfig).packageName;
 			this.$logger.out("Using ", packageFile);
 		}
 
@@ -170,7 +170,7 @@ class AndroidDebugService implements IDebugService {
 		await this.debugStartCore(packageName);
 	}
 
-	public async debugStart(projectData: IProjectData): Promise<void> {
+	public async debugStart(projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
 		await this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device });
 		let action = (device: Mobile.IAndroidDevice): Promise<void> => {
 			this.device = device;

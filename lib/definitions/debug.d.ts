@@ -1,6 +1,6 @@
 interface IDebugService {
-	debug(projectData: IProjectData): Promise<void>;
-	debugStart(projectData: IProjectData): Promise<void>;
+	debug(projectData: IProjectData, buildConfig: IBuildConfig): Promise<void>;
+	debugStart(projectData: IProjectData, buildConfig: IBuildConfig): Promise<void>;
 	debugStop(): Promise<void>
 	platform: string;
 }

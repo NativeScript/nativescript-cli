@@ -39,7 +39,7 @@ class IOSDebugService implements IDebugService {
 		return "ios";
 	}
 
-	public async debug(projectData: IProjectData): Promise<void> {
+	public async debug(projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
 		if (this.$options.debugBrk && this.$options.start) {
 			this.$errors.failWithoutHelp("Expected exactly one of the --debug-brk or --start options.");
 		}
@@ -50,26 +50,26 @@ class IOSDebugService implements IDebugService {
 
 		if (this.$options.emulator) {
 			if (this.$options.debugBrk) {
-				return this.emulatorDebugBrk(projectData, true);
+				return this.emulatorDebugBrk(projectData, buildConfig, true);
 			} else if (this.$options.start) {
 				return this.emulatorStart(projectData);
 			} else {
-				return this.emulatorDebugBrk(projectData);
+				return this.emulatorDebugBrk(projectData, buildConfig);
 			}
 		} else {
 			if (this.$options.debugBrk) {
-				return this.deviceDebugBrk(projectData, true);
+				return this.deviceDebugBrk(projectData, buildConfig, true);
 			} else if (this.$options.start) {
 				return this.deviceStart(projectData);
 			} else {
-				return this.deviceDebugBrk(projectData, false);
+				return this.deviceDebugBrk(projectData, buildConfig, false);
 			}
 		}
 	}
 
-	public async debugStart(projectData: IProjectData): Promise<void> {
+	public async debugStart(projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
 		await this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device });
-		this.$devicesService.execute(async (device: Mobile.IiOSDevice) => await device.isEmulator ? this.emulatorDebugBrk(projectData) : this.debugBrkCore(device, projectData));
+		this.$devicesService.execute(async (device: Mobile.IiOSDevice) => await device.isEmulator ? this.emulatorDebugBrk(projectData, buildConfig) : this.debugBrkCore(device, projectData));
 	}
 
 	public async debugStop(): Promise<void> {
@@ -93,10 +93,10 @@ class IOSDebugService implements IDebugService {
 		}
 	}
 
-	private async emulatorDebugBrk(projectData: IProjectData, shouldBreak?: boolean): Promise<void> {
+	private async emulatorDebugBrk(projectData: IProjectData, buildConfig: IBuildConfig, shouldBreak?: boolean): Promise<void> {
 		let platformData = this.$platformsData.getPlatformData(this.platform, projectData);
 
-		let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData);
+		let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData, buildConfig);
 
 		let args = shouldBreak ? "--nativescript-debug-brk" : "--nativescript-debug-start";
 		let child_process = await this.$iOSEmulatorServices.runApplicationOnEmulator(emulatorPackage.packageName, {
@@ -135,11 +135,11 @@ class IOSDebugService implements IDebugService {
 		await iOSEmulator.postDarwinNotification(attachRequestMessage);
 	}
 
-	private async deviceDebugBrk(projectData: IProjectData, shouldBreak?: boolean): Promise<void> {
+	private async deviceDebugBrk(projectData: IProjectData, buildConfig: IBuildConfig, shouldBreak?: boolean): Promise<void> {
 		await this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device });
 		this.$devicesService.execute(async (device: iOSDevice.IOSDevice) => {
 			if (device.isEmulator) {
-				return await this.emulatorDebugBrk(projectData, shouldBreak);
+				return await this.emulatorDebugBrk(projectData, buildConfig, shouldBreak);
 			}
 
 			const runOptions: IRunPlatformOptions = {

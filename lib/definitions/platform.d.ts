@@ -1,6 +1,6 @@
 interface IPlatformService extends NodeJS.EventEmitter {
 	cleanPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, framework?: string): Promise<void>;
-	
+
 	addPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, frameworkPath?: string): Promise<void>;
 
 	/**
@@ -143,28 +143,37 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	/**
 	 * Returns information about the latest built application for device in the current project.
 	 * @param {IPlatformData} platformData Data describing the current platform.
+	 * @param {IBuildConfig} buildConfig Defines if the build is for release configuration.
 	 * @returns {IApplicationPackage} Information about latest built application.
 	 */
-	getLatestApplicationPackageForDevice(platformData: IPlatformData): IApplicationPackage;
+	getLatestApplicationPackageForDevice(platformData: IPlatformData, buildConfig: IBuildConfig): IApplicationPackage;
 
 	/**
 	 * Returns information about the latest built application for simulator in the current project.
 	 * @param {IPlatformData} platformData Data describing the current platform.
+	 * @param {IBuildConfig} buildConfig Defines if the build is for release configuration.
 	 * @returns {IApplicationPackage} Information about latest built application.
 	 */
-	getLatestApplicationPackageForEmulator(platformData: IPlatformData): IApplicationPackage;
+	getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig): IApplicationPackage;
 
 	/**
 	 * Copies latest build output to a specified location.
 	 * @param {string} platform Mobile platform - Android, iOS.
 	 * @param {string} targetPath Destination where the build artifact should be copied.
-	 * @param {{isForDevice: boolean}} settings Defines if the searched artifact should be for simulator.
+	 * @param {IBuildConfig} buildConfig Defines if the searched artifact should be for simulator and is it built for release.
 	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}, projectData: IProjectData): void;
+	copyLastOutput(platform: string, targetPath: string, buildConfig: IBuildConfig, projectData: IProjectData): void;
 
-	lastOutputPath(platform: string, settings: { isForDevice: boolean }, projectData: IProjectData): string;
+	/**
+	 * Gets the latest build output.
+	 * @param {string} platform Mobile platform - Android, iOS.
+	 * @param {IBuildConfig} buildConfig Defines if the searched artifact should be for simulator and is it built for release.
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @returns {string} The path to latest built artifact.
+	 */
+	lastOutputPath(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): string;
 
 	/**
 	 * Reads contents of a file on device.
@@ -209,8 +218,7 @@ interface IPlatformData {
 	appDestinationDirectoryPath: string;
 	deviceBuildOutputPath: string;
 	emulatorBuildOutputPath?: string;
-	validPackageNamesForDevice: string[];
-	validPackageNamesForEmulator?: string[];
+	getValidPackageNames(buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[];
 	frameworkFilesExtensions: string[];
 	frameworkDirectoriesExtensions?: string[];
 	frameworkDirectoriesNames?: string[];
