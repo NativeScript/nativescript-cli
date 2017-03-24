@@ -469,8 +469,8 @@ function unexpected(msg: string): Error {
 	return err;
 }
 
-export class DebugServiceStub implements IDebugService {
-	public async debug(): Promise<void> {
+export class DebugServiceStub extends EventEmitter implements IPlatformDebugService {
+	public async debug(): Promise<string[]> {
 		return;
 	}
 

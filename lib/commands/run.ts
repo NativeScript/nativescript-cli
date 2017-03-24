@@ -38,7 +38,8 @@ export class RunCommandBase {
 				justlaunch: this.$options.justlaunch,
 			};
 
-			return this.$platformService.startApplication(args[0], deployOpts, this.$projectData);
+			await this.$platformService.startApplication(args[0], deployOpts, this.$projectData.projectId);
+			return this.$platformService.trackProjectType(this.$projectData);
 		}
 
 		return this.$usbLiveSyncService.liveSync(args[0], this.$projectData);

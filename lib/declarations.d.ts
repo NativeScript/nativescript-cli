@@ -287,9 +287,9 @@ interface IAndroidToolsInfoData {
 	generateTypings: boolean;
 }
 
-interface ISocketProxyFactory {
-	createTCPSocketProxy(factory: () => any): any;
-	createWebSocketProxy(factory: () => Promise<any>): any;
+interface ISocketProxyFactory extends NodeJS.EventEmitter {
+	createTCPSocketProxy(factory: () => Promise<any>): any;
+	createWebSocketProxy(factory: () => Promise<any>): Promise<any>;
 }
 
 interface IiOSNotification {

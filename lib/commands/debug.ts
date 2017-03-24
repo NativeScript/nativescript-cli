@@ -1,21 +1,25 @@
-﻿export class DebugPlatformCommand implements ICommand {
+﻿import { EOL } from "os";
+
+export abstract class DebugPlatformCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(private debugService: IDebugService,
+	constructor(private debugService: IPlatformDebugService,
 		private $devicesService: Mobile.IDevicesService,
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $config: IConfiguration,
 		private $usbLiveSyncService: ILiveSyncService,
+		private $debugDataService: IDebugDataService,
 		protected $platformService: IPlatformService,
 		protected $projectData: IProjectData,
 		protected $options: IOptions,
 		protected $platformsData: IPlatformsData) {
-			this.$projectData.initializeProjectData();
-		}
+		this.$projectData.initializeProjectData(this.$options.path);
+	}
 
 	public async execute(args: string[]): Promise<void> {
+		const debugOptions = this.$options;
 		const deployOptions: IDeployPlatformOptions = {
 			clean: this.$options.clean,
 			device: this.$options.device,
@@ -29,8 +33,12 @@
 
 		const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
 
+		const debugData = this.$debugDataService.createDebugData(this.debugService, this.$options, buildConfig);
+
+		await this.$platformService.trackProjectType(this.$projectData);
+
 		if (this.$options.start) {
-			return this.debugService.debug(this.$projectData, buildConfig);
+			return this.printDebugInformation(await this.debugService.debug(debugData, debugOptions));
 		}
 
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
@@ -49,8 +57,9 @@
 
 			await deviceAppData.device.applicationManager.stopApplication(applicationId);
 
-			await this.debugService.debug(this.$projectData, buildConfig);
+			this.printDebugInformation(await this.debugService.debug(debugData, debugOptions));
 		};
+
 		return this.$usbLiveSyncService.liveSync(this.$devicesService.platform, this.$projectData, applicationReloadAction);
 	}
 
@@ -70,22 +79,29 @@
 
 		return true;
 	}
+
+	private printDebugInformation(information: string[]): void {
+		_.each(information, i => {
+			this.$logger.info(`To start debugging, open the following URL in Chrome:${EOL}${i}${EOL}`.cyan);
+		});
+	}
 }
 
 export class DebugIOSCommand extends DebugPlatformCommand {
-	constructor($iOSDebugService: IDebugService,
+	constructor($iOSDebugService: IPlatformDebugService,
 		$devicesService: Mobile.IDevicesService,
 		$injector: IInjector,
 		$logger: ILogger,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$config: IConfiguration,
 		$usbLiveSyncService: ILiveSyncService,
+		$debugDataService: IDebugDataService,
 		$platformService: IPlatformService,
 		$options: IOptions,
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$iosDeviceOperations: IIOSDeviceOperations) {
-		super($iOSDebugService, $devicesService, $injector, $logger, $devicePlatformsConstants, $config, $usbLiveSyncService, $platformService, $projectData, $options, $platformsData);
+		super($iOSDebugService, $devicesService, $injector, $logger, $devicePlatformsConstants, $config, $usbLiveSyncService, $debugDataService, $platformService, $projectData, $options, $platformsData);
 		$iosDeviceOperations.setShouldDispose(this.$options.justlaunch);
 	}
 
@@ -97,19 +113,19 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 $injector.registerCommand("debug|ios", DebugIOSCommand);
 
 export class DebugAndroidCommand extends DebugPlatformCommand {
-	constructor($androidDebugService: IDebugService,
+	constructor($androidDebugService: IPlatformDebugService,
 		$devicesService: Mobile.IDevicesService,
 		$injector: IInjector,
 		$logger: ILogger,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$config: IConfiguration,
 		$usbLiveSyncService: ILiveSyncService,
+		$debugDataService: IDebugDataService,
 		$platformService: IPlatformService,
 		$options: IOptions,
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData) {
-
-		super($androidDebugService, $devicesService, $injector, $logger, $devicePlatformsConstants, $config, $usbLiveSyncService, $platformService, $projectData, $options, $platformsData);
+		super($androidDebugService, $devicesService, $injector, $logger, $devicePlatformsConstants, $config, $usbLiveSyncService, $debugDataService, $platformService, $projectData, $options, $platformsData);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
