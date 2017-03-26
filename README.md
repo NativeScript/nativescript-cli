@@ -303,12 +303,12 @@ Library that helps identifying if the environment can be used for development of
 
 		// node stuff
 		/**
-		 * node.js version, returned by `process.version`.
+		 * node.js version, returned by node -v.
 		 * @type {string}
 		 */
 		nodeVer: string;
 
-		/** 
+		/**
 		 * npm version, returned by `npm -v`.
 		 * @type {string}
 		 */
@@ -404,6 +404,12 @@ Library that helps identifying if the environment can be used for development of
 		 * @type {string}
 		 */
 		nativeScriptCliVersion: string;
+
+		/**
+		 * The version of `nativescript-cloud` library, as returned by `tns cloud lib version`.
+		 * @type {string}
+		 */
+		nativeScriptCloudVersion: string;
 
 		/**
 		 * Information about xcproj.
