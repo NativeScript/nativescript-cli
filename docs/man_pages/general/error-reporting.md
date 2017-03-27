@@ -15,7 +15,7 @@ All data gathered is used strictly for improving the product and will never be u
 * `enable` - Enables anonymous error reporting.
 * `disable` - Disables anonymous error reporting.
 
-<% if(isHtml) { %> 
+<% if(isHtml) { %>
 ### Related Commands
 
 Command | Description
@@ -26,4 +26,7 @@ Command | Description
 [autocomplete-enable](autocomplete-enable.html) | Enables command-line completion for bash and zsh shells.
 [autocomplete-disable](autocomplete-disable.html) | Disables command-line completion for bash and zsh shells.
 [doctor](doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
+[proxy](proxy.html) | Displays proxy settings.
+[proxy clear](proxy-clear.html) | Clears proxy settings.
+[proxy set](proxy-set.html) | Sets proxy settings.
 <% } %>

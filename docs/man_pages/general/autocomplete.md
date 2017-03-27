@@ -18,7 +18,7 @@ Prints your current command-line completion settings. If disabled, prompts you t
 * `enable` - Enables command-line completion. You need to restart the shell to complete the operation.
 * `disable` - Disables command-line completion. You need to restart the shell to complete the operation.
 
-<% if(isHtml) { %> 
+<% if(isHtml) { %>
 ### Related Commands
 
 Command | Description
@@ -29,4 +29,7 @@ Command | Description
 [usage-reporting](usage-reporting.html) | Configures anonymous usage reporting for the NativeScript CLI.
 [error-reporting](error-reporting.html) | Configures anonymous error reporting for the NativeScript CLI.
 [doctor](doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
+[proxy](proxy.html) | Displays proxy settings.
+[proxy clear](proxy-clear.html) | Clears proxy settings.
+[proxy set](proxy-set.html) | Sets proxy settings.
 <% } %>

@@ -8,7 +8,7 @@ General | `$ tns autocomplete enable`
 Enables command-line completion for bash and zsh shells. You need to restart the shell to complete the operation.
 
 <% if(isHtml) { %>> <% } %>NOTE: This operation might modify the `.bash_profile`, `.bashrc` and `.zshrc` files.
-<% if(isHtml) { %> 
+<% if(isHtml) { %>
 ### Related Commands
 
 Command | Description
@@ -20,4 +20,7 @@ Command | Description
 [error-reporting](error-reporting.html) | Configures anonymous error reporting for the NativeScript CLI.
 [help](help.html) | Lists the available commands or shows information about the selected command.
 [doctor](doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
+[proxy](proxy.html) | Displays proxy settings.
+[proxy clear](proxy-clear.html) | Clears proxy settings.
+[proxy set](proxy-set.html) | Sets proxy settings.
 <% } %>
