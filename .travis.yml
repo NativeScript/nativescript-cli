@@ -5,7 +5,7 @@ env:
   - NATIVESCRIPT_SKIP_POSTINSTALL_TASKS=1
 language: node_js
 node_js:
-- '4'
+- '6'
 git:
   submodules: true
 before_script:
