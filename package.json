@@ -56,7 +56,7 @@
     "mute-stream": "0.0.5",
     "open": "0.0.5",
     "osenv": "0.1.3",
-    "pbxproj-dom": "1.0.8",
+    "pbxproj-dom": "1.0.9",
     "plist": "1.1.0",
     "plist-merge-patch": "0.0.9",
     "plistlib": "0.2.1",
