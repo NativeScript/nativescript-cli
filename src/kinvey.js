@@ -123,7 +123,11 @@ var restoreActiveUser = function(options) {
   var promise = Storage.get('activeUser');
   return promise.then(function(user) {
     if (null == user) {
-      return Storage.get(Kinvey.appKey+'kinvey_user');
+      var activeUser = Storage.get(Kinvey.appKey+'kinvey_user');
+
+      if (null == activeUser) {
+        return [ activeUser._id, activeUser._kmd.authtoken ];
+      }
     }
 
     return user;
