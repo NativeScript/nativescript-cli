@@ -4,10 +4,7 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 	constructor(private $errors: IErrors,
 		private $iOSNotification: IiOSNotification,
 		private $iOSNotificationService: IiOSNotificationService,
-		private $logger: ILogger,
-		private $iosDeviceOperations: IIOSDeviceOperations) {
-		this.$iosDeviceOperations.setShouldDispose(false);
-	}
+		private $logger: ILogger) { }
 
 	public async executeAttachRequest(device: Mobile.IiOSDevice, timeout: number, projectId: string): Promise<void> {
 		const deviceIdentifier = device.deviceInfo.identifier;

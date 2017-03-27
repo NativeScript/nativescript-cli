@@ -83,9 +83,10 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 		$platformService: IPlatformService,
 		$options: IOptions,
 		$projectData: IProjectData,
-		$platformsData: IPlatformsData) {
-
+		$platformsData: IPlatformsData,
+		$iosDeviceOperations: IIOSDeviceOperations) {
 		super($iOSDebugService, $devicesService, $injector, $logger, $devicePlatformsConstants, $config, $usbLiveSyncService, $platformService, $projectData, $options, $platformsData);
+		$iosDeviceOperations.setShouldDispose(this.$options.justlaunch);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
