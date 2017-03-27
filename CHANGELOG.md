@@ -1,4 +1,12 @@
 ## Changelog
+## [3.4.4](https://github.com/Kinvey/js-sdk/tree/v3.4.4) (2017-03-27)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.4.3...v3.4.4)<br/>
+
+**Changes**
+- Don't perform a sync push operation while one is already in progress. [#117](https://github.com/Kinvey/js-sdk/pull/117)
+- Use `tls: true` by default when fetching files. [#118](https://github.com/Kinvey/js-sdk/pull/118)
+- Catch a `NotFoundError` thrown when trying to store an active user in the cache. [#119](https://github.com/Kinvey/js-sdk/pull/119)
+
 ## [3.4.3](https://github.com/Kinvey/js-sdk/tree/v3.4.3) (2017-03-16)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.4.2...v3.4.3)<br/>
 
