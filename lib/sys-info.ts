@@ -301,7 +301,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	public getNativeScriptCloudVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.nativeScriptCloudVersionCache, async (): Promise<string> => {
 			const output = await this.execCommand("tns cloud lib version");
-			return output ? output.trim() : output;
+			return output ? this.getVersionFromString(output.trim()) : output;
 		});
 	}
 
