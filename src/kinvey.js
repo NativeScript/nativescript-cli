@@ -125,7 +125,7 @@ var restoreActiveUser = function(options) {
     if (null == user) {
       var activeUser = Storage.get(Kinvey.appKey+'kinvey_user');
 
-      if (null == activeUser) {
+      if (null != activeUser) {
         return [ activeUser._id, activeUser._kmd.authtoken ];
       }
     }
