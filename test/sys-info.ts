@@ -16,6 +16,7 @@ interface IChildProcessResultDescription {
 interface IChildProcessResults {
 	uname: IChildProcessResultDescription;
 	npmV: IChildProcessResultDescription;
+	nodeV: IChildProcessResultDescription;
 	javaVersion: IChildProcessResultDescription;
 	javacVersion: IChildProcessResultDescription;
 	nodeGypVersion: IChildProcessResultDescription;
@@ -65,6 +66,7 @@ function createChildProcessResults(childProcessResult: IChildProcessResults): ID
 	return {
 		"uname -a": childProcessResult.uname,
 		"npm -v": childProcessResult.npmV,
+		"node -v": childProcessResult.nodeV,
 		"java": childProcessResult.javaVersion,
 		'"javac" -version': childProcessResult.javacVersion,
 		"node-gyp -v": childProcessResult.nodeGypVersion,
@@ -207,6 +209,7 @@ describe("SysInfo unit tests", () => {
 			childProcessResult = {
 				uname: { result: setStdOut("name") },
 				npmV: { result: setStdOut("2.14.1") },
+				nodeV: { result: setStdOut("v6.0.0") },
 				javaVersion: { result: setStdErr('java version "1.8.0_60"') },
 				javacVersion: { result: setStdErr("javac 1.8.0_60") },
 				nodeGypVersion: { result: setStdOut("2.0.0") },
@@ -233,6 +236,7 @@ describe("SysInfo unit tests", () => {
 		describe("returns correct results when everything is installed", () => {
 			let assertCommonValues = (result: NativeScriptDoctor.ISysInfoData) => {
 				assert.deepEqual(result.npmVer, childProcessResult.npmV.result.stdout);
+				assert.deepEqual(result.nodeVer, "6.0.0");
 				assert.deepEqual(result.javaVer, "1.8.0");
 				assert.deepEqual(result.javacVersion, "1.8.0_60");
 				assert.deepEqual(result.nodeGypVer, childProcessResult.nodeGypVersion.result.stdout);
@@ -308,6 +312,7 @@ describe("SysInfo unit tests", () => {
 				childProcessResult = {
 					uname: { shouldThrowError: true },
 					npmV: { shouldThrowError: true },
+					nodeV: { shouldThrowError: true },
 					javaVersion: { shouldThrowError: true },
 					javacVersion: { shouldThrowError: true },
 					nodeGypVersion: { shouldThrowError: true },
