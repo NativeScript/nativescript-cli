@@ -5,7 +5,7 @@ import localStorage from 'local-storage';
 import cloneDeep from 'lodash/cloneDeep';
 
 import Client from 'src/client';
-import { KinveyError } from 'src/errors';
+import { KinveyError, NotFoundError } from 'src/errors';
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
 import { isDefined } from 'src/utils';
@@ -131,19 +131,21 @@ export default class CacheRequest extends Request {
           return users[0];
         }
 
-        // Try local storage (legacy)
-        const legacyActiveUser = CacheRequest.loadActiveUserLegacy(client);
-        if (isDefined(legacyActiveUser)) {
+        return null;
+      })
+      .then((activeUser) => {
+        // Try local storage
+        if (isDefined(activeUser) === false) {
+          const legacyActiveUser = CacheRequest.loadActiveUserLegacy(client);
           return CacheRequest.setActiveUser(client, legacyActiveUser);
         }
 
-        return null;
+        return activeUser;
       })
       .then((activeUser) => {
         activeUsers[client.appKey] = activeUser;
         return activeUser;
-      })
-      .catch(() => null);
+      });
   }
 
   static loadActiveUserLegacy(client = Client.sharedInstance()) {
@@ -185,7 +187,14 @@ export default class CacheRequest extends Request {
         })
       });
       promise = request.execute()
-        .then(response => response.data);
+        .then(response => response.data)
+        .catch((error) => {
+          if (error instanceof NotFoundError) {
+            return null;
+          }
+
+          throw error;
+        });
     }
 
     return promise
