@@ -115,7 +115,6 @@ $injector.require("iOSSocketRequestExecutor", "./device-sockets/ios/socket-reque
 $injector.require("messages", "./common/messages/messages");
 $injector.require("xmlValidator", "./xml-validator");
 
-$injector.requireCommand("devices", "./commands/devices");
 $injector.requireCommand("post-install-cli", "./commands/post-install");
 $injector.requireCommand("update", "./commands/update");
 

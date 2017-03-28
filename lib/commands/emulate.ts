@@ -1,11 +1,13 @@
 export class EmulateCommandBase {
 	constructor(private $options: IOptions,
 		private $projectData: IProjectData,
+		private $logger: ILogger,
 		private $platformService: IPlatformService) {
 			this.$projectData.initializeProjectData();
 		}
 
 	public async executeCore(args: string[]): Promise<void> {
+		this.$logger.warn(`Emulate command is deprecated and will soon be removed. Please use "tns run <platform>" instead. All options available for emulate are present in "tns run" command.`);
 		this.$options.emulator = true;
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
 		const emulateOptions: IEmulatePlatformOptions = {
@@ -34,9 +36,10 @@ export class EmulateIosCommand extends EmulateCommandBase implements ICommand {
 
 	constructor($options: IOptions,
 		$projectData: IProjectData,
+		$logger: ILogger,
 		$platformService: IPlatformService,
 		private $platformsData: IPlatformsData) {
-		super($options, $projectData, $platformService);
+		super($options, $projectData, $logger, $platformService);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -49,9 +52,10 @@ $injector.registerCommand("emulate|ios", EmulateIosCommand);
 export class EmulateAndroidCommand extends EmulateCommandBase implements ICommand {
 	constructor($options: IOptions,
 		$projectData: IProjectData,
+		$logger: ILogger,
 		$platformService: IPlatformService,
 		private $platformsData: IPlatformsData) {
-		super($options, $projectData, $platformService);
+		super($options, $projectData, $logger, $platformService);
 	}
 
 	public allowedParameters: ICommandParameter[] = [];
