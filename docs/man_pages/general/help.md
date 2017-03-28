@@ -23,4 +23,7 @@ Command | Description
 [autocomplete](autocomplete.html) | Prints your current command-line completion settings. If disabled, prompts you to enable it.
 [doctor](doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
 [info](info.html) | Displays version information about the NativeScript CLI, core modules, and runtimes.
+[proxy](proxy.html) | Displays proxy settings.
+[proxy clear](proxy-clear.html) | Clears proxy settings.
+[proxy set](proxy-set.html) | Sets proxy settings.
 <% } %>

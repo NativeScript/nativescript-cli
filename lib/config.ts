@@ -6,7 +6,6 @@ export class Configuration extends ConfigBase implements IConfiguration { // Use
 	CI_LOGGER = false;
 	DEBUG = false;
 	TYPESCRIPT_COMPILER_OPTIONS = {};
-	USE_PROXY = false;
 	ANDROID_DEBUG_UI: string = null;
 	USE_POD_SANDBOX: boolean = false;
 	debugLivesync: boolean = false;
