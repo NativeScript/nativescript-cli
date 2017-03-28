@@ -110,7 +110,17 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 			}
 		});
 
+		// skip hidden files, to prevent reload of the app for hidden files
+		// created temporarily by the IDEs
+		if (this.isUnixHiddenPath(filePath)) {
+			isFileExcluded = true;
+		}
+
 		return isFileExcluded;
+	}
+
+	private isUnixHiddenPath(filePath: string): boolean {
+		return (/(^|\/)\.[^\/\.]/g).test(filePath);
 	}
 
 	private batchSync(filePath: string, dispatcher: IFutureDispatcher, afterFileSyncAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>, projectData: IProjectData): void {
