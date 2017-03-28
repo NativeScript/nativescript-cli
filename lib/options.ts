@@ -62,7 +62,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 
 		let that = (<any>this);
 		// if justlaunch is set, it takes precedence over the --watch flag and the default true value
-		if(that.justlaunch) {
+		if (that.justlaunch) {
 			that.watch = false;
 		}
 	}
