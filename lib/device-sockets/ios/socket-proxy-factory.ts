@@ -2,23 +2,20 @@ import { PacketStream } from "./packet-stream";
 import * as net from "net";
 import * as ws from "ws";
 import temp = require("temp");
-import * as helpers from "../../common/helpers";
 
 export class SocketProxyFactory implements ISocketProxyFactory {
 	constructor(private $logger: ILogger,
 		private $config: IConfiguration,
 		private $options: IOptions) { }
 
-	public createTCPSocketProxy(factory: () => net.Socket): any {
-		let socketFactory = (callback: (_socket: net.Socket) => void) => helpers.connectEventually(factory, callback);
-
+	public createTCPSocketProxy(factory: () => Promise<net.Socket>): any {
 		this.$logger.info("\nSetting up proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
 
 		let server = net.createServer({
 			allowHalfOpen: true
 		});
 
-		server.on("connection", (frontendSocket: net.Socket) => {
+		server.on("connection", async (frontendSocket: net.Socket) => {
 			this.$logger.info("Frontend client connected.");
 
 			frontendSocket.on("end", () => {
@@ -28,33 +25,32 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 				}
 			});
 
-			socketFactory((backendSocket: net.Socket) => {
-				this.$logger.info("Backend socket created.");
+			const backendSocket: net.Socket = await factory();
+			this.$logger.info("Backend socket created.");
 
-				backendSocket.on("end", () => {
-					this.$logger.info("Backend socket closed!");
-					if (!(this.$config.debugLivesync && this.$options.watch)) {
-						process.exit(0);
-					}
-				});
-
-				frontendSocket.on("close", () => {
-					console.log("frontend socket closed");
-					if (!(<any>backendSocket).destroyed) {
-						backendSocket.destroy();
-					}
-				});
-				backendSocket.on("close", () => {
-					console.log("backend socket closed");
-					if (!(<any>frontendSocket).destroyed) {
-						frontendSocket.destroy();
-					}
-				});
-
-				backendSocket.pipe(frontendSocket);
-				frontendSocket.pipe(backendSocket);
-				frontendSocket.resume();
+			backendSocket.on("end", () => {
+				this.$logger.info("Backend socket closed!");
+				if (!(this.$config.debugLivesync && this.$options.watch)) {
+					process.exit(0);
+				}
 			});
+
+			frontendSocket.on("close", () => {
+				console.log("frontend socket closed");
+				if (!(<any>backendSocket).destroyed) {
+					backendSocket.destroy();
+				}
+			});
+			backendSocket.on("close", () => {
+				console.log("backend socket closed");
+				if (!(<any>frontendSocket).destroyed) {
+					frontendSocket.destroy();
+				}
+			});
+
+			backendSocket.pipe(frontendSocket);
+			frontendSocket.pipe(backendSocket);
+			frontendSocket.resume();
 		});
 
 		let socketFileLocation = temp.path({ suffix: ".sock" });
