@@ -61,7 +61,10 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 		}
 
 		let that = (<any>this);
-		that.watch = !that.justlaunch;
+		// if justlaunch is set, it takes precedence over the --watch flag and the default true value
+		if(that.justlaunch) {
+			that.watch = false;
+		}
 	}
 }
 $injector.register("options", Options);
