@@ -107,7 +107,7 @@ class LiveSyncService implements ILiveSyncService {
 			}
 		}
 
-		let watcher = choki.watch(pattern, { ignoreInitial: true, cwd: syncWorkingDirectory, ignored: '**/*.DS_Store' }).on("all", (event: string, filePath: string) => {
+		let watcher = choki.watch(pattern, { ignoreInitial: true, cwd: syncWorkingDirectory }).on("all", (event: string, filePath: string) => {
 			that.$dispatcher.dispatch(async () => {
 				try {
 					filePath = path.join(syncWorkingDirectory, filePath);
