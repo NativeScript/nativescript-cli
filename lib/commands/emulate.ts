@@ -7,7 +7,7 @@ export class EmulateCommandBase {
 		}
 
 	public async executeCore(args: string[]): Promise<void> {
-		this.$logger.warn(`Emulate command is deprecated and will soon be removed. Please use "tns run <platform>" instead. All options available for emulate are present in "tns run" command.`);
+		this.$logger.warn(`Emulate command is deprecated and will soon be removed. Please use "tns run <platform>" instead. All options available for "tns emulate" are present in "tns run" command. To run on all available emulators, use "tns run <platform> --emulator".`);
 		this.$options.emulator = true;
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
 		const emulateOptions: IEmulatePlatformOptions = {
