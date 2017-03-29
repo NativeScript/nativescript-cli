@@ -10,7 +10,6 @@ Start a default emulator if none are running, or run application on all connecte
 Runs your project on a connected Android device or in a native Android emulator, if configured. This is shorthand for prepare, build and deploy. While your app is running, prints the output from the application in the console and watches for changes in your code. Once a change is detected, it synchronizes the change with all selected devices and restarts/refreshes the application.
 
 ### Options
-* `--available-devices` - Shows a list of available emulators to be started and a list of already connected devices.
 * `--device` - Specifies a connected device/emulator to start and run the app.
 * `--emulator` - If set, runs the app in all available and configured android emulators. It will start an emulator if none are already running.
 * `--justlaunch` - If set, does not print the application output in the console.
@@ -23,7 +22,7 @@ Runs your project on a connected Android device or in a native Android emulator,
 * `--key-store-alias-password` - Provides the password for the alias specified with `--key-store-alias-password`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 
 ### Attributes
-* `<Device ID>` is the index or `Device Identifier` of the target device as listed by `$ tns run android --available-devices`
+* `<Device ID>` is the index or `Device Identifier` of the target device as listed by `$ tns device android --available-devices`
 
 <% if(isHtml) { %>
 ### Prerequisites:
