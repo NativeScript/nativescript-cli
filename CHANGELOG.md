@@ -1,7 +1,7 @@
 NativeScript CLI Changelog
 ================
 
-3.0.0 (2017, March 29)
+3.0.0-RC.1 (2017, March 29)
 ==
 
 ### New
@@ -14,21 +14,19 @@ NativeScript CLI Changelog
 
 ### Fixed
 
-* [Fixed #1956](https://github.com/NativeScript/nativescript-cli/issues/1956): Livesync starts the app twice on iOS devices
 * [Fixed #2225](https://github.com/NativeScript/nativescript-cli/issues/2225): The tns debug ios command hangs on launch screen 
 * [Fixed #2357](https://github.com/NativeScript/nativescript-cli/issues/2357): --copy-to option is broken
 * [Fixed #2446](https://github.com/NativeScript/nativescript-cli/issues/2446): tns emulate --device NonexistentName retunrs different messages for ios and android
 * [Fixed #2486](https://github.com/NativeScript/nativescript-cli/issues/2486): tns run android (without started emulator/connected device) fails to start app
 * [Fixed #2487](https://github.com/NativeScript/nativescript-cli/issues/2487): Exception: The plugin tns-android@2.5.0 is already installed
-* [Fixed #2496](https://github.com/NativeScript/nativescript-cli/issues/2496): TNS platform clean android 
+* [Fixed #2496](https://github.com/NativeScript/nativescript-cli/issues/2496): `tns platform clean android` does not maintain the same version of the runtimes
 * [Fixed #2511](https://github.com/NativeScript/nativescript-cli/issues/2511): Second run of `tns run android --release` does not respect changes in application code
 * [Fixed #2557](https://github.com/NativeScript/nativescript-cli/issues/2557): 2.5.1 iOS incremental build generates inconsistent binary 
 * [Fixed #2559](https://github.com/NativeScript/nativescript-cli/issues/2559): `tns init` fails, `ins init --force` produce invalid app
-* [Fixed #2560](https://github.com/NativeScript/nativescript-cli/issues/2560): `tns run` should do full prepare/rebuild if something in AppResources is changes
+* [Fixed #2560](https://github.com/NativeScript/nativescript-cli/issues/2560): `tns run` should do full prepare/rebuild if something in App_Resources is changes
 * [Fixed #2561](https://github.com/NativeScript/nativescript-cli/issues/2561): Fix prepare process terminates if passing too many arguments to a new node process
 * [Fixed #2641](https://github.com/NativeScript/nativescript-cli/issues/2641): Removed files are not sync correctly on android
-* [Fixed #2642](https://github.com/NativeScript/nativescript-cli/issues/2642): `tns run ios/anroid` sync hidden files
-* [Fixed #2644](https://github.com/NativeScript/nativescript-cli/issues/2644): Closing an app on an iOS device while run is on crashes with "Could not start application" message
+* [Fixed #2642](https://github.com/NativeScript/nativescript-cli/issues/2642): `tns run ios/android` sync hidden files
 * [Fixed #2653](https://github.com/NativeScript/nativescript-cli/issues/2653): Copy folder with files inside app breaks live sync
 
 2.5.3 (2017, March 20)
