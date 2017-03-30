@@ -476,40 +476,38 @@ export default class Query {
    * @returns {Query} The query.
    */
   matches(field, regExp, options = {}) {
+    const flags = [];
+
     if (!isRegExp(regExp)) {
       regExp = new RegExp(regExp);
     }
 
-    if ((regExp.ignoreCase || options.ignoreCase) && options.ignoreCase !== false) {
-      throw new QueryError('ignoreCase flag is not supported.');
-    }
-
     if (regExp.source.indexOf('^') !== 0) {
-      throw new QueryError('regExp must have `^` at the beginning of the expression ' +
-        'to make it an anchored expression.');
+      throw new QueryError('regExp must have \'^\' at the beginning of the expression'
+        + ' to make it an anchored expression.');
     }
 
-    const flags = [];
+    if ((regExp.ignoreCase || options.ignoreCase) && options.ignoreCase !== false) {
+      throw new QueryError('ignoreCase flag is not supported');
+    }
 
     if ((regExp.multiline || options.multiline) && options.multiline !== false) {
       flags.push('m');
     }
 
-    if (options.extended) {
+    if (options.extended === true) {
       flags.push('x');
     }
 
-    if (options.dotMatchesAll) {
+    if (options.dotMatchesAll === true) {
       flags.push('s');
     }
 
-    const result = this.addFilter(field, '$regex', regExp.source);
-
-    if (flags.length) {
+    if (flags.length > 0) {
       this.addFilter(field, '$options', flags.join(''));
     }
 
-    return result;
+    return this.addFilter(field, '$regex', regExp.source);
   }
 
   /**
