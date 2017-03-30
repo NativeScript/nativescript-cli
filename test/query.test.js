@@ -1,5 +1,6 @@
-import Query from 'src/query';
 import expect from 'expect';
+import { randomString } from 'src/utils';
+import Query from 'src/query';
 
 describe('Query', function() {
 
@@ -15,14 +16,14 @@ describe('Query', function() {
     it('should parse a limit from string', function() {
       const query = new Query();
       query.limit = '3';
-      
+
       expect(query.limit).toEqual(3);
     });
 
     it('should parse a skip from string', function() {
       const query = new Query();
       query.skip = '10';
-      
+
       expect(query.skip).toEqual(10);
     });
 
@@ -53,7 +54,7 @@ describe('Query', function() {
 
     it('throw an error when a data is not ann array', function() {
       expect(() => {
-        const query = new Query();        
+        const query = new Query();
         return query.process({});
       }).toThrow(/data argument must be of type: Array./);
     });
@@ -78,9 +79,156 @@ describe('Query', function() {
   describe('matches()', function() {
     it('throw an error for unsupported ignoreCase option', function() {
       expect(() => {
+        const field = randomString();
         const query = new Query();
-        return query.matches('field', '/^abc/', {ignoreCase: true});        
-      }).toThrow(/ignoreCase flag is not supported./);
+        return query.matches(field, /^abc/, { ignoreCase: true });
+      }).toThrow(/ignoreCase/);
+    });
+
+    it('should throw an error for unanchored expression', function() {
+      expect(() => {
+        const field = randomString();
+        const query = new Query();
+        return query.matches(field, '/abc/');
+      }).toThrow(/anchored/);
+    });
+
+    it('should add a match filter by string', function() {
+      const field = randomString();
+      const value = `^${randomString()}`;
+      const query = new Query();
+      query.matches(field, value);
+      expect(query.toPlainObject().filter).toIncludeKey(field);
+      expect(query.toPlainObject().filter[field]).toEqual({ $regex: value });
+    });
+
+    it('should add a match filter by RegExp literal', function() {
+      const field = randomString();
+      const value = /^foo/;
+      const query = new Query();
+      query.matches(field, value);
+      expect(query.toPlainObject().filter).toIncludeKey(field);
+      expect(query.toPlainObject().filter[field]).toEqual({ $regex: value.source });
+    });
+
+    it('should add a match filter by RegExp object.', function() {
+      const field = randomString();
+      const value = new RegExp('^foo');
+      const query = new Query();
+      query.matches(field, value);
+      expect(query.toPlainObject().filter).toIncludeKey(field);
+      expect(query.toPlainObject().filter[field]).toEqual({ $regex: value.source });
+    });
+
+    it('should respect any existing filters on the same field', function() {
+      const field = randomString();
+      const query = new Query();
+      query.matches(field, `^${randomString()}`);
+      query.greaterThan(field, randomString());
+      expect(query.toPlainObject().filter).toIncludeKey(field);
+      expect(query.toPlainObject().filter[field]).toIncludeKey(['$gt']);
+    });
+
+    it('should return the query', function() {
+      const field = randomString();
+      const query = new Query();
+      const value = query.matches(field, /^foo/);
+      expect(value).toEqual(query);
+    });
+
+    describe('with options', function() {
+      it('should throw if the ignoreCase flag is part of the RegExp.', function() {
+        expect(() => {
+          const field = randomString();
+          const query = new Query();
+          return query.matches(field, /^foo/i);
+        }).toThrow(/ignoreCase/);
+      });
+
+      it('should unset the ignoreCase flag if `options.ignoreCase` is `false`', function() {
+        const field = randomString();
+        const value = /^foo/i;
+        const query = new Query();
+        query.matches(field, value, { ignoreCase: false });
+        expect(query.toPlainObject().filter).toIncludeKey(field);
+        expect(query.toPlainObject().filter[field]).toNotIncludeKey('$options');
+      });
+
+      it('should set the multiline flag if part of the RegExp', function() {
+        const field = randomString();
+        const value = /^foo/m;
+        const query = new Query();
+        query.matches(field, value);
+        expect(query.toPlainObject().filter).toIncludeKey(field);
+        expect(query.toPlainObject().filter[field]).toInclude({ $options: 'm' });
+      });
+
+      it('should set the multiline flag if `options.multiline`', function() {
+        const field = randomString();
+        const value = /^foo/;
+        const query = new Query();
+        query.matches(field, value, { multiline: true });
+        expect(query.toPlainObject().filter).toIncludeKey(field);
+        expect(query.toPlainObject().filter[field]).toInclude({ $options: 'm' });
+      });
+
+      it('should unset the multiline flag if `options.multiline` is `false`', function() {
+        const field = randomString();
+        const value = /^foo/m;
+        const query = new Query();
+        query.matches(field, value, { multiline: false });
+        expect(query.toPlainObject().filter).toIncludeKey(field);
+        expect(query.toPlainObject().filter[field]).toNotIncludeKey('$options');
+      });
+
+      it('should set the extended flag if `options.extended`', function() {
+        const field = randomString();
+        const value = `^${randomString()}`;
+        const query = new Query();
+        query.matches(field, value, { extended: true });
+        expect(query.toPlainObject().filter).toIncludeKey(field);
+        expect(query.toPlainObject().filter[field]).toInclude({ $options: 'x' });
+      });
+
+      it('should not set the multiline flag if `options.extended` is `false`', function() {
+        const field = randomString();
+        const value = `^${randomString()}`;
+        const query = new Query();
+        query.matches(field, value, { extended: false });
+        expect(query.toPlainObject().filter).toIncludeKey(field);
+        expect(query.toPlainObject().filter[field]).toNotIncludeKey('$options');
+      });
+
+      it('should set the dotMatchesAll flag if `options.dotMatchesAll`', function() {
+        const field = randomString();
+        const value = `^${randomString()}`;
+        const query = new Query();
+        query.matches(field, value, { dotMatchesAll: true });
+        expect(query.toPlainObject().filter).toIncludeKey(field);
+        expect(query.toPlainObject().filter[field]).toInclude({ $options: 's' });
+      });
+
+      it('should not set the dotMatchesAll flag if `options.dotMatchesAll` is `false`', function() {
+        const field = randomString();
+        const value = `^${randomString()}`;
+        const query = new Query();
+        query.matches(field, value, { dotMatchesAll: false });
+        expect(query.toPlainObject().filter).toIncludeKey(field);
+        expect(query.toPlainObject().filter[field]).toNotIncludeKey('$options');
+      });
+
+      it('should set multiple flags.', function() {
+        const field = randomString();
+        const value = /^foo/im;
+        const query = new Query();
+        query.matches(field, value, {
+          ignoreCase: false,
+          extended: true,
+          dotMatchesAll: true
+        });
+        expect(query.toPlainObject().filter).toIncludeKey(field);
+        expect(query.toPlainObject().filter[field]).toInclude({ $options: 'mxs' });
+      });
     });
   });
 
