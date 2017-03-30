@@ -108,8 +108,41 @@ export default class SyncManager {
    * @param   {Number}        [options.timeout]           Timeout for the request.
    * @return  {Promise}                                   Promise
    */
-  count(query = new Query(), options = {}) {
-    return this.find(query, options)
+  count(query, options = {}) {
+    let promise = Promise.resolve();
+
+    if (isDefined(query)) {
+      if (!(query instanceof Query)) {
+        query = new Query(result(query, 'toJSON', query));
+      }
+
+      const request = new CacheRequest({
+        method: RequestMethod.GET,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this.backendPathname
+        }),
+        query: query,
+        properties: options.properties,
+        timeout: options.timeout,
+        client: this.client
+      });
+      promise = request.execute()
+        .then(response => response.data);
+    }
+
+    return promise
+      .then((entities) => {
+        if (isDefined(entities)) {
+          const syncQuery = new Query();
+          syncQuery.contains('entityId', map(entities, entity => entity._id));
+          return this.find(syncQuery, options);
+        }
+
+        // Get the pending sync items
+        return this.find(query, options);
+      })
       .then(entities => entities.length);
   }
 
@@ -300,11 +333,11 @@ export default class SyncManager {
         if (isDefined(entities)) {
           const syncQuery = new Query();
           syncQuery.contains('entityId', map(entities, entity => entity._id));
-          return this.find(syncQuery);
+          return this.find(syncQuery, options);
         }
 
         // Get the pending sync items
-        return this.find();
+        return this.find(query, options);
       })
       .then((syncEntities) => {
         if (syncEntities.length > 0) {
