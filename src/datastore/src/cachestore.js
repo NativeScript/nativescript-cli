@@ -830,7 +830,7 @@ export default class CacheStore extends NetworkStore {
    */
   sync(query, options) {
     options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
-    return this.push(null, options)
+    return this.push(query, options)
       .then((push) => {
         const promise = this.pull(query, options)
           .then((pull) => {
