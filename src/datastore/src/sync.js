@@ -15,6 +15,7 @@ import {
 import { InsufficientCredentialsError, SyncError } from 'src/errors';
 import Client from 'src/client';
 import Query from 'src/query';
+import { isDefined } from 'src/utils';
 
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sync';
@@ -261,6 +262,7 @@ export default class SyncManager {
   push(query, options = {}) {
     const batchSize = 100;
     let i = 0;
+    let promise = Promise.resolve(null);
 
     // Don't push data to the backend if we are in the middle
     // of already pushing data
@@ -272,8 +274,38 @@ export default class SyncManager {
     // Set pushInProgress to true
     pushInProgress = true;
 
-    // Get the pending sync items
-    return this.find(query)
+    if (isDefined(query)) {
+      if (!(query instanceof Query)) {
+        query = new Query(result(query, 'toJSON', query));
+      }
+
+      const request = new CacheRequest({
+        method: RequestMethod.GET,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this.backendPathname
+        }),
+        query: query,
+        properties: options.properties,
+        timeout: options.timeout,
+        client: this.client
+      });
+      promise = request.execute()
+        .then(response => response.data);
+    }
+
+    return promise
+      .then((entities) => {
+        if (isDefined(entities)) {
+          const syncQuery = new Query();
+          syncQuery.contains('entityId', map(entities, entity => entity._id));
+          return this.find(syncQuery);
+        }
+
+        // Get the pending sync items
+        return this.find();
+      })
       .then((syncEntities) => {
         if (syncEntities.length > 0) {
           // Sync the entities in batches to prevent exhausting
