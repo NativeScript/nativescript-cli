@@ -174,7 +174,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 			let localToDevicePaths: Mobile.ILocalToDevicePathData[] = null;
 			let isFullSync = false;
 
-			if (this.$options.clean || this.$projectChangesService.currentChanges.changesRequireBuild) {
+			if (this.$projectChangesService.currentChanges.changesRequireBuild) {
 				let buildConfig: IBuildConfig = {
 					buildForDevice: !device.isEmulator,
 					projectDir: this.$options.path,

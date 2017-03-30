@@ -375,7 +375,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			return true;
 		}
 		if (buildConfig.clean) {
-			return prepareInfo.time !== buildInfo.prepareTime;
+			return true;
 		}
 		if (prepareInfo.time === buildInfo.prepareTime) {
 			return false;
@@ -467,7 +467,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				keyStoreAlias: deployOptions.keyStoreAlias,
 				keyStoreAliasPassword: deployOptions.keyStoreAliasPassword,
 				keyStorePassword: deployOptions.keyStorePassword,
-				keyStorePath: deployOptions.keyStorePath
+				keyStorePath: deployOptions.keyStorePath,
+				clean: deployOptions.clean
 			};
 			let shouldBuild = await this.shouldBuild(platform, projectData, buildConfig);
 			if (shouldBuild) {
