@@ -248,8 +248,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			"-exportPath", exportPath,
 			"-exportOptionsPlist", platformData.configurationFilePath
 		];
-
-		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", 
+		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit",
 			{ stdio: buildConfig.buildOutputStdio || 'inherit', cwd: this.getPlatformData(projectData).projectRoot },
 			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
 
@@ -458,12 +457,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	private async createIpa(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string> {
 		let xarchivePath = await this.archive(projectData);
-		let exportFileIpa = await this.exportDevelopmentArchive(projectData, 
+		let exportFileIpa = await this.exportDevelopmentArchive(projectData,
 			buildConfig,
-			{ 
-				archivePath: xarchivePath, 
+			{
+				archivePath: xarchivePath,
 			});
-			
+
 		return exportFileIpa;
 	}
 
