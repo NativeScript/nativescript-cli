@@ -230,6 +230,32 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return exportFile;
 	}
 
+	/**
+	 * Exports .xcarchive for AppStore distribution.
+	 */
+	public async exportDevelopmentArchive(projectData: IProjectData, buildConfig: IBuildConfig, options: { archivePath: string, exportDir?: string, teamID?: string }): Promise<string> {
+		let platformData = this.getPlatformData(projectData);
+		let projectRoot = platformData.projectRoot;
+		let archivePath = options.archivePath;
+		let buildOutputPath = path.join(projectRoot, "build", "device");
+
+		// The xcodebuild exportPath expects directory and writes the <project-name>.ipa at that directory.
+		let exportPath = path.resolve(options.exportDir || buildOutputPath);
+		let exportFile = path.join(exportPath, projectData.projectName + ".ipa");
+
+		let args = ["-exportArchive",
+			"-archivePath", archivePath,
+			"-exportPath", exportPath,
+			"-exportOptionsPlist", platformData.configurationFilePath
+		];
+
+		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", 
+			{ stdio: buildConfig.buildOutputStdio || 'inherit', cwd: this.getPlatformData(projectData).projectRoot },
+			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
+
+		return exportFile;
+	}
+
 	private xcbuildProjectArgs(projectRoot: string, projectData: IProjectData, product?: "scheme" | "target"): string[] {
 		let xcworkspacePath = path.join(projectRoot, projectData.projectName + ".xcworkspace");
 		if (this.$fs.exists(xcworkspacePath)) {
@@ -430,24 +456,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
 	}
 
-	private async createIpa(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
-		let buildOutputPath = path.join(projectRoot, "build", "device");
-
-		let exportOptionsPath = this.exportArchive(projectData, {buildConfig.team });
-		let xcrunArgs = this.getXcodeArchiveArgs(projectData.projectName, projectRoot, buildOutputPath, exportOptionsPath);
-		await this.$childProcess.spawnFromEvent("xcodebuild", xcrunArgs, "exit",
-			{ stdio: buildConfig.buildOutputStdio || "inherit", cwd: this.getPlatformData(projectData).projectRoot },
-			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
-		// this.$logger.out("Project package succeeded.");
-	}
-
-	private getXcodeArchiveArgs(projectName: string, projectPath: string, outputPath, exportOptionsPath): Array<string> {
-		return [
-			'-exportArchive',
-			'-archivePath', projectName + '.xcarchive',
-			'-exportOptionsPlist', exportOptionsPath,
-			'-exportPath', outputPath
-		];
+	private async createIpa(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string> {
+		let xarchivePath = await this.archive(projectData);
+		let exportFileIpa = await this.exportDevelopmentArchive(projectData, 
+			buildConfig,
+			{ 
+				archivePath: xarchivePath, 
+			});
+			
+		return exportFileIpa;
 	}
 
 	public isPlatformPrepared(projectRoot: string, projectData: IProjectData): boolean {
