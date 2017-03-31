@@ -343,7 +343,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
 		// this.$logger.out("xcodebuild build succeded.");
 
-		await this.createIpa(projectRoot, projectData, buildConfig.buildOutputStdio);
+		await this.createIpa(projectRoot, projectData, buildConfig);
 	}
 
 	private async setupSigningFromProvision(projectRoot: string, projectData: IProjectData, provision?: any): Promise<void> {
@@ -430,22 +430,24 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
 	}
 
-	private async createIpa(projectRoot: string, projectData: IProjectData, buildOutputStdio?: string): Promise<void> {
+	private async createIpa(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
 		let buildOutputPath = path.join(projectRoot, "build", "device");
-		let xcrunArgs = [
-			"-sdk", "iphoneos",
-			"PackageApplication",
-			path.join(buildOutputPath, projectData.projectName + ".app"),
-			"-o", path.join(buildOutputPath, projectData.projectName + ".ipa")
-		];
-		// if (this.$logger.getLevel() !== "INFO") {
-		xcrunArgs.push("-verbose");
-		// }
-		// this.$logger.out("Packaging project...");
-		await this.$childProcess.spawnFromEvent("xcrun", xcrunArgs, "exit",
-			{ stdio: buildOutputStdio || "inherit", cwd: this.getPlatformData(projectData).projectRoot },
+
+		let exportOptionsPath = this.exportArchive(projectData, {buildConfig.team });
+		let xcrunArgs = this.getXcodeArchiveArgs(projectData.projectName, projectRoot, buildOutputPath, exportOptionsPath);
+		await this.$childProcess.spawnFromEvent("xcodebuild", xcrunArgs, "exit",
+			{ stdio: buildConfig.buildOutputStdio || "inherit", cwd: this.getPlatformData(projectData).projectRoot },
 			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
 		// this.$logger.out("Project package succeeded.");
+	}
+
+	private getXcodeArchiveArgs(projectName: string, projectPath: string, outputPath, exportOptionsPath): Array<string> {
+		return [
+			'-exportArchive',
+			'-archivePath', projectName + '.xcarchive',
+			'-exportOptionsPlist', exportOptionsPath,
+			'-exportPath', outputPath
+		];
 	}
 
 	public isPlatformPrepared(projectRoot: string, projectData: IProjectData): boolean {
