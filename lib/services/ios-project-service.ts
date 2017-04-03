@@ -423,21 +423,35 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
+	/**
+	 * Exports .xcarchive for a development device.
+	 */
+	private exportDevelopmentArchive(projectData: IProjectData, options: { archivePath: string, exportDir?: string, teamID?: string }): IFuture<string> {
+		return (() => {
+			let projectRoot = this.platformData.projectRoot;
+			let archivePath = options.archivePath;
+			let buildOutputPath = path.join(projectRoot, "build", "device");
+
+			// The xcodebuild exportPath expects directory and writes the <project-name>.ipa at that directory.
+			let exportPath = path.resolve(options.exportDir || buildOutputPath);
+			let exportFile = path.join(exportPath, projectData.projectName + ".ipa");
+
+			let args = ["-exportArchive",
+				"-archivePath", archivePath,
+				"-exportPath", exportPath,
+				"-exportOptionsPlist", this.platformData.configurationFilePath
+			];
+
+			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { stdio: 'inherit', cwd: this.$options }).wait();
+
+			return exportFile;
+		}).future<string>()();
+	}
+
 	private createIpa(projectRoot: string): IFuture<void> {
 		return (() => {
-			let buildOutputPath = path.join(projectRoot, "build", "device");
-			let xcrunArgs = [
-				"-sdk", "iphoneos",
-				"PackageApplication",
-				path.join(buildOutputPath, this.$projectData.projectName + ".app"),
-				"-o", path.join(buildOutputPath, this.$projectData.projectName + ".ipa")
-			];
-			// if (this.$logger.getLevel() !== "INFO") {
-				xcrunArgs.push("-verbose");
-			// }
-			// this.$logger.out("Packaging project...");
-			this.$childProcess.spawnFromEvent("xcrun", xcrunArgs, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
-			// this.$logger.out("Project package succeeded.");
+			let xArchivePath = this.archive().wait();
+			let exportFileIpa = this.exportDevelopmentArchive(this.$projectData, { archivePath: xArchivePath }).wait();
 		}).future<void>()();
 	}
 
