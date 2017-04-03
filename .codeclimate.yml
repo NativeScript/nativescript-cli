@@ -6,7 +6,6 @@ engines:
     - "dist/"
     - "node_modules/"
     - "test/"
-    - "test2/"
     checks:
       import/no-unresolved:
         enabled: false

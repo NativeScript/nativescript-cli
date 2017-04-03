@@ -1,2 +1,3 @@
-- "src/identity/**/*"
-- "!src/identity/src/mic.js"
+ignore:
+  - "src/identity/**/*"
+  - "!src/identity/src/mic.js"
