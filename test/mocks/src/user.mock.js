@@ -3,6 +3,7 @@ import { randomString } from 'src/utils';
 import { User } from 'src/entity';
 import nock from 'nock';
 import url from 'url';
+import isEmpty from 'lodash/isEmpty';
 
 export default class UserMock extends User {
   static getActiveUser(client) {
@@ -122,5 +123,38 @@ export default class UserMock extends User {
     }
 
     return Promise.resolve(null);
+  }
+
+  signup(data, options) {
+    let userData = data;
+
+    if (userData instanceof User) {
+      userData = data.data;
+    }
+
+    const reply = {
+      _id: randomString(),
+      _kmd: {
+        lmt: new Date().toISOString(),
+        ect: new Date().toISOString(),
+        authtoken: randomString()
+      },
+      username: userData ? userData.username : undefined,
+      _acl: {
+        creator: randomString()
+      }
+    };
+
+    // Setup nock response
+    nock(this.client.apiHostname, { encodedQueryParams: true })
+      .post(this.pathname, userData)
+      .reply(201, reply);
+
+    return super.signup(data, options);
+  }
+
+  static signup(data, options) {
+    const user = new UserMock({}, options);
+    return user.signup(data, options);
   }
 }

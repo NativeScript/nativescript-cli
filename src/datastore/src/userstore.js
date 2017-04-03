@@ -185,6 +185,7 @@ class UserStore extends NetworkStore {
 
     return stream.toPromise();
   }
+
   /**
    * Restore a user that has been suspended.
    *

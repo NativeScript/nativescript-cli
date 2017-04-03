@@ -80,30 +80,12 @@ export default class User {
   }
 
   /**
-   * Set the metadata for the user.
-   *
-   * @param {Metadata|Object} metadata The metadata.
-   */
-  set metadata(metadata) {
-    this.data[kmdAttribute] = result(metadata, 'toPlainObject', metadata);
-  }
-
-  /**
    * The _kmd for the user.
    *
    * @return {Metadata} _kmd
    */
   get _kmd() {
     return this.metadata;
-  }
-
-  /**
-   * Set the _kmd for the user.
-   *
-   * @param {Metadata|Object} metadata The metadata.
-   */
-  set _kmd(kmd) {
-    this.metadata = kmd;
   }
 
   /**
@@ -122,17 +104,6 @@ export default class User {
    */
   get authtoken() {
     return this.metadata.authtoken;
-  }
-
-  /**
-   * Set the auth token for the user.
-   *
-   * @param  {?string} authtoken Auth token
-   */
-  set authtoken(authtoken) {
-    const metadata = this.metadata;
-    metadata.authtoken = authtoken;
-    this.metadata = metadata;
   }
 
   /**
@@ -183,23 +154,6 @@ export default class User {
   isEmailVerified() {
     const status = this.metadata.emailVerification;
     return status === 'confirmed';
-  }
-
-  /**
-   * Gets the active user. You can optionally provide a client
-   * to use to lookup the active user.
-   *
-   * @param {Client} [client=Client.sharedInstance()] Client to use to lookup active user.
-   * @return {?User} The active user.
-   */
-  static getActiveUser(client = Client.sharedInstance()) {
-    const data = CacheRequest.getActiveUser(client);
-
-    if (isDefined(data)) {
-      return new this(data, { client: client });
-    }
-
-    return null;
   }
 
   /**
@@ -617,6 +571,9 @@ export default class User {
       data = data.data;
     }
 
+    // Merge the data
+    data = assign(this.data, data);
+
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
@@ -753,25 +710,21 @@ export default class User {
     return request.execute()
       .then(response => response.data)
       .then((data) => {
-        if (!isDefined(data[kmdAttribute].authtoken)) {
-          const activeUser = User.getActiveUser(this.client);
+        // Merge returned data
+        data = assign(this.data, data);
 
-          if (isDefined(activeUser)) {
-            data[kmdAttribute].authtoken = activeUser.authtoken;
-          }
-
-          return data;
-        }
-
-        return data;
-      })
-      .then((data) => {
         // Remove sensitive data
         delete data.password;
 
-        // Store the active user
+        // Replace the data
         this.data = data;
-        return CacheRequest.setActiveUser(this.client, this.data);
+
+        // Store the active user
+        if (this.isActive()) {
+          return CacheRequest.setActiveUser(this.client, this.data);
+        }
+
+        return data;
       })
       .then(() => this);
   }
@@ -790,6 +743,23 @@ export default class User {
     }
 
     return Promise.resolve(null);
+  }
+
+  /**
+   * Gets the active user. You can optionally provide a client
+   * to use to lookup the active user.
+   *
+   * @param {Client} [client=Client.sharedInstance()] Client to use to lookup active user.
+   * @return {?User} The active user.
+   */
+  static getActiveUser(client = Client.sharedInstance()) {
+    const data = CacheRequest.getActiveUser(client);
+
+    if (isDefined(data)) {
+      return new this(data, { client: client });
+    }
+
+    return null;
   }
 
   /**

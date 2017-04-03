@@ -66,7 +66,7 @@ const Auth = {
     if (!client.appKey || !client.appSecret) {
       return Promise.reject(
         new Error('Missing client appKey and/or appSecret.'
-          + ' Use Kinvey.init() to set the appKey and appSecret for the client.')
+          + ' Use Kinvey.initialize() to set the appKey and appSecret for the client.')
       );
     }
 
@@ -95,8 +95,8 @@ const Auth = {
   master(client) {
     if (!client.appKey || !client.masterSecret) {
       return Promise.reject(
-        new Error('Missing client appKey and/or appSecret.'
-          + ' Use Kinvey.init() to set the appKey and appSecret for the client.')
+        new Error('Missing client appKey and/or masterSecret.'
+          + ' Use Kinvey.initialize() to set the appKey and masterSecret for the client.')
       );
     }
 
