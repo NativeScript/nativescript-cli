@@ -327,52 +327,46 @@ export default class NetworkStore {
   /**
    * Create a single or an array of entities on the data store.
    *
-   * @param   {Object|Array}          data                              Data that you want to create on the data store.
+   * @param   {Object}                data                              Data that you want to create on the data store.
    * @param   {Object}                [options]                         Options
    * @param   {Properties}            [options.properties]              Custom properties to send with
    *                                                                    the request.
    * @param   {Number}                [options.timeout]                 Timeout for the request.
    * @return  {Promise}                                                 Promise.
    */
-  create(entities, options = {}) {
+  create(entity, options = {}) {
     const stream = KinveyObservable.create((observer) => {
-      try {
-        if (!entities) {
-          observer.next(null);
-          return observer.complete();
-        }
-
-        let singular = false;
-
-        if (!isArray(entities)) {
-          singular = true;
-          entities = [entities];
-        }
-
-        return Promise.all(map(entities, (entity) => {
-          const request = new KinveyRequest({
-            method: RequestMethod.POST,
-            authType: AuthType.Default,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: this.pathname,
-              query: options.query
-            }),
-            properties: options.properties,
-            data: entity,
-            timeout: options.timeout,
-            client: this.client
-          });
-          return request.execute();
-        }))
-          .then(responses => map(responses, response => response.data))
-          .then(data => observer.next(singular ? data[0] : data))
-          .then(() => observer.complete())
-          .catch(error => observer.error(error));
-      } catch (error) {
-        return observer.error(error);
+      if (isDefined(entity) === false) {
+        observer.next(null);
+        return observer.complete();
       }
+
+      if (isArray(entity)) {
+        return observer.error(new KinveyError(
+          'Unable to create entities.',
+          'Please create entities one by one.'
+        ));
+      }
+
+      const request = new KinveyRequest({
+        method: RequestMethod.POST,
+        authType: AuthType.Default,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this.pathname,
+          query: options.query
+        }),
+        properties: options.properties,
+        data: entity,
+        timeout: options.timeout,
+        client: this.client
+      });
+      return request.execute()
+        .then(response => response.data)
+        .then(data => observer.next(data))
+        .then(() => observer.complete())
+        .catch(error => observer.error(error));
     });
 
     return stream.toPromise();
@@ -381,52 +375,53 @@ export default class NetworkStore {
   /**
    * Update a single or an array of entities on the data store.
    *
-   * @param   {Object|Array}          data                              Data that you want to update on the data store.
+   * @param   {Object}          data                                    Data that you want to update on the data store.
    * @param   {Object}                [options]                         Options
    * @param   {Properties}            [options.properties]              Custom properties to send with
    *                                                                    the request.
    * @param   {Number}                [options.timeout]                 Timeout for the request.
    * @return  {Promise}                                                 Promise.
    */
-  update(entities, options = {}) {
+  update(entity, options = {}) {
     const stream = KinveyObservable.create((observer) => {
-      try {
-        if (!entities) {
-          observer.next(null);
-          return observer.complete();
-        }
-
-        let singular = false;
-
-        if (!isArray(entities)) {
-          singular = true;
-          entities = [entities];
-        }
-
-        return Promise.all(map(entities, (entity) => {
-          const request = new KinveyRequest({
-            method: RequestMethod.PUT,
-            authType: AuthType.Default,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: `${this.pathname}/${entity._id}`,
-              query: options.query
-            }),
-            properties: options.properties,
-            data: entity,
-            timeout: options.timeout,
-            client: this.client
-          });
-          return request.execute();
-        }))
-          .then(responses => map(responses, response => response.data))
-          .then(data => observer.next(singular ? data[0] : data))
-          .then(() => observer.complete())
-          .catch(error => observer.error(error));
-      } catch (error) {
-        return observer.error(error);
+      if (isDefined(entity) === false) {
+        observer.next(null);
+        return observer.complete();
       }
+
+      if (isArray(entity)) {
+        return observer.error(new KinveyError(
+          'Unable to update entities.',
+          'Please update entities one by one.'
+        ));
+      }
+
+      if (isDefined(entity._id) === false) {
+        return observer.error(new KinveyError(
+          'Unable to update entity.',
+          'Entity must contain an _id to be updated.'
+        ));
+      }
+
+      const request = new KinveyRequest({
+        method: RequestMethod.PUT,
+        authType: AuthType.Default,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: `${this.pathname}/${entity._id}`,
+          query: options.query
+        }),
+        properties: options.properties,
+        data: entity,
+        timeout: options.timeout,
+        client: this.client
+      });
+      return request.execute()
+        .then(response => response.data)
+        .then(data => observer.next(data))
+        .then(() => observer.complete())
+        .catch(error => observer.error(error));
     });
 
     return stream.toPromise();
@@ -510,7 +505,7 @@ export default class NetworkStore {
   removeById(id, options = {}) {
     const stream = KinveyObservable.create((observer) => {
       try {
-        if (!id) {
+        if (isDefined(id) === false) {
           observer.next(undefined);
           return observer.complete();
         }
