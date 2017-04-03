@@ -231,9 +231,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	/**
-	 * Exports .xcarchive for AppStore distribution.
+	 * Exports .xcarchive for a development device.
 	 */
-	public async exportDevelopmentArchive(projectData: IProjectData, buildConfig: IBuildConfig, options: { archivePath: string, exportDir?: string, teamID?: string }): Promise<string> {
+	private async exportDevelopmentArchive(projectData: IProjectData, buildConfig: IBuildConfig, options: { archivePath: string, exportDir?: string, teamID?: string }): Promise<string> {
 		let platformData = this.getPlatformData(projectData);
 		let projectRoot = platformData.projectRoot;
 		let archivePath = options.archivePath;
@@ -250,7 +250,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		];
 		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit",
 			{ stdio: buildConfig.buildOutputStdio || 'inherit', cwd: this.getPlatformData(projectData).projectRoot },
-			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
+			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
 
 		return exportFile;
 	}
