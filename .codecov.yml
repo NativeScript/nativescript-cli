@@ -1,0 +1,2 @@
+- "src/identity/**/*"
+- "!src/identity/src/mic.js"
