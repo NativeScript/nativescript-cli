@@ -1,5 +1,12 @@
 NativeScript CLI Changelog
 ================
+2.5.4 (2017, April 5)
+==
+
+### New
+
+* [Implemented #2668](https://github.com/NativeScript/nativescript-cli/issues/2668): Add support for Xcode 8.3
+
 2.5.3 (2017, March 21)
 ==
 
