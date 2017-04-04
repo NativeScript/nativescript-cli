@@ -679,6 +679,10 @@ export class PlatformServiceStub implements IPlatformService {
 	public trackProjectType(): IFuture<void> {
 		return Future.fromResult();
 	}
+
+	public trackActionForPlatform(actionData: ITrackPlatformAction): IFuture<void> {
+		return Future.fromResult();
+	}
 }
 
 export class EmulatorPlatformService implements IEmulatorPlatformService {

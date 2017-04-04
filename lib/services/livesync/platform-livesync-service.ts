@@ -12,10 +12,6 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 
 	protected liveSyncData: ILiveSyncData;
 
-	private get $analyticsService(): IAnalyticsService {
-		return this.$injector.resolve("analyticsService");
-	}
-
 	constructor(_liveSyncData: ILiveSyncData,
 		private $devicesService: Mobile.IDevicesService,
 		private $mobileHelper: Mobile.IMobileHelper,
@@ -43,9 +39,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 			let canExecute = this.getCanExecuteAction(platform, appIdentifier);
 			let action = (device: Mobile.IDevice): IFuture<void> => {
 				return (() => {
-					const normalizePlatformName = this.$mobileHelper.normalizePlatformName(platform);
-					const deviceType = device.isEmulator ? "emulator" : "device";
-					this.$analyticsService.track("LiveSync", `${normalizePlatformName}.${deviceType}`).wait();
+					this.$platformService.trackActionForPlatform({ action: "LiveSync", platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version }).wait();
 
 					let deviceAppData = this.$deviceAppDataFactory.create(appIdentifier, this.$mobileHelper.normalizePlatformName(platform), device);
 					let localToDevicePaths: Mobile.ILocalToDevicePathData[] = null;
