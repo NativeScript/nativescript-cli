@@ -1,7 +1,6 @@
 import SyncManager from 'src/datastore/src/sync';
 import { SyncError } from 'src/errors';
 import { randomString } from 'src/utils';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import nock from 'nock';
 import expect from 'expect';
 import chai from 'chai';

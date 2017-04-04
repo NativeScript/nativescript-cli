@@ -343,7 +343,7 @@ export default class NetworkStore {
 
       if (isArray(entity)) {
         return observer.error(new KinveyError(
-          'Unable to create entities.',
+          'Unable to create an array of entities.',
           'Please create entities one by one.'
         ));
       }
@@ -391,7 +391,7 @@ export default class NetworkStore {
 
       if (isArray(entity)) {
         return observer.error(new KinveyError(
-          'Unable to update entities.',
+          'Unable to update an array of entities.',
           'Please update entities one by one.'
         ));
       }

@@ -1,5 +1,4 @@
 import { NetworkStore, SyncStore } from 'src/datastore';
-import Client from 'src/client';
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
 import { KinveyError, NotFoundError, ServerError } from 'src/errors';
@@ -9,20 +8,10 @@ import expect from 'expect';
 const collection = 'Books';
 
 describe('NetworkStore', function() {
-  // Get the sared client instance
-  before(function() {
-    this.client = Client.sharedInstance();
-  });
-
-  // Cleanup
-  after(function() {
-    delete this.client;
-  });
-
   describe('pathname', function() {
     it(`should equal /appdata/<appkey>/${collection}`, function() {
       const store = new NetworkStore(collection);
-      expect(store.pathname).toEqual(`/appdata/${this.client.appKey}/${collection}`);
+      expect(store.pathname).toEqual(`/appdata/${store.client.appKey}/${collection}`);
     });
 
     it('should not be able to be changed', function() {
@@ -34,71 +23,37 @@ describe('NetworkStore', function() {
   });
 
   describe('find()', function() {
-    const entity1 = {
-      _id: '57b48371319a67493dc50dba',
-      title: 'Opela',
-      author: 'Maria Crawford',
-      isbn: '887420007-2',
-      summary: 'Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros.\n\nVestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.',
-      _acl: {
-        creator: 'kid_HkTD2CJc'
-      },
-      _kmd: {
-        lmt: '2016-08-17T15:32:01.741Z',
-        ect: '2016-08-17T15:32:01.741Z'
-      }
-    };
-    const entity2 = {
-      _id: '57b48371b262874d7e2f0a99',
-      title: 'Treeflex',
-      author: 'Harry Larson',
-      isbn: '809087960-8',
-      summary: 'Aenean fermentum. Donec ut mauris eget massa tempor convallis. Nulla neque libero, convallis eget, eleifend luctus, ultricies eu, nibh.',
-      _acl: {
-        creator: 'kid_HkTD2CJc'
-      },
-      _kmd: {
-        lmt: '2016-08-17T15:32:01.744Z',
-        ect: '2016-08-17T15:32:01.744Z'
-      }
-    };
-
-    beforeEach(function() {
-      // Kinvey API response
-      nock(this.client.apiHostname, { encodedQueryParams: true })
-        .get(`/appdata/${this.client.appKey}/${collection}`)
-        .reply(200, [entity1, entity2], {
-          'content-type': 'application/json',
-          'x-kinvey-request-id': 'a6b7712a0bca42b8a98c82de1fe0f5cf',
-          'x-kinvey-api-version': '4'
-        });
-
-      // nock(this.client.apiHostname, { encodedQueryParams: true })
-      //   .get(`/appdata/${this.client.appKey}/${collection}`?query=)
-      //   .reply(200, [entity1, entity2], {
-      //     'content-type': 'application/json',
-      //     'x-kinvey-request-id': 'a6b7712a0bca42b8a98c82de1fe0f5cf',
-      //     'x-kinvey-api-version': '4'
-      //   });
-
-    });
-
-    afterEach(function() {
-    });
-
-    it('should return all the entities from the backend', async function() {
+    it('should throw an error if the query argument is not an instance of the Query class', function(done) {
       const store = new NetworkStore(collection);
-      const entities = await store.find().toPromise();
-      expect(entities).toEqual([entity1, entity2]);
+      store.find({})
+        .subscribe(null, (error) => {
+          try {
+            expect(error).toBeA(KinveyError);
+            expect(error.message).toEqual('Invalid query. It must be an instance of the Query class.');
+            done();
+          } catch (e) {
+            done(e);
+          }
+        });
     });
 
-    it('should throw an error if the query argument is not an instance of the Query class', async function() {
-      try {
-        const store = new NetworkStore(collection);
-        await store.find({}).toPromise();
-      } catch (error) {
-        expect(error).toBeA(KinveyError);
-      }
+    it('should return all the entities from the backend', function() {
+      const entity1 = {
+        _id: randomString()
+      };
+      const entity2 = {
+        _id: randomString()
+      };
+
+      nock(this.client.apiHostname)
+        .get(`/appdata/${this.client.appKey}/${collection}`)
+        .reply(200, [entity1, entity2]);
+
+      const store = new NetworkStore(collection);
+      return store.find().toPromise()
+        .then((entities) => {
+          expect(entities).toEqual([entity1, entity2]);
+        });
     });
 
     // it('should return all the entities from the backen that match the query', async function() {
@@ -110,58 +65,34 @@ describe('NetworkStore', function() {
   });
 
   describe('findById()', function() {
-    const entityId = '57b48371319a67493dc50dba';
-    const entity1 = {
-      _id: entityId,
-      title: 'Opela',
-      author: 'Maria Crawford',
-      isbn: '887420007-2',
-      summary: 'Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros.\n\nVestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.',
-      _acl: {
-        creator: 'kid_HkTD2CJc'
-      },
-      _kmd: {
-        lmt: '2016-08-17T15:32:01.741Z',
-        ect: '2016-08-17T15:32:01.741Z'
-      }
-    };
-
-    beforeEach(function() {
-      // Kinvey API response
-      nock(this.client.apiHostname, { encodedQueryParams: true })
+    it('should throw a NotFoundError if the id argument does not exist', function() {
+      const entityId = 1;
+      nock(this.client.apiHostname)
         .get(`/appdata/${this.client.appKey}/${collection}/${entityId}`)
-        .reply(200, entity1, {
-          'content-type': 'application/json',
-          'x-kinvey-request-id': 'a6b7712a0bca42b8a98c82de1fe0f5cf',
-          'x-kinvey-api-version': '4'
-        });
+        .reply(404);
 
-      nock(this.client.apiHostname, { encodedQueryParams: true })
-        .get(`/appdata/${this.client.appKey}/${collection}/1`)
-        .reply(404, {}, {
-          'content-type': 'application/json',
-          'x-kinvey-request-id': 'a6b7712a0bca42b8a98c82de1fe0f5cf',
-          'x-kinvey-api-version': '4'
-        });
-    });
-
-    afterEach(function() {
-
-    });
-
-    it('should throw a NotFoundError if the id argument does not exist', async function() {
-      try {
-        const store = new NetworkStore(collection);
-        await store.findById("1").toPromise();
-      } catch (error) {
-        expect(error).toBeA(NotFoundError);
-      }
-    });
-
-    it('should return the entity that matches the id argument', async function() {
       const store = new NetworkStore(collection);
-      const entity = await store.findById(entityId).toPromise();
-      expect(entity).toEqual(entity1);
+      return store.findById(entityId).toPromise()
+        .catch((error) => {
+          expect(error).toBeA(NotFoundError);
+        });
+    });
+
+    it('should return the entity that matches the id argument', function() {
+      const entityId = randomString();
+      const entity1 = {
+        _id: entityId
+      };
+
+      nock(this.client.apiHostname)
+        .get(`/appdata/${this.client.appKey}/${collection}/${entityId}`)
+        .reply(200, entity1);
+
+      const store = new NetworkStore(collection);
+      return store.findById(entityId).toPromise()
+        .then((entity) => {
+          expect(entity).toEqual(entity1);
+        });
     });
   });
 
@@ -176,7 +107,7 @@ describe('NetworkStore', function() {
     });
 
     it('should throw a ServerError', function() {
-      nock(this.client.apiHostname, { encodedQueryParams: true })
+      nock(this.client.apiHostname)
         .post(`/appdata/${this.client.appKey}/${collection}/_group`)
         .reply(500);
 
@@ -191,11 +122,9 @@ describe('NetworkStore', function() {
 
     it('should return the count of all unique properties on the collection', function() {
       const reply = [{ title: randomString(), count: 2 }, { title: randomString(), count: 1 }]
-      nock(this.client.apiHostname, { encodedQueryParams: true })
+      nock(this.client.apiHostname)
         .post(`/appdata/${this.client.appKey}/${collection}/_group`)
-        .reply(200, reply , {
-          'content-type': 'application/json'
-        });
+        .reply(200, reply);
 
       const store = new NetworkStore(collection);
       const aggregation = Aggregation.count('title');
@@ -208,16 +137,6 @@ describe('NetworkStore', function() {
   });
 
   describe('count()', function() {
-    beforeEach(function() {
-      nock(this.client.apiHostname, { encodedQueryParams: true })
-        .get(`/appdata/${this.client.appKey}/${collection}/_count`)
-        .reply(200, {"count": 1}, {
-          'content-type': 'application/json',
-          'x-kinvey-request-id': 'a6b7712a0bca42b8a98c82de1fe0f5cf',
-          'x-kinvey-api-version': '4'
-        });
-    });
-
     it('should throw an error for an invalid query', function() {
       const store = new NetworkStore(collection);
       return store.count({}).toPromise()
@@ -228,7 +147,7 @@ describe('NetworkStore', function() {
     });
 
     it('should throw a ServerError', function() {
-      nock(this.client.apiHostname, { encodedQueryParams: true })
+      nock(this.client.apiHostname)
         .get(`/appdata/${this.client.appKey}/${collection}/_count`)
         .reply(500);
 
@@ -241,7 +160,7 @@ describe('NetworkStore', function() {
     });
 
     it('should return the count for the collection', function(){
-      nock(this.client.apiHostname, { encodedQueryParams: true })
+      nock(this.client.apiHostname)
         .get(`/appdata/${this.client.appKey}/${collection}/_count`)
         .reply(200, { count: 1 });
 
@@ -270,7 +189,7 @@ describe('NetworkStore', function() {
       return store.create([entity1, entity2])
         .catch((error) => {
           expect(error).toBeA(KinveyError);
-          expect(error.message).toEqual('Unable to create entities.');
+          expect(error.message).toEqual('Unable to create an array of entities.');
         });
     });
 
@@ -287,7 +206,8 @@ describe('NetworkStore', function() {
         author: entity.author,
         summary: entity.summary
       };
-      nock(this.client.apiHostname, { encodedQueryParams: true })
+
+      nock(this.client.apiHostname)
         .post(`/appdata/${this.client.appKey}/${collection}`, entity)
         .reply(201, reply);
 
@@ -315,7 +235,8 @@ describe('NetworkStore', function() {
         author: randomString(),
         summary: randomString(),
       };
-      nock(this.client.apiHostname, { encodedQueryParams: true })
+
+      nock(this.client.apiHostname)
         .post(`/appdata/${this.client.appKey}/${collection}`, entity)
         .reply(201, entity);
 
@@ -355,7 +276,7 @@ describe('NetworkStore', function() {
       return store.update([entity1, entity2])
         .catch((error) => {
           expect(error).toBeA(KinveyError);
-          expect(error.message).toEqual('Unable to update entities.');
+          expect(error.message).toEqual('Unable to update an array of entities.');
         });
     });
 
@@ -382,7 +303,7 @@ describe('NetworkStore', function() {
         author: randomString(),
         summary: randomString(),
       };
-      nock(this.client.apiHostname, { encodedQueryParams: true })
+      nock(this.client.apiHostname)
         .put(`/appdata/${this.client.appKey}/${collection}/${entity._id}`, entity)
         .reply(200, entity);
 
@@ -441,7 +362,7 @@ describe('NetworkStore', function() {
     });
 
     it('should throw a ServerError', function() {
-      nock(this.client.apiHostname, { encodedQueryParams: true })
+      nock(this.client.apiHostname)
         .delete(`/appdata/${this.client.appKey}/${collection}`)
         .reply(500);
 
@@ -455,7 +376,8 @@ describe('NetworkStore', function() {
 
     it('should remove all entities from the cache', function() {
       const reply = { count: 2 };
-      nock(this.client.apiHostname, { encodedQueryParams: true })
+
+      nock(this.client.apiHostname)
         .delete(`/appdata/${this.client.appKey}/${collection}`)
         .reply(200, reply);
 
@@ -472,7 +394,7 @@ describe('NetworkStore', function() {
       const store = new NetworkStore(collection);
       const _id = randomString();
 
-      nock(this.client.apiHostname, { encodedQueryParams: true })
+      nock(this.client.apiHostname)
         .delete(`/appdata/${this.client.appKey}/${collection}/${_id}`)
         .reply(404);
 
@@ -487,7 +409,7 @@ describe('NetworkStore', function() {
       const _id = randomString();
       const reply = { count: 1 };
 
-      nock(this.client.apiHostname, { encodedQueryParams: true })
+      nock(this.client.apiHostname)
         .delete(`/appdata/${this.client.appKey}/${collection}/${_id}`)
         .reply(200, reply);
 

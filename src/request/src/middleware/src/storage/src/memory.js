@@ -95,15 +95,14 @@ class Memory {
         entities = keyBy(entities, idAttribute);
         const entity = entities[id];
 
-        if (!entity) {
+        if (isDefined(entity) === false) {
           throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
             + ` collection on the ${this.name} memory database.`);
         }
 
         delete entities[id];
         this.cache.set(collection, JSON.stringify(values(entities)));
-
-        return entity;
+        return { count: 1 };
       });
   }
 

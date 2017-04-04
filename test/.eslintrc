@@ -1,11 +1,12 @@
 {
   "extends": [
-    "../../.eslintrc"
+    "../.eslintrc"
   ],
   "env": {
     "mocha": true
   },
   "rules": {
+    "max-len": "off",
     "prefer-arrow-callback": "off"
   }
 }
