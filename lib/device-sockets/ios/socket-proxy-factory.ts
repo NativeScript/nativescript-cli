@@ -1,7 +1,6 @@
 import { EventEmitter } from "events";
 import { CONNECTION_ERROR_EVENT_NAME } from "../../constants";
 import { PacketStream } from "./packet-stream";
-import { getAvailablePort } from "../../common/helpers";
 import * as net from "net";
 import * as ws from "ws";
 import temp = require("temp");
@@ -10,7 +9,8 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
 		private $config: IConfiguration,
-		private $options: IOptions) {
+		private $options: IOptions,
+		private $net: INet) {
 		super();
 	}
 
@@ -70,7 +70,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 
 	public async createWebSocketProxy(factory: () => Promise<net.Socket>): Promise<ws.Server> {
 		// NOTE: We will try to provide command line options to select ports, at least on the localhost.
-		const localPort = await getAvailablePort(8080);
+		const localPort = await this.$net.getAvailablePortInRange(8080);
 
 		this.$logger.info("\nSetting up debugger proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
 

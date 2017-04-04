@@ -50,27 +50,23 @@ class IOSDebugService extends DebugServiceBase implements IPlatformDebugService 
 		}
 
 		if (debugOptions.emulator) {
-			if (debugOptions.debugBrk) {
-				return [await this.emulatorDebugBrk(debugData, true, debugOptions)];
-			} else if (debugOptions.start) {
+			if (debugOptions.start) {
 				return [await this.emulatorStart(debugData, debugOptions)];
 			} else {
-				return [await this.emulatorDebugBrk(debugData, false, debugOptions)];
+				return [await this.emulatorDebugBrk(debugData, debugOptions)];
 			}
 		} else {
-			if (debugOptions.debugBrk) {
-				return this.deviceDebugBrk(debugData, true, debugOptions);
-			} else if (debugOptions.start) {
+			if (debugOptions.start) {
 				return this.deviceStart(debugData, debugOptions);
 			} else {
-				return this.deviceDebugBrk(debugData, false, debugOptions);
+				return this.deviceDebugBrk(debugData, debugOptions);
 			}
 		}
 	}
 
 	public async debugStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
 		await this.$devicesService.initialize({ platform: this.platform, deviceId: debugData.deviceIdentifier });
-		const action = async (device: Mobile.IiOSDevice) => await device.isEmulator ? this.emulatorDebugBrk(debugData, false, debugOptions) : this.debugBrkCore(device, debugData, debugOptions);
+		const action = async (device: Mobile.IiOSDevice) => device.isEmulator ? await this.emulatorDebugBrk(debugData, debugOptions) : await this.debugBrkCore(device, debugData, debugOptions);
 		await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
 	}
 
@@ -95,8 +91,8 @@ class IOSDebugService extends DebugServiceBase implements IPlatformDebugService 
 		}
 	}
 
-	private async emulatorDebugBrk(debugData: IDebugData, shouldBreak: boolean, debugOptions: IDebugOptions): Promise<string> {
-		let args = shouldBreak ? "--nativescript-debug-brk" : "--nativescript-debug-start";
+	private async emulatorDebugBrk(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		let args = debugOptions.debugBrk ? "--nativescript-debug-brk" : "--nativescript-debug-start";
 		let child_process = await this.$iOSEmulatorServices.runApplicationOnEmulator(debugData.pathToAppPackage, {
 			waitForDebugger: true,
 			captureStdin: true,
@@ -136,11 +132,11 @@ class IOSDebugService extends DebugServiceBase implements IPlatformDebugService 
 		return result;
 	}
 
-	private async deviceDebugBrk(debugData: IDebugData, shouldBreak: boolean, debugOptions: IDebugOptions): Promise<string[]> {
+	private async deviceDebugBrk(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string[]> {
 		await this.$devicesService.initialize({ platform: this.platform, deviceId: debugData.deviceIdentifier });
 		const action = async (device: iOSDevice.IOSDevice) => {
 			if (device.isEmulator) {
-				return await this.emulatorDebugBrk(debugData, shouldBreak, debugOptions);
+				return await this.emulatorDebugBrk(debugData, debugOptions);
 			}
 
 			const runOptions: IRunPlatformOptions = {
@@ -151,27 +147,27 @@ class IOSDebugService extends DebugServiceBase implements IPlatformDebugService 
 			// we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
 			let startApplicationAction = this.$platformService.startApplication(this.platform, runOptions, debugData.applicationIdentifier);
 
-			const result = await this.debugBrkCore(device, debugData, debugOptions, shouldBreak);
+			const result = await this.debugBrkCore(device, debugData, debugOptions);
 
 			await startApplicationAction;
 
 			return result;
 		};
 
-		const result = await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
-		return _.map(result, r => r.result);
+		const results = await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
+		return _.map(results, r => r.result);
 	}
 
-	private async debugBrkCore(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions, shouldBreak?: boolean): Promise<string> {
-		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device.deviceInfo.identifier, TIMEOUT_SECONDS, TIMEOUT_SECONDS, debugData.applicationIdentifier, shouldBreak);
+	private async debugBrkCore(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device.deviceInfo.identifier, TIMEOUT_SECONDS, TIMEOUT_SECONDS, debugData.applicationIdentifier, debugOptions.debugBrk);
 		return this.wireDebuggerClient(debugData, debugOptions, device);
 	}
 
 	private async deviceStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string[]> {
 		await this.$devicesService.initialize({ platform: this.platform, deviceId: debugData.deviceIdentifier });
 		const action = async (device: Mobile.IiOSDevice) => device.isEmulator ? await this.emulatorStart(debugData, debugOptions) : await this.deviceStartCore(device, debugData, debugOptions);
-		const result = await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
-		return _.map(result, r => r.result);
+		const results = await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
+		return _.map(results, r => r.result);
 	}
 
 	private async deviceStartCore(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {

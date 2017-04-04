@@ -1,8 +1,8 @@
 export class DebugDataService implements IDebugDataService {
 	constructor(private $projectData: IProjectData,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $platformService: IPlatformService,
-		private $platformsData: IPlatformsData) { }
+		private $platformsData: IPlatformsData,
+		private $mobileHelper: Mobile.IMobileHelper) { }
 
 	public createDebugData(debugService: IPlatformDebugService, options: IOptions, buildConfig: IBuildConfig): IDebugData {
 		this.$projectData.initializeProjectData(options.path);
@@ -16,26 +16,24 @@ export class DebugDataService implements IDebugDataService {
 	}
 
 	private getPathToAppPackage(debugService: IPlatformDebugService, options: IOptions, buildConfig: IBuildConfig): string {
-		if (debugService.platform === this.$devicePlatformsConstants.Android) {
+		if (this.$mobileHelper.isAndroidPlatform(debugService.platform)) {
 			if (!options.start && !options.emulator) {
 				const platformData = this.getPlatformData(debugService);
 
 				return this.$platformService.getLatestApplicationPackageForDevice(platformData, buildConfig).packageName;
-			} else {
-				return null;
 			}
-		} else if (debugService.platform === this.$devicePlatformsConstants.iOS) {
+		} else if (this.$mobileHelper.isiOSPlatform(debugService.platform)) {
 			if (options.emulator) {
 				const platformData = this.getPlatformData(debugService);
 
 				return this.$platformService.getLatestApplicationPackageForEmulator(platformData, buildConfig).packageName;
-			} else {
-				return null;
 			}
 		}
+
+		return null;
 	}
 
-	protected getPlatformData(debugService: IPlatformDebugService): IPlatformData {
+	private getPlatformData(debugService: IPlatformDebugService): IPlatformData {
 		return this.$platformsData.getPlatformData(debugService.platform, this.$projectData);
 	}
 }

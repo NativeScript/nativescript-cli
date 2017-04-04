@@ -130,33 +130,23 @@ class TestExecutionService implements ITestExecutionService {
 					this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 				}
 
-				if (this.$options.debugBrk) {
-					const debugService = this.getDebugService(platform); const deployOptions: IDeployPlatformOptions = {
-						clean: this.$options.clean,
-						device: this.$options.device,
-						emulator: this.$options.emulator,
-						projectDir: this.$options.path,
-						platformTemplate: this.$options.platformTemplate,
-						release: this.$options.release,
-						provision: this.$options.provision,
-						teamId: this.$options.teamId
-					};
+				const deployOptions: IDeployPlatformOptions = {
+					clean: this.$options.clean,
+					device: this.$options.device,
+					emulator: this.$options.emulator,
+					projectDir: this.$options.path,
+					platformTemplate: this.$options.platformTemplate,
+					release: this.$options.release,
+					provision: this.$options.provision,
+					teamId: this.$options.teamId
+				};
 
+				if (this.$options.debugBrk) {
+					const debugService = this.getDebugService(platform);
 					const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
 					const debugData = this.$debugDataService.createDebugData(debugService, this.$options, buildConfig);
 					await debugService.debug(debugData, this.$options);
 				} else {
-					const deployOptions: IDeployPlatformOptions = {
-						clean: this.$options.clean,
-						device: this.$options.device,
-						emulator: this.$options.emulator,
-						projectDir: this.$options.path,
-						platformTemplate: this.$options.platformTemplate,
-						release: this.$options.release,
-						provision: this.$options.provision,
-						teamId: this.$options.teamId
-					};
-
 					await this.$platformService.deployPlatform(platform, appFilesUpdaterOptions, deployOptions, projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 					await this.$usbLiveSyncService.liveSync(platform, projectData);
 				}

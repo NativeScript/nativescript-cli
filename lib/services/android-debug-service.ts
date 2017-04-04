@@ -1,4 +1,4 @@
-import { sleep, getAvailablePort } from "../common/helpers";
+import { sleep } from "../common/helpers";
 import { ChildProcess } from "child_process";
 import { DebugServiceBase } from "./debug-service-base";
 
@@ -23,7 +23,8 @@ class AndroidDebugService extends DebugServiceBase implements IPlatformDebugServ
 		private $logger: ILogger,
 		private $config: IConfiguration,
 		private $androidDeviceDiscovery: Mobile.IDeviceDiscovery,
-		private $androidProcessService: Mobile.IAndroidProcessService) {
+		private $androidProcessService: Mobile.IAndroidProcessService,
+		private $net: INet) {
 		super();
 	}
 
@@ -69,7 +70,7 @@ class AndroidDebugService extends DebugServiceBase implements IPlatformDebugServ
 		if (match) {
 			port = parseInt(match[1]);
 		} else {
-			port = await getAvailablePort(40000);
+			port = await this.$net.getAvailablePortInRange(40000);
 
 			await this.unixSocketForward(port, `${unixSocketName}`);
 		}
@@ -127,7 +128,7 @@ class AndroidDebugService extends DebugServiceBase implements IPlatformDebugServ
 		let startDebuggerCommand = ["am", "broadcast", "-a", `\"${packageName}-debug\"`, "--ez", "enable", "true"];
 		await this.device.adb.executeShellCommand(startDebuggerCommand);
 
-		if (debugOptions.client) {
+		if (debugOptions.chrome) {
 			let port = await this.getForwardedLocalDebugPortForPackageName(deviceId, packageName);
 			return `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${port}`;
 		}

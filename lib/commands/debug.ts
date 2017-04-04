@@ -15,7 +15,7 @@ export abstract class DebugPlatformCommand implements ICommand {
 		protected $projectData: IProjectData,
 		protected $options: IOptions,
 		protected $platformsData: IPlatformsData) {
-		this.$projectData.initializeProjectData(this.$options.path);
+		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {

@@ -44,7 +44,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("xmlValidator", {});
 	testInjector.register("npm", {});
 	testInjector.register("debugDataService", {
-		createDebugData: () => { return {}; }
+		createDebugData: () => ({})
 	});
 	testInjector.register("androidEmulatorServices", {});
 	testInjector.register("adb", AndroidDebugBridge);
