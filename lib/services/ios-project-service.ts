@@ -448,11 +448,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<string>()();
 	}
 
-	private createIpa(projectRoot: string): IFuture<void> {
+	private createIpa(projectRoot: string): IFuture<string> {
 		return (() => {
 			let xArchivePath = this.archive().wait();
 			let exportFileIpa = this.exportDevelopmentArchive(this.$projectData, { archivePath: xArchivePath }).wait();
-		}).future<void>()();
+			return exportFileIpa;
+		}).future<string>()();
 	}
 
 	public isPlatformPrepared(projectRoot: string): boolean {
