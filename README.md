@@ -332,8 +332,8 @@ On iOS devices, the app does not run automatically. To run the app, tap the app 
 If you do not have any physical devices on which to test your app or if you have not configured any certificates and provisioning profiles for iOS, you can run your app in the native emulator of your target platform.
 
 ```Shell
-tns emulate android
-tns emulate ios
+tns run android --emulator
+tns run ios --emulator
 ```
 
 This operation calls the SDK for the selected target platform, builds your app locally, launches the native device emulator for the selected target platform, and runs your project on the virtual device.
@@ -351,13 +351,6 @@ You can quickly run your app on connected devices, including all running Android
 ```Shell
 tns run android
 tns run ios
-```
-
-You can quickly deploy your app in the native emulators. The following command is shorthand for `prepare`, `build`, and `emulate`.
-
-```Shell
-tns run android --emulator
-tns run ios --emulator
 ```
 
 [Back to Top][1]
