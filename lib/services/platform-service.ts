@@ -398,6 +398,10 @@ export class PlatformService implements IPlatformService {
 
 			this.trackProjectType().wait();
 
+			const normalizePlatformName = this.$mobileHelper.normalizePlatformName(platform);
+			const deviceType = buildConfig && buildConfig.buildForDevice ? "device" : "emulator";
+			this.$analyticsService.track("Build", `${normalizePlatformName}.${deviceType}`).wait();
+
 			let platformData = this.$platformsData.getPlatformData(platform);
 			platformData.platformProjectService.buildProject(platformData.projectRoot, buildConfig).wait();
 			let prepareInfo = this.$projectChangesService.getPrepareInfo(platform);
