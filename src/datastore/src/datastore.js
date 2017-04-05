@@ -1,7 +1,9 @@
 import url from 'url';
+import isString from 'lodash/isString';
 
 import { CacheRequest, RequestMethod } from 'src/request';
 import { KinveyError } from 'src/errors';
+import { isDefined } from 'src/utils';
 import Client from 'src/client';
 import NetworkStore from './networkstore';
 import CacheStore from './cachestore';
@@ -29,7 +31,7 @@ export { DataStoreType };
 export default class DataStore {
   constructor() {
     throw new KinveyError('Not allowed to construct a DataStore instance.'
-      + ' Please use the collection() function to retrieve an instance of a DataStore instance.');
+      + ' Please use the collection() function to get an instance of a DataStore instance.');
   }
 
   /**
@@ -42,8 +44,8 @@ export default class DataStore {
   static collection(collection, type = DataStoreType.Cache, options) {
     let store;
 
-    if (!collection) {
-      throw new KinveyError('A collection is required.');
+    if (isDefined(collection) === false || isString(collection) === false) {
+      throw new KinveyError('A collection is required and must be a string.');
     }
 
     switch (type) {
@@ -89,6 +91,7 @@ export default class DataStore {
       properties: options.properties,
       timeout: options.timeout
     });
-    return request.execute().then(response => response.data);
+    return request.execute()
+      .then(response => response.data);
   }
 }
