@@ -135,12 +135,12 @@ export default class Query {
    * @type {Object}
    */
   set sort(sort) {
-    if (sort && !isObject(sort)) {
+    if (sort && isObject(sort) === false) {
       throw new QueryError('sort must an Object');
     }
 
     if (isDefined(this._parent)) {
-      this._parent.sort(sort);
+      this._parent.sort = sort;
     } else {
       this._sort = sort || {};
     }
@@ -161,7 +161,7 @@ export default class Query {
       limit = parseFloat(limit);
     }
 
-    if (isDefined(limit) && !isNumber(limit)) {
+    if (isDefined(limit) && isNumber(limit) === false) {
       throw new QueryError('limit must be a number');
     }
 
@@ -182,17 +182,17 @@ export default class Query {
   /**
    * @type {number}
    */
-  set skip(skip = 0) {
+  set skip(skip) {
     if (isString(skip)) {
       skip = parseFloat(skip);
     }
 
-    if (!isNumber(skip)) {
+    if (isNumber(skip) === false) {
       throw new QueryError('skip must be a number');
     }
 
     if (isDefined(this._parent)) {
-      this._parent.skip(skip);
+      this._parent.skip = skip;
     } else {
       this._skip = skip;
     }
@@ -237,7 +237,11 @@ export default class Query {
    * @returns {Query} The query.
    */
   contains(field, values) {
-    if (!isArray(values)) {
+    if (isDefined(values) === false) {
+      throw new QueryError('You must supply a value.');
+    }
+
+    if (isArray(values) === false) {
       values = [values];
     }
 
@@ -255,7 +259,11 @@ export default class Query {
    * @returns {Query} The query.
    */
   containsAll(field, values) {
-    if (!isArray(values)) {
+    if (isDefined(values) === false) {
+      throw new QueryError('You must supply a value.');
+    }
+
+    if (isArray(values) === false) {
       values = [values];
     }
 
@@ -273,7 +281,7 @@ export default class Query {
    * @returns {Query} The query.
    */
   greaterThan(field, value) {
-    if (!isNumber(value) && !isString(value)) {
+    if (isNumber(value) === false && isString(value) === false) {
       throw new QueryError('You must supply a number or string.');
     }
 
@@ -291,7 +299,7 @@ export default class Query {
    * @returns {Query} The query.
    */
   greaterThanOrEqualTo(field, value) {
-    if (!isNumber(value) && !isString(value)) {
+    if (isNumber(value) === false && isString(value) === false) {
       throw new QueryError('You must supply a number or string.');
     }
 
@@ -309,7 +317,7 @@ export default class Query {
    * @returns {Query} The query.
    */
   lessThan(field, value) {
-    if (!isNumber(value) && !isString(value)) {
+    if (isNumber(value) === false && isString(value) === false) {
       throw new QueryError('You must supply a number or string.');
     }
 
@@ -327,7 +335,7 @@ export default class Query {
    * @returns {Query} The query.
    */
   lessThanOrEqualTo(field, value) {
-    if (!isNumber(value) && !isString(value)) {
+    if (isNumber(value) === false && isString(value) === false) {
       throw new QueryError('You must supply a number or string.');
     }
 
@@ -358,7 +366,7 @@ export default class Query {
    * @returns {Query} The query.
    */
   notContainedIn(field, values) {
-    if (!isArray(values)) {
+    if (isArray(values) === false) {
       values = [values];
     }
 
@@ -390,7 +398,7 @@ export default class Query {
   nor(...args) {
     // NOR is preceded by AND. Therefore, if this query is part of an AND-join,
     // apply the NOR onto the parent to make sure AND indeed precedes NOR.
-    if (isDefined(this._parent) && has(this._parent, 'filter.$and')) {
+    if (isDefined(this._parent) && has(this._parent.filter, '$and')) {
       return this._parent.nor(...args);
     }
 
@@ -580,13 +588,13 @@ export default class Query {
    * @returns {Query} The query.
    */
   withinPolygon(field, coords) {
-    if (!isArray(coords) || coords.length > 3) {
-      throw new QueryError('coords must be [[number, number]]');
+    if (isArray(coords) === false || coords.length === 0 || coords.length > 3) {
+      throw new QueryError('coords must be a [[number, number]]');
     }
 
     coords = coords.map((coord) => {
-      if (!coord[0] || !coord[1]) {
-        throw new QueryError('coords argument must be [number, number]');
+      if (isNumber(coord[0]) === false || isNumber(coord[1]) === false) {
+        throw new QueryError('coords argument must be a [number, number]');
       }
 
       return [parseFloat(coord[0]), parseFloat(coord[1])];
@@ -706,7 +714,7 @@ export default class Query {
     if (queries.length === 0) {
       that = new Query();
       queries = [that.toJSON().filter];
-      that.parent = this; // Required for operator precedence and `toJSON`.
+      that._parent = this; // Required for operator precedence and `toJSON`.
     }
 
     // Join operators operate on the top-level of `filter`. Since the `toJSON`
