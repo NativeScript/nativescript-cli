@@ -192,6 +192,13 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @returns {Promise<void>}
 	 */
 	trackProjectType(projectData: IProjectData): Promise<void>;
+
+	/**
+	 * Sends information to analytics for specific platform related action, for example Build, LiveSync, etc.
+	 * @param {ITrackPlatformAction} actionData The data describing current action.
+	 * @returns {Promise<void>}
+	 */
+	trackActionForPlatform(actionData: ITrackPlatformAction): Promise<void>;
 }
 
 /**
@@ -207,6 +214,31 @@ interface IPlatformSpecificData {
 	 * Target SDK for Android.s
 	 */
 	sdk: string;
+}
+
+/**
+ * Describes information that will be tracked for specific action related for platforms - build, livesync, etc.
+ */
+interface ITrackPlatformAction {
+	/**
+	 * Name of the action.
+	 */
+	action: string;
+
+	/**
+	 * Platform for which the action will be executed.
+	 */
+	platform: string;
+
+	/**
+	 * Defines if the action is for device or emulator.
+	 */
+	isForDevice: boolean;
+
+	/**
+	 * Defines the OS version of the device for which the action will be executed.
+	 */
+	deviceOsVersion?: string;
 }
 
 interface IPlatformData {

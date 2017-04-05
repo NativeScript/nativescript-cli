@@ -68,7 +68,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	private getCurrentPlatformVersion(platform: string, projectData: IProjectData) : string {
+	private getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		let currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
 		let version: string;
@@ -393,10 +393,27 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
+	public async trackActionForPlatform(actionData: ITrackPlatformAction): Promise<void> {
+		const normalizePlatformName = this.$mobileHelper.normalizePlatformName(actionData.platform);
+		let featureValue = normalizePlatformName;
+		if (actionData.isForDevice !== null) {
+			const deviceType = actionData.isForDevice ? "device" : "emulator";
+			featureValue += `.${deviceType}`;
+		}
+
+		await this.$analyticsService.track(actionData.action, featureValue);
+
+		if (actionData.deviceOsVersion) {
+			await this.$analyticsService.track(`Device OS version`, `${normalizePlatformName}_${actionData.deviceOsVersion}`);
+		}
+	}
+
 	public async buildPlatform(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {
 		this.$logger.out("Building project...");
 
 		await this.trackProjectType(projectData);
+		const isForDevice = this.$mobileHelper.isAndroidPlatform(platform) ? null : buildConfig && buildConfig.buildForDevice;
+		await this.trackActionForPlatform({ action: "Build", platform, isForDevice });
 
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		platformData.platformProjectService.on(constants.BUILD_OUTPUT_EVENT_NAME, (data: any) => {
@@ -482,6 +499,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			} else {
 				this.$logger.out("Skipping install.");
 			}
+
+			await this.trackActionForPlatform({ action: "Deploy", platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
 		};
 
 		await this.$devicesService.execute(action, this.getCanExecuteAction(platform, deployOptions));
