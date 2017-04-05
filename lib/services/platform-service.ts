@@ -395,8 +395,14 @@ export class PlatformService implements IPlatformService {
 	public trackActionForPlatform(actionData: ITrackPlatformAction): IFuture<void> {
 		return (() => {
 			const normalizePlatformName = this.$mobileHelper.normalizePlatformName(actionData.platform);
-			const deviceType = actionData.isForDevice ? "device" : "emulator";
-			this.$analyticsService.track(actionData.action, `${normalizePlatformName}.${deviceType}`).wait();
+			let featureValue = normalizePlatformName;
+			if (actionData.isForDevice !== null) {
+				const deviceType = actionData.isForDevice ? "device" : "emulator";
+				featureValue += `.${deviceType}`;
+			}
+
+			this.$analyticsService.track(actionData.action, featureValue).wait();
+
 			if (actionData.deviceOsVersion) {
 				this.$analyticsService.track(`Device OS version`, `${normalizePlatformName}_${actionData.deviceOsVersion}`).wait();
 			}
@@ -408,7 +414,7 @@ export class PlatformService implements IPlatformService {
 			this.$logger.out("Building project...");
 
 			this.trackProjectType().wait();
-			const isForDevice = this.$options.forDevice || (buildConfig && buildConfig.buildForDevice);
+			const isForDevice = this.$mobileHelper.isAndroidPlatform(platform) ? null : (this.$options.forDevice || (buildConfig && buildConfig.buildForDevice));
 			this.trackActionForPlatform({ action: "Build", platform, isForDevice }).wait();
 
 			let platformData = this.$platformsData.getPlatformData(platform);
