@@ -189,8 +189,8 @@ describe('SyncStore', function() {
     });
 
     it('should return the count of all unique properties on the collection', function(done) {
-      const entity1 = { _id: randomString() };
-      const entity2 = { _id: randomString() };
+      const entity1 = { _id: randomString(), title: randomString() };
+      const entity2 = { _id: randomString(), title: randomString() };
       const store = new SyncStore(collection);
       const onNextSpy = expect.createSpy();
 
