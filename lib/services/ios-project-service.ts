@@ -179,8 +179,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return (() => {
 			let projectRoot = this.platformData.projectRoot;
 			let archivePath = options && options.archivePath ? path.resolve(options.archivePath) : path.join(projectRoot, "/build/archive/", this.$projectData.projectName + ".xcarchive");
-			let args = ["archive", "-archivePath", archivePath]
+			let args = ["archive", "-archivePath", archivePath, "-configuration", this.$options.release ? "Release" : "Debug"]
 				.concat(this.xcbuildProjectArgs(projectRoot, "scheme"));
+
 			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
 			return archivePath;
 		}).future<string>()();
