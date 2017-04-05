@@ -405,6 +405,7 @@ To learn how to suggest a new feature or improvement, click [here](https://githu
 To learn how to contribute to the code base, click [here](https://github.com/NativeScript/nativescript-cli/blob/master/CONTRIBUTING.md#contribute-to-the-code-base).
 
 [Back to Top][1]
+
 How to Build
 ===
 ```
@@ -417,10 +418,6 @@ grunt
 
 To use the locally built CLI instead `tns` you can call `PATH_TO_CLI_FOLDER/bin/tns`. For example:
 `PATH_TO_CLI_FOLDER/bin/tns run ios|android`
-
-> NOTE: You should have [SSH key set](https://github.com/settings/keys) for your Git in order add the submodule via [smart git protocol](https://github.com/settings/keys).
-Instruction on how to set new SSH key in Windows, Mac and Linux can be found [here](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/#platform-windows).
-If you try to clone without SSH key setup, you will receive error _"Permission denied (publickey). Please make sure you have the correct access rights"_.
 
 [Back to Top][1]
 
