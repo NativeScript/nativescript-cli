@@ -37,6 +37,18 @@ class TestInitCommand implements ICommand {
 				'save-dev': true,
 				optional: false,
 			});
+
+			let modulePath = path.join(projectDir, "node_modules", mod);
+			let modulePackageJsonPath = path.join(modulePath, "package.json");
+			let modulePackageJsonContent = this.$fs.readJson(modulePackageJsonPath);
+			let modulePeerDependencies = modulePackageJsonContent.peerDependencies || {};
+
+			for (let peerDependency in modulePeerDependencies) {
+				let dependencyVersion = modulePeerDependencies[peerDependency] || "*";
+				await this.$npm.install(`${peerDependency}@${dependencyVersion}`, projectDir, {
+					'save-dev': true
+				});
+			}
 		}
 
 		await this.$pluginsService.add('nativescript-unit-test-runner', this.$projectData);
