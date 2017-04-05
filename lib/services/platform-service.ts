@@ -392,11 +392,30 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
+	public trackActionForPlatform(actionData: ITrackPlatformAction): IFuture<void> {
+		return (() => {
+			const normalizePlatformName = this.$mobileHelper.normalizePlatformName(actionData.platform);
+			let featureValue = normalizePlatformName;
+			if (actionData.isForDevice !== null) {
+				const deviceType = actionData.isForDevice ? "device" : "emulator";
+				featureValue += `.${deviceType}`;
+			}
+
+			this.$analyticsService.track(actionData.action, featureValue).wait();
+
+			if (actionData.deviceOsVersion) {
+				this.$analyticsService.track(`Device OS version`, `${normalizePlatformName}_${actionData.deviceOsVersion}`).wait();
+			}
+		}).future<void>()();
+	}
+
 	public buildPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			this.$logger.out("Building project...");
 
 			this.trackProjectType().wait();
+			const isForDevice = this.$mobileHelper.isAndroidPlatform(platform) ? null : (this.$options.forDevice || (buildConfig && buildConfig.buildForDevice));
+			this.trackActionForPlatform({ action: "Build", platform, isForDevice }).wait();
 
 			let platformData = this.$platformsData.getPlatformData(platform);
 			platformData.platformProjectService.buildProject(platformData.projectRoot, buildConfig).wait();
@@ -464,6 +483,8 @@ export class PlatformService implements IPlatformService {
 					} else {
 						this.$logger.out("Skipping install.");
 					}
+
+					this.trackActionForPlatform({ action: "Deploy", platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version }).wait();
 				}).future<void>()();
 			};
 			this.$devicesService.execute(action, this.getCanExecuteAction(platform)).wait();

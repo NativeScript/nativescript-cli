@@ -131,7 +131,7 @@ interface IPlatformService {
 	 * @param {{isForDevice: boolean}} settings Defines if the searched artifact should be for simulator.
 	 * @returns {void}
 	 */
-	copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}): void;
+	copyLastOutput(platform: string, targetPath: string, settings: { isForDevice: boolean }): void;
 
 	lastOutputPath(platform: string, settings: { isForDevice: boolean }): string;
 
@@ -150,6 +150,38 @@ interface IPlatformService {
 	 * @returns {IFuture<void>}
 	 */
 	trackProjectType(): IFuture<void>;
+
+	/**
+	 * Sends information to analytics for specific platform related action, for example Build, LiveSync, etc.
+	 * @param {ITrackPlatformAction} actionData The data describing current action.
+	 * @returns {IFuture<void>}
+	 */
+	trackActionForPlatform(actionData: ITrackPlatformAction): IFuture<void>;
+}
+
+/**
+ * Describes information that will be tracked for specific action related for platforms - build, livesync, etc.
+ */
+interface ITrackPlatformAction {
+	/**
+	 * Name of the action.
+	 */
+	action: string;
+
+	/**
+	 * Platform for which the action will be executed.
+	 */
+	platform: string;
+
+	/**
+	 * Defines if the action is for device or emulator.
+	 */
+	isForDevice: boolean;
+
+	/**
+	 * Defines the OS version of the device for which the action will be executed.
+	 */
+	deviceOsVersion?: string;
 }
 
 interface IPlatformData {
