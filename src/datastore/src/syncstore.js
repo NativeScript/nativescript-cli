@@ -4,7 +4,7 @@ import { CacheRequest, RequestMethod } from 'src/request';
 import { KinveyError } from 'src/errors';
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
-import { KinveyObservable } from 'src/utils';
+import { KinveyObservable, isDefined } from 'src/utils';
 import CacheStore from './cachestore';
 
 /**
@@ -76,6 +76,11 @@ export default class SyncStore extends CacheStore {
   findById(id, options = {}) {
     const stream = KinveyObservable.create((observer) => {
       try {
+        if (isDefined(id) === false) {
+          observer.next(undefined);
+          return observer.complete();
+        }
+
         // Fetch from the cache
         const request = new CacheRequest({
           method: RequestMethod.GET,

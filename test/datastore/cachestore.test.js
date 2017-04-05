@@ -59,9 +59,7 @@ describe('CacheStore', function() {
     });
 
     it('should throw an error if there are entities to sync', function(done) {
-      const entity = {
-        _id: randomString()
-      };
+      const entity = { _id: randomString() };
       const syncStore = new SyncStore(collection);
       syncStore.save(entity)
         .then(() => {
@@ -85,12 +83,8 @@ describe('CacheStore', function() {
     });
 
     it('should return the entities', function(done) {
-      const entity1 = {
-        _id: randomString()
-      };
-      const entity2 = {
-        _id: randomString()
-      };
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
       const store = new CacheStore(collection);
       const onNextSpy = expect.createSpy();
 
@@ -135,12 +129,8 @@ describe('CacheStore', function() {
     });
 
     it('should return the entities that match the query', function(done) {
-      const entity1 = {
-        _id: randomString()
-      };
-      const entity2 = {
-        _id: randomString()
-      };
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
       const store = new CacheStore(collection);
       const query = new Query().equalTo('_id', entity1._id);
       const onNextSpy = expect.createSpy();
@@ -171,12 +161,8 @@ describe('CacheStore', function() {
     });
 
     it('should remove entities that no longer exist on the backend from the cache', function(done) {
-      const entity1 = {
-        _id: randomString()
-      };
-      const entity2 = {
-        _id: randomString()
-      };
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
       const store = new CacheStore(collection);
       const onNextSpy = expect.createSpy();
 
@@ -238,9 +224,7 @@ describe('CacheStore', function() {
     });
 
     it('should throw an error if there are entities to sync', function(done) {
-      const entity = {
-        _id: randomString()
-      };
+      const entity = { _id: randomString() };
       const syncStore = new SyncStore(collection);
       syncStore.save(entity)
         .then(() => {
@@ -264,9 +248,7 @@ describe('CacheStore', function() {
     });
 
     it('should throw a NotFoundError if the entity does not exist', function(done) {
-      const entity = {
-        _id: randomString()
-      };
+      const entity = { _id: randomString() };
       const store = new CacheStore(collection);
       const onNextSpy = expect.createSpy();
 
@@ -290,12 +272,8 @@ describe('CacheStore', function() {
     });
 
     it('should return the entity that matches the id', function(done) {
-      const entity1 = {
-        _id: randomString()
-      };
-      const entity2 = {
-        _id: randomString()
-      };
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
       const store = new CacheStore(collection);
       const onNextSpy = expect.createSpy();
 
@@ -324,12 +302,8 @@ describe('CacheStore', function() {
     });
 
     it('should remove entities that no longer exist on the backend from the cache', function(done) {
-      const entity1 = {
-        _id: randomString()
-      };
-      const entity2 = {
-        _id: randomString()
-      };
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
       const store = new CacheStore(collection);
       const onNextSpy = expect.createSpy();
 
@@ -399,9 +373,7 @@ describe('CacheStore', function() {
     });
 
     it('should throw an error if there are entities to sync', function(done) {
-      const entity = {
-        _id: randomString()
-      };
+      const entity = { _id: randomString() };
       const syncStore = new SyncStore(collection);
       syncStore.save(entity)
         .then(() => {
@@ -426,14 +398,8 @@ describe('CacheStore', function() {
     });
 
     it('should return the count of all unique properties on the collection', function(done) {
-      const entity1 = {
-        _id: randomString(),
-        title: randomString()
-      };
-      const entity2 = {
-        _id: randomString(),
-        title: randomString()
-      };
+      const entity1 = { _id: randomString(), title: randomString() };
+      const entity2 = { _id: randomString(), title: randomString() };
       const store = new CacheStore(collection);
       const onNextSpy = expect.createSpy();
 
@@ -502,9 +468,7 @@ describe('CacheStore', function() {
     });
 
     it('should throw an error if there are entities to sync', function(done) {
-      const entity = {
-        _id: randomString()
-      };
+      const entity = { _id: randomString() };
       const syncStore = new SyncStore(collection);
       syncStore.save(entity)
         .then(() => {
@@ -528,12 +492,8 @@ describe('CacheStore', function() {
     });
 
     it('should return the count for the collection', function(done) {
-      const entity1 = {
-        _id: randomString()
-      };
-      const entity2 = {
-        _id: randomString()
-      };
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
       const store = new CacheStore(collection);
       const onNextSpy = expect.createSpy();
 
@@ -565,16 +525,8 @@ describe('CacheStore', function() {
   describe('create()', function() {
     it('should throw an error if trying to create an array of entities', function() {
       const store = new CacheStore(collection);
-      const entity1 = {
-        title: randomString(),
-        author: randomString(),
-        summary: randomString(),
-      };
-      const entity2 = {
-        title: randomString(),
-        author: randomString(),
-        summary: randomString(),
-      };
+      const entity1 = {};
+      const entity2 = {};
 
       return store.create([entity1, entity2])
         .catch((error) => {
@@ -585,17 +537,8 @@ describe('CacheStore', function() {
 
     it('should create an entity', function() {
       const store = new CacheStore(collection);
-      const entity = {
-        title: randomString(),
-        author: randomString(),
-        summary: randomString(),
-      };
-      const reply = {
-        _id: randomString(),
-        title: entity.title,
-        author: entity.author,
-        summary: entity.summary
-      };
+      const entity = { title: randomString() };
+      const reply = { _id: randomString(), title: entity.title };
 
       nock(this.client.apiHostname)
         .post(`/appdata/${this.client.appKey}/${collection}`, entity)
@@ -623,12 +566,7 @@ describe('CacheStore', function() {
 
     it('should create an entity if it contains an _id', async function() {
       const store = new CacheStore(collection);
-      const entity = {
-        _id: randomString(),
-        title: randomString(),
-        author: randomString(),
-        summary: randomString(),
-      };
+      const entity = { _id: randomString() };
 
       nock(this.client.apiHostname)
         .post(`/appdata/${this.client.appKey}/${collection}`, entity)
@@ -658,18 +596,8 @@ describe('CacheStore', function() {
   describe('update()', function() {
     it('should throw an error if trying to update an array of entities', async function() {
       const store = new CacheStore(collection);
-      const entity1 = {
-        _id: randomString(),
-        title: randomString(),
-        author: randomString(),
-        summary: randomString(),
-      };
-      const entity2 = {
-        _id: randomString(),
-        title: randomString(),
-        author: randomString(),
-        summary: randomString(),
-      };
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
 
       return store.update([entity1, entity2])
         .catch((error) => {
@@ -680,11 +608,7 @@ describe('CacheStore', function() {
 
     it('should throw an error if an entity does not have an _id', async function() {
       const store = new CacheStore(collection);
-      const entity = {
-        title: randomString(),
-        author: randomString(),
-        summary: randomString(),
-      };
+      const entity = {};
 
       return store.update(entity)
         .catch((error) => {
@@ -695,12 +619,7 @@ describe('CacheStore', function() {
 
     it('should update an entity with an _id', async function() {
       const store = new CacheStore(collection);
-      const entity = {
-        _id: randomString(),
-        title: randomString(),
-        author: randomString(),
-        summary: randomString(),
-      };
+      const entity = { _id: randomString() };
 
       nock(this.client.apiHostname)
         .put(`/appdata/${this.client.appKey}/${collection}/${entity._id}`, entity)
@@ -765,9 +684,7 @@ describe('CacheStore', function() {
 
     it('should remove the entity from cache if the entity is not found on the backend', function() {
       const store = new CacheStore(collection);
-      const entity = {
-        _id: randomString()
-      };
+      const entity = { _id: randomString() };
 
       nock(store.client.apiHostname)
         .get(`/appdata/${store.client.appKey}/${collection}`)
@@ -794,9 +711,7 @@ describe('CacheStore', function() {
 
     it('should remove the entity from the backend', function() {
       const store = new CacheStore(collection);
-      const entity = {
-        _id: randomString()
-      };
+      const entity = { _id: randomString() };
 
       nock(store.client.apiHostname)
         .get(`/appdata/${store.client.appKey}/${collection}`)
@@ -849,9 +764,7 @@ describe('CacheStore', function() {
   describe('clear()', function() {
     it('should remove all entities only from the cache', function() {
       const store = new CacheStore(collection);
-      const entity = {
-        _id: randomString()
-      };
+      const entity = { _id: randomString() };
 
       nock(store.client.apiHostname)
         .get(`/appdata/${store.client.appKey}/${collection}`)
@@ -873,12 +786,8 @@ describe('CacheStore', function() {
 
     it('should remove only the entities from the cache that match the query', function() {
       const store = new CacheStore(collection);
-      const entity1 = {
-        _id: randomString()
-      };
-      const entity2 = {
-        _id: randomString()
-      };
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
 
       nock(store.client.apiHostname)
         .get(`/appdata/${store.client.appKey}/${collection}`)
@@ -948,9 +857,7 @@ describe('CacheStore', function() {
   describe('push', function() {
     it('should push the entities to the backend', function() {
       const store = new CacheStore(collection);
-      const entity = {
-        _id: randomString()
-      };
+      const entity = { _id: randomString() };
 
       return store.save(entity)
         .then(() => {
@@ -971,12 +878,8 @@ describe('CacheStore', function() {
 
     it('should push only the entities matching the query to the backend', function() {
       const store = new CacheStore(collection);
-      const entity1 = {
-        _id: randomString()
-      };
-      const entity2 = {
-        _id: randomString()
-      };
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
 
       return store.save(entity1)
         .then(() => {
@@ -1002,12 +905,8 @@ describe('CacheStore', function() {
 
   describe('pull', function() {
     it('should save entities from the backend to the cache', function() {
-      const entity1 = {
-        _id: randomString()
-      };
-      const entity2 = {
-        _id: randomString()
-      };
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
       const store = new CacheStore(collection);
 
       nock(store.client.apiHostname)
@@ -1057,9 +956,7 @@ describe('CacheStore', function() {
   describe('clearSync()', function() {
     it('should clear the sync table', function() {
       const store = new CacheStore(collection);
-      const entity = {
-        _id: randomString()
-      };
+      const entity = { _id: randomString() };
 
       return store.save(entity)
         .then(() => {
@@ -1081,12 +978,8 @@ describe('CacheStore', function() {
 
     it('should clear only the entities from the sync table matching the query', function() {
       const store = new CacheStore(collection);
-      const entity1 = {
-        _id: randomString()
-      };
-      const entity2 = {
-        _id: randomString()
-      };
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
 
       return store.save(entity1)
         .then(() => {
