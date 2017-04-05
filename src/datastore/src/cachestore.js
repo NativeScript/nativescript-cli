@@ -4,10 +4,11 @@ import keyBy from 'lodash/keyBy';
 import filter from 'lodash/filter';
 import xorWith from 'lodash/xorWith';
 import isArray from 'lodash/isArray';
+import reduce from 'lodash/reduce';
 import url from 'url';
 
 import { CacheRequest, AuthType, RequestMethod } from 'src/request';
-import { KinveyError } from 'src/errors';
+import { KinveyError, NotFoundError } from 'src/errors';
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
 import { Metadata } from 'src/entity';
@@ -507,97 +508,6 @@ export default class CacheStore extends NetworkStore {
   }
 
   /**
-   * Remove all entities in the data store. A query can be optionally provided to remove
-   * a subset of all entities in a collection or omitted to remove all entities in
-   * a collection. The number of entities removed adheres to the limits specified
-   * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
-   *
-   * @param   {Query}                 [query]                           Query used to filter entities.
-   * @param   {Object}                [options]                         Options
-   * @param   {Properties}            [options.properties]              Custom properties to send with
-   *                                                                    the request.
-   * @param   {Number}                [options.timeout]                 Timeout for the request.
-   * @return  {Promise}                                                 Promise.
-   */
-  remove(query, options = {}) {
-    const stream = KinveyObservable.create((observer) => {
-      if (query && !(query instanceof Query)) {
-        return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
-      }
-
-      // Fetch the cache entities
-      const fetchRequest = new CacheRequest({
-        method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this.pathname
-        }),
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout
-      });
-
-      // Execute the request
-      return fetchRequest.execute()
-        .then(response => response.data)
-        .then((entities) => {
-          if (isDefined(entities) && entities.length > 0) {
-            // Remove the entities from the cache
-            const removeRequest = new CacheRequest({
-              method: RequestMethod.DELETE,
-              url: url.format({
-                protocol: this.client.protocol,
-                host: this.client.host,
-                pathname: this.pathname
-              }),
-              properties: options.properties,
-              body: entities,
-              timeout: options.timeout
-            });
-
-            // Execite the request
-            return removeRequest.execute()
-              .then(response => response.data)
-              .then((result) => {
-                // Clear the entities from the sync table
-                const localEntities = filter(entities, (entity) => {
-                  const metadata = new Metadata(entity);
-                  return metadata.isLocal();
-                });
-                const query = new Query().contains('entityId', Object.keys(keyBy(localEntities, '_id')));
-                return this.clearSync(query, options)
-                  .then(() => {
-                    // Create delete operations for non local data in the sync table
-                    const syncEntities = xorWith(entities, localEntities,
-                      (entity, localEntity) => entity._id === localEntity._id);
-                    return this.syncManager.addDeleteOperation(syncEntities, options);
-                  })
-                  .then(() => {
-                    // Push the entities
-                    if (this.syncAutomatically === true) {
-                      const ids = Object.keys(keyBy(entities, '_id'));
-                      const query = new Query().contains('entityId', ids);
-                      return this.push(query, options);
-                    }
-
-                    return null;
-                  })
-                  .then(() => result);
-              });
-          }
-
-          return { count: 0 };
-        })
-        .then(result => observer.next(result))
-        .then(() => observer.complete())
-        .catch(error => observer.error(error));
-    });
-
-    return stream.toPromise();
-  }
-
-  /**
    * Remove a single entity in the data store by id.
    *
    * @param   {string}                id                               Entity by id to remove.
@@ -609,14 +519,18 @@ export default class CacheStore extends NetworkStore {
    */
   removeById(id, options = {}) {
     const stream = KinveyObservable.create((observer) => {
-      // Remove from cache
+      if (isDefined(id) === false) {
+        observer.next({ count: 0 });
+        return observer.complete();
+      }
+
+      // Get the entity from cache
       const request = new CacheRequest({
-        method: RequestMethod.DELETE,
+        method: RequestMethod.GET,
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: `${this.pathname}/${id}`,
-          query: options.query
+          pathname: `${this.pathname}/${id}`
         }),
         properties: options.properties,
         authType: AuthType.Default,
@@ -626,8 +540,15 @@ export default class CacheStore extends NetworkStore {
       // Execute the request
       return request.execute()
         .then(response => response.data)
+        .catch((error) => {
+          if (error instanceof NotFoundError) {
+            return null;
+          }
+
+          throw error;
+        })
         .then((entity) => {
-          if (entity) {
+          if (isDefined(entity)) {
             const metadata = new Metadata(entity);
 
             // Clear any pending sync items if the entity
@@ -656,7 +577,24 @@ export default class CacheStore extends NetworkStore {
 
           return entity;
         })
-        .then(entity => observer.next(entity))
+        .then((entity) => {
+          // Remove from cache
+          const request = new CacheRequest({
+            method: RequestMethod.DELETE,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: `${this.pathname}/${entity._id}`,
+              query: options.query
+            }),
+            properties: options.properties,
+            authType: AuthType.Default,
+            timeout: options.timeout
+          });
+          return request.execute()
+            .then(response => response.data);
+        })
+        .then(result => observer.next(result))
         .then(() => observer.complete())
         .catch(error => observer.error(error));
     });
@@ -686,8 +624,7 @@ export default class CacheStore extends NetworkStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname,
-          query: options.query
+          pathname: this.pathname
         }),
         properties: options.properties,
         query: query,
@@ -697,33 +634,47 @@ export default class CacheStore extends NetworkStore {
       // Execute the request
       return request.execute()
         .then(response => response.data)
-        .then((entities) => {
-          if (isDefined(entities) && entities.length > 0) {
-            // Remove the entities from the cache
-            const removeRequest = new CacheRequest({
-              method: RequestMethod.DELETE,
-              url: url.format({
-                protocol: this.client.protocol,
-                host: this.client.host,
-                pathname: this.pathname
-              }),
-              properties: options.properties,
-              body: entities,
-              timeout: options.timeout
-            });
+        .then((entities = []) => {
+          return Promise.all(entities.map((entity) => {
+            return Promise.resolve(entity)
+              .then((entity) => {
+                const metadata = new Metadata(entity);
 
-            // Execite the request
-            return removeRequest.execute()
-              .then(response => response.data)
-              .then((result) => {
-                // Clear entities from the sync table
-                const query = new Query().contains('entityId', Object.keys(keyBy(entities, '_id')));
-                return this.clearSync(query, options)
-                  .then(() => result);
+                // Clear any pending sync items if the entity
+                // was created locally
+                if (metadata.isLocal()) {
+                  const query = new Query();
+                  query.equalTo('entityId', entity._id);
+                  return this.clearSync(query, options)
+                    .then(() => entity);
+                }
+
+                return entity;
+              })
+              .then((entity) => {
+                // Remove from cache
+                const request = new CacheRequest({
+                  method: RequestMethod.DELETE,
+                  url: url.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: `${this.pathname}/${entity._id}`,
+                    query: options.query
+                  }),
+                  properties: options.properties,
+                  authType: AuthType.Default,
+                  timeout: options.timeout
+                });
+                return request.execute()
+                  .then(response => response.data);
               });
-          }
-
-          return { count: 0 };
+          }));
+        })
+        .then((results) => {
+          return reduce(results, (totalResult, result) => {
+            totalResult.count += result.count;
+            return totalResult;
+          }, { count: 0 });
         })
         .then(result => observer.next(result))
         .then(() => observer.complete())
@@ -750,6 +701,9 @@ export default class CacheStore extends NetworkStore {
     return this.syncManager.count(query, options);
   }
 
+  /**
+   * @deprecated Use pendingSyncCount().
+   */
   syncCount(query, options) {
     return this.pendingSyncCount(query, options);
   }
@@ -843,7 +797,7 @@ export default class CacheStore extends NetworkStore {
   }
 
   /**
-   * @deprecated Use clearSync() instead of this.
+   * @deprecated Use clearSync().
    */
   purge(query, options) {
     return this.clearSync(query, options);

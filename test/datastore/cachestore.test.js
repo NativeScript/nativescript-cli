@@ -754,153 +754,370 @@ describe('CacheStore', function() {
     });
   });
 
-  // describe('remove()', function() {
-  //   it('should throw an error for an invalid query', function() {
-  //     const store = new CacheStore(collection);
-  //     return store.remove({})
-  //       .catch((error) => {
-  //         expect(error).toBeA(KinveyError);
-  //         expect(error.message).toEqual('Invalid query. It must be an instance of the Query class.');
-  //       });
-  //   });
+  describe('removeById()', function() {
+    it('should return a `{ count: 0 } if an id is not provided', function() {
+      const store = new CacheStore(collection);
+      return store.removeById()
+        .then((result) => {
+          expect(result).toEqual({ count: 0 });
+        });
+    });
 
-  //   it('should throw a ServerError', function() {
-  //     nock(this.client.apiHostname)
-  //       .delete(`/appdata/${this.client.appKey}/${collection}`)
-  //       .reply(500);
+    it('should remove the entity from cache if the entity is not found on the backend', function() {
+      const store = new CacheStore(collection);
+      const entity = {
+        _id: randomString()
+      };
 
-  //     const store = new CacheStore(collection);
-  //     return store.remove()
-  //       .catch((error) => {
-  //         expect(error).toBeA(ServerError);
-  //         expect(error.message).toEqual('An error occurred on the server.');
-  //       });
-  //   });
+      nock(store.client.apiHostname)
+        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200, [entity]);
 
-  //   it('should remove all entities from the cache', function() {
-  //     const entity1 = {
-  //       _id: randomString()
-  //     };
-  //     const entity2 = {
-  //       _id: randomString()
-  //     };
-  //     const store = new CacheStore(collection);
+      return store.pull()
+        .then(() => {
+          nock(store.client.apiHostname)
+            .delete(`/appdata/${store.client.appKey}/${collection}/${entity._id}`)
+            .reply(404);
 
-  //     nock(store.client.apiHostname)
-  //       .get(`/appdata/${store.client.appKey}/${collection}`)
-  //       .reply(200, [entity1, entity2]);
+          return store.removeById(entity._id);
+        })
+        .then((result) => {
+          expect(result).toEqual({ count: 1 });
+          const syncStore = new SyncStore(collection);
+          const query = new Query().equalTo('_id', entity._id);
+          return syncStore.find(query).toPromise();
+        })
+        .then((entities) => {
+          expect(entities).toEqual([]);
+        });
+    });
 
-  //     return store.pull()
-  //       .then(() => {
-  //         const reply = { count: 2 };
+    it('should remove the entity from the backend', function() {
+      const store = new CacheStore(collection);
+      const entity = {
+        _id: randomString()
+      };
 
-  //         // nock(this.client.apiHostname)
-  //         //   .delete(`/appdata/${this.client.appKey}/${collection}`)
-  //         //   .reply(200, reply);
+      nock(store.client.apiHostname)
+        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200, [entity]);
 
-  //         return store.remove()
-  //           .then((result) => {
-  //             expect(result).toEqual(reply);
-  //           });
-  //       });
-  //   });
-  // });
+      return store.pull()
+        .then(() => {
+          nock(store.client.apiHostname)
+            .delete(`/appdata/${store.client.appKey}/${collection}/${entity._id}`)
+            .reply(200, { count: 1 });
 
-  // describe('removeById()', function() {
-  //   it('should throw a NotFoundError if the id argument does not exist', function() {
-  //     const store = new CacheStore(collection);
-  //     const _id = randomString();
+          return store.removeById(entity._id);
+        })
+        .then((result) => {
+          expect(result).toEqual({ count: 1 });
+          const syncStore = new SyncStore(collection);
+          const query = new Query().equalTo('_id', entity._id);
+          return syncStore.find(query).toPromise();
+        })
+        .then((entities) => {
+          expect(entities).toEqual([]);
+        });
+    });
 
-  //     nock(this.client.apiHostname)
-  //       .delete(`/appdata/${this.client.appKey}/${collection}/${_id}`)
-  //       .reply(404);
+    it('should remove the entity from the cache and sync table', function() {
+      const store = new CacheStore(collection);
+      const entity = {};
 
-  //     return store.removeById(_id)
-  //       .catch((error) => {
-  //         expect(error).toBeA(NotFoundError);
-  //       });
-  //   });
-
-  //   it('should remove the entity that matches the id argument', function() {
-  //     const store = new CacheStore(collection);
-  //     const _id = randomString();
-  //     const reply = { count: 1 };
-
-  //     nock(this.client.apiHostname)
-  //       .delete(`/appdata/${this.client.appKey}/${collection}/${_id}`)
-  //       .reply(200, reply);
-
-  //     return store.removeById(_id)
-  //       .then((response) => {
-  //         expect(response).toEqual(reply);
-  //       });
-  //   });
-  // });
+      return store.save(entity)
+        .then((entity) => {
+          return store.removeById(entity._id);
+        })
+        .then((result) => {
+          expect(result).toEqual({ count: 1 });
+          const syncStore = new SyncStore(collection);
+          const query = new Query().equalTo('_id', entity._id);
+          return syncStore.find(query).toPromise();
+        })
+        .then((entities) => {
+          expect(entities).toEqual([]);
+          const query = new Query().equalTo('_id', entity._id);
+          return store.pendingSyncCount(query);
+        })
+        .then((count) => {
+          expect(count).toEqual(0);
+        });
+    });
+  });
 
   describe('clear()', function() {
-    const entity1 = {
-      _id: randomString()
-    };
-    const entity2 = {
-      _id: randomString()
-    };
+    it('should remove all entities only from the cache', function() {
+      const store = new CacheStore(collection);
+      const entity = {
+        _id: randomString()
+      };
 
-    beforeEach(function() {
-      nock(this.client.apiHostname)
-        .get(`/appdata/${this.client.appKey}/${collection}`)
+      nock(store.client.apiHostname)
+        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200, [entity]);
+
+      return store.pull()
+        .then(() => {
+          return store.clear();
+        })
+        .then((result) => {
+          expect(result).toEqual({ count: 1 });
+          const syncStore = new SyncStore(collection);
+          return syncStore.find().toPromise();
+        })
+        .then((entities) => {
+          expect(entities).toEqual([]);
+        });
+    });
+
+    it('should remove only the entities from the cache that match the query', function() {
+      const store = new CacheStore(collection);
+      const entity1 = {
+        _id: randomString()
+      };
+      const entity2 = {
+        _id: randomString()
+      };
+
+      nock(store.client.apiHostname)
+        .get(`/appdata/${store.client.appKey}/${collection}`)
         .reply(200, [entity1, entity2]);
 
+      store.pull()
+        .then(() => {
+          const query = new Query().equalTo('_id', entity1._id);
+          return store.clear(query);
+        })
+        .then((result) => {
+          expect(result).toEqual({ count: 1 });
+          const syncStore = new SyncStore(collection);
+          const query = new Query().equalTo('_id', entity1._id);
+          return syncStore.find(query).toPromise();
+        })
+        .then((entities) => {
+          expect(entities).toEqual([]);
+        });
+    });
+  });
+
+  describe('pendingSyncCount()', function() {
+    it('should return the count of entities waiting to be synced', function() {
       const store = new CacheStore(collection);
-      return store.pull()
+      const entity = {};
+
+      return store.save(entity)
+        .then((entity) => {
+          const query = new Query().equalTo('entityId', entity._id);
+          return store.pendingSyncCount(query);
+        })
+        .then((count) => {
+          expect(count).toEqual(1);
+        });
+    });
+  });
+
+  describe('syncCount()', function() {
+    it('should call pendingSyncCount()', function() {
+      const store = new CacheStore(collection);
+      const spy = expect.spyOn(store, 'pendingSyncCount');
+      store.syncCount();
+      expect(spy).toHaveBeenCalled();
+    });
+  });
+
+  describe('pendingSyncEntities()', function() {
+    it('should return the entities waiting to be synced', function() {
+      const store = new CacheStore(collection);
+      const entity = {};
+
+      return store.save(entity)
+        .then((entity) => {
+          const query = new Query().equalTo('entityId', entity._id);
+          return store.pendingSyncEntities(query)
+            .then((entities) => {
+              expect(entities[0]).toIncludeKey('_id');
+              expect(entities[0].collection).toEqual(collection);
+              expect(entities[0].entityId).toEqual(entity._id);
+              expect(entities[0].state).toEqual({ method: 'POST' });
+            });
+        });
+    });
+  });
+
+  describe('push', function() {
+    it('should push the entities to the backend', function() {
+      const store = new CacheStore(collection);
+      const entity = {
+        _id: randomString()
+      };
+
+      return store.save(entity)
+        .then(() => {
+          nock(this.client.apiHostname)
+            .put(`/appdata/${this.client.appKey}/${collection}/${entity._id}`, entity)
+            .reply(200, entity);
+
+          return store.push();
+        })
+        .then((result) => {
+          expect(result).toEqual([{ _id: entity._id, entity: entity }]);
+          return store.pendingSyncCount();
+        })
+        .then((count) => {
+          expect(count).toEqual(0);
+        });
+    });
+
+    it('should push only the entities matching the query to the backend', function() {
+      const store = new CacheStore(collection);
+      const entity1 = {
+        _id: randomString()
+      };
+      const entity2 = {
+        _id: randomString()
+      };
+
+      return store.save(entity1)
+        .then(() => {
+          return store.save(entity2);
+        })
+        .then(() => {
+          nock(this.client.apiHostname)
+            .put(`/appdata/${this.client.appKey}/${collection}/${entity1._id}`, entity1)
+            .reply(200, entity1);
+
+          const query = new Query().equalTo('entityId', entity1._id);
+          return store.push(query);
+        })
+        .then((result) => {
+          expect(result).toEqual([{ _id: entity1._id, entity: entity1 }]);
+          return store.pendingSyncCount();
+        })
+        .then((count) => {
+          expect(count).toEqual(1);
+        });
+    });
+  });
+
+  describe('pull', function() {
+    it('should save entities from the backend to the cache', function() {
+      const entity1 = {
+        _id: randomString()
+      };
+      const entity2 = {
+        _id: randomString()
+      };
+      const store = new CacheStore(collection);
+
+      nock(store.client.apiHostname)
+        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200, [entity1, entity2]);
+
+      store.pull()
+        .then(() => {
+          const syncStore = new SyncStore(collection);
+          return syncStore.find().toPromise();
+        })
         .then((entities) => {
           expect(entities).toEqual([entity1, entity2]);
         });
     });
+  });
 
-    afterEach(async function() {
+  describe('sync', function() {
+    it('should push any pending sync entities and then pull entities from the backend and save them to the cache', function() {
       const store = new CacheStore(collection);
-      return store.clear()
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
+
+      return store.save(entity1)
         .then(() => {
-          return store.find(null, { syncAutomatically: false }).toPromise();
+          nock(this.client.apiHostname)
+            .put(`/appdata/${this.client.appKey}/${collection}/${entity1._id}`, entity1)
+            .reply(200, entity1);
+
+          nock(store.client.apiHostname)
+            .get(`/appdata/${store.client.appKey}/${collection}`)
+            .reply(200, [entity1, entity2]);
+
+          return store.sync();
+        })
+        .then((result) => {
+          expect(result.push).toEqual([{ _id: entity1._id, entity: entity1 }]);
+          expect(result.pull).toEqual([entity1, entity2]);
+          return store.pendingSyncCount();
+        })
+        .then((count) => {
+          expect(count).toEqual(0);
+        });
+    });
+  });
+
+  describe('clearSync()', function() {
+    it('should clear the sync table', function() {
+      const store = new CacheStore(collection);
+      const entity = {
+        _id: randomString()
+      };
+
+      return store.save(entity)
+        .then(() => {
+          return store.clearSync();
+        })
+        .then(() => {
+          return store.pendingSyncCount();
+        })
+        .then((count) => {
+          expect(count).toEqual(0);
+          const syncStore = new SyncStore(collection);
+          const query = new Query().equalTo('_id', entity._id);
+          return syncStore.find(query).toPromise();
         })
         .then((entities) => {
-          expect(entities).toEqual([]);
+          expect(entities).toEqual([entity]);
         });
     });
 
-    it('should remove all entities from the cache', function() {
+    it('should clear only the entities from the sync table matching the query', function() {
       const store = new CacheStore(collection);
-      return store.clear()
-        .then((entities) => {
-          expect(entities).toEqual({ count: 2 });
+      const entity1 = {
+        _id: randomString()
+      };
+      const entity2 = {
+        _id: randomString()
+      };
+
+      return store.save(entity1)
+        .then(() => {
+          return store.save(entity2);
+        })
+        .then(() => {
+          const query = new Query().equalTo('entityId', entity1._id);
+          return store.clearSync(query);
+        })
+        .then(() => {
+          const query = new Query().equalTo('entityId', entity1._id);
+          return store.pendingSyncCount(query);
+        })
+        .then((count) => {
+          expect(count).toEqual(0);
           const syncStore = new SyncStore(collection);
-          return syncStore.find().toPromise();
+          const query = new Query().equalTo('_id', entity1._id);
+          return syncStore.find(query).toPromise();
         })
         .then((entities) => {
-          expect(entities).toEqual([]);
-          return store.pendingSyncEntities();
-        })
-        .then((entities) => {
-          expect(entities).toEqual([]);
+          expect(entities).toEqual([entity1]);
         });
     });
+  });
 
-    it('should remove only the entities from the cache that match the query', async function() {
+  describe('purge()', function() {
+    it('should call clearSync()', function() {
       const store = new CacheStore(collection);
-      const query = new Query().equalTo('_id', entity1._id);
-      return store.clear(query)
-        .then((entities) => {
-          expect(entities).toEqual({ count: 1 });
-          const syncStore = new SyncStore(collection);
-          return syncStore.find().toPromise();
-        })
-        .then((entities) => {
-          expect(entities).toEqual([entity2]);
-          return store.pendingSyncEntities();
-        })
-        .then((entities) => {
-          expect(entities).toEqual([]);
-        });
+      const spy = expect.spyOn(store, 'clearSync');
+      store.purge();
+      expect(spy).toHaveBeenCalled();
     });
   });
 });

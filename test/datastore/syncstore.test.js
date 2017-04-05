@@ -725,98 +725,98 @@ describe('SyncStore', function() {
   //   });
   // });
 
-  describe('removeById()', function() {
-    const entity1 = {
-      _id: '57b48371319a67493dc50dba',
-      title: 'Opela',
-      author: 'Maria Crawford',
-      isbn: '887420007-2',
-      summary: 'Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros.\n\nVestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.',
-      _acl: {
-        creator: 'kid_HkTD2CJc'
-      },
-      _kmd: {
-        lmt: '2016-08-17T15:32:01.741Z',
-        ect: '2016-08-17T15:32:01.741Z'
-      }
-    };
-    const entity2 = {
-      _id: '57b48371b262874d7e2f0a99',
-      title: 'Treeflex',
-      author: 'Harry Larson',
-      isbn: '809087960-8',
-      summary: 'Aenean fermentum. Donec ut mauris eget massa tempor convallis. Nulla neque libero, convallis eget, eleifend luctus, ultricies eu, nibh.',
-      _acl: {
-        creator: 'kid_HkTD2CJc'
-      },
-      _kmd: {
-        lmt: '2016-08-17T15:32:01.744Z',
-        ect: '2016-08-17T15:32:01.744Z'
-      }
-    };
+  // describe('removeById()', function() {
+  //   const entity1 = {
+  //     _id: '57b48371319a67493dc50dba',
+  //     title: 'Opela',
+  //     author: 'Maria Crawford',
+  //     isbn: '887420007-2',
+  //     summary: 'Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros.\n\nVestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.',
+  //     _acl: {
+  //       creator: 'kid_HkTD2CJc'
+  //     },
+  //     _kmd: {
+  //       lmt: '2016-08-17T15:32:01.741Z',
+  //       ect: '2016-08-17T15:32:01.741Z'
+  //     }
+  //   };
+  //   const entity2 = {
+  //     _id: '57b48371b262874d7e2f0a99',
+  //     title: 'Treeflex',
+  //     author: 'Harry Larson',
+  //     isbn: '809087960-8',
+  //     summary: 'Aenean fermentum. Donec ut mauris eget massa tempor convallis. Nulla neque libero, convallis eget, eleifend luctus, ultricies eu, nibh.',
+  //     _acl: {
+  //       creator: 'kid_HkTD2CJc'
+  //     },
+  //     _kmd: {
+  //       lmt: '2016-08-17T15:32:01.744Z',
+  //       ect: '2016-08-17T15:32:01.744Z'
+  //     }
+  //   };
 
-    beforeEach(function() {
-      // Kinvey API response
-      nock(this.client.apiHostname, { encodedQueryParams: true })
-        .get(`/appdata/${this.client.appKey}/${collection}`)
-        .reply(200, [entity1, entity2], {
-          'content-type': 'application/json',
-          'x-kinvey-request-id': 'a6b7712a0bca42b8a98c82de1fe0f5cf',
-          'x-kinvey-api-version': '4'
-        });
+  //   beforeEach(function() {
+  //     // Kinvey API response
+  //     nock(this.client.apiHostname, { encodedQueryParams: true })
+  //       .get(`/appdata/${this.client.appKey}/${collection}`)
+  //       .reply(200, [entity1, entity2], {
+  //         'content-type': 'application/json',
+  //         'x-kinvey-request-id': 'a6b7712a0bca42b8a98c82de1fe0f5cf',
+  //         'x-kinvey-api-version': '4'
+  //       });
 
-      // Pull data into cache
-      const store = new SyncStore(collection);
-      return store.pull();
-    });
+  //     // Pull data into cache
+  //     const store = new SyncStore(collection);
+  //     return store.pull();
+  //   });
 
-    afterEach(async function() {
-      // Clear the cache
-      const store = new SyncStore(collection);
-      await store.clear();
-    });
+  //   afterEach(async function() {
+  //     // Clear the cache
+  //     const store = new SyncStore(collection);
+  //     await store.clear();
+  //   });
 
-    it('should throw a NotFoundError if the id argument is not a string', async function() {
-      try {
-        const store = new SyncStore(collection);
-        await store.removeById({});
-      } catch (error) {
-        expect(error).toBeA(NotFoundError);
-      }
-    });
+  //   it('should throw a NotFoundError if the id argument is not a string', async function() {
+  //     try {
+  //       const store = new SyncStore(collection);
+  //       await store.removeById({});
+  //     } catch (error) {
+  //       expect(error).toBeA(NotFoundError);
+  //     }
+  //   });
 
-    it('should throw a NotFoundError if the id argument does not exist', async function() {
-      try {
-        const store = new SyncStore(collection);
-        await store.removeById(randomString());
-      } catch (error) {
-        expect(error).toBeA(NotFoundError);
-      }
-    });
+  //   it('should throw a NotFoundError if the id argument does not exist', async function() {
+  //     try {
+  //       const store = new SyncStore(collection);
+  //       await store.removeById(randomString());
+  //     } catch (error) {
+  //       expect(error).toBeA(NotFoundError);
+  //     }
+  //   });
 
-    // it('should remove the entity that matches the id argument', async function() {
-    //   const store = new SyncStore(collection);
+  //   // it('should remove the entity that matches the id argument', async function() {
+  //   //   const store = new SyncStore(collection);
 
-    //   // Remove the entity
-    //   const result = await store.removeById(entity1._id);
-    //   expect(result).toEqual(entity1);
+  //   //   // Remove the entity
+  //   //   const result = await store.removeById(entity1._id);
+  //   //   expect(result).toEqual(entity1);
 
-    //   // Check that the entities were removed
-    //   const entities = await store.find().toPromise();
-    //   expect(entities).toEqual([entity2]);
+  //   //   // Check that the entities were removed
+  //   //   const entities = await store.find().toPromise();
+  //   //   expect(entities).toEqual([entity2]);
 
-    //   // Check the sync entities
-    //   const query = new Query().equalTo('entityId', entity1._id);
-    //   const syncEntities = await store.pendingSyncEntities(query);
-    //   expect(syncEntities[0]).toEqual({
-    //     collection: collection,
-    //     state: { method: 'DELETE' },
-    //     entityId: entity1._id,
-    //     _id: syncEntities[0]._id,
-    //     _kmd: { local: true }
-    //   });
-    // });
-  });
+  //   //   // Check the sync entities
+  //   //   const query = new Query().equalTo('entityId', entity1._id);
+  //   //   const syncEntities = await store.pendingSyncEntities(query);
+  //   //   expect(syncEntities[0]).toEqual({
+  //   //     collection: collection,
+  //   //     state: { method: 'DELETE' },
+  //   //     entityId: entity1._id,
+  //   //     _id: syncEntities[0]._id,
+  //   //     _kmd: { local: true }
+  //   //   });
+  //   // });
+  // });
 
   describe('pull()', function() {
     it('should save entities from the backend in cache', async function() {

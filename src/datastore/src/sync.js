@@ -324,60 +324,6 @@ export default class SyncManager {
                       return result;
                     })
                     .catch((error) => {
-                      // If the credentials used to authenticate this request are
-                      // not authorized to run the operation
-                      if (error instanceof InsufficientCredentialsError) {
-                        // Get the original entity
-                        const request = new KinveyRequest({
-                          method: RequestMethod.GET,
-                          authType: AuthType.Default,
-                          url: url.format({
-                            protocol: this.client.protocol,
-                            host: this.client.host,
-                            pathname: `${this.backendPathname}/${entityId}`
-                          }),
-                          properties: options.properties,
-                          timeout: options.timeout,
-                          client: this.client
-                        });
-                        return request.execute().then(response => response.data)
-                          .then((originalEntity) => {
-                            // Update the cache with the original entity
-                            const request = new CacheRequest({
-                              method: RequestMethod.PUT,
-                              url: url.format({
-                                protocol: this.client.protocol,
-                                host: this.client.host,
-                                pathname: `${this.backendPathname}/${entityId}`
-                              }),
-                              properties: options.properties,
-                              timeout: options.timeout,
-                              body: originalEntity
-                            });
-                            return request.execute();
-                          })
-                          .then(() => {
-                            // Clear the item from the sync table
-                            const request = new CacheRequest({
-                              method: RequestMethod.DELETE,
-                              url: url.format({
-                                protocol: this.client.protocol,
-                                host: this.client.host,
-                                pathname: `${this.pathname}/${syncEntity._id}`
-                              }),
-                              properties: options.properties,
-                              timeout: options.timeout
-                            });
-                            return request.execute();
-                          })
-                          .catch(() => {
-                            throw error;
-                          });
-                      }
-
-                      throw error;
-                    })
-                    .catch((error) => {
                       // Return the result of the sync operation.
                       const result = {
                         _id: entityId,
@@ -426,13 +372,11 @@ export default class SyncManager {
                           delete entity._id;
                         }
 
-                        request.method = RequestMethod.POST;
                         request.url = url.format({
                           protocol: this.client.protocol,
                           host: this.client.host,
                           pathname: this.backendPathname
                         });
-                        request.body = entity;
                       }
 
                       return request.execute()
@@ -463,7 +407,8 @@ export default class SyncManager {
                                 timeout: options.timeout,
                                 body: entity
                               });
-                              return request.execute().then(response => response.data);
+                              return request.execute()
+                                .then(response => response.data);
                             })
                             .then((entity) => {
                               // Remove the original entity if it was created locally
@@ -479,7 +424,8 @@ export default class SyncManager {
                                   timeout: options.timeout
                                 });
 
-                                return request.execute().then(() => entity);
+                                return request.execute()
+                                  .then(() => entity);
                               }
 
                               return entity;
@@ -494,61 +440,9 @@ export default class SyncManager {
                             });
                         })
                         .catch((error) => {
-                          // If the credentials used to authenticate this request are
-                          // not authorized to run the operation
-                          if (error instanceof InsufficientCredentialsError) {
-                            // Get the original entity
-                            const request = new KinveyRequest({
-                              method: RequestMethod.GET,
-                              authType: AuthType.Default,
-                              url: url.format({
-                                protocol: this.client.protocol,
-                                host: this.client.host,
-                                pathname: `${this.backendPathname}/${entityId}`
-                              }),
-                              properties: options.properties,
-                              timeout: options.timeout,
-                              client: this.client
-                            });
-                            return request.execute()
-                              .then(response => response.data)
-                              .then((originalEntity) => {
-                                // Update the cache with the original entity
-                                const request = new CacheRequest({
-                                  method: RequestMethod.PUT,
-                                  url: url.format({
-                                    protocol: this.client.protocol,
-                                    host: this.client.host,
-                                    pathname: `${this.backendPathname}/${entityId}`
-                                  }),
-                                  properties: options.properties,
-                                  timeout: options.timeout,
-                                  body: originalEntity
-                                });
-                                return request.execute();
-                              })
-                              .then(() => {
-                                // Clear the item from the sync table
-                                const request = new CacheRequest({
-                                  method: RequestMethod.DELETE,
-                                  url: url.format({
-                                    protocol: this.client.protocol,
-                                    host: this.client.host,
-                                    pathname: `${this.pathname}/${syncEntity._id}`
-                                  }),
-                                  properties: options.properties,
-                                  timeout: options.timeout
-                                });
-                                return request.execute();
-                              })
-                              .catch(() => {
-                                throw error;
-                              });
-                          }
+                          // Set then id back on the entity
+                          entity._id = entityId;
 
-                          throw error;
-                        })
-                        .catch((error) => {
                           // Return the result of the sync operation.
                           const result = {
                             _id: entityId,
