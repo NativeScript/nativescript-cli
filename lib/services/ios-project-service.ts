@@ -176,10 +176,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	 * Archive the Xcode project to .xcarchive.
 	 * Returns the path to the .xcarchive.
 	 */
-	public async archive(projectData: IProjectData, options?: { archivePath?: string }): Promise<string> {
+	public async archive(projectData: IProjectData, buildConfig?: IBuildConfig, options?: { archivePath?: string }): Promise<string> {
 		let projectRoot = this.getPlatformData(projectData).projectRoot;
 		let archivePath = options && options.archivePath ? path.resolve(options.archivePath) : path.join(projectRoot, "/build/archive/", projectData.projectName + ".xcarchive");
-		let args = ["archive", "-archivePath", archivePath]
+		let args = ["archive", "-archivePath", archivePath, "-configuration",
+				(!buildConfig || buildConfig.release) ? "Release" : "Debug" ]
 			.concat(this.xcbuildProjectArgs(projectRoot, projectData, "scheme"));
 		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { stdio: 'inherit' });
 		return archivePath;
@@ -456,7 +457,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private async createIpa(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string> {
-		let xarchivePath = await this.archive(projectData);
+		let xarchivePath = await this.archive(projectData, buildConfig);
 		let exportFileIpa = await this.exportDevelopmentArchive(projectData,
 			buildConfig,
 			{
