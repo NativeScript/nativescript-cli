@@ -43,8 +43,7 @@ export default class SyncStore extends CacheStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname,
-          query: options.query
+          pathname: this.pathname
         }),
         properties: options.properties,
         query: query,
@@ -87,8 +86,7 @@ export default class SyncStore extends CacheStore {
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
-            pathname: `${this.pathname}/${id}`,
-            query: options.query
+            pathname: `${this.pathname}/${id}`
           }),
           properties: options.properties,
           timeout: options.timeout
@@ -173,8 +171,7 @@ export default class SyncStore extends CacheStore {
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
-            pathname: this.pathname,
-            query: options.query
+            pathname: this.pathname
           }),
           properties: options.properties,
           query: query,

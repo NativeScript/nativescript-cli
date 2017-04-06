@@ -69,8 +69,7 @@ export default class CacheStore extends NetworkStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname,
-          query: options.query
+          pathname: this.pathname
         }),
         properties: options.properties,
         query: query,
@@ -120,8 +119,7 @@ export default class CacheStore extends NetworkStore {
                   url: url.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: this.pathname,
-                    query: options.query
+                    pathname: this.pathname
                   }),
                   properties: options.properties,
                   body: networkEntities,
@@ -172,8 +170,7 @@ export default class CacheStore extends NetworkStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: `${this.pathname}/${id}`,
-          query: options.query
+          pathname: `${this.pathname}/${id}`
         }),
         properties: options.properties,
         timeout: options.timeout
@@ -210,8 +207,7 @@ export default class CacheStore extends NetworkStore {
                   url: url.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: this.pathname,
-                    query: options.query
+                    pathname: this.pathname
                   }),
                   properties: options.properties,
                   body: networkEntity,
@@ -331,8 +327,7 @@ export default class CacheStore extends NetworkStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname,
-          query: options.query
+          pathname: this.pathname
         }),
         properties: options.properties,
         query: query,
@@ -408,8 +403,7 @@ export default class CacheStore extends NetworkStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname,
-          query: options.query
+          pathname: this.pathname
         }),
         properties: options.properties,
         body: entity,
@@ -473,8 +467,7 @@ export default class CacheStore extends NetworkStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname,
-          query: options.query
+          pathname: this.pathname
         }),
         properties: options.properties,
         body: entity,
@@ -584,8 +577,7 @@ export default class CacheStore extends NetworkStore {
                 url: url.format({
                   protocol: this.client.protocol,
                   host: this.client.host,
-                  pathname: `${this.pathname}/${result._id}`,
-                  query: options.query
+                  pathname: `${this.pathname}/${result._id}`
                 }),
                 properties: options.properties,
                 authType: AuthType.Default,
@@ -690,8 +682,7 @@ export default class CacheStore extends NetworkStore {
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
-              pathname: `${this.pathname}/${entity._id}`,
-              query: options.query
+              pathname: `${this.pathname}/${entity._id}`
             }),
             properties: options.properties,
             authType: AuthType.Default,
@@ -764,8 +755,7 @@ export default class CacheStore extends NetworkStore {
                   url: url.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: `${this.pathname}/${entity._id}`,
-                    query: options.query
+                    pathname: `${this.pathname}/${entity._id}`
                   }),
                   properties: options.properties,
                   authType: AuthType.Default,
@@ -857,8 +847,7 @@ export default class CacheStore extends NetworkStore {
               url: url.format({
                 protocol: this.client.protocol,
                 host: this.client.host,
-                pathname: this.pathname,
-                query: options.query
+                pathname: this.pathname
               }),
               properties: options.properties,
               body: entities,

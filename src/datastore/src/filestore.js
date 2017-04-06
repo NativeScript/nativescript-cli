@@ -231,8 +231,7 @@ class FileStore extends NetworkStore {
       request.url = url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this.pathname}/${metadata._id}`,
-        query: options.query
+        pathname: `${this.pathname}/${metadata._id}`
       });
     }
 
