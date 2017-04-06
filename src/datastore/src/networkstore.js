@@ -1,6 +1,4 @@
-import Promise from 'es6-promise';
 import isString from 'lodash/isString';
-import map from 'lodash/map';
 import isArray from 'lodash/isArray';
 import url from 'url';
 

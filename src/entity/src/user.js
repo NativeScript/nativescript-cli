@@ -1,6 +1,5 @@
 import Promise from 'es6-promise';
 import assign from 'lodash/assign';
-import result from 'lodash/result';
 import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import isEmpty from 'lodash/isEmpty';
@@ -18,7 +17,6 @@ import Metadata from './metadata';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
-const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
 const usernameAttribute = process.env.KINVEY_USERNAME_ATTRIBUTE || 'username';
 const emailAttribute = process.env.KINVEY_EMAIL_ATTRIBUTE || 'email';

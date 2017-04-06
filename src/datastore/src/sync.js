@@ -12,7 +12,7 @@ import {
   CacheRequest,
   DeltaFetchRequest
 } from 'src/request';
-import { InsufficientCredentialsError, SyncError } from 'src/errors';
+import { SyncError } from 'src/errors';
 import { isDefined } from 'src/utils';
 import Client from 'src/client';
 import Query from 'src/query';
