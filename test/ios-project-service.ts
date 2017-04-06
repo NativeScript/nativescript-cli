@@ -159,9 +159,9 @@ describe("iOSProjectService", () => {
 			return {
 				run: async (): Promise<void> => {
 					if (hasCustomArchivePath) {
-						resultArchivePath = await iOSProjectService.archive(projectData, { archivePath: options.archivePath });
+						resultArchivePath = await iOSProjectService.archive(projectData, null, { archivePath: options.archivePath });
 					} else {
-						resultArchivePath = await iOSProjectService.archive(projectData);
+						resultArchivePath = await iOSProjectService.archive(projectData, null);
 					}
 				},
 				assert: () => {
