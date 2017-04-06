@@ -1,3 +1,4 @@
 ignore:
   - "src/identity/**/*"
   - "!src/identity/src/mic.js"
+  - "src/utils/src/log.js"
