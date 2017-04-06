@@ -256,18 +256,18 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return true;
 	}
 
-	public async validateOptions(provision: any, projectData: IProjectData, platform?: string): Promise<boolean> {
+	public async validateOptions(provision: true | string, projectData: IProjectData, platform?: string): Promise<boolean> {
 		if (platform) {
 			platform = this.$mobileHelper.normalizePlatformName(platform);
 			this.$logger.trace("Validate options for platform: " + platform);
 			let platformData = this.$platformsData.getPlatformData(platform, projectData);
-			return await platformData.platformProjectService.validateOptions(provision);
+			return await platformData.platformProjectService.validateOptions(projectData.projectId, provision);
 		} else {
 			let valid = true;
 			for (let availablePlatform in this.$platformsData.availablePlatforms) {
 				this.$logger.trace("Validate options for platform: " + availablePlatform);
 				let platformData = this.$platformsData.getPlatformData(availablePlatform, projectData);
-				valid = valid && await platformData.platformProjectService.validateOptions(provision);
+				valid = valid && await platformData.platformProjectService.validateOptions(projectData.projectId, provision);
 			}
 
 			return valid;

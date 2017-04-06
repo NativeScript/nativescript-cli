@@ -85,7 +85,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return this._platformData;
 	}
 
-	public async validateOptions(projectId: string, provision: any): Promise<boolean> {
+	public async validateOptions(projectId: string, provision: true | string): Promise<boolean> {
 		if (provision === true) {
 			await this.$iOSProvisionService.list(projectId);
 			this.$errors.failWithoutHelp("Please provide provisioning profile uuid or name with the --provision option.");

@@ -176,7 +176,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	 * @param {any} provision UUID of the provisioning profile used in iOS option validation.
 	 * @returns {void}
 	 */
-	validateOptions(projectId?: string, provision?: any): Promise<boolean>;
+	validateOptions(projectId?: string, provision?: true | string): Promise<boolean>;
 
 	validatePlugins(projectData: IProjectData): Promise<void>;
 
