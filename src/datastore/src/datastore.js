@@ -85,8 +85,7 @@ export default class DataStore {
       url: url.format({
         protocol: client.protocol,
         host: client.host,
-        pathname: pathname,
-        query: options.query
+        pathname: pathname
       }),
       properties: options.properties,
       timeout: options.timeout

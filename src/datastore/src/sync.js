@@ -531,19 +531,20 @@ export default class SyncManager {
     return request.execute()
       .then(response => response.data)
       .then((entities) => {
-        const request = new CacheRequest({
-          method: RequestMethod.DELETE,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: this.pathname
-          }),
-          properties: options.properties,
-          body: entities,
-          timeout: options.timeout
-        });
-        return request.execute()
-          .then(response => response.data);
+        return Promise.all(map(entities, (entity) => {
+          const request = new CacheRequest({
+            method: RequestMethod.DELETE,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: `${this.pathname}/${entity._id}`
+            }),
+            properties: options.properties,
+            timeout: options.timeout
+          });
+          return request.execute()
+            .then(response => response.data);
+        }));
       });
   }
 }

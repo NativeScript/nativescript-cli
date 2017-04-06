@@ -5,6 +5,7 @@ import filter from 'lodash/filter';
 import xorWith from 'lodash/xorWith';
 import isArray from 'lodash/isArray';
 import reduce from 'lodash/reduce';
+import map from 'lodash/map';
 import url from 'url';
 
 import { CacheRequest, AuthType, RequestMethod } from 'src/request';
@@ -508,6 +509,111 @@ export default class CacheStore extends NetworkStore {
   }
 
   /**
+   * Remove all entities in the data store. A query can be optionally provided to remove
+   * a subset of all entities in a collection or omitted to remove all entities in
+   * a collection. The number of entities removed adheres to the limits specified
+   * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
+   *
+   * @param   {Query}                 [query]                           Query used to filter entities.
+   * @param   {Object}                [options]                         Options
+   * @param   {Properties}            [options.properties]              Custom properties to send with
+   *                                                                    the request.
+   * @param   {Number}                [options.timeout]                 Timeout for the request.
+   * @return  {Promise}                                                 Promise.
+   */
+  remove(query, options = {}) {
+    const stream = KinveyObservable.create((observer) => {
+      if (query && !(query instanceof Query)) {
+        return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
+      }
+
+      // Fetch the cache entities
+      const request = new CacheRequest({
+        method: RequestMethod.GET,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this.pathname
+        }),
+        properties: options.properties,
+        query: query,
+        timeout: options.timeout
+      });
+
+      // Execute the request
+      return request.execute()
+        .then(response => response.data)
+        .then((entities = []) => {
+          if (entities.length > 0) {
+            return Promise.all(map(entities, (entity) => {
+              const metadata = new Metadata(entity);
+
+              // Clear any pending sync items if the entity
+              // was created locally
+              if (metadata.isLocal()) {
+                const query = new Query();
+                query.equalTo('entityId', entity._id);
+                return this.clearSync(query, options)
+                  .then(() => entity);
+              }
+
+              // Add a delete operation to sync
+              return this.syncManager.addDeleteOperation(entity, options)
+                .then(() => entity);
+            }))
+            .then(() => entities);
+          }
+
+          return entities;
+        })
+        .then((entities) => {
+          // Push the entities
+          if (entities.length > 0 && this.syncAutomatically === true) {
+            const ids = Object.keys(keyBy(entities, '_id'));
+            const query = new Query().contains('entityId', ids);
+            return this.push(query, options);
+          }
+
+          return entities;
+        })
+        .then((results) => {
+          return Promise.all(map(results, (result) => {
+            if (isDefined(result.error) === false) {
+              const request = new CacheRequest({
+                method: RequestMethod.DELETE,
+                url: url.format({
+                  protocol: this.client.protocol,
+                  host: this.client.host,
+                  pathname: `${this.pathname}/${result._id}`,
+                  query: options.query
+                }),
+                properties: options.properties,
+                authType: AuthType.Default,
+                timeout: options.timeout
+              });
+              return request.execute()
+                .then(response => response.data);
+            }
+
+            return { count: 0 };
+          }));
+        })
+        .then((results) => {
+          return reduce(results, (totalResult, result) => {
+            totalResult.count += result.count;
+            return totalResult;
+          }, { count: 0 });
+        })
+        .then()
+        .then(result => observer.next(result))
+        .then(() => observer.complete())
+        .catch(error => observer.error(error));
+    });
+
+    return stream.toPromise();
+  }
+
+  /**
    * Remove a single entity in the data store by id.
    *
    * @param   {string}                id                               Entity by id to remove.
@@ -635,7 +741,7 @@ export default class CacheStore extends NetworkStore {
       return request.execute()
         .then(response => response.data)
         .then((entities = []) => {
-          return Promise.all(entities.map((entity) => {
+          return Promise.all(map(entities, (entity) => {
             return Promise.resolve(entity)
               .then((entity) => {
                 const metadata = new Metadata(entity);
