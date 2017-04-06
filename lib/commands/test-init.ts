@@ -38,16 +38,23 @@ class TestInitCommand implements ICommand {
 				optional: false,
 			});
 
-			let modulePath = path.join(projectDir, "node_modules", mod);
-			let modulePackageJsonPath = path.join(modulePath, "package.json");
-			let modulePackageJsonContent = this.$fs.readJson(modulePackageJsonPath);
-			let modulePeerDependencies = modulePackageJsonContent.peerDependencies || {};
+			const modulePath = path.join(projectDir, "node_modules", mod);
+			const modulePackageJsonPath = path.join(modulePath, "package.json");
+			const modulePackageJsonContent = this.$fs.readJson(modulePackageJsonPath);
+			const modulePeerDependencies = modulePackageJsonContent.peerDependencies || {};
 
 			for (let peerDependency in modulePeerDependencies) {
 				let dependencyVersion = modulePeerDependencies[peerDependency] || "*";
-				await this.$npm.install(`${peerDependency}@${dependencyVersion}`, projectDir, {
-					'save-dev': true
-				});
+
+				// catch errors when a peerDependency is already installed
+				// e.g karma is installed; karma-jasmine depends on karma and will try to install it again
+				try {
+					await this.$npm.install(`${peerDependency}@${dependencyVersion}`, projectDir, {
+						'save-dev': true
+					});
+				} catch (e) {
+					this.$logger.info(e.message);
+				}
 			}
 		}
 
