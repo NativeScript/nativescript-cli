@@ -34,6 +34,8 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 		let projectFilesPath = this.liveSyncData.projectFilesPath;
 		let canExecute = this.getCanExecuteAction(platform, appIdentifier);
 		let action = async (device: Mobile.IDevice): Promise<void> => {
+			await this.$platformService.trackActionForPlatform({ action: "LiveSync", platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
+
 			let deviceAppData = this.$deviceAppDataFactory.create(appIdentifier, this.$mobileHelper.normalizePlatformName(platform), device);
 			let localToDevicePaths: Mobile.ILocalToDevicePathData[] = null;
 			if (await this.shouldTransferAllFiles(platform, deviceAppData, projectData)) {

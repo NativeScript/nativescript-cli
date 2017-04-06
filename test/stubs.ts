@@ -255,7 +255,7 @@ export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
 			normalizedPlatformName: "",
 			appDestinationDirectoryPath: "",
 			deviceBuildOutputPath: "",
-			getValidPackageNames: (buildOptions: {isForDevice?: boolean, isReleaseBuild?: boolean}) => [],
+			getValidPackageNames: (buildOptions: { isForDevice?: boolean, isReleaseBuild?: boolean }) => [],
 			frameworkFilesExtensions: [],
 			relativeToFrameworkConfigurationFilePath: "",
 			fastLivesyncFileExtensions: []
@@ -276,7 +276,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 			emulatorServices: undefined,
 			projectRoot: "",
 			deviceBuildOutputPath: "",
-			getValidPackageNames: (buildOptions: {isForDevice?: boolean, isReleaseBuild?: boolean}) => [],
+			getValidPackageNames: (buildOptions: { isForDevice?: boolean, isReleaseBuild?: boolean }) => [],
 			frameworkFilesExtensions: [],
 			appDestinationDirectoryPath: "",
 			relativeToFrameworkConfigurationFilePath: "",
@@ -302,7 +302,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 		return Promise.resolve();
 	}
 	interpolateConfigurationFile(): void {
-		return ;
+		return;
 	}
 	afterCreateProject(projectRoot: string): void {
 		return null;
@@ -350,7 +350,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 		return null;
 	}
 	async stopServices(): Promise<ISpawnResult> {
-		return Promise.resolve({stderr: "", stdout: "", exitCode: 0});
+		return Promise.resolve({ stderr: "", stdout: "", exitCode: 0 });
 	}
 	async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
 		return Promise.resolve();
@@ -680,6 +680,10 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 	}
 
 	public async trackProjectType(): Promise<void> {
+		return null;
+	}
+
+	public async trackActionForPlatform(actionData: ITrackPlatformAction): Promise<void> {
 		return null;
 	}
 }
