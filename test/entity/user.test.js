@@ -47,7 +47,7 @@ describe('User', function() {
 
   describe('_acl', function() {
     it('should return the _acl', function() {
-      const data = { _acl: { authtoken: randomString() }};
+      const data = { _acl: { authtoken: randomString() } };
       const user = new User(data);
       expect(user._acl).toEqual(new Acl(data));
     });
@@ -55,7 +55,7 @@ describe('User', function() {
     it('should not be able to set the _acl', function() {
       expect(function() {
         const user = new User();
-        const data = { _acl: { creator: randomString() }};
+        const data = { _acl: { creator: randomString() } };
         user._acl = new Acl(data);
       }).toThrow();
     });
@@ -63,7 +63,7 @@ describe('User', function() {
 
   describe('metadata', function() {
     it('should return the metadata', function() {
-      const data = { _kmd: { lmt: new Date().toISOString(), ect: new Date().toISOString() }};
+      const data = { _kmd: { lmt: new Date().toISOString(), ect: new Date().toISOString() } };
       const user = new User(data);
       expect(user.metadata).toEqual(new Metadata(data));
     });
@@ -71,7 +71,7 @@ describe('User', function() {
     it('should not be able to set the metadata', function() {
       expect(function() {
         const user = new User();
-        const data = { _kmd: { lmt: new Date().toISOString(), ect: new Date().toISOString() }};
+        const data = { _kmd: { lmt: new Date().toISOString(), ect: new Date().toISOString() } };
         user.metadata = new Metadata(data);
       }).toThrow();
     });
@@ -79,7 +79,7 @@ describe('User', function() {
 
   describe('_kmd', function() {
     it('should return the metadata', function() {
-      const data = { _kmd: { lmt: new Date().toISOString(), ect: new Date().toISOString() }};
+      const data = { _kmd: { lmt: new Date().toISOString(), ect: new Date().toISOString() } };
       const user = new User(data);
       expect(user._kmd).toEqual(new Metadata(data));
     });
@@ -87,7 +87,7 @@ describe('User', function() {
     it('should not be able to set the _kmd', function() {
       expect(function() {
         const user = new User();
-        const data = { _kmd: { lmt: new Date().toISOString(), ect: new Date().toISOString() }};
+        const data = { _kmd: { lmt: new Date().toISOString(), ect: new Date().toISOString() } };
         user._kmd = new Metadata(data);
       }).toThrow();
     });
@@ -95,7 +95,7 @@ describe('User', function() {
 
   describe('_socialIdentity', function() {
     it('should return the metadata', function() {
-      const data = { _socialIdentity: { kinvey: {} }};
+      const data = { _socialIdentity: { kinvey: {} } };
       const user = new User(data);
       expect(user._socialIdentity).toEqual(data._socialIdentity);
     });
@@ -103,7 +103,7 @@ describe('User', function() {
     it('should not be able to set the _socialIdentity', function() {
       expect(function() {
         const user = new User();
-        const data = { _socialIdentity: { kinvey: {} }};
+        const data = { _socialIdentity: { kinvey: {} } };
         user._socialIdentity = data._socialIdentity;
       }).toThrow();
     });
@@ -111,7 +111,7 @@ describe('User', function() {
 
   describe('authtoken', function() {
     it('should return the authtoken', function() {
-      const data = { _kmd: { authtoken: randomString() }};
+      const data = { _kmd: { authtoken: randomString() } };
       const user = new User(data);
       expect(user.authtoken).toEqual(new Metadata(data).authtoken);
     });
@@ -119,7 +119,7 @@ describe('User', function() {
     it('should not be able to set the authtoken', function() {
       expect(function() {
         const user = new User();
-        const data = { _kmd: { authtoken: randomString() }};
+        const data = { _kmd: { authtoken: randomString() } };
         user.authtoken = new Metadata(data).authtoken;
       }).toThrow();
     });
@@ -175,7 +175,7 @@ describe('User', function() {
     it('should return true', function() {
       return UserMock.logout()
         .then(() => {
-          return UserMock.login('test', 'test')
+          return UserMock.login('test', 'test');
         })
         .then((user) => {
           expect(user.isActive()).toEqual(true);
@@ -190,13 +190,13 @@ describe('User', function() {
 
   describe('isEmailVerified()', function() {
     it('should return true', function() {
-      const data = { _kmd: { emailVerification: { status: 'confirmed' }}};
+      const data = { _kmd: { emailVerification: { status: 'confirmed' } } };
       const user = new User(data);
       expect(user.isEmailVerified()).toEqual(true);
     });
 
     it('should return false', function() {
-      const data = { _kmd: { emailVerification: { status: 'unconfirmed' }}};
+      const data = { _kmd: { emailVerification: { status: 'unconfirmed' } } };
       const user = new User(data);
       expect(user.isEmailVerified()).toEqual(false);
     });
@@ -250,7 +250,7 @@ describe('User', function() {
     });
 
     it('should throw an error if the username and/or password is invalid', function() {
-      let user = new User();
+      const user = new User();
       const username = randomString();
       const password = randomString();
 
@@ -271,7 +271,7 @@ describe('User', function() {
     });
 
     it('should login a user', function() {
-      let user = new User();
+      const user = new User();
       const username = randomString();
       const password = randomString();
       const reply = {
@@ -584,7 +584,7 @@ describe('User', function() {
         })
         .then((user) => {
           const email = randomString();
-          const requestData = assign(user.data, { email: email })
+          const requestData = assign(user.data, { email: email });
           const responseData = assign(requestData, { _kmd: { authtoken: randomString() } });
 
           // Kinvey API response
@@ -608,7 +608,7 @@ describe('User', function() {
         .then((activeUser) => {
           const user = new User({ _id: randomString(), email: randomString() });
           const email = randomString();
-          const requestData = assign(user.data, { email: email })
+          const requestData = assign(user.data, { email: email });
           const responseData = assign(requestData, { _kmd: { authtoken: randomString() } });
 
           // Kinvey API response
@@ -745,7 +745,7 @@ describe('User', function() {
     it('should return the active user', function() {
       return UserMock.logout()
         .then(() => {
-          return UserMock.login(randomString(), randomString())
+          return UserMock.login(randomString(), randomString());
         })
         .then((user) => {
           expect(UserMock.getActiveUser()).toEqual(user);
@@ -754,7 +754,7 @@ describe('User', function() {
 
     it('should return null', function() {
       return UserMock.logout()
-        .then((user) => {
+        .then(() => {
           expect(UserMock.getActiveUser()).toEqual(null);
         });
     });
@@ -961,14 +961,14 @@ describe('User', function() {
       // Remove the user
       const user = new User({ _id: randomString(), email: randomString() });
 
-      nock(this.client.apiHostname, { encodedQueryParams: true })
+      nock(this.client.apiHostname)
         .delete(`${user.pathname}/${user._id}`)
         .reply(204);
 
-      return User.remove(user._id, {})
-        .then(()=> {
+      return User.remove(user._id)
+        .then(() => {
           expect(nock.isDone()).toEqual(true);
-        })
+        });
     });
 
     it('should remove the user that matches the id argument permanently', function() {
@@ -980,38 +980,9 @@ describe('User', function() {
         .reply(204);
 
       return User.remove(user._id, { hard: true })
-        .then(()=> {
+        .then(() => {
           expect(nock.isDone()).toEqual(true);
         });
     });
   });
-
-  // describe('restore()', function() {
-  //   it('should throw a KinveyError if an id is not provided', function() {
-  //     return User.restore()
-  //       .catch((error) => {
-  //         expect(error).toBeA(KinveyError);
-  //       });
-  //   });
-
-  //   it('should throw a KinveyError if an id is not a string', function() {
-  //     return User.restore(1)
-  //       .catch((error) => {
-  //         expect(error).toBeA(KinveyError);
-  //       });
-  //   });
-
-  //   it('should restore the user that matches the id argument', function() {
-  //     const user = new User({ _id: randomString(), email: randomString() });
-
-  //     nock(this.client.apiHostname, { encodedQueryParams: true })
-  //       .delete(`${user.pathname}/${user._id}`)
-  //       .reply(204);
-
-  //     return User.restore(user._id)
-  //       .then(()=> {
-  //         expect(nock.isDone()).toEqual(true);
-  //       })
-  //   });
-  // });
 });

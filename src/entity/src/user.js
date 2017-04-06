@@ -904,15 +904,4 @@ export default class User {
   static remove(id, options = {}) {
     return store.removeById(id, options);
   }
-
-  /**
-   * Restore a user that has been suspended.
-   *
-   * @param {string} id Id of the user to restore.
-   * @param {Object} [options] Options
-   * @return {Promise<Object>} The response.
-   */
-  static restore(id, options = {}) {
-    return store.restore(id, options);
-  }
 }
