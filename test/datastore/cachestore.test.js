@@ -794,6 +794,45 @@ describe('CacheStore', function() {
           expect(count).toEqual(1);
         });
     });
+
+    it('should remove an entity if it was created locally', function() {
+      const store = new CacheStore(collection);
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
+      const entity3 = {};
+
+      nock(store.client.apiHostname)
+        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200, [entity1, entity2]);
+
+      return store.pull()
+        .then(() => {
+          return store.save(entity3);
+        })
+        .then(() => {
+          nock(store.client.apiHostname)
+            .delete(`/appdata/${store.client.appKey}/${collection}/${entity1._id}`)
+            .reply(200);
+
+          nock(store.client.apiHostname)
+            .delete(`/appdata/${store.client.appKey}/${collection}/${entity2._id}`)
+            .reply(200);
+
+          return store.remove();
+        })
+        .then((result) => {
+          expect(result).toEqual({ count: 3 });
+          const syncStore = new SyncStore(collection);
+          return syncStore.find().toPromise();
+        })
+        .then((entities) => {
+          expect(entities).toEqual([]);
+          return store.pendingSyncCount();
+        })
+        .then((count) => {
+          expect(count).toEqual(0);
+        });
+    });
   });
 
   describe('removeById()', function() {

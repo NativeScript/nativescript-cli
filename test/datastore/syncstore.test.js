@@ -566,6 +566,37 @@ describe('SyncStore', function() {
           expect(entities).toEqual([]);
         });
     });
+
+    it('should remove an entity if it was created locally and not add it to the sync queue', function() {
+      const store = new SyncStore(collection);
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
+      const entity3 = {};
+
+      nock(store.client.apiHostname)
+        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200, [entity1, entity2]);
+
+      return store.pull()
+        .then(() => {
+          return store.save(entity3);
+        })
+        .then(() => {
+          return store.remove();
+        })
+        .then((result) => {
+          expect(result).toEqual({ count: 3 });
+          const syncStore = new SyncStore(collection);
+          return syncStore.find().toPromise();
+        })
+        .then((entities) => {
+          expect(entities).toEqual([]);
+          return store.pendingSyncCount();
+        })
+        .then((count) => {
+          expect(count).toEqual(2);
+        });
+    });
   });
 
   describe('pendingSyncCount()', function() {

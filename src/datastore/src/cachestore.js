@@ -1,8 +1,7 @@
 import differenceBy from 'lodash/differenceBy';
 import assign from 'lodash/assign';
 import keyBy from 'lodash/keyBy';
-import filter from 'lodash/filter';
-import xorWith from 'lodash/xorWith';
+import remove from 'lodash/remove';
 import isArray from 'lodash/isArray';
 import reduce from 'lodash/reduce';
 import map from 'lodash/map';
@@ -562,9 +561,15 @@ export default class CacheStore extends NetworkStore {
         .then((entities) => {
           // Push the entities
           if (entities.length > 0 && this.syncAutomatically === true) {
+            const localEntities = remove(entities, (entity) => {
+              const metadata = new Metadata(entity);
+              return metadata.isLocal();
+            });
+
             const ids = Object.keys(keyBy(entities, '_id'));
             const query = new Query().contains('entityId', ids);
-            return this.push(query, options);
+            return this.push(query, options)
+              .then(results => results.concat(localEntities));
           }
 
           return entities;
