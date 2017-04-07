@@ -38,12 +38,8 @@ describe('NetworkStore', function() {
     });
 
     it('should return all the entities from the backend', function() {
-      const entity1 = {
-        _id: randomString()
-      };
-      const entity2 = {
-        _id: randomString()
-      };
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
 
       nock(this.client.apiHostname)
         .get(`/appdata/${this.client.appKey}/${collection}`)
@@ -56,12 +52,22 @@ describe('NetworkStore', function() {
         });
     });
 
-    // it('should return all the entities from the backen that match the query', async function() {
-    //   const store = new NetworkStore(collection);
-    //   const query = new Query().equalTo('title', entity1.title);
-    //   const entities = await store.find(query).toPromise();
-    //   expect(entities).toEqual([entity1]);
-    // });
+    it('should find the entities that match the query', function() {
+      const store = new NetworkStore();
+      const entity1 = { _id: randomString() };
+      const query = new Query();
+      query.equalTo('_id', entity1._id);
+
+      nock(this.client.apiHostname)
+        .get(store.pathname)
+        .query({ query: JSON.stringify({ _id: entity1._id }) })
+        .reply(200, [entity1]);
+
+      return store.find(query).toPromise()
+        .then((entities) => {
+          expect(entities).toEqual([entity1]);
+        });
+    });
   });
 
   describe('findById()', function() {
@@ -80,9 +86,7 @@ describe('NetworkStore', function() {
 
     it('should return the entity that matches the id argument', function() {
       const entityId = randomString();
-      const entity1 = {
-        _id: entityId
-      };
+      const entity1 = { _id: entityId };
 
       nock(this.client.apiHostname)
         .get(`/appdata/${this.client.appKey}/${collection}/${entityId}`)

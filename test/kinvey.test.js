@@ -147,7 +147,7 @@ describe('Kinvey', function () {
           expect(activeUser).toBeA(User);
           expect(activeUser._id).toEqual(UserMock.getActiveUser()._id);
         })
-        .then(() => UserMock.logout()) // Logout
+        .then(() => UserMock.logout()); // Logout
     });
 
     it('should set default MIC host name when a custom one is not provided', function() {

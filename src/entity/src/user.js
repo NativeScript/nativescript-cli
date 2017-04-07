@@ -8,7 +8,7 @@ import url from 'url';
 import Client from 'src/client';
 import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from 'src/request';
 import { KinveyError, NotFoundError, ActiveUserError } from 'src/errors';
-import DataStore, { UserStore as store } from 'src/datastore';
+import DataStore, { UserStore } from 'src/datastore';
 import { Facebook, Google, LinkedIn, MobileIdentityConnect } from 'src/identity';
 import { Log, isDefined } from 'src/utils';
 import Acl from './acl';
@@ -655,6 +655,7 @@ export default class User {
    */
   update(data, options = {}) {
     data = assign(this.data, data);
+    const store = new UserStore();
     return store.update(data, options)
       .then((data) => {
         if (this.isActive()) {
@@ -877,6 +878,7 @@ export default class User {
    * @return {Observable} Observable.
    */
   static lookup(query, options = {}) {
+    const store = new UserStore();
     return store.lookup(query, options);
   }
 
@@ -888,6 +890,7 @@ export default class User {
    * @return {boolean} True if the username already exists otherwise false.
    */
   static exists(username, options = {}) {
+    const store = new UserStore();
     return store.exists(username, options);
   }
 
@@ -900,6 +903,7 @@ export default class User {
    * @return  {Promise}
    */
   static remove(id, options = {}) {
+    const store = new UserStore();
     return store.removeById(id, options);
   }
 }

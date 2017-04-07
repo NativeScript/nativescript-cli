@@ -1,4 +1,4 @@
-import { UserStore as store } from 'src/datastore';
+import { UserStore } from 'src/datastore';
 import Query from 'src/query';
 import { KinveyError } from 'src/errors';
 import { randomString } from 'src/utils';
@@ -8,6 +8,7 @@ import expect from 'expect';
 describe('UserStore', function () {
   describe('lookup()', function() {
     it('should throw an error if the query argument is not an instance of the Query class', function() {
+      const store = new UserStore();
       return store.lookup({})
         .toPromise()
         .catch((error) => {
@@ -16,6 +17,7 @@ describe('UserStore', function () {
     });
 
     it('should return an array of users', function() {
+      const store = new UserStore();
       const USERS = [{
         _id: randomString(),
         username: randomString(),
@@ -51,6 +53,7 @@ describe('UserStore', function () {
     });
 
     it('should return an array of users matching the query', function() {
+      const store = new UserStore();
       const USERS = [{
         _id: randomString(),
         username: 'foo',
