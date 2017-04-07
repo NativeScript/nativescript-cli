@@ -107,7 +107,7 @@ describe('NetworkStore', function() {
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Invalid aggregation. It must be an instance of the Aggregation class.');
-        })
+        });
     });
 
     it('should throw a ServerError', function() {
@@ -121,11 +121,11 @@ describe('NetworkStore', function() {
         .catch((error) => {
           expect(error).toBeA(ServerError);
           expect(error.message).toEqual('An error occurred on the server.');
-        })
+        });
     });
 
     it('should return the count of all unique properties on the collection', function() {
-      const reply = [{ title: randomString(), count: 2 }, { title: randomString(), count: 1 }]
+      const reply = [{ title: randomString(), count: 2 }, { title: randomString(), count: 1 }];
       nock(this.client.apiHostname)
         .post(`/appdata/${this.client.appKey}/${collection}/_group`)
         .reply(200, reply);
@@ -136,7 +136,7 @@ describe('NetworkStore', function() {
         .then((result) => {
           expect(result).toBeA(Array);
           expect(result).toEqual(reply);
-        })
+        });
     });
   });
 
@@ -147,7 +147,7 @@ describe('NetworkStore', function() {
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Invalid query. It must be an instance of the Query class.');
-        })
+        });
     });
 
     it('should throw a ServerError', function() {
@@ -160,10 +160,10 @@ describe('NetworkStore', function() {
         .catch((error) => {
           expect(error).toBeA(ServerError);
           expect(error.message).toEqual('An error occurred on the server.');
-        })
+        });
     });
 
-    it('should return the count for the collection', function(){
+    it('should return the count for the collection', function() {
       nock(this.client.apiHostname)
         .get(`/appdata/${this.client.appKey}/${collection}/_count`)
         .reply(200, { count: 1 });
@@ -350,7 +350,7 @@ describe('NetworkStore', function() {
     it('should call create() when an array of entities is provided', function() {
       const store = new NetworkStore(collection);
       const spy = expect.spyOn(store, 'create');
-      store.save([{ _id: randomString() }, {}])
+      store.save([{ _id: randomString() }, {}]);
       expect(spy).toHaveBeenCalled();
     });
   });
@@ -362,7 +362,7 @@ describe('NetworkStore', function() {
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Invalid query. It must be an instance of the Query class.');
-        })
+        });
     });
 
     it('should throw a ServerError', function() {
@@ -375,7 +375,7 @@ describe('NetworkStore', function() {
         .catch((error) => {
           expect(error).toBeA(ServerError);
           expect(error.message).toEqual('An error occurred on the server.');
-        })
+        });
     });
 
     it('should remove all entities from the cache', function() {
