@@ -283,12 +283,21 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		if (!changesInfo || changesInfo.appFilesChanged) {
 			await this.copyAppFiles(platform, appFilesUpdaterOptions, projectData);
+
+			// remove the App_Resources folder from the app/assets as here we're applying other files changes.
+			const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+			const appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
+			if (this.$fs.exists(appResourcesDirectoryPath)) {
+				this.$fs.deleteDirectory(appResourcesDirectoryPath);
+			}
 		}
+
 		if (!changesInfo || changesInfo.appResourcesChanged) {
 			await this.copyAppFiles(platform, appFilesUpdaterOptions, projectData);
 			this.copyAppResources(platform, projectData);
 			await platformData.platformProjectService.prepareProject(projectData, platformSpecificData);
 		}
+
 		if (!changesInfo || changesInfo.modulesChanged) {
 			await this.copyTnsModules(platform, projectData);
 		}
