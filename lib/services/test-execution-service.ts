@@ -17,6 +17,7 @@ class TestExecutionService implements ITestExecutionService {
 		private $platformsData: IPlatformsData,
 		private $usbLiveSyncService: ILiveSyncService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $debugDataService: IDebugDataService,
 		private $httpClient: Server.IHttpClient,
 		private $config: IConfiguration,
 		private $logger: ILogger,
@@ -24,8 +25,8 @@ class TestExecutionService implements ITestExecutionService {
 		private $options: IOptions,
 		private $pluginsService: IPluginsService,
 		private $errors: IErrors,
-		private $androidDebugService: IDebugService,
-		private $iOSDebugService: IDebugService,
+		private $androidDebugService: IPlatformDebugService,
+		private $iOSDebugService: IPlatformDebugService,
 		private $devicesService: Mobile.IDevicesService,
 		private $childProcess: IChildProcess) {
 	}
@@ -75,8 +76,9 @@ class TestExecutionService implements ITestExecutionService {
 					if (this.$options.debugBrk) {
 						const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
 						this.$logger.info('Starting debugger...');
-						let debugService: IDebugService = this.$injector.resolve(`${platform}DebugService`);
-						await debugService.debugStart(projectData, buildConfig);
+						let debugService: IPlatformDebugService = this.$injector.resolve(`${platform}DebugService`);
+						const debugData: IDebugData = this.$debugDataService.createDebugData(debugService, this.$options, buildConfig);
+						await debugService.debugStart(debugData, this.$options);
 					}
 					resolve();
 				} catch (err) {
@@ -139,10 +141,11 @@ class TestExecutionService implements ITestExecutionService {
 					teamId: this.$options.teamId
 				};
 
-				const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
-
 				if (this.$options.debugBrk) {
-					await this.getDebugService(platform).debug(projectData, buildConfig);
+					const debugService = this.getDebugService(platform);
+					const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
+					const debugData = this.$debugDataService.createDebugData(debugService, this.$options, buildConfig);
+					await debugService.debug(debugData, this.$options);
 				} else {
 					await this.$platformService.deployPlatform(platform, appFilesUpdaterOptions, deployOptions, projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
 					await this.$usbLiveSyncService.liveSync(platform, projectData);
@@ -198,7 +201,7 @@ class TestExecutionService implements ITestExecutionService {
 		return 'module.exports = ' + JSON.stringify(config);
 	}
 
-	private getDebugService(platform: string): IDebugService {
+	private getDebugService(platform: string): IPlatformDebugService {
 		let lowerCasedPlatform = platform.toLowerCase();
 		if (lowerCasedPlatform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
 			return this.$iOSDebugService;

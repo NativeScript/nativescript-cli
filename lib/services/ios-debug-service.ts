@@ -2,8 +2,10 @@ import * as iOSDevice from "../common/mobile/ios/device/ios-device";
 import * as net from "net";
 import * as path from "path";
 import * as log4js from "log4js";
-import * as os from "os";
 import { ChildProcess } from "child_process";
+import { DebugServiceBase } from "./debug-service-base";
+import { CONNECTION_ERROR_EVENT_NAME } from "../constants";
+
 import byline = require("byline");
 
 const inspectorBackendPort = 18181;
@@ -12,7 +14,7 @@ const inspectorNpmPackageName = "tns-ios-inspector";
 const inspectorUiDir = "WebInspectorUI/";
 const TIMEOUT_SECONDS = 9;
 
-class IOSDebugService implements IDebugService {
+class IOSDebugService extends DebugServiceBase implements IPlatformDebugService {
 	private _lldbProcess: ChildProcess;
 	private _sockets: net.Socket[] = [];
 	private _childProcess: ChildProcess;
@@ -21,55 +23,51 @@ class IOSDebugService implements IDebugService {
 	constructor(private $platformService: IPlatformService,
 		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $devicesService: Mobile.IDevicesService,
-		private $platformsData: IPlatformsData,
 		private $childProcess: IChildProcess,
 		private $logger: ILogger,
 		private $errors: IErrors,
 		private $npmInstallationManager: INpmInstallationManager,
-		private $options: IOptions,
-		private $utils: IUtils,
 		private $iOSNotification: IiOSNotification,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $processService: IProcessService,
 		private $socketProxyFactory: ISocketProxyFactory) {
+		super();
 		this.$processService.attachToProcessExitSignals(this, this.debugStop);
+		this.$socketProxyFactory.on(CONNECTION_ERROR_EVENT_NAME, (e: Error) => this.emit(CONNECTION_ERROR_EVENT_NAME, e));
 	}
 
 	public get platform(): string {
 		return "ios";
 	}
 
-	public async debug(projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
-		if (this.$options.debugBrk && this.$options.start) {
+	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string[]> {
+		if (debugOptions.debugBrk && debugOptions.start) {
 			this.$errors.failWithoutHelp("Expected exactly one of the --debug-brk or --start options.");
 		}
 
 		if (this.$devicesService.isOnlyiOSSimultorRunning() || this.$devicesService.deviceCount === 0) {
-			this.$options.emulator = true;
+			debugOptions.emulator = true;
 		}
 
-		if (this.$options.emulator) {
-			if (this.$options.debugBrk) {
-				return this.emulatorDebugBrk(projectData, buildConfig, true);
-			} else if (this.$options.start) {
-				return this.emulatorStart(projectData);
+		if (debugOptions.emulator) {
+			if (debugOptions.start) {
+				return [await this.emulatorStart(debugData, debugOptions)];
 			} else {
-				return this.emulatorDebugBrk(projectData, buildConfig);
+				return [await this.emulatorDebugBrk(debugData, debugOptions)];
 			}
 		} else {
-			if (this.$options.debugBrk) {
-				return this.deviceDebugBrk(projectData, buildConfig, true);
-			} else if (this.$options.start) {
-				return this.deviceStart(projectData);
+			if (debugOptions.start) {
+				return this.deviceStart(debugData, debugOptions);
 			} else {
-				return this.deviceDebugBrk(projectData, buildConfig, false);
+				return this.deviceDebugBrk(debugData, debugOptions);
 			}
 		}
 	}
 
-	public async debugStart(projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
-		await this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device });
-		this.$devicesService.execute(async (device: Mobile.IiOSDevice) => await device.isEmulator ? this.emulatorDebugBrk(projectData, buildConfig) : this.debugBrkCore(device, projectData));
+	public async debugStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
+		await this.$devicesService.initialize({ platform: this.platform, deviceId: debugData.deviceIdentifier });
+		const action = async (device: Mobile.IiOSDevice) => device.isEmulator ? await this.emulatorDebugBrk(debugData, debugOptions) : await this.debugBrkCore(device, debugData, debugOptions);
+		await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
 	}
 
 	public async debugStop(): Promise<void> {
@@ -93,15 +91,13 @@ class IOSDebugService implements IDebugService {
 		}
 	}
 
-	private async emulatorDebugBrk(projectData: IProjectData, buildConfig: IBuildConfig, shouldBreak?: boolean): Promise<void> {
-		let platformData = this.$platformsData.getPlatformData(this.platform, projectData);
-
-		let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData, buildConfig);
-
-		let args = shouldBreak ? "--nativescript-debug-brk" : "--nativescript-debug-start";
-		let child_process = await this.$iOSEmulatorServices.runApplicationOnEmulator(emulatorPackage.packageName, {
-			waitForDebugger: true, captureStdin: true,
-			args: args, appId: projectData.projectId,
+	private async emulatorDebugBrk(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		let args = debugOptions.debugBrk ? "--nativescript-debug-brk" : "--nativescript-debug-start";
+		let child_process = await this.$iOSEmulatorServices.runApplicationOnEmulator(debugData.pathToAppPackage, {
+			waitForDebugger: true,
+			captureStdin: true,
+			args: args,
+			appId: debugData.applicationIdentifier,
 			skipInstall: true
 		});
 
@@ -110,8 +106,8 @@ class IOSDebugService implements IDebugService {
 
 		lineStream.on('data', (line: NodeBuffer) => {
 			let lineText = line.toString();
-			if (lineText && _.startsWith(lineText, projectData.projectId)) {
-				let pid = _.trimStart(lineText, projectData.projectId + ": ");
+			if (lineText && _.startsWith(lineText, debugData.applicationIdentifier)) {
+				let pid = _.trimStart(lineText, debugData.applicationIdentifier + ": ");
 				this._lldbProcess = this.$childProcess.spawn("lldb", ["-p", pid]);
 				if (log4js.levels.TRACE.isGreaterThanOrEqualTo(this.$logger.getLevel())) {
 					this._lldbProcess.stdout.pipe(process.stdout);
@@ -123,86 +119,99 @@ class IOSDebugService implements IDebugService {
 			}
 		});
 
-		await this.wireDebuggerClient(projectData);
+		return this.wireDebuggerClient(debugData, debugOptions);
 	}
 
-	private async emulatorStart(projectData: IProjectData): Promise<void> {
-		await this.wireDebuggerClient(projectData);
+	private async emulatorStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		const result = await this.wireDebuggerClient(debugData, debugOptions);
 
-		let attachRequestMessage = this.$iOSNotification.getAttachRequest(projectData.projectId);
+		let attachRequestMessage = this.$iOSNotification.getAttachRequest(debugData.applicationIdentifier);
 
 		let iOSEmulator = <Mobile.IiOSSimulatorService>this.$iOSEmulatorServices;
 		await iOSEmulator.postDarwinNotification(attachRequestMessage);
+		return result;
 	}
 
-	private async deviceDebugBrk(projectData: IProjectData, buildConfig: IBuildConfig, shouldBreak?: boolean): Promise<void> {
-		await this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device });
-		this.$devicesService.execute(async (device: iOSDevice.IOSDevice) => {
+	private async deviceDebugBrk(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string[]> {
+		await this.$devicesService.initialize({ platform: this.platform, deviceId: debugData.deviceIdentifier });
+		const action = async (device: iOSDevice.IOSDevice) => {
 			if (device.isEmulator) {
-				return await this.emulatorDebugBrk(projectData, buildConfig, shouldBreak);
+				return await this.emulatorDebugBrk(debugData, debugOptions);
 			}
 
 			const runOptions: IRunPlatformOptions = {
-				device: this.$options.device,
-				emulator: this.$options.emulator,
-				justlaunch: this.$options.justlaunch
+				device: debugData.deviceIdentifier,
+				emulator: debugOptions.emulator,
+				justlaunch: debugOptions.justlaunch
 			};
 			// we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
-			let action = this.$platformService.startApplication(this.platform, runOptions, projectData);
+			let startApplicationAction = this.$platformService.startApplication(this.platform, runOptions, debugData.applicationIdentifier);
 
-			await this.debugBrkCore(device, projectData, shouldBreak);
+			const result = await this.debugBrkCore(device, debugData, debugOptions);
 
-			await action;
-		});
-	}
+			await startApplicationAction;
 
-	private async debugBrkCore(device: Mobile.IiOSDevice, projectData: IProjectData, shouldBreak?: boolean): Promise<void> {
-		let timeout = this.$utils.getMilliSecondsTimeout(TIMEOUT_SECONDS);
-		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device.deviceInfo.identifier, timeout, timeout, projectData.projectId, shouldBreak);
-		await this.wireDebuggerClient(projectData, device);
-	}
-
-	private async deviceStart(projectData: IProjectData): Promise<void> {
-		await this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device });
-		this.$devicesService.execute(async (device: Mobile.IiOSDevice) => device.isEmulator ? await this.emulatorStart(projectData) : await this.deviceStartCore(device, projectData));
-	}
-
-	private async deviceStartCore(device: Mobile.IiOSDevice, projectData: IProjectData): Promise<void> {
-		let timeout = this.$utils.getMilliSecondsTimeout(TIMEOUT_SECONDS);
-		await this.$iOSSocketRequestExecutor.executeAttachRequest(device, timeout, projectData.projectId);
-		await this.wireDebuggerClient(projectData, device);
-	}
-
-	private async wireDebuggerClient(projectData: IProjectData, device?: Mobile.IiOSDevice): Promise<void> {
-		const factory = async () => {
-			let socket = device ? await device.connectToPort(inspectorBackendPort) : net.connect(inspectorBackendPort);
-			this._sockets.push(socket);
-			return socket;
+			return result;
 		};
 
-		if (this.$options.chrome) {
-			this._socketProxy = this.$socketProxyFactory.createWebSocketProxy(factory);
+		const results = await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
+		return _.map(results, r => r.result);
+	}
+
+	private async debugBrkCore(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device.deviceInfo.identifier, TIMEOUT_SECONDS, TIMEOUT_SECONDS, debugData.applicationIdentifier, debugOptions.debugBrk);
+		return this.wireDebuggerClient(debugData, debugOptions, device);
+	}
+
+	private async deviceStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string[]> {
+		await this.$devicesService.initialize({ platform: this.platform, deviceId: debugData.deviceIdentifier });
+		const action = async (device: Mobile.IiOSDevice) => device.isEmulator ? await this.emulatorStart(debugData, debugOptions) : await this.deviceStartCore(device, debugData, debugOptions);
+		const results = await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
+		return _.map(results, r => r.result);
+	}
+
+	private async deviceStartCore(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		await this.$iOSSocketRequestExecutor.executeAttachRequest(device, TIMEOUT_SECONDS, debugData.applicationIdentifier);
+		return this.wireDebuggerClient(debugData, debugOptions, device);
+	}
+
+	private async wireDebuggerClient(debugData: IDebugData, debugOptions: IDebugOptions, device?: Mobile.IiOSDevice): Promise<string> {
+		if (debugOptions.chrome) {
+			this._socketProxy = await this.$socketProxyFactory.createWebSocketProxy(this.getSocketFactory(device));
 
 			const commitSHA = "02e6bde1bbe34e43b309d4ef774b1168d25fd024"; // corresponds to 55.0.2883 Chrome version
-			this.$logger.info(`To start debugging, open the following URL in Chrome:${os.EOL}chrome-devtools://devtools/remote/serve_file/@${commitSHA}/inspector.html?experiments=true&ws=localhost:${this._socketProxy.options.port}${os.EOL}`.cyan);
+			return `chrome-devtools://devtools/remote/serve_file/@${commitSHA}/inspector.html?experiments=true&ws=localhost:${this._socketProxy.options.port}`;
 		} else {
-			this._socketProxy = this.$socketProxyFactory.createTCPSocketProxy(factory);
-			await this.openAppInspector(this._socketProxy.address(), projectData);
+			this._socketProxy = this.$socketProxyFactory.createTCPSocketProxy(this.getSocketFactory(device));
+			await this.openAppInspector(this._socketProxy.address(), debugData, debugOptions);
+			return null;
 		}
 	}
 
-	private async openAppInspector(fileDescriptor: string, projectData: IProjectData): Promise<void> {
-		if (this.$options.client) {
-			let inspectorPath = await this.$npmInstallationManager.getInspectorFromCache(inspectorNpmPackageName, projectData.projectDir);
+	private async openAppInspector(fileDescriptor: string, debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
+		if (debugOptions.client) {
+			let inspectorPath = await this.$npmInstallationManager.getInspectorFromCache(inspectorNpmPackageName, debugData.projectDir);
 
 			let inspectorSourceLocation = path.join(inspectorPath, inspectorUiDir, "Main.html");
 			let inspectorApplicationPath = path.join(inspectorPath, inspectorAppName);
 
-			let cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${projectData.projectName}' '${fileDescriptor}'`;
+			let cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${debugData.projectName}' '${fileDescriptor}'`;
 			await this.$childProcess.exec(cmd);
 		} else {
 			this.$logger.info("Suppressing debugging client.");
 		}
 	}
+
+	private getSocketFactory(device?: Mobile.IiOSDevice): () => Promise<net.Socket> {
+		const factory = async () => {
+			const socket = device ? await device.connectToPort(inspectorBackendPort) : net.connect(inspectorBackendPort);
+			this._sockets.push(socket);
+			return socket;
+		};
+
+		factory.bind(this);
+		return factory;
+	}
 }
+
 $injector.register("iOSDebugService", IOSDebugService);

@@ -1,14 +1,20 @@
+import { EventEmitter } from "events";
+import { CONNECTION_ERROR_EVENT_NAME } from "../../constants";
 import { PacketStream } from "./packet-stream";
 import * as net from "net";
 import * as ws from "ws";
 import temp = require("temp");
 
-export class SocketProxyFactory implements ISocketProxyFactory {
+export class SocketProxyFactory extends EventEmitter implements ISocketProxyFactory {
 	constructor(private $logger: ILogger,
+		private $errors: IErrors,
 		private $config: IConfiguration,
-		private $options: IOptions) { }
+		private $options: IOptions,
+		private $net: INet) {
+		super();
+	}
 
-	public createTCPSocketProxy(factory: () => Promise<net.Socket>): any {
+	public createTCPSocketProxy(factory: () => Promise<net.Socket>): net.Server {
 		this.$logger.info("\nSetting up proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
 
 		let server = net.createServer({
@@ -25,7 +31,7 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 				}
 			});
 
-			const backendSocket: net.Socket = await factory();
+			const backendSocket = await factory();
 			this.$logger.info("Backend socket created.");
 
 			backendSocket.on("end", () => {
@@ -62,9 +68,9 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 		return server;
 	}
 
-	public createWebSocketProxy(factory: () => Promise<net.Socket>): ws.Server {
+	public async createWebSocketProxy(factory: () => Promise<net.Socket>): Promise<ws.Server> {
 		// NOTE: We will try to provide command line options to select ports, at least on the localhost.
-		let localPort = 8080;
+		const localPort = await this.$net.getAvailablePortInRange(8080);
 
 		this.$logger.info("\nSetting up debugger proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
 
@@ -77,7 +83,15 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 			port: localPort,
 			verifyClient: async (info: any, callback: Function) => {
 				this.$logger.info("Frontend client connected.");
-				const _socket = await factory();
+				let _socket;
+				try {
+					_socket = await factory();
+				} catch (err) {
+					this.$logger.trace(err);
+					this.emit(CONNECTION_ERROR_EVENT_NAME, err);
+					this.$errors.failWithoutHelp("Cannot connect to device socket.");
+				}
+
 				this.$logger.info("Backend socket created.");
 				info.req["__deviceSocket"] = _socket;
 				callback(true);

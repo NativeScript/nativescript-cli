@@ -506,13 +506,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		await this.$devicesService.execute(action, this.getCanExecuteAction(platform, deployOptions));
 	}
 
-	public async startApplication(platform: string, runOptions: IRunPlatformOptions, projectData: IProjectData): Promise<void> {
-		await this.trackProjectType(projectData);
-
+	public async startApplication(platform: string, runOptions: IRunPlatformOptions, projectId: string): Promise<void> {
 		this.$logger.out("Starting...");
 
 		let action = async (device: Mobile.IDevice) => {
-			await device.applicationManager.startApplication(projectData.projectId);
+			await device.applicationManager.startApplication(projectId);
 			this.$logger.out(`Successfully started on device with identifier '${device.deviceInfo.identifier}'.`);
 		};
 
@@ -552,7 +550,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		await this.deployPlatform(platform, appFilesUpdaterOptions, emulateOptions, projectData, platformSpecificData);
-		return this.startApplication(platform, emulateOptions, projectData);
+		return this.startApplication(platform, emulateOptions, projectData.projectId);
 	}
 
 	private getBuildOutputPath(platform: string, platformData: IPlatformData, options: IBuildForDevice): string {

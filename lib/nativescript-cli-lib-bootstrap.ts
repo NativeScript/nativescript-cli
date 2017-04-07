@@ -9,6 +9,7 @@ $injector.requirePublic("companionAppsService", "./common/appbuilder/services/li
 $injector.requirePublicClass("deviceEmitter", "./common/appbuilder/device-emitter");
 $injector.requirePublicClass("deviceLogProvider", "./common/appbuilder/device-log-provider");
 $injector.requirePublicClass("localBuildService", "./services/local-build-service");
+$injector.requirePublicClass("debugService", "./services/debug-service");
 $injector.require("iOSLogFilter", "./common/mobile/ios/ios-log-filter");
 
 // We need this because some services check if (!$options.justlaunch) to start the device log after some operation.
