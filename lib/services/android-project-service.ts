@@ -4,6 +4,7 @@ import * as constants from "../constants";
 import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
+import { attachAwaitDetach } from "../common/helpers";
 import { EOL } from "os";
 import { Configurations } from "../common/constants";
 import { SpawnOptions } from "child_process";
@@ -257,13 +258,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			buildOptions.unshift("buildapk");
 
-			this.$childProcess.on(constants.BUILD_OUTPUT_EVENT_NAME, (data: any) => {
+			const handler = (data: any) => {
 				this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
-			});
+			};
 
-			await this.executeGradleCommand(this.getPlatformData(projectData).projectRoot, buildOptions,
-				{ stdio: buildConfig.buildOutputStdio || "inherit" },
-				{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
+			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
+				this.$childProcess,
+				handler,
+				this.executeGradleCommand(this.getPlatformData(projectData).projectRoot,
+					buildOptions,
+					{ stdio: buildConfig.buildOutputStdio || "inherit" },
+					{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true }));
 		} else {
 			this.$errors.failWithoutHelp("Cannot complete build because this project is ANT-based." + EOL +
 				"Run `tns platform remove android && tns platform add android` to switch to Gradle and try again.");

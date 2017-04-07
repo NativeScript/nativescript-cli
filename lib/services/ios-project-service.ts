@@ -5,6 +5,7 @@ import * as semver from "semver";
 import * as xcode from "xcode";
 import * as constants from "../constants";
 import * as helpers from "../common/helpers";
+import { attachAwaitDetach } from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { PlistSession } from "plist-merge-patch";
 import { EOL } from "os";
@@ -180,7 +181,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		let projectRoot = this.getPlatformData(projectData).projectRoot;
 		let archivePath = options && options.archivePath ? path.resolve(options.archivePath) : path.join(projectRoot, "/build/archive/", projectData.projectName + ".xcarchive");
 		let args = ["archive", "-archivePath", archivePath, "-configuration",
-				(!buildConfig || buildConfig.release) ? "Release" : "Debug" ]
+			(!buildConfig || buildConfig.release) ? "Release" : "Debug"]
 			.concat(this.xcbuildProjectArgs(projectRoot, projectData, "scheme"));
 		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { stdio: 'inherit' });
 		return archivePath;
@@ -287,15 +288,21 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		// 	}
 		// }
 
-		this.$childProcess.on(constants.BUILD_OUTPUT_EVENT_NAME, (data: any) => {
+		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
-		});
-		if (buildConfig.buildForDevice) {
-			await this.buildForDevice(projectRoot, basicArgs, buildConfig, projectData);
-		} else {
-			await this.buildForSimulator(projectRoot, basicArgs, projectData, buildConfig.buildOutputStdio);
-		}
+		};
 
+		if (buildConfig.buildForDevice) {
+			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
+				this.$childProcess,
+				handler,
+				this.buildForDevice(projectRoot, basicArgs, buildConfig, projectData));
+		} else {
+			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
+				this.$childProcess,
+				handler,
+				this.buildForSimulator(projectRoot, basicArgs, projectData, buildConfig.buildOutputStdio));
+		}
 	}
 
 	public async validatePlugins(projectData: IProjectData): Promise<void> {
