@@ -453,7 +453,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit",
 			{ stdio: buildOutputStdio || "inherit", cwd: this.getPlatformData(projectData).projectRoot },
-			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: false });
+			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
 	}
 
 	private async createIpa(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string> {
