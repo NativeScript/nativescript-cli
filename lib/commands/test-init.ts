@@ -53,7 +53,7 @@ class TestInitCommand implements ICommand {
 						'save-dev': true
 					});
 				} catch (e) {
-					this.$logger.info(e.message);
+					this.$logger.error(e.message);
 				}
 			}
 		}
