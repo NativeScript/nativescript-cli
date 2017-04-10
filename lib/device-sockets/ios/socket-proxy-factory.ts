@@ -45,13 +45,14 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				});
 
 				frontendSocket.on("close", () => {
-					console.log("frontend socket closed");
+					this.$logger.info("Frontend socket closed");
 					if (!(<any>backendSocket).destroyed) {
 						backendSocket.destroy();
 					}
 				});
+
 				backendSocket.on("close", () => {
-					console.log("backend socket closed");
+					this.$logger.info("Backend socket closed");
 					if (!(<any>frontendSocket).destroyed) {
 						frontendSocket.destroy();
 					}

@@ -6,7 +6,6 @@ export abstract class DebugPlatformCommand implements ICommand {
 	constructor(private debugService: IPlatformDebugService,
 		private $devicesService: Mobile.IDevicesService,
 		private $injector: IInjector,
-		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $config: IConfiguration,
 		private $usbLiveSyncService: ILiveSyncService,
@@ -14,7 +13,8 @@ export abstract class DebugPlatformCommand implements ICommand {
 		protected $platformService: IPlatformService,
 		protected $projectData: IProjectData,
 		protected $options: IOptions,
-		protected $platformsData: IPlatformsData) {
+		protected $platformsData: IPlatformsData,
+		protected $logger: ILogger) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -31,9 +31,7 @@ export abstract class DebugPlatformCommand implements ICommand {
 			teamId: this.$options.teamId
 		};
 
-		const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
-
-		const debugData = this.$debugDataService.createDebugData(this.debugService, this.$options, buildConfig);
+		let debugData = this.$debugDataService.createDebugData(this.$projectData, this.$options);
 
 		await this.$platformService.trackProjectType(this.$projectData);
 
@@ -56,6 +54,9 @@ export abstract class DebugPlatformCommand implements ICommand {
 			}
 
 			await deviceAppData.device.applicationManager.stopApplication(applicationId);
+
+			const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
+			debugData.pathToAppPackage = this.$platformService.lastOutputPath(this.debugService.platform, buildConfig, projectData);
 
 			this.printDebugInformation(await this.debugService.debug(debugData, debugOptions));
 		};
@@ -80,7 +81,7 @@ export abstract class DebugPlatformCommand implements ICommand {
 		return true;
 	}
 
-	private printDebugInformation(information: string[]): void {
+	protected printDebugInformation(information: string[]): void {
 		_.each(information, i => {
 			this.$logger.info(`To start debugging, open the following URL in Chrome:${EOL}${i}${EOL}`.cyan);
 		});
@@ -88,10 +89,10 @@ export abstract class DebugPlatformCommand implements ICommand {
 }
 
 export class DebugIOSCommand extends DebugPlatformCommand {
-	constructor($iOSDebugService: IPlatformDebugService,
+	constructor(protected $logger: ILogger,
+		$iOSDebugService: IPlatformDebugService,
 		$devicesService: Mobile.IDevicesService,
 		$injector: IInjector,
-		$logger: ILogger,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$config: IConfiguration,
 		$usbLiveSyncService: ILiveSyncService,
@@ -101,22 +102,28 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$iosDeviceOperations: IIOSDeviceOperations) {
-		super($iOSDebugService, $devicesService, $injector, $logger, $devicePlatformsConstants, $config, $usbLiveSyncService, $debugDataService, $platformService, $projectData, $options, $platformsData);
+		super($iOSDebugService, $devicesService, $injector, $devicePlatformsConstants, $config, $usbLiveSyncService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger);
 		$iosDeviceOperations.setShouldDispose(this.$options.justlaunch);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		return await super.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.iOS);
 	}
+
+	protected printDebugInformation(information: string[]): void {
+		if (this.$options.chrome) {
+			super.printDebugInformation(information);
+		}
+	}
 }
 
 $injector.registerCommand("debug|ios", DebugIOSCommand);
 
 export class DebugAndroidCommand extends DebugPlatformCommand {
-	constructor($androidDebugService: IPlatformDebugService,
+	constructor($logger: ILogger,
+		$androidDebugService: IPlatformDebugService,
 		$devicesService: Mobile.IDevicesService,
 		$injector: IInjector,
-		$logger: ILogger,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$config: IConfiguration,
 		$usbLiveSyncService: ILiveSyncService,
@@ -125,7 +132,7 @@ export class DebugAndroidCommand extends DebugPlatformCommand {
 		$options: IOptions,
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData) {
-		super($androidDebugService, $devicesService, $injector, $logger, $devicePlatformsConstants, $config, $usbLiveSyncService, $debugDataService, $platformService, $projectData, $options, $platformsData);
+		super($androidDebugService, $devicesService, $injector, $devicePlatformsConstants, $config, $usbLiveSyncService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

@@ -112,6 +112,7 @@ class IOSDebugService extends DebugServiceBase implements IPlatformDebugService 
 
 				if (!pidMatch) {
 					this.$logger.trace(`Line ${lineText} does not contain the searched pattern: ${pidRegExp}.`);
+					return;
 				}
 
 				const pid = pidMatch[1];

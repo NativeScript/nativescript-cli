@@ -74,10 +74,9 @@ class TestExecutionService implements ITestExecutionService {
 					await this.$usbLiveSyncService.liveSync(platform, projectData);
 
 					if (this.$options.debugBrk) {
-						const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
 						this.$logger.info('Starting debugger...');
 						let debugService: IPlatformDebugService = this.$injector.resolve(`${platform}DebugService`);
-						const debugData: IDebugData = this.$debugDataService.createDebugData(debugService, this.$options, buildConfig);
+						const debugData = this.getDebugData(platform, projectData, deployOptions);
 						await debugService.debugStart(debugData, this.$options);
 					}
 					resolve();
@@ -143,8 +142,7 @@ class TestExecutionService implements ITestExecutionService {
 
 				if (this.$options.debugBrk) {
 					const debugService = this.getDebugService(platform);
-					const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
-					const debugData = this.$debugDataService.createDebugData(debugService, this.$options, buildConfig);
+					const debugData = this.getDebugData(platform, projectData, deployOptions);
 					await debugService.debug(debugData, this.$options);
 				} else {
 					await this.$platformService.deployPlatform(platform, appFilesUpdaterOptions, deployOptions, projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
@@ -246,6 +244,14 @@ class TestExecutionService implements ITestExecutionService {
 		this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
 
 		return karmaConfig;
+	}
+
+	private getDebugData(platform: string, projectData: IProjectData, deployOptions: IDeployPlatformOptions): IDebugData {
+		const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
+		let debugData = this.$debugDataService.createDebugData(projectData, this.$options);
+		debugData.pathToAppPackage = this.$platformService.lastOutputPath(platform, buildConfig, projectData);
+
+		return debugData;
 	}
 }
 $injector.register('testExecutionService', TestExecutionService);
