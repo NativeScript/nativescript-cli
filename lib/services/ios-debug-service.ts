@@ -5,6 +5,7 @@ import * as log4js from "log4js";
 import { ChildProcess } from "child_process";
 import { DebugServiceBase } from "./debug-service-base";
 import { CONNECTION_ERROR_EVENT_NAME } from "../constants";
+import { getPidFromiOSSimulatorLogs } from "../common/helpers";
 
 import byline = require("byline");
 
@@ -103,19 +104,16 @@ class IOSDebugService extends DebugServiceBase implements IPlatformDebugService 
 
 		let lineStream = byline(child_process.stdout);
 		this._childProcess = child_process;
-		const pidRegExp = new RegExp(`${debugData.applicationIdentifier}:\\s?(\\d+)`);
 
 		lineStream.on('data', (line: NodeBuffer) => {
 			let lineText = line.toString();
 			if (lineText && _.startsWith(lineText, debugData.applicationIdentifier)) {
-				const pidMatch = lineText.match(pidRegExp);
-
-				if (!pidMatch) {
-					this.$logger.trace(`Line ${lineText} does not contain the searched pattern: ${pidRegExp}.`);
+				const pid = getPidFromiOSSimulatorLogs(debugData.applicationIdentifier, lineText);
+				if (!pid) {
+					this.$logger.trace(`Line ${lineText} does not contain PID of the application ${debugData.applicationIdentifier}.`);
 					return;
 				}
 
-				const pid = pidMatch[1];
 				this._lldbProcess = this.$childProcess.spawn("lldb", ["-p", pid]);
 				if (log4js.levels.TRACE.isGreaterThanOrEqualTo(this.$logger.getLevel())) {
 					this._lldbProcess.stdout.pipe(process.stdout);
