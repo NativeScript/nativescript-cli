@@ -464,6 +464,17 @@ describe('Platform Service Tests', () => {
 			return created;
 		}
 
+		function updateFile(files: string[], fileName: string, content: string) {
+			let fileToUpdate = _.find(files, (f) => f.indexOf(fileName) !== -1);
+			fs.writeFile(fileToUpdate, content);
+		}
+
+		function assertFileContent(createdItems: CreatedItems, expectedFileContent: string, fileName: string) {
+			let destinationFilePath = path.join(createdItems.testDirData.appDestFolderPath, "app", fileName);
+			let actual = fs.readFile(destinationFilePath);
+			assert.equal(actual, expectedFileContent);
+		}
+
 		it("should process only files in app folder when preparing for iOS platform", async () => {
 			await testPreparePlatform("iOS");
 		});
@@ -480,19 +491,26 @@ describe('Platform Service Tests', () => {
 			await testPreparePlatform("Android", true);
 		});
 
-		it("should sync only changed files, without special folders", async () => {
+		it("should sync only changed files, without special folders (iOS)", async () => {
 			let createdItems = await testPreparePlatform("iOS");
 
-			// update one file.
-			const expected = "updated-data-ios";
-			let test1Js = _.find(createdItems.files, (f) => f.indexOf('test1.ios.js') !== -1);
-			fs.writeFile(test1Js, expected);
+			const expectedFileContent = "updated-content-ios";
+			updateFile(createdItems.files, "test1.ios.js", expectedFileContent);			
 
 			await execPreparePlatform("iOS", createdItems.testDirData);
 
-			let destinationTest1Js = path.join(createdItems.testDirData.appDestFolderPath, "app", "test1.js");
-			let actual = fs.readFile(destinationTest1Js);
-			assert.equal(actual, expected);
+			assertFileContent(createdItems, expectedFileContent, "test1.js");
+		});
+
+		it("should sync only changed files, without special folders (Android)", async () => {
+			let createdItems = await testPreparePlatform("Android");
+
+			const expectedFileContent = "updated-content-android";
+			updateFile(createdItems.files, "test2.android.js", expectedFileContent);			
+
+			await execPreparePlatform("Android", createdItems.testDirData);
+
+			assertFileContent(createdItems, expectedFileContent, "test2.js");
 		});
 
 		it("invalid xml is caught", async () => {
