@@ -1,7 +1,7 @@
 interface IDebugData {
 	deviceIdentifier: string;
 	applicationIdentifier: string;
-	pathToAppPackage: string;
+	pathToAppPackage?: string;
 	projectName?: string;
 	projectDir?: string;
 }
@@ -17,7 +17,7 @@ interface IDebugOptions {
 }
 
 interface IDebugDataService {
-	createDebugData(debugService: IPlatformDebugService, options: IOptions, buildConfig: IBuildConfig): IDebugData;
+	createDebugData(projectData: IProjectData, options: IOptions): IDebugData;
 }
 
 interface IDebugService extends NodeJS.EventEmitter {

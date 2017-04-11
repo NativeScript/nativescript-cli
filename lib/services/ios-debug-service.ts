@@ -5,6 +5,7 @@ import * as log4js from "log4js";
 import { ChildProcess } from "child_process";
 import { DebugServiceBase } from "./debug-service-base";
 import { CONNECTION_ERROR_EVENT_NAME } from "../constants";
+import { getPidFromiOSSimulatorLogs } from "../common/helpers";
 
 import byline = require("byline");
 
@@ -107,7 +108,12 @@ class IOSDebugService extends DebugServiceBase implements IPlatformDebugService 
 		lineStream.on('data', (line: NodeBuffer) => {
 			let lineText = line.toString();
 			if (lineText && _.startsWith(lineText, debugData.applicationIdentifier)) {
-				let pid = _.trimStart(lineText, debugData.applicationIdentifier + ": ");
+				const pid = getPidFromiOSSimulatorLogs(debugData.applicationIdentifier, lineText);
+				if (!pid) {
+					this.$logger.trace(`Line ${lineText} does not contain PID of the application ${debugData.applicationIdentifier}.`);
+					return;
+				}
+
 				this._lldbProcess = this.$childProcess.spawn("lldb", ["-p", pid]);
 				if (log4js.levels.TRACE.isGreaterThanOrEqualTo(this.$logger.getLevel())) {
 					this._lldbProcess.stdout.pipe(process.stdout);
@@ -182,7 +188,7 @@ class IOSDebugService extends DebugServiceBase implements IPlatformDebugService 
 			const commitSHA = "02e6bde1bbe34e43b309d4ef774b1168d25fd024"; // corresponds to 55.0.2883 Chrome version
 			return `chrome-devtools://devtools/remote/serve_file/@${commitSHA}/inspector.html?experiments=true&ws=localhost:${this._socketProxy.options.port}`;
 		} else {
-			this._socketProxy = this.$socketProxyFactory.createTCPSocketProxy(this.getSocketFactory(device));
+			this._socketProxy = await this.$socketProxyFactory.createTCPSocketProxy(this.getSocketFactory(device));
 			await this.openAppInspector(this._socketProxy.address(), debugData, debugOptions);
 			return null;
 		}

@@ -128,10 +128,8 @@ class AndroidDebugService extends DebugServiceBase implements IPlatformDebugServ
 		let startDebuggerCommand = ["am", "broadcast", "-a", `\"${packageName}-debug\"`, "--ez", "enable", "true"];
 		await this.device.adb.executeShellCommand(startDebuggerCommand);
 
-		if (debugOptions.chrome) {
-			let port = await this.getForwardedLocalDebugPortForPackageName(deviceId, packageName);
-			return `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${port}`;
-		}
+		let port = await this.getForwardedLocalDebugPortForPackageName(deviceId, packageName);
+		return `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${port}`;
 	}
 
 	private detachDebugger(packageName: string): Promise<void> {

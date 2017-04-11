@@ -288,7 +288,7 @@ interface IAndroidToolsInfoData {
 }
 
 interface ISocketProxyFactory extends NodeJS.EventEmitter {
-	createTCPSocketProxy(factory: () => Promise<any>): any;
+	createTCPSocketProxy(factory: () => Promise<any>): Promise<any>;
 	createWebSocketProxy(factory: () => Promise<any>): Promise<any>;
 }
 
