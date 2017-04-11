@@ -432,11 +432,11 @@ describe('Platform Service Tests', () => {
 
 			// Add App_Resources file to app and app1 folders
 			_.each(destinationDirectories, directoryPath => {
-				let iosIconFullPath = path.join(directoryPath, "App_Resources/iOS/icon.png");
+				let iosIconFullPath = path.join(directoryPath, "App_Resources/ios/icon.png");
 				fs.writeFile(iosIconFullPath, "test-image");
 				created.resources.ios.push(iosIconFullPath);
 
-				let androidFullPath = path.join(directoryPath, "App_Resources/Android/icon.png");
+				let androidFullPath = path.join(directoryPath, "App_Resources/android/icon.png");
 				fs.writeFile(androidFullPath, "test-image");
 				created.resources.android.push(androidFullPath);
 			});
