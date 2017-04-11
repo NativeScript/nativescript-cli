@@ -432,11 +432,11 @@ describe('Platform Service Tests', () => {
 
 			// Add App_Resources file to app and app1 folders
 			_.each(destinationDirectories, directoryPath => {
-				let iosIconFullPath = path.join(directoryPath, "App_Resources/ios/icon.png");
+				let iosIconFullPath = path.join(directoryPath, "App_Resources/iOS/icon.png");
 				fs.writeFile(iosIconFullPath, "test-image");
 				created.resources.ios.push(iosIconFullPath);
 
-				let androidFullPath = path.join(directoryPath, "App_Resources/android/icon.png");
+				let androidFullPath = path.join(directoryPath, "App_Resources/Android/icon.png");
 				fs.writeFile(androidFullPath, "test-image");
 				created.resources.android.push(androidFullPath);
 			});
@@ -481,14 +481,14 @@ describe('Platform Service Tests', () => {
 		});
 
 		it("should sync only changed files, without special folders", async () => {
-			let createdItems = await testPreparePlatform("ios");
+			let createdItems = await testPreparePlatform("iOS");
 
 			// update one file.
 			const expected = "updated-data-ios";
 			let test1Js = _.find(createdItems.files, (f) => f.indexOf('test1.ios.js') !== -1);
 			fs.writeFile(test1Js, expected);
 
-			await execPreparePlatform("ios", createdItems.testDirData);
+			await execPreparePlatform("iOS", createdItems.testDirData);
 
 			let destinationTest1Js = path.join(createdItems.testDirData.appDestFolderPath, "app", "test1.js");
 			let actual = fs.readFile(destinationTest1Js);
