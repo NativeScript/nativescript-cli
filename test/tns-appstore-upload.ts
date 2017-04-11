@@ -1,10 +1,8 @@
-import { suite, test/*, only*/ } from "mocha-typescript";
 import { PublishIOS } from "../lib/commands/appstore-upload";
 import { PrompterStub, LoggerStub, ProjectDataStub } from "./stubs";
 import * as chai from "chai";
 import * as yok from "../lib/common/yok";
 
-@suite("tns appstore")
 class AppStore {
 	static itunesconnect = {
 		user: "person@private.com",
@@ -142,7 +140,6 @@ class AppStore {
 		};
 	}
 
-	@test("without args, prompts for itunesconnect credentionals, prepares, archives and uploads")
 	async noArgs() {
 		this.expectItunesPrompt();
 		this.expectPreparePlatform();
@@ -155,7 +152,6 @@ class AppStore {
 		this.assert();
 	}
 
-	@test("with command line itunesconnect credentionals, prepares, archives and uploads")
 	async itunesconnectArgs() {
 		this.expectPreparePlatform();
 		this.expectArchive();
@@ -167,7 +163,6 @@ class AppStore {
 		this.assert();
 	}
 
-	@test("passes --team-id to xcodebuild exportArchive")
 	async teamIdOption() {
 		this.expectItunesPrompt();
 		this.expectPreparePlatform();
@@ -182,3 +177,21 @@ class AppStore {
 		this.assert();
 	}
 }
+
+describe("tns appstore", () => {
+	it("without args, prompts for itunesconnect credentionals, prepares, archives and uploads", async () => {
+		const instance = new AppStore();
+		instance.before();
+		await instance.noArgs();
+	});
+	it("with command line itunesconnect credentionals, prepares, archives and uploads", async () => {
+		const instance = new AppStore();
+		instance.before();
+		await instance.itunesconnectArgs();
+	});
+	it("passes --team-id to xcodebuild exportArchive", async () => {
+		const instance = new AppStore();
+		instance.before();
+		await instance.teamIdOption();
+	});
+});

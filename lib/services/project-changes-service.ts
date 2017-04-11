@@ -11,19 +11,26 @@ class ProjectChangesInfo implements IProjectChangesInfo {
 	public configChanged: boolean;
 	public packageChanged: boolean;
 	public nativeChanged: boolean;
+	public signingChanged: boolean;
 
 	public get hasChanges(): boolean {
 		return this.packageChanged ||
 			this.appFilesChanged ||
 			this.appResourcesChanged ||
 			this.modulesChanged ||
-			this.configChanged;
+			this.configChanged ||
+			this.signingChanged;
 	}
 
 	public get changesRequireBuild(): boolean {
 		return this.packageChanged ||
 			this.appResourcesChanged ||
 			this.nativeChanged;
+	}
+
+	public get changesRequirePrepare(): boolean {
+		return this.appResourcesChanged ||
+			this.signingChanged;
 	}
 }
 
@@ -75,16 +82,10 @@ export class ProjectChangesService implements IProjectChangesService {
 				]);
 			}
 		}
-		if (platform.toLowerCase() === this.$devicePlatformsConstants.iOS.toLowerCase()) {
-			const nextCommandProvisionUUID = projectChangesOptions.provision;
-			// We should consider reading here the provisioning profile UUID from the xcodeproj and xcconfig.
-			const prevProvisionUUID = this._prepareInfo.iOSProvisioningProfileUUID;
-			if (nextCommandProvisionUUID !== prevProvisionUUID) {
-				this._changesInfo.nativeChanged = true;
-				this._changesInfo.configChanged = true;
-				this._prepareInfo.iOSProvisioningProfileUUID = nextCommandProvisionUUID;
-			}
-		}
+
+		let projectService = platformData.platformProjectService;
+		projectService.checkForChanges(this._changesInfo, projectChangesOptions, projectData);
+
 		if (projectChangesOptions.bundle !== this._prepareInfo.bundle || projectChangesOptions.release !== this._prepareInfo.release) {
 			this._changesInfo.appFilesChanged = true;
 			this._changesInfo.appResourcesChanged = true;

@@ -258,6 +258,12 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	 * @returns {void}
 	 */
 	cleanProject(projectRoot: string, projectData: IProjectData): Promise<void>
+
+	/**
+	 * Check the current state of the project, and validate against the options.
+	 * If there are parts in the project that are inconsistent with the desired options, marks them in the changeset flags.
+	 */
+	checkForChanges(changeset: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void;
 }
 
 interface IAndroidProjectPropertiesManager {

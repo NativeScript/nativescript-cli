@@ -24,6 +24,7 @@ import { PluginVariablesHelper } from "../lib/common/plugin-variables-helper";
 import { Utils } from "../lib/common/utils";
 import { CocoaPodsService } from "../lib/services/cocoapods-service";
 import { assert } from "chai";
+import { IOSProvisionService } from "../lib/services/ios-provision-service";
 import temp = require("temp");
 
 temp.track();
@@ -85,6 +86,14 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("androidProcessService", {});
 	testInjector.register("processService", {});
 	testInjector.register("sysInfo", {});
+	testInjector.register("pbxprojDomXcode", {});
+	testInjector.register("xcode", {
+		project: class {
+			constructor() { /* */ }
+			parseSync() { /* */ }
+			pbxGroupByName() { /* */ }
+		}
+	});
 	return testInjector;
 }
 
@@ -416,7 +425,7 @@ describe("Static libraries support", () => {
 		return;
 	}
 
-	let projectName = "projectDirectory";
+	let projectName = "TNSApp";
 	let projectPath = temp.mkdirSync(projectName);
 	let libraryName = "testLibrary1";
 	let headers = ["TestHeader1.h", "TestHeader2.h"];
@@ -484,5 +493,235 @@ describe("Relative paths", () => {
 
 		let result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath, projectData);
 		assert.equal(result, path.join("..", "..", "sub", "path"));
+	});
+});
+
+describe("iOS Project Service Signing", () => {
+	let testInjector: IInjector;
+	let projectName: string;
+	let projectDirName: string;
+	let projectPath: string;
+	let files: any;
+	let iOSProjectService: IPlatformProjectService;
+	let projectData: any;
+	let pbxproj: string;
+	let iOSProvisionService: IOSProvisionService;
+	let pbxprojDomXcode: IPbxprojDomXcode;
+
+	beforeEach(() => {
+		files = {};
+		projectName = "TNSApp" + Math.ceil(Math.random() * 1000);
+		projectDirName = projectName + "Dir";
+		projectPath = temp.mkdirSync(projectDirName);
+		testInjector = createTestInjector(projectPath, projectDirName);
+		testInjector.register("fs", {
+			files: {},
+			readJson(path: string): any {
+				if (this.exists(path)) {
+					return JSON.stringify(files[path]);
+				} else {
+					return null;
+				}
+			},
+			exists(path: string): boolean {
+				return path in files;
+			}
+		});
+		testInjector.register("pbxprojDomXcode", { Xcode: {} });
+		pbxproj = path.join(projectPath, `platforms/ios/${projectDirName}.xcodeproj/project.pbxproj`);
+		iOSProjectService = testInjector.resolve("iOSProjectService");
+		iOSProvisionService = testInjector.resolve("iOSProvisionService");
+		pbxprojDomXcode = testInjector.resolve("pbxprojDomXcode");
+		projectData = testInjector.resolve("projectData");
+		iOSProvisionService.pick = async (uuidOrName: string, projId: string) => {
+			return (<any>{
+				"NativeScriptDev": {
+					Name: "NativeScriptDev",
+					CreationDate: null,
+					ExpirationDate: null,
+					TeamName: "Telerik AD",
+					TeamIdentifier: ["TKID101"],
+					ProvisionedDevices: [],
+					Entitlements: {
+						"application-identifier": "*",
+						"com.apple.developer.team-identifier": "ABC"
+					},
+					UUID: "12345",
+					ProvisionsAllDevices: false,
+					ApplicationIdentifierPrefix: null,
+					DeveloperCertificates: null,
+					Type: "Development"
+				},
+				"NativeScriptDist": {
+					Name: "NativeScriptDist",
+					CreationDate: null,
+					ExpirationDate: null,
+					TeamName: "Telerik AD",
+					TeamIdentifier: ["TKID202"],
+					ProvisionedDevices: [],
+					Entitlements: {
+						"application-identifier": "*",
+						"com.apple.developer.team-identifier": "ABC"
+					},
+					UUID: "6789",
+					ProvisionsAllDevices: true,
+					ApplicationIdentifierPrefix: null,
+					DeveloperCertificates: null,
+					Type: "Distribution"
+				},
+				"NativeScriptAdHoc": {
+					Name: "NativeScriptAdHoc",
+					CreationDate: null,
+					ExpirationDate: null,
+					TeamName: "Telerik AD",
+					TeamIdentifier: ["TKID303"],
+					ProvisionedDevices: [],
+					Entitlements: {
+						"application-identifier": "*",
+						"com.apple.developer.team-identifier": "ABC"
+					},
+					UUID: "1010",
+					ProvisionsAllDevices: true,
+					ApplicationIdentifierPrefix: null,
+					DeveloperCertificates: null,
+					Type: "Distribution"
+				}
+			})[uuidOrName];
+		};
+	});
+
+	describe("Check for Changes", () => {
+		it("sets signingChanged if no Xcode project exists", () => {
+			let changes = <IProjectChangesInfo>{};
+			iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev" }, projectData);
+			assert.isTrue(!!changes.signingChanged);
+		});
+		it("sets signingChanged if the Xcode projects is configured with Automatic signing, but proivsion is specified", () => {
+			files[pbxproj] = "";
+			pbxprojDomXcode.Xcode.open = <any>function(path: string) {
+				assert.equal(path, pbxproj);
+				return {
+					getSigning(x: string) {
+						return { style: "Automatic" };
+					}
+				};
+			};
+			let changes = <IProjectChangesInfo>{};
+			iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev" }, projectData);
+			assert.isTrue(!!changes.signingChanged);
+		});
+		it("sets signingChanged if the Xcode projects is configured with Manual signing, but the proivsion specified differs the selected in the pbxproj", () => {
+			files[pbxproj] = "";
+			pbxprojDomXcode.Xcode.open = <any>function(path: string) {
+				assert.equal(path, pbxproj);
+				return {
+					getSigning() {
+						return { style: "Manual", configurations: {
+							Debug: { name: "NativeScriptDev2" },
+							Release: { name: "NativeScriptDev2" }
+						}};
+					}
+				};
+			};
+			let changes = <IProjectChangesInfo>{};
+			iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev" }, projectData);
+			assert.isTrue(!!changes.signingChanged);
+		});
+		it("does not set signingChanged if the Xcode projects is configured with Manual signing and proivsion matches", () => {
+			files[pbxproj] = "";
+			pbxprojDomXcode.Xcode.open = <any>function(path: string) {
+				assert.equal(path, pbxproj);
+				return {
+					getSigning() {
+						return { style: "Manual", configurations: {
+							Debug: { name: "NativeScriptDev" },
+							Release: { name: "NativeScriptDev" }
+						}};
+					}
+				};
+			};
+			let changes = <IProjectChangesInfo>{};
+			iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev" }, projectData);
+			assert.isFalse(!!changes.signingChanged);
+		});
+	});
+
+	describe("specifying provision", () => {
+		describe("from Automatic to provision name", () => {
+			beforeEach(() => {
+				files[pbxproj] = "";
+				pbxprojDomXcode.Xcode.open = <any>function(path: string) {
+					return {
+						getSigning(x: string) {
+							return { style: "Automatic", teamID: "AutoTeam" };
+						}
+					};
+				};
+			});
+			it("fails with proper error if the provision can not be found", async () => {
+				try {
+					await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDev2" });
+				} catch (e) {
+					assert.isTrue(e.toString().indexOf("Failed to find mobile provision with UUID or Name: NativeScriptDev2") >= 0);
+				}
+			});
+			it("succeeds if the provision name is provided for development cert", async() => {
+				let stack: any = [];
+				pbxprojDomXcode.Xcode.open = <any>function(path: string) {
+					assert.equal(path, pbxproj);
+					return {
+						getSigning() {
+							return { style: "Automatic", teamID: "AutoTeam" };
+						},
+						save() {
+							stack.push("save()");
+						},
+						setManualSigningStyle(targetName: string, manualSigning: any) {
+							stack.push({ targetName, manualSigning });
+						}
+					};
+				};
+				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDev" });
+				assert.deepEqual(stack, [{targetName: projectDirName, manualSigning: { team: "TKID101", uuid: "12345", name: "NativeScriptDev", identity: "iPhone Developer" }}, "save()"]);
+			});
+			it("succeds if the provision name is provided for distribution cert", async () => {
+				let stack: any = [];
+				pbxprojDomXcode.Xcode.open = <any>function(path: string) {
+					assert.equal(path, pbxproj);
+					return {
+						getSigning() {
+							return { style: "Automatic", teamID: "AutoTeam" };
+						},
+						save() {
+							stack.push("save()");
+						},
+						setManualSigningStyle(targetName: string, manualSigning: any) {
+							stack.push({ targetName, manualSigning });
+						}
+					};
+				};
+				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDist" });
+				assert.deepEqual(stack, [{targetName: projectDirName, manualSigning: { team: "TKID202", uuid: "6789", name: "NativeScriptDist", identity: "iPhone Distribution" }}, "save()"]);
+			});
+			it("succeds if the provision name is provided for adhoc cert", async () => {
+				let stack: any = [];
+				pbxprojDomXcode.Xcode.open = <any>function(path: string) {
+					assert.equal(path, pbxproj);
+					return {
+						getSigning() {
+							return { style: "Automatic", teamID: "AutoTeam" };
+						},
+						save() {
+							stack.push("save()");
+						},
+						setManualSigningStyle(targetName: string, manualSigning: any) {
+							stack.push({ targetName, manualSigning });
+						}
+					};
+				};
+				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptAdHoc" });
+				assert.deepEqual(stack, [{targetName: projectDirName, manualSigning: { team: "TKID303", uuid: "1010", name: "NativeScriptAdHoc", identity: "iPhone Distribution" }}, "save()"]);
+			});
+		});
 	});
 });

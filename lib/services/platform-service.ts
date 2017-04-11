@@ -290,7 +290,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			}
 		}
 
-		if (!changesInfo || changesInfo.appResourcesChanged) {
+		if (!changesInfo || changesInfo.changesRequirePrepare) {
 			await this.copyAppFiles(platform, appFilesUpdaterOptions, projectData);
 			this.copyAppResources(platform, projectData);
 			await platformData.platformProjectService.prepareProject(projectData, platformSpecificData);
