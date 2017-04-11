@@ -5,6 +5,7 @@ import * as helpers from "../common/helpers";
 import * as semver from "semver";
 import { EventEmitter } from "events";
 import { AppFilesUpdater } from "./app-files-updater";
+import { attachAwaitDetach } from "../common/helpers";
 import * as temp from "temp";
 temp.track();
 let clui = require("clui");
@@ -425,10 +426,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		await this.trackActionForPlatform({ action: "Build", platform, isForDevice });
 
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
-		platformData.platformProjectService.on(constants.BUILD_OUTPUT_EVENT_NAME, (data: any) => {
+		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
-		});
-		await platformData.platformProjectService.buildProject(platformData.projectRoot, projectData, buildConfig);
+			this.$logger.printInfoMessageOnSameLine(data.data.toString());
+		};
+
+		await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME, platformData.platformProjectService, handler, platformData.platformProjectService.buildProject(platformData.projectRoot, projectData, buildConfig));
+
 		let prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
 		let buildInfoFilePath = this.getBuildOutputPath(platform, platformData, buildConfig);
 		let buildInfoFile = path.join(buildInfoFilePath, buildInfoFileName);
