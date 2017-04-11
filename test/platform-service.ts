@@ -89,6 +89,39 @@ function createTestInjector() {
 	return testInjector;
 }
 
+class CreatedItems {
+	files: string[];
+
+	resources: {
+		ios: string[],
+		android: string[]
+	};
+
+	testDirData: {
+		tempFolder: string,
+		appFolderPath: string,
+		app1FolderPath: string,
+		appDestFolderPath: string,
+		appResourcesFolderPath: string
+	};
+
+	constructor() {
+		this.files = [];
+		this.resources = {
+			ios: [],
+			android: []
+		};
+
+		this.testDirData = {
+			tempFolder: "",
+			appFolderPath: "",
+			app1FolderPath: "",
+			appDestFolderPath: "",
+			appResourcesFolderPath: ""
+		};
+	}
+}
+
 describe('Platform Service Tests', () => {
 	let platformService: IPlatformService, testInjector: IInjector;
 	beforeEach(() => {
@@ -312,6 +345,9 @@ describe('Platform Service Tests', () => {
 			let appFolderPath = path.join(tempFolder, "app");
 			fs.createDirectory(appFolderPath);
 
+			let nodeModulesPath = path.join(tempFolder, "node_modules");
+			fs.createDirectory(nodeModulesPath);
+
 			let testsFolderPath = path.join(appFolderPath, "tests");
 			fs.createDirectory(testsFolderPath);
 
@@ -324,8 +360,59 @@ describe('Platform Service Tests', () => {
 			return { tempFolder, appFolderPath, app1FolderPath, appDestFolderPath, appResourcesFolderPath };
 		}
 
-		async function testPreparePlatform(platformToTest: string, release?: boolean) {
+		async function execPreparePlatform(platformToTest: string, testDirData: any,
+			release?: boolean) {
+			let platformsData = testInjector.resolve("platformsData");
+			platformsData.platformsNames = ["ios", "android"];
+			platformsData.getPlatformData = (platform: string) => {
+				return {
+					appDestinationDirectoryPath: testDirData.appDestFolderPath,
+					appResourcesDestinationDirectoryPath: testDirData.appResourcesFolderPath,
+					normalizedPlatformName: platformToTest,
+					configurationFileName: platformToTest === "ios" ? "Info.plist" : "AndroidManifest.xml",
+					projectRoot: testDirData.tempFolder,
+					platformProjectService: {
+						prepareProject: (): any => null,
+						validate: () => Promise.resolve(),
+						createProject: (projectRoot: string, frameworkDir: string) => Promise.resolve(),
+						interpolateData: (projectRoot: string) => Promise.resolve(),
+						afterCreateProject: (projectRoot: string): any => null,
+						getAppResourcesDestinationDirectoryPath: (projectData: IProjectData, frameworkVersion?: string) : string => {
+							if (platform === "ios") {
+								let dirPath = path.join(testDirData.tempFolder, projectData.projectName,
+									"Resources");
+								fs.ensureDirectoryExists(dirPath);
+								return dirPath;
+							} else {
+								let dirPath = path.join(testDirData.tempFolder, "src", "main", "res");
+								fs.ensureDirectoryExists(dirPath);
+								return dirPath;
+							}
+						},
+						processConfigurationFilesFromAppResources: () => Promise.resolve(),
+						ensureConfigurationFileInAppResources: (): any => null,
+						interpolateConfigurationFile: (): void => undefined,
+						isPlatformPrepared: (projectRoot: string) => false,
+						prepareAppResources: (appResourcesDirectoryPath: string, projectData: IProjectData): void => undefined
+					}
+				};
+			};
+
+			let projectData = testInjector.resolve("projectData");
+			projectData.projectDir = testDirData.tempFolder;
+			projectData.appDirectoryPath = testDirData.appFolderPath;
+			projectData.appResourcesDirectoryPath = path.join(testDirData.appFolderPath, "App_Resources");
+			projectData.projectName = "app";
+
+			platformService = testInjector.resolve("platformService");
+			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: release };
+			await platformService.preparePlatform(platformToTest, appFilesUpdaterOptions, "", projectData, { provision: null, sdk: null });
+		}
+
+		async function testPreparePlatform(platformToTest: string, release?: boolean): Promise<CreatedItems> {
 			let testDirData = prepareDirStructure();
+			let created: CreatedItems = new CreatedItems();
+			created.testDirData = testDirData;
 
 			// Add platform specific files to app and app1 folders
 			let platformSpecificFiles = [
@@ -338,38 +425,23 @@ describe('Platform Service Tests', () => {
 				_.each(platformSpecificFiles, filePath => {
 					let fileFullPath = path.join(directoryPath, filePath);
 					fs.writeFile(fileFullPath, "testData");
+
+					created.files.push(fileFullPath);
 				});
 			});
 
-			let platformsData = testInjector.resolve("platformsData");
-			platformsData.platformsNames = ["ios", "android"];
-			platformsData.getPlatformData = (platform: string) => {
-				return {
-					appDestinationDirectoryPath: testDirData.appDestFolderPath,
-					appResourcesDestinationDirectoryPath: testDirData.appResourcesFolderPath,
-					normalizedPlatformName: platformToTest,
-					projectRoot: testDirData.tempFolder,
-					platformProjectService: {
-						prepareProject: (): any => null,
-						validate: () => Promise.resolve(),
-						createProject: (projectRoot: string, frameworkDir: string) => Promise.resolve(),
-						interpolateData: (projectRoot: string) => Promise.resolve(),
-						afterCreateProject: (projectRoot: string): any => null,
-						getAppResourcesDestinationDirectoryPath: () => "",
-						processConfigurationFilesFromAppResources: () => Promise.resolve(),
-						ensureConfigurationFileInAppResources: (): any => null,
-						interpolateConfigurationFile: (): void => undefined,
-						isPlatformPrepared: (projectRoot: string) => false
-					}
-				};
-			};
+			// Add App_Resources file to app and app1 folders
+			_.each(destinationDirectories, directoryPath => {
+				let iosIconFullPath = path.join(directoryPath, "App_Resources/iOS/icon.png");
+				fs.writeFile(iosIconFullPath, "test-image");
+				created.resources.ios.push(iosIconFullPath);
 
-			let projectData = testInjector.resolve("projectData");
-			projectData.projectDir = testDirData.tempFolder;
+				let androidFullPath = path.join(directoryPath, "App_Resources/Android/icon.png");
+				fs.writeFile(androidFullPath, "test-image");
+				created.resources.android.push(androidFullPath);
+			});
 
-			platformService = testInjector.resolve("platformService");
-			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: release };
-			await platformService.preparePlatform(platformToTest, appFilesUpdaterOptions, "", projectData, { provision: null, sdk: null });
+			await execPreparePlatform(platformToTest, testDirData, release);
 
 			let test1FileName = platformToTest.toLowerCase() === "ios" ? "test1.js" : "test2.js";
 			let test2FileName = platformToTest.toLowerCase() === "ios" ? "test2.js" : "test1.js";
@@ -388,6 +460,8 @@ describe('Platform Service Tests', () => {
 				// Asserts that the files in tests folder aren't copied
 				assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "tests")), "Asserts that the files in tests folder aren't copied");
 			}
+
+			return created;
 		}
 
 		it("should process only files in app folder when preparing for iOS platform", async () => {
@@ -404,6 +478,21 @@ describe('Platform Service Tests', () => {
 
 		it("should process only files in app folder when preparing for Android platform", async () => {
 			await testPreparePlatform("Android", true);
+		});
+
+		it("should sync only changed files, without special folders", async () => {
+			let createdItems = await testPreparePlatform("ios");
+
+			// update one file.
+			const expected = "updated-data-ios";
+			let test1Js = _.find(createdItems.files, (f) => f.indexOf('test1.ios.js') !== -1);
+			fs.writeFile(test1Js, expected);
+
+			await execPreparePlatform("ios", createdItems.testDirData);
+
+			let destinationTest1Js = path.join(createdItems.testDirData.appDestFolderPath, "app", "test1.js");
+			let actual = fs.readFile(destinationTest1Js);
+			assert.equal(actual, expected);
 		});
 
 		it("invalid xml is caught", async () => {
@@ -433,7 +522,8 @@ describe('Platform Service Tests', () => {
 						ensureConfigurationFileInAppResources: (): any => null,
 						interpolateConfigurationFile: (): void => undefined,
 						isPlatformPrepared: (projectRoot: string) => false
-					}
+					},
+					frameworkPackageName: "tns-ios"
 				};
 			};
 

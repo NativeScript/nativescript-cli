@@ -47,7 +47,7 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 	}
 }
 
-describe.only("Project Changes Service Tests", () => {
+describe("Project Changes Service Tests", () => {
 	let serviceTest: ProjectChangesServiceTest;
 	beforeEach(() => {
 		serviceTest = new ProjectChangesServiceTest();
