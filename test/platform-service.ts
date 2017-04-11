@@ -495,7 +495,7 @@ describe('Platform Service Tests', () => {
 			let createdItems = await testPreparePlatform("iOS");
 
 			const expectedFileContent = "updated-content-ios";
-			updateFile(createdItems.files, "test1.ios.js", expectedFileContent);			
+			updateFile(createdItems.files, "test1.ios.js", expectedFileContent);
 
 			await execPreparePlatform("iOS", createdItems.testDirData);
 
@@ -506,7 +506,7 @@ describe('Platform Service Tests', () => {
 			let createdItems = await testPreparePlatform("Android");
 
 			const expectedFileContent = "updated-content-android";
-			updateFile(createdItems.files, "test2.android.js", expectedFileContent);			
+			updateFile(createdItems.files, "test2.android.js", expectedFileContent);
 
 			await execPreparePlatform("Android", createdItems.testDirData);
 
