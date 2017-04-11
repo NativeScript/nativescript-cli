@@ -379,12 +379,11 @@ describe('Platform Service Tests', () => {
 						afterCreateProject: (projectRoot: string): any => null,
 						getAppResourcesDestinationDirectoryPath: (projectData: IProjectData, frameworkVersion?: string) : string => {
 							if (platform.toLowerCase() === "ios") {
-								let dirPath = path.join(testDirData.tempFolder, projectData.projectName,
-									"Resources");
+								let dirPath = path.join(testDirData.appDestFolderPath, "Resources");
 								fs.ensureDirectoryExists(dirPath);
 								return dirPath;
 							} else {
-								let dirPath = path.join(testDirData.tempFolder, projectData.projectName, "src", "main", "res");
+								let dirPath = path.join(testDirData.appDestFolderPath, "src", "main", "res");
 								fs.ensureDirectoryExists(dirPath);
 								return dirPath;
 							}
@@ -469,21 +468,34 @@ describe('Platform Service Tests', () => {
 			fs.writeFile(fileToUpdate, content);
 		}
 
-		function assertFileContent(createdItems: CreatedItems, expectedFileContent: string, fileName: string) {
-			let destinationFilePath = path.join(createdItems.testDirData.appDestFolderPath, "app", fileName);
+		function assertAppFileContent(appDestFolderPath: string, expectedFileContent: string, fileName: string) {
+			let destinationFilePath = path.join(appDestFolderPath, "app", fileName);
 
-			let actual = fs.readFile(destinationFilePath);
+			let actual = fs.readFile(destinationFilePath).toString();
 			assert.equal(actual, expectedFileContent);
 		}
 
-		function assertFilesExistance(createdItems: CreatedItems, present: boolean, fileNames: string[]) {
-			_.each(fileNames, (fileName) => assertFileExistance(createdItems, present, fileName));
+		function assertFileContent(appDestFolderPath: string, expectedFileContent: string, fileName: string) {
+			let destinationFilePath = path.join(appDestFolderPath, fileName);
+
+			let actual = fs.readFile(destinationFilePath).toString();
+			assert.equal(actual, expectedFileContent);
 		}
 
-		function assertFileExistance(createdItems: CreatedItems, present: boolean, fileName: string) {
-			let destinationFilePath = path.join(createdItems.testDirData.appDestFolderPath, "app", fileName);
+		function assertFilesExistance(appDestFolderPath: string, present: boolean, fileNames: string[]) {
+			_.each(fileNames, (fileName) => assertFileExistance(appDestFolderPath, present, fileName));
+		}
+
+		function assertFileExistance(appDestFolderPath: string, present: boolean, fileName: string) {
+			let destinationFilePath = path.join(appDestFolderPath, "app", fileName);
 			let fileExists = fs.exists(destinationFilePath);
 			assert.equal(fileExists, present);
+		}
+
+		function assertAppResourcesAreRemovedFromAppDest(appDestFolderPath: string) {
+			let appResourcesPath = path.join(appDestFolderPath, "app/App_Resources");
+			let dirExists = fs.exists(appResourcesPath);
+			assert.equal(dirExists, false);
 		}
 
 		it("should process only files in app folder when preparing for iOS platform", async () => {
@@ -511,12 +523,14 @@ describe('Platform Service Tests', () => {
 			await execPreparePlatform("iOS", createdItems.testDirData);
 
 			// assert the updated file have been copied to the destination
-			assertFileContent(createdItems, expectedFileContent, "test1.js");
+			let appDestFolderPath = createdItems.testDirData.appDestFolderPath;
+			assertAppFileContent(appDestFolderPath, expectedFileContent, "test1.js");
 
 			// assert the platform specific files for Android are not copied.
-			assertFilesExistance(createdItems, false, ["test1.ios.js", "test2.android.js", "test2.js"]);
-			assertFilesExistance(createdItems, true, ["test1.js", "test2-android-js", "test1-ios-js"]);
-			assertFileContent(createdItems, "test-image", "Resources/icon.png");
+			assertFilesExistance(appDestFolderPath, false, ["test1.ios.js", "test2.android.js", "test2.js"]);
+			assertFilesExistance(appDestFolderPath, true, ["test1.js", "test2-android-js", "test1-ios-js"]);
+			assertFileContent(appDestFolderPath, "test-image", "Resources/icon.png");
+			assertAppResourcesAreRemovedFromAppDest(appDestFolderPath);
 		});
 
 		it("should sync only changed files, without special folders (Android) #2697", async () => {
@@ -528,12 +542,14 @@ describe('Platform Service Tests', () => {
 			await execPreparePlatform("Android", createdItems.testDirData);
 
 			// assert the updated file have been copied to the destination
-			assertFileContent(createdItems, expectedFileContent, "test2.js");
+			let appDestFolderPath = createdItems.testDirData.appDestFolderPath;
+			assertAppFileContent(appDestFolderPath, expectedFileContent, "test2.js");
 
 			// assert the platform specific files for iOS are not copied.
-			assertFilesExistance(createdItems, false, ["test1.android.js", "test2.ios.js", "test1.js"]);
-			assertFilesExistance(createdItems, true, ["test2.js", "test2-android-js", "test1-ios-js"]);
-			assertFileContent(createdItems, "test-image", "src/main/res/Resources/icon.png");
+			assertFilesExistance(appDestFolderPath, false, ["test1.android.js", "test2.ios.js", "test1.js"]);
+			assertFilesExistance(appDestFolderPath, true, ["test2.js", "test2-android-js", "test1-ios-js"]);
+			assertFileContent(appDestFolderPath, "test-image", "src/main/res/icon.png");
+			assertAppResourcesAreRemovedFromAppDest(appDestFolderPath);
 		});
 
 		it("Ensure, App_Resources are not copied in the appDest and left there (iOS) #2697", async () => {
@@ -545,9 +561,7 @@ describe('Platform Service Tests', () => {
 			await execPreparePlatform("iOS", createdItems.testDirData);
 
 			// assert the App_Resources are not left copied in the destination App Folder
-			let appResourcesPath = path.join(createdItems.testDirData.appDestFolderPath, "app/App_Resources");
-			let dirExists = fs.exists(appResourcesPath);
-			assert.equal(dirExists, false);
+			assertAppResourcesAreRemovedFromAppDest(createdItems.testDirData.appDestFolderPath);
 		});
 
 		it("Ensure, App_Resources are not copied in the appDest and left there (Android) #2697", async () => {
@@ -559,9 +573,41 @@ describe('Platform Service Tests', () => {
 			await execPreparePlatform("Android", createdItems.testDirData);
 
 			// assert the App_Resources are not left copied in the destination App Folder
-			let appResourcesPath = path.join(createdItems.testDirData.appDestFolderPath, "app/App_Resources");
-			let dirExists = fs.exists(appResourcesPath);
-			assert.equal(dirExists, false);
+			assertAppResourcesAreRemovedFromAppDest(createdItems.testDirData.appDestFolderPath);
+		});
+
+		it("Ensure, App_Resources get reloaded, after change in the app folder (iOS) #2560", async () => {
+			let createdItems = await testPreparePlatform("iOS");
+
+			const expectedFileContent = "updated-icon-content";
+			let iconPngPath = path.join(createdItems.testDirData.appFolderPath, "App_Resources/iOS/icon.png");
+			fs.writeFile(iconPngPath, expectedFileContent);
+
+			await execPreparePlatform("iOS", createdItems.testDirData);
+
+			// assert the App_Resources are not left copied in the destination App Folder
+			let appDestFolderPath = createdItems.testDirData.appDestFolderPath;
+			assertFilesExistance(appDestFolderPath, false, ["test1.ios.js", "test2.android.js", "test2.js"]);
+			assertFilesExistance(appDestFolderPath, true, ["test1.js", "test2-android-js", "test1-ios-js"]);
+			assertAppResourcesAreRemovedFromAppDest(appDestFolderPath);
+			assertFileContent(appDestFolderPath, expectedFileContent, "Resources/icon.png");
+		});
+
+		it("Ensure, App_Resources get reloaded, after change in the app folder (Android) #2560", async () => {
+			let createdItems = await testPreparePlatform("Android");
+
+			const expectedFileContent = "updated-icon-content";
+			let iconPngPath = path.join(createdItems.testDirData.appFolderPath, "App_Resources/Android/icon.png");
+			fs.writeFile(iconPngPath, expectedFileContent);
+
+			await execPreparePlatform("Android", createdItems.testDirData);
+
+			// assert the App_Resources are not left copied in the destination App Folder
+			let appDestFolderPath = createdItems.testDirData.appDestFolderPath;
+			assertFilesExistance(appDestFolderPath, false, ["test1.android.js", "test2.ios.js", "test1.js"]);
+			assertFilesExistance(appDestFolderPath, true, ["test2.js", "test2-android-js", "test1-ios-js"]);
+			assertAppResourcesAreRemovedFromAppDest(appDestFolderPath);
+			assertFileContent(appDestFolderPath, expectedFileContent, "src/main/res/icon.png");
 		});
 
 		it("invalid xml is caught", async () => {
