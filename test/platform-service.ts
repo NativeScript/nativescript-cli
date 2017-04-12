@@ -127,16 +127,16 @@ class DestinationFolderVerifier {
 		_.forOwn(data, (folder, folderRoot) => {
 			_.each(folder.filesWithContent || [], (file) => {
 				const filePath = path.join(folderRoot, file.name);
-				assert.isTrue(fs.exists(filePath));
-				assert.equal(fs.readFile(filePath).toString(), file.content);
+				assert.isTrue(fs.exists(filePath), `Expected file {filePath} to be present.`);
+				assert.equal(fs.readFile(filePath).toString(), file.content, `File content for {filePath} doesn't match.`);
 			});
 
 			_.each(folder.missingFiles || [], (file) => {
-				assert.isFalse(fs.exists(path.join(folderRoot, file)));
+				assert.isFalse(fs.exists(path.join(folderRoot, file)), `Expected file {file} to be missing.`);
 			});
 
 			_.each(folder.presentFiles || [], (file) => {
-				assert.isTrue(fs.exists(path.join(folderRoot, file)));
+				assert.isTrue(fs.exists(path.join(folderRoot, file)), `Expected file {file} to be present.`);
 			});
 		});
 	}
