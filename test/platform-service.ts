@@ -142,7 +142,7 @@ class DestinationFolderVerifier {
 	}
 }
 
-describe('Platform Service Tests', () => {
+describe.only('Platform Service Tests', () => {
 	let platformService: IPlatformService, testInjector: IInjector;
 	beforeEach(() => {
 		testInjector = createTestInjector();
@@ -630,7 +630,7 @@ describe('Platform Service Tests', () => {
 			await testChangesApplied("Android", applyChangesFn);
 		});
 
-		it("Ensure, App_Resources get reloaded, after change in the app folder (iOS) #2560", async () => {
+		it("Ensure App_Resources get reloaded after change in the app folder (iOS) #2560", async () => {
 			let applyChangesFn = (createdTestData: CreatedTestData) => {
 				// apply changes
 				const expectedFileContent = "updated-icon-content";
@@ -653,7 +653,7 @@ describe('Platform Service Tests', () => {
 			await testChangesApplied("iOS", applyChangesFn);
 		});
 
-		it("Ensure, App_Resources get reloaded, after change in the app folder (Android) #2560", async () => {
+		it("Ensure App_Resources get reloaded after change in the app folder (Android) #2560", async () => {
 			let applyChangesFn = (createdTestData: CreatedTestData) => {
 				// apply changes
 				const expectedFileContent = "updated-icon-content";
@@ -666,6 +666,52 @@ describe('Platform Service Tests', () => {
 					filesWithContent: [
 						{
 							name: "src/main/res/icon.png",
+							content: expectedFileContent
+						}
+					]
+				};
+
+				return modifications;
+			};
+			await testChangesApplied("Android", applyChangesFn);
+		});
+
+		it("Ensure App_Resources get reloaded after a new file appears in the app folder (iOS) #2560", async () => {
+			let applyChangesFn = (createdTestData: CreatedTestData) => {
+				// apply changes
+				const expectedFileContent = "new-file-content";
+				let iconPngPath = path.join(createdTestData.testDirData.appFolderPath, "App_Resources/iOS/new-file.png");
+				fs.writeFile(iconPngPath, expectedFileContent);
+
+				// construct the folder modifications data
+				let modifications: any = {};
+				modifications[createdTestData.testDirData.appDestFolderPath] = {
+					filesWithContent: [
+						{
+							name: "Resources/new-file.png",
+							content: expectedFileContent
+						}
+					]
+				};
+
+				return modifications;
+			};
+			await testChangesApplied("iOS", applyChangesFn);
+		});
+
+		it("Ensure App_Resources get reloaded after a new file appears in the app folder (Android) #2560", async () => {
+			let applyChangesFn = (createdTestData: CreatedTestData) => {
+				// apply changes
+				const expectedFileContent = "new-file-content";
+				let iconPngPath = path.join(createdTestData.testDirData.appFolderPath, "App_Resources/Android/new-file.png");
+				fs.writeFile(iconPngPath, expectedFileContent);
+
+				// construct the folder modifications data
+				let modifications: any = {};
+				modifications[createdTestData.testDirData.appDestFolderPath] = {
+					filesWithContent: [
+						{
+							name: "src/main/res/new-file.png",
 							content: expectedFileContent
 						}
 					]
