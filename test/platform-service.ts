@@ -415,7 +415,8 @@ describe('Platform Service Tests', () => {
 
 			// Add platform specific files to app and app1 folders
 			let platformSpecificFiles = [
-				"test1.ios.js", "test1-ios-js", "test2.android.js", "test2-android-js"
+				"test1.ios.js", "test1-ios-js", "test2.android.js", "test2-android-js",
+				"main.js"
 			];
 
 			let destinationDirectories = [testDirData.appFolderPath, testDirData.app1FolderPath];
@@ -608,6 +609,159 @@ describe('Platform Service Tests', () => {
 			assertFilesExistance(appDestFolderPath, true, ["test2.js", "test2-android-js", "test1-ios-js"]);
 			assertAppResourcesAreRemovedFromAppDest(appDestFolderPath);
 			assertFileContent(appDestFolderPath, expectedFileContent, "src/main/res/icon.png");
+		});
+
+		it("should sync new platform specific files (iOS)", async () => {
+			let createdItems = await testPreparePlatform("iOS");
+
+			// create a new platform-specific file - test3.ios.js
+			const expectedFileContent = "new-content-ios";
+			fs.writeFile(path.join(createdItems.testDirData.appFolderPath, "test3.ios.js"), expectedFileContent);
+
+			await execPreparePlatform("iOS", createdItems.testDirData);
+
+			// assert the updated file have been copied to the destination
+			let appDestFolderPath = createdItems.testDirData.appDestFolderPath;
+			assertAppFileContent(appDestFolderPath, expectedFileContent, "test3.js");
+
+			// assert the platform specific files for Android are not copied.
+			assertFilesExistance(appDestFolderPath, false, ["test1.ios.js", "test2.android.js", "test2.js"]);
+			assertFilesExistance(appDestFolderPath, true, ["test1.js", "test2-android-js", "test1-ios-js"]);
+			assertFileContent(appDestFolderPath, "test-image", "Resources/icon.png");
+			assertAppResourcesAreRemovedFromAppDest(appDestFolderPath);
+		});
+
+		it("should sync new platform specific files (Android)", async () => {
+			let createdItems = await testPreparePlatform("Android");
+
+			// create a new platform-specific file - test3.ios.js
+			const expectedFileContent = "new-content-android";
+			fs.writeFile(path.join(createdItems.testDirData.appFolderPath, "test3.android.js"), expectedFileContent);
+
+			await execPreparePlatform("Android", createdItems.testDirData);
+
+			// assert the updated file have been copied to the destination
+			let appDestFolderPath = createdItems.testDirData.appDestFolderPath;
+			assertAppFileContent(appDestFolderPath, expectedFileContent, "test3.js");
+
+			// assert the platform specific files for iOS are not copied.
+			assertFilesExistance(appDestFolderPath, false, ["test1.android.js", "test2.ios.js", "test1.js"]);
+			assertFilesExistance(appDestFolderPath, true, ["test2.js", "test2-android-js", "test1-ios-js"]);
+			assertFileContent(appDestFolderPath, "test-image", "src/main/res/icon.png");
+			assertAppResourcesAreRemovedFromAppDest(appDestFolderPath);
+		});
+
+		it("should sync new common files (iOS)", async () => {
+			let createdItems = await testPreparePlatform("iOS");
+
+			// create a new platform-specific file - test3.ios.js
+			const expectedFileContent = "new-content-ios";
+			fs.writeFile(path.join(createdItems.testDirData.appFolderPath, "test3.js"), expectedFileContent);
+
+			await execPreparePlatform("iOS", createdItems.testDirData);
+
+			// assert the updated file have been copied to the destination
+			let appDestFolderPath = createdItems.testDirData.appDestFolderPath;
+			assertAppFileContent(appDestFolderPath, expectedFileContent, "test3.js");
+
+			// assert the platform specific files for Android are not copied.
+			assertFilesExistance(appDestFolderPath, false, ["test1.ios.js", "test2.android.js", "test2.js"]);
+			assertFilesExistance(appDestFolderPath, true, ["test1.js", "test2-android-js", "test1-ios-js"]);
+			assertFileContent(appDestFolderPath, "test-image", "Resources/icon.png");
+			assertAppResourcesAreRemovedFromAppDest(appDestFolderPath);
+		});
+
+		it("should sync new common files (Android)", async () => {
+			let createdItems = await testPreparePlatform("Android");
+
+			// create a new platform-specific file - test3.ios.js
+			const expectedFileContent = "new-content-android";
+			fs.writeFile(path.join(createdItems.testDirData.appFolderPath, "test3.js"), expectedFileContent);
+
+			await execPreparePlatform("Android", createdItems.testDirData);
+
+			// assert the updated file have been copied to the destination
+			let appDestFolderPath = createdItems.testDirData.appDestFolderPath;
+			assertAppFileContent(appDestFolderPath, expectedFileContent, "test3.js");
+
+			// assert the platform specific files for iOS are not copied.
+			assertFilesExistance(appDestFolderPath, false, ["test1.android.js", "test2.ios.js", "test1.js"]);
+			assertFilesExistance(appDestFolderPath, true, ["test2.js", "test2-android-js", "test1-ios-js"]);
+			assertFileContent(appDestFolderPath, "test-image", "src/main/res/icon.png");
+			assertAppResourcesAreRemovedFromAppDest(appDestFolderPath);
+		});
+
+		it("should sync deleted common file (iOS)", async () => {
+			let createdItems = await testPreparePlatform("iOS");
+
+			// delete the common - main.js file
+			fs.deleteFile(path.join(createdItems.testDirData.appFolderPath, "main.js"));
+
+			await execPreparePlatform("iOS", createdItems.testDirData);
+
+			// assert the updated file have been copied to the destination
+			let appDestFolderPath = createdItems.testDirData.appDestFolderPath;
+			assertFileExistance(appDestFolderPath, false, "main.js");
+
+			// assert the platform specific files for Android are not copied.
+			assertFilesExistance(appDestFolderPath, false, ["test1.ios.js", "test2.android.js", "test2.js"]);
+			assertFilesExistance(appDestFolderPath, true, ["test1.js", "test2-android-js", "test1-ios-js"]);
+			assertFileContent(appDestFolderPath, "test-image", "Resources/icon.png");
+			assertAppResourcesAreRemovedFromAppDest(appDestFolderPath);
+		});
+
+		it("should sync deleted common file (Android)", async () => {
+			let createdItems = await testPreparePlatform("Android");
+
+			// delete the common - main.js file
+			fs.deleteFile(path.join(createdItems.testDirData.appFolderPath, "main.js"));
+			await execPreparePlatform("Android", createdItems.testDirData);
+
+			// assert the updated file have been copied to the destination
+			let appDestFolderPath = createdItems.testDirData.appDestFolderPath;
+			assertFileExistance(appDestFolderPath, false, "main.js");
+
+			// assert the platform specific files for iOS are not copied.
+			assertFilesExistance(appDestFolderPath, false, ["test1.android.js", "test2.ios.js", "test1.js"]);
+			assertFilesExistance(appDestFolderPath, true, ["test2.js", "test2-android-js", "test1-ios-js"]);
+			assertFileContent(appDestFolderPath, "test-image", "src/main/res/icon.png");
+			assertAppResourcesAreRemovedFromAppDest(appDestFolderPath);
+		});
+
+		it("should sync deleted platform specific file (iOS)", async () => {
+			let createdItems = await testPreparePlatform("iOS");
+
+			// delete the common - main.js file
+			fs.deleteFile(path.join(createdItems.testDirData.appFolderPath, "test1.ios.js"));
+
+			await execPreparePlatform("iOS", createdItems.testDirData);
+
+			// assert the updated file have been copied to the destination
+			let appDestFolderPath = createdItems.testDirData.appDestFolderPath;
+			assertFileExistance(appDestFolderPath, false, "test1.js");
+			// assert the platform specific files for Android are not copied.
+			assertFilesExistance(appDestFolderPath, false, ["test1.ios.js", "test2.android.js", "test2.js"]);
+			assertFilesExistance(appDestFolderPath, true, ["test2-android-js", "test1-ios-js"]);
+			assertFileContent(appDestFolderPath, "test-image", "Resources/icon.png");
+			assertAppResourcesAreRemovedFromAppDest(appDestFolderPath);
+		});
+
+		it("should sync deleted platform specific file (Android)", async () => {
+			let createdItems = await testPreparePlatform("Android");
+
+			// delete the common - main.js file
+			fs.deleteFile(path.join(createdItems.testDirData.appFolderPath, "test2.android.js"));
+			await execPreparePlatform("Android", createdItems.testDirData);
+
+			// assert the updated file have been copied to the destination
+			let appDestFolderPath = createdItems.testDirData.appDestFolderPath;
+			assertFileExistance(appDestFolderPath, false, "test2.js");
+
+			// assert the platform specific files for iOS are not copied.
+			assertFilesExistance(appDestFolderPath, false, ["test1.android.js", "test2.ios.js", "test1.js"]);
+			assertFilesExistance(appDestFolderPath, true, ["test2-android-js", "test1-ios-js"]);
+			assertFileContent(appDestFolderPath, "test-image", "src/main/res/icon.png");
+			assertAppResourcesAreRemovedFromAppDest(appDestFolderPath);
 		});
 
 		it("invalid xml is caught", async () => {
