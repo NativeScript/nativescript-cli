@@ -350,7 +350,7 @@ describe('Platform Service Tests', () => {
 		});
 	});
 
-	describe.only("prepare platform unit tests", () => {
+	describe("prepare platform unit tests", () => {
 		let fs: IFileSystem;
 
 		beforeEach(() => {
@@ -757,70 +757,6 @@ describe('Platform Service Tests', () => {
 							content: expectedFileContent
 						}
 					]
-				};
-
-				return modifications;
-			};
-			await testChangesApplied("Android", applyChangesFn);
-		});
-
-		it("should sync deleted common file (iOS)", async () => {
-			let applyChangesFn = (createdTestData: CreatedTestData) => {
-				// apply changes
-				fs.deleteFile(path.join(createdTestData.testDirData.appFolderPath, "main.js"));
-
-				// construct the folder modifications data
-				let modifications: any = {};
-				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
-					missingFiles: [ "main.js" ]
-				};
-
-				return modifications;
-			};
-			await testChangesApplied("iOS", applyChangesFn);
-		});
-
-		it("should sync deleted common file (Android)", async () => {
-			let applyChangesFn = (createdTestData: CreatedTestData) => {
-				// apply changes
-				fs.deleteFile(path.join(createdTestData.testDirData.appFolderPath, "main.js"));
-
-				// construct the folder modifications data
-				let modifications: any = {};
-				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
-					missingFiles: [ "main.js" ]
-				};
-
-				return modifications;
-			};
-			await testChangesApplied("Android", applyChangesFn);
-		});
-
-		it("should sync deleted platform specific file (iOS)", async () => {
-			let applyChangesFn = (createdTestData: CreatedTestData) => {
-				// apply changes
-				fs.deleteFile(path.join(createdTestData.testDirData.appFolderPath, "test1.ios.js"));
-
-				// construct the folder modifications data
-				let modifications: any = {};
-				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
-					missingFiles: [ "test1.js" ]
-				};
-
-				return modifications;
-			};
-			await testChangesApplied("iOS", applyChangesFn);
-		});
-
-		it("should sync deleted platform specific file (Android)", async () => {
-			let applyChangesFn = (createdTestData: CreatedTestData) => {
-				// apply changes
-				fs.deleteFile(path.join(createdTestData.testDirData.appFolderPath, "test2.android.js"));
-
-				// construct the folder modifications data
-				let modifications: any = {};
-				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
-					missingFiles: [ "test2.js" ]
 				};
 
 				return modifications;
