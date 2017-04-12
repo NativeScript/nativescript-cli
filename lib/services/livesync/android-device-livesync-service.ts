@@ -21,6 +21,14 @@ class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncService {
 	}
 
 	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean, projectData: IProjectData): Promise<void> {
+		await this.device.adb.executeShellCommand(
+			["chmod",
+			"777",
+			await deviceAppData.getDeviceProjectRootPath(),
+			`/data/local/tmp/${deviceAppData.appIdentifier}`,
+			`/data/local/tmp/${deviceAppData.appIdentifier}/sync`]
+			);
+
 		let canExecuteFastSync = !forceExecuteFullSync && !_.some(localToDevicePaths, (localToDevicePath: any) => !this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, deviceAppData.platform));
 
 		if (canExecuteFastSync) {
@@ -31,8 +39,6 @@ class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncService {
 	}
 
 	private async restartApplication(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
-		await this.device.adb.executeShellCommand(["chmod", "777", await deviceAppData.getDeviceProjectRootPath(), `/data/local/tmp/${deviceAppData.appIdentifier}`]);
-
 		let devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;
 		let devicePath = this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb");
 		await this.device.adb.executeShellCommand(["rm", "-rf", devicePath]);
