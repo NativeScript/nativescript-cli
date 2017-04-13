@@ -174,7 +174,7 @@ class AndroidDebugService extends DebugServiceBase implements IPlatformDebugServ
 			debugerStarted = forwardsResult.indexOf(waitText) === -1;
 
 			if (!debugerStarted) {
-				sleep(500);
+				await sleep(500);
 			}
 		}
 
