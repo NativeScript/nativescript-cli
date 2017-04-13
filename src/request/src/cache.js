@@ -142,7 +142,7 @@ export default class CacheRequest extends Request {
         return activeUser;
       })
       .then((activeUser) => {
-        return CacheRequest.setActiveUser(client, legacyActiveUser);
+        return CacheRequest.setActiveUser(client, activeUser);
       })
       .then((activeUser) => {
         activeUsers[client.appKey] = activeUser;
