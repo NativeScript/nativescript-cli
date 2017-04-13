@@ -55,7 +55,7 @@ export abstract class DebugPlatformCommand implements ICommand {
 
 			await deviceAppData.device.applicationManager.stopApplication(applicationId);
 
-			const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
+			const buildConfig: IBuildConfig = _.merge({ buildForDevice: !deviceAppData.device.isEmulator }, deployOptions);
 			debugData.pathToAppPackage = this.$platformService.lastOutputPath(this.debugService.platform, buildConfig, projectData);
 
 			this.printDebugInformation(await this.debugService.debug(debugData, debugOptions));
