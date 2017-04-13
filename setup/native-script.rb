@@ -130,29 +130,30 @@ puts "Configuring your system for Android development... This might take some ti
 error_msg = "There seem to be some problems with the Android configuration"
 
 android_executable = File.join(ENV["ANDROID_HOME"], "tools", "bin", "sdkmanager")
-execute("echo y | #{android_executable} platform-tools --all --no-ui", error_msg)
-execute("echo y | #{android_executable} tools --all --no-ui", error_msg)
-execute("echo y | #{android_executable} android-23 --all --no-ui", error_msg)
-execute("echo y | #{android_executable} build-tools-25.0.2 --all --no-ui", error_msg)
-execute("echo y | #{android_executable} build-tools-23.0.3 --all --no-ui", error_msg)
-execute("echo y | #{android_executable} extra-android-m2repository --all --no-ui", error_msg)
-execute("echo y | #{android_executable} extra-google-m2repository --all --no-ui", error_msg)
+execute("echo y | #{android_executable} \"platform-tools\"", error_msg)
+execute("echo y | #{android_executable} \"tools\"", error_msg)
+execute("echo y | #{android_executable} \"build-tools;25.0.2\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-25\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-24\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-23\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-22\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-21\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-19\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-18\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-17\"", error_msg)
 
 puts "Do you want to install Android emulator? (y/n)"
 if gets.chomp.downcase == "y"
   puts "Do you want to install HAXM (Hardware accelerated Android emulator)? (y/n)"
   if gets.chomp.downcase == "y"
-    execute("echo y | #{android_executable} extra-intel-Hardware_Accelerated_Execution_Manager --all --no-ui", error_msg)
-
+    execute("echo y | #{android_executable} \"extras;intel;Hardware_Accelerated_Execution_Manager\"", error_msg)
+    
     haxm_silent_installer = File.join(ENV["ANDROID_HOME"], "extras", "intel", "Hardware_Accelerated_Execution_Manager", "silent_install.sh")
-    execute("#{haxm_silent_installer}", "There seem to be some problems with the Android configuration")
-
-    execute("echo y | #{android_executable} sys-img-x86-android-23 --all --no-ui", error_msg)
-    execute("echo no | android avd -n Emulator-Api23-Default -t android-23 --abi default/x86 -c 12M -f", error_msg)
-  else
-    execute("echo y | #{android_executable} sys-img-armeabi-v7a-android-23 --all --no-ui", error_msg)
-    execute("echo no | android avd -n Emulator-Api23-Default -t android-23 --abi default/armeabi-v7a -c 12M -f", error_msg)
+    execute("sudo #{haxm_silent_installer}", "There seem to be some problems with the Android configuration")
+  else           
   end
+    execute("echo y | #{android_executable} \"system-images;android-25;google_apis;x86\"", error_msg)
+    execute("echo y | #{android_executable} \"system-images;android-24;default;x86\"", error_msg)
 end
 
 puts "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .bash_profile/.zprofile"
