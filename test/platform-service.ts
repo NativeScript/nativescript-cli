@@ -142,7 +142,7 @@ class DestinationFolderVerifier {
 	}
 }
 
-describe.only('Platform Service Tests', () => {
+describe('Platform Service Tests', () => {
 	let platformService: IPlatformService, testInjector: IInjector;
 	beforeEach(() => {
 		testInjector = createTestInjector();
