@@ -100,11 +100,18 @@ export namespace Kinvey {
   class SyncStore extends CacheStore {}
 
   // File
-  class Files extends NetworkStore {
-    download(name: string, options?: {}): any;
-    downloadByUrl(url: string, options?: {}): any;
-    stream(name: string, options?: {}): any;
-    upload(file: {}, metadata?: {}, options?: {}): any;
+  class Files {
+    static useDeltaFetch: boolean;
+    static find(query?: Query, options?: {}): any;
+    static findById(id: string, options?: {}): any;
+    static download(name: string, options?: {}): any;
+    static downloadByUrl(url: string, options?: {}): any;
+    static stream(name: string, options?: {}): any;
+    static group(aggregation: Aggregation, options?: {}): any;
+    static count(query?: Query, options?: {}): any;
+    static upload(file: {}, metadata?: {}, options?: {}): any;
+    static remove(query?: Query, options?: {}): any;
+    static removeById(id: string, options?: {}): any;
   }
 
   // Metadata
@@ -166,6 +173,7 @@ export namespace Kinvey {
   }
   class User {
     constructor(data?: {}, options?: {})
+    data: {};
     isActive(): boolean;
     isEmailVerified(): boolean;
     static getActiveUser(client?: Client): User|null
