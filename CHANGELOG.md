@@ -1,4 +1,8 @@
 ## Changelog
+#### 1.7.0 (2017-04-13)
+* Enhancement (MLIBZ-1661): Share active user information with 3.x SDK.
+* Bugfix (MLIBZ-1089): Fix a bug that would cause `POST` requests containing `??` to be sent as a `GET` requests.
+
 #### 1.6.10 (2016-05-19)
 * Enhancement (MLIBZ-1070): Do not hide custom errors from ALC when using Mobile Identity Connect.
 
