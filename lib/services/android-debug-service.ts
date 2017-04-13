@@ -165,20 +165,20 @@ class AndroidDebugService extends DebugServiceBase implements IPlatformDebugServ
 	private async waitForDebugger(packageName: String): Promise<void> {
 		let waitText: string = `0 /data/local/tmp/${packageName}-debugger-started`;
 		let maxWait = 12;
-		let debugerStarted: boolean = false;
-		while (maxWait > 0 && !debugerStarted) {
+		let debuggerStarted: boolean = false;
+		while (maxWait > 0 && !debuggerStarted) {
 			let forwardsResult = await this.device.adb.executeShellCommand(["ls", "-s", `/data/local/tmp/${packageName}-debugger-started`]);
 
 			maxWait--;
 
-			debugerStarted = forwardsResult.indexOf(waitText) === -1;
+			debuggerStarted = forwardsResult.indexOf(waitText) === -1;
 
-			if (!debugerStarted) {
+			if (!debuggerStarted) {
 				await sleep(500);
 			}
 		}
 
-		if (debugerStarted) {
+		if (debuggerStarted) {
 			this.$logger.info("# NativeScript Debugger started #");
 		} else {
 			this.$logger.warn("# NativeScript Debugger did not start in time #");
