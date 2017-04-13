@@ -85,11 +85,11 @@ export default class CacheStore extends NetworkStore {
 
           if (syncAutomatically === true) {
             // Attempt to push any pending sync data before fetching from the network.
-            return this.pendingSyncCount(null, options)
+            return this.pendingSyncCount(query, options)
               .then((syncCount) => {
                 if (syncCount > 0) {
-                  return this.push(null, options)
-                    .then(() => this.pendingSyncCount(null, options));
+                  return this.push(query, options)
+                    .then(() => this.pendingSyncCount(query, options));
                 }
 
                 return syncCount;
@@ -182,10 +182,13 @@ export default class CacheStore extends NetworkStore {
 
           if (syncAutomatically === true) {
             // Attempt to push any pending sync data before fetching from the network.
-            return this.pendingSyncCount(null, options)
+            const query = new Query();
+            query.equalTo('_id', id);
+            return this.pendingSyncCount(query, options)
               .then((syncCount) => {
                 if (syncCount > 0) {
-                  return this.push(null, options).then(() => this.pendingSyncCount(null, options));
+                  return this.push(query, options)
+                    .then(() => this.pendingSyncCount(query, options));
                 }
 
                 return syncCount;
@@ -345,10 +348,11 @@ export default class CacheStore extends NetworkStore {
 
           if (syncAutomatically === true) {
             // Attempt to push any pending sync data before fetching from the network.
-            return this.pendingSyncCount(null, options)
+            return this.pendingSyncCount(query, options)
               .then((syncCount) => {
                 if (syncCount > 0) {
-                  return this.push(null, options).then(() => this.pendingSyncCount(null, options));
+                  return this.push(query, options)
+                    .then(() => this.pendingSyncCount(query, options));
                 }
 
                 return syncCount;
@@ -830,7 +834,7 @@ export default class CacheStore extends NetworkStore {
    */
   sync(query, options) {
     options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
-    return this.push(null, options)
+    return this.push(query, options)
       .then((push) => {
         const promise = this.pull(query, options)
           .then((pull) => {

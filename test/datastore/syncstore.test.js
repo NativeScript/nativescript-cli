@@ -1,4 +1,4 @@
-import { SyncStore } from 'src/datastore';
+import { CacheStore, SyncStore } from 'src/datastore';
 import Client from 'src/client';
 import Query from 'src/query';
 import { KinveyError, NotFoundError } from 'src/errors';
@@ -1048,37 +1048,94 @@ describe('SyncStore', function() {
   });
 
   describe('sync()', function() {
-    it('should push pending entities, then pull new entities', async function() {
+    it('should sync all entities', function() {
       const store = new SyncStore(collection);
-      let entity = {
-        prop: randomString()
-      };
-      entity = await store.save(entity);
-      const pendingCount = await store.syncCount();
-      expect(pendingCount).toEqual(1);
+      return store.save([{ title: 'foo' }, { title: 'bar' }])
+        .then((entities) => {
+          return store.syncCount()
+            .then((count) => {
+              expect(count).toEqual(2);
+              return entities;
+            });
+        })
+        .then((entities) => {
+          nock(store.client.baseUrl)
+            .post(store.pathname, () => true)
+            .query(true)
+            .reply(201, entities[0]);
 
-      nock(store.client.baseUrl)
-        .post(store.pathname, () => true)
-        .query(true)
-        .reply(200, entity, {
-          'content-type': 'application/json'
+          nock(store.client.baseUrl)
+            .post(store.pathname, () => true)
+            .query(true)
+            .reply(201, entities[1]);
+
+          nock(store.client.baseUrl)
+            .get(store.pathname, () => true)
+            .query(true)
+            .reply(200, [entities[0], entities[1]]);
+
+          return store.sync()
+            .then((result) => {
+              expect(result.pull).toEqual([entities[0], entities[1]]);
+              expect(result.push).toEqual([
+                { _id: entities[0]._id, entity: entities[0] },
+                { _id: entities[1]._id, entity: entities[1] }
+              ]);
+              return store.syncCount();
+            });
+        })
+        .then((count) => {
+          expect(count).toEqual(0);
         });
+    });
 
-      nock(store.client.baseUrl)
-        .get(store.pathname, () => true)
-        .query(true)
-        .reply(200, [entity], {
-          'content-type': 'application/json'
+    it('should sync only entities matching the query', function() {
+      const syncStore = new SyncStore(collection);
+      return syncStore.save([{ title: 'foo' }, { title: 'bar' }])
+        .then((entities) => {
+          return syncStore.syncCount()
+            .then((count) => {
+              expect(count).toEqual(2);
+              return entities;
+            });
+        })
+        .then((entities) => {
+          nock(syncStore.client.baseUrl)
+            .post(syncStore.pathname, () => true)
+            .query(true)
+            .reply(201, entities[0]);
+
+          nock(syncStore.client.baseUrl)
+            .get(syncStore.pathname, () => true)
+            .query(true)
+            .reply(200, [entities[0]]);
+
+          const query = new Query();
+          query.equalTo('title', 'foo');
+          return syncStore.sync(query)
+            .then((result) => {
+              expect(result.pull).toEqual([entities[0]]);
+              expect(result.push).toEqual([
+                { _id: entities[0]._id, entity: entities[0] }
+              ]);
+              return syncStore.syncCount();
+            })
+            .then((count) => {
+              expect(count).toEqual(1);
+
+              const cacheStore = new CacheStore(collection);
+
+              nock(cacheStore.client.baseUrl)
+                .get(cacheStore.pathname, () => true)
+                .query(true)
+                .reply(200, [entities[0]]);
+
+              return cacheStore.find(query).toPromise();
+            })
+            .then((findEntities) => {
+              expect(findEntities).toEqual([entities[0]]);
+            });
         });
-
-      const result = await store.sync();
-      expect(result.pull).toEqual([entity]);
-      expect(result.push).toEqual([{ _id: entity._id, entity: entity }]);
-
-      const syncCount = await store.syncCount();
-      expect(syncCount).toEqual(0);
-
-
     });
   });
 });
