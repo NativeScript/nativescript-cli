@@ -123,11 +123,14 @@ var restoreActiveUser = function(options) {
   var promise = Storage.get('activeUser');
   return promise.then(function(user) {
     if (null == user) {
-      var activeUser = Storage.get(Kinvey.appKey+'kinvey_user');
+      return Storage.get(Kinvey.appKey+'kinvey_user')
+        .then(function(user) {
+          if (null != user) {
+            return [ user._id, user._kmd.authtoken ];
+          }
 
-      if (null != activeUser) {
-        return [ activeUser._id, activeUser._kmd.authtoken ];
-      }
+          return user;
+        });
     }
 
     return user;
@@ -228,11 +231,11 @@ Kinvey.setActiveUser = function(user) {
   // Update disk state in the background.
   if(null != user) {// Save the active user.
     Storage.save('activeUser', [ user._id, user._kmd.authtoken ]);
-    Storage.save(Kinvey.appKey+'kinvey_user', user); // Share authentication info with v3.x
+    Storage._save(Kinvey.appKey+'kinvey_user', user); // Share authentication info with v3.x
   }
   else {// Delete the active user.
     Storage.destroy('activeUser');
-    Storage.destroy(Kinvey.appKey+'kinvey_user');
+    Storage._destroy(Kinvey.appKey+'kinvey_user');
   }
 
   // Return the previous active user.
