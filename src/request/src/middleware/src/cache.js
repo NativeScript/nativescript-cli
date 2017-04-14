@@ -1,5 +1,6 @@
 import isEmpty from 'lodash/isEmpty';
 
+import { isDefined } from 'src/utils';
 import Middleware from './middleware';
 import Storage from './storage';
 
@@ -32,10 +33,8 @@ export default class CacheMiddleware extends Middleware {
     } else if (method === 'DELETE') {
       if (collection && entityId) {
         promise = storage.removeById(collection, entityId);
-      } else if (!collection) {
+      } else if (isDefined(collection) === false) {
         promise = storage.clear();
-      } else {
-        promise = storage.remove(collection, body);
       }
     }
 
@@ -49,7 +48,7 @@ export default class CacheMiddleware extends Middleware {
         response.statusCode = 200;
       }
 
-      if (!data || isEmpty(data)) {
+      if (isDefined(data) === false || isEmpty(data)) {
         response.statusCode = 204;
       }
 

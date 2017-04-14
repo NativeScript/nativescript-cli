@@ -5,8 +5,8 @@ import url from 'url';
 
 import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
 import { KinveyError } from 'src/errors';
-import { KinveyObservable, isDefined } from '../../utils';
-import Query from '../../query';
+import { KinveyObservable, isDefined } from 'src/utils';
+import Query from 'src/query';
 import NetworkStore from './networkstore';
 
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
@@ -15,7 +15,7 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 /**
  * The UserStore class is used to find, save, update, remove, count and group users.
  */
-class UserStore extends NetworkStore {
+export default class UserStore extends NetworkStore {
   constructor(options) {
     super(null, options);
   }
@@ -50,8 +50,7 @@ class UserStore extends NetworkStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: `${this.pathname}/_lookup`,
-          query: options.query
+          pathname: `${this.pathname}/_lookup`
         }),
         properties: options.properties,
         body: isDefined(query) ? query.toPlainObject().filter : null,
@@ -142,8 +141,6 @@ class UserStore extends NetworkStore {
    */
   removeById(id, options = {}) {
     const stream = KinveyObservable.create((observer) => {
-      let query = options.query;
-
       if (isDefined(id) === false) {
         return observer.error(new KinveyError(
           'An id was not provided.',
@@ -158,12 +155,6 @@ class UserStore extends NetworkStore {
         ));
       }
 
-      if (options.hard === true) {
-        query = {
-          hard: true
-        };
-      }
-
       const request = new KinveyRequest({
         method: RequestMethod.DELETE,
         authType: AuthType.Default,
@@ -171,7 +162,7 @@ class UserStore extends NetworkStore {
           protocol: this.client.protocol,
           host: this.client.host,
           pathname: `${this.pathname}/${id}`,
-          query: query
+          query: options.hard === true ? { hard: true } : undefined
         }),
         properties: options.properties,
         timeout: options.timeout
@@ -185,32 +176,4 @@ class UserStore extends NetworkStore {
 
     return stream.toPromise();
   }
-  /**
-   * Restore a user that has been suspended.
-   *
-   * @deprecated Use the `restore` function on the `User` class.
-   *
-   * @param {string} id Id of the user to restore.
-   * @param {Object} [options={}] Options
-   * @return {Promise<Object>} The response.
-   */
-  restore(id, options = {}) {
-    const request = new KinveyRequest({
-      method: RequestMethod.POST,
-      authType: AuthType.Master,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: `${this.pathname}/${id}`
-      }),
-      properties: options.properties,
-      timeout: options.timeout,
-      client: this.client
-    });
-    return request.execute()
-      .then(response => response.data);
-  }
 }
-
-// Export
-export default new UserStore();

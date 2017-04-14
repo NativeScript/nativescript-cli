@@ -1,18 +1,377 @@
-import { FileStore as store } from 'src/datastore';
-import { NotFoundError, ServerError } from 'src/errors';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import fs from 'fs';
 import path from 'path';
 import nock from 'nock';
 import expect from 'expect';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+import { FileStore } from 'src/datastore';
+import { KinveyError, NotFoundError, ServerError } from 'src/errors';
+import { randomString } from 'src/utils';
+import Query from 'src/query';
+
 chai.use(chaiAsPromised);
 chai.should();
 
 describe('FileStore', function() {
+  describe('pathname', function() {
+    it('should equal /blob/<appkey>', function() {
+      const store = new FileStore();
+      expect(store.pathname).toEqual(`/blob/${store.client.appKey}`);
+    });
+
+    it('should not be able to be changed', function() {
+      expect(() => {
+        const store = new FileStore();
+        store.pathname = '/foo';
+      }).toThrow();
+    });
+  });
+
+  describe('find()', function() {
+    it('should find the files', function() {
+      const store = new FileStore();
+      const file1 = { _id: randomString() };
+      const file2 = { _id: randomString() };
+
+      nock(this.client.apiHostname)
+        .get(store.pathname)
+        .query({ tls: true })
+        .reply(200, [file1, file2]);
+
+      return store.find()
+        .then((files) => {
+          expect(files).toEqual([file1, file2]);
+        });
+    });
+
+    it('should throw an error if the query argument is not an instance of the Query class', function() {
+      const store = new FileStore();
+      store.find({})
+        .catch((error) => {
+          expect(error).toBeA(KinveyError);
+          expect(error.message).toEqual('Invalid query. It must be an instance of the Query class.');
+        })
+        .then(() => {
+          throw new Error('This test should fail.');
+        });
+    });
+
+    it('should find the files that match the query', function() {
+      const store = new FileStore();
+      const file = { _id: randomString() };
+      const query = new Query();
+      query.equalTo('_id', file._id);
+
+      nock(this.client.apiHostname)
+        .get(store.pathname)
+        .query({ tls: true, query: JSON.stringify({ _id: file._id }) })
+        .reply(200, [file]);
+
+      return store.find(query)
+        .then((files) => {
+          expect(files).toEqual([file]);
+        });
+    });
+
+    it('should set tls to true by default', function() {
+      const store = new FileStore();
+      const file = { _id: randomString() };
+
+      nock(this.client.apiHostname)
+        .get(store.pathname)
+        .query({ tls: true })
+        .reply(200, [file]);
+
+      return store.find()
+        .then((files) => {
+          expect(files).toEqual([file]);
+        });
+    });
+
+    it('should set tls to false', function() {
+      const store = new FileStore();
+      const file = { _id: randomString() };
+
+      nock(this.client.apiHostname)
+        .get(store.pathname)
+        .query({ tls: false })
+        .reply(200, [file]);
+
+      return store.find(null, { tls: false })
+        .then((files) => {
+          expect(files).toEqual([file]);
+        });
+    });
+
+    it('should not set ttl if it is not a number', function() {
+      const store = new FileStore();
+      const file = { _id: randomString() };
+
+      nock(this.client.apiHostname)
+        .get(store.pathname)
+        .query({ tls: true })
+        .reply(200, [file]);
+
+      return store.find(null, { ttl: {} })
+        .then((files) => {
+          expect(files).toEqual([file]);
+        });
+    });
+
+    it('should set ttl to 10 seconds', function() {
+      const store = new FileStore();
+      const file = { _id: randomString() };
+
+      nock(this.client.apiHostname)
+        .get(store.pathname)
+        .query({ tls: true, ttl_in_seconds: 10 })
+        .reply(200, [file]);
+
+      return store.find(null, { ttl: 10 })
+        .then((files) => {
+          expect(files).toEqual([file]);
+        });
+    });
+
+    it('should parse ttl to an int', function() {
+      const store = new FileStore();
+      const file = { _id: randomString() };
+
+      nock(this.client.apiHostname)
+        .get(store.pathname)
+        .query({ tls: true, ttl_in_seconds: 10 })
+        .reply(200, [file]);
+
+      return store.find(null, { ttl: 10.5 })
+        .then((files) => {
+          expect(files).toEqual([file]);
+        });
+    });
+
+    it('should download the files', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'downloadByUrl');
+      const file = { _id: randomString() };
+
+      nock(this.client.apiHostname)
+        .get(store.pathname)
+        .query({ tls: true })
+        .reply(200, [file]);
+
+      return store.find(null, { download: true })
+        .then(() => {
+          expect(spy).toHaveBeenCalled();
+          expect.restoreSpies();
+        });
+    });
+
+    it('should not download the files', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'downloadByUrl');
+      const file = { _id: randomString() };
+
+      nock(this.client.apiHostname)
+        .get(store.pathname)
+        .query({ tls: true })
+        .reply(200, [file]);
+
+      return store.find(null, { download: false })
+        .then(() => {
+          expect(spy).toNotHaveBeenCalled();
+          expect.restoreSpies();
+        });
+    });
+  });
+
+  describe('download()', function() {
+    it('should set tls to true by default', function() {
+      const store = new FileStore();
+      const fileEntity = { _id: randomString(), _downloadURL: 'http://tests.com' };
+      const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
+
+      nock(this.client.apiHostname)
+        .get(`${store.pathname}/${fileEntity._id}`)
+        .query({ tls: true })
+        .reply(200, fileEntity);
+
+      nock(fileEntity._downloadURL)
+        .get('/')
+        .reply(200, file);
+
+      return store.download(fileEntity._id)
+        .then((response) => {
+          expect(response).toEqual(file);
+        });
+    });
+
+    it('should set tls to false', function() {
+      const store = new FileStore();
+      const fileEntity = { _id: randomString(), _downloadURL: 'http://tests.com' };
+      const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
+
+      nock(this.client.apiHostname)
+        .get(`${store.pathname}/${fileEntity._id}`)
+        .query({ tls: false })
+        .reply(200, fileEntity);
+
+      nock(fileEntity._downloadURL)
+        .get('/')
+        .reply(200, file);
+
+      return store.download(fileEntity._id, { tls: false })
+        .then((response) => {
+          expect(response).toEqual(file);
+        });
+    });
+
+    it('should not set ttl if it is not a number', function() {
+      const store = new FileStore();
+      const fileEntity = { _id: randomString(), _downloadURL: 'http://tests.com' };
+      const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
+
+      nock(this.client.apiHostname)
+        .get(`${store.pathname}/${fileEntity._id}`)
+        .query({ tls: true })
+        .reply(200, fileEntity);
+
+      nock(fileEntity._downloadURL)
+        .get('/')
+        .reply(200, file);
+
+      return store.download(fileEntity._id, { ttl: {} })
+        .then((response) => {
+          expect(response).toEqual(file);
+        });
+    });
+
+    it('should set ttl to 10 seconds', function() {
+      const store = new FileStore();
+      const fileEntity = { _id: randomString(), _downloadURL: 'http://tests.com' };
+      const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
+
+      nock(this.client.apiHostname)
+        .get(`${store.pathname}/${fileEntity._id}`)
+        .query({ tls: true, ttl_in_seconds: 10 })
+        .reply(200, fileEntity);
+
+      nock(fileEntity._downloadURL)
+        .get('/')
+        .reply(200, file);
+
+      return store.download(fileEntity._id, { ttl: 10 })
+        .then((response) => {
+          expect(response).toEqual(file);
+        });
+    });
+
+    it('should parse ttl to an int', function() {
+      const store = new FileStore();
+      const fileEntity = { _id: randomString(), _downloadURL: 'http://tests.com' };
+      const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
+
+      nock(this.client.apiHostname)
+        .get(`${store.pathname}/${fileEntity._id}`)
+        .query({ tls: true, ttl_in_seconds: 10 })
+        .reply(200, fileEntity);
+
+      nock(fileEntity._downloadURL)
+        .get('/')
+        .reply(200, file);
+
+      return store.download(fileEntity._id, { ttl: 10.5 })
+        .then((response) => {
+          expect(response).toEqual(file);
+        });
+    });
+
+    it('should steam the file', function() {
+      const store = new FileStore();
+      const fileEntity = { _id: randomString(), _downloadURL: 'http://tests.com' };
+
+      nock(this.client.apiHostname)
+        .get(`${store.pathname}/${fileEntity._id}`)
+        .query({ tls: true })
+        .reply(200, fileEntity);
+
+      return store.download(fileEntity._id, { stream: true })
+        .then((entity) => {
+          expect(entity).toEqual(fileEntity);
+        });
+    });
+
+    it('should not stream the file', function() {
+      const store = new FileStore();
+      const fileEntity = { _id: randomString(), _downloadURL: 'http://tests.com' };
+      const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
+
+      nock(this.client.apiHostname)
+        .get(`${store.pathname}/${fileEntity._id}`)
+        .query({ tls: true })
+        .reply(200, fileEntity);
+
+      nock(fileEntity._downloadURL)
+        .get('/')
+        .reply(200, file);
+
+      return store.download(fileEntity._id, { stream: false })
+        .then((response) => {
+          expect(response).toEqual(file);
+        });
+    });
+  });
+
+  describe('findById()', function() {
+    it('should call download()', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'download');
+      store.findById();
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('should call download() with id', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'download');
+      const id = randomString();
+      store.findById(id);
+      expect(spy).toHaveBeenCalledWith(id, undefined);
+    });
+
+    it('should call download() with options', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'download');
+      const options = { foo: randomString() };
+      store.findById(null, options);
+      expect(spy).toHaveBeenCalledWith(null, options);
+    });
+  });
+
+  describe('stream()', function() {
+    it('should call download()', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'download');
+      store.stream();
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('should call download() with id', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'download');
+      const id = randomString();
+      store.stream(id);
+      expect(spy).toHaveBeenCalledWith(id, { stream: true });
+    });
+
+    it('should call download() with options.stream = true if it was set to false', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'download');
+      store.stream(null, { stream: false });
+      expect(spy).toHaveBeenCalledWith(null, { stream: true });
+    });
+  });
+
   describe('upload()', function() {
     it('should upload a file', function() {
+      const store = new FileStore();
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -138,6 +497,7 @@ describe('FileStore', function() {
     });
 
     it('should resume a file upload when a 308 status code is received', function() {
+      const store = new FileStore();
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -277,6 +637,7 @@ describe('FileStore', function() {
     });
 
     it('should resume a file upload when a 5xx status code is received', function() {
+      const store = new FileStore();
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -430,6 +791,7 @@ describe('FileStore', function() {
     });
 
     it('should fail to upload a file when a 5xx status code is received mutiple times', function() {
+      const store = new FileStore();
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -530,6 +892,7 @@ describe('FileStore', function() {
     });
 
     it('should fail to upload a file when a 4xx status code is received', function() {
+      const store = new FileStore();
       const file = fs.readFileSync(path.resolve(__dirname, '../fixtures/test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -623,6 +986,112 @@ describe('FileStore', function() {
           throw error;
         });
       return promise.should.be.rejected;
+    });
+  });
+
+  describe('create()', function() {
+    it('should call upload()', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'upload');
+      store.create();
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('should call upload() with file', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'upload');
+      const file = randomString();
+      store.create(file);
+      expect(spy).toHaveBeenCalledWith(file, undefined, undefined);
+    });
+
+    it('should call upload() with metadata', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'upload');
+      const metadata = randomString();
+      store.create(null, metadata);
+      expect(spy).toHaveBeenCalledWith(null, metadata, undefined);
+    });
+
+    it('should call upload() with options', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'upload');
+      const options = randomString();
+      store.create(null, null, options);
+      expect(spy).toHaveBeenCalledWith(null, null, options);
+    });
+  });
+
+  describe('update()', function() {
+    it('should call upload()', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'upload');
+      store.update();
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('should call upload() with file', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'upload');
+      const file = randomString();
+      store.update(file);
+      expect(spy).toHaveBeenCalledWith(file, undefined, undefined);
+    });
+
+    it('should call upload() with metadata', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'upload');
+      const metadata = randomString();
+      store.update(null, metadata);
+      expect(spy).toHaveBeenCalledWith(null, metadata, undefined);
+    });
+
+    it('should call upload() with options', function() {
+      const store = new FileStore();
+      const spy = expect.spyOn(store, 'upload');
+      const options = randomString();
+      store.update(null, null, options);
+      expect(spy).toHaveBeenCalledWith(null, null, options);
+    });
+  });
+
+  describe('remove()', function() {
+    it('should throw an error', function() {
+      expect(() => {
+        const store = new FileStore();
+        store.remove();
+      }).toThrow();
+    });
+  });
+
+  describe('removeById()', function() {
+    it('should throw a NotFoundError if the id argument does not exist', function() {
+      const store = new FileStore();
+      const _id = randomString();
+
+      nock(this.client.apiHostname)
+        .delete(`${store.pathname}/${_id}`)
+        .reply(404);
+
+      return store.removeById(_id)
+        .catch((error) => {
+          expect(error).toBeA(NotFoundError);
+        });
+    });
+
+    it('should remove the entity that matches the id argument', function() {
+      const store = new FileStore();
+      const _id = randomString();
+      const reply = { count: 1 };
+
+      nock(this.client.apiHostname)
+        .delete(`${store.pathname}/${_id}`)
+        .reply(200, reply);
+
+      return store.removeById(_id)
+        .then((response) => {
+          expect(response).toEqual(reply);
+        });
     });
   });
 });

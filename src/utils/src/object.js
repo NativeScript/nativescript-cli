@@ -4,8 +4,15 @@ import isUndefined from 'lodash/isUndefined';
 /**
  * @private
  */
+export function isDefined(obj) {
+  return isUndefined(obj) === false && isNull(obj) === false;
+}
+
+/**
+ * @private
+ */
 export function nested(obj, dotProperty, value) {
-  if (!dotProperty) {
+  if (isDefined(dotProperty) === false) {
     obj = value || obj;
     return obj;
   }
@@ -18,11 +25,4 @@ export function nested(obj, dotProperty, value) {
   }
 
   return value || obj;
-}
-
-/**
- * @private
- */
-export function isDefined(obj) {
-  return !isUndefined(obj) && !isNull(obj);
 }

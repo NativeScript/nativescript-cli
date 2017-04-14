@@ -228,15 +228,15 @@ Kinvey.AuthorizationGrant = AuthorizationGrant;
 Kinvey.CustomEndpoint = CustomEndpoint;
 Kinvey.DataStore = DataStore;
 Kinvey.DataStoreType = DataStoreType;
-Kinvey.File = FileStore;
-Kinvey.Files = FileStore;
+Kinvey.File = new FileStore();
+Kinvey.Files = new FileStore();
 Kinvey.Group = Aggregation;
 Kinvey.Log = Log;
 Kinvey.Metadata = Metadata;
 Kinvey.Query = Query;
 Kinvey.User = User;
-Kinvey.Users = UserStore;
-Kinvey.UserStore = UserStore;
+Kinvey.Users = new UserStore();
+Kinvey.UserStore = new UserStore();
 
 // Add errors
 Kinvey.ActiveUserError = ActiveUserError;

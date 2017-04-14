@@ -87,16 +87,13 @@ export default class Storage {
       }
 
       entities = entities.map((entity) => {
-        let id = entity._id;
-        const kmd = entity._kmd || {};
-
-        if (isDefined(id) === false) {
-          id = this.generateObjectId();
+        if (isDefined(entity._id) === false) {
+          const kmd = entity._kmd || {};
           kmd.local = true;
+          entity._kmd = kmd;
+          entity._id = this.generateObjectId();
         }
 
-        entity._id = id;
-        entity._kmd = kmd;
         return entity;
       });
 
@@ -120,11 +117,11 @@ export default class Storage {
 
       return this.removeById(collection, entity._id);
     }))
-      .then((responses) => {
-        return responses.reduce((entities, entity) => {
-          entities.push(entity);
-          return entities;
-        }, []);
+      .then((results) => {
+        return results.reduce((response, result) => {
+          response.count += result.count;
+          return response;
+        }, { count: 0 });
       });
   }
 

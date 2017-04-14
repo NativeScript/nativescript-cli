@@ -1,6 +1,5 @@
 import Promise from 'es6-promise';
 import assign from 'lodash/assign';
-import result from 'lodash/result';
 import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import isEmpty from 'lodash/isEmpty';
@@ -9,7 +8,7 @@ import url from 'url';
 import Client from 'src/client';
 import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from 'src/request';
 import { KinveyError, NotFoundError, ActiveUserError } from 'src/errors';
-import DataStore, { UserStore as store } from 'src/datastore';
+import DataStore, { UserStore } from 'src/datastore';
 import { Facebook, Google, LinkedIn, MobileIdentityConnect } from 'src/identity';
 import { Log, isDefined } from 'src/utils';
 import Acl from './acl';
@@ -18,7 +17,6 @@ import Metadata from './metadata';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
-const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
 const usernameAttribute = process.env.KINVEY_USERNAME_ATTRIBUTE || 'username';
 const emailAttribute = process.env.KINVEY_EMAIL_ATTRIBUTE || 'email';
@@ -80,30 +78,12 @@ export default class User {
   }
 
   /**
-   * Set the metadata for the user.
-   *
-   * @param {Metadata|Object} metadata The metadata.
-   */
-  set metadata(metadata) {
-    this.data[kmdAttribute] = result(metadata, 'toPlainObject', metadata);
-  }
-
-  /**
    * The _kmd for the user.
    *
    * @return {Metadata} _kmd
    */
   get _kmd() {
     return this.metadata;
-  }
-
-  /**
-   * Set the _kmd for the user.
-   *
-   * @param {Metadata|Object} metadata The metadata.
-   */
-  set _kmd(kmd) {
-    this.metadata = kmd;
   }
 
   /**
@@ -122,17 +102,6 @@ export default class User {
    */
   get authtoken() {
     return this.metadata.authtoken;
-  }
-
-  /**
-   * Set the auth token for the user.
-   *
-   * @param  {?string} authtoken Auth token
-   */
-  set authtoken(authtoken) {
-    const metadata = this.metadata;
-    metadata.authtoken = authtoken;
-    this.metadata = metadata;
   }
 
   /**
@@ -183,23 +152,6 @@ export default class User {
   isEmailVerified() {
     const status = this.metadata.emailVerification;
     return status === 'confirmed';
-  }
-
-  /**
-   * Gets the active user. You can optionally provide a client
-   * to use to lookup the active user.
-   *
-   * @param {Client} [client=Client.sharedInstance()] Client to use to lookup active user.
-   * @return {?User} The active user.
-   */
-  static getActiveUser(client = Client.sharedInstance()) {
-    const data = CacheRequest.getActiveUser(client);
-
-    if (isDefined(data)) {
-      return new this(data, { client: client });
-    }
-
-    return null;
   }
 
   /**
@@ -617,6 +569,9 @@ export default class User {
       data = data.data;
     }
 
+    // Merge the data
+    data = assign(this.data, data);
+
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
@@ -700,6 +655,7 @@ export default class User {
    */
   update(data, options = {}) {
     data = assign(this.data, data);
+    const store = new UserStore();
     return store.update(data, options)
       .then((data) => {
         if (this.isActive()) {
@@ -753,25 +709,21 @@ export default class User {
     return request.execute()
       .then(response => response.data)
       .then((data) => {
-        if (!isDefined(data[kmdAttribute].authtoken)) {
-          const activeUser = User.getActiveUser(this.client);
+        // Merge returned data
+        data = assign(this.data, data);
 
-          if (isDefined(activeUser)) {
-            data[kmdAttribute].authtoken = activeUser.authtoken;
-          }
-
-          return data;
-        }
-
-        return data;
-      })
-      .then((data) => {
         // Remove sensitive data
         delete data.password;
 
-        // Store the active user
+        // Replace the data
         this.data = data;
-        return CacheRequest.setActiveUser(this.client, this.data);
+
+        // Store the active user
+        if (this.isActive()) {
+          return CacheRequest.setActiveUser(this.client, this.data);
+        }
+
+        return data;
       })
       .then(() => this);
   }
@@ -790,6 +742,23 @@ export default class User {
     }
 
     return Promise.resolve(null);
+  }
+
+  /**
+   * Gets the active user. You can optionally provide a client
+   * to use to lookup the active user.
+   *
+   * @param {Client} [client=Client.sharedInstance()] Client to use to lookup active user.
+   * @return {?User} The active user.
+   */
+  static getActiveUser(client = Client.sharedInstance()) {
+    const data = CacheRequest.getActiveUser(client);
+
+    if (isDefined(data)) {
+      return new this(data, { client: client });
+    }
+
+    return null;
   }
 
   /**
@@ -909,6 +878,7 @@ export default class User {
    * @return {Observable} Observable.
    */
   static lookup(query, options = {}) {
+    const store = new UserStore();
     return store.lookup(query, options);
   }
 
@@ -920,6 +890,7 @@ export default class User {
    * @return {boolean} True if the username already exists otherwise false.
    */
   static exists(username, options = {}) {
+    const store = new UserStore();
     return store.exists(username, options);
   }
 
@@ -932,24 +903,7 @@ export default class User {
    * @return  {Promise}
    */
   static remove(id, options = {}) {
+    const store = new UserStore();
     return store.removeById(id, options);
-  }
-
-  /**
-   * Restore a user that has been suspended.
-   *
-   * @param {string} id Id of the user to restore.
-   * @param {Object} [options] Options
-   * @return {Promise<Object>} The response.
-   */
-  static restore(id, options = {}) {
-    return store.restore(id, options);
-  }
-
-  /**
-   * @private
-   */
-  static usePopupClass(popupClass) {
-    MobileIdentityConnect.usePopupClass(popupClass);
   }
 }

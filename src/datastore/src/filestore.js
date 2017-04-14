@@ -13,7 +13,8 @@ import {
   Headers
 } from 'src/request';
 import { KinveyError } from 'src/errors';
-import { Log } from 'src/utils';
+import { KinveyObservable, Log, isDefined } from 'src/utils';
+import Query from 'src/query';
 import NetworkStore from './networkstore';
 
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
@@ -32,7 +33,7 @@ function getStartIndex(rangeHeader, max) {
 /**
  * The FileStore class is used to find, save, update, remove, count and group files.
  */
-class FileStore extends NetworkStore {
+export default class FileStore extends NetworkStore {
   /**
    * @private
    * The pathname for the store.
@@ -75,19 +76,41 @@ class FileStore extends NetworkStore {
    * });
    */
   find(query, options = {}) {
-    // Set defaults for options
-    options = assign({
-      query: {},
-      tls: true
-    }, options);
-    options.query.tls = options.tls === true;
+    options = assign({ tls: true }, options);
+    const queryString = { tls: options.tls === true };
 
     if (isNumber(options.ttl)) {
-      options.query.ttl_in_seconds = options.ttl;
+      queryString.ttl_in_seconds = parseInt(options.ttl, 10);
     }
 
-    return super.find(query, options)
-      .toPromise()
+    const stream = KinveyObservable.create((observer) => {
+      // Check that the query is valid
+      if (isDefined(query) && !(query instanceof Query)) {
+        return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
+      }
+
+      // Create the request
+      const request = new KinveyRequest({
+        method: RequestMethod.GET,
+        authType: AuthType.Default,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this.pathname,
+          query: queryString
+        }),
+        properties: options.properties,
+        query: query,
+        timeout: options.timeout,
+        client: this.client
+      });
+      return request.execute()
+        .then(response => response.data)
+        .then(data => observer.next(data))
+        .then(() => observer.complete())
+        .catch(error => observer.error(error));
+    });
+    return stream.toPromise()
       .then((files) => {
         if (options.download === true) {
           return Promise.all(map(files, file => this.downloadByUrl(file._downloadURL, options)));
@@ -124,15 +147,39 @@ class FileStore extends NetworkStore {
    * });
   */
   download(name, options = {}) {
-    options.query = options.query || {};
-    options.query.tls = options.tls === true;
+    options = assign({ tls: true }, options);
+    const queryString = { tls: options.tls === true };
 
     if (isNumber(options.ttl)) {
-      options.query.ttl_in_seconds = options.ttl;
+      queryString.ttl_in_seconds = parseInt(options.ttl, 10);
     }
 
-    return super.findById(name, options)
-      .toPromise()
+    const stream = KinveyObservable.create((observer) => {
+      if (isDefined(name) === false) {
+        observer.next(undefined);
+        return observer.complete();
+      }
+
+      const request = new KinveyRequest({
+        method: RequestMethod.GET,
+        authType: AuthType.Default,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: `${this.pathname}/${name}`,
+          query: queryString
+        }),
+        properties: options.properties,
+        timeout: options.timeout,
+        client: this.client
+      });
+      return request.execute()
+        .then(response => response.data)
+        .then(data => observer.next(data))
+        .then(() => observer.complete())
+        .catch(error => observer.error(error));
+    });
+    return stream.toPromise()
       .then((file) => {
         if (options.stream === true) {
           return file;
@@ -231,8 +278,7 @@ class FileStore extends NetworkStore {
       request.url = url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this.pathname}/${metadata._id}`,
-        query: options.query
+        pathname: `${this.pathname}/${metadata._id}`
       });
     }
 
@@ -370,6 +416,3 @@ class FileStore extends NetworkStore {
     throw new KinveyError('Please use removeById() to remove files one by one.');
   }
 }
-
-// Export
-export default new FileStore();

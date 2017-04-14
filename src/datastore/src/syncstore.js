@@ -4,7 +4,7 @@ import { CacheRequest, RequestMethod } from 'src/request';
 import { KinveyError } from 'src/errors';
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
-import { KinveyObservable } from 'src/utils';
+import { KinveyObservable, isDefined } from 'src/utils';
 import CacheStore from './cachestore';
 
 /**
@@ -43,8 +43,7 @@ export default class SyncStore extends CacheStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname,
-          query: options.query
+          pathname: this.pathname
         }),
         properties: options.properties,
         query: query,
@@ -76,14 +75,18 @@ export default class SyncStore extends CacheStore {
   findById(id, options = {}) {
     const stream = KinveyObservable.create((observer) => {
       try {
+        if (isDefined(id) === false) {
+          observer.next(undefined);
+          return observer.complete();
+        }
+
         // Fetch from the cache
         const request = new CacheRequest({
           method: RequestMethod.GET,
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
-            pathname: `${this.pathname}/${id}`,
-            query: options.query
+            pathname: `${this.pathname}/${id}`
           }),
           properties: options.properties,
           timeout: options.timeout
@@ -168,8 +171,7 @@ export default class SyncStore extends CacheStore {
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
-            pathname: this.pathname,
-            query: options.query
+            pathname: this.pathname
           }),
           properties: options.properties,
           query: query,

@@ -1,18 +1,18 @@
 import differenceBy from 'lodash/differenceBy';
 import assign from 'lodash/assign';
 import keyBy from 'lodash/keyBy';
-import filter from 'lodash/filter';
-import map from 'lodash/map';
-import xorWith from 'lodash/xorWith';
+import remove from 'lodash/remove';
 import isArray from 'lodash/isArray';
+import reduce from 'lodash/reduce';
+import map from 'lodash/map';
 import url from 'url';
 
 import { CacheRequest, AuthType, RequestMethod } from 'src/request';
-import { KinveyError } from 'src/errors';
+import { KinveyError, NotFoundError } from 'src/errors';
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
 import { Metadata } from 'src/entity';
-import { KinveyObservable } from 'src/utils';
+import { KinveyObservable, isDefined } from 'src/utils';
 import NetworkStore from './networkstore';
 import SyncManager from './sync';
 
@@ -68,8 +68,7 @@ export default class CacheStore extends NetworkStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname,
-          query: options.query
+          pathname: this.pathname
         }),
         properties: options.properties,
         query: query,
@@ -95,11 +94,11 @@ export default class CacheStore extends NetworkStore {
                 return syncCount;
               })
               .then((syncCount) => {
-                // Throw an error if there are still items that need to be synced
+                // Throw an error if there are still entities that need to be synced
                 if (syncCount > 0) {
-                  throw new KinveyError('Unable to load data from the network.'
+                  throw new KinveyError('Unable to fetch the entities on the backend.'
                     + ` There are ${syncCount} entities that need`
-                    + ' to be synced before data is loaded from the network.');
+                    + ' to be synced.');
                 }
 
                 // Fetch the network entities
@@ -120,8 +119,7 @@ export default class CacheStore extends NetworkStore {
                   url: url.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: this.pathname,
-                    query: options.query
+                    pathname: this.pathname
                   }),
                   properties: options.properties,
                   body: networkEntities,
@@ -134,8 +132,12 @@ export default class CacheStore extends NetworkStore {
 
           return cacheEntities;
         })
-        .then(entities => observer.next(entities))
-        .then(() => observer.complete())
+        .then((entities) => {
+          observer.next(entities);
+        })
+        .then(() => {
+          observer.complete();
+        })
         .catch(error => observer.error(error));
     });
 
@@ -157,7 +159,7 @@ export default class CacheStore extends NetworkStore {
     options = assign({ syncAutomatically: this.syncAutomatically }, options);
     const syncAutomatically = options.syncAutomatically === true;
     const stream = KinveyObservable.create((observer) => {
-      if (!id) {
+      if (isDefined(id) === false) {
         observer.next(undefined);
         return observer.complete();
       }
@@ -168,8 +170,7 @@ export default class CacheStore extends NetworkStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: `${this.pathname}/${id}`,
-          query: options.query
+          pathname: `${this.pathname}/${id}`
         }),
         properties: options.properties,
         timeout: options.timeout
@@ -196,9 +197,9 @@ export default class CacheStore extends NetworkStore {
               .then((syncCount) => {
                 // Throw an error if there are still items that need to be synced
                 if (syncCount > 0) {
-                  throw new KinveyError('Unable to load data from the network.'
+                  throw new KinveyError('Unable to find the entity on the backend.'
                     + ` There are ${syncCount} entities that need`
-                    + ' to be synced before data is loaded from the network.');
+                    + ' to be synced.');
                 }
               })
               .then(() => super.findById(id, options).toPromise())
@@ -209,8 +210,7 @@ export default class CacheStore extends NetworkStore {
                   url: url.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: this.pathname,
-                    query: options.query
+                    pathname: this.pathname
                   }),
                   properties: options.properties,
                   body: networkEntity,
@@ -284,9 +284,9 @@ export default class CacheStore extends NetworkStore {
               .then((syncCount) => {
                 // Throw an error if there are still items that need to be synced
                 if (syncCount > 0) {
-                  throw new KinveyError('Unable to load data from the network.'
+                  throw new KinveyError('Unable to group entities on the backend.'
                     + ` There are ${syncCount} entities that need`
-                    + ' to be synced before data is loaded from the network.');
+                    + ' to be synced.');
                 }
 
                 // Group the network entities
@@ -330,8 +330,7 @@ export default class CacheStore extends NetworkStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname,
-          query: options.query
+          pathname: this.pathname
         }),
         properties: options.properties,
         query: query,
@@ -360,9 +359,9 @@ export default class CacheStore extends NetworkStore {
               .then((syncCount) => {
                 // Throw an error if there are still items that need to be synced
                 if (syncCount > 0) {
-                  throw new KinveyError('Unable to load data from the network.'
+                  throw new KinveyError('Unable to count entities on the backend.'
                     + ` There are ${syncCount} entities that need`
-                    + ' to be synced before data is loaded from the network.');
+                    + ' to be synced.');
                 }
               })
               .then(() => super.count(query, options).toPromise());
@@ -381,63 +380,60 @@ export default class CacheStore extends NetworkStore {
   /**
    * Create a single or an array of entities on the data store.
    *
-   * @param   {Object|Array}          data                              Data that you want to create on the data store.
+   * @param   {Object}                entity                            Entity that you want to create on the data store.
    * @param   {Object}                [options]                         Options
    * @param   {Properties}            [options.properties]              Custom properties to send with
    *                                                                    the request.
    * @param   {Number}                [options.timeout]                 Timeout for the request.
    * @return  {Promise}                                                 Promise.
    */
-  create(data, options = {}) {
+  create(entity, options = {}) {
     const stream = KinveyObservable.create((observer) => {
-      if (!data) {
+      if (isDefined(entity) === false) {
         observer.next(null);
-        observer.complete();
+        return observer.complete();
       }
 
-      let singular = false;
-
-      // Cast the data to an array
-      if (!isArray(data)) {
-        singular = true;
-        data = [data];
+      if (isArray(entity)) {
+        return observer.error(new KinveyError(
+          'Unable to create an array of entities.',
+          'Please create entities one by one.'
+        ));
       }
 
-      // Save the data to the cache
+      // Save the entity to the cache
       const request = new CacheRequest({
         method: RequestMethod.POST,
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname,
-          query: options.query
+          pathname: this.pathname
         }),
         properties: options.properties,
-        body: data,
+        body: entity,
         timeout: options.timeout
       });
 
       // Execute the request
       return request.execute()
         .then(response => response.data)
-        .then((data) => {
-          return this.syncManager.addCreateOperation(data, options)
-            .then(() => data);
+        .then((entity) => {
+          return this.syncManager.addCreateOperation(entity, options)
+            .then(() => entity);
         })
-        .then((data) => {
-          // Push the data
+        .then((entity) => {
+          // Push the entity
           if (this.syncAutomatically === true) {
-            const ids = Object.keys(keyBy(data, '_id'));
-            const query = new Query().contains('entityId', ids);
+            const query = new Query().equalTo('entityId', entity._id);
             return this.push(query, options)
               .then((results) => {
-                return map(results, result => result.entity);
+                return results[0].entity;
               });
           }
 
-          return data;
+          return entity;
         })
-        .then(entities => observer.next(singular ? entities[0] : entities))
+        .then(entity => observer.next(entity))
         .then(() => observer.complete())
         .catch(error => observer.error(error));
     });
@@ -448,63 +444,60 @@ export default class CacheStore extends NetworkStore {
   /**
    * Update a single or an array of entities on the data store.
    *
-   * @param   {Object|Array}          data                              Data that you want to update on the data store.
+   * @param   {Object}                entity                            Entity that you want to update on the data store.
    * @param   {Object}                [options]                         Options
    * @param   {Properties}            [options.properties]              Custom properties to send with
    *                                                                    the request.
    * @param   {Number}                [options.timeout]                 Timeout for the request.
    * @return  {Promise}                                                 Promise.
    */
-  update(data, options = {}) {
+  update(entity, options = {}) {
     const stream = KinveyObservable.create((observer) => {
-      if (!data) {
+      if (isDefined(entity) === false) {
         observer.next(null);
         return observer.complete();
       }
 
-      let singular = false;
-
-      // Cast the data to an array
-      if (!isArray(data)) {
-        singular = true;
-        data = [data];
+      if (isArray(entity)) {
+        return observer.error(new KinveyError(
+          'Unable to update an array of entities.',
+          'Please update entities one by one.'
+        ));
       }
 
-      // Save the data to the cache
+      // Save the entity to the cache
       const request = new CacheRequest({
         method: RequestMethod.PUT,
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname,
-          query: options.query
+          pathname: this.pathname
         }),
         properties: options.properties,
-        body: data,
+        body: entity,
         timeout: options.timeout
       });
 
       // Execute the request
       return request.execute()
         .then(response => response.data)
-        .then((data) => {
-          return this.syncManager.addUpdateOperation(data, options)
-            .then(() => data);
+        .then((entity) => {
+          return this.syncManager.addUpdateOperation(entity, options)
+            .then(() => entity);
         })
-        .then((data) => {
-          // Push the data
+        .then((entity) => {
+          // Push the entity
           if (this.syncAutomatically === true) {
-            const ids = Object.keys(keyBy(data, '_id'));
-            const query = new Query().contains('entityId', ids);
+            const query = new Query().equalTo('entityId', entity._id);
             return this.push(query, options)
               .then((results) => {
-                return map(results, result => result.entity);
+                return results[0].entity;
               });
           }
 
-          return data;
+          return entity;
         })
-        .then(entities => observer.next(singular ? entities[0] : entities))
+        .then(entity => observer.next(entity))
         .then(() => observer.complete())
         .catch(error => observer.error(error));
     });
@@ -532,13 +525,12 @@ export default class CacheStore extends NetworkStore {
       }
 
       // Fetch the cache entities
-      const fetchRequest = new CacheRequest({
+      const request = new CacheRequest({
         method: RequestMethod.GET,
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname,
-          query: options.query
+          pathname: this.pathname
         }),
         properties: options.properties,
         query: query,
@@ -546,59 +538,76 @@ export default class CacheStore extends NetworkStore {
       });
 
       // Execute the request
-      return fetchRequest.execute()
+      return request.execute()
         .then(response => response.data)
-        .then((entities) => {
-          // Remove the data from the cache
-          const removeRequest = new CacheRequest({
-            method: RequestMethod.DELETE,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: this.pathname,
-              query: options.query
-            }),
-            properties: options.properties,
-            body: entities,
-            timeout: options.timeout
-          });
+        .then((entities = []) => {
+          if (entities.length > 0) {
+            return Promise.all(map(entities, (entity) => {
+              const metadata = new Metadata(entity);
 
-          // Execite the request
-          return removeRequest.execute()
-            .then(response => response.data);
+              // Clear any pending sync items if the entity
+              // was created locally
+              if (metadata.isLocal()) {
+                const query = new Query();
+                query.equalTo('entityId', entity._id);
+                return this.clearSync(query, options)
+                  .then(() => entity);
+              }
+
+              // Add a delete operation to sync
+              return this.syncManager.addDeleteOperation(entity, options)
+                .then(() => entity);
+            }))
+            .then(() => entities);
+          }
+
+          return entities;
         })
         .then((entities) => {
-          if (entities && entities.length > 0) {
-            // Clear local entities from the sync table
-            const localEntities = filter(entities, (entity) => {
+          // Push the entities
+          if (entities.length > 0 && this.syncAutomatically === true) {
+            const localEntities = remove(entities, (entity) => {
               const metadata = new Metadata(entity);
               return metadata.isLocal();
             });
-            const query = new Query().contains('entityId', Object.keys(keyBy(localEntities, '_id')));
-            return this.clearSync(query, options)
-              .then(() => {
-                // Create delete operations for non local data in the sync table
-                const syncEntities = xorWith(entities, localEntities,
-                  (entity, localEntity) => entity._id === localEntity._id);
-                return this.syncManager.addDeleteOperation(syncEntities, options);
-              })
-              .then(() => entities);
-          }
 
-          return entities;
-        })
-        .then((entities) => {
-          // Push the data
-          if (this.syncAutomatically === true) {
             const ids = Object.keys(keyBy(entities, '_id'));
             const query = new Query().contains('entityId', ids);
             return this.push(query, options)
-              .then(() => entities);
+              .then(results => results.concat(localEntities));
           }
 
           return entities;
         })
-        .then(entities => observer.next(entities))
+        .then((results) => {
+          return Promise.all(map(results, (result) => {
+            if (isDefined(result.error) === false) {
+              const request = new CacheRequest({
+                method: RequestMethod.DELETE,
+                url: url.format({
+                  protocol: this.client.protocol,
+                  host: this.client.host,
+                  pathname: `${this.pathname}/${result._id}`
+                }),
+                properties: options.properties,
+                authType: AuthType.Default,
+                timeout: options.timeout
+              });
+              return request.execute()
+                .then(response => response.data);
+            }
+
+            return { count: 0 };
+          }));
+        })
+        .then((results) => {
+          return reduce(results, (totalResult, result) => {
+            totalResult.count += result.count;
+            return totalResult;
+          }, { count: 0 });
+        })
+        .then()
+        .then(result => observer.next(result))
         .then(() => observer.complete())
         .catch(error => observer.error(error));
     });
@@ -618,14 +627,18 @@ export default class CacheStore extends NetworkStore {
    */
   removeById(id, options = {}) {
     const stream = KinveyObservable.create((observer) => {
-      // Remove from cache
+      if (isDefined(id) === false) {
+        observer.next({ count: 0 });
+        return observer.complete();
+      }
+
+      // Get the entity from cache
       const request = new CacheRequest({
-        method: RequestMethod.DELETE,
+        method: RequestMethod.GET,
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: `${this.pathname}/${id}`,
-          query: options.query
+          pathname: `${this.pathname}/${id}`
         }),
         properties: options.properties,
         authType: AuthType.Default,
@@ -635,8 +648,15 @@ export default class CacheStore extends NetworkStore {
       // Execute the request
       return request.execute()
         .then(response => response.data)
+        .catch((error) => {
+          if (error instanceof NotFoundError) {
+            return null;
+          }
+
+          throw error;
+        })
         .then((entity) => {
-          if (entity) {
+          if (isDefined(entity)) {
             const metadata = new Metadata(entity);
 
             // Clear any pending sync items if the entity
@@ -656,7 +676,7 @@ export default class CacheStore extends NetworkStore {
           return entity;
         })
         .then((entity) => {
-          // Push the data
+          // Push the entity
           if (this.syncAutomatically === true) {
             const query = new Query().equalTo('entityId', entity._id);
             return this.push(query, options)
@@ -665,7 +685,23 @@ export default class CacheStore extends NetworkStore {
 
           return entity;
         })
-        .then(entity => observer.next(entity))
+        .then((entity) => {
+          // Remove from cache
+          const request = new CacheRequest({
+            method: RequestMethod.DELETE,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: `${this.pathname}/${entity._id}`
+            }),
+            properties: options.properties,
+            authType: AuthType.Default,
+            timeout: options.timeout
+          });
+          return request.execute()
+            .then(response => response.data);
+        })
+        .then(result => observer.next(result))
         .then(() => observer.complete())
         .catch(error => observer.error(error));
     });
@@ -695,8 +731,7 @@ export default class CacheStore extends NetworkStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname,
-          query: options.query
+          pathname: this.pathname
         }),
         properties: options.properties,
         query: query,
@@ -706,36 +741,48 @@ export default class CacheStore extends NetworkStore {
       // Execute the request
       return request.execute()
         .then(response => response.data)
-        .then((entities) => {
-          // Remove the data from the cache
-          const request = new CacheRequest({
-            method: RequestMethod.DELETE,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: this.pathname,
-              query: options.query
-            }),
-            properties: options.properties,
-            body: entities,
-            timeout: options.timeout
-          });
+        .then((entities = []) => {
+          return Promise.all(map(entities, (entity) => {
+            return Promise.resolve(entity)
+              .then((entity) => {
+                const metadata = new Metadata(entity);
 
-          // Execute the request
-          return request.execute()
-            .then(response => response.data);
-        })
-        .then((entities) => {
-          if (entities && entities.length > 0) {
-            // Clear entities from the sync table
-            const query = new Query().contains('entityId', Object.keys(keyBy(entities, '_id')));
-            return this.clearSync(query, options)
-              .then(() => entities);
-          }
+                // Clear any pending sync items if the entity
+                // was created locally
+                if (metadata.isLocal()) {
+                  const query = new Query();
+                  query.equalTo('entityId', entity._id);
+                  return this.clearSync(query, options)
+                    .then(() => entity);
+                }
 
-          return entities;
+                return entity;
+              })
+              .then((entity) => {
+                // Remove from cache
+                const request = new CacheRequest({
+                  method: RequestMethod.DELETE,
+                  url: url.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: `${this.pathname}/${entity._id}`
+                  }),
+                  properties: options.properties,
+                  authType: AuthType.Default,
+                  timeout: options.timeout
+                });
+                return request.execute()
+                  .then(response => response.data);
+              });
+          }));
         })
-        .then(entities => observer.next(entities))
+        .then((results) => {
+          return reduce(results, (totalResult, result) => {
+            totalResult.count += result.count;
+            return totalResult;
+          }, { count: 0 });
+        })
+        .then(result => observer.next(result))
         .then(() => observer.complete())
         .catch(error => observer.error(error));
     });
@@ -760,6 +807,9 @@ export default class CacheStore extends NetworkStore {
     return this.syncManager.count(query, options);
   }
 
+  /**
+   * @deprecated Use pendingSyncCount().
+   */
   syncCount(query, options) {
     return this.pendingSyncCount(query, options);
   }
@@ -807,8 +857,7 @@ export default class CacheStore extends NetworkStore {
               url: url.format({
                 protocol: this.client.protocol,
                 host: this.client.host,
-                pathname: this.pathname,
-                query: options.query
+                pathname: this.pathname
               }),
               properties: options.properties,
               body: entities,
@@ -853,7 +902,7 @@ export default class CacheStore extends NetworkStore {
   }
 
   /**
-   * @deprecated Use clearSync() instead of this.
+   * @deprecated Use clearSync().
    */
   purge(query, options) {
     return this.clearSync(query, options);
