@@ -16,10 +16,11 @@ import { SyncError } from 'src/errors';
 import { isDefined } from 'src/utils';
 import Client from 'src/client';
 import Query from 'src/query';
+import { isDefined } from 'src/utils';
 
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sync';
-let pushInProgress = false;
+const pushInProgress = new Map();
 
 /**
  * @private
@@ -108,8 +109,41 @@ export default class SyncManager {
    * @param   {Number}        [options.timeout]           Timeout for the request.
    * @return  {Promise}                                   Promise
    */
-  count(query = new Query(), options = {}) {
-    return this.find(query, options)
+  count(query, options = {}) {
+    let promise = Promise.resolve();
+
+    if (isDefined(query)) {
+      if (!(query instanceof Query)) {
+        query = new Query(result(query, 'toJSON', query));
+      }
+
+      const request = new CacheRequest({
+        method: RequestMethod.GET,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this.backendPathname
+        }),
+        query: query,
+        properties: options.properties,
+        timeout: options.timeout,
+        client: this.client
+      });
+      promise = request.execute()
+        .then(response => response.data);
+    }
+
+    return promise
+      .then((entities) => {
+        if (isDefined(entities)) {
+          const syncQuery = new Query();
+          syncQuery.contains('entityId', map(entities, entity => entity._id));
+          return this.find(syncQuery, options);
+        }
+
+        // Get the pending sync items
+        return this.find(query, options);
+      })
       .then(entities => entities.length);
   }
 
@@ -262,19 +296,50 @@ export default class SyncManager {
   push(query, options = {}) {
     const batchSize = 100;
     let i = 0;
+    let promise = Promise.resolve(null);
 
     // Don't push data to the backend if we are in the middle
     // of already pushing data
-    if (pushInProgress) {
+    if (pushInProgress.get(this.collection) === true) {
       return Promise.reject(new SyncError('Data is already being pushed to the backend.'
         + ' Please wait for it to complete before pushing new data to the backend.'));
     }
 
     // Set pushInProgress to true
-    pushInProgress = true;
+    pushInProgress.set(this.collection, true);
 
-    // Get the pending sync items
-    return this.find(query)
+    if (isDefined(query)) {
+      if (!(query instanceof Query)) {
+        query = new Query(result(query, 'toJSON', query));
+      }
+
+      const request = new CacheRequest({
+        method: RequestMethod.GET,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this.backendPathname
+        }),
+        query: query,
+        properties: options.properties,
+        timeout: options.timeout,
+        client: this.client
+      });
+      promise = request.execute()
+        .then(response => response.data);
+    }
+
+    return promise
+      .then((entities) => {
+        if (isDefined(entities)) {
+          const syncQuery = new Query();
+          syncQuery.contains('entityId', map(entities, entity => entity._id));
+          return this.find(syncQuery, options);
+        }
+
+        // Get the pending sync items
+        return this.find(query, options);
+      })
       .then((syncEntities) => {
         if (syncEntities.length > 0) {
           // Sync the entities in batches to prevent exhausting
@@ -492,12 +557,12 @@ export default class SyncManager {
       })
       .then((result) => {
         // Set pushInProgress to false
-        pushInProgress = false;
+        pushInProgress.set(this.collection, false);
         return result;
       })
       .catch((error) => {
         // Set pushInProgress to false
-        pushInProgress = false;
+        pushInProgress.set(this.collection, false);
         throw error;
       });
   }

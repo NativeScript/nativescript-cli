@@ -5,13 +5,15 @@ import isString from 'lodash/isString';
 
 import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
 import { KinveyError, MobileIdentityConnectError } from 'src/errors';
-import Popup from './popup';
+import { isDefined } from 'src/utils';
+import CorePopup from './popup';
 import Identity from './identity';
 import { SocialIdentity } from './enums';
 
 const authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 const invalidatePathname = process.env.KINVEY_MIC_INVALIDATE_PATHNAME || '/oauth/invalidate';
+let Popup = CorePopup;
 
 /**
  * Enum for Mobile Identity Connect authorization grants.
@@ -258,5 +260,14 @@ export class MobileIdentityConnect extends Identity {
       properties: options.properties
     });
     return request.execute().then(response => response.data);
+  }
+
+  /**
+   * @private
+   */
+  static usePopupClass(popupClass) {
+    if (isDefined(popupClass)) {
+      Popup = popupClass;
+    }
   }
 }

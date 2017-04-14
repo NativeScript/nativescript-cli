@@ -1,4 +1,13 @@
 ## Changelog
+## [3.4.5](https://github.com/Kinvey/js-sdk/tree/v3.4.5) (2017-04-13)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.4.4...v3.4.5)<br/>
+
+**Changes**
+- Share authentication information for active user with 1.x SDK.
+- Use query to push a subset of sync entities to the backend. [#120](https://github.com/Kinvey/js-sdk/pull/120)
+- Add more tests for query. [#121](https://github.com/Kinvey/js-sdk/pull/121)
+- Allow multiple sync push operations to be in progress at the same time for difference collections.. Only one sync push operation is allowed to be in progress for the same collection. This fixes an issue caused with [#117](https://github.com/Kinvey/js-sdk/pull/117) that only allowed one sync push operation to be in progress regardless of the collection. [#123](https://github.com/Kinvey/js-sdk/pull/123)
+
 ## [3.4.4](https://github.com/Kinvey/js-sdk/tree/v3.4.4) (2017-03-27)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.4.3...v3.4.4)<br/>
 

@@ -231,5 +231,33 @@ describe('Sync', function () {
           return sync.push();
         });
     });
+
+    it('should push when an existing push is in progress on a different collection', function(done) {
+      const sync1 = new SyncManager(collection);
+      var entity1 = { _id: randomString() };
+      var promise = sync1.addDeleteOperation(entity1)
+        .then(() => {
+          // Kinvey API Response
+          nock(sync1.client.baseUrl)
+            .delete(`${sync1.backendPathname}/${entity1._id}`, () => true)
+            .query(true)
+            .delay(1000) // Delay the response for 1 second
+            .reply(204);
+
+          // Sync
+          sync1.push()
+            .then(() => promise.should.be.fulfilled)
+            .then(() => done())
+            .catch(done);
+
+          // Add second sync operation
+          const sync2 = new SyncManager(randomString());
+          const entity2 = { _id: randomString() };
+          return sync2.addDeleteOperation(entity2)
+            .then(() => {
+              return sync2.push();
+          });
+        });
+    });
   });
 });

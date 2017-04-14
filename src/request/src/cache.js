@@ -136,11 +136,13 @@ export default class CacheRequest extends Request {
       .then((activeUser) => {
         // Try local storage
         if (isDefined(activeUser) === false) {
-          const legacyActiveUser = CacheRequest.loadActiveUserLegacy(client);
-          return CacheRequest.setActiveUser(client, legacyActiveUser);
+          return CacheRequest.loadActiveUserLegacy(client);
         }
 
         return activeUser;
+      })
+      .then((activeUser) => {
+        return CacheRequest.setActiveUser(client, activeUser);
       })
       .then((activeUser) => {
         activeUsers[client.appKey] = activeUser;
