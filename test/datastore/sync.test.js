@@ -1,6 +1,8 @@
 import SyncManager from 'src/datastore/src/sync';
+import { SyncStore } from 'src/datastore';
 import { SyncError } from 'src/errors';
 import { randomString } from 'src/utils';
+import Query from 'src/query';
 import nock from 'nock';
 import expect from 'expect';
 import chai from 'chai';
@@ -16,24 +18,34 @@ describe('Sync', function () {
   });
 
   describe('count()', function() {
+    const entity1 = { _id: randomString() };
+    const entity2 = { _id: randomString() };
+
     beforeEach(function() {
-      const sync = new SyncManager(collection);
-      return sync.addUpdateOperation({
-        _id: randomString()
-      });
+      const store = new SyncStore(collection);
+      return store.save(entity1);
     });
 
     beforeEach(function() {
-      const sync = new SyncManager(collection);
-      return sync.addUpdateOperation({
-        _id: randomString()
-      });
+      const store = new SyncStore(collection);
+      return store.save(entity2);
     });
 
-    it('should return the count for all entities that need to be synced', async function() {
+    it('should return the count for all entities that need to be synced', function() {
       const sync = new SyncManager(collection);
-      const count = await sync.count();
-      expect(count).toEqual(2);
+      return sync.count()
+        .then((count) => {
+          expect(count).toEqual(2);
+        });
+    });
+
+    it('should return the count for all entities that match the query that need to be synced', function() {
+      const sync = new SyncManager(collection);
+      const query = new Query().equalTo('_id', entity1._id);
+      return sync.count(query)
+        .then((count) => {
+          expect(count).toEqual(1);
+        });
     });
   });
 
@@ -67,14 +79,17 @@ describe('Sync', function () {
       expect(syncEntities).toEqual(entities);
     });
 
-    it('should add entities to the sync table', async function() {
-      const entities = [{
-        _id: randomString()
-      }];
-      const sync = new SyncManager(collection);
-      await sync.addCreateOperation(entities);
-      const count = await sync.count();
-      expect(count).toEqual(entities.length);
+    it('should add entities to the sync table', function() {
+      const entity = { _id: randomString() };
+      const store = new SyncStore(collection);
+      return store.create(entity)
+        .then(() => {
+          const sync = new SyncManager(collection);
+          return sync.count();
+        })
+        .then((count) => {
+          expect(count).toEqual(1);
+        });
     });
   });
 
@@ -109,13 +124,16 @@ describe('Sync', function () {
     });
 
     it('should add entities to the sync table', async function() {
-      const entities = [{
-        _id: randomString()
-      }];
-      const sync = new SyncManager(collection);
-      await sync.addUpdateOperation(entities);
-      const count = await sync.count();
-      expect(count).toEqual(entities.length);
+      const entity = { _id: randomString() };
+      const store = new SyncStore(collection);
+      return store.update(entity)
+        .then(() => {
+          const sync = new SyncManager(collection);
+          return sync.count();
+        })
+        .then((count) => {
+          expect(count).toEqual(1);
+        });
     });
   });
 
@@ -148,16 +166,6 @@ describe('Sync', function () {
       const syncEntities = await sync.addDeleteOperation(entities);
       expect(syncEntities).toEqual(entities);
     });
-
-    it('should add entities to the sync table', async function() {
-      const entities = [{
-        _id: randomString()
-      }];
-      const sync = new SyncManager(collection);
-      await sync.addDeleteOperation(entities);
-      const count = await sync.count();
-      expect(count).toEqual(entities.length);
-    });
   });
 
   describe('pull()', function() {
@@ -186,36 +194,40 @@ describe('Sync', function () {
 
   describe('push()', function() {
     it('should execute pending sync operations', async function() {
-      const entity1 = {
-        _id: randomString()
-      };
+      const entity = { _id: randomString() };
       const sync = new SyncManager(collection);
-      await sync.addDeleteOperation(entity1);
-
-      // Kinvey API Response
-      nock(sync.client.baseUrl)
-        .delete(`${sync.backendPathname}/${entity1._id}`, () => true)
-        .query(true)
-        .reply(204);
-
-      const result = await sync.push();
-      expect(result).toEqual([{ _id: entity1._id }]);
-
-      const count = await sync.count();
-      expect(count).toEqual(0);
-    });
-
-    it('should not push when an existing push is in progress', function(done) {
-      const sync = new SyncManager(collection);
-      var entity1 = { _id: randomString() };
-      var promise = sync.addDeleteOperation(entity1)
+      const store = new SyncStore(collection);
+      return store.save(entity)
         .then(() => {
           // Kinvey API Response
           nock(sync.client.baseUrl)
-            .delete(`${sync.backendPathname}/${entity1._id}`, () => true)
+            .put(`${sync.backendPathname}/${entity._id}`, () => true)
+            .query(true)
+            .reply(200, entity);
+
+          return sync.push();
+        })
+        .then((result) => {
+          expect(result).toEqual([{ _id: entity._id, entity: entity }]);
+          return sync.count();
+        })
+        .then((count) => {
+          expect(count).toEqual(0);
+        });
+    });
+
+    it('should not push when an existing push is in progress', function(done) {
+      const entity1 = { _id: randomString() };
+      const sync = new SyncManager(collection);
+      const store = new SyncStore(collection);
+      const promise = store.save(entity1)
+        .then(() => {
+          // Kinvey API Response
+          nock(sync.client.baseUrl)
+            .put(`${sync.backendPathname}/${entity1._id}`, () => true)
             .query(true)
             .delay(1000) // Delay the response for 1 second
-            .reply(204);
+            .reply(200, entity1);
 
           // Sync
           sync.push()
@@ -225,7 +237,7 @@ describe('Sync', function () {
 
           // Add second sync operation
           const entity2 = { _id: randomString() };
-          return sync.addDeleteOperation(entity2);
+          return store.save(entity2);
         })
         .then(() => {
           return sync.push();
@@ -233,16 +245,17 @@ describe('Sync', function () {
     });
 
     it('should push when an existing push is in progress on a different collection', function(done) {
+      const entity1 = { _id: randomString() };
       const sync1 = new SyncManager(collection);
-      var entity1 = { _id: randomString() };
-      var promise = sync1.addDeleteOperation(entity1)
+      const store1 = new SyncStore(collection);
+      const promise = store1.save(entity1)
         .then(() => {
           // Kinvey API Response
           nock(sync1.client.baseUrl)
-            .delete(`${sync1.backendPathname}/${entity1._id}`, () => true)
+            .put(`${sync1.backendPathname}/${entity1._id}`, () => true)
             .query(true)
             .delay(1000) // Delay the response for 1 second
-            .reply(204);
+            .reply(200, entity1);
 
           // Sync
           sync1.push()
@@ -251,12 +264,13 @@ describe('Sync', function () {
             .catch(done);
 
           // Add second sync operation
-          const sync2 = new SyncManager(randomString());
           const entity2 = { _id: randomString() };
-          return sync2.addDeleteOperation(entity2)
+          const sync2 = new SyncManager(randomString());
+          const store2 = new SyncStore(randomString());
+          return store2.save(entity2)
             .then(() => {
               return sync2.push();
-          });
+            });
         });
     });
   });

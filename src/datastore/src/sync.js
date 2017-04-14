@@ -16,7 +16,6 @@ import { SyncError } from 'src/errors';
 import { isDefined } from 'src/utils';
 import Client from 'src/client';
 import Query from 'src/query';
-import { isDefined } from 'src/utils';
 
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sync';
@@ -76,28 +75,48 @@ export default class SyncManager {
     return `/${appdataNamespace}/${this.client.appKey}/${this.collection}`;
   }
 
-  find(query = new Query(), options = {}) {
-    if (!(query instanceof Query)) {
+  find(query, options = {}) {
+    if (isDefined(query) && (query instanceof Query) === false) {
       query = new Query(result(query, 'toJSON', query));
     }
 
-    query.equalTo('collection', this.collection);
-
-    // Get all sync entities
     const request = new CacheRequest({
       method: RequestMethod.GET,
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this.pathname
+        pathname: this.backendPathname
       }),
-      properties: options.properties,
       query: query,
+      properties: options.properties,
       timeout: options.timeout,
       client: this.client
     });
     return request.execute()
-      .then(response => response.data);
+      .then(response => response.data)
+      .then((entities) => {
+        const syncQuery = new Query();
+        syncQuery.equalTo('collection', this.collection);
+
+        if (isDefined(query)) {
+          syncQuery.contains('entityId', map(entities, entity => entity._id));
+        }
+
+        const request = new CacheRequest({
+          method: RequestMethod.GET,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: this.pathname
+          }),
+          properties: options.properties,
+          query: syncQuery,
+          timeout: options.timeout,
+          client: this.client
+        });
+        return request.execute()
+          .then(response => response.data);
+      });
   }
 
   /**
@@ -110,40 +129,7 @@ export default class SyncManager {
    * @return  {Promise}                                   Promise
    */
   count(query, options = {}) {
-    let promise = Promise.resolve();
-
-    if (isDefined(query)) {
-      if (!(query instanceof Query)) {
-        query = new Query(result(query, 'toJSON', query));
-      }
-
-      const request = new CacheRequest({
-        method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this.backendPathname
-        }),
-        query: query,
-        properties: options.properties,
-        timeout: options.timeout,
-        client: this.client
-      });
-      promise = request.execute()
-        .then(response => response.data);
-    }
-
-    return promise
-      .then((entities) => {
-        if (isDefined(entities)) {
-          const syncQuery = new Query();
-          syncQuery.contains('entityId', map(entities, entity => entity._id));
-          return this.find(syncQuery, options);
-        }
-
-        // Get the pending sync items
-        return this.find(query, options);
-      })
+    return this.find(query, options)
       .then(entities => entities.length);
   }
 
@@ -238,12 +224,12 @@ export default class SyncManager {
       return Promise.reject(new SyncError('Invalid query. It must be an instance of the Query class.'));
     }
 
-    return this.count()
+    return this.count(query)
       .then((count) => {
         // Attempt to push any pending sync data before fetching from the network.
         if (count > 0) {
-          return this.push()
-            .then(() => this.count);
+          return this.push(query)
+            .then(() => this.count(query));
         }
 
         return count;
@@ -263,8 +249,7 @@ export default class SyncManager {
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
-            pathname: this.backendPathname,
-            query: options.query
+            pathname: this.backendPathname
           }),
           properties: options.properties,
           query: query,
@@ -296,7 +281,6 @@ export default class SyncManager {
   push(query, options = {}) {
     const batchSize = 100;
     let i = 0;
-    let promise = Promise.resolve(null);
 
     // Don't push data to the backend if we are in the middle
     // of already pushing data
@@ -308,38 +292,7 @@ export default class SyncManager {
     // Set pushInProgress to true
     pushInProgress.set(this.collection, true);
 
-    if (isDefined(query)) {
-      if (!(query instanceof Query)) {
-        query = new Query(result(query, 'toJSON', query));
-      }
-
-      const request = new CacheRequest({
-        method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this.backendPathname
-        }),
-        query: query,
-        properties: options.properties,
-        timeout: options.timeout,
-        client: this.client
-      });
-      promise = request.execute()
-        .then(response => response.data);
-    }
-
-    return promise
-      .then((entities) => {
-        if (isDefined(entities)) {
-          const syncQuery = new Query();
-          syncQuery.contains('entityId', map(entities, entity => entity._id));
-          return this.find(syncQuery, options);
-        }
-
-        // Get the pending sync items
-        return this.find(query, options);
-      })
+    return this.find(query)
       .then((syncEntities) => {
         if (syncEntities.length > 0) {
           // Sync the entities in batches to prevent exhausting
@@ -411,9 +364,8 @@ export default class SyncManager {
                     timeout: options.timeout
                   });
                   return request.execute()
-                    .then((response) => {
-                      const entity = response.data;
-
+                    .then((response) => response.data)
+                    .then((entity) => {
                       // Save the entity to the backend.
                       const request = new KinveyRequest({
                         method: method,
@@ -576,25 +528,8 @@ export default class SyncManager {
    * @param   {Number}        [options.timeout]           Timeout for the request.
    * @return  {Promise}                                   Promise
    */
-  clear(query = new Query(), options = {}) {
-    if (!(query instanceof Query)) {
-      query = new Query(query);
-    }
-    query.equalTo('collection', this.collection);
-
-    const request = new CacheRequest({
-      method: RequestMethod.GET,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: this.pathname
-      }),
-      properties: options.properties,
-      query: query,
-      timeout: options.timeout
-    });
-    return request.execute()
-      .then(response => response.data)
+  clear(query, options = {}) {
+    return this.find(query, options)
       .then((entities) => {
         return Promise.all(map(entities, (entity) => {
           const request = new CacheRequest({

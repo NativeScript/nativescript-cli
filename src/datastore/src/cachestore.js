@@ -424,7 +424,7 @@ export default class CacheStore extends NetworkStore {
         .then((entity) => {
           // Push the entity
           if (this.syncAutomatically === true) {
-            const query = new Query().equalTo('entityId', entity._id);
+            const query = new Query().equalTo('_id', entity._id);
             return this.push(query, options)
               .then((results) => {
                 return results[0].entity;
@@ -488,7 +488,7 @@ export default class CacheStore extends NetworkStore {
         .then((entity) => {
           // Push the entity
           if (this.syncAutomatically === true) {
-            const query = new Query().equalTo('entityId', entity._id);
+            const query = new Query().equalTo('_id', entity._id);
             return this.push(query, options)
               .then((results) => {
                 return results[0].entity;
@@ -549,7 +549,7 @@ export default class CacheStore extends NetworkStore {
               // was created locally
               if (metadata.isLocal()) {
                 const query = new Query();
-                query.equalTo('entityId', entity._id);
+                query.equalTo('_id', entity._id);
                 return this.clearSync(query, options)
                   .then(() => entity);
               }
@@ -566,13 +566,14 @@ export default class CacheStore extends NetworkStore {
         .then((entities) => {
           // Push the entities
           if (entities.length > 0 && this.syncAutomatically === true) {
+            // Remove the localEntities
             const localEntities = remove(entities, (entity) => {
               const metadata = new Metadata(entity);
               return metadata.isLocal();
             });
 
             const ids = Object.keys(keyBy(entities, '_id'));
-            const query = new Query().contains('entityId', ids);
+            const query = new Query().contains('_id', ids);
             return this.push(query, options)
               .then(results => results.concat(localEntities));
           }
@@ -663,7 +664,7 @@ export default class CacheStore extends NetworkStore {
             // was created locally
             if (metadata.isLocal()) {
               const query = new Query();
-              query.equalTo('entityId', entity._id);
+              query.equalTo('_id', entity._id);
               return this.clearSync(query, options)
                 .then(() => entity);
             }
@@ -678,7 +679,7 @@ export default class CacheStore extends NetworkStore {
         .then((entity) => {
           // Push the entity
           if (this.syncAutomatically === true) {
-            const query = new Query().equalTo('entityId', entity._id);
+            const query = new Query().equalTo('_id', entity._id);
             return this.push(query, options)
               .then(() => entity);
           }
@@ -751,7 +752,7 @@ export default class CacheStore extends NetworkStore {
                 // was created locally
                 if (metadata.isLocal()) {
                   const query = new Query();
-                  query.equalTo('entityId', entity._id);
+                  query.equalTo('_id', entity._id);
                   return this.clearSync(query, options)
                     .then(() => entity);
                 }

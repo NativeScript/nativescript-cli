@@ -606,7 +606,7 @@ describe('SyncStore', function() {
 
       return store.save(entity)
         .then((entity) => {
-          const query = new Query().equalTo('entityId', entity._id);
+          const query = new Query().equalTo('_id', entity._id);
           return store.pendingSyncCount(query);
         })
         .then((count) => {
@@ -635,7 +635,7 @@ describe('SyncStore', function() {
 
       return store.save(entity)
         .then((entity) => {
-          const query = new Query().equalTo('entityId', entity._id);
+          const query = new Query().equalTo('_id', entity._id);
           return store.pendingSyncEntities(query)
             .then((entities) => {
               expect(entities[0]).toIncludeKey('_id');
@@ -683,7 +683,7 @@ describe('SyncStore', function() {
             .put(`/appdata/${this.client.appKey}/${collection}/${entity1._id}`, entity1)
             .reply(200, entity1);
 
-          const query = new Query().equalTo('entityId', entity1._id);
+          const query = new Query().equalTo('_id', entity1._id);
           return store.push(query);
         })
         .then((result) => {
@@ -779,11 +779,11 @@ describe('SyncStore', function() {
           return store.save(entity2);
         })
         .then(() => {
-          const query = new Query().equalTo('entityId', entity1._id);
+          const query = new Query().equalTo('_id', entity1._id);
           return store.clearSync(query);
         })
         .then(() => {
-          const query = new Query().equalTo('entityId', entity1._id);
+          const query = new Query().equalTo('_id', entity1._id);
           return store.pendingSyncCount(query);
         })
         .then((count) => {
