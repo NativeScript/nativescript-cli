@@ -945,4 +945,11 @@ export default class User {
   static restore(id, options = {}) {
     return store.restore(id, options);
   }
+
+  /**
+   * @private
+   */
+  static usePopupClass(popupClass) {
+    MobileIdentityConnect.usePopupClass(popupClass);
+  }
 }
