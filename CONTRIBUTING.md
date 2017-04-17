@@ -61,7 +61,7 @@ Before you submit a Pull Request, consider the following guidelines.
 ```
 * Ensure all the tests pass.
 ```bash
-    grunt test
+    grunt tests
 ```
 * Ensure that your code passes the linter.
 ```bash
