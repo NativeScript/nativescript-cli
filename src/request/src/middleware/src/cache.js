@@ -19,7 +19,7 @@ export default class CacheMiddleware extends Middleware {
     let promise;
 
     if (method === 'GET') {
-      if (entityId) {
+      if (isDefined(entityId)) {
         promise = storage.findById(collection, entityId);
       } else {
         promise = storage.find(collection);
@@ -31,10 +31,10 @@ export default class CacheMiddleware extends Middleware {
         promise = storage.save(collection, body);
       }
     } else if (method === 'DELETE') {
-      if (collection && entityId) {
-        promise = storage.removeById(collection, entityId);
-      } else if (isDefined(collection) === false) {
+      if (isDefined(collection) === false) {
         promise = storage.clear();
+      } else {
+        promise = storage.removeById(collection, entityId);
       }
     }
 
@@ -54,7 +54,7 @@ export default class CacheMiddleware extends Middleware {
 
       return response;
     })
-    .catch(error => ({ statusCode: error.code || 500 }))
+    .catch(error => ({ statusCode: error.code }))
     .then(response => ({ response: response }));
   }
 }
