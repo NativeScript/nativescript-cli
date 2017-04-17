@@ -1,4 +1,4 @@
-import DataStore, { DataStoreType, FileStore, UserStore } from './datastore';
+import DataStore, { DataStoreType, FileStore, SyncOperation UserStore } from './datastore';
 import { Acl, Metadata, User } from './entity';
 import { AuthorizationGrant, SocialIdentity } from './identity';
 import Request, {
@@ -67,6 +67,7 @@ export {
   SocialIdentity,
   StatusCode,
   Storage,
+  SyncOperation,
   User,
   UserStore,
   UserStore as Users,
