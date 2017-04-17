@@ -427,7 +427,13 @@ export default class CacheStore extends NetworkStore {
             const query = new Query().equalTo('_id', entity._id);
             return this.push(query, options)
               .then((results) => {
-                return results[0].entity;
+                const result = results[0];
+
+                if (isDefined(result.error)) {
+                  throw result.error;
+                }
+
+                return result.entity;
               });
           }
 
@@ -465,13 +471,20 @@ export default class CacheStore extends NetworkStore {
         ));
       }
 
+      if (isDefined(entity._id) === false) {
+        return observer.error(new KinveyError(
+          'The entity provided does not contain an _id. An _id is required to'
+          + ' update the entity.', entity
+        ));
+      }
+
       // Save the entity to the cache
       const request = new CacheRequest({
         method: RequestMethod.PUT,
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname
+          pathname: `${this.pathname}/${entity._id}`
         }),
         properties: options.properties,
         body: entity,
@@ -491,7 +504,13 @@ export default class CacheStore extends NetworkStore {
             const query = new Query().equalTo('_id', entity._id);
             return this.push(query, options)
               .then((results) => {
-                return results[0].entity;
+                const result = results[0];
+
+                if (isDefined(result.error)) {
+                  throw result.error;
+                }
+
+                return result.entity;
               });
           }
 
