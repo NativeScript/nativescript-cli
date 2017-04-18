@@ -25,8 +25,8 @@ import {
   MissingRequestHeaderError,
   MissingRequestParameterError,
   MobileIdentityConnectError,
+  NetworkConnectionError,
   NoActiveUserError,
-  NoNetworkConnectionError,
   NoResponseError,
   NotFoundError,
   ParameterValueOutOfRangeError,
@@ -44,7 +44,7 @@ import Client from './client';
 import CustomEndpoint from './endpoint';
 import Query from './query';
 import Aggregation from './aggregation';
-import DataStore, { DataStoreType, FileStore, SyncOperation, UserStore } from './datastore';
+import DataStore, { DataStoreType, FileStore, SyncOperation } from './datastore';
 import { Acl, Metadata, User } from './entity';
 import { AuthorizationGrant } from './identity';
 import { AuthType, CacheRack, NetworkRack, Rack, RequestMethod, KinveyRequest } from './request';
@@ -217,7 +217,7 @@ Kinvey.MissingRequestHeaderError = MissingRequestHeaderError;
 Kinvey.MissingRequestParameterError = MissingRequestParameterError;
 Kinvey.MobileIdentityConnectError = MobileIdentityConnectError;
 Kinvey.NoActiveUserError = NoActiveUserError;
-Kinvey.NoNetworkConnectionError = NoNetworkConnectionError;
+Kinvey.NetworkConnectionError = NetworkConnectionError;
 Kinvey.NoResponseError = NoResponseError;
 Kinvey.NotFoundError = NotFoundError;
 Kinvey.ParameterValueOutOfRangeError = ParameterValueOutOfRangeError;
