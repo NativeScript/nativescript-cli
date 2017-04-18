@@ -101,8 +101,8 @@ describe('DeltaFetchRequest', function() {
         method: RequestMethod.GET,
         authType: AuthType.Default,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `/appdata/${this.client.appKey}/${collection}`
         }),
         client: this.client
@@ -131,8 +131,8 @@ describe('DeltaFetchRequest', function() {
         method: RequestMethod.GET,
         authType: AuthType.Default,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `/appdata/${this.client.appKey}/${collection}`
         }),
         client: this.client
@@ -167,8 +167,8 @@ describe('DeltaFetchRequest', function() {
         method: RequestMethod.GET,
         authType: AuthType.Default,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `/appdata/${this.client.appKey}/${collection}`
         }),
         client: this.client
@@ -217,8 +217,8 @@ describe('DeltaFetchRequest', function() {
         method: RequestMethod.GET,
         authType: AuthType.Default,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `/appdata/${this.client.appKey}/${collection}`
         }),
         query: query,
@@ -265,8 +265,8 @@ describe('DeltaFetchRequest', function() {
         method: RequestMethod.GET,
         authType: AuthType.Default,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `/appdata/${this.client.appKey}/${collection}`
         }),
         client: this.client

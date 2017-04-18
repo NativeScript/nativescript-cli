@@ -1,4 +1,4 @@
-import DataStore, { DataStoreType, FileStore, SyncOperation, UserStore } from './datastore';
+import DataStore, { DataStoreType, FileStore, SyncOperation } from './datastore';
 import { Acl, Metadata, User } from './entity';
 import { AuthorizationGrant, SocialIdentity } from './identity';
 import Request, {
@@ -30,6 +30,8 @@ import CustomEndpoint from './endpoint';
 import Kinvey from './kinvey';
 import Query from './query';
 
+const Files = new FileStore();
+
 // Export modules
 export {
   Acl,
@@ -45,7 +47,7 @@ export {
   DataStore,
   DataStoreType,
   DeltaFetchRequest,
-  FileStore as Files,
+  Files,
   Headers,
   HttpMiddleware,
   Kinvey,
@@ -68,9 +70,7 @@ export {
   StatusCode,
   Storage,
   SyncOperation,
-  User,
-  UserStore,
-  UserStore as Users,
+  User
 };
 
 // Export errors

@@ -616,19 +616,6 @@ describe('SyncStore', function() {
     });
   });
 
-  describe('syncCount()', function() {
-    afterEach(function () {
-      expect.restoreSpies();
-    });
-
-    it('should call pendingSyncCount()', function() {
-      const store = new SyncStore(collection);
-      const spy = expect.spyOn(store, 'pendingSyncCount');
-      store.syncCount();
-      expect(spy).toHaveBeenCalled();
-    });
-  });
-
   describe('pendingSyncEntities()', function() {
     it('should return the entities waiting to be synced', function() {
       const store = new SyncStore(collection);
@@ -796,19 +783,6 @@ describe('SyncStore', function() {
         .then((entities) => {
           expect(entities).toEqual([entity1]);
         });
-    });
-  });
-
-  describe('purge()', function() {
-    afterEach(function () {
-      expect.restoreSpies();
-    });
-
-    it('should call clearSync()', function() {
-      const store = new SyncStore(collection);
-      const spy = expect.spyOn(store, 'clearSync');
-      store.purge();
-      expect(spy).toHaveBeenCalled();
     });
   });
 });

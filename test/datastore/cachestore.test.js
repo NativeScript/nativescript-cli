@@ -89,7 +89,7 @@ describe('CacheStore', function() {
       const onNextSpy = expect.createSpy();
 
       nock(store.client.apiHostname)
-        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .get(store.pathname)
         .reply(200, [entity1, entity2]);
 
       store.pull()
@@ -99,7 +99,7 @@ describe('CacheStore', function() {
           };
 
           nock(store.client.apiHostname)
-            .get(`/appdata/${store.client.appKey}/${collection}`)
+            .get(store.pathname)
             .reply(200, [entity1, entity2, entity3]);
 
           store.find()
@@ -125,7 +125,8 @@ describe('CacheStore', function() {
                 done(error);
               }
             });
-        });
+        })
+        .catch(done);
     });
 
     it('should return the entities that match the query', function(done) {
@@ -986,19 +987,6 @@ describe('CacheStore', function() {
     });
   });
 
-  describe('syncCount()', function() {
-    afterEach(function () {
-      expect.restoreSpies();
-    });
-
-    it('should call pendingSyncCount()', function() {
-      const store = new CacheStore(collection);
-      const spy = expect.spyOn(store, 'pendingSyncCount');
-      store.syncCount();
-      expect(spy).toHaveBeenCalled();
-    });
-  });
-
   describe('pendingSyncEntities()', function() {
     it('should return the entities waiting to be synced', function() {
       const store = new CacheStore(collection);
@@ -1166,19 +1154,6 @@ describe('CacheStore', function() {
         .then((entities) => {
           expect(entities).toEqual([entity1]);
         });
-    });
-  });
-
-  describe('purge()', function() {
-    afterEach(function () {
-      expect.restoreSpies();
-    });
-
-    it('should call clearSync()', function() {
-      const store = new CacheStore(collection);
-      const spy = expect.spyOn(store, 'clearSync');
-      store.purge();
-      expect(spy).toHaveBeenCalled();
     });
   });
 });

@@ -83,8 +83,8 @@ export default class DataStore {
     const request = new CacheRequest({
       method: RequestMethod.DELETE,
       url: url.format({
-        protocol: client.protocol,
-        host: client.host,
+        protocol: client.apiProtocol,
+        host: client.apiHost,
         pathname: pathname
       }),
       properties: options.properties,

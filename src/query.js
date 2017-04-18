@@ -705,7 +705,7 @@ export default class Query {
         }
       }
 
-      return query.toJSON().filter;
+      return query.toPlainObject().filter;
     });
 
     // If there are no `queries` supplied, create a new (empty) `Query`.
@@ -713,7 +713,7 @@ export default class Query {
     // returned to allow for a fluent interface.
     if (queries.length === 0) {
       that = new Query();
-      queries = [that.toJSON().filter];
+      queries = [that.toPlainObject().filter];
       that._parent = this; // Required for operator precedence and `toJSON`.
     }
 
@@ -760,7 +760,7 @@ export default class Query {
     }
 
     // Apply the query
-    const json = this.toJSON();
+    const json = this.toPlainObject();
     data = sift(json.filter, data);
 
     // Remove fields
@@ -835,16 +835,6 @@ export default class Query {
     };
 
     return json;
-  }
-
-  /**
-   * Returns Object representation of the query.
-   *
-   * @returns {Object} Object
-   * @deprecated Use toPlainObject() instead.
-   */
-  toJSON() {
-    return this.toPlainObject();
   }
 
   /**

@@ -83,8 +83,8 @@ export default class SyncManager {
     const request = new CacheRequest({
       method: RequestMethod.GET,
       url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
         pathname: this.backendPathname
       }),
       query: query,
@@ -105,8 +105,8 @@ export default class SyncManager {
         const request = new CacheRequest({
           method: RequestMethod.GET,
           url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
             pathname: this.pathname
           }),
           properties: options.properties,
@@ -176,8 +176,8 @@ export default class SyncManager {
       const findRequest = new CacheRequest({
         method: RequestMethod.GET,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: this.pathname
         }),
         properties: options.properties,
@@ -199,8 +199,8 @@ export default class SyncManager {
           const request = new CacheRequest({
             method: RequestMethod.PUT,
             url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
+              protocol: this.client.apiProtocol,
+              host: this.client.apiHost,
               pathname: this.pathname
             }),
             properties: options.properties,
@@ -247,8 +247,8 @@ export default class SyncManager {
           method: RequestMethod.GET,
           authType: AuthType.Default,
           url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
             pathname: this.backendPathname
           }),
           properties: options.properties,
@@ -313,8 +313,8 @@ export default class SyncManager {
                     method: RequestMethod.DELETE,
                     authType: AuthType.Default,
                     url: url.format({
-                      protocol: this.client.protocol,
-                      host: this.client.host,
+                      protocol: this.client.apiProtocol,
+                      host: this.client.apiHost,
                       pathname: `${this.backendPathname}/${entityId}`
                     }),
                     properties: options.properties,
@@ -327,8 +327,8 @@ export default class SyncManager {
                       const request = new CacheRequest({
                         method: RequestMethod.DELETE,
                         url: url.format({
-                          protocol: this.client.protocol,
-                          host: this.client.host,
+                          protocol: this.client.apiProtocol,
+                          host: this.client.apiHost,
                           pathname: `${this.pathname}/${syncEntity._id}`
                         }),
                         properties: options.properties,
@@ -357,8 +357,8 @@ export default class SyncManager {
                   const request = new CacheRequest({
                     method: RequestMethod.GET,
                     url: url.format({
-                      protocol: this.client.protocol,
-                      host: this.client.host,
+                      protocol: this.client.apiProtocol,
+                      host: this.client.apiHost,
                       pathname: `${this.backendPathname}/${entityId}`
                     }),
                     properties: options.properties,
@@ -372,8 +372,8 @@ export default class SyncManager {
                         method: RequestMethod.PUT,
                         authType: AuthType.Default,
                         url: url.format({
-                          protocol: this.client.protocol,
-                          host: this.client.host,
+                          protocol: this.client.apiProtocol,
+                          host: this.client.apiHost,
                           pathname: `${this.backendPathname}/${entityId}`
                         }),
                         properties: options.properties,
@@ -392,8 +392,8 @@ export default class SyncManager {
 
                         request.method = RequestMethod.POST;
                         request.url = url.format({
-                          protocol: this.client.protocol,
-                          host: this.client.host,
+                          protocol: this.client.apiProtocol,
+                          host: this.client.apiHost,
                           pathname: this.backendPathname
                         });
                       }
@@ -405,8 +405,8 @@ export default class SyncManager {
                           const request = new CacheRequest({
                             method: RequestMethod.DELETE,
                             url: url.format({
-                              protocol: this.client.protocol,
-                              host: this.client.host,
+                              protocol: this.client.apiProtocol,
+                              host: this.client.apiHost,
                               pathname: `${this.pathname}/${syncEntity._id}`
                             }),
                             properties: options.properties,
@@ -418,8 +418,8 @@ export default class SyncManager {
                               const request = new CacheRequest({
                                 method: RequestMethod.PUT,
                                 url: url.format({
-                                  protocol: this.client.protocol,
-                                  host: this.client.host,
+                                  protocol: this.client.apiProtocol,
+                                  host: this.client.apiHost,
                                   pathname: `${this.backendPathname}/${entity._id}`
                                 }),
                                 properties: options.properties,
@@ -435,8 +435,8 @@ export default class SyncManager {
                                 const request = new CacheRequest({
                                   method: RequestMethod.DELETE,
                                   url: url.format({
-                                    protocol: this.client.protocol,
-                                    host: this.client.host,
+                                    protocol: this.client.apiProtocol,
+                                    host: this.client.apiHost,
                                     pathname: `${this.backendPathname}/${entityId}`
                                   }),
                                   properties: options.properties,
@@ -541,8 +541,8 @@ export default class SyncManager {
           const request = new CacheRequest({
             method: RequestMethod.DELETE,
             url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
+              protocol: this.client.apiProtocol,
+              host: this.client.apiHost,
               pathname: `${this.pathname}/${entity._id}`
             }),
             properties: options.properties,

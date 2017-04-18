@@ -34,15 +34,15 @@ describe('CacheRequest', function() {
       const request = new CacheRequest({
         method: RequestMethod.POST,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `/${usersNamespace}/${this.client.appKey}/${activeUserCollectionName}`
         }),
         body: user
       });
       return request.execute()
         .then(() => {
-          return CacheRequest.loadActiveUser(this.client)
+          return CacheRequest.loadActiveUser(this.client);
         })
         .then((activeUser) => {
           expect(activeUser).toEqual(user);

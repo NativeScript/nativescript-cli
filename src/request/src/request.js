@@ -50,7 +50,7 @@ export default class Request {
 
   set client(client) {
     if (client) {
-      if (!(client instanceof Client)) {
+      if ((client instanceof Client) === false) {
         throw new KinveyError('client must be an instance of the Client class.');
       }
     }

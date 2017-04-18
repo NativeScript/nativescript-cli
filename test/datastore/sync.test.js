@@ -193,7 +193,7 @@ describe('Sync', function () {
       const sync = new SyncManager(collection);
 
       // Kinvey API Response
-      nock(this.client.baseUrl)
+      nock(this.client.apiHostname)
         .get(sync.backendPathname, () => true)
         .query(true)
         .reply(200, [entity]);
@@ -221,17 +221,17 @@ describe('Sync', function () {
         .then(entity => (entity3 = entity))
         .then(() => store.removeById(entity2._id))
         .then(() => {
-          nock(sync.client.baseUrl)
+          nock(sync.client.apiHostname)
             .put(`${sync.backendPathname}/${entity1._id}`, () => true)
             .query(true)
             .reply(200, entity1);
 
-          nock(sync.client.baseUrl)
+          nock(sync.client.apiHostname)
             .delete(`${sync.backendPathname}/${entity2._id}`, () => true)
             .query(true)
             .reply(200, { count: 1 });
 
-          nock(sync.client.baseUrl)
+          nock(sync.client.apiHostname)
             .post(sync.backendPathname, () => true)
             .query(true)
             .reply(200, { _id: entity3Id });
@@ -260,12 +260,12 @@ describe('Sync', function () {
         .then(() => store.save(entity2))
         .then(() => store.removeById(entity2._id))
         .then(() => {
-          nock(sync.client.baseUrl)
+          nock(sync.client.apiHostname)
             .put(`${sync.backendPathname}/${entity1._id}`, () => true)
             .query(true)
             .reply(500);
 
-          nock(sync.client.baseUrl)
+          nock(sync.client.apiHostname)
             .delete(`${sync.backendPathname}/${entity2._id}`, () => true)
             .query(true)
             .reply(200, { count: 1 });
@@ -290,7 +290,7 @@ describe('Sync', function () {
       const promise = store.save(entity1)
         .then(() => {
           // Kinvey API Response
-          nock(sync.client.baseUrl)
+          nock(sync.client.apiHostname)
             .put(`${sync.backendPathname}/${entity1._id}`, () => true)
             .query(true)
             .reply(200, entity1);
@@ -317,7 +317,7 @@ describe('Sync', function () {
       const promise = store1.save(entity1)
         .then(() => {
           // Kinvey API Response
-          nock(sync1.client.baseUrl)
+          nock(sync1.client.apiHostname)
             .put(`${sync1.backendPathname}/${entity1._id}`, () => true)
             .query(true)
             .delay(1000) // Delay the response for 1 second

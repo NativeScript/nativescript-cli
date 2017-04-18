@@ -166,8 +166,8 @@ class Kinvey {
       method: RequestMethod.GET,
       authType: AuthType.All,
       url: url.format({
-        protocol: client.protocol,
-        host: client.host,
+        protocol: client.apiProtocol,
+        host: client.apiHost,
         pathname: `${appdataNamespace}/${client.appKey}`
       })
     });

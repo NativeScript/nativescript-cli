@@ -376,7 +376,7 @@ describe('FileStore', function() {
       const fileSize = file.size || file.length;
 
       // Kinvey API response
-      nock(store.client.baseUrl, { encodedQueryParams: true })
+      nock(store.client.apiHostname, { encodedQueryParams: true })
         .post(store.pathname, {
           _filename: 'kinvey.png',
           _public: true,
@@ -502,7 +502,7 @@ describe('FileStore', function() {
       const fileSize = file.size || file.length;
 
       // Kinvey API response
-      nock(store.client.baseUrl, { encodedQueryParams: true })
+      nock(store.client.apiHostname, { encodedQueryParams: true })
         .post(store.pathname, {
           _filename: 'kinvey.png',
           _public: true,
@@ -642,7 +642,7 @@ describe('FileStore', function() {
       const fileSize = file.size || file.length;
 
       // Kinvey API response
-      nock(store.client.baseUrl, { encodedQueryParams: true })
+      nock(store.client.apiHostname, { encodedQueryParams: true })
         .post(store.pathname, {
           _filename: 'kinvey.png',
           _public: true,
@@ -799,7 +799,7 @@ describe('FileStore', function() {
       this.timeout(0);
 
       // Kinvey API response
-      nock(store.client.baseUrl, { encodedQueryParams: true })
+      nock(store.client.apiHostname, { encodedQueryParams: true })
         .post(store.pathname, {
           _filename: 'kinvey.png',
           _public: true,
@@ -897,7 +897,7 @@ describe('FileStore', function() {
       const fileSize = file.size || file.length;
 
       // Kinvey API response
-      nock(store.client.baseUrl, { encodedQueryParams: true })
+      nock(store.client.apiHostname, { encodedQueryParams: true })
         .post(store.pathname, {
           _filename: 'kinvey.png',
           _public: true,

@@ -41,8 +41,8 @@ export default class SyncStore extends CacheStore {
       const request = new CacheRequest({
         method: RequestMethod.GET,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: this.pathname
         }),
         properties: options.properties,
@@ -84,8 +84,8 @@ export default class SyncStore extends CacheStore {
         const request = new CacheRequest({
           method: RequestMethod.GET,
           url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
             pathname: `${this.pathname}/${id}`
           }),
           properties: options.properties,
@@ -126,8 +126,8 @@ export default class SyncStore extends CacheStore {
       const request = new CacheRequest({
         method: RequestMethod.POST,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `${this.pathname}/_group`
         }),
         properties: options.properties,
@@ -169,8 +169,8 @@ export default class SyncStore extends CacheStore {
         const request = new CacheRequest({
           method: RequestMethod.GET,
           url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
             pathname: this.pathname
           }),
           properties: options.properties,

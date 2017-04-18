@@ -154,8 +154,8 @@ export default class NetworkStore {
         method: RequestMethod.GET,
         authType: AuthType.Default,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: this.pathname
         }),
         properties: options.properties,
@@ -204,8 +204,8 @@ export default class NetworkStore {
         method: RequestMethod.GET,
         authType: AuthType.Default,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `${this.pathname}/${id}`
         }),
         properties: options.properties,
@@ -250,8 +250,8 @@ export default class NetworkStore {
         method: RequestMethod.POST,
         authType: AuthType.Default,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `${this.pathname}/_group`,
         }),
         properties: options.properties,
@@ -295,8 +295,8 @@ export default class NetworkStore {
           method: RequestMethod.GET,
           authType: AuthType.Default,
           url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
             pathname: `${this.pathname}/_count`
           }),
           properties: options.properties,
@@ -347,8 +347,8 @@ export default class NetworkStore {
         method: RequestMethod.POST,
         authType: AuthType.Default,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: this.pathname
         }),
         properties: options.properties,
@@ -401,8 +401,8 @@ export default class NetworkStore {
         method: RequestMethod.PUT,
         authType: AuthType.Default,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `${this.pathname}/${entity._id}`
         }),
         properties: options.properties,
@@ -462,8 +462,8 @@ export default class NetworkStore {
           method: RequestMethod.DELETE,
           authType: AuthType.Default,
           url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
             pathname: this.pathname
           }),
           properties: options.properties,
@@ -506,8 +506,8 @@ export default class NetworkStore {
           method: RequestMethod.DELETE,
           authType: AuthType.Default,
           url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
             pathname: `${this.pathname}/${id}`
           }),
           properties: options.properties,

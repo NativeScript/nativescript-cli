@@ -136,7 +136,7 @@ describe('Kinvey', function () {
       return UserMock.logout()
         .then(() => {
           // Kinvey API Response
-          nock(this.client.baseUrl)
+          nock(this.client.apiHostname)
             .get(`/${appdataNamespace}/${this.client.appKey}`)
             .query(true)
             .reply(200, reply, {
@@ -160,7 +160,7 @@ describe('Kinvey', function () {
       };
 
       // Kinvey API Response
-      nock(this.client.baseUrl)
+      nock(this.client.apiHostname)
         .get(`/${appdataNamespace}/${this.client.appKey}`)
         .query(true)
         .reply(200, reply, {

@@ -94,8 +94,8 @@ export default class FileStore extends NetworkStore {
         method: RequestMethod.GET,
         authType: AuthType.Default,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: this.pathname,
           query: queryString
         }),
@@ -164,8 +164,8 @@ export default class FileStore extends NetworkStore {
         method: RequestMethod.GET,
         authType: AuthType.Default,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `${this.pathname}/${name}`,
           query: queryString
         }),
@@ -260,8 +260,8 @@ export default class FileStore extends NetworkStore {
       method: RequestMethod.POST,
       authType: AuthType.Default,
       url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
         pathname: this.pathname
       }),
       properties: options.properties,
@@ -276,8 +276,8 @@ export default class FileStore extends NetworkStore {
     if (metadata._id) {
       request.method = RequestMethod.PUT;
       request.url = url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
         pathname: `${this.pathname}/${metadata._id}`
       });
     }

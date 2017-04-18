@@ -48,11 +48,6 @@ describe('Endpoint', function() {
           description: 'The custom endpoint you tried to access does not exist.'
             + ' Please configure custom Business Logic endpoints through the Kinvey Console.',
           debug: ''
-        }, {
-          'content-type': 'application/json; charset=utf-8',
-          'content-length': '192',
-          'x-kinvey-request-id': '2a22add2a94844bc94a1649baf7c161a',
-          'x-kinvey-api-version': '4'
         });
 
       // Execute custom endpoint
