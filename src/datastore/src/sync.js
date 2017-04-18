@@ -365,7 +365,7 @@ export default class SyncManager {
                     timeout: options.timeout
                   });
                   return request.execute()
-                    .then((response) => response.data)
+                    .then(response => response.data)
                     .then((entity) => {
                       // Save the entity to the backend.
                       const request = new KinveyRequest({

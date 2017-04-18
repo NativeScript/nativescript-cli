@@ -777,6 +777,7 @@ export default class Query {
       });
     }
 
+    /* eslint-disable no-restricted-syntax, no-prototype-builtins  */
     // Sorting.
     if (isDefined(json.sort)) {
       data.sort((a, b) => {
@@ -800,6 +801,7 @@ export default class Query {
         return 0;
       });
     }
+    /* eslint-enable no-restricted-syntax, no-prototype-builtins */
 
     // Limit and skip.
     if (isNumber(json.skip)) {

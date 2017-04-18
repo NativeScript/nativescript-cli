@@ -23,7 +23,7 @@ export default class Metadata {
   }
 
   get createdAt() {
-    if (this.entity._kmd.ect) {
+    if (isDefined(this.entity._kmd.ect)) {
       return new Date(this.entity._kmd.ect);
     }
 
@@ -43,7 +43,7 @@ export default class Metadata {
   }
 
   get lastModified() {
-    if (this.entity._kmd.lmt) {
+    if (isDefined(this.entity._kmd.lmt)) {
       return new Date(this.entity._kmd.lmt);
     }
 
