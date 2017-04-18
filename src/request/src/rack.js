@@ -67,7 +67,7 @@ export default class Rack extends Middleware {
   cancel() {
     this.canceled = true;
 
-    if (typeof this.activeMiddleware !== 'undefined' && isFunction(this.activeMiddleware.cancel)) {
+    if (isDefined(this.activeMiddleware) && isFunction(this.activeMiddleware.cancel)) {
       return this.activeMiddleware.cancel();
     }
 
