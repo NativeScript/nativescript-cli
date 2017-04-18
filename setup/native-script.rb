@@ -93,7 +93,7 @@ if !(execute("brew --version", "Homebrew is not installed or not configured prop
 end
 
 install("Java SE Development Kit", "Installing the Java SE Development Kit... This might take some time, please, be patient. (You will be prompted for your password)", 'brew cask install java', false, false)
-install("Android SDK", "Installing Android SDK", 'brew cask install android-sdk', false)
+install("Android SDK", "Installing Android SDK", 'brew tap caskroom/cask; brew cask install android-sdk', false)
 
 unless ENV["ANDROID_HOME"]
   require 'pathname'
