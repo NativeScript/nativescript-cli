@@ -892,4 +892,11 @@ export default class User {
     const store = new UserStore();
     return store.removeById(id, options);
   }
+
+  /**
+   * @private
+   */
+  static usePopupClass(popupClass) {
+    MobileIdentityConnect.usePopupClass(popupClass);
+  }
 }
