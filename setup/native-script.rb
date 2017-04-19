@@ -76,7 +76,7 @@ def install(program_name, message, script, run_as_root = false, show_all_option 
 end
 
 def install_environment_variable(name, value)
-  ENV[name] = value
+  ENV[name] = value.to_s
  
   execute("echo \"export #{name}=#{value}\" >> ~/.bash_profile", "Unable to set #{name}")
   
