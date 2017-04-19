@@ -22,6 +22,15 @@ export class PluginsService implements IPluginsService {
 		return this.$injector.resolve("projectFilesManager");
 	}
 
+	private get npmInstallOptions(): INodePackageManagerInstallOptions {
+		return _.merge({
+			disableNpmInstall: this.$options.disableNpmInstall,
+			frameworkPath: this.$options.frameworkPath,
+			ignoreScripts: this.$options.ignoreScripts,
+			path: this.$options.path
+		}, PluginsService.NPM_CONFIG);
+	}
+
 	constructor(private $npm: INodePackageManager,
 		private $fs: IFileSystem,
 		private $options: IOptions,
@@ -35,7 +44,8 @@ export class PluginsService implements IPluginsService {
 		if (possiblePackageName.indexOf(".tgz") !== -1 && this.$fs.exists(possiblePackageName)) {
 			plugin = possiblePackageName;
 		}
-		let name = (await this.$npm.install(plugin, projectData.projectDir, PluginsService.NPM_CONFIG))[0];
+
+		let name = (await this.$npm.install(plugin, projectData.projectDir, this.npmInstallOptions)).name;
 		let pathToRealNpmPackageJson = path.join(projectData.projectDir, "node_modules", name, "package.json");
 		let realNpmPackageJson = this.$fs.readJson(pathToRealNpmPackageJson);
 
@@ -158,7 +168,12 @@ export class PluginsService implements IPluginsService {
 		let notInstalledDependencies = _.difference(allDependencies, installedDependencies);
 		if (this.$options.force || notInstalledDependencies.length) {
 			this.$logger.trace("Npm install will be called from CLI. Force option is: ", this.$options.force, " Not installed dependencies are: ", notInstalledDependencies);
-			await this.$npm.install(projectData.projectDir, projectData.projectDir, { "ignore-scripts": this.$options.ignoreScripts });
+			await this.$npm.install(projectData.projectDir, projectData.projectDir, {
+				disableNpmInstall: this.$options.disableNpmInstall,
+				frameworkPath: this.$options.frameworkPath,
+				ignoreScripts: this.$options.ignoreScripts,
+				path: this.$options.path
+			});
 		}
 	}
 
@@ -249,7 +264,7 @@ export class PluginsService implements IPluginsService {
 
 	private async executeNpmCommand(npmCommandName: string, npmCommandArguments: string, projectData: IProjectData): Promise<string> {
 		if (npmCommandName === PluginsService.INSTALL_COMMAND_NAME) {
-			await this.$npm.install(npmCommandArguments, projectData.projectDir, PluginsService.NPM_CONFIG);
+			await this.$npm.install(npmCommandArguments, projectData.projectDir, this.npmInstallOptions);
 		} else if (npmCommandName === PluginsService.UNINSTALL_COMMAND_NAME) {
 			await this.$npm.uninstall(npmCommandArguments, PluginsService.NPM_CONFIG, projectData.projectDir);
 		}

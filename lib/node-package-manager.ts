@@ -1,46 +1,70 @@
 import * as path from "path";
+import { exported } from "./common/decorators";
 
 export class NodePackageManager implements INodePackageManager {
 	constructor(private $fs: IFileSystem,
 		private $hostInfo: IHostInfo,
 		private $errors: IErrors,
 		private $childProcess: IChildProcess,
-		private $logger: ILogger,
-		private $options: IOptions) { }
+		private $logger: ILogger) { }
 
-	public async install(packageName: string, pathToSave: string, config?: any): Promise<any> {
-		if (this.$options.disableNpmInstall) {
+	@exported("npm")
+	public async install(packageName: string, pathToSave: string, config: INodePackageManagerInstallOptions): Promise<INpmInstallResultInfo> {
+		if (config.disableNpmInstall) {
 			return;
 		}
-		if (this.$options.ignoreScripts) {
-			config = config || {};
+		if (config.ignoreScripts) {
 			config["ignore-scripts"] = true;
 		}
 
 		let packageJsonPath = path.join(pathToSave, "package.json");
 		let jsonContentBefore = this.$fs.readJson(packageJsonPath);
-		let dependenciesBefore = _.keys(jsonContentBefore.dependencies).concat(_.keys(jsonContentBefore.devDependencies));
 
 		let flags = this.getFlagsString(config, true);
 		let params = ["install"];
-		if (packageName !== pathToSave) {
-			params.push(packageName); //because npm install ${pwd} on mac tries to install itself as a dependency (windows and linux have no such issues)
+		const isInstallingAllDependencies = packageName === pathToSave;
+		if (!isInstallingAllDependencies) {
+			params.push(packageName);
 		}
+
 		params = params.concat(flags);
-		let pwd = pathToSave;
+		let cwd = pathToSave;
+		// Npm creates `etc` directory in installation dir when --prefix is passed
+		// https://github.com/npm/npm/issues/11486
+		// we should delete it if it was created because of us
+		const etcDirectoryLocation = path.join(cwd, "etc");
+		const etcExistsPriorToInstallation = this.$fs.exists(etcDirectoryLocation);
+
 		//TODO: plamen5kov: workaround is here for a reason (remove whole file later)
-		if (this.$options.path) {
+		if (config.path) {
 			let relativePathFromCwdToSource = "";
-			if (this.$options.frameworkPath) {
-				relativePathFromCwdToSource = path.relative(this.$options.frameworkPath, pathToSave);
+			if (config.frameworkPath) {
+				relativePathFromCwdToSource = path.relative(config.frameworkPath, pathToSave);
 				if (this.$fs.exists(relativePathFromCwdToSource)) {
 					packageName = relativePathFromCwdToSource;
 				}
 			}
 		}
+
 		try {
-			let spawnResult: ISpawnResult = await this.$childProcess.spawnFromEvent(this.getNpmExecutableName(), params, "close", { cwd: pwd, stdio: "inherit" });
-			this.$logger.out(spawnResult.stdout);
+			let spawnResult: ISpawnResult = await this.$childProcess.spawnFromEvent(this.getNpmExecutableName(), params, "close", { cwd, stdio: "inherit" });
+			if (!etcExistsPriorToInstallation) {
+				this.$fs.deleteDirectory(etcDirectoryLocation);
+			}
+
+			// Whenever calling npm install without any arguments (hence installing all dependencies) no output is emitted on stdout
+			// Luckily, whenever you call npm install to install all dependencies chances are you won't need the name/version of the package you're installing because there is none.
+			if (isInstallingAllDependencies) {
+				return null;
+			}
+
+			params = params.concat(["--json", "--dry-run", "--prefix", cwd]);
+			// After the actual install runs successfully execute a dry-run in order to get information about the package.
+			// We cannot use the actual install with --json to get the information because of post-install scripts which may print on stdout
+			// dry-run install is quite fast when the dependencies are already installed even for many dependencies (e.g. angular) so we can live with this approach
+			// We need the --prefix here because without it no output is emitted on stdout because all the dependencies are already installed.
+			spawnResult = await this.$childProcess.spawnFromEvent(this.getNpmExecutableName(), params, "close");
+			return this.parseNpmInstallResult(spawnResult.stdout);
 		} catch (err) {
 			if (err.message && err.message.indexOf("EPEERINVALID") !== -1) {
 				// Not installed peer dependencies are treated by npm 2 as errors, but npm 3 treats them as warnings.
@@ -53,48 +77,21 @@ export class NodePackageManager implements INodePackageManager {
 				throw err;
 			}
 		}
-
-		let jsonContentAfter = this.$fs.readJson(path.join(pathToSave, "package.json"));
-		let dependenciesAfter = _.keys(jsonContentAfter.dependencies).concat(_.keys(jsonContentAfter.devDependencies));
-
-		/** This diff is done in case the installed pakcage is a URL address, a path to local directory or a .tgz file
-		 *  in these cases we don't have the package name and we can't rely on "npm install --json"" option
-		 *  to get the project name because we have to parse the output from the stdout and we have no controll over it (so other messages may be mangled in stdout)
-		 * 	The solution is to compare package.json project dependencies before and after install and get the name of the installed package,
-		 * 	even if it's installed through local path or URL. If command installes more than one package, only the package originally installed is returned.
-		 */
-		let dependencyDiff = _(jsonContentAfter.dependencies)
-			.omitBy((val: string, key: string) => jsonContentBefore && jsonContentBefore.dependencies && jsonContentBefore.dependencies[key] && jsonContentBefore.dependencies[key] === val)
-			.keys()
-			.value();
-
-		let devDependencyDiff = _(jsonContentAfter.devDependencies)
-			.omitBy((val: string, key: string) => jsonContentBefore && jsonContentBefore.devDependencies && jsonContentBefore.devDependencies[key] && jsonContentBefore.devDependencies[key] === val)
-			.keys()
-			.value();
-
-		let diff = dependencyDiff.concat(devDependencyDiff);
-
-		if (diff.length <= 0 && dependenciesBefore.length === dependenciesAfter.length && packageName !== pathToSave) {
-			this.$logger.warn(`The plugin ${packageName} is already installed`);
-		}
-		if (diff.length <= 0 && dependenciesBefore.length !== dependenciesAfter.length) {
-			this.$logger.warn(`Couldn't install package ${packageName} correctly`);
 		}
 
-		return diff;
-	}
-
+	@exported("npm")
 	public async uninstall(packageName: string, config?: any, path?: string): Promise<any> {
 		let flags = this.getFlagsString(config, false);
 		return this.$childProcess.exec(`npm uninstall ${packageName} ${flags}`, { cwd: path });
 	}
 
+	@exported("npm")
 	public async search(filter: string[], config: any): Promise<any> {
 		let args = (<any[]>([filter] || [])).concat(config.silent);
 		return this.$childProcess.exec(`npm search ${args.join(" ")}`);
 	}
 
+	@exported("npm")
 	public async view(packageName: string, config: Object): Promise<any> {
 		const wrappedConfig = _.extend({}, config, { json: true }); // always require view response as JSON
 
@@ -137,6 +134,17 @@ export class NodePackageManager implements INodePackageManager {
 		}
 
 		return array.join(" ");
+	}
+
+	private parseNpmInstallResult(npmInstallOutput: string): INpmInstallResultInfo {
+		const originalOutput: INpmInstallCLIResult = JSON.parse(npmInstallOutput);
+		const name = _.head(_.keys(originalOutput.dependencies));
+		const dependency = _.pick<INpmDependencyInfo, INpmDependencyInfo | INpmPeerDependencyInfo>(originalOutput.dependencies, name);
+		return {
+			name,
+			originalOutput,
+			version: dependency[name].version
+		};
 	}
 }
 
