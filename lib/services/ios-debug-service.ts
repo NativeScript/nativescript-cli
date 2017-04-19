@@ -78,17 +78,28 @@ class IOSDebugService extends DebugServiceBase implements IPlatformDebugService 
 		}
 
 		_.forEach(this._sockets, socket => socket.destroy());
+
 		this._sockets = [];
 
 		if (this._lldbProcess) {
 			this._lldbProcess.stdin.write("process detach\n");
-			this._lldbProcess.kill();
+
+			await this.killProcess(this._lldbProcess);
 			this._lldbProcess = undefined;
 		}
 
 		if (this._childProcess) {
-			this._childProcess.kill();
+			await this.killProcess(this._childProcess);
 			this._childProcess = undefined;
+		}
+	}
+
+	private async killProcess(childProcess: ChildProcess): Promise<void> {
+		if (childProcess) {
+			return new Promise<void>((resolve, reject) => {
+				childProcess.on("close", resolve);
+				childProcess.kill();
+			});
 		}
 	}
 
