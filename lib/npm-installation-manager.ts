@@ -91,7 +91,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		}
 
 		let installedModuleNames = await this.npmInstall(packageName, pathToSave, version, dependencyType);
-		let installedPackageName = installedModuleNames[0];
+		let installedPackageName = installedModuleNames.name;
 
 		let pathToInstalledPackage = path.join(pathToSave, "node_modules", installedPackageName);
 		return pathToInstalledPackage;
@@ -103,7 +103,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		return str.length < 2083 && url.test(str);
 	}
 
-	private async npmInstall(packageName: string, pathToSave: string, version: string, dependencyType: string): Promise<any> {
+	private async npmInstall(packageName: string, pathToSave: string, version: string, dependencyType: string): Promise<INpmInstallResultInfo> {
 		this.$logger.out("Installing ", packageName);
 
 		packageName = packageName + (version ? `@${version}` : "");

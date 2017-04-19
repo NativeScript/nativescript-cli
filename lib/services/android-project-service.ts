@@ -138,11 +138,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		this.cleanResValues(targetSdkVersion, projectData, frameworkVersion);
 
-		let npmConfig = {
+		let npmConfig: INodePackageManagerInstallOptions = {
 			"save": true,
 			"save-dev": true,
 			"save-exact": true,
-			"silent": true
+			"silent": true,
+			disableNpmInstall: false,
+			frameworkPath: null,
+			ignoreScripts: false
 		};
 
 		let projectPackageJson: any = this.$fs.readJson(projectData.projectFilePath);

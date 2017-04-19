@@ -176,17 +176,14 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		if (selectedTemplate) {
 			let tempDir = temp.mkdirSync("platform-template");
+			this.$fs.writeJson(path.join(tempDir, constants.PACKAGE_JSON_FILE_NAME), {});
 			try {
-				/*
-				 * Output of npm.install is array of arrays. For example:
-				 * [ [ 'test-android-platform-template@0.0.1',
-				 *	'C:\\Users\\<USER>~1\\AppData\\Local\\Temp\\1\\platform-template11627-15560-rm3ngx\\node_modules\\test-android-platform-template',
-				 *	undefined,
-				 *	undefined,
-				 *	'..\\..\\..\\android-platform-template' ] ]
-				 * Project successfully created.
-				 */
-				let pathToTemplate = (await this.$npm.install(selectedTemplate, tempDir))[0];
+				const npmInstallResult = await this.$npm.install(selectedTemplate, tempDir, {
+					disableNpmInstall: false,
+					frameworkPath: null,
+					ignoreScripts: false
+				});
+				let pathToTemplate = path.join(tempDir, constants.NODE_MODULES_FOLDER_NAME, npmInstallResult.name);
 				return { selectedTemplate, pathToTemplate };
 			} catch (err) {
 				this.$logger.trace("Error while trying to install specified template: ", err);

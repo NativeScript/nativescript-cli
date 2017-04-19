@@ -51,13 +51,23 @@ export class ProjectService implements IProjectService {
 			await this.ensureAppResourcesExist(projectDir);
 
 			let packageName = constants.TNS_CORE_MODULES_NAME;
-			await this.$npm.install(packageName, projectDir, { save: true, "save-exact": true });
+			await this.$npm.install(packageName, projectDir, {
+				save: true,
+				"save-exact": true,
+				disableNpmInstall: false,
+				frameworkPath: null,
+				ignoreScripts: projectOptions.ignoreScripts
+			});
 
 			let templatePackageJsonData = this.getDataFromJson(templatePath);
 			this.mergeProjectAndTemplateProperties(projectDir, templatePackageJsonData); //merging dependencies from template (dev && prod)
 			this.removeMergedDependencies(projectDir, templatePackageJsonData);
 
-			await this.$npm.install(projectDir, projectDir, { "ignore-scripts": projectOptions.ignoreScripts });
+			await this.$npm.install(projectDir, projectDir, {
+				disableNpmInstall: false,
+				frameworkPath: null,
+				ignoreScripts: projectOptions.ignoreScripts
+			});
 
 			let templatePackageJson = this.$fs.readJson(path.join(templatePath, "package.json"));
 			await this.$npm.uninstall(templatePackageJson.name, { save: true }, projectDir);
@@ -112,7 +122,13 @@ export class ProjectService implements IProjectService {
 
 			// the template installed doesn't have App_Resources -> get from a default template
 			let defaultTemplateName = constants.RESERVED_TEMPLATE_NAMES["default"];
-			await this.$npm.install(defaultTemplateName, projectDir, { save: true, });
+			await this.$npm.install(defaultTemplateName, projectDir, {
+				save: true,
+				disableNpmInstall: false,
+				frameworkPath: null,
+				ignoreScripts: false
+			});
+
 			let defaultTemplateAppResourcesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME,
 				defaultTemplateName, constants.APP_RESOURCES_FOLDER_NAME);
 

@@ -17,8 +17,8 @@ class TestInitCommand implements ICommand {
 		private $resources: IResourceLoader,
 		private $pluginsService: IPluginsService,
 		private $logger: ILogger) {
-			this.$projectData.initializeProjectData();
-		}
+		this.$projectData.initializeProjectData();
+	}
 
 	public async execute(args: string[]): Promise<void> {
 		let projectDir = this.$projectData.projectDir;
@@ -36,6 +36,10 @@ class TestInitCommand implements ICommand {
 			await this.$npm.install(mod, projectDir, {
 				'save-dev': true,
 				optional: false,
+				disableNpmInstall: this.$options.disableNpmInstall,
+				frameworkPath: this.$options.frameworkPath,
+				ignoreScripts: this.$options.ignoreScripts,
+				path: this.$options.path
 			});
 
 			const modulePath = path.join(projectDir, "node_modules", mod);

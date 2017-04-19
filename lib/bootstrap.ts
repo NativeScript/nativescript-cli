@@ -65,7 +65,7 @@ $injector.requireCommand("appstore|upload", "./commands/appstore-upload");
 $injector.requireCommand("publish|ios", "./commands/appstore-upload");
 $injector.require("itmsTransporterService", "./services/itmstransporter-service");
 
-$injector.require("npm", "./node-package-manager");
+$injector.requirePublic("npm", "./node-package-manager");
 $injector.require("npmInstallationManager", "./npm-installation-manager");
 $injector.require("lockfile", "./lockfile");
 $injector.require("dynamicHelpProvider", "./dynamic-help-provider");
