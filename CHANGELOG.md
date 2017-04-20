@@ -1,4 +1,36 @@
-## Changelog
+# Change Log
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/)
+and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [3.5.0](https://github.com/Kinvey/js-sdk/tree/v3.5.0) (2017-04-20)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.4.5...v3.5.0)<br/>
+
+### Added
+- `usePopupClass()` as a static function to the `User` class for registering a popup class to be used for MIC authentication.
+- Tests to increase code coverage to 90%.
+
+### Removed
+- `init()` static function on `Kinvey` namespace. This was deprecated with [v3.3.3](https://github.com/Kinvey/js-sdk/v3.3.3).
+- `baseUrl`, `protocol`, and `host` properties on a `client` instance. These were deprecated with [v3.0.0](https://github.com/Kinvey/js-sdk/v3.0.0).
+- `syncCount()` and `purge()` on `CacheStore` and `SyncStore` instances. These were deprecated with [v3.2.0](https://github.com/Kinvey/js-sdk/v3.2.0).
+
+### Changed
+- `restore()` static function from the `User` class to throw an error whenever it is called. This function required an end user to supply their master secret for their application. We strongly advise not to do this in your application.
+- All `toJSON()` functions have now been replaced by `toPlainObject()`. The returned result is the exact same.
+- `save()`, `create()`, and `update()` on datastore instances no longer accepts an array of entities. This is to help with reporting errors that may occur when saving an entity.
+- `remove()` and `removeById()` on datastore instances now returns the count of entities removed and not the actual entity removed.
+- Results returned when pushing sync items to the backend contain a new property called `operation`. This property will either be `Kinvey.SyncOperation.Create`, `Kinvey.SyncOperation.Update`, or `Kinvey.SyncOperation.Delete`.
+
+### Merged Pull Requests
+- Increase Test Coverage [#122](https://github.com/Kinvey/js-sdk/pull/122)
+- Add a function to overwrite Popup class [#124](https://github.com/Kinvey/js-sdk/pull/124)
+- Cleanup [#125](https://github.com/Kinvey/js-sdk/pull/125)
+
+### Closed Issues
+_None_
+
 ## [3.4.5](https://github.com/Kinvey/js-sdk/tree/v3.4.5) (2017-04-13)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.4.4...v3.4.5)<br/>
 
