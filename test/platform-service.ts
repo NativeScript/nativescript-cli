@@ -89,6 +89,59 @@ function createTestInjector() {
 	return testInjector;
 }
 
+class CreatedTestData {
+	files: string[];
+
+	resources: {
+		ios: string[],
+		android: string[]
+	};
+
+	testDirData: {
+		tempFolder: string,
+		appFolderPath: string,
+		app1FolderPath: string,
+		appDestFolderPath: string,
+		appResourcesFolderPath: string
+	};
+
+	constructor() {
+		this.files = [];
+		this.resources = {
+			ios: [],
+			android: []
+		};
+
+		this.testDirData = {
+			tempFolder: "",
+			appFolderPath: "",
+			app1FolderPath: "",
+			appDestFolderPath: "",
+			appResourcesFolderPath: ""
+		};
+	}
+}
+
+class DestinationFolderVerifier {
+	static verify(data: any, fs: IFileSystem) {
+		_.forOwn(data, (folder, folderRoot) => {
+			_.each(folder.filesWithContent || [], (file) => {
+				const filePath = path.join(folderRoot, file.name);
+				assert.isTrue(fs.exists(filePath), `Expected file ${filePath} to be present.`);
+				assert.equal(fs.readFile(filePath).toString(), file.content, `File content for ${filePath} doesn't match.`);
+			});
+
+			_.each(folder.missingFiles || [], (file) => {
+				assert.isFalse(fs.exists(path.join(folderRoot, file)), `Expected file ${file} to be missing.`);
+			});
+
+			_.each(folder.presentFiles || [], (file) => {
+				assert.isTrue(fs.exists(path.join(folderRoot, file)), `Expected file ${file} to be present.`);
+			});
+		});
+	}
+}
+
 describe('Platform Service Tests', () => {
 	let platformService: IPlatformService, testInjector: IInjector;
 	beforeEach(() => {
@@ -307,10 +360,13 @@ describe('Platform Service Tests', () => {
 		});
 
 		function prepareDirStructure() {
-			let tempFolder = temp.mkdirSync("prepare platform");
+			let tempFolder = temp.mkdirSync("prepare_platform");
 
 			let appFolderPath = path.join(tempFolder, "app");
 			fs.createDirectory(appFolderPath);
+
+			let nodeModulesPath = path.join(tempFolder, "node_modules");
+			fs.createDirectory(nodeModulesPath);
 
 			let testsFolderPath = path.join(appFolderPath, "tests");
 			fs.createDirectory(testsFolderPath);
@@ -324,12 +380,63 @@ describe('Platform Service Tests', () => {
 			return { tempFolder, appFolderPath, app1FolderPath, appDestFolderPath, appResourcesFolderPath };
 		}
 
-		async function testPreparePlatform(platformToTest: string, release?: boolean) {
+		async function execPreparePlatform(platformToTest: string, testDirData: any,
+			release?: boolean) {
+			let platformsData = testInjector.resolve("platformsData");
+			platformsData.platformsNames = ["ios", "android"];
+			platformsData.getPlatformData = (platform: string) => {
+				return {
+					appDestinationDirectoryPath: testDirData.appDestFolderPath,
+					appResourcesDestinationDirectoryPath: testDirData.appResourcesFolderPath,
+					normalizedPlatformName: platformToTest,
+					configurationFileName: platformToTest === "ios" ? "Info.plist" : "AndroidManifest.xml",
+					projectRoot: testDirData.tempFolder,
+					platformProjectService: {
+						prepareProject: (): any => null,
+						validate: () => Promise.resolve(),
+						createProject: (projectRoot: string, frameworkDir: string) => Promise.resolve(),
+						interpolateData: (projectRoot: string) => Promise.resolve(),
+						afterCreateProject: (projectRoot: string): any => null,
+						getAppResourcesDestinationDirectoryPath: (projectData: IProjectData, frameworkVersion?: string): string => {
+							if (platform.toLowerCase() === "ios") {
+								let dirPath = path.join(testDirData.appDestFolderPath, "Resources");
+								fs.ensureDirectoryExists(dirPath);
+								return dirPath;
+							} else {
+								let dirPath = path.join(testDirData.appDestFolderPath, "src", "main", "res");
+								fs.ensureDirectoryExists(dirPath);
+								return dirPath;
+							}
+						},
+						processConfigurationFilesFromAppResources: () => Promise.resolve(),
+						ensureConfigurationFileInAppResources: (): any => null,
+						interpolateConfigurationFile: (): void => undefined,
+						isPlatformPrepared: (projectRoot: string) => false,
+						prepareAppResources: (appResourcesDirectoryPath: string, projectData: IProjectData): void => undefined
+					}
+				};
+			};
+
+			let projectData = testInjector.resolve("projectData");
+			projectData.projectDir = testDirData.tempFolder;
+			projectData.appDirectoryPath = testDirData.appFolderPath;
+			projectData.appResourcesDirectoryPath = path.join(testDirData.appFolderPath, "App_Resources");
+			projectData.projectName = "app";
+
+			platformService = testInjector.resolve("platformService");
+			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: release };
+			await platformService.preparePlatform(platformToTest, appFilesUpdaterOptions, "", projectData, { provision: null, sdk: null });
+		}
+
+		async function testPreparePlatform(platformToTest: string, release?: boolean): Promise<CreatedTestData> {
 			let testDirData = prepareDirStructure();
+			let created: CreatedTestData = new CreatedTestData();
+			created.testDirData = testDirData;
 
 			// Add platform specific files to app and app1 folders
 			let platformSpecificFiles = [
-				"test1.ios.js", "test1-ios-js", "test2.android.js", "test2-android-js"
+				"test1.ios.js", "test1-ios-js", "test2.android.js", "test2-android-js",
+				"main.js"
 			];
 
 			let destinationDirectories = [testDirData.appFolderPath, testDirData.app1FolderPath];
@@ -338,38 +445,23 @@ describe('Platform Service Tests', () => {
 				_.each(platformSpecificFiles, filePath => {
 					let fileFullPath = path.join(directoryPath, filePath);
 					fs.writeFile(fileFullPath, "testData");
+
+					created.files.push(fileFullPath);
 				});
 			});
 
-			let platformsData = testInjector.resolve("platformsData");
-			platformsData.platformsNames = ["ios", "android"];
-			platformsData.getPlatformData = (platform: string) => {
-				return {
-					appDestinationDirectoryPath: testDirData.appDestFolderPath,
-					appResourcesDestinationDirectoryPath: testDirData.appResourcesFolderPath,
-					normalizedPlatformName: platformToTest,
-					projectRoot: testDirData.tempFolder,
-					platformProjectService: {
-						prepareProject: (): any => null,
-						validate: () => Promise.resolve(),
-						createProject: (projectRoot: string, frameworkDir: string) => Promise.resolve(),
-						interpolateData: (projectRoot: string) => Promise.resolve(),
-						afterCreateProject: (projectRoot: string): any => null,
-						getAppResourcesDestinationDirectoryPath: () => "",
-						processConfigurationFilesFromAppResources: () => Promise.resolve(),
-						ensureConfigurationFileInAppResources: (): any => null,
-						interpolateConfigurationFile: (): void => undefined,
-						isPlatformPrepared: (projectRoot: string) => false
-					}
-				};
-			};
+			// Add App_Resources file to app and app1 folders
+			_.each(destinationDirectories, directoryPath => {
+				let iosIconFullPath = path.join(directoryPath, "App_Resources/iOS/icon.png");
+				fs.writeFile(iosIconFullPath, "test-image");
+				created.resources.ios.push(iosIconFullPath);
 
-			let projectData = testInjector.resolve("projectData");
-			projectData.projectDir = testDirData.tempFolder;
+				let androidFullPath = path.join(directoryPath, "App_Resources/Android/icon.png");
+				fs.writeFile(androidFullPath, "test-image");
+				created.resources.android.push(androidFullPath);
+			});
 
-			platformService = testInjector.resolve("platformService");
-			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: release };
-			await platformService.preparePlatform(platformToTest, appFilesUpdaterOptions, "", projectData, { provision: null, sdk: null });
+			await execPreparePlatform(platformToTest, testDirData, release);
 
 			let test1FileName = platformToTest.toLowerCase() === "ios" ? "test1.js" : "test2.js";
 			let test2FileName = platformToTest.toLowerCase() === "ios" ? "test2.js" : "test1.js";
@@ -388,6 +480,13 @@ describe('Platform Service Tests', () => {
 				// Asserts that the files in tests folder aren't copied
 				assert.isFalse(fs.exists(path.join(testDirData.appDestFolderPath, "tests")), "Asserts that the files in tests folder aren't copied");
 			}
+
+			return created;
+		}
+
+		function updateFile(files: string[], fileName: string, content: string) {
+			let fileToUpdate = _.find(files, (f) => f.indexOf(fileName) !== -1);
+			fs.writeFile(fileToUpdate, content);
 		}
 
 		it("should process only files in app folder when preparing for iOS platform", async () => {
@@ -404,6 +503,311 @@ describe('Platform Service Tests', () => {
 
 		it("should process only files in app folder when preparing for Android platform", async () => {
 			await testPreparePlatform("Android", true);
+		});
+
+		function getDefaultFolderVerificationData(platform: string, appDestFolderPath: string) {
+			let data: any = {};
+			if (platform.toLowerCase() === "ios") {
+				data[path.join(appDestFolderPath, "app")] = {
+					missingFiles: ["test1.ios.js", "test2.android.js", "test2.js", "App_Resources"],
+					presentFiles: ["test1.js", "test2-android-js", "test1-ios-js", "main.js"]
+				};
+
+				data[appDestFolderPath] = {
+					filesWithContent: [
+						{
+							name: "Resources/icon.png",
+							content: "test-image"
+						}
+					]
+				};
+			} else {
+				data[path.join(appDestFolderPath, "app")] = {
+					missingFiles: ["test1.android.js", "test2.ios.js", "test1.js"],
+					presentFiles: ["test2.js", "test2-android-js", "test1-ios-js"]
+				};
+
+				data[appDestFolderPath] = {
+					filesWithContent: [
+						{
+							name: "src/main/res/icon.png",
+							content: "test-image"
+						}
+					]
+				};
+			}
+
+			return data;
+		}
+
+		function mergeModifications(def: any, mod: any) {
+			// custom merge to reflect changes
+			let merged: any = _.cloneDeep(def);
+			_.forOwn(mod, (modFolder, folderRoot) => {
+				// whole folder not present in Default
+				if (!def.hasOwnProperty(folderRoot)) {
+					merged[folderRoot] = _.cloneDeep(modFolder[folderRoot]);
+				} else {
+					let defFolder = def[folderRoot];
+					merged[folderRoot].filesWithContent = _.merge(defFolder.filesWithContent || [], modFolder.filesWithContent || []);
+					merged[folderRoot].missingFiles = (defFolder.missingFiles || []).concat(modFolder.missingFiles || []);
+					merged[folderRoot].presentFiles = (defFolder.presentFiles || []).concat(modFolder.presentFiles || []);
+
+					// remove the missingFiles from the presentFiles if they were initially there
+					if (modFolder.missingFiles) {
+						merged[folderRoot].presentFiles = _.difference(defFolder.presentFiles, modFolder.missingFiles);
+					}
+
+					// remove the presentFiles from the missingFiles if they were initially there.
+					if (modFolder.presentFiles) {
+						merged[folderRoot].missingFiles = _.difference(defFolder.presentFiles, modFolder.presentFiles);
+					}
+				}
+			});
+
+			return merged;
+		}
+
+		// Executes a changes test case:
+		// 1. Executes Prepare Platform for the Platform
+		// 2. Applies some changes to the App. Persists the expected Modifications
+		// 3. Executes again Prepare Platform for the Platform
+		// 4. Gets the Default Destination App Structure and merges it with the Modifications
+		// 5. Asserts the Destination App matches our expectations
+		async function testChangesApplied(platform: string, applyChangesFn: (createdTestData: CreatedTestData) => any) {
+			let createdTestData = await testPreparePlatform(platform);
+
+			let modifications = applyChangesFn(createdTestData);
+
+			await execPreparePlatform(platform, createdTestData.testDirData);
+
+			let defaultStructure = getDefaultFolderVerificationData(platform, createdTestData.testDirData.appDestFolderPath);
+
+			let merged = mergeModifications(defaultStructure, modifications);
+
+			DestinationFolderVerifier.verify(merged, fs);
+		}
+
+		it("should sync only changed files, without special folders (iOS)", async () => {
+			let applyChangesFn = (createdTestData: CreatedTestData) => {
+				// apply changes
+				const expectedFileContent = "updated-content-ios";
+				updateFile(createdTestData.files, "test1.ios.js", expectedFileContent);
+
+				// construct the folder modifications data
+				let modifications: any = {};
+				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
+					filesWithContent: [
+						{
+							name: "test1.js",
+							content: expectedFileContent
+						}
+					]
+				};
+				return modifications;
+			};
+			await testChangesApplied("iOS", applyChangesFn);
+		});
+
+		it("should sync only changed files, without special folders (Android) #2697", async () => {
+			let applyChangesFn = (createdTestData: CreatedTestData) => {
+				// apply changes
+				const expectedFileContent = "updated-content-android";
+				updateFile(createdTestData.files, "test2.android.js", expectedFileContent);
+
+				// construct the folder modifications data
+				let modifications: any = {};
+				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
+					filesWithContent: [
+						{
+							name: "test2.js",
+							content: expectedFileContent
+						}
+					]
+				};
+				return modifications;
+			};
+			await testChangesApplied("Android", applyChangesFn);
+		});
+
+		it("Ensure App_Resources get reloaded after change in the app folder (iOS) #2560", async () => {
+			let applyChangesFn = (createdTestData: CreatedTestData) => {
+				// apply changes
+				const expectedFileContent = "updated-icon-content";
+				let iconPngPath = path.join(createdTestData.testDirData.appFolderPath, "App_Resources/iOS/icon.png");
+				fs.writeFile(iconPngPath, expectedFileContent);
+
+				// construct the folder modifications data
+				let modifications: any = {};
+				modifications[createdTestData.testDirData.appDestFolderPath] = {
+					filesWithContent: [
+						{
+							name: "Resources/icon.png",
+							content: expectedFileContent
+						}
+					]
+				};
+
+				return modifications;
+			};
+			await testChangesApplied("iOS", applyChangesFn);
+		});
+
+		it("Ensure App_Resources get reloaded after change in the app folder (Android) #2560", async () => {
+			let applyChangesFn = (createdTestData: CreatedTestData) => {
+				// apply changes
+				const expectedFileContent = "updated-icon-content";
+				let iconPngPath = path.join(createdTestData.testDirData.appFolderPath, "App_Resources/Android/icon.png");
+				fs.writeFile(iconPngPath, expectedFileContent);
+
+				// construct the folder modifications data
+				let modifications: any = {};
+				modifications[createdTestData.testDirData.appDestFolderPath] = {
+					filesWithContent: [
+						{
+							name: "src/main/res/icon.png",
+							content: expectedFileContent
+						}
+					]
+				};
+
+				return modifications;
+			};
+			await testChangesApplied("Android", applyChangesFn);
+		});
+
+		it("Ensure App_Resources get reloaded after a new file appears in the app folder (iOS) #2560", async () => {
+			let applyChangesFn = (createdTestData: CreatedTestData) => {
+				// apply changes
+				const expectedFileContent = "new-file-content";
+				let iconPngPath = path.join(createdTestData.testDirData.appFolderPath, "App_Resources/iOS/new-file.png");
+				fs.writeFile(iconPngPath, expectedFileContent);
+
+				// construct the folder modifications data
+				let modifications: any = {};
+				modifications[createdTestData.testDirData.appDestFolderPath] = {
+					filesWithContent: [
+						{
+							name: "Resources/new-file.png",
+							content: expectedFileContent
+						}
+					]
+				};
+
+				return modifications;
+			};
+			await testChangesApplied("iOS", applyChangesFn);
+		});
+
+		it("Ensure App_Resources get reloaded after a new file appears in the app folder (Android) #2560", async () => {
+			let applyChangesFn = (createdTestData: CreatedTestData) => {
+				// apply changes
+				const expectedFileContent = "new-file-content";
+				let iconPngPath = path.join(createdTestData.testDirData.appFolderPath, "App_Resources/Android/new-file.png");
+				fs.writeFile(iconPngPath, expectedFileContent);
+
+				// construct the folder modifications data
+				let modifications: any = {};
+				modifications[createdTestData.testDirData.appDestFolderPath] = {
+					filesWithContent: [
+						{
+							name: "src/main/res/new-file.png",
+							content: expectedFileContent
+						}
+					]
+				};
+
+				return modifications;
+			};
+			await testChangesApplied("Android", applyChangesFn);
+		});
+
+		it("should sync new platform specific files (iOS)", async () => {
+			let applyChangesFn = (createdTestData: CreatedTestData) => {
+				// apply changes
+				const expectedFileContent = "new-content-ios";
+				fs.writeFile(path.join(createdTestData.testDirData.appFolderPath, "test3.ios.js"), expectedFileContent);
+
+				// construct the folder modifications data
+				let modifications: any = {};
+				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
+					filesWithContent: [
+						{
+							name: "test3.js",
+							content: expectedFileContent
+						}
+					]
+				};
+
+				return modifications;
+			};
+			await testChangesApplied("iOS", applyChangesFn);
+		});
+
+		it("should sync new platform specific files (Android)", async () => {
+			let applyChangesFn = (createdTestData: CreatedTestData) => {
+				// apply changes
+				const expectedFileContent = "new-content-android";
+				fs.writeFile(path.join(createdTestData.testDirData.appFolderPath, "test3.android.js"), expectedFileContent);
+
+				// construct the folder modifications data
+				let modifications: any = {};
+				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
+					filesWithContent: [
+						{
+							name: "test3.js",
+							content: expectedFileContent
+						}
+					]
+				};
+
+				return modifications;
+			};
+			await testChangesApplied("Android", applyChangesFn);
+		});
+
+		it("should sync new common files (iOS)", async () => {
+			let applyChangesFn = (createdTestData: CreatedTestData) => {
+				// apply changes
+				const expectedFileContent = "new-content-ios";
+				fs.writeFile(path.join(createdTestData.testDirData.appFolderPath, "test3.js"), expectedFileContent);
+
+				// construct the folder modifications data
+				let modifications: any = {};
+				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
+					filesWithContent: [
+						{
+							name: "test3.js",
+							content: expectedFileContent
+						}
+					]
+				};
+
+				return modifications;
+			};
+			await testChangesApplied("iOS", applyChangesFn);
+		});
+
+		it("should sync new common file (Android)", async () => {
+			let applyChangesFn = (createdTestData: CreatedTestData) => {
+				// apply changes
+				const expectedFileContent = "new-content-android";
+				fs.writeFile(path.join(createdTestData.testDirData.appFolderPath, "test3.js"), expectedFileContent);
+
+				// construct the folder modifications data
+				let modifications: any = {};
+				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
+					filesWithContent: [
+						{
+							name: "test3.js",
+							content: expectedFileContent
+						}
+					]
+				};
+
+				return modifications;
+			};
+			await testChangesApplied("Android", applyChangesFn);
 		});
 
 		it("invalid xml is caught", async () => {
@@ -433,7 +837,8 @@ describe('Platform Service Tests', () => {
 						ensureConfigurationFileInAppResources: (): any => null,
 						interpolateConfigurationFile: (): void => undefined,
 						isPlatformPrepared: (projectRoot: string) => false
-					}
+					},
+					frameworkPackageName: "tns-ios"
 				};
 			};
 
