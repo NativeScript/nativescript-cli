@@ -7,9 +7,31 @@ interface INodePackageManager {
 	 * @return {Promise<INpmInstallResultInfo>}                Information about installed package.
 	 */
 	install(packageName: string, pathToSave: string, config: INodePackageManagerInstallOptions): Promise<INpmInstallResultInfo>;
-	uninstall(packageName: string, config?: any, path?: string): Promise<any>;
+
+	/**
+	 * Uninstalls a dependency
+	 * @param  {string}                            packageName The name of the dependency.
+	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate uninstallation.
+	 * @param  {string}                            path  The destination of the uninstallation.
+	 * @return {Promise<string>}                The output of the uninstallation.
+	 */
+	uninstall(packageName: string, config?: IDictionary<string | boolean>, path?: string): Promise<string>;
+
+	/**
+	 * Provides information about a given package.
+	 * @param  {string}                            packageName The name of the package.
+	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate view.
+	 * @return {Promise<any>}                Object, containing information about the package.
+	 */
 	view(packageName: string, config: Object): Promise<any>;
-	search(filter: string[], config: any): Promise<any>;
+
+	/**
+	 * Searches for a package.
+	 * @param  {string[]}                            filter Keywords with which to perform the search.
+	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate search.
+	 * @return {Promise<string>}                The output of the uninstallation.
+	 */
+	search(filter: string[], config: IDictionary<string | boolean>): Promise<string>;
 }
 
 interface INpmInstallationManager {

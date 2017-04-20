@@ -103,11 +103,6 @@ export class PluginsService implements IPluginsService {
 		}
 	}
 
-	public getAvailable(filter: string[]): Promise<IDictionary<any>> {
-		let silent: boolean = true;
-		return this.$npm.search(filter, { "silent": silent });
-	}
-
 	public async validate(platformData: IPlatformData, projectData: IProjectData): Promise<void> {
 		return await platformData.platformProjectService.validatePlugins(projectData);
 	}

@@ -18,6 +18,7 @@ describe("nativescript-cli-lib", () => {
 		projectService: ["createProject", "isValidNativeScriptProject"],
 		localBuildService: ["build"],
 		deviceLogProvider: null,
+		npm: ["install", "uninstall", "view", "search"],
 		extensibilityService: ["loadExtensions", "getInstalledExtensions", "installExtension", "uninstallExtension"]
 	};
 
