@@ -22,8 +22,8 @@ import MissingQueryError from './src/missingQuery';
 import MissingRequestHeaderError from './src/missingRequestHeader';
 import MissingRequestParameterError from './src/missingRequestParameter';
 import MobileIdentityConnectError from './src/mobileIdentityConnect';
+import NetworkConnectionError from './src/networkConnection';
 import NoActiveUserError from './src/noActiveUser';
-import NoNetworkConnectionError from './src/noNetworkConnection';
 import NoResponseError from './src/noResponse';
 import NotFoundError from './src/notFound';
 import ParameterValueOutOfRangeError from './src/parameterValueOutOfRange';
@@ -62,8 +62,8 @@ export {
   MissingRequestHeaderError,
   MissingRequestParameterError,
   MobileIdentityConnectError,
+  NetworkConnectionError,
   NoActiveUserError,
-  NoNetworkConnectionError,
   NoResponseError,
   NotFoundError,
   ParameterValueOutOfRangeError,

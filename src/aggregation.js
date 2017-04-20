@@ -73,7 +73,7 @@ export default class Aggregation {
   }
 
   process(entities = []) {
-    const aggregation = this.toJSON();
+    const aggregation = this.toPlainObject();
     const keys = Object.keys(aggregation.key);
     const reduceFn = aggregation.reduceFn.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
     aggregation.reduce = new Function(['doc', 'out'], reduceFn); // eslint-disable-line no-new-func
@@ -122,17 +122,15 @@ export default class Aggregation {
     return [result];
   }
 
-  toJSON() {
-    const json = {
+  toPlainObject() {
+    return {
       key: this.key,
       initial: this.initial,
       reduce: this.reduceFn,
       reduceFn: this.reduceFn,
-      condition: this.query ? this.query.toJSON().filter : {},
-      query: this.query ? this.query.toJSON() : null
+      condition: this.query ? this.query.toPlainObject().filter : {},
+      query: this.query ? this.query.toPlainObject() : null
     };
-
-    return json;
   }
 
   static count(field = '') {

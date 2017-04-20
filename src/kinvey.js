@@ -25,8 +25,8 @@ import {
   MissingRequestHeaderError,
   MissingRequestParameterError,
   MobileIdentityConnectError,
+  NetworkConnectionError,
   NoActiveUserError,
-  NoNetworkConnectionError,
   NoResponseError,
   NotFoundError,
   ParameterValueOutOfRangeError,
@@ -44,7 +44,7 @@ import Client from './client';
 import CustomEndpoint from './endpoint';
 import Query from './query';
 import Aggregation from './aggregation';
-import DataStore, { DataStoreType, FileStore, UserStore } from './datastore';
+import DataStore, { DataStoreType, FileStore, SyncOperation } from './datastore';
 import { Acl, Metadata, User } from './entity';
 import { AuthorizationGrant } from './identity';
 import { AuthType, CacheRack, NetworkRack, Rack, RequestMethod, KinveyRequest } from './request';
@@ -95,50 +95,6 @@ class Kinvey {
    */
   static set appVersion(appVersion) {
     this.client.appVersion = appVersion;
-  }
-
-  /**
-   * Initializes the SDK with your app's information.
-   *
-   * @deprecated Use `Kinvey.initialize` instead.
-   *
-   * @param {Object}    options                                            Options
-   * @param {string}    [options.apiHostname='https://baas.kinvey.com']    Host name used for Kinvey API requests
-   * @param {string}    [options.micHostname='https://auth.kinvey.com']    Host name used for Kinvey MIC requests
-   * @param {string}    [options.appKey]                                   App Key
-   * @param {string}    [options.appSecret]                                App Secret
-   * @param {string}    [options.masterSecret]                             App Master Secret
-   * @param {string}    [options.encryptionKey]                            App Encryption Key
-   * @param {string}    [options.appVersion]                               App Version
-   * @return {Client}                                                      A client instance.
-   *
-   * @throws  {KinveyError}  If an `options.appKey` is not provided.
-   * @throws  {KinveyError}  If neither an `options.appSecret` or `options.masterSecret` is provided.
-   *
-   * @example
-   * var client = Kinvey.init({
-   *   appKey: 'appKey',
-   *   appSecret: 'appSecret'
-   * });
-   */
-  static init(options = {}) {
-    // Check that an appKey or appId was provided
-    if (!options.appKey) {
-      throw new KinveyError('No App Key was provided.'
-        + ' Unable to create a new Client without an App Key.');
-    }
-
-    // Check that an appSecret or masterSecret was provided
-    if (!options.appSecret && !options.masterSecret) {
-      throw new KinveyError('No App Secret or Master Secret was provided.'
-        + ' Unable to create a new Client without an App Key.');
-    }
-
-    // Initialize the client
-    const client = Client.init(options);
-
-    // Return the client
-    return client;
   }
 
   /**
@@ -210,8 +166,8 @@ class Kinvey {
       method: RequestMethod.GET,
       authType: AuthType.All,
       url: url.format({
-        protocol: client.protocol,
-        host: client.host,
+        protocol: client.apiProtocol,
+        host: client.apiHost,
         pathname: `${appdataNamespace}/${client.appKey}`
       })
     });
@@ -228,15 +184,13 @@ Kinvey.AuthorizationGrant = AuthorizationGrant;
 Kinvey.CustomEndpoint = CustomEndpoint;
 Kinvey.DataStore = DataStore;
 Kinvey.DataStoreType = DataStoreType;
-Kinvey.File = new FileStore();
 Kinvey.Files = new FileStore();
 Kinvey.Group = Aggregation;
 Kinvey.Log = Log;
 Kinvey.Metadata = Metadata;
 Kinvey.Query = Query;
+Kinvey.SyncOperation = SyncOperation;
 Kinvey.User = User;
-Kinvey.Users = new UserStore();
-Kinvey.UserStore = new UserStore();
 
 // Add errors
 Kinvey.ActiveUserError = ActiveUserError;
@@ -263,7 +217,7 @@ Kinvey.MissingRequestHeaderError = MissingRequestHeaderError;
 Kinvey.MissingRequestParameterError = MissingRequestParameterError;
 Kinvey.MobileIdentityConnectError = MobileIdentityConnectError;
 Kinvey.NoActiveUserError = NoActiveUserError;
-Kinvey.NoNetworkConnectionError = NoNetworkConnectionError;
+Kinvey.NetworkConnectionError = NetworkConnectionError;
 Kinvey.NoResponseError = NoResponseError;
 Kinvey.NotFoundError = NotFoundError;
 Kinvey.ParameterValueOutOfRangeError = ParameterValueOutOfRangeError;

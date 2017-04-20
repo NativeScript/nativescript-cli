@@ -83,8 +83,8 @@ export default class SyncManager {
     const request = new CacheRequest({
       method: RequestMethod.GET,
       url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
         pathname: this.backendPathname
       }),
       query: query,
@@ -105,8 +105,8 @@ export default class SyncManager {
         const request = new CacheRequest({
           method: RequestMethod.GET,
           url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
             pathname: this.pathname
           }),
           properties: options.properties,
@@ -176,8 +176,8 @@ export default class SyncManager {
       const findRequest = new CacheRequest({
         method: RequestMethod.GET,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: this.pathname
         }),
         properties: options.properties,
@@ -193,14 +193,14 @@ export default class SyncManager {
 
           // Update the state
           syncEntity.state = syncEntity.state || {};
-          syncEntity.state.method = operation;
+          syncEntity.state.operation = operation;
 
           // Send a request to save the sync entity
           const request = new CacheRequest({
             method: RequestMethod.PUT,
             url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
+              protocol: this.client.apiProtocol,
+              host: this.client.apiHost,
               pathname: this.pathname
             }),
             properties: options.properties,
@@ -247,8 +247,8 @@ export default class SyncManager {
           method: RequestMethod.GET,
           authType: AuthType.Default,
           url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
             pathname: this.backendPathname
           }),
           properties: options.properties,
@@ -304,17 +304,17 @@ export default class SyncManager {
 
               // Get the results of syncing all of the entities
               return Promise.all(map(batch, (syncEntity) => {
-                const { entityId, state } = syncEntity;
-                const { method } = state;
+                const { entityId, state = {} } = syncEntity;
+                const operation = state.operation || state.method;
 
-                if (method === RequestMethod.DELETE) {
+                if (operation === SyncOperation.Delete) {
                   // Remove the entity from the network.
                   const request = new KinveyRequest({
                     method: RequestMethod.DELETE,
                     authType: AuthType.Default,
                     url: url.format({
-                      protocol: this.client.protocol,
-                      host: this.client.host,
+                      protocol: this.client.apiProtocol,
+                      host: this.client.apiHost,
                       pathname: `${this.backendPathname}/${entityId}`
                     }),
                     properties: options.properties,
@@ -327,8 +327,8 @@ export default class SyncManager {
                       const request = new CacheRequest({
                         method: RequestMethod.DELETE,
                         url: url.format({
-                          protocol: this.client.protocol,
-                          host: this.client.host,
+                          protocol: this.client.apiProtocol,
+                          host: this.client.apiHost,
                           pathname: `${this.pathname}/${syncEntity._id}`
                         }),
                         properties: options.properties,
@@ -338,41 +338,42 @@ export default class SyncManager {
                     })
                     .then(() => {
                       // Return the result
-                      const result = { _id: entityId };
+                      const result = { _id: entityId, operation: operation };
                       return result;
                     })
                     .catch((error) => {
                       // Return the result of the sync operation.
                       const result = {
                         _id: entityId,
+                        operation: operation,
                         error: error
                       };
                       return result;
                     });
-                } else if (method === RequestMethod.POST || method === RequestMethod.PUT) {
+                } else if (operation === SyncOperation.Create || operation === SyncOperation.Update) {
                   let local = false;
 
                   // Get the entity from cache
                   const request = new CacheRequest({
                     method: RequestMethod.GET,
                     url: url.format({
-                      protocol: this.client.protocol,
-                      host: this.client.host,
+                      protocol: this.client.apiProtocol,
+                      host: this.client.apiHost,
                       pathname: `${this.backendPathname}/${entityId}`
                     }),
                     properties: options.properties,
                     timeout: options.timeout
                   });
                   return request.execute()
-                    .then((response) => response.data)
+                    .then(response => response.data)
                     .then((entity) => {
                       // Save the entity to the backend.
                       const request = new KinveyRequest({
-                        method: method,
+                        method: RequestMethod.PUT,
                         authType: AuthType.Default,
                         url: url.format({
-                          protocol: this.client.protocol,
-                          host: this.client.host,
+                          protocol: this.client.apiProtocol,
+                          host: this.client.apiHost,
                           pathname: `${this.backendPathname}/${entityId}`
                         }),
                         properties: options.properties,
@@ -382,16 +383,17 @@ export default class SyncManager {
                       });
 
                       // Send a POST request, and update the url.
-                      if (method === RequestMethod.POST) {
+                      if (operation === SyncOperation.Create) {
                         // If the entity was created locally then delete the autogenerated _id
                         if (isDefined(entity._kmd) && entity._kmd.local === true) {
                           local = true;
                           delete entity._id;
                         }
 
+                        request.method = RequestMethod.POST;
                         request.url = url.format({
-                          protocol: this.client.protocol,
-                          host: this.client.host,
+                          protocol: this.client.apiProtocol,
+                          host: this.client.apiHost,
                           pathname: this.backendPathname
                         });
                       }
@@ -403,8 +405,8 @@ export default class SyncManager {
                           const request = new CacheRequest({
                             method: RequestMethod.DELETE,
                             url: url.format({
-                              protocol: this.client.protocol,
-                              host: this.client.host,
+                              protocol: this.client.apiProtocol,
+                              host: this.client.apiHost,
                               pathname: `${this.pathname}/${syncEntity._id}`
                             }),
                             properties: options.properties,
@@ -416,8 +418,8 @@ export default class SyncManager {
                               const request = new CacheRequest({
                                 method: RequestMethod.PUT,
                                 url: url.format({
-                                  protocol: this.client.protocol,
-                                  host: this.client.host,
+                                  protocol: this.client.apiProtocol,
+                                  host: this.client.apiHost,
                                   pathname: `${this.backendPathname}/${entity._id}`
                                 }),
                                 properties: options.properties,
@@ -433,8 +435,8 @@ export default class SyncManager {
                                 const request = new CacheRequest({
                                   method: RequestMethod.DELETE,
                                   url: url.format({
-                                    protocol: this.client.protocol,
-                                    host: this.client.host,
+                                    protocol: this.client.apiProtocol,
+                                    host: this.client.apiHost,
                                     pathname: `${this.backendPathname}/${entityId}`
                                   }),
                                   properties: options.properties,
@@ -451,6 +453,7 @@ export default class SyncManager {
                               // Return the result of the sync operation.
                               const result = {
                                 _id: entityId,
+                                operation: operation,
                                 entity: entity
                               };
                               return result;
@@ -463,6 +466,7 @@ export default class SyncManager {
                           // Return the result of the sync operation.
                           const result = {
                             _id: entityId,
+                            operation: operation,
                             entity: entity,
                             error: error
                           };
@@ -472,6 +476,7 @@ export default class SyncManager {
                     .catch((error) => {
                       const result = {
                         _id: entityId,
+                        operation: operation,
                         entity: undefined,
                         error: error
                       };
@@ -481,8 +486,9 @@ export default class SyncManager {
 
                 return {
                   _id: entityId,
+                  operation: operation,
                   entity: undefined,
-                  error: new SyncError('Unable to sync the entity since the method was not recognized.', syncEntity)
+                  error: new SyncError('Unable to sync the entity since the operation was not recognized.', syncEntity)
                 };
               })).then((results) => {
                 // Concat the results
@@ -535,8 +541,8 @@ export default class SyncManager {
           const request = new CacheRequest({
             method: RequestMethod.DELETE,
             url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
+              protocol: this.client.apiProtocol,
+              host: this.client.apiHost,
               pathname: `${this.pathname}/${entity._id}`
             }),
             properties: options.properties,

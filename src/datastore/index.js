@@ -4,6 +4,7 @@ import FileStore from './src/filestore';
 import NetworkStore from './src/networkstore';
 import SyncStore from './src/syncstore';
 import UserStore from './src/userstore';
+import { SyncOperation } from './src/sync';
 
 // Export
 export {
@@ -11,6 +12,7 @@ export {
   DataStoreType,
   FileStore,
   NetworkStore,
+  SyncOperation,
   SyncStore,
   UserStore
 };

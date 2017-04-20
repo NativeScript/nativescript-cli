@@ -338,20 +338,6 @@ export default class User {
   }
 
   /**
-   * Connect an social identity.
-   *
-   * @deprecated Use connectIdentity().
-   *
-   * @param {string} identity Social identity.
-   * @param {Object} session Social identity session.
-   * @param {Object} [options] Options
-   * @return {Promise<User>} The user.
-   */
-  connectWithIdentity(identity, session, options = {}) {
-    return this.connectIdentity(identity, session, options);
-  }
-
-  /**
    * Connect a Facebook identity.
    *
    * @param  {Object}         [options]     Options
@@ -576,8 +562,8 @@ export default class User {
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
         pathname: this.pathname
       }),
       body: isEmpty(data) ? null : data,
@@ -698,8 +684,8 @@ export default class User {
       method: RequestMethod.GET,
       authType: AuthType.Session,
       url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
         pathname: `${this.pathname}/_me`
       }),
       properties: options.properties,
@@ -785,8 +771,8 @@ export default class User {
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
-        protocol: client.protocol,
-        host: client.host,
+        protocol: client.apiProtocol,
+        host: client.apiHost,
         pathname: `/${rpcNamespace}/${client.appKey}/${username}/user-email-verification-initiate`
       }),
       properties: options.properties,
@@ -821,8 +807,8 @@ export default class User {
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
-        protocol: client.protocol,
-        host: client.host,
+        protocol: client.apiProtocol,
+        host: client.apiHost,
         pathname: `/${rpcNamespace}/${client.appKey}/user-forgot-username`
       }),
       properties: options.properties,
@@ -858,8 +844,8 @@ export default class User {
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
-        protocol: client.protocol,
-        host: client.host,
+        protocol: client.apiProtocol,
+        host: client.apiHost,
         pathname: `/${rpcNamespace}/${client.appKey}/${username}/user-password-reset-initiate`
       }),
       properties: options.properties,
@@ -905,5 +891,12 @@ export default class User {
   static remove(id, options = {}) {
     const store = new UserStore();
     return store.removeById(id, options);
+  }
+
+  /**
+   * @private
+   */
+  static usePopupClass(popupClass) {
+    MobileIdentityConnect.usePopupClass(popupClass);
   }
 }

@@ -12,7 +12,7 @@ export default class Headers {
 
   get(name) {
     if (name) {
-      if (!isString(name)) {
+      if (isString(name) === false) {
         name = String(name);
       }
 
@@ -24,18 +24,18 @@ export default class Headers {
   }
 
   set(name, value) {
-    if (!isDefined(name) || !isDefined(value)) {
+    if (isDefined(name) === false || isDefined(value) === false) {
       throw new Error('A name and value must be provided to set a header.');
     }
 
-    if (!isString(name)) {
+    if (isString(name) === false) {
       name = String(name);
     }
 
     const headers = this.headers;
     name = name.toLowerCase();
 
-    if (!isString(value)) {
+    if (isString(value) === false) {
       headers[name] = JSON.stringify(value);
     } else {
       headers[name] = value;
@@ -58,7 +58,7 @@ export default class Headers {
       headers = headers.toPlainObject();
     }
 
-    if (!isPlainObject(headers)) {
+    if (isPlainObject(headers) === false) {
       throw new Error('Headers argument must be an object.');
     }
 
@@ -75,7 +75,7 @@ export default class Headers {
 
   remove(name) {
     if (name) {
-      if (!isString(name)) {
+      if (isString(name) === false) {
         name = String(name);
       }
 

@@ -1,5 +1,6 @@
 import Promise from 'es6-promise';
 
+import { isDefined } from 'src/utils';
 import Middleware from './middleware';
 
 export default class ParseMiddleware extends Middleware {
@@ -8,7 +9,7 @@ export default class ParseMiddleware extends Middleware {
   }
 
   handle(request, response) {
-    if (response && response.data) {
+    if (isDefined(response) && isDefined(response.data)) {
       const contentType = response.headers['content-type'] || response.headers['Content-Type'];
 
       if (contentType) {

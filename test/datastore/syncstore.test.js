@@ -1,4 +1,4 @@
-import { SyncStore } from 'src/datastore';
+import { SyncStore, SyncOperation } from 'src/datastore';
 import Aggregation from 'src/aggregation';
 import Query from 'src/query';
 import { KinveyError, NotFoundError } from 'src/errors';
@@ -337,7 +337,8 @@ describe('SyncStore', function() {
       return store.update(entity)
         .catch((error) => {
           expect(error).toBeA(KinveyError);
-          expect(error.message).toEqual('Unable to update entity.');
+          expect(error.message).toEqual('The entity provided does not contain an _id. An _id is required to update the entity.');
+          expect(error.debug).toEqual(entity);
         });
     });
 
@@ -615,19 +616,6 @@ describe('SyncStore', function() {
     });
   });
 
-  describe('syncCount()', function() {
-    afterEach(function () {
-      expect.restoreSpies();
-    });
-
-    it('should call pendingSyncCount()', function() {
-      const store = new SyncStore(collection);
-      const spy = expect.spyOn(store, 'pendingSyncCount');
-      store.syncCount();
-      expect(spy).toHaveBeenCalled();
-    });
-  });
-
   describe('pendingSyncEntities()', function() {
     it('should return the entities waiting to be synced', function() {
       const store = new SyncStore(collection);
@@ -641,7 +629,7 @@ describe('SyncStore', function() {
               expect(entities[0]).toIncludeKey('_id');
               expect(entities[0].collection).toEqual(collection);
               expect(entities[0].entityId).toEqual(entity._id);
-              expect(entities[0].state).toEqual({ method: 'POST' });
+              expect(entities[0].state).toEqual({ operation: SyncOperation.Create });
             });
         });
     });
@@ -661,7 +649,7 @@ describe('SyncStore', function() {
           return store.push();
         })
         .then((result) => {
-          expect(result).toEqual([{ _id: entity._id, entity: entity }]);
+          expect(result).toEqual([{ _id: entity._id, operation: SyncOperation.Update, entity: entity }]);
           return store.pendingSyncCount();
         })
         .then((count) => {
@@ -687,7 +675,7 @@ describe('SyncStore', function() {
           return store.push(query);
         })
         .then((result) => {
-          expect(result).toEqual([{ _id: entity1._id, entity: entity1 }]);
+          expect(result).toEqual([{ _id: entity1._id, operation: SyncOperation.Update, entity: entity1 }]);
           return store.pendingSyncCount();
         })
         .then((count) => {
@@ -736,7 +724,7 @@ describe('SyncStore', function() {
           return store.sync();
         })
         .then((result) => {
-          expect(result.push).toEqual([{ _id: entity1._id, entity: entity1 }]);
+          expect(result.push).toEqual([{ _id: entity1._id, operation: SyncOperation.Update, entity: entity1 }]);
           expect(result.pull).toEqual([entity1, entity2]);
           return store.pendingSyncCount();
         })
@@ -795,19 +783,6 @@ describe('SyncStore', function() {
         .then((entities) => {
           expect(entities).toEqual([entity1]);
         });
-    });
-  });
-
-  describe('purge()', function() {
-    afterEach(function () {
-      expect.restoreSpies();
-    });
-
-    it('should call clearSync()', function() {
-      const store = new SyncStore(collection);
-      const spy = expect.spyOn(store, 'clearSync');
-      store.purge();
-      expect(spy).toHaveBeenCalled();
     });
   });
 });

@@ -48,8 +48,8 @@ export default class UserStore extends NetworkStore {
         method: RequestMethod.POST,
         authType: AuthType.Default,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `${this.pathname}/_lookup`
         }),
         properties: options.properties,
@@ -79,8 +79,6 @@ export default class UserStore extends NetworkStore {
   /**
    * Update a user.
    *
-   * @deprecated Use the `update` function for a user instance.
-   *
    * @param {Object} data Data for user to update.
    * @param {Object} [options={}] Options
    * @return {Promise<Object>} The updated user data.
@@ -104,8 +102,6 @@ export default class UserStore extends NetworkStore {
   /**
    * Check if a username already exists.
    *
-   * @deprecated Use the `exists` function on the `User` class.
-   *
    * @param {string} username Username
    * @param {Object} [options={}] Options
    * @return {boolean} True if the username already exists otherwise false.
@@ -115,8 +111,8 @@ export default class UserStore extends NetworkStore {
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
         pathname: `/${rpcNamespace}/${this.client.appKey}/check-username-exists`
       }),
       properties: options.properties,
@@ -131,8 +127,6 @@ export default class UserStore extends NetworkStore {
 
   /**
    * Remove a user.
-   *
-   * @deprecated Use the `remove` static function on the `User` class.
    *
    * @param   {string}  id               Id of the user to remove.
    * @param   {Object}  [options]        Options
@@ -159,8 +153,8 @@ export default class UserStore extends NetworkStore {
         method: RequestMethod.DELETE,
         authType: AuthType.Default,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `${this.pathname}/${id}`,
           query: options.hard === true ? { hard: true } : undefined
         }),

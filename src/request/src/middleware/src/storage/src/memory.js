@@ -26,7 +26,7 @@ class Memory {
     this.name = name;
     this.cache = caches[name];
 
-    if (!this.cache) {
+    if (isDefined(this.cache) === false) {
       this.cache = new MemoryCache();
       caches[name] = this.cache;
     }
@@ -63,7 +63,7 @@ class Memory {
   save(collection, entities) {
     let singular = false;
 
-    if (!isArray(entities)) {
+    if (isArray(entities) === false) {
       entities = [entities];
       singular = true;
     }

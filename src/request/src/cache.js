@@ -119,8 +119,8 @@ export default class CacheRequest extends Request {
     const request = new CacheRequest({
       method: RequestMethod.GET,
       url: url.format({
-        protocol: client.protocol,
-        host: client.host,
+        protocol: client.apiProtocol,
+        host: client.apiHost,
         pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}`
       })
     });
@@ -183,8 +183,8 @@ export default class CacheRequest extends Request {
       const request = new CacheRequest({
         method: RequestMethod.DELETE,
         url: url.format({
-          protocol: client.protocol,
-          host: client.host,
+          protocol: client.apiProtocol,
+          host: client.apiHost,
           pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}/${activeUser._id}`
         })
       });
@@ -218,8 +218,8 @@ export default class CacheRequest extends Request {
         const request = new CacheRequest({
           method: RequestMethod.POST,
           url: url.format({
-            protocol: client.protocol,
-            host: client.host,
+            protocol: client.apiProtocol,
+            host: client.apiHost,
             pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}`
           }),
           body: user

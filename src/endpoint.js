@@ -50,8 +50,8 @@ export default class CustomEndpoint {
       method: RequestMethod.POST,
       authType: AuthType.Default,
       url: url.format({
-        protocol: client.protocol,
-        host: client.host,
+        protocol: client.apiProtocol,
+        host: client.apiHost,
         pathname: `/${rpcNamespace}/${client.appKey}/custom/${endpoint}`
       }),
       properties: options.properties,

@@ -42,7 +42,6 @@ export default class Request {
     this.timeout = isDefined(options.timeout) ? options.timeout : this.client.defaultTimeout;
     this.followRedirect = options.followRedirect === true;
     this.cache = options.cache === true;
-    this.executing = false;
   }
 
   get client() {
@@ -51,7 +50,7 @@ export default class Request {
 
   set client(client) {
     if (client) {
-      if (!(client instanceof Client)) {
+      if ((client instanceof Client) === false) {
         throw new KinveyError('client must be an instance of the Client class.');
       }
     }
@@ -148,23 +147,19 @@ export default class Request {
     this._cache = !!cache;
   }
 
-  isExecuting() {
-    return !!this.executing;
-  }
-
   execute() {
-    if (!this.rack) {
+    if (isDefined(this.rack) === false) {
       return Promise.reject(
         new KinveyError('Unable to execute the request. Please provide a rack to execute the request.')
       );
     }
 
     return this.rack.execute(this.toPlainObject()).then((response) => {
-      if (!response) {
+      if (isDefined(response) === false) {
         throw new NoResponseError();
       }
 
-      if (!(response instanceof Response)) {
+      if ((response instanceof Response) === false) {
         response = new Response({
           statusCode: response.statusCode,
           headers: response.headers,

@@ -205,7 +205,7 @@ export class KinveyRequest extends NetworkRequest {
     }
 
     if (isDefined(aggregation)) {
-      this.body = aggregation.toJSON();
+      this.body = aggregation.toPlainObject();
     }
 
     this._aggregation = aggregation;
@@ -303,7 +303,7 @@ export class KinveyRequest extends NetworkRequest {
   }
 
   set properties(properties) {
-    if (properties && !(properties instanceof Properties)) {
+    if (properties && (properties instanceof Properties) === false) {
       properties = new Properties(properties);
     }
 
@@ -440,8 +440,8 @@ export class KinveyRequest extends NetworkRequest {
                     method: RequestMethod.POST,
                     authType: AuthType.App,
                     url: url.format({
-                      protocol: this.client.protocol,
-                      host: this.client.host,
+                      protocol: this.client.apiProtocol,
+                      host: this.client.apiHost,
                       pathname: `/${usersNamespace}/${this.client.appKey}/login`
                     }),
                     properties: this.properties,

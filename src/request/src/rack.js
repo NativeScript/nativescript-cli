@@ -35,13 +35,13 @@ export default class Rack extends Middleware {
   }
 
   execute(req) {
-    if (typeof req === 'undefined') {
+    if (isDefined(req) === false) {
       return Promise.reject(new Error('Request is undefined. Please provide a valid request.'));
     }
 
     return reduce(values(this.middlewares),
       (promise, middleware) => promise.then(({ request, response }) => {
-        if (this.canceled === true) {
+        if (this.canceled) {
           return Promise.reject(new Error('Cancelled'));
         }
 
@@ -67,7 +67,7 @@ export default class Rack extends Middleware {
   cancel() {
     this.canceled = true;
 
-    if (typeof this.activeMiddleware !== 'undefined' && isFunction(this.activeMiddleware.cancel)) {
+    if (isDefined(this.activeMiddleware) && isFunction(this.activeMiddleware.cancel)) {
       return this.activeMiddleware.cancel();
     }
 

@@ -1,4 +1,4 @@
-import { CacheStore, SyncStore } from 'src/datastore';
+import { CacheStore, SyncStore, SyncOperation } from 'src/datastore';
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
 import { KinveyError, NotFoundError, ServerError } from 'src/errors';
@@ -89,7 +89,7 @@ describe('CacheStore', function() {
       const onNextSpy = expect.createSpy();
 
       nock(store.client.apiHostname)
-        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .get(store.pathname)
         .reply(200, [entity1, entity2]);
 
       store.pull()
@@ -99,7 +99,7 @@ describe('CacheStore', function() {
           };
 
           nock(store.client.apiHostname)
-            .get(`/appdata/${store.client.appKey}/${collection}`)
+            .get(store.pathname)
             .reply(200, [entity1, entity2, entity3]);
 
           store.find()
@@ -125,7 +125,8 @@ describe('CacheStore', function() {
                 done(error);
               }
             });
-        });
+        })
+        .catch(done);
     });
 
     it('should return the entities that match the query', function(done) {
@@ -613,7 +614,8 @@ describe('CacheStore', function() {
       return store.update(entity)
         .catch((error) => {
           expect(error).toBeA(KinveyError);
-          expect(error.message).toEqual('Unable to update entity.');
+          expect(error.message).toEqual('The entity provided does not contain an _id. An _id is required to update the entity.');
+          expect(error.debug).toEqual(entity);
         });
     });
 
@@ -797,6 +799,7 @@ describe('CacheStore', function() {
 
     it('should remove an entity if it was created locally', function() {
       const store = new CacheStore(collection);
+      const syncStore = new SyncStore(collection);
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
       const entity3 = {};
@@ -806,23 +809,20 @@ describe('CacheStore', function() {
         .reply(200, [entity1, entity2]);
 
       return store.pull()
-        .then(() => {
-          return store.save(entity3);
-        })
+        .then(() => syncStore.save(entity3))
         .then(() => {
           nock(store.client.apiHostname)
-            .delete(`/appdata/${store.client.appKey}/${collection}/${entity1._id}`)
+            .delete(`${store.pathname}/${entity1._id}`)
             .reply(200);
 
           nock(store.client.apiHostname)
-            .delete(`/appdata/${store.client.appKey}/${collection}/${entity2._id}`)
+            .delete(`${store.pathname}/${entity2._id}`)
             .reply(200);
 
           return store.remove();
         })
         .then((result) => {
           expect(result).toEqual({ count: 3 });
-          const syncStore = new SyncStore(collection);
           return syncStore.find().toPromise();
         })
         .then((entities) => {
@@ -900,15 +900,13 @@ describe('CacheStore', function() {
 
     it('should remove the entity from the cache and sync table', function() {
       const store = new CacheStore(collection);
+      const syncStore = new SyncStore(collection);
       const entity = {};
 
-      return store.save(entity)
-        .then((entity) => {
-          return store.removeById(entity._id);
-        })
+      return syncStore.save(entity)
+        .then(entity => store.removeById(entity._id))
         .then((result) => {
           expect(result).toEqual({ count: 1 });
-          const syncStore = new SyncStore(collection);
           const query = new Query().equalTo('_id', entity._id);
           return syncStore.find(query).toPromise();
         })
@@ -975,9 +973,10 @@ describe('CacheStore', function() {
   describe('pendingSyncCount()', function() {
     it('should return the count of entities waiting to be synced', function() {
       const store = new CacheStore(collection);
+      const syncStore = new SyncStore(collection);
       const entity = {};
 
-      return store.save(entity)
+      return syncStore.save(entity)
         .then((entity) => {
           const query = new Query().equalTo('_id', entity._id);
           return store.pendingSyncCount(query);
@@ -988,25 +987,13 @@ describe('CacheStore', function() {
     });
   });
 
-  describe('syncCount()', function() {
-    afterEach(function () {
-      expect.restoreSpies();
-    });
-
-    it('should call pendingSyncCount()', function() {
-      const store = new CacheStore(collection);
-      const spy = expect.spyOn(store, 'pendingSyncCount');
-      store.syncCount();
-      expect(spy).toHaveBeenCalled();
-    });
-  });
-
   describe('pendingSyncEntities()', function() {
     it('should return the entities waiting to be synced', function() {
       const store = new CacheStore(collection);
+      const syncStore = new SyncStore(collection);
       const entity = {};
 
-      return store.save(entity)
+      return syncStore.save(entity)
         .then((entity) => {
           const query = new Query().equalTo('_id', entity._id);
           return store.pendingSyncEntities(query)
@@ -1014,27 +1001,28 @@ describe('CacheStore', function() {
               expect(entities[0]).toIncludeKey('_id');
               expect(entities[0].collection).toEqual(collection);
               expect(entities[0].entityId).toEqual(entity._id);
-              expect(entities[0].state).toEqual({ method: 'POST' });
+              expect(entities[0].state).toEqual({ operation: SyncOperation.Create });
             });
         });
     });
   });
 
-  describe('push', function() {
+  describe('push()', function() {
     it('should push the entities to the backend', function() {
       const store = new CacheStore(collection);
+      const syncStore = new SyncStore(collection);
       const entity = { _id: randomString() };
 
-      return store.save(entity)
+      return syncStore.save(entity)
         .then(() => {
-          nock(this.client.apiHostname)
-            .put(`/appdata/${this.client.appKey}/${collection}/${entity._id}`, entity)
+          nock(store.client.apiHostname)
+            .put(`${store.pathname}/${entity._id}`, entity)
             .reply(200, entity);
 
           return store.push();
         })
         .then((result) => {
-          expect(result).toEqual([{ _id: entity._id, entity: entity }]);
+          expect(result).toEqual([{ _id: entity._id, operation: SyncOperation.Update, entity: entity }]);
           return store.pendingSyncCount();
         })
         .then((count) => {
@@ -1044,23 +1032,22 @@ describe('CacheStore', function() {
 
     it('should push only the entities matching the query to the backend', function() {
       const store = new CacheStore(collection);
+      const syncStore = new SyncStore(collection);
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
-      return store.save(entity1)
+      return syncStore.save(entity1)
+        .then(() => syncStore.save(entity2))
         .then(() => {
-          return store.save(entity2);
-        })
-        .then(() => {
-          nock(this.client.apiHostname)
-            .put(`/appdata/${this.client.appKey}/${collection}/${entity1._id}`, entity1)
+          nock(store.client.apiHostname)
+            .put(`${store.pathname}/${entity1._id}`, entity1)
             .reply(200, entity1);
 
           const query = new Query().equalTo('_id', entity1._id);
           return store.push(query);
         })
         .then((result) => {
-          expect(result).toEqual([{ _id: entity1._id, entity: entity1 }]);
+          expect(result).toEqual([{ _id: entity1._id, operation: SyncOperation.Update, entity: entity1 }]);
           return store.pendingSyncCount();
         })
         .then((count) => {
@@ -1069,7 +1056,7 @@ describe('CacheStore', function() {
     });
   });
 
-  describe('pull', function() {
+  describe('pull()', function() {
     it('should save entities from the backend to the cache', function() {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
@@ -1090,26 +1077,27 @@ describe('CacheStore', function() {
     });
   });
 
-  describe('sync', function() {
+  describe('sync()', function() {
     it('should push any pending sync entities and then pull entities from the backend and save them to the cache', function() {
       const store = new CacheStore(collection);
+      const syncStore = new SyncStore(collection);
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
-      return store.save(entity1)
+      return syncStore.save(entity1)
         .then(() => {
-          nock(this.client.apiHostname)
-            .put(`/appdata/${this.client.appKey}/${collection}/${entity1._id}`, entity1)
+          nock(store.client.apiHostname)
+            .put(`${store.pathname}/${entity1._id}`, entity1)
             .reply(200, entity1);
 
           nock(store.client.apiHostname)
-            .get(`/appdata/${store.client.appKey}/${collection}`)
+            .get(store.pathname)
             .reply(200, [entity1, entity2]);
 
           return store.sync();
         })
         .then((result) => {
-          expect(result.push).toEqual([{ _id: entity1._id, entity: entity1 }]);
+          expect(result.push).toEqual([{ _id: entity1._id, operation: SyncOperation.Update, entity: entity1 }]);
           expect(result.pull).toEqual([entity1, entity2]);
           return store.pendingSyncCount();
         })
@@ -1122,9 +1110,10 @@ describe('CacheStore', function() {
   describe('clearSync()', function() {
     it('should clear the sync table', function() {
       const store = new CacheStore(collection);
+      const syncStore = new SyncStore(collection);
       const entity = { _id: randomString() };
 
-      return store.save(entity)
+      return syncStore.save(entity)
         .then(() => {
           return store.clearSync();
         })
@@ -1133,7 +1122,6 @@ describe('CacheStore', function() {
         })
         .then((count) => {
           expect(count).toEqual(0);
-          const syncStore = new SyncStore(collection);
           const query = new Query().equalTo('_id', entity._id);
           return syncStore.find(query).toPromise();
         })
@@ -1144,13 +1132,12 @@ describe('CacheStore', function() {
 
     it('should clear only the entities from the sync table matching the query', function() {
       const store = new CacheStore(collection);
+      const syncStore = new SyncStore(collection);
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
-      return store.save(entity1)
-        .then(() => {
-          return store.save(entity2);
-        })
+      return syncStore.save(entity1)
+        .then(() => syncStore.save(entity2))
         .then(() => {
           const query = new Query().equalTo('_id', entity1._id);
           return store.clearSync(query);
@@ -1161,26 +1148,12 @@ describe('CacheStore', function() {
         })
         .then((count) => {
           expect(count).toEqual(0);
-          const syncStore = new SyncStore(collection);
           const query = new Query().equalTo('_id', entity1._id);
           return syncStore.find(query).toPromise();
         })
         .then((entities) => {
           expect(entities).toEqual([entity1]);
         });
-    });
-  });
-
-  describe('purge()', function() {
-    afterEach(function () {
-      expect.restoreSpies();
-    });
-
-    it('should call clearSync()', function() {
-      const store = new CacheStore(collection);
-      const spy = expect.spyOn(store, 'clearSync');
-      store.purge();
-      expect(spy).toHaveBeenCalled();
     });
   });
 });

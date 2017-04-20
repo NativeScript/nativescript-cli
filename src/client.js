@@ -138,27 +138,6 @@ export default class Client {
   }
 
   /**
-   * @deprecated Use apiHostname instead of this.
-   */
-  get baseUrl() {
-    return this.apiHostname;
-  }
-
-  /**
-   * @deprecated Use apiProtocol instead of this.
-   */
-  get protocol() {
-    return this.apiProtocol;
-  }
-
-  /**
-   * @deprecated Use apiHost instead of this.
-   */
-  get host() {
-    return this.apiHost;
-  }
-
-  /**
    * Mobile Identity Connect host name used for MIC requests.
    */
   get micHostname() {
@@ -242,36 +221,6 @@ export default class Client {
       encryptionKey: this.encryptionKey,
       appVersion: this.appVersion
     };
-  }
-
-  /**
-   * Initializes the Client class by creating a new instance of the
-   * Client class and storing it as a shared instance.
-   *
-   * @deprecated Use `Client.initialize` instead.
-   *
-   * @param {Object}    options                                            Options
-   * @param {string}    [options.apiHostname='https://baas.kinvey.com']    Host name used for Kinvey API requests
-   * @param {string}    [options.micHostname='https://auth.kinvey.com']    Host name used for Kinvey MIC requests
-   * @param {string}    [options.appKey]                                   App Key
-   * @param {string}    [options.appSecret]                                App Secret
-   * @param {string}    [options.masterSecret]                             App Master Secret
-   * @param {string}    [options.encryptionKey]                            App Encryption Key
-   * @param {string}    [options.appVersion]                               App Version
-   * @return {Client}                                                      An instance of Client.
-   *
-   * @example
-   * var client = Kinvey.Client.init({
-   *   appKey: '<appKey>',
-   *   appSecret: '<appSecret>'
-   * });
-   * Kinvey.Client.sharedInstance() === client; // true
-   */
-  static init(options) {
-    const client = new Client(options);
-    sharedInstance = client;
-    CacheRequest.loadActiveUserLegacy(client);
-    return client;
   }
 
   /**

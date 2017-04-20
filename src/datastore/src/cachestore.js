@@ -66,8 +66,8 @@ export default class CacheStore extends NetworkStore {
       const request = new CacheRequest({
         method: RequestMethod.GET,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: this.pathname
         }),
         properties: options.properties,
@@ -117,8 +117,8 @@ export default class CacheStore extends NetworkStore {
                 const request = new CacheRequest({
                   method: RequestMethod.PUT,
                   url: url.format({
-                    protocol: this.client.protocol,
-                    host: this.client.host,
+                    protocol: this.client.apiProtocol,
+                    host: this.client.apiHost,
                     pathname: this.pathname
                   }),
                   properties: options.properties,
@@ -168,8 +168,8 @@ export default class CacheStore extends NetworkStore {
       const request = new CacheRequest({
         method: RequestMethod.GET,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `${this.pathname}/${id}`
         }),
         properties: options.properties,
@@ -208,8 +208,8 @@ export default class CacheStore extends NetworkStore {
                 const request = new CacheRequest({
                   method: RequestMethod.PUT,
                   url: url.format({
-                    protocol: this.client.protocol,
-                    host: this.client.host,
+                    protocol: this.client.apiProtocol,
+                    host: this.client.apiHost,
                     pathname: this.pathname
                   }),
                   properties: options.properties,
@@ -254,8 +254,8 @@ export default class CacheStore extends NetworkStore {
       const request = new CacheRequest({
         method: RequestMethod.POST,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `${this.pathname}/_group`
         }),
         properties: options.properties,
@@ -328,8 +328,8 @@ export default class CacheStore extends NetworkStore {
       const request = new CacheRequest({
         method: RequestMethod.GET,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: this.pathname
         }),
         properties: options.properties,
@@ -405,8 +405,8 @@ export default class CacheStore extends NetworkStore {
       const request = new CacheRequest({
         method: RequestMethod.POST,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: this.pathname
         }),
         properties: options.properties,
@@ -427,7 +427,13 @@ export default class CacheStore extends NetworkStore {
             const query = new Query().equalTo('_id', entity._id);
             return this.push(query, options)
               .then((results) => {
-                return results[0].entity;
+                const result = results[0];
+
+                if (isDefined(result.error)) {
+                  throw result.error;
+                }
+
+                return result.entity;
               });
           }
 
@@ -465,13 +471,20 @@ export default class CacheStore extends NetworkStore {
         ));
       }
 
+      if (isDefined(entity._id) === false) {
+        return observer.error(new KinveyError(
+          'The entity provided does not contain an _id. An _id is required to'
+          + ' update the entity.', entity
+        ));
+      }
+
       // Save the entity to the cache
       const request = new CacheRequest({
         method: RequestMethod.PUT,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this.pathname
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: `${this.pathname}/${entity._id}`
         }),
         properties: options.properties,
         body: entity,
@@ -491,7 +504,13 @@ export default class CacheStore extends NetworkStore {
             const query = new Query().equalTo('_id', entity._id);
             return this.push(query, options)
               .then((results) => {
-                return results[0].entity;
+                const result = results[0];
+
+                if (isDefined(result.error)) {
+                  throw result.error;
+                }
+
+                return result.entity;
               });
           }
 
@@ -528,8 +547,8 @@ export default class CacheStore extends NetworkStore {
       const request = new CacheRequest({
         method: RequestMethod.GET,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: this.pathname
         }),
         properties: options.properties,
@@ -586,8 +605,8 @@ export default class CacheStore extends NetworkStore {
               const request = new CacheRequest({
                 method: RequestMethod.DELETE,
                 url: url.format({
-                  protocol: this.client.protocol,
-                  host: this.client.host,
+                  protocol: this.client.apiProtocol,
+                  host: this.client.apiHost,
                   pathname: `${this.pathname}/${result._id}`
                 }),
                 properties: options.properties,
@@ -637,8 +656,8 @@ export default class CacheStore extends NetworkStore {
       const request = new CacheRequest({
         method: RequestMethod.GET,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: `${this.pathname}/${id}`
         }),
         properties: options.properties,
@@ -691,8 +710,8 @@ export default class CacheStore extends NetworkStore {
           const request = new CacheRequest({
             method: RequestMethod.DELETE,
             url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
+              protocol: this.client.apiProtocol,
+              host: this.client.apiHost,
               pathname: `${this.pathname}/${entity._id}`
             }),
             properties: options.properties,
@@ -730,8 +749,8 @@ export default class CacheStore extends NetworkStore {
       const request = new CacheRequest({
         method: RequestMethod.GET,
         url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
           pathname: this.pathname
         }),
         properties: options.properties,
@@ -764,8 +783,8 @@ export default class CacheStore extends NetworkStore {
                 const request = new CacheRequest({
                   method: RequestMethod.DELETE,
                   url: url.format({
-                    protocol: this.client.protocol,
-                    host: this.client.host,
+                    protocol: this.client.apiProtocol,
+                    host: this.client.apiHost,
                     pathname: `${this.pathname}/${entity._id}`
                   }),
                   properties: options.properties,
@@ -806,13 +825,6 @@ export default class CacheStore extends NetworkStore {
    */
   pendingSyncCount(query, options) {
     return this.syncManager.count(query, options);
-  }
-
-  /**
-   * @deprecated Use pendingSyncCount().
-   */
-  syncCount(query, options) {
-    return this.pendingSyncCount(query, options);
   }
 
   pendingSyncEntities(query, options) {
@@ -856,8 +868,8 @@ export default class CacheStore extends NetworkStore {
             const saveRequest = new CacheRequest({
               method: RequestMethod.PUT,
               url: url.format({
-                protocol: this.client.protocol,
-                host: this.client.host,
+                protocol: this.client.apiProtocol,
+                host: this.client.apiHost,
                 pathname: this.pathname
               }),
               properties: options.properties,
@@ -900,12 +912,5 @@ export default class CacheStore extends NetworkStore {
 
   clearSync(query, options) {
     return this.syncManager.clear(query, options);
-  }
-
-  /**
-   * @deprecated Use clearSync().
-   */
-  purge(query, options) {
-    return this.clearSync(query, options);
   }
 }
