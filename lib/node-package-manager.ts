@@ -80,15 +80,15 @@ export class NodePackageManager implements INodePackageManager {
 		}
 
 	@exported("npm")
-	public async uninstall(packageName: string, config?: any, path?: string): Promise<any> {
-		let flags = this.getFlagsString(config, false);
+	public async uninstall(packageName: string, config?: any, path?: string): Promise<string> {
+		const flags = this.getFlagsString(config, false);
 		return this.$childProcess.exec(`npm uninstall ${packageName} ${flags}`, { cwd: path });
 	}
 
 	@exported("npm")
-	public async search(filter: string[], config: any): Promise<any> {
-		let args = (<any[]>([filter] || [])).concat(config.silent);
-		return this.$childProcess.exec(`npm search ${args.join(" ")}`);
+	public async search(filter: string[], config: any): Promise<string> {
+		const flags = this.getFlagsString(config, false);
+		return this.$childProcess.exec(`npm search ${filter.join(" ")} ${flags}`);
 	}
 
 	@exported("npm")

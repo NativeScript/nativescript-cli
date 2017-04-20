@@ -1,7 +1,6 @@
 interface IPluginsService {
 	add(plugin: string, projectData: IProjectData): Promise<void>; // adds plugin by name, github url, local path and et.
 	remove(pluginName: string, projectData: IProjectData): Promise<void>; // removes plugin only by name
-	getAvailable(filter: string[]): Promise<IDictionary<any>>; // gets all available plugins
 	prepare(pluginData: IDependencyData, platform: string, projectData: IProjectData): Promise<void>;
 	getAllInstalledPlugins(projectData: IProjectData): Promise<IPluginData[]>;
 	ensureAllDependenciesAreInstalled(projectData: IProjectData): Promise<void>;

@@ -219,6 +219,126 @@ interface ISettingsService {
 tns.settingsService.setSettings({ userAgentName: "myUserAgent" });
 ```
 
+## npm
+`npm` module provides a way to interact with npm specifically the use of install, uninstall, search and view commands.
+
+### install
+Installs specified package. Note that you can use the third argument in order to pass different options to the installation like `ignore-scripts`, `save` or `save-exact` which work exactly like they would if you would execute npm from the command line and pass them as `--` flags.
+* Auxiliary interfaces:
+```TypeScript
+/**
+ * Describes information about installed package.
+ */
+interface INpmInstallResultInfo {
+	/**
+	 * Installed package's name.
+	 * @type {string}
+	 */
+	name: string;
+	/**
+	 * Installed package's version.
+	 * @type {string}
+	 */
+	version: string;
+	/**
+	 * The original output that npm CLI produced upon installation.
+	 * @type {INpmInstallCLIResult}
+	 */
+	originalOutput: INpmInstallCLIResult;
+}
+```
+
+* Definition:
+```TypeScript
+/**
+ * Installs dependency
+ * @param  {string}                            packageName The name of the dependency - can be a path, a url or a string.
+ * @param  {string}                            pathToSave  The destination of the installation.
+ * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate installation.
+ * @return {Promise<INpmInstallResultInfo>}                Information about installed package.
+*/
+install(packageName: string, pathToSave: string, config: IDictionary<string | boolean>): Promise<INpmInstallResultInfo>;
+```
+
+* Usage:
+```JavaScript
+tns.npm.install("lodash", "/tmp/myProject", { save: true }).then(result => {
+	console.log(`${result.name} installed successfully`);
+}, err => {
+	console.log("An error occurred during installation", err);
+});
+```
+
+### uninstall
+Uninstalls a specified package.
+
+* Definition:
+```TypeScript
+/**
+ * Uninstalls a dependency
+ * @param  {string}                            packageName The name of the dependency.
+ * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate  uninstallation.
+ * @param  {string}                            path  The destination of the uninstallation.
+ * @return {Promise<any>}                The output of the uninstallation.
+*/
+uninstall(packageName: string, config?: IDictionary<string | boolean>, path?: string): Promise<string>;
+```
+
+* Usage:
+```JavaScript
+tns.npm.uninstall("lodash", "/tmp/myProject", { save: true }).then(output => {
+	console.log(`Uninstalled successfully, output: ${output}`);
+}, err => {
+	console.log("An error occurred during uninstallation", err);
+});
+```
+
+### search
+Searches for a package using keywords.
+
+* Definition:
+```TypeScript
+/**
+ * Searches for a package.
+ * @param  {string[]}                            filter Keywords with which to perform the search.
+ * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate search.
+ * @return {Promise<string>}                The output of the uninstallation.
+ */
+search(filter: string[], config: IDictionary<string | boolean>): Promise<string>;
+```
+
+* Usage:
+```JavaScript
+tns.npm.search(["nativescript", "cloud"], { silent: true }).then(output => {
+	console.log(`Found: ${output}`);
+}, err => {
+	console.log("An error occurred during searching", err);
+});
+```
+
+### view
+Provides information about a given package.
+
+* Definition
+```TypeScript
+/**
+ * Provides information about a given package.
+ * @param  {string}                            packageName The name of the package.
+ * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate view.
+ * @return {Promise<any>}                Object, containing information about the package.
+ */
+view(packageName: string, config: Object): Promise<any>;
+```
+
+* Usage:
+```JavaScript
+tns.npm.view(["nativescript"], {}).then(result => {
+	console.log(`${result.name}'s latest version is ${result["dist-tags"].latest}`);
+}, err => {
+	console.log("An error occurred during viewing", err);
+});
+```
+
 ## How to add a new method to Public API
 CLI is designed as command line tool and when it is used as a library, it does not give you access to all of the methods. This is mainly implementation detail. Most of the CLI's code is created to work in command line, not as a library, so before adding method to public API, most probably it will require some modification.
 For example the `$options` injected module contains information about all `--` options passed on the terminal. When the CLI is used as a library, the options are not populated. Before adding method to public API, make sure its implementation does not rely on `$options`.
