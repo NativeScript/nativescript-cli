@@ -5,14 +5,25 @@ shelljs.config.fatal = true;
 import { installUncaughtExceptionListener } from "./common/errors";
 installUncaughtExceptionListener(process.exit);
 
+import { settlePromises } from "./common/helpers";
+
 (async () => {
-	let config: Config.IConfig = $injector.resolve("$config");
-	let err: IErrors = $injector.resolve("$errors");
+	const config: Config.IConfig = $injector.resolve("$config");
+	const err: IErrors = $injector.resolve("$errors");
 	err.printCallStack = config.DEBUG;
 
-	let commandDispatcher: ICommandDispatcher = $injector.resolve("commandDispatcher");
+	const logger: ILogger = $injector.resolve("logger");
 
-	let messages: IMessagesService = $injector.resolve("$messagesService");
+	const extensibilityService: IExtensibilityService = $injector.resolve("extensibilityService");
+	try {
+		await settlePromises<IExtensionData>(extensibilityService.loadExtensions());
+	} catch (err) {
+		logger.trace("Unable to load extensions. Error is: ", err);
+	}
+
+	const commandDispatcher: ICommandDispatcher = $injector.resolve("commandDispatcher");
+
+	const messages: IMessagesService = $injector.resolve("$messagesService");
 	messages.pathsToMessageJsonFiles = [/* Place client-specific json message file paths here */];
 
 	if (process.argv[2] === "completion") {

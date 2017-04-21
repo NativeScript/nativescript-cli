@@ -211,7 +211,7 @@ interface IPlatformSpecificData {
 	provision: any;
 
 	/**
-	 * Target SDK for Android.s
+	 * Target SDK for Android.
 	 */
 	sdk: string;
 }
