@@ -76,7 +76,7 @@ def install(program_name, message, script, run_as_root = false, show_all_option 
 end
 
 def install_environment_variable(name, value)
-  ENV[name] = value
+  ENV[name] = value.to_s
  
   execute("echo \"export #{name}=#{value}\" >> ~/.bash_profile", "Unable to set #{name}")
   
@@ -93,7 +93,7 @@ if !(execute("brew --version", "Homebrew is not installed or not configured prop
 end
 
 install("Java SE Development Kit", "Installing the Java SE Development Kit... This might take some time, please, be patient. (You will be prompted for your password)", 'brew cask install java', false, false)
-install("Android SDK", "Installing Android SDK", 'brew install android-sdk', false)
+install("Android SDK", "Installing Android SDK", 'brew tap caskroom/cask; brew cask install android-sdk', false)
 
 unless ENV["ANDROID_HOME"]
   require 'pathname'
@@ -129,30 +129,31 @@ puts "Configuring your system for Android development... This might take some ti
 # the android tool will introduce a --accept-license option in subsequent releases
 error_msg = "There seem to be some problems with the Android configuration"
 
-android_executable = File.join(ENV["ANDROID_HOME"], "tools", "android")
-execute("echo y | #{android_executable} update sdk --filter platform-tools --all --no-ui", error_msg)
-execute("echo y | #{android_executable} update sdk --filter tools --all --no-ui", error_msg)
-execute("echo y | #{android_executable} update sdk --filter android-23 --all --no-ui", error_msg)
-execute("echo y | #{android_executable} update sdk --filter build-tools-25.0.2 --all --no-ui", error_msg)
-execute("echo y | #{android_executable} update sdk --filter build-tools-23.0.3 --all --no-ui", error_msg)
-execute("echo y | #{android_executable} update sdk --filter extra-android-m2repository --all --no-ui", error_msg)
-execute("echo y | #{android_executable} update sdk --filter extra-google-m2repository --all --no-ui", error_msg)
+android_executable = File.join(ENV["ANDROID_HOME"], "tools", "bin", "sdkmanager")
+execute("echo y | #{android_executable} \"platform-tools\"", error_msg)
+execute("echo y | #{android_executable} \"tools\"", error_msg)
+execute("echo y | #{android_executable} \"build-tools;25.0.2\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-25\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-24\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-23\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-22\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-21\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-19\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-18\"", error_msg)
+execute("echo y | #{android_executable} \"platforms;android-17\"", error_msg)
 
 puts "Do you want to install Android emulator? (y/n)"
 if gets.chomp.downcase == "y"
   puts "Do you want to install HAXM (Hardware accelerated Android emulator)? (y/n)"
   if gets.chomp.downcase == "y"
-    execute("echo y | #{android_executable} update sdk --filter extra-intel-Hardware_Accelerated_Execution_Manager --all --no-ui", error_msg)
-
+    execute("echo y | #{android_executable} \"extras;intel;Hardware_Accelerated_Execution_Manager\"", error_msg)
+    
     haxm_silent_installer = File.join(ENV["ANDROID_HOME"], "extras", "intel", "Hardware_Accelerated_Execution_Manager", "silent_install.sh")
-    execute("#{haxm_silent_installer}", "There seem to be some problems with the Android configuration")
-
-    execute("echo y | #{android_executable} update sdk --filter sys-img-x86-android-23 --all --no-ui", error_msg)
-    execute("echo no | #{android_executable} create avd -n Emulator-Api23-Default -t android-23 --abi default/x86 -c 12M -f", error_msg)
-  else
-    execute("echo y | #{android_executable} update sdk --filter sys-img-armeabi-v7a-android-23 --all --no-ui", error_msg)
-    execute("echo no | #{android_executable} create avd -n Emulator-Api23-Default -t android-23 --abi default/armeabi-v7a -c 12M -f", error_msg)
+    execute("sudo #{haxm_silent_installer}", "There seem to be some problems with the Android configuration")
+  else           
   end
+    execute("echo y | #{android_executable} \"system-images;android-25;google_apis;x86\"", error_msg)
+    execute("echo y | #{android_executable} \"system-images;android-24;default;x86\"", error_msg)
 end
 
 puts "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .bash_profile/.zprofile"
