@@ -188,9 +188,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	/**
-	 * Exports .xcarchive for AppStore distribution.
+	 * Exports .xcarchive for distribution.
 	 */
-	public async exportArchive(projectData: IProjectData, options: { archivePath: string, exportDir?: string, teamID?: string }): Promise<string> {
+	public async exportArchive(projectData: IProjectData, options: { archivePath: string, exportDir?: string, teamID?: string, exportMethod?: string, xcargs?: string }): Promise<string> {
 		let projectRoot = this.getPlatformData(projectData).projectRoot;
 		let archivePath = options.archivePath;
 		// The xcodebuild exportPath expects directory and writes the <project-name>.ipa at that directory.
@@ -208,9 +208,18 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
     <string>${options.teamID}</string>
 `;
 		}
-		plistTemplate += `    <key>method</key>
+
+		if (options && options.exportMethod) {
+			plistTemplate += `    <key>method</key>
+    <string>${options.exportMethod}</string>
+`;
+		} else {
+			plistTemplate += `    <key>method</key>
     <string>app-store</string>
-    <key>uploadBitcode</key>
+`;
+		}
+
+		plistTemplate += `    <key>uploadBitcode</key>
     <false/>
     <key>uploadSymbols</key>
     <false/>
@@ -223,6 +232,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.$fs.writeFile(exportOptionsPlist, plistTemplate);
 
 		let args = ["-exportArchive",
+			options && options.xcargs ? options.xcargs : "",
 			"-archivePath", archivePath,
 			"-exportPath", exportPath,
 			"-exportOptionsPlist", exportOptionsPlist
