@@ -1,6 +1,7 @@
 import Promise from 'es6-promise';
-import { Middleware, isDefined, NoNetworkConnectionError, TimeoutError } from 'kinvey-js-sdk/dist/export';
-import httpRequest from 'request';
+import { Middleware, isDefined, NetworkConnectionError, TimeoutError } from 'kinvey-js-sdk/dist/export';
+import HttpRequest from 'request';
+import isFunction from 'lodash/isFunction';
 import pkg from 'package.json';
 
 function deviceInformation() {
@@ -36,7 +37,7 @@ export default class HttpMiddleware extends Middleware {
       // Add the X-Kinvey-Device-Information header
       headers['X-Kinvey-Device-Information'] = this.deviceInformation;
 
-      httpRequest({
+      this.httpRequest = HttpRequest({
         method: method,
         url: url,
         headers: headers,
@@ -47,11 +48,9 @@ export default class HttpMiddleware extends Middleware {
         if (isDefined(error)) {
           if (error.code === 'ESOCKETTIMEDOUT' || error.code === 'ETIMEDOUT') {
             return reject(new TimeoutError('The network request timed out.'));
-          } else if (error.code === 'ENOENT') {
-            return reject(new NoNetworkConnectionError('You do not have a network connection.'));
           }
 
-          return reject(error);
+          return reject(new NetworkConnectionError('There was an error connecting to the network.', error));
         }
 
         return resolve({
@@ -67,6 +66,10 @@ export default class HttpMiddleware extends Middleware {
   }
 
   cancel() {
+    if (isDefined(this.httpRequest) && isFunction(this.httpRequest.abort)) {
+      this.httpRequest.abort();
+    }
+
     return Promise.resolve();
   }
 }
