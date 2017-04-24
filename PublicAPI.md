@@ -180,6 +180,45 @@ for (let promise of loadExtensionsPromises) {
 }
 ```
 
+## settings
+`settings` module provides a way to configure various settings.
+
+### set
+Used to set various settings in order to modify the behavior of some methods.
+* Auxiliary interfaces:
+```TypeScript
+/**
+ * Describes configuration settings that modify the behavior of some methods.
+ */
+interface IConfigurationSettings {
+	/**
+	 * This string will be used when constructing the UserAgent http header.
+	 * @type {string}
+	 */
+	userAgentName: string;
+}
+```
+
+* Definition:
+```TypeScript
+/**
+ * Describes service used to confugure various settings.
+ */
+interface ISettingsService {
+	/**
+	 * Used to set various settings in order to modify the behavior of some methods.
+	 * @param {IConfigurationSettings} settings Settings which will modify the behaviour of some methods.
+	 * @returns {void}
+	 */
+	setSettings(settings: IConfigurationSettings): void;
+}
+```
+
+* Usage:
+```JavaScript
+tns.settingsService.setSettings({ userAgentName: "myUserAgent" });
+```
+
 ## How to add a new method to Public API
 CLI is designed as command line tool and when it is used as a library, it does not give you access to all of the methods. This is mainly implementation detail. Most of the CLI's code is created to work in command line, not as a library, so before adding method to public API, most probably it will require some modification.
 For example the `$options` injected module contains information about all `--` options passed on the terminal. When the CLI is used as a library, the options are not populated. Before adding method to public API, make sure its implementation does not rely on `$options`.

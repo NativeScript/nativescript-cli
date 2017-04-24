@@ -13,6 +13,7 @@ describe("nativescript-cli-lib", () => {
 	});
 
 	const publicApi: any = {
+		settingsService: ["setSettings"],
 		deviceEmitter: null,
 		projectService: ["createProject", "isValidNativeScriptProject"],
 		localBuildService: ["build"],
