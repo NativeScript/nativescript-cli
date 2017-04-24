@@ -11,6 +11,8 @@ import { EOL } from "os";
 import * as temp from "temp";
 import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
+import { IOSEntitlementsService } from "./ios-entitlements-service";
+import { XCConfigService } from "./xcconfig-service";
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
@@ -40,9 +42,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $pluginVariablesService: IPluginVariablesService,
 		private $xcprojService: IXcprojService,
 		private $iOSProvisionService: IOSProvisionService,
-		private $sysInfo: ISysInfo,
 		private $pbxprojDomXcode: IPbxprojDomXcode,
-		private $xcode: IXcode) {
+		private $xcode: IXcode,
+		private $iOSEntitlementsService: IOSEntitlementsService,
+		private $sysInfo: ISysInfo,
+		private xCConfigService: XCConfigService) {
 		super($fs, $projectDataService);
 	}
 
@@ -668,6 +672,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	public async processConfigurationFilesFromAppResources(release: boolean, projectData: IProjectData): Promise<void> {
 		await this.mergeInfoPlists(projectData);
+		await this.$iOSEntitlementsService.merge(projectData);
 		await this.mergeProjectXcconfigFiles(release, projectData);
 		for (let pluginData of await this.getAllInstalledPlugins(projectData)) {
 			await this.$pluginVariablesService.interpolatePluginVariables(pluginData, this.getPlatformData(projectData).configurationFilePath, projectData);
@@ -1178,43 +1183,29 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return null;
 	}
 
-	private readXCConfig(flag: string, projectData: IProjectData): string {
-		let xcconfigFile = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "build.xcconfig");
-		if (this.$fs.exists(xcconfigFile)) {
-			let text = this.$fs.readText(xcconfigFile);
-			let teamId: string;
-			text.split(/\r?\n/).forEach((line) => {
-				line = line.replace(/\/(\/)[^\n]*$/, "");
-				if (line.indexOf(flag) >= 0) {
-					teamId = line.split("=")[1].trim();
-					if (teamId[teamId.length - 1] === ';') {
-						teamId = teamId.slice(0, -1);
-					}
-				}
-			});
-			if (teamId) {
-				return teamId;
-			}
-		}
-
-		let fileName = path.join(this.getPlatformData(projectData).projectRoot, "teamid");
-		if (this.$fs.exists(fileName)) {
-			return this.$fs.readText(fileName);
-		}
-
-		return null;
+	private getBuildXCConfigFilePath(projectData: IProjectData): string {
+		let buildXCConfig = path.join(projectData.appResourcesDirectoryPath,
+			this.getPlatformData(projectData).normalizedPlatformName, "build.xcconfig");
+		return buildXCConfig;
 	}
 
 	private readTeamId(projectData: IProjectData): string {
-		return this.readXCConfig("DEVELOPMENT_TEAM", projectData);
+		let teamId = this.xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "DEVELOPMENT_TEAM");
+
+		let fileName = path.join(this.getPlatformData(projectData).projectRoot, "teamid");
+		if (this.$fs.exists(fileName)) {
+			teamId = this.$fs.readText(fileName);
+		}
+
+		return teamId;
 	}
 
 	private readXCConfigProvisioningProfile(projectData: IProjectData): string {
-		return this.readXCConfig("PROVISIONING_PROFILE", projectData);
+		return this.xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE");
 	}
 
 	private readXCConfigProvisioningProfileForIPhoneOs(projectData: IProjectData): string {
-		return this.readXCConfig("PROVISIONING_PROFILE[sdk=iphoneos*]", projectData);
+		return this.xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE[sdk=iphoneos*]");
 	}
 
 	private readXCConfigProvisioningProfileSpecifier(projectData: IProjectData): string {

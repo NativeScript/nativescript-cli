@@ -16,6 +16,8 @@ export const TEST_RUNNER_NAME = "nativescript-unit-test-runner";
 export const LIVESYNC_EXCLUDED_FILE_PATTERNS = ["**/*.js.map", "**/*.ts"];
 export const XML_FILE_EXTENSION = ".xml";
 export const PLATFORMS_DIR_NAME = "platforms";
+export const IOS_PLATFORM_NAME = "ios";
+export const IOS_PLATFORM_NORMALIZED_NAME = "iOS";
 
 export class PackageVersion {
 	static NEXT = "next";
