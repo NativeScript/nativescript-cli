@@ -117,8 +117,8 @@ class Push extends EventEmitter {
         const request = new KinveyRequest({
           method: RequestMethod.POST,
           url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
             pathname: `${this.pathname}/register-device`
           }),
           properties: options.properties,
@@ -146,8 +146,8 @@ class Push extends EventEmitter {
         const request = new CacheRequest({
           method: RequestMethod.PUT,
           url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
             pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/${DEVICE_COLLECTION}`
           }),
           data: {
@@ -196,8 +196,8 @@ class Push extends EventEmitter {
         const request = new CacheRequest({
           method: RequestMethod.GET,
           url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
             pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/${DEVICE_COLLECTION}/${_id}`
           }),
           client: this.client
@@ -233,8 +233,8 @@ class Push extends EventEmitter {
         const request = new KinveyRequest({
           method: RequestMethod.POST,
           url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
             pathname: `${this.pathname}/unregister-device`
           }),
           properties: options.properties,
@@ -262,8 +262,8 @@ class Push extends EventEmitter {
         const request = new CacheRequest({
           method: RequestMethod.DELETE,
           url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
             pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/${DEVICE_COLLECTION}/${_id}`
           }),
           client: this.client
