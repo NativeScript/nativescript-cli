@@ -6,6 +6,8 @@ import * as FileSystemLib from "../lib/common/file-system";
 import * as HostInfoLib from "../lib/common/host-info";
 import * as iOSProjectServiceLib from "../lib/services/ios-project-service";
 import { IOSProjectService } from "../lib/services/ios-project-service";
+import { IOSEntitlementsService } from "../lib/services/ios-entitlements-service";
+import { XCConfigService } from "../lib/services/xcconfig-service";
 import * as LoggerLib from "../lib/common/logger";
 import * as OptionsLib from "../lib/options";
 import * as yok from "../lib/common/yok";
@@ -51,6 +53,8 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("cocoapodsService", CocoaPodsService);
 	testInjector.register("iOSProjectService", iOSProjectServiceLib.IOSProjectService);
 	testInjector.register("iOSProvisionService", {});
+	testInjector.register("xCConfigService", XCConfigService);
+	testInjector.register("iOSEntitlementsService", IOSEntitlementsService);
 	testInjector.register("logger", LoggerLib.Logger);
 	testInjector.register("options", OptionsLib.Options);
 	testInjector.register("projectData", {
