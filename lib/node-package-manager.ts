@@ -76,10 +76,10 @@ export class NodePackageManager implements INodePackageManager {
 		let diff = dependencyDiff.concat(devDependencyDiff);
 
 		if (diff.length <= 0 && dependenciesBefore.length === dependenciesAfter.length && packageName !== pathToSave) {
-			this.$errors.failWithoutHelp(`The plugin ${packageName} is already installed`);
+			this.$logger.warn(`The plugin ${packageName} is already installed`);
 		}
 		if (diff.length <= 0 && dependenciesBefore.length !== dependenciesAfter.length) {
-			this.$errors.failWithoutHelp(`Couldn't install package correctly`);
+			this.$logger.warn(`Couldn't install package ${packageName} correctly`);
 		}
 
 		return diff;

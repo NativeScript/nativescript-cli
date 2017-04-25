@@ -125,3 +125,10 @@ $injector.require("projectChangesService", "./services/project-changes-service")
 $injector.require("emulatorPlatformService", "./services/emulator-platform-service");
 
 $injector.require("staticConfig", "./config");
+
+$injector.require("requireService", "./services/require-service");
+
+$injector.requireCommand("extension|*list", "./commands/extensibility/list-extensions");
+$injector.requireCommand("extension|install", "./commands/extensibility/install-extension");
+$injector.requireCommand("extension|uninstall", "./commands/extensibility/uninstall-extension");
+$injector.requirePublic("extensibilityService", "./services/extensibility-service");
