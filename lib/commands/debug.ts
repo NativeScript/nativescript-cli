@@ -36,7 +36,7 @@ export abstract class DebugPlatformCommand implements ICommand {
 		await this.$platformService.trackProjectType(this.$projectData);
 
 		if (this.$options.start) {
-			return this.printDebugInformation(await this.debugService.debug(debugData, debugOptions));
+			return this.printDebugInformation(await this.debugService.debug<string[]>(debugData, debugOptions));
 		}
 
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
@@ -58,7 +58,7 @@ export abstract class DebugPlatformCommand implements ICommand {
 			const buildConfig: IBuildConfig = _.merge({ buildForDevice: !deviceAppData.device.isEmulator }, deployOptions);
 			debugData.pathToAppPackage = this.$platformService.lastOutputPath(this.debugService.platform, buildConfig, projectData);
 
-			this.printDebugInformation(await this.debugService.debug(debugData, debugOptions));
+			this.printDebugInformation(await this.debugService.debug<string[]>(debugData, debugOptions));
 		};
 
 		return this.$usbLiveSyncService.liveSync(this.$devicesService.platform, this.$projectData, applicationReloadAction);
