@@ -9,7 +9,7 @@ export class UpdatePlatformCommand implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$platformService.updatePlatforms(args, this.$options.platformTemplate, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
+		await this.$platformService.updatePlatforms(args, this.$options.platformTemplate, this.$projectData, this.$options);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

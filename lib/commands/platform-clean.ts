@@ -5,11 +5,11 @@ export class CleanCommand implements ICommand {
 		private $projectData: IProjectData,
 		private $platformService: IPlatformService,
 		private $errors: IErrors) {
-			this.$projectData.initializeProjectData();
-		}
+		this.$projectData.initializeProjectData();
+	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$platformService.cleanPlatforms(args, this.$options.platformTemplate, this.$projectData, {provision: this.$options.provision, sdk: this.$options.sdk });
+		await this.$platformService.cleanPlatforms(args, this.$options.platformTemplate, this.$projectData, this.$options);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

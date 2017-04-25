@@ -69,7 +69,7 @@ interface IProjectData {
 	 * @param {string} projectDir Project root directory.
 	 * @returns {void}
 	 */
-	initializeProjectData(projectDir? :string): void;
+	initializeProjectData(projectDir?: string): void;
 }
 
 interface IProjectDataService {
@@ -158,7 +158,7 @@ interface IiOSBuildConfig extends IBuildForDevice, IDeviceIdentifier, IProvision
 interface IPlatformProjectService extends NodeJS.EventEmitter {
 	getPlatformData(projectData: IProjectData): IPlatformData;
 	validate(projectData: IProjectData): Promise<void>;
-	createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, pathToTemplate?: string): Promise<void>;
+	createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, config: ICreateProjectOptions): Promise<void>;
 	interpolateData(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
 	interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): void;
 

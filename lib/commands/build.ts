@@ -9,7 +9,7 @@ export class BuildCommandBase {
 	public async executeCore(args: string[]): Promise<void> {
 		let platform = args[0].toLowerCase();
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
-		await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
+		await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData, this.$options);
 		this.$options.clean = true;
 		const buildConfig: IBuildConfig = {
 			buildForDevice: this.$options.forDevice,

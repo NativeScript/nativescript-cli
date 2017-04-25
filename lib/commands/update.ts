@@ -12,8 +12,8 @@ export class UpdateCommand implements ICommand {
 		private $projectDataService: IProjectDataService,
 		private $fs: IFileSystem,
 		private $logger: ILogger) {
-			this.$projectData.initializeProjectData();
-		}
+		this.$projectData.initializeProjectData();
+	}
 
 	public async execute(args: string[]): Promise<void> {
 		let folders = ["lib", "hooks", "platforms", "node_modules"];
@@ -83,12 +83,12 @@ export class UpdateCommand implements ICommand {
 		platforms = platforms.concat(packagePlatforms);
 		if (args.length === 1) {
 			for (let platform of platforms) {
-				await this.$platformService.addPlatforms([platform + "@" + args[0]], this.$options.platformTemplate, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk }, this.$options.frameworkPath);
+				await this.$platformService.addPlatforms([platform + "@" + args[0]], this.$options.platformTemplate, this.$projectData, this.$options, this.$options.frameworkPath);
 			}
 
 			await this.$pluginsService.add("tns-core-modules@" + args[0], this.$projectData);
 		} else {
-			await this.$platformService.addPlatforms(platforms, this.$options.platformTemplate, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk }, this.$options.frameworkPath);
+			await this.$platformService.addPlatforms(platforms, this.$options.platformTemplate, this.$projectData, this.$options, this.$options.frameworkPath);
 			await this.$pluginsService.add("tns-core-modules", this.$projectData);
 		}
 

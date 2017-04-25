@@ -41,7 +41,7 @@ export abstract class DebugPlatformCommand implements ICommand {
 
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
 
-		await this.$platformService.deployPlatform(this.$devicesService.platform, appFilesUpdaterOptions, deployOptions, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
+		await this.$platformService.deployPlatform(this.$devicesService.platform, appFilesUpdaterOptions, deployOptions, this.$projectData, this.$options);
 		this.$config.debugLivesync = true;
 		let applicationReloadAction = async (deviceAppData: Mobile.IDeviceAppData): Promise<void> => {
 			let projectData: IProjectData = this.$injector.resolve("projectData");
