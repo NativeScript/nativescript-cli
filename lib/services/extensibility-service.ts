@@ -32,13 +32,10 @@ export class ExtensibilityService implements IExtensibilityService {
 		const localPath = path.resolve(extensionName);
 		const packageName = this.$fs.exists(localPath) ? localPath : extensionName;
 
-		const realName = (await this.$npm.install(packageName, this.pathToExtensions, npmOpts))[0];
+		const installResultInfo = await this.$npm.install(packageName, this.pathToExtensions, npmOpts);
 		this.$logger.trace(`Finished installation of extension '${extensionName}'. Trying to load it now.`);
 
-		// In case the extension is already installed, the $npm.install method will not return the name of the package.
-		// Fallback to the original value.
-		// NOTE: This will not be required once $npm.install starts working correctly.
-		return await this.loadExtension(realName || extensionName);
+		return await this.loadExtension(installResultInfo.name);
 	}
 
 	@exported("extensibilityService")
