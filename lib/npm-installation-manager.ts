@@ -90,8 +90,8 @@ export class NpmInstallationManager implements INpmInstallationManager {
 			version = version || await this.getLatestCompatibleVersion(packageName);
 		}
 
-		let installedModuleNames = await this.npmInstall(packageName, pathToSave, version, dependencyType);
-		let installedPackageName = installedModuleNames.name;
+		let installResultInfo = await this.npmInstall(packageName, pathToSave, version, dependencyType);
+		let installedPackageName = installResultInfo.name;
 
 		let pathToInstalledPackage = path.join(pathToSave, "node_modules", installedPackageName);
 		return pathToInstalledPackage;

@@ -144,6 +144,13 @@ class DestinationFolderVerifier {
 
 describe('Platform Service Tests', () => {
 	let platformService: IPlatformService, testInjector: IInjector;
+	const config: IAddPlatformCoreOptions = {
+		ignoreScripts: false,
+		provision: null,
+		sdk: null,
+		frameworkPath: null
+	};
+
 	beforeEach(() => {
 		testInjector = createTestInjector();
 		testInjector.register("fs", stubs.FileSystemStub);
@@ -156,22 +163,21 @@ describe('Platform Service Tests', () => {
 				let fs = testInjector.resolve("fs");
 				fs.exists = () => false;
 				let projectData: IProjectData = testInjector.resolve("projectData");
+				await platformService.addPlatforms(["Android"], "", projectData, config);
+				await platformService.addPlatforms(["ANDROID"], "", projectData, config);
+				await platformService.addPlatforms(["AnDrOiD"], "", projectData, config);
+				await platformService.addPlatforms(["androiD"], "", projectData, config);
 
-				await platformService.addPlatforms(["Android"], "", projectData, null);
-				await platformService.addPlatforms(["ANDROID"], "", projectData, null);
-				await platformService.addPlatforms(["AnDrOiD"], "", projectData, null);
-				await platformService.addPlatforms(["androiD"], "", projectData, null);
-
-				await platformService.addPlatforms(["iOS"], "", projectData, null);
-				await platformService.addPlatforms(["IOS"], "", projectData, null);
-				await platformService.addPlatforms(["IoS"], "", projectData, null);
-				await platformService.addPlatforms(["iOs"], "", projectData, null);
+				await platformService.addPlatforms(["iOS"], "", projectData, config);
+				await platformService.addPlatforms(["IOS"], "", projectData, config);
+				await platformService.addPlatforms(["IoS"], "", projectData, config);
+				await platformService.addPlatforms(["iOs"], "", projectData, config);
 			});
 			it("should fail if platform is already installed", async () => {
 				let projectData: IProjectData = testInjector.resolve("projectData");
 				// By default fs.exists returns true, so the platforms directory should exists
-				await assert.isRejected(platformService.addPlatforms(["android"], "", projectData, null));
-				await assert.isRejected(platformService.addPlatforms(["ios"], "", projectData, null));
+				await assert.isRejected(platformService.addPlatforms(["android"], "", projectData, config));
+				await assert.isRejected(platformService.addPlatforms(["ios"], "", projectData, config));
 			});
 			it("should fail if npm is unavalible", async () => {
 				let fs = testInjector.resolve("fs");
@@ -183,7 +189,7 @@ describe('Platform Service Tests', () => {
 				let projectData: IProjectData = testInjector.resolve("projectData");
 
 				try {
-					await platformService.addPlatforms(["android"], "", projectData, null);
+					await platformService.addPlatforms(["android"], "", projectData, config);
 				} catch (err) {
 					assert.equal(errorMessage, err.message);
 				}
@@ -206,8 +212,8 @@ describe('Platform Service Tests', () => {
 
 				let projectData: IProjectData = testInjector.resolve("projectData");
 
-				await platformService.addPlatforms(["android"], "", projectData, null);
-				await platformService.addPlatforms(["ios"], "", projectData, null);
+				await platformService.addPlatforms(["android"], "", projectData, config);
+				await platformService.addPlatforms(["ios"], "", projectData, config);
 			});
 			it("should install latest platform if no information found in package.json's nativescript key", async () => {
 				let fs = testInjector.resolve("fs");
@@ -224,8 +230,8 @@ describe('Platform Service Tests', () => {
 
 				let projectData: IProjectData = testInjector.resolve("projectData");
 
-				await platformService.addPlatforms(["android"], "", projectData, null);
-				await platformService.addPlatforms(["ios"], "", projectData, null);
+				await platformService.addPlatforms(["android"], "", projectData, config);
+				await platformService.addPlatforms(["ios"], "", projectData, config);
 			});
 		});
 		describe("#add platform(ios)", () => {
@@ -242,7 +248,7 @@ describe('Platform Service Tests', () => {
 				};
 
 				try {
-					await platformService.addPlatforms(["ios"], "", projectData, null);
+					await platformService.addPlatforms(["ios"], "", projectData, config);
 				} catch (err) {
 					assert.equal(errorMessage, err.message);
 				}
@@ -262,7 +268,7 @@ describe('Platform Service Tests', () => {
 				let projectData: IProjectData = testInjector.resolve("projectData");
 
 				try {
-					await platformService.addPlatforms(["android"], "", projectData, null);
+					await platformService.addPlatforms(["android"], "", projectData, config);
 				} catch (err) {
 					assert.equal(errorMessage, err.message);
 				}
@@ -294,7 +300,7 @@ describe('Platform Service Tests', () => {
 		it("shouldn't fail when platforms are added", async () => {
 			let projectData: IProjectData = testInjector.resolve("projectData");
 			testInjector.resolve("fs").exists = () => false;
-			await platformService.addPlatforms(["android"], "", projectData, null);
+			await platformService.addPlatforms(["android"], "", projectData, config);
 
 			testInjector.resolve("fs").exists = () => true;
 			await platformService.removePlatforms(["android"], projectData);
@@ -324,10 +330,10 @@ describe('Platform Service Tests', () => {
 				return Promise.resolve();
 			};
 
-			await platformService.cleanPlatforms(["android"], "", projectData, null);
+			await platformService.cleanPlatforms(["android"], "", projectData, config);
 
 			nsValueObject[VERSION_STRING] = versionString;
-			await platformService.cleanPlatforms(["ios"], "", projectData, null);
+			await platformService.cleanPlatforms(["ios"], "", projectData, config);
 		});
 	});
 
@@ -425,7 +431,7 @@ describe('Platform Service Tests', () => {
 
 			platformService = testInjector.resolve("platformService");
 			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: release };
-			await platformService.preparePlatform(platformToTest, appFilesUpdaterOptions, "", projectData, { provision: null, sdk: null });
+			await platformService.preparePlatform(platformToTest, appFilesUpdaterOptions, "", projectData, { provision: null, sdk: null, frameworkPath: null, ignoreScripts: false });
 		}
 
 		async function testPreparePlatform(platformToTest: string, release?: boolean): Promise<CreatedTestData> {
@@ -851,7 +857,7 @@ describe('Platform Service Tests', () => {
 			try {
 				testInjector.resolve("$logger").warn = (text: string) => warnings += text;
 				const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: false };
-				await platformService.preparePlatform("android", appFilesUpdaterOptions, "", projectData, { provision: null, sdk: null });
+				await platformService.preparePlatform("android", appFilesUpdaterOptions, "", projectData, { provision: null, sdk: null, frameworkPath: null, ignoreScripts: false });
 			} finally {
 				testInjector.resolve("$logger").warn = oldLoggerWarner;
 			}

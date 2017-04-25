@@ -10,7 +10,12 @@ export class LocalBuildService extends EventEmitter {
 
 	public async build(platform: string, platformBuildOptions: IPlatformBuildData, platformTemplate?: string): Promise<string> {
 		this.$projectData.initializeProjectData(platformBuildOptions.projectDir);
-		await this.$platformService.preparePlatform(platform, platformBuildOptions, platformTemplate, this.$projectData, { provision: platformBuildOptions.provision, sdk: null });
+		await this.$platformService.preparePlatform(platform, platformBuildOptions, platformTemplate, this.$projectData, {
+			provision: platformBuildOptions.provision,
+			sdk: null,
+			frameworkPath: null,
+			ignoreScripts: false
+		});
 		const handler = (data: any) => {
 			data.projectDir = platformBuildOptions.projectDir;
 			this.emit(BUILD_OUTPUT_EVENT_NAME, data);

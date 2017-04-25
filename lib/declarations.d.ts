@@ -295,10 +295,17 @@ interface IAndroidReleaseOptions {
 	keyStorePath?: string;
 }
 
-interface INpmInstallConfigurationOptions {
+interface INpmInstallConfigurationOptionsBase {
 	frameworkPath: string;
-	disableNpmInstall: boolean;
 	ignoreScripts: boolean; //npm flag
+}
+
+interface INpmInstallConfigurationOptions extends INpmInstallConfigurationOptionsBase {
+	disableNpmInstall: boolean;
+}
+
+interface ICreateProjectOptions extends INpmInstallConfigurationOptionsBase {
+	pathToTemplate?: string;
 }
 
 interface IOptions extends ICommonOptions, IBundle, IPlatformTemplate, IEmulator, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions {

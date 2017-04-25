@@ -4,8 +4,8 @@ export class RunCommandBase {
 		protected $projectData: IProjectData,
 		protected $options: IOptions,
 		protected $emulatorPlatformService: IEmulatorPlatformService) {
-			this.$projectData.initializeProjectData();
-		}
+		this.$projectData.initializeProjectData();
+	}
 
 	public async executeCore(args: string[]): Promise<void> {
 
@@ -25,7 +25,7 @@ export class RunCommandBase {
 			keyStorePath: this.$options.keyStorePath
 		};
 
-		await this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
+		await this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, this.$options);
 
 		if (this.$options.bundle) {
 			this.$options.watch = false;

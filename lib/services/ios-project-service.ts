@@ -120,14 +120,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	// TODO: Remove Promise, reason: readDirectory - unable until androidProjectService has async operations.
-	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, pathToTemplate?: string): Promise<void> {
+	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, config: ICreateProjectOptions): Promise<void> {
 		this.$fs.ensureDirectoryExists(path.join(this.getPlatformData(projectData).projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
-		if (pathToTemplate) {
+		if (config.pathToTemplate) {
 			// Copy everything except the template from the runtime
 			this.$fs.readDirectory(frameworkDir)
 				.filter(dirName => dirName.indexOf(IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER) === -1)
 				.forEach(dirName => shell.cp("-R", path.join(frameworkDir, dirName), this.getPlatformData(projectData).projectRoot));
-			shell.cp("-rf", path.join(pathToTemplate, "*"), this.getPlatformData(projectData).projectRoot);
+			shell.cp("-rf", path.join(config.pathToTemplate, "*"), this.getPlatformData(projectData).projectRoot);
 		} else {
 			shell.cp("-R", path.join(frameworkDir, "*"), this.getPlatformData(projectData).projectRoot);
 		}
