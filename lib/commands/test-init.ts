@@ -54,7 +54,11 @@ class TestInitCommand implements ICommand {
 				// e.g karma is installed; karma-jasmine depends on karma and will try to install it again
 				try {
 					await this.$npm.install(`${peerDependency}@${dependencyVersion}`, projectDir, {
-						'save-dev': true
+						'save-dev': true,
+						disableNpmInstall: false,
+						frameworkPath: this.$options.frameworkPath,
+						ignoreScripts: this.$options.ignoreScripts,
+						path: this.$options.path
 					});
 				} catch (e) {
 					this.$logger.error(e.message);
