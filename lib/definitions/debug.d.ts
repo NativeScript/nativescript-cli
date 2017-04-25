@@ -33,7 +33,7 @@ interface IDebugData {
  */
 interface IDebugOptions {
 	/**
-	 * Defines if Chrome-Dev Tools should be used for debugging.
+	 * Defines if Chrome DevTools should be used for debugging.
 	 */
 	chrome?: boolean;
 
