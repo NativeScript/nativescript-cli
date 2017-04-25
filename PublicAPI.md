@@ -180,10 +180,10 @@ for (let promise of loadExtensionsPromises) {
 }
 ```
 
-## settings
-`settings` module provides a way to configure various settings.
+## settingsService
+`settingsService` module provides a way to configure various settings.
 
-### set
+### setSettings
 Used to set various settings in order to modify the behavior of some methods.
 * Auxiliary interfaces:
 ```TypeScript
@@ -337,6 +337,125 @@ tns.npm.view(["nativescript"], {}).then(result => {
 }, err => {
 	console.log("An error occurred during viewing", err);
 });
+```
+
+## debugService
+Provides methods for debugging applications on devices. The service is also event emitter, that raises the following events:
+* `connectionError` event - this event is raised when the debug operation cannot start on iOS device. The causes can be:
+  * Application is not running on the specified iOS Device.
+  * Application is not built in debug configuration on the specified iOS device.
+  The event is raised with the following information:
+```TypeScript
+{
+	/**
+	 * Device identifier on which the debug process cannot start.
+	 */
+	deviceId: string;
+
+	/**
+	 * The error message.
+	 */
+	message: string;
+
+	/**
+	 * Code of the error.
+	 */
+	code: number
+}
+```
+
+* Usage:
+```JavaScript
+tns.debugService.on("connectionError", errorData => {
+	console.log(`Unable to start debug operation on device ${errorData.deviceId}. Error is: ${errorData.message}.`);
+});
+```
+
+### debug
+The `debug` method allows starting a debug operation for specified application on a specific device. The method returns a Promise, which is resolved with a url. The url should be opened in Chrome DevTools in order to debug the application.
+
+The returned Promise will be rejected in case any error occurs. It will also be rejected in case:
+1. Specified deviceIdentifier is not found in current list of attached devices.
+1. The device, specified as deviceIdentifier is connected but not trusted.
+1. The specified application is not installed on the device.
+1. Trying to debug applications on connected iOS device on Linux.
+1. In case the application is not running on the specified device.
+1. In case the installed application is not built in debug configuration.
+
+* Definition:
+```TypeScript
+/**
+ * Starts debug operation based on the specified debug data.
+ * @param {IDebugData} debugData Describes information for device and application that will be debugged.
+ * @param {IDebugOptions} debugOptions Describe possible options to modify the behaivor of the debug operation, for example stop on the first line.
+ * @returns {Promise<string>} URL that should be opened in Chrome DevTools.
+ */
+debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string>;
+```
+
+The type of arguments that you can pass are described below:
+```TypeScript
+/**
+ * Describes information for starting debug process.
+ */
+interface IDebugData {
+	/**
+	 * Id of the device on which the debug process will be started.
+	 */
+	deviceIdentifier: string;
+
+	/**
+	 * Application identifier of the app that it will be debugged.
+	 */
+	applicationIdentifier: string;
+
+	/**
+	 * Path to .app built for iOS Simulator.
+	 */
+	pathToAppPackage?: string;
+
+	/**
+	 * The name of the application, for example `MyProject`.
+	 */
+	projectName?: string;
+
+	/**
+	 * Path to project.
+	 */
+	projectDir?: string;
+}
+
+/**
+ * Describes all options that define the behavior of debug.
+ */
+interface IDebugOptions {
+	/**
+	 * Defines if bundled Chrome DevTools should be used or specific commit. Valid for iOS only.
+	 */
+	useBundledDevTools?: boolean;
+}
+```
+
+* Usage:
+```JavaScript
+tns.debugService.on("connectionError", errorData => {
+	console.log(`Unable to start debug operation on device ${errorData.deviceId}. Error is: ${errorData.message}.`);
+});
+
+const debugData = {
+	deviceIdentifier: "4df18f307d8a8f1b",
+	applicationIdentifier: "com.telerik.app1",
+	projectName: "app1",
+	projectDir: "/Users/myUser/app1"
+};
+
+const debugOptions = {
+	useBundledDevTools: true
+};
+
+tns.debugService.debug(debugData, debugOptions)
+	.then(url => console.log(`Open the following url in Chrome DevTools: ${url}`))
+	.catch(err => console.log(`Unable to start debug operation, reason: ${err.message}.`));
 ```
 
 ## How to add a new method to Public API

@@ -1,10 +1,9 @@
 import { platform } from "os";
 import { EventEmitter } from "events";
 import { CONNECTION_ERROR_EVENT_NAME } from "../constants";
+import { CONNECTED_STATUS } from "../common/constants";
 
-// This service can't implement IDebugService because
-// the debug method returns only one result.
-class DebugService extends EventEmitter {
+class DebugService extends EventEmitter implements IDebugService {
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $androidDebugService: IPlatformDebugService,
 		private $iOSDebugService: IPlatformDebugService,
@@ -21,6 +20,10 @@ class DebugService extends EventEmitter {
 
 		if (!device) {
 			this.$errors.failWithoutHelp(`Can't find device with identifier ${debugData.deviceIdentifier}`);
+		}
+
+		if (device.deviceInfo.status !== CONNECTED_STATUS) {
+			this.$errors.failWithoutHelp(`The device with identifier ${debugData.deviceIdentifier} is unreachable. Make sure it is Trusted and try again.`);
 		}
 
 		if (!(await device.applicationManager.isApplicationInstalled(debugData.applicationIdentifier))) {
@@ -51,9 +54,9 @@ class DebugService extends EventEmitter {
 				this.$errors.failWithoutHelp(`Debugging on iOS devices is not supported for ${platform()} yet.`);
 			}
 
-			result = await debugService.debug(debugData, debugOptions);
+			result = await debugService.debug<string[]>(debugData, debugOptions);
 		} else if (this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
-			result = await debugService.debug(debugData, debugOptions);
+			result = await debugService.debug<string[]>(debugData, debugOptions);
 		}
 
 		return _.first(result);

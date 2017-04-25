@@ -19,7 +19,8 @@ describe("nativescript-cli-lib", () => {
 		localBuildService: ["build"],
 		deviceLogProvider: null,
 		npm: ["install", "uninstall", "view", "search"],
-		extensibilityService: ["loadExtensions", "getInstalledExtensions", "installExtension", "uninstallExtension"]
+		extensibilityService: ["loadExtensions", "getInstalledExtensions", "installExtension", "uninstallExtension"],
+		debugService: ["debug"]
 	};
 
 	const pathToEntryPoint = path.join(__dirname, "..", "lib", "nativescript-cli-lib.js").replace(/\\/g, "\\\\");
