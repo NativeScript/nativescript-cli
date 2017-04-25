@@ -12,20 +12,23 @@ export class XCConfigService {
 			let text = this.$fs.readText(xcconfigFilePath);
 
 			let property: string;
+			let isPropertyParsed: boolean = false;
 			text.split(/\r?\n/).forEach((line) => {
 				line = line.replace(/\/(\/)[^\n]*$/, "");
 				if (line.indexOf(propertyName) >= 0) {
-					// todo this can have undefined.
-					property = line.split("=")[1].trim();
-					// todo this can have undefined.
-					if (property[property.length - 1] === ';') {
-						property = property.slice(0, -1);
+					let parts = line.split("=");
+					if (parts.length > 1 && parts[1]) {
+						property = parts[1].trim();
+						isPropertyParsed = true;
+						if (property[property.length - 1] === ';') {
+							property = property.slice(0, -1);
+						}
 					}
 				}
 			});
 
-			// what if the property is set to empty value?
-			if (property) {
+			if (isPropertyParsed) {
+				// property can be an empty string, so we don't check for that.
 				return property;
 			}
 		}
