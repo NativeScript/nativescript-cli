@@ -37,6 +37,25 @@ class TestInitCommand implements ICommand {
 				'save-dev': true,
 				optional: false,
 			});
+
+			const modulePath = path.join(projectDir, "node_modules", mod);
+			const modulePackageJsonPath = path.join(modulePath, "package.json");
+			const modulePackageJsonContent = this.$fs.readJson(modulePackageJsonPath);
+			const modulePeerDependencies = modulePackageJsonContent.peerDependencies || {};
+
+			for (let peerDependency in modulePeerDependencies) {
+				let dependencyVersion = modulePeerDependencies[peerDependency] || "*";
+
+				// catch errors when a peerDependency is already installed
+				// e.g karma is installed; karma-jasmine depends on karma and will try to install it again
+				try {
+					await this.$npm.install(`${peerDependency}@${dependencyVersion}`, projectDir, {
+						'save-dev': true
+					});
+				} catch (e) {
+					this.$logger.error(e.message);
+				}
+			}
 		}
 
 		await this.$pluginsService.add('nativescript-unit-test-runner', this.$projectData);
