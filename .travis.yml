@@ -9,6 +9,8 @@ node_js:
 git:
   submodules: true
 before_script:
+- gem install xcodeproj
+- gem install cocoapods
 - npm install grunt
 - node_modules/.bin/grunt enableScripts:false
 - grunt rebuild
