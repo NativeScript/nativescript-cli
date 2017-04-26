@@ -22,9 +22,14 @@ import { DeviceDiscovery } from "../lib/common/mobile/mobile-core/device-discove
 import { IOSDeviceDiscovery } from "../lib/common/mobile/mobile-core/ios-device-discovery";
 import { AndroidDeviceDiscovery } from "../lib/common/mobile/mobile-core/android-device-discovery";
 import { PluginVariablesService } from "../lib/services/plugin-variables-service";
+import { PluginsService } from "../lib/services/plugins-service";
 import { PluginVariablesHelper } from "../lib/common/plugin-variables-helper";
 import { Utils } from "../lib/common/utils";
 import { CocoaPodsService } from "../lib/services/cocoapods-service";
+import { NpmInstallationManager } from "../lib/npm-installation-manager";
+import { NodePackageManager } from "../lib/node-package-manager";
+import * as constants from "../lib/constants";
+
 import { assert } from "chai";
 import temp = require("temp");
 
@@ -82,13 +87,23 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("loggingLevels", LoggingLevels);
 	testInjector.register("utils", Utils);
 	testInjector.register("iTunesValidator", {});
-	testInjector.register("xcprojService", {});
+	testInjector.register("xcprojService", {
+		getXcprojInfo: () => {
+			return {
+				shouldUseXcproj: false
+			};
+		}
+	});
 	testInjector.register("iosDeviceOperations", {});
 	testInjector.register("pluginVariablesService", PluginVariablesService);
 	testInjector.register("pluginVariablesHelper", PluginVariablesHelper);
+	testInjector.register("pluginsService", PluginsService);
 	testInjector.register("androidProcessService", {});
 	testInjector.register("processService", {});
 	testInjector.register("sysInfo", {});
+	testInjector.register("npmInstallationManager", NpmInstallationManager);
+	testInjector.register("npm", NodePackageManager);
+	testInjector.register("xCConfigService", XCConfigService);
 	return testInjector;
 }
 
@@ -488,5 +503,63 @@ describe("Relative paths", () => {
 
 		let result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath, projectData);
 		assert.equal(result, path.join("..", "..", "sub", "path"));
+	});
+});
+
+describe("Merge Project XCConfig files", () => {
+	const assertPropertyValues = (expected: any, xcconfigPath: string, injector: IInjector) => {
+		let service = <XCConfigService>injector.resolve('xCConfigService');
+		_.forOwn(expected, (value, key) => {
+			let actual = service.readPropertyValue(xcconfigPath, key);
+			assert.equal(actual, value);
+		});
+	};
+
+	let projectName: string,
+		projectPath: string,
+		testInjector: IInjector,
+		iOSProjectService: IOSProjectService,
+		projectData: IProjectData,
+		fs: IFileSystem;
+
+	beforeEach(() => {
+		projectName = "projectDirectory";
+		projectPath = temp.mkdirSync(projectName);
+
+		testInjector = createTestInjector(projectPath, projectName);
+		iOSProjectService = testInjector.resolve("iOSProjectService");
+		projectData = testInjector.resolve("projectData");
+		projectData.projectDir = projectPath;
+
+		let testPackageJson = {
+			"name": "test-project",
+			"version": "0.0.1"
+		};
+		fs = testInjector.resolve("fs");
+		fs.writeJson(path.join(projectPath, "package.json"), testPackageJson);
+	});
+
+	it("Uses the build.xcconfig file content from App_Resources", async () => {
+		let appResourcesXcconfigPath = path.join(projectData.projectDir, constants.APP_FOLDER_NAME,
+			constants.APP_RESOURCES_FOLDER_NAME, constants.IOS_PLATFORM_NORMALIZED_NAME, "build.xcconfig");
+		let appResourceXCConfigContent = `CODE_SIGN_IDENTITY = iPhone Distribution 
+			// To build for device with XCode 8 you need to specify your development team. More info: https://developer.apple.com/library/prerelease/content/releasenotes/DeveloperTools/RN-Xcode/Introduction.html
+			// DEVELOPMENT_TEAM = YOUR_TEAM_ID;
+			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+			`;
+		fs.writeFile(appResourcesXcconfigPath, appResourceXCConfigContent);
+
+		await (<any>iOSProjectService).mergeProjectXcconfigFiles(true, projectData);
+
+		let destinationFilePath = path.join(projectData.platformsDir, constants.IOS_PLATFORM_NAME, "plugins-release.xcconfig");
+
+		assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing.');
+		let expected = {
+			'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
+			'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
+			'CODE_SIGN_IDENTITY': 'iPhone Distribution'
+		};
+		assertPropertyValues(expected, destinationFilePath, testInjector);
 	});
 });
