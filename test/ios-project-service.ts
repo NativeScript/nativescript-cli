@@ -22,9 +22,14 @@ import { DeviceDiscovery } from "../lib/common/mobile/mobile-core/device-discove
 import { IOSDeviceDiscovery } from "../lib/common/mobile/mobile-core/ios-device-discovery";
 import { AndroidDeviceDiscovery } from "../lib/common/mobile/mobile-core/android-device-discovery";
 import { PluginVariablesService } from "../lib/services/plugin-variables-service";
+import { PluginsService } from "../lib/services/plugins-service";
 import { PluginVariablesHelper } from "../lib/common/plugin-variables-helper";
 import { Utils } from "../lib/common/utils";
 import { CocoaPodsService } from "../lib/services/cocoapods-service";
+import { NpmInstallationManager } from "../lib/npm-installation-manager";
+import { NodePackageManager } from "../lib/node-package-manager";
+import * as constants from "../lib/constants";
+
 import { assert } from "chai";
 import { IOSProvisionService } from "../lib/services/ios-provision-service";
 import temp = require("temp");
@@ -83,10 +88,17 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("loggingLevels", LoggingLevels);
 	testInjector.register("utils", Utils);
 	testInjector.register("iTunesValidator", {});
-	testInjector.register("xcprojService", {});
+	testInjector.register("xcprojService", {
+		getXcprojInfo: () => {
+			return {
+				shouldUseXcproj: false
+			};
+		}
+	});
 	testInjector.register("iosDeviceOperations", {});
 	testInjector.register("pluginVariablesService", PluginVariablesService);
 	testInjector.register("pluginVariablesHelper", PluginVariablesHelper);
+	testInjector.register("pluginsService", PluginsService);
 	testInjector.register("androidProcessService", {});
 	testInjector.register("processService", {});
 	testInjector.register("sysInfo", {});
@@ -98,6 +110,9 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 			pbxGroupByName() { /* */ }
 		}
 	});
+	testInjector.register("npmInstallationManager", NpmInstallationManager);
+	testInjector.register("npm", NodePackageManager);
+	testInjector.register("xCConfigService", XCConfigService);
 	return testInjector;
 }
 
@@ -602,7 +617,7 @@ describe("iOS Project Service Signing", () => {
 		});
 		it("sets signingChanged if the Xcode projects is configured with Automatic signing, but proivsion is specified", () => {
 			files[pbxproj] = "";
-			pbxprojDomXcode.Xcode.open = <any>function(path: string) {
+			pbxprojDomXcode.Xcode.open = <any>function (path: string) {
 				assert.equal(path, pbxproj);
 				return {
 					getSigning(x: string) {
@@ -616,14 +631,16 @@ describe("iOS Project Service Signing", () => {
 		});
 		it("sets signingChanged if the Xcode projects is configured with Manual signing, but the proivsion specified differs the selected in the pbxproj", () => {
 			files[pbxproj] = "";
-			pbxprojDomXcode.Xcode.open = <any>function(path: string) {
+			pbxprojDomXcode.Xcode.open = <any>function (path: string) {
 				assert.equal(path, pbxproj);
 				return {
 					getSigning() {
-						return { style: "Manual", configurations: {
-							Debug: { name: "NativeScriptDev2" },
-							Release: { name: "NativeScriptDev2" }
-						}};
+						return {
+							style: "Manual", configurations: {
+								Debug: { name: "NativeScriptDev2" },
+								Release: { name: "NativeScriptDev2" }
+							}
+						};
 					}
 				};
 			};
@@ -633,14 +650,16 @@ describe("iOS Project Service Signing", () => {
 		});
 		it("does not set signingChanged if the Xcode projects is configured with Manual signing and proivsion matches", () => {
 			files[pbxproj] = "";
-			pbxprojDomXcode.Xcode.open = <any>function(path: string) {
+			pbxprojDomXcode.Xcode.open = <any>function (path: string) {
 				assert.equal(path, pbxproj);
 				return {
 					getSigning() {
-						return { style: "Manual", configurations: {
-							Debug: { name: "NativeScriptDev" },
-							Release: { name: "NativeScriptDev" }
-						}};
+						return {
+							style: "Manual", configurations: {
+								Debug: { name: "NativeScriptDev" },
+								Release: { name: "NativeScriptDev" }
+							}
+						};
 					}
 				};
 			};
@@ -654,7 +673,7 @@ describe("iOS Project Service Signing", () => {
 		describe("from Automatic to provision name", () => {
 			beforeEach(() => {
 				files[pbxproj] = "";
-				pbxprojDomXcode.Xcode.open = <any>function(path: string) {
+				pbxprojDomXcode.Xcode.open = <any>function (path: string) {
 					return {
 						getSigning(x: string) {
 							return { style: "Automatic", teamID: "AutoTeam" };
@@ -669,9 +688,9 @@ describe("iOS Project Service Signing", () => {
 					assert.isTrue(e.toString().indexOf("Failed to find mobile provision with UUID or Name: NativeScriptDev2") >= 0);
 				}
 			});
-			it("succeeds if the provision name is provided for development cert", async() => {
+			it("succeeds if the provision name is provided for development cert", async () => {
 				let stack: any = [];
-				pbxprojDomXcode.Xcode.open = <any>function(path: string) {
+				pbxprojDomXcode.Xcode.open = <any>function (path: string) {
 					assert.equal(path, pbxproj);
 					return {
 						getSigning() {
@@ -686,11 +705,11 @@ describe("iOS Project Service Signing", () => {
 					};
 				};
 				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDev" });
-				assert.deepEqual(stack, [{targetName: projectDirName, manualSigning: { team: "TKID101", uuid: "12345", name: "NativeScriptDev", identity: "iPhone Developer" }}, "save()"]);
+				assert.deepEqual(stack, [{ targetName: projectDirName, manualSigning: { team: "TKID101", uuid: "12345", name: "NativeScriptDev", identity: "iPhone Developer" } }, "save()"]);
 			});
 			it("succeds if the provision name is provided for distribution cert", async () => {
 				let stack: any = [];
-				pbxprojDomXcode.Xcode.open = <any>function(path: string) {
+				pbxprojDomXcode.Xcode.open = <any>function (path: string) {
 					assert.equal(path, pbxproj);
 					return {
 						getSigning() {
@@ -705,11 +724,11 @@ describe("iOS Project Service Signing", () => {
 					};
 				};
 				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDist" });
-				assert.deepEqual(stack, [{targetName: projectDirName, manualSigning: { team: "TKID202", uuid: "6789", name: "NativeScriptDist", identity: "iPhone Distribution" }}, "save()"]);
+				assert.deepEqual(stack, [{ targetName: projectDirName, manualSigning: { team: "TKID202", uuid: "6789", name: "NativeScriptDist", identity: "iPhone Distribution" } }, "save()"]);
 			});
 			it("succeds if the provision name is provided for adhoc cert", async () => {
 				let stack: any = [];
-				pbxprojDomXcode.Xcode.open = <any>function(path: string) {
+				pbxprojDomXcode.Xcode.open = <any>function (path: string) {
 					assert.equal(path, pbxproj);
 					return {
 						getSigning() {
@@ -724,8 +743,66 @@ describe("iOS Project Service Signing", () => {
 					};
 				};
 				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptAdHoc" });
-				assert.deepEqual(stack, [{targetName: projectDirName, manualSigning: { team: "TKID303", uuid: "1010", name: "NativeScriptAdHoc", identity: "iPhone Distribution" }}, "save()"]);
+				assert.deepEqual(stack, [{ targetName: projectDirName, manualSigning: { team: "TKID303", uuid: "1010", name: "NativeScriptAdHoc", identity: "iPhone Distribution" } }, "save()"]);
 			});
 		});
+	});
+});
+
+describe("Merge Project XCConfig files", () => {
+	const assertPropertyValues = (expected: any, xcconfigPath: string, injector: IInjector) => {
+		let service = <XCConfigService>injector.resolve('xCConfigService');
+		_.forOwn(expected, (value, key) => {
+			let actual = service.readPropertyValue(xcconfigPath, key);
+			assert.equal(actual, value);
+		});
+	};
+
+	let projectName: string,
+		projectPath: string,
+		testInjector: IInjector,
+		iOSProjectService: IOSProjectService,
+		projectData: IProjectData,
+		fs: IFileSystem;
+
+	beforeEach(() => {
+		projectName = "projectDirectory";
+		projectPath = temp.mkdirSync(projectName);
+
+		testInjector = createTestInjector(projectPath, projectName);
+		iOSProjectService = testInjector.resolve("iOSProjectService");
+		projectData = testInjector.resolve("projectData");
+		projectData.projectDir = projectPath;
+
+		let testPackageJson = {
+			"name": "test-project",
+			"version": "0.0.1"
+		};
+		fs = testInjector.resolve("fs");
+		fs.writeJson(path.join(projectPath, "package.json"), testPackageJson);
+	});
+
+	it("Uses the build.xcconfig file content from App_Resources", async () => {
+		let appResourcesXcconfigPath = path.join(projectData.projectDir, constants.APP_FOLDER_NAME,
+			constants.APP_RESOURCES_FOLDER_NAME, constants.IOS_PLATFORM_NORMALIZED_NAME, "build.xcconfig");
+		let appResourceXCConfigContent = `CODE_SIGN_IDENTITY = iPhone Distribution 
+			// To build for device with XCode 8 you need to specify your development team. More info: https://developer.apple.com/library/prerelease/content/releasenotes/DeveloperTools/RN-Xcode/Introduction.html
+			// DEVELOPMENT_TEAM = YOUR_TEAM_ID;
+			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+			`;
+		fs.writeFile(appResourcesXcconfigPath, appResourceXCConfigContent);
+
+		await (<any>iOSProjectService).mergeProjectXcconfigFiles(true, projectData);
+
+		let destinationFilePath = path.join(projectData.platformsDir, constants.IOS_PLATFORM_NAME, "plugins-release.xcconfig");
+
+		assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing.');
+		let expected = {
+			'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
+			'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
+			'CODE_SIGN_IDENTITY': 'iPhone Distribution'
+		};
+		assertPropertyValues(expected, destinationFilePath, testInjector);
 	});
 });
