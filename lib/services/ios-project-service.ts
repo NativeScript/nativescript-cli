@@ -1090,20 +1090,33 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private async mergeProjectXcconfigFiles(release: boolean, projectData: IProjectData): Promise<void> {
-		this.$fs.deleteFile(release ? this.getPluginsReleaseXcconfigFilePath(projectData) : this.getPluginsDebugXcconfigFilePath(projectData));
+		let pluginsXcconfigFilePath = release ? this.getPluginsReleaseXcconfigFilePath(projectData) : this.getPluginsDebugXcconfigFilePath(projectData);
+		this.$fs.deleteFile(pluginsXcconfigFilePath);
 
 		let allPlugins: IPluginData[] = await (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins(projectData);
 		for (let plugin of allPlugins) {
 			let pluginPlatformsFolderPath = plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 			let pluginXcconfigFilePath = path.join(pluginPlatformsFolderPath, "build.xcconfig");
 			if (this.$fs.exists(pluginXcconfigFilePath)) {
-				await this.mergeXcconfigFiles(pluginXcconfigFilePath, release ? this.getPluginsReleaseXcconfigFilePath(projectData) : this.getPluginsDebugXcconfigFilePath(projectData));
+				await this.mergeXcconfigFiles(pluginXcconfigFilePath, pluginsXcconfigFilePath);
 			}
 		}
 
 		let appResourcesXcconfigPath = path.join(projectData.projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, "build.xcconfig");
 		if (this.$fs.exists(appResourcesXcconfigPath)) {
-			await this.mergeXcconfigFiles(appResourcesXcconfigPath, release ? this.getPluginsReleaseXcconfigFilePath(projectData) : this.getPluginsDebugXcconfigFilePath(projectData));
+			await this.mergeXcconfigFiles(appResourcesXcconfigPath, pluginsXcconfigFilePath);
+		}
+
+		// Set Entitlements Property to point to default file if not set explicitly by the user.
+		let entitlementsPropertyValue = this.xCConfigService.readPropertyValue(pluginsXcconfigFilePath, constants.CODE_SIGN_ENTITLEMENTS);
+		if (entitlementsPropertyValue == null) {
+			temp.track();
+			let tempEntitlementsDir = temp.mkdirSync("entitlements");
+			let tempEntitlementsFilePath = path.join(tempEntitlementsDir, "set-entitlements.xcconfig");
+			const entitlementsRelativePath = this.$iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData);
+			this.$fs.writeFile(tempEntitlementsFilePath, `CODE_SIGN_ENTITLEMENTS = ${entitlementsRelativePath}${EOL}`);
+
+			await this.mergeXcconfigFiles(tempEntitlementsFilePath, pluginsXcconfigFilePath);
 		}
 
 		let podFilesRootDirName = path.join("Pods", "Target Support Files", `Pods-${projectData.projectName}`);

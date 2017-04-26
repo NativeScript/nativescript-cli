@@ -25,6 +25,9 @@ export class IOSEntitlementsService {
 		return path.join(projectData.platformsDir, constants.IOS_PLATFORM_NAME,
 			projectData.projectName, projectData.projectName + ".entitlements");
 	}
+	public getPlatformsEntitlementsRelativePath(projectData: IProjectData): string {
+		return path.join(projectData.projectName, projectData.projectName + ".entitlements");
+	}
 
 	public async merge(projectData: IProjectData): Promise<void> {
 		let session = new PlistSession({ log: (txt: string) => this.$logger.trace("App.entitlements: " + txt) });

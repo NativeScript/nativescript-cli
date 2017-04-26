@@ -18,6 +18,7 @@ export const XML_FILE_EXTENSION = ".xml";
 export const PLATFORMS_DIR_NAME = "platforms";
 export const IOS_PLATFORM_NAME = "ios";
 export const IOS_PLATFORM_NORMALIZED_NAME = "iOS";
+export const CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
 
 export class PackageVersion {
 	static NEXT = "next";
