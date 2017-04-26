@@ -27,7 +27,7 @@ export class EmulateCommandBase {
 			keyStorePassword: this.$options.keyStorePassword,
 			keyStorePath: this.$options.keyStorePath
 		};
-		return this.$platformService.emulatePlatform(args[0], appFilesUpdaterOptions, emulateOptions, this.$projectData, this.$options.provision);
+		return this.$platformService.emulatePlatform(args[0], appFilesUpdaterOptions, emulateOptions, this.$projectData, this.$options);
 	}
 }
 
