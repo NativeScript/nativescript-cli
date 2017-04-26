@@ -520,7 +520,10 @@ describe("Merge Project XCConfig files", () => {
 		testInjector: IInjector,
 		iOSProjectService: IOSProjectService,
 		projectData: IProjectData,
-		fs: IFileSystem;
+		fs: IFileSystem,
+		appResourcesXcconfigPath: string,
+		appResourceXCConfigContent: string,
+		iOSEntitlementsService: IOSEntitlementsService;
 
 	beforeEach(() => {
 		projectName = "projectDirectory";
@@ -531,6 +534,16 @@ describe("Merge Project XCConfig files", () => {
 		projectData = testInjector.resolve("projectData");
 		projectData.projectDir = projectPath;
 
+		iOSEntitlementsService = testInjector.resolve("iOSEntitlementsService");
+
+		appResourcesXcconfigPath = path.join(projectData.projectDir, constants.APP_FOLDER_NAME,
+			constants.APP_RESOURCES_FOLDER_NAME, constants.IOS_PLATFORM_NORMALIZED_NAME, "build.xcconfig");
+		appResourceXCConfigContent = `CODE_SIGN_IDENTITY = iPhone Distribution 
+			// To build for device with XCode 8 you need to specify your development team. More info: https://developer.apple.com/library/prerelease/content/releasenotes/DeveloperTools/RN-Xcode/Introduction.html
+			// DEVELOPMENT_TEAM = YOUR_TEAM_ID;
+			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+			`;
 		let testPackageJson = {
 			"name": "test-project",
 			"version": "0.0.1"
@@ -540,26 +553,38 @@ describe("Merge Project XCConfig files", () => {
 	});
 
 	it("Uses the build.xcconfig file content from App_Resources", async () => {
-		let appResourcesXcconfigPath = path.join(projectData.projectDir, constants.APP_FOLDER_NAME,
-			constants.APP_RESOURCES_FOLDER_NAME, constants.IOS_PLATFORM_NORMALIZED_NAME, "build.xcconfig");
-		let appResourceXCConfigContent = `CODE_SIGN_IDENTITY = iPhone Distribution 
-			// To build for device with XCode 8 you need to specify your development team. More info: https://developer.apple.com/library/prerelease/content/releasenotes/DeveloperTools/RN-Xcode/Introduction.html
-			// DEVELOPMENT_TEAM = YOUR_TEAM_ID;
-			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-			ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
-			`;
+		// setup app_resource build.xcconfig
 		fs.writeFile(appResourcesXcconfigPath, appResourceXCConfigContent);
 
-		await (<any>iOSProjectService).mergeProjectXcconfigFiles(true, projectData);
+		// run merge for all release: debug|release
+		for (let release in [true, false]) {
+			await (<any>iOSProjectService).mergeProjectXcconfigFiles(release, projectData);
 
-		let destinationFilePath = path.join(projectData.platformsDir, constants.IOS_PLATFORM_NAME, "plugins-release.xcconfig");
+			let destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
+				: (<any>iOSProjectService).getPluginsDebugXcconfigFilePath(projectData);
 
-		assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing.');
-		let expected = {
-			'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
-			'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
-			'CODE_SIGN_IDENTITY': 'iPhone Distribution'
-		};
-		assertPropertyValues(expected, destinationFilePath, testInjector);
+			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
+			let expected = {
+				'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
+				'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
+				'CODE_SIGN_IDENTITY': 'iPhone Distribution'
+			};
+			assertPropertyValues(expected, destinationFilePath, testInjector);
+		}
+	});
+
+	it("Adds the entitlements property if not set by the user", async () => {
+		for (let release in [true, false]) {
+			await (<any>iOSProjectService).mergeProjectXcconfigFiles(release, projectData);
+
+			let destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
+				: (<any>iOSProjectService).getPluginsDebugXcconfigFilePath(projectData);
+
+			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
+			let expected = {
+				'CODE_SIGN_ENTITLEMENTS': iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData)
+			};
+			assertPropertyValues(expected, destinationFilePath, testInjector);
+		}
 	});
 });
