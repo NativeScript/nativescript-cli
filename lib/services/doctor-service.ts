@@ -226,9 +226,8 @@ class DoctorService implements IDoctorService {
 		let hasInvalidPackages = false;
 		if (this.$hostInfo.isDarwin) {
 			try {
-				let queryForSixPackage = await this.$childProcess.exec(`pip freeze | grep '^six=' | wc -l`);
-				let sixPackagesFoundCount = parseInt(queryForSixPackage);
-				if (sixPackagesFoundCount === 0) {
+				let queryForSixPackage = await this.$childProcess.exec(`echo 'help("six")' | python`);
+				if (queryForSixPackage.indexOf("no Python documentation found for 'six'") === 0) {
 					hasInvalidPackages = true;
 					this.$logger.warn("The Python 'six' package not found.");
 					this.$logger.out("This package is required by the Debugger library (LLDB) for iOS. You can install it by running 'pip install six' from the terminal.");
