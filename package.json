@@ -98,7 +98,7 @@
     "grunt-tslint": "4.0.0",
     "istanbul": "0.4.5",
     "mocha": "3.1.2",
-    "mocha-typescript": "^1.0.4",
+    "mocha-typescript": "1.0.23",
     "should": "7.0.2",
     "tslint": "4.3.1",
     "typescript": "2.1.4"
