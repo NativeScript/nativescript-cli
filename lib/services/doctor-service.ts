@@ -226,17 +226,18 @@ class DoctorService implements IDoctorService {
 		let hasInvalidPackages = false;
 		if (this.$hostInfo.isDarwin) {
 			try {
-				let queryForSixPackage = await this.$childProcess.exec(`pip freeze | grep '^six=' | wc -l`);
-				let sixPackagesFoundCount = parseInt(queryForSixPackage);
-				if (sixPackagesFoundCount === 0) {
+				await this.$childProcess.exec(`python -c "import six"`);
+			} catch (error) {
+				// error.code = 1 so the Python is present, but we don't have six.
+				if (error.code === 1) {
 					hasInvalidPackages = true;
 					this.$logger.warn("The Python 'six' package not found.");
 					this.$logger.out("This package is required by the Debugger library (LLDB) for iOS. You can install it by running 'pip install six' from the terminal.");
+				} else {
+					this.$logger.warn("Couldn't retrieve installed python packages.");
+					this.$logger.out("We cannot verify your python installation is setup correctly. Please, make sure you have both 'python' and 'pip' installed.");
+					this.$logger.trace(`Error while validating Python packages. Error is: ${error.message}`);
 				}
-			} catch (error) {
-				this.$logger.warn("Couldn't retrieve installed python packages.");
-				this.$logger.out("We cannot verify your python installation is setup correctly. Please, make sure you have both 'python' and 'pip' installed.");
-				this.$logger.trace(`Error while validating Python packages. Error is: ${error.message}`);
 			}
 		}
 		return hasInvalidPackages;
