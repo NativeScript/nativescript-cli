@@ -438,6 +438,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
 	}
 
+	public checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void {
+		// Nothing android specific to check yet.
+	}
+
 	private _canUseGradle: boolean;
 	private canUseGradle(projectData: IProjectData, frameworkVersion?: string): boolean {
 		if (!this._canUseGradle) {

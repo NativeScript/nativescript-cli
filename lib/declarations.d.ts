@@ -281,7 +281,7 @@ interface IClean {
 }
 
 interface IProvision {
-	provision: any;
+	provision: string;
 }
 
 interface ITeamIdentifier {

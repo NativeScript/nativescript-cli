@@ -357,6 +357,9 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
 		return Promise.resolve();
 	}
+	checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void {
+		// Nothing yet.
+	}
 }
 
 export class ProjectDataService implements IProjectDataService {

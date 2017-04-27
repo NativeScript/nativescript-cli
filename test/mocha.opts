@@ -1,5 +1,6 @@
 --recursive
 --reporter spec
+--require source-map-support/register
 --require test/test-bootstrap.js
 --timeout 150000
 test/

@@ -418,7 +418,8 @@ describe('Platform Service Tests', () => {
 						ensureConfigurationFileInAppResources: (): any => null,
 						interpolateConfigurationFile: (): void => undefined,
 						isPlatformPrepared: (projectRoot: string) => false,
-						prepareAppResources: (appResourcesDirectoryPath: string, projectData: IProjectData): void => undefined
+						prepareAppResources: (appResourcesDirectoryPath: string, projectData: IProjectData): void => undefined,
+						checkForChanges: () => { /* */ }
 					}
 				};
 			};
@@ -842,7 +843,8 @@ describe('Platform Service Tests', () => {
 						processConfigurationFilesFromAppResources: () => Promise.resolve(),
 						ensureConfigurationFileInAppResources: (): any => null,
 						interpolateConfigurationFile: (): void => undefined,
-						isPlatformPrepared: (projectRoot: string) => false
+						isPlatformPrepared: (projectRoot: string) => false,
+						checkForChanges: () => { /* */ }
 					},
 					frameworkPackageName: "tns-ios"
 				};

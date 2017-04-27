@@ -59,9 +59,27 @@ describe("Project Changes Service Tests", () => {
 
 		serviceTest.platformsData.getPlatformData =
 			(platform: string) => {
-				return {
-					projectRoot: path.join(platformsDir, platform)
-				};
+				if (platform.toLowerCase() === "ios") {
+					return {
+						projectRoot: path.join(platformsDir, platform),
+						get platformProjectService(): any {
+							return {
+								checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void {
+									changesInfo.signingChanged = true;
+								}
+							};
+						}
+					};
+				} else {
+					return {
+						projectRoot: path.join(platformsDir, platform),
+						get platformProjectService(): any {
+							return {
+								checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void { /* no android changes */ }
+							};
+						}
+					};
+				}
 			};
 	});
 
@@ -111,6 +129,15 @@ describe("Project Changes Service Tests", () => {
 				// assert
 				assert.deepEqual(actualPrepareInfo, expectedPrepareInfo);
 			}
+		});
+	});
+
+	describe("Accumulates Changes From Project Services", () => {
+		it("accumulates changes from the project service", () => {
+			let iOSChanges = serviceTest.projectChangesService.checkForChanges("ios", serviceTest.projectData, { bundle: false, release: false, provision: undefined });
+			assert.isTrue(!!iOSChanges.signingChanged, "iOS signingChanged expected to be true");
+			let androidChanges = serviceTest.projectChangesService.checkForChanges("android", serviceTest.projectData, { bundle: false, release: false, provision: undefined });
+			assert.isFalse(!!androidChanges.signingChanged, "Android signingChanged expected to be false");
 		});
 	});
 });
