@@ -46,16 +46,6 @@ export class IOSEntitlementsService {
 			});
 		};
 
-		// Start with a default empty entitlements file.
-		session.patch({
-				name: "Default entitlements file",
-				read: () =>
-					`<?xml version="1.0" encoding="UTF-8"?>
-					<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-					<plist version="1.0">
-					</plist>`
-			});
-
 		let allPlugins = await this.getAllInstalledPlugins(projectData);
 		for (let plugin of allPlugins) {
 			let pluginInfoPlistPath = path.join(plugin.pluginPlatformsFolderPath(constants.IOS_PLATFORM_NAME), this.getDefaultEntitlementsName());
@@ -71,13 +61,6 @@ export class IOSEntitlementsService {
 		let plistContent = session.build();
 		this.$logger.trace("App.entitlements: Write to: " + this.getPlatformsEntitlementsPath(projectData));
 		this.$fs.writeFile(this.getPlatformsEntitlementsPath(projectData), plistContent);
-		return;
-	}
-
-	public async patchXcconfigFile(projectData: IProjectData) {
-		//CODE_SIGN_ENTITLEMENTS = fgomobile/fgomobile.entitlements
-		//let entitlementsRelativePath = path.join(projectData.projectName, projectData.projectName + ".entitlements");
-
 		return;
 	}
 
