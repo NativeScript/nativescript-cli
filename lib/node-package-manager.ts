@@ -77,7 +77,7 @@ export class NodePackageManager implements INodePackageManager {
 				throw err;
 			}
 		}
-		}
+	}
 
 	@exported("npm")
 	public async uninstall(packageName: string, config?: any, path?: string): Promise<string> {
