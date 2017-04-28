@@ -8,12 +8,10 @@ export class IOSEntitlementsService {
 		private $logger: ILogger) {
 	}
 
-	private getDefaultEntitlementsName() : string {
-		return "app.entitlements";
-	}
+	public static readonly DefaultEntitlementsName: string = "app.entitlements";
 
 	private getDefaultAppEntitlementsPath(projectData: IProjectData) : string {
-		let entitlementsName = this.getDefaultEntitlementsName();
+		let entitlementsName = IOSEntitlementsService.DefaultEntitlementsName;
 		let entitlementsPath = path.join(projectData.projectDir,
 			constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME,
 			constants.IOS_PLATFORM_NORMALIZED_NAME,
@@ -21,7 +19,7 @@ export class IOSEntitlementsService {
 		return entitlementsPath;
 	}
 
-	private getPlatformsEntitlementsPath(projectData: IProjectData) : string {
+	public getPlatformsEntitlementsPath(projectData: IProjectData) : string {
 		return path.join(projectData.platformsDir, constants.IOS_PLATFORM_NAME,
 			projectData.projectName, projectData.projectName + ".entitlements");
 	}
@@ -48,11 +46,10 @@ export class IOSEntitlementsService {
 
 		let allPlugins = await this.getAllInstalledPlugins(projectData);
 		for (let plugin of allPlugins) {
-			let pluginInfoPlistPath = path.join(plugin.pluginPlatformsFolderPath(constants.IOS_PLATFORM_NAME), this.getDefaultEntitlementsName());
+			let pluginInfoPlistPath = path.join(plugin.pluginPlatformsFolderPath(constants.IOS_PLATFORM_NAME), IOSEntitlementsService.DefaultEntitlementsName);
 			makePatch(pluginInfoPlistPath);
 		}
 
-		// for older ios-app-templates or if has been deleted.
 		let appEntitlementsPath = this.getDefaultAppEntitlementsPath(projectData);
 		if (this.$fs.exists(appEntitlementsPath)) {
 			makePatch(appEntitlementsPath);

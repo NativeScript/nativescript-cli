@@ -1,4 +1,5 @@
 import * as path from "path";
+import { EOL } from "os";
 import * as ChildProcessLib from "../lib/common/child-process";
 import * as ConfigLib from "../lib/config";
 import * as ErrorsLib from "../lib/common/errors";
@@ -826,6 +827,30 @@ describe("Merge Project XCConfig files", () => {
 			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
 			let expected = {
 				'CODE_SIGN_ENTITLEMENTS': iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData)
+			};
+			assertPropertyValues(expected, destinationFilePath, testInjector);
+		}
+	});
+
+	it("The user specified entitlements property takes percedence", async () => {
+		// setup app_resource build.xcconfig
+		const expectedEntitlementsFile = 'user.entitlements';
+		let xcconfigEntitlements = appResourceXCConfigContent + `${EOL}CODE_SIGN_ENTITLEMENTS = ${expectedEntitlementsFile}`;
+		fs.writeFile(appResourcesXcconfigPath, xcconfigEntitlements);
+
+		// run merge for all release: debug|release
+		for (let release in [true, false]) {
+			await (<any>iOSProjectService).mergeProjectXcconfigFiles(release, projectData);
+
+			let destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
+				: (<any>iOSProjectService).getPluginsDebugXcconfigFilePath(projectData);
+
+			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
+			let expected = {
+				'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
+				'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
+				'CODE_SIGN_IDENTITY': 'iPhone Distribution',
+				'CODE_SIGN_ENTITLEMENTS': expectedEntitlementsFile
 			};
 			assertPropertyValues(expected, destinationFilePath, testInjector);
 		}
