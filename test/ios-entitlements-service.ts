@@ -80,6 +80,24 @@ describe("IOSEntitlements Service Tests", () => {
     <string>production</string>
   </dict>
 </plist>`;
+		const namedAppResourcesEntitlementsContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>nameKey</key>
+    <string>appResources</string>
+  </dict>
+</plist>`;
+		const mergedEntitlementsContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>aps-environment</key>
+    <string>production</string>
+    <key>nameKey</key>
+    <string>appResources</string>
+  </dict>
+</plist>`;
 
 		function assertContent(actual: string, expected: string) {
 			let strip = (x: string) => {
@@ -126,6 +144,30 @@ describe("IOSEntitlements Service Tests", () => {
 			// assert
 			let actual = fs.readText(destinationFilePath);
 			assertContent(actual, defaultPluginEntitlementsContent);
+		});
+
+		it("Merge uses App_Resources and Plugins and merges all keys", async () => {
+			// setup app resoruces
+			let appResourcesEntitlement = (<any>iOSEntitlementsService).getDefaultAppEntitlementsPath(projectData);
+			fs.writeFile(appResourcesEntitlement, namedAppResourcesEntitlementsContent);
+
+			// setup plugin entitlements
+			let pluginsService = injector.resolve("pluginsService");
+			let testPluginFolderPath =  temp.mkdirSync("testPlugin");
+			pluginsService.getAllInstalledPlugins = async() => [{
+				pluginPlatformsFolderPath: (platform: string) => {
+					return testPluginFolderPath;
+				}
+			}];
+			let pluginAppEntitlementsPath = path.join(testPluginFolderPath, IOSEntitlementsService.DefaultEntitlementsName);
+			fs.writeFile(pluginAppEntitlementsPath, defaultPluginEntitlementsContent);
+
+			// act
+			await iOSEntitlementsService.merge(projectData);
+
+			// assert
+			let actual = fs.readText(destinationFilePath);
+			assertContent(actual, mergedEntitlementsContent);
 		});
 	});
 });
