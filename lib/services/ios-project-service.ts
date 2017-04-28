@@ -1222,11 +1222,11 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private readXCConfigProvisioningProfileSpecifier(projectData: IProjectData): string {
-		return this.readXCConfig("PROVISIONING_PROFILE_SPECIFIER", projectData);
+		return this.xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE_SPECIFIER");
 	}
 
 	private readXCConfigProvisioningProfileSpecifierForIPhoneOs(projectData: IProjectData): string {
-		return this.readXCConfig("PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]", projectData);
+		return this.xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]");
 	}
 
 	private async getDevelopmentTeam(projectData: IProjectData, teamId?: string): Promise<string> {
