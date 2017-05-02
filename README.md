@@ -2,7 +2,7 @@
 
 [Kinvey](http://www.kinvey.com) (pronounced Kin-vey, like convey) makes it ridiculously easy for developers to setup, use and operate a cloud backend for their mobile apps. They don't have to worry about connecting to various cloud services, setting up servers for their backend, or maintaining and scaling them.
 
-The JS SDK is used as a way to share common code for platform specific SDK shims. Here is a list of the platforms we currently support, each as a separate repo -
+The JS SDK is used as a way to share common code for platform specific SDK shims. Here is a list of the platforms we currently support.
 
 * [Angular](https://github.com/Kinvey/angular-sdk)
 * [Angular 2](https://github.com/Kinvey/angular2-sdk)
@@ -11,10 +11,6 @@ The JS SDK is used as a way to share common code for platform specific SDK shims
 * [NodeJS](https://github.com/Kinvey/node-sdk)
 * [PhoneGap](https://github.com/Kinvey/phonegap-sdk)
 * [Titanium](https://github.com/Kinvey/titanium-sdk)
-
-## Documentation
-
-For more detailed documentation, see http://devcenter.kinvey.com/html5
 
 ## License
 See [LICENSE](LICENSE) for details.
