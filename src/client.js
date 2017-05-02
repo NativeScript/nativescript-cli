@@ -256,7 +256,7 @@ export default class Client {
    * var client = Kinvey.Client.sharedInstance();
    */
   static sharedInstance() {
-    if (!sharedInstance) {
+    if (isDefined(sharedInstance) === false {
       throw new KinveyError('You have not initialized the library. ' +
         'Please call Kinvey.init() to initialize the library.');
     }
