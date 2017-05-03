@@ -1,6 +1,21 @@
 NativeScript CLI Changelog
 ================
 
+3.0.0 (2017, May 3)
+==
+
+### Fixed
+
+* [Fixed #2500](https://github.com/NativeScript/nativescript-cli/issues/2500): Debug on device does not sync file changes
+* [Fixed #2639](https://github.com/NativeScript/nativescript-cli/issues/2639): Build continues after gradle build fails
+* [Fixed #1882](https://github.com/NativeScript/nativescript-cli/issues/1882): Run/debug commands should not try to deploy on connected but not paired devices
+* [Fixed #2673](https://github.com/NativeScript/nativescript-cli/issues/2673): `tns device ios` does not list real devices if simulator is running.
+* [Fixed #2685](https://github.com/NativeScript/nativescript-cli/issues/2685): `tns run ios` starts iOS Simulator even if physical iOS device is attached
+* [Fixed #2661](https://github.com/NativeScript/nativescript-cli/issues/2661): Adding new files during livesync doesn't succeed on iOS Devices
+* [Fixed #2650](https://github.com/NativeScript/nativescript-cli/issues/2650): Release Build Android error: gradlew.bat failed with exit code 1 When Path contains Space
+* [Fixed #2125](https://github.com/NativeScript/nativescript-cli/issues/2125): NativeScript setup script fails on Mac
+* [Fixed #2697](https://github.com/NativeScript/nativescript-cli/issues/2697): App_Resources being copied into app RAW 
+
 3.0.0-RC.1 (2017, March 29)
 ==
 
