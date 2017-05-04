@@ -3,7 +3,7 @@ import * as shelljs from "shelljs";
 shelljs.config.silent = true;
 shelljs.config.fatal = true;
 import { installUncaughtExceptionListener } from "./common/errors";
-installUncaughtExceptionListener(process.exit);
+installUncaughtExceptionListener(process.exit.bind(process, ErrorCodes.UNCAUGHT));
 
 import { settlePromises } from "./common/helpers";
 
