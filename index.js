@@ -7,3 +7,4 @@ CacheRack.useCacheMiddleware(new CacheMiddleware());
 
 // Export
 module.exports = Kinvey;
+module.exports.Kinvey = Kinvey;
