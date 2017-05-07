@@ -400,7 +400,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return;
 	}
 
-	public async beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDictionary<IDependencyData>): Promise<void> {
+	public async beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void> {
 		if (!this.$config.debugLivesync) {
 			if (dependencies) {
 				let platformDir = path.join(projectData.platformsDir, "android");

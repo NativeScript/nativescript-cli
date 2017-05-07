@@ -171,6 +171,10 @@ export class FileSystemStub implements IFileSystem {
 	deleteEmptyParents(directory: string): void { }
 
 	utimes(path: string, atime: Date, mtime: Date): void { }
+
+	realpath(filePath: string): string {
+		return null;
+	}
 }
 
 export class ErrorsStub implements IErrors {

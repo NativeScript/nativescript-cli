@@ -15,7 +15,7 @@ export class TnsModulesCopy {
 	) {
 	}
 
-	public copyModules(dependencies: any[], platform: string): void {
+	public copyModules(dependencies: IDependencyData[], platform: string): void {
 		for (let entry in dependencies) {
 			let dependency = dependencies[entry];
 
@@ -34,7 +34,7 @@ export class TnsModulesCopy {
 		}
 	}
 
-	private copyDependencyDir(dependency: any): void {
+	private copyDependencyDir(dependency: IDependencyData): void {
 		if (dependency.depth === 0) {
 			let isScoped = dependency.name.indexOf("@") === 0;
 			let targetDir = this.outputRoot;
@@ -61,18 +61,18 @@ export class NpmPluginPrepare {
 	) {
 	}
 
-	protected async beforePrepare(dependencies: IDictionary<IDependencyData>, platform: string, projectData: IProjectData): Promise<void> {
+	protected async beforePrepare(dependencies: IDependencyData[], platform: string, projectData: IProjectData): Promise<void> {
 		await this.$platformsData.getPlatformData(platform, projectData).platformProjectService.beforePrepareAllPlugins(projectData, dependencies);
 	}
 
-	protected async afterPrepare(dependencies: IDictionary<IDependencyData>, platform: string, projectData: IProjectData): Promise<void> {
+	protected async afterPrepare(dependencies: IDependencyData[], platform: string, projectData: IProjectData): Promise<void> {
 		await this.$platformsData.getPlatformData(platform, projectData).platformProjectService.afterPrepareAllPlugins(projectData);
 		this.writePreparedDependencyInfo(dependencies, platform, projectData);
 	}
 
-	private writePreparedDependencyInfo(dependencies: IDictionary<IDependencyData>, platform: string, projectData: IProjectData): void {
+	private writePreparedDependencyInfo(dependencies: IDependencyData[], platform: string, projectData: IProjectData): void {
 		let prepareData: IDictionary<boolean> = {};
-		_.values(dependencies).forEach(d => {
+		_.each(dependencies, d => {
 			prepareData[d.name] = true;
 		});
 		this.$fs.createDirectory(this.preparedPlatformsDir(platform, projectData));
@@ -101,10 +101,10 @@ export class NpmPluginPrepare {
 		return this.$fs.readJson(this.preparedPlatformsFile(platform, projectData), "utf8");
 	}
 
-	private allPrepared(dependencies: IDictionary<IDependencyData>, platform: string, projectData: IProjectData): boolean {
+	private allPrepared(dependencies: IDependencyData[], platform: string, projectData: IProjectData): boolean {
 		let result = true;
 		const previouslyPrepared = this.getPreviouslyPreparedDependencies(platform, projectData);
-		_.values(dependencies).forEach(d => {
+		_.each(dependencies, d => {
 			if (!previouslyPrepared[d.name]) {
 				result = false;
 			}
@@ -112,7 +112,7 @@ export class NpmPluginPrepare {
 		return result;
 	}
 
-	public async preparePlugins(dependencies: IDictionary<IDependencyData>, platform: string, projectData: IProjectData): Promise<void> {
+	public async preparePlugins(dependencies: IDependencyData[], platform: string, projectData: IProjectData): Promise<void> {
 		if (_.isEmpty(dependencies) || this.allPrepared(dependencies, platform, projectData)) {
 			return;
 		}

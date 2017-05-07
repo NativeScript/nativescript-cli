@@ -1,7 +1,6 @@
 import * as constants from "../../constants";
 import * as helpers from "../../common/helpers";
 import * as path from "path";
-import { NodeModulesDependenciesBuilder } from "../../tools/node-modules/node-modules-dependencies-builder";
 
 let choki = require("chokidar");
 
@@ -17,7 +16,8 @@ class LiveSyncService implements ILiveSyncService {
 		private $logger: ILogger,
 		private $dispatcher: IFutureDispatcher,
 		private $hooksService: IHooksService,
-		private $processService: IProcessService) { }
+		private $processService: IProcessService,
+		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder) { }
 
 	public get isInitialized(): boolean { // This function is used from https://github.com/NativeScript/nativescript-dev-typescript/blob/master/lib/before-prepare.js#L4
 		return this._isInitialized;
@@ -94,8 +94,7 @@ class LiveSyncService implements ILiveSyncService {
 
 	private partialSync(syncWorkingDirectory: string, onChangedActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => Promise<void>)[], projectData: IProjectData): void {
 		let that = this;
-		let dependenciesBuilder = this.$injector.resolve(NodeModulesDependenciesBuilder, {});
-		let productionDependencies = dependenciesBuilder.getProductionDependencies(projectData.projectDir);
+		let productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
 		let pattern = ["app"];
 
 		if (this.$options.syncAllFiles) {

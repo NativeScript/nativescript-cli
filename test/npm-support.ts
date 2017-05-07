@@ -27,6 +27,7 @@ import { XmlValidator } from "../lib/xml-validator";
 import { LockFile } from "../lib/lockfile";
 import ProjectChangesLib = require("../lib/services/project-changes-service");
 import { Messages } from "../lib/common/messages/messages";
+import { NodeModulesDependenciesBuilder } from "../lib/tools/node-modules/node-modules-dependencies-builder";
 
 import path = require("path");
 import temp = require("temp");
@@ -81,9 +82,10 @@ function createTestInjector(): IInjector {
 	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
 	testInjector.register("emulatorPlatformService", stubs.EmulatorPlatformService);
 	testInjector.register("analyticsService", {
-		track: async () => undefined
+		track: async (): Promise<any> => undefined
 	});
 	testInjector.register("messages", Messages);
+	testInjector.register("nodeModulesDependenciesBuilder", NodeModulesDependenciesBuilder);
 
 	return testInjector;
 }

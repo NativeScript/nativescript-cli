@@ -477,14 +477,15 @@ describe("Plugins service", () => {
 			let pluginName = "mySamplePlugin";
 			let projectFolder = createProjectFile(testInjector);
 			let pluginFolderPath = path.join(projectFolder, pluginName);
-			let pluginJsonData = {
-				"name": pluginName,
-				"version": "0.0.1",
-				"nativescript": {
-					"platforms": {
-						"android": "0.10.0"
+			let pluginJsonData: IDependencyData = {
+				name: pluginName,
+				nativescript: {
+					platforms: {
+						android: "0.10.0"
 					}
-				}
+				},
+				depth: 0,
+				directory: "some dir"
 			};
 			let fs = testInjector.resolve("fs");
 			fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);

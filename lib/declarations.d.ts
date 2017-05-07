@@ -202,12 +202,31 @@ interface INpmInstallOptions {
 	dependencyType?: string;
 }
 
+/**
+ * Describes a package installed in node_modules directory of a project.
+ */
 interface IDependencyData {
+	/**
+	 * The name of the package.
+	 */
 	name: string;
-	version: string;
-	nativescript: any;
-	dependencies?: IStringDictionary;
-	devDependencies?: IStringDictionary;
+
+	/**
+	 * The full path where the package is installed.
+	 */
+	directory: string;
+
+	/**
+	 * The depth inside node_modules dir, where the package is located.
+	 * The <project_dir>/node_modules/ is level 0.
+	 * Level 1 is <project dir>/node_modules/<package name>/node_modules, etc.
+	 */
+	depth: number;
+
+	/**
+	 * Describes the `nativescript` key in package.json of a dependency.
+	 */
+	nativescript?: any;
 }
 
 interface IStaticConfig extends Config.IStaticConfig { }
