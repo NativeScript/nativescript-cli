@@ -14,7 +14,8 @@ export class ProjectService implements IProjectService {
 		private $projectHelper: IProjectHelper,
 		private $projectNameService: IProjectNameService,
 		private $projectTemplatesService: IProjectTemplatesService,
-		private $staticConfig: IStaticConfig) { }
+		private $staticConfig: IStaticConfig,
+		private $npmInstallationManager: INpmInstallationManager) { }
 
 	@exported("projectService")
 	public async createProject(projectOptions: IProjectSettings): Promise<void> {
@@ -50,10 +51,12 @@ export class ProjectService implements IProjectService {
 
 			await this.ensureAppResourcesExist(projectDir);
 
-			let packageName = constants.TNS_CORE_MODULES_NAME;
-			await this.$npm.install(packageName, projectDir, { save: true, "save-exact": true });
-
 			let templatePackageJsonData = this.getDataFromJson(templatePath);
+
+			if (!(templatePackageJsonData && templatePackageJsonData.dependencies && templatePackageJsonData.dependencies[constants.TNS_CORE_MODULES_NAME])) {
+				await this.$npmInstallationManager.install(constants.TNS_CORE_MODULES_NAME, projectDir, { dependencyType: "save" });
+			}
+
 			this.mergeProjectAndTemplateProperties(projectDir, templatePackageJsonData); //merging dependencies from template (dev && prod)
 			this.removeMergedDependencies(projectDir, templatePackageJsonData);
 

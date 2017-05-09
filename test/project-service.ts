@@ -114,7 +114,7 @@ class ProjectIntegrationTest {
 		this.testInjector.register("fs", FileSystem);
 		this.testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
 		this.testInjector.register("staticConfig", StaticConfig);
-		this.testInjector.register("analyticsService", { track: async () => undefined });
+		this.testInjector.register("analyticsService", { track: async (): Promise<any> => undefined });
 
 		this.testInjector.register("npmInstallationManager", NpmInstallationManager);
 		this.testInjector.register("npm", NpmLib.NodePackageManager);
@@ -130,6 +130,7 @@ class ProjectIntegrationTest {
 				return dummyString;
 			}
 		});
+		this.testInjector.register("npmInstallationManager", NpmInstallationManager);
 	}
 }
 
@@ -471,6 +472,7 @@ describe("Project Service Tests", () => {
 			testInjector.register("projectTemplatesService", {});
 			testInjector.register("staticConfig", {});
 			testInjector.register("projectHelper", {});
+			testInjector.register("npmInstallationManager", {});
 
 			return testInjector;
 		};
