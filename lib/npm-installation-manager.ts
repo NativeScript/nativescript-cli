@@ -108,7 +108,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 
 		packageName = packageName + (version ? `@${version}` : "");
 
-		let npmOptions: any = { silent: true };
+		let npmOptions: any = { silent: true, "save-exact": true };
 
 		if (dependencyType) {
 			npmOptions[dependencyType] = true;
