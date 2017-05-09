@@ -27,7 +27,13 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	public getLatestCompatibleVersion(packageName: string): IFuture<string> {
 		return (() => {
 			const configVersion = this.$staticConfig.version;
+			const isPreReleaseVersion = (<any>semver).prerelease(configVersion) !== null;
 			let cliVersionRange = `~${semver.major(configVersion)}.${(<any>semver).minor(configVersion)}.0`;
+			if(isPreReleaseVersion) {
+				// if the user has some 0-19 pre-release version, include pre-release versions in the search query.
+				cliVersionRange = `~${configVersion}`;
+			}
+
 			let latestVersion = this.getLatestVersion(packageName).wait();
 			if (semver.satisfies(latestVersion, cliVersionRange)) {
 				return latestVersion;
