@@ -26,15 +26,16 @@ export class NpmInstallationManager implements INpmInstallationManager {
 
 	public getLatestCompatibleVersion(packageName: string): IFuture<string> {
 		return (() => {
-
-			let cliVersionRange = `~${this.$staticConfig.version}`;
+			const configVersion = this.$staticConfig.version;
+			let cliVersionRange = `~${semver.major(configVersion)}.${(<any>semver).minor(configVersion)}.0`;
 			let latestVersion = this.getLatestVersion(packageName).wait();
 			if (semver.satisfies(latestVersion, cliVersionRange)) {
 				return latestVersion;
 			}
 			let data = this.$npm.view(packageName, { json: true, "versions": true }).wait();
 
-			return semver.maxSatisfying(data, cliVersionRange) || latestVersion;
+			let maxSatisfying = semver.maxSatisfying(data, cliVersionRange);
+			return maxSatisfying || latestVersion;
 		}).future<string>()();
 	}
 
