@@ -6,6 +6,7 @@ import * as shelljs from "shelljs";
 export class ProjectService implements IProjectService {
 
 	constructor(private $npm: INodePackageManager,
+		private $npmInstallationManager: INpmInstallationManager,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
@@ -166,7 +167,8 @@ export class ProjectService implements IProjectService {
 			if (tnsModulesVersion) {
 				packageName = `${packageName}@${tnsModulesVersion}`;
 			}
-			this.$npm.install(packageName, projectDir, { save: true, "save-exact": true }).wait();
+
+			this.$npmInstallationManager.install(packageName, projectDir, { dependencyType: "save" }).wait();
 		}).future<void>()();
 	}
 

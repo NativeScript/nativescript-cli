@@ -66,7 +66,7 @@
     "properties-parser": "0.2.3",
     "ref": "https://github.com/icenium/ref/tarball/v1.3.2.3",
     "ref-struct": "https://github.com/telerik/ref-struct/tarball/v1.0.2.5",
-    "semver": "5.0.1",
+    "semver": "5.3.0",
     "shelljs": "0.7.6",
     "source-map": "0.5.6",
     "tabtab": "https://github.com/Icenium/node-tabtab/tarball/master",
