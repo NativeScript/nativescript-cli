@@ -6,7 +6,6 @@ export abstract class DebugPlatformCommand implements ICommand {
 	constructor(private debugService: IPlatformDebugService,
 		private $devicesService: Mobile.IDevicesService,
 		private $injector: IInjector,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $config: IConfiguration,
 		private $usbLiveSyncService: ILiveSyncService,
 		private $debugDataService: IDebugDataService,
@@ -49,11 +48,7 @@ export abstract class DebugPlatformCommand implements ICommand {
 			await this.debugService.debugStop();
 
 			let applicationId = deviceAppData.appIdentifier;
-			if (deviceAppData.device.isEmulator && deviceAppData.platform.toLowerCase() === this.$devicePlatformsConstants.iOS.toLowerCase()) {
-				applicationId = projectData.projectName;
-			}
-
-			await deviceAppData.device.applicationManager.stopApplication(applicationId);
+			await deviceAppData.device.applicationManager.stopApplication(applicationId, projectData.projectName);
 
 			const buildConfig: IBuildConfig = _.merge({ buildForDevice: !deviceAppData.device.isEmulator }, deployOptions);
 			debugData.pathToAppPackage = this.$platformService.lastOutputPath(this.debugService.platform, buildConfig, projectData);
@@ -102,7 +97,7 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$iosDeviceOperations: IIOSDeviceOperations) {
-		super($iOSDebugService, $devicesService, $injector, $devicePlatformsConstants, $config, $usbLiveSyncService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger);
+		super($iOSDebugService, $devicesService, $injector, $config, $usbLiveSyncService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger);
 		// Do not dispose ios-device-lib, so the process will remain alive and the debug application (NativeScript Inspector or Chrome DevTools) will be able to connect to the socket.
 		// In case we dispose ios-device-lib, the socket will be closed and the code will fail when the debug application tries to read/send data to device socket.
 		// That's why the `$ tns debug ios --justlaunch` command will not release the terminal.
@@ -136,7 +131,7 @@ export class DebugAndroidCommand extends DebugPlatformCommand {
 		$options: IOptions,
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData) {
-		super($androidDebugService, $devicesService, $injector, $devicePlatformsConstants, $config, $usbLiveSyncService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger);
+		super($androidDebugService, $devicesService, $injector, $config, $usbLiveSyncService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
