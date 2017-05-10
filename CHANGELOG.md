@@ -1,5 +1,11 @@
 NativeScript CLI Changelog
 ================
+2.5.5 (2017, May 11)
+==
+
+### Fixed
+
+* [Fix #2782](https://github.com/NativeScript/nativescript-cli/issues/2782): [2.5.*] tns run always add latest platform
 2.5.4 (2017, April 5)
 ==
 
