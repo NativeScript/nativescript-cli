@@ -51,26 +51,27 @@ class SQLite {
 
           return prev
             .then(() => {
+              if (write === false) {
+                return db.all(sql, parts[1]);
+              }
+
               return db.execSQL(sql, parts[1]);
             })
             .then((resultSet = []) => {
-              const response = {
-                result: []
-              };
-
-              if (resultSet.length > 0) {
+              if (write === false && isArray(resultSet) && resultSet.length > 0) {
                 for (let i = 0, len = resultSet.length; i < len; i += 1) {
                   try {
-                    const value = resultSet[i];
-                    const entity = isMaster ? value : JSON.parse(value);
-                    response.result.push(entity);
+                    const row = resultSet[i];
+                    const entity = isMaster ? row.value : JSON.parse(row.value);
+                    responses.push(entity);
                   } catch (error) {
                     // Catch the error
                   }
                 }
+              } else if (write === true) {
+                responses.push(resultSet);
               }
 
-              responses.push(response);
               return responses;
             });
         }, Promise.resolve());
@@ -80,14 +81,12 @@ class SQLite {
   find(collection) {
     const sql = 'SELECT value FROM #{collection}';
     return this.openTransaction(collection, sql, [])
-      .then(response => response.result)
       .catch(() => []);
   }
 
   findById(collection, id) {
     const sql = 'SELECT value FROM #{collection} WHERE key = ?';
     return this.openTransaction(collection, sql, [id])
-      .then(response => response.result)
       .then((entities) => {
         if (entities.length === 0) {
           throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
@@ -135,8 +134,8 @@ class SQLite {
     ];
     return this.openTransaction(collection, queries, null, true)
       .then((response) => {
-        const entities = response[0].result;
-        let count = response[1].rowCount;
+        const entities = response[0];
+        let count = response[1];
         count = count || entities.length;
 
         if (count === 0) {
@@ -155,7 +154,6 @@ class SQLite {
       ['table'],
       false
     )
-      .then(response => response.result)
       .then((tables) => {
         // If there are no tables, return.
         if (tables.length === 0) {
