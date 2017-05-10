@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as temp from "temp";
+import { TNS_MODULES_FOLDER_NAME } from "../constants";
 
 export class LiveSyncProvider implements ILiveSyncProvider {
 	constructor(private $androidLiveSyncServiceLocator: { factory: Function },
@@ -7,8 +8,9 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		private $logger: ILogger,
-		private $childProcess: IChildProcess,
-		private $options: IOptions) { }
+		private $options: IOptions,
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $fs: IFileSystem) { }
 
 	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml", ".html"];
 
@@ -63,21 +65,25 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 	}
 
 	public async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<void> {
-		if (deviceAppData.platform.toLowerCase() === "android" || !deviceAppData.deviceSyncZipPath || !isFullSync) {
+		if (this.$mobileHelper.isAndroidPlatform(deviceAppData.platform) || !deviceAppData.deviceSyncZipPath || !isFullSync) {
 			await deviceAppData.device.fileSystem.transferFiles(deviceAppData, localToDevicePaths);
 		} else {
 			temp.track();
 			let tempZip = temp.path({ prefix: "sync", suffix: ".zip" });
+			let tempApp = temp.mkdirSync("app");
 			this.$logger.trace("Creating zip file: " + tempZip);
+			this.$fs.copyFile(path.join(path.dirname(projectFilesPath), "app/*"), tempApp);
 
-			if (this.$options.syncAllFiles) {
-				await this.$childProcess.spawnFromEvent("zip", ["-r", "-0", tempZip, "app"], "close", { cwd: path.dirname(projectFilesPath) });
-			} else {
+			if (!this.$options.syncAllFiles) {
 				this.$logger.info("Skipping node_modules folder! Use the syncAllFiles option to sync files from this folder.");
-				await this.$childProcess.spawnFromEvent("zip", ["-r", "-0", tempZip, "app", "-x", "app/tns_modules/*"], "close", { cwd: path.dirname(projectFilesPath) });
+				this.$fs.deleteDirectory(path.join(tempApp, TNS_MODULES_FOLDER_NAME));
 			}
 
-			deviceAppData.device.fileSystem.transferFiles(deviceAppData, [{
+			await this.$fs.zipFiles(tempZip, this.$fs.enumerateFilesInDirectorySync(tempApp), (res) => {
+				return path.join("app", path.relative(tempApp, res));
+			});
+
+			await deviceAppData.device.fileSystem.transferFiles(deviceAppData, [{
 				getLocalPath: () => tempZip,
 				getDevicePath: () => deviceAppData.deviceSyncZipPath,
 				getRelativeToProjectBasePath: () => "../sync.zip",

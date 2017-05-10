@@ -370,32 +370,34 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public async shouldBuild(platform: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<boolean> {
-		if (this.$projectChangesService.currentChanges.changesRequireBuild) {
-			return true;
-		}
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
-		let forDevice = !buildConfig || buildConfig.buildForDevice;
-		let outputPath = forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath;
-		if (!this.$fs.exists(outputPath)) {
-			return true;
-		}
-		let packageNames = platformData.getValidPackageNames({ isForDevice: forDevice });
-		let packages = this.getApplicationPackages(outputPath, packageNames);
-		if (packages.length === 0) {
-			return true;
-		}
-		let prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
-		let buildInfo = this.getBuildInfo(platform, platformData, buildConfig);
-		if (!prepareInfo || !buildInfo) {
-			return true;
-		}
-		if (buildConfig.clean) {
-			return true;
-		}
-		if (prepareInfo.time === buildInfo.prepareTime) {
-			return false;
-		}
-		return prepareInfo.changesRequireBuildTime !== buildInfo.prepareTime;
+		//TODO: shouldBuild - issue with outputPath - we do not have always the built dir locally
+		return false;
+		// if (this.$projectChangesService.currentChanges.changesRequireBuild) {
+		// 	return true;
+		// }
+		// let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		// let forDevice = !buildConfig || buildConfig.buildForDevice;
+		// let outputPath = forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath;
+		// if (!this.$fs.exists(outputPath)) {
+		// 	return true;
+		// }
+		// let packageNames = platformData.getValidPackageNames({ isForDevice: forDevice });
+		// let packages = this.getApplicationPackages(outputPath, packageNames);
+		// if (packages.length === 0) {
+		// 	return true;
+		// }
+		// let prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
+		// let buildInfo = this.getBuildInfo(platform, platformData, buildConfig);
+		// if (!prepareInfo || !buildInfo) {
+		// 	return true;
+		// }
+		// if (buildConfig.clean) {
+		// 	return true;
+		// }
+		// if (prepareInfo.time === buildInfo.prepareTime) {
+		// 	return false;
+		// }
+		// return prepareInfo.changesRequireBuildTime !== buildInfo.prepareTime;
 	}
 
 	public async trackProjectType(projectData: IProjectData): Promise<void> {
@@ -462,25 +464,25 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	public async installApplication(device: Mobile.IDevice, buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {
 		this.$logger.out("Installing...");
-		let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
-		let packageFile = "";
-		if (this.$devicesService.isiOSSimulator(device)) {
-			packageFile = this.getLatestApplicationPackageForEmulator(platformData, buildConfig).packageName;
-		} else {
-			packageFile = this.getLatestApplicationPackageForDevice(platformData, buildConfig).packageName;
-		}
+		// let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
+		// let packageFile = "";
+		// if (this.$devicesService.isiOSSimulator(device)) {
+		// 	packageFile = this.getLatestApplicationPackageForEmulator(platformData, buildConfig).packageName;
+		// } else {
+		// 	packageFile = this.getLatestApplicationPackageForDevice(platformData, buildConfig).packageName;
+		// }
 
-		await platformData.platformProjectService.cleanDeviceTempFolder(device.deviceInfo.identifier, projectData);
+		// await platformData.platformProjectService.cleanDeviceTempFolder(device.deviceInfo.identifier, projectData);
 
-		await device.applicationManager.reinstallApplication(projectData.projectId, packageFile);
+		// await device.applicationManager.reinstallApplication(projectData.projectId, packageFile);
 
-		if (!buildConfig.release) {
-			let deviceFilePath = await this.getDeviceBuildInfoFilePath(device, projectData);
-			let buildInfoFilePath = this.getBuildOutputPath(device.deviceInfo.platform, platformData, { buildForDevice: !device.isEmulator });
-			let appIdentifier = projectData.projectId;
+		// if (!buildConfig.release) {
+		// 	let deviceFilePath = await this.getDeviceBuildInfoFilePath(device, projectData);
+		// 	let buildInfoFilePath = this.getBuildOutputPath(device.deviceInfo.platform, platformData, { buildForDevice: !device.isEmulator });
+		// 	let appIdentifier = projectData.projectId;
 
-			await device.fileSystem.putFile(path.join(buildInfoFilePath, buildInfoFileName), deviceFilePath, appIdentifier);
-		}
+		// 	await device.fileSystem.putFile(path.join(buildInfoFilePath, buildInfoFileName), deviceFilePath, appIdentifier);
+		// }
 
 		this.$logger.out(`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`);
 	}
@@ -678,9 +680,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(this.$platformsData.platformsNames));
 		}
 
-		if (!this.isPlatformSupportedForOS(platform, projectData)) {
-			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", platform, process.platform);
-		}
+		//TODO: move to commands.
+		// if (!this.isPlatformSupportedForOS(platform, projectData)) {
+		// 	this.$errors.fail("Applications for platform %s can not be built on this OS - %s", platform, process.platform);
+		// }
 	}
 
 	public validatePlatformInstalled(platform: string, projectData: IProjectData): void {

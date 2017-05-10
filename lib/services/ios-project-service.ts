@@ -13,6 +13,7 @@ import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { XCConfigService } from "./xcconfig-service";
+const simplePlist = require("simple-plist");
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
@@ -39,6 +40,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $devicesService: Mobile.IDevicesService,
 		private $mobileHelper: Mobile.IMobileHelper,
+		private $hostInfo: IHostInfo,
 		private $pluginVariablesService: IPluginVariablesService,
 		private $xcprojService: IXcprojService,
 		private $iOSProvisionService: IOSProvisionService,
@@ -111,6 +113,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	public async validate(): Promise<void> {
+		if (!this.$hostInfo.isDarwin) {
+			return;
+		}
+
 		try {
 			await this.$childProcess.exec("which xcodebuild");
 		} catch (error) {
@@ -492,12 +498,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private async addFramework(frameworkPath: string, projectData: IProjectData): Promise<void> {
-		await this.validateFramework(frameworkPath);
+		this.validateFramework(frameworkPath);
 
 		let project = this.createPbxProj(projectData);
 		let frameworkName = path.basename(frameworkPath, path.extname(frameworkPath));
 		let frameworkBinaryPath = path.join(frameworkPath, frameworkName);
-		let isDynamic = _.includes((await this.$childProcess.spawnFromEvent("otool", ["-Vh", frameworkBinaryPath], "close")).stdout, " DYLIB ");
+		let isDynamic = _.includes((await this.$childProcess.spawnFromEvent(path.join(__dirname, "..", "..", "vendor", "file", "file.exe"), [frameworkBinaryPath], "close")).stdout, "dynamically linked");
 
 		let frameworkAddOptions: IXcode.Options = { customFramework: true };
 
@@ -918,17 +924,18 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return path.join(newModulesDir, constants.PROJECT_FRAMEWORK_FOLDER_NAME, `${IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER}.xcodeproj`, "project.pbxproj");
 	}
 
-	private async validateFramework(libraryPath: string): Promise<void> {
-		let infoPlistPath = path.join(libraryPath, "Info.plist");
+	private validateFramework(libraryPath: string): void {
+		const infoPlistPath = path.join(libraryPath, "Info.plist");
 		if (!this.$fs.exists(infoPlistPath)) {
 			this.$errors.failWithoutHelp("The bundle at %s does not contain an Info.plist file.", libraryPath);
 		}
 
-		let packageType = (await this.$childProcess.spawnFromEvent("/usr/libexec/PlistBuddy", ["-c", "Print :CFBundlePackageType", infoPlistPath], "close")).stdout.trim();
+		const plistJson = simplePlist.readFileSync(infoPlistPath);
+		const packageType = plistJson["CFBundlePackageType"];
+
 		if (packageType !== "FMWK") {
 			this.$errors.failWithoutHelp("The bundle at %s does not appear to be a dynamic framework.", libraryPath);
 		}
-
 	}
 
 	private async validateStaticLibrary(libraryPath: string): Promise<void> {
@@ -997,9 +1004,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private async prepareFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): Promise<void> {
-		for (let fileName of this.getAllLibsForPluginWithFileExtension(pluginData, ".framework")) {
-			await this.addFramework(path.join(pluginPlatformsFolderPath, fileName), projectData);
-		}
+		await _.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".framework"), (fileName) => {
+			this.addFramework(path.join(pluginPlatformsFolderPath, fileName), projectData);
+		});
 	}
 
 	private async prepareStaticLibs(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): Promise<void> {
@@ -1107,11 +1114,13 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			this.$fs.writeFile(projectFile, "");
 		}
 
-		await this.checkIfXcodeprojIsRequired();
-		let escapedProjectFile = projectFile.replace(/'/g, "\\'"),
-			escapedPluginFile = pluginFile.replace(/'/g, "\\'"),
-			mergeScript = `require 'xcodeproj'; Xcodeproj::Config.new('${escapedProjectFile}').merge(Xcodeproj::Config.new('${escapedPluginFile}')).save_as(Pathname.new('${escapedProjectFile}'))`;
-		await this.$childProcess.exec(`ruby -e "${mergeScript}"`);
+		if (this.$hostInfo.isDarwin) {
+			await this.checkIfXcodeprojIsRequired();
+			let escapedProjectFile = projectFile.replace(/'/g, "\\'"),
+				escapedPluginFile = pluginFile.replace(/'/g, "\\'"),
+				mergeScript = `require 'xcodeproj'; Xcodeproj::Config.new('${escapedProjectFile}').merge(Xcodeproj::Config.new('${escapedPluginFile}')).save_as(Pathname.new('${escapedProjectFile}'))`;
+			await this.$childProcess.exec(`ruby -e "${mergeScript}"`);
+		}
 	}
 
 	private async mergeProjectXcconfigFiles(release: boolean, projectData: IProjectData): Promise<void> {
