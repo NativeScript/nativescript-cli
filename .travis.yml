@@ -24,7 +24,7 @@ after_success:
 - mkdir s3-publish
 - cp nativescript*.tgz s3-publish/nativescript.tgz
 before_deploy:
-- node .travis/add-publishConfig.js next
+- node .travis/add-publishConfig.js $TRAVIS_BRANCH
 deploy:
   - provider: s3
     bucket: nativescript-ci
@@ -41,5 +41,12 @@ deploy:
     email: nativescript@telerik.com
     on:
       branch: master
+    api_key:
+      secure: KzzsvF3eA3j4gRQa8tO//+XWNSR3XiX8Sa18o3PyKyG9/cBZ6PQ3Te74cNS1C3ZiLUOgs5dWA6/TmRVPci4XjvFaWo/B6e2fuVSl5H94Od99bkeBHJsbLSEkLN4ClV/YbGuyKgA5Q2yIFt6p2EJjL90RjbbIk7I4YuyG2Mo3j0Q=
+  - provider: npm
+    skip_cleanup: true
+    email: nativescript@telerik.com
+    on:
+      branch: release
     api_key:
       secure: KzzsvF3eA3j4gRQa8tO//+XWNSR3XiX8Sa18o3PyKyG9/cBZ6PQ3Te74cNS1C3ZiLUOgs5dWA6/TmRVPci4XjvFaWo/B6e2fuVSl5H94Od99bkeBHJsbLSEkLN4ClV/YbGuyKgA5Q2yIFt6p2EJjL90RjbbIk7I4YuyG2Mo3j0Q=
