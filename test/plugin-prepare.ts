@@ -14,13 +14,13 @@ class TestNpmPluginPrepare extends NpmPluginPrepare {
 		return this.previouslyPrepared;
 	}
 
-	protected async beforePrepare(dependencies: IDictionary<IDependencyData>, platform: string): Promise<void> {
-		_.values(dependencies).forEach(d => {
+	protected async beforePrepare(dependencies: IDependencyData[], platform: string): Promise<void> {
+		_.each(dependencies, d => {
 			this.preparedDependencies[d.name] = true;
 		});
 	}
 
-	protected async afterPrepare(dependencies: IDictionary<IDependencyData>, platform: string): Promise<void> {
+	protected async afterPrepare(dependencies: IDependencyData[], platform: string): Promise<void> {
 		// DO NOTHING
 	}
 }
@@ -28,37 +28,40 @@ class TestNpmPluginPrepare extends NpmPluginPrepare {
 describe("Plugin preparation", () => {
 	it("skips prepare if no plugins", async () => {
 		const pluginPrepare = new TestNpmPluginPrepare({});
-		await pluginPrepare.preparePlugins({}, "android", null);
+		await pluginPrepare.preparePlugins([], "android", null);
 		assert.deepEqual({}, pluginPrepare.preparedDependencies);
 	});
 
 	it("skips prepare if every plugin prepared", async () => {
 		const pluginPrepare = new TestNpmPluginPrepare({ "tns-core-modules-widgets": true });
-		const testDependencies: IDictionary<IDependencyData> = {
-			"0": {
+		const testDependencies: IDependencyData[] = [
+			{
 				name: "tns-core-modules-widgets",
-				version: "1.0.0",
+				depth: 0,
+				directory: "some dir",
 				nativescript: null,
 			}
-		};
+		];
 		await pluginPrepare.preparePlugins(testDependencies, "android", null);
 		assert.deepEqual({}, pluginPrepare.preparedDependencies);
 	});
 
 	it("saves prepared plugins after preparation", async () => {
 		const pluginPrepare = new TestNpmPluginPrepare({ "tns-core-modules-widgets": true });
-		const testDependencies: IDictionary<IDependencyData> = {
-			"0": {
+		const testDependencies: IDependencyData[] = [
+			{
 				name: "tns-core-modules-widgets",
-				version: "1.0.0",
+				depth: 0,
+				directory: "some dir",
 				nativescript: null,
 			},
-			"1": {
+			{
 				name: "nativescript-calendar",
-				version: "1.0.0",
+				depth: 0,
+				directory: "some dir",
 				nativescript: null,
 			}
-		};
+		];
 		await pluginPrepare.preparePlugins(testDependencies, "android", null);
 		const prepareData = { "tns-core-modules-widgets": true, "nativescript-calendar": true };
 		assert.deepEqual(prepareData, pluginPrepare.preparedDependencies);

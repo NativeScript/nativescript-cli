@@ -225,7 +225,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void>;
 
 	afterPrepareAllPlugins(projectData: IProjectData): Promise<void>;
-	beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDictionary<IDependencyData>): Promise<void>;
+	beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void>;
 
 	/**
 	 * Gets the path wheren App_Resources should be copied.

@@ -1,111 +1,110 @@
 import * as path from "path";
-import * as fs from "fs";
+import { NODE_MODULES_FOLDER_NAME, PACKAGE_JSON_FILE_NAME } from "../../constants";
+
+interface IDependencyDescription {
+	parentDir: string;
+	name: string;
+	depth: number;
+}
 
 export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesBuilder {
-	private projectPath: string;
-	private rootNodeModulesPath: string;
-	private resolvedDependencies: any[];
-	private seen: any;
+	public constructor(private $fs: IFileSystem) { }
 
-	public constructor(private $fs: IFileSystem) {
-		this.seen = {};
-		this.resolvedDependencies = [];
-	}
+	public getProductionDependencies(projectPath: string): IDependencyData[] {
+		const rootNodeModulesPath = path.join(projectPath, NODE_MODULES_FOLDER_NAME);
+		const projectPackageJsonPath = path.join(projectPath, PACKAGE_JSON_FILE_NAME);
+		const packageJsonContent = this.$fs.readJson(projectPackageJsonPath);
+		const dependencies = packageJsonContent && packageJsonContent.dependencies;
 
-	public getProductionDependencies(projectPath: string): any[] {
-		this.projectPath = projectPath;
-		this.rootNodeModulesPath = path.join(this.projectPath, "node_modules");
+		let resolvedDependencies: IDependencyData[] = [];
 
-		let projectPackageJsonpath = path.join(this.projectPath, "package.json");
-		let packageJsonContent = this.$fs.readJson(projectPackageJsonpath);
+		let queue: IDependencyDescription[] = _.keys(dependencies)
+			.map(dependencyName => ({
+				parentDir: projectPath,
+				name: dependencyName,
+				depth: 0
+			}));
 
-		_.keys(packageJsonContent.dependencies).forEach(dependencyName => {
-			let depth = 0;
-			let directory = path.join(this.rootNodeModulesPath, dependencyName);
+		while (queue.length) {
+			const currentModule = queue.shift();
+			const resolvedDependency = this.findModule(rootNodeModulesPath, currentModule.parentDir, currentModule.name, currentModule.depth, resolvedDependencies);
 
-			// find and traverse child with name `key`, parent's directory -> dep.directory
-			this.traverseDependency(dependencyName, directory, depth);
-		});
+			if (resolvedDependency && !_.some(resolvedDependencies, r => r.directory === resolvedDependency.directory)) {
+				_.each(resolvedDependency.dependencies, d => {
+					const dependency: IDependencyDescription = { name: d, parentDir: resolvedDependency.directory, depth: resolvedDependency.depth + 1 };
 
-		return this.resolvedDependencies;
-	}
+					const shouldAdd = !_.some(queue, element =>
+						element.name === dependency.name &&
+						element.parentDir === dependency.parentDir &&
+						element.depth === dependency.depth);
 
-	private traverseDependency(name: string, currentModulePath: string, depth: number): void {
-		// Check if child has been extracted in the parent's node modules, AND THEN in `node_modules`
-		// Slower, but prevents copying wrong versions if multiple of the same module are installed
-		// Will also prevent copying project's devDependency's version if current module depends on another version
-		let modulePath = path.join(currentModulePath, "node_modules", name); // node_modules/parent/node_modules/<package>
-		let alternativeModulePath = path.join(this.rootNodeModulesPath, name);
+					if (shouldAdd) {
+						queue.push(dependency);
+					}
+				});
 
-		this.findModule(modulePath, alternativeModulePath, name, depth);
-	}
-
-	private findModule(modulePath: string, alternativeModulePath: string, name: string, depth: number) {
-		let exists = this.moduleExists(modulePath);
-
-		if (exists) {
-			if (this.seen[modulePath]) {
-				return;
+				resolvedDependencies.push(resolvedDependency);
 			}
-
-			let dependency = this.addDependency(name, modulePath, depth + 1);
-			this.readModuleDependencies(modulePath, depth + 1, dependency);
-		} else {
-			modulePath = alternativeModulePath; // /node_modules/<package>
-			exists = this.moduleExists(modulePath);
-
-			if (!exists) {
-				return;
-			}
-
-			if (this.seen[modulePath]) {
-				return;
-			}
-
-			let dependency = this.addDependency(name, modulePath, 0);
-			this.readModuleDependencies(modulePath, 0, dependency);
 		}
 
-		this.seen[modulePath] = true;
+		return resolvedDependencies;
 	}
 
-	private readModuleDependencies(modulePath: string, depth: number, currentModule: any): void {
-		let packageJsonPath = path.join(modulePath, 'package.json');
-		let packageJsonExists = fs.lstatSync(packageJsonPath).isFile();
+	private findModule(rootNodeModulesPath: string, parentModulePath: string, name: string, depth: number, resolvedDependencies: IDependencyData[]): IDependencyData {
+		let modulePath = path.join(parentModulePath, NODE_MODULES_FOLDER_NAME, name); // node_modules/parent/node_modules/<package>
+		const rootModulesPath = path.join(rootNodeModulesPath, name);
+		let depthInNodeModules = depth;
+
+		if (!this.moduleExists(modulePath)) {
+			modulePath = rootModulesPath; // /node_modules/<package>
+			if (!this.moduleExists(modulePath)) {
+				return null;
+			}
+
+			depthInNodeModules = 0;
+		}
+
+		if (_.some(resolvedDependencies, r => r.name === name && r.directory === modulePath)) {
+			return null;
+
+		}
+
+		return this.getDependencyData(name, modulePath, depthInNodeModules);
+	}
+
+	private getDependencyData(name: string, directory: string, depth: number): IDependencyData {
+		const dependency: IDependencyData = {
+			name,
+			directory,
+			depth
+		};
+
+		const packageJsonPath = path.join(directory, PACKAGE_JSON_FILE_NAME);
+		const packageJsonExists = this.$fs.getLsStats(packageJsonPath).isFile();
 
 		if (packageJsonExists) {
 			let packageJsonContents = this.$fs.readJson(packageJsonPath);
 
 			if (!!packageJsonContents.nativescript) {
 				// add `nativescript` property, necessary for resolving plugins
-				currentModule.nativescript = packageJsonContents.nativescript;
+				dependency.nativescript = packageJsonContents.nativescript;
 			}
 
-			_.keys(packageJsonContents.dependencies).forEach((dependencyName) => {
-				this.traverseDependency(dependencyName, modulePath, depth);
-			});
+			dependency.dependencies = _.keys(packageJsonContents.dependencies);
+			return dependency;
 		}
-	}
 
-	private addDependency(name: string, directory: string, depth: number): any {
-		let dependency: any = {
-			name,
-			directory,
-			depth
-		};
-
-		this.resolvedDependencies.push(dependency);
-
-		return dependency;
+		return null;
 	}
 
 	private moduleExists(modulePath: string): boolean {
 		try {
-			let exists = fs.lstatSync(modulePath);
-			if (exists.isSymbolicLink()) {
-				exists = fs.lstatSync(fs.realpathSync(modulePath));
+			let modulePathLsStat = this.$fs.getLsStats(modulePath);
+			if (modulePathLsStat.isSymbolicLink()) {
+				modulePathLsStat = this.$fs.getLsStats(this.$fs.realpath(modulePath));
 			}
-			return exists.isDirectory();
+
+			return modulePathLsStat.isDirectory();
 		} catch (e) {
 			return false;
 		}

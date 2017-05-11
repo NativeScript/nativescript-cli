@@ -1,11 +1,11 @@
 import * as shelljs from "shelljs";
 import { TnsModulesCopy, NpmPluginPrepare } from "./node-modules-dest-copy";
-import { NodeModulesDependenciesBuilder } from "./node-modules-dependencies-builder";
 
 export class NodeModulesBuilder implements INodeModulesBuilder {
 	constructor(private $fs: IFileSystem,
 		private $injector: IInjector,
-		private $options: IOptions
+		private $options: IOptions,
+		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder
 	) { }
 
 	public async prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData): Promise<void> {
@@ -14,8 +14,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 			lastModifiedTime = null;
 		}
 
-		let dependenciesBuilder = this.$injector.resolve(NodeModulesDependenciesBuilder, {});
-		let productionDependencies = dependenciesBuilder.getProductionDependencies(projectData.projectDir);
+		let productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
 
 		if (!this.$options.bundle) {
 			const tnsModulesCopy = this.$injector.resolve(TnsModulesCopy, {

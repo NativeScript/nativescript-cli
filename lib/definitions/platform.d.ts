@@ -275,7 +275,7 @@ interface INodeModulesBuilder {
 }
 
 interface INodeModulesDependenciesBuilder {
-	getProductionDependencies(projectPath: string): void;
+	getProductionDependencies(projectPath: string): IDependencyData[];
 }
 
 interface IBuildInfo {

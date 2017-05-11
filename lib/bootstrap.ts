@@ -135,3 +135,5 @@ $injector.requireCommand("extension|*list", "./commands/extensibility/list-exten
 $injector.requireCommand("extension|install", "./commands/extensibility/install-extension");
 $injector.requireCommand("extension|uninstall", "./commands/extensibility/uninstall-extension");
 $injector.requirePublic("extensibilityService", "./services/extensibility-service");
+
+$injector.require("nodeModulesDependenciesBuilder", "./tools/node-modules/node-modules-dependencies-builder");
