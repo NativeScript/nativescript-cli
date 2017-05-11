@@ -24,7 +24,7 @@ after_success:
 - mkdir s3-publish
 - cp nativescript*.tgz s3-publish/nativescript.tgz
 before_deploy:
-- node .travis/add-publishConfig.js
+- node .travis/add-publishConfig.js $TRAVIS_BRANCH
 deploy:
   - provider: s3
     bucket: nativescript-ci
