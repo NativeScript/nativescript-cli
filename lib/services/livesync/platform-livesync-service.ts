@@ -135,7 +135,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 							let batch = this.batch[platform];
 							await batch.syncFiles(async (filesToSync: string[]) => {
 								const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
-								await this.$platformService.preparePlatform(this.liveSyncData.platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, { provision: this.$options.provision, sdk: this.$options.sdk }, filesToSync);
+								await this.$platformService.preparePlatform(this.liveSyncData.platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, this.$options, filesToSync);
 								let canExecute = this.getCanExecuteAction(this.liveSyncData.platform, this.liveSyncData.appIdentifier);
 								let deviceFileAction = (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => this.transferFiles(deviceAppData, localToDevicePaths, this.liveSyncData.projectFilesPath, !filePath);
 								let action = this.getSyncAction(filesToSync, deviceFileAction, afterFileSyncAction, projectData);

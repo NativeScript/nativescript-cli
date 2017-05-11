@@ -29,7 +29,7 @@ export class IOSProvisionService {
 
 		function formatSupportedDeviceCount(prov: mobileprovision.provision.MobileProvision) {
 			if (devices.length > 0 && prov.Type === "Development") {
-				return prov.ProvisionedDevices.reduce((count, device) => count + (devices.indexOf(device) >= 0 ? 1 : 0), 0) + "/" + devices.length + " targets";
+				return prov.ProvisionedDevices.filter(device => devices.indexOf(device) >= 0).length + "/" + devices.length + " targets";
 			} else {
 				return "";
 			}

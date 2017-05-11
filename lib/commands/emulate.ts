@@ -3,8 +3,8 @@ export class EmulateCommandBase {
 		private $projectData: IProjectData,
 		private $logger: ILogger,
 		private $platformService: IPlatformService) {
-			this.$projectData.initializeProjectData();
-		}
+		this.$projectData.initializeProjectData();
+	}
 
 	public async executeCore(args: string[]): Promise<void> {
 		this.$logger.warn(`Emulate command is deprecated and will soon be removed. Please use "tns run <platform>" instead. All options available for "tns emulate" are present in "tns run" command. To run on all available emulators, use "tns run <platform> --emulator".`);
@@ -27,7 +27,7 @@ export class EmulateCommandBase {
 			keyStorePassword: this.$options.keyStorePassword,
 			keyStorePath: this.$options.keyStorePath
 		};
-		return this.$platformService.emulatePlatform(args[0], appFilesUpdaterOptions, emulateOptions, this.$projectData, { provision: this.$options.provision, sdk: this.$options.sdk });
+		return this.$platformService.emulatePlatform(args[0], appFilesUpdaterOptions, emulateOptions, this.$projectData, this.$options);
 	}
 }
 

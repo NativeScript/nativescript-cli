@@ -106,7 +106,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		Promise.resolve();
 	}
 
-	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, pathToTemplate?: string): Promise<void> {
+	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, config: ICreateProjectOptions): Promise<void> {
 		if (semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
 			this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
 		}
@@ -118,10 +118,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
 		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "libs", "-R");
 
-		if (pathToTemplate) {
+		if (config.pathToTemplate) {
 			let mainPath = path.join(this.getPlatformData(projectData).projectRoot, "src", "main");
 			this.$fs.createDirectory(mainPath);
-			shell.cp("-R", path.join(path.resolve(pathToTemplate), "*"), mainPath);
+			shell.cp("-R", path.join(path.resolve(config.pathToTemplate), "*"), mainPath);
 		} else {
 			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "src", "-R");
 		}
@@ -138,11 +138,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		this.cleanResValues(targetSdkVersion, projectData, frameworkVersion);
 
-		let npmConfig = {
-			"save": true,
+		let npmConfig: INodePackageManagerInstallOptions = {
+			save: true,
 			"save-dev": true,
 			"save-exact": true,
-			"silent": true
+			silent: true,
+			disableNpmInstall: false,
+			frameworkPath: config.frameworkPath,
+			ignoreScripts: config.ignoreScripts
 		};
 
 		let projectPackageJson: any = this.$fs.readJson(projectData.projectFilePath);
@@ -433,6 +436,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
 		let deviceRootPath = `/data/local/tmp/${projectData.projectId}`;
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
+	}
+
+	public checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void {
+		// Nothing android specific to check yet.
 	}
 
 	private _canUseGradle: boolean;

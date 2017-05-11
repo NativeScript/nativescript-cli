@@ -182,7 +182,14 @@ class DoctorService implements IDoctorService {
 		let spinner = new clui.Spinner("Installing iOS runtime.");
 		try {
 			spinner.start();
-			await this.$npm.install("tns-ios", projDir, { global: false, "ignore-scripts": true, production: true, save: true });
+			await this.$npm.install("tns-ios", projDir, {
+				global: false,
+				production: true,
+				save: true,
+				disableNpmInstall: false,
+				frameworkPath: null,
+				ignoreScripts: true
+			});
 			spinner.stop();
 			let iosDir = path.join(projDir, "node_modules", "tns-ios", "framework");
 			this.$fs.writeFile(

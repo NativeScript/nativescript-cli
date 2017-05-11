@@ -15,8 +15,11 @@ interface IProjectChangesInfo {
 	configChanged: boolean;
 	packageChanged: boolean;
 	nativeChanged: boolean;
-	hasChanges: boolean;
-	changesRequireBuild: boolean;
+	signingChanged: boolean;
+
+	readonly hasChanges: boolean;
+	readonly changesRequireBuild: boolean;
+	readonly changesRequirePrepare: boolean;
 }
 
 interface IProjectChangesOptions extends IAppFilesUpdaterOptions, IProvision {}

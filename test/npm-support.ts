@@ -159,7 +159,8 @@ async function setupProject(dependencies?: any): Promise<any> {
 				ensureConfigurationFileInAppResources: (): any => null,
 				interpolateConfigurationFile: (): void => undefined,
 				isPlatformPrepared: (projectRoot: string) => false,
-				validatePlugins: (projectData: IProjectData) => Promise.resolve()
+				validatePlugins: (projectData: IProjectData) => Promise.resolve(),
+				checkForChanges: () => { /* */ }
 			}
 		};
 	};
@@ -192,7 +193,7 @@ async function preparePlatform(testInjector: IInjector): Promise<void> {
 	projectData.initializeProjectData();
 	const options: IOptions = testInjector.resolve("options");
 
-	await platformService.preparePlatform("android", { bundle: options.bundle, release: options.release }, "", projectData, { provision: options.provision, sdk: options.sdk });
+	await platformService.preparePlatform("android", { bundle: options.bundle, release: options.release }, "", projectData, options);
 }
 
 describe("Npm support tests", () => {

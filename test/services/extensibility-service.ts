@@ -77,7 +77,7 @@ describe("extensibilityService", () => {
 					argsPassedToNpmInstall.packageName = packageName;
 					argsPassedToNpmInstall.pathToSave = pathToSave;
 					argsPassedToNpmInstall.config = config;
-					return [userSpecifiedValue];
+					return { name: userSpecifiedValue };
 				};
 
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
@@ -130,7 +130,7 @@ describe("extensibilityService", () => {
 			fs.readDirectory = (dir: string): string[] => [extensionName];
 
 			const npm: INodePackageManager = testInjector.resolve("npm");
-			npm.install = async (packageName: string, pathToSave: string, config?: any): Promise<any> => [extensionName];
+			npm.install = async (packageName: string, pathToSave: string, config?: any): Promise<any> => ({ name: extensionName });
 
 			const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 			const actualResult = await extensibilityService.installExtension(extensionName);
@@ -148,7 +148,7 @@ describe("extensibilityService", () => {
 			fs.readDirectory = (dir: string): string[] => [extensionName];
 
 			const npm: INodePackageManager = testInjector.resolve("npm");
-			npm.install = async (packageName: string, pathToSave: string, config?: any): Promise<any> => [extensionName];
+			npm.install = async (packageName: string, pathToSave: string, config?: any): Promise<any> => ({ name: extensionName });
 
 			const requireService: IRequireService = testInjector.resolve("requireService");
 			requireService.require = (pathToRequire: string) => {
@@ -230,7 +230,7 @@ describe("extensibilityService", () => {
 				npm.install = async (packageName: string, pathToSave: string, config?: any): Promise<any> => {
 					assert.deepEqual(packageName, extensionNames[0]);
 					isNpmInstallCalled = true;
-					return [packageName];
+					return { name: packageName };
 				};
 
 				const expectedResults: IExtensionData[] = _.map(extensionNames, extensionName => ({ extensionName }));

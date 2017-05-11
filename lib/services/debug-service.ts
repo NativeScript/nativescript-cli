@@ -1,10 +1,9 @@
 import { platform } from "os";
 import { EventEmitter } from "events";
 import { CONNECTION_ERROR_EVENT_NAME } from "../constants";
+import { CONNECTED_STATUS } from "../common/constants";
 
-// This service can't implement IDebugService because
-// the debug method returns only one result.
-class DebugService extends EventEmitter {
+export class DebugService extends EventEmitter implements IDebugService {
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $androidDebugService: IPlatformDebugService,
 		private $iOSDebugService: IPlatformDebugService,
@@ -17,10 +16,13 @@ class DebugService extends EventEmitter {
 
 	public async debug(debugData: IDebugData, options: IDebugOptions): Promise<string> {
 		const device = this.$devicesService.getDeviceByIdentifier(debugData.deviceIdentifier);
-		const debugService = this.getDebugService(device);
 
 		if (!device) {
-			this.$errors.failWithoutHelp(`Can't find device with identifier ${debugData.deviceIdentifier}`);
+			this.$errors.failWithoutHelp(`Cannot find device with identifier ${debugData.deviceIdentifier}.`);
+		}
+
+		if (device.deviceInfo.status !== CONNECTED_STATUS) {
+			this.$errors.failWithoutHelp(`The device with identifier ${debugData.deviceIdentifier} is unreachable. Make sure it is Trusted and try again.`);
 		}
 
 		if (!(await device.applicationManager.isApplicationInstalled(debugData.applicationIdentifier))) {
@@ -35,9 +37,15 @@ class DebugService extends EventEmitter {
 		// After we find a way to check on iOS we should use it here.
 		const isAppRunning = true;
 		let result: string[];
-		debugOptions.chrome = !debugOptions.client;
+		debugOptions.chrome = true;
+
+		const debugService = this.getDebugService(device);
+		if (!debugService) {
+			this.$errors.failWithoutHelp(`Unsupported device OS: ${device.deviceInfo.platform}. You can debug your applications only on iOS or Android.`);
+		}
+
 		if (this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform)) {
-			if (device.isEmulator && !debugData.pathToAppPackage) {
+			if (device.isEmulator && !debugData.pathToAppPackage && debugOptions.debugBrk) {
 				this.$errors.failWithoutHelp("To debug on iOS simulator you need to provide path to the app package.");
 			}
 
@@ -51,9 +59,9 @@ class DebugService extends EventEmitter {
 				this.$errors.failWithoutHelp(`Debugging on iOS devices is not supported for ${platform()} yet.`);
 			}
 
-			result = await debugService.debug(debugData, debugOptions);
+			result = await debugService.debug<string[]>(debugData, debugOptions);
 		} else if (this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
-			result = await debugService.debug(debugData, debugOptions);
+			result = await debugService.debug<string[]>(debugData, debugOptions);
 		}
 
 		return _.first(result);

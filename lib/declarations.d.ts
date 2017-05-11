@@ -1,8 +1,37 @@
 interface INodePackageManager {
-	install(packageName: string, pathToSave: string, config?: any): Promise<any>;
-	uninstall(packageName: string, config?: any, path?: string): Promise<any>;
+	/**
+	 * Installs dependency
+	 * @param  {string}                            packageName The name of the dependency - can be a path, a url or a string.
+	 * @param  {string}                            pathToSave  The destination of the installation.
+	 * @param  {INodePackageManagerInstallOptions} config      Additional options that can be passed to manipulate installation.
+	 * @return {Promise<INpmInstallResultInfo>}                Information about installed package.
+	 */
+	install(packageName: string, pathToSave: string, config: INodePackageManagerInstallOptions): Promise<INpmInstallResultInfo>;
+
+	/**
+	 * Uninstalls a dependency
+	 * @param  {string}                            packageName The name of the dependency.
+	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate uninstallation.
+	 * @param  {string}                            path  The destination of the uninstallation.
+	 * @return {Promise<string>}                The output of the uninstallation.
+	 */
+	uninstall(packageName: string, config?: IDictionary<string | boolean>, path?: string): Promise<string>;
+
+	/**
+	 * Provides information about a given package.
+	 * @param  {string}                            packageName The name of the package.
+	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate view.
+	 * @return {Promise<any>}                Object, containing information about the package.
+	 */
 	view(packageName: string, config: Object): Promise<any>;
-	search(filter: string[], config: any): Promise<any>;
+
+	/**
+	 * Searches for a package.
+	 * @param  {string[]}                            filter Keywords with which to perform the search.
+	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate search.
+	 * @return {Promise<string>}                The output of the uninstallation.
+	 */
+	search(filter: string[], config: IDictionary<string | boolean>): Promise<string>;
 }
 
 interface INpmInstallationManager {
@@ -11,6 +40,160 @@ interface INpmInstallationManager {
 	getNextVersion(packageName: string): Promise<string>;
 	getLatestCompatibleVersion(packageName: string): Promise<string>;
 	getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string): Promise<string>;
+}
+
+/**
+ * Describes options that can be passed to manipulate package installation.
+ */
+interface INodePackageManagerInstallOptions extends INpmInstallConfigurationOptions, IDictionary<string | boolean> {
+	/**
+	 * Destination of the installation.
+	 * @type {string}
+	 * @optional
+	 */
+	path?: string;
+}
+
+/**
+ * Describes information about dependency packages.
+ */
+interface INpmDependencyInfo {
+	/**
+	 * Dependency name.
+	 */
+	[key: string]: {
+		/**
+		 * Dependency version.
+		 * @type {string}
+		 */
+		version: string;
+		/**
+		 * How was the dependency resolved. For example: lodash@latest or underscore@>=1.8.3 <2.0.0
+		 * @type {string}
+		 */
+		from: string;
+		/**
+		 * Where was the dependency resolved from. For example: https://registry.npmjs.org/lodash/-/lodash-4.17.4.tgz
+		 * @type {string}
+		 */
+		resolved: string;
+		/**
+		 * Dependencies of the dependency.
+		 * @type {INpmDependencyInfo}
+		 */
+		dependencies?: INpmDependencyInfo;
+		/**
+		 * Set to true when the dependency is invalid.
+		 * @type {boolean}
+		 */
+		invalid?: boolean;
+		/**
+		 * If invalid is set to true this will contain errors which make the dependency invalid.
+		 */
+		problems?: string[];
+	}
+}
+
+/**
+ * Describes information about peer dependency packages.
+ */
+interface INpmPeerDependencyInfo {
+	required: {
+		/**
+		 * Id used in package.json - for example: zone.js@^0.8.4
+		 * @type {string}
+		 */
+		_id: string;
+		/**
+		 * Dependency name.
+		 * @type {string}
+		 */
+		name: string;
+		/**
+		 * Dependency version.
+		 * @type {string}
+		 */
+		version: string;
+		/**
+		 * If peerMissing below is set to true this will contain information about missing peers.
+		 */
+		peerMissing?: [
+			{
+				/**
+				 * The id of the package which requires the unmet peer dependency.
+				 * @type {string}
+				 */
+				requiredBy: string;
+				/**
+				 * The id of the unmet peer dependency.
+				 * @type {string}
+				 */
+				requires: string;
+			}
+		];
+		/**
+		 * Dependencies of the dependency.
+		 * @type {INpmDependencyInfo}
+		 */
+		dependencies: INpmDependencyInfo;
+		/**
+		 * Whether the dependency was found or not.
+		 * @type {boolean}
+		 */
+		_found: boolean;
+	};
+	/**
+	 * Set to true if peer dependency unmet.
+	 * @type {boolean}
+	 */
+	peerMissing: boolean;
+}
+
+/**
+ * Describes information returned by the npm CLI upon calling install with --json flag.
+ */
+interface INpmInstallCLIResult {
+	/**
+	 * The name of the destination package. Note that this is not the installed package.
+	 * @type {string}
+	 */
+	name: string;
+	/**
+	 * The version of the destination package. Note that this is not the installed package.
+	 * @type {string}
+	 */
+	version: string;
+	/**
+	 * Installed dependencies. Note that whenever installing a particular dependency it is listed as the first key and after it any number of peer dependencies may follow.
+	 * Whenever installing npm prints the information by reversing the tree of operations and because the initial dependency was installed last it is listed first.
+	 * @type {INpmDependencyInfo | INpmPeerDependencyInfo}
+	 */
+	dependencies: INpmDependencyInfo | INpmPeerDependencyInfo;
+	/**
+	 * Describes problems that might have occurred during installation. For example missing peer dependencies.
+	 */
+	problems?: string[];
+}
+
+/**
+ * Describes information about installed package.
+ */
+interface INpmInstallResultInfo {
+	/**
+	 * Installed package's name.
+	 * @type {string}
+	 */
+	name: string;
+	/**
+	 * Installed package's version.
+	 * @type {string}
+	 */
+	version: string;
+	/**
+	 * The original output that npm CLI produced upon installation.
+	 * @type {INpmInstallCLIResult}
+	 */
+	originalOutput: INpmInstallCLIResult;
 }
 
 interface INpmInstallOptions {
@@ -98,7 +281,7 @@ interface IClean {
 }
 
 interface IProvision {
-	provision: any;
+	provision: string;
 }
 
 interface ITeamIdentifier {
@@ -112,7 +295,20 @@ interface IAndroidReleaseOptions {
 	keyStorePath?: string;
 }
 
-interface IOptions extends ICommonOptions, IBundle, IPlatformTemplate, IEmulator, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions {
+interface INpmInstallConfigurationOptionsBase {
+	frameworkPath: string;
+	ignoreScripts: boolean; //npm flag
+}
+
+interface INpmInstallConfigurationOptions extends INpmInstallConfigurationOptionsBase {
+	disableNpmInstall: boolean;
+}
+
+interface ICreateProjectOptions extends INpmInstallConfigurationOptionsBase {
+	pathToTemplate?: string;
+}
+
+interface IOptions extends ICommonOptions, IBundle, IPlatformTemplate, IEmulator, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions {
 	all: boolean;
 	client: boolean;
 	compileSdk: number;
@@ -121,10 +317,7 @@ interface IOptions extends ICommonOptions, IBundle, IPlatformTemplate, IEmulator
 	forDevice: boolean;
 	framework: string;
 	frameworkName: string;
-	frameworkPath: string;
 	frameworkVersion: string;
-	ignoreScripts: boolean; //npm flag
-	disableNpmInstall: boolean;
 	ipa: string;
 	tsc: boolean;
 	ng: boolean;

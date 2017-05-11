@@ -53,7 +53,7 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 
 	public async preparePlatformForSync(platform: string, provision: any, projectData: IProjectData): Promise<void> {
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
-		await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, { provision: provision, sdk: this.$options.sdk });
+		await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, this.$options);
 	}
 
 	public canExecuteFastSync(filePath: string, projectData: IProjectData, platform: string): boolean {

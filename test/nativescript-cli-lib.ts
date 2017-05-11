@@ -13,11 +13,14 @@ describe("nativescript-cli-lib", () => {
 	});
 
 	const publicApi: any = {
+		settingsService: ["setSettings"],
 		deviceEmitter: null,
 		projectService: ["createProject", "isValidNativeScriptProject"],
 		localBuildService: ["build"],
 		deviceLogProvider: null,
-		extensibilityService: ["loadExtensions", "getInstalledExtensions", "installExtension", "uninstallExtension"]
+		npm: ["install", "uninstall", "view", "search"],
+		extensibilityService: ["loadExtensions", "getInstalledExtensions", "installExtension", "uninstallExtension"],
+		debugService: ["debug"]
 	};
 
 	const pathToEntryPoint = path.join(__dirname, "..", "lib", "nativescript-cli-lib.js").replace(/\\/g, "\\\\");

@@ -169,6 +169,8 @@ export class FileSystemStub implements IFileSystem {
 	}
 
 	deleteEmptyParents(directory: string): void { }
+
+	utimes(path: string, atime: Date, mtime: Date): void { }
 }
 
 export class ErrorsStub implements IErrors {
@@ -354,6 +356,9 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	}
 	async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
 		return Promise.resolve();
+	}
+	checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void {
+		// Nothing yet.
 	}
 }
 

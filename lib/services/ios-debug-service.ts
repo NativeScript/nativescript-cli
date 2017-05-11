@@ -196,8 +196,17 @@ class IOSDebugService extends DebugServiceBase implements IPlatformDebugService 
 		if (debugOptions.chrome) {
 			this._socketProxy = await this.$socketProxyFactory.createWebSocketProxy(this.getSocketFactory(device));
 
-			const commitSHA = "02e6bde1bbe34e43b309d4ef774b1168d25fd024"; // corresponds to 55.0.2883 Chrome version
-			return `chrome-devtools://devtools/remote/serve_file/@${commitSHA}/inspector.html?experiments=true&ws=localhost:${this._socketProxy.options.port}`;
+			let chromeDevToolsPrefix = `chrome-devtools://devtools/`;
+
+			if (debugOptions.useBundledDevTools) {
+				chromeDevToolsPrefix += "bundled";
+			} else {
+				// corresponds to 55.0.2883 Chrome version
+				const commitSHA = "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
+				chromeDevToolsPrefix += `remote/serve_file/@${commitSHA}`;
+			}
+
+			return `${chromeDevToolsPrefix}/inspector.html?experiments=true&ws=localhost:${this._socketProxy.options.port}`;
 		} else {
 			this._socketProxy = await this.$socketProxyFactory.createTCPSocketProxy(this.getSocketFactory(device));
 			await this.openAppInspector(this._socketProxy.address(), debugData, debugOptions);

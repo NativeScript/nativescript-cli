@@ -69,7 +69,7 @@ interface IProjectData {
 	 * @param {string} projectDir Project root directory.
 	 * @returns {void}
 	 */
-	initializeProjectData(projectDir? :string): void;
+	initializeProjectData(projectDir?: string): void;
 }
 
 interface IProjectDataService {
@@ -158,7 +158,7 @@ interface IiOSBuildConfig extends IBuildForDevice, IDeviceIdentifier, IProvision
 interface IPlatformProjectService extends NodeJS.EventEmitter {
 	getPlatformData(projectData: IProjectData): IPlatformData;
 	validate(projectData: IProjectData): Promise<void>;
-	createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, pathToTemplate?: string): Promise<void>;
+	createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, config: ICreateProjectOptions): Promise<void>;
 	interpolateData(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
 	interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): void;
 
@@ -258,6 +258,12 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	 * @returns {void}
 	 */
 	cleanProject(projectRoot: string, projectData: IProjectData): Promise<void>
+
+	/**
+	 * Check the current state of the project, and validate against the options.
+	 * If there are parts in the project that are inconsistent with the desired options, marks them in the changeset flags.
+	 */
+	checkForChanges(changeset: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void;
 }
 
 interface IAndroidProjectPropertiesManager {
