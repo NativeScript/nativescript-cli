@@ -203,7 +203,7 @@ interface INpmInstallOptions {
 }
 
 /**
- * Describes a package installed in node_modules directory of a project.
+ * Describes npm package installed in node_modules.
  */
 interface IDependencyData {
 	/**
@@ -227,6 +227,11 @@ interface IDependencyData {
 	 * Describes the `nativescript` key in package.json of a dependency.
 	 */
 	nativescript?: any;
+
+	/**
+	 * Dependencies of the current module.
+	 */
+	dependencies?: string[];
 }
 
 interface IStaticConfig extends Config.IStaticConfig { }
