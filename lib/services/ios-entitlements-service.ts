@@ -4,23 +4,25 @@ import { PlistSession } from "plist-merge-patch";
 
 export class IOSEntitlementsService {
 	constructor(private $fs: IFileSystem,
-		private $injector: IInjector,
-		private $logger: ILogger) {
+		private $logger: ILogger,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $pluginsService: IPluginsService) {
 	}
 
 	public static readonly DefaultEntitlementsName: string = "app.entitlements";
 
 	private getDefaultAppEntitlementsPath(projectData: IProjectData) : string {
-		let entitlementsName = IOSEntitlementsService.DefaultEntitlementsName;
-		let entitlementsPath = path.join(projectData.projectDir,
+		const entitlementsName = IOSEntitlementsService.DefaultEntitlementsName;
+		const entitlementsPath = path.join(projectData.projectDir,
 			constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME,
-			constants.IOS_PLATFORM_NORMALIZED_NAME,
+			this.$mobileHelper.normalizePlatformName(this.$devicePlatformsConstants.iOS),
 			entitlementsName);
 		return entitlementsPath;
 	}
 
 	public getPlatformsEntitlementsPath(projectData: IProjectData) : string {
-		return path.join(projectData.platformsDir, constants.IOS_PLATFORM_NAME,
+		return path.join(projectData.platformsDir, this.$devicePlatformsConstants.iOS,
 			projectData.projectName, projectData.projectName + ".entitlements");
 	}
 	public getPlatformsEntitlementsRelativePath(projectData: IProjectData): string {
@@ -46,7 +48,8 @@ export class IOSEntitlementsService {
 
 		let allPlugins = await this.getAllInstalledPlugins(projectData);
 		for (let plugin of allPlugins) {
-			let pluginInfoPlistPath = path.join(plugin.pluginPlatformsFolderPath(constants.IOS_PLATFORM_NAME), IOSEntitlementsService.DefaultEntitlementsName);
+			let pluginInfoPlistPath = path.join(plugin.pluginPlatformsFolderPath(this.$devicePlatformsConstants.iOS),
+				IOSEntitlementsService.DefaultEntitlementsName);
 			makePatch(pluginInfoPlistPath);
 		}
 
@@ -62,7 +65,7 @@ export class IOSEntitlementsService {
 	}
 
 	private getAllInstalledPlugins(projectData: IProjectData): Promise<IPluginData[]> {
-		return (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins(projectData);
+		return this.$pluginsService.getAllInstalledPlugins(projectData);
 	}
 }
 

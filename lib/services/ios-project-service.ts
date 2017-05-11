@@ -46,7 +46,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $xcode: IXcode,
 		private $iOSEntitlementsService: IOSEntitlementsService,
 		private $sysInfo: ISysInfo,
-		private xCConfigService: XCConfigService) {
+		private $xCConfigService: XCConfigService) {
 		super($fs, $projectDataService);
 	}
 
@@ -1108,11 +1108,11 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 
 		// Set Entitlements Property to point to default file if not set explicitly by the user.
-		let entitlementsPropertyValue = this.xCConfigService.readPropertyValue(pluginsXcconfigFilePath, constants.CODE_SIGN_ENTITLEMENTS);
-		if (entitlementsPropertyValue == null) {
+		let entitlementsPropertyValue = this.$xCConfigService.readPropertyValue(pluginsXcconfigFilePath, constants.CODE_SIGN_ENTITLEMENTS);
+		if (entitlementsPropertyValue === null) {
 			temp.track();
-			let tempEntitlementsDir = temp.mkdirSync("entitlements");
-			let tempEntitlementsFilePath = path.join(tempEntitlementsDir, "set-entitlements.xcconfig");
+			const tempEntitlementsDir = temp.mkdirSync("entitlements");
+			const tempEntitlementsFilePath = path.join(tempEntitlementsDir, "set-entitlements.xcconfig");
 			const entitlementsRelativePath = this.$iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData);
 			this.$fs.writeFile(tempEntitlementsFilePath, `CODE_SIGN_ENTITLEMENTS = ${entitlementsRelativePath}${EOL}`);
 
@@ -1203,7 +1203,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private readTeamId(projectData: IProjectData): string {
-		let teamId = this.xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "DEVELOPMENT_TEAM");
+		let teamId = this.$xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "DEVELOPMENT_TEAM");
 
 		let fileName = path.join(this.getPlatformData(projectData).projectRoot, "teamid");
 		if (this.$fs.exists(fileName)) {
@@ -1214,19 +1214,19 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private readXCConfigProvisioningProfile(projectData: IProjectData): string {
-		return this.xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE");
+		return this.$xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE");
 	}
 
 	private readXCConfigProvisioningProfileForIPhoneOs(projectData: IProjectData): string {
-		return this.xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE[sdk=iphoneos*]");
+		return this.$xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE[sdk=iphoneos*]");
 	}
 
 	private readXCConfigProvisioningProfileSpecifier(projectData: IProjectData): string {
-		return this.xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE_SPECIFIER");
+		return this.$xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE_SPECIFIER");
 	}
 
 	private readXCConfigProvisioningProfileSpecifierForIPhoneOs(projectData: IProjectData): string {
-		return this.xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]");
+		return this.$xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]");
 	}
 
 	private async getDevelopmentTeam(projectData: IProjectData, teamId?: string): Promise<string> {

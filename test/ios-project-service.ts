@@ -781,7 +781,7 @@ describe("Merge Project XCConfig files", () => {
 		iOSEntitlementsService = testInjector.resolve("iOSEntitlementsService");
 
 		appResourcesXcconfigPath = path.join(projectData.projectDir, constants.APP_FOLDER_NAME,
-			constants.APP_RESOURCES_FOLDER_NAME, constants.IOS_PLATFORM_NORMALIZED_NAME, "build.xcconfig");
+			constants.APP_RESOURCES_FOLDER_NAME, "iOS", "build.xcconfig");
 		appResourceXCConfigContent = `CODE_SIGN_IDENTITY = iPhone Distribution 
 			// To build for device with XCode 8 you need to specify your development team. More info: https://developer.apple.com/library/prerelease/content/releasenotes/DeveloperTools/RN-Xcode/Introduction.html
 			// DEVELOPMENT_TEAM = YOUR_TEAM_ID;
@@ -832,7 +832,7 @@ describe("Merge Project XCConfig files", () => {
 		}
 	});
 
-	it("The user specified entitlements property takes percedence", async () => {
+	it("The user specified entitlements property takes precedence", async () => {
 		// setup app_resource build.xcconfig
 		const expectedEntitlementsFile = 'user.entitlements';
 		let xcconfigEntitlements = appResourceXCConfigContent + `${EOL}CODE_SIGN_ENTITLEMENTS = ${expectedEntitlementsFile}`;

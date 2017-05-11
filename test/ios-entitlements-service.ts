@@ -5,6 +5,10 @@ import { IOSEntitlementsService } from "../lib/services/ios-entitlements-service
 import * as yok from "../lib/common/yok";
 import * as stubs from "./stubs";
 import * as FsLib from "../lib/common/file-system";
+import * as MobilePlatformsCapabilitiesLib from "../lib/common/appbuilder/mobile-platforms-capabilities";
+import * as MobileHelperLib from "../lib/common/mobile/mobile-helper";
+import * as DevicePlatformsConstantsLib from "../lib/common/mobile/device-platforms-constants";
+import * as ErrorsLib from "../lib/common/errors";
 import * as path from "path";
 
 // start tracking temporary folders/files
@@ -19,6 +23,10 @@ describe("IOSEntitlements Service Tests", () => {
 		testInjector.register('iOSEntitlementsService', IOSEntitlementsService);
 
 		testInjector.register("fs", FsLib.FileSystem);
+		testInjector.register("mobileHelper", MobileHelperLib.MobileHelper);
+		testInjector.register("devicePlatformsConstants", DevicePlatformsConstantsLib.DevicePlatformsConstants);
+		testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilitiesLib.MobilePlatformsCapabilities);
+		testInjector.register("errors", ErrorsLib.Errors);
 
 		testInjector.register("pluginsService", {
 			getAllInstalledPlugins: async () => []
@@ -34,7 +42,7 @@ describe("IOSEntitlements Service Tests", () => {
 		iOSEntitlementsService: IOSEntitlementsService,
 		destinationFilePath: string;
 
-	beforeEach(function() {
+	beforeEach(() => {
 		injector = createTestInjector();
 
 		platformsData = injector.resolve("platformsData");
