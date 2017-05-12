@@ -1,5 +1,3 @@
-import { QueryError } from 'src/errors';
-import { nested, isDefined } from 'src/utils';
 import sift from 'sift';
 import assign from 'lodash/assign';
 import isArray from 'lodash/isArray';
@@ -11,6 +9,10 @@ import isEmpty from 'lodash/isEmpty';
 import forEach from 'lodash/forEach';
 import findKey from 'lodash/findKey';
 import has from 'lodash/has';
+
+import { QueryError } from 'src/errors';
+import { nested, isDefined, Log } from 'src/utils';
+
 const unsupportedFilters = ['$nearSphere'];
 
 /**
@@ -743,6 +745,8 @@ export default class Query {
    * @returns {Array} The processed data.
    */
   process(data) {
+    Log.debug('Proccessing query', this.toPlainObject(), data);
+
     if (this.isSupportedOffline() === false) {
       let message = 'This query is not able to run locally. The following filters are not supported'
         + ' locally:';
@@ -751,6 +755,7 @@ export default class Query {
         message = `${message} ${filter}`;
       });
 
+      Log.error(message);
       throw new QueryError(message);
     }
 
@@ -762,6 +767,8 @@ export default class Query {
     // Apply the query
     const json = this.toPlainObject();
     data = sift(json.filter, data);
+
+    Log.debug('After applying query filter to data', data);
 
     // Remove fields
     if (isArray(json.fields) && json.fields.length > 0) {
@@ -776,6 +783,8 @@ export default class Query {
         return item;
       });
     }
+
+    Log.debug('After removing fields from data', data);
 
     /* eslint-disable no-restricted-syntax, no-prototype-builtins  */
     // Sorting.
@@ -803,6 +812,8 @@ export default class Query {
     }
     /* eslint-enable no-restricted-syntax, no-prototype-builtins */
 
+    Log.debug('After sorting data', data);
+
     // Limit and skip.
     if (isNumber(json.skip)) {
       if (isNumber(json.limit) && json.limit > 0) {
@@ -811,6 +822,8 @@ export default class Query {
 
       return data.slice(json.skip);
     }
+
+    Log.debug('After limiting and skipping data', data);
 
     return data;
   }

@@ -112,6 +112,14 @@ export default class Response {
       || this.statusCode === StatusCode.TemporaryRedirect
       || this.statusCode === StatusCode.PermanentRedirect;
   }
+
+  toPlainObject() {
+    return {
+      statusCode: this.statusCode,
+      headers: this.headers.toPlainObject(),
+      data: this.data
+    };
+  }
 }
 
 /**

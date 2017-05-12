@@ -1,7 +1,7 @@
 import Promise from 'es6-promise';
 import reduce from 'lodash/reduce';
 import isFunction from 'lodash/isFunction';
-import { isDefined } from 'src/utils';
+import { isDefined, Log } from 'src/utils';
 import values from 'lodash/values';
 
 import Middleware, {
@@ -99,6 +99,19 @@ class CacheRack extends Rack {
     this.reset();
     this.use(cacheMiddleware);
   }
+
+  execute(request) {
+    Log.debug('Executing cache request', request);
+    return super.execute(request)
+      .then((response) => {
+        Log.debug(`Received response for cache request id: ${request.id}`, response);
+        return response;
+      })
+      .catch((error) => {
+        Log.error(`Received error for cache request id: ${request.id}`, error);
+        throw error;
+      });
+  }
 }
 const cacheRack = new CacheRack();
 export { cacheRack as CacheRack };
@@ -116,6 +129,19 @@ class NetworkRack extends Rack {
     this.use(new SerializeMiddleware());
     this.use(httpMiddleware);
     this.use(new ParseMiddleware());
+  }
+
+  execute(request) {
+    Log.debug('Executing network request', request);
+    return super.execute(request)
+      .then((response) => {
+        Log.debug(`Received response for network request: ${request.id}`, response);
+        return response;
+      })
+      .catch((error) => {
+        Log.error(`Received error for network request id: ${request.id}`, error);
+        throw error;
+      });
   }
 }
 const networkRack = new NetworkRack();

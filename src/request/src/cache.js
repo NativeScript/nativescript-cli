@@ -8,7 +8,7 @@ import Client from 'src/client';
 import { KinveyError, NotFoundError } from 'src/errors';
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
-import { isDefined } from 'src/utils';
+import { isDefined, Log } from 'src/utils';
 import Request, { RequestMethod } from './request';
 import { KinveyResponse } from './response';
 import { CacheRack } from './rack';
@@ -145,6 +145,7 @@ export default class CacheRequest extends Request {
         return CacheRequest.setActiveUser(client, activeUser);
       })
       .then((activeUser) => {
+        Log.debug('Load active user', client, activeUser);
         activeUsers[client.appKey] = activeUser;
         return activeUser;
       });
@@ -152,23 +153,30 @@ export default class CacheRequest extends Request {
 
   static loadActiveUserLegacy(client = Client.sharedInstance()) {
     const activeUser = CacheRequest.getActiveUserLegacy(client);
+    Log.debug('Load active user legacy', client, activeUser);
     activeUsers[client.appKey] = activeUser;
     return activeUser;
   }
 
   static getActiveUser(client = Client.sharedInstance()) {
-    return activeUsers[client.appKey];
+    const activeUser = activeUsers[client.appKey];
+    Log.debug('Get active user', client, activeUser);
+    return activeUser;
   }
 
   static getActiveUserLegacy(client = Client.sharedInstance()) {
     try {
-      return localStorage.get(`${client.appKey}kinvey_user`);
+      const activeUser = localStorage.get(`${client.appKey}kinvey_user`);
+      Log.debug('Get active user legacy', client, activeUser);
+      return activeUser;
     } catch (error) {
+      Log.error('Get active user legacy', client, error);
       return null;
     }
   }
 
   static setActiveUser(client = Client.sharedInstance(), user) {
+    Log.debug('Set active user', client, user);
     let promise = Promise.resolve(null);
     const activeUser = CacheRequest.getActiveUser(client);
 
@@ -238,8 +246,10 @@ export default class CacheRequest extends Request {
         localStorage.set(`${client.appKey}kinvey_user`, user);
       }
 
+      Log.debug('Set active user legacy', client, user);
       return true;
     } catch (error) {
+      Log.error('Set active user legacy', client, error);
       return false;
     }
   }

@@ -3,7 +3,7 @@ import Queue from 'promise-queue';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 
-import { isDefined } from 'src/utils';
+import { isDefined, Log } from 'src/utils';
 import { NotFoundError } from 'src/errors';
 import MemoryAdapter from './src/memory';
 
@@ -53,8 +53,12 @@ export default class Storage {
 
   find(collection) {
     return this.loadAdapter()
-      .then(adapter => adapter.find(collection))
+      .then((adapter) => {
+        Log.debug(`Find all the entities stored in the ${collection} collection.`, adapter);
+        return adapter.find(collection);
+      })
       .catch((error) => {
+        Log.error(`Unable to find all the entities stored in the ${collection} collection.`, error);
         if (error instanceof NotFoundError || error.code === 404) {
           return [];
         }
@@ -66,18 +70,23 @@ export default class Storage {
 
   findById(collection, id) {
     if (isString(id) === false) {
-      return Promise.reject(new Error('id must be a string', id));
+      const error = new Error('id must be a string', id);
+      Log.error(`Unable to find an entity with id ${id} stored in the ${collection} collection.`, error);
+      return Promise.reject(error);
     }
 
     return this.loadAdapter()
-      .then(adapter => adapter.findById(collection, id));
+      .then((adapter) => {
+        Log.debug(`Find an entity with id ${id} stored in the ${collection} collection.`, adapter);
+        return adapter.findById(collection, id);
+      });
   }
 
   save(collection, entities = []) {
     return queue.add(() => {
       let singular = false;
 
-      if (!entities) {
+      if (isDefined(entities) === false) {
         return Promise.resolve(null);
       }
 
