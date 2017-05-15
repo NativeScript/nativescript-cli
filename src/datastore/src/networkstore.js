@@ -2,11 +2,11 @@ import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 import url from 'url';
 
-import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod } from 'src/request';
+import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod, LiveRequest } from 'src/request';
 import { KinveyError } from 'src/errors';
 import Query from 'src/query';
 import Client from 'src/client';
-import { KinveyObservable, Log, isDefined } from 'src/utils';
+import { KinveyObservable, isDefined } from 'src/utils';
 import Aggregation from 'src/aggregation';
 
 /**
@@ -70,55 +70,6 @@ export default class NetworkStore {
     }
 
     return pathname;
-  }
-
-  /**
-   * Returns the live stream for the store.
-   * @return {Observable} Observable
-   */
-  get liveStream() {
-    if (typeof EventSource === 'undefined') {
-      throw new KinveyError('Your environment does not support server-sent events.');
-    }
-
-    if (!this._liveStream) {
-      // Subscribe to KLS
-      const source = new EventSource(`${this.client.liveServiceHostname}${this.pathname}`);
-
-       // Create a live stream
-      this._liveStream = KinveyObservable.create((observer) => {
-        // Open event
-        source.onopen = (event) => {
-          Log.info(`Subscription to Kinvey Live Service is now open at ${source.url}.`);
-          Log.info(event);
-        };
-
-        // Message event
-        source.onmessage = (message) => {
-          try {
-            observer.next(JSON.parse(message.data));
-          } catch (error) {
-            observer.error(error);
-          }
-        };
-
-        // Error event
-        source.onerror = (error) => {
-          observer.error(error);
-        };
-
-        // Dispose function
-        return () => {
-          observer.complete();
-        };
-      }).finally(() => {
-        source.close();
-        delete this._liveStream;
-      });
-    }
-
-    // Return the stream
-    return this._liveStream;
   }
 
   /**
@@ -523,7 +474,27 @@ export default class NetworkStore {
   /**
    * Subscribes to a live stream
    */
-  subscribe(onNext, onError, onComplete) {
-    return this.liveStream.subscribe(onNext, onError, onComplete);
+  subscribe(next, error, complete, status, presence) {
+    if (isDefined(this._liveStream) === false) {
+      // Subscribe to KLS
+      const request = new LiveRequest({
+        method: RequestMethod.GET,
+        authType: AuthType.Default,
+        url: url.format({
+          protocol: this.client.liveServiceProtocol,
+          host: this.client.liveServiceHost,
+          pathname: this.pathname
+        }),
+        client: this.client
+      });
+      return request.execute()
+        .then((stream) => {
+          this._liveStream = stream;
+          return stream.subscribe(next, error, complete, status, presence);
+        });
+    }
+
+    // Return the stream
+    return Promise.resolve(this._liveStream.subscribe(next, error, complete, status, presence));
   }
 }
