@@ -1,19 +1,95 @@
 import Promise from 'es6-promise';
 import { Observable } from 'rxjs/Observable';
-import { Subscriber, SafeSubscriber } from 'rxjs/Subscriber';
+import { Subscriber } from 'rxjs/Subscriber';
 import { rxSubscriber as rxSubscriberSymbol } from 'rxjs/symbol/rxSubscriber';
 import { empty as emptyObserver } from 'rxjs/Observer';
+import isFunction from 'lodash/isFunction';
 
 import { isDefined } from 'src/utils';
 
 /**
  * @private
  */
-class KinveySafeSubscriber extends SafeSubscriber {
+class SafeSubscriber extends Subscriber {
   constructor(_parentSubscriber, observerOrNext, error, complete, status, presence) {
-    super(_parentSubscriber, observerOrNext, error, complete);
+    super();
+    let next;
+    let context = this;
+    this._parentSubscriber = _parentSubscriber;
+
+    if (isFunction(observerOrNext)) {
+      next = observerOrNext;
+    } else if (observerOrNext) {
+      next = observerOrNext.next;
+      error = observerOrNext.error;
+      complete = observerOrNext.complete;
+      if (observerOrNext !== emptyObserver) {
+        context = Object.create(observerOrNext);
+        if (isFunction(context.unsubscribe)) {
+          this.add(context.unsubscribe.bind(context));
+        }
+        context.unsubscribe = this.unsubscribe.bind(this);
+      }
+    }
+
+    this._context = context;
+    this._next = next;
+    this._error = error;
+    this._complete = complete;
     this._status = status;
     this._presence = presence;
+  }
+
+  next(value) {
+    if (!this.isStopped && this._next) {
+      const { _parentSubscriber } = this;
+      if (!_parentSubscriber.syncErrorThrowable) {
+        this.__tryOrUnsub(this._next, value);
+      } else if (this.__tryOrSetError(_parentSubscriber, this._next, value)) {
+        this.unsubscribe();
+      }
+    }
+  }
+
+  error(err) {
+    if (!this.isStopped) {
+      const { _parentSubscriber } = this;
+      if (this._error) {
+        if (!_parentSubscriber.syncErrorThrowable) {
+          this.__tryOrUnsub(this._error, err);
+          this.unsubscribe();
+        } else {
+          this.__tryOrSetError(_parentSubscriber, this._error, err);
+          this.unsubscribe();
+        }
+      } else if (!_parentSubscriber.syncErrorThrowable) {
+        this.unsubscribe();
+        throw err;
+      } else {
+        _parentSubscriber.syncErrorValue = err;
+        _parentSubscriber.syncErrorThrown = true;
+        this.unsubscribe();
+      }
+    }
+  }
+
+  complete() {
+    if (!this.isStopped) {
+      const { _parentSubscriber } = this;
+      if (this._complete) {
+        const wrappedComplete = () => this._complete.call(this._context);
+
+        if (!_parentSubscriber.syncErrorThrowable) {
+          this.__tryOrUnsub(wrappedComplete);
+          this.unsubscribe();
+        } else {
+          this.__tryOrSetError(_parentSubscriber, wrappedComplete);
+          this.unsubscribe();
+        }
+      } else {
+        this.unsubscribe();
+      }
+    }
   }
 
   status(value) {
@@ -36,6 +112,33 @@ class KinveySafeSubscriber extends SafeSubscriber {
         this.unsubscribe();
       }
     }
+  }
+
+  __tryOrUnsub(fn, value) {
+    try {
+      fn.call(this._context, value);
+    } catch (err) {
+      this.unsubscribe();
+      throw err;
+    }
+  }
+
+  __tryOrSetError(parent, fn, value) {
+    try {
+      fn.call(this._context, value);
+    } catch (err) {
+      parent.syncErrorValue = err;
+      parent.syncErrorThrown = true;
+      return true;
+    }
+    return false;
+  }
+
+  _unsubscribe() {
+    const { _parentSubscriber } = this;
+    this._context = null;
+    this._parentSubscriber = null;
+    _parentSubscriber.unsubscribe();
   }
 }
 
@@ -67,7 +170,7 @@ class KinveySubscriber extends Subscriber {
         }
       default:
         this.syncErrorThrowable = true;
-        this.destination = new KinveySafeSubscriber(this, observerOrNext, error, complete, status, presence);
+        this.destination = new SafeSubscriber(this, observerOrNext, error, complete, status, presence);
         break;
     }
   }
