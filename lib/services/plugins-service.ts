@@ -71,7 +71,7 @@ export class PluginsService implements IPluginsService {
 
 			this.$logger.out(`Successfully installed plugin ${realNpmPackageJson.name}.`);
 		} else {
-			this.$npm.uninstall(realNpmPackageJson.name, { save: true }, projectData.projectDir);
+			await this.$npm.uninstall(realNpmPackageJson.name, { save: true }, projectData.projectDir);
 			this.$errors.failWithoutHelp(`${plugin} is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.`);
 		}
 	}

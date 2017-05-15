@@ -2,6 +2,9 @@ import * as path from "path";
 import { exported } from "./common/decorators";
 
 export class NodePackageManager implements INodePackageManager {
+	private static SCOPED_DEPENDENCY_REGEXP = /^(@.+?)(?:@(.+?))?$/;
+	private static DEPENDENCY_REGEXP = /^(.+?)(?:@(.+?))?$/;
+
 	constructor(private $fs: IFileSystem,
 		private $hostInfo: IHostInfo,
 		private $errors: IErrors,
@@ -47,10 +50,7 @@ export class NodePackageManager implements INodePackageManager {
 		}
 
 		try {
-			let spawnResult: ISpawnResult = await this.$childProcess.spawnFromEvent(this.getNpmExecutableName(), params, "close", { cwd, stdio: "inherit" });
-			if (!etcExistsPriorToInstallation) {
-				this.$fs.deleteDirectory(etcDirectoryLocation);
-			}
+			let spawnResult: ISpawnResult = await this.getNpmInstallResult(params, cwd);
 
 			// Whenever calling npm install without any arguments (hence installing all dependencies) no output is emitted on stdout
 			// Luckily, whenever you call npm install to install all dependencies chances are you won't need the name/version of the package you're installing because there is none.
@@ -63,8 +63,8 @@ export class NodePackageManager implements INodePackageManager {
 			// We cannot use the actual install with --json to get the information because of post-install scripts which may print on stdout
 			// dry-run install is quite fast when the dependencies are already installed even for many dependencies (e.g. angular) so we can live with this approach
 			// We need the --prefix here because without it no output is emitted on stdout because all the dependencies are already installed.
-			spawnResult = await this.$childProcess.spawnFromEvent(this.getNpmExecutableName(), params, "close");
-			return this.parseNpmInstallResult(spawnResult.stdout);
+			let spawnNpmDryRunResult = await this.$childProcess.spawnFromEvent(this.getNpmExecutableName(), params, "close");
+			return this.parseNpmInstallResult(spawnNpmDryRunResult.stdout, spawnResult.stdout, packageName);
 		} catch (err) {
 			if (err.message && err.message.indexOf("EPEERINVALID") !== -1) {
 				// Not installed peer dependencies are treated by npm 2 as errors, but npm 3 treats them as warnings.
@@ -75,6 +75,10 @@ export class NodePackageManager implements INodePackageManager {
 				// Revert package.json contents to preserve valid state
 				this.$fs.writeJson(packageJsonPath, jsonContentBefore);
 				throw err;
+			}
+		} finally {
+			if (!etcExistsPriorToInstallation) {
+				this.$fs.deleteDirectory(etcDirectoryLocation);
 			}
 		}
 	}
@@ -136,15 +140,110 @@ export class NodePackageManager implements INodePackageManager {
 		return array.join(" ");
 	}
 
-	private parseNpmInstallResult(npmInstallOutput: string): INpmInstallResultInfo {
-		const originalOutput: INpmInstallCLIResult = JSON.parse(npmInstallOutput);
-		const name = _.head(_.keys(originalOutput.dependencies));
-		const dependency = _.pick<INpmDependencyInfo, INpmDependencyInfo | INpmPeerDependencyInfo>(originalOutput.dependencies, name);
+	private parseNpmInstallResult(npmDryRunInstallOutput: string, npmInstallOutput: string, userSpecifiedPackageName: string): INpmInstallResultInfo {
+		// TODO: Add tests for this functionality
+		try {
+			const originalOutput: INpmInstallCLIResult = JSON.parse(npmDryRunInstallOutput);
+			const name = _.head(_.keys(originalOutput.dependencies));
+			const dependency = _.pick<INpmDependencyInfo, INpmDependencyInfo | INpmPeerDependencyInfo>(originalOutput.dependencies, name);
+			return {
+				name,
+				originalOutput,
+				version: dependency[name].version
+			};
+		} catch (err) {
+			this.$logger.trace(`Unable to parse result of npm --dry-run operation. Output is: ${npmDryRunInstallOutput}.`);
+			this.$logger.trace("Now we'll try to parse the real output of npm install command.");
+
+			let npmOutputMatchRegExp = /^.--\s+(?!UNMET)(.*)@((?:\d+\.){2}\d+)/m;
+			const match = npmInstallOutput.match(npmOutputMatchRegExp);
+			if (match) {
+				return {
+					name: match[1],
+					version: match[2]
+				};
+			}
+		}
+
+		this.$logger.trace("Unable to get information from npm installation, trying to return value specified by user.");
+		return this.getDependencyInformation(userSpecifiedPackageName);
+	}
+
+	private getDependencyInformation(dependency: string): INpmInstallResultInfo {
+		const scopeDependencyMatch = dependency.match(NodePackageManager.SCOPED_DEPENDENCY_REGEXP);
+		let name: string = null,
+			version: string = null;
+
+		if (scopeDependencyMatch) {
+			name = scopeDependencyMatch[1];
+			version = scopeDependencyMatch[2];
+		} else {
+			const matches = dependency.match(NodePackageManager.DEPENDENCY_REGEXP);
+			if (matches) {
+				name = matches[1];
+				version = matches[2];
+			}
+		}
+
 		return {
 			name,
-			originalOutput,
-			version: dependency[name].version
+			version
 		};
+	}
+
+	private async getNpmInstallResult(params: string[], cwd: string): Promise<ISpawnResult> {
+		return new Promise<ISpawnResult>((resolve, reject) => {
+			const npmExecutable = this.getNpmExecutableName();
+			let childProcess = this.$childProcess.spawn(npmExecutable, params, { cwd, stdio: "pipe" });
+
+			let isFulfilled = false;
+			let capturedOut = "";
+			let capturedErr = "";
+
+			childProcess.stdout.on("data", (data: string) => {
+				this.$logger.write(data.toString());
+				capturedOut += data;
+			});
+
+			if (childProcess.stderr) {
+				childProcess.stderr.on("data", (data: string) => {
+					console.error(data.toString());
+					capturedErr += data;
+				});
+			}
+
+			childProcess.on("close", (arg: any) => {
+				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
+
+				if (exitCode === 0) {
+					isFulfilled = true;
+					const result = {
+						stdout: capturedOut,
+						stderr: capturedErr,
+						exitCode
+					};
+
+					resolve(result);
+				} else {
+					let errorMessage = `Command ${npmExecutable} ${params && params.join(" ")} failed with exit code ${exitCode}`;
+					if (capturedErr) {
+						errorMessage += ` Error output: \n ${capturedErr}`;
+					}
+
+					if (!isFulfilled) {
+						isFulfilled = true;
+						reject(new Error(errorMessage));
+					}
+				}
+			});
+
+			childProcess.on("error", (err: Error) => {
+				if (!isFulfilled) {
+					isFulfilled = true;
+					reject(err);
+				}
+			});
+		});
 	}
 }
 
