@@ -193,7 +193,7 @@ interface INpmInstallResultInfo {
 	 * The original output that npm CLI produced upon installation.
 	 * @type {INpmInstallCLIResult}
 	 */
-	originalOutput: INpmInstallCLIResult;
+	originalOutput?: INpmInstallCLIResult;
 }
 
 interface INpmInstallOptions {
