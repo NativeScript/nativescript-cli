@@ -13,6 +13,7 @@ import Middleware, {
   SerializeMiddleware,
   Storage
 } from './src/middleware';
+import LiveRequest from './src/live';
 
 // Export
 export {
@@ -25,6 +26,7 @@ export {
   HttpMiddleware,
   KinveyRequest,
   KinveyResponse,
+  LiveRequest,
   MemoryAdapter,
   Middleware,
   NetworkRack,
