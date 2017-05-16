@@ -108,7 +108,7 @@ class LiveSyncService implements ILiveSyncService {
 
 		let watcher = choki.watch(pattern, { ignoreInitial: true, cwd: syncWorkingDirectory,
 		awaitWriteFinish: {
-			stabilityThreshold: 1000,
+			stabilityThreshold: 500,
 			pollInterval: 100
 		}, }).on("all", (event: string, filePath: string) => {
 			that.$dispatcher.dispatch(async () => {
