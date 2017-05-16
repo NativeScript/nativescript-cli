@@ -665,6 +665,10 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 
 	}
 
+	isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean {
+		return true;
+	}
+
 	public getLatestApplicationPackageForDevice(platformData: IPlatformData): IApplicationPackage {
 		return null;
 	}

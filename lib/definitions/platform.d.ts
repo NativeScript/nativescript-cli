@@ -125,9 +125,13 @@ interface IPlatformService extends NodeJS.EventEmitter {
 
 	/**
 	 * Ensures the passed platform is a valid one (from the supported ones)
-	 * and that it can be built on the current OS
 	 */
 	validatePlatform(platform: string, projectData: IProjectData): void;
+
+	/**
+	 * Ensures that passed platform can be built on the current OS
+	 */
+	isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean;
 
 	/**
 	 * Returns information about the latest built application for device in the current project.

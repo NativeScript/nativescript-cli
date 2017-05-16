@@ -84,11 +84,12 @@ export abstract class DebugPlatformCommand implements ICommand {
 }
 
 export class DebugIOSCommand extends DebugPlatformCommand {
-	constructor(protected $logger: ILogger,
+	constructor(private $errors: IErrors,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		$logger: ILogger,
 		$iOSDebugService: IPlatformDebugService,
 		$devicesService: Mobile.IDevicesService,
 		$injector: IInjector,
-		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$config: IConfiguration,
 		$usbLiveSyncService: ILiveSyncService,
 		$debugDataService: IDebugDataService,
@@ -106,6 +107,10 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
+			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", this.$devicePlatformsConstants.iOS, process.platform);
+		}
+
 		return await super.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.iOS);
 	}
 
@@ -119,11 +124,12 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 $injector.registerCommand("debug|ios", DebugIOSCommand);
 
 export class DebugAndroidCommand extends DebugPlatformCommand {
-	constructor($logger: ILogger,
+	constructor(private $errors: IErrors,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		$logger: ILogger,
 		$androidDebugService: IPlatformDebugService,
 		$devicesService: Mobile.IDevicesService,
 		$injector: IInjector,
-		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$config: IConfiguration,
 		$usbLiveSyncService: ILiveSyncService,
 		$debugDataService: IDebugDataService,
@@ -135,6 +141,10 @@ export class DebugAndroidCommand extends DebugPlatformCommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.Android, this.$projectData)) {
+			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", this.$devicePlatformsConstants.Android, process.platform);
+		}
+
 		return await super.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.Android);
 	}
 }

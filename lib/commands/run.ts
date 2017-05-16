@@ -51,6 +51,8 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 
 	constructor($platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $errors: IErrors,
 		$usbLiveSyncService: ILiveSyncService,
 		$projectData: IProjectData,
 		$options: IOptions,
@@ -59,6 +61,10 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
+		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
+			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", this.$devicePlatformsConstants.iOS, process.platform);
+		}
+
 		return this.executeCore([this.$platformsData.availablePlatforms.iOS]);
 	}
 
@@ -74,11 +80,12 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 
 	constructor($platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $errors: IErrors,
 		$usbLiveSyncService: ILiveSyncService,
 		$projectData: IProjectData,
 		$options: IOptions,
-		$emulatorPlatformService: IEmulatorPlatformService,
-		private $errors: IErrors) {
+		$emulatorPlatformService: IEmulatorPlatformService) {
 		super($platformService, $usbLiveSyncService, $projectData, $options, $emulatorPlatformService);
 	}
 
@@ -87,6 +94,10 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.Android, this.$projectData)) {
+			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", this.$devicePlatformsConstants.Android, process.platform);
+		}
+
 		if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 			this.$errors.fail("When producing a release build, you need to specify all --key-store-* options.");
 		}

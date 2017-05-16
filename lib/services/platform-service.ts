@@ -679,11 +679,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		if (!this.isValidPlatform(platform, projectData)) {
 			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(this.$platformsData.platformsNames));
 		}
-
-		//TODO: move to commands.
-		// if (!this.isPlatformSupportedForOS(platform, projectData)) {
-		// 	this.$errors.fail("Applications for platform %s can not be built on this OS - %s", platform, process.platform);
-		// }
 	}
 
 	public validatePlatformInstalled(platform: string, projectData: IProjectData): void {
@@ -708,7 +703,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return this.$platformsData.getPlatformData(platform, projectData);
 	}
 
-	private isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean {
+	public isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean {
 		let targetedOS = this.$platformsData.getPlatformData(platform, projectData).targetedOS;
 		let res = !targetedOS || targetedOS.indexOf("*") >= 0 || targetedOS.indexOf(process.platform) >= 0;
 		return res;

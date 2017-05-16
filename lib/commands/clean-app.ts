@@ -1,7 +1,7 @@
 export class CleanAppCommandBase {
 	constructor(protected $options: IOptions,
 		protected $projectData: IProjectData,
-		private $platformService: IPlatformService) {
+		protected $platformService: IPlatformService) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -14,7 +14,9 @@ export class CleanAppCommandBase {
 
 export class CleanAppIosCommand extends CleanAppCommandBase implements ICommand {
 	constructor(protected $options: IOptions,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $platformsData: IPlatformsData,
+		private $errors: IErrors,
 		$platformService: IPlatformService,
 		$projectData: IProjectData) {
 		super($options, $projectData, $platformService);
@@ -23,6 +25,9 @@ export class CleanAppIosCommand extends CleanAppCommandBase implements ICommand 
 	public allowedParameters: ICommandParameter[] = [];
 
 	public async execute(args: string[]): Promise<void> {
+		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
+			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", this.$devicePlatformsConstants.iOS, process.platform);
+		}
 		return super.execute([this.$platformsData.availablePlatforms.iOS]);
 	}
 }
@@ -33,13 +38,18 @@ export class CleanAppAndroidCommand extends CleanAppCommandBase implements IComm
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(protected $options: IOptions,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $platformsData: IPlatformsData,
+		private $errors: IErrors,
 		$platformService: IPlatformService,
 		$projectData: IProjectData) {
 		super($options, $projectData, $platformService);
 	}
 
 	public async execute(args: string[]): Promise<void> {
+		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
+			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", this.$devicePlatformsConstants.iOS, process.platform);
+		}
 		return super.execute([this.$platformsData.availablePlatforms.Android]);
 	}
 }

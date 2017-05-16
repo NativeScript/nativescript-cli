@@ -7,7 +7,6 @@ export class PublishIOS implements ICommand {
 	new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector)];
 
 	constructor(private $errors: IErrors,
-		private $hostInfo: IHostInfo,
 		private $injector: IInjector,
 		private $itmsTransporterService: IITMSTransporterService,
 		private $logger: ILogger,
@@ -100,8 +99,8 @@ export class PublishIOS implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		if (!this.$hostInfo.isDarwin) {
-			this.$errors.failWithoutHelp("This command is only available on Mac OS X.");
+		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
+			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", this.$devicePlatformsConstants.iOS, process.platform);
 		}
 
 		return true;
