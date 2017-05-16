@@ -95,8 +95,9 @@ describe('Client', () => {
   describe('appVersion', function() {
     it('should set the appVersion', function() {
       const appVersion = randomString();
-      const client = new Client();
-      client.appVersion = appVersion;
+      const client = new Client({
+        appVersion: appVersion
+      });
       expect(client.appVersion).toEqual(appVersion);
     });
   });

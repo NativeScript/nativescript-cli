@@ -607,6 +607,56 @@ export default class User {
       });
   }
 
+  registerRealTime(options = {}) {
+    // Check if this is the active user
+    if (this.isActive() === false) {
+      return Promise.reject(
+        new KinveyError('This user must be the active user to register from real time.')
+      );
+    }
+
+    // Register the active user
+    const request = new KinveyRequest({
+      method: RequestMethod.POST,
+      authType: AuthType.Session,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: `/user/${this.client.appKey}/${this._id}/register-realtime`
+      }),
+      body: { deviceId: this.client.deviceId },
+      properties: options.properties,
+      timeout: options.timeout
+    });
+    return request.execute()
+      .then(response => response.data);
+  }
+
+  unregisterRealTime(options = {}) {
+    // Check if this is the active user
+    if (this.isActive() === false) {
+      return Promise.reject(
+        new KinveyError('This user must be the active user to unregister from real time.')
+      );
+    }
+
+    // Unregister the active user
+    const request = new KinveyRequest({
+      method: RequestMethod.POST,
+      authType: AuthType.Session,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: `/user/${this.client.appKey}/${this._id}/unregister-realtime`
+      }),
+      body: { deviceId: this.client.deviceId },
+      properties: options.properties,
+      timeout: options.timeout
+    });
+    return request.execute()
+      .then(response => response.data);
+  }
+
   /**
    * Refresh the active user.
    *

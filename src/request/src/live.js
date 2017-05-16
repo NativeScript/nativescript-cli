@@ -1,110 +1,184 @@
 import Promise from 'es6-promise';
 import PubNub from 'pubnub';
-import UrlPattern from 'url-pattern';
 import url from 'url';
+import assign from 'lodash/assign';
+import isString from 'lodash/isString';
 
 import { KinveyObservable, isDefined } from 'src/utils';
 import { KinveyError } from 'src/errors';
-import CacheRequest from './cache';
-import Request from './request';
+import Client from 'src/client';
+import { User } from 'src/entity';
+import { AuthType, KinveyRequest } from './network';
+import { RequestMethod } from './request';
 
 const subscriptions = new Map();
-const registered = new Map();
 
-function register(options = {}) {
-  const activeUser = CacheRequest.getActiveUser(options.client);
+export default class LiveServiceManager {
+  static subscribe(collection, callbacks = {}, options = {}) {
+    if (isDefined(collection) === false || isString(collection) === false) {
+      throw new KinveyError('A collection is required and must be a string.');
+    }
 
-  // Check if an active user exists
-  if (isDefined(activeUser) === false) {
-    return Promise.reject(
-      new KinveyError('An active user is required to register for real time updates.')
-    );
-  }
+    options = assign({
+      client: Client.sharedInstance()
+    }, options);
 
-  // Check if the active user is already registered
-  if (registered.get(activeUser._id)) {
-    return Promise.resolve(activeUser);
-  }
+    const next = callbacks.next || callbacks.onNext;
+    const error = callbacks.error || callbacks.onError;
+    const complete = callbacks.complete || callbacks.onComplete;
+    const onStatus = callbacks.status || callbacks.onStatus;
+    const presence = callbacks.presence || callbacks.onPresense;
+    const client = options.client;
+    const activeUser = User.getActiveUser(client);
 
-  // Register the active user
-  return Promise.resolve(activeUser);
-}
+    if (isDefined(activeUser) === false) {
+      return Promise.reject(
+        new KinveyError('An active user is required to register for real time.')
+      );
+    }
 
-// function unregister(options = {}) {
-//   const activeUser = CacheRequest.getActiveUser(options.client);
+    const key = `${client.deviceId}_${activeUser._id}_${collection}`;
+    const subscription = subscriptions.get(key) || {};
 
-//   // Check if an active user exists
-//   if (isDefined(activeUser) === false) {
-//     return Promise.reject(
-//       new KinveyError('An active user is required to unregister from real time updates.')
-//     );
-//   }
+    if (isDefined(subscription.stream) === false) {
+      // Register the user for real time
+      return activeUser.registerRealTime(options)
+        .then((pubnubConfig) => {
+          return new Promise((resolve) => {
+            const stream = KinveyObservable.create((observer) => {
+              const pubnub = {
+                config: pubnubConfig,
+                instance: new PubNub({
+                  publishKey: pubnubConfig.publishKey,
+                  subscribeKey: pubnubConfig.subscribeKey,
+                  authKey: activeUser.authtoken
+                }),
+                listeners: [],
+                subscriptions: []
+              };
+              const listener = {
+                status(event) {
+                  if (event.category === 'PNConnectedCategory') {
+                    // Subscribe to the collection for real time
+                    const request = new KinveyRequest({
+                      method: RequestMethod.POST,
+                      authType: AuthType.Session,
+                      url: url.format({
+                        protocol: client.apiProtocol,
+                        host: client.apiHost,
+                        pathname: `/appdata/${client.appKey}/${collection}/_subscribe`
+                      }),
+                      body: { deviceId: client.deviceId },
+                      client: client,
+                      timeout: options.timeout,
+                      properties: options.properties
+                    });
+                    request.execute()
+                      .then(() => {
+                        // Subscribe to stream
+                        const stream = subscription.stream;
+                        stream.subscriptions.push(stream.instance.subscribe(next, error, complete, onStatus, presence));
+                        subscription.stream = stream;
 
-//   // Check if the active user is already registered
-//   if (registered.get(activeUser._id) === false) {
-//     return Promise.resolve(activeUser);
-//   }
+                        // Set the subscription
+                        subscriptions.set(key, subscription);
+                        resolve();
+                      });
+                  }
 
-//   // Unregister the active user
-//   return Promise.resolve(activeUser);
-// }
+                  observer.status(event);
+                },
+                message(event) {
+                  // var channelName = event.channel; // The channel for which the message belongs
+                  // var channelGroup = event.subscription; // The channel group or wildcard subscription match (if exists)
+                  // var pubTT = event.timetoken; // Publish timetoken
+                  // var msg = event.message; // The Payload
+                  observer.next(event.message);
+                },
+                presence(event) {
+                  observer.presence(event);
+                }
+              };
 
-export default class LiveRequest extends Request {
-  get url() {
-    return super.url;
-  }
+              // Add listener for pubnub
+              pubnub.instance.addListener(listener);
+              pubnub.listeners.push(listener);
 
-  set url(urlString) {
-    super.url = urlString;
-    const pathname = global.escape(url.parse(urlString).pathname);
-    const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:entityId)(/)');
-    const { appKey, collection, entityId } = pattern.match(pathname) || {};
-    this.appKey = appKey;
-    this.collection = collection;
-    this.entityId = entityId;
-  }
+              // Subscribe to channel group on PubNub
+              pubnub.instance.subscribe({
+                channelGroups: [pubnubConfig.userChannelGroup]
+              });
 
-  execute() {
-    return this.subscribe();
-  }
+              // Set pubnub
+              subscription.pubnub = pubnub;
 
-  subscribe() {
-    return register({ client: this.client })
-      .then((user) => {
-        const key = { _id: user._id, collection: this.collection };
-        const subscription = subscriptions.get(key) || {};
-        let stream = subscription.stream;
+              // Subscribe to stream
+              subscription.stream = {
+                instance: stream,
+                subscriptions: []
+              };
 
-        if (isDefined(stream) === false) {
-          stream = KinveyObservable.create((observer) => {
-            const pubnub = new PubNub({
-              publishKey: 'demo',
-              subscribeKey: 'demo'
-            });
-
-            pubnub.addListener({
-              status(statusEvent) {
-                observer.status(statusEvent);
-              },
-              message(message) {
-                observer.next(message);
-              },
-              presence(presenceEvent) {
-                observer.presence(presenceEvent);
-              }
-            });
-
-            pubnub.subscribe({
-              channels: ['hello_world']
+              // Set the subscription
+              subscriptions.set(key, subscription);
             });
           });
+        });
+    }
 
-          subscription.stream = stream;
-          subscriptions.set(key, subscription);
-          return stream;
-        }
+    // Subscribe to stream
+    const stream = subscription.stream;
+    stream.subscriptions.push(stream.instance.subscribe(next, error, complete, onStatus, presence));
+    subscription.stream = stream;
 
-        return stream;
+    // Set the subscription
+    subscriptions.set(key, subscription);
+
+    return Promise.resolve();
+  }
+
+  static unsubscribe(collection, options = {}) {
+    options = assign({
+      client: Client.sharedInstance()
+    }, options);
+
+    const client = options.client;
+    const activeUser = User.getActiveUser(client);
+
+    if (isDefined(activeUser) === false) {
+      return Promise.reject(
+        new KinveyError('An active user is required to unregister from real time.')
+      );
+    }
+
+    const key = `${client.deviceId}_${activeUser._id}_${collection}`;
+    const subscription = subscriptions.get(key);
+
+    if (isDefined(subscription)) {
+      const request = new KinveyRequest({
+        method: RequestMethod.POST,
+        authType: AuthType.Session,
+        url: url.format({
+          protocol: client.apiProtocol,
+          host: client.apiHost,
+          pathname: `/appdata/${client.appKey}/${collection}/_unsubscribe`
+        }),
+        body: { deviceId: client.deviceId },
+        client: client,
+        timeout: options.timeout,
+        properties: options.properties
       });
+      return request.execute()
+        .then(() => {
+          const stream = subscription.stream;
+
+          if (isDefined(stream)) {
+            stream.subscriptions.forEach((subscription) => {
+              subscription.unsubscribe();
+            });
+          }
+        });
+    }
+
+    return Promise.resolve();
   }
 }

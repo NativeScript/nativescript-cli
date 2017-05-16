@@ -3,6 +3,7 @@ import url from 'url';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
+import uid from 'uid-safe';
 
 import { KinveyError } from 'src/errors';
 import { Log, isDefined } from 'src/utils';
@@ -65,13 +66,24 @@ export default class Client {
    *   appSecret: '<appSecret>'
    * });
    */
-  constructor(config = {}) {
-    let apiHostname = isString(config.apiHostname) ? config.apiHostname : 'https://baas.kinvey.com';
-    if (/^https?:\/\//i.test(apiHostname) === false) {
-      apiHostname = `https://${apiHostname}`;
+  constructor(options = {}) {
+    options = assign({
+      apiHostname: 'https://baas.kinvey.com',
+      micHostname: 'https://auth.kinvey.com'
+    }, options);
+
+    if (options.apiHostname && isString(options.apiHostname)) {
+      const apiHostnameParsed = url.parse(options.apiHostname);
+      options.apiProtocol = apiHostnameParsed.protocol || 'https:';
+      options.apiHost = apiHostnameParsed.host;
     }
 
     const apiHostnameParsed = url.parse(apiHostname);
+
+    /**
+     * @type {string}
+     */
+    this.deviceId = uid.sync(18);
 
     /**
      * @type {string}
@@ -108,16 +120,6 @@ export default class Client {
     const liveServiceHostnameParsed = url.parse(liveServiceHostname);
 
     /**
-     * @type {string}
-     */
-    this.liveServiceProtocol = liveServiceHostnameParsed.protocol;
-
-    /**
-     * @type {string}
-     */
-    this.liveServiceHost = liveServiceHostnameParsed.host;
-
-    /**
      * @type {?string}
      */
     this.appKey = config.appKey;
@@ -150,7 +152,8 @@ export default class Client {
     /**
      * @private
      */
-    this.activeUserStorage = new ActiveUserStorage();
+    this.activeUserStorage = new ActiveUserStorage();    
+
   }
 
   /**
@@ -188,13 +191,44 @@ export default class Client {
   }
 
   /**
-   * Live Service host name used for streaming data.
+   * The version of your app. It will sent with Kinvey API requests
+   * using the X-Kinvey-Api-Version header.
    */
-  get liveServiceHostname() {
-    return url.format({
-      protocol: this.liveServiceProtocol,
-      host: this.liveServiceHost
-    });
+  get appVersion() {
+    return this._appVersion;
+  }
+
+  /**
+   * Set the version of your app. It will sent with Kinvey API requests
+   * using the X-Kinvey-Api-Version header.
+   *
+   * @param  {String} appVersion  App version.
+   */
+  set appVersion(appVersion) {
+    if (appVersion && !isString(appVersion)) {
+      appVersion = String(appVersion);
+    }
+
+    this._appVersion = appVersion;
+  }
+
+  get defaultTimeout() {
+    return this._defaultTimeout;
+  }
+
+  set defaultTimeout(timeout) {
+    timeout = parseInt(timeout, 10);
+
+    if (isNumber(timeout) === false || isNaN(timeout)) {
+      throw new KinveyError('Invalid timeout. Timeout must be a number.');
+    }
+
+    if (timeout < 0) {
+      Log.info(`Default timeout is less than 0. Setting default timeout to ${defaultTimeout}ms.`);
+      timeout = defaultTimeout;
+    }
+
+    this._defaultTimeout = timeout;
   }
 
   /**
@@ -204,15 +238,13 @@ export default class Client {
    */
   toPlainObject() {
     return {
+      deviceId: this.deviceId,
       apiHostname: this.apiHostname,
       apiProtocol: this.apiProtocol,
       apiHost: this.apiHost,
       micHostname: this.micHostname,
       micProtocol: this.micProtocol,
       micHost: this.micHost,
-      liveServiceHostname: this.liveServiceHostname,
-      liveServiceHost: this.liveServiceHost,
-      liveServiceProtocol: this.liveServiceProtocol,
       appKey: this.appKey,
       appSecret: this.appSecret,
       masterSecret: this.masterSecret,

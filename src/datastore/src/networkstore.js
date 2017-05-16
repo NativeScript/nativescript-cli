@@ -2,7 +2,7 @@ import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 import url from 'url';
 
-import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod, LiveRequest } from 'src/request';
+import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod, LiveServiceManager } from 'src/request';
 import { KinveyError } from 'src/errors';
 import Query from 'src/query';
 import Client from 'src/client';
@@ -472,29 +472,9 @@ export default class NetworkStore {
   }
 
   /**
-   * Subscribes to a live stream
+   * Subscribes to a live stream of the collection
    */
-  subscribe(next, error, complete, status, presence) {
-    if (isDefined(this._liveStream) === false) {
-      // Subscribe to KLS
-      const request = new LiveRequest({
-        method: RequestMethod.GET,
-        authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.liveServiceProtocol,
-          host: this.client.liveServiceHost,
-          pathname: this.pathname
-        }),
-        client: this.client
-      });
-      return request.execute()
-        .then((stream) => {
-          this._liveStream = stream;
-          return stream.subscribe(next, error, complete, status, presence);
-        });
-    }
-
-    // Return the stream
-    return Promise.resolve(this._liveStream.subscribe(next, error, complete, status, presence));
+  subscribe(callbacks, options = {}) {
+    return LiveServiceManager.subscribe(this.collection, callbacks, options);
   }
 }
