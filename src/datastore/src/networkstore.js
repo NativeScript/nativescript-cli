@@ -472,9 +472,16 @@ export default class NetworkStore {
   }
 
   /**
-   * Subscribes to a live stream of the collection
+   * Subscribes to the live stream for the collection
    */
-  subscribe(callbacks, options = {}) {
-    return LiveServiceManager.subscribe(this.collection, callbacks, options);
+  subscribe(options = {}) {
+    return LiveServiceManager.subscribe(this.collection, options);
+  }
+
+  /**
+   * Unsubscribes from the live stream for the collection
+   */
+  unsubscribe(options = {}) {
+    return LiveServiceManager.unsubscribe(this.collection, options);
   }
 }
