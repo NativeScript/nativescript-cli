@@ -10,7 +10,6 @@ describe('Client', () => {
       expect(client).toBeA(Client);
       expect(client.apiHostname).toEqual('https://baas.kinvey.com');
       expect(client.micHostname).toEqual('https://auth.kinvey.com');
-      expect(client.liveServiceHostname).toEqual('https://kls.kinvey.com');
     });
 
     it('should be able to provide custom apiHostname with protocol https:', () => {

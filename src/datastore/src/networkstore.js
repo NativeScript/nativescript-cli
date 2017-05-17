@@ -2,7 +2,8 @@ import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 import url from 'url';
 
-import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod, LiveServiceManager } from 'src/request';
+import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod } from 'src/request';
+import { LiveServiceManager } from 'src/live';
 import { KinveyError } from 'src/errors';
 import Query from 'src/query';
 import Client from 'src/client';
