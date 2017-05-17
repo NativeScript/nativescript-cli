@@ -625,6 +625,41 @@ describe('User', function() {
             });
         });
     });
+
+    it('should be able to update a user with mutiple async requests running concurrently', function() {
+      return UserMock.logout()
+        .then(() => {
+          return UserMock.login(randomString(), randomString());
+        })
+        .then((activeUser) => {
+          const user = new User({ _id: randomString(), email: randomString() });
+          const email = randomString();
+          const requestData = assign(user.data, { email: email });
+          const responseData = assign(requestData, { _kmd: { authtoken: randomString() } });
+
+          // Kinvey API response
+          nock(this.client.apiHostname, {
+            encodedQueryParams: true,
+            reqheaders: {
+              authorization(value) {
+                console.log(value);
+                return true;
+              }
+            }
+          })
+            .put(`${user.pathname}/${user._id}`, requestData)
+            .times(2)
+            .reply(200, responseData);
+
+          return Promise.all([user.update({ email: email }), user.update({ email: email })])
+            .then(() => {
+              expect(user.data).toEqual(responseData);
+              expect(user._kmd.authtoken).toEqual(responseData._kmd.authtoken);
+              expect(activeUser.data).toNotEqual(responseData);
+              expect(activeUser._kmd.authtoken).toNotEqual(responseData._kmd.authtoken);
+            });
+        });
+    });
   });
 
   describe('me()', function() {
