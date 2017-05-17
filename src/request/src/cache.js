@@ -1,11 +1,11 @@
 import Promise from 'es6-promise';
+import Queue from 'promise-queue';
 import UrlPattern from 'url-pattern';
 import url from 'url';
-import localStorage from 'local-storage';
 import cloneDeep from 'lodash/cloneDeep';
 
 import Client from 'src/client';
-import { KinveyError, NotFoundError } from 'src/errors';
+import { KinveyError } from 'src/errors';
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
 import { isDefined } from 'src/utils';
@@ -16,6 +16,9 @@ import { CacheRack } from './rack';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const activeUserCollectionName = process.env.KINVEY_USER_ACTIVE_COLLECTION_NAME || 'kinvey_active_user';
 const activeUsers = {};
+
+Queue.configure(Promise);
+const queue = new Queue(1, Infinity);
 
 /**
  * @private
@@ -116,103 +119,46 @@ export default class CacheRequest extends Request {
   }
 
   static loadActiveUser(client = Client.sharedInstance()) {
-    const request = new CacheRequest({
-      method: RequestMethod.GET,
-      url: url.format({
-        protocol: client.apiProtocol,
-        host: client.apiHost,
-        pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}`
-      })
-    });
-    return request.execute()
-      .then(response => response.data)
-      .then((users) => {
-        if (users.length > 0) {
-          return users[0];
-        }
-
-        return null;
-      })
-      .then((activeUser) => {
-        // Try local storage
-        if (isDefined(activeUser) === false) {
-          return CacheRequest.loadActiveUserLegacy(client);
-        }
-
-        return activeUser;
-      })
-      .then((activeUser) => {
-        return CacheRequest.setActiveUser(client, activeUser);
-      })
-      .then((activeUser) => {
-        activeUsers[client.appKey] = activeUser;
-        return activeUser;
+    return queue.add(() => {
+      const request = new CacheRequest({
+        method: RequestMethod.GET,
+        url: url.format({
+          protocol: client.apiProtocol,
+          host: client.apiHost,
+          pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}`
+        })
       });
-  }
+      return request.execute()
+        .then(response => response.data)
+        .then((users) => {
+          if (users.length > 0) {
+            return users[0];
+          }
 
-  static loadActiveUserLegacy(client = Client.sharedInstance()) {
-    const activeUser = CacheRequest.getActiveUserLegacy(client);
-    activeUsers[client.appKey] = activeUser;
-    return activeUser;
+          return null;
+        })
+        .then((activeUser) => {
+          activeUsers[client.appKey] = activeUser;
+          return activeUser;
+        });
+    });
   }
 
   static getActiveUser(client = Client.sharedInstance()) {
     return activeUsers[client.appKey];
   }
 
-  static getActiveUserLegacy(client = Client.sharedInstance()) {
-    try {
-      return localStorage.get(`${client.appKey}kinvey_user`);
-    } catch (error) {
-      return null;
-    }
-  }
+  static setActiveUser(client = Client.sharedInstance(), activeUser) {
+    return queue.add(() => {
+      let promise = Promise.resolve(null);
+      const prevActiveUser = CacheRequest.getActiveUser(client);
 
-  static setActiveUser(client = Client.sharedInstance(), user) {
-    let promise = Promise.resolve(null);
-    const activeUser = CacheRequest.getActiveUser(client);
-
-    if (isDefined(activeUser)) {
-      // Delete from local storage (legacy)
-      CacheRequest.setActiveUserLegacy(client, null);
-
-      // Delete from memory
-      activeUsers[client.appKey] = null;
-
-      // Delete from cache
-      const request = new CacheRequest({
-        method: RequestMethod.DELETE,
-        url: url.format({
-          protocol: client.apiProtocol,
-          host: client.apiHost,
-          pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}/${activeUser._id}`
-        })
-      });
-      promise = request.execute()
-        .then(response => response.data)
-        .catch((error) => {
-          if (error instanceof NotFoundError) {
-            return null;
-          }
-
-          throw error;
-        });
-    }
-
-    return promise
-      .then(() => {
-        if (isDefined(user) === false) {
-          return null;
-        }
-
-        // Remove sensitive data from user
-        delete user.password;
+      if (isDefined(activeUser)) {
+        // Remove sensitive data from activeUser
+        delete activeUser.password;
 
         // Save to memory
-        activeUsers[client.appKey] = user;
-
-        // Save to local storage (legacy)
-        CacheRequest.setActiveUserLegacy(client, user);
+        activeUsers[client.appKey] = activeUser;
 
         // Save to cache
         const request = new CacheRequest({
@@ -222,25 +168,34 @@ export default class CacheRequest extends Request {
             host: client.apiHost,
             pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}`
           }),
-          body: user
+          body: activeUser
         });
-        return request.execute()
+        promise = request.execute()
           .then(response => response.data);
-      })
-      .then(() => user);
-  }
-
-  static setActiveUserLegacy(client = Client.sharedInstance(), user) {
-    try {
-      localStorage.remove(`${client.appKey}kinvey_user`);
-
-      if (isDefined(user)) {
-        localStorage.set(`${client.appKey}kinvey_user`, user);
+      } else {
+        // Delete from memory
+        delete activeUsers[client.appKey];
       }
 
-      return true;
-    } catch (error) {
-      return false;
-    }
+      return promise
+        .then(() => {
+          if (isDefined(prevActiveUser) && (isDefined(activeUser) === false || prevActiveUser._id !== activeUser._id)) {
+            // Delete from cache
+            const request = new CacheRequest({
+              method: RequestMethod.DELETE,
+              url: url.format({
+                protocol: client.apiProtocol,
+                host: client.apiHost,
+                pathname: `/${usersNamespace}/${client.appKey}/${activeUserCollectionName}/${prevActiveUser._id}`
+              })
+            });
+            return request.execute()
+              .catch(() => activeUser);
+          }
+
+          return activeUser;
+        })
+        .then(() => activeUser);
+    });
   }
 }
