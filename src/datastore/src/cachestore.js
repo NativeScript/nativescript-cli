@@ -4,6 +4,7 @@ import assign from 'lodash/assign';
 import keyBy from 'lodash/keyBy';
 import remove from 'lodash/remove';
 import isArray from 'lodash/isArray';
+import isFunction from 'lodash/isFunction';
 import reduce from 'lodash/reduce';
 import map from 'lodash/map';
 import url from 'url';
@@ -913,5 +914,72 @@ export default class CacheStore extends NetworkStore {
 
   clearSync(query, options) {
     return this.syncManager.clear(query, options);
+  }
+
+  /**
+   * Subscribes to the live stream for the collection
+   */
+  subscribe(options = {}) {
+    return super.subscribe(options)
+      .then((stream) => {
+        const prevSubscribe = stream.subscribe;
+        stream.subscribe = (onNext, onError, onComplete, onStatus, onPresense) => {
+          return prevSubscribe.call(stream, (entity) => {
+            const query = new Query();
+            query.equalTo('_id', entity._id);
+
+            return this.pendingSyncCount(query, options)
+              .then((syncCount) => {
+                if (syncCount > 0 && this.syncAutomatically === true) {
+                  return this.push(query, options)
+                    .then(() => this.pendingSyncCount(query, options));
+                }
+
+                return syncCount;
+              })
+              .then((syncCount) => {
+                // Throw an error if there are still items that need to be synced
+                if (syncCount > 0) {
+                  throw new KinveyError(`Unable to save the entity with id ${entity._id} to cache received`
+                    + ` from the live stream for the ${this.collection} collection.`
+                    + ` There ${syncCount === 1 ? 'is' : 'are'}`
+                    + ` ${syncCount} ${syncCount === 1 ? 'entity' : 'entities'} that need`
+                    + ` to be synced. The live stream for the ${this.collection} collection`
+                    + ' will be unsubscribed.', 'Please push the pending sync entities'
+                    + ` for the ${this.collection} collection.`);
+                }
+
+                // Save the entity to the cache
+                const request = new CacheRequest({
+                  method: RequestMethod.PUT,
+                  url: url.format({
+                    protocol: this.client.apiProtocol,
+                    host: this.client.apiHost,
+                    pathname: `${this.pathname}/${entity._id}`
+                  }),
+                  properties: options.properties,
+                  body: entity,
+                  timeout: options.timeout
+                });
+                return request.execute()
+                  .then(response => response.data);
+              })
+              .then((entity) => {
+                if (isFunction(onNext)) {
+                  onNext(entity);
+                }
+              })
+              .catch((error) => {
+                if (isFunction(onError)) {
+                  onError(error);
+                }
+
+                this.unsubscribe();
+              });
+          }, onError, onComplete, onStatus, onPresense);
+        };
+
+        return stream;
+      });
   }
 }
