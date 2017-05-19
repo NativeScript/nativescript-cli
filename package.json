@@ -72,8 +72,10 @@
     "istanbul": "1.1.0-alpha.1",
     "json-loader": "^0.5.4",
     "mocha": "^3.0.0",
+    "request": "2.81.0",
     "nock": "9.0.13",
-    "request": "2.81.0"
+    "proxyquire": "1.8.0",
+    "regenerator-runtime": "^0.9.5"
   },
   "engines": {
     "node": "6.9.1"
