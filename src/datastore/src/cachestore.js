@@ -944,8 +944,7 @@ export default class CacheStore extends NetworkStore {
                     + ` from the live stream for the ${this.collection} collection.`
                     + ` There ${syncCount === 1 ? 'is' : 'are'}`
                     + ` ${syncCount} ${syncCount === 1 ? 'entity' : 'entities'} that need`
-                    + ` to be synced. The live stream for the ${this.collection} collection`
-                    + ' will be unsubscribed.', 'Please push the pending sync entities'
+                    + ' to be synced.', 'Please push the pending sync entities'
                     + ` for the ${this.collection} collection.`);
                 }
 
@@ -973,8 +972,6 @@ export default class CacheStore extends NetworkStore {
                 if (isFunction(onError)) {
                   onError(error);
                 }
-
-                this.unsubscribe();
               });
           }, onError, onComplete, onStatus, onPresense);
         };

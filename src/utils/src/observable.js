@@ -2,10 +2,21 @@ import Promise from 'es6-promise';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import { rxSubscriber as rxSubscriberSymbol } from 'rxjs/symbol/rxSubscriber';
-import { empty as emptyObserver } from 'rxjs/Observer';
 import isFunction from 'lodash/isFunction';
 
 import { isDefined } from 'src/utils';
+
+/**
+ * @private
+ */
+const emptyObserver = {
+  closed: true,
+  next() { /* noop */ },
+  error(err) { throw err; },
+  complete() { /* noop */ },
+  status() { /* noop */ },
+  presence() { /* noop */ }
+};
 
 /**
  * @private
@@ -201,7 +212,7 @@ class KinveySubscriber extends Subscriber {
  */
 function toSubscriber(observerOrNext, error, complete, status, presence) {
   if (observerOrNext) {
-    if (observerOrNext instanceof Subscriber) {
+    if (observerOrNext instanceof KinveySubscriber) {
       return observerOrNext;
     }
 
@@ -210,8 +221,8 @@ function toSubscriber(observerOrNext, error, complete, status, presence) {
     }
   }
 
-  if (!observerOrNext && !error && !complete) {
-    return new Subscriber(emptyObserver);
+  if (!observerOrNext && !error && !complete && !status && !presence) {
+    return new KinveySubscriber(emptyObserver);
   }
 
   return new KinveySubscriber(observerOrNext, error, complete, status, presence);

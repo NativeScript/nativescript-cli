@@ -3,17 +3,18 @@ import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 
 import { isDefined } from 'src/utils';
-import { KinveyError } from 'src/errors';
+import { KinveyError, NoActiveUserError } from 'src/errors';
 import Client from 'src/client';
 import { User } from 'src/entity';
 import LiveServiceSubscription from './subscription';
 
 const subscriptions = new Map();
-
-export default class LiveServiceManager {
-  static subscribe(collection, options = {}) {
+const LiveServiceManager = {
+  subscribe(collection, options = {}) {
     if (isDefined(collection) === false || isString(collection) === false) {
-      throw new KinveyError('A collection is required and must be a string.');
+      return Promise.reject(
+        new KinveyError('A collection is required and must be a string.')
+      );
     }
 
     const client = options.client || Client.sharedInstance();
@@ -21,7 +22,7 @@ export default class LiveServiceManager {
 
     if (isDefined(activeUser) === false) {
       return Promise.reject(
-        new KinveyError('An active user is required to register for real time.')
+        new NoActiveUserError('An active user is required to register for real time.')
       );
     }
 
@@ -43,26 +44,37 @@ export default class LiveServiceManager {
         // Return the stream for the collection
         return stream;
       });
-  }
+  },
 
-  static unsubscribe(collection, options = {}) {
+  unsubscribe(collection, options = {}) {
     if (isDefined(collection) === false || isString(collection) === false) {
-      throw new KinveyError('A collection is required and must be a string.');
+      return Promise.reject(
+        new KinveyError('A collection is required and must be a string.')
+      );
     }
 
     const key = collection;
     const collectionSubscriptions = subscriptions.get(key) || [];
-    const remainingSubscriptions = [];
+    const remainingSubscriptions = collectionSubscriptions;
 
     return Promise.all(collectionSubscriptions.map((subscription) => {
       return subscription.unsubscribe(options)
-        .catch(() => {
-          return remainingSubscriptions.push(subscription);
+        .then(() => {
+          const index = remainingSubscriptions.indexOf(subscription);
+          if (index !== -1) {
+            remainingSubscriptions.splice(index, 1);
+          }
         });
     }))
       .then(() => {
         subscriptions.set(key, remainingSubscriptions);
         return undefined;
+      })
+      .catch((error) => {
+        subscriptions.set(key, remainingSubscriptions);
+        throw error;
       });
   }
-}
+};
+
+export default LiveServiceManager;

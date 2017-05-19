@@ -9,7 +9,7 @@ import Client from 'src/client';
 import { AuthType, KinveyRequest, RequestMethod } from 'src/request';
 
 export default class LiveServiceSubscription {
-  constructor(collection, pubnubConfig, options = {}) {
+  constructor(collection, pubnubConfig = {}, options = {}) {
     if (isDefined(collection) === false || isString(collection) === false) {
       throw new KinveyError('A collection is required and must be a string.');
     }
@@ -67,7 +67,7 @@ export default class LiveServiceSubscription {
 
           // Subscribe to channel group on PubNub
           this.pubnub.subscribe({
-            channelGroups: [channelGroups]
+            channelGroups: channelGroups
           });
 
           this.unsubscribe = (options = {}) => {
@@ -100,6 +100,10 @@ export default class LiveServiceSubscription {
           };
         });
 
+        // Subscribe to create unsubscribe function
+        stream.subscribe();
+
+        // Return the stream
         return stream;
       });
   }
