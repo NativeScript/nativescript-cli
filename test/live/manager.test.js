@@ -6,6 +6,7 @@ import { LiveServiceManager } from 'src/live';
 import { User } from 'src/entity';
 import { UserMock } from 'test/mocks';
 import { randomString, KinveyObservable } from 'src/utils';
+import Client from 'src/client';
 
 // Setup chai
 chai.use(chaiAsPromised);
@@ -40,15 +41,15 @@ describe('LiveServiceManager', function() {
         userChannelGroup: randomString()
       };
 
-      nock(this.client.apiHostname)
+      nock(this.client.apiHostname, { encodedQueryParams: true })
         .post(`/user/${this.client.appKey}/${activeUser._id}/register-realtime`, { deviceId: this.client.deviceId })
         .reply(200, pubnubConfig);
 
-      nock(this.client.apiHostname)
+      nock(this.client.apiHostname, { encodedQueryParams: true })
         .post(`/appdata/${this.client.appKey}/${collection}/_subscribe`, { deviceId: this.client.deviceId })
         .reply(200);
 
-      return LiveServiceManager.subscribe(collection)
+      return LiveServiceManager.subscribe(collection, { client: this.client })
         .then((stream) => {
           expect(stream).toBeA(KinveyObservable);
         });
@@ -75,19 +76,19 @@ describe('LiveServiceManager', function() {
         userChannelGroup: randomString()
       };
 
-      nock(this.client.apiHostname)
+      nock(this.client.apiHostname, { encodedQueryParams: true })
         .post(`/user/${this.client.appKey}/${activeUser._id}/register-realtime`, { deviceId: this.client.deviceId })
         .times(2)
         .reply(200, pubnubConfig);
 
-      nock(this.client.apiHostname)
+      nock(this.client.apiHostname, { encodedQueryParams: true })
         .post(`/appdata/${this.client.appKey}/${collection}/_subscribe`, { deviceId: this.client.deviceId })
         .times(2)
         .reply(200);
 
-      return LiveServiceManager.subscribe(collection)
+      return LiveServiceManager.subscribe(collection, { client: this.client })
         .then(() => {
-          return LiveServiceManager.subscribe(collection);
+          return LiveServiceManager.subscribe(collection, { client: this.client });
         })
         .then(() => {
           nock(this.client.apiHostname)
@@ -95,7 +96,7 @@ describe('LiveServiceManager', function() {
             .times(2)
             .reply(200);
 
-          return LiveServiceManager.unsubscribe(collection);
+          return LiveServiceManager.unsubscribe(collection, { client: this.client });
         });
     });
 
@@ -108,30 +109,30 @@ describe('LiveServiceManager', function() {
         userChannelGroup: randomString()
       };
 
-      nock(this.client.apiHostname)
+      nock(this.client.apiHostname, { encodedQueryParams: true })
         .post(`/user/${this.client.appKey}/${activeUser._id}/register-realtime`, { deviceId: this.client.deviceId })
         .times(2)
         .reply(200, pubnubConfig);
 
-      nock(this.client.apiHostname)
+      nock(this.client.apiHostname, { encodedQueryParams: true })
         .post(`/appdata/${this.client.appKey}/${collection}/_subscribe`, { deviceId: this.client.deviceId })
         .times(2)
         .reply(200);
 
-      const promise = LiveServiceManager.subscribe(collection)
+      const promise = LiveServiceManager.subscribe(collection, { client: this.client })
         .then(() => {
-          return LiveServiceManager.subscribe(collection);
+          return LiveServiceManager.subscribe(collection, { client: this.client });
         })
         .then(() => {
-          nock(this.client.apiHostname)
+          nock(this.client.apiHostname, { encodedQueryParams: true })
             .post(`/appdata/${this.client.appKey}/${collection}/_unsubscribe`, { deviceId: this.client.deviceId })
             .reply(200);
 
-          nock(this.client.apiHostname)
+          nock(this.client.apiHostname, { encodedQueryParams: true })
             .post(`/appdata/${this.client.appKey}/${collection}/_unsubscribe`, { deviceId: this.client.deviceId })
             .reply(500);
 
-          return LiveServiceManager.unsubscribe(collection);
+          return LiveServiceManager.unsubscribe(collection, { client: this.client });
         });
       return promise.should.be.rejected;
     });

@@ -48,7 +48,8 @@
     "url": "0.11.0",
     "url-join": "2.0.2",
     "uid-safe": "2.1.4",
-    "url-pattern": "1.0.3"
+    "url-pattern": "1.0.3",
+    "uuid": "3.0.1"
   },
   "devDependencies": {
     "app-module-path": "2.2.0",

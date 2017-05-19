@@ -4,6 +4,7 @@ import Client from 'src/client';
 import { UserMock } from 'test/mocks';
 import expect from 'expect';
 import nock from 'nock';
+
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 describe('Kinvey', function () {
@@ -11,7 +12,10 @@ describe('Kinvey', function () {
     // Reintialize with the previous client
     Kinvey.init({
       appKey: this.client.appKey,
-      appSecret: this.client.appSecret
+      appSecret: this.client.appSecret,
+      masterSecret: this.client.masterSecret,
+      encryptionKey: this.client.encryptionKey,
+      appVersion: this.client.appVersion
     });
   });
 

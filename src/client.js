@@ -3,7 +3,7 @@ import url from 'url';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
-import uid from 'uid-safe';
+import uuidV4 from 'uuid/v4';
 
 import { KinveyError } from 'src/errors';
 import { Log, isDefined } from 'src/utils';
@@ -83,7 +83,7 @@ export default class Client {
     /**
      * @type {string}
      */
-    this.deviceId = uid.sync(18);
+    this.deviceId = uuidV4();
 
     /**
      * @type {string}

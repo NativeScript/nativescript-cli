@@ -87,7 +87,9 @@ describe('LiveServiceSubscription', function() {
         return subscription;
       }).toThrow();
     });
+  });
 
+  describe('subscribe()', function() {
     it('should return a stream', function() {
       const activeUser = User.getActiveUser();
       const collection = randomString();
@@ -169,8 +171,8 @@ describe('LiveServiceSubscription', function() {
           }).andCallThrough();
           stream.subscribe(null, null, spy);
 
-          nock(this.client.apiHostname)
-            .post(`/appdata/${this.client.appKey}/${collection}/_unsubscribe`, { deviceId: this.client.deviceId })
+          nock(subscription.client.apiHostname)
+            .post(`/appdata/${subscription.client.appKey}/${collection}/_unsubscribe`, { deviceId: subscription.client.deviceId })
             .reply(200);
           subscription.unsubscribe();
         });
