@@ -352,7 +352,7 @@ tns prepare <Platform>
 
 Make sure to run the command for all platforms configured for the project. During this operation, the NativeScript CLI will remove any leftover plugin files from your `platforms\ios` directory.
 
-> **TIP:** Instead of `$ tns prepare` you can run `$ tns build`, `$ tns run`, `$ tns deploy` or `$ tns emulate`. All these commands run `$ tns prepare`.
+> **TIP:** Instead of `$ tns prepare` you can run `$ tns build`, `$ tns run` or `$ tns deploy`. All these commands run `$ tns prepare`.
 
 Next, open your `platforms\ios\Info.plist` file and remove any leftover entries from the plugin `Info.plist` file.
 
