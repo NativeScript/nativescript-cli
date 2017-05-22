@@ -361,8 +361,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		if (this.$fs.exists(pluginPlatformsFolderPath)) {
 			this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath);
 
+			let isScoped = pluginData.name.indexOf("@") === 0;
+			let flattenedDependencyName = isScoped ? pluginData.name.replace("/", "_") : pluginData.name;
+
 			// Copy all resources from plugin
-			let resourcesDestinationDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "src", pluginData.name);
+			let resourcesDestinationDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "src", flattenedDependencyName);
 			this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath);
 			shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
 
