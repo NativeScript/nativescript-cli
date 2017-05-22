@@ -329,7 +329,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		// build only for device specific architecture
 		if (!buildConfig.release && !buildConfig.architectures) {
-			await this.$devicesService.initialize({ platform: this.$devicePlatformsConstants.iOS.toLowerCase(), deviceId: buildConfig.device });
+			await this.$devicesService.initialize({ platform: this.$devicePlatformsConstants.iOS.toLowerCase(), deviceId: buildConfig.device,
+				isBuildForDevice: true });
 			let instances = this.$devicesService.getDeviceInstances();
 			let devicesArchitectures = _(instances)
 				.filter(d => this.$mobileHelper.isiOSPlatform(d.deviceInfo.platform) && d.deviceInfo.activeArchitecture)
