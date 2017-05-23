@@ -751,6 +751,10 @@ describe("iOS Project Service Signing", () => {
 });
 
 describe("Merge Project XCConfig files", () => {
+	if (require("os").platform() !== "darwin") {
+		console.log("Skipping 'Merge Project XCConfig files' tests. They can work only on macOS");
+		return;
+	}
 	const assertPropertyValues = (expected: any, xcconfigPath: string, injector: IInjector) => {
 		let service = <XCConfigService>injector.resolve('xCConfigService');
 		_.forOwn(expected, (value, key) => {
@@ -782,7 +786,7 @@ describe("Merge Project XCConfig files", () => {
 
 		appResourcesXcconfigPath = path.join(projectData.projectDir, constants.APP_FOLDER_NAME,
 			constants.APP_RESOURCES_FOLDER_NAME, "iOS", "build.xcconfig");
-		appResourceXCConfigContent = `CODE_SIGN_IDENTITY = iPhone Distribution 
+		appResourceXCConfigContent = `CODE_SIGN_IDENTITY = iPhone Distribution
 			// To build for device with XCode 8 you need to specify your development team. More info: https://developer.apple.com/library/prerelease/content/releasenotes/DeveloperTools/RN-Xcode/Introduction.html
 			// DEVELOPMENT_TEAM = YOUR_TEAM_ID;
 			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
