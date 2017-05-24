@@ -4,18 +4,18 @@ import { cache } from "../common/decorators";
 import * as iOSLogFilterBase from "../common/mobile/ios/ios-log-filter";
 
 export class IOSLogFilter extends iOSLogFilterBase.IOSLogFilter implements Mobile.IPlatformLogFilter {
-	protected infoFilterRegex = /^.*?(<Notice>:.*?((CONSOLE LOG|JS ERROR).*?)|(<Warning>:.*?)|(<Error>:.*?))$/im;
+	protected infoFilterRegex = /^.*?(<Notice>:.*?(((?:CONSOLE|JS) (?:LOG|ERROR)).*?))$/im;
 
 	private partialLine: string = null;
 
 	constructor($loggingLevels: Mobile.ILoggingLevels,
 		private $fs: IFileSystem,
 		private $projectData: IProjectData) {
-			super($loggingLevels);
-		}
+		super($loggingLevels);
+	}
 
 	public filterData(data: string, logLevel: string, pid?: string): string {
-		data  = super.filterData(data, logLevel, pid);
+		data = super.filterData(data, logLevel, pid);
 		if (pid && data && data.indexOf(`[${pid}]`) === -1) {
 			return null;
 		}
