@@ -62,7 +62,8 @@ Create a `package.json` file with the following content:
 }
 ```
 
-Create a [Podfile](https://guides.cocoapods.org/syntax/podfile.html) which describes the dependency to the library that you want to use. Move it to the `platforms/ios` folder.
+Create a [
+](https://guides.cocoapods.org/syntax/podfile.html) which describes the dependency to the library that you want to use. Move it to the `platforms/ios` folder.
 
 ```
 my-plugin/
@@ -75,7 +76,15 @@ my-plugin/
 Podfile:
 ```
 pod 'GoogleMaps'
+
+project "../../../platforms/ios/MY_PROJECT_NAME.xcodeproj"
+target "MY_PROJECT_NAME" do
+    pod "GoogleMaps"
+
+end
+
 ```
+where MY_PROJECT_NAME is the case sensitive name of your parent xcode project
 
 ## Install the Plugin
 
