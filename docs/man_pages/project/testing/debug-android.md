@@ -3,11 +3,11 @@ debug android
 
 Usage | Synopsis
 ---|---
-Deploys on device/emulator, runs the app, generates a link to use in Chrome Developer Tools, and attaches the debugger | `$ tns debug android`
-Deploys on device/emulator, runs the app and stops at the first code statement | `$ tns debug android --debug-brk [--device <Device ID>] [--timeout <timeout>]`
-Deploys in the native emulator, runs the app and stops at the first code statement | `$ tns debug android --debug-brk --emulator [--timeout <timeout>]`
-Attaches the debug tools to a running app on device/emulator | `$ tns debug android --start [--device <Device ID>] [--timeout <timeout>]`
-Attaches the debug tools to a running app in the native emulator | `$ tns debug android --start --emulator [--timeout <timeout>]`
+Deploy on device/emulator, run the app, follow generated link to use in Chrome Developer Tools, and attach the debugger | `$ tns debug android`
+Deploy on device/emulator, run the app and stop at the first code statement | `$ tns debug android --debug-brk [--device <Device ID>] [--timeout <timeout>]`
+Deploy in the native emulator, run the app and stop at the first code statement | `$ tns debug android --debug-brk --emulator [--timeout <timeout>]`
+Attach the debug tools to a running app on device/emulator | `$ tns debug android --start [--device <Device ID>] [--timeout <timeout>]`
+Attach the debug tools to a running app in the native emulator | `$ tns debug android --start --emulator [--timeout <timeout>]`
 
 Prepares, builds and deploys the project when necessary. Debugs your project on a connected device or emulator.
 While debugging, prints the output from the application in the console and watches for changes in your code. Once a change is detected, it synchronizes the change with the selected device and restarts the application.
@@ -25,6 +25,10 @@ While debugging, prints the output from the application in the console and watch
 * `<Device ID>` is the device identifier or name of the target device as listed by `$ tns device android`
 
 <% if(isHtml) { %>
+### Prerequisites
+
+* You must have Chrome installed on your system.<br/>
+
 
 ### Related Commands
 

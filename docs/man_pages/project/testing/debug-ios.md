@@ -3,11 +3,11 @@ debug ios
 
 Usage | Synopsis
 ---|---
-Deploys on device/simulator, runs the app, starts Safari Web Inspector and attaches the debugger | `$ tns debug ios`
-Deploys on device/simulator, runs the app and stops at the first code statement | `$ tns debug ios --debug-brk [--device <Device ID>] [--no-client]`
-Deploys in the iOS simulator, runs the app and stops at the first code statement | `$ tns debug ios --debug-brk --emulator [--no-client]`
-Attaches the debug tools to a running app on specified device or simulator| `$ tns debug ios --start [--device <Device ID>] [--no-client]`
-Attaches the debug tools to a running app in the iOS simulator | `$ tns debug ios --start --emulator [--no-client]`
+Deploy on device/simulator, run the app, start Safari Web Inspector and attache the debugger | `$ tns debug ios`
+Deploy on device/simulator, run the app and stop at the first code statement | `$ tns debug ios --debug-brk [--device <Device ID>] [--no-client]`
+Deploy in the iOS simulator, run the app and stop at the first code statement | `$ tns debug ios --debug-brk --emulator [--no-client]`
+Attach the debug tools to a running app on specified device or simulator| `$ tns debug ios --start [--device <Device ID>] [--no-client]`
+Attach the debug tools to a running app in the iOS simulator | `$ tns debug ios --start --emulator [--no-client]`
 
 Prepares, builds and deploys the project when necessary. Debugs your project on a connected device or in the iOS simulator. <% if(isHtml) { %>Any debugging traffic is forwarded to port 8080( or the next available one) from the device to the local machine.<% } %>
 While debugging, prints the output from the application in the console and watches for changes in your code. Once a change is detected, it synchronizes the change with the selected device and restarts the application.
