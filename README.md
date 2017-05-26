@@ -383,7 +383,7 @@ tns doctor
 
 This command prints warnings about current configuration issues and provides basic information about how to resolve them.
 
-If addressing the configuration issues does not resolve your problem, you can [report an issue](https://github.com/NativeScript/nativescript-cli/blob/master/CONTRIBUTING.md#report-an-issue) or [post in the NativeScript page in Google Groups](https://groups.google.com/forum/#!forum/nativescript).
+If addressing the configuration issues does not resolve your problem, you can [report an issue](https://github.com/NativeScript/nativescript-cli/blob/master/CONTRIBUTING.md#report-an-issue) or [post in the NativeScript forums](https://discourse.nativescript.org/).
 
 [Back to Top][1]
 
