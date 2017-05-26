@@ -1,16 +1,12 @@
 import Promise from 'es6-promise';
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
-import url from 'url';
 
 import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
 import { KinveyError } from 'src/errors';
-import { KinveyObservable, isDefined } from 'src/utils';
+import { KinveyObservable, isDefined, appendQuery } from 'src/utils';
 import Query from 'src/query';
 import NetworkStore from './networkstore';
-
-const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
-const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 /**
  * The UserStore class is used to find, save, update, remove, count and group users.
@@ -26,7 +22,7 @@ export default class UserStore extends NetworkStore {
    * @return  {string}   Pathname
    */
   get pathname() {
-    return `/${usersNamespace}/${this.client.appKey}`;
+    return `/user/${this.client.appKey}`;
   }
 
   /**
@@ -47,11 +43,7 @@ export default class UserStore extends NetworkStore {
       const request = new KinveyRequest({
         method: RequestMethod.POST,
         authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/_lookup`
-        }),
+        url: `${this.client.apiHostname}${this.pathname}/_lookup`,
         properties: options.properties,
         body: isDefined(query) ? query.toPlainObject().filter : null,
         timeout: options.timeout,
@@ -110,11 +102,7 @@ export default class UserStore extends NetworkStore {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
-      url: url.format({
-        protocol: this.client.apiProtocol,
-        host: this.client.apiHost,
-        pathname: `/${rpcNamespace}/${this.client.appKey}/check-username-exists`
-      }),
+      url: `${this.client.apiHostname}/rpc/${this.client.appKey}/check-username-exists`,
       properties: options.properties,
       data: { username: username },
       timeout: options.timeout,
@@ -152,12 +140,10 @@ export default class UserStore extends NetworkStore {
       const request = new KinveyRequest({
         method: RequestMethod.DELETE,
         authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/${id}`,
-          query: options.hard === true ? { hard: true } : undefined
-        }),
+        url: appendQuery(
+          `${this.client.apiHostname}${this.pathname}/${id}`,
+          options.hard === true ? { hard: true } : undefined
+        ),
         properties: options.properties,
         timeout: options.timeout
       });

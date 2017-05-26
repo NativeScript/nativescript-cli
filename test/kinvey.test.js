@@ -84,8 +84,7 @@ describe('Kinvey', function () {
         appSecret: randomString()
       }).then(() => {
         const client = Kinvey.client;
-        expect(client).toInclude({ micProtocol: defaultMicProtocol });
-        expect(client).toInclude({ micHost: defaultMicHost });
+        expect(client).toInclude({ micHostname: 'https://auth.kinvey.com' });
       });
     });
 
@@ -97,8 +96,7 @@ describe('Kinvey', function () {
         micHostname: micHostname
       }).then(() => {
         const client = Kinvey.client;
-        expect(client).toInclude({ micProtocol: 'https:' });
-        expect(client).toInclude({ micHost: 'auth.example.com' });
+        expect(client).toInclude({ micHostname: micHostname });
       });
     });
 

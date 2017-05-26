@@ -1,11 +1,10 @@
 import { AuthType, DeltaFetchRequest, RequestMethod } from 'src/request';
 import { KinveyError } from 'src/errors';
-import { SyncStore } from 'src/datastore'
+import { SyncStore } from 'src/datastore';
 import { randomString } from 'src/utils';
 import Query from 'src/query';
 import nock from 'nock';
 import expect from 'expect';
-import url from 'url';
 const collection = 'books';
 
 describe('DeltaFetchRequest', function() {
@@ -100,11 +99,7 @@ describe('DeltaFetchRequest', function() {
       const request = new DeltaFetchRequest({
         method: RequestMethod.GET,
         authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `/appdata/${this.client.appKey}/${collection}`
-        }),
+        url: `${this.client.apiHostname}/appdata/${this.client.appKey}/${collection}`,
         client: this.client
       });
 
@@ -130,11 +125,7 @@ describe('DeltaFetchRequest', function() {
       const request = new DeltaFetchRequest({
         method: RequestMethod.GET,
         authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `/appdata/${this.client.appKey}/${collection}`
-        }),
+        url: `${this.client.apiHostname}/appdata/${this.client.appKey}/${collection}`,
         client: this.client
       });
 
@@ -166,11 +157,7 @@ describe('DeltaFetchRequest', function() {
       const request = new DeltaFetchRequest({
         method: RequestMethod.GET,
         authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `/appdata/${this.client.appKey}/${collection}`
-        }),
+        url: `${this.client.apiHostname}/appdata/${this.client.appKey}/${collection}`,
         client: this.client
       });
 
@@ -216,11 +203,7 @@ describe('DeltaFetchRequest', function() {
       const request = new DeltaFetchRequest({
         method: RequestMethod.GET,
         authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `/appdata/${this.client.appKey}/${collection}`
-        }),
+        url: `${this.client.apiHostname}/appdata/${this.client.appKey}/${collection}`,
         query: query,
         client: this.client
       });
@@ -264,11 +247,7 @@ describe('DeltaFetchRequest', function() {
       const request = new DeltaFetchRequest({
         method: RequestMethod.GET,
         authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `/appdata/${this.client.appKey}/${collection}`
-        }),
+        url: `${this.client.apiHostname}/appdata/${this.client.appKey}/${collection}`,
         client: this.client
       });
 

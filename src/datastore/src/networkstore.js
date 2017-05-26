@@ -1,6 +1,5 @@
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
-import url from 'url';
 
 import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod } from 'src/request';
 import { KinveyError } from 'src/errors';
@@ -8,8 +7,6 @@ import Query from 'src/query';
 import Client from 'src/client';
 import { KinveyObservable, Log, isDefined } from 'src/utils';
 import Aggregation from 'src/aggregation';
-
-const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 /**
  * The NetworkStore class is used to find, create, update, remove, count and group entities over the network.
@@ -65,7 +62,7 @@ export default class NetworkStore {
    * @return  {string}  Pathname
    */
   get pathname() {
-    let pathname = `/${appdataNamespace}/${this.client.appKey}`;
+    let pathname = `/appdata/${this.client.appKey}`;
 
     if (this.collection) {
       pathname = `${pathname}/${this.collection}`;
@@ -85,11 +82,7 @@ export default class NetworkStore {
 
     if (!this._liveStream) {
       // Subscribe to KLS
-      const source = new EventSource(url.format({
-        protocol: this.client.liveServiceProtocol,
-        host: this.client.liveServiceHost,
-        pathname: this.pathname,
-      }));
+      const source = new EventSource(`${this.client.liveServiceHostname}${this.pathname}`);
 
        // Create a live stream
       this._liveStream = KinveyObservable.create((observer) => {
@@ -153,11 +146,7 @@ export default class NetworkStore {
       const config = {
         method: RequestMethod.GET,
         authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
+        url: `${this.client.apiHostname}${this.pathname}`,
         properties: options.properties,
         query: query,
         timeout: options.timeout,
@@ -203,11 +192,7 @@ export default class NetworkStore {
       const config = {
         method: RequestMethod.GET,
         authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/${id}`
-        }),
+        url: `${this.client.apiHostname}${this.pathname}/${id}`,
         properties: options.properties,
         timeout: options.timeout,
         client: this.client
@@ -249,11 +234,7 @@ export default class NetworkStore {
       const request = new KinveyRequest({
         method: RequestMethod.POST,
         authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/_group`,
-        }),
+        url: `${this.client.apiHostname}${this.pathname}/_group`,
         properties: options.properties,
         aggregation: aggregation,
         timeout: options.timeout,
@@ -294,11 +275,7 @@ export default class NetworkStore {
         const request = new KinveyRequest({
           method: RequestMethod.GET,
           authType: AuthType.Default,
-          url: url.format({
-            protocol: this.client.apiProtocol,
-            host: this.client.apiHost,
-            pathname: `${this.pathname}/_count`
-          }),
+          url: `${this.client.apiHostname}${this.pathname}/_count`,
           properties: options.properties,
           query: query,
           timeout: options.timeout,
@@ -346,11 +323,7 @@ export default class NetworkStore {
       const request = new KinveyRequest({
         method: RequestMethod.POST,
         authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
+        url: `${this.client.apiHostname}${this.pathname}`,
         properties: options.properties,
         data: entity,
         timeout: options.timeout,
@@ -400,11 +373,7 @@ export default class NetworkStore {
       const request = new KinveyRequest({
         method: RequestMethod.PUT,
         authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/${entity._id}`
-        }),
+        url: `${this.client.apiHostname}${this.pathname}/${entity._id}`,
         properties: options.properties,
         data: entity,
         timeout: options.timeout,
@@ -461,11 +430,7 @@ export default class NetworkStore {
         const request = new KinveyRequest({
           method: RequestMethod.DELETE,
           authType: AuthType.Default,
-          url: url.format({
-            protocol: this.client.apiProtocol,
-            host: this.client.apiHost,
-            pathname: this.pathname
-          }),
+          url: `${this.client.apiHostname}${this.pathname}`,
           properties: options.properties,
           query: query,
           timeout: options.timeout,
@@ -505,11 +470,7 @@ export default class NetworkStore {
         const request = new KinveyRequest({
           method: RequestMethod.DELETE,
           authType: AuthType.Default,
-          url: url.format({
-            protocol: this.client.apiProtocol,
-            host: this.client.apiHost,
-            pathname: `${this.pathname}/${id}`
-          }),
+          url: `${this.client.apiHostname}${this.pathname}/${id}`,
           properties: options.properties,
           timeout: options.timeout
         });

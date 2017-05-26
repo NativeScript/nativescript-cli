@@ -27,7 +27,7 @@ import Request, {
 import Aggregation from './aggregation';
 import Client from './client';
 import CustomEndpoint from './endpoint';
-import Kinvey from './kinvey';
+import { Kinvey } from './kinvey';
 import Query from './query';
 
 const Files = new FileStore();

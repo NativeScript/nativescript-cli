@@ -1,29 +1,8 @@
-/**
- * @private
- */
-export * from './src/enums';
+import { SocialIdentity } from './src/enums';
+import { AuthorizationGrant, MobileIdentityConnect } from './src/mic';
 
-/**
- * @private
- */
-export * from './src/facebook';
-
-/**
- * @private
- */
-export * from './src/google';
-
-/**
- * @private
- */
-export * from './src/linkedin';
-
-/**
- * @private
- */
-export * from './src/mic';
-
-/**
- * @private
- */
-export * from './src/windows';
+export {
+  AuthorizationGrant,
+  MobileIdentityConnect,
+  SocialIdentity
+};

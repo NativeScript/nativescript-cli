@@ -166,8 +166,7 @@ describe('MobileIdentityConnect', function() {
               identity: MobileIdentityConnect.identity,
               client_id: this.client.appKey,
               redirect_uri: redirectUri,
-              protocol: this.client.micProtocol,
-              host: this.client.micHost
+              hostname: this.client.micHostname
             }));
           });
       });

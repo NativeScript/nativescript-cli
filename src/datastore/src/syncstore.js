@@ -1,5 +1,3 @@
-import url from 'url';
-
 import { CacheRequest, RequestMethod } from 'src/request';
 import { KinveyError } from 'src/errors';
 import Query from 'src/query';
@@ -40,11 +38,7 @@ export default class SyncStore extends CacheStore {
       // Fetch the cache entities
       const request = new CacheRequest({
         method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
+        url: `${this.client.apiHostname}${this.pathname}`,
         properties: options.properties,
         query: query,
         timeout: options.timeout
@@ -83,11 +77,7 @@ export default class SyncStore extends CacheStore {
         // Fetch from the cache
         const request = new CacheRequest({
           method: RequestMethod.GET,
-          url: url.format({
-            protocol: this.client.apiProtocol,
-            host: this.client.apiHost,
-            pathname: `${this.pathname}/${id}`
-          }),
+          url: `${this.client.apiHostname}${this.pathname}/${id}`,
           properties: options.properties,
           timeout: options.timeout
         });
@@ -125,11 +115,7 @@ export default class SyncStore extends CacheStore {
       // Fetch the cache entities
       const request = new CacheRequest({
         method: RequestMethod.POST,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/_group`
-        }),
+        url: `${this.client.apiHostname}${this.pathname}/_group`,
         properties: options.properties,
         aggregation: aggregation,
         timeout: options.timeout
@@ -168,11 +154,7 @@ export default class SyncStore extends CacheStore {
         // Fetch the entities in the cache
         const request = new CacheRequest({
           method: RequestMethod.GET,
-          url: url.format({
-            protocol: this.client.apiProtocol,
-            host: this.client.apiHost,
-            pathname: this.pathname
-          }),
+          url: `${this.client.apiHostname}${this.pathname}`,
           properties: options.properties,
           query: query,
           timeout: options.timeout

@@ -10,7 +10,6 @@ import isArray from 'lodash/isArray';
 import { isDefined } from 'src/utils';
 import { NotFoundError } from 'src/errors';
 
-const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const caches = {};
 
 class Memory {
@@ -49,7 +48,7 @@ class Memory {
   findById(collection, id) {
     return this.find(collection)
       .then((entities) => {
-        const entity = find(entities, entity => entity[idAttribute] === id);
+        const entity = find(entities, entity => entity._id === id);
 
         if (!entity) {
           return Promise.reject(new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
@@ -74,8 +73,8 @@ class Memory {
 
     return this.find(collection)
       .then((existingEntities) => {
-        existingEntities = keyBy(existingEntities, idAttribute);
-        entities = keyBy(entities, idAttribute);
+        existingEntities = keyBy(existingEntities, '_id');
+        entities = keyBy(entities, '_id');
         const entityIds = Object.keys(entities);
 
         forEach(entityIds, (id) => {
@@ -92,7 +91,7 @@ class Memory {
   removeById(collection, id) {
     return this.find(collection)
       .then((entities) => {
-        entities = keyBy(entities, idAttribute);
+        entities = keyBy(entities, '_id');
         const entity = entities[id];
 
         if (!isDefined(entity)) {

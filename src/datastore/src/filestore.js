@@ -1,5 +1,4 @@
 import Promise from 'es6-promise';
-import url from 'url';
 import map from 'lodash/map';
 import assign from 'lodash/assign';
 import isFunction from 'lodash/isFunction';
@@ -13,12 +12,9 @@ import {
   Headers
 } from 'src/request';
 import { KinveyError } from 'src/errors';
-import { KinveyObservable, Log, isDefined } from 'src/utils';
+import { KinveyObservable, Log, isDefined, appendQuery } from 'src/utils';
 import Query from 'src/query';
 import NetworkStore from './networkstore';
-
-const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
-const MAX_BACKOFF = process.env.KINVEY_MAX_BACKOFF || 32 * 1000;
 
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
@@ -41,7 +37,7 @@ export default class FileStore extends NetworkStore {
    * @return  {string}  Pathname
    */
   get pathname() {
-    return `/${filesNamespace}/${this.client.appKey}`;
+    return `/blob/${this.client.appKey}`;
   }
 
   /**
@@ -77,10 +73,10 @@ export default class FileStore extends NetworkStore {
    */
   find(query, options = {}) {
     options = assign({ tls: true }, options);
-    const queryString = { tls: options.tls === true };
+    const queryStringObject = { tls: options.tls === true };
 
     if (isNumber(options.ttl)) {
-      queryString.ttl_in_seconds = parseInt(options.ttl, 10);
+      queryStringObject.ttl_in_seconds = parseInt(options.ttl, 10);
     }
 
     const stream = KinveyObservable.create((observer) => {
@@ -93,12 +89,7 @@ export default class FileStore extends NetworkStore {
       const request = new KinveyRequest({
         method: RequestMethod.GET,
         authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname,
-          query: queryString
-        }),
+        url: appendQuery(`${this.client.apiHostname}${this.pathname}`, queryStringObject),
         properties: options.properties,
         query: query,
         timeout: options.timeout,
@@ -148,10 +139,10 @@ export default class FileStore extends NetworkStore {
   */
   download(name, options = {}) {
     options = assign({ tls: true }, options);
-    const queryString = { tls: options.tls === true };
+    const queryStringObject = { tls: options.tls === true };
 
     if (isNumber(options.ttl)) {
-      queryString.ttl_in_seconds = parseInt(options.ttl, 10);
+      queryStringObject.ttl_in_seconds = parseInt(options.ttl, 10);
     }
 
     const stream = KinveyObservable.create((observer) => {
@@ -163,12 +154,7 @@ export default class FileStore extends NetworkStore {
       const request = new KinveyRequest({
         method: RequestMethod.GET,
         authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/${name}`,
-          query: queryString
-        }),
+        url: appendQuery(`${this.client.apiHostname}${this.pathname}/${name}`, queryStringObject),
         properties: options.properties,
         timeout: options.timeout,
         client: this.client
@@ -259,11 +245,7 @@ export default class FileStore extends NetworkStore {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.Default,
-      url: url.format({
-        protocol: this.client.apiProtocol,
-        host: this.client.apiHost,
-        pathname: this.pathname
-      }),
+      url: `${this.client.apiHostname}${this.pathname}`,
       properties: options.properties,
       timeout: options.timeout,
       body: metadata,
@@ -275,11 +257,7 @@ export default class FileStore extends NetworkStore {
     // update the file
     if (metadata._id) {
       request.method = RequestMethod.PUT;
-      request.url = url.format({
-        protocol: this.client.apiProtocol,
-        host: this.client.apiHost,
-        pathname: `${this.pathname}/${metadata._id}`
-      });
+      request.url = `${this.client.apiHostname}${this.pathname}/${metadata._id}`;
     }
 
     // Execute the request
@@ -334,7 +312,7 @@ export default class FileStore extends NetworkStore {
     options = assign({
       count: 0,
       start: 0,
-      maxBackoff: MAX_BACKOFF
+      maxBackoff: 32 * 1000
     }, options);
 
     Log.debug('Start file upload');

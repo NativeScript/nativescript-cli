@@ -1,5 +1,4 @@
 import Promise from 'es6-promise';
-import url from 'url';
 
 import {
   ActiveUserError,
@@ -48,8 +47,6 @@ import DataStore, { DataStoreType, FileStore, SyncOperation } from './datastore'
 import { Acl, Metadata, User } from './entity';
 import { AuthorizationGrant } from './identity';
 import { AuthType, CacheRack, NetworkRack, Rack, RequestMethod, KinveyRequest } from './request';
-
-const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 /**
  * The Kinvey class is used as the entry point for the Kinvey JavaScript SDK.
@@ -165,11 +162,7 @@ class Kinvey {
     const request = new KinveyRequest({
       method: RequestMethod.GET,
       authType: AuthType.All,
-      url: url.format({
-        protocol: client.apiProtocol,
-        host: client.apiHost,
-        pathname: `${appdataNamespace}/${client.appKey}`
-      })
+      url: `${this.client.apiHostname}/appdata/${client.appKey}`,
     });
 
     return request.execute()
@@ -236,4 +229,5 @@ Kinvey.NetworkRack = NetworkRack;
 Kinvey.Rack = Rack;
 
 // Export
+export { Kinvey };
 export default Kinvey;

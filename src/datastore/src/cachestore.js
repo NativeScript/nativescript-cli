@@ -6,7 +6,6 @@ import remove from 'lodash/remove';
 import isArray from 'lodash/isArray';
 import reduce from 'lodash/reduce';
 import map from 'lodash/map';
-import url from 'url';
 
 import { CacheRequest, AuthType, RequestMethod } from 'src/request';
 import { KinveyError, NotFoundError } from 'src/errors';
@@ -66,11 +65,7 @@ export default class CacheStore extends NetworkStore {
       // Fetch the cache entities
       const request = new CacheRequest({
         method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
+        url: `${this.client.apiHostname}${this.pathname}`,
         properties: options.properties,
         query: query,
         timeout: options.timeout
@@ -117,11 +112,7 @@ export default class CacheStore extends NetworkStore {
                 // Save network entities to cache
                 const request = new CacheRequest({
                   method: RequestMethod.PUT,
-                  url: url.format({
-                    protocol: this.client.apiProtocol,
-                    host: this.client.apiHost,
-                    pathname: this.pathname
-                  }),
+                  url: `${this.client.apiHostname}${this.pathname}`,
                   properties: options.properties,
                   body: networkEntities,
                   timeout: options.timeout
@@ -168,11 +159,7 @@ export default class CacheStore extends NetworkStore {
       // Fetch from the cache
       const request = new CacheRequest({
         method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/${id}`
-        }),
+        url: `${this.client.apiHostname}${this.pathname}/${id}`,
         properties: options.properties,
         timeout: options.timeout
       });
@@ -208,11 +195,7 @@ export default class CacheStore extends NetworkStore {
                 // Save the network entity to cache
                 const request = new CacheRequest({
                   method: RequestMethod.PUT,
-                  url: url.format({
-                    protocol: this.client.apiProtocol,
-                    host: this.client.apiHost,
-                    pathname: this.pathname
-                  }),
+                  url: `${this.client.apiHostname}${this.pathname}`,
                   properties: options.properties,
                   body: networkEntity,
                   timeout: options.timeout
@@ -254,11 +237,7 @@ export default class CacheStore extends NetworkStore {
       // Fetch the cache entities
       const request = new CacheRequest({
         method: RequestMethod.POST,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/_group`
-        }),
+        url: `${this.client.apiHostname}${this.pathname}/_group`,
         properties: options.properties,
         aggregation: aggregation,
         timeout: options.timeout
@@ -328,11 +307,7 @@ export default class CacheStore extends NetworkStore {
       // Count the entities in the cache
       const request = new CacheRequest({
         method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
+        url: `${this.client.apiHostname}${this.pathname}`,
         properties: options.properties,
         query: query,
         timeout: options.timeout
@@ -405,11 +380,7 @@ export default class CacheStore extends NetworkStore {
       // Save the entity to the cache
       const request = new CacheRequest({
         method: RequestMethod.POST,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
+        url: `${this.client.apiHostname}${this.pathname}`,
         properties: options.properties,
         body: entity,
         timeout: options.timeout
@@ -482,11 +453,7 @@ export default class CacheStore extends NetworkStore {
       // Save the entity to the cache
       const request = new CacheRequest({
         method: RequestMethod.PUT,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/${entity._id}`
-        }),
+        url: `${this.client.apiHostname}${this.pathname}/${entity._id}`,
         properties: options.properties,
         body: entity,
         timeout: options.timeout
@@ -547,11 +514,7 @@ export default class CacheStore extends NetworkStore {
       // Fetch the cache entities
       const request = new CacheRequest({
         method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
+        url: `${this.client.apiHostname}${this.pathname}`,
         properties: options.properties,
         query: query,
         timeout: options.timeout
@@ -605,11 +568,7 @@ export default class CacheStore extends NetworkStore {
             if (isDefined(result.error) === false) {
               const request = new CacheRequest({
                 method: RequestMethod.DELETE,
-                url: url.format({
-                  protocol: this.client.apiProtocol,
-                  host: this.client.apiHost,
-                  pathname: `${this.pathname}/${result._id}`
-                }),
+                url: `${this.client.apiHostname}${this.pathname}/${result._id}`,
                 properties: options.properties,
                 authType: AuthType.Default,
                 timeout: options.timeout
@@ -656,11 +615,7 @@ export default class CacheStore extends NetworkStore {
       // Get the entity from cache
       const request = new CacheRequest({
         method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/${id}`
-        }),
+        url: `${this.client.apiHostname}${this.pathname}/${id}`,
         properties: options.properties,
         authType: AuthType.Default,
         timeout: options.timeout
@@ -710,11 +665,7 @@ export default class CacheStore extends NetworkStore {
           // Remove from cache
           const request = new CacheRequest({
             method: RequestMethod.DELETE,
-            url: url.format({
-              protocol: this.client.apiProtocol,
-              host: this.client.apiHost,
-              pathname: `${this.pathname}/${entity._id}`
-            }),
+            url: `${this.client.apiHostname}${this.pathname}/${entity._id}`,
             properties: options.properties,
             authType: AuthType.Default,
             timeout: options.timeout
@@ -749,11 +700,7 @@ export default class CacheStore extends NetworkStore {
       // Fetch the cache entities
       const request = new CacheRequest({
         method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
+        url: `${this.client.apiHostname}${this.pathname}`,
         properties: options.properties,
         query: query,
         timeout: options.timeout
@@ -783,11 +730,7 @@ export default class CacheStore extends NetworkStore {
                 // Remove from cache
                 const request = new CacheRequest({
                   method: RequestMethod.DELETE,
-                  url: url.format({
-                    protocol: this.client.apiProtocol,
-                    host: this.client.apiHost,
-                    pathname: `${this.pathname}/${entity._id}`
-                  }),
+                  url: `${this.client.apiHostname}${this.pathname}/${entity._id}`,
                   properties: options.properties,
                   authType: AuthType.Default,
                   timeout: options.timeout
@@ -868,11 +811,7 @@ export default class CacheStore extends NetworkStore {
             // Save network entities to cache
             const saveRequest = new CacheRequest({
               method: RequestMethod.PUT,
-              url: url.format({
-                protocol: this.client.apiProtocol,
-                host: this.client.apiHost,
-                pathname: this.pathname
-              }),
+              url: `${this.client.apiHostname}${this.pathname}`,
               properties: options.properties,
               body: entities,
               timeout: options.timeout

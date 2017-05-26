@@ -1,13 +1,12 @@
 import Promise from 'es6-promise';
 import qs from 'qs';
-import appendQuery from 'append-query';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
 
 import Client from 'src/client';
 import { KinveyError, NoResponseError } from 'src/errors';
-import { isDefined } from 'src/utils';
+import { isDefined, appendQuery } from 'src/utils';
 import Response from './response';
 import Headers from './headers';
 

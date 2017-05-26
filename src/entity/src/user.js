@@ -3,23 +3,15 @@ import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import isEmpty from 'lodash/isEmpty';
-import url from 'url';
 
 import Client from 'src/client';
 import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from 'src/request';
 import { KinveyError, NotFoundError, ActiveUserError } from 'src/errors';
 import DataStore, { UserStore } from 'src/datastore';
-import { Facebook, Google, LinkedIn, MobileIdentityConnect } from 'src/identity';
+import { MobileIdentityConnect } from 'src/identity';
 import { Log, isDefined } from 'src/utils';
 import Acl from './acl';
 import Metadata from './metadata';
-
-const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
-const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
-const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
-const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
-const usernameAttribute = process.env.KINVEY_USERNAME_ATTRIBUTE || 'username';
-const emailAttribute = process.env.KINVEY_EMAIL_ATTRIBUTE || 'email';
 
 /**
  * The User class is used to represent a single user on the Kinvey platform.
@@ -56,7 +48,7 @@ export default class User {
    * @return {?string} _id
    */
   get _id() {
-    return this.data[idAttribute];
+    return this.data._id;
   }
 
   /**
@@ -92,7 +84,7 @@ export default class User {
    * @return {Object} _socialIdentity
    */
   get _socialIdentity() {
-    return this.data[socialIdentityAttribute];
+    return this.data._socialIdentity;
   }
 
   /**
@@ -110,7 +102,7 @@ export default class User {
    * @return {?string} Username
    */
   get username() {
-    return this.data[usernameAttribute];
+    return this.data.username;
   }
 
   /**
@@ -119,14 +111,14 @@ export default class User {
    * @return {?string} Email
    */
   get email() {
-    return this.data[emailAttribute];
+    return this.data.email;
   }
 
   /**
    * @private
    */
   get pathname() {
-    return `/${usersNamespace}/${this.client.appKey}`;
+    return `/user/${this.client.appKey}`;
   }
 
   /**
@@ -207,11 +199,7 @@ export default class User {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
-      url: url.format({
-        protocol: this.client.apiProtocol,
-        host: this.client.apiHost,
-        pathname: `${this.pathname}/login`
-      }),
+      url: `${this.client.apiHostname}${this.pathname}/login`,
       body: credentials,
       properties: options.properties,
       timeout: options.timeout,
@@ -305,9 +293,9 @@ export default class User {
   connectIdentity(identity, session, options = {}) {
     const isActive = this.isActive();
     const data = {};
-    const socialIdentity = data[socialIdentityAttribute] || {};
+    const socialIdentity = data._socialIdentity || {};
     socialIdentity[identity] = session;
-    data[socialIdentityAttribute] = socialIdentity;
+    data._socialIdentity = socialIdentity;
 
     if (isActive) {
       return this.update(data, options);
@@ -338,105 +326,6 @@ export default class User {
   }
 
   /**
-   * Connect a Facebook identity.
-   *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The user.
-   */
-  connectFacebook(clientId, options = {}) {
-    const facebook = new Facebook({ client: this.client });
-    return facebook.login(clientId, options)
-      .then(session => this.connectIdentity(Facebook.identity, session, options));
-  }
-
-  /**
-   * Connect a Facebook identity.
-   *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The user.
-   */
-  static connectFacebook(clientId, options = {}) {
-    const user = new this({}, options);
-    return user.connectFacebook(clientId, options);
-  }
-
-  /**
-   * Diconnect a Facebook identity.
-   *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The user.
-   */
-  disconnectFacebook(options = {}) {
-    return this.disconnectIdentity(Facebook.identity, options);
-  }
-
-  /**
-   * Connect a Google identity.
-   *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The user.
-   */
-  connectGoogle(clientId, options = {}) {
-    const google = new Google({ client: this.client });
-    return google.login(clientId, options)
-      .then(session => this.connectIdentity(Google.identity, session, options));
-  }
-
-  /**
-   * Connect a Google identity.
-   *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The user.
-   */
-  static connectGoogle(clientId, options = {}) {
-    const user = new this({}, options);
-    return user.connectGoogle(clientId, options);
-  }
-
-  /**
-   * Diconnect a Google identity.
-   *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The user.
-   */
-  disconnectGoogle(options = {}) {
-    return this.disconnectIdentity(Google.identity, options);
-  }
-
-  /**
-   * Connect a LinkedIn identity.
-   *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The user.
-   */
-  googleconnectLinkedIn(clientId, options = {}) {
-    const linkedIn = new LinkedIn({ client: this.client });
-    return linkedIn.login(clientId, options)
-      .then(session => this.connectIdentity(LinkedIn.identity, session, options));
-  }
-
-  /**
-   * Connect a LinkedIn identity.
-   *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The user.
-   */
-  static connectLinkedIn(clientId, options = {}) {
-    const user = new this({}, options);
-    return user.connectLinkedIn(clientId, options);
-  }
-
-  /**
-   * Diconnect a LinkedIn identity.
-   *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The user.
-   */
-  disconnectLinkedIn(options = {}) {
-    return this.disconnectIdentity(LinkedIn.identity, options);
-  }
-
-  /**
    * @private
    * Disconnects the user from an identity.
    *
@@ -447,13 +336,7 @@ export default class User {
   disconnectIdentity(identity, options = {}) {
     let promise = Promise.resolve();
 
-    if (identity === Facebook.identity) {
-      promise = Facebook.logout(this, options);
-    } else if (identity === Google.identity) {
-      promise = Google.logout(this, options);
-    } else if (identity === LinkedIn.identity) {
-      promise = LinkedIn.logout(this, options);
-    } else if (identity === MobileIdentityConnect.identity) {
+    if (identity === MobileIdentityConnect.identity) {
       promise = MobileIdentityConnect.logout(this, options);
     }
 
@@ -463,12 +346,12 @@ export default class User {
       })
       .then(() => {
         const data = this.data;
-        const socialIdentity = data[socialIdentityAttribute] || {};
+        const socialIdentity = data._socialIdentity || {};
         delete socialIdentity[identity];
-        data[socialIdentityAttribute] = socialIdentity;
+        data._socialIdentity = socialIdentity;
         this.data = data;
 
-        if (!this[idAttribute]) {
+        if (!this._id) {
           return this;
         }
 
@@ -488,11 +371,7 @@ export default class User {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.Session,
-      url: url.format({
-        protocol: this.client.apiProtocol,
-        host: this.client.apiHost,
-        pathname: `${this.pathname}/_logout`
-      }),
+      url: `${this.client.apiHostname}${this.pathname}/_logout`,
       properties: options.properties,
       timeout: options.timeout,
       client: this.client
@@ -561,11 +440,7 @@ export default class User {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
-      url: url.format({
-        protocol: this.client.apiProtocol,
-        host: this.client.apiHost,
-        pathname: this.pathname
-      }),
+      url: `${this.client.apiHostname}${this.pathname}`,
       body: isEmpty(data) ? null : data,
       properties: options.properties,
       timeout: options.timeout,
@@ -612,8 +487,8 @@ export default class User {
    */
   signupWithIdentity(identity, session, options = {}) {
     const data = {};
-    data[socialIdentityAttribute] = {};
-    data[socialIdentityAttribute][identity] = session;
+    data._socialIdentity = {};
+    data._socialIdentity[identity] = session;
     return this.signup(data, options);
   }
 
@@ -683,11 +558,7 @@ export default class User {
     const request = new KinveyRequest({
       method: RequestMethod.GET,
       authType: AuthType.Session,
-      url: url.format({
-        protocol: this.client.apiProtocol,
-        host: this.client.apiHost,
-        pathname: `${this.pathname}/_me`
-      }),
+      url: `${this.client.apiHostname}${this.pathname}/_me`,
       properties: options.properties,
       timeout: options.timeout
     });
@@ -770,11 +641,7 @@ export default class User {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
-      url: url.format({
-        protocol: client.apiProtocol,
-        host: client.apiHost,
-        pathname: `/${rpcNamespace}/${client.appKey}/${username}/user-email-verification-initiate`
-      }),
+      url: `${client.apiHostname}/rpc/${client.appKey}/${username}/user-email-verification-initiate`,
       properties: options.properties,
       timeout: options.timeout,
       client: client
@@ -806,11 +673,7 @@ export default class User {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
-      url: url.format({
-        protocol: client.apiProtocol,
-        host: client.apiHost,
-        pathname: `/${rpcNamespace}/${client.appKey}/user-forgot-username`
-      }),
+      url: `${client.apiHostname}/rpc/${client.appKey}/user-forgot-username`,
       properties: options.properties,
       data: { email: email },
       timeout: options.timeout,
@@ -843,11 +706,7 @@ export default class User {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
-      url: url.format({
-        protocol: client.apiProtocol,
-        host: client.apiHost,
-        pathname: `/${rpcNamespace}/${client.appKey}/${username}/user-password-reset-initiate`
-      }),
+      url: `${client.apiHostname}/rpc/${client.appKey}/${username}/user-password-reset-initiate`,
       properties: options.properties,
       timeout: options.timeout,
       client: client

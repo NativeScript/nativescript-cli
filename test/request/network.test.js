@@ -26,11 +26,7 @@ describe('KinveyRequest', () => {
         .reply(200, reply);
 
       const request = new KinveyRequest({
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: '/foo'
-        })
+        url: `${this.client.apiHostname}/foo`
       });
       return request.execute()
         .then((response) => {
@@ -48,11 +44,7 @@ describe('KinveyRequest', () => {
         });
 
       const request = new KinveyRequest({
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: '/foo'
-        })
+        url: `${this.client.apiHostname}/foo`
       });
       return request.execute()
         .then((response) => {
@@ -73,11 +65,7 @@ describe('KinveyRequest', () => {
         });
 
       const request = new KinveyRequest({
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: '/foo'
-        }),
+        url: `${this.client.apiHostname}/foo`,
         followRedirect: false
       });
       return request.execute()
@@ -102,11 +90,7 @@ describe('KinveyRequest', () => {
         });
 
       const request = new KinveyRequest({
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: '/foo'
-        })
+        url: `${this.client.apiHostname}/foo`
       });
       return request.execute()
         .catch((error) => {
@@ -127,11 +111,7 @@ describe('KinveyRequest', () => {
         .reply(200);
 
       const request = new KinveyRequest({
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: '/foo'
-        })
+        url: `${this.client.apiHostname}/foo`
       });
       return request.execute()
         .catch((error) => {
@@ -152,11 +132,7 @@ describe('KinveyRequest', () => {
           });
 
         const request = new KinveyRequest({
-          url: url.format({
-            protocol: this.client.apiProtocol,
-            host: this.client.apiHost,
-            pathname: '/foo'
-          })
+          url: `${this.client.apiHostname}/foo`
         });
         return request.execute()
           .catch((error) => {
@@ -195,11 +171,7 @@ describe('KinveyRequest', () => {
               });
 
             const request = new KinveyRequest({
-              url: url.format({
-                protocol: this.client.apiProtocol,
-                host: this.client.apiHost,
-                pathname: '/foo'
-              })
+              url: `${this.client.apiHostname}/foo`
             });
             return request.execute()
               .catch((error) => {
@@ -265,11 +237,7 @@ describe('KinveyRequest', () => {
               .reply(200, reply);
 
             const request = new KinveyRequest({
-              url: url.format({
-                protocol: this.client.apiProtocol,
-                host: this.client.apiHost,
-                pathname: '/foo'
-              })
+              url: `${this.client.apiHostname}/foo`
             });
             return request.execute()
               .then((response) => {
