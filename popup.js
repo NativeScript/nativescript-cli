@@ -1,30 +1,48 @@
-/* global UIApplication */
+/* global UIApplication, android */
 
-import { EventEmitter } from 'events';
-import { openAdvancedUrl as openUrl } from 'nativescript-advanced-webview'; // eslint-disable-line import/no-unresolved, import/extensions, import/no-extraneous-dependencies
-import * as utils from 'utils/utils'; // eslint-disable-line import/no-unresolved, import/extensions, import/no-extraneous-dependencies
-const application = require('application'); // eslint-disable-line import/no-unresolved, import/extensions, import/no-extraneous-dependencies
+// import { KinveyError } from 'kinvey-js-sdk';
+// import { EventEmitter } from 'events';
+// import { openAdvancedUrl as openUrl } from 'nativescript-advanced-webview'; // eslint-disable-line import/no-unresolved, import/extensions, import/no-extraneous-dependencies
+// import * as utils from 'utils/utils'; // eslint-disable-line import/no-unresolved, import/extensions, import/no-extraneous-dependencies
+// import * as app from 'application'; // eslint-disable-line import/no-unresolved, import/extensions, import/no-extraneous-dependencies
 
-export class Popup extends EventEmitter {
-  open(url = '/') {
-    // Open the url
-    openUrl({ url: url });
+// export class Popup extends EventEmitter {
+//   open(url = '/') {
+//     const options = { url: url };
 
-    // Listen for MICSuccessNotification
-    application.on('MICRedirectNotification', (args) => {
-      // Remove listeners
-      application.off('MICRedirectNotification');
+//     if (app.ios) {
+//       // Listen for MICSuccessNotification
+//       app.on('MICRedirectNotification', (args) => {
+//         // Remove listeners
+//         app.off('MICRedirectNotification');
 
-      // Emit loadstop event
-      this.emit('loadstop', args);
-    });
+//         // Emit loadstop event
+//         this.emit('loadstop', args);
+//       });
+//     } else if (app.android) {
+//       const uri = android.net.Uri.parse(url);
+//       const intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, uri);
+//       const activity = app.android.startActivity || app.android.foregroundActivity;
 
-    return this;
-  }
+//       if (activity) {
+//         activity.startActivity(intent);
+//       }
+//     } else {
+//       throw new KinveyError('This platform is not supported for MIC.');
+//     }
 
-  close() {
-    const uiApplication = utils.ios.getter(UIApplication, UIApplication.sharedApplication);
-    uiApplication.keyWindow.rootViewController.dismissViewControllerAnimatedCompletion(true, null);
-    return this;
-  }
-}
+//     // Open the url
+//     openUrl(options);
+
+//     return this;
+//   }
+
+//   close() {
+//     if (app.ios) {
+//       const uiApplication = utils.ios.getter(UIApplication, UIApplication.sharedApplication);
+//       uiApplication.keyWindow.rootViewController.dismissViewControllerAnimatedCompletion(true, null);
+//     }
+
+//     return this;
+//   }
+// }
