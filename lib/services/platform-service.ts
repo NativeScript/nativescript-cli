@@ -38,7 +38,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $npm: INodePackageManager,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
-		private $projectChangesService: IProjectChangesService,		
+		private $projectChangesService: IProjectChangesService,
 		private $analyticsService: IAnalyticsService) {
 		super();
 	}
