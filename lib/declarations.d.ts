@@ -369,9 +369,6 @@ interface IDeployPlatformOptions extends IAndroidReleaseOptions, IPlatformTempla
 	forceInstall?: boolean;
 }
 
-interface IEmulatePlatformOptions extends IJustLaunch, IDeployPlatformOptions, IAvailableDevices, IAvd {
-}
-
 interface IUpdatePlatformOptions extends IPlatformTemplate {
 	currentVersion: string;
 	newVersion: string;

@@ -38,11 +38,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $npm: INodePackageManager,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
-		private $projectChangesService: IProjectChangesService,
-		private $emulatorPlatformService: IEmulatorPlatformService,
-		private $analyticsService: IAnalyticsService,
-		private $messages: IMessages,
-		private $staticConfig: Config.IStaticConfig) {
+		private $projectChangesService: IProjectChangesService,		
+		private $analyticsService: IAnalyticsService) {
 		super();
 	}
 
@@ -526,41 +523,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		await this.$devicesService.initialize({ platform: platform, deviceId: runOptions.device });
 		await this.$devicesService.execute(action, this.getCanExecuteAction(platform, runOptions));
-	}
-
-	public async emulatePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, emulateOptions: IEmulatePlatformOptions, projectData: IProjectData, config: IAddPlatformCoreOptions): Promise<void> {
-		if (emulateOptions.avd) {
-			this.$logger.warn(`Option --avd is no longer supported. Please use --device instead!`);
-			return Promise.resolve();
-		}
-
-		if (emulateOptions.availableDevices) {
-			return this.$emulatorPlatformService.listAvailableEmulators(platform);
-		}
-
-		if (emulateOptions.device) {
-			let info = await this.$emulatorPlatformService.getEmulatorInfo(platform, emulateOptions.device);
-			if (info) {
-				if (!info.isRunning) {
-					await this.$emulatorPlatformService.startEmulator(info, projectData);
-				}
-
-				emulateOptions.device = null;
-			} else {
-				await this.$devicesService.initialize({ platform: platform, deviceId: emulateOptions.device });
-				let found: Mobile.IDeviceInfo[] = [];
-				if (this.$devicesService.hasDevices) {
-					found = this.$devicesService.getDevices().filter((deviceInfo: Mobile.IDeviceInfo) => deviceInfo.identifier === emulateOptions.device);
-				}
-
-				if (found.length === 0) {
-					this.$errors.fail(this.$messages.Devices.NotFoundDeviceByIdentifierErrorMessage, this.$staticConfig.CLIENT_NAME.toLowerCase());
-				}
-			}
-		}
-
-		await this.deployPlatform(platform, appFilesUpdaterOptions, emulateOptions, projectData, config);
-		return this.startApplication(platform, emulateOptions, projectData.projectId);
 	}
 
 	private getBuildOutputPath(platform: string, platformData: IPlatformData, options: IBuildForDevice): string {
