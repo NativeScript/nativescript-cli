@@ -44,9 +44,6 @@ Command | Description
 [debug android](debug-android.html) | Debugs your project on a connected Android device or in a native emulator.
 [debug ios](debug-ios.html) | Debugs your project on a connected iOS device or in a native emulator.
 [debug](debug.html) | Debugs your project on a connected device or in a native emulator.
-[emulate android](emulate-android.html) | Builds the specified project and runs it in a native Android emulator.
-[emulate ios](emulate-ios.html) | Builds the specified project and runs it in the native iOS Simulator.
-[emulate](emulate.html) | You must run the emulate command with a related command.
 [run android](run-android.html) | Runs your project on a connected Android device or in a native Android emulator, if configured.
 [run ios](run-ios.html) | Runs your project on a connected iOS device or in the iOS Simulator, if configured.
 [run](run.html) | Runs your project on a connected device or in the native emulator for the selected platform.

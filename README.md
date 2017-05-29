@@ -21,7 +21,6 @@ The NativeScript CLI lets you create, build, and deploy NativeScript-based proje
     * [Prepare for Build](#prepare-for-build)
     * [Build Your Project](#build-your-project)
     * [Deploy Your Project](#deploy-your-project)
-    * [Emulate Your Project](#emulate-your-project)
     * [Run Your Project](#run-your-project)
 * [Extending the CLI](#extending-the-cli)
 * [Troubleshooting](#troubleshooting)
@@ -112,7 +111,6 @@ Quick Start
 * [Prepare for Build](#prepare-for-build)
 * [Build Your Project](#build-your-project)
 * [Deploy Your Project](#deploy-your-project)
-* [Emulate Your Project](#emulate-your-project)
 * [Run Your Project](#run-your-project)
 
 ## The Commands

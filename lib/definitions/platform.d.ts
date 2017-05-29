@@ -120,17 +120,6 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 */
 	startApplication(platform: string, runOptions: IRunPlatformOptions, projectId: string): Promise<void>;
 
-	/**
-	 * The emulate command. In addition to `run --emulator` command, it handles the `--available-devices` option to show the available devices.
-	 * @param {string} platform The platform to emulate.
-	 * @param {IAppFilesUpdaterOptions} appFilesUpdaterOptions Options needed to instantiate AppFilesUpdater class.
-	 * @param {IEmulatePlatformOptions} emulateOptions Various options that can manage the emulate operation.
-	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @param {IAddPlatformCoreOptions} config Options required for project preparation/creation.
-	 * @returns {void}
-	 */
-	emulatePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, emulateOptions: IEmulatePlatformOptions, projectData: IProjectData, config: IAddPlatformCoreOptions): Promise<void>;
-
 	cleanDestinationApp(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions): Promise<void>;
 	validatePlatformInstalled(platform: string, projectData: IProjectData): void;
 
