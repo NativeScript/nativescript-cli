@@ -10,7 +10,7 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 		private $childProcess: IChildProcess,
 		private $options: IOptions) { }
 
-	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml", ".html"];
+	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml"];
 
 	private deviceSpecificLiveSyncServicesCache: IDictionary<any> = {};
 	public get deviceSpecificLiveSyncServices(): IDictionary<any> {
