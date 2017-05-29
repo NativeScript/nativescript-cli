@@ -60,7 +60,7 @@ describe("IOSEntitlements Service Tests", () => {
 
 	describe("Ensure paths constructed are correct", () => {
 		it("Ensure destination entitlements relative path is calculated correctly.", () => {
-			const expected = "testApp/testApp.entitlements";
+			const expected = path.join("testApp", "testApp.entitlements");
 			let actual = iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData);
 			assert.equal(actual, expected);
 		});

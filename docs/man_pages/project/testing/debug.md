@@ -5,12 +5,12 @@ Usage | Synopsis
 ---|---
 <% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns debug <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns debug android`<% } %>
 
-Debugs your project on a connected device or in a native emulator. <% if(isMacOS) { %>You must specify the target platform on which you want to debug.<% } %> The command will prepare, build and deploy the app when necessary. By default listens for changes in your code, synchronizes those changes and refreshes the selected device.
+Debugs your project on a connected device or in a native emulator. <% if(isMacOS) { %>You must specify the target platform on which you want to debug.<% } %> The command will prepare, build and deploy the app when necessary. By default listens for changes in your code, synchronizes those changes and restarts the app on the targeted device.
 
 <% if((isConsole && isMacOS) || isHtml) { %>### Attributes
-`<Platform>` is the target mobile platform for which you want to debug your project. You can set the following target platforms.
+`<Platform>` is the target mobile platform for which you want to debug your project. You can set the following target platforms:
 * `android` - Debugs your project on a connected Android device or Android emulator.
-* `ios` - Debugs your project on a connected iOS device or in a native iOS emulator.<% } %>
+* `ios` - Debugs your project on a connected iOS device or in a native iOS simulator.<% } %>
 
 <% if(isHtml) { %>
 ### Command Limitations

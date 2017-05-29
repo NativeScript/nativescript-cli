@@ -257,6 +257,12 @@ The NativeScript CLI respects any platform configuration files placed inside `ap
 
 Additionaly, you can modify `app/App_Resources/build.xcconfig` and `app/App_Resources/app.gradle` for adding/removing additional build properties for iOS and Android, respectively.
 
+### Modifying Entitlements File (iOS only)
+
+To specify which Capabilities are required by your App - Maps, Push Notifications, Wallet and etc. you can add or edit the `app.entitlements` file placed inside `app/App_Resources/iOS`. When building the project, the default `app/App_Resources/iOS/app.entitlements` file gets merged with all Plugins entitlement files and a new `yourAppName.entitlements` is created in the platforms directory. The path would be `app/platforms/ios/<application name>/<application name>.entitlements` and will be linked in the `build.xcconfig` file.
+
+You can always override the generated entitlements file, by pointing to your own entitlements file by setting the `CODE_SIGN_ENTITLEMENTS` property in the `app/App_Resources/iOS/build.xcconfig` file.
+
 [Back to Top][1]
 
 ## Prepare for Build
@@ -375,7 +381,7 @@ tns doctor
 
 This command prints warnings about current configuration issues and provides basic information about how to resolve them.
 
-If addressing the configuration issues does not resolve your problem, you can [report an issue](https://github.com/NativeScript/nativescript-cli/blob/master/CONTRIBUTING.md#report-an-issue) or [post in the NativeScript page in Google Groups](https://groups.google.com/forum/#!forum/nativescript).
+If addressing the configuration issues does not resolve your problem, you can [report an issue](https://github.com/NativeScript/nativescript-cli/blob/master/CONTRIBUTING.md#report-an-issue) or [post in the NativeScript forums](https://discourse.nativescript.org/).
 
 [Back to Top][1]
 
