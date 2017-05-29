@@ -97,8 +97,7 @@ install("Android SDK", "Installing Android SDK", 'brew tap caskroom/cask; brew c
 
 unless ENV["ANDROID_HOME"]
   require 'pathname'
-  # if android-sdk was installed through brew, there should be a symlink in /usr/local/opt/android-sdk pointing to the actual sdk
-  android_home = "/usr/local/opt/android-sdk"
+  android_home = "/usr/local/share/android-sdk"
   unless Pathname.new(android_home).exist?
     require 'mkmf'
     # if there's no such symlink then try to find the `android-sdk` directory through the `android` executable
@@ -129,31 +128,23 @@ puts "Configuring your system for Android development... This might take some ti
 # the android tool will introduce a --accept-license option in subsequent releases
 error_msg = "There seem to be some problems with the Android configuration"
 
-android_executable = File.join(ENV["ANDROID_HOME"], "tools", "bin", "sdkmanager")
-execute("echo y | #{android_executable} \"platform-tools\"", error_msg)
-execute("echo y | #{android_executable} \"tools\"", error_msg)
-execute("echo y | #{android_executable} \"build-tools;25.0.2\"", error_msg)
-execute("echo y | #{android_executable} \"platforms;android-25\"", error_msg)
-execute("echo y | #{android_executable} \"platforms;android-24\"", error_msg)
-execute("echo y | #{android_executable} \"platforms;android-23\"", error_msg)
-execute("echo y | #{android_executable} \"platforms;android-22\"", error_msg)
-execute("echo y | #{android_executable} \"platforms;android-21\"", error_msg)
-execute("echo y | #{android_executable} \"platforms;android-19\"", error_msg)
-execute("echo y | #{android_executable} \"platforms;android-18\"", error_msg)
-execute("echo y | #{android_executable} \"platforms;android-17\"", error_msg)
+sdk_manager = File.join(ENV["ANDROID_HOME"], "tools", "bin", "sdkmanager")
+execute("echo y | #{sdk_manager} \"platform-tools\"", error_msg)
+execute("echo y | #{sdk_manager} \"tools\"", error_msg)
+execute("echo y | #{sdk_manager} \"build-tools;25.0.2\"", error_msg)
+execute("echo y | #{sdk_manager} \"platforms;android-23\"", error_msg)
+execute("echo y | #{sdk_manager} \"extras;android;m2repository\"", error_msg)
+execute("echo y | #{sdk_manager} \"extras;google;m2repository\"", error_msg)
 
 puts "Do you want to install Android emulator? (y/n)"
 if gets.chomp.downcase == "y"
   puts "Do you want to install HAXM (Hardware accelerated Android emulator)? (y/n)"
   if gets.chomp.downcase == "y"
-    execute("echo y | #{android_executable} \"extras;intel;Hardware_Accelerated_Execution_Manager\"", error_msg)
-    
+    execute("echo y | #{sdk_manager} \"extras;intel;Hardware_Accelerated_Execution_Manager\"", error_msg)
     haxm_silent_installer = File.join(ENV["ANDROID_HOME"], "extras", "intel", "Hardware_Accelerated_Execution_Manager", "silent_install.sh")
     execute("sudo #{haxm_silent_installer}", "There seem to be some problems with the Android configuration")
-  else           
   end
-    execute("echo y | #{android_executable} \"system-images;android-25;google_apis;x86\"", error_msg)
-    execute("echo y | #{android_executable} \"system-images;android-24;default;x86\"", error_msg)
+  execute("echo y | #{sdk_manager} \"system-images;android-23;default;x86\"", error_msg)
 end
 
 puts "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .bash_profile/.zprofile"
