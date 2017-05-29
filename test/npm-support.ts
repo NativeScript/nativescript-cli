@@ -159,7 +159,8 @@ async function setupProject(dependencies?: any): Promise<any> {
 				ensureConfigurationFileInAppResources: (): any => null,
 				interpolateConfigurationFile: (): void => undefined,
 				isPlatformPrepared: (projectRoot: string) => false,
-				validatePlugins: (projectData: IProjectData) => Promise.resolve()
+				validatePlugins: (projectData: IProjectData) => Promise.resolve(),
+				cleanProject: () => Promise.resolve(),
 			}
 		};
 	};
@@ -316,7 +317,7 @@ describe("Flatten npm modules tests", () => {
 		let gulpJshint = path.join(tnsModulesFolderPath, "gulp-jshint");
 		assert.isFalse(fs.exists(gulpJshint));
 
-		// Get  all gulp dependencies
+		// Get	all gulp dependencies
 		let gulpJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp", packageJsonName));
 		_.each(_.keys(gulpJsonContent.dependencies), dependency => {
 			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)));
