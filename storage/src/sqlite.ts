@@ -5,7 +5,7 @@ const NativeScriptSQLite = require('nativescript-sqlite');
 const masterCollectionName = 'sqlite_master';
 let isSupported;
 
-class SQLite {
+class SQLiteAdapter {
   name: string;
 
   constructor(name = 'kinvey') {
@@ -173,9 +173,9 @@ class SQLite {
   }
 }
 
-export default {
+export const SQLite = {
   load(name) {
-    const db = new SQLite(name);
+    const db = new SQLiteAdapter(name);
 
     if (isDefined(NativeScriptSQLite) === false) {
       return Promise.resolve(undefined);

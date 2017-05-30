@@ -1,5 +1,5 @@
 import { Middleware } from 'kinvey-js-sdk/dist/request';
-import { request as HttpRequest, HttpResponse } from 'http';
+import { request as HttpRequest } from 'http';
 import { device } from 'platform'
 
 function deviceInformation() {
@@ -39,7 +39,7 @@ export class HttpMiddleware extends Middleware {
       timeout: timeout,
       dontFollowRedirects: followRedirect
     })
-      .then((response: HttpResponse) => {
+      .then((response) => {
         return {
           response: {
             statusCode: response.statusCode,

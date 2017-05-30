@@ -11,14 +11,25 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var request_1 = require("kinvey-js-sdk/dist/request");
-var storage_1 = require("./storage");
+var storage_1 = require("kinvey-js-sdk/dist/request/src/middleware/src/storage");
+var storage_2 = require("../../storage");
+var Storage = (function (_super) {
+    __extends(Storage, _super);
+    function Storage(name) {
+        return _super.call(this, name) || this;
+    }
+    Storage.prototype.loadAdapter = function () {
+        return storage_2.SQLite.load(this.name);
+    };
+    return Storage;
+}(storage_1.default));
 var NativeScriptCacheMiddleware = (function (_super) {
     __extends(NativeScriptCacheMiddleware, _super);
     function NativeScriptCacheMiddleware() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     NativeScriptCacheMiddleware.prototype.loadStorage = function (name) {
-        return new storage_1.Storage(name);
+        return new Storage(name);
     };
     return NativeScriptCacheMiddleware;
 }(request_1.CacheMiddleware));
