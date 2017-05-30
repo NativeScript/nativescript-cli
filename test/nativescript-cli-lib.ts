@@ -20,6 +20,7 @@ describe("nativescript-cli-lib", () => {
 		deviceLogProvider: null,
 		npm: ["install", "uninstall", "view", "search"],
 		extensibilityService: ["loadExtensions", "getInstalledExtensions", "installExtension", "uninstallExtension"],
+		analyticsService: ["startEqatecMonitor"],
 		debugService: ["debug"]
 	};
 
