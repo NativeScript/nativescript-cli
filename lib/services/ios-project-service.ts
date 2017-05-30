@@ -329,8 +329,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		// build only for device specific architecture
 		if (!buildConfig.release && !buildConfig.architectures) {
-			await this.$devicesService.initialize({ platform: this.$devicePlatformsConstants.iOS.toLowerCase(), deviceId: buildConfig.device,
-				isBuildForDevice: true });
+			await this.$devicesService.initialize({
+				platform: this.$devicePlatformsConstants.iOS.toLowerCase(), deviceId: buildConfig.device,
+				isBuildForDevice: true
+			});
 			let instances = this.$devicesService.getDeviceInstances();
 			let devicesArchitectures = _(instances)
 				.filter(d => this.$mobileHelper.isiOSPlatform(d.deviceInfo.platform) && d.deviceInfo.activeArchitecture)
@@ -672,7 +674,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	public async processConfigurationFilesFromAppResources(release: boolean, projectData: IProjectData): Promise<void> {
-		await this.mergeInfoPlists(projectData);
+		await this.mergeInfoPlists({ release }, projectData);
 		await this.$iOSEntitlementsService.merge(projectData);
 		await this.mergeProjectXcconfigFiles(release, projectData);
 		for (let pluginData of await this.getAllInstalledPlugins(projectData)) {
@@ -704,7 +706,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return Promise.resolve();
 	}
 
-	private async mergeInfoPlists(projectData: IProjectData): Promise<void> {
+	private async mergeInfoPlists(buildOptions: IRelease, projectData: IProjectData): Promise<void> {
 		let projectDir = projectData.projectDir;
 		let infoPlistPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, this.getPlatformData(projectData).configurationFileName);
 		this.ensureConfigurationFileInAppResources();
@@ -745,7 +747,29 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 						<plist version="1.0">
 						<dict>
 							<key>CFBundleIdentifier</key>
-							<string>${ projectData.projectId}</string>
+							<string>${projectData.projectId}</string>
+						</dict>
+						</plist>`
+			});
+		}
+
+		if (!buildOptions.release && projectData.projectId) {
+			session.patch({
+				name: "CFBundleURLTypes from package.json nativescript.id",
+				read: () =>
+					`<?xml version="1.0" encoding="UTF-8"?>
+						<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+						<plist version="1.0">
+						<dict>
+							<key>CFBundleURLTypes</key>
+							<array>
+								<dict>
+									<key>CFBundleURLSchemes</key>
+									<array>
+										<string>${projectData.projectId.replace(/[^A-Za-z0-9]/g, "")}</string>
+									</array>
+								</dict>
+							</array>
 						</dict>
 						</plist>`
 			});
