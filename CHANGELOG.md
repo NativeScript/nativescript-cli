@@ -1,12 +1,13 @@
 NativeScript CLI Changelog
 ================
 
-3.0.2 (2017, May 26)
+3.0.2 (2017, May 30)
 ==
 
 ### Fixed
 
 * Removed restart of the App if HTML/CSS file was modified. The issue is fixed in the Modules **3.0.1** and we can again just refresh the app on change.
+* [Fix #2852](https://github.com/NativeScript/nativescript-cli/pull/2852): Fix prepare for android when building with webpack
 
 3.0.1 (2017, May 11)
 ==
