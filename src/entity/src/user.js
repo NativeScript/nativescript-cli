@@ -5,11 +5,12 @@ import isObject from 'lodash/isObject';
 import isEmpty from 'lodash/isEmpty';
 
 import Client from 'src/client';
-import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from 'src/request';
+import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
 import { KinveyError, NotFoundError, ActiveUserError } from 'src/errors';
 import DataStore, { UserStore } from 'src/datastore';
 import { MobileIdentityConnect } from 'src/identity';
 import { Log, isDefined } from 'src/utils';
+import { ActiveUserHelper } from './activeUserHelper';
 import Acl from './acl';
 import Metadata from './metadata';
 
@@ -226,7 +227,7 @@ export default class User {
 
         // Store the active user
         this.data = data;
-        return CacheRequest.setActiveUser(this.client, this.data);
+        return ActiveUserHelper.set(this.client, this.data);
       })
       .then(() => this);
   }
@@ -382,7 +383,7 @@ export default class User {
         Log.error(error);
         return null;
       })
-      .then(() => CacheRequest.setActiveUser(this.client, null))
+      .then(() => ActiveUserHelper.remove(this.client))
       .catch((error) => {
         Log.error(error);
         return null;
@@ -453,7 +454,7 @@ export default class User {
         this.data = data;
 
         if (options.state === true) {
-          return CacheRequest.setActiveUser(this.client, this.data);
+          return ActiveUserHelper.set(this.client, this.data);
         }
 
         return this;
@@ -520,7 +521,7 @@ export default class User {
     return store.update(data, options)
       .then((data) => {
         if (this.isActive()) {
-          return CacheRequest.setActiveUser(this.client, data);
+          return ActiveUserHelper.set(this.client, data);
         }
 
         return data;
@@ -577,7 +578,7 @@ export default class User {
 
         // Store the active user
         if (this.isActive()) {
-          return CacheRequest.setActiveUser(this.client, this.data);
+          return ActiveUserHelper.set(this.client, this.data);
         }
 
         return data;
@@ -609,7 +610,7 @@ export default class User {
    * @return {?User} The active user.
    */
   static getActiveUser(client = Client.sharedInstance()) {
-    const data = CacheRequest.getActiveUser(client);
+    const data = ActiveUserHelper.get(client);
 
     if (isDefined(data)) {
       return new this(data, { client: client });
@@ -760,12 +761,5 @@ export default class User {
   static restore() {
     return Promise.reject(new KinveyError('This function requires a master secret to be provided for your application.'
       + ' We strongly advise not to do this.'));
-  }
-
-  /**
-   * @private
-   */
-  static usePopupClass(popupClass) {
-    MobileIdentityConnect.usePopupClass(popupClass);
   }
 }

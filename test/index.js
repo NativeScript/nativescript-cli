@@ -1,7 +1,7 @@
 import { HttpMiddlewareMock, UserMock } from 'test/mocks';
 import { SerializeMiddleware, ParseMiddleware, NetworkRack } from 'src/request';
 import { randomString } from 'src/utils';
-import Kinvey from 'src/kinvey';
+import { Kinvey } from 'src/kinvey';
 import nock from 'nock';
 
 // Setup network rack
@@ -22,11 +22,9 @@ before(function() {
   //   this.client = Kinvey.client;
   // });
 
-  return Kinvey.initialize({
+  this.client = Kinvey.init({
     appKey: randomString(),
     appSecret: randomString()
-  }).then(() => {
-    this.client = Kinvey.client;
   });
 });
 

@@ -10,6 +10,7 @@ import Aggregation from 'src/aggregation';
 import { isDefined, appendQuery } from 'src/utils';
 import { InvalidCredentialsError, NoActiveUserError, KinveyError } from 'src/errors';
 import { SocialIdentity } from 'src/identity';
+import { ActiveUserHelper } from 'src/entity/src/activeUserHelper';
 import Request, { RequestMethod } from './request';
 import CacheRequest from './cache';
 import Headers from './headers';
@@ -117,7 +118,7 @@ const Auth = {
    * @returns {Object}
    */
   session(client) {
-    const activeUser = CacheRequest.getActiveUser(client);
+    const activeUser = ActiveUserHelper.get(client);
 
     if (!isDefined(activeUser)) {
       return Promise.reject(
@@ -387,7 +388,7 @@ export class KinveyRequest extends NetworkRequest {
       })
       .catch((error) => {
         if (error instanceof InvalidCredentialsError && retry === true) {
-          const activeUser = CacheRequest.getActiveUser(this.client);
+          const activeUser = ActiveUserHelper.get(this.client);
 
           if (!isDefined(activeUser)) {
             throw error;
@@ -441,7 +442,7 @@ export class KinveyRequest extends NetworkRequest {
                 })
                 .then((user) => {
                   user._socialIdentity[session.identity] = defaults(user._socialIdentity[session.identity], session);
-                  return CacheRequest.setActiveUser(this.client, user);
+                  return ActiveUserHelper.set(this.client, user);
                 })
                 .then(() => this.execute(rawResponse, false))
                 .catch(() => {

@@ -247,9 +247,9 @@ export class MobileIdentityConnect extends Identity {
   /**
    * @private
    */
-  static usePopupClass(popupClass) {
-    if (isDefined(popupClass)) {
-      Popup = popupClass;
+  static usePopupClass(PopupClass) {
+    if (isDefined(PopupClass)) {
+      Popup = PopupClass;
     }
   }
 }

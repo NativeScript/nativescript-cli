@@ -4,7 +4,7 @@ import isNumber from 'lodash/isNumber';
 
 import { KinveyError } from 'src/errors';
 import { Log, isDefined } from 'src/utils';
-import { CacheRequest } from './request';
+import { ActiveUserHelper } from 'src/entity/src/activeUserHelper';
 
 let sharedInstance = null;
 
@@ -116,7 +116,7 @@ export default class Client {
    * Get the active user.
    */
   get activeUser() {
-    return CacheRequest.getActiveUser(this);
+    return ActiveUserHelper.get(this);
   }
 
   /**
@@ -153,11 +153,29 @@ export default class Client {
    * @param {string}    [options.appVersion]                               App Version
    * @return {Promise}                                                     A promise.
    */
-  static initialize(options) {
+  static initialize() {
+    throw new KinveyError('Please use Client.init().');
+  }
+
+  /**
+   * Initializes the Client class by creating a new instance of the
+   * Client class and storing it as a shared instance. The returned promise
+   * resolves with the shared instance of the Client class.
+   *
+   * @param {Object}    options                                            Options
+   * @param {string}    [options.apiHostname='https://baas.kinvey.com']    Host name used for Kinvey API requests
+   * @param {string}    [options.micHostname='https://auth.kinvey.com']    Host name used for Kinvey MIC requests
+   * @param {string}    [options.appKey]                                   App Key
+   * @param {string}    [options.appSecret]                                App Secret
+   * @param {string}    [options.masterSecret]                             App Master Secret
+   * @param {string}    [options.encryptionKey]                            App Encryption Key
+   * @param {string}    [options.appVersion]                               App Version
+   * @return {Promise}                                                     A promise.
+   */
+  static init(options) {
     const client = new Client(options);
     sharedInstance = client;
-    return CacheRequest.loadActiveUser(client)
-      .then(() => client);
+    return client;
   }
 
   /**

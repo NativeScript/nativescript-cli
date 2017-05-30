@@ -106,6 +106,7 @@ describe('Client', () => {
       expect(() => {
         const timeout = 'foo';
         const client = new Client({ defaultTimeout: timeout });
+        return client;
       }).toThrow(/Invalid timeout. Timeout must be a number./);
     });
 
