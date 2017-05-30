@@ -29,5 +29,4 @@ interface IProjectChangesService {
 	getPrepareInfo(platform: string, projectData: IProjectData): IPrepareInfo;
 	savePrepareInfo(platform: string, projectData: IProjectData): void;
 	getPrepareInfoFilePath(platform: string, projectData: IProjectData): string;
-	currentChanges: IProjectChangesInfo;
 }

@@ -358,8 +358,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	public async shouldBuild(platform: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<boolean> {
-		if (this.$projectChangesService.currentChanges.changesRequireBuild) {
+	public async shouldBuild(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions, buildConfig: IBuildConfig): Promise<boolean> {
+		if (this.$projectChangesService.checkForChanges(platform, projectData, projectChangesOptions).changesRequireBuild) {
 			return true;
 		}
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
@@ -494,7 +494,12 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				keyStorePath: deployOptions.keyStorePath,
 				clean: deployOptions.clean
 			};
-			let shouldBuild = await this.shouldBuild(platform, projectData, buildConfig);
+			const projectChangesOptions: IProjectChangesOptions = {
+				bundle: appFilesUpdaterOptions.bundle,
+				release: appFilesUpdaterOptions.release,
+				provision: buildConfig.provision
+			};
+			let shouldBuild = await this.shouldBuild(platform, projectData, projectChangesOptions, buildConfig);
 			if (shouldBuild) {
 				await this.buildPlatform(platform, buildConfig, projectData);
 			} else {

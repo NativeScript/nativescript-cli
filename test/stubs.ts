@@ -629,7 +629,7 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 		return Promise.resolve(true);
 	}
 
-	public shouldBuild(platform: string, projectData: IProjectData, buildConfig?: IBuildConfig): Promise<boolean> {
+	public shouldBuild(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions, buildConfig?: IBuildConfig): Promise<boolean> {
 		return Promise.resolve(true);
 	}
 
