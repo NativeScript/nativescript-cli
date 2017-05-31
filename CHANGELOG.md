@@ -1,6 +1,13 @@
 NativeScript CLI Changelog
 ================
 
+3.0.3 (2017, May 31)
+==
+
+### Fixed
+
+* [Fix #2855](https://github.com/NativeScript/nativescript-cli/issues/2855): iOS inspector not installed with npm 5
+
 3.0.2 (2017, May 30)
 ==
 
