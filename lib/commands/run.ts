@@ -42,7 +42,8 @@ export class RunCommandBase {
 			return this.$platformService.trackProjectType(this.$projectData);
 		}
 
-		return this.$usbLiveSyncService.liveSync(args[0], this.$projectData);
+		// TODO: Fix this call
+		return this.$usbLiveSyncService.liveSync(args[0], this.$projectData, null, this.$options);
 	}
 }
 

@@ -1,136 +1,273 @@
-import * as constants from "../../constants";
-import * as helpers from "../../common/helpers";
 import * as path from "path";
+import * as choki from "chokidar";
+import * as iOSLs from "./ios-livesync-service";
+import * as androidLs from "./android-livesync-service";
+import { EventEmitter } from "events";
+import { exported } from "../../common/decorators";
+import { hook } from "../../common/helpers";
 
-let choki = require("chokidar");
-
-class LiveSyncService implements ILiveSyncService {
-	private _isInitialized = false;
-
-	constructor(private $errors: IErrors,
-		private $platformsData: IPlatformsData,
-		private $platformService: IPlatformService,
-		private $injector: IInjector,
+// TODO: emit events for "successfull livesync", "stoppedLivesync",
+export class LiveSyncService extends EventEmitter {
+	constructor(private $platformService: IPlatformService,
+		private $projectDataService: IProjectDataService,
 		private $devicesService: Mobile.IDevicesService,
-		private $options: IOptions,
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
 		private $logger: ILogger,
-		private $dispatcher: IFutureDispatcher,
-		private $hooksService: IHooksService,
 		private $processService: IProcessService,
-		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder) { }
-
-	public get isInitialized(): boolean { // This function is used from https://github.com/NativeScript/nativescript-dev-typescript/blob/master/lib/before-prepare.js#L4
-		return this._isInitialized;
+		private $hooksService: IHooksService,
+		private $projectChangesService: IProjectChangesService,
+		private $injector: IInjector) {
+		super();
 	}
 
-	public async liveSync(platform: string, projectData: IProjectData, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => Promise<void>): Promise<void> {
-		if (this.$options.justlaunch) {
-			this.$options.watch = false;
+	// TODO: Add finishLivesync method in the platform specific services
+	@exported("liveSyncService")
+	@hook("liveSync")
+	public async liveSync(
+		deviceDescriptors: { identifier: string, buildAction: () => Promise<string>, outputPath?: string }[],
+		liveSyncData: { projectDir: string, shouldStartWatcher: boolean, syncAllFiles: boolean }): Promise<void> {
+
+		// TODO: Initialize devicesService before that.
+		const projectData = this.$projectDataService.getProjectData(liveSyncData.projectDir);
+		await this.initialSync(projectData, deviceDescriptors, liveSyncData);
+
+		// Should be set after prepare
+		this.$injector.resolve("usbLiveSyncService")._isInitialized = true;
+
+		if (liveSyncData.shouldStartWatcher) {
+			await this.startWatcher(projectData, deviceDescriptors, liveSyncData);
 		}
-		let liveSyncData: ILiveSyncData[] = [];
+	}
 
-		if (platform) {
-			await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
-			liveSyncData.push(await this.prepareLiveSyncData(platform, projectData));
-		} else if (this.$options.device) {
-			await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
-			platform = this.$devicesService.getDeviceByIdentifier(this.$options.device).deviceInfo.platform;
-			liveSyncData.push(await this.prepareLiveSyncData(platform, projectData));
-		} else {
-			await this.$devicesService.initialize({ skipInferPlatform: true, skipDeviceDetectionInterval: true });
+	@exported("liveSyncService")
+	public async stopLiveSync(projectDir: string): Promise<void> {
+		const liveSyncProcessInfo = _.find(this.liveSyncProcessesInfo, (info, key) => key === projectDir);
 
-			for (let installedPlatform of this.$platformService.getInstalledPlatforms(projectData)) {
-				if (this.$devicesService.getDevicesForPlatform(installedPlatform).length === 0) {
-					await this.$devicesService.startEmulator(installedPlatform);
-				}
-
-				liveSyncData.push(await this.prepareLiveSyncData(installedPlatform, projectData));
+		if (liveSyncProcessInfo) {
+			if (liveSyncProcessInfo.timer) {
+				clearTimeout(liveSyncProcessInfo.timer);
 			}
+
+			if (liveSyncProcessInfo.watcher) {
+				liveSyncProcessInfo.watcher.close();
+			}
+
+			delete this.liveSyncProcessesInfo[projectDir];
+
+			// Kill typescript watcher
+			await this.$hooksService.executeAfterHooks('watch');
 		}
-
-		if (liveSyncData.length === 0) {
-			this.$errors.fail("There are no platforms installed in this project. Please specify platform or install one by using `tns platform add` command!");
-		}
-
-		this._isInitialized = true; // If we want before-prepare hooks to work properly, this should be set after preparePlatform function
-
-		await this.liveSyncCore(liveSyncData, applicationReloadAction, projectData);
 	}
 
-	private async prepareLiveSyncData(platform: string, projectData: IProjectData): Promise<ILiveSyncData> {
-		platform = platform || this.$devicesService.platform;
-		let platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
+	private currentPromiseChain: Promise<any> = Promise.resolve();
 
-		let liveSyncData: ILiveSyncData = {
-			platform: platform,
-			appIdentifier: projectData.projectId,
-			projectFilesPath: path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME),
-			syncWorkingDirectory: projectData.projectDir,
-			excludedProjectDirsAndFiles: this.$options.release ? constants.LIVESYNC_EXCLUDED_FILE_PATTERNS : []
+	private liveSyncProcessesInfo: IDictionary<{ timer: NodeJS.Timer, watcher: choki.FSWatcher }> = {};
+
+	// TODO: Register both livesync services in injector
+	private getLiveSyncService(platform: string): any {
+		if (this.$mobileHelper.isiOSPlatform(platform)) {
+			return this.$injector.resolve(iOSLs.IOSLiveSyncService);
+		} else if (this.$mobileHelper.isAndroidPlatform(platform)) {
+			return this.$injector.resolve(androidLs.AndroidLiveSyncService);
+		}
+
+		throw new Error(`Invalid platform ${platform}. Supported platforms are: ${this.$mobileHelper.platformNames.join(", ")}`);
+	}
+
+	private async ensureLatestAppPackageIsInstalledOnDevice(device: Mobile.IDevice,
+		preparedPlatforms: string[],
+		rebuiltInformation: any[],
+		projectData: IProjectData,
+		deviceBuildInfoDescriptor: { identifier: string, buildAction: () => Promise<string>, outputPath?: string },
+		modifiedFiles?: string[]): Promise<void> {
+
+		const platform = device.deviceInfo.platform;
+		if (preparedPlatforms.indexOf(platform) === -1) {
+			preparedPlatforms.push(platform);
+			await this.$platformService.preparePlatform(platform, <any>{}, null, projectData, <any>{}, modifiedFiles);
+		}
+
+		const shouldBuild = await this.$platformService.shouldBuild(platform, projectData, <any>{ buildForDevice: !device.isEmulator }, deviceBuildInfoDescriptor.outputPath);
+		if (shouldBuild) {
+			const pathToBuildItem = await deviceBuildInfoDescriptor.buildAction();
+			// Is it possible to return shouldBuild for two devices? What about android device and android emulator?
+			rebuiltInformation.push({ isEmulator: device.isEmulator, platform, pathToBuildItem });
+		}
+
+		const rebuildInfo = _.find(rebuiltInformation, info => info.isEmulator === device.isEmulator && info.platform === platform);
+
+		if (rebuildInfo) {
+			// Case where we have three devices attached, a change that requires build is found,
+			// we'll rebuild the app only for the first device, but we should install new package on all three devices.
+			await this.$platformService.installApplication(device, { release: false }, projectData, rebuildInfo.pathToBuildItem, deviceBuildInfoDescriptor.outputPath);
+		}
+	}
+
+	private async initialSync(projectData: IProjectData, deviceDescriptors: { identifier: string, buildAction: () => Promise<string>, outputPath?: string }[],
+		liveSyncData: { projectDir: string, shouldStartWatcher: boolean, syncAllFiles: boolean }): Promise<void> {
+
+		const preparedPlatforms: string[] = [];
+		const rebuiltInformation: { platform: string, isEmulator: boolean, pathToBuildItem: string }[] = [];
+
+		// Now fullSync
+		const deviceAction = async (device: Mobile.IDevice): Promise<void> => {
+			// TODO: Call androidDeviceLiveSyncService.beforeLiveSyncAction
+			const platform = device.deviceInfo.platform;
+			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
+			await this.ensureLatestAppPackageIsInstalledOnDevice(device, preparedPlatforms, rebuiltInformation, projectData, deviceDescriptor);
+
+			await this.getLiveSyncService(platform).fullSync(projectData, device);
+
+			await device.applicationManager.restartApplication(projectData.projectId, projectData.projectName);
 		};
 
-		return liveSyncData;
+		await this.$devicesService.execute(deviceAction, (device: Mobile.IDevice) => _.some(deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier));
 	}
 
-	@helpers.hook('livesync')
-	private async liveSyncCore(liveSyncData: ILiveSyncData[], applicationReloadAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>, projectData: IProjectData): Promise<void> {
-		await this.$platformService.trackProjectType(projectData);
+	private async startWatcher(projectData: IProjectData,
+		deviceDescriptors: { identifier: string, buildAction: () => Promise<string>, outputPath?: string }[],
+		liveSyncData: { projectDir: string, shouldStartWatcher: boolean, syncAllFiles: boolean }): Promise<void> {
 
-		let watchForChangeActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => Promise<void>)[] = [];
-
-		for (let dataItem of liveSyncData) {
-			let service: IPlatformLiveSyncService = this.$injector.resolve("platformLiveSyncService", { _liveSyncData: dataItem });
-			watchForChangeActions.push((event: string, filePath: string, dispatcher: IFutureDispatcher) =>
-				service.partialSync(event, filePath, dispatcher, applicationReloadAction, projectData));
-
-			await service.fullSync(projectData, applicationReloadAction);
-		}
-
-		if (this.$options.watch && !this.$options.justlaunch) {
-			await this.$hooksService.executeBeforeHooks('watch');
-			await this.partialSync(liveSyncData[0].syncWorkingDirectory, watchForChangeActions, projectData);
-		}
-	}
-
-	private partialSync(syncWorkingDirectory: string, onChangedActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => Promise<void>)[], projectData: IProjectData): void {
-		let that = this;
-		let productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
 		let pattern = ["app"];
 
-		if (this.$options.syncAllFiles) {
+		if (liveSyncData.syncAllFiles) {
+			const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
 			pattern.push("package.json");
 
 			// watch only production node_module/packages same one prepare uses
 			for (let index in productionDependencies) {
-				pattern.push("node_modules/" + productionDependencies[index].name);
+				pattern.push(productionDependencies[index].directory);
 			}
 		}
 
-		let watcher = choki.watch(pattern, { ignoreInitial: true, cwd: syncWorkingDirectory,
-		awaitWriteFinish: {
-			stabilityThreshold: 500,
-			pollInterval: 100
-		}, }).on("all", (event: string, filePath: string) => {
-			that.$dispatcher.dispatch(async () => {
-				try {
-					filePath = path.join(syncWorkingDirectory, filePath);
-					for (let i = 0; i < onChangedActions.length; i++) {
-						that.$logger.trace(`Event '${event}' triggered for path: '${filePath}'`);
-						await onChangedActions[i](event, filePath, that.$dispatcher);
+		console.log("now starting watcher!", pattern);
+
+		let filesToSync: string[] = [],
+			filesToRemove: string[] = [];
+		let timeoutTimer: NodeJS.Timer;
+
+		const removeDeviceDescriptor = async (deviceId: string) => {
+			_.remove(deviceDescriptors, descriptor => descriptor.identifier === deviceId);
+
+			if (!deviceDescriptors.length) {
+				await this.stopLiveSync(liveSyncData.projectDir);
+			}
+		};
+
+		const startTimeout = () => {
+			timeoutTimer = setTimeout(async () => {
+				await this.addActionToQueue(async () => {
+					// TODO: Push consecutive actions to the queue, do not start them simultaneously
+					if (filesToSync.length || filesToRemove.length) {
+						try {
+							let currentFilesToSync = _.cloneDeep(filesToSync);
+							filesToSync = [];
+
+							let currentFilesToRemove = _.cloneDeep(filesToRemove);
+							filesToRemove = [];
+
+							const allModifiedFiles = [].concat(currentFilesToSync).concat(currentFilesToRemove);
+							console.log(this.$projectChangesService.currentChanges);
+
+							const preparedPlatforms: string[] = [];
+							const rebuiltInformation: { platform: string, isEmulator: boolean, pathToBuildItem: string }[] = [];
+							await this.$devicesService.execute(async (device: Mobile.IDevice) => {
+								// const platform = device.deviceInfo.platform;
+								const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
+
+								await this.ensureLatestAppPackageIsInstalledOnDevice(device, preparedPlatforms, rebuiltInformation,
+									projectData, deviceDescriptor, allModifiedFiles);
+
+								const service = this.getLiveSyncService(device.deviceInfo.platform);
+								const settings: any = {
+									projectData,
+									filesToRemove: currentFilesToRemove,
+									filesToSync: currentFilesToSync,
+									isRebuilt: !!_.find(rebuiltInformation, info => info.isEmulator === device.isEmulator && info.platform === device.deviceInfo.platform)
+								};
+
+								await service.liveSyncWatchAction(device, settings);
+							},
+								(device: Mobile.IDevice) => _.some(deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier)
+							);
+						} catch (err) {
+							// TODO: Decide if we should break here.
+							// this.$logger.info(`Unable to sync file ${filePath}. Error is:${err.message}`.red.bold);
+							this.$logger.info("Try saving it again or restart the livesync operation.");
+							// we can remove the descriptor from action:
+							const allErrors = err.allErrors;
+							console.log(allErrors);
+							_.each(allErrors, (deviceError: any) => {
+								console.log("for error: ", deviceError, " device ID: ", deviceError.deviceIdentifier);
+								removeDeviceDescriptor(deviceError.deviceIdentifier);
+							});
+						}
 					}
-				} catch (err) {
-					that.$logger.info(`Unable to sync file ${filePath}. Error is:${err.message}`.red.bold);
-					that.$logger.info("Try saving it again or restart the livesync operation.");
+				});
+			}, 250);
+
+			this.liveSyncProcessesInfo[liveSyncData.projectDir].timer = timeoutTimer;
+		};
+
+		await this.$hooksService.executeBeforeHooks('watch');
+
+		const watcherOptions: choki.WatchOptions = {
+			ignoreInitial: true,
+			cwd: liveSyncData.projectDir,
+			awaitWriteFinish: {
+				pollInterval: 100,
+				stabilityThreshold: 500
+			},
+			ignored: ["**/.*", ".*"] // hidden files
+		};
+
+		const watcher = choki.watch(pattern, watcherOptions)
+			.on("all", async (event: string, filePath: string) => {
+				clearTimeout(timeoutTimer);
+
+				filePath = path.join(liveSyncData.projectDir, filePath);
+
+				this.$logger.trace(`Chokidar raised event ${event} for ${filePath}.`);
+
+				if (event === "add" || event === "addDir" || event === "change" /* <--- what to do when change event is raised ? */) {
+					filesToSync.push(filePath);
+				} else if (event === "unlink" || event === "unlinkDir") {
+					filesToRemove.push(filePath);
 				}
+
+				startTimeout();
+			});
+
+		this.liveSyncProcessesInfo[liveSyncData.projectDir] = {
+			watcher,
+			timer: timeoutTimer
+		};
+
+		this.$processService.attachToProcessExitSignals(this, () => {
+			_.keys(this.liveSyncProcessesInfo).forEach(projectDir => {
+				// Do not await here, we are in process exit's handler.
+				this.stopLiveSync(projectDir);
 			});
 		});
 
-		this.$processService.attachToProcessExitSignals(this, () => {
-			watcher.close(pattern);
+		this.$devicesService.on("deviceLost", async (device: Mobile.IDevice) => {
+			await removeDeviceDescriptor(device.deviceInfo.identifier);
+		});
+	}
+
+	private async addActionToQueue<T>(action: () => Promise<T>): Promise<T> {
+		this.currentPromiseChain = this.currentPromiseChain.then(async () => {
+			const res = await action();
+			//	console.log("after ", unique);
+			return res;
 		});
 
-		this.$dispatcher.run();
+		const result = await this.currentPromiseChain;
+		return result;
 	}
+
 }
 
+$injector.register("liveSyncService", LiveSyncService);
 $injector.register("usbLiveSyncService", LiveSyncService);

@@ -12,8 +12,8 @@ export class ListiOSApps implements ICommand {
 		private $platformService: IPlatformService,
 		private $errors: IErrors,
 		private $prompter: IPrompter) {
-			this.$projectData.initializeProjectData();
-		 }
+		this.$projectData.initializeProjectData();
+	}
 
 	public async execute(args: string[]): Promise<void> {
 		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {

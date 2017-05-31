@@ -3,31 +3,54 @@ import { AndroidDeviceHashService } from "../../common/mobile/android/android-de
 import * as helpers from "../../common/helpers";
 import * as path from "path";
 import * as net from "net";
+import { EOL } from "os";
 
-class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncService {
+export class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncService {
 	private static BACKEND_PORT = 18182;
 	private device: Mobile.IAndroidDevice;
 
 	constructor(_device: Mobile.IDevice,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $injector: IInjector,
-		private $androidDebugService: IDebugService,
+		private $logger: ILogger,
+		private $androidDebugService: IPlatformDebugService,
 		private $liveSyncProvider: ILiveSyncProvider) {
 		this.device = <Mobile.IAndroidDevice>(_device);
 	}
 
-	public get debugService(): IDebugService {
+	public get debugService(): IPlatformDebugService {
 		return this.$androidDebugService;
 	}
 
-	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean, projectData: IProjectData): Promise<void> {
+	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData,
+		localToDevicePaths: Mobile.ILocalToDevicePathData[],
+		forceExecuteFullSync: boolean,
+		projectData: IProjectData,
+		outputFilePath?: string,
+		debugData?: IDebugData,
+		debugOptions?: IOptions): Promise<void> {
+
+		if (debugData) {
+			// TODO: Move this outside of here
+			await this.debugService.debugStop();
+
+			let applicationId = deviceAppData.appIdentifier;
+			await deviceAppData.device.applicationManager.stopApplication(applicationId, projectData.projectName);
+
+			debugData.pathToAppPackage = outputFilePath;
+			const debugInfo = await this.debugService.debug<string[]>(debugData, debugOptions);
+			this.printDebugInformation(debugInfo);
+
+			return;
+		}
+
 		await this.device.adb.executeShellCommand(
 			["chmod",
-			"777",
-			await deviceAppData.getDeviceProjectRootPath(),
-			`/data/local/tmp/${deviceAppData.appIdentifier}`,
-			`/data/local/tmp/${deviceAppData.appIdentifier}/sync`]
-			);
+				"777",
+				await deviceAppData.getDeviceProjectRootPath(),
+				`/data/local/tmp/${deviceAppData.appIdentifier}`,
+				`/data/local/tmp/${deviceAppData.appIdentifier}/sync`]
+		);
 
 		let canExecuteFastSync = !forceExecuteFullSync && !_.some(localToDevicePaths, (localToDevicePath: any) => !this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, deviceAppData.platform));
 
@@ -36,6 +59,12 @@ class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncService {
 		}
 
 		return this.restartApplication(deviceAppData);
+	}
+
+	protected printDebugInformation(information: string[]): void {
+		_.each(information, i => {
+			this.$logger.info(`To start debugging, open the following URL in Chrome:${EOL}${i}${EOL}`.cyan);
+		});
 	}
 
 	private async restartApplication(deviceAppData: Mobile.IDeviceAppData): Promise<void> {

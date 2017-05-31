@@ -65,7 +65,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 					return [
 						`${packageName}-${buildMode}.apk`,
-						`${projectData.projectName}-${buildMode}.apk`
+						`${projectData.projectName}-${buildMode}.apk`,
+						`${projectData.projectName}.apk`
 					];
 				},
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],

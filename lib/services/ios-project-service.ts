@@ -503,7 +503,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		let project = this.createPbxProj(projectData);
 		let frameworkName = path.basename(frameworkPath, path.extname(frameworkPath));
 		let frameworkBinaryPath = path.join(frameworkPath, frameworkName);
-		let isDynamic = _.includes((await this.$childProcess.spawnFromEvent(path.join(__dirname, "..", "..", "vendor", "file", "file.exe"), [frameworkBinaryPath], "close")).stdout, "dynamically linked");
+		const pathToFileCommand = this.$hostInfo.isWindows ? path.join(__dirname, "..", "..", "vendor", "file", "file.exe") : "file";
+		let isDynamic = _.includes((await this.$childProcess.spawnFromEvent(pathToFileCommand, [frameworkBinaryPath], "close")).stdout, "dynamically linked");
 
 		let frameworkAddOptions: IXcode.Options = { customFramework: true };
 

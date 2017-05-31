@@ -53,6 +53,8 @@ const createTestInjector = (readTextData?: string): IInjector => {
 
 	testInjector.register("projectDataService", ProjectDataService);
 
+	testInjector.register("injector", testInjector);
+
 	return testInjector;
 };
 

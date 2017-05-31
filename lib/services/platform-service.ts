@@ -369,35 +369,34 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	public async shouldBuild(platform: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<boolean> {
+	public async shouldBuild(platform: string, projectData: IProjectData, buildConfig: IBuildConfig, outputPath?: string): Promise<boolean> {
 		//TODO: shouldBuild - issue with outputPath - we do not have always the built dir locally
-		return false;
-		// if (this.$projectChangesService.currentChanges.changesRequireBuild) {
-		// 	return true;
-		// }
-		// let platformData = this.$platformsData.getPlatformData(platform, projectData);
-		// let forDevice = !buildConfig || buildConfig.buildForDevice;
-		// let outputPath = forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath;
-		// if (!this.$fs.exists(outputPath)) {
-		// 	return true;
-		// }
-		// let packageNames = platformData.getValidPackageNames({ isForDevice: forDevice });
-		// let packages = this.getApplicationPackages(outputPath, packageNames);
-		// if (packages.length === 0) {
-		// 	return true;
-		// }
-		// let prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
-		// let buildInfo = this.getBuildInfo(platform, platformData, buildConfig);
-		// if (!prepareInfo || !buildInfo) {
-		// 	return true;
-		// }
-		// if (buildConfig.clean) {
-		// 	return true;
-		// }
-		// if (prepareInfo.time === buildInfo.prepareTime) {
-		// 	return false;
-		// }
-		// return prepareInfo.changesRequireBuildTime !== buildInfo.prepareTime;
+		if (this.$projectChangesService.currentChanges.changesRequireBuild) {
+			return true;
+		}
+		let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		let forDevice = !buildConfig || buildConfig.buildForDevice;
+		outputPath = outputPath || (forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath);
+		if (!this.$fs.exists(outputPath)) {
+			return true;
+		}
+		let packageNames = platformData.getValidPackageNames({ isForDevice: forDevice });
+		let packages = this.getApplicationPackages(outputPath, packageNames);
+		if (packages.length === 0) {
+			return true;
+		}
+		let prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
+		let buildInfo = this.getBuildInfo(platform, platformData, buildConfig, outputPath);
+		if (!prepareInfo || !buildInfo) {
+			return true;
+		}
+		if (buildConfig.clean) {
+			return true;
+		}
+		if (prepareInfo.time === buildInfo.prepareTime) {
+			return false;
+		}
+		return prepareInfo.changesRequireBuildTime !== buildInfo.prepareTime;
 	}
 
 	public async trackProjectType(projectData: IProjectData): Promise<void> {
@@ -451,38 +450,39 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.$logger.out("Project successfully built.");
 	}
 
-	public async shouldInstall(device: Mobile.IDevice, projectData: IProjectData): Promise<boolean> {
+	public async shouldInstall(device: Mobile.IDevice, projectData: IProjectData, outputPath?: string): Promise<boolean> {
 		let platform = device.deviceInfo.platform;
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		if (!(await device.applicationManager.isApplicationInstalled(projectData.projectId))) {
 			return true;
 		}
 		let deviceBuildInfo: IBuildInfo = await this.getDeviceBuildInfo(device, projectData);
-		let localBuildInfo = this.getBuildInfo(platform, platformData, { buildForDevice: !device.isEmulator });
+		let localBuildInfo = this.getBuildInfo(platform, platformData, { buildForDevice: !device.isEmulator }, outputPath);
 		return !localBuildInfo || !deviceBuildInfo || deviceBuildInfo.buildTime !== localBuildInfo.buildTime;
 	}
 
-	public async installApplication(device: Mobile.IDevice, buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {
+	public async installApplication(device: Mobile.IDevice, buildConfig: IBuildConfig, projectData: IProjectData, packageFile?: string, outputFilePath?: string): Promise<void> {
 		this.$logger.out("Installing...");
-		// let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
-		// let packageFile = "";
-		// if (this.$devicesService.isiOSSimulator(device)) {
-		// 	packageFile = this.getLatestApplicationPackageForEmulator(platformData, buildConfig).packageName;
-		// } else {
-		// 	packageFile = this.getLatestApplicationPackageForDevice(platformData, buildConfig).packageName;
-		// }
+		let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
+		if (!packageFile) {
+			if (this.$devicesService.isiOSSimulator(device)) {
+				packageFile = this.getLatestApplicationPackageForEmulator(platformData, buildConfig).packageName;
+			} else {
+				packageFile = this.getLatestApplicationPackageForDevice(platformData, buildConfig).packageName;
+			}
+		}
 
-		// await platformData.platformProjectService.cleanDeviceTempFolder(device.deviceInfo.identifier, projectData);
+		await platformData.platformProjectService.cleanDeviceTempFolder(device.deviceInfo.identifier, projectData);
 
-		// await device.applicationManager.reinstallApplication(projectData.projectId, packageFile);
+		await device.applicationManager.reinstallApplication(projectData.projectId, packageFile);
 
-		// if (!buildConfig.release) {
-		// 	let deviceFilePath = await this.getDeviceBuildInfoFilePath(device, projectData);
-		// 	let buildInfoFilePath = this.getBuildOutputPath(device.deviceInfo.platform, platformData, { buildForDevice: !device.isEmulator });
-		// 	let appIdentifier = projectData.projectId;
+		if (!buildConfig.release) {
+			let deviceFilePath = await this.getDeviceBuildInfoFilePath(device, projectData);
+			let buildInfoFilePath = outputFilePath || this.getBuildOutputPath(device.deviceInfo.platform, platformData, { buildForDevice: !device.isEmulator });
+			let appIdentifier = projectData.projectId;
 
-		// 	await device.fileSystem.putFile(path.join(buildInfoFilePath, buildInfoFileName), deviceFilePath, appIdentifier);
-		// }
+			await device.fileSystem.putFile(path.join(buildInfoFilePath, buildInfoFileName), deviceFilePath, appIdentifier);
+		}
 
 		this.$logger.out(`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`);
 	}
@@ -561,9 +561,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	private getBuildInfo(platform: string, platformData: IPlatformData, options: IBuildForDevice): IBuildInfo {
-		let buildInfoFilePath = this.getBuildOutputPath(platform, platformData, options);
-		let buildInfoFile = path.join(buildInfoFilePath, buildInfoFileName);
+	private getBuildInfo(platform: string, platformData: IPlatformData, options: IBuildForDevice, buildOutputPath?: string): IBuildInfo {
+		buildOutputPath = buildOutputPath || this.getBuildOutputPath(platform, platformData, options);
+		let buildInfoFile = path.join(buildOutputPath, buildInfoFileName);
 		if (this.$fs.exists(buildInfoFile)) {
 			try {
 				let buildInfoTime = this.$fs.readJson(buildInfoFile);
@@ -792,6 +792,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.$logger.out("Successfully updated to version ", updateOptions.newVersion);
 	}
 
+	// TODO: Remove this method from here. It has nothing to do with platform
 	public async readFile(device: Mobile.IDevice, deviceFilePath: string, projectData: IProjectData): Promise<string> {
 		temp.track();
 		let uniqueFilePath = temp.path({ suffix: ".tmp" });

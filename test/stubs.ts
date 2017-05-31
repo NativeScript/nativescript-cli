@@ -376,6 +376,8 @@ export class ProjectDataService implements IProjectDataService {
 	removeNSProperty(propertyName: string): void { }
 
 	removeDependency(dependencyName: string): void { }
+
+	getProjectData(projectDir: string): IProjectData { return null; }
 }
 
 export class ProjectHelperStub implements IProjectHelper {

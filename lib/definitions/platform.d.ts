@@ -58,7 +58,7 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @param {IBuildConfig} buildConfig Indicates whether the build is for device or emulator.
 	 * @returns {boolean} true indicates that the platform should be build.
 	 */
-	shouldBuild(platform: string, projectData: IProjectData, buildConfig?: IBuildConfig): Promise<boolean>;
+	shouldBuild(platform: string, projectData: IProjectData, buildConfig?: IBuildConfig, outputPath?: string): Promise<boolean>;
 
 	/**
 	 * Builds the native project for the specified platform for device or emulator.
@@ -79,7 +79,7 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {Promise<boolean>} true indicates that the application should be installed.
 	 */
-	shouldInstall(device: Mobile.IDevice, projectData: IProjectData): Promise<boolean>;
+	shouldInstall(device: Mobile.IDevice, projectData: IProjectData, outputPath?: string): Promise<boolean>;
 
 	/**
 	 * Installs the application on specified device.
@@ -90,7 +90,7 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	installApplication(device: Mobile.IDevice, options: IRelease, projectData: IProjectData): Promise<void>;
+	installApplication(device: Mobile.IDevice, options: IRelease, projectData: IProjectData, pathToBuiltApp?: string, outputPath?: string): Promise<void>;
 
 	/**
 	 * Gets first chance to validate the options provided as command line arguments.

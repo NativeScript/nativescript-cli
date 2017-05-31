@@ -31,7 +31,7 @@
     "bufferpack": "0.0.6",
     "byline": "4.2.1",
     "chalk": "1.1.0",
-    "chokidar": "^1.6.1",
+    "chokidar": "1.7.0",
     "cli-table": "https://github.com/telerik/cli-table/tarball/v0.3.1.2",
     "clui": "0.3.1",
     "colors": "1.1.2",
@@ -83,6 +83,7 @@
   "devDependencies": {
     "@types/chai": "3.4.34",
     "@types/chai-as-promised": "0.0.29",
+    "@types/chokidar": "1.6.0",
     "@types/lodash": "4.14.50",
     "@types/node": "6.0.61",
     "@types/qr-image": "3.2.0",

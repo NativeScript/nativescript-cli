@@ -5,7 +5,7 @@ import * as net from "net";
 
 let currentPageReloadId = 0;
 
-class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
+export class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 	private static BACKEND_PORT = 18181;
 	private socket: net.Socket;
 	private device: Mobile.IiOSDevice;
