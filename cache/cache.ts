@@ -1,6 +1,6 @@
-import { CacheMiddleware } from 'kinvey-js-sdk/dist/request';
+import { CacheMiddleware as CoreCacheMiddleware } from 'kinvey-js-sdk/dist/request';
 import KinveyStorage from 'kinvey-js-sdk/dist/request/src/middleware/src/storage';
-import { SQLite } from '../../storage';
+import { SQLite } from './storage';
 
 class Storage extends KinveyStorage {
   name: string;
@@ -14,7 +14,7 @@ class Storage extends KinveyStorage {
   }
 }
 
-export class NativeScriptCacheMiddleware extends CacheMiddleware {
+export class CacheMiddleware extends CoreCacheMiddleware {
   loadStorage(name) {
     return new Storage(name);
   }

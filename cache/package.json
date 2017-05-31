@@ -1,0 +1,6 @@
+{
+  "name" : "cache",
+  "main" : "cache",
+  "types": "cache.d.ts",
+  "nativescript": {}
+}
