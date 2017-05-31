@@ -20,6 +20,10 @@ Lists all recognized connected Android <% if(isWindows || isMacOS) { %>or iOS de
 
 * You can run `$ tns device ios` on Windows and OS X systems.
 
+### Aliases
+
+* You can use `$ tns devices` as an alias for `$ tns device`. 
+
 ### Related Commands
 
 Command | Description

@@ -11,6 +11,7 @@ Lists all recognized connected iOS devices with serial number and index.
 
 <% if((isConsole && (isWindows || isMacOS)) || isHtml) { %>  
 ### Options
+* `--available-devices` - Lists all available emulators for iOS.
 * `--timeout` - Sets the time in milliseconds for the operation to search for connected devices before completing. If not set, the default value is 4000. <% } %><% if(isHtml) { %>The operation will continue to wait and listen for newly connected devices and will list them after the specified time expires.
 
 ### Command Limitations
