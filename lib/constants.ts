@@ -71,3 +71,4 @@ export const TYPESCRIPT_NAME = "typescript";
 export const BUILD_OUTPUT_EVENT_NAME = "buildOutput";
 export const CONNECTION_ERROR_EVENT_NAME = "connectionError";
 export const VERSION_STRING = "version";
+export const INSPECTOR_CACHE_DIRNAME = "ios-inspector";
