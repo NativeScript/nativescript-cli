@@ -136,37 +136,6 @@ describe("extensibilityService", () => {
 			const actualResult = await extensibilityService.installExtension(extensionName);
 			assert.deepEqual(actualResult, { extensionName });
 		});
-
-		it("throws error that has extensionName property when unable to load extension", async () => {
-			const expectedErrorMessage = "Require failed";
-
-			const extensionName = "extension1";
-			const testInjector = getTestInjector();
-			const fs: IFileSystem = testInjector.resolve("fs");
-			fs.exists = (pathToCheck: string): boolean => path.basename(pathToCheck) !== extensionName;
-
-			fs.readDirectory = (dir: string): string[] => [extensionName];
-
-			const npm: INodePackageManager = testInjector.resolve("npm");
-			npm.install = async (packageName: string, pathToSave: string, config?: any): Promise<any> => ({ name: extensionName });
-
-			const requireService: IRequireService = testInjector.resolve("requireService");
-			requireService.require = (pathToRequire: string) => {
-				throw new Error(expectedErrorMessage);
-			};
-
-			const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
-			let isErrorRaised = false;
-			try {
-				await extensibilityService.installExtension(extensionName);
-			} catch (err) {
-				isErrorRaised = true;
-				assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds.`);
-				assert.deepEqual(err.extensionName, extensionName);
-			}
-
-			assert.isTrue(isErrorRaised);
-		});
 	});
 
 	describe("loadExtensions", () => {
@@ -607,6 +576,39 @@ describe("extensibilityService", () => {
 
 			const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 			assert.deepEqual(extensibilityService.getInstalledExtensions(), dependencies);
+		});
+	});
+
+	describe("loadExtension", () => {
+		it("throws error that has extensionName property when unable to load extension", async () => {
+			const expectedErrorMessage = "Require failed";
+
+			const extensionName = "extension1";
+			const testInjector = getTestInjector();
+			const fs: IFileSystem = testInjector.resolve("fs");
+			fs.exists = (pathToCheck: string): boolean => path.basename(pathToCheck) !== extensionName;
+
+			fs.readDirectory = (dir: string): string[] => [extensionName];
+
+			const npm: INodePackageManager = testInjector.resolve("npm");
+			npm.install = async (packageName: string, pathToSave: string, config?: any): Promise<any> => ({ name: extensionName });
+
+			const requireService: IRequireService = testInjector.resolve("requireService");
+			requireService.require = (pathToRequire: string) => {
+				throw new Error(expectedErrorMessage);
+			};
+
+			const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
+			let isErrorRaised = false;
+			try {
+				await extensibilityService.loadExtension(extensionName);
+			} catch (err) {
+				isErrorRaised = true;
+				assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds.`);
+				assert.deepEqual(err.extensionName, extensionName);
+			}
+
+			assert.isTrue(isErrorRaised);
 		});
 	});
 });

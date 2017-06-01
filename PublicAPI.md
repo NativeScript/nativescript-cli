@@ -180,6 +180,31 @@ for (let promise of loadExtensionsPromises) {
 }
 ```
 
+### loadExtension
+Loads a specified extension.
+
+* Definition
+```TypeScript
+/**
+ * Loads a single extension, so their methods and commands can be used from CLI.
+ * @param {string} extensionName Name of the extension to be installed. It may contain version as well, i.e. myPackage, myPackage@1.0.0
+ * A Promise is returned. It will be rejected in case the extension cannot be loaded.
+ * @returns {Promise<IExtensionData>} Promise, resolved with IExtensionData.
+ */
+loadExtension(extensionName: string): Promise<IExtensionData>;
+```
+
+* Usage:
+```JavaScript
+tns.extensibilityService.loadExtension("my-extension")
+	.then(extensionData => console.log(`Loaded extension: ${extensionData.extensionName}.`),
+		err => {
+			console.log(`Failed to load extension: ${err.extensionName}`);
+			console.log(err);
+		});
+}
+```
+
 ## settingsService
 `settingsService` module provides a way to configure various settings.
 
