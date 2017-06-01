@@ -35,7 +35,7 @@ export class ExtensibilityService implements IExtensibilityService {
 		const installResultInfo = await this.$npm.install(packageName, this.pathToExtensions, npmOpts);
 		this.$logger.trace(`Finished installation of extension '${extensionName}'. Trying to load it now.`);
 
-		return await this.loadExtension(installResultInfo.name);
+		return { extensionName: installResultInfo.name };
 	}
 
 	@exported("extensibilityService")
@@ -74,7 +74,8 @@ export class ExtensibilityService implements IExtensibilityService {
 		return null;
 	}
 
-	private async loadExtension(extensionName: string): Promise<IExtensionData> {
+	@exported("extensibilityService")
+	public async loadExtension(extensionName: string): Promise<IExtensionData> {
 		try {
 			await this.assertExtensionIsInstalled(extensionName);
 

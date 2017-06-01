@@ -94,12 +94,12 @@ interface IExtensionData {
 ```
 
 ### installExtension
-Installs specified extension and loads it in the current process, so the functionality that it adds can be used immediately.
+Installs specified extension.
 
 * Definition:
 ```TypeScript
 /**
- * Installs and loads specified extension.
+ * Installs a specified extension.
  * @param {string} extensionName Name of the extension to be installed. It may contain version as well, i.e. myPackage, myPackage@1.0.0, myPackage.tgz, https://github.com/myOrganization/myPackage/tarball/master, https://github.com/myOrganization/myPackage etc.
  * @returns {Promise<IExtensionData>} Information about installed extensions.
  */
@@ -173,6 +173,31 @@ loadExtensions(): Promise<IExtensionData>[];
 const loadExtensionsPromises = tns.extensibilityService.loadExtensions();
 for (let promise of loadExtensionsPromises) {
 	promise.then(extensionData => console.log(`Loaded extension: ${extensionData.extensionName}.`),
+		err => {
+			console.log(`Failed to load extension: ${err.extensionName}`);
+			console.log(err);
+		});
+}
+```
+
+### loadExtension
+Loads a specified extension.
+
+* Definition
+```TypeScript
+/**
+ * Loads a single extension, so its methods and commands can be used from CLI.
+ * @param {string} extensionName Name of the extension to be installed. It may contain version as well, i.e. myPackage, myPackage@1.0.0
+ * A Promise is returned. It will be rejected in case the extension cannot be loaded.
+ * @returns {Promise<IExtensionData>} Promise, resolved with IExtensionData.
+ */
+loadExtension(extensionName: string): Promise<IExtensionData>;
+```
+
+* Usage:
+```JavaScript
+tns.extensibilityService.loadExtension("my-extension")
+	.then(extensionData => console.log(`Loaded extension: ${extensionData.extensionName}.`),
 		err => {
 			console.log(`Failed to load extension: ${err.extensionName}`);
 			console.log(err);
