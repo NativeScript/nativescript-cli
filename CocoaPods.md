@@ -14,6 +14,7 @@ You need to install CocoaPods. If you haven't yet, you can do so by running:
 
 ```bash
 $ sudo gem install cocoapods
+$ pod setup
 ```
 > **NOTE:** The minimum required version of CocoaPods is 1.0.0.
 
@@ -27,6 +28,7 @@ To update CocoaPods, just run the installation command again.
 
 ```
 sudo gem install cocoapods
+pod setup
 ```
 
 ## Create CLI Project
