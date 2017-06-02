@@ -233,15 +233,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.$logger.trace("Changes info in prepare platform:", changesInfo);
 
 		if (changesInfo.hasChanges) {
-			// android build artifacts need to be cleaned up when switching from release to debug builds
-			if (platform.toLowerCase() === "android") {
-				let previousPrepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
-				// clean up prepared plugins when not building for release
-				if (previousPrepareInfo && previousPrepareInfo.release !== appFilesUpdaterOptions.release) {
-					await platformData.platformProjectService.cleanProject(platformData.projectRoot, projectData);
-				}
-			}
-
+			await this.cleanProject(platform, appFilesUpdaterOptions, platformData, projectData);
 			await this.preparePlatformCore(platform, appFilesUpdaterOptions, projectData, config, changesInfo, filesToSync);
 			this.$projectChangesService.savePrepareInfo(platform, projectData);
 		} else {
@@ -266,6 +258,25 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			}
 
 			return valid;
+		}
+	}
+
+	private async cleanProject(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformData: IPlatformData, projectData: IProjectData): Promise<void> {
+		// android build artifacts need to be cleaned up
+		// when switching between debug, release and webpack builds
+		if (platform.toLowerCase() !== "android") {
+			return;
+		}
+
+		const previousPrepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
+		if (!previousPrepareInfo) {
+			return;
+		}
+
+		const { release: previousWasRelease, bundle: previousWasBundle } = previousPrepareInfo;
+		const { release: currentIsRelease, bundle: currentIsBundle } = appFilesUpdaterOptions;
+		if ((previousWasRelease !== currentIsRelease) || (previousWasBundle !== currentIsBundle)) {
+			await platformData.platformProjectService.cleanProject(platformData.projectRoot, projectData);
 		}
 	}
 
