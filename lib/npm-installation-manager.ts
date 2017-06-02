@@ -47,25 +47,36 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	}
 
 	public async getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string): Promise<string> {
-		let inspectorPath = path.join(projectDir, "node_modules", inspectorNpmPackageName);
+		let inspectorPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME, inspectorNpmPackageName);
 
 		// local installation takes precedence over cache
 		if (!this.inspectorAlreadyInstalled(inspectorPath)) {
-			let cachepath = (await this.$childProcess.exec("npm get cache")).trim();
-			let version = await this.getLatestCompatibleVersion(inspectorNpmPackageName);
-			let pathToPackageInCache = path.join(cachepath, inspectorNpmPackageName, version);
-			let pathToUnzippedInspector = path.join(pathToPackageInCache, "package");
+			const cachePath = path.join(this.$options.profileDir, constants.INSPECTOR_CACHE_DIRNAME);
+			this.prepareCacheDir(cachePath);
+			const pathToPackageInCache = path.join(cachePath, constants.NODE_MODULES_FOLDER_NAME, inspectorNpmPackageName);
 
 			if (!this.$fs.exists(pathToPackageInCache)) {
-				await this.$childProcess.exec(`npm cache add ${inspectorNpmPackageName}@${version}`);
-				let inspectorTgzPathInCache = path.join(pathToPackageInCache, "package.tgz");
-				await this.$childProcess.exec(`tar -xf ${inspectorTgzPathInCache} -C ${pathToPackageInCache}`);
-				await this.$childProcess.exec(`npm install --prefix ${pathToUnzippedInspector}`);
+				const version = await this.getLatestCompatibleVersion(inspectorNpmPackageName);
+				await this.$childProcess.exec(`npm install ${inspectorNpmPackageName}@${version} --prefix ${cachePath}`);
 			}
+
 			this.$logger.out("Using inspector from cache.");
-			return pathToUnzippedInspector;
+			return pathToPackageInCache;
 		}
+
 		return inspectorPath;
+	}
+
+	private prepareCacheDir(cacheDirName: string): void {
+		this.$fs.ensureDirectoryExists(cacheDirName);
+
+		const cacheDirPackageJsonLocation = path.join(cacheDirName, constants.PACKAGE_JSON_FILE_NAME);
+		if (!this.$fs.exists(cacheDirPackageJsonLocation)) {
+			this.$fs.writeJson(cacheDirPackageJsonLocation, {
+				name: constants.INSPECTOR_CACHE_DIRNAME,
+				version: "0.1.0"
+			});
+		}
 	}
 
 	private inspectorAlreadyInstalled(pathToInspector: string): Boolean {

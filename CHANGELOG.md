@@ -1,12 +1,26 @@
 NativeScript CLI Changelog
 ================
 
+3.0.3 (2017, June 1)
+==
+
+### Fixed
+
+* [Fix #2855](https://github.com/NativeScript/nativescript-cli/issues/2855): iOS inspector not installed with npm 5
+
+3.0.2 (2017, May 30)
+==
+
+### Fixed
+
+* Removed restart of the App if HTML/CSS file was modified. The issue is fixed in the Modules **3.0.1** and we can again just refresh the app on change.
+* [Fix #2852](https://github.com/NativeScript/nativescript-cli/pull/2852): Fix prepare for android when building with webpack
+
 3.0.1 (2017, May 11)
 ==
 
 ### Fixed
 
-* [Fix #2780](https://github.com/NativeScript/nativescript-cli/issues/2780): CLI tool doesn't restart app if HTML/CSS file was modified
 * [Fix #2732](https://github.com/NativeScript/nativescript-cli/issues/2732): Livesync crashes app every OTHER time on iOS with 3.0.0-rc.2
 * [Fix #2764](https://github.com/NativeScript/nativescript-cli/issues/2764): Error when executing "tns run ios" with 3.0 on a project that is located in a directory path with "spaces"
 
