@@ -20,15 +20,22 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	}
 
 	public async getLatestCompatibleVersion(packageName: string): Promise<string> {
+		const configVersion = this.$staticConfig.version;
+		const isPreReleaseVersion = (<any>semver).prerelease(configVersion) !== null;
+		let cliVersionRange = `~${semver.major(configVersion)}.${(<any>semver).minor(configVersion)}.0`;
+		if (isPreReleaseVersion) {
+			// if the user has some 0-19 pre-release version, include pre-release versions in the search query.
+			cliVersionRange = `~${configVersion}`;
+		}
 
-		let cliVersionRange = `~${this.$staticConfig.version}`;
 		let latestVersion = await this.getLatestVersion(packageName);
 		if (semver.satisfies(latestVersion, cliVersionRange)) {
 			return latestVersion;
 		}
 		let data = await this.$npm.view(packageName, { "versions": true });
 
-		return semver.maxSatisfying(data, cliVersionRange) || latestVersion;
+		let maxSatisfying = semver.maxSatisfying(data, cliVersionRange);
+		return maxSatisfying || latestVersion;
 	}
 
 	public async install(packageName: string, projectDir: string, opts?: INpmInstallOptions): Promise<any> {
