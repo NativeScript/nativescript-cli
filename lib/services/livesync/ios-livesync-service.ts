@@ -4,10 +4,9 @@ import * as iosdls from "./ios-device-livesync-service";
 import * as temp from "temp";
 // import * as uuid from "uuid";
 
-export class IOSLiveSyncService {
+export class IOSLiveSyncService implements IPlatformLiveSyncService {
 	constructor(
 		private $devicesService: Mobile.IDevicesService,
-		private $options: IOptions,
 		private $projectFilesManager: IProjectFilesManager,
 		private $platformsData: IPlatformsData,
 		private $logger: ILogger,
@@ -16,7 +15,15 @@ export class IOSLiveSyncService {
 		private $injector: IInjector) {
 	}
 
-	public async fullSync(projectData: IProjectData, device: Mobile.IDevice): Promise<void> {
+	/*
+	fullSync(projectData: IProjectData, device: Mobile.IDevice): Promise<ILiveSyncResultInfo>;
+	liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo>;
+	refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
+	*/
+
+	public async fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo> {
+		const projectData = syncInfo.projectData;
+		const device = syncInfo.device;
 		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 		const deviceAppData = this.$injector.resolve(deviceAppDataIdentifiers.IOSAppIdentifier,
 			{ _appIdentifier: projectData.projectId, device, platform: device.deviceInfo.platform });
@@ -25,6 +32,11 @@ export class IOSLiveSyncService {
 		if (device.isEmulator) {
 			const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, null, []);
 			await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, true);
+			return {
+				deviceAppData,
+				isFullSync: true,
+				modifiedFilesData: localToDevicePaths
+			};
 		} else {
 			temp.track();
 			let tempZip = temp.path({ prefix: "sync", suffix: ".zip" });
@@ -32,7 +44,7 @@ export class IOSLiveSyncService {
 			this.$logger.trace("Creating zip file: " + tempZip);
 			this.$fs.copyFile(path.join(path.dirname(projectFilesPath), "app/*"), tempApp);
 
-			if (!this.$options.syncAllFiles) {
+			if (!syncInfo.syncAllFiles) {
 				this.$logger.info("Skipping node_modules folder! Use the syncAllFiles option to sync files from this folder.");
 				this.$fs.deleteDirectory(path.join(tempApp, "tns_modules"));
 			}
@@ -47,10 +59,16 @@ export class IOSLiveSyncService {
 				getRelativeToProjectBasePath: () => "../sync.zip",
 				deviceProjectRootPath: await deviceAppData.getDeviceProjectRootPath()
 			}]);
+
+			return {
+				deviceAppData,
+				isFullSync: true,
+				modifiedFilesData: []
+			};
 		}
 	}
 
-	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: { projectData: IProjectData, filesToRemove: string[], filesToSync: string[], isRebuilt: boolean }): Promise<void> {
+	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
 		const projectData = liveSyncInfo.projectData;
 		const deviceAppData = this.$injector.resolve(deviceAppDataIdentifiers.IOSAppIdentifier,
 			{ _appIdentifier: projectData.projectId, device, platform: device.deviceInfo.platform });
@@ -58,7 +76,7 @@ export class IOSLiveSyncService {
 
 		if (liveSyncInfo.isRebuilt) {
 			// In this case we should execute fullsync:
-			await this.fullSync(projectData, device);
+			await this.fullSync({ projectData, device, syncAllFiles: liveSyncInfo.syncAllFiles });
 		} else {
 			if (liveSyncInfo.filesToSync.length) {
 				const filesToSync = liveSyncInfo.filesToSync;
@@ -96,19 +114,17 @@ export class IOSLiveSyncService {
 			}
 		}
 
-		if (liveSyncInfo.isRebuilt) {
-			// WHAT if we are in debug session?
-			// After application is rebuilt, we should just start it
-			await device.applicationManager.restartApplication(liveSyncInfo.projectData.projectId, liveSyncInfo.projectData.projectName);
-		} else if (modifiedLocalToDevicePaths) {
-			await this.refreshApplication(deviceAppData, modifiedLocalToDevicePaths, false, projectData);
-		}
+		return {
+			modifiedFilesData: modifiedLocalToDevicePaths,
+			isFullSync: liveSyncInfo.isRebuilt,
+			deviceAppData
+		};
 	}
 
-	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], isFullSync: boolean, projectData: IProjectData): Promise<void> {
-		let deviceLiveSyncService = this.$injector.resolve(iosdls.IOSLiveSyncService, { _device: deviceAppData.device });
+	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
+		let deviceLiveSyncService = this.$injector.resolve(iosdls.IOSLiveSyncService, { _device: liveSyncInfo.deviceAppData.device });
 		this.$logger.info("Refreshing application...");
-		await deviceLiveSyncService.refreshApplication(deviceAppData, localToDevicePaths, isFullSync, projectData);
+		await deviceLiveSyncService.refreshApplication(liveSyncInfo.deviceAppData, liveSyncInfo.modifiedFilesData, liveSyncInfo.isFullSync, projectData);
 	}
 
 	protected async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<void> {

@@ -15,7 +15,6 @@ export class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 		private $iOSNotification: IiOSNotification,
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
 		private $logger: ILogger,
-		private $options: IOptions,
 		private $iOSDebugService: IDebugService,
 		private $fs: IFileSystem,
 		private $liveSyncProvider: ILiveSyncProvider,
@@ -26,10 +25,6 @@ export class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 
 	public get debugService(): IDebugService {
 		return this.$iOSDebugService;
-	}
-
-	public async afterInstallApplicationAction(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<boolean> {
-		return this.$options.watch;
 	}
 
 	private async setupSocketIfNeeded(projectId: string): Promise<boolean> {

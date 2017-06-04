@@ -15,7 +15,7 @@ class TestExecutionService implements ITestExecutionService {
 	constructor(private $injector: IInjector,
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
-		private $usbLiveSyncService: ILiveSyncService,
+		private $liveSyncService: ILiveSyncService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $debugDataService: IDebugDataService,
 		private $httpClient: Server.IHttpClient,
@@ -42,6 +42,7 @@ class TestExecutionService implements ITestExecutionService {
 					let platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
 					let projectDir = projectData.projectDir;
 					await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
+					await this.$devicesService.detectCurrentlyAttachedDevices();
 					let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
 					let configOptions: IKarmaConfigOptions = JSON.parse(launcherConfig);
@@ -53,8 +54,8 @@ class TestExecutionService implements ITestExecutionService {
 					let socketIoJsUrl = `http://localhost:${this.$options.port}/socket.io/socket.io.js`;
 					let socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
-
 					const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+
 					if (!await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, this.$options)) {
 						this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 					}
@@ -63,16 +64,56 @@ class TestExecutionService implements ITestExecutionService {
 					const deployOptions: IDeployPlatformOptions = {
 						clean: this.$options.clean,
 						device: this.$options.device,
-						projectDir: this.$options.path,
 						emulator: this.$options.emulator,
+						projectDir: this.$options.path,
 						platformTemplate: this.$options.platformTemplate,
 						release: this.$options.release,
 						provision: this.$options.provision,
 						teamId: this.$options.teamId
 					};
-					await this.$platformService.deployPlatform(platform, appFilesUpdaterOptions, deployOptions, projectData, this.$options);
+
+					if (this.$options.bundle) {
+						this.$options.watch = false;
+					}
+
+
+
+					const devices = this.$devicesService.getDeviceInstances();
+					// Now let's take data for each device:
+					const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !this.platform || d.deviceInfo.platform === this.platform)
+						.map(d => {
+							const info: ILiveSyncDeviceInfo = {
+								identifier: d.deviceInfo.identifier,
+								buildAction: async (): Promise<string> => {
+									const buildConfig: IBuildConfig = {
+										buildForDevice: !d.isEmulator, // this.$options.forDevice,
+										projectDir: this.$options.path,
+										clean: this.$options.clean,
+										teamId: this.$options.teamId,
+										device: this.$options.device,
+										provision: this.$options.provision,
+										release: this.$options.release,
+										keyStoreAlias: this.$options.keyStoreAlias,
+										keyStorePath: this.$options.keyStorePath,
+										keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
+										keyStorePassword: this.$options.keyStorePassword
+									};
+
+									await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, projectData);
+									const pathToBuildResult = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, projectData);
+									console.log("3##### return path to buildResult = ", pathToBuildResult);
+									return pathToBuildResult;
+								}
+							}
+
+							return info;
+						});
+
+					// TODO: Fix this call
+					const liveSyncInfo: ILiveSyncInfo = { projectDir: projectData.projectDir, shouldStartWatcher: this.$options.watch, syncAllFiles: this.$options.syncAllFiles };
+					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 					// TODO: Fix
-					await this.$usbLiveSyncService.liveSync(platform, projectData, null, this.$options);
+					// await this.$liveSyncService.liveSync(platform, projectData, null, this.$options);
 
 					if (this.$options.debugBrk) {
 						this.$logger.info('Starting debugger...');
@@ -146,9 +187,40 @@ class TestExecutionService implements ITestExecutionService {
 					const debugData = this.getDebugData(platform, projectData, deployOptions);
 					await debugService.debug(debugData, this.$options);
 				} else {
-					await this.$platformService.deployPlatform(platform, appFilesUpdaterOptions, deployOptions, projectData, this.$options);
-					// TODO: Fix
-					await this.$usbLiveSyncService.liveSync(platform, projectData, null, this.$options);
+					const devices = this.$devicesService.getDeviceInstances();
+					// Now let's take data for each device:
+					const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !this.platform || d.deviceInfo.platform === this.platform)
+						.map(d => {
+							const info: ILiveSyncDeviceInfo = {
+								identifier: d.deviceInfo.identifier,
+								buildAction: async (): Promise<string> => {
+									const buildConfig: IBuildConfig = {
+										buildForDevice: !d.isEmulator, // this.$options.forDevice,
+										projectDir: this.$options.path,
+										clean: this.$options.clean,
+										teamId: this.$options.teamId,
+										device: this.$options.device,
+										provision: this.$options.provision,
+										release: this.$options.release,
+										keyStoreAlias: this.$options.keyStoreAlias,
+										keyStorePath: this.$options.keyStorePath,
+										keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
+										keyStorePassword: this.$options.keyStorePassword
+									};
+
+									await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, projectData);
+									const pathToBuildResult = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, projectData);
+									console.log("3##### return path to buildResult = ", pathToBuildResult);
+									return pathToBuildResult;
+								}
+							}
+
+							return info;
+						});
+
+					// TODO: Fix this call
+					const liveSyncInfo: ILiveSyncInfo = { projectDir: projectData.projectDir, shouldStartWatcher: this.$options.watch, syncAllFiles: this.$options.syncAllFiles };
+					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 				}
 			};
 

@@ -30,7 +30,7 @@ function createTestInjector(): IInjector {
 		checkConsent: async () => undefined,
 		trackFeature: async () => undefined
 	});
-	testInjector.register("usbLiveSyncService", stubs.LiveSyncServiceStub);
+	testInjector.register("liveSyncService", stubs.LiveSyncServiceStub);
 	testInjector.register("androidProjectService", AndroidProjectService);
 	testInjector.register("androidToolsInfo", stubs.AndroidToolsInfoStub);
 	testInjector.register("hostInfo", {});

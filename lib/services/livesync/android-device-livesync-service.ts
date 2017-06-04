@@ -1,11 +1,14 @@
 import { DeviceAndroidDebugBridge } from "../../common/mobile/android/device-android-debug-bridge";
 import { AndroidDeviceHashService } from "../../common/mobile/android/android-device-hash-service";
 import * as helpers from "../../common/helpers";
+import { cache } from "../../common/decorators";
 import * as path from "path";
 import * as net from "net";
 import { EOL } from "os";
 
 export class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncService {
+		private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml", ".html"];
+
 	private static BACKEND_PORT = 18182;
 	private device: Mobile.IAndroidDevice;
 
@@ -14,7 +17,7 @@ export class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncServic
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $androidDebugService: IPlatformDebugService,
-		private $liveSyncProvider: ILiveSyncProvider) {
+		private $platformsData: IPlatformsData) {
 		this.device = <Mobile.IAndroidDevice>(_device);
 	}
 
@@ -25,40 +28,37 @@ export class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncServic
 	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData,
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 		forceExecuteFullSync: boolean,
-		projectData: IProjectData,
-		outputFilePath?: string,
-		debugData?: IDebugData,
-		debugOptions?: IOptions): Promise<void> {
-
-		if (debugData) {
-			// TODO: Move this outside of here
-			await this.debugService.debugStop();
-
-			let applicationId = deviceAppData.appIdentifier;
-			await deviceAppData.device.applicationManager.stopApplication(applicationId, projectData.projectName);
-
-			debugData.pathToAppPackage = outputFilePath;
-			const debugInfo = await this.debugService.debug<string[]>(debugData, debugOptions);
-			this.printDebugInformation(debugInfo);
-
-			return;
-		}
+		projectData: IProjectData): Promise<void> {
 
 		await this.device.adb.executeShellCommand(
 			["chmod",
 				"777",
-				await deviceAppData.getDeviceProjectRootPath(),
+				"/data/local/tmp/",
 				`/data/local/tmp/${deviceAppData.appIdentifier}`,
 				`/data/local/tmp/${deviceAppData.appIdentifier}/sync`]
 		);
 
-		let canExecuteFastSync = !forceExecuteFullSync && !_.some(localToDevicePaths, (localToDevicePath: any) => !this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, deviceAppData.platform));
+		let canExecuteFastSync = !forceExecuteFullSync && !_.some(localToDevicePaths,
+			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
 
 		if (canExecuteFastSync) {
 			return this.reloadPage(deviceAppData, localToDevicePaths);
 		}
 
 		return this.restartApplication(deviceAppData);
+	}
+
+	@cache()
+	private getFastLiveSyncFileExtensions(platform: string, projectData: IProjectData): string[] {
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const fastSyncFileExtensions = AndroidLiveSyncService.FAST_SYNC_FILE_EXTENSIONS.concat(platformData.fastLivesyncFileExtensions);
+		return fastSyncFileExtensions;
+	}
+
+	public canExecuteFastSync(filePath: string, projectData: IProjectData, platform: string): boolean {
+		console.log("called canExecuteFastSync for file: ", filePath);
+		const fastSyncFileExtensions = this.getFastLiveSyncFileExtensions(platform, projectData);
+		return _.includes(fastSyncFileExtensions, path.extname(filePath));
 	}
 
 	protected printDebugInformation(information: string[]): void {
@@ -110,11 +110,6 @@ export class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncServic
 		}
 
 		await this.getDeviceHashService(projectId).removeHashes(localToDevicePaths);
-	}
-
-	public async afterInstallApplicationAction(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectId: string): Promise<boolean> {
-		await this.getDeviceHashService(projectId).uploadHashFileToDevice(localToDevicePaths);
-		return false;
 	}
 
 	private getDeviceRootPath(appIdentifier: string): string {

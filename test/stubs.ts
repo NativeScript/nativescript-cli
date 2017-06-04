@@ -497,7 +497,11 @@ export class DebugServiceStub extends EventEmitter implements IPlatformDebugServ
 }
 
 export class LiveSyncServiceStub implements ILiveSyncService {
-	public async liveSync(platform: string, projectData: IProjectData, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => Promise<void>): Promise<void> {
+	public async liveSync(deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo): Promise<void> {
+		return;
+	}
+
+	public async stopLiveSync(projectDir: string): Promise<void> {
 		return;
 	}
 }

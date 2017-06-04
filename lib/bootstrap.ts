@@ -39,6 +39,7 @@ $injector.requireCommand("platform|*list", "./commands/list-platforms");
 $injector.requireCommand("platform|add", "./commands/add-platform");
 $injector.requireCommand("platform|remove", "./commands/remove-platform");
 $injector.requireCommand("platform|update", "./commands/update-platform");
+$injector.requireCommand("run|*all", "./commands/run");
 $injector.requireCommand("run|ios", "./commands/run");
 $injector.requireCommand("run|android", "./commands/run");
 
@@ -102,6 +103,7 @@ $injector.require("androidToolsInfo", "./android-tools-info");
 
 $injector.requireCommand("platform|clean", "./commands/platform-clean");
 
+$injector.require("liveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
 $injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
 $injector.require("iosLiveSyncServiceLocator", "./services/livesync/ios-device-livesync-service");
 $injector.require("androidLiveSyncServiceLocator", "./services/livesync/android-device-livesync-service");

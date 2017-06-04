@@ -2,7 +2,7 @@ import * as deviceAppDataIdentifiers from "../../providers/device-app-data-provi
 import * as path from "path";
 import * as adls from "./android-device-livesync-service";
 
-export class AndroidLiveSyncService {
+export class AndroidLiveSyncService implements IPlatformLiveSyncService {
 	constructor(private $projectFilesManager: IProjectFilesManager,
 		private $platformsData: IPlatformsData,
 		private $logger: ILogger,
@@ -11,7 +11,9 @@ export class AndroidLiveSyncService {
 		private $injector: IInjector) {
 	}
 
-	public async fullSync(projectData: IProjectData, device: Mobile.IDevice): Promise<void> {
+	public async fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo> {
+		const projectData = syncInfo.projectData;
+		const device = syncInfo.device;
 		const deviceLiveSyncService = this.$injector.resolve<adls.AndroidLiveSyncService>(adls.AndroidLiveSyncService, { _device: device });
 		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 		const deviceAppData = this.$injector.resolve(deviceAppDataIdentifiers.AndroidAppIdentifier,
@@ -22,12 +24,18 @@ export class AndroidLiveSyncService {
 		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, "app");
 		const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, null, []);
 		await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, true);
+
+		return {
+			modifiedFilesData: localToDevicePaths,
+			isFullSync: true,
+			deviceAppData
+		};
 	}
 
-	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: { projectData: IProjectData, filesToRemove: string[], filesToSync: string[], isRebuilt: boolean }): Promise<void> {
+	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
 		const projectData = liveSyncInfo.projectData;
 		const deviceAppData = this.$injector.resolve(deviceAppDataIdentifiers.AndroidAppIdentifier,
-				{ _appIdentifier: projectData.projectId, device, platform: device.deviceInfo.platform });
+			{ _appIdentifier: projectData.projectId, device, platform: device.deviceInfo.platform });
 
 		let modifiedLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
 		if (liveSyncInfo.filesToSync.length) {
@@ -61,22 +69,28 @@ export class AndroidLiveSyncService {
 			let localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, mappedFiles, []);
 			modifiedLocalToDevicePaths.push(...localToDevicePaths);
 
-			const deviceLiveSyncService = this.$injector.resolve(adls.AndroidLiveSyncService, { _device: device });
+			const deviceLiveSyncService = this.$injector.resolve<INativeScriptDeviceLiveSyncService>(adls.AndroidLiveSyncService, { _device: device });
 			deviceLiveSyncService.removeFiles(projectData.projectId, localToDevicePaths, projectData.projectId);
 		}
 
-		if (liveSyncInfo.isRebuilt) {
-			// After application is rebuilt, we should just start it
-			await device.applicationManager.restartApplication(liveSyncInfo.projectData.projectId, liveSyncInfo.projectData.projectName);
-		} else if (modifiedLocalToDevicePaths) {
-			await this.refreshApplication(deviceAppData, modifiedLocalToDevicePaths, false, projectData);
-		}
+		return {
+			modifiedFilesData: modifiedLocalToDevicePaths,
+			isFullSync: liveSyncInfo.isRebuilt,
+			deviceAppData
+		};
 	}
 
-	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], isFullSync: boolean, projectData: IProjectData): Promise<void> {
-		let deviceLiveSyncService = this.$injector.resolve(adls.AndroidLiveSyncService, { _device: deviceAppData.device });
-		this.$logger.info("Refreshing application...");
-		await deviceLiveSyncService.refreshApplication(deviceAppData, localToDevicePaths, isFullSync, projectData);
+	public async refreshApplication(
+		projectData: IProjectData,
+		liveSyncInfo: ILiveSyncResultInfo
+	): Promise<void> {
+		if (liveSyncInfo.isFullSync || liveSyncInfo.modifiedFilesData.length) {
+			// const deviceAppData = this.$injector.resolve(deviceAppDataIdentifiers.AndroidAppIdentifier,
+			// 	{ _appIdentifier: projectData.projectId, device, platform: device.deviceInfo.platform });
+			let deviceLiveSyncService = this.$injector.resolve<INativeScriptDeviceLiveSyncService>(adls.AndroidLiveSyncService, { _device: liveSyncInfo.deviceAppData.device });
+			this.$logger.info("Refreshing application...");
+			await deviceLiveSyncService.refreshApplication(liveSyncInfo.deviceAppData, liveSyncInfo.modifiedFilesData, liveSyncInfo.isFullSync, projectData);
+		}
 	}
 
 	protected async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, canTransferDirectory: boolean): Promise<void> {

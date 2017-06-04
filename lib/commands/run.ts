@@ -1,64 +1,104 @@
-export class RunCommandBase {
+export class RunCommandBase implements ICommand {
+	protected platform: string;
+
 	constructor(protected $platformService: IPlatformService,
-		protected $usbLiveSyncService: ILiveSyncService,
+		protected $liveSyncService: ILiveSyncService,
 		protected $projectData: IProjectData,
 		protected $options: IOptions,
-		protected $emulatorPlatformService: IEmulatorPlatformService) {
+		protected $emulatorPlatformService: IEmulatorPlatformService,
+		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $devicesService: Mobile.IDevicesService,
+		private $hostInfo: IHostInfo) {
 		this.$projectData.initializeProjectData();
 	}
 
+	public allowedParameters: ICommandParameter[] = [ ];
+	public async execute(args: string[]): Promise<void> {
+		return this.executeCore(args);
+	}
+
+	public async canExecute(args: string[]): Promise<boolean> {
+		if (!this.platform && !this.$hostInfo.isDarwin) {
+			this.platform = this.$devicePlatformsConstants.Android;
+		}
+
+		return true;
+	}
+
 	public async executeCore(args: string[]): Promise<void> {
-
-		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
-		const deployOptions: IDeployPlatformOptions = {
-			clean: this.$options.clean,
-			device: this.$options.device,
-			emulator: this.$options.emulator,
-			projectDir: this.$options.path,
-			platformTemplate: this.$options.platformTemplate,
-			release: this.$options.release,
-			provision: this.$options.provision,
-			teamId: this.$options.teamId,
-			keyStoreAlias: this.$options.keyStoreAlias,
-			keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-			keyStorePassword: this.$options.keyStorePassword,
-			keyStorePath: this.$options.keyStorePath
-		};
-
-		await this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, this.$options);
-
 		if (this.$options.bundle) {
 			this.$options.watch = false;
 		}
 
-		if (this.$options.release) {
-			const deployOpts: IRunPlatformOptions = {
-				device: this.$options.device,
-				emulator: this.$options.emulator,
-				justlaunch: this.$options.justlaunch,
-			};
+		await this.$devicesService.initialize({ deviceId: this.$options.device, platform: this.platform, skipDeviceDetectionInterval: true, skipInferPlatform: true });
+		await this.$devicesService.detectCurrentlyAttachedDevices();
 
-			await this.$platformService.startApplication(args[0], deployOpts, this.$projectData.projectId);
-			return this.$platformService.trackProjectType(this.$projectData);
-		}
+		const devices = this.$devicesService.getDeviceInstances();
+		// Now let's take data for each device:
+		const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !this.platform || d.deviceInfo.platform === this.platform)
+			.map(d => {
+				const info: ILiveSyncDeviceInfo = {
+					identifier: d.deviceInfo.identifier,
+					buildAction: async (): Promise<string> => {
+						const buildConfig: IBuildConfig = {
+							buildForDevice: !d.isEmulator, // this.$options.forDevice,
+							projectDir: this.$options.path,
+							clean: this.$options.clean,
+							teamId: this.$options.teamId,
+							device: this.$options.device,
+							provision: this.$options.provision,
+							release: this.$options.release,
+							keyStoreAlias: this.$options.keyStoreAlias,
+							keyStorePath: this.$options.keyStorePath,
+							keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
+							keyStorePassword: this.$options.keyStorePassword
+						};
+
+						await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, this.$projectData);
+						const pathToBuildResult = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, this.$projectData);
+						console.log("3##### return path to buildResult = ", pathToBuildResult);
+						return pathToBuildResult;
+					}
+				}
+
+				return info;
+			});
+
+		// if (this.$options.release) {
+		// 	const deployOpts: IRunPlatformOptions = {
+		// 		device: this.$options.device,
+		// 		emulator: this.$options.emulator,
+		// 		justlaunch: this.$options.justlaunch,
+		// 	};
+
+		// 	await this.$platformService.startApplication(args[0], deployOpts, this.$projectData.projectId);
+		// 	return this.$platformService.trackProjectType(this.$projectData);
+		// }
 
 		// TODO: Fix this call
-		return this.$usbLiveSyncService.liveSync(args[0], this.$projectData, null, this.$options);
+		const liveSyncInfo: ILiveSyncInfo = { projectDir: this.$projectData.projectDir, shouldStartWatcher: this.$options.watch, syncAllFiles: this.$options.syncAllFiles };
+		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 	}
 }
+$injector.registerCommand("run|*all", RunCommandBase);
 
 export class RunIosCommand extends RunCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
+	public get platform(): string {
+		return this.$devicePlatformsConstants.iOS;
+	}
 
 	constructor($platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
-		$usbLiveSyncService: ILiveSyncService,
+		$liveSyncService: ILiveSyncService,
 		$projectData: IProjectData,
 		$options: IOptions,
-		$emulatorPlatformService: IEmulatorPlatformService) {
-		super($platformService, $usbLiveSyncService, $projectData, $options, $emulatorPlatformService);
+		$emulatorPlatformService: IEmulatorPlatformService,
+		$devicesService: Mobile.IDevicesService,
+		$hostInfo: IHostInfo) {
+		super($platformService, $liveSyncService, $projectData, $options, $emulatorPlatformService, $devicePlatformsConstants, $devicesService, $hostInfo);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -78,16 +118,21 @@ $injector.registerCommand("run|ios", RunIosCommand);
 
 export class RunAndroidCommand extends RunCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
+	public get platform(): string {
+		return this.$devicePlatformsConstants.Android;
+	}
 
 	constructor($platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
-		$usbLiveSyncService: ILiveSyncService,
+		$liveSyncService: ILiveSyncService,
 		$projectData: IProjectData,
 		$options: IOptions,
-		$emulatorPlatformService: IEmulatorPlatformService) {
-		super($platformService, $usbLiveSyncService, $projectData, $options, $emulatorPlatformService);
+		$emulatorPlatformService: IEmulatorPlatformService,
+		$devicesService: Mobile.IDevicesService,
+		$hostInfo: IHostInfo) {
+		super($platformService, $liveSyncService, $projectData, $options, $emulatorPlatformService, $devicePlatformsConstants, $devicesService, $hostInfo);
 	}
 
 	public async execute(args: string[]): Promise<void> {
