@@ -92,18 +92,21 @@ interface ILiveSyncWatchInfo {
 	filesToSync: string[];
 	isRebuilt: boolean;
 	syncAllFiles: boolean;
+	useLiveEdit?: boolean;
 }
 
 interface ILiveSyncResultInfo {
 	modifiedFilesData: Mobile.ILocalToDevicePathData[];
 	isFullSync: boolean;
 	deviceAppData: Mobile.IDeviceAppData;
+	useLiveEdit?: boolean;
 }
 
 interface IFullSyncInfo {
 	projectData: IProjectData;
 	device: Mobile.IDevice;
 	syncAllFiles: boolean;
+	useLiveEdit?: boolean;
 }
 
 interface IPlatformLiveSyncService {
@@ -121,10 +124,8 @@ interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase 
 	 * @param  {IProjectData} projectData Project data.
 	 * @return {Promise<void>}
 	 */
-	refreshApplication(deviceAppData: Mobile.IDeviceAppData,
-		localToDevicePaths: Mobile.ILocalToDevicePathData[],
-		forceExecuteFullSync: boolean,
-		projectData: IProjectData): Promise<void>;
+	refreshApplication(projectData: IProjectData,
+		liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
 
 	/**
 	 * Removes specified files from a connected device

@@ -138,7 +138,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 			await this.ensureLatestAppPackageIsInstalledOnDevice(device, preparedPlatforms, rebuiltInformation, projectData, deviceDescriptor);
 
-			const liveSyncResultInfo = await this.getLiveSyncService(platform).fullSync({ projectData, device, syncAllFiles: liveSyncData.syncAllFiles });
+			const liveSyncResultInfo = await this.getLiveSyncService(platform).fullSync({ projectData, device, syncAllFiles: liveSyncData.syncAllFiles, useLiveEdit: liveSyncData.useLiveEdit });
 			await this.refreshApplication(projectData, liveSyncResultInfo);
 			//await device.applicationManager.restartApplication(projectData.projectId, projectData.projectName);
 		};
@@ -206,7 +206,8 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 									filesToRemove: currentFilesToRemove,
 									filesToSync: currentFilesToSync,
 									isRebuilt: !!_.find(rebuiltInformation, info => info.isEmulator === device.isEmulator && info.platform === device.deviceInfo.platform),
-									syncAllFiles: liveSyncData.syncAllFiles
+									syncAllFiles: liveSyncData.syncAllFiles,
+									useLiveEdit: liveSyncData.useLiveEdit
 								};
 
 								const liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);

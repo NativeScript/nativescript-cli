@@ -25,10 +25,9 @@ export class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncServic
 		return this.$androidDebugService;
 	}
 
-	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData,
-		localToDevicePaths: Mobile.ILocalToDevicePathData[],
-		forceExecuteFullSync: boolean,
-		projectData: IProjectData): Promise<void> {
+	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
+		const deviceAppData = liveSyncInfo.deviceAppData;
+		const localToDevicePaths = liveSyncInfo.modifiedFilesData;
 
 		await this.device.adb.executeShellCommand(
 			["chmod",
@@ -38,7 +37,7 @@ export class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncServic
 				`/data/local/tmp/${deviceAppData.appIdentifier}/sync`]
 		);
 
-		let canExecuteFastSync = !forceExecuteFullSync && !_.some(localToDevicePaths,
+		let canExecuteFastSync = ! liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
 			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
 
 		if (canExecuteFastSync) {

@@ -85,11 +85,9 @@ export class AndroidLiveSyncService implements IPlatformLiveSyncService {
 		liveSyncInfo: ILiveSyncResultInfo
 	): Promise<void> {
 		if (liveSyncInfo.isFullSync || liveSyncInfo.modifiedFilesData.length) {
-			// const deviceAppData = this.$injector.resolve(deviceAppDataIdentifiers.AndroidAppIdentifier,
-			// 	{ _appIdentifier: projectData.projectId, device, platform: device.deviceInfo.platform });
 			let deviceLiveSyncService = this.$injector.resolve<INativeScriptDeviceLiveSyncService>(adls.AndroidLiveSyncService, { _device: liveSyncInfo.deviceAppData.device });
 			this.$logger.info("Refreshing application...");
-			await deviceLiveSyncService.refreshApplication(liveSyncInfo.deviceAppData, liveSyncInfo.modifiedFilesData, liveSyncInfo.isFullSync, projectData);
+			await deviceLiveSyncService.refreshApplication(projectData, liveSyncInfo);
 		}
 	}
 

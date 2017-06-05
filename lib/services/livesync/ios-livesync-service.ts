@@ -109,7 +109,7 @@ export class IOSLiveSyncService implements IPlatformLiveSyncService {
 				let localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, mappedFiles, []);
 				modifiedLocalToDevicePaths.push(...localToDevicePaths);
 
-				const deviceLiveSyncService = this.$injector.resolve(iosdls.IOSLiveSyncService, { _device: device });
+				const deviceLiveSyncService = this.$injector.resolve(iosdls.IOSDeviceLiveSyncService, { _device: device });
 				deviceLiveSyncService.removeFiles(projectData.projectId, localToDevicePaths, projectData.projectId);
 			}
 		}
@@ -122,9 +122,9 @@ export class IOSLiveSyncService implements IPlatformLiveSyncService {
 	}
 
 	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
-		let deviceLiveSyncService = this.$injector.resolve(iosdls.IOSLiveSyncService, { _device: liveSyncInfo.deviceAppData.device });
+		let deviceLiveSyncService = this.$injector.resolve(iosdls.IOSDeviceLiveSyncService, { _device: liveSyncInfo.deviceAppData.device });
 		this.$logger.info("Refreshing application...");
-		await deviceLiveSyncService.refreshApplication(liveSyncInfo.deviceAppData, liveSyncInfo.modifiedFilesData, liveSyncInfo.isFullSync, projectData);
+		await deviceLiveSyncService.refreshApplication(projectData, liveSyncInfo);
 	}
 
 	protected async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<void> {

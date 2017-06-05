@@ -5,7 +5,7 @@ import * as net from "net";
 
 let currentPageReloadId = 0;
 
-export class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
+export class IOSDeviceLiveSyncService implements INativeScriptDeviceLiveSyncService {
 	private static BACKEND_PORT = 18181;
 	private socket: net.Socket;
 	private device: Mobile.IiOSDevice;
@@ -35,7 +35,7 @@ export class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 		if (this.device.isEmulator) {
 			await this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.getAttachRequest(projectId));
 			try {
-				this.socket = await helpers.connectEventuallyUntilTimeout(() => net.connect(IOSLiveSyncService.BACKEND_PORT), 5000);
+				this.socket = await helpers.connectEventuallyUntilTimeout(() => net.connect(IOSDeviceLiveSyncService.BACKEND_PORT), 5000);
 			} catch (e) {
 				this.$logger.debug(e);
 				return false;
@@ -43,7 +43,7 @@ export class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 		} else {
 			let timeout = 9000;
 			await this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, timeout, projectId);
-			this.socket = await this.device.connectToPort(IOSLiveSyncService.BACKEND_PORT);
+			this.socket = await this.device.connectToPort(IOSDeviceLiveSyncService.BACKEND_PORT);
 		}
 
 		this.attachEventHandlers();
@@ -55,12 +55,10 @@ export class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 		await Promise.all(_.map(localToDevicePaths, localToDevicePathData => this.device.fileSystem.deleteFile(localToDevicePathData.getDevicePath(), appIdentifier)));
 	}
 
-	public async refreshApplication(
-		deviceAppData: Mobile.IDeviceAppData,
-		localToDevicePaths: Mobile.ILocalToDevicePathData[],
-		forceExecuteFullSync: boolean,
-		projectData: IProjectData): Promise<void> {
-		if (forceExecuteFullSync) {
+	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
+		const deviceAppData = liveSyncInfo.deviceAppData;
+		const localToDevicePaths = liveSyncInfo.modifiedFilesData;
+		if (liveSyncInfo.isFullSync) {
 			await this.restartApplication(deviceAppData, projectData.projectName);
 			return;
 		}
@@ -72,7 +70,7 @@ export class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 		let otherFiles = _.difference(localToDevicePaths, _.concat(scriptFiles, scriptRelatedFiles));
 		let shouldRestart = _.some(otherFiles, (localToDevicePath: Mobile.ILocalToDevicePathData) => !this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, deviceAppData.platform));
 
-		if (shouldRestart || (!this.$options.liveEdit && scriptFiles.length)) {
+		if (shouldRestart || (!liveSyncInfo.useLiveEdit && scriptFiles.length)) {
 			await this.restartApplication(deviceAppData, projectData.projectName);
 			return;
 		}
@@ -174,4 +172,4 @@ export class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 		}
 	}
 }
-$injector.register("iosLiveSyncServiceLocator", { factory: IOSLiveSyncService });
+$injector.register("iosLiveSyncServiceLocator", { factory: IOSDeviceLiveSyncService });
