@@ -60,6 +60,7 @@ interface ILiveSyncProcessInfo {
 	watcher: IFSWatcher;
 	actionsChain: Promise<any>;
 	isStopped: boolean;
+	deviceDescriptors: ILiveSyncDeviceInfo[];
 }
 
 /**

@@ -26,11 +26,17 @@ function createTestInjector(): IInjector {
 	testInjector.register('errors', stubs.ErrorsStub);
 	testInjector.register('hostInfo', {});
 	testInjector.register("analyticsService", {
-		trackException: async () => undefined,
-		checkConsent: async () => undefined,
-		trackFeature: async () => undefined
+		trackException: async (): Promise<void> => undefined,
+		checkConsent: async (): Promise<void> => undefined,
+		trackFeature: async (): Promise<void> => undefined
 	});
-	testInjector.register("liveSyncService", stubs.LiveSyncServiceStub);
+	testInjector.register('devicesService', {
+		initialize: async () => { /* Intentionally left blank */ },
+		detectCurrentlyAttachedDevices: async () => { /* Intentionally left blank */ },
+		getDeviceInstances: (): any[] => { return []; },
+		execute: async (): Promise<any> => ({})
+	});
+	testInjector.register("debugLiveSyncService", stubs.LiveSyncServiceStub);
 	testInjector.register("androidProjectService", AndroidProjectService);
 	testInjector.register("androidToolsInfo", stubs.AndroidToolsInfoStub);
 	testInjector.register("hostInfo", {});

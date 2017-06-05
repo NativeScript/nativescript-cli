@@ -76,8 +76,6 @@ class TestExecutionService implements ITestExecutionService {
 						this.$options.watch = false;
 					}
 
-
-
 					const devices = this.$devicesService.getDeviceInstances();
 					// Now let's take data for each device:
 					const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !this.platform || d.deviceInfo.platform === this.platform)
@@ -104,7 +102,7 @@ class TestExecutionService implements ITestExecutionService {
 									console.log("3##### return path to buildResult = ", pathToBuildResult);
 									return pathToBuildResult;
 								}
-							}
+							};
 
 							return info;
 						});
@@ -213,7 +211,7 @@ class TestExecutionService implements ITestExecutionService {
 									console.log("3##### return path to buildResult = ", pathToBuildResult);
 									return pathToBuildResult;
 								}
-							}
+							};
 
 							return info;
 						});

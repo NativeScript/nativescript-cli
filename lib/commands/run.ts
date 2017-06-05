@@ -59,7 +59,7 @@ export class RunCommandBase implements ICommand {
 						console.log("3##### return path to buildResult = ", pathToBuildResult);
 						return pathToBuildResult;
 					}
-				}
+				};
 
 				return info;
 			});
