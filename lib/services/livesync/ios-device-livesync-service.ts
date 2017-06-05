@@ -55,7 +55,11 @@ export class IOSLiveSyncService implements INativeScriptDeviceLiveSyncService {
 		await Promise.all(_.map(localToDevicePaths, localToDevicePathData => this.device.fileSystem.deleteFile(localToDevicePathData.getDevicePath(), appIdentifier)));
 	}
 
-	public async refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean, projectData: IProjectData): Promise<void> {
+	public async refreshApplication(
+		deviceAppData: Mobile.IDeviceAppData,
+		localToDevicePaths: Mobile.ILocalToDevicePathData[],
+		forceExecuteFullSync: boolean,
+		projectData: IProjectData): Promise<void> {
 		if (forceExecuteFullSync) {
 			await this.restartApplication(deviceAppData, projectData.projectName);
 			return;

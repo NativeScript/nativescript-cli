@@ -272,8 +272,6 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		this.liveSyncProcessesInfo[liveSyncData.projectDir].timer = timeoutTimer;
 		this.liveSyncProcessesInfo[liveSyncData.projectDir].isStopped = false;
 
-		this.liveSyncProcessesInfo[liveSyncData.projectDir].isStopped = false;
-
 		this.$processService.attachToProcessExitSignals(this, () => {
 			_.keys(this.liveSyncProcessesInfo).forEach(projectDir => {
 				// Do not await here, we are in process exit's handler.
