@@ -163,8 +163,8 @@ export abstract class DebugPlatformCommand implements ICommand {
 
 		const liveSyncInfo: ILiveSyncInfo = {
 			projectDir: this.$projectData.projectDir,
-			shouldStartWatcher: this.$options.watch,
-			syncAllFiles: this.$options.syncAllFiles
+			skipWatcher: !this.$options.watch || this.$options.justlaunch,
+			watchAllFiles: this.$options.syncAllFiles
 		};
 
 		const debugLiveSyncService = this.$injector.resolve<ILiveSyncService>(DebugLiveSyncService, { debugService: this.debugService });

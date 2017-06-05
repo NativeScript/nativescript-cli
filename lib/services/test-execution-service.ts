@@ -110,7 +110,7 @@ class TestExecutionService implements ITestExecutionService {
 						});
 
 					// TODO: Fix this call
-					const liveSyncInfo: ILiveSyncInfo = { projectDir: projectData.projectDir, shouldStartWatcher: this.$options.watch, syncAllFiles: this.$options.syncAllFiles };
+					const liveSyncInfo: ILiveSyncInfo = { projectDir: projectData.projectDir, skipWatcher: !this.$options.watch || this.$options.justlaunch, watchAllFiles: this.$options.syncAllFiles };
 					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 					// TODO: Fix
 					// await this.$liveSyncService.liveSync(platform, projectData, null, this.$options);
@@ -219,7 +219,7 @@ class TestExecutionService implements ITestExecutionService {
 						});
 
 					// TODO: Fix this call
-					const liveSyncInfo: ILiveSyncInfo = { projectDir: projectData.projectDir, shouldStartWatcher: this.$options.watch, syncAllFiles: this.$options.syncAllFiles };
+					const liveSyncInfo: ILiveSyncInfo = { projectDir: projectData.projectDir, skipWatcher: !this.$options.watch || this.$options.justlaunch, watchAllFiles: this.$options.syncAllFiles };
 					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 				}
 			};

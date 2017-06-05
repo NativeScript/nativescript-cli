@@ -62,16 +62,53 @@ interface ILiveSyncProcessInfo {
 	isStopped: boolean;
 }
 
+/**
+ * Describes information for LiveSync on a device.
+ */
 interface ILiveSyncDeviceInfo {
+	/**
+	 * Device identifier.
+	 */
 	identifier: string;
+
+	/**
+	 * Action that will rebuild the application. The action must return a Promise, which is resolved with at path to build artifact.
+	 * @returns {Promise<string>} Path to build artifact (.ipa, .apk or .zip).
+	 */
 	buildAction: () => Promise<string>;
+
+	/**
+	 * Path where the build result is located (directory containing .ipa, .apk or .zip).
+	 * This is required for initial checks where LiveSync will skip the rebuild in case there's already a build result and no change requiring rebuild is made since then.
+	 * In case it is not passed, the default output for local builds will be used.
+	 */
 	outputPath?: string;
 }
 
+/**
+ * Describes a LiveSync operation.
+ */
 interface ILiveSyncInfo {
+	/**
+	 * Directory of the project that will be synced.
+	 */
 	projectDir: string;
-	shouldStartWatcher: boolean;
-	syncAllFiles?: boolean;
+
+	/**
+	 * Defines if the watcher should be skipped. If not passed, fs.Watcher will be started.
+	 */
+	skipWatcher?: boolean;
+
+	/**
+	 * Defines if all project files should be watched for changes. In case it is not passed, only `app` dir of the project will be watched for changes.
+	 * In case it is set to true, the package.json of the project and node_modules directory will also be watched, so any change there will be transferred to device(s).
+	 */
+	watchAllFiles?: boolean;
+
+	/**
+	 * Defines if the liveEdit functionality should be used, i.e. LiveSync of .js files without restart.
+	 * NOTE: Currently this is available only for iOS.
+	 */
 	useLiveEdit?: boolean;
 }
 
@@ -81,8 +118,23 @@ interface ILiveSyncBuildInfo {
 	pathToBuildItem: string;
 }
 
+/**
+ * Describes LiveSync operations.
+ */
 interface ILiveSyncService {
+	/**
+	 * Starts LiveSync operation by rebuilding the application if necessary and starting watcher.
+	 * @param {ILiveSyncDeviceInfo[]} deviceDescriptors Describes each device for which we would like to sync the application - identifier, outputPath and action to rebuild the app.
+	 * @param {ILiveSyncInfo} liveSyncData Describes the LiveSync operation - for which project directory is the operation and other settings.
+	 * @returns {Promise<void>}
+	 */
 	liveSync(deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo): Promise<void>;
+
+	/**
+	 * Stops LiveSync operation for specified directory.
+	 * @param {string} projectDir The directory for which to stop the operation.
+	 * @returns {Promise<void>}
+	 */
 	stopLiveSync(projectDir: string): Promise<void>;
 }
 
@@ -93,6 +145,7 @@ interface ILiveSyncWatchInfo {
 	isRebuilt: boolean;
 	syncAllFiles: boolean;
 	useLiveEdit?: boolean;
+
 }
 
 interface ILiveSyncResultInfo {

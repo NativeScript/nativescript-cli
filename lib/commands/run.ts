@@ -76,7 +76,7 @@ export class RunCommandBase implements ICommand {
 		// }
 
 		// TODO: Fix this call
-		const liveSyncInfo: ILiveSyncInfo = { projectDir: this.$projectData.projectDir, shouldStartWatcher: this.$options.watch, syncAllFiles: this.$options.syncAllFiles };
+		const liveSyncInfo: ILiveSyncInfo = { projectDir: this.$projectData.projectDir, skipWatcher: !this.$options.watch || this.$options.justlaunch, watchAllFiles: this.$options.syncAllFiles };
 		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 	}
 }

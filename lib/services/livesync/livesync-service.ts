@@ -48,7 +48,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		// Should be set after prepare
 		this.$injector.resolve<DeprecatedUsbLiveSyncService>("usbLiveSyncService").isInitialized = true;
 
-		if (liveSyncData.shouldStartWatcher) {
+		if (!liveSyncData.skipWatcher) {
 			await this.startWatcher(projectData, deviceDescriptors, liveSyncData);
 		}
 	}
@@ -138,7 +138,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 			await this.ensureLatestAppPackageIsInstalledOnDevice(device, preparedPlatforms, rebuiltInformation, projectData, deviceDescriptor);
 
-			const liveSyncResultInfo = await this.getLiveSyncService(platform).fullSync({ projectData, device, syncAllFiles: liveSyncData.syncAllFiles, useLiveEdit: liveSyncData.useLiveEdit });
+			const liveSyncResultInfo = await this.getLiveSyncService(platform).fullSync({ projectData, device, syncAllFiles: liveSyncData.watchAllFiles, useLiveEdit: liveSyncData.useLiveEdit });
 			await this.refreshApplication(projectData, liveSyncResultInfo);
 			//await device.applicationManager.restartApplication(projectData.projectId, projectData.projectName);
 		};
@@ -152,7 +152,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 
 		let pattern = ["app"];
 
-		if (liveSyncData.syncAllFiles) {
+		if (liveSyncData.watchAllFiles) {
 			const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
 			pattern.push("package.json");
 
@@ -206,7 +206,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 									filesToRemove: currentFilesToRemove,
 									filesToSync: currentFilesToSync,
 									isRebuilt: !!_.find(rebuiltInformation, info => info.isEmulator === device.isEmulator && info.platform === device.deviceInfo.platform),
-									syncAllFiles: liveSyncData.syncAllFiles,
+									syncAllFiles: liveSyncData.watchAllFiles,
 									useLiveEdit: liveSyncData.useLiveEdit
 								};
 
