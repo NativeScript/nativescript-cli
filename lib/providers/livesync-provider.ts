@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as temp from "temp";
+import * as constants from "../constants";
 
 export class LiveSyncProvider implements ILiveSyncProvider {
 	constructor(private $androidLiveSyncServiceLocator: { factory: Function },
@@ -58,7 +59,14 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 
 	public canExecuteFastSync(filePath: string, projectData: IProjectData, platform: string): boolean {
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
-		let fastSyncFileExtensions = LiveSyncProvider.FAST_SYNC_FILE_EXTENSIONS.concat(platformData.fastLivesyncFileExtensions);
+		let fastSyncFileExtensions = platformData.fastLivesyncFileExtensions;
+
+		// for Angular we don't fast sync .css/.xml/.html files as it messes up with the router
+		// and the app after refresh freezes.
+		if (projectData.projectType.toLowerCase() !== constants.ANGULAR_NAME.toLowerCase()) {
+			fastSyncFileExtensions = fastSyncFileExtensions.concat(LiveSyncProvider.FAST_SYNC_FILE_EXTENSIONS);
+		}
+
 		return _.includes(fastSyncFileExtensions, path.extname(filePath));
 	}
 
