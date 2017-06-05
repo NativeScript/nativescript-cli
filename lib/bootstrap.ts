@@ -104,10 +104,10 @@ $injector.require("androidToolsInfo", "./android-tools-info");
 $injector.requireCommand("platform|clean", "./commands/platform-clean");
 
 $injector.require("liveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
+$injector.require("androidLiveSyncService", "./services/livesync/android-livesync-service");
+$injector.require("iOSLiveSyncService", "./services/livesync/ios-livesync-service");
 $injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
 $injector.require("iosLiveSyncServiceLocator", "./services/livesync/ios-device-livesync-service");
-$injector.require("androidLiveSyncServiceLocator", "./services/livesync/android-device-livesync-service");
-
 $injector.require("sysInfo", "./sys-info");
 
 $injector.require("iOSNotificationService", "./services/ios-notification-service");

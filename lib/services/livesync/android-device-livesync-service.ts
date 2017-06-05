@@ -1,13 +1,14 @@
 import { DeviceAndroidDebugBridge } from "../../common/mobile/android/device-android-debug-bridge";
 import { AndroidDeviceHashService } from "../../common/mobile/android/android-device-hash-service";
 import * as helpers from "../../common/helpers";
+import { SYNC_DIR_NAME, FULLSYNC_DIR_NAME, REMOVEDSYNC_DIR_NAME } from "../../constants";
 import { cache } from "../../common/decorators";
 import * as path from "path";
 import * as net from "net";
 import { EOL } from "os";
 
-export class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncService {
-		private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml", ".html"];
+export class AndroidDeviceLiveSyncService implements IAndroidNativeScriptDeviceLiveSyncService {
+	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml", ".html"];
 
 	private static BACKEND_PORT = 18182;
 	private device: Mobile.IAndroidDevice;
@@ -37,7 +38,7 @@ export class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncServic
 				`/data/local/tmp/${deviceAppData.appIdentifier}/sync`]
 		);
 
-		let canExecuteFastSync = ! liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
+		let canExecuteFastSync = !liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
 			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
 
 		if (canExecuteFastSync) {
@@ -50,7 +51,7 @@ export class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncServic
 	@cache()
 	private getFastLiveSyncFileExtensions(platform: string, projectData: IProjectData): string[] {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-		const fastSyncFileExtensions = AndroidLiveSyncService.FAST_SYNC_FILE_EXTENSIONS.concat(platformData.fastLivesyncFileExtensions);
+		const fastSyncFileExtensions = AndroidDeviceLiveSyncService.FAST_SYNC_FILE_EXTENSIONS.concat(platformData.fastLivesyncFileExtensions);
 		return fastSyncFileExtensions;
 	}
 
@@ -87,13 +88,13 @@ export class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncServic
 			await this.device.adb.executeShellCommand(["rm", "-f", deviceRootPath]);
 		}
 
-		this.device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, "fullsync"),
-			this.$mobileHelper.buildDevicePath(deviceRootPath, "sync"),
-			await this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync")]);
+		this.device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, FULLSYNC_DIR_NAME),
+			this.$mobileHelper.buildDevicePath(deviceRootPath, SYNC_DIR_NAME),
+			await this.$mobileHelper.buildDevicePath(deviceRootPath, REMOVEDSYNC_DIR_NAME)]);
 	}
 
 	private async reloadPage(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
-		await this.device.adb.executeCommand(["forward", `tcp:${AndroidLiveSyncService.BACKEND_PORT.toString()}`, `localabstract:${deviceAppData.appIdentifier}-livesync`]);
+		await this.device.adb.executeCommand(["forward", `tcp:${AndroidDeviceLiveSyncService.BACKEND_PORT.toString()}`, `localabstract:${deviceAppData.appIdentifier}-livesync`]);
 		if (!await this.sendPageReloadMessage()) {
 			await this.restartApplication(deviceAppData);
 		}
@@ -104,11 +105,17 @@ export class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncServic
 
 		for (let localToDevicePathData of localToDevicePaths) {
 			let relativeUnixPath = _.trimStart(helpers.fromWindowsRelativePathToUnix(localToDevicePathData.getRelativeToProjectBasePath()), "/");
-			let deviceFilePath = this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync", relativeUnixPath);
+			let deviceFilePath = this.$mobileHelper.buildDevicePath(deviceRootPath, REMOVEDSYNC_DIR_NAME, relativeUnixPath);
 			await this.device.adb.executeShellCommand(["mkdir", "-p", path.dirname(deviceFilePath), " && ", "touch", deviceFilePath]);
 		}
 
 		await this.getDeviceHashService(projectId).removeHashes(localToDevicePaths);
+	}
+
+	@cache()
+	public getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService {
+		let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
+		return this.$injector.resolve(AndroidDeviceHashService, { adb, appIdentifier });
 	}
 
 	private getDeviceRootPath(appIdentifier: string): string {
@@ -120,7 +127,7 @@ export class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncServic
 			let isResolved = false;
 			let socket = new net.Socket();
 
-			socket.connect(AndroidLiveSyncService.BACKEND_PORT, '127.0.0.1', () => {
+			socket.connect(AndroidDeviceLiveSyncService.BACKEND_PORT, '127.0.0.1', () => {
 				socket.write(new Buffer([0, 0, 0, 1, 1]));
 			});
 			socket.on("data", (data: any) => {
@@ -141,15 +148,4 @@ export class AndroidLiveSyncService implements INativeScriptDeviceLiveSyncServic
 			});
 		});
 	}
-
-	private _deviceHashService: Mobile.IAndroidDeviceHashService;
-	private getDeviceHashService(projectId: string): Mobile.IAndroidDeviceHashService {
-		if (!this._deviceHashService) {
-			let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
-			this._deviceHashService = this.$injector.resolve(AndroidDeviceHashService, { adb: adb, appIdentifier: projectId });
-		}
-
-		return this._deviceHashService;
-	}
 }
-$injector.register("androidLiveSyncServiceLocator", { factory: AndroidLiveSyncService });

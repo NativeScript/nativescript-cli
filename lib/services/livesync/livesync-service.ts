@@ -1,7 +1,5 @@
 import * as path from "path";
 import * as choki from "chokidar";
-import * as iOSLs from "./ios-livesync-service";
-import * as androidLs from "./android-livesync-service";
 import { EventEmitter } from "events";
 import { exported } from "../../common/decorators";
 import { hook } from "../../common/helpers";
@@ -123,9 +121,9 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 	// TODO: Register both livesync services in injector
 	private getLiveSyncService(platform: string): IPlatformLiveSyncService {
 		if (this.$mobileHelper.isiOSPlatform(platform)) {
-			return this.$injector.resolve(iOSLs.IOSLiveSyncService);
+			return this.$injector.resolve("iOSLiveSyncService");
 		} else if (this.$mobileHelper.isAndroidPlatform(platform)) {
-			return this.$injector.resolve(androidLs.AndroidLiveSyncService);
+			return this.$injector.resolve("androidLiveSyncService");
 		}
 
 		throw new Error(`Invalid platform ${platform}. Supported platforms are: ${this.$mobileHelper.platformNames.join(", ")}`);

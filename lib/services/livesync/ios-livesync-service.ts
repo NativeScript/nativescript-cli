@@ -76,7 +76,7 @@ export class IOSLiveSyncService implements IPlatformLiveSyncService {
 
 		if (liveSyncInfo.isRebuilt) {
 			// In this case we should execute fullsync:
-			await this.fullSync({ projectData, device, syncAllFiles: liveSyncInfo.syncAllFiles });
+			await this.fullSync({ projectData, device, syncAllFiles: liveSyncInfo.syncAllFiles, watch: true });
 		} else {
 			if (liveSyncInfo.filesToSync.length) {
 				const filesToSync = liveSyncInfo.filesToSync;
@@ -138,3 +138,4 @@ export class IOSLiveSyncService implements IPlatformLiveSyncService {
 		console.log("### ios TRANSFEREEDDDDDDD!!!!!!");
 	}
 }
+$injector.register("iOSLiveSyncService", IOSLiveSyncService);

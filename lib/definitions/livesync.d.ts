@@ -163,6 +163,7 @@ interface ILiveSyncResultInfo {
 interface IFullSyncInfo {
 	projectData: IProjectData;
 	device: Mobile.IDevice;
+	watch: boolean;
 	syncAllFiles: boolean;
 	useLiveEdit?: boolean;
 }
@@ -193,4 +194,13 @@ interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase 
 	 * @return {Promise<void>}
 	 */
 	removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectId: string): Promise<void>;
+}
+
+interface IAndroidNativeScriptDeviceLiveSyncService {
+	/**
+	 * Retrieves the android device's hash service.
+	 * @param  {string} appIdentifier Application identifier.
+	 * @return {Promise<Mobile.IAndroidDeviceHashService>} The hash service
+	 */
+	getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService;
 }
