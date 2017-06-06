@@ -137,17 +137,19 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * Returns information about the latest built application for device in the current project.
 	 * @param {IPlatformData} platformData Data describing the current platform.
 	 * @param {IBuildConfig} buildConfig Defines if the build is for release configuration.
+	 * @param {string} @optional outputPath Directory that should contain the build artifact.
 	 * @returns {IApplicationPackage} Information about latest built application.
 	 */
-	getLatestApplicationPackageForDevice(platformData: IPlatformData, buildConfig: IBuildConfig): IApplicationPackage;
+	getLatestApplicationPackageForDevice(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage;
 
 	/**
 	 * Returns information about the latest built application for simulator in the current project.
 	 * @param {IPlatformData} platformData Data describing the current platform.
 	 * @param {IBuildConfig} buildConfig Defines if the build is for release configuration.
+	 * @param {string} @optional outputPath Directory that should contain the build artifact.
 	 * @returns {IApplicationPackage} Information about latest built application.
 	 */
-	getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig): IApplicationPackage;
+	getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage;
 
 	/**
 	 * Copies latest build output to a specified location.
@@ -164,9 +166,10 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @param {string} platform Mobile platform - Android, iOS.
 	 * @param {IBuildConfig} buildConfig Defines if the searched artifact should be for simulator and is it built for release.
 	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @param {string} @optional outputPath Directory that should contain the build artifact.
 	 * @returns {string} The path to latest built artifact.
 	 */
-	lastOutputPath(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): string;
+	lastOutputPath(platform: string, buildConfig: IBuildConfig, projectData: IProjectData, outputPath?: string): string;
 
 	/**
 	 * Reads contents of a file on device.

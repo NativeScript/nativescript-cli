@@ -370,7 +370,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public async shouldBuild(platform: string, projectData: IProjectData, buildConfig: IBuildConfig, outputPath?: string): Promise<boolean> {
-		//TODO: shouldBuild - issue with outputPath - we do not have always the built dir locally
 		if (this.$projectChangesService.currentChanges.changesRequireBuild) {
 			return true;
 		}
@@ -587,13 +586,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		appUpdater.cleanDestinationApp();
 	}
 
-	public lastOutputPath(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): string {
+	public lastOutputPath(platform: string, buildConfig: IBuildConfig, projectData: IProjectData, outputPath?: string): string {
 		let packageFile: string;
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		if (buildConfig.buildForDevice) {
-			packageFile = this.getLatestApplicationPackageForDevice(platformData, buildConfig).packageName;
+			packageFile = this.getLatestApplicationPackageForDevice(platformData, buildConfig, outputPath).packageName;
 		} else {
-			packageFile = this.getLatestApplicationPackageForEmulator(platformData, buildConfig).packageName;
+			packageFile = this.getLatestApplicationPackageForEmulator(platformData, buildConfig, outputPath).packageName;
 		}
 		if (!packageFile || !this.$fs.exists(packageFile)) {
 			this.$errors.failWithoutHelp("Unable to find built application. Try 'tns build %s'.", platform);
@@ -744,12 +743,12 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return packages[0];
 	}
 
-	public getLatestApplicationPackageForDevice(platformData: IPlatformData, buildConfig: IBuildConfig): IApplicationPackage {
-		return this.getLatestApplicationPackage(platformData.deviceBuildOutputPath, platformData.getValidPackageNames({ isForDevice: true, isReleaseBuild: buildConfig.release }));
+	public getLatestApplicationPackageForDevice(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage {
+		return this.getLatestApplicationPackage(outputPath || platformData.deviceBuildOutputPath, platformData.getValidPackageNames({ isForDevice: true, isReleaseBuild: buildConfig.release }));
 	}
 
-	public getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig): IApplicationPackage {
-		return this.getLatestApplicationPackage(platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath, platformData.getValidPackageNames({ isForDevice: false, isReleaseBuild: buildConfig.release }));
+	public getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage {
+		return this.getLatestApplicationPackage(outputPath || platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath, platformData.getValidPackageNames({ isForDevice: false, isReleaseBuild: buildConfig.release }));
 	}
 
 	private async updatePlatform(platform: string, version: string, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions): Promise<void> {

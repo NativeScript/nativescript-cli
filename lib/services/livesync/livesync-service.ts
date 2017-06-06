@@ -143,27 +143,29 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 			await this.$platformService.preparePlatform(platform, <any>{}, null, projectData, <any>{}, modifiedFiles);
 		}
 
-		// TODO: fix args cast to any
-		const shouldBuild = await this.$platformService.shouldBuild(platform, projectData, <any>{ buildForDevice: !device.isEmulator }, deviceBuildInfoDescriptor.outputPath);
-		if (shouldBuild) {
-			const pathToBuildItem = await deviceBuildInfoDescriptor.buildAction();
-			// Is it possible to return shouldBuild for two devices? What about android device and android emulator?
-			rebuiltInformation.push({ isEmulator: device.isEmulator, platform, pathToBuildItem });
-		}
-
 		const rebuildInfo = _.find(rebuiltInformation, info => info.isEmulator === device.isEmulator && info.platform === platform);
 
 		if (rebuildInfo) {
 			// Case where we have three devices attached, a change that requires build is found,
 			// we'll rebuild the app only for the first device, but we should install new package on all three devices.
 			await this.$platformService.installApplication(device, { release: false }, projectData, rebuildInfo.pathToBuildItem, deviceBuildInfoDescriptor.outputPath);
+			return;
+		}
+
+		// TODO: fix args cast to any
+		const shouldBuild = await this.$platformService.shouldBuild(platform, projectData, <any>{ buildForDevice: !device.isEmulator }, deviceBuildInfoDescriptor.outputPath);
+		if (shouldBuild) {
+			const pathToBuildItem = await deviceBuildInfoDescriptor.buildAction();
+			// Is it possible to return shouldBuild for two devices? What about android device and android emulator?
+			rebuiltInformation.push({ isEmulator: device.isEmulator, platform, pathToBuildItem });
+			await this.$platformService.installApplication(device, { release: false }, projectData, pathToBuildItem, deviceBuildInfoDescriptor.outputPath);
+
 		}
 
 		const shouldInstall = await this.$platformService.shouldInstall(device, projectData, deviceBuildInfoDescriptor.outputPath);
 		if (shouldInstall) {
-			// device.applicationManager.installApplication()
-			console.log("TODO!!!!!!");
-			// call platformService.installApplication here as well.
+
+			await this.$platformService.installApplication(device, { release: false }, projectData, null, deviceBuildInfoDescriptor.outputPath);
 		}
 	}
 

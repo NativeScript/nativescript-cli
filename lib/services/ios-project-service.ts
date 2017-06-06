@@ -73,10 +73,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				emulatorBuildOutputPath: path.join(projectRoot, "build", "emulator"),
 				getValidPackageNames: (buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[] => {
 					if (buildOptions.isForDevice) {
-						return [projectData.projectName + ".ipa"];
+						return [`${projectData.projectName}.ipa`];
 					}
 
-					return [projectData.projectName + ".app"];
+					return [`${projectData.projectName}.app`, `${projectData.projectName}.zip`];
 				},
 				frameworkFilesExtensions: [".a", ".framework", ".bin"],
 				frameworkDirectoriesExtensions: [".framework"],
