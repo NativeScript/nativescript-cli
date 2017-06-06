@@ -37,10 +37,14 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		liveSyncData: ILiveSyncInfo): Promise<void> {
 		// TODO: Initialize devicesService before that.
 		const projectData = this.$projectDataService.getProjectData(liveSyncData.projectDir);
-
+		// In case liveSync is called for a second time for the same projectDir.
+		const isAlreadyLiveSyncing = this.liveSyncProcessesInfo[projectData.projectDir] && !this.liveSyncProcessesInfo[projectData.projectDir].isStopped;
 		this.setLiveSyncProcessInfo(liveSyncData.projectDir, deviceDescriptors);
 
-		await this.initialSync(projectData, deviceDescriptors, liveSyncData);
+		// TODO: Check if the _.difference actually works.
+		const deviceDescriptorsForInitialSync = isAlreadyLiveSyncing ? _.difference(deviceDescriptors, this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors) : deviceDescriptors;
+
+		await this.initialSync(projectData, deviceDescriptorsForInitialSync, liveSyncData);
 
 		if (!liveSyncData.skipWatcher && deviceDescriptors && deviceDescriptors.length) {
 			// Should be set after prepare
@@ -169,9 +173,6 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		const preparedPlatforms: string[] = [];
 		const rebuiltInformation: ILiveSyncBuildInfo[] = [];
 
-		// Prevent cases where liveSync is called consecutive times with the same device, for example [ A, B, C ] and then [ A, B, D ] - we want to execute initialSync only for D.
-		const deviceDescriptorsForExecution = _.difference(deviceDescriptors, this.liveSyncProcessesInfo[liveSyncData.projectDir].deviceDescriptors);
-
 		// Now fullSync
 		const deviceAction = async (device: Mobile.IDevice): Promise<void> => {
 			try {
@@ -204,7 +205,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 
 		// Execute the action only on the deviceDescriptors passed to initialSync.
 		// In case where we add deviceDescriptors to already running application, we've already executed initialSync for them.
-		await this.addActionToChain(projectData.projectDir, () => this.$devicesService.execute(deviceAction, (device: Mobile.IDevice) => _.some(deviceDescriptorsForExecution, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier)));
+		await this.addActionToChain(projectData.projectDir, () => this.$devicesService.execute(deviceAction, (device: Mobile.IDevice) => _.some(deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier)));
 	}
 
 	private async startWatcher(projectData: IProjectData,
