@@ -1,141 +1,75 @@
 import * as path from "path";
-import * as iosdls from "./ios-device-livesync-service";
 import * as temp from "temp";
+
+import { IOSDeviceLiveSyncService } from "./ios-device-livesync-service";
 import { PlatformLiveSyncServiceBase } from "./platform-livesync-service-base";
-// import * as uuid from "uuid";
+import { APP_FOLDER_NAME, TNS_MODULES_FOLDER_NAME } from "../../constants";
 
 export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
-	constructor(private $devicesService: Mobile.IDevicesService,
-		private $projectFilesManager: IProjectFilesManager,
-		private $platformsData: IPlatformsData,
-		private $logger: ILogger,
-		private $projectFilesProvider: IProjectFilesProvider,
-		private $fs: IFileSystem,
+	constructor(protected $fs: IFileSystem,
+		protected $platformsData: IPlatformsData,
+		protected $projectFilesManager: IProjectFilesManager,
 		private $injector: IInjector,
-		$devicePathProvider: IDevicePathProvider) {
-		super($devicePathProvider);
+		$devicePathProvider: IDevicePathProvider,
+		$logger: ILogger,
+		$projectFilesProvider: IProjectFilesProvider,
+	) {
+		super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
 	}
-
-	/*
-	fullSync(projectData: IProjectData, device: Mobile.IDevice): Promise<ILiveSyncResultInfo>;
-	liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo>;
-	refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
-	*/
 
 	public async fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo> {
-		const projectData = syncInfo.projectData;
 		const device = syncInfo.device;
-		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
-		const deviceAppData = await this.getAppData(syncInfo);
-		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, "app");
 
 		if (device.isEmulator) {
-			const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, null, []);
-			await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, true);
-			return {
-				deviceAppData,
-				isFullSync: true,
-				modifiedFilesData: localToDevicePaths
-			};
-		} else {
-			temp.track();
-			let tempZip = temp.path({ prefix: "sync", suffix: ".zip" });
-			let tempApp = temp.mkdirSync("app");
-			this.$logger.trace("Creating zip file: " + tempZip);
-			this.$fs.copyFile(path.join(path.dirname(projectFilesPath), "app/*"), tempApp);
-
-			if (!syncInfo.syncAllFiles) {
-				this.$logger.info("Skipping node_modules folder! Use the syncAllFiles option to sync files from this folder.");
-				this.$fs.deleteDirectory(path.join(tempApp, "tns_modules"));
-			}
-
-			await this.$fs.zipFiles(tempZip, this.$fs.enumerateFilesInDirectorySync(tempApp), (res) => {
-				return path.join("app", path.relative(tempApp, res));
-			});
-
-			await device.fileSystem.transferFiles(deviceAppData, [{
-				getLocalPath: () => tempZip,
-				getDevicePath: () => deviceAppData.deviceSyncZipPath,
-				getRelativeToProjectBasePath: () => "../sync.zip",
-				deviceProjectRootPath: await deviceAppData.getDeviceProjectRootPath()
-			}]);
-
-			return {
-				deviceAppData,
-				isFullSync: true,
-				modifiedFilesData: []
-			};
+			return super.fullSync(syncInfo);
 		}
-	}
 
-	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
-		const projectData = liveSyncInfo.projectData;
-		const syncInfo = _.merge<IFullSyncInfo>({ device, watch: true }, liveSyncInfo);
+		const projectData = syncInfo.projectData;
+		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 		const deviceAppData = await this.getAppData(syncInfo);
-		let modifiedLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
+		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 
-		if (liveSyncInfo.isRebuilt) {
-			// In this case we should execute fullsync:
-			await this.fullSync({ projectData, device, syncAllFiles: liveSyncInfo.syncAllFiles, watch: true });
-		} else {
-			if (liveSyncInfo.filesToSync.length) {
-				const filesToSync = liveSyncInfo.filesToSync;
-				const mappedFiles = _.map(filesToSync, filePath => this.$projectFilesProvider.mapFilePath(filePath, device.deviceInfo.platform, projectData));
+		temp.track();
+		const tempZip = temp.path({ prefix: "sync", suffix: ".zip" });
+		const tempApp = temp.mkdirSync("app");
+		this.$logger.trace("Creating zip file: " + tempZip);
+		this.$fs.copyFile(path.join(path.dirname(projectFilesPath), `${APP_FOLDER_NAME}/*`), tempApp);
 
-				// Some plugins modify platforms dir on afterPrepare (check nativescript-dev-sass) - we want to sync only existing file.
-				const existingFiles = mappedFiles.filter(m => this.$fs.exists(m));
-				this.$logger.trace("Will execute livesync for files: ", existingFiles);
-				const skippedFiles = _.difference(mappedFiles, existingFiles);
-				if (skippedFiles.length) {
-					this.$logger.trace("The following files will not be synced as they do not exist:", skippedFiles);
-				}
-
-				if (existingFiles.length) {
-					const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
-					const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, "app");
-					let localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData,
-						projectFilesPath, mappedFiles, []);
-					modifiedLocalToDevicePaths.push(...localToDevicePaths);
-					await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, false);
-				}
-			}
-
-			if (liveSyncInfo.filesToRemove.length) {
-				const filePaths = liveSyncInfo.filesToRemove;
-				const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
-
-				const mappedFiles = _.map(filePaths, filePath => this.$projectFilesProvider.mapFilePath(filePath, device.deviceInfo.platform, projectData));
-				const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, "app");
-				let localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, mappedFiles, []);
-				modifiedLocalToDevicePaths.push(...localToDevicePaths);
-
-				const deviceLiveSyncService = this.$injector.resolve(iosdls.IOSDeviceLiveSyncService, { _device: device });
-				deviceLiveSyncService.removeFiles(projectData.projectId, localToDevicePaths, projectData.projectId);
-			}
+		if (!syncInfo.syncAllFiles) {
+			this.$logger.info("Skipping node_modules folder! Use the syncAllFiles option to sync files from this folder.");
+			this.$fs.deleteDirectory(path.join(tempApp, TNS_MODULES_FOLDER_NAME));
 		}
+
+		await this.$fs.zipFiles(tempZip, this.$fs.enumerateFilesInDirectorySync(tempApp), (res) => {
+			return path.join(APP_FOLDER_NAME, path.relative(tempApp, res));
+		});
+
+		await device.fileSystem.transferFiles(deviceAppData, [{
+			getLocalPath: () => tempZip,
+			getDevicePath: () => deviceAppData.deviceSyncZipPath,
+			getRelativeToProjectBasePath: () => "../sync.zip",
+			deviceProjectRootPath: await deviceAppData.getDeviceProjectRootPath()
+		}]);
 
 		return {
-			modifiedFilesData: modifiedLocalToDevicePaths,
-			isFullSync: liveSyncInfo.isRebuilt,
-			deviceAppData
+			deviceAppData,
+			isFullSync: true,
+			modifiedFilesData: []
 		};
 	}
 
-	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
-		let deviceLiveSyncService = this.$injector.resolve(iosdls.IOSDeviceLiveSyncService, { _device: liveSyncInfo.deviceAppData.device });
-		this.$logger.info("Refreshing application...");
-		await deviceLiveSyncService.refreshApplication(projectData, liveSyncInfo);
+	public liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
+		if (liveSyncInfo.isRebuilt) {
+			// In this case we should execute fullsync because iOS Runtime requires the full content of app dir to be extracted in the root of sync dir.
+			return this.fullSync({ projectData: liveSyncInfo.projectData, device, syncAllFiles: liveSyncInfo.syncAllFiles, watch: true });
+		} else {
+			return super.liveSyncWatchAction(device, liveSyncInfo);
+		}
 	}
 
-	protected async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<void> {
-		let canTransferDirectory = isFullSync && this.$devicesService.isiOSDevice(deviceAppData.device);
-		if (canTransferDirectory) {
-			await deviceAppData.device.fileSystem.transferDirectory(deviceAppData, localToDevicePaths, projectFilesPath);
-		} else {
-			await deviceAppData.device.fileSystem.transferFiles(deviceAppData, localToDevicePaths);
-		}
-
-		console.log("### ios TRANSFEREEDDDDDDD!!!!!!");
+	public getDeviceLiveSyncService(device: Mobile.IDevice): INativeScriptDeviceLiveSyncService {
+		const service = this.$injector.resolve<INativeScriptDeviceLiveSyncService>(IOSDeviceLiveSyncService, { _device: device });
+		return service;
 	}
 }
 $injector.register("iOSLiveSyncService", IOSLiveSyncService);
