@@ -9,7 +9,6 @@ import { hook } from "../../common/helpers";
 const LiveSyncEvents = {
 	liveSyncStopped: "liveSyncStopped",
 	liveSyncError: "error",
-	liveSyncFileChangedEvent: "fileChanged",
 	liveSyncExecuted: "liveSyncExecuted",
 	liveSyncStarted: "liveSyncStarted"
 };
@@ -38,19 +37,22 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		liveSyncData: ILiveSyncInfo): Promise<void> {
 		// TODO: Initialize devicesService before that.
 		const projectData = this.$projectDataService.getProjectData(liveSyncData.projectDir);
+
+		this.setLiveSyncProcessInfo(liveSyncData.projectDir, deviceDescriptors);
+
 		await this.initialSync(projectData, deviceDescriptors, liveSyncData);
 
 		if (!liveSyncData.skipWatcher && deviceDescriptors && deviceDescriptors.length) {
 			// Should be set after prepare
 			this.$injector.resolve<DeprecatedUsbLiveSyncService>("usbLiveSyncService").isInitialized = true;
 
-			await this.startWatcher(projectData, this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors, liveSyncData);
+			await this.startWatcher(projectData, liveSyncData);
 		}
 	}
 
 	@exported("liveSyncService")
 	public async stopLiveSync(projectDir: string, deviceIdentifiers?: string[], ): Promise<void> {
-		const liveSyncProcessInfo = _.find(this.liveSyncProcessesInfo, (info, key) => key === projectDir);
+		const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectDir];
 
 		if (liveSyncProcessInfo) {
 			_.each(deviceIdentifiers, deviceId => {
@@ -70,9 +72,11 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 					clearTimeout(liveSyncProcessInfo.timer);
 				}
 
-				if (liveSyncProcessInfo.watcher) {
-					liveSyncProcessInfo.watcher.close();
+				if (liveSyncProcessInfo.watcherInfo && liveSyncProcessInfo.watcherInfo.watcher) {
+					liveSyncProcessInfo.watcherInfo.watcher.close();
 				}
+
+				liveSyncProcessInfo.watcherInfo = null;
 
 				if (liveSyncProcessInfo.actionsChain) {
 					await liveSyncProcessInfo.actionsChain;
@@ -100,6 +104,16 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 			syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
 			deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier
 		});
+	}
+
+	private setLiveSyncProcessInfo(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[]): void {
+		this.liveSyncProcessesInfo[projectDir] = this.liveSyncProcessesInfo[projectDir] || Object.create(null);
+		this.liveSyncProcessesInfo[projectDir].actionsChain = this.liveSyncProcessesInfo[projectDir].actionsChain || Promise.resolve();
+		this.liveSyncProcessesInfo[projectDir].isStopped = false;
+
+		const currentDeviceDescriptors = this.liveSyncProcessesInfo[projectDir].deviceDescriptors || [];
+		// Prevent cases where liveSync is called consecutive times with the same device, for example [ A, B, C ] and then [ A, B, D ] - we want to execute initialSync only for D.
+		this.liveSyncProcessesInfo[projectDir].deviceDescriptors = _.uniqBy(currentDeviceDescriptors.concat(deviceDescriptors), "identifier");
 	}
 
 	// TODO: Register both livesync services in injector
@@ -155,39 +169,45 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		const preparedPlatforms: string[] = [];
 		const rebuiltInformation: ILiveSyncBuildInfo[] = [];
 
+		// Prevent cases where liveSync is called consecutive times with the same device, for example [ A, B, C ] and then [ A, B, D ] - we want to execute initialSync only for D.
+		const deviceDescriptorsForExecution = _.difference(deviceDescriptors, this.liveSyncProcessesInfo[liveSyncData.projectDir].deviceDescriptors);
+
 		// Now fullSync
 		const deviceAction = async (device: Mobile.IDevice): Promise<void> => {
 			try {
-				this.liveSyncProcessesInfo[liveSyncData.projectDir] = this.liveSyncProcessesInfo[liveSyncData.projectDir] || <any>{
-					actionsChain: Promise.resolve()
-				};
-
-				this.liveSyncProcessesInfo[liveSyncData.projectDir].isStopped = false;
-				this.liveSyncProcessesInfo[liveSyncData.projectDir].deviceDescriptors = deviceDescriptors;
-
 				this.emit(LiveSyncEvents.liveSyncStarted, {
 					projectDir: projectData.projectDir,
 					deviceIdentifier: device.deviceInfo.identifier,
 					applicationIdentifier: projectData.projectId
 				});
 
-				// TODO: Call androidDeviceLiveSyncService.beforeLiveSyncAction
 				const platform = device.deviceInfo.platform;
 				const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
+
 				await this.ensureLatestAppPackageIsInstalledOnDevice(device, preparedPlatforms, rebuiltInformation, projectData, deviceDescriptor);
 
 				const liveSyncResultInfo = await this.getLiveSyncService(platform).fullSync({ projectData, device, syncAllFiles: liveSyncData.watchAllFiles, useLiveEdit: liveSyncData.useLiveEdit });
 				await this.refreshApplication(projectData, liveSyncResultInfo);
 			} catch (err) {
+				this.$logger.warn(`Unable to apply changes on device: ${err.deviceIdentifier}. Error is: ${err.message}.`);
+
+				this.emit(LiveSyncEvents.liveSyncError, {
+					error: err,
+					deviceIdentifier: device.deviceInfo.identifier,
+					projectDir: projectData.projectDir,
+					applicationIdentifier: projectData.projectId
+				});
+
 				await this.stopLiveSync(projectData.projectDir, [device.deviceInfo.identifier]);
 			}
 		};
 
-		await this.$devicesService.execute(deviceAction, (device: Mobile.IDevice) => _.some(deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier));
+		// Execute the action only on the deviceDescriptors passed to initialSync.
+		// In case where we add deviceDescriptors to already running application, we've already executed initialSync for them.
+		await this.addActionToChain(projectData.projectDir, () => this.$devicesService.execute(deviceAction, (device: Mobile.IDevice) => _.some(deviceDescriptorsForExecution, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier)));
 	}
 
 	private async startWatcher(projectData: IProjectData,
-		deviceDescriptors: ILiveSyncDeviceInfo[],
 		liveSyncData: ILiveSyncInfo): Promise<void> {
 
 		let pattern = ["app"];
@@ -202,137 +222,128 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 			}
 		}
 
-		let filesToSync: string[] = [],
-			filesToRemove: string[] = [];
-		let timeoutTimer: NodeJS.Timer;
+		const currentWatcherInfo = this.liveSyncProcessesInfo[liveSyncData.projectDir].watcherInfo;
 
-		const startTimeout = () => {
-			timeoutTimer = setTimeout(async () => {
-				await this.addActionToQueue(projectData.projectDir, async () => {
-					// TODO: Push consecutive actions to the queue, do not start them simultaneously
-					if (filesToSync.length || filesToRemove.length) {
-						try {
-							let currentFilesToSync = _.cloneDeep(filesToSync);
-							filesToSync = [];
+		if (!currentWatcherInfo || currentWatcherInfo.pattern !== pattern) {
+			if (currentWatcherInfo) {
+				currentWatcherInfo.watcher.close();
+			}
 
-							let currentFilesToRemove = _.cloneDeep(filesToRemove);
-							filesToRemove = [];
+			let filesToSync: string[] = [],
+				filesToRemove: string[] = [];
+			let timeoutTimer: NodeJS.Timer;
 
-							const allModifiedFiles = [].concat(currentFilesToSync).concat(currentFilesToRemove);
-							const preparedPlatforms: string[] = [];
-							const rebuiltInformation: ILiveSyncBuildInfo[] = [];
+			const startTimeout = () => {
+				timeoutTimer = setTimeout(async () => {
+					// Push actions to the queue, do not start them simultaneously
+					await this.addActionToChain(projectData.projectDir, async () => {
+						if (filesToSync.length || filesToRemove.length) {
+							try {
+								let currentFilesToSync = _.cloneDeep(filesToSync);
+								filesToSync = [];
 
-							await this.$devicesService.execute(async (device: Mobile.IDevice) => {
+								let currentFilesToRemove = _.cloneDeep(filesToRemove);
+								filesToRemove = [];
 
-								this.emit(LiveSyncEvents.liveSyncStarted, {
-									projectDir: projectData.projectDir,
-									deviceIdentifier: device.deviceInfo.identifier,
-									applicationIdentifier: projectData.projectId
-								});
+								const allModifiedFiles = [].concat(currentFilesToSync).concat(currentFilesToRemove);
+								const preparedPlatforms: string[] = [];
+								const rebuiltInformation: ILiveSyncBuildInfo[] = [];
 
-								// const platform = device.deviceInfo.platform;
-								const liveSyncProcessesInfo = _.find(this.liveSyncProcessesInfo, (info, projectDir) => projectDir === projectDir);
-								const deviceDescriptor = _.find(liveSyncProcessesInfo.deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
+								await this.$devicesService.execute(async (device: Mobile.IDevice) => {
+									const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];
+									const deviceDescriptor = _.find(liveSyncProcessInfo.deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 
-								await this.ensureLatestAppPackageIsInstalledOnDevice(device, preparedPlatforms, rebuiltInformation,
-									projectData, deviceDescriptor, allModifiedFiles);
+									await this.ensureLatestAppPackageIsInstalledOnDevice(device, preparedPlatforms, rebuiltInformation, projectData, deviceDescriptor, allModifiedFiles);
 
-								const service = this.getLiveSyncService(device.deviceInfo.platform);
-								const settings: ILiveSyncWatchInfo = {
-									projectData,
-									filesToRemove: currentFilesToRemove,
-									filesToSync: currentFilesToSync,
-									isRebuilt: !!_.find(rebuiltInformation, info => info.isEmulator === device.isEmulator && info.platform === device.deviceInfo.platform),
-									syncAllFiles: liveSyncData.watchAllFiles,
-									useLiveEdit: liveSyncData.useLiveEdit
-								};
+									const service = this.getLiveSyncService(device.deviceInfo.platform);
+									const settings: ILiveSyncWatchInfo = {
+										projectData,
+										filesToRemove: currentFilesToRemove,
+										filesToSync: currentFilesToSync,
+										isRebuilt: !!_.find(rebuiltInformation, info => info.isEmulator === device.isEmulator && info.platform === device.deviceInfo.platform),
+										syncAllFiles: liveSyncData.watchAllFiles,
+										useLiveEdit: liveSyncData.useLiveEdit
+									};
 
-								const liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);
-								await this.refreshApplication(projectData, liveSyncResultInfo);
-							},
-								(device: Mobile.IDevice) => {
-									const liveSyncProcessesInfo = _.find(this.liveSyncProcessesInfo, (info, projectDir) => projectDir === projectDir);
-									return liveSyncProcessesInfo && _.some(liveSyncProcessesInfo.deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier);
-								}
-							);
-						} catch (err) {
-							// we can remove the descriptor from action:
-							const allErrors = (<Mobile.IDevicesOperationError>err).allErrors;
-							if (allErrors && _.isArray(allErrors)) {
-								for (let deviceError of allErrors) {
-									this.$logger.warn(`Unable to apply changes for device: ${deviceError.deviceIdentifier}. Error is: ${deviceError.message}.`);
+									const liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);
+									await this.refreshApplication(projectData, liveSyncResultInfo);
+								},
+									(device: Mobile.IDevice) => {
+										const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];
+										return liveSyncProcessInfo && _.some(liveSyncProcessInfo.deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier);
+									}
+								);
+							} catch (err) {
+								const allErrors = (<Mobile.IDevicesOperationError>err).allErrors;
 
-									this.emit(LiveSyncEvents.liveSyncError, {
-										error: deviceError,
-										deviceIdentifier: deviceError.deviceIdentifier,
-										projectDir: projectData.projectDir,
-										applicationIdentifier: projectData.projectId
-									});
+								if (allErrors && _.isArray(allErrors)) {
+									for (let deviceError of allErrors) {
+										this.$logger.warn(`Unable to apply changes for device: ${deviceError.deviceIdentifier}. Error is: ${deviceError.message}.`);
 
-									await this.stopLiveSync(projectData.projectDir, [deviceError.deviceIdentifier]);
+										this.emit(LiveSyncEvents.liveSyncError, {
+											error: deviceError,
+											deviceIdentifier: deviceError.deviceIdentifier,
+											projectDir: projectData.projectDir,
+											applicationIdentifier: projectData.projectId
+										});
+
+										await this.stopLiveSync(projectData.projectDir, [deviceError.deviceIdentifier]);
+									}
 								}
 							}
 						}
+					});
+				}, 250);
+
+				this.liveSyncProcessesInfo[liveSyncData.projectDir].timer = timeoutTimer;
+			};
+
+			await this.$hooksService.executeBeforeHooks('watch');
+
+			const watcherOptions: choki.WatchOptions = {
+				ignoreInitial: true,
+				cwd: liveSyncData.projectDir,
+				awaitWriteFinish: {
+					pollInterval: 100,
+					stabilityThreshold: 500
+				},
+				ignored: ["**/.*", ".*"] // hidden files
+			};
+
+			const watcher = choki.watch(pattern, watcherOptions)
+				.on("all", async (event: string, filePath: string) => {
+					clearTimeout(timeoutTimer);
+
+					filePath = path.join(liveSyncData.projectDir, filePath);
+
+					this.$logger.trace(`Chokidar raised event ${event} for ${filePath}.`);
+
+					if (event === "add" || event === "addDir" || event === "change" /* <--- what to do when change event is raised ? */) {
+						filesToSync.push(filePath);
+					} else if (event === "unlink" || event === "unlinkDir") {
+						filesToRemove.push(filePath);
 					}
-				});
-			}, 250);
 
+					startTimeout();
+				});
+
+			this.liveSyncProcessesInfo[liveSyncData.projectDir].watcherInfo = { watcher, pattern };
 			this.liveSyncProcessesInfo[liveSyncData.projectDir].timer = timeoutTimer;
-		};
 
-		await this.$hooksService.executeBeforeHooks('watch');
-
-		const watcherOptions: choki.WatchOptions = {
-			ignoreInitial: true,
-			cwd: liveSyncData.projectDir,
-			awaitWriteFinish: {
-				pollInterval: 100,
-				stabilityThreshold: 500
-			},
-			ignored: ["**/.*", ".*"] // hidden files
-		};
-
-		const watcher = choki.watch(pattern, watcherOptions)
-			.on("all", async (event: string, filePath: string) => {
-				clearTimeout(timeoutTimer);
-				const liveSyncProcessesInfo = _.find(this.liveSyncProcessesInfo, (info, projectDir) => projectDir === projectDir);
-				this.emit(LiveSyncEvents.liveSyncFileChangedEvent, {
-					projectDir: liveSyncData.projectDir,
-					applicationIdentifier: projectData.projectId,
-					deviceIdentifiers: liveSyncProcessesInfo.deviceDescriptors.map(dd => dd.identifier),
-					modifiedFile: filePath,
-					event
+			this.$processService.attachToProcessExitSignals(this, () => {
+				_.keys(this.liveSyncProcessesInfo).forEach(projectDir => {
+					// Do not await here, we are in process exit's handler.
+					this.stopLiveSync(projectDir);
 				});
-
-				filePath = path.join(liveSyncData.projectDir, filePath);
-
-				this.$logger.trace(`Chokidar raised event ${event} for ${filePath}.`);
-
-				if (event === "add" || event === "addDir" || event === "change" /* <--- what to do when change event is raised ? */) {
-					filesToSync.push(filePath);
-				} else if (event === "unlink" || event === "unlinkDir") {
-					filesToRemove.push(filePath);
-				}
-
-				startTimeout();
 			});
 
-		this.liveSyncProcessesInfo[liveSyncData.projectDir].watcher = watcher;
-		this.liveSyncProcessesInfo[liveSyncData.projectDir].timer = timeoutTimer;
-
-		this.$processService.attachToProcessExitSignals(this, () => {
-			_.keys(this.liveSyncProcessesInfo).forEach(projectDir => {
-				// Do not await here, we are in process exit's handler.
-				this.stopLiveSync(projectDir);
+			this.$devicesService.on("deviceLost", async (device: Mobile.IDevice) => {
+				await this.stopLiveSync(projectData.projectDir, [device.deviceInfo.identifier]);
 			});
-		});
-
-		this.$devicesService.on("deviceLost", async (device: Mobile.IDevice) => {
-			await this.stopLiveSync(projectData.projectDir, [device.deviceInfo.identifier]);
-		});
+		}
 	}
 
-	private async addActionToQueue<T>(projectDir: string, action: () => Promise<T>): Promise<T> {
+	private async addActionToChain<T>(projectDir: string, action: () => Promise<T>): Promise<T> {
 		const liveSyncInfo = this.liveSyncProcessesInfo[projectDir];
 		if (liveSyncInfo) {
 			liveSyncInfo.actionsChain = liveSyncInfo.actionsChain.then(async () => {

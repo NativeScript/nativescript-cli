@@ -7,6 +7,32 @@ This document describes all methods that can be invoked when NativeScript CLI is
 const tns = require("nativescript");
 ```
 
+# Contents
+* [projectService](#projectservice)
+	* [createProject](#createproject)
+	* [isValidNativeScriptProject](#isvalidnativescriptproject)
+* [extensibilityService](#extensibilityservice)
+	* [installExtension](#installextension)
+	* [uninstallExtension](#uninstallextension)
+	* [getInstalledExtensions](#getinstalledextensions)
+	* [loadExtensions](#loadextensions)
+* [settingsService](#settingsservice)
+	* [setSettings](#setsettings)
+* [npm](#npm)
+	* [install](#install)
+	* [uninstall](#uninstall)
+	* [search](#search)
+	* [view](#view)
+* [analyticsService](#analyticsservice)
+	* [startEqatecMonitor](#starteqatecmonitor)
+* [debugService](#debugservice)
+	* [debug](#debug)
+* [liveSyncService](#livesyncservice)
+	* [liveSync](#livesync)
+	* [stopLiveSync](#stopLiveSync)
+	* [events](#events)
+
+
 ## Module projectService
 
 `projectService` modules allow you to create new NativeScript application.
@@ -496,6 +522,191 @@ const debugOptions = {
 tns.debugService.debug(debugData, debugOptions)
 	.then(url => console.log(`Open the following url in Chrome DevTools: ${url}`))
 	.catch(err => console.log(`Unable to start debug operation, reason: ${err.message}.`));
+```
+
+## liveSyncService
+Used to LiveSync changes on devices. The operation can be started for multiple devices and stopped for each of them. During LiveSync operation, the service will emit different events based on the action that's executing.
+
+### liveSync
+Starts a LiveSync operation for specified devices. During the operation, application may have to be rebuilt (for example in case a change in App_Resources is detected).
+By default the LiveSync operation will start file system watcher for `<project dir>/app` directory and any change in it will trigger a LiveSync operation.
+After calling the method once, you can add new devices to the same LiveSync operation by calling the method again with the new device identifiers.
+
+> NOTE: Consecutive calls to `liveSync` method for the same project will execute the initial sync (deploy and fullSync) only for new device identifiers. So in case the first call is for devices with ids [ 'A' , 'B' ] and the second one is for devices with ids [ 'B', 'C' ], the initial sync will be executed only for device with identifier 'C'.
+
+> NOTE: In case a consecutive call to `liveSync` method requires change in the pattern for watching files (i.e. `liveSyncData.syncAllFiles` option has changed), current watch operation will be stopped and a new one will be started.
+
+* Definition
+```TypeScript
+/**
+ * Starts LiveSync operation by rebuilding the application if necessary and starting watcher.
+ * @param {ILiveSyncDeviceInfo[]} deviceDescriptors Describes each device for which we would like to sync the application - identifier, outputPath and action to rebuild the app.
+ * @param {ILiveSyncInfo} liveSyncData Describes the LiveSync operation - for which project directory is the operation and other settings.
+ * @returns {Promise<void>}
+ */
+liveSync(deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo): Promise<void>;
+```
+
+* Usage:
+```JavaScript
+const projectDir = "myProjectDir";
+const androidDeviceDescriptor = {
+	identifier: "4df18f307d8a8f1b",
+	buildAction: () => {
+		return tns.localBuildService.build("Android", { projectDir, bundle: false, release: false, buildForDevice: true });
+	},
+	outputPath: null
+};
+
+const iOSDeviceDescriptor = {
+	identifier: "12318af23ebc0e25",
+	buildAction: () => {
+		return tns.localBuildService.build("iOS", { projectDir, bundle: false, release: false, buildForDevice: true });
+	},
+	outputPath: null
+};
+
+const liveSyncData = {
+	projectDir,
+	skipWatcher: false,
+	watchAllFiles: false,
+	useLiveEdit: false
+};
+
+tns.liveSyncService.liveSync([ androidDeviceDescriptor, iOSDeviceDescriptor ], liveSyncData)
+	.then(() => {
+		console.log("LiveSync operation started.");
+	}, err => {
+		console.log("An error occurred during LiveSync", err);
+	});
+```
+
+### stopLiveSync
+Stops LiveSync operation. In case deviceIdentifires are passed, the operation will be stopped only for these devices.
+
+* Definition
+```TypeScript
+/**
+ * Stops LiveSync operation for specified directory.
+ * @param {string} projectDir The directory for which to stop the operation.
+ * @param {string[]} @optional deviceIdentifiers Device ids for which to stop the application. In case nothing is passed, LiveSync operation will be stopped for all devices.
+ * @returns {Promise<void>}
+ */
+stopLiveSync(projectDir: string, deviceIdentifiers?: string[]): Promise<void>;
+```
+
+* Usage
+```JavaScript
+const projectDir = "myProjectDir";
+const deviceIdentifiers = [ "4df18f307d8a8f1b", "12318af23ebc0e25" ];
+tns.liveSyncService.stopLiveSync(projectDir, deviceIdentifiers)
+	.then(() => {
+		console.log("LiveSync operation stopped.");
+	}, err => {
+		console.log("An error occurred during stopage.", err);
+	});
+```
+
+### Events
+`liveSyncService` raises several events in order to provide information for current state of the operation.
+* liveSyncStarted - raised whenever CLI starts a LiveSync operation for specific device. When `liveSync` method is called, the initial LiveSync operation will emit `liveSyncStarted` for each specified device. After that the event will be emitted only in case when liveSync method is called again with different device instances. The event is raised with the following data:
+```TypeScript
+{
+	projectDir: string;
+	deviceIdentifier: string;
+	applicationIdentifier: string;
+}
+```
+
+Example:
+```JavaScript
+tns.liveSyncService.on("liveSyncStarted", data => {
+	console.log(`Started LiveSync on ${data.deviceIdentifier} for ${data.applicationIdentifier}.`);
+});
+```
+
+* liveSyncExecuted - raised whenever CLI finishes a LiveSync operation for specific device. When `liveSync` method is called, the initial LiveSync operation will emit `liveSyncExecuted` for each specified device once it finishes the operation. After that the event will be emitted whenever a change is detected (in case file system watcher is staretd) and the LiveSync operation is executed for each device. The event is raised with the following data:
+```TypeScript
+{
+	projectDir: string;
+	deviceIdentifier: string;
+	applicationIdentifier: string;
+	/**
+	 * Full paths to files synced during the operation. In case the `syncedFiles.length` is 0, the operation is "fullSync" (i.e. all project files are synced).
+	 */
+	syncedFiles: string[];
+}
+```
+
+Example:
+```JavaScript
+tns.liveSyncService.on("liveSyncExecuted", data => {
+	console.log(`Executed LiveSync on ${data.deviceIdentifier} for ${data.applicationIdentifier}. Uploaded files are: ${syncedFiles.join(" ")}.`);
+});
+```
+
+* liveSyncStopped - raised when LiveSync operation is stopped. The event will be raised when the operation is stopped for each device and will be raised when the whole operation is stopped. The event is raised with the following data:
+```TypeScript
+{
+	projectDir: string;
+	/**
+	 * Passed only when the LiveSync operation is stopped for a specific device. In case it is not passed, the whole LiveSync operation is stopped.
+	 */
+	deviceIdentifier?: string;
+}
+```
+
+Example:
+```JavaScript
+tns.liveSyncService.on("liveSyncStopped", data => {
+	if (data.deviceIdentifier) {
+		console.log(`Stopped LiveSync on ${data.deviceIdentifier} for ${data.projectDir}.`);
+	} else {
+		console.log(`Stopped LiveSync for ${data.projectDir}.`);
+	}
+});
+```
+
+* error - raised whenever an error is detected during LiveSync operation. The event is raised for specific device. Once an error is detected, the event will be raised and the LiveSync operation will be stopped for this device, i.e. `liveSyncStopped` event will be raised for it. The event is raised with the following data:
+```TypeScript
+{
+	projectDir: string;
+	deviceIdentifier: string;
+	applicationIdentifier: string;
+	error: Error;
+}
+```
+
+Example:
+```JavaScript
+tns.liveSyncService.on("error", data => {
+	console.log(`Error detected during LiveSync on ${data.deviceIdentifier} for ${data.projectDir}. Error: ${err.message}.`);
+});
+```
+
+* fileChanged - raised when a watched file is modified. The event is raised witht he following data:
+```TypeScript
+{
+	projectDir: string;
+	/**
+	 * Device identifiers on which the file will be LiveSynced.
+	 */
+	deviceIdentifiers: string[];
+	applicationIdentifier: string;
+	modifiedFile: string;
+
+	/**
+	 * File System event - "add", "addDir", "change", "unlink", "unlinkDir".
+	 */
+	event: string;
+}
+```
+
+Example:
+```JavaScript
+tns.liveSyncService.on("fileChanged", data => {
+	console.log(`Detected file changed: ${data.modifiedFile} in ${data.projectDir}. Will start LiveSync operation on ${data.deviceIdentifiers.join(", ")}.`);
+});
 ```
 
 ## How to add a new method to Public API

@@ -57,7 +57,10 @@ interface IFSWatcher extends NodeJS.EventEmitter {
 
 interface ILiveSyncProcessInfo {
 	timer: NodeJS.Timer;
-	watcher: IFSWatcher;
+	watcherInfo: {
+		watcher: IFSWatcher,
+		pattern: string | string[]
+	};
 	actionsChain: Promise<any>;
 	isStopped: boolean;
 	deviceDescriptors: ILiveSyncDeviceInfo[];
@@ -134,9 +137,10 @@ interface ILiveSyncService {
 	/**
 	 * Stops LiveSync operation for specified directory.
 	 * @param {string} projectDir The directory for which to stop the operation.
+	 * @param {string[]} @optional deviceIdentifiers Device ids for which to stop the application. In case nothing is passed, LiveSync operation will be stopped for all devices.
 	 * @returns {Promise<void>}
 	 */
-	stopLiveSync(projectDir: string): Promise<void>;
+	stopLiveSync(projectDir: string, deviceIdentifiers?: string[]): Promise<void>;
 }
 
 interface ILiveSyncWatchInfo {
