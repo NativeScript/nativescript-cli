@@ -36,18 +36,20 @@ export class TnsModulesCopy {
 
 	private copyDependencyDir(dependency: IDependencyData): void {
 		if (dependency.depth === 0) {
+			const targetPackageDir = path.join(this.outputRoot, dependency.name);
+
+			shelljs.mkdir("-p", targetPackageDir);
+
 			let isScoped = dependency.name.indexOf("@") === 0;
-			let targetDir = this.outputRoot;
 
 			if (isScoped) {
-				targetDir = path.join(this.outputRoot, dependency.name.substring(0, dependency.name.indexOf("/")));
+				// copy module into tns_modules/@scope/module instead of tns_modules/module
+				shelljs.cp("-Rf", dependency.directory, path.join(this.outputRoot, dependency.name.substring(0, dependency.name.indexOf("/"))));
+			} else {
+				shelljs.cp("-Rf", dependency.directory, this.outputRoot);
 			}
 
-			shelljs.mkdir("-p", targetDir);
-			shelljs.cp("-Rf", dependency.directory, targetDir);
-
-			//remove platform-specific files (processed separately by plugin services)
-			const targetPackageDir = path.join(targetDir, dependency.name);
+			// remove platform-specific files (processed separately by plugin services)
 			shelljs.rm("-rf", path.join(targetPackageDir, "platforms"));
 		}
 	}
