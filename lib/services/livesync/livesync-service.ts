@@ -6,7 +6,8 @@ import { hook } from "../../common/helpers";
 
 const LiveSyncEvents = {
 	liveSyncStopped: "liveSyncStopped",
-	liveSyncError: "error",
+	// In case we name it error, EventEmitter expects instance of Error to be raised and will also raise uncaught exception in case there's no handler
+	liveSyncError: "liveSyncError",
 	liveSyncExecuted: "liveSyncExecuted",
 	liveSyncStarted: "liveSyncStarted",
 	liveSyncNotification: "notify"
@@ -209,7 +210,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 				});
 				await this.refreshApplication(projectData, liveSyncResultInfo);
 			} catch (err) {
-				this.$logger.warn(`Unable to apply changes on device: ${err.deviceIdentifier}. Error is: ${err.message}.`);
+				this.$logger.warn(`Unable to apply changes on device: ${device.deviceInfo.identifier}. Error is: ${err.message}.`);
 
 				this.emit(LiveSyncEvents.liveSyncError, {
 					error: err,

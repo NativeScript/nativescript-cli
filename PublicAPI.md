@@ -667,7 +667,7 @@ tns.liveSyncService.on("liveSyncStopped", data => {
 });
 ```
 
-* error - raised whenever an error is detected during LiveSync operation. The event is raised for specific device. Once an error is detected, the event will be raised and the LiveSync operation will be stopped for this device, i.e. `liveSyncStopped` event will be raised for it. The event is raised with the following data:
+* liveSyncError - raised whenever an error is detected during LiveSync operation. The event is raised for specific device. Once an error is detected, the event will be raised and the LiveSync operation will be stopped for this device, i.e. `liveSyncStopped` event will be raised for it. The event is raised with the following data:
 ```TypeScript
 {
 	projectDir: string;
@@ -679,7 +679,7 @@ tns.liveSyncService.on("liveSyncStopped", data => {
 
 Example:
 ```JavaScript
-tns.liveSyncService.on("error", data => {
+tns.liveSyncService.on("liveSyncError", data => {
 	console.log(`Error detected during LiveSync on ${data.deviceIdentifier} for ${data.projectDir}. Error: ${err.message}.`);
 });
 ```
