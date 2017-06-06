@@ -185,7 +185,12 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 
 				await this.ensureLatestAppPackageIsInstalledOnDevice(device, preparedPlatforms, rebuiltInformation, projectData, deviceDescriptor);
 
-				const liveSyncResultInfo = await this.getLiveSyncService(platform).fullSync({ projectData, device, syncAllFiles: liveSyncData.watchAllFiles, useLiveEdit: liveSyncData.useLiveEdit });
+			const liveSyncResultInfo = await this.getLiveSyncService(platform).fullSync({
+				projectData, device,
+				syncAllFiles: liveSyncData.watchAllFiles,
+				useLiveEdit: liveSyncData.useLiveEdit,
+				watch: !liveSyncData.skipWatcher
+			});
 				await this.refreshApplication(projectData, liveSyncResultInfo);
 			} catch (err) {
 				this.$logger.warn(`Unable to apply changes on device: ${err.deviceIdentifier}. Error is: ${err.message}.`);

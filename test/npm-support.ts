@@ -20,7 +20,6 @@ import { DeviceAppDataFactory } from "../lib/common/mobile/device-app-data/devic
 import { LocalToDevicePathDataFactory } from "../lib/common/mobile/local-to-device-path-data-factory";
 import { MobileHelper } from "../lib/common/mobile/mobile-helper";
 import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
-import { DeviceAppDataProvider } from "../lib/providers/device-app-data-provider";
 import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilities";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
@@ -74,7 +73,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("localToDevicePathDataFactory", LocalToDevicePathDataFactory);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("projectFilesProvider", ProjectFilesProvider);
-	testInjector.register("deviceAppDataProvider", DeviceAppDataProvider);
 	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("xmlValidator", XmlValidator);

@@ -100,6 +100,7 @@ $injector.require("infoService", "./services/info-service");
 $injector.requireCommand("info", "./commands/info");
 
 $injector.require("androidToolsInfo", "./android-tools-info");
+$injector.require("devicePathProvider", "./device-path-provider");
 
 $injector.requireCommand("platform|clean", "./commands/platform-clean");
 

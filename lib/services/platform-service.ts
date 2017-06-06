@@ -34,10 +34,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $projectFilesManager: IProjectFilesManager,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $hostInfo: IHostInfo,
+		private $devicePathProvider: Mobile.IDevicePathProvider,
 		private $xmlValidator: IXmlValidator,
 		private $npm: INodePackageManager,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		private $projectChangesService: IProjectChangesService,
 		private $analyticsService: IAnalyticsService) {
 		super();
@@ -547,8 +547,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	private async getDeviceBuildInfoFilePath(device: Mobile.IDevice, projectData: IProjectData): Promise<string> {
-		let deviceAppData = this.$deviceAppDataFactory.create(projectData.projectId, device.deviceInfo.platform, device);
-		let deviceRootPath = path.dirname(await deviceAppData.getDeviceProjectRootPath());
+		// let deviceAppData = this.$deviceAppDataFactory.create(projectData.projectId, device.deviceInfo.platform, device);
+		// let deviceRootPath = path.dirname(await deviceAppData.getDeviceProjectRootPath());
+		const deviceRootPath = await this.$devicePathProvider.getDeviceBuildInfoDirname(device, projectData.projectId);
 		return helpers.fromWindowsRelativePathToUnix(path.join(deviceRootPath, buildInfoFileName));
 	}
 

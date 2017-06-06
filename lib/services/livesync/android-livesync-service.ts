@@ -1,14 +1,17 @@
 import * as path from "path";
 import { AndroidDeviceLiveSyncService } from "./android-device-livesync-service";
-import { APP_FOLDER_NAME, SYNC_DIR_NAME, FULLSYNC_DIR_NAME } from "../../constants";
+import { APP_FOLDER_NAME } from "../../constants";
+import { PlatformLiveSyncServiceBase } from "./platform-livesync-service-base";
 
-export class AndroidLiveSyncService implements IPlatformLiveSyncService {
+export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
 	constructor(private $projectFilesManager: IProjectFilesManager,
 		private $platformsData: IPlatformsData,
 		private $logger: ILogger,
 		private $projectFilesProvider: IProjectFilesProvider,
 		private $fs: IFileSystem,
-		private $injector: IInjector) {
+		private $injector: IInjector,
+		$devicePathProvider: Mobile.IDevicePathProvider) {
+		super($devicePathProvider);
 	}
 
 	public async fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo> {
@@ -17,7 +20,7 @@ export class AndroidLiveSyncService implements IPlatformLiveSyncService {
 		const deviceLiveSyncService = this.$injector.resolve<AndroidDeviceLiveSyncService>(AndroidDeviceLiveSyncService, { _device: device });
 		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 
-		const deviceAppData = await this.getAppData(syncInfo, deviceLiveSyncService);
+		const deviceAppData = await this.getAppData(syncInfo);
 		await deviceLiveSyncService.beforeLiveSyncAction(deviceAppData);
 
 		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
@@ -34,8 +37,7 @@ export class AndroidLiveSyncService implements IPlatformLiveSyncService {
 	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
 		const projectData = liveSyncInfo.projectData;
 		const syncInfo = _.merge<IFullSyncInfo>({ device, watch: true }, liveSyncInfo);
-		const deviceLiveSyncService = this.$injector.resolve<AndroidDeviceLiveSyncService>(AndroidDeviceLiveSyncService, { _device: device });
-		const deviceAppData = await this.getAppData(syncInfo, deviceLiveSyncService);
+		const deviceAppData = await this.getAppData(syncInfo);
 
 		let modifiedLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
 		if (liveSyncInfo.filesToSync.length) {
@@ -94,21 +96,6 @@ export class AndroidLiveSyncService implements IPlatformLiveSyncService {
 		} else {
 			await deviceAppData.device.fileSystem.transferFiles(deviceAppData, localToDevicePaths);
 		}
-	}
-
-	private async getAppData(syncInfo: IFullSyncInfo, deviceLiveSyncService: IAndroidNativeScriptDeviceLiveSyncService): Promise<Mobile.IDeviceAppData> {
-		return {
-			appIdentifier: syncInfo.device.deviceInfo.identifier,
-			device: syncInfo.device,
-			platform: syncInfo.device.deviceInfo.platform,
-			getDeviceProjectRootPath: async () => {
-				const hashService = deviceLiveSyncService.getDeviceHashService(syncInfo.device.deviceInfo.identifier);
-				const hashFile = syncInfo.syncAllFiles ? null : await hashService.doesShasumFileExistsOnDevice();
-				const syncFolderName = syncInfo.watch || hashFile ? SYNC_DIR_NAME : FULLSYNC_DIR_NAME;
-				return `/data/local/tmp/${syncInfo.device.deviceInfo.identifier}/${syncFolderName}`;
-			},
-			isLiveSyncSupported: async () => true
-		};
 	}
 }
 $injector.register("androidLiveSyncService", AndroidLiveSyncService);

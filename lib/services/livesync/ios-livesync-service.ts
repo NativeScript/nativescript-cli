@@ -1,18 +1,19 @@
-import * as deviceAppDataIdentifiers from "../../providers/device-app-data-provider";
 import * as path from "path";
 import * as iosdls from "./ios-device-livesync-service";
 import * as temp from "temp";
+import { PlatformLiveSyncServiceBase } from "./platform-livesync-service-base";
 // import * as uuid from "uuid";
 
-export class IOSLiveSyncService implements IPlatformLiveSyncService {
-	constructor(
-		private $devicesService: Mobile.IDevicesService,
+export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
+	constructor(private $devicesService: Mobile.IDevicesService,
 		private $projectFilesManager: IProjectFilesManager,
 		private $platformsData: IPlatformsData,
 		private $logger: ILogger,
 		private $projectFilesProvider: IProjectFilesProvider,
 		private $fs: IFileSystem,
-		private $injector: IInjector) {
+		private $injector: IInjector,
+		$devicePathProvider: Mobile.IDevicePathProvider) {
+		super($devicePathProvider);
 	}
 
 	/*
@@ -25,8 +26,7 @@ export class IOSLiveSyncService implements IPlatformLiveSyncService {
 		const projectData = syncInfo.projectData;
 		const device = syncInfo.device;
 		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
-		const deviceAppData = this.$injector.resolve(deviceAppDataIdentifiers.IOSAppIdentifier,
-			{ _appIdentifier: projectData.projectId, device, platform: device.deviceInfo.platform });
+		const deviceAppData = await this.getAppData(syncInfo);
 		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, "app");
 
 		if (device.isEmulator) {
@@ -70,8 +70,8 @@ export class IOSLiveSyncService implements IPlatformLiveSyncService {
 
 	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
 		const projectData = liveSyncInfo.projectData;
-		const deviceAppData = this.$injector.resolve(deviceAppDataIdentifiers.IOSAppIdentifier,
-			{ _appIdentifier: projectData.projectId, device, platform: device.deviceInfo.platform });
+		const syncInfo = _.merge<IFullSyncInfo>({ device, watch: true }, liveSyncInfo);
+		const deviceAppData = await this.getAppData(syncInfo);
 		let modifiedLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
 
 		if (liveSyncInfo.isRebuilt) {
