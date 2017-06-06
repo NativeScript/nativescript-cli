@@ -1,29 +1,22 @@
 import { DeviceAndroidDebugBridge } from "../../common/mobile/android/device-android-debug-bridge";
 import { AndroidDeviceHashService } from "../../common/mobile/android/android-device-hash-service";
+import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 import * as helpers from "../../common/helpers";
 import { SYNC_DIR_NAME, FULLSYNC_DIR_NAME, REMOVEDSYNC_DIR_NAME } from "../../constants";
 import { cache } from "../../common/decorators";
 import * as path from "path";
 import * as net from "net";
-import { EOL } from "os";
 
-export class AndroidDeviceLiveSyncService implements IAndroidNativeScriptDeviceLiveSyncService {
-	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml", ".html"];
-
+export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService {
 	private static BACKEND_PORT = 18182;
 	private device: Mobile.IAndroidDevice;
 
 	constructor(_device: Mobile.IDevice,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $injector: IInjector,
-		private $logger: ILogger,
-		private $androidDebugService: IPlatformDebugService,
-		private $platformsData: IPlatformsData) {
+		protected $platformsData: IPlatformsData) {
+		super($platformsData);
 		this.device = <Mobile.IAndroidDevice>(_device);
-	}
-
-	public get debugService(): IPlatformDebugService {
-		return this.$androidDebugService;
 	}
 
 	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
@@ -38,7 +31,7 @@ export class AndroidDeviceLiveSyncService implements IAndroidNativeScriptDeviceL
 				`/data/local/tmp/${deviceAppData.appIdentifier}/sync`]
 		);
 
-		let canExecuteFastSync = !liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
+		const canExecuteFastSync = !liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
 			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
 
 		if (canExecuteFastSync) {
@@ -46,25 +39,6 @@ export class AndroidDeviceLiveSyncService implements IAndroidNativeScriptDeviceL
 		}
 
 		return this.restartApplication(deviceAppData);
-	}
-
-	@cache()
-	private getFastLiveSyncFileExtensions(platform: string, projectData: IProjectData): string[] {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-		const fastSyncFileExtensions = AndroidDeviceLiveSyncService.FAST_SYNC_FILE_EXTENSIONS.concat(platformData.fastLivesyncFileExtensions);
-		return fastSyncFileExtensions;
-	}
-
-	public canExecuteFastSync(filePath: string, projectData: IProjectData, platform: string): boolean {
-		console.log("called canExecuteFastSync for file: ", filePath);
-		const fastSyncFileExtensions = this.getFastLiveSyncFileExtensions(platform, projectData);
-		return _.includes(fastSyncFileExtensions, path.extname(filePath));
-	}
-
-	protected printDebugInformation(information: string[]): void {
-		_.each(information, i => {
-			this.$logger.info(`To start debugging, open the following URL in Chrome:${EOL}${i}${EOL}`.cyan);
-		});
 	}
 
 	private async restartApplication(deviceAppData: Mobile.IDeviceAppData): Promise<void> {

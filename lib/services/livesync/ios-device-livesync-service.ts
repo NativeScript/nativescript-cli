@@ -2,10 +2,11 @@ import * as helpers from "../../common/helpers";
 import * as constants from "../../constants";
 import * as minimatch from "minimatch";
 import * as net from "net";
+import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 
 let currentPageReloadId = 0;
 
-export class IOSDeviceLiveSyncService implements INativeScriptDeviceLiveSyncService {
+export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements INativeScriptDeviceLiveSyncService {
 	private static BACKEND_PORT = 18181;
 	private socket: net.Socket;
 	private device: Mobile.IiOSDevice;
@@ -15,16 +16,11 @@ export class IOSDeviceLiveSyncService implements INativeScriptDeviceLiveSyncServ
 		private $iOSNotification: IiOSNotification,
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
 		private $logger: ILogger,
-		private $iOSDebugService: IDebugService,
 		private $fs: IFileSystem,
-		private $liveSyncProvider: ILiveSyncProvider,
-		private $processService: IProcessService) {
-
+		private $processService: IProcessService,
+		protected $platformsData: IPlatformsData) {
+		super($platformsData);
 		this.device = _device;
-	}
-
-	public get debugService(): IDebugService {
-		return this.$iOSDebugService;
 	}
 
 	private async setupSocketIfNeeded(projectId: string): Promise<boolean> {
@@ -64,11 +60,11 @@ export class IOSDeviceLiveSyncService implements INativeScriptDeviceLiveSyncServ
 		}
 
 		let scriptRelatedFiles: Mobile.ILocalToDevicePathData[] = [];
-		let scriptFiles = _.filter(localToDevicePaths, localToDevicePath => _.endsWith(localToDevicePath.getDevicePath(), ".js"));
+		const scriptFiles = _.filter(localToDevicePaths, localToDevicePath => _.endsWith(localToDevicePath.getDevicePath(), ".js"));
 		constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => scriptRelatedFiles = _.concat(scriptRelatedFiles, localToDevicePaths.filter(file => minimatch(file.getDevicePath(), pattern, { nocase: true }))));
 
-		let otherFiles = _.difference(localToDevicePaths, _.concat(scriptFiles, scriptRelatedFiles));
-		let shouldRestart = _.some(otherFiles, (localToDevicePath: Mobile.ILocalToDevicePathData) => !this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, deviceAppData.platform));
+		const otherFiles = _.difference(localToDevicePaths, _.concat(scriptFiles, scriptRelatedFiles));
+		const shouldRestart = _.some(otherFiles, (localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, deviceAppData.platform));
 
 		if (shouldRestart || (!liveSyncInfo.useLiveEdit && scriptFiles.length)) {
 			await this.restartApplication(deviceAppData, projectData.projectName);

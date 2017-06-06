@@ -75,7 +75,6 @@ $injector.require("commandsServiceProvider", "./providers/commands-service-provi
 $injector.require("deviceAppDataProvider", "./providers/device-app-data-provider");
 
 $injector.require("deviceLogProvider", "./common/mobile/device-log-provider");
-$injector.require("liveSyncProvider", "./providers/livesync-provider");
 $injector.require("projectFilesProvider", "./providers/project-files-provider");
 
 $injector.require("nodeModulesBuilder", "./tools/node-modules/node-modules-builder");
