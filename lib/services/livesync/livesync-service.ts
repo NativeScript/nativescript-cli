@@ -8,7 +8,8 @@ const LiveSyncEvents = {
 	liveSyncStopped: "liveSyncStopped",
 	liveSyncError: "error",
 	liveSyncExecuted: "liveSyncExecuted",
-	liveSyncStarted: "liveSyncStarted"
+	liveSyncStarted: "liveSyncStarted",
+	liveSyncNotification: "notify"
 };
 
 // TODO: emit events for "successfull livesync", "stoppedLivesync",
@@ -98,7 +99,20 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 
 	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo): Promise<void> {
 		const platformLiveSyncService = this.getLiveSyncService(liveSyncResultInfo.deviceAppData.platform);
-		await platformLiveSyncService.refreshApplication(projectData, liveSyncResultInfo);
+		try {
+			// TODO: Assure we are able to self-restart iOS apps on Windows.
+			await platformLiveSyncService.refreshApplication(projectData, liveSyncResultInfo);
+		} catch (err) {
+			this.$logger.info(`Error while trying to start application ${projectData.projectId} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err}`);
+			const msg = `Unable to start application ${projectData.projectId} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Try starting it manually.`;
+			this.$logger.warn(msg);
+			this.emit(LiveSyncEvents.liveSyncNotification, {
+				projectDir: projectData.projectDir,
+				applicationIdentifier: projectData.projectId,
+				deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
+				notification: msg
+			});
+		}
 
 		this.emit(LiveSyncEvents.liveSyncExecuted, {
 			projectDir: projectData.projectDir,
@@ -187,12 +201,12 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 
 				await this.ensureLatestAppPackageIsInstalledOnDevice(device, preparedPlatforms, rebuiltInformation, projectData, deviceDescriptor);
 
-			const liveSyncResultInfo = await this.getLiveSyncService(platform).fullSync({
-				projectData, device,
-				syncAllFiles: liveSyncData.watchAllFiles,
-				useLiveEdit: liveSyncData.useLiveEdit,
-				watch: !liveSyncData.skipWatcher
-			});
+				const liveSyncResultInfo = await this.getLiveSyncService(platform).fullSync({
+					projectData, device,
+					syncAllFiles: liveSyncData.watchAllFiles,
+					useLiveEdit: liveSyncData.useLiveEdit,
+					watch: !liveSyncData.skipWatcher
+				});
 				await this.refreshApplication(projectData, liveSyncResultInfo);
 			} catch (err) {
 				this.$logger.warn(`Unable to apply changes on device: ${err.deviceIdentifier}. Error is: ${err.message}.`);

@@ -684,28 +684,20 @@ tns.liveSyncService.on("error", data => {
 });
 ```
 
-* fileChanged - raised when a watched file is modified. The event is raised witht he following data:
+* notify - raised when LiveSync operation has some data that is important for the user. The event is raised for specific device. The event is raised with the following data:
 ```TypeScript
 {
 	projectDir: string;
-	/**
-	 * Device identifiers on which the file will be LiveSynced.
-	 */
-	deviceIdentifiers: string[];
+	deviceIdentifier: string;
 	applicationIdentifier: string;
-	modifiedFile: string;
-
-	/**
-	 * File System event - "add", "addDir", "change", "unlink", "unlinkDir".
-	 */
-	event: string;
+	notification: string;
 }
 ```
 
 Example:
 ```JavaScript
-tns.liveSyncService.on("fileChanged", data => {
-	console.log(`Detected file changed: ${data.modifiedFile} in ${data.projectDir}. Will start LiveSync operation on ${data.deviceIdentifiers.join(", ")}.`);
+tns.liveSyncService.on("notify", data => {
+	console.log(`Notification: ${notification} for LiveSync operation on ${data.deviceIdentifier} for ${data.projectDir}. `);
 });
 ```
 
