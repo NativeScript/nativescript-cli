@@ -1,11 +1,11 @@
 export class PlatformLiveSyncServiceBase {
 	constructor(
-		private $devicePathProvider: Mobile.IDevicePathProvider,
+		private $devicePathProvider: IDevicePathProvider,
 	) {
 	}
 
 	protected async getAppData(syncInfo: IFullSyncInfo): Promise<Mobile.IDeviceAppData> {
-		const deviceProjectRootOptions: Mobile.IDeviceProjectRootOptions = _.assign({ appIdentifier: syncInfo.projectData.projectId }, syncInfo);
+		const deviceProjectRootOptions: IDeviceProjectRootOptions = _.assign({ appIdentifier: syncInfo.projectData.projectId }, syncInfo);
 		return {
 			appIdentifier: syncInfo.projectData.projectId,
 			device: syncInfo.device,

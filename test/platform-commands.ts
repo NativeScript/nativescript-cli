@@ -141,6 +141,7 @@ function createTestInjector() {
 		track: async () => undefined
 	});
 	testInjector.register("messages", Messages);
+	testInjector.register("devicePathProvider", {});
 
 	return testInjector;
 }

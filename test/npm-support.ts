@@ -85,6 +85,8 @@ function createTestInjector(): IInjector {
 	testInjector.register("messages", Messages);
 	testInjector.register("nodeModulesDependenciesBuilder", NodeModulesDependenciesBuilder);
 
+	testInjector.register("devicePathProvider", {});
+
 	return testInjector;
 }
 

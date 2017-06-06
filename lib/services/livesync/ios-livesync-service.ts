@@ -12,7 +12,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		private $projectFilesProvider: IProjectFilesProvider,
 		private $fs: IFileSystem,
 		private $injector: IInjector,
-		$devicePathProvider: Mobile.IDevicePathProvider) {
+		$devicePathProvider: IDevicePathProvider) {
 		super($devicePathProvider);
 	}
 

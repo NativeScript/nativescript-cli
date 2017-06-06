@@ -3,7 +3,7 @@ import { IOS_DEVICE_PROJECT_ROOT_PATH, SYNC_DIR_NAME, FULLSYNC_DIR_NAME } from "
 import { AndroidDeviceLiveSyncService } from "./services/livesync/android-device-livesync-service";
 import * as path from "path";
 
-export class DevicePathProvider implements Mobile.IDevicePathProvider {
+export class DevicePathProvider implements IDevicePathProvider {
 	constructor(private $mobileHelper: Mobile.IMobileHelper,
 		private $injector: IInjector,
 		private $iOSSimResolver: Mobile.IiOSSimResolver) {
@@ -20,7 +20,7 @@ export class DevicePathProvider implements Mobile.IDevicePathProvider {
 		return result;
 	}
 
-	public async getDeviceProjectRootPath(device: Mobile.IDevice, options: Mobile.IDeviceProjectRootOptions): Promise<string> {
+	public async getDeviceProjectRootPath(device: Mobile.IDevice, options: IDeviceProjectRootOptions): Promise<string> {
 		let projectRoot = "";
 		if (this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform)) {
 			if (device.isEmulator) {

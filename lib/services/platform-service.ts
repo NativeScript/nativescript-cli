@@ -34,7 +34,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $projectFilesManager: IProjectFilesManager,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $hostInfo: IHostInfo,
-		private $devicePathProvider: Mobile.IDevicePathProvider,
+		private $devicePathProvider: IDevicePathProvider,
 		private $xmlValidator: IXmlValidator,
 		private $npm: INodePackageManager,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,

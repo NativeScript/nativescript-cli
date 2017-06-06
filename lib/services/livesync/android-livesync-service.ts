@@ -10,7 +10,7 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 		private $projectFilesProvider: IProjectFilesProvider,
 		private $fs: IFileSystem,
 		private $injector: IInjector,
-		$devicePathProvider: Mobile.IDevicePathProvider) {
+		$devicePathProvider: IDevicePathProvider) {
 		super($devicePathProvider);
 	}
 

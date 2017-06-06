@@ -204,3 +204,14 @@ interface IAndroidNativeScriptDeviceLiveSyncService {
 	 */
 	getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService;
 }
+
+interface IDeviceProjectRootOptions {
+	appIdentifier: string;
+	syncAllFiles?: boolean;
+	watch?: boolean;
+}
+
+interface IDevicePathProvider {
+	getDeviceBuildInfoDirname(device: Mobile.IDevice, appIdentifier: string): Promise<string>;
+	getDeviceProjectRootPath(device: Mobile.IDevice, options: IDeviceProjectRootOptions): Promise<string>;
+}
