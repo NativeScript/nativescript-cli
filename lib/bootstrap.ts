@@ -24,6 +24,7 @@ $injector.require("platformsData", "./platforms-data");
 $injector.require("platformService", "./services/platform-service");
 
 $injector.require("debugDataService", "./services/debug-data-service");
+$injector.requirePublicClass("debugService", "./services/debug-service");
 $injector.require("iOSDebugService", "./services/ios-debug-service");
 $injector.require("androidDebugService", "./services/android-debug-service");
 
@@ -104,6 +105,7 @@ $injector.require("devicePathProvider", "./device-path-provider");
 $injector.requireCommand("platform|clean", "./commands/platform-clean");
 
 $injector.require("liveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
+$injector.require("debugLiveSyncService", "./services/livesync/debug-livesync-service");
 $injector.require("androidLiveSyncService", "./services/livesync/android-livesync-service");
 $injector.require("iOSLiveSyncService", "./services/livesync/ios-livesync-service");
 $injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript

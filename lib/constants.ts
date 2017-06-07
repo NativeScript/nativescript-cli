@@ -70,6 +70,7 @@ export const SYNC_DIR_NAME = "sync";
 export const REMOVEDSYNC_DIR_NAME = "removedsync";
 export const FULLSYNC_DIR_NAME = "fullsync";
 export const IOS_DEVICE_PROJECT_ROOT_PATH = "Library/Application Support/LiveSync/app";
+export const IOS_DEVICE_SYNC_ZIP_PATH = "Library/Application Support/LiveSync/sync.zip";
 export const ANGULAR_NAME = "angular";
 export const TYPESCRIPT_NAME = "typescript";
 export const BUILD_OUTPUT_EVENT_NAME = "buildOutput";

@@ -1,5 +1,5 @@
 import { fromWindowsRelativePathToUnix } from "./common/helpers";
-import { IOS_DEVICE_PROJECT_ROOT_PATH, SYNC_DIR_NAME, FULLSYNC_DIR_NAME } from "./constants";
+import { IOS_DEVICE_SYNC_ZIP_PATH, IOS_DEVICE_PROJECT_ROOT_PATH, SYNC_DIR_NAME, FULLSYNC_DIR_NAME } from "./constants";
 import { AndroidDeviceLiveSyncService } from "./services/livesync/android-device-livesync-service";
 import * as path from "path";
 
@@ -12,7 +12,7 @@ export class DevicePathProvider implements IDevicePathProvider {
 	public async getDeviceBuildInfoDirname(device: Mobile.IDevice, appIdentifier: string): Promise<string> {
 		let result = "";
 		if (this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform)) {
-			result = path.basename(await this.getDeviceProjectRootPath(device, { appIdentifier }));
+			result = path.dirname(await this.getDeviceProjectRootPath(device, { appIdentifier }));
 		} else if (this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
 			result = `/data/local/tmp/${appIdentifier}`;
 		}
@@ -38,6 +38,10 @@ export class DevicePathProvider implements IDevicePathProvider {
 		}
 
 		return fromWindowsRelativePathToUnix(projectRoot);
+	}
+
+	public getDeviceSyncZipPath(device: Mobile.IDevice): string {
+		return this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform) && !device.isEmulator ? IOS_DEVICE_SYNC_ZIP_PATH : undefined;
 	}
 }
 

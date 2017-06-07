@@ -214,4 +214,5 @@ interface IDeviceProjectRootOptions {
 interface IDevicePathProvider {
 	getDeviceBuildInfoDirname(device: Mobile.IDevice, appIdentifier: string): Promise<string>;
 	getDeviceProjectRootPath(device: Mobile.IDevice, options: IDeviceProjectRootOptions): Promise<string>;
+	getDeviceSyncZipPath(device: Mobile.IDevice): string;
 }

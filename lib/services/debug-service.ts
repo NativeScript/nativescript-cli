@@ -67,7 +67,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 		return _.first(result);
 	}
 
-	private getDebugService(device: Mobile.IDevice): IPlatformDebugService {
+	public getDebugService(device: Mobile.IDevice): IPlatformDebugService {
 		if (this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform)) {
 			return this.$iOSDebugService;
 		} else if (this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {

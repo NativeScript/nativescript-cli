@@ -100,7 +100,7 @@ describe("debugService", () => {
 		describe("rejects the result promise when", () => {
 			const assertIsRejected = async (testData: IDebugTestData, expectedError: string, userSpecifiedOptions?: IDebugOptions): Promise<void> => {
 				const testInjector = getTestInjectorForTestConfiguration(testData);
-				const debugService = testInjector.resolve<IDebugService>(DebugService);
+				const debugService = testInjector.resolve<IDebugServiceBase>(DebugService);
 
 				const debugData = getDebugData();
 				await assert.isRejected(debugService.debug(debugData, userSpecifiedOptions), expectedError);
@@ -161,7 +161,7 @@ describe("debugService", () => {
 					throw new Error(expectedErrorMessage);
 				};
 
-				const debugService = testInjector.resolve<IDebugService>(DebugService);
+				const debugService = testInjector.resolve<IDebugServiceBase>(DebugService);
 
 				const debugData = getDebugData();
 				await assert.isRejected(debugService.debug(debugData, null), expectedErrorMessage);
@@ -192,7 +192,7 @@ describe("debugService", () => {
 					return [];
 				};
 
-				const debugService = testInjector.resolve<IDebugService>(DebugService);
+				const debugService = testInjector.resolve<IDebugServiceBase>(DebugService);
 
 				const debugData = getDebugData();
 				await assert.isFulfilled(debugService.debug(debugData, userSpecifiedOptions));
@@ -255,7 +255,7 @@ describe("debugService", () => {
 					testData.deviceInformation.deviceInfo.platform = platform;
 
 					const testInjector = getTestInjectorForTestConfiguration(testData);
-					const debugService = testInjector.resolve<IDebugService>(DebugService);
+					const debugService = testInjector.resolve<IDebugServiceBase>(DebugService);
 					let dataRaisedForConnectionError: any = null;
 					debugService.on(CONNECTION_ERROR_EVENT_NAME, (data: any) => {
 						dataRaisedForConnectionError = data;
@@ -279,7 +279,7 @@ describe("debugService", () => {
 					testData.deviceInformation.deviceInfo.platform = platform;
 
 					const testInjector = getTestInjectorForTestConfiguration(testData);
-					const debugService = testInjector.resolve<IDebugService>(DebugService);
+					const debugService = testInjector.resolve<IDebugServiceBase>(DebugService);
 
 					const debugData = getDebugData();
 					const url = await debugService.debug(debugData, null);

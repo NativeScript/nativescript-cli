@@ -75,7 +75,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 
 	public async createWebSocketProxy(factory: () => Promise<net.Socket>): Promise<ws.Server> {
 		// NOTE: We will try to provide command line options to select ports, at least on the localhost.
-		const localPort = await this.$net.getAvailablePortInRange(8080);
+		const localPort = await this.$net.getFreePort();
 
 		this.$logger.info("\nSetting up debugger proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
 

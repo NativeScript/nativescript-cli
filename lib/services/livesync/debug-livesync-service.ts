@@ -15,7 +15,7 @@ export class DebugLiveSyncService extends LiveSyncService {
 		private $options: IOptions,
 		private $debugDataService: IDebugDataService,
 		private $projectData: IProjectData,
-		private debugService: IPlatformDebugService,
+		private $debugService: IDebugService,
 		private $config: IConfiguration) {
 
 		super($platformService,
@@ -43,25 +43,26 @@ export class DebugLiveSyncService extends LiveSyncService {
 		};
 
 		let debugData = this.$debugDataService.createDebugData(this.$projectData, this.$options);
+		const debugService = this.$debugService.getDebugService(liveSyncResultInfo.deviceAppData.device);
 
 		await this.$platformService.trackProjectType(this.$projectData);
 
 		if (this.$options.start) {
-			return this.printDebugInformation(await this.debugService.debug<string[]>(debugData, debugOptions));
+			return this.printDebugInformation(await debugService.debug<string[]>(debugData, debugOptions));
 		}
 
 		const deviceAppData = liveSyncResultInfo.deviceAppData;
 		this.$config.debugLivesync = true;
 
-		await this.debugService.debugStop();
+		await debugService.debugStop();
 
 		let applicationId = deviceAppData.appIdentifier;
 		await deviceAppData.device.applicationManager.stopApplication(applicationId, projectData.projectName);
 
 		const buildConfig: IBuildConfig = _.merge({ buildForDevice: !deviceAppData.device.isEmulator }, deployOptions);
-		debugData.pathToAppPackage = this.$platformService.lastOutputPath(this.debugService.platform, buildConfig, projectData);
+		debugData.pathToAppPackage = this.$platformService.lastOutputPath(debugService.platform, buildConfig, projectData);
 
-		this.printDebugInformation(await this.debugService.debug<string[]>(debugData, debugOptions));
+		this.printDebugInformation(await debugService.debug<string[]>(debugData, debugOptions));
 	}
 
 	protected printDebugInformation(information: string[]): void {
