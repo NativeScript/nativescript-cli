@@ -52,24 +52,27 @@ export class TnsModulesCopy {
 			// remove platform-specific files (processed separately by plugin services)
 			shelljs.rm("-rf", path.join(targetPackageDir, "platforms"));
 
-			//leave only production dependencies
-			let packageJsonFilePath = path.join(dependency.directory, "package.json");
-			if (!this.$fs.exists(packageJsonFilePath)) {
-				return;
-			}
+			this.removeNotProductionDependencies(dependency, targetPackageDir);
+		}
+	}
 
-			let packageJsonContent = this.$fs.readJson(packageJsonFilePath);
-			let productionDependencies = packageJsonContent.dependencies;
+	private removeNotProductionDependencies(dependency: IDependencyData, targetPackageDir: string): void {
+		let packageJsonFilePath = path.join(dependency.directory, "package.json");
+		if (!this.$fs.exists(packageJsonFilePath)) {
+			return;
+		}
 
-			let dependenciesFolder = path.join(targetPackageDir, "node_modules");
-			if (this.$fs.exists(dependenciesFolder)) {
-				let dependencies = this.$fs.readDirectory(dependenciesFolder);
+		let packageJsonContent = this.$fs.readJson(packageJsonFilePath);
+		let productionDependencies = packageJsonContent.dependencies;
 
-				for (let i = 0; i < dependencies.length; i++) {
-					let dir = dependencies[i];
-					if (productionDependencies == null || !productionDependencies.hasOwnProperty(dir)) {
-						shelljs.rm("-rf", path.join(dependenciesFolder, dir));
-					}
+		let dependenciesFolder = path.join(targetPackageDir, "node_modules");
+		if (this.$fs.exists(dependenciesFolder)) {
+			let dependencies = this.$fs.readDirectory(dependenciesFolder);
+
+			for (let i = 0; i < dependencies.length; i++) {
+				let dir = dependencies[i];
+				if (productionDependencies == null || !productionDependencies.hasOwnProperty(dir)) {
+					shelljs.rm("-rf", path.join(dependenciesFolder, dir));
 				}
 			}
 		}
