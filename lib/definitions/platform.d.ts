@@ -55,10 +55,11 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * - the .nsbuildinfo file in product folder points to an old prepare.
 	 * @param {string} platform The platform to build.
 	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @param {IProjectChangesOptions} projectChangesOptions Additional info about project state.
 	 * @param {IBuildConfig} buildConfig Indicates whether the build is for device or emulator.
 	 * @returns {boolean} true indicates that the platform should be build.
 	 */
-	shouldBuild(platform: string, projectData: IProjectData, buildConfig?: IBuildConfig): Promise<boolean>;
+	shouldBuild(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions, buildConfig?: IBuildConfig): Promise<boolean>;
 
 	/**
 	 * Builds the native project for the specified platform for device or emulator.

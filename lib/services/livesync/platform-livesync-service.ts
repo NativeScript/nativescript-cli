@@ -176,7 +176,9 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 			let localToDevicePaths: Mobile.ILocalToDevicePathData[] = null;
 			let isFullSync = false;
 
-			if (this.$projectChangesService.currentChanges.changesRequireBuild) {
+			const buildOptions = { bundle: this.$options.bundle, release: this.$options.release, provision: this.$options.provision };
+
+			if (this.$projectChangesService.checkForChanges(device.deviceInfo.platform, projectData, buildOptions).changesRequireBuild) {
 				let buildConfig: IBuildConfig = {
 					buildForDevice: !device.isEmulator,
 					projectDir: this.$options.path,
@@ -186,7 +188,7 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 					provision: this.$options.provision,
 				};
 				let platform = device.deviceInfo.platform;
-				if (this.$platformService.shouldBuild(platform, projectData, buildConfig)) {
+				if (this.$platformService.shouldBuild(platform, projectData, buildOptions, buildConfig)) {
 					await this.$platformService.buildPlatform(platform, buildConfig, projectData);
 				}
 

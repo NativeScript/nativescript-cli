@@ -36,7 +36,6 @@ class ProjectChangesInfo implements IProjectChangesInfo {
 
 export class ProjectChangesService implements IProjectChangesService {
 
-	private _changesInfo: IProjectChangesInfo;
 	private _prepareInfo: IPrepareInfo;
 	private _newFiles: number = 0;
 	private _outputProjectMtime: number;
@@ -48,35 +47,32 @@ export class ProjectChangesService implements IProjectChangesService {
 		private $fs: IFileSystem) {
 	}
 
-	public get currentChanges(): IProjectChangesInfo {
-		return this._changesInfo;
-	}
-
 	public checkForChanges(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): IProjectChangesInfo {
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
-		this._changesInfo = new ProjectChangesInfo();
-		if (!this.ensurePrepareInfo(platform, projectData, projectChangesOptions)) {
+		const changesInfo = new ProjectChangesInfo();
+		if (!this.ensurePrepareInfo(platform, projectData, projectChangesOptions, changesInfo)) {
 			this._newFiles = 0;
-			this._changesInfo.appFilesChanged = this.containsNewerFiles(projectData.appDirectoryPath, projectData.appResourcesDirectoryPath, projectData);
-			this._changesInfo.packageChanged = this.filesChanged([path.join(projectData.projectDir, "package.json")]);
-			this._changesInfo.appResourcesChanged = this.containsNewerFiles(projectData.appResourcesDirectoryPath, null, projectData);
+			changesInfo.appFilesChanged = this.containsNewerFiles(projectData.appDirectoryPath, projectData.appResourcesDirectoryPath, projectData);
+			changesInfo.packageChanged = this.filesChanged([path.join(projectData.projectDir, "package.json")]);
+			changesInfo.appResourcesChanged = this.containsNewerFiles(projectData.appResourcesDirectoryPath, null, projectData);
 			/*done because currently all node_modules are traversed, a possible improvement could be traversing only the production dependencies*/
-			this._changesInfo.nativeChanged = this.containsNewerFiles(
+			changesInfo.nativeChanged = this.containsNewerFiles(
 				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME),
 				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME, "tns-ios-inspector"),
 				projectData,
 				this.fileChangeRequiresBuild);
 			if (this._newFiles > 0) {
-				this._changesInfo.modulesChanged = true;
+				changesInfo.modulesChanged = true;
 			}
+
 			let platformResourcesDir = path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
 			if (platform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
-				this._changesInfo.configChanged = this.filesChanged([path.join(platformResourcesDir, platformData.configurationFileName),
-					path.join(platformResourcesDir, "LaunchScreen.storyboard"),
-					path.join(platformResourcesDir, "build.xcconfig")
+				changesInfo.configChanged = this.filesChanged([path.join(platformResourcesDir, platformData.configurationFileName),
+				path.join(platformResourcesDir, "LaunchScreen.storyboard"),
+				path.join(platformResourcesDir, "build.xcconfig")
 				]);
 			} else {
-				this._changesInfo.configChanged = this.filesChanged([
+				changesInfo.configChanged = this.filesChanged([
 					path.join(platformResourcesDir, platformData.configurationFileName),
 					path.join(platformResourcesDir, "app.gradle")
 				]);
@@ -84,30 +80,34 @@ export class ProjectChangesService implements IProjectChangesService {
 		}
 
 		let projectService = platformData.platformProjectService;
-		projectService.checkForChanges(this._changesInfo, projectChangesOptions, projectData);
+		projectService.checkForChanges(changesInfo, projectChangesOptions, projectData);
 
 		if (projectChangesOptions.bundle !== this._prepareInfo.bundle || projectChangesOptions.release !== this._prepareInfo.release) {
-			this._changesInfo.appFilesChanged = true;
-			this._changesInfo.appResourcesChanged = true;
-			this._changesInfo.modulesChanged = true;
-			this._changesInfo.configChanged = true;
+			changesInfo.appFilesChanged = true;
+			changesInfo.appResourcesChanged = true;
+			changesInfo.modulesChanged = true;
+			changesInfo.configChanged = true;
 			this._prepareInfo.release = projectChangesOptions.release;
 			this._prepareInfo.bundle = projectChangesOptions.bundle;
 		}
-		if (this._changesInfo.packageChanged) {
-			this._changesInfo.modulesChanged = true;
+
+		if (changesInfo.packageChanged) {
+			changesInfo.modulesChanged = true;
 		}
-		if (this._changesInfo.modulesChanged || this._changesInfo.appResourcesChanged) {
-			this._changesInfo.configChanged = true;
+
+		if (changesInfo.modulesChanged || changesInfo.appResourcesChanged) {
+			changesInfo.configChanged = true;
 		}
-		if (this._changesInfo.hasChanges) {
-			this._prepareInfo.changesRequireBuild = this._changesInfo.changesRequireBuild;
+
+		if (changesInfo.hasChanges) {
+			this._prepareInfo.changesRequireBuild = changesInfo.changesRequireBuild;
 			this._prepareInfo.time = new Date().toString();
 			if (this._prepareInfo.changesRequireBuild) {
 				this._prepareInfo.changesRequireBuildTime = this._prepareInfo.time;
 			}
 		}
-		return this._changesInfo;
+
+		return changesInfo;
 	}
 
 	public getPrepareInfoFilePath(platform: string, projectData: IProjectData): string {
@@ -134,7 +134,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		this.$fs.writeJson(prepareInfoFilePath, this._prepareInfo);
 	}
 
-	private ensurePrepareInfo(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): boolean {
+	private ensurePrepareInfo(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions, changesInfo: IProjectChangesInfo): boolean {
 		this._prepareInfo = this.getPrepareInfo(platform, projectData);
 		if (this._prepareInfo) {
 			let platformData = this.$platformsData.getPlatformData(platform, projectData);
@@ -152,10 +152,10 @@ export class ProjectChangesService implements IProjectChangesService {
 		};
 		this._outputProjectMtime = 0;
 		this._outputProjectCTime = 0;
-		this._changesInfo.appFilesChanged = true;
-		this._changesInfo.appResourcesChanged = true;
-		this._changesInfo.modulesChanged = true;
-		this._changesInfo.configChanged = true;
+		changesInfo.appFilesChanged = true;
+		changesInfo.appResourcesChanged = true;
+		changesInfo.modulesChanged = true;
+		changesInfo.configChanged = true;
 		return true;
 	}
 
