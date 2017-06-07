@@ -52,11 +52,11 @@ export class TnsModulesCopy {
 			// remove platform-specific files (processed separately by plugin services)
 			shelljs.rm("-rf", path.join(targetPackageDir, "platforms"));
 
-			this.removeNotProductionDependencies(dependency, targetPackageDir);
+			this.removeNonProductionDependencies(dependency, targetPackageDir);
 		}
 	}
 
-	private removeNotProductionDependencies(dependency: IDependencyData, targetPackageDir: string): void {
+	private removeNonProductionDependencies(dependency: IDependencyData, targetPackageDir: string): void {
 		let packageJsonFilePath = path.join(dependency.directory, "package.json");
 		if (!this.$fs.exists(packageJsonFilePath)) {
 			return;
