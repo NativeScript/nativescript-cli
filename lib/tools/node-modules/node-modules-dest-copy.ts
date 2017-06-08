@@ -29,7 +29,7 @@ export class TnsModulesCopy {
 				let matchPattern = this.$options.release ? "**/*.ts" : "**/*.d.ts";
 				allFiles.filter(file => minimatch(file, matchPattern, { nocase: true })).map(file => this.$fs.deleteFile(file));
 
-				shelljs.rm("-rf", path.join(tnsCoreModulesResourcePath, "node_modules"));
+				shelljs.rm("-rf", path.join(tnsCoreModulesResourcePath, constants.NODE_MODULES_FOLDER_NAME));
 			}
 		}
 	}
@@ -57,19 +57,19 @@ export class TnsModulesCopy {
 	}
 
 	private removeNonProductionDependencies(dependency: IDependencyData, targetPackageDir: string): void {
-		let packageJsonFilePath = path.join(dependency.directory, "package.json");
+		const packageJsonFilePath = path.join(dependency.directory, constants.PACKAGE_JSON_FILE_NAME);
 		if (!this.$fs.exists(packageJsonFilePath)) {
 			return;
 		}
 
-		let packageJsonContent = this.$fs.readJson(packageJsonFilePath);
-		let productionDependencies = packageJsonContent.dependencies;
+		const packageJsonContent = this.$fs.readJson(packageJsonFilePath);
+		const productionDependencies = packageJsonContent.dependencies;
 
-		let dependenciesFolder = path.join(targetPackageDir, "node_modules");
+		const dependenciesFolder = path.join(targetPackageDir, constants.NODE_MODULES_FOLDER_NAME);
 		if (this.$fs.exists(dependenciesFolder)) {
-			let dependencies = this.$fs.readDirectory(dependenciesFolder);
+			const dependencies = this.$fs.readDirectory(dependenciesFolder);
 			dependencies.filter(dir => !!productionDependencies || !productionDependencies.hasOwnProperty(dir))
-				.map(dir => shelljs.rm("-rf", path.join(dependenciesFolder, dir)));
+				.forEach(dir => shelljs.rm("-rf", path.join(dependenciesFolder, dir)));
 		}
 	}
 }
