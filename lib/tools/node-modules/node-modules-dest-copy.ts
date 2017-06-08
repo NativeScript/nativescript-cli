@@ -29,7 +29,7 @@ export class TnsModulesCopy {
 				let matchPattern = this.$options.release ? "**/*.ts" : "**/*.d.ts";
 				allFiles.filter(file => minimatch(file, matchPattern, { nocase: true })).map(file => this.$fs.deleteFile(file));
 
-				shelljs.rm("-rf", path.join(tnsCoreModulesResourcePath, "node_modules"));
+				shelljs.rm("-rf", path.join(tnsCoreModulesResourcePath, constants.NODE_MODULES_FOLDER_NAME));
 			}
 		}
 	}
@@ -51,6 +51,25 @@ export class TnsModulesCopy {
 
 			// remove platform-specific files (processed separately by plugin services)
 			shelljs.rm("-rf", path.join(targetPackageDir, "platforms"));
+
+			this.removeNonProductionDependencies(dependency, targetPackageDir);
+		}
+	}
+
+	private removeNonProductionDependencies(dependency: IDependencyData, targetPackageDir: string): void {
+		const packageJsonFilePath = path.join(dependency.directory, constants.PACKAGE_JSON_FILE_NAME);
+		if (!this.$fs.exists(packageJsonFilePath)) {
+			return;
+		}
+
+		const packageJsonContent = this.$fs.readJson(packageJsonFilePath);
+		const productionDependencies = packageJsonContent.dependencies;
+
+		const dependenciesFolder = path.join(targetPackageDir, constants.NODE_MODULES_FOLDER_NAME);
+		if (this.$fs.exists(dependenciesFolder)) {
+			const dependencies = this.$fs.readDirectory(dependenciesFolder);
+			dependencies.filter(dir => !!productionDependencies || !productionDependencies.hasOwnProperty(dir))
+				.forEach(dir => shelljs.rm("-rf", path.join(dependenciesFolder, dir)));
 		}
 	}
 }
