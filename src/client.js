@@ -42,15 +42,43 @@ export default class Client {
     }, options);
 
     if (options.apiHostname && isString(options.apiHostname)) {
-      const apiHostnameParsed = url.parse(options.apiHostname);
-      options.apiProtocol = apiHostnameParsed.protocol || 'https:';
-      options.apiHost = apiHostnameParsed.host;
+      let apiHostname = options.apiHostname;
+
+      if (/^https?:\/\//i.test(apiHostname) === false) {
+        apiHostname = `https://${apiHostname}`;
+      }
+
+      const apiHostnameParsed = url.parse(apiHostname);
+
+      /**
+       * @type {string}
+       */
+      this.apiProtocol = apiHostnameParsed.protocol;
+
+      /**
+       * @type {string}
+       */
+      this.apiHost = apiHostnameParsed.host;
     }
 
     if (options.micHostname && isString(options.micHostname)) {
-      const micHostnameParsed = url.parse(options.micHostname);
-      options.micProtocol = micHostnameParsed.protocol || 'https:';
-      options.micHost = micHostnameParsed.host;
+      let micHostname = options.micHostname;
+
+      if (/^https?:\/\//i.test(micHostname) === false) {
+        micHostname = `https://${micHostname}`;
+      }
+
+      const micHostnameParsed = url.parse(micHostname);
+
+      /**
+       * @type {string}
+       */
+      this.micProtocol = micHostnameParsed.protocol;
+
+      /**
+       * @type {string}
+       */
+      this.micHost = micHostnameParsed.host;
     }
 
     if (options.liveServiceHostname && isString(options.liveServiceHostname)) {
@@ -58,26 +86,6 @@ export default class Client {
       options.liveServiceProtocol = liveServiceHostnameParsed.protocol || 'https:';
       options.liveServiceHost = liveServiceHostnameParsed.host;
     }
-
-    /**
-     * @type {string}
-     */
-    this.apiProtocol = options.apiProtocol;
-
-    /**
-     * @type {string}
-     */
-    this.apiHost = options.apiHost;
-
-    /**
-     * @type {string}
-     */
-    this.micProtocol = options.micProtocol;
-
-    /**
-     * @type {string}
-     */
-    this.micHost = options.micHost;
 
     /**
      * @type {string}
