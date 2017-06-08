@@ -58,7 +58,10 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				contentDeliveryResponse = await this.$httpClient.httpRequest({
 					url: "https://contentdelivery.itunes.apple.com/WebObjects/MZLabelService.woa/json/MZITunesProducerService",
 					method: "POST",
-					body: requestBody
+					body: requestBody,
+					headers: {
+						"Content-Length": requestBody.length
+					}
 				}),
 				contentDeliveryBody: IContentDeliveryBody = JSON.parse(contentDeliveryResponse.body);
 
@@ -170,12 +173,12 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		return this._itmsTransporterPath;
 	}
 
-	private getContentDeliveryRequestBody(credentials: ICredentials): string {
+	private getContentDeliveryRequestBody(credentials: ICredentials): Buffer {
 		// All of those values except credentials are hardcoded
 		// Apple's content delivery API is very picky with handling requests
 		// and if only one of these ends up missing the API returns
 		// a response with 200 status code and an error
-		return JSON.stringify({
+		return Buffer.from(JSON.stringify({
 			id: "1", // magic number
 			jsonrpc: "2.0",
 			method: "lookupSoftwareApplications",
@@ -186,7 +189,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				Application: "Application Loader",
 				OSIdentifier: "Mac OS X 10.8.5 (x86_64)"
 			}
-		});
+		}), "utf8");
 	}
 
 	private getITMSMetadataXml(appleId: string, ipaFileName: string, ipaFileHash: string, ipaFileSize: number): string {
