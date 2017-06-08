@@ -623,6 +623,10 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 		return [];
 	}
 
+	public saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void {
+		return;
+	}
+
 	public async removePlatforms(platforms: string[]): Promise<void> {
 
 	}

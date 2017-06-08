@@ -1,8 +1,8 @@
 import * as path from "path";
 import * as choki from "chokidar";
 import { EventEmitter } from "events";
-import { exported } from "../../common/decorators";
 import { hook } from "../../common/helpers";
+import { FileExtensions } from "../../common/constants";
 
 const LiveSyncEvents = {
 	liveSyncStopped: "liveSyncStopped",
@@ -30,8 +30,6 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		super();
 	}
 
-	// TODO: Add finishLivesync method in the platform specific services
-	@exported("liveSyncService")
 	@hook("liveSync")
 	public async liveSync(deviceDescriptors: ILiveSyncDeviceInfo[],
 		liveSyncData: ILiveSyncInfo): Promise<void> {
@@ -54,7 +52,6 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		}
 	}
 
-	@exported("liveSyncService")
 	public async stopLiveSync(projectDir: string, deviceIdentifiers?: string[], ): Promise<void> {
 		const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectDir];
 
@@ -91,7 +88,12 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 
 				// Kill typescript watcher
 				// TODO: Pass the projectDir in hooks args.
-				await this.$hooksService.executeAfterHooks('watch');
+				const projectData = this.$projectDataService.getProjectData(projectDir);
+				await this.$hooksService.executeAfterHooks('watch', {
+					hookArgs: {
+						projectData
+					}
+				});
 
 				this.emit(LiveSyncEvents.liveSyncStopped, { projectDir });
 			}
@@ -155,7 +157,10 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		if (preparedPlatforms.indexOf(platform) === -1) {
 			preparedPlatforms.push(platform);
 			// TODO: fix args cast to any
-			await this.$platformService.preparePlatform(platform, <any>{}, null, projectData, <any>{}, modifiedFiles);
+			await this.$platformService.preparePlatform(platform, {
+				bundle: false,
+				release: false,
+			}, null, projectData, <any>{}, modifiedFiles);
 		}
 
 		const rebuildInfo = _.find(rebuiltInformation, info => info.isEmulator === device.isEmulator && info.platform === platform);
@@ -169,18 +174,16 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 
 		// TODO: fix args cast to any
 		const shouldBuild = await this.$platformService.shouldBuild(platform, projectData, <any>{ buildForDevice: !device.isEmulator }, deviceBuildInfoDescriptor.outputPath);
+		let pathToBuildItem = null;
 		if (shouldBuild) {
-			const pathToBuildItem = await deviceBuildInfoDescriptor.buildAction();
+			pathToBuildItem = await deviceBuildInfoDescriptor.buildAction();
 			// Is it possible to return shouldBuild for two devices? What about android device and android emulator?
 			rebuiltInformation.push({ isEmulator: device.isEmulator, platform, pathToBuildItem });
-			await this.$platformService.installApplication(device, { release: false }, projectData, pathToBuildItem, deviceBuildInfoDescriptor.outputPath);
-
 		}
 
 		const shouldInstall = await this.$platformService.shouldInstall(device, projectData, deviceBuildInfoDescriptor.outputPath);
 		if (shouldInstall) {
-
-			await this.$platformService.installApplication(device, { release: false }, projectData, null, deviceBuildInfoDescriptor.outputPath);
+			await this.$platformService.installApplication(device, { release: false }, projectData, pathToBuildItem, deviceBuildInfoDescriptor.outputPath);
 		}
 	}
 
@@ -319,7 +322,11 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 				this.liveSyncProcessesInfo[liveSyncData.projectDir].timer = timeoutTimer;
 			};
 
-			await this.$hooksService.executeBeforeHooks('watch');
+			await this.$hooksService.executeBeforeHooks('watch', {
+				hookArgs: {
+					projectData
+				}
+			});
 
 			const watcherOptions: choki.WatchOptions = {
 				ignoreInitial: true,
@@ -345,7 +352,10 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 						filesToRemove.push(filePath);
 					}
 
-					startTimeout();
+					// Do not sync typescript files directly - wait for javascript changes to occur in order to restart the app only once
+					if (path.extname(filePath) !== FileExtensions.TYPESCRIPT_FILE) {
+						startTimeout();
+					}
 				});
 
 			this.liveSyncProcessesInfo[liveSyncData.projectDir].watcherInfo = { watcher, pattern };

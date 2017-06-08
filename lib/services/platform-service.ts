@@ -438,23 +438,31 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME, platformData.platformProjectService, handler, platformData.platformProjectService.buildProject(platformData.projectRoot, projectData, buildConfig));
 
-		let prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
-		let buildInfoFilePath = this.getBuildOutputPath(platform, platformData, buildConfig);
-		let buildInfoFile = path.join(buildInfoFilePath, buildInfoFileName);
-		let buildInfo: IBuildInfo = {
+		const buildInfoFilePath = this.getBuildOutputPath(platform, platformData, buildConfig);
+		this.saveBuildInfoFile(platform, projectData.projectDir, buildInfoFilePath);
+
+		this.$logger.out("Project successfully built.");
+	}
+
+	public saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void {
+		let buildInfoFile = path.join(buildInfoFileDirname, buildInfoFileName);
+
+		let prepareInfo = this.$projectChangesService.getPrepareInfo(platform, this.$projectDataService.getProjectData(projectDir));
+		let buildInfo = {
 			prepareTime: prepareInfo.changesRequireBuildTime,
 			buildTime: new Date().toString()
 		};
+
 		this.$fs.writeJson(buildInfoFile, buildInfo);
-		this.$logger.out("Project successfully built.");
 	}
 
 	public async shouldInstall(device: Mobile.IDevice, projectData: IProjectData, outputPath?: string): Promise<boolean> {
 		let platform = device.deviceInfo.platform;
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		if (!(await device.applicationManager.isApplicationInstalled(projectData.projectId))) {
 			return true;
 		}
+
+		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		let deviceBuildInfo: IBuildInfo = await this.getDeviceBuildInfo(device, projectData);
 		let localBuildInfo = this.getBuildInfo(platform, platformData, { buildForDevice: !device.isEmulator }, outputPath);
 		return !localBuildInfo || !deviceBuildInfo || deviceBuildInfo.buildTime !== localBuildInfo.buildTime;

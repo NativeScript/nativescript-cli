@@ -195,6 +195,15 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @returns {Promise<void>}
 	 */
 	trackActionForPlatform(actionData: ITrackPlatformAction): Promise<void>;
+
+	/**
+	 * Saves build information in a proprietary file.
+	 * @param {string} platform The build platform.
+	 * @param {string} projectDir The project's directory.
+	 * @param {string} buildInfoFileDirname The directory where the build file should be written to.
+	 * @returns {void}
+	 */
+	saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void
 }
 
 interface IAddPlatformCoreOptions extends IPlatformSpecificData, ICreateProjectOptions { }
