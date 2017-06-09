@@ -485,11 +485,6 @@ interface IiOSNotification {
 	getAttachAvailable(projectId: string): string;
 }
 
-interface IiOSNotificationService {
-	awaitNotification(deviceIdentifier: string, socket: number, timeout: number): Promise<string>;
-	postNotification(deviceIdentifier: string, notification: string, commandType?: string): Promise<number>;
-}
-
 interface IiOSSocketRequestExecutor {
 	executeLaunchRequest(deviceIdentifier: string, timeout: number, readyForAttachTimeout: number, projectId: string, shouldBreak?: boolean): Promise<void>;
 	executeAttachRequest(device: Mobile.IiOSDevice, timeout: number, projectId: string): Promise<void>;
