@@ -116,11 +116,7 @@ interface ILiveSyncInfo {
 	useLiveEdit?: boolean;
 }
 
-interface ILatestAppPackageInstalledSettings {
-	[key: string]: {
-		[key: string]: boolean;
-	}
-}
+interface ILatestAppPackageInstalledSettings extends IDictionary<IDictionary<boolean>> { /* empty */ }
 
 interface ILiveSyncBuildInfo {
 	platform: string;

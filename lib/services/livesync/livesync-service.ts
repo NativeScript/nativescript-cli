@@ -200,7 +200,6 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 
 		await this.$platformService.trackActionForPlatform({ action: LiveSyncTrackActionNames.DEVICE_INFO, platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
 
-
 		const shouldInstall = await this.$platformService.shouldInstall(device, projectData, deviceBuildInfoDescriptor.outputPath);
 		if (shouldInstall) {
 			await this.$platformService.installApplication(device, { release: false }, projectData, pathToBuildItem, deviceBuildInfoDescriptor.outputPath);
@@ -263,7 +262,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 				[DeviceTypes.Device]: false,
 				[DeviceTypes.Emulator]: false
 			}
-		}
+		};
 	}
 
 	private async startWatcher(projectData: IProjectData,
