@@ -103,7 +103,6 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo): Promise<void> {
 		const platformLiveSyncService = this.getLiveSyncService(liveSyncResultInfo.deviceAppData.platform);
 		try {
-			// TODO: Assure we are able to self-restart iOS apps on Windows.
 			await platformLiveSyncService.refreshApplication(projectData, liveSyncResultInfo);
 		} catch (err) {
 			this.$logger.info(`Error while trying to start application ${projectData.projectId} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
@@ -123,6 +122,8 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 			syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
 			deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier
 		});
+
+		this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
 	}
 
 	private setLiveSyncProcessInfo(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[]): void {

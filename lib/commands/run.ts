@@ -1,3 +1,5 @@
+import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "../common/constants";
+
 export class RunCommandBase implements ICommand {
 	protected platform: string;
 
@@ -7,19 +9,24 @@ export class RunCommandBase implements ICommand {
 		protected $options: IOptions,
 		protected $emulatorPlatformService: IEmulatorPlatformService,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		protected $errors: IErrors,
 		private $devicesService: Mobile.IDevicesService,
 		private $hostInfo: IHostInfo,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper) {
-		this.$projectData.initializeProjectData();
 	}
 
-	public allowedParameters: ICommandParameter[] = [ ];
+	public allowedParameters: ICommandParameter[] = [];
 	public async execute(args: string[]): Promise<void> {
 		return this.executeCore(args);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		if (args.length) {
+			this.$errors.fail(ERROR_NO_VALID_SUBCOMMAND_FORMAT, "run");
+		}
+
+		this.$projectData.initializeProjectData();
 		if (!this.platform && !this.$hostInfo.isDarwin) {
 			this.platform = this.$devicePlatformsConstants.Android;
 		}
@@ -43,7 +50,7 @@ export class RunCommandBase implements ICommand {
 					identifier: d.deviceInfo.identifier,
 					buildAction: async (): Promise<string> => {
 						const buildConfig: IBuildConfig = {
-							buildForDevice: !d.isEmulator, // this.$options.forDevice,
+							buildForDevice: !d.isEmulator,
 							projectDir: this.$options.path,
 							clean: this.$options.clean,
 							teamId: this.$options.teamId,
@@ -65,25 +72,26 @@ export class RunCommandBase implements ICommand {
 				return info;
 			});
 
-		// if (this.$options.release) {
-		// 	const deployOpts: IRunPlatformOptions = {
-		// 		device: this.$options.device,
-		// 		emulator: this.$options.emulator,
-		// 		justlaunch: this.$options.justlaunch,
-		// 	};
-
-		// 	await this.$platformService.startApplication(args[0], deployOpts, this.$projectData.projectId);
-		// 	return this.$platformService.trackProjectType(this.$projectData);
-		// }
-
 		if ((!this.platform || this.$mobileHelper.isiOSPlatform(this.platform)) && (this.$options.watch || !this.$options.justlaunch)) {
 			this.$iosDeviceOperations.setShouldDispose(false);
+		}
+
+		if (this.$options.release) {
+			const deployOpts: IRunPlatformOptions = {
+				device: this.$options.device,
+				emulator: this.$options.emulator,
+				justlaunch: this.$options.justlaunch,
+			};
+
+			await this.$platformService.startApplication(args[0], deployOpts, this.$projectData.projectId);
+			return this.$platformService.trackProjectType(this.$projectData);
 		}
 
 		const liveSyncInfo: ILiveSyncInfo = { projectDir: this.$projectData.projectDir, skipWatcher: !this.$options.watch, watchAllFiles: this.$options.syncAllFiles };
 		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 	}
 }
+
 $injector.registerCommand("run|*all", RunCommandBase);
 
 export class RunIosCommand extends RunCommandBase implements ICommand {
@@ -95,7 +103,7 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 	constructor($platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $errors: IErrors,
+		protected $errors: IErrors,
 		$liveSyncService: ILiveSyncService,
 		$projectData: IProjectData,
 		$options: IOptions,
@@ -104,7 +112,7 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 		$hostInfo: IHostInfo,
 		$iosDeviceOperations: IIOSDeviceOperations,
 		$mobileHelper: Mobile.IMobileHelper) {
-		super($platformService, $liveSyncService, $projectData, $options, $emulatorPlatformService, $devicePlatformsConstants, $devicesService, $hostInfo, $iosDeviceOperations, $mobileHelper);
+		super($platformService, $liveSyncService, $projectData, $options, $emulatorPlatformService, $devicePlatformsConstants, $errors, $devicesService, $hostInfo, $iosDeviceOperations, $mobileHelper);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -131,7 +139,7 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 	constructor($platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $errors: IErrors,
+		protected $errors: IErrors,
 		$liveSyncService: ILiveSyncService,
 		$projectData: IProjectData,
 		$options: IOptions,
@@ -140,7 +148,7 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 		$hostInfo: IHostInfo,
 		$iosDeviceOperations: IIOSDeviceOperations,
 		$mobileHelper: Mobile.IMobileHelper) {
-		super($platformService, $liveSyncService, $projectData, $options, $emulatorPlatformService, $devicePlatformsConstants, $devicesService, $hostInfo, $iosDeviceOperations, $mobileHelper);
+		super($platformService, $liveSyncService, $projectData, $options, $emulatorPlatformService, $devicePlatformsConstants, $errors, $devicesService, $hostInfo, $iosDeviceOperations, $mobileHelper);
 	}
 
 	public async execute(args: string[]): Promise<void> {
