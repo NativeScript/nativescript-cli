@@ -403,9 +403,9 @@ describe('FileStore', function() {
         });
 
       // GCS status check response
-      nock('https://www.googleapis.com', { encodedQueryParams: true })
-        .matchHeader('content-range', `bytes */${fileSize}`)
-        .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o')
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes */${fileSize}` }})
+        // .matchHeader('content-range', `bytes */${fileSize}`)
+        .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o', () => true)
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
           uploadType: 'resumable',
@@ -419,8 +419,8 @@ describe('FileStore', function() {
         });
 
       // GCS complete response
-      nock('https://www.googleapis.com')
-        .matchHeader('content-range', `bytes 0-${fileSize - 1}/${fileSize}`)
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes 0-${fileSize - 1}/${fileSize}` }})
+        // .matchHeader('content-range', `bytes 0-${fileSize - 1}/${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o', () => true)
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
@@ -529,8 +529,8 @@ describe('FileStore', function() {
         });
 
       // GCS status check response
-      nock('https://www.googleapis.com', { encodedQueryParams: true })
-        .matchHeader('content-range', `bytes */${fileSize}`)
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes */${fileSize}` }})
+        // .matchHeader('content-range', `bytes */${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o')
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
@@ -545,8 +545,8 @@ describe('FileStore', function() {
         });
 
       // GCS resumable response
-      nock('https://www.googleapis.com')
-        .matchHeader('content-range', `bytes 0-${fileSize - 1}/${fileSize}`)
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes 0-${fileSize - 1}/${fileSize}` }})
+        // .matchHeader('content-range', `bytes 0-${fileSize - 1}/${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o', () => true)
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
@@ -560,8 +560,8 @@ describe('FileStore', function() {
         });
 
       // GCS complete response
-      nock('https://www.googleapis.com')
-        .matchHeader('content-range', `bytes 1001-${fileSize - 1}/${fileSize}`)
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes 1001-${fileSize - 1}/${fileSize}` }})
+        // .matchHeader('content-range', `bytes 1001-${fileSize - 1}/${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o', () => true)
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
@@ -669,8 +669,8 @@ describe('FileStore', function() {
         });
 
       // GCS status check response
-      nock('https://www.googleapis.com', { encodedQueryParams: true })
-        .matchHeader('content-range', `bytes */${fileSize}`)
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes */${fileSize}` }})
+        // .matchHeader('content-range', `bytes */${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o')
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
@@ -685,8 +685,8 @@ describe('FileStore', function() {
         });
 
       // GCS resumable response
-      nock('https://www.googleapis.com')
-        .matchHeader('content-range', `bytes 0-${fileSize - 1}/${fileSize}`)
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes 0-${fileSize - 1}/${fileSize}` }})
+        // .matchHeader('content-range', `bytes 0-${fileSize - 1}/${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o', () => true)
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
@@ -700,8 +700,8 @@ describe('FileStore', function() {
         });
 
       // GCS error response
-      nock('https://www.googleapis.com')
-        .matchHeader('content-range', `bytes 1001-${fileSize - 1}/${fileSize}`)
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes 1001-${fileSize - 1}/${fileSize}` }})
+        // .matchHeader('content-range', `bytes 1001-${fileSize - 1}/${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o', () => true)
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
@@ -714,8 +714,8 @@ describe('FileStore', function() {
         });
 
       // GCS complete response
-      nock('https://www.googleapis.com')
-        .matchHeader('content-range', `bytes 1001-${fileSize - 1}/${fileSize}`)
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes 1001-${fileSize - 1}/${fileSize}` }})
+        // .matchHeader('content-range', `bytes 1001-${fileSize - 1}/${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o', () => true)
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
@@ -826,8 +826,8 @@ describe('FileStore', function() {
         });
 
       // GCS status check response
-      nock('https://www.googleapis.com', { encodedQueryParams: true })
-        .matchHeader('content-range', `bytes */${fileSize}`)
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes */${fileSize}` }})
+        // .matchHeader('content-range', `bytes */${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o')
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
@@ -842,8 +842,8 @@ describe('FileStore', function() {
         });
 
       // GCS resumable response
-      nock('https://www.googleapis.com')
-        .matchHeader('content-range', `bytes 0-${fileSize - 1}/${fileSize}`)
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes 0-${fileSize - 1}/${fileSize}` }})
+        // .matchHeader('content-range', `bytes 0-${fileSize - 1}/${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o', () => true)
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
@@ -857,8 +857,8 @@ describe('FileStore', function() {
         });
 
       // GCS error response
-      nock('https://www.googleapis.com')
-        .matchHeader('content-range', `bytes 1001-${fileSize - 1}/${fileSize}`)
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes 1001-${fileSize - 1}/${fileSize}` }})
+        // .matchHeader('content-range', `bytes 1001-${fileSize - 1}/${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o', () => true)
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
@@ -924,8 +924,8 @@ describe('FileStore', function() {
         });
 
       // GCS status check response
-      nock('https://www.googleapis.com', { encodedQueryParams: true })
-        .matchHeader('content-range', `bytes */${fileSize}`)
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes */${fileSize}` }})
+        // .matchHeader('content-range', `bytes */${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o')
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
@@ -940,8 +940,8 @@ describe('FileStore', function() {
         });
 
       // GCS resumable response
-      nock('https://www.googleapis.com')
-        .matchHeader('content-range', `bytes 0-${fileSize - 1}/${fileSize}`)
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes 0-${fileSize - 1}/${fileSize}` }})
+        // .matchHeader('content-range', `bytes 0-${fileSize - 1}/${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o', () => true)
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
@@ -955,8 +955,8 @@ describe('FileStore', function() {
         });
 
       // GCS error response
-      nock('https://www.googleapis.com')
-        .matchHeader('content-range', `bytes 1001-${fileSize - 1}/${fileSize}`)
+      nock('https://www.googleapis.com', { encodedQueryParams: true, reqheaders: { 'content-range': `bytes 1001-${fileSize - 1}/${fileSize}` }})
+        // .matchHeader('content-range', `bytes 1001-${fileSize - 1}/${fileSize}`)
         .put('/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o', () => true)
         .query({
           name: '58caed1d-9e42-4bf6-9a37-68d18cd29e3e/kinvey.png',
