@@ -473,9 +473,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 		if (!packageFile) {
 			if (this.$devicesService.isiOSSimulator(device)) {
-				packageFile = this.getLatestApplicationPackageForEmulator(platformData, buildConfig).packageName;
+				packageFile = this.getLatestApplicationPackageForEmulator(platformData, buildConfig, outputFilePath).packageName;
 			} else {
-				packageFile = this.getLatestApplicationPackageForDevice(platformData, buildConfig).packageName;
+				packageFile = this.getLatestApplicationPackageForDevice(platformData, buildConfig, outputFilePath).packageName;
 			}
 		}
 

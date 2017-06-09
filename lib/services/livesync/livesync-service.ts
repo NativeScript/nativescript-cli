@@ -106,7 +106,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 			// TODO: Assure we are able to self-restart iOS apps on Windows.
 			await platformLiveSyncService.refreshApplication(projectData, liveSyncResultInfo);
 		} catch (err) {
-			this.$logger.info(`Error while trying to start application ${projectData.projectId} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err}`);
+			this.$logger.info(`Error while trying to start application ${projectData.projectId} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
 			const msg = `Unable to start application ${projectData.projectId} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Try starting it manually.`;
 			this.$logger.warn(msg);
 			this.emit(LiveSyncEvents.liveSyncNotification, {

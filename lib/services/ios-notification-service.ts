@@ -15,10 +15,10 @@ export class IOSNotificationService implements IiOSNotificationService {
 		return _.first(notificationResponse[deviceIdentifier]).response;
 	}
 
-	public async postNotification(deviceIdentifier: string, notification: string, commandType?: string): Promise<string> {
+	public async postNotification(deviceIdentifier: string, notification: string, commandType?: string): Promise<number> {
 		commandType = commandType || constants.IOS_POST_NOTIFICATION_COMMAND_TYPE;
 		const response = await this.$iosDeviceOperations.postNotification([{ deviceId: deviceIdentifier, commandType: commandType, notificationName: notification }]);
-		return _.first(response[deviceIdentifier]).response;
+		return +_.first(response[deviceIdentifier]).response;
 	}
 }
 

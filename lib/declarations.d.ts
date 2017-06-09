@@ -487,7 +487,7 @@ interface IiOSNotification {
 
 interface IiOSNotificationService {
 	awaitNotification(deviceIdentifier: string, socket: number, timeout: number): Promise<string>;
-	postNotification(deviceIdentifier: string, notification: string, commandType?: string): Promise<string>;
+	postNotification(deviceIdentifier: string, notification: string, commandType?: string): Promise<number>;
 }
 
 interface IiOSSocketRequestExecutor {
