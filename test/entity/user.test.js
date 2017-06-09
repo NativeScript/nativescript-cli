@@ -962,7 +962,7 @@ describe('User', function() {
       const user = new User({ _id: randomString(), email: randomString() });
 
       nock(this.client.apiHostname)
-        .delete(`${user.pathname}/${user._id}`)
+        .delete(`${user.pathname}/${user._id}?hard=false`)
         .reply(204);
 
       return User.remove(user._id)

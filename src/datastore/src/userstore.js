@@ -1,10 +1,11 @@
 import Promise from 'es6-promise';
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
+import url from 'url';
 
 import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
 import { KinveyError } from 'src/errors';
-import { KinveyObservable, isDefined, appendQuery } from 'src/utils';
+import { KinveyObservable, isDefined } from 'src/utils';
 import Query from 'src/query';
 import NetworkStore from './networkstore';
 
@@ -43,7 +44,11 @@ export default class UserStore extends NetworkStore {
       const request = new KinveyRequest({
         method: RequestMethod.POST,
         authType: AuthType.Default,
-        url: `${this.client.apiHostname}${this.pathname}/_lookup`,
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: `${this.pathname}/_lookup`
+        }),
         properties: options.properties,
         body: isDefined(query) ? query.toPlainObject().filter : null,
         timeout: options.timeout,
@@ -102,7 +107,11 @@ export default class UserStore extends NetworkStore {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
-      url: `${this.client.apiHostname}/rpc/${this.client.appKey}/check-username-exists`,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: `/rpc/${this.client.appKey}/check-username-exists`
+      }),
       properties: options.properties,
       data: { username: username },
       timeout: options.timeout,
@@ -140,10 +149,14 @@ export default class UserStore extends NetworkStore {
       const request = new KinveyRequest({
         method: RequestMethod.DELETE,
         authType: AuthType.Default,
-        url: appendQuery(
-          `${this.client.apiHostname}${this.pathname}/${id}`,
-          options.hard === true ? { hard: true } : undefined
-        ),
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: `${this.pathname}/${id}`,
+          query: {
+            hard: options.hard === true ? true : false
+          }
+        }),
         properties: options.properties,
         timeout: options.timeout
       });

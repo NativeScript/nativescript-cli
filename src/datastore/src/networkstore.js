@@ -1,5 +1,6 @@
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
+import url from 'url';
 
 import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod } from 'src/request';
 import { KinveyError } from 'src/errors';
@@ -146,7 +147,11 @@ export default class NetworkStore {
       const config = {
         method: RequestMethod.GET,
         authType: AuthType.Default,
-        url: `${this.client.apiHostname}${this.pathname}`,
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: this.pathname
+        }),
         properties: options.properties,
         query: query,
         timeout: options.timeout,
@@ -192,7 +197,11 @@ export default class NetworkStore {
       const config = {
         method: RequestMethod.GET,
         authType: AuthType.Default,
-        url: `${this.client.apiHostname}${this.pathname}/${id}`,
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: `${this.pathname}/${id}`
+        }),
         properties: options.properties,
         timeout: options.timeout,
         client: this.client
@@ -234,7 +243,11 @@ export default class NetworkStore {
       const request = new KinveyRequest({
         method: RequestMethod.POST,
         authType: AuthType.Default,
-        url: `${this.client.apiHostname}${this.pathname}/_group`,
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: `${this.pathname}/_group`
+        }),
         properties: options.properties,
         aggregation: aggregation,
         timeout: options.timeout,
@@ -275,7 +288,11 @@ export default class NetworkStore {
         const request = new KinveyRequest({
           method: RequestMethod.GET,
           authType: AuthType.Default,
-          url: `${this.client.apiHostname}${this.pathname}/_count`,
+          url: url.format({
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
+            pathname: `${this.pathname}/_count`
+          }),
           properties: options.properties,
           query: query,
           timeout: options.timeout,
@@ -323,7 +340,11 @@ export default class NetworkStore {
       const request = new KinveyRequest({
         method: RequestMethod.POST,
         authType: AuthType.Default,
-        url: `${this.client.apiHostname}${this.pathname}`,
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: this.pathname
+        }),
         properties: options.properties,
         data: entity,
         timeout: options.timeout,
@@ -373,7 +394,11 @@ export default class NetworkStore {
       const request = new KinveyRequest({
         method: RequestMethod.PUT,
         authType: AuthType.Default,
-        url: `${this.client.apiHostname}${this.pathname}/${entity._id}`,
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: `${this.pathname}/${entity._id}`
+        }),
         properties: options.properties,
         data: entity,
         timeout: options.timeout,
@@ -430,7 +455,11 @@ export default class NetworkStore {
         const request = new KinveyRequest({
           method: RequestMethod.DELETE,
           authType: AuthType.Default,
-          url: `${this.client.apiHostname}${this.pathname}`,
+          url: url.format({
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
+            pathname: this.pathname
+          }),
           properties: options.properties,
           query: query,
           timeout: options.timeout,
@@ -470,7 +499,11 @@ export default class NetworkStore {
         const request = new KinveyRequest({
           method: RequestMethod.DELETE,
           authType: AuthType.Default,
-          url: `${this.client.apiHostname}${this.pathname}/${id}`,
+          url: url.format({
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
+            pathname: `${this.pathname}/${id}`
+          }),
           properties: options.properties,
           timeout: options.timeout
         });

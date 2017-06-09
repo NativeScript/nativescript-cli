@@ -3,6 +3,7 @@ import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import isEmpty from 'lodash/isEmpty';
+import url from 'url';
 
 import Client from 'src/client';
 import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
@@ -200,7 +201,11 @@ export default class User {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
-      url: `${this.client.apiHostname}${this.pathname}/login`,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: `${this.pathname}/login`
+      }),
       body: credentials,
       properties: options.properties,
       timeout: options.timeout,
@@ -372,7 +377,11 @@ export default class User {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.Session,
-      url: `${this.client.apiHostname}${this.pathname}/_logout`,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: `${this.pathname}/_logout`
+      }),
       properties: options.properties,
       timeout: options.timeout,
       client: this.client
@@ -441,7 +450,11 @@ export default class User {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
-      url: `${this.client.apiHostname}${this.pathname}`,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: this.pathname
+      }),
       body: isEmpty(data) ? null : data,
       properties: options.properties,
       timeout: options.timeout,
@@ -559,7 +572,11 @@ export default class User {
     const request = new KinveyRequest({
       method: RequestMethod.GET,
       authType: AuthType.Session,
-      url: `${this.client.apiHostname}${this.pathname}/_me`,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: `${this.pathname}/_me`
+      }),
       properties: options.properties,
       timeout: options.timeout
     });
@@ -642,7 +659,11 @@ export default class User {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
-      url: `${client.apiHostname}/rpc/${client.appKey}/${username}/user-email-verification-initiate`,
+      url: url.format({
+        protocol: client.apiProtocol,
+        host: client.apiHost,
+        pathname: `/rpc/${client.appKey}/${username}/user-email-verification-initiate`
+      }),
       properties: options.properties,
       timeout: options.timeout,
       client: client
@@ -674,7 +695,11 @@ export default class User {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
-      url: `${client.apiHostname}/rpc/${client.appKey}/user-forgot-username`,
+      url: url.format({
+        protocol: client.apiProtocol,
+        host: client.apiHost,
+        pathname: `/rpc/${client.appKey}/user-forgot-username`
+      }),
       properties: options.properties,
       data: { email: email },
       timeout: options.timeout,
@@ -707,7 +732,11 @@ export default class User {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
-      url: `${client.apiHostname}/rpc/${client.appKey}/${username}/user-password-reset-initiate`,
+      url: url.format({
+        protocol: client.apiProtocol,
+        host: client.apiHost,
+        pathname: `/rpc/${client.appKey}/${username}/user-password-reset-initiate`
+      }),
       properties: options.properties,
       timeout: options.timeout,
       client: client

@@ -1,5 +1,6 @@
 import Promise from 'es6-promise';
 import isString from 'lodash/isString';
+import url from 'url';
 
 import { KinveyError } from './errors';
 import Client from './client';
@@ -46,7 +47,11 @@ export default class CustomEndpoint {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.Default,
-      url: `${client.apiHostname}/rpc/${client.appKey}/custom/${endpoint}`,
+      url: url.format({
+        protocol: client.apiProtocol,
+        host: client.apiHost,
+        pathname: `/rpc/${client.appKey}/custom/${endpoint}`
+      }),
       properties: options.properties,
       body: args,
       timeout: options.timeout,

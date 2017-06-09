@@ -3,6 +3,7 @@ import map from 'lodash/map';
 import result from 'lodash/result';
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
+import url from 'url';
 
 import {
   KinveyRequest,
@@ -79,7 +80,11 @@ export default class SyncManager {
 
     const request = new CacheRequest({
       method: RequestMethod.GET,
-      url: `${this.client.apiHostname}${this.backendPathname}`,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: this.backendPathname
+      }),
       query: query,
       properties: options.properties,
       timeout: options.timeout,
@@ -97,7 +102,11 @@ export default class SyncManager {
 
         const request = new CacheRequest({
           method: RequestMethod.GET,
-          url: `${this.client.apiHostname}${this.pathname}`,
+          url: url.format({
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
+            pathname: this.pathname
+          }),
           properties: options.properties,
           query: syncQuery,
           timeout: options.timeout,
@@ -164,7 +173,11 @@ export default class SyncManager {
       const query = new Query().equalTo('entityId', id);
       const findRequest = new CacheRequest({
         method: RequestMethod.GET,
-        url: `${this.client.apiHostname}${this.pathname}`,
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: this.pathname
+        }),
         properties: options.properties,
         query: query,
         timeout: options.timeout
@@ -183,7 +196,11 @@ export default class SyncManager {
           // Send a request to save the sync entity
           const request = new CacheRequest({
             method: RequestMethod.PUT,
-            url: `${this.client.apiHostname}${this.pathname}`,
+            url: url.format({
+              protocol: this.client.apiProtocol,
+              host: this.client.apiHost,
+              pathname: this.pathname
+            }),
             properties: options.properties,
             body: syncEntity,
             timeout: options.timeout
@@ -227,7 +244,11 @@ export default class SyncManager {
         const config = {
           method: RequestMethod.GET,
           authType: AuthType.Default,
-          url: `${this.client.apiHostname}${this.backendPathname}`,
+          url: url.format({
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
+            pathname: this.backendPathname
+          }),
           properties: options.properties,
           query: query,
           timeout: options.timeout,
@@ -289,7 +310,11 @@ export default class SyncManager {
                   const request = new KinveyRequest({
                     method: RequestMethod.DELETE,
                     authType: AuthType.Default,
-                    url: `${this.client.apiHostname}${this.backendPathname}/${entityId}`,
+                    url: url.format({
+                      protocol: this.client.apiProtocol,
+                      host: this.client.apiHost,
+                      pathname: `${this.backendPathname}/${entityId}`
+                    }),
                     properties: options.properties,
                     timeout: options.timeout,
                     client: this.client
@@ -299,7 +324,11 @@ export default class SyncManager {
                       // Remove the sync entity from the cache
                       const request = new CacheRequest({
                         method: RequestMethod.DELETE,
-                        url: `${this.client.apiHostname}${this.pathname}/${syncEntity._id}`,
+                        url: url.format({
+                          protocol: this.client.apiProtocol,
+                          host: this.client.apiHost,
+                          pathname: `${this.pathname}/${syncEntity._id}`
+                        }),
                         properties: options.properties,
                         timeout: options.timeout
                       });
@@ -325,7 +354,11 @@ export default class SyncManager {
                   // Get the entity from cache
                   const request = new CacheRequest({
                     method: RequestMethod.GET,
-                    url: `${this.client.apiHostname}${this.backendPathname}/${entityId}`,
+                    url: url.format({
+                      protocol: this.client.apiProtocol,
+                      host: this.client.apiHost,
+                      pathname: `${this.backendPathname}/${entityId}`
+                    }),
                     properties: options.properties,
                     timeout: options.timeout
                   });
@@ -336,7 +369,11 @@ export default class SyncManager {
                       const request = new KinveyRequest({
                         method: RequestMethod.PUT,
                         authType: AuthType.Default,
-                        url: `${this.client.apiHostname}${this.backendPathname}/${entityId}`,
+                        url: url.format({
+                          protocol: this.client.apiProtocol,
+                          host: this.client.apiHost,
+                          pathname: `${this.backendPathname}/${entityId}`
+                        }),
                         properties: options.properties,
                         timeout: options.timeout,
                         body: entity,
@@ -352,7 +389,11 @@ export default class SyncManager {
                         }
 
                         request.method = RequestMethod.POST;
-                        request.url = `${this.client.apiHostname}${this.backendPathname}`;
+                        request.url = url.format({
+                          protocol: this.client.apiProtocol,
+                          host: this.client.apiHost,
+                          pathname: this.backendPathname
+                        });
                       }
 
                       return request.execute()
@@ -361,7 +402,11 @@ export default class SyncManager {
                           // Remove the sync entity
                           const request = new CacheRequest({
                             method: RequestMethod.DELETE,
-                            url: `${this.client.apiHostname}${this.pathname}/${syncEntity._id}`,
+                            url: url.format({
+                              protocol: this.client.apiProtocol,
+                              host: this.client.apiHost,
+                              pathname: `${this.pathname}/${syncEntity._id}`
+                            }),
                             properties: options.properties,
                             timeout: options.timeout
                           });
@@ -370,7 +415,11 @@ export default class SyncManager {
                               // Save the result of the network request locally.
                               const request = new CacheRequest({
                                 method: RequestMethod.PUT,
-                                url: `${this.client.apiHostname}${this.backendPathname}/${entity._id}`,
+                                url: url.format({
+                                  protocol: this.client.apiProtocol,
+                                  host: this.client.apiHost,
+                                  pathname: `${this.backendPathname}/${entity._id}`
+                                }),
                                 properties: options.properties,
                                 timeout: options.timeout,
                                 body: entity
@@ -383,7 +432,11 @@ export default class SyncManager {
                               if (local) {
                                 const request = new CacheRequest({
                                   method: RequestMethod.DELETE,
-                                  url: `${this.client.apiHostname}${this.backendPathname}/${entityId}`,
+                                  url: url.format({
+                                    protocol: this.client.apiProtocol,
+                                    host: this.client.apiHost,
+                                    pathname: `${this.backendPathname}/${entityId}`
+                                  }),
                                   properties: options.properties,
                                   timeout: options.timeout
                                 });
@@ -485,7 +538,11 @@ export default class SyncManager {
         return Promise.all(map(entities, (entity) => {
           const request = new CacheRequest({
             method: RequestMethod.DELETE,
-            url: `${this.client.apiHostname}${this.pathname}/${entity._id}`,
+            url: url.format({
+              protocol: this.client.apiProtocol,
+              host: this.client.apiHost,
+              pathname: `${this.pathname}/${entity._id}`
+            }),
             properties: options.properties,
             timeout: options.timeout
           });

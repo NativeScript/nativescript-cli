@@ -400,11 +400,6 @@ describe('FileStore', function() {
           _uploadURL: 'https://www.googleapis.com/upload/storage/v1/b/5d91e6b552d148188e30d8eb106da6d8/o?name=58caed1d-9e42-4bf6-9a37-68d18cd29e3e%2Fkinvey.png&uploadType=resumable&predefinedAcl=publicRead&upload_id=AEnB2UrXv4rk9Nosi5pA8Esyq1art9RuqxKz_mnKfWInUetzy86yQ3cFrboL1drhp1sCHT5EKdyPNXr0bHS9g6ZDUEG4h-7xgg',
           _expiresAt: '2016-08-23T19:52:37.821Z',
           _requiredHeaders: {}
-        }, {
-          'content-type': 'application/json; charset=utf-8',
-          'content-length': '612',
-          'x-kinvey-request-id': 'def63a2d5ac246d69e3c9b90352b7772',
-          'x-kinvey-api-version': '4'
         });
 
       // GCS status check response

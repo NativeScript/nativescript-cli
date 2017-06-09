@@ -1,4 +1,5 @@
 import isString from 'lodash/isString';
+import url from 'url';
 
 import { CacheRequest, RequestMethod } from 'src/request';
 import { KinveyError } from 'src/errors';
@@ -79,7 +80,11 @@ export default class DataStore {
     const pathname = `/appdata/${client.appKey}`;
     const request = new CacheRequest({
       method: RequestMethod.DELETE,
-      url: `${client.apiHostname}${pathname}`,
+      url: url.format({
+        protocol: client.apiProtocol,
+        host: client.apiHost,
+        pathname: pathname
+      }),
       properties: options.properties,
       timeout: options.timeout
     });

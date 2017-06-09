@@ -4,6 +4,7 @@ import qs from 'qs';
 import assign from 'lodash/assign';
 import defaults from 'lodash/defaults';
 import isEmpty from 'lodash/isEmpty';
+import url from 'url';
 
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
@@ -408,7 +409,11 @@ export class KinveyRequest extends NetworkRequest {
                   'Content-Type': 'application/x-www-form-urlencoded'
                 },
                 authType: AuthType.App,
-                url: `${session.hostname || this.client.micHostname}/oauth/token`,
+                url: url.format({
+                  protocol: session.protocol || this.client.micProtocol,
+                  host: session.host || this.client.micHost,
+                  pathname: '/oauth/token'
+                }),
                 body: {
                   grant_type: 'refresh_token',
                   client_id: session.client_id,
@@ -431,7 +436,11 @@ export class KinveyRequest extends NetworkRequest {
                   const loginRequest = new KinveyRequest({
                     method: RequestMethod.POST,
                     authType: AuthType.App,
-                    url: `${this.client.apiHostname}/user/${this.client.appKey}/login`,
+                    url: url.format({
+                      protocol: this.client.apiProtocol,
+                      host: this.client.apiHost,
+                      pathname: `/user/${this.client.appKey}/login`
+                    }),
                     properties: this.properties,
                     body: data,
                     timeout: this.timeout,

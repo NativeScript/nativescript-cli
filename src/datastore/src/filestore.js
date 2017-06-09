@@ -3,6 +3,7 @@ import map from 'lodash/map';
 import assign from 'lodash/assign';
 import isFunction from 'lodash/isFunction';
 import isNumber from 'lodash/isNumber';
+import url from 'url';
 
 import {
   NetworkRequest,
@@ -12,7 +13,7 @@ import {
   Headers
 } from 'src/request';
 import { KinveyError } from 'src/errors';
-import { KinveyObservable, Log, isDefined, appendQuery } from 'src/utils';
+import { KinveyObservable, Log, isDefined } from 'src/utils';
 import Query from 'src/query';
 import NetworkStore from './networkstore';
 
@@ -89,7 +90,12 @@ export default class FileStore extends NetworkStore {
       const request = new KinveyRequest({
         method: RequestMethod.GET,
         authType: AuthType.Default,
-        url: appendQuery(`${this.client.apiHostname}${this.pathname}`, queryStringObject),
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: this.pathname,
+          query: queryStringObject
+        }),
         properties: options.properties,
         query: query,
         timeout: options.timeout,
@@ -154,7 +160,12 @@ export default class FileStore extends NetworkStore {
       const request = new KinveyRequest({
         method: RequestMethod.GET,
         authType: AuthType.Default,
-        url: appendQuery(`${this.client.apiHostname}${this.pathname}/${name}`, queryStringObject),
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: `${this.pathname}/${name}`,
+          query: queryStringObject
+        }),
         properties: options.properties,
         timeout: options.timeout,
         client: this.client
@@ -245,7 +256,11 @@ export default class FileStore extends NetworkStore {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.Default,
-      url: `${this.client.apiHostname}${this.pathname}`,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: this.pathname
+      }),
       properties: options.properties,
       timeout: options.timeout,
       body: metadata,
@@ -257,7 +272,11 @@ export default class FileStore extends NetworkStore {
     // update the file
     if (metadata._id) {
       request.method = RequestMethod.PUT;
-      request.url = `${this.client.apiHostname}${this.pathname}/${metadata._id}`;
+      request.url = url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: `${this.pathname}/${metadata._id}`
+      });
     }
 
     // Execute the request
@@ -281,6 +300,7 @@ export default class FileStore extends NetworkStore {
         });
         statusCheckRequest.headers.addAll(headers.toPlainObject());
         statusCheckRequest.headers.set('Content-Range', `bytes */${metadata.size}`);
+        console.log(statusCheckRequest);
         return statusCheckRequest.execute(true)
           .then((statusCheckResponse) => {
             Log.debug('File upload status check response', statusCheckResponse);
