@@ -116,6 +116,12 @@ interface ILiveSyncInfo {
 	useLiveEdit?: boolean;
 }
 
+interface ILatestAppPackageInstalledSettings {
+	[key: string]: {
+		[key: string]: boolean;
+	}
+}
+
 interface ILiveSyncBuildInfo {
 	platform: string;
 	isEmulator: boolean;

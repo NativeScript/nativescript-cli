@@ -124,7 +124,7 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		return args.length === 0 && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.iOS);
+		return super.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.iOS);
 	}
 }
 
@@ -156,6 +156,7 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		super.canExecute(args);
 		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.Android, this.$projectData)) {
 			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", this.$devicePlatformsConstants.Android, process.platform);
 		}
@@ -163,7 +164,7 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 		if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 			this.$errors.fail("When producing a release build, you need to specify all --key-store-* options.");
 		}
-		return args.length === 0 && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.Android);
+		return this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.Android);
 	}
 }
 

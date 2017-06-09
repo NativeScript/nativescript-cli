@@ -1,4 +1,5 @@
 import { createTable, deferPromise } from "../common/helpers";
+import { DeviceTypes } from "../common/constants";
 
 export class EmulatorPlatformService implements IEmulatorPlatformService {
 
@@ -70,7 +71,7 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 						name: device.deviceInfo.displayName,
 						version: device.deviceInfo.version,
 						platform: "Android",
-						type: "emulator",
+						type: DeviceTypes.Emulator,
 						isRunning: true
 					};
 				}

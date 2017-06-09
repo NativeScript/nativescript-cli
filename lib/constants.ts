@@ -23,6 +23,13 @@ export class PackageVersion {
 	static LATEST = "latest";
 }
 
+const liveSyncOperation = "LiveSync Operation";
+export class LiveSyncTrackActionNames {
+	static LIVESYNC_OPERATION = liveSyncOperation;
+	static LIVESYNC_OPERATION_BUILD = `${liveSyncOperation} - Build`;
+	static DEVICE_INFO = `Device Info for ${liveSyncOperation}`;
+}
+
 export const PackageJsonKeysToKeep: Array<String> = ["name", "main", "android", "version"];
 
 export class SaveOptions {
