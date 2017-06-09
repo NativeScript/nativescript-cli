@@ -300,7 +300,6 @@ export default class FileStore extends NetworkStore {
         });
         statusCheckRequest.headers.addAll(headers.toPlainObject());
         statusCheckRequest.headers.set('Content-Range', `bytes */${metadata.size}`);
-        console.log(statusCheckRequest);
         return statusCheckRequest.execute(true)
           .then((statusCheckResponse) => {
             Log.debug('File upload status check response', statusCheckResponse);
