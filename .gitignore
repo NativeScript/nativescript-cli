@@ -2,7 +2,6 @@
 .npm_cache
 node_modules
 npm-debug.log
-package-lock.json
 
 # Src files
 docs
