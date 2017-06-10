@@ -153,9 +153,7 @@ export default class UserStore extends NetworkStore {
           protocol: this.client.apiProtocol,
           host: this.client.apiHost,
           pathname: `${this.pathname}/${id}`,
-          query: {
-            hard: options.hard === true ? true : false
-          }
+          query: options.hard === true ? { hard: true } : undefined
         }),
         properties: options.properties,
         timeout: options.timeout
