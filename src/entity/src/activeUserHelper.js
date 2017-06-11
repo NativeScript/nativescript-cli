@@ -10,7 +10,7 @@ const ActiveUserHelper = {
     let value = storage.get(client.appKey);
 
     try {
-        value = JSON.parse(value);
+      value = JSON.parse(value);
     } catch (e) {
         // Catch exception
     }
@@ -30,9 +30,9 @@ const ActiveUserHelper = {
 
   remove(client = Client.sharedInstance()) {
     if (isFunction(storage.remove)) {
-        storage.remove(client.appKey);
+      storage.remove(client.appKey);
     } else if (isFunction(storage.delete)) {
-        storage.delete(client.appKey);
+      storage.delete(client.appKey);
     }
   },
 

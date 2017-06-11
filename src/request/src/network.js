@@ -13,7 +13,6 @@ import { InvalidCredentialsError, NoActiveUserError, KinveyError } from 'src/err
 import { SocialIdentity } from 'src/identity';
 import { ActiveUserHelper } from 'src/entity/src/activeUserHelper';
 import Request, { RequestMethod } from './request';
-import CacheRequest from './cache';
 import Headers from './headers';
 import { KinveyResponse } from './response';
 import { NetworkRack } from './rack';
