@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as util from "util";
 import { APP_FOLDER_NAME } from "../../constants";
 
 export abstract class PlatformLiveSyncServiceBase {
@@ -95,6 +96,8 @@ export abstract class PlatformLiveSyncServiceBase {
 		} else {
 			await deviceAppData.device.fileSystem.transferFiles(deviceAppData, localToDevicePaths);
 		}
+
+		this.logFilesSyncInformation(localToDevicePaths, "Successfully transferred %s.", this.$logger.info);
 	}
 
 	protected async getAppData(syncInfo: IFullSyncInfo): Promise<Mobile.IDeviceAppData> {
@@ -108,4 +111,15 @@ export abstract class PlatformLiveSyncServiceBase {
 			isLiveSyncSupported: async () => true
 		};
 	}
+
+	private logFilesSyncInformation(localToDevicePaths: Mobile.ILocalToDevicePathData[], message: string, action: Function): void {
+		if (localToDevicePaths && localToDevicePaths.length < 10) {
+			_.each(localToDevicePaths, (file: Mobile.ILocalToDevicePathData) => {
+				action.call(this.$logger, util.format(message, path.basename(file.getLocalPath()).yellow));
+			});
+		} else {
+			action.call(this.$logger, util.format(message, "all files"));
+		}
+	}
+
 }
