@@ -3,6 +3,8 @@ import * as util from "util";
 import { APP_FOLDER_NAME } from "../../constants";
 
 export abstract class PlatformLiveSyncServiceBase {
+	private _deviceLiveSyncServicesCache: IDictionary<INativeScriptDeviceLiveSyncService> = {};
+
 	constructor(protected $fs: IFileSystem,
 		protected $logger: ILogger,
 		protected $platformsData: IPlatformsData,
@@ -10,11 +12,20 @@ export abstract class PlatformLiveSyncServiceBase {
 		private $devicePathProvider: IDevicePathProvider,
 		private $projectFilesProvider: IProjectFilesProvider) { }
 
-	public abstract getDeviceLiveSyncService(device: Mobile.IDevice): INativeScriptDeviceLiveSyncService;
+	public getDeviceLiveSyncService(device: Mobile.IDevice, applicationIdentifier: string): INativeScriptDeviceLiveSyncService {
+		const key = device.deviceInfo.identifier + applicationIdentifier;
+		if (!this._deviceLiveSyncServicesCache[key]) {
+			this._deviceLiveSyncServicesCache[key] = this._getDeviceLiveSyncService(device);
+		}
+
+		return this._deviceLiveSyncServicesCache[key];
+	}
+
+	protected abstract _getDeviceLiveSyncService(device: Mobile.IDevice): INativeScriptDeviceLiveSyncService;
 
 	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
 		if (liveSyncInfo.isFullSync || liveSyncInfo.modifiedFilesData.length) {
-			const deviceLiveSyncService = this.getDeviceLiveSyncService(liveSyncInfo.deviceAppData.device);
+			const deviceLiveSyncService = this.getDeviceLiveSyncService(liveSyncInfo.deviceAppData.device, projectData.projectId);
 			this.$logger.info("Refreshing application...");
 			await deviceLiveSyncService.refreshApplication(projectData, liveSyncInfo);
 		}
@@ -23,7 +34,7 @@ export abstract class PlatformLiveSyncServiceBase {
 	public async fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo> {
 		const projectData = syncInfo.projectData;
 		const device = syncInfo.device;
-		const deviceLiveSyncService = this.getDeviceLiveSyncService(device);
+		const deviceLiveSyncService = this.getDeviceLiveSyncService(device, syncInfo.projectData.projectId);
 		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 		const deviceAppData = await this.getAppData(syncInfo);
 
@@ -79,7 +90,7 @@ export abstract class PlatformLiveSyncServiceBase {
 			const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, mappedFiles, []);
 			modifiedLocalToDevicePaths.push(...localToDevicePaths);
 
-			const deviceLiveSyncService = this.getDeviceLiveSyncService(device);
+			const deviceLiveSyncService = this.getDeviceLiveSyncService(device, projectData.projectId);
 			deviceLiveSyncService.removeFiles(deviceAppData, localToDevicePaths);
 		}
 
