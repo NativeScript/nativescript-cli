@@ -72,7 +72,9 @@ export class RunCommandBase implements ICommand {
 				return info;
 			});
 
-		if ((!this.platform || this.$mobileHelper.isiOSPlatform(this.platform)) && (this.$options.watch || !this.$options.justlaunch)) {
+		const workingWithiOSDevices = !this.platform || this.$mobileHelper.isiOSPlatform(this.platform);
+		const shouldKeepProcessAlive = this.$options.watch || !this.$options.justlaunch;
+		if (workingWithiOSDevices && shouldKeepProcessAlive) {
 			this.$iosDeviceOperations.setShouldDispose(false);
 		}
 

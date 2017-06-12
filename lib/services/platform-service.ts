@@ -373,28 +373,34 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		if (this.$projectChangesService.currentChanges.changesRequireBuild) {
 			return true;
 		}
+
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		let forDevice = !buildConfig || buildConfig.buildForDevice;
 		outputPath = outputPath || (forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath);
 		if (!this.$fs.exists(outputPath)) {
 			return true;
 		}
+
 		let packageNames = platformData.getValidPackageNames({ isForDevice: forDevice });
 		let packages = this.getApplicationPackages(outputPath, packageNames);
 		if (packages.length === 0) {
 			return true;
 		}
+
 		let prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
 		let buildInfo = this.getBuildInfo(platform, platformData, buildConfig, outputPath);
 		if (!prepareInfo || !buildInfo) {
 			return true;
 		}
+
 		if (buildConfig.clean) {
 			return true;
 		}
+
 		if (prepareInfo.time === buildInfo.prepareTime) {
 			return false;
 		}
+
 		return prepareInfo.changesRequireBuildTime !== buildInfo.prepareTime;
 	}
 
@@ -554,9 +560,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	private async getDeviceBuildInfoFilePath(device: Mobile.IDevice, projectData: IProjectData): Promise<string> {
-		// let deviceAppData = this.$deviceAppDataFactory.create(projectData.projectId, device.deviceInfo.platform, device);
-		// let deviceRootPath = path.dirname(await deviceAppData.getDeviceProjectRootPath());
-		const deviceRootPath = await this.$devicePathProvider.getDeviceBuildInfoDirname(device, projectData.projectId);
+		const deviceRootPath = await this.$devicePathProvider.getDeviceProjectRootPath(device, {
+			appIdentifier: projectData.projectId,
+			getDirname: true
+		});
 		return helpers.fromWindowsRelativePathToUnix(path.join(deviceRootPath, buildInfoFileName));
 	}
 

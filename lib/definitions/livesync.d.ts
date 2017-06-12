@@ -1,3 +1,4 @@
+// This interface is a mashup of NodeJS' along with Chokidar's event watchers
 interface IFSWatcher extends NodeJS.EventEmitter {
 	// from fs.FSWatcher
 	close(): void;
@@ -152,7 +153,6 @@ interface ILiveSyncWatchInfo {
 	isRebuilt: boolean;
 	syncAllFiles: boolean;
 	useLiveEdit?: boolean;
-
 }
 
 interface ILiveSyncResultInfo {
@@ -190,12 +190,11 @@ interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase 
 
 	/**
 	 * Removes specified files from a connected device
-	 * @param  {string} appIdentifier Application identifier.
+	 * @param  {Mobile.IDeviceAppData} deviceAppData Data about device and app.
 	 * @param  {Mobile.ILocalToDevicePathData[]} localToDevicePaths Object containing a mapping of file paths from the system to the device.
-	 * @param  {string} projectId Project identifier - for example org.nativescript.livesync.
 	 * @return {Promise<void>}
 	 */
-	removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectId: string): Promise<void>;
+	removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void>;
 }
 
 interface IAndroidNativeScriptDeviceLiveSyncService {
@@ -209,12 +208,12 @@ interface IAndroidNativeScriptDeviceLiveSyncService {
 
 interface IDeviceProjectRootOptions {
 	appIdentifier: string;
+	getDirname?: boolean;
 	syncAllFiles?: boolean;
 	watch?: boolean;
 }
 
 interface IDevicePathProvider {
-	getDeviceBuildInfoDirname(device: Mobile.IDevice, appIdentifier: string): Promise<string>;
 	getDeviceProjectRootPath(device: Mobile.IDevice, options: IDeviceProjectRootOptions): Promise<string>;
 	getDeviceSyncZipPath(device: Mobile.IDevice): string;
 }

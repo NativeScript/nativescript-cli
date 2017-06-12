@@ -55,7 +55,8 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * - the .nsbuildinfo file in product folder points to an old prepare.
 	 * @param {string} platform The platform to build.
 	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @param {IBuildConfig} buildConfig Indicates whether the build is for device or emulator.
+	 * @param {IBuildConfig} @optional buildConfig Indicates whether the build is for device or emulator.
+	 * @param {string} @optional outputPath Directory containing build information and artifacts.
 	 * @returns {boolean} true indicates that the platform should be build.
 	 */
 	shouldBuild(platform: string, projectData: IProjectData, buildConfig?: IBuildConfig, outputPath?: string): Promise<boolean>;
@@ -77,6 +78,7 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * - the .nsbuildinfo file located in application root folder is different than the local .nsbuildinfo file
 	 * @param {Mobile.IDevice} device The device where the application should be installed.
 	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @param {string} @optional outputPath Directory containing build information and artifacts.
 	 * @returns {Promise<boolean>} true indicates that the application should be installed.
 	 */
 	shouldInstall(device: Mobile.IDevice, projectData: IProjectData, outputPath?: string): Promise<boolean>;
@@ -87,6 +89,8 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * * .nsbuildinfo is not persisted when building for release.
 	 * @param {Mobile.IDevice} device The device where the application should be installed.
 	 * @param {IRelease} options Whether the application was built in release configuration.
+	 * @param {string} @optional pathToBuiltApp Path to build artifact.
+	 * @param {string} @optional outputPath Directory containing build information and artifacts.
 	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
@@ -129,7 +133,10 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	validatePlatform(platform: string, projectData: IProjectData): void;
 
 	/**
-	 * Ensures that passed platform can be built on the current OS
+	 * Checks whether passed platform can be built on the current OS
+	 * @param {string} platform The mobile platform.
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @returns {boolean} Whether the platform is supported for current OS or not.
 	 */
 	isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean;
 

@@ -30,7 +30,6 @@ export abstract class DebugPlatformCommand implements ICommand {
 
 		this.$config.debugLivesync = true;
 
-		// TODO: Fix this call
 		await this.$devicesService.initialize({ deviceId: this.$options.device, platform: this.platform, skipDeviceDetectionInterval: true, skipInferPlatform: true });
 		await this.$devicesService.detectCurrentlyAttachedDevices();
 
@@ -42,7 +41,7 @@ export abstract class DebugPlatformCommand implements ICommand {
 					identifier: d.deviceInfo.identifier,
 					buildAction: async (): Promise<string> => {
 						const buildConfig: IBuildConfig = {
-							buildForDevice: !d.isEmulator, // this.$options.forDevice,
+							buildForDevice: !d.isEmulator,
 							projectDir: this.$options.path,
 							clean: this.$options.clean,
 							teamId: this.$options.teamId,
@@ -133,7 +132,7 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 		}
 	}
 
-	public platform = "iOS";
+	public platform = this.$devicePlatformsConstants.iOS;
 }
 
 $injector.registerCommand("debug|ios", DebugIOSCommand);
@@ -162,7 +161,7 @@ export class DebugAndroidCommand extends DebugPlatformCommand {
 		return await super.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.Android);
 	}
 
-	public platform = "Android";
+	public platform = this.$devicePlatformsConstants.Android;
 }
 
 $injector.registerCommand("debug|android", DebugAndroidCommand);

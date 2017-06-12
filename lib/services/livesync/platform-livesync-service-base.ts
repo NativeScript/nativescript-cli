@@ -61,9 +61,9 @@ export abstract class PlatformLiveSyncServiceBase {
 			}
 
 			if (existingFiles.length) {
-				let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
+				const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 				const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
-				let localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData,
+				const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData,
 					projectFilesPath, mappedFiles, []);
 				modifiedLocalToDevicePaths.push(...localToDevicePaths);
 				await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, false);
@@ -72,15 +72,15 @@ export abstract class PlatformLiveSyncServiceBase {
 
 		if (liveSyncInfo.filesToRemove.length) {
 			const filePaths = liveSyncInfo.filesToRemove;
-			let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
+			const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 
 			const mappedFiles = _.map(filePaths, filePath => this.$projectFilesProvider.mapFilePath(filePath, device.deviceInfo.platform, projectData));
 			const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
-			let localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, mappedFiles, []);
+			const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, mappedFiles, []);
 			modifiedLocalToDevicePaths.push(...localToDevicePaths);
 
 			const deviceLiveSyncService = this.getDeviceLiveSyncService(device);
-			deviceLiveSyncService.removeFiles(projectData.projectId, localToDevicePaths, projectData.projectId);
+			deviceLiveSyncService.removeFiles(deviceAppData, localToDevicePaths);
 		}
 
 		return {

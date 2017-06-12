@@ -2,17 +2,18 @@ import { DeviceAndroidDebugBridge } from "../../common/mobile/android/device-and
 import { AndroidDeviceHashService } from "../../common/mobile/android/android-device-hash-service";
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 import * as helpers from "../../common/helpers";
-import { SYNC_DIR_NAME, FULLSYNC_DIR_NAME, REMOVEDSYNC_DIR_NAME } from "../../constants";
+import { LiveSyncPaths } from "../../constants";
 import { cache } from "../../common/decorators";
 import * as path from "path";
 import * as net from "net";
 
-export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService {
+export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
 	private static BACKEND_PORT = 18182;
 	private device: Mobile.IAndroidDevice;
 
 	constructor(_device: Mobile.IDevice,
 		private $mobileHelper: Mobile.IMobileHelper,
+		private $devicePathProvider: IDevicePathProvider,
 		private $injector: IInjector,
 		protected $platformsData: IPlatformsData) {
 		super($platformsData);
@@ -22,13 +23,17 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
 		const deviceAppData = liveSyncInfo.deviceAppData;
 		const localToDevicePaths = liveSyncInfo.modifiedFilesData;
+		const deviceProjectRootDirname = await this.$devicePathProvider.getDeviceProjectRootPath(liveSyncInfo.deviceAppData.device, {
+			appIdentifier: liveSyncInfo.deviceAppData.appIdentifier,
+			getDirname: true
+		});
 
 		await this.device.adb.executeShellCommand(
 			["chmod",
 				"777",
-				"/data/local/tmp/",
-				`/data/local/tmp/${deviceAppData.appIdentifier}`,
-				`/data/local/tmp/${deviceAppData.appIdentifier}/sync`]
+				path.dirname(deviceProjectRootDirname),
+				deviceProjectRootDirname,
+				`${deviceProjectRootDirname}/sync`]
 		);
 
 		const canExecuteFastSync = !liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
@@ -50,21 +55,24 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 	}
 
 	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
-		let deviceRootPath = this.getDeviceRootPath(deviceAppData.appIdentifier),
-			deviceRootDir = path.dirname(deviceRootPath),
-			deviceRootBasename = path.basename(deviceRootPath),
-			listResult = await this.device.adb.executeShellCommand(["ls", "-l", deviceRootDir]),
-			regex = new RegExp(`^-.*${deviceRootBasename}$`, "m"),
-			matchingFile = (listResult || "").match(regex);
+		const deviceRootPath = await this.$devicePathProvider.getDeviceProjectRootPath(deviceAppData.device, {
+			appIdentifier: deviceAppData.appIdentifier,
+			getDirname: true
+		});
+		const deviceRootDir = path.dirname(deviceRootPath);
+		const deviceRootBasename = path.basename(deviceRootPath);
+		const listResult = await this.device.adb.executeShellCommand(["ls", "-l", deviceRootDir]);
+		const regex = new RegExp(`^-.*${deviceRootBasename}$`, "m");
+		const matchingFile = (listResult || "").match(regex);
 
 		// Check if there is already a file with deviceRootBasename. If so, delete it as it breaks LiveSyncing.
 		if (matchingFile && matchingFile[0] && _.startsWith(matchingFile[0], '-')) {
 			await this.device.adb.executeShellCommand(["rm", "-f", deviceRootPath]);
 		}
 
-		this.device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, FULLSYNC_DIR_NAME),
-			this.$mobileHelper.buildDevicePath(deviceRootPath, SYNC_DIR_NAME),
-			await this.$mobileHelper.buildDevicePath(deviceRootPath, REMOVEDSYNC_DIR_NAME)]);
+		this.device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.FULLSYNC_DIR_NAME),
+			this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.SYNC_DIR_NAME),
+			await this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.REMOVEDSYNC_DIR_NAME)]);
 	}
 
 	private async reloadPage(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
@@ -74,26 +82,25 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 		}
 	}
 
-	public async removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectId: string): Promise<void> {
-		let deviceRootPath = this.getDeviceRootPath(appIdentifier);
+	public async removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
+		const deviceRootPath = await this.$devicePathProvider.getDeviceProjectRootPath(deviceAppData.device, {
+			appIdentifier: deviceAppData.appIdentifier,
+			getDirname: true
+		});
 
-		for (let localToDevicePathData of localToDevicePaths) {
-			let relativeUnixPath = _.trimStart(helpers.fromWindowsRelativePathToUnix(localToDevicePathData.getRelativeToProjectBasePath()), "/");
-			let deviceFilePath = this.$mobileHelper.buildDevicePath(deviceRootPath, REMOVEDSYNC_DIR_NAME, relativeUnixPath);
+		for (const localToDevicePathData of localToDevicePaths) {
+			const relativeUnixPath = _.trimStart(helpers.fromWindowsRelativePathToUnix(localToDevicePathData.getRelativeToProjectBasePath()), "/");
+			const deviceFilePath = this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.REMOVEDSYNC_DIR_NAME, relativeUnixPath);
 			await this.device.adb.executeShellCommand(["mkdir", "-p", path.dirname(deviceFilePath), " && ", "touch", deviceFilePath]);
 		}
 
-		await this.getDeviceHashService(projectId).removeHashes(localToDevicePaths);
+		await this.getDeviceHashService(deviceAppData.appIdentifier).removeHashes(localToDevicePaths);
 	}
 
 	@cache()
 	public getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService {
 		let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
 		return this.$injector.resolve(AndroidDeviceHashService, { adb, appIdentifier });
-	}
-
-	private getDeviceRootPath(appIdentifier: string): string {
-		return `/data/local/tmp/${appIdentifier}`;
 	}
 
 	private async sendPageReloadMessage(): Promise<boolean> {

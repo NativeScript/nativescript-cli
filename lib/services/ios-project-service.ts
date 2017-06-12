@@ -13,7 +13,7 @@ import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { XCConfigService } from "./xcconfig-service";
-const simplePlist = require("simple-plist");
+import * as simplePlist from "simple-plist";
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
@@ -1005,9 +1005,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private async prepareFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): Promise<void> {
-		await _.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".framework"), (fileName) => {
-			this.addFramework(path.join(pluginPlatformsFolderPath, fileName), projectData);
-		});
+		for (let fileName of this.getAllLibsForPluginWithFileExtension(pluginData, ".framework")) {
+			await this.addFramework(path.join(pluginPlatformsFolderPath, fileName), projectData);
+		}
 	}
 
 	private async prepareStaticLibs(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): Promise<void> {

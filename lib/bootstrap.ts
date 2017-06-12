@@ -104,12 +104,11 @@ $injector.require("devicePathProvider", "./device-path-provider");
 
 $injector.requireCommand("platform|clean", "./commands/platform-clean");
 
-$injector.requirePublicClass("liveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
+$injector.requirePublicClass("liveSyncService", "./services/livesync/livesync-service");
 $injector.require("debugLiveSyncService", "./services/livesync/debug-livesync-service");
 $injector.require("androidLiveSyncService", "./services/livesync/android-livesync-service");
 $injector.require("iOSLiveSyncService", "./services/livesync/ios-livesync-service");
 $injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
-$injector.require("iosLiveSyncServiceLocator", "./services/livesync/ios-device-livesync-service");
 $injector.require("sysInfo", "./sys-info");
 
 $injector.require("iOSNotificationService", "./services/ios-notification-service");

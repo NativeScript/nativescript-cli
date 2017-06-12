@@ -625,7 +625,7 @@ tns.liveSyncService.on("liveSyncStarted", data => {
 });
 ```
 
-* liveSyncExecuted - raised whenever CLI finishes a LiveSync operation for specific device. When `liveSync` method is called, the initial LiveSync operation will emit `liveSyncExecuted` for each specified device once it finishes the operation. After that the event will be emitted whenever a change is detected (in case file system watcher is staretd) and the LiveSync operation is executed for each device. The event is raised with the following data:
+* liveSyncExecuted - raised whenever CLI finishes a LiveSync operation for specific device. When `liveSync` method is called, the initial LiveSync operation will emit `liveSyncExecuted` for each specified device once it finishes the operation. After that the event will be emitted whenever a change is detected (in case file system watcher is started) and the LiveSync operation is executed for each device. The event is raised with the following data:
 ```TypeScript
 {
 	projectDir: string;
@@ -641,7 +641,7 @@ tns.liveSyncService.on("liveSyncStarted", data => {
 Example:
 ```JavaScript
 tns.liveSyncService.on("liveSyncExecuted", data => {
-	console.log(`Executed LiveSync on ${data.deviceIdentifier} for ${data.applicationIdentifier}. Uploaded files are: ${syncedFiles.join(" ")}.`);
+	console.log(`Executed LiveSync on ${data.deviceIdentifier} for ${data.applicationIdentifier}. Uploaded files are: ${data.syncedFiles.join(" ")}.`);
 });
 ```
 
@@ -680,7 +680,7 @@ tns.liveSyncService.on("liveSyncStopped", data => {
 Example:
 ```JavaScript
 tns.liveSyncService.on("liveSyncError", data => {
-	console.log(`Error detected during LiveSync on ${data.deviceIdentifier} for ${data.projectDir}. Error: ${err.message}.`);
+	console.log(`Error detected during LiveSync on ${data.deviceIdentifier} for ${data.projectDir}. Error: ${data.error.message}.`);
 });
 ```
 
@@ -697,7 +697,7 @@ tns.liveSyncService.on("liveSyncError", data => {
 Example:
 ```JavaScript
 tns.liveSyncService.on("notify", data => {
-	console.log(`Notification: ${notification} for LiveSync operation on ${data.deviceIdentifier} for ${data.projectDir}. `);
+	console.log(`Notification: ${data.notification} for LiveSync operation on ${data.deviceIdentifier} for ${data.projectDir}. `);
 });
 ```
 

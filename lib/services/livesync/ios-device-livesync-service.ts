@@ -47,8 +47,8 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		return true;
 	}
 
-	public async removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
-		await Promise.all(_.map(localToDevicePaths, localToDevicePathData => this.device.fileSystem.deleteFile(localToDevicePathData.getDevicePath(), appIdentifier)));
+	public async removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
+		await Promise.all(_.map(localToDevicePaths, localToDevicePathData => this.device.fileSystem.deleteFile(localToDevicePathData.getDevicePath(), deviceAppData.appIdentifier)));
 	}
 
 	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
@@ -168,4 +168,3 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		}
 	}
 }
-$injector.register("iosLiveSyncServiceLocator", { factory: IOSDeviceLiveSyncService });

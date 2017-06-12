@@ -4,6 +4,7 @@ import { EventEmitter } from "events";
 import { hook } from "../../common/helpers";
 import { APP_FOLDER_NAME, PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames } from "../../constants";
 import { FileExtensions, DeviceTypes } from "../../common/constants";
+const deviceDescriptorPrimaryKey = "identifier";
 
 const LiveSyncEvents = {
 	liveSyncStopped: "liveSyncStopped",
@@ -14,7 +15,6 @@ const LiveSyncEvents = {
 	liveSyncNotification: "notify"
 };
 
-// TODO: emit events for "successfull livesync", "stoppedLivesync",
 export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 	// key is projectDir
 	private liveSyncProcessesInfo: IDictionary<ILiveSyncProcessInfo> = {};
@@ -35,14 +35,12 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 	@hook("liveSync")
 	public async liveSync(deviceDescriptors: ILiveSyncDeviceInfo[],
 		liveSyncData: ILiveSyncInfo): Promise<void> {
-		// TODO: Initialize devicesService before that.
 		const projectData = this.$projectDataService.getProjectData(liveSyncData.projectDir);
 		// In case liveSync is called for a second time for the same projectDir.
 		const isAlreadyLiveSyncing = this.liveSyncProcessesInfo[projectData.projectDir] && !this.liveSyncProcessesInfo[projectData.projectDir].isStopped;
 		this.setLiveSyncProcessInfo(liveSyncData.projectDir, deviceDescriptors);
 
-		// TODO: Check if the _.difference actually works.
-		const deviceDescriptorsForInitialSync = isAlreadyLiveSyncing ? _.difference(deviceDescriptors, this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors) : deviceDescriptors;
+		const deviceDescriptorsForInitialSync = isAlreadyLiveSyncing ? _.differenceBy(deviceDescriptors, this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors, deviceDescriptorPrimaryKey) : deviceDescriptors;
 
 		await this.initialSync(projectData, deviceDescriptorsForInitialSync, liveSyncData);
 
@@ -54,7 +52,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		}
 	}
 
-	public async stopLiveSync(projectDir: string, deviceIdentifiers?: string[], ): Promise<void> {
+	public async stopLiveSync(projectDir: string, deviceIdentifiers?: string[]): Promise<void> {
 		const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectDir];
 
 		if (liveSyncProcessInfo) {
@@ -89,7 +87,6 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 				liveSyncProcessInfo.deviceDescriptors = [];
 
 				// Kill typescript watcher
-				// TODO: Pass the projectDir in hooks args.
 				const projectData = this.$projectDataService.getProjectData(projectDir);
 				await this.$hooksService.executeAfterHooks('watch', {
 					hookArgs: {
@@ -135,10 +132,9 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 
 		const currentDeviceDescriptors = this.liveSyncProcessesInfo[projectDir].deviceDescriptors || [];
 		// Prevent cases where liveSync is called consecutive times with the same device, for example [ A, B, C ] and then [ A, B, D ] - we want to execute initialSync only for D.
-		this.liveSyncProcessesInfo[projectDir].deviceDescriptors = _.uniqBy(currentDeviceDescriptors.concat(deviceDescriptors), "identifier");
+		this.liveSyncProcessesInfo[projectDir].deviceDescriptors = _.uniqBy(currentDeviceDescriptors.concat(deviceDescriptors), deviceDescriptorPrimaryKey);
 	}
 
-	// TODO: Register both livesync services in injector
 	private getLiveSyncService(platform: string): IPlatformLiveSyncService {
 		if (this.$mobileHelper.isiOSPlatform(platform)) {
 			return this.$injector.resolve("iOSLiveSyncService");
@@ -159,7 +155,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		const platform = device.deviceInfo.platform;
 		if (preparedPlatforms.indexOf(platform) === -1) {
 			preparedPlatforms.push(platform);
-			// TODO: fix args cast to any
+			// TODO: Pass provision and sdk as a fifth argument here
 			await this.$platformService.preparePlatform(platform, {
 				bundle: false,
 				release: false,
@@ -175,7 +171,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 			return;
 		}
 
-		// TODO: fix args cast to any
+		// TODO: Pass provision and sdk as a fifth argument here
 		const shouldBuild = await this.$platformService.shouldBuild(platform, projectData, <any>{ buildForDevice: !device.isEmulator }, deviceBuildInfoDescriptor.outputPath);
 		let pathToBuildItem = null;
 		let action = LiveSyncTrackActionNames.LIVESYNC_OPERATION;
@@ -265,9 +261,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		};
 	}
 
-	private async startWatcher(projectData: IProjectData,
-		liveSyncData: ILiveSyncInfo): Promise<void> {
-
+	private async startWatcher(projectData: IProjectData, liveSyncData: ILiveSyncInfo): Promise<void> {
 		let pattern = [APP_FOLDER_NAME];
 
 		if (liveSyncData.watchAllFiles) {
