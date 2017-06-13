@@ -40,11 +40,11 @@
     "local-storage": "1.4.2",
     "lodash": "4.17.4",
     "loglevel": "1.4.1",
-    "path": "0.12.7",
     "qs": "6.4.0",
     "rxjs": "5.4.0",
     "sift": "3.3.10",
     "url": "0.11.0",
+    "url-join": "2.0.2",
     "url-pattern": "1.0.3"
   },
   "devDependencies": {

@@ -1,8 +1,7 @@
 import Promise from 'es6-promise';
-import qs from 'qs';
 import isString from 'lodash/isString';
 import url from 'url';
-import path from 'path';
+import urljoin from 'url-join';
 
 import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
 import { KinveyError, MobileIdentityConnectError } from 'src/errors';
@@ -89,7 +88,7 @@ export class MobileIdentityConnect extends Identity {
         version = String(version);
       }
 
-      pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
+      pathname = urljoin(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
     }
 
     const request = new KinveyRequest({
@@ -125,7 +124,7 @@ export class MobileIdentityConnect extends Identity {
           version = String(version);
         }
 
-        pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
+        pathname = urljoin(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
       }
 
       return popup.open(url.format({
