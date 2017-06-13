@@ -34,7 +34,7 @@ export class BuildCommandBase {
 
 	protected validatePlatform(platform: string): void {
 		if (!this.$platformService.isPlatformSupportedForOS(platform, this.$projectData)) {
-			this.$errors.fail(`Applications for platform ${platform} can not be built on this OS - ${process.platform}`);
+			this.$errors.fail(`Applications for platform ${platform} can not be built on this OS`);
 		}
 	}
 }

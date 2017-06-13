@@ -26,7 +26,7 @@ export class CleanAppIosCommand extends CleanAppCommandBase implements ICommand 
 
 	public async execute(args: string[]): Promise<void> {
 		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
-			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", this.$devicePlatformsConstants.iOS, process.platform);
+			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 		return super.execute([this.$platformsData.availablePlatforms.iOS]);
 	}
@@ -48,7 +48,7 @@ export class CleanAppAndroidCommand extends CleanAppCommandBase implements IComm
 
 	public async execute(args: string[]): Promise<void> {
 		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
-			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", this.$devicePlatformsConstants.iOS, process.platform);
+			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 		return super.execute([this.$platformsData.availablePlatforms.Android]);
 	}

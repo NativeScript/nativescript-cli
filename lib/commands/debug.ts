@@ -30,7 +30,9 @@ export abstract class DebugPlatformCommand implements ICommand {
 
 		this.$config.debugLivesync = true;
 
-		await this.$devicesService.initialize({ deviceId: this.$options.device, platform: this.platform, skipDeviceDetectionInterval: true, skipInferPlatform: true });
+		await this.$devicesService.initialize({
+
+		});
 		await this.$devicesService.detectCurrentlyAttachedDevices();
 
 		const devices = this.$devicesService.getDeviceInstances();
@@ -73,7 +75,13 @@ export abstract class DebugPlatformCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		await this.$devicesService.initialize({ platform: this.debugService.platform, deviceId: this.$options.device });
+		await this.$devicesService.initialize({
+			platform: this.platform,
+			deviceId: this.$options.device,
+			emulator: this.$options.emulator,
+			skipDeviceDetectionInterval: true,
+			skipInferPlatform: true
+		});
 		// Start emulator if --emulator is selected or no devices found.
 		if (this.$options.emulator || this.$devicesService.deviceCount === 0) {
 			return true;
@@ -120,7 +128,7 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
-			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", this.$devicePlatformsConstants.iOS, process.platform);
+			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
 		return await super.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.iOS);
@@ -155,7 +163,7 @@ export class DebugAndroidCommand extends DebugPlatformCommand {
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.Android, this.$projectData)) {
-			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", this.$devicePlatformsConstants.Android, process.platform);
+			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.Android} can not be built on this OS`);
 		}
 
 		return await super.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.Android);

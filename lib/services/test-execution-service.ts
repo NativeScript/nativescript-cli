@@ -41,7 +41,11 @@ class TestExecutionService implements ITestExecutionService {
 				try {
 					let platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
 					let projectDir = projectData.projectDir;
-					await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
+					await this.$devicesService.initialize({
+						platform: platform,
+						deviceId: this.$options.device,
+						emulator: this.$options.emulator
+					});
 					await this.$devicesService.detectCurrentlyAttachedDevices();
 					let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
@@ -59,6 +63,7 @@ class TestExecutionService implements ITestExecutionService {
 					if (!await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, this.$options)) {
 						this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 					}
+
 					this.detourEntryPoint(projectFilesPath);
 
 					const deployOptions: IDeployPlatformOptions = {
@@ -78,7 +83,8 @@ class TestExecutionService implements ITestExecutionService {
 
 					const devices = this.$devicesService.getDeviceInstances();
 					// Now let's take data for each device:
-					const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !this.platform || d.deviceInfo.platform === this.platform)
+					const platformLowerCase = this.platform && this.platform.toLowerCase();
+					const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !platformLowerCase || d.deviceInfo.platform.toLowerCase() === platformLowerCase)
 						.map(d => {
 							const info: ILiveSyncDeviceInfo = {
 								identifier: d.deviceInfo.identifier,
@@ -99,7 +105,6 @@ class TestExecutionService implements ITestExecutionService {
 
 									await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, projectData);
 									const pathToBuildResult = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, projectData);
-									console.log("3##### return path to buildResult = ", pathToBuildResult);
 									return pathToBuildResult;
 								}
 							};
@@ -107,11 +112,9 @@ class TestExecutionService implements ITestExecutionService {
 							return info;
 						});
 
-					// TODO: Fix this call
 					const liveSyncInfo: ILiveSyncInfo = { projectDir: projectData.projectDir, skipWatcher: !this.$options.watch || this.$options.justlaunch, watchAllFiles: this.$options.syncAllFiles };
+
 					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
-					// TODO: Fix
-					// await this.$liveSyncService.liveSync(platform, projectData, null, this.$options);
 
 					if (this.$options.debugBrk) {
 						this.$logger.info('Starting debugger...');
@@ -142,7 +145,11 @@ class TestExecutionService implements ITestExecutionService {
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 
 		let projectDir = projectData.projectDir;
-		await this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device });
+		await this.$devicesService.initialize({
+			platform: platform,
+			deviceId: this.$options.device,
+			emulator: this.$options.emulator
+		});
 
 		let karmaConfig = this.getKarmaConfiguration(platform, projectData),
 			karmaRunner = this.$childProcess.fork(path.join(__dirname, "karma-execution.js")),
@@ -187,13 +194,14 @@ class TestExecutionService implements ITestExecutionService {
 				} else {
 					const devices = this.$devicesService.getDeviceInstances();
 					// Now let's take data for each device:
-					const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !this.platform || d.deviceInfo.platform === this.platform)
+					const platformLowerCase = this.platform && this.platform.toLowerCase();
+					const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !platformLowerCase || d.deviceInfo.platform.toLowerCase() === platformLowerCase)
 						.map(d => {
 							const info: ILiveSyncDeviceInfo = {
 								identifier: d.deviceInfo.identifier,
 								buildAction: async (): Promise<string> => {
 									const buildConfig: IBuildConfig = {
-										buildForDevice: !d.isEmulator, // this.$options.forDevice,
+										buildForDevice: !d.isEmulator,
 										projectDir: this.$options.path,
 										clean: this.$options.clean,
 										teamId: this.$options.teamId,
@@ -208,7 +216,6 @@ class TestExecutionService implements ITestExecutionService {
 
 									await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, projectData);
 									const pathToBuildResult = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, projectData);
-									console.log("3##### return path to buildResult = ", pathToBuildResult);
 									return pathToBuildResult;
 								}
 							};
@@ -216,7 +223,6 @@ class TestExecutionService implements ITestExecutionService {
 							return info;
 						});
 
-					// TODO: Fix this call
 					const liveSyncInfo: ILiveSyncInfo = { projectDir: projectData.projectDir, skipWatcher: !this.$options.watch || this.$options.justlaunch, watchAllFiles: this.$options.syncAllFiles };
 					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 				}

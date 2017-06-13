@@ -42,6 +42,7 @@ export class RunCommandBase implements ICommand {
 		await this.$devicesService.initialize({
 			deviceId: this.$options.device,
 			platform: this.platform,
+			emulator: this.$options.emulator,
 			skipDeviceDetectionInterval: true,
 			skipInferPlatform: !this.platform
 		});
@@ -124,7 +125,7 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 
 	public async execute(args: string[]): Promise<void> {
 		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
-			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", this.$devicePlatformsConstants.iOS, process.platform);
+			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
 		return this.executeCore([this.$platformsData.availablePlatforms.iOS]);
@@ -165,7 +166,7 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 	public async canExecute(args: string[]): Promise<boolean> {
 		await super.canExecute(args);
 		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.Android, this.$projectData)) {
-			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", this.$devicePlatformsConstants.Android, process.platform);
+			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.Android} can not be built on this OS`);
 		}
 
 		if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
