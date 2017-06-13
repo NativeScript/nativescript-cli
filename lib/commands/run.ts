@@ -39,7 +39,12 @@ export class RunCommandBase implements ICommand {
 			this.$options.watch = false;
 		}
 
-		await this.$devicesService.initialize({ deviceId: this.$options.device, platform: this.platform, skipDeviceDetectionInterval: true, skipInferPlatform: true });
+		await this.$devicesService.initialize({
+			deviceId: this.$options.device,
+			platform: this.platform,
+			skipDeviceDetectionInterval: true,
+			skipInferPlatform: !this.platform
+		});
 		await this.$devicesService.detectCurrentlyAttachedDevices();
 
 		const devices = this.$devicesService.getDeviceInstances();
