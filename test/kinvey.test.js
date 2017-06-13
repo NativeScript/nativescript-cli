@@ -1,14 +1,10 @@
 import { Kinvey } from 'src/kinvey';
-import { User } from 'src/entity';
 import { randomString } from 'src/utils';
-import { KinveyError } from 'src/errors';
 import Client from 'src/client';
 import { UserMock } from 'test/mocks';
 import expect from 'expect';
 import nock from 'nock';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
-const defaultMicProtocol = process.env.KINVEY_MIC_PROTOCOL || 'https:';
-const defaultMicHost = process.env.KINVEY_MIC_HOST || 'auth.kinvey.com';
 
 describe('Kinvey', function () {
   afterEach(function() {
@@ -19,29 +15,21 @@ describe('Kinvey', function () {
     });
   });
 
-  describe('appVersion', function() {
-    it('should set the appVersion', function() {
-      const appVersion = '1.0.0';
-      Kinvey.appVersion = appVersion;
-      expect(Kinvey.appVersion).toEqual(appVersion);
-    });
-  });
-
   describe('init()', function () {
     it('should throw an error if an appKey is not provided', function() {
-        expect(() => {
-            Kinvey.init({
-                appSecret: randomString()
-            });
-        }).toThrow();
+      expect(() => {
+        Kinvey.init({
+          appSecret: randomString()
+        });
+      }).toThrow();
     });
 
     it('should throw an error if an appSecret or masterSecret is not provided', function() {
       expect(() => {
-            Kinvey.init({
-                appKey: randomString()
-            });
-        }).toThrow();
+        Kinvey.init({
+          appKey: randomString()
+        });
+      }).toThrow();
     });
 
     it('should return a client', function() {
