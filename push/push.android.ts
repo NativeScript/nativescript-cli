@@ -32,14 +32,14 @@ export class Push extends EventEmitter {
     }
 
     onNotification(listener) {
-        return this.on('notification', listener);
+        return (this as any).on('notification', listener);
     }
 
     onceNotification(listener) {
-        return this.once('notification', listener);
+        return (this as any).once('notification', listener);
      }
 
-    register(options = {}) {
+    register(options = <any>{}) {
         return new Promise((resolve, reject) => {
             if (this.isSupported() === false) {
                 return reject(new KinveyError('Kinvey currently only supports push notifications on iOS and Android platforms.'));
@@ -54,7 +54,7 @@ export class Push extends EventEmitter {
             PushPlugin.register(options, resolve, reject);
 
             PushPlugin.onMessageReceived((data: any) => {
-                this.emit('notification', data);
+                (this as any).emit('notification', data);
             });
         })
             .then((token) => {
@@ -108,7 +108,7 @@ export class Push extends EventEmitter {
             });
     }
 
-    unregister(options = {}) {
+    unregister(options = <any>{}) {
         return new Promise((resolve, reject) => {
             if (this.isSupported() === false) {
                 return null;

@@ -1,4 +1,4 @@
-/// <reference path="../references.d.ts" />
+/// <reference path="../../node_modules/tns-platform-declarations/ios.d.ts" />
 
 import { EventEmitter } from 'events';
 import * as app from 'application';
@@ -109,7 +109,7 @@ export class Popup extends EventEmitter {
           // Just catch the exception
         }
 
-        this.emit('loadstop', { url: urlStr });
+        (this as any).emit('loadstop', { url: urlStr });
         return true;
       };
 
