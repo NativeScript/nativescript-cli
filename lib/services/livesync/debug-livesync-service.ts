@@ -1,7 +1,7 @@
 import { EOL } from "os";
 import { LiveSyncService } from "./livesync-service";
 
-export class DebugLiveSyncService extends LiveSyncService {
+export class DebugLiveSyncService extends LiveSyncService implements IDebugLiveSyncService {
 
 	constructor(protected $platformService: IPlatformService,
 		$projectDataService: IProjectDataService,
@@ -67,7 +67,8 @@ export class DebugLiveSyncService extends LiveSyncService {
 		this.printDebugInformation(await debugService.debug<string[]>(debugData, debugOptions));
 	}
 
-	protected printDebugInformation(information: string[]): void {
+	public printDebugInformation(information: string[]): void {
+		information = information.filter(i => !!i);
 		_.each(information, i => {
 			this.$logger.info(`To start debugging, open the following URL in Chrome:${EOL}${i}${EOL}`.cyan);
 		});

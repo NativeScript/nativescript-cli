@@ -146,6 +146,18 @@ interface ILiveSyncService {
 	stopLiveSync(projectDir: string, deviceIdentifiers?: string[]): Promise<void>;
 }
 
+/**
+ * Describes LiveSync operations while debuggging.
+ */
+interface IDebugLiveSyncService extends ILiveSyncService {
+	/**
+	 * Prints debug information.
+	 * @param {string[]} information Array of information to be printed. Note that false-like values will be stripped from the array.
+	 * @returns {void}
+	 */
+	printDebugInformation(information: string[]): void;
+}
+
 interface ILiveSyncWatchInfo {
 	projectData: IProjectData;
 	filesToRemove: string[];

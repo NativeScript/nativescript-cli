@@ -1,6 +1,4 @@
-﻿import { EOL } from "os";
-
-export abstract class DebugPlatformCommand implements ICommand {
+﻿export abstract class DebugPlatformCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 	public platform: string;
 
@@ -12,7 +10,7 @@ export abstract class DebugPlatformCommand implements ICommand {
 		protected $options: IOptions,
 		protected $platformsData: IPlatformsData,
 		protected $logger: ILogger,
-		private $debugLiveSyncService: ILiveSyncService,
+		private $debugLiveSyncService: IDebugLiveSyncService,
 		private $config: IConfiguration) {
 		this.$projectData.initializeProjectData();
 	}
@@ -25,7 +23,7 @@ export abstract class DebugPlatformCommand implements ICommand {
 		await this.$platformService.trackProjectType(this.$projectData);
 
 		if (this.$options.start) {
-			return this.printDebugInformation(await this.debugService.debug<string[]>(debugData, debugOptions));
+			return this.$debugLiveSyncService.printDebugInformation(await this.debugService.debug<string[]>(debugData, debugOptions));
 		}
 
 		this.$config.debugLivesync = true;
@@ -96,12 +94,6 @@ export abstract class DebugPlatformCommand implements ICommand {
 
 		return true;
 	}
-
-	protected printDebugInformation(information: string[]): void {
-		_.each(information, i => {
-			this.$logger.info(`To start debugging, open the following URL in Chrome:${EOL}${i}${EOL}`.cyan);
-		});
-	}
 }
 
 export class DebugIOSCommand extends DebugPlatformCommand {
@@ -117,7 +109,7 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$iosDeviceOperations: IIOSDeviceOperations,
-		$debugLiveSyncService: ILiveSyncService) {
+		$debugLiveSyncService: IDebugLiveSyncService) {
 		super($iOSDebugService, $devicesService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger, $debugLiveSyncService, $config);
 		// Do not dispose ios-device-lib, so the process will remain alive and the debug application (NativeScript Inspector or Chrome DevTools) will be able to connect to the socket.
 		// In case we dispose ios-device-lib, the socket will be closed and the code will fail when the debug application tries to read/send data to device socket.
@@ -132,12 +124,6 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 		}
 
 		return await super.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.iOS);
-	}
-
-	protected printDebugInformation(information: string[]): void {
-		if (this.$options.chrome) {
-			super.printDebugInformation(information);
-		}
 	}
 
 	public platform = this.$devicePlatformsConstants.iOS;
@@ -157,7 +143,7 @@ export class DebugAndroidCommand extends DebugPlatformCommand {
 		$options: IOptions,
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
-		$debugLiveSyncService: ILiveSyncService) {
+		$debugLiveSyncService: IDebugLiveSyncService) {
 		super($androidDebugService, $devicesService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger, $debugLiveSyncService, $config);
 	}
 
