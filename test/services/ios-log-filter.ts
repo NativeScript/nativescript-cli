@@ -43,7 +43,7 @@ describe("iOSLogFilter", () => {
 				null,
 				null,
 				"CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3472:32: EXCEPTION: Uncaught (in promise): Error: CUSTOM EXCEPTION",
-				null
+				""
 			]
 		},
 		{
@@ -84,7 +84,7 @@ describe("iOSLogFilter", () => {
 				null,
 				null,
 				null,
-				null
+				""
 			]
 		}
 	];
