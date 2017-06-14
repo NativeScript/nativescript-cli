@@ -498,24 +498,23 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private async addFramework(frameworkPath: string, projectData: IProjectData): Promise<void> {
-		this.validateFramework(frameworkPath);
+		if (!this.$hostInfo.isWindows) {
+			this.validateFramework(frameworkPath);
 
-		let project = this.createPbxProj(projectData);
-		let frameworkName = path.basename(frameworkPath, path.extname(frameworkPath));
-		let frameworkBinaryPath = path.join(frameworkPath, frameworkName);
-		const pathToFileCommand = this.$hostInfo.isWindows ? path.join(__dirname, "..", "..", "vendor", "file", "file.exe") : "file";
-		let isDynamic = _.includes((await this.$childProcess.spawnFromEvent(pathToFileCommand, [frameworkBinaryPath], "close")).stdout, "dynamically linked");
+			let project = this.createPbxProj(projectData);
+			let frameworkName = path.basename(frameworkPath, path.extname(frameworkPath));
+			let frameworkBinaryPath = path.join(frameworkPath, frameworkName);
+			let isDynamic = _.includes((await this.$childProcess.spawnFromEvent("file", [frameworkBinaryPath], "close")).stdout, "dynamically linked");
+			let frameworkAddOptions: IXcode.Options = { customFramework: true };
 
-		let frameworkAddOptions: IXcode.Options = { customFramework: true };
+			if (isDynamic) {
+				frameworkAddOptions["embed"] = true;
+			}
 
-		if (isDynamic) {
-			frameworkAddOptions["embed"] = true;
+			let frameworkRelativePath = '$(SRCROOT)/' + this.getLibSubpathRelativeToProjectPath(frameworkPath, projectData);
+			project.addFramework(frameworkRelativePath, frameworkAddOptions);
+			this.savePbxProj(project, projectData);
 		}
-
-		let frameworkRelativePath = '$(SRCROOT)/' + this.getLibSubpathRelativeToProjectPath(frameworkPath, projectData);
-		project.addFramework(frameworkRelativePath, frameworkAddOptions);
-		this.savePbxProj(project, projectData);
-
 	}
 
 	private async addStaticLibrary(staticLibPath: string, projectData: IProjectData): Promise<void> {
