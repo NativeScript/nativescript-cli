@@ -145,60 +145,54 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		throw new Error(`Invalid platform ${platform}. Supported platforms are: ${this.$mobileHelper.platformNames.join(", ")}`);
 	}
 
-	private async ensureLatestAppPackageIsInstalledOnDevice(device: Mobile.IDevice,
-		preparedPlatforms: string[],
-		rebuiltInformation: ILiveSyncBuildInfo[],
-		projectData: IProjectData,
-		deviceBuildInfoDescriptor: ILiveSyncDeviceInfo,
-		settings: ILatestAppPackageInstalledSettings,
-		modifiedFiles?: string[]): Promise<void> {
-		const platform = device.deviceInfo.platform;
-		if (preparedPlatforms.indexOf(platform) === -1) {
-			preparedPlatforms.push(platform);
+	private async ensureLatestAppPackageIsInstalledOnDevice(options: IEnsureLatestAppPackageIsInstalledOnDeviceOptions): Promise<void> {
+		const platform = options.device.deviceInfo.platform;
+		if (options.preparedPlatforms.indexOf(platform) === -1) {
+			options.preparedPlatforms.push(platform);
 			// TODO: Pass provision and sdk as a fifth argument here
 			await this.$platformService.preparePlatform(platform, {
 				bundle: false,
 				release: false,
-			}, null, projectData, <any>{}, modifiedFiles);
+			}, null, options.projectData, <any>{}, options.modifiedFiles);
 		}
 
-		const rebuildInfo = _.find(rebuiltInformation, info => info.isEmulator === device.isEmulator && info.platform === platform);
+		const rebuildInfo = _.find(options.rebuiltInformation, info => info.isEmulator === options.device.isEmulator && info.platform === platform);
 
 		if (rebuildInfo) {
 			// Case where we have three devices attached, a change that requires build is found,
 			// we'll rebuild the app only for the first device, but we should install new package on all three devices.
-			await this.$platformService.installApplication(device, { release: false }, projectData, rebuildInfo.pathToBuildItem, deviceBuildInfoDescriptor.outputPath);
+			await this.$platformService.installApplication(options.device, { release: false }, options.projectData, rebuildInfo.pathToBuildItem, options.deviceBuildInfoDescriptor.outputPath);
 			return;
 		}
 
 		// TODO: Pass provision and sdk as a fifth argument here
-		const shouldBuild = await this.$platformService.shouldBuild(platform, projectData, <any>{ buildForDevice: !device.isEmulator }, deviceBuildInfoDescriptor.outputPath);
+		const shouldBuild = await this.$platformService.shouldBuild(platform, options.projectData, <any>{ buildForDevice: !options.device.isEmulator, clean: options.liveSyncData && options.liveSyncData.clean }, options.deviceBuildInfoDescriptor.outputPath);
 		let pathToBuildItem = null;
 		let action = LiveSyncTrackActionNames.LIVESYNC_OPERATION;
 		if (shouldBuild) {
-			pathToBuildItem = await deviceBuildInfoDescriptor.buildAction();
+			pathToBuildItem = await options.deviceBuildInfoDescriptor.buildAction();
 			// Is it possible to return shouldBuild for two devices? What about android device and android emulator?
-			rebuiltInformation.push({ isEmulator: device.isEmulator, platform, pathToBuildItem });
+			options.rebuiltInformation.push({ isEmulator: options.device.isEmulator, platform, pathToBuildItem });
 			action = LiveSyncTrackActionNames.LIVESYNC_OPERATION_BUILD;
 		}
 
-		if (!settings[platform][device.deviceInfo.type]) {
-			let isForDevice = !device.isEmulator;
-			settings[platform][device.deviceInfo.type] = true;
+		if (!options.settings[platform][options.device.deviceInfo.type]) {
+			let isForDevice = !options.device.isEmulator;
+			options.settings[platform][options.device.deviceInfo.type] = true;
 			if (this.$mobileHelper.isAndroidPlatform(platform)) {
-				settings[platform][DeviceTypes.Emulator] = true;
-				settings[platform][DeviceTypes.Device] = true;
+				options.settings[platform][DeviceTypes.Emulator] = true;
+				options.settings[platform][DeviceTypes.Device] = true;
 				isForDevice = null;
 			}
 
 			await this.$platformService.trackActionForPlatform({ action, platform, isForDevice });
 		}
 
-		await this.$platformService.trackActionForPlatform({ action: LiveSyncTrackActionNames.DEVICE_INFO, platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
+		await this.$platformService.trackActionForPlatform({ action: LiveSyncTrackActionNames.DEVICE_INFO, platform, isForDevice: !options.device.isEmulator, deviceOsVersion: options.device.deviceInfo.version });
 
-		const shouldInstall = await this.$platformService.shouldInstall(device, projectData, deviceBuildInfoDescriptor.outputPath);
+		const shouldInstall = await this.$platformService.shouldInstall(options.device, options.projectData, options.deviceBuildInfoDescriptor.outputPath);
 		if (shouldInstall) {
-			await this.$platformService.installApplication(device, { release: false }, projectData, pathToBuildItem, deviceBuildInfoDescriptor.outputPath);
+			await this.$platformService.installApplication(options.device, { release: false }, options.projectData, pathToBuildItem, options.deviceBuildInfoDescriptor.outputPath);
 		}
 	}
 
@@ -217,9 +211,17 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 				});
 
 				const platform = device.deviceInfo.platform;
-				const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
+				const deviceBuildInfoDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 
-				await this.ensureLatestAppPackageIsInstalledOnDevice(device, preparedPlatforms, rebuiltInformation, projectData, deviceDescriptor, settings);
+				await this.ensureLatestAppPackageIsInstalledOnDevice({
+					device,
+					preparedPlatforms,
+					rebuiltInformation,
+					projectData,
+					deviceBuildInfoDescriptor,
+					liveSyncData,
+					settings
+				});
 
 				const liveSyncResultInfo = await this.getLiveSyncService(platform).fullSync({
 					projectData, device,
@@ -305,9 +307,17 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 
 								await this.$devicesService.execute(async (device: Mobile.IDevice) => {
 									const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];
-									const deviceDescriptor = _.find(liveSyncProcessInfo.deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
+									const deviceBuildInfoDescriptor = _.find(liveSyncProcessInfo.deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 
-									await this.ensureLatestAppPackageIsInstalledOnDevice(device, preparedPlatforms, rebuiltInformation, projectData, deviceDescriptor, latestAppPackageInstalledSettings, allModifiedFiles);
+									await this.ensureLatestAppPackageIsInstalledOnDevice({
+										device,
+										preparedPlatforms,
+										rebuiltInformation,
+										projectData,
+										deviceBuildInfoDescriptor,
+										settings: latestAppPackageInstalledSettings,
+										modifiedFiles: allModifiedFiles
+									});
 
 									const service = this.getLiveSyncService(device.deviceInfo.platform);
 									const settings: ILiveSyncWatchInfo = {

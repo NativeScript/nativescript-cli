@@ -115,6 +115,11 @@ interface ILiveSyncInfo {
 	 * NOTE: Currently this is available only for iOS.
 	 */
 	useLiveEdit?: boolean;
+
+	/**
+	 * Forces a build before the initial livesync.
+	 */
+	clean?: boolean;
 }
 
 interface ILatestAppPackageInstalledSettings extends IDictionary<IDictionary<boolean>> { /* empty */ }
@@ -123,6 +128,20 @@ interface ILiveSyncBuildInfo {
 	platform: string;
 	isEmulator: boolean;
 	pathToBuildItem: string;
+}
+
+/**
+ * Desribes object that can be passed to ensureLatestAppPackageIsInstalledOnDevice method.
+ */
+interface IEnsureLatestAppPackageIsInstalledOnDeviceOptions {
+	device: Mobile.IDevice;
+	preparedPlatforms: string[];
+	rebuiltInformation: ILiveSyncBuildInfo[];
+	projectData: IProjectData;
+	deviceBuildInfoDescriptor: ILiveSyncDeviceInfo;
+	settings: ILatestAppPackageInstalledSettings;
+	liveSyncData?: ILiveSyncInfo;
+	modifiedFiles?: string[];
 }
 
 /**
