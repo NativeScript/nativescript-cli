@@ -86,6 +86,8 @@ describe("debugService", () => {
 
 		testInjector.register("hostInfo", testData.hostInfo);
 
+		testInjector.register("logger", stubs.LoggerStub);
+
 		return testInjector;
 	};
 
