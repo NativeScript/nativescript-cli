@@ -89,7 +89,7 @@ interface IDebugDataService {
 /**
  * Describes methods for debug operation.
  */
-interface IDebugService extends NodeJS.EventEmitter {
+interface IDebugServiceBase extends NodeJS.EventEmitter {
 	/**
 	 * Starts debug operation based on the specified debug data.
 	 * @param {IDebugData} debugData Describes information for device and application that will be debugged.
@@ -99,10 +99,14 @@ interface IDebugService extends NodeJS.EventEmitter {
 	debug<T>(debugData: IDebugData, debugOptions: IDebugOptions): Promise<T>;
 }
 
+interface IDebugService {
+	getDebugService(device: Mobile.IDevice): IPlatformDebugService;
+}
+
 /**
  * Describes actions required for debugging on specific platform (Android or iOS).
  */
-interface IPlatformDebugService extends IDebugService {
+interface IPlatformDebugService extends IDebugServiceBase {
 	/**
 	 * Starts debug operation.
 	 * @param {IDebugData} debugData Describes information for device and application that will be debugged.

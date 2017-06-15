@@ -34,10 +34,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $projectFilesManager: IProjectFilesManager,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $hostInfo: IHostInfo,
+		private $devicePathProvider: IDevicePathProvider,
 		private $xmlValidator: IXmlValidator,
 		private $npm: INodePackageManager,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		private $projectChangesService: IProjectChangesService,
 		private $analyticsService: IAnalyticsService) {
 		super();
@@ -369,32 +369,38 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	public async shouldBuild(platform: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<boolean> {
+	public async shouldBuild(platform: string, projectData: IProjectData, buildConfig: IBuildConfig, outputPath?: string): Promise<boolean> {
 		if (this.$projectChangesService.currentChanges.changesRequireBuild) {
 			return true;
 		}
+
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		let forDevice = !buildConfig || buildConfig.buildForDevice;
-		let outputPath = forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath;
+		outputPath = outputPath || (forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath);
 		if (!this.$fs.exists(outputPath)) {
 			return true;
 		}
+
 		let packageNames = platformData.getValidPackageNames({ isForDevice: forDevice });
 		let packages = this.getApplicationPackages(outputPath, packageNames);
 		if (packages.length === 0) {
 			return true;
 		}
+
 		let prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
-		let buildInfo = this.getBuildInfo(platform, platformData, buildConfig);
+		let buildInfo = this.getBuildInfo(platform, platformData, buildConfig, outputPath);
 		if (!prepareInfo || !buildInfo) {
 			return true;
 		}
+
 		if (buildConfig.clean) {
 			return true;
 		}
+
 		if (prepareInfo.time === buildInfo.prepareTime) {
 			return false;
 		}
+
 		return prepareInfo.changesRequireBuildTime !== buildInfo.prepareTime;
 	}
 
@@ -438,36 +444,45 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME, platformData.platformProjectService, handler, platformData.platformProjectService.buildProject(platformData.projectRoot, projectData, buildConfig));
 
-		let prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
-		let buildInfoFilePath = this.getBuildOutputPath(platform, platformData, buildConfig);
-		let buildInfoFile = path.join(buildInfoFilePath, buildInfoFileName);
-		let buildInfo: IBuildInfo = {
-			prepareTime: prepareInfo.changesRequireBuildTime,
-			buildTime: new Date().toString()
-		};
-		this.$fs.writeJson(buildInfoFile, buildInfo);
+		const buildInfoFilePath = this.getBuildOutputPath(platform, platformData, buildConfig);
+		this.saveBuildInfoFile(platform, projectData.projectDir, buildInfoFilePath);
+
 		this.$logger.out("Project successfully built.");
 	}
 
-	public async shouldInstall(device: Mobile.IDevice, projectData: IProjectData): Promise<boolean> {
+	public saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void {
+		let buildInfoFile = path.join(buildInfoFileDirname, buildInfoFileName);
+
+		let prepareInfo = this.$projectChangesService.getPrepareInfo(platform, this.$projectDataService.getProjectData(projectDir));
+		let buildInfo = {
+			prepareTime: prepareInfo.changesRequireBuildTime,
+			buildTime: new Date().toString()
+		};
+
+		this.$fs.writeJson(buildInfoFile, buildInfo);
+	}
+
+	public async shouldInstall(device: Mobile.IDevice, projectData: IProjectData, outputPath?: string): Promise<boolean> {
 		let platform = device.deviceInfo.platform;
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		if (!(await device.applicationManager.isApplicationInstalled(projectData.projectId))) {
 			return true;
 		}
+
+		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		let deviceBuildInfo: IBuildInfo = await this.getDeviceBuildInfo(device, projectData);
-		let localBuildInfo = this.getBuildInfo(platform, platformData, { buildForDevice: !device.isEmulator });
+		let localBuildInfo = this.getBuildInfo(platform, platformData, { buildForDevice: !device.isEmulator }, outputPath);
 		return !localBuildInfo || !deviceBuildInfo || deviceBuildInfo.buildTime !== localBuildInfo.buildTime;
 	}
 
-	public async installApplication(device: Mobile.IDevice, buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {
+	public async installApplication(device: Mobile.IDevice, buildConfig: IBuildConfig, projectData: IProjectData, packageFile?: string, outputFilePath?: string): Promise<void> {
 		this.$logger.out("Installing...");
 		let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
-		let packageFile = "";
-		if (this.$devicesService.isiOSSimulator(device)) {
-			packageFile = this.getLatestApplicationPackageForEmulator(platformData, buildConfig).packageName;
-		} else {
-			packageFile = this.getLatestApplicationPackageForDevice(platformData, buildConfig).packageName;
+		if (!packageFile) {
+			if (this.$devicesService.isiOSSimulator(device)) {
+				packageFile = this.getLatestApplicationPackageForEmulator(platformData, buildConfig, outputFilePath).packageName;
+			} else {
+				packageFile = this.getLatestApplicationPackageForDevice(platformData, buildConfig, outputFilePath).packageName;
+			}
 		}
 
 		await platformData.platformProjectService.cleanDeviceTempFolder(device.deviceInfo.identifier, projectData);
@@ -476,7 +491,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		if (!buildConfig.release) {
 			let deviceFilePath = await this.getDeviceBuildInfoFilePath(device, projectData);
-			let buildInfoFilePath = this.getBuildOutputPath(device.deviceInfo.platform, platformData, { buildForDevice: !device.isEmulator });
+			let buildInfoFilePath = outputFilePath || this.getBuildOutputPath(device.deviceInfo.platform, platformData, { buildForDevice: !device.isEmulator });
 			let appIdentifier = projectData.projectId;
 
 			await device.fileSystem.putFile(path.join(buildInfoFilePath, buildInfoFileName), deviceFilePath, appIdentifier);
@@ -545,8 +560,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	private async getDeviceBuildInfoFilePath(device: Mobile.IDevice, projectData: IProjectData): Promise<string> {
-		let deviceAppData = this.$deviceAppDataFactory.create(projectData.projectId, device.deviceInfo.platform, device);
-		let deviceRootPath = path.dirname(await deviceAppData.getDeviceProjectRootPath());
+		const deviceRootPath = await this.$devicePathProvider.getDeviceProjectRootPath(device, {
+			appIdentifier: projectData.projectId,
+			getDirname: true
+		});
 		return helpers.fromWindowsRelativePathToUnix(path.join(deviceRootPath, buildInfoFileName));
 	}
 
@@ -559,9 +576,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	private getBuildInfo(platform: string, platformData: IPlatformData, options: IBuildForDevice): IBuildInfo {
-		let buildInfoFilePath = this.getBuildOutputPath(platform, platformData, options);
-		let buildInfoFile = path.join(buildInfoFilePath, buildInfoFileName);
+	private getBuildInfo(platform: string, platformData: IPlatformData, options: IBuildForDevice, buildOutputPath?: string): IBuildInfo {
+		buildOutputPath = buildOutputPath || this.getBuildOutputPath(platform, platformData, options);
+		let buildInfoFile = path.join(buildOutputPath, buildInfoFileName);
 		if (this.$fs.exists(buildInfoFile)) {
 			try {
 				let buildInfoTime = this.$fs.readJson(buildInfoFile);
@@ -584,13 +601,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		appUpdater.cleanDestinationApp();
 	}
 
-	public lastOutputPath(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): string {
+	public lastOutputPath(platform: string, buildConfig: IBuildConfig, projectData: IProjectData, outputPath?: string): string {
 		let packageFile: string;
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		if (buildConfig.buildForDevice) {
-			packageFile = this.getLatestApplicationPackageForDevice(platformData, buildConfig).packageName;
+			packageFile = this.getLatestApplicationPackageForDevice(platformData, buildConfig, outputPath).packageName;
 		} else {
-			packageFile = this.getLatestApplicationPackageForEmulator(platformData, buildConfig).packageName;
+			packageFile = this.getLatestApplicationPackageForEmulator(platformData, buildConfig, outputPath).packageName;
 		}
 		if (!packageFile || !this.$fs.exists(packageFile)) {
 			this.$errors.failWithoutHelp("Unable to find built application. Try 'tns build %s'.", platform);
@@ -677,10 +694,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		if (!this.isValidPlatform(platform, projectData)) {
 			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(this.$platformsData.platformsNames));
 		}
-
-		if (!this.isPlatformSupportedForOS(platform, projectData)) {
-			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", platform, process.platform);
-		}
 	}
 
 	public validatePlatformInstalled(platform: string, projectData: IProjectData): void {
@@ -705,7 +718,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return this.$platformsData.getPlatformData(platform, projectData);
 	}
 
-	private isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean {
+	public isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean {
 		let targetedOS = this.$platformsData.getPlatformData(platform, projectData).targetedOS;
 		let res = !targetedOS || targetedOS.indexOf("*") >= 0 || targetedOS.indexOf(process.platform) >= 0;
 		return res;
@@ -745,12 +758,12 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return packages[0];
 	}
 
-	public getLatestApplicationPackageForDevice(platformData: IPlatformData, buildConfig: IBuildConfig): IApplicationPackage {
-		return this.getLatestApplicationPackage(platformData.deviceBuildOutputPath, platformData.getValidPackageNames({ isForDevice: true, isReleaseBuild: buildConfig.release }));
+	public getLatestApplicationPackageForDevice(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage {
+		return this.getLatestApplicationPackage(outputPath || platformData.deviceBuildOutputPath, platformData.getValidPackageNames({ isForDevice: true, isReleaseBuild: buildConfig.release }));
 	}
 
-	public getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig): IApplicationPackage {
-		return this.getLatestApplicationPackage(platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath, platformData.getValidPackageNames({ isForDevice: false, isReleaseBuild: buildConfig.release }));
+	public getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage {
+		return this.getLatestApplicationPackage(outputPath || platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath, platformData.getValidPackageNames({ isForDevice: false, isReleaseBuild: buildConfig.release }));
 	}
 
 	private async updatePlatform(platform: string, version: string, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions): Promise<void> {
@@ -794,6 +807,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.$logger.out("Successfully updated to version ", updateOptions.newVersion);
 	}
 
+	// TODO: Remove this method from here. It has nothing to do with platform
 	public async readFile(device: Mobile.IDevice, deviceFilePath: string, projectData: IProjectData): Promise<string> {
 		temp.track();
 		let uniqueFilePath = temp.path({ suffix: ".tmp" });

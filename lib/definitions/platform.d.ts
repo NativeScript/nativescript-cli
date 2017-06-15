@@ -55,10 +55,11 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * - the .nsbuildinfo file in product folder points to an old prepare.
 	 * @param {string} platform The platform to build.
 	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @param {IBuildConfig} buildConfig Indicates whether the build is for device or emulator.
+	 * @param {IBuildConfig} @optional buildConfig Indicates whether the build is for device or emulator.
+	 * @param {string} @optional outputPath Directory containing build information and artifacts.
 	 * @returns {boolean} true indicates that the platform should be build.
 	 */
-	shouldBuild(platform: string, projectData: IProjectData, buildConfig?: IBuildConfig): Promise<boolean>;
+	shouldBuild(platform: string, projectData: IProjectData, buildConfig?: IBuildConfig, outputPath?: string): Promise<boolean>;
 
 	/**
 	 * Builds the native project for the specified platform for device or emulator.
@@ -77,9 +78,10 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * - the .nsbuildinfo file located in application root folder is different than the local .nsbuildinfo file
 	 * @param {Mobile.IDevice} device The device where the application should be installed.
 	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @param {string} @optional outputPath Directory containing build information and artifacts.
 	 * @returns {Promise<boolean>} true indicates that the application should be installed.
 	 */
-	shouldInstall(device: Mobile.IDevice, projectData: IProjectData): Promise<boolean>;
+	shouldInstall(device: Mobile.IDevice, projectData: IProjectData, outputPath?: string): Promise<boolean>;
 
 	/**
 	 * Installs the application on specified device.
@@ -87,10 +89,12 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * * .nsbuildinfo is not persisted when building for release.
 	 * @param {Mobile.IDevice} device The device where the application should be installed.
 	 * @param {IRelease} options Whether the application was built in release configuration.
+	 * @param {string} @optional pathToBuiltApp Path to build artifact.
+	 * @param {string} @optional outputPath Directory containing build information and artifacts.
 	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	installApplication(device: Mobile.IDevice, options: IRelease, projectData: IProjectData): Promise<void>;
+	installApplication(device: Mobile.IDevice, options: IRelease, projectData: IProjectData, pathToBuiltApp?: string, outputPath?: string): Promise<void>;
 
 	/**
 	 * Gets first chance to validate the options provided as command line arguments.
@@ -125,25 +129,34 @@ interface IPlatformService extends NodeJS.EventEmitter {
 
 	/**
 	 * Ensures the passed platform is a valid one (from the supported ones)
-	 * and that it can be built on the current OS
 	 */
 	validatePlatform(platform: string, projectData: IProjectData): void;
+
+	/**
+	 * Checks whether passed platform can be built on the current OS
+	 * @param {string} platform The mobile platform.
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @returns {boolean} Whether the platform is supported for current OS or not.
+	 */
+	isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean;
 
 	/**
 	 * Returns information about the latest built application for device in the current project.
 	 * @param {IPlatformData} platformData Data describing the current platform.
 	 * @param {IBuildConfig} buildConfig Defines if the build is for release configuration.
+	 * @param {string} @optional outputPath Directory that should contain the build artifact.
 	 * @returns {IApplicationPackage} Information about latest built application.
 	 */
-	getLatestApplicationPackageForDevice(platformData: IPlatformData, buildConfig: IBuildConfig): IApplicationPackage;
+	getLatestApplicationPackageForDevice(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage;
 
 	/**
 	 * Returns information about the latest built application for simulator in the current project.
 	 * @param {IPlatformData} platformData Data describing the current platform.
 	 * @param {IBuildConfig} buildConfig Defines if the build is for release configuration.
+	 * @param {string} @optional outputPath Directory that should contain the build artifact.
 	 * @returns {IApplicationPackage} Information about latest built application.
 	 */
-	getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig): IApplicationPackage;
+	getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage;
 
 	/**
 	 * Copies latest build output to a specified location.
@@ -160,9 +173,10 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @param {string} platform Mobile platform - Android, iOS.
 	 * @param {IBuildConfig} buildConfig Defines if the searched artifact should be for simulator and is it built for release.
 	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @param {string} @optional outputPath Directory that should contain the build artifact.
 	 * @returns {string} The path to latest built artifact.
 	 */
-	lastOutputPath(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): string;
+	lastOutputPath(platform: string, buildConfig: IBuildConfig, projectData: IProjectData, outputPath?: string): string;
 
 	/**
 	 * Reads contents of a file on device.
@@ -188,6 +202,15 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @returns {Promise<void>}
 	 */
 	trackActionForPlatform(actionData: ITrackPlatformAction): Promise<void>;
+
+	/**
+	 * Saves build information in a proprietary file.
+	 * @param {string} platform The build platform.
+	 * @param {string} projectDir The project's directory.
+	 * @param {string} buildInfoFileDirname The directory where the build file should be written to.
+	 * @returns {void}
+	 */
+	saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void
 }
 
 interface IAddPlatformCoreOptions extends IPlatformSpecificData, ICreateProjectOptions { }

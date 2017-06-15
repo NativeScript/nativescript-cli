@@ -1,4 +1,5 @@
 import * as path from "path";
+import { ProjectData } from "../project-data";
 
 interface IProjectFileData {
 	projectData: any;
@@ -10,7 +11,8 @@ export class ProjectDataService implements IProjectDataService {
 
 	constructor(private $fs: IFileSystem,
 		private $staticConfig: IStaticConfig,
-		private $logger: ILogger) {
+		private $logger: ILogger,
+		private $injector: IInjector) {
 	}
 
 	public getNSValue(projectDir: string, propertyName: string): any {
@@ -29,6 +31,14 @@ export class ProjectDataService implements IProjectDataService {
 		const projectFileInfo = this.getProjectFileData(projectDir);
 		delete projectFileInfo.projectData[ProjectDataService.DEPENDENCIES_KEY_NAME][dependencyName];
 		this.$fs.writeJson(projectFileInfo.projectFilePath, projectFileInfo.projectData);
+	}
+
+	// TODO: Add tests
+	// TODO: Remove $projectData and replace it with $projectDataService.getProjectData
+	public getProjectData(projectDir: string): IProjectData {
+		const projectDataInstance = this.$injector.resolve<IProjectData>(ProjectData);
+		projectDataInstance.initializeProjectData(projectDir);
+		return projectDataInstance;
 	}
 
 	private getValue(projectDir: string, propertyName: string): any {

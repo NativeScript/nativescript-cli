@@ -257,37 +257,6 @@ interface IOpener {
 	open(target: string, appname: string): void;
 }
 
-interface ILiveSyncService {
-	liveSync(platform: string, projectData: IProjectData, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => Promise<void>): Promise<void>;
-}
-
-interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase {
-	/**
-	 * Refreshes the application's content on a device
-	 * @param  {Mobile.IDeviceAppData} deviceAppData Information about the application and the device.
-	 * @param  {Mobile.ILocalToDevicePathData[]} localToDevicePaths Object containing a mapping of file paths from the system to the device.
-	 * @param  {boolean} forceExecuteFullSync If this is passed a full LiveSync is performed instead of an incremental one.
-	 * @param  {IProjectData} projectData Project data.
-	 * @return {Promise<void>}
-	 */
-	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean, projectData: IProjectData): Promise<void>;
-	/**
-	 * Removes specified files from a connected device
-	 * @param  {string} appIdentifier Application identifier.
-	 * @param  {Mobile.ILocalToDevicePathData[]} localToDevicePaths Object containing a mapping of file paths from the system to the device.
-	 * @param  {string} projectId Project identifier - for example org.nativescript.livesync.
-	 * @return {Promise<void>}
-	 */
-	removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectId: string): Promise<void>;
-	afterInstallApplicationAction?(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectId: string): Promise<boolean>;
-}
-
-interface IPlatformLiveSyncService {
-	fullSync(projectData: IProjectData, postAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>): Promise<void>;
-	partialSync(event: string, filePath: string, dispatcher: IFutureDispatcher, afterFileSyncAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>, projectData: IProjectData): Promise<void>;
-	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], isFullSync: boolean, projectData: IProjectData): Promise<void>;
-}
-
 interface IBundle {
 	bundle: boolean;
 }
@@ -514,11 +483,6 @@ interface IiOSNotification {
 	getAttachAvailabilityQuery(projectId: string): string;
 	getAlreadyConnected(projectId: string): string;
 	getAttachAvailable(projectId: string): string;
-}
-
-interface IiOSNotificationService {
-	awaitNotification(deviceIdentifier: string, socket: number, timeout: number): Promise<string>;
-	postNotification(deviceIdentifier: string, notification: string, commandType?: string): Promise<string>;
 }
 
 interface IiOSSocketRequestExecutor {

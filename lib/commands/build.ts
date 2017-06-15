@@ -1,7 +1,9 @@
 export class BuildCommandBase {
 	constructor(protected $options: IOptions,
+		protected $errors: IErrors,
 		protected $projectData: IProjectData,
 		protected $platformsData: IPlatformsData,
+		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		protected $platformService: IPlatformService) {
 		this.$projectData.initializeProjectData();
 	}
@@ -29,16 +31,24 @@ export class BuildCommandBase {
 			this.$platformService.copyLastOutput(platform, this.$options.copyTo, buildConfig, this.$projectData);
 		}
 	}
+
+	protected validatePlatform(platform: string): void {
+		if (!this.$platformService.isPlatformSupportedForOS(platform, this.$projectData)) {
+			this.$errors.fail(`Applications for platform ${platform} can not be built on this OS`);
+		}
+	}
 }
 
 export class BuildIosCommand extends BuildCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(protected $options: IOptions,
+		$errors: IErrors,
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
+		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService) {
-		super($options, $projectData, $platformsData, $platformService);
+		super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -46,6 +56,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 	}
 
 	public canExecute(args: string[]): Promise<boolean> {
+		super.validatePlatform(this.$devicePlatformsConstants.iOS);
 		return args.length === 0 && this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.iOS);
 	}
 }
@@ -56,11 +67,12 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(protected $options: IOptions,
+		protected $errors: IErrors,
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
-		private $errors: IErrors,
+		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService) {
-		super($options, $projectData, $platformsData, $platformService);
+		super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -68,6 +80,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		super.validatePlatform(this.$devicePlatformsConstants.Android);
 		if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 			this.$errors.fail("When producing a release build, you need to specify all --key-store-* options.");
 		}

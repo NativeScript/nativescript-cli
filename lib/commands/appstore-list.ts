@@ -7,9 +7,19 @@ export class ListiOSApps implements ICommand {
 	constructor(private $injector: IInjector,
 		private $itmsTransporterService: IITMSTransporterService,
 		private $logger: ILogger,
-		private $prompter: IPrompter) { }
+		private $projectData: IProjectData,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $platformService: IPlatformService,
+		private $errors: IErrors,
+		private $prompter: IPrompter) {
+		this.$projectData.initializeProjectData();
+	}
 
 	public async execute(args: string[]): Promise<void> {
+		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
+			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
+		}
+
 		let username = args[0],
 			password = args[1];
 

@@ -376,6 +376,8 @@ export class ProjectDataService implements IProjectDataService {
 	removeNSProperty(propertyName: string): void { }
 
 	removeDependency(dependencyName: string): void { }
+
+	getProjectData(projectDir: string): IProjectData { return null; }
 }
 
 export class ProjectHelperStub implements IProjectHelper {
@@ -495,7 +497,11 @@ export class DebugServiceStub extends EventEmitter implements IPlatformDebugServ
 }
 
 export class LiveSyncServiceStub implements ILiveSyncService {
-	public async liveSync(platform: string, projectData: IProjectData, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData) => Promise<void>): Promise<void> {
+	public async liveSync(deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo): Promise<void> {
+		return;
+	}
+
+	public async stopLiveSync(projectDir: string): Promise<void> {
 		return;
 	}
 }
@@ -617,6 +623,10 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 		return [];
 	}
 
+	public saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void {
+		return;
+	}
+
 	public async removePlatforms(platforms: string[]): Promise<void> {
 
 	}
@@ -663,6 +673,10 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 
 	public validatePlatform(platform: string): void {
 
+	}
+
+	isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean {
+		return true;
 	}
 
 	public getLatestApplicationPackageForDevice(platformData: IPlatformData): IApplicationPackage {
