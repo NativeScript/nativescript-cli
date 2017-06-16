@@ -228,6 +228,11 @@ interface IPlatformSpecificData {
 	 * Target SDK for Android.
 	 */
 	sdk: string;
+
+	/**
+	 * Data from mobileProvision.
+	 */
+	mobileProvisionData?: any;
 }
 
 /**
