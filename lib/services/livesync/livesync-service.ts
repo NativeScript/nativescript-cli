@@ -83,6 +83,10 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 					await liveSyncProcessInfo.actionsChain;
 				}
 
+				_.each(liveSyncProcessInfo.deviceDescriptors, descriptor => {
+					this.emit(LiveSyncEvents.liveSyncStopped, { projectDir, deviceIdentifier: descriptor.identifier });
+				});
+
 				liveSyncProcessInfo.isStopped = true;
 				liveSyncProcessInfo.deviceDescriptors = [];
 
@@ -93,8 +97,6 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 						projectData
 					}
 				});
-
-				this.emit(LiveSyncEvents.liveSyncStopped, { projectDir });
 			}
 		}
 	}
