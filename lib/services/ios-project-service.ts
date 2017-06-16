@@ -14,6 +14,7 @@ import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { XCConfigService } from "./xcconfig-service";
 import * as simplePlist from "simple-plist";
+import * as mobileprovision from "ios-mobileprovision-finder";
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
@@ -392,7 +393,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		await this.createIpa(projectRoot, projectData, buildConfig);
 	}
 
-	private async setupSigningFromProvision(projectRoot: string, projectData: IProjectData, provision?: string): Promise<void> {
+	private async setupSigningFromProvision(projectRoot: string, projectData: IProjectData, provision?: string, mobileProvisionData?: mobileprovision.provision.MobileProvision): Promise<void> {
 		if (provision) {
 			const xcode = this.$pbxprojDomXcode.Xcode.open(this.getPbxProjPath(projectData));
 			const signing = xcode.getSigning(projectData.projectName);
@@ -412,7 +413,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			if (shouldUpdateXcode) {
 				const pickStart = Date.now();
-				const mobileprovision = await this.$iOSProvisionService.pick(provision, projectData.projectId);
+				const mobileprovision = mobileProvisionData || await this.$iOSProvisionService.pick(provision, projectData.projectId);
 				const pickEnd = Date.now();
 				this.$logger.trace("Searched and " + (mobileprovision ? "found" : "failed to find ") + " matching provisioning profile. (" + (pickEnd - pickStart) + "ms.)");
 				if (!mobileprovision) {
@@ -638,7 +639,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 		if (provision) {
 			let projectRoot = path.join(projectData.platformsDir, "ios");
-			await this.setupSigningFromProvision(projectRoot, projectData, provision);
+			await this.setupSigningFromProvision(projectRoot, projectData, provision, platformSpecificData.mobileProvisionData);
 		}
 
 		let project = this.createPbxProj(projectData);
