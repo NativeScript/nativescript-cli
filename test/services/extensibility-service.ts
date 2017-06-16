@@ -238,7 +238,7 @@ describe("extensibilityService", () => {
 				};
 
 				const expectedResults: any[] = _.map(extensionNames, extensionName => ({ extensionName }));
-				expectedResults[0] = new Error("Unable to load extension extension1. You will not be able to use the functionality that it adds. Unable to load module.");
+				expectedResults[0] = new Error("Unable to load extension extension1. You will not be able to use the functionality that it adds. Error: Unable to load module.");
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 				const promises = extensibilityService.loadExtensions();
 				assert.deepEqual(promises.length, extensionNames.length);
@@ -284,7 +284,7 @@ describe("extensibilityService", () => {
 					await loadExtensionPromise.then(res => { throw new Error("Shouldn't get here!"); },
 						err => {
 							const extensionName = extensionNames[index];
-							assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. ${expectedErrorMessage}`);
+							assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${expectedErrorMessage}`);
 							assert.deepEqual(err.extensionName, extensionName);
 						});
 				};
@@ -332,12 +332,12 @@ describe("extensibilityService", () => {
 				for (let index = 0; index < promises.length; index++) {
 					const loadExtensionPromise = promises[index];
 					await loadExtensionPromise.then(res => {
-						console.log("######### res = ", res); throw new Error("Shouldn't get here!");
+						throw new Error("Shouldn't get here!");
 					},
 
 						err => {
 							const extensionName = extensionNames[index];
-							assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. ${expectedErrorMessages[index]}`);
+							assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${expectedErrorMessages[index]}`);
 							assert.deepEqual(err.extensionName, extensionName);
 						});
 				};
@@ -610,7 +610,7 @@ describe("extensibilityService", () => {
 				await extensibilityService.loadExtension(extensionName);
 			} catch (err) {
 				isErrorRaised = true;
-				assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. ${expectedErrorMessage}`);
+				assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${expectedErrorMessage}`);
 				assert.deepEqual(err.extensionName, extensionName);
 			}
 
