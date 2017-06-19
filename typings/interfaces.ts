@@ -82,6 +82,12 @@ declare module NativeScriptDoctor {
 		getGitVersion(): Promise<string>;
 
 		/**
+		 * Returns the path to the currently installed Git.
+		 * @return {Promise<string>} Returns the path to the currently installed Git. It will return null if Git is not installed.
+		 */
+		getGitPath(): Promise<string>;
+
+		/**
 		 * Returns the currently installed Gradle version.
 		 * @return {Promise<string>} Returns the currently installed Gradle version. It will return null if Gradle is not installed.
 		 */
