@@ -8,7 +8,6 @@ export class DebugService extends EventEmitter implements IDebugService {
 		private $androidDebugService: IPlatformDebugService,
 		private $iOSDebugService: IPlatformDebugService,
 		private $errors: IErrors,
-		private $logger: ILogger,
 		private $hostInfo: IHostInfo,
 		private $mobileHelper: Mobile.IMobileHelper) {
 		super();
@@ -28,14 +27,6 @@ export class DebugService extends EventEmitter implements IDebugService {
 
 		if (!(await device.applicationManager.isApplicationInstalled(debugData.applicationIdentifier))) {
 			this.$errors.failWithoutHelp(`The application ${debugData.applicationIdentifier} is not installed on device with identifier ${debugData.deviceIdentifier}.`);
-		}
-
-		if (this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform)) {
-			try {
-				await device.applicationManager.restartApplication(debugData.applicationIdentifier, debugData.projectName);
-			} catch (err) {
-				this.$logger.trace("Failed to restart app", err);
-			}
 		}
 
 		const debugOptions: IDebugOptions = _.merge({}, options);
