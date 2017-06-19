@@ -27,7 +27,11 @@ let isCommandExecuted = true;
 class PlatformData implements IPlatformData {
 	frameworkPackageName = "tns-android";
 	normalizedPlatformName = "Android";
-	platformProjectService: IPlatformProjectService = null;
+	platformProjectService: IPlatformProjectService = <any>{
+		validate: async (projectData: IProjectData): Promise<void> => {
+			// intentionally left blank
+		}
+	};
 	emulatorServices: Mobile.IEmulatorPlatformServices = null;
 	projectRoot = "";
 	deviceBuildOutputPath = "";

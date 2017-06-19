@@ -10,6 +10,7 @@
 		protected $options: IOptions,
 		protected $platformsData: IPlatformsData,
 		protected $logger: ILogger,
+		protected $errors: IErrors,
 		private $debugLiveSyncService: IDebugLiveSyncService,
 		private $config: IConfiguration) {
 		this.$projectData.initializeProjectData();
@@ -73,6 +74,14 @@
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		if (!this.$platformService.isPlatformSupportedForOS(this.platform, this.$projectData)) {
+			this.$errors.fail(`Applications for platform ${this.platform} can not be built on this OS`);
+		}
+
+		const platformData = this.$platformsData.getPlatformData(this.platform, this.$projectData);
+		const platformProjectService = platformData.platformProjectService;
+		await platformProjectService.validate(this.$projectData);
+
 		await this.$devicesService.initialize({
 			platform: this.platform,
 			deviceId: this.$options.device,
@@ -97,7 +106,7 @@
 }
 
 export class DebugIOSCommand extends DebugPlatformCommand {
-	constructor(private $errors: IErrors,
+	constructor(protected $errors: IErrors,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$logger: ILogger,
 		$iOSDebugService: IPlatformDebugService,
@@ -109,8 +118,9 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$iosDeviceOperations: IIOSDeviceOperations,
-		$debugLiveSyncService: IDebugLiveSyncService) {
-		super($iOSDebugService, $devicesService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger, $debugLiveSyncService, $config);
+		$debugLiveSyncService: IDebugLiveSyncService, ) {
+		super($iOSDebugService, $devicesService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger,
+			$errors, $debugLiveSyncService, $config);
 		// Do not dispose ios-device-lib, so the process will remain alive and the debug application (NativeScript Inspector or Chrome DevTools) will be able to connect to the socket.
 		// In case we dispose ios-device-lib, the socket will be closed and the code will fail when the debug application tries to read/send data to device socket.
 		// That's why the `$ tns debug ios --justlaunch` command will not release the terminal.
@@ -132,7 +142,7 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 $injector.registerCommand("debug|ios", DebugIOSCommand);
 
 export class DebugAndroidCommand extends DebugPlatformCommand {
-	constructor(private $errors: IErrors,
+	constructor(protected $errors: IErrors,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$logger: ILogger,
 		$androidDebugService: IPlatformDebugService,
@@ -144,14 +154,11 @@ export class DebugAndroidCommand extends DebugPlatformCommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$debugLiveSyncService: IDebugLiveSyncService) {
-		super($androidDebugService, $devicesService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger, $debugLiveSyncService, $config);
+		super($androidDebugService, $devicesService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger,
+			$errors, $debugLiveSyncService, $config);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.Android, this.$projectData)) {
-			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.Android} can not be built on this OS`);
-		}
-
 		return await super.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.Android);
 	}
 

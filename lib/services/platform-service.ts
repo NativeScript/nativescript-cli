@@ -96,10 +96,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			version = this.getCurrentPlatformVersion(platform, projectData);
 		}
 
-		// Copy platform specific files in platforms dir
-		let platformProjectService = platformData.platformProjectService;
-		await platformProjectService.validate(projectData);
-
 		// Log the values for project
 		this.$logger.trace("Creating NativeScript project for the %s platform", platform);
 		this.$logger.trace("Path: %s", platformData.projectRoot);

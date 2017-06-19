@@ -13,7 +13,8 @@ export class RunCommandBase implements ICommand {
 		private $devicesService: Mobile.IDevicesService,
 		private $hostInfo: IHostInfo,
 		private $iosDeviceOperations: IIOSDeviceOperations,
-		private $mobileHelper: Mobile.IMobileHelper) {
+		private $mobileHelper: Mobile.IMobileHelper,
+		protected $platformsData: IPlatformsData) {
 	}
 
 	public allowedParameters: ICommandParameter[] = [];
@@ -31,6 +32,13 @@ export class RunCommandBase implements ICommand {
 			this.platform = this.$devicePlatformsConstants.Android;
 		}
 
+		const availablePlatforms = this.platform ? [this.platform] : this.$platformsData.availablePlatforms;
+		for (let platform of availablePlatforms) {
+			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+			const platformProjectService = platformData.platformProjectService;
+			await platformProjectService.validate(this.$projectData);
+		}
+
 		return true;
 	}
 
@@ -46,6 +54,7 @@ export class RunCommandBase implements ICommand {
 			skipDeviceDetectionInterval: true,
 			skipInferPlatform: !this.platform
 		});
+
 		await this.$devicesService.detectCurrentlyAttachedDevices();
 
 		const devices = this.$devicesService.getDeviceInstances();
@@ -118,7 +127,7 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 	}
 
 	constructor($platformService: IPlatformService,
-		private $platformsData: IPlatformsData,
+		protected $platformsData: IPlatformsData,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		protected $errors: IErrors,
 		$liveSyncService: ILiveSyncService,
@@ -129,7 +138,8 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 		$hostInfo: IHostInfo,
 		$iosDeviceOperations: IIOSDeviceOperations,
 		$mobileHelper: Mobile.IMobileHelper) {
-		super($platformService, $liveSyncService, $projectData, $options, $emulatorPlatformService, $devicePlatformsConstants, $errors, $devicesService, $hostInfo, $iosDeviceOperations, $mobileHelper);
+		super($platformService, $liveSyncService, $projectData, $options, $emulatorPlatformService, $devicePlatformsConstants, $errors,
+			$devicesService, $hostInfo, $iosDeviceOperations, $mobileHelper, $platformsData);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -154,7 +164,7 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 	}
 
 	constructor($platformService: IPlatformService,
-		private $platformsData: IPlatformsData,
+		protected $platformsData: IPlatformsData,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		protected $errors: IErrors,
 		$liveSyncService: ILiveSyncService,
@@ -165,7 +175,8 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 		$hostInfo: IHostInfo,
 		$iosDeviceOperations: IIOSDeviceOperations,
 		$mobileHelper: Mobile.IMobileHelper) {
-		super($platformService, $liveSyncService, $projectData, $options, $emulatorPlatformService, $devicePlatformsConstants, $errors, $devicesService, $hostInfo, $iosDeviceOperations, $mobileHelper);
+		super($platformService, $liveSyncService, $projectData, $options, $emulatorPlatformService, $devicePlatformsConstants, $errors,
+			$devicesService, $hostInfo, $iosDeviceOperations, $mobileHelper, $platformsData);
 	}
 
 	public async execute(args: string[]): Promise<void> {

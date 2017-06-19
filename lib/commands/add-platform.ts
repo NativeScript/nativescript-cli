@@ -4,6 +4,7 @@ export class AddPlatformCommand implements ICommand {
 	constructor(private $options: IOptions,
 		private $platformService: IPlatformService,
 		private $projectData: IProjectData,
+		private $platformsData: IPlatformsData,
 		private $errors: IErrors) {
 		this.$projectData.initializeProjectData();
 	}
@@ -17,7 +18,12 @@ export class AddPlatformCommand implements ICommand {
 			this.$errors.fail("No platform specified. Please specify a platform to add");
 		}
 
-		_.each(args, arg => this.$platformService.validatePlatform(arg, this.$projectData));
+		for (let arg of args) {
+			this.$platformService.validatePlatform(arg, this.$projectData);
+			const platformData = this.$platformsData.getPlatformData(arg, this.$projectData);
+			const platformProjectService = platformData.platformProjectService;
+			await platformProjectService.validate(this.$projectData);
+		}
 
 		return true;
 	}

@@ -101,6 +101,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		let javaCompilerVersion = await this.$sysInfo.getJavaCompilerVersion();
 
 		await this.$androidToolsInfo.validateJavacVersion(javaCompilerVersion, { showWarningsAsErrors: true });
+
+		await this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
 	}
 
 	public async validatePlugins(): Promise<void> {
@@ -113,9 +115,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		this.$fs.ensureDirectoryExists(this.getPlatformData(projectData).projectRoot);
-		this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
 		let androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
-		let targetSdkVersion = androidToolsInfo.targetSdkVersion;
+		let targetSdkVersion = androidToolsInfo && androidToolsInfo.targetSdkVersion;
 		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
 		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "libs", "-R");
 
@@ -219,8 +220,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): void {
 		let manifestPath = this.getPlatformData(projectData).configurationFilePath;
 		shell.sed('-i', /__PACKAGE__/, projectData.projectId, manifestPath);
-		const sdk = (platformSpecificData && platformSpecificData.sdk) || this.$androidToolsInfo.getToolsInfo().compileSdkVersion.toString();
-		shell.sed('-i', /__APILEVEL__/, sdk, manifestPath);
+		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
+			const sdk = (platformSpecificData && platformSpecificData.sdk) || (this.$androidToolsInfo.getToolsInfo().compileSdkVersion).toString();
+			shell.sed('-i', /__APILEVEL__/, sdk, manifestPath);
+		}
 	}
 
 	private getProjectNameFromId(projectData: IProjectData): string {
@@ -431,9 +434,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
-		const buildOptions = this.getBuildOptions({ release: false }, projectData);
-		buildOptions.unshift("clean");
-		await this.executeGradleCommand(projectRoot, buildOptions);
+		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
+			const buildOptions = this.getBuildOptions({ release: false }, projectData);
+			buildOptions.unshift("clean");
+			await this.executeGradleCommand(projectRoot, buildOptions);
+		}
 	}
 
 	public async cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void> {
@@ -509,16 +514,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	private async executeGradleCommand(projectRoot: string, gradleArgs: string[], childProcessOpts?: SpawnOptions, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult> {
-		const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
+		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
+			const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
 
-		childProcessOpts = childProcessOpts || {};
-		childProcessOpts.cwd = childProcessOpts.cwd || projectRoot;
-		childProcessOpts.stdio = childProcessOpts.stdio || "inherit";
+			childProcessOpts = childProcessOpts || {};
+			childProcessOpts.cwd = childProcessOpts.cwd || projectRoot;
+			childProcessOpts.stdio = childProcessOpts.stdio || "inherit";
 
-		return await this.spawn(gradlew,
-			gradleArgs,
-			childProcessOpts,
-			spawnFromEventOptions);
+			return await this.spawn(gradlew,
+				gradleArgs,
+				childProcessOpts,
+				spawnFromEventOptions);
+		}
 	}
 }
 
