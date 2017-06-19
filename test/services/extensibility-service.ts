@@ -238,7 +238,7 @@ describe("extensibilityService", () => {
 				};
 
 				const expectedResults: any[] = _.map(extensionNames, extensionName => ({ extensionName }));
-				expectedResults[0] = new Error("Unable to load extension extension1. You will not be able to use the functionality that it adds.");
+				expectedResults[0] = new Error("Unable to load extension extension1. You will not be able to use the functionality that it adds. Error: Unable to load module.");
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 				const promises = extensibilityService.loadExtensions();
 				assert.deepEqual(promises.length, extensionNames.length);
@@ -258,6 +258,7 @@ describe("extensibilityService", () => {
 				const testInjector = getTestInjector();
 				const extensionNames = ["extension1", "extension2", "extension3"];
 				const fs: IFileSystem = testInjector.resolve("fs");
+				const expectedErrorMessage = `Unable to read ${constants.NODE_MODULES_FOLDER_NAME} dir.`;
 				fs.exists = (pathToCheck: string): boolean => path.basename(pathToCheck) === "extensions" || path.basename(pathToCheck) === constants.PACKAGE_JSON_FILE_NAME;
 				fs.readJson = (filename: string, encoding?: string): any => {
 					const dependencies: any = {};
@@ -272,7 +273,7 @@ describe("extensibilityService", () => {
 				fs.readDirectory = (dir: string): string[] => {
 					isReadDirCalled = true;
 					assert.deepEqual(path.basename(dir), constants.NODE_MODULES_FOLDER_NAME);
-					throw new Error(`Unable to read ${constants.NODE_MODULES_FOLDER_NAME} dir.`);
+					throw new Error(expectedErrorMessage);
 				};
 
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
@@ -283,7 +284,7 @@ describe("extensibilityService", () => {
 					await loadExtensionPromise.then(res => { throw new Error("Shouldn't get here!"); },
 						err => {
 							const extensionName = extensionNames[index];
-							assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds.`);
+							assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${expectedErrorMessage}`);
 							assert.deepEqual(err.extensionName, extensionName);
 						});
 				};
@@ -295,6 +296,9 @@ describe("extensibilityService", () => {
 			it("rejects all promises when unable to install extensions to extension dir (simulate EPERM error)", async () => {
 				const testInjector = getTestInjector();
 				const extensionNames = ["extension1", "extension2", "extension3"];
+				const expectedErrorMessages = ["Unable to install to node_modules dir.",
+					"expected 'extension2' to deeply equal 'extension1'",
+					"expected 'extension3' to deeply equal 'extension1'"];
 				const fs: IFileSystem = testInjector.resolve("fs");
 				fs.exists = (pathToCheck: string): boolean => path.basename(pathToCheck) === "extensions" || path.basename(pathToCheck) === constants.PACKAGE_JSON_FILE_NAME;
 				fs.readJson = (filename: string, encoding?: string): any => {
@@ -315,10 +319,11 @@ describe("extensibilityService", () => {
 
 				let isNpmInstallCalled = false;
 				const npm: INodePackageManager = testInjector.resolve("npm");
+				const expectedErrorMessage = `Unable to install to ${constants.NODE_MODULES_FOLDER_NAME} dir.`;
 				npm.install = async (packageName: string, pathToSave: string, config?: any): Promise<any> => {
 					assert.deepEqual(packageName, extensionNames[0]);
 					isNpmInstallCalled = true;
-					throw new Error(`Unable to install to ${constants.NODE_MODULES_FOLDER_NAME} dir.`);
+					throw new Error(expectedErrorMessage);
 				};
 
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
@@ -327,11 +332,12 @@ describe("extensibilityService", () => {
 				for (let index = 0; index < promises.length; index++) {
 					const loadExtensionPromise = promises[index];
 					await loadExtensionPromise.then(res => {
-						console.log("######### res = ", res); throw new Error("Shouldn't get here!");
+						throw new Error("Shouldn't get here!");
 					},
+
 						err => {
 							const extensionName = extensionNames[index];
-							assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds.`);
+							assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${expectedErrorMessages[index]}`);
 							assert.deepEqual(err.extensionName, extensionName);
 						});
 				};
@@ -604,7 +610,7 @@ describe("extensibilityService", () => {
 				await extensibilityService.loadExtension(extensionName);
 			} catch (err) {
 				isErrorRaised = true;
-				assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds.`);
+				assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${expectedErrorMessage}`);
 				assert.deepEqual(err.extensionName, extensionName);
 			}
 

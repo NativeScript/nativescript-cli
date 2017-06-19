@@ -84,7 +84,7 @@ export class ExtensibilityService implements IExtensibilityService {
 			return { extensionName };
 		} catch (error) {
 			this.$logger.warn(`Error while loading ${extensionName} is: ${error.message}`);
-			const err = <IExtensionLoadingError>new Error(`Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds.`);
+			const err = <IExtensionLoadingError>new Error(`Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${error.message}`);
 			err.extensionName = extensionName;
 			throw err;
 		}
