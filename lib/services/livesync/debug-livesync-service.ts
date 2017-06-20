@@ -12,6 +12,7 @@ export class DebugLiveSyncService extends LiveSyncService implements IDebugLiveS
 		protected $logger: ILogger,
 		$processService: IProcessService,
 		$hooksService: IHooksService,
+		$pluginsService: IPluginsService,
 		protected $injector: IInjector,
 		private $options: IOptions,
 		private $debugDataService: IDebugDataService,
@@ -28,6 +29,7 @@ export class DebugLiveSyncService extends LiveSyncService implements IDebugLiveS
 			$logger,
 			$processService,
 			$hooksService,
+			$pluginsService,
 			$injector);
 	}
 
