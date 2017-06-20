@@ -6,7 +6,8 @@ export class DeployOnDeviceCommand implements ICommand {
 		private $options: IOptions,
 		private $projectData: IProjectData,
 		private $errors: IErrors,
-		private $mobileHelper: Mobile.IMobileHelper) {
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $platformsData: IPlatformsData) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -42,6 +43,10 @@ export class DeployOnDeviceCommand implements ICommand {
 		if (this.$mobileHelper.isAndroidPlatform(args[0]) && this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 			this.$errors.fail("When producing a release build, you need to specify all --key-store-* options.");
 		}
+
+		const platformData = this.$platformsData.getPlatformData(args[0], this.$projectData);
+		const platformProjectService = platformData.platformProjectService;
+		await platformProjectService.validate(this.$projectData);
 
 		return this.$platformService.validateOptions(this.$options.provision, this.$projectData, args[0]);
 	}

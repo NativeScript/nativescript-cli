@@ -509,7 +509,7 @@ export class LiveSyncServiceStub implements ILiveSyncService {
 export class AndroidToolsInfoStub implements IAndroidToolsInfo {
 	public getToolsInfo(): IAndroidToolsInfoData {
 		let infoData: IAndroidToolsInfoData = Object.create(null);
-		infoData.androidHomeEnvVar = "";
+		infoData.androidHomeEnvVar = "ANDROID_HOME";
 		infoData.compileSdkVersion = 23;
 		infoData.buildToolsVersion = "23";
 		infoData.targetSdkVersion = 23;

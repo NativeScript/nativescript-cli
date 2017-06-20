@@ -1,56 +1,64 @@
-export class CleanAppCommandBase {
+export class CleanAppCommandBase implements ICommand {
+	public allowedParameters: ICommandParameter[] = [];
+
+	protected platform: string;
+
 	constructor(protected $options: IOptions,
 		protected $projectData: IProjectData,
-		protected $platformService: IPlatformService) {
+		protected $platformService: IPlatformService,
+		protected $errors: IErrors,
+		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		protected $platformsData: IPlatformsData) {
+
 		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		let platform = args[0].toLowerCase();
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
-		return this.$platformService.cleanDestinationApp(platform, appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData, this.$options);
+		return this.$platformService.cleanDestinationApp(this.platform.toLowerCase(), appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData, this.$options);
+	}
+
+	public async canExecute(args: string[]): Promise<boolean> {
+		if (!this.$platformService.isPlatformSupportedForOS(this.platform, this.$projectData)) {
+			this.$errors.fail(`Applications for platform ${this.platform} can not be built on this OS`);
+		}
+
+		let platformData = this.$platformsData.getPlatformData(this.platform, this.$projectData);
+		let platformProjectService = platformData.platformProjectService;
+		await platformProjectService.validate(this.$projectData);
+		return true;
 	}
 }
 
 export class CleanAppIosCommand extends CleanAppCommandBase implements ICommand {
 	constructor(protected $options: IOptions,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $platformsData: IPlatformsData,
-		private $errors: IErrors,
+		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		protected $platformsData: IPlatformsData,
+		protected $errors: IErrors,
 		$platformService: IPlatformService,
 		$projectData: IProjectData) {
-		super($options, $projectData, $platformService);
+		super($options, $projectData, $platformService, $errors, $devicePlatformsConstants, $platformsData);
 	}
 
-	public allowedParameters: ICommandParameter[] = [];
-
-	public async execute(args: string[]): Promise<void> {
-		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
-			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
-		}
-		return super.execute([this.$platformsData.availablePlatforms.iOS]);
+	protected get platform(): string {
+		return this.$devicePlatformsConstants.iOS;
 	}
 }
 
 $injector.registerCommand("clean-app|ios", CleanAppIosCommand);
 
 export class CleanAppAndroidCommand extends CleanAppCommandBase implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
-
 	constructor(protected $options: IOptions,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $platformsData: IPlatformsData,
-		private $errors: IErrors,
+		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		protected $platformsData: IPlatformsData,
+		protected $errors: IErrors,
 		$platformService: IPlatformService,
 		$projectData: IProjectData) {
-		super($options, $projectData, $platformService);
+		super($options, $projectData, $platformService, $errors, $devicePlatformsConstants, $platformsData);
 	}
 
-	public async execute(args: string[]): Promise<void> {
-		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
-			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
-		}
-		return super.execute([this.$platformsData.availablePlatforms.Android]);
+	protected get platform(): string {
+		return this.$devicePlatformsConstants.Android;
 	}
 }
 

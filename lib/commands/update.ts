@@ -55,6 +55,14 @@ export class UpdateCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		for (let arg of args) {
+			const platform = arg.split("@")[0];
+			this.$platformService.validatePlatformInstalled(platform, this.$projectData);
+			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+			const platformProjectService = platformData.platformProjectService;
+			await platformProjectService.validate(this.$projectData);
+		}
+
 		return args.length < 2 && this.$projectData.projectDir !== "";
 	}
 

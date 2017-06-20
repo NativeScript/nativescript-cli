@@ -4,7 +4,8 @@ export class PrepareCommand implements ICommand {
 	constructor(private $options: IOptions,
 		private $platformService: IPlatformService,
 		private $projectData: IProjectData,
-		private $platformCommandParameter: ICommandParameter) {
+		private $platformCommandParameter: ICommandParameter,
+		private $platformsData: IPlatformsData) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -14,7 +15,15 @@ export class PrepareCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		return await this.$platformCommandParameter.validate(args[0]) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, args[0]);
+		const platform = args[0];
+		const result = await this.$platformCommandParameter.validate(platform) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, platform);
+		if (result) {
+			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+			const platformProjectService = platformData.platformProjectService;
+			await platformProjectService.validate(this.$projectData);
+		}
+
+		return result;
 	}
 }
 

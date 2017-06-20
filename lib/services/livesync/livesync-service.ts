@@ -28,28 +28,16 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		protected $logger: ILogger,
 		private $processService: IProcessService,
 		private $hooksService: IHooksService,
+		private $pluginsService: IPluginsService,
 		protected $injector: IInjector) {
 		super();
 	}
 
-	@hook("liveSync")
 	public async liveSync(deviceDescriptors: ILiveSyncDeviceInfo[],
 		liveSyncData: ILiveSyncInfo): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(liveSyncData.projectDir);
-		// In case liveSync is called for a second time for the same projectDir.
-		const isAlreadyLiveSyncing = this.liveSyncProcessesInfo[projectData.projectDir] && !this.liveSyncProcessesInfo[projectData.projectDir].isStopped;
-		this.setLiveSyncProcessInfo(liveSyncData.projectDir, deviceDescriptors);
-
-		const deviceDescriptorsForInitialSync = isAlreadyLiveSyncing ? _.differenceBy(deviceDescriptors, this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors, deviceDescriptorPrimaryKey) : deviceDescriptors;
-
-		await this.initialSync(projectData, deviceDescriptorsForInitialSync, liveSyncData);
-
-		if (!liveSyncData.skipWatcher && deviceDescriptors && deviceDescriptors.length) {
-			// Should be set after prepare
-			this.$injector.resolve<DeprecatedUsbLiveSyncService>("usbLiveSyncService").isInitialized = true;
-
-			await this.startWatcher(projectData, liveSyncData);
-		}
+		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
+		await this.liveSyncOperation(deviceDescriptors, liveSyncData, projectData);
 	}
 
 	public async stopLiveSync(projectDir: string, deviceIdentifiers?: string[]): Promise<void> {
@@ -125,6 +113,25 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		});
 
 		this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
+	}
+
+	@hook("liveSync")
+	private async liveSyncOperation(deviceDescriptors: ILiveSyncDeviceInfo[],
+		liveSyncData: ILiveSyncInfo, projectData: IProjectData): Promise<void> {
+		// In case liveSync is called for a second time for the same projectDir.
+		const isAlreadyLiveSyncing = this.liveSyncProcessesInfo[projectData.projectDir] && !this.liveSyncProcessesInfo[projectData.projectDir].isStopped;
+		this.setLiveSyncProcessInfo(liveSyncData.projectDir, deviceDescriptors);
+
+		const deviceDescriptorsForInitialSync = isAlreadyLiveSyncing ? _.differenceBy(deviceDescriptors, this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors, deviceDescriptorPrimaryKey) : deviceDescriptors;
+
+		await this.initialSync(projectData, deviceDescriptorsForInitialSync, liveSyncData);
+
+		if (!liveSyncData.skipWatcher && deviceDescriptors && deviceDescriptors.length) {
+			// Should be set after prepare
+			this.$injector.resolve<DeprecatedUsbLiveSyncService>("usbLiveSyncService").isInitialized = true;
+
+			await this.startWatcher(projectData, liveSyncData);
+		}
 	}
 
 	private setLiveSyncProcessInfo(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[]): void {

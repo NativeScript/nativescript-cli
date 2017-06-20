@@ -4,7 +4,8 @@ export class UpdatePlatformCommand implements ICommand {
 	constructor(private $options: IOptions,
 		private $projectData: IProjectData,
 		private $platformService: IPlatformService,
-		private $errors: IErrors) {
+		private $errors: IErrors,
+		private $platformsData: IPlatformsData) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -17,7 +18,13 @@ export class UpdatePlatformCommand implements ICommand {
 			this.$errors.fail("No platform specified. Please specify platforms to update.");
 		}
 
-		_.each(args, arg => this.$platformService.validatePlatform(arg.split("@")[0], this.$projectData));
+		for (let arg of args) {
+			const platform = arg.split("@")[0];
+			this.$platformService.validatePlatformInstalled(platform, this.$projectData);
+			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+			const platformProjectService = platformData.platformProjectService;
+			await platformProjectService.validate(this.$projectData);
+		}
 
 		return true;
 	}

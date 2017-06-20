@@ -84,6 +84,11 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 			this.$errors.fail("When producing a release build, you need to specify all --key-store-* options.");
 		}
+
+		const platformData = this.$platformsData.getPlatformData(this.$devicePlatformsConstants.Android, this.$projectData);
+		const platformProjectService = platformData.platformProjectService;
+		await platformProjectService.validate(this.$projectData);
+
 		return args.length === 0 && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.Android);
 	}
 }

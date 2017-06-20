@@ -3,9 +3,10 @@ export class RemovePlatformCommand implements ICommand {
 
 	constructor(private $platformService: IPlatformService,
 		private $projectData: IProjectData,
-		private $errors: IErrors) {
-			this.$projectData.initializeProjectData();
-		}
+		private $errors: IErrors,
+		private $platformsData: IPlatformsData) {
+		this.$projectData.initializeProjectData();
+	}
 
 	public execute(args: string[]): Promise<void> {
 		return this.$platformService.removePlatforms(args, this.$projectData);
@@ -16,7 +17,12 @@ export class RemovePlatformCommand implements ICommand {
 			this.$errors.fail("No platform specified. Please specify a platform to remove");
 		}
 
-		_.each(args, arg => this.$platformService.validatePlatformInstalled(arg, this.$projectData));
+		for (let platform of args) {
+			this.$platformService.validatePlatformInstalled(platform, this.$projectData);
+			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+			const platformProjectService = platformData.platformProjectService;
+			await platformProjectService.validate(this.$projectData);
+		}
 
 		return true;
 	}

@@ -317,11 +317,12 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	@cache()
 	private getInstalledTargets(): string[] {
 		let installedTargets: string[] = [];
-		const pathToInstalledTargets = path.join(this.androidHome, "platforms");
-		if (this.$fs.exists(pathToInstalledTargets)) {
-			installedTargets = this.$fs.readDirectory(pathToInstalledTargets);
+		if (this.androidHome) {
+			const pathToInstalledTargets = path.join(this.androidHome, "platforms");
+			if (this.$fs.exists(pathToInstalledTargets)) {
+				installedTargets = this.$fs.readDirectory(pathToInstalledTargets);
+			}
 		}
-
 		this.$logger.trace("Installed Android Targets are: ", installedTargets);
 
 		return installedTargets;
