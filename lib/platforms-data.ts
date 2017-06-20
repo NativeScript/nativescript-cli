@@ -15,7 +15,13 @@ export class PlatformsData implements IPlatformsData {
 	}
 
 	public getPlatformData(platform: string, projectData: IProjectData): IPlatformData {
-		return this.platformsData[platform.toLowerCase()] && this.platformsData[platform.toLowerCase()].getPlatformData(projectData);
+		const platformKey = platform && _.first(platform.toLowerCase().split("@"));
+		let platformData: IPlatformData;
+		if (platformKey) {
+			platformData = this.platformsData[platformKey] && this.platformsData[platformKey].getPlatformData(projectData);
+		}
+
+		return platformData;
 	}
 
 	public get availablePlatforms(): any {
