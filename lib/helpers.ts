@@ -1,6 +1,8 @@
-import { platform } from "os";
+import { HostInfo } from "./host-info";
 
 export class Helpers {
+	constructor(private hostInfo: HostInfo) { }
+
 	public getPropertyName(method: Function): string {
 		if (method) {
 			let match = method.toString().match(/(?:return\s+?.*\.(.+);)|(?:=>\s*?.*\.(.+)\b)/);
@@ -17,7 +19,7 @@ export class Helpers {
 			return value;
 		}
 
-		return (platform() === "win32") ? this.cmdQuote(value) : this.bashQuote(value);
+		return this.hostInfo.isWindows ? this.cmdQuote(value) : this.bashQuote(value);
 	}
 
 	private bashQuote(s: string): string {

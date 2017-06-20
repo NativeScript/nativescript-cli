@@ -6,7 +6,8 @@ import { ChildProcess } from "../lib/wrappers/child-process";
 
 const JavaHomeName = "JAVA_HOME";
 const AndroidHomeName = "ANDROID_HOME";
-const helpers = new Helpers();
+const PROGRAM_FILES = "ProgramFiles";
+const PROGRAM_FILES_ENV_PATH = "C:\\Program Files";
 
 interface IChildProcessResultDescription {
 	result?: any;
@@ -29,6 +30,7 @@ interface IChildProcessResults {
 	podVersion: IChildProcessResultDescription;
 	pod: IChildProcessResultDescription;
 	nativeScriptCliVersion: IChildProcessResultDescription;
+	git: IChildProcessResultDescription;
 }
 
 interface IHostInfoMockOptions {
@@ -73,16 +75,19 @@ function createChildProcessResults(childProcessResult: IChildProcessResults): ID
 		"xcodebuild -version": childProcessResult.xCodeVersion,
 		"pod --version": childProcessResult.podVersion,
 		"pod": childProcessResult.pod,
-		'adb': childProcessResult.adbVersion,
-		'adb version': childProcessResult.adbVersion,
+		"adb": childProcessResult.adbVersion,
+		"adb version": childProcessResult.adbVersion,
 		"'adb' version": childProcessResult.adbVersion, // for Mac and Linux
-		'android': childProcessResult.androidInstalled,
-		'android.bat': childProcessResult.androidInstalled, // for Windows
+		"android": childProcessResult.androidInstalled,
+		"android.bat": childProcessResult.androidInstalled, // for Windows
 		"mono --version": childProcessResult.monoVersion,
-		"git --version": childProcessResult.gitVersion,
+		"'git' --version": childProcessResult.gitVersion, // for Mac and Linux
+		'"C:\\Program Files\\Git\\cmd\\git.exe" --version': childProcessResult.gitVersion, // for Windows
+		'"C:\\Program Files/Git/cmd/git.exe" --version': childProcessResult.gitVersion, // When running Windows test on the Non-Windows platform
 		"gradle -v": childProcessResult.gradleVersion,
 		"tns --version": childProcessResult.nativeScriptCliVersion,
-		"emulator": { shouldThrowError: false }
+		"emulator": { shouldThrowError: false },
+		"which git": childProcessResult.git
 	};
 }
 
@@ -128,9 +133,11 @@ function mockSysInfo(childProcessResult: IChildProcessResults, hostInfoOptions?:
 
 	const fileSystem: any = {
 		exists: () => Promise.resolve((fileSystemOptions || {}).existsResult),
-		extractZip: () => Promise.resolve()
+		extractZip: () => Promise.resolve(),
+		readDirectory: () => Promise.resolve([])
 	};
 
+	const helpers = new Helpers(hostInfo);
 	return new SysInfo(childProcess, fileSystem, helpers, hostInfo, winreg, androidToolsInfo);
 }
 
@@ -169,6 +176,7 @@ describe("SysInfo unit tests", () => {
 				}
 			};
 
+			const helpers = new Helpers(null);
 			sysInfo = new SysInfo(childProcess, null, helpers, null, null, androidToolsInfo);
 		});
 
@@ -221,7 +229,8 @@ describe("SysInfo unit tests", () => {
 				gitVersion: { result: setStdOut("git version 1.9.5") },
 				podVersion: { result: setStdOut("0.38.2") },
 				pod: { result: setStdOut("success") },
-				nativeScriptCliVersion: { result: setStdOut("2.5.0") }
+				nativeScriptCliVersion: { result: setStdOut("2.5.0") },
+				git: { result: setStdOut("git") }
 			};
 
 			delete process.env[JavaHomeName];
@@ -253,8 +262,11 @@ describe("SysInfo unit tests", () => {
 			});
 
 			it("on Windows", async () => {
+				const originalProgramFiles = process.env[PROGRAM_FILES];
+				process.env[PROGRAM_FILES] = PROGRAM_FILES_ENV_PATH;
 				sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion: "4.5.1" });
 				let result = await sysInfo.getSysInfo();
+				process.env[PROGRAM_FILES] = originalProgramFiles;
 				assertCommonValues(result);
 				assert.deepEqual(result.xcodeVer, null);
 				assert.deepEqual(result.cocoaPodsVer, null);
@@ -287,8 +299,11 @@ describe("SysInfo unit tests", () => {
 			});
 
 			it("is null when OS is not Mac", async () => {
+				const originalProgramFiles = process.env[PROGRAM_FILES];
+				process.env[PROGRAM_FILES] = PROGRAM_FILES_ENV_PATH;
 				sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion: "4.5.1" });
 				let result = await sysInfo.getSysInfo();
+				process.env[PROGRAM_FILES] = originalProgramFiles;
 				assert.deepEqual(result.cocoaPodsVer, null);
 			});
 
@@ -324,7 +339,8 @@ describe("SysInfo unit tests", () => {
 					gitVersion: { shouldThrowError: true },
 					podVersion: { shouldThrowError: true },
 					pod: { shouldThrowError: true },
-					nativeScriptCliVersion: { shouldThrowError: true }
+					nativeScriptCliVersion: { shouldThrowError: true },
+					git: { shouldThrowError: false }
 				};
 				androidToolsInfo.validateAndroidHomeEnvVariable = (): any[] => [1];
 			});
@@ -346,7 +362,10 @@ describe("SysInfo unit tests", () => {
 				};
 
 				it("on Windows", async () => {
+					const originalProgramFiles = process.env[PROGRAM_FILES];
+					process.env[PROGRAM_FILES] = PROGRAM_FILES_ENV_PATH;
 					sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion: "4.5.1" });
+					process.env[PROGRAM_FILES] = originalProgramFiles;
 					await assertAllValuesAreNull();
 				});
 

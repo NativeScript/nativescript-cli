@@ -193,7 +193,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	public async isAndroidSdkConfiguredCorrectly(): Promise<boolean> {
 		return this.getValueForProperty(() => this.isAndroidSdkConfiguredCorrectlyCache, async (): Promise<boolean> => {
-			const output = await this.childProcess.spawnFromEvent(this.androidToolsInfo.getPathToEmulatorExecutable(), ['-help'], "close", { ignoreError: true });
+			const output = await this.childProcess.spawnFromEvent(this.androidToolsInfo.getPathToEmulatorExecutable(), ["-help"], "close", { ignoreError: true });
 
 			return output && output.stdout.indexOf("usage: emulator") >= 0;
 		});
@@ -209,10 +209,14 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	public getGitVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.gitVerCache, async (): Promise<string> => {
-			const output = await this.execCommand("git --version");
+			const gitPath = await this.getGitPath();
+			if (!gitPath) {
+				return null;
+			}
+
+			const output = await this.execCommand(`${this.helpers.quoteString(gitPath)} --version`);
 			const matches = SysInfo.GIT_VERSION_REGEXP.exec(output);
 			return matches && matches[1];
-
 		});
 	}
 
@@ -338,6 +342,61 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	public setShouldCacheSysInfo(shouldCache: boolean): void {
 		this.shouldCache = shouldCache;
+	}
+
+	public getGitPath(): Promise<string> {
+		return this.hostInfo.isWindows ? this.findGitWin32() : this.findGitUnix();
+	}
+
+	private async findGitWin32(): Promise<string> {
+		let result: string;
+		const win32Paths = [process.env["ProgramFiles"], process.env["ProgramFiles(x86)"]];
+		for (const win32Path of win32Paths) {
+			result = this.findSystemGitWin32(win32Path);
+			if (result) {
+				return result;
+			}
+		}
+
+		result = this.findGitHubGitWin32();
+		return result ? result : await this.findGitCore("where");
+	}
+
+	private findSystemGitWin32(base: string): string {
+		if (!base) {
+			return null;
+		}
+
+		return this.findSpecificGit(path.join(base, "Git", "cmd", "git.exe"));
+	}
+
+	private findGitHubGitWin32(): string {
+		const github = path.join(process.env["LOCALAPPDATA"], "GitHub");
+		if (!this.fileSystem.exists(github)) {
+			return null;
+		}
+
+		const children = this.fileSystem.readDirectory(github);
+		const git = children.filter(child => /^PortableGit/.test(child))[0];
+		if (!this.fileSystem.exists(git)) {
+			return null;
+		}
+
+		return this.findSpecificGit(path.join(github, git, "cmd", "git.exe"));
+	}
+
+	private findSpecificGit(gitPath: string): string {
+		return this.fileSystem.exists(gitPath) ? gitPath : null;
+	}
+
+	private async findGitUnix(): Promise<string> {
+		return await this.findGitCore("which");
+	}
+
+	private async findGitCore(command: string, options?: any): Promise<string> {
+		const result = await this.execCommand(`${command} git`);
+
+		return result && result.split("\n")[0].trim();
 	}
 
 	private async getValueForProperty<T>(property: Function, getValueMethod: () => Promise<T>): Promise<T> {
