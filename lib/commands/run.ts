@@ -97,10 +97,18 @@ export class RunCommandBase implements ICommand {
 			const runPlatformOptions: IRunPlatformOptions = {
 				device: this.$options.device,
 				emulator: this.$options.emulator,
-				justlaunch: this.$options.justlaunch,
+				justlaunch: this.$options.justlaunch
 			};
 
-			const deployOptions = _.merge<IDeployPlatformOptions>({ projectDir: this.$projectData.projectDir, clean: true }, this.$options);
+			const deployOptions = _.merge<IDeployPlatformOptions>({
+				projectDir: this.$projectData.projectDir,
+				clean: true,
+				release: this.$options.release,
+				keyStoreAlias: this.$options.keyStoreAlias,
+				keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
+				keyStorePassword: this.$options.keyStorePassword,
+				keyStorePath: this.$options.keyStorePath
+			}, this.$options);
 
 			await this.$platformService.deployPlatform(args[0], this.$options, deployOptions, this.$projectData, this.$options);
 			await this.$platformService.startApplication(args[0], runPlatformOptions, this.$projectData.projectId);
