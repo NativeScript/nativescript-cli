@@ -17,9 +17,12 @@ export class PrepareCommand implements ICommand {
 	public async canExecute(args: string[]): Promise<boolean> {
 		const platform = args[0];
 		const result = await this.$platformCommandParameter.validate(platform) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, platform);
-		const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
-		const platformProjectService = platformData.platformProjectService;
-		await platformProjectService.validate(this.$projectData);
+		if (!result) {
+			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+			const platformProjectService = platformData.platformProjectService;
+			await platformProjectService.validate(this.$projectData);
+		}
+
 		return result;
 	}
 }

@@ -118,7 +118,7 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$iosDeviceOperations: IIOSDeviceOperations,
-		$debugLiveSyncService: IDebugLiveSyncService, ) {
+		$debugLiveSyncService: IDebugLiveSyncService) {
 		super($iOSDebugService, $devicesService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger,
 			$errors, $debugLiveSyncService, $config);
 		// Do not dispose ios-device-lib, so the process will remain alive and the debug application (NativeScript Inspector or Chrome DevTools) will be able to connect to the socket.
