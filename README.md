@@ -135,6 +135,9 @@ Library that helps identifying if the environment can be used for development of
 
 		const sysInfoData = await sysInfo.getSysInfo();
 		console.log("sysInfo: ", sysInfoData);
+
+		const gitPath = await sysInfo.getGitPath();
+		console.log("Path to the git executable: ", gitPath);
 	}
 
 	main();
@@ -273,6 +276,12 @@ Library that helps identifying if the environment can be used for development of
 		 * @return {void}
 		 */
 		setShouldCacheSysInfo(shouldCache: boolean): void;
+
+		/**
+		 * Returns the path to the currently installed Git.
+		 * @return {Promise<string>} Returns the path to the currently installed Git. It will return null if Git is not installed.
+		 */
+		getGitPath(): Promise<string>;
 	}
 
 	interface ISysInfoData {
@@ -462,6 +471,7 @@ Library that helps identifying if the environment can be used for development of
 	main();
 	```
 	- Interfaces:
+	```TypeScript
 	/**
 	 * Describes methods for getting and validating Android tools.
 	 */
