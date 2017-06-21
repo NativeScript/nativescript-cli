@@ -743,7 +743,17 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			makePatch(pluginInfoPlistPath);
 		}
 
-		makePatch(infoPlistPath);
+		if (!buildOptions.release && projectData.projectId) {
+			const modifiedPlistContent = this.updateCFBundleURLSchemes(infoPlistPath, projectData);
+
+			session.patch({
+				name: "CFBundleURLTypes from Info.plist and required one for restarting application",
+				read: () => modifiedPlistContent
+			});
+
+		} else {
+			makePatch(infoPlistPath);
+		}
 
 		if (projectData.projectId) {
 			session.patch({
@@ -760,32 +770,40 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			});
 		}
 
-		if (!buildOptions.release && projectData.projectId) {
-			session.patch({
-				name: "CFBundleURLTypes from package.json nativescript.id",
-				read: () =>
-					`<?xml version="1.0" encoding="UTF-8"?>
-						<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-						<plist version="1.0">
-						<dict>
-							<key>CFBundleURLTypes</key>
-							<array>
-								<dict>
-									<key>CFBundleURLSchemes</key>
-									<array>
-										<string>${projectData.projectId.replace(/[^A-Za-z0-9]/g, "")}</string>
-									</array>
-								</dict>
-							</array>
-						</dict>
-						</plist>`
-			});
-		}
-
 		let plistContent = session.build();
 
 		this.$logger.trace("Info.plist: Write to: " + this.getPlatformData(projectData).configurationFilePath);
 		this.$fs.writeFile(this.getPlatformData(projectData).configurationFilePath, plistContent);
+	}
+
+	private updateCFBundleURLSchemes(infoPlistPath: string, projectData: IProjectData): string {
+		// This code is required due to bug in session.patch logic which cannot merge values which are both arrays - it uses the second one directly.
+		// In our case we want to merge the values of CFBundleURLSchemes (which are arrays), which are in CFBundleURLTypes arrays.
+		let parsedPlist: any = plist.parse(this.$fs.readFile(infoPlistPath).toString());
+		parsedPlist.CFBundleURLTypes = parsedPlist.CFBundleURLTypes || [];
+
+		const appIdCfBundleUrlScheme = projectData.projectId.replace(/[^A-Za-z0-9]/g, "");
+
+		let hasAddedCFBundleURLSchemes = false;
+
+		_.each(parsedPlist.CFBundleURLTypes, type => {
+			if (type.CFBundleURLSchemes) {
+				hasAddedCFBundleURLSchemes = true;
+				type.CFBundleURLSchemes.push(appIdCfBundleUrlScheme);
+				return false;
+			}
+		});
+
+		if (!hasAddedCFBundleURLSchemes) {
+			parsedPlist.CFBundleURLTypes.push(
+				{
+					CFBundleURLSchemes: [appIdCfBundleUrlScheme]
+				}
+			);
+		}
+
+		const newPlistContent = plist.build(parsedPlist);
+		return newPlistContent;
 	}
 
 	private getAllInstalledPlugins(projectData: IProjectData): Promise<IPluginData[]> {
