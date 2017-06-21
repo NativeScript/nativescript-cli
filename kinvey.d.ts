@@ -8,6 +8,15 @@ export namespace Kinvey {
   var appVersion: string;
   function initialize(config: ClientConfig): Promise<User>;
   function init(config: ClientConfig): void;
+  
+  interface PingResponse {
+    version: string,
+    kinvey: string,
+    appName: string,
+    environmentName: string
+  }
+  function ping(): Promise<PingResponse>;
+
 
   // Request Options interface
   interface RequestOptions {
