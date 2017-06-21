@@ -1,6 +1,28 @@
 NativeScript CLI Changelog
 ================
 
+3.1.0 (2017, June 22)
+==
+
+### Fixed
+
+* [Fixed #2905](https://github.com/NativeScript/nativescript-cli/issues/2905): Doctor command fails when ANDROID_HOME is not set
+* [Fixed #2874](https://github.com/NativeScript/nativescript-cli/issues/2874): Unable to build and deploy app to iTunes: Unable to connect to iTunes Connect
+* [Fixed #2856](https://github.com/NativeScript/nativescript-cli/issues/2856): Check for dev-dependencies within production dependencies
+* [Fixed #2860](https://github.com/NativeScript/nativescript-cli/issues/2860): `tns run ios` fails on iOS devices after rebuilding application in the process
+* [Fixed #2850](https://github.com/NativeScript/nativescript-cli/issues/2850): Document properly the "Emulate Options"
+* [Fixed #2757](https://github.com/NativeScript/nativescript-cli/issues/2757): `tns build ios --forDevice --path TestApp` start simulator
+* [Fixed #2720](https://github.com/NativeScript/nativescript-cli/issues/2720): Livesync error with webstorm temporary files
+* [Fixed #2716](https://github.com/NativeScript/nativescript-cli/issues/2716): Web pack issues when build in release mode
+* [Fixed #2501](https://github.com/NativeScript/nativescript-cli/issues/2501): Manual signing with distribution provisioning profile fails with NS 2.5
+* [Fixed #2446](https://github.com/NativeScript/nativescript-cli/issues/2446): tns run--device NonexistentName retunrs different messages for ios and android
+* [Fixed #1358](https://github.com/NativeScript/nativescript-cli/issues/1358): Webstorm Ubuntu .bash_profile
+* [Fixed #521](https://github.com/NativeScript/nativescript-cli/issues/521): EPERM error with .local/share directory after installing CLI
+
+### Deprecated
+
+* [Implemented #2329](https://github.com/NativeScript/nativescript-cli/issues/2329): Remove the emulate command
+
 3.0.3 (2017, June 1)
 ==
 
