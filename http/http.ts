@@ -26,15 +26,15 @@ export class HttpMiddleware extends Middleware {
   handle(request: any) {
     const { url, method, headers, body, timeout, followRedirect } = request;
     headers['X-Kinvey-Device-Information'] = deviceInformation();
-
-    return HttpRequest({
+    const options = {
       method: method,
       headers: headers,
-      url: url,
+      url: encodeURI(url),
       content: body,
       timeout: timeout,
       dontFollowRedirects: followRedirect
-    })
+    };
+    return (HttpRequest(options) as any)
       .then((response) => {
         return {
           response: {
