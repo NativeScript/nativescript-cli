@@ -47,7 +47,18 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 			}
 		}
 
-		return resolvedDependencies;
+		return this.distinctDependencies(resolvedDependencies);
+	}
+
+	private distinctDependencies(dependencies: IDependencyData[]): IDependencyData[] {
+		const depsDictionary = dependencies.reduce((dict, dep) => {
+			const collision = dict[dep.name];
+			if (!collision || collision.depth > dep.depth) {
+				dict[dep.name] = dep;
+			}
+			return dict;
+		}, <{ [key: string]: IDependencyData}>{});
+		return Object.keys(depsDictionary).map(key => depsDictionary[key]);
 	}
 
 	private findModule(rootNodeModulesPath: string, parentModulePath: string, name: string, depth: number, resolvedDependencies: IDependencyData[]): IDependencyData {

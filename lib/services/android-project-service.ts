@@ -12,7 +12,6 @@ import { SpawnOptions } from "child_process";
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static VALUES_DIRNAME = "values";
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
-	private static ANDROID_PLATFORM_NAME = "android";
 	private static MIN_RUNTIME_VERSION_WITH_GRADLE = "1.5.0";
 	private static REQUIRED_DEV_DEPENDENCIES = [
 		{ name: "babel-traverse", version: "^6.4.5" },
@@ -33,7 +32,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		$projectDataService: IProjectDataService,
 		private $sysInfo: ISysInfo,
 		private $injector: IInjector,
-		private $pluginVariablesService: IPluginVariablesService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $npm: INodePackageManager) {
 		super($fs, $projectDataService);
@@ -348,42 +346,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
-		const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
-		await this.processResourcesFromPlugin(pluginData, pluginPlatformsFolderPath, projectData);
+		// Add to platforms/android/dependencies.json
 	}
 
 	public async processConfigurationFilesFromAppResources(): Promise<void> {
 		return;
-	}
-
-	private async processResourcesFromPlugin(pluginData: IPluginData, pluginPlatformsFolderPath: string, projectData: IProjectData): Promise<void> {
-		const configurationsDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "configurations");
-		this.$fs.ensureDirectoryExists(configurationsDirectoryPath);
-
-		const pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginData.name);
-		if (this.$fs.exists(pluginPlatformsFolderPath)) {
-			this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath);
-
-			const isScoped = pluginData.name.indexOf("@") === 0;
-			const flattenedDependencyName = isScoped ? pluginData.name.replace("/", "_") : pluginData.name;
-
-			// Copy all resources from plugin
-			const resourcesDestinationDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "src", flattenedDependencyName);
-			this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath);
-			shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
-
-			const filesForInterpolation = this.$fs.enumerateFilesInDirectorySync(resourcesDestinationDirectoryPath, file => this.$fs.getFsStats(file).isDirectory() || path.extname(file) === constants.XML_FILE_EXTENSION) || [];
-			for (const file of filesForInterpolation) {
-				this.$logger.trace(`Interpolate data for plugin file: ${file}`);
-				await this.$pluginVariablesService.interpolate(pluginData, file, projectData);
-			}
-		}
-
-		// Copy include.gradle file
-		const includeGradleFilePath = path.join(pluginPlatformsFolderPath, "include.gradle");
-		if (this.$fs.exists(includeGradleFilePath)) {
-			shell.cp("-f", includeGradleFilePath, pluginConfigurationDirectoryPath);
-		}
 	}
 
 	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
@@ -408,22 +375,37 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void> {
 		if (dependencies) {
-			const platformDir = path.join(projectData.platformsDir, "android");
-			const buildDir = path.join(platformDir, "build-tools");
-			const checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
-			if (this.$fs.exists(checkV8dependants)) {
-				const stringifiedDependencies = JSON.stringify(dependencies);
-				try {
-					await this.spawn('node', [checkV8dependants, stringifiedDependencies, projectData.platformsDir], { stdio: "inherit" });
-				} catch (e) {
-					this.$logger.info("Checking for dependants on v8 public API failed. This is likely caused because of cyclic production dependencies. Error code: " + e.code + "\nMore information: https://github.com/NativeScript/nativescript-cli/issues/2561");
-				}
+			await this.provideV8Dependants(projectData, dependencies);
+			this.provideDependenciesJson(projectData, dependencies);
+		}
+	}
+
+	private async provideV8Dependants(projectData: IProjectData, dependencies: IDependencyData[]): Promise<void> {
+		const platformDir = path.join(projectData.platformsDir, "android");
+		const buildDir = path.join(platformDir, "build-tools");
+		const checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
+		if (this.$fs.exists(checkV8dependants)) {
+			const stringifiedDependencies = JSON.stringify(dependencies);
+			try {
+				await this.spawn('node', [checkV8dependants, stringifiedDependencies, projectData.platformsDir], { stdio: "inherit" });
+			} catch (e) {
+				this.$logger.info("Checking for dependants on v8 public API failed. This is likely caused because of cyclic production dependencies. Error code: " + e.code + "\nMore information: https://github.com/NativeScript/nativescript-cli/issues/2561");
 			}
 		}
+	}
 
-		const projectRoot = this.getPlatformData(projectData).projectRoot;
+	private provideDependenciesJson(projectData: IProjectData, dependencies: IDependencyData[]): void {
+		const platformDir = path.join(projectData.platformsDir, "android")
+		const dependenciesJsonPath = path.join(platformDir, "dependencies.json");
+		const nativeDependencies = dependencies
+			.filter(AndroidProjectService.isNativeAndroidDependency)
+			.map(({ name, directory }) => ({ name, directory: path.relative(platformDir, directory) }));
+		const jsonContent = JSON.stringify(nativeDependencies, null, 4);
+		this.$fs.writeFile(dependenciesJsonPath, jsonContent);
+	}
 
-		await this.cleanProject(projectRoot, projectData);
+	private static isNativeAndroidDependency({ nativescript }: IDependencyData): boolean {
+		return nativescript && (nativescript.android || (nativescript.platforms && nativescript.platforms.android));
 	}
 
 	public stopServices(projectRoot: string): Promise<ISpawnResult> {
