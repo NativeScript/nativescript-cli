@@ -20,7 +20,7 @@ export class UpdatePlatformCommand implements ICommand {
 
 		for (let arg of args) {
 			const platform = arg.split("@")[0];
-			this.$platformService.validatePlatformInstalled(platform, this.$projectData);
+			this.$platformService.validatePlatform(platform, this.$projectData);
 			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
 			const platformProjectService = platformData.platformProjectService;
 			await platformProjectService.validate(this.$projectData);
