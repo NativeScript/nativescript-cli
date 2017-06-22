@@ -8,7 +8,7 @@ NativeScript CLI Changelog
 
 * [Fixed #2905](https://github.com/NativeScript/nativescript-cli/issues/2905): Doctor command fails when ANDROID_HOME is not set
 * [Fixed #2874](https://github.com/NativeScript/nativescript-cli/issues/2874): Unable to build and deploy app to iTunes: Unable to connect to iTunes Connect
-* [Fixed #2856](https://github.com/NativeScript/nativescript-cli/issues/2856): Check for dev-dependencies within production dependencies
+* [Fixed #2856](https://github.com/NativeScript/nativescript-cli/issues/2856): DevDependencies' dependencies are added to native project
 * [Fixed #2860](https://github.com/NativeScript/nativescript-cli/issues/2860): `tns run ios` fails on iOS devices after rebuilding application in the process
 * [Fixed #2850](https://github.com/NativeScript/nativescript-cli/issues/2850): Document properly the "Emulate Options"
 * [Fixed #2757](https://github.com/NativeScript/nativescript-cli/issues/2757): `tns build ios --forDevice --path TestApp` start simulator
