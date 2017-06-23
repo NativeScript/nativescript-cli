@@ -338,7 +338,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		if (!buildConfig.release && !buildConfig.architectures) {
 			await this.$devicesService.initialize({
 				platform: this.$devicePlatformsConstants.iOS.toLowerCase(), deviceId: buildConfig.device,
-				isBuildForDevice: true
+				skipEmulatorStart: true
 			});
 			let instances = this.$devicesService.getDeviceInstances();
 			let devicesArchitectures = _(instances)
