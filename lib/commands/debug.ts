@@ -1,4 +1,4 @@
-﻿export abstract class DebugPlatformCommand implements ICommand {
+export abstract class DebugPlatformCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 	public platform: string;
 
@@ -29,9 +29,6 @@
 
 		this.$config.debugLivesync = true;
 
-		await this.$devicesService.initialize({
-
-		});
 		await this.$devicesService.detectCurrentlyAttachedDevices();
 
 		const devices = this.$devicesService.getDeviceInstances();
@@ -86,9 +83,9 @@
 			platform: this.platform,
 			deviceId: this.$options.device,
 			emulator: this.$options.emulator,
-			skipDeviceDetectionInterval: true,
-			skipInferPlatform: true
+			skipDeviceDetectionInterval: true
 		});
+
 		// Start emulator if --emulator is selected or no devices found.
 		if (this.$options.emulator || this.$devicesService.deviceCount === 0) {
 			return true;
