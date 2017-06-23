@@ -139,3 +139,4 @@ $injector.requireCommand("extension|uninstall", "./commands/extensibility/uninst
 $injector.requirePublic("extensibilityService", "./services/extensibility-service");
 
 $injector.require("nodeModulesDependenciesBuilder", "./tools/node-modules/node-modules-dependencies-builder");
+$injector.require("subscriptionService", "./services/subscription-service");
