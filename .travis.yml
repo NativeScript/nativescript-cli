@@ -8,6 +8,8 @@ node_js:
 - '6'
 git:
   submodules: true
+install:
+- npm install --ignore-scripts
 before_script:
 - gem install xcodeproj
 - gem install cocoapods
