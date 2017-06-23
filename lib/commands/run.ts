@@ -93,7 +93,7 @@ export class RunCommandBase implements ICommand {
 			this.$iosDeviceOperations.setShouldDispose(false);
 		}
 
-		if (this.$options.release) {
+		if (this.$options.release || this.$options.bundle) {
 			const runPlatformOptions: IRunPlatformOptions = {
 				device: this.$options.device,
 				emulator: this.$options.emulator,
