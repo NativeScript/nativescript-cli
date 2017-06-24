@@ -1,6 +1,6 @@
 {
   "name": "kinvey-js-sdk",
-  "version": "3.6.0-ns.7",
+  "version": "3.6.0-ns.8",
   "description": "Kinvey JavaScript SDK for developing JavaScript applications. This is the core code used to create specific bundles for all other JavaScript platforms.",
   "homepage": "http://www.kinvey.com",
   "bugs": {
