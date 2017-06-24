@@ -124,7 +124,7 @@ export class MobileIdentityConnect extends Identity {
           version = String(version);
         }
 
-        pathname = urljoin(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
+        pathname = urljoin(version.indexOf('v') === 0 ? version : `v${version}`, pathname);
       }
 
       return popup.open(url.format({
