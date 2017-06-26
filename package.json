@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "3.1.0",
+  "version": "3.1.1",
   "author": "Telerik <support@telerik.com>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -42,7 +42,7 @@
     "glob": "^7.0.3",
     "iconv-lite": "0.4.11",
     "inquirer": "0.9.0",
-    "ios-device-lib": "0.4.6",
+    "ios-device-lib": "0.4.7",
     "ios-mobileprovision-finder": "1.0.9",
     "ios-sim-portable": "~3.0.0",
     "lockfile": "1.0.1",

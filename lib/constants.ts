@@ -86,3 +86,4 @@ export const BUILD_OUTPUT_EVENT_NAME = "buildOutput";
 export const CONNECTION_ERROR_EVENT_NAME = "connectionError";
 export const VERSION_STRING = "version";
 export const INSPECTOR_CACHE_DIRNAME = "ios-inspector";
+export const POST_INSTALL_COMMAND_NAME = "post-install-cli";
