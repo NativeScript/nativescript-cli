@@ -12,7 +12,7 @@ try {
 
 export class Push extends PushCommon {
   protected _registerWithPushPlugin(options = <any>{}): Promise<string> {
-    const config = option.ios || {};
+    const config = options.ios || {};
 
     return new Promise((resolve, reject) => {
       if (isDefined(PushPlugin) === false) {

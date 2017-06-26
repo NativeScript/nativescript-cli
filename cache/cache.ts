@@ -15,7 +15,7 @@ class Storage extends KinveyStorage {
 }
 
 export class CacheMiddleware extends CoreCacheMiddleware {
-  loadStorage(name) {
+  loadStorage(name): KinveyStorage {
     return new Storage(name);
   }
 }
