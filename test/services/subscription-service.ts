@@ -121,7 +121,7 @@ describe("subscriptionService", () => {
 				helpers.isInteractive = originalIsInteractive;
 				process.env.CLI_NOPROMPT = originalCliNoPrompt;
 
-				assert.isTrue(shouldAskForEmailResult, "When the user had already been asked for mail, we should not ask for email.");
+				assert.isTrue(shouldAskForEmailResult, "We should ask the user for email when console is interactiv, CLI_NOPROMPT is not 1 and we have never asked the user before.");
 			});
 		});
 	});
