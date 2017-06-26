@@ -150,6 +150,37 @@ interface INpmPeerDependencyInfo {
 }
 
 /**
+ * Describes information about dependency update packages.
+ */
+interface INpm5DependencyInfo {
+	/**
+	 * Npm action type.
+	 * @type {string}
+	 */
+	action: string;
+	/**
+	 * Dependency name.
+	 * @type {string}
+	 */
+	name: string;
+	/**
+	 * Dependency version.
+	 * @type {string}
+	 */
+	version: string;
+	/**
+	 * Destination of the installation.
+	 * @type {string}
+	 */
+	path: string;
+	/**
+	 * Dependency previous version.
+	 * @type {string}
+	 */
+	previousVersion: string;
+}
+
+/**
  * Describes information returned by the npm CLI upon calling install with --json flag.
  */
 interface INpmInstallCLIResult {
@@ -176,6 +207,47 @@ interface INpmInstallCLIResult {
 }
 
 /**
+ * Describes information returned by the npm 5 CLI upon calling install with --json flag.
+ */
+interface INpm5InstallCliResult {
+	/**
+	 * Added dependencies. Note that whenever add a particular dependency with npm 5 it is listed inside of array with key "Added".
+	 * @type {INpmDependencyUpdateInfo[]}
+	 */
+	added: INpm5DependencyInfo[];
+	/**
+	 * Removed dependencies. Note that whenever remove a particular dependency with npm 5 it is listed inside of array with key "removed".
+	 * @type {INpmDependencyUpdateInfo[]}
+	 */
+	removed: INpm5DependencyInfo[];
+	/**
+	 * Updated dependencies. Note that whenever update a particular dependency with npm 5 it is listed inside of array with key "updated".
+	 * @type {INpmDependencyUpdateInfo[]}
+	 */
+	updated: INpm5DependencyInfo[];
+	/**
+	 * Moved dependencies. Note that whenever move a particular dependency with npm 5 it is listed inside of array with key "moved".
+	 * @type {INpmDependencyUpdateInfo[]}
+	 */
+	moved: INpm5DependencyInfo[];
+	/**
+	 * Failed dependencies. Note that whenever use npm 5 and the operation over particular dependency fail it is listed inside of array with key "failed".
+	 * @type {INpmDependencyUpdateInfo[]}
+	 */
+	failed: INpm5DependencyInfo[];
+	/**
+	 * Warnings. Note that whenever use npm 5 and the operation over particular dependency have warnings they are listed inside of array with key "warnings".
+	 * @type {INpmDependencyUpdateInfo[]}
+	 */
+	warnings: INpm5DependencyInfo[];
+	/**
+	 *Time elapsed.
+	 * @type {Number}
+	 */
+	elapsed: Number
+}
+
+/**
  * Describes information about installed package.
  */
 interface INpmInstallResultInfo {
@@ -193,7 +265,7 @@ interface INpmInstallResultInfo {
 	 * The original output that npm CLI produced upon installation.
 	 * @type {INpmInstallCLIResult}
 	 */
-	originalOutput?: INpmInstallCLIResult;
+	originalOutput?: INpmInstallCLIResult | INpm5InstallCliResult;
 }
 
 interface INpmInstallOptions {

@@ -143,9 +143,23 @@ export class NodePackageManager implements INodePackageManager {
 	private parseNpmInstallResult(npmDryRunInstallOutput: string, npmInstallOutput: string, userSpecifiedPackageName: string): INpmInstallResultInfo {
 		// TODO: Add tests for this functionality
 		try {
-			const originalOutput: INpmInstallCLIResult = JSON.parse(npmDryRunInstallOutput);
-			const name = _.head(_.keys(originalOutput.dependencies));
-			const dependency = _.pick<INpmDependencyInfo, INpmDependencyInfo | INpmPeerDependencyInfo>(originalOutput.dependencies, name);
+			const originalOutput: INpmInstallCLIResult | INpm5InstallCliResult = JSON.parse(npmDryRunInstallOutput);
+			const npm5Output = <INpm5InstallCliResult> originalOutput;
+			const npmOutput = <INpmInstallCLIResult> originalOutput;
+			const name = _.head(_.keys(npmOutput.dependencies));
+
+			// Npm 5 return different object after performing `npm install --dry-run`.
+			// Considering that the dependency is already installed we should
+			// find it in the `updated` key as a first element of the array.
+			if (!name && npm5Output.updated) {
+				const updatedDependency = npm5Output.updated[0];
+				return {
+					name: updatedDependency.name,
+					originalOutput,
+					version: updatedDependency.version
+				};
+			}
+			const dependency = _.pick<INpmDependencyInfo, INpmDependencyInfo | INpmPeerDependencyInfo>(npmOutput.dependencies, name);
 			return {
 				name,
 				originalOutput,
