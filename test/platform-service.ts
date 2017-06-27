@@ -30,6 +30,7 @@ function createTestInjector() {
 	testInjector.register('platformService', PlatformServiceLib.PlatformService);
 	testInjector.register('errors', stubs.ErrorsStub);
 	testInjector.register('logger', stubs.LoggerStub);
+	testInjector.register("nodeModulesDependenciesBuilder", {});
 	testInjector.register('npmInstallationManager', stubs.NpmInstallationManagerStub);
 	testInjector.register('projectData', stubs.ProjectDataStub);
 	testInjector.register('platformsData', stubs.PlatformsDataStub);
