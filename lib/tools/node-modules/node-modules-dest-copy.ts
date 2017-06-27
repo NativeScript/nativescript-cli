@@ -44,9 +44,9 @@ export class TnsModulesCopy {
 
 			if (isScoped) {
 				// copy module into tns_modules/@scope/module instead of tns_modules/module
-				shelljs.cp("-Rf", dependency.directory, path.join(this.outputRoot, dependency.name.substring(0, dependency.name.indexOf("/"))));
+				shelljs.cp("-Rf", this.$fs.realpath(dependency.directory), path.join(this.outputRoot, dependency.name.substring(0, dependency.name.indexOf("/"))));
 			} else {
-				shelljs.cp("-Rf", dependency.directory, this.outputRoot);
+				shelljs.cp("-Rf", this.$fs.realpath(dependency.directory), this.outputRoot);
 			}
 
 			// remove platform-specific files (processed separately by plugin services)
