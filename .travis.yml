@@ -32,9 +32,9 @@ before_deploy:
 deploy:
   - provider: s3
     bucket: nativescript-ci
-    access_key_id: AKIAIYSWYOZRFLVKPCTQ
+    access_key_id: AKIAIKDD3GIKBDZLE4GA
     secret_access_key:
-      secure: THGlblH9XdRcTQMc3jm4kpwCB3myl8MGB3v9XjB5ObK4gqxUxuPi6e158LEG9Dgb730MGEYtaAjc9OneH59WAjQOrdcf3GXiGKOiCYzGYZLqVE4pjNDuxHaVGOj7mso4TzMinMCaDSQajTvadCfVmXqgT6p9eSXkiV3V2d2DN6c=
+      secure: s4al5LwLvskHyCjC5cQ0wYDpKQc7NaVSv2aG6kD/
     skip_cleanup: true
     local-dir: s3-publish
     upload-dir: build_result
