@@ -298,7 +298,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	public getNativeScriptCliVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.nativeScriptCliVersionCache, async (): Promise<string> => {
 			const output = await this.execCommand("tns --version");
-			return output ? output.trim() : output;
+			return output ? this.getVersionFromString(output.trim()) : output;
 		});
 	}
 
