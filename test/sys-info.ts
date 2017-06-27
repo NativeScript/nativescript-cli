@@ -153,7 +153,7 @@ describe("SysInfo unit tests", () => {
 
 	beforeEach(() => {
 		// We need to mock this because on Mac the tests in which the platform is mocked to Windows in the process there will be no CommonProgramFiles.
-		process.env.CommonProgramFiles = process.env.CommonProgramFiles || "mocked on mac";
+		process.env["CommonProgramFiles"] = process.env["CommonProgramFiles"] || "mocked on mac";
 		process.env["CommonProgramFiles(x86)"] = process.env["CommonProgramFiles(x86)"] || "mocked on mac";
 	});
 
