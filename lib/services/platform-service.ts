@@ -39,7 +39,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $npm: INodePackageManager,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $projectChangesService: IProjectChangesService,
-		private $analyticsService: IAnalyticsService) {
+		private $analyticsService: IAnalyticsService,
+		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder) {
 		super();
 	}
 
@@ -223,13 +224,17 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		await this.$pluginsService.validate(platformData, projectData);
 
+		const bundle = appFilesUpdaterOptions.bundle;
+
 		await this.ensurePlatformInstalled(platform, platformTemplate, projectData, config);
-		let changesInfo = this.$projectChangesService.checkForChanges(platform, projectData, { bundle: appFilesUpdaterOptions.bundle, release: appFilesUpdaterOptions.release, provision: config.provision });
+		let changesInfo = this.$projectChangesService.checkForChanges(platform, projectData, { bundle, release: appFilesUpdaterOptions.release, provision: config.provision });
 
 		this.$logger.trace("Changes info in prepare platform:", changesInfo);
 
 		if (changesInfo.hasChanges) {
 			await this.cleanProject(platform, appFilesUpdaterOptions, platformData, projectData);
+		}
+		if (changesInfo.hasChanges || bundle) {
 			await this.preparePlatformCore(platform, appFilesUpdaterOptions, projectData, config, changesInfo, filesToSync);
 			this.$projectChangesService.savePrepareInfo(platform, projectData);
 		} else {
@@ -302,6 +307,16 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		if (!changesInfo || changesInfo.modulesChanged) {
 			await this.copyTnsModules(platform, projectData);
+		} else if (appFilesUpdaterOptions.bundle) {
+			let dependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
+			for (let dependencyKey in dependencies) {
+				const dependency = dependencies[dependencyKey];
+				let isPlugin = !!dependency.nativescript;
+				if (isPlugin) {
+					let pluginData = this.$pluginsService.convertToPluginData(dependency, projectData.projectDir);
+					await this.$pluginsService.preparePluginNativeCode(pluginData, platform, projectData);
+				}
+			}
 		}
 
 		let directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);

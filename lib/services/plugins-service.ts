@@ -139,7 +139,7 @@ export class PluginsService implements IPluginsService {
 		this.$projectFilesManager.processPlatformSpecificFiles(pluginScriptsDestinationPath, platform);
 	}
 
-	private async preparePluginNativeCode(pluginData: IPluginData, platform: string, projectData: IProjectData): Promise<void> {
+	public async preparePluginNativeCode(pluginData: IPluginData, platform: string, projectData: IProjectData): Promise<void> {
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 
 		pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform);
@@ -228,7 +228,7 @@ export class PluginsService implements IPluginsService {
 		};
 	}
 
-	private convertToPluginData(cacheData: any, projectDir: string): IPluginData {
+	public convertToPluginData(cacheData: any, projectDir: string): IPluginData {
 		let pluginData: any = {};
 		pluginData.name = cacheData.name;
 		pluginData.version = cacheData.version;
