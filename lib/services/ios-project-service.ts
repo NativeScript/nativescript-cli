@@ -933,7 +933,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	private getAllLibsForPluginWithFileExtension(pluginData: IPluginData, fileExtension: string): string[] {
 		let filterCallback = (fileName: string, pluginPlatformsFolderPath: string) => path.extname(fileName) === fileExtension;
 		return this.getAllNativeLibrariesForPlugin(pluginData, IOSProjectService.IOS_PLATFORM_NAME, filterCallback);
-	};
+	}
 
 	private buildPathToCurrentXcodeProjectFile(projectData: IProjectData): string {
 		return path.join(projectData.platformsDir, "ios", `${projectData.projectName}.xcodeproj`, "project.pbxproj");

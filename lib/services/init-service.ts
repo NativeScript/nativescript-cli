@@ -56,7 +56,7 @@ export class InitService implements IInitService {
 
 						projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][platformData.frameworkPackageName] = _.extend(currentPlatformData, await this.getVersionData(platformData.frameworkPackageName));
 					}
-				};
+				}
 			}
 
 			let dependencies = projectData.dependencies;

@@ -251,7 +251,7 @@ describe("extensibilityService", () => {
 							assert.deepEqual(err.message, expectedResults[index].message);
 							assert.deepEqual(err.extensionName, extensionNames[index]);
 						});
-				};
+				}
 			});
 
 			it("rejects all promises when unable to read node_modules dir (simulate EPERM error)", async () => {
@@ -287,7 +287,7 @@ describe("extensibilityService", () => {
 							assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${expectedErrorMessage}`);
 							assert.deepEqual(err.extensionName, extensionName);
 						});
-				};
+				}
 
 				assert.deepEqual(promises.length, extensionNames.length);
 				assert.isTrue(isReadDirCalled, "readDirectory should have been called for the extensions.");
@@ -340,7 +340,7 @@ describe("extensibilityService", () => {
 							assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${expectedErrorMessages[index]}`);
 							assert.deepEqual(err.extensionName, extensionName);
 						});
-				};
+				}
 
 				assert.deepEqual(promises.length, extensionNames.length);
 				assert.isTrue(isNpmInstallCalled, "Npm install should have been called for the extensions.");

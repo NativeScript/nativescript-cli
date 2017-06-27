@@ -57,7 +57,7 @@ describe("XCConfig Service Tests", () => {
 			fs.readText = (filename: string, options?: IReadFileOptions | string): string => {
 				return `// You can add custom settings here
 						// for example you can uncomment the following line to force distribution code signing
-						CODE_SIGN_IDENTITY = iPhone Distribution 
+						CODE_SIGN_IDENTITY = iPhone Distribution
 						// To build for device with XCode 8 you need to specify your development team. More info: https://developer.apple.com/library/prerelease/content/releasenotes/DeveloperTools/RN-Xcode/Introduction.html
 						// DEVELOPMENT_TEAM = YOUR_TEAM_ID;
 						ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -79,7 +79,7 @@ describe("XCConfig Service Tests", () => {
 			fs.readText = (filename: string, options?: IReadFileOptions | string): string => {
 				return `// You can add custom settings here
 						// for example you can uncomment the following line to force distribution code signing
-						CODE_SIGN_IDENTITY = iPhone Distribution 
+						CODE_SIGN_IDENTITY = iPhone Distribution
 						// To build for device with XCode 8 you need to specify your development team. More info: https://developer.apple.com/library/prerelease/content/releasenotes/DeveloperTools/RN-Xcode/Introduction.html
 						// DEVELOPMENT_TEAM = YOUR_TEAM_ID
 						ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon

@@ -178,10 +178,6 @@ export class FileSystemStub implements IFileSystem {
 }
 
 export class ErrorsStub implements IErrors {
-	constructor() {
-		new (require("../lib/common/errors").Errors)(); // we need the side effect of require'ing errors
-	}
-
 	fail(formatStr: string, ...args: any[]): void;
 	fail(opts: { formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean }, ...args: any[]): void;
 

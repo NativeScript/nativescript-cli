@@ -171,7 +171,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					this.$errors.failWithoutHelp(`Your project have installed ${dependency.name} version ${cleanedVerson} but Android platform requires version ${dependency.version}.`);
 				}
 			}
-		};
+		}
 	}
 
 	private cleanResValues(targetSdkVersion: number, projectData: IProjectData, frameworkVersion: string): void {

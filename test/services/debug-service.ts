@@ -11,7 +11,7 @@ class PlatformDebugService extends EventEmitter /* implements IPlatformDebugServ
 	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string[]> {
 		return [fakeChromeDebugUrl];
 	}
-};
+}
 
 interface IDebugTestDeviceInfo {
 	deviceInfo: {
@@ -20,7 +20,7 @@ interface IDebugTestDeviceInfo {
 	};
 
 	isEmulator: boolean;
-};
+}
 
 interface IDebugTestData {
 	isDeviceFound: boolean;
@@ -30,7 +30,7 @@ interface IDebugTestData {
 		isWindows: boolean;
 		isDarwin: boolean;
 	};
-};
+}
 
 const getDefaultDeviceInformation = (platform?: string): IDebugTestDeviceInfo => ({
 	deviceInfo: {

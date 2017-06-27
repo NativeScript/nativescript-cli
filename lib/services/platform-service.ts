@@ -73,7 +73,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		let version: string;
 		if (currentPlatformData && currentPlatformData[constants.VERSION_STRING]) {
 			version = currentPlatformData[constants.VERSION_STRING];
-		};
+		}
 
 		return version;
 	}
@@ -669,7 +669,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			} else {
 				await this.addPlatform(platformParam, platformTemplate, projectData, config);
 			}
-		};
+		}
 	}
 
 	private getCanExecuteAction(platform: string, options: IDeviceEmulator): any {

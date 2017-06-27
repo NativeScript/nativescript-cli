@@ -9,7 +9,7 @@ interface IValidateTestData {
 	name: string;
 	valuePassedToValidate: string;
 	expectedResult: boolean | string;
-};
+}
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();

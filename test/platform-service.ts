@@ -81,7 +81,7 @@ function createTestInjector() {
 	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
 	testInjector.register("emulatorPlatformService", stubs.EmulatorPlatformService);
 	testInjector.register("analyticsService", {
-		track: async () => undefined
+		track: async (): Promise<any[]> => undefined
 	});
 	testInjector.register("messages", Messages);
 	testInjector.register("devicePathProvider", {});
