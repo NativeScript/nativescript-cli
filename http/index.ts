@@ -23,7 +23,7 @@ export class HttpMiddleware extends Middleware {
     super(name);
   }
 
-  handle(request: any) {
+  handle(request: any): Promise<any> {
     const { url, method, headers, body, timeout, followRedirect } = request;
     headers['X-Kinvey-Device-Information'] = deviceInformation();
     const options = {
@@ -46,7 +46,7 @@ export class HttpMiddleware extends Middleware {
       });
   }
 
-  cancel() {
+  cancel(): Promise<void> {
     return Promise.resolve();
   }
 }
