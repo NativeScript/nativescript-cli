@@ -68,7 +68,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	public getJavaCompilerVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.javaCompilerVerCache, async (): Promise<string> => {
 			const javaCompileExecutableName = "javac";
-			const javaHome = process.env.JAVA_HOME;
+			const javaHome = process.env["JAVA_HOME"];
 			const pathToJavaCompilerExecutable = javaHome ? path.join(javaHome, "bin", javaCompileExecutableName) : javaCompileExecutableName;
 			try {
 				const output = await this.childProcess.exec(`"${pathToJavaCompilerExecutable}" -version`);
@@ -135,7 +135,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			let mobileDeviceDir: string;
 
 			if (this.hostInfo.isWindows) {
-				const commonProgramFiles = this.hostInfo.isWindows64 ? process.env["CommonProgramFiles(x86)"] : process.env.CommonProgramFiles;
+				const commonProgramFiles = this.hostInfo.isWindows64 ? process.env["CommonProgramFiles(x86)"] : process.env["CommonProgramFiles"];
 				coreFoundationDir = path.join(commonProgramFiles, "Apple", "Apple Application Support");
 				mobileDeviceDir = path.join(commonProgramFiles, "Apple", "Mobile Device Support");
 			} else if (this.hostInfo.isDarwin) {
@@ -298,7 +298,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	public getNativeScriptCliVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.nativeScriptCliVersionCache, async (): Promise<string> => {
 			const output = await this.execCommand("tns --version");
-			return output ? output.trim() : output;
+			return output ? this.getVersionFromString(output.trim()) : output;
 		});
 	}
 

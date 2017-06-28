@@ -126,7 +126,7 @@ function mockSysInfo(childProcessResult: IChildProcessResults, hostInfoOptions?:
 		spawnFromEvent: async (command: string, args: string[], event: string, options: ISpawnFromEventOptions) => {
 			return getResultFromChildProcess(childProcessResultDictionary[command], command, options);
 		},
-		execFile: async () => {
+		execFile: async (): Promise<any> => {
 			return undefined;
 		}
 	};
@@ -153,7 +153,7 @@ describe("SysInfo unit tests", () => {
 
 	beforeEach(() => {
 		// We need to mock this because on Mac the tests in which the platform is mocked to Windows in the process there will be no CommonProgramFiles.
-		process.env.CommonProgramFiles = process.env.CommonProgramFiles || "mocked on mac";
+		process.env["CommonProgramFiles"] = process.env["CommonProgramFiles"] || "mocked on mac";
 		process.env["CommonProgramFiles(x86)"] = process.env["CommonProgramFiles(x86)"] || "mocked on mac";
 	});
 
@@ -319,6 +319,29 @@ describe("SysInfo unit tests", () => {
 				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
 				let result = await sysInfo.getSysInfo();
 				assert.deepEqual(result.cocoaPodsVer, "0.38.2");
+			});
+		});
+
+		describe("nativeScriptCliVersion", () => {
+			it("is null when tns is not installed", async () => {
+				childProcessResult.nativeScriptCliVersion = { shouldThrowError: true };
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
+				let result = await sysInfo.getSysInfo();
+				assert.deepEqual(result.nativeScriptCliVersion, null);
+			});
+
+			it("is correct when the version is the only row in `tns --version` output", async () => {
+				childProcessResult.nativeScriptCliVersion = { result: setStdOut("3.0.0") };
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
+				let result = await sysInfo.getSysInfo();
+				assert.deepEqual(result.nativeScriptCliVersion, "3.0.0");
+			});
+
+			it("is correct when there are warnings in the `tns --version` output", async () => {
+				childProcessResult.nativeScriptCliVersion = { result: setStdOut("Some warning due to invalid extensions\\n3.0.0") };
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
+				let result = await sysInfo.getSysInfo();
+				assert.deepEqual(result.nativeScriptCliVersion, "3.0.0");
 			});
 		});
 
