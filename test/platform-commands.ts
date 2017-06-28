@@ -96,6 +96,7 @@ function createTestInjector() {
 	testInjector.register("injector", testInjector);
 	testInjector.register("hooksService", stubs.HooksServiceStub);
 	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
+	testInjector.register("nodeModulesDependenciesBuilder", {});
 	testInjector.register('platformService', PlatformServiceLib.PlatformService);
 	testInjector.register('errors', ErrorsNoFailStub);
 	testInjector.register('logger', stubs.LoggerStub);
