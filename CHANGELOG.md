@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.5.1](https://github.com/Kinvey/js-sdk/tree/v3.5.1) (2017-06-30)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.5.0...v3.5.1)<br/>
+
+### Added
+_None_
+
+### Removed
+_None_
+
+### Changed
+- `https:` will automatically be used when a custom hostname is missing a protocol.
+- Prevent the active user from being `null` for a short period of time when setting the active user.
+
+### Merged Pull Requests
+- Active User Bug [#128](https://github.com/Kinvey/js-sdk/pull/128)
+- Add missing protocol to custom hostnames [#129](https://github.com/Kinvey/js-sdk/pull/129)
+
+### Closed Issues
+_None_
+
 ## [3.5.0](https://github.com/Kinvey/js-sdk/tree/v3.5.0) (2017-04-20)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.4.5...v3.5.0)<br/>
 
