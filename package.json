@@ -81,16 +81,16 @@
   },
   "analyze": true,
   "devDependencies": {
-    "@types/chai": "3.4.34",
-    "@types/chai-as-promised": "0.0.29",
+    "@types/chai": "4.0.1",
+    "@types/chai-as-promised": "0.0.31",
     "@types/chokidar": "1.6.0",
     "@types/node": "6.0.61",
     "@types/qr-image": "3.2.0",
-    "@types/request": "0.0.42",
+    "@types/request": "0.0.45",
     "@types/semver": "^5.3.31",
     "@types/source-map": "0.5.0",
-    "chai": "3.5.0",
-    "chai-as-promised": "6.0.0",
+    "chai": "4.0.2",
+    "chai-as-promised": "7.0.0",
     "grunt": "1.0.1",
     "grunt-contrib-clean": "1.0.0",
     "grunt-contrib-copy": "1.0.0",
@@ -103,7 +103,7 @@
     "should": "7.0.2",
     "source-map-support": "^0.4.14",
     "tslint": "5.4.3",
-    "typescript": "2.3.4"
+    "typescript": "2.4.1"
   },
   "license": "Apache-2.0",
   "engines": {

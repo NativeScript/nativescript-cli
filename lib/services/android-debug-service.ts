@@ -18,17 +18,17 @@ class AndroidDebugService extends DebugServiceBase implements IPlatformDebugServ
 		this._device = newDevice;
 	}
 
-	constructor(private $devicesService: Mobile.IDevicesService,
+	constructor(protected $devicesService: Mobile.IDevicesService,
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $config: IConfiguration,
 		private $androidDeviceDiscovery: Mobile.IDeviceDiscovery,
 		private $androidProcessService: Mobile.IAndroidProcessService,
 		private $net: INet) {
-		super();
+		super($devicesService);
 	}
 
-	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string[]> {
+	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		return debugOptions.emulator
 			? this.debugOnEmulator(debugData, debugOptions)
 			: this.debugOnDevice(debugData, debugOptions);
@@ -49,7 +49,7 @@ class AndroidDebugService extends DebugServiceBase implements IPlatformDebugServ
 		return;
 	}
 
-	private async debugOnEmulator(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string[]> {
+	private async debugOnEmulator(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		// Assure we've detected the emulator as device
 		// For example in case deployOnEmulator had stated new emulator instance
 		// we need some time to detect it. Let's force detection.
@@ -82,7 +82,7 @@ class AndroidDebugService extends DebugServiceBase implements IPlatformDebugServ
 		return this.device.adb.executeCommand(["forward", `tcp:${local}`, `localabstract:${remote}`]);
 	}
 
-	private async debugOnDevice(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string[]> {
+	private async debugOnDevice(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		let packageFile = "";
 
 		if (!debugOptions.start && !debugOptions.emulator) {
@@ -94,9 +94,8 @@ class AndroidDebugService extends DebugServiceBase implements IPlatformDebugServ
 
 		let action = (device: Mobile.IAndroidDevice): Promise<string> => this.debugCore(device, packageFile, debugData.applicationIdentifier, debugOptions);
 
-		const result = await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
-
-		return _.map(result, r => r.result);
+		const deviceActionResult = await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
+		return deviceActionResult[0].result;
 	}
 
 	private async debugCore(device: Mobile.IAndroidDevice, packageFile: string, packageName: string, debugOptions: IDebugOptions): Promise<string> {
