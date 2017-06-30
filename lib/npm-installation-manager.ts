@@ -42,7 +42,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		} catch (error) {
 			this.$logger.debug(error);
 
-			throw new Error(error);
+			throw error;
 		}
 	}
 
@@ -91,11 +91,9 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		if (this.$fs.exists(possiblePackageName)) {
 			packageName = possiblePackageName;
 		}
-		if (packageName.indexOf(".tgz") >= 0) {
-			version = null;
-		}
+
 		// check if the packageName is url or local file and if it is, let npm install deal with the version
-		if (this.isURL(packageName) || this.$fs.exists(packageName)) {
+		if (this.isURL(packageName) || this.$fs.exists(packageName) || this.isTgz(packageName)) {
 			version = null;
 		} else {
 			version = version || await this.getLatestCompatibleVersion(packageName);
@@ -108,7 +106,11 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		return pathToInstalledPackage;
 	}
 
-	private isURL(str: string) {
+	private isTgz(packageName: string): boolean {
+		return packageName.indexOf(".tgz") >= 0;
+	}
+
+	private isURL(str: string): boolean {
 		let urlRegex = '^(?!mailto:)(?:(?:http|https|ftp)://)(?:\\S+(?::\\S*)?@)?(?:(?:(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[0-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)(?:\\.(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)*(?:\\.(?:[a-z\\u00a1-\\uffff]{2,})))|localhost)(?::\\d{2,5})?(?:(/|\\?|#)[^\\s]*)?$';
 		let url = new RegExp(urlRegex, 'i');
 		return str.length < 2083 && url.test(str);
