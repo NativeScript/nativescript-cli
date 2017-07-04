@@ -10,7 +10,7 @@ interface IDependencyInfo {
 	depth: number;
 	dependencies?: IDependencyInfo[];
 	nativescript?: any;
-};
+}
 
 // TODO: Add integration tests.
 // The tests assumes npm 3 or later is used, so all dependencies (and their dependencies) will be installed at the root node_modules

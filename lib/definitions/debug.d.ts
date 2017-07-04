@@ -96,7 +96,7 @@ interface IDebugServiceBase extends NodeJS.EventEmitter {
 	 * @param {IDebugOptions} debugOptions Describe possible options to modify the behaivor of the debug operation, for example stop on the first line.
 	 * @returns {Promise<T>} Array of URLs that can be used for debugging or a string representing a single url that can be used for debugging.
 	 */
-	debug<T>(debugData: IDebugData, debugOptions: IDebugOptions): Promise<T>;
+	debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string>;
 }
 
 interface IDebugService {

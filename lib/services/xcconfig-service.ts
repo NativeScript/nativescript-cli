@@ -4,7 +4,7 @@ export class XCConfigService {
 
 	/**
 	 * Returns the Value of a Property from a XC Config file.
-	 * @param xcconfigFilePath 
+	 * @param xcconfigFilePath
 	 * @param propertyName
 	 */
 	public readPropertyValue(xcconfigFilePath: string, propertyName: string): string {

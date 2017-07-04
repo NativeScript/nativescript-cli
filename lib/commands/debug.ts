@@ -24,15 +24,15 @@
 		await this.$platformService.trackProjectType(this.$projectData);
 
 		if (this.$options.start) {
-			return this.$debugLiveSyncService.printDebugInformation(await this.debugService.debug<string[]>(debugData, debugOptions));
+			return this.$debugLiveSyncService.printDebugInformation(await this.debugService.debug(debugData, debugOptions));
 		}
 
 		this.$config.debugLivesync = true;
 
 		await this.$devicesService.detectCurrentlyAttachedDevices();
 
-		const devices = this.$devicesService.getDeviceInstances();
 		// Now let's take data for each device:
+		const devices = this.$devicesService.getDeviceInstances();
 		const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !this.platform || d.deviceInfo.platform === this.platform)
 			.map(d => {
 				const info: ILiveSyncDeviceInfo = {
@@ -91,10 +91,7 @@
 		}
 
 		if (this.$devicesService.deviceCount > 1) {
-			// Starting debugger on emulator.
-			this.$options.emulator = true;
-
-			this.$logger.warn("Multiple devices found! Starting debugger on emulator. If you want to debug on specific device please select device with --device option.".yellow.bold);
+			this.$errors.failWithoutHelp("Multiple devices found! To debug on specific device please select device with --device option.");
 		}
 
 		return true;

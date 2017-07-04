@@ -52,7 +52,7 @@ export class DebugLiveSyncService extends LiveSyncService implements IDebugLiveS
 		await this.$platformService.trackProjectType(this.$projectData);
 
 		if (this.$options.start) {
-			return this.printDebugInformation(await debugService.debug<string[]>(debugData, debugOptions));
+			return this.printDebugInformation(await debugService.debug(debugData, debugOptions));
 		}
 
 		const deviceAppData = liveSyncResultInfo.deviceAppData;
@@ -66,14 +66,13 @@ export class DebugLiveSyncService extends LiveSyncService implements IDebugLiveS
 		const buildConfig: IBuildConfig = _.merge({ buildForDevice: !deviceAppData.device.isEmulator }, deployOptions);
 		debugData.pathToAppPackage = this.$platformService.lastOutputPath(debugService.platform, buildConfig, projectData);
 
-		this.printDebugInformation(await debugService.debug<string[]>(debugData, debugOptions));
+		this.printDebugInformation(await debugService.debug(debugData, debugOptions));
 	}
 
-	public printDebugInformation(information: string[]): void {
-		information = information.filter(i => !!i);
-		_.each(information, i => {
-			this.$logger.info(`To start debugging, open the following URL in Chrome:${EOL}${i}${EOL}`.cyan);
-		});
+	public printDebugInformation(information: string): void {
+		if (!!information) {
+			this.$logger.info(`To start debugging, open the following URL in Chrome:${EOL}${information}${EOL}`.cyan);
+		}
 	}
 }
 

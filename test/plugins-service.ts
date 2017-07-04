@@ -137,9 +137,7 @@ async function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: str
 
 	let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 	pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
-		return [{
-			name: ""
-		}];
+		return <any[]>[{ name: "" }];
 	};
 	pluginsService.ensureAllDependenciesAreInstalled = () => {
 		return Promise.resolve();
@@ -210,9 +208,7 @@ describe("Plugins service", () => {
 
 				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (projData: IProjectData) => {
-					return [{
-						name: "plugin1"
-					}];
+					return <any[]>[{ name: "plugin1" }];
 				};
 
 				mockBeginCommand(testInjector, "Exception: " + 'Plugin "plugin1" is already installed.');
@@ -260,9 +256,7 @@ describe("Plugins service", () => {
 				let projectData: IProjectData = testInjector.resolve("projectData");
 				projectData.initializeProjectData();
 				pluginsService.getAllInstalledPlugins = async (projData: IProjectData) => {
-					return [{
-						name: ""
-					}];
+					return <any[]>[{ name: "" }];
 				};
 
 				// Mock platformsData
@@ -285,9 +279,7 @@ describe("Plugins service", () => {
 
 				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
-					return [{
-						name: ""
-					}];
+					return <any[]>[{ name: "" }];
 				};
 
 				let commandsService = testInjector.resolve(CommandsService);
@@ -320,9 +312,7 @@ describe("Plugins service", () => {
 
 				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
-					return [{
-						name: ""
-					}];
+					return <any[]>[{ name: "" }];
 				};
 
 				let commandsService = testInjector.resolve(CommandsService);
@@ -368,9 +358,7 @@ describe("Plugins service", () => {
 
 				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
-					return [{
-						name: ""
-					}];
+					return <any[]>[{ name: "" }];
 				};
 
 				let commandsService = testInjector.resolve(CommandsService);
@@ -411,9 +399,7 @@ describe("Plugins service", () => {
 
 				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
-					return [{
-						name: ""
-					}];
+					return <any[]>[{ name: "" }];
 				};
 
 				// Mock options
@@ -451,9 +437,7 @@ describe("Plugins service", () => {
 
 				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
-					return [{
-						name: ""
-					}];
+					return <any[]>[{ name: "" }];
 				};
 
 				// Mock options
@@ -494,9 +478,7 @@ describe("Plugins service", () => {
 			// Mock plugins service
 			let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 			pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
-				return [{
-					name: ""
-				}];
+				return <any[]>[{ name: "" }];
 			};
 
 			let appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");

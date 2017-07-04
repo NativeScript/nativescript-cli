@@ -35,7 +35,7 @@ class PlatformData implements IPlatformData {
 	emulatorServices: Mobile.IEmulatorPlatformServices = null;
 	projectRoot = "";
 	deviceBuildOutputPath = "";
-	getValidPackageNames = (buildOptions: {isForDevice?: boolean, isReleaseBuild?: boolean}) => [""];
+	getValidPackageNames = (buildOptions: { isForDevice?: boolean, isReleaseBuild?: boolean }) => [""];
 	validPackageNamesForDevice: string[] = [];
 	frameworkFilesExtensions = [".jar", ".dat"];
 	appDestinationDirectoryPath = "";
@@ -126,7 +126,7 @@ function createTestInjector() {
 		prepareNodeModulesFolder: () => { /* intentionally left blank */ }
 	});
 	testInjector.register("pluginsService", {
-		getAllInstalledPlugins: async () => []
+		getAllInstalledPlugins: async (): Promise<any[]> => []
 	});
 	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
 	testInjector.register("hooksService", stubs.HooksServiceStub);
@@ -143,7 +143,7 @@ function createTestInjector() {
 	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
 	testInjector.register("emulatorPlatformService", stubs.EmulatorPlatformService);
 	testInjector.register("analyticsService", {
-		track: async () => undefined
+		track: async () => async (): Promise<any[]> => undefined
 	});
 	testInjector.register("messages", Messages);
 	testInjector.register("devicePathProvider", {});

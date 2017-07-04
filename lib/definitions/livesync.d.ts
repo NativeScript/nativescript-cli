@@ -174,7 +174,7 @@ interface IDebugLiveSyncService extends ILiveSyncService {
 	 * @param {string[]} information Array of information to be printed. Note that false-like values will be stripped from the array.
 	 * @returns {void}
 	 */
-	printDebugInformation(information: string[]): void;
+	printDebugInformation(information: string): void;
 }
 
 interface ILiveSyncWatchInfo {

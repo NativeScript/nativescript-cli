@@ -29,7 +29,7 @@ describe("IOSEntitlements Service Tests", () => {
 		testInjector.register("errors", ErrorsLib.Errors);
 
 		testInjector.register("pluginsService", {
-			getAllInstalledPlugins: async () => []
+			getAllInstalledPlugins: async (): Promise<any[]> => []
 		});
 
 		return testInjector;
@@ -137,8 +137,8 @@ describe("IOSEntitlements Service Tests", () => {
 
 		it("Merge uses the entitlements file from a Plugin", async () => {
 			let pluginsService = injector.resolve("pluginsService");
-			let testPluginFolderPath =  temp.mkdirSync("testPlugin");
-			pluginsService.getAllInstalledPlugins = async() => [{
+			let testPluginFolderPath = temp.mkdirSync("testPlugin");
+			pluginsService.getAllInstalledPlugins = async () => [{
 				pluginPlatformsFolderPath: (platform: string) => {
 					return testPluginFolderPath;
 				}
@@ -161,8 +161,8 @@ describe("IOSEntitlements Service Tests", () => {
 
 			// setup plugin entitlements
 			let pluginsService = injector.resolve("pluginsService");
-			let testPluginFolderPath =  temp.mkdirSync("testPlugin");
-			pluginsService.getAllInstalledPlugins = async() => [{
+			let testPluginFolderPath = temp.mkdirSync("testPlugin");
+			pluginsService.getAllInstalledPlugins = async () => [{
 				pluginPlatformsFolderPath: (platform: string) => {
 					return testPluginFolderPath;
 				}

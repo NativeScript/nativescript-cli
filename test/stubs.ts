@@ -178,10 +178,6 @@ export class FileSystemStub implements IFileSystem {
 }
 
 export class ErrorsStub implements IErrors {
-	constructor() {
-		new (require("../lib/common/errors").Errors)(); // we need the side effect of require'ing errors
-	}
-
 	fail(formatStr: string, ...args: any[]): void;
 	fail(opts: { formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean }, ...args: any[]): void;
 
@@ -210,7 +206,7 @@ export class ErrorsStub implements IErrors {
 }
 
 export class NpmInstallationManagerStub implements INpmInstallationManager {
-	async install(packageName: string, pathToSave?: string, version?: string): Promise<string> {
+	async install(packageName: string, pathToSave?: string, options?: INpmInstallOptions ): Promise<string> {
 		return Promise.resolve("");
 	}
 
@@ -481,7 +477,7 @@ function unexpected(msg: string): Error {
 }
 
 export class DebugServiceStub extends EventEmitter implements IPlatformDebugService {
-	public async debug(): Promise<string[]> {
+	public async debug(): Promise<string> {
 		return;
 	}
 

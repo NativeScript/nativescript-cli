@@ -50,7 +50,7 @@ function createTestInjector(configuration?: { shouldNpmInstallThrow: boolean, np
 
 	injector.register("projectTemplatesService", ProjectTemplatesService);
 
-	injector.register("analyticsService", { track: async () => undefined });
+	injector.register("analyticsService", { track: async (): Promise<any[]> => undefined });
 
 	return injector;
 }

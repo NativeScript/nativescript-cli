@@ -280,7 +280,7 @@ export class PluginsService implements IPluginsService {
 				let pluginDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
 				await action(pluginDestinationPath, platform.toLowerCase(), platformData);
 			}
-		};
+		}
 	}
 
 	private getInstalledFrameworkVersion(platform: string, projectData: IProjectData): string {

@@ -36,7 +36,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 		// For now we can only check if app is running on Android.
 		// After we find a way to check on iOS we should use it here.
 		const isAppRunning = true;
-		let result: string[];
+		let result: string;
 		debugOptions.chrome = true;
 
 		const debugService = this.getDebugService(device);
@@ -59,9 +59,9 @@ export class DebugService extends EventEmitter implements IDebugService {
 				this.$errors.failWithoutHelp(`Debugging on iOS devices is not supported for ${platform()} yet.`);
 			}
 
-			result = await debugService.debug<string[]>(debugData, debugOptions);
+			result = await debugService.debug(debugData, debugOptions);
 		} else if (this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
-			result = await debugService.debug<string[]>(debugData, debugOptions);
+			result = await debugService.debug(debugData, debugOptions);
 		}
 
 		return _.first(result);
