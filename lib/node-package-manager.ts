@@ -238,6 +238,8 @@ export class NodePackageManager implements INodePackageManager {
 					};
 
 					resolve(result);
+					// this makes sure postinstall scripts run after a 'tns plugin add' command
+					this.$childProcess.spawnFromEvent(npmExecutable, params, "close", { cwd, stdio: "inherit" });
 				} else {
 					let errorMessage = `Command ${npmExecutable} ${params && params.join(" ")} failed with exit code ${exitCode}`;
 					if (capturedErr) {
