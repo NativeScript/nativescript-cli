@@ -1,5 +1,6 @@
 import * as path from "path";
 import { exported } from "./common/decorators";
+import { isInteractive } from "./common/helpers";
 
 export class NodePackageManager implements INodePackageManager {
 	private static SCOPED_DEPENDENCY_REGEXP = /^(@.+?)(?:@(.+?))?$/;
@@ -194,16 +195,20 @@ export class NodePackageManager implements INodePackageManager {
 	private async getNpmInstallResult(params: string[], cwd: string): Promise<ISpawnResult> {
 		return new Promise<ISpawnResult>((resolve, reject) => {
 			const npmExecutable = this.getNpmExecutableName();
-			let childProcess = this.$childProcess.spawn(npmExecutable, params, { cwd, stdio: "pipe" });
+			const stdioValue = isInteractive() ? "inherit" : "pipe";
+
+			const childProcess = this.$childProcess.spawn(npmExecutable, params, { cwd, stdio: stdioValue });
 
 			let isFulfilled = false;
 			let capturedOut = "";
 			let capturedErr = "";
 
-			childProcess.stdout.on("data", (data: string) => {
-				this.$logger.write(data.toString());
-				capturedOut += data;
-			});
+			if (childProcess.stdout) {
+				childProcess.stdout.on("data", (data: string) => {
+					this.$logger.write(data.toString());
+					capturedOut += data;
+				});
+			}
 
 			if (childProcess.stderr) {
 				childProcess.stderr.on("data", (data: string) => {
