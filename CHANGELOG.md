@@ -1,5 +1,12 @@
 NativeScript CLI Changelog
 ================
+
+3.1.2 (2017, July 06)
+==
+
+### Fixed
+* [Fixed #2950](https://github.com/NativeScript/nativescript-cli/issues/2950): Unable to provide user input on postinstall of plugin
+
 3.1.1 (2017, June 28)
 ==
 
