@@ -104,7 +104,7 @@ export class NodePackageManager implements INodePackageManager {
 		try {
 			viewResult = await this.$childProcess.exec(`npm view ${packageName} ${flags}`);
 		} catch (e) {
-			this.$errors.failWithoutHelp(e);
+			this.$errors.failWithoutHelp(e.message);
 		}
 		return JSON.parse(viewResult);
 	}
@@ -221,7 +221,6 @@ export class NodePackageManager implements INodePackageManager {
 
 			if (childProcess.stderr) {
 				childProcess.stderr.on("data", (data: string) => {
-					console.error(data.toString());
 					capturedErr += data;
 				});
 			}
