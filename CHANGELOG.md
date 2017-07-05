@@ -1,5 +1,12 @@
 NativeScript CLI Changelog
 ================
+
+3.1.2 (2017, July 06)
+==
+
+### Fixed
+* [Fixed #2950](https://github.com/NativeScript/nativescript-cli/issues/2950): Unable to provide user input on postinstall of plugin
+
 3.1.1 (2017, June 28)
 ==
 
@@ -8,6 +15,7 @@ NativeScript CLI Changelog
 * [Fixed #2892](https://github.com/NativeScript/nativescript-cli/issues/2892): Not copying the CFBundleURLTypes from the plist file to the project
 * [Fixed #2916](https://github.com/NativeScript/nativescript-cli/issues/2916): If no device or emulator is attached `tns debug android` kills the commandline process and doesn't start an emulator
 * [Fixed #2923](https://github.com/NativeScript/nativescript-cli/issues/2923): Fix asking for user email on postinstall
+* [Fixed #2929](https://github.com/NativeScript/nativescript-cli/issues/2929): Android release builds with webpack disregards plugin's gradle dependencies.
 
 
 3.1.0 (2017, June 22)
