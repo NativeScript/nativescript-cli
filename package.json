@@ -44,7 +44,7 @@
     "promise-queue": "2.2.3",
     "qs": "6.4.0",
     "request": "2.81.0",
-    "rxjs": "5.2.0",
+    "rxjs": "5.4.2",
     "sift": "3.2.7",
     "uid": "0.0.2",
     "url-pattern": "1.0.3"
