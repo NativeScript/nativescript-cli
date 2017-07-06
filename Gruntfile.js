@@ -1,8 +1,9 @@
-var now = new Date().toISOString();
+const childProcess = require("child_process");
+const now = new Date().toISOString();
 
 function shallowCopy(obj) {
 	var result = {};
-	Object.keys(obj).forEach(function(key) {
+	Object.keys(obj).forEach(function (key) {
 		result[key] = obj[key];
 	});
 	return result;
@@ -11,10 +12,10 @@ function shallowCopy(obj) {
 var travis = process.env["TRAVIS"];
 var buildNumber = process.env["PACKAGE_VERSION"] || process.env["BUILD_NUMBER"] || "non-ci";
 
-module.exports = function(grunt) {
+module.exports = function (grunt) {
 	var path = require("path");
 	var commonLibNodeModules = path.join("lib", "common", "node_modules");
-	if(require("fs").existsSync(commonLibNodeModules)) {
+	if (require("fs").existsSync(commonLibNodeModules)) {
 		grunt.file.delete(commonLibNodeModules);
 	}
 	grunt.file.write(path.join("lib", "common", ".d.ts"), "");
@@ -48,17 +49,6 @@ module.exports = function(grunt) {
 					removeComments: true
 				}
 			},
-		},
-
-		tslint: {
-			build: {
-				files: {
-					src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts", "!lib/common/messages/**/*.ts", "lib/common/test/unit-tests/**/*.ts", "definitions/**/*.ts", "!lib/**/*.d.ts" , "!test/**/*.d.ts"]
-				},
-				options: {
-					configuration: grunt.file.readJSON("./tslint.json")
-				}
-			}
 		},
 
 		watch: {
@@ -96,7 +86,7 @@ module.exports = function(grunt) {
 				command: "npm pack",
 				options: {
 					execOptions: {
-						env: (function() {
+						env: (function () {
 							var env = shallowCopy(process.env);
 							env["NATIVESCRIPT_SKIP_POSTINSTALL_TASKS"] = "1";
 							return env;
@@ -145,7 +135,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks("grunt-ts");
 	grunt.loadNpmTasks("grunt-tslint");
 
-	grunt.registerTask("set_package_version", function(version) {
+	grunt.registerTask("set_package_version", function (version) {
 		var buildVersion = version !== undefined ? version : buildNumber;
 		if (process.env["BUILD_CAUSE_GHPRBCAUSE"]) {
 			buildVersion = "PR" + buildVersion;
@@ -154,8 +144,8 @@ module.exports = function(grunt) {
 		var packageJson = grunt.file.readJSON("package.json");
 		var versionParts = packageJson.version.split("-");
 		if (process.env["RELEASE_BUILD"]) {
-// HACK - excluded until 1.0.0 release or we refactor our project infrastructure (whichever comes first)
-//			packageJson.version = versionParts[0];
+			// HACK - excluded until 1.0.0 release or we refactor our project infrastructure (whichever comes first)
+			//			packageJson.version = versionParts[0];
 		} else {
 			versionParts[1] = buildVersion;
 			packageJson.version = versionParts.join("-");
@@ -163,7 +153,11 @@ module.exports = function(grunt) {
 		grunt.file.write("package.json", JSON.stringify(packageJson, null, "  "));
 	});
 
-	grunt.registerTask("enableScripts", function(enable) {
+	grunt.registerTask("tslint:build", function (version) {
+		childProcess.execSync("npm run tslint", { stdio: "inherit" });
+	});
+
+	grunt.registerTask("enableScripts", function (enable) {
 		var enableTester = /false/i;
 		var newScriptsAttr = !enableTester.test(enable) ? "scripts" : "skippedScripts";
 		var packageJson = grunt.file.readJSON("package.json");

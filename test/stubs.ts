@@ -245,30 +245,6 @@ export class ProjectDataStub implements IProjectData {
 	}
 }
 
-export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
-	public platformsNames: string[];
-
-	public getPlatformData(platform: string, projectData: IProjectData): IPlatformData {
-		return {
-			frameworkPackageName: "",
-			platformProjectService: new PlatformProjectServiceStub(),
-			emulatorServices: undefined,
-			projectRoot: "",
-			normalizedPlatformName: "",
-			appDestinationDirectoryPath: "",
-			deviceBuildOutputPath: "",
-			getValidPackageNames: (buildOptions: { isForDevice?: boolean, isReleaseBuild?: boolean }) => [],
-			frameworkFilesExtensions: [],
-			relativeToFrameworkConfigurationFilePath: "",
-			fastLivesyncFileExtensions: []
-		};
-	}
-
-	public get availablePlatforms(): any {
-		return undefined;
-	}
-}
-
 export class PlatformProjectServiceStub extends EventEmitter implements IPlatformProjectService {
 	getPlatformData(projectData: IProjectData): IPlatformData {
 		return {
@@ -359,6 +335,30 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	}
 	checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void {
 		// Nothing yet.
+	}
+}
+
+export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
+	public platformsNames: string[];
+
+	public getPlatformData(platform: string, projectData: IProjectData): IPlatformData {
+		return {
+			frameworkPackageName: "",
+			platformProjectService: new PlatformProjectServiceStub(),
+			emulatorServices: undefined,
+			projectRoot: "",
+			normalizedPlatformName: "",
+			appDestinationDirectoryPath: "",
+			deviceBuildOutputPath: "",
+			getValidPackageNames: (buildOptions: { isForDevice?: boolean, isReleaseBuild?: boolean }) => [],
+			frameworkFilesExtensions: [],
+			relativeToFrameworkConfigurationFilePath: "",
+			fastLivesyncFileExtensions: []
+		};
+	}
+
+	public get availablePlatforms(): any {
+		return undefined;
 	}
 }
 
