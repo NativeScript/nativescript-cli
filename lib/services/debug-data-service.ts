@@ -1,5 +1,5 @@
 export class DebugDataService implements IDebugDataService {
-	public createDebugData(projectData: IProjectData, options: IOptions): IDebugData {
+	public createDebugData(projectData: IProjectData, options: IDeviceIdentifier): IDebugData {
 		return {
 			applicationIdentifier: projectData.projectId,
 			projectDir: projectData.projectDir,

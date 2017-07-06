@@ -1,4 +1,8 @@
-﻿export abstract class DebugPlatformCommand implements ICommand {
+﻿import { CONNECTED_STATUS } from "../common/constants";
+import { isInteractive } from "../common/helpers";
+import { DebugCommandErrors } from "../constants";
+
+export abstract class DebugPlatformCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 	public platform: string;
 
@@ -12,7 +16,8 @@
 		protected $logger: ILogger,
 		protected $errors: IErrors,
 		private $debugLiveSyncService: IDebugLiveSyncService,
-		private $config: IConfiguration) {
+		private $config: IConfiguration,
+		private $prompter: IPrompter) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -29,11 +34,9 @@
 
 		this.$config.debugLivesync = true;
 
-		await this.$devicesService.detectCurrentlyAttachedDevices();
+		const selectedDeviceForDebug = await this.getDeviceForDebug();
 
-		// Now let's take data for each device:
-		const devices = this.$devicesService.getDeviceInstances();
-		const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !this.platform || d.deviceInfo.platform === this.platform)
+		const deviceDescriptors: ILiveSyncDeviceInfo[] = [selectedDeviceForDebug]
 			.map(d => {
 				const info: ILiveSyncDeviceInfo = {
 					identifier: d.deviceInfo.identifier,
@@ -70,6 +73,62 @@
 		await this.$debugLiveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 	}
 
+	public async getDeviceForDebug(): Promise<Mobile.IDevice> {
+		if (this.$options.forDevice && this.$options.emulator) {
+			this.$errors.fail(DebugCommandErrors.UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR);
+		}
+
+		await this.$devicesService.detectCurrentlyAttachedDevices();
+
+		if (this.$options.device) {
+			const device = await this.$devicesService.getDevice(this.$options.device);
+			return device;
+		}
+
+		// Now let's take data for each device:
+		const availableDevicesAndEmulators = this.$devicesService.getDeviceInstances()
+			.filter(d => d.deviceInfo.status === CONNECTED_STATUS && (!this.platform || d.deviceInfo.platform.toLowerCase() === this.platform.toLowerCase()));
+
+		const selectedDevices = availableDevicesAndEmulators.filter(d => this.$options.emulator ? d.isEmulator : (this.$options.forDevice ? !d.isEmulator : true));
+
+		if (selectedDevices.length > 1) {
+			if (isInteractive()) {
+				const choices = selectedDevices.map(e => `${e.deviceInfo.identifier} - ${e.deviceInfo.displayName}`);
+
+				const selectedDeviceString = await this.$prompter.promptForChoice("Select device for debugging", choices);
+
+				const selectedDevice = _.find(selectedDevices, d => `${d.deviceInfo.identifier} - ${d.deviceInfo.displayName}` === selectedDeviceString);
+				return selectedDevice;
+			} else {
+				const sortedInstances = _.sortBy(selectedDevices, e => e.deviceInfo.version);
+				const emulators = sortedInstances.filter(e => e.isEmulator);
+				const devices = sortedInstances.filter(d => !d.isEmulator);
+				let selectedInstance: Mobile.IDevice;
+
+				if (this.$options.emulator || this.$options.forDevice) {
+					// When --emulator or --forDevice is passed, the instances are already filtered
+					// So we are sure we have exactly the type we need and we can safely return the last one (highest OS version).
+					selectedInstance = _.last(sortedInstances);
+				} else {
+					if (emulators.length) {
+						selectedInstance = _.last(emulators);
+					} else {
+						selectedInstance = _.last(devices);
+					}
+				}
+
+				this.$logger.warn(`Multiple devices/emulators found. Starting debugger on ${selectedInstance.deviceInfo.identifier}. ` +
+					"If you want to debug on specific device/emulator, you can specify it with --device option.");
+
+				return selectedInstance;
+			}
+		} else if (selectedDevices.length === 1) {
+			return _.head(selectedDevices);
+		}
+
+		this.$errors.failWithoutHelp(DebugCommandErrors.NO_DEVICES_EMULATORS_FOUND_FOR_OPTIONS);
+	}
+
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!this.$platformService.isPlatformSupportedForOS(this.platform, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.platform} can not be built on this OS`);
@@ -85,14 +144,6 @@
 			emulator: this.$options.emulator,
 			skipDeviceDetectionInterval: true
 		});
-		// Start emulator if --emulator is selected or no devices found.
-		if (this.$options.emulator || this.$devicesService.deviceCount === 0) {
-			return true;
-		}
-
-		if (this.$devicesService.deviceCount > 1) {
-			this.$errors.failWithoutHelp("Multiple devices found! To debug on specific device please select device with --device option.");
-		}
 
 		return true;
 	}
@@ -111,9 +162,10 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$iosDeviceOperations: IIOSDeviceOperations,
-		$debugLiveSyncService: IDebugLiveSyncService) {
+		$debugLiveSyncService: IDebugLiveSyncService,
+		$prompter: IPrompter) {
 		super($iOSDebugService, $devicesService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger,
-			$errors, $debugLiveSyncService, $config);
+			$errors, $debugLiveSyncService, $config, $prompter);
 		// Do not dispose ios-device-lib, so the process will remain alive and the debug application (NativeScript Inspector or Chrome DevTools) will be able to connect to the socket.
 		// In case we dispose ios-device-lib, the socket will be closed and the code will fail when the debug application tries to read/send data to device socket.
 		// That's why the `$ tns debug ios --justlaunch` command will not release the terminal.
@@ -146,9 +198,10 @@ export class DebugAndroidCommand extends DebugPlatformCommand {
 		$options: IOptions,
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
-		$debugLiveSyncService: IDebugLiveSyncService) {
+		$debugLiveSyncService: IDebugLiveSyncService,
+		$prompter: IPrompter) {
 		super($androidDebugService, $devicesService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger,
-			$errors, $debugLiveSyncService, $config);
+			$errors, $debugLiveSyncService, $config, $prompter);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

@@ -14,8 +14,13 @@ export abstract class DebugServiceBase extends EventEmitter implements IPlatform
 	protected getCanExecuteAction(deviceIdentifier: string): (device: Mobile.IDevice) => boolean {
 		return (device: Mobile.IDevice): boolean => {
 			if (deviceIdentifier) {
-				return device.deviceInfo.identifier === deviceIdentifier
-				|| device.deviceInfo.identifier === this.$devicesService.getDeviceByDeviceOption().deviceInfo.identifier;
+				let isSearchedDevice = device.deviceInfo.identifier === deviceIdentifier;
+				if (!isSearchedDevice) {
+					const deviceByDeviceOption = this.$devicesService.getDeviceByDeviceOption();
+					isSearchedDevice = deviceByDeviceOption && device.deviceInfo.identifier === deviceByDeviceOption.deviceInfo.identifier;
+				}
+
+				return isSearchedDevice;
 			} else {
 				return true;
 			}

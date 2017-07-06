@@ -46,7 +46,7 @@ export class DebugLiveSyncService extends LiveSyncService implements IDebugLiveS
 			teamId: this.$options.teamId
 		};
 
-		let debugData = this.$debugDataService.createDebugData(this.$projectData, this.$options);
+		let debugData = this.$debugDataService.createDebugData(this.$projectData, { device: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier });
 		const debugService = this.$debugService.getDebugService(liveSyncResultInfo.deviceAppData.device);
 
 		await this.$platformService.trackProjectType(this.$projectData);
