@@ -12,9 +12,9 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 
 	private static INTERNAL_NONPROJECT_FILES = [ "**/*.ts" ];
 
-	public mapFilePath(filePath: string, platform: string, projectData: IProjectData): string {
+	public mapFilePath(filePath: string, platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): string {
 		let platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
-		let parsedFilePath = this.getPreparedFilePath(filePath);
+		let parsedFilePath = this.getPreparedFilePath(filePath, projectFilesConfig);
 		let mappedFilePath = "";
 		if (parsedFilePath.indexOf(constants.NODE_MODULES_FOLDER_NAME) > -1) {
 			let relativePath = path.relative(path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME), parsedFilePath);

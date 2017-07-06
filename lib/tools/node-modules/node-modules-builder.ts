@@ -8,16 +8,16 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder
 	) { }
 
-	public async prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData): Promise<void> {
+	public async prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
 		const productionDependencies = this.initialPrepareNodeModules(absoluteOutputPath, platform, lastModifiedTime, projectData);
 		const npmPluginPrepare: NpmPluginPrepare = this.$injector.resolve(NpmPluginPrepare);
-		await npmPluginPrepare.preparePlugins(productionDependencies, platform, projectData);
+		await npmPluginPrepare.preparePlugins(productionDependencies, platform, projectData, projectFilesConfig);
 	}
 
-	public async prepareJSNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData): Promise<void> {
+	public async prepareJSNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
 		const productionDependencies = this.initialPrepareNodeModules(absoluteOutputPath, platform, lastModifiedTime, projectData);
 		const npmPluginPrepare: NpmPluginPrepare = this.$injector.resolve(NpmPluginPrepare);
-		await npmPluginPrepare.prepareJSPlugins(productionDependencies, platform, projectData);
+		await npmPluginPrepare.prepareJSPlugins(productionDependencies, platform, projectData, projectFilesConfig);
 	}
 
 	public cleanNodeModules(absoluteOutputPath: string, platform: string): void {

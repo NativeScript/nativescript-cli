@@ -33,7 +33,7 @@ class TestExecutionService implements ITestExecutionService {
 
 	public platform: string;
 
-	public async startTestRunner(platform: string, projectData: IProjectData): Promise<void> {
+	public async startTestRunner(platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
 		this.platform = platform;
 		this.$options.justlaunch = true;
 		await new Promise<void>((resolve, reject) => {
@@ -133,7 +133,7 @@ class TestExecutionService implements ITestExecutionService {
 		});
 	}
 
-	public async startKarmaServer(platform: string, projectData: IProjectData): Promise<void> {
+	public async startKarmaServer(platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
 		platform = platform.toLowerCase();
 		this.platform = platform;
 
