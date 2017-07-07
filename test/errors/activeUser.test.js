@@ -39,9 +39,9 @@ describe('ActiveUserError', () => {
   });
 
   describe('debug', () => {
-    it('should return the default debug message \'\'', () => {
+    it('should return the default debug message undefined', () => {
       const error = new ActiveUserError();
-      expect(error.debug).toEqual('');
+      expect(error.debug).toEqual(undefined);
     });
 
     it('should return the custom debug message \'Please logout with Kinvey.User.logout.\'', () => {
@@ -51,9 +51,9 @@ describe('ActiveUserError', () => {
   });
 
   describe('code', () => {
-    it('should return the default code -1', () => {
+    it('should return the default code undefined', () => {
       const error = new ActiveUserError();
-      expect(error.code).toEqual(-1);
+      expect(error.code).toEqual(undefined);
     });
 
     it('should return the custom code 309', () => {
