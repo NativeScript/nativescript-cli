@@ -386,7 +386,7 @@ describe('SyncStore', function() {
 
     it('should call update() for an entity that contains an _id with special characters', function() {
       const store = new SyncStore(collection);
-      const specialSymbols = ['.', '$', '~', '>', '<', '!', '@', '%'];
+      const specialSymbols = ['.', '$', '~', '>', '<', '!', '@'];
       const savePromises = specialSymbols.map(symbol => {
         const id = `${randomString()}${symbol}${randomString()}`;
         return store.save({ _id: id })
