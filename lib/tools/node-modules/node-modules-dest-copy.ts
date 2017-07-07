@@ -67,8 +67,16 @@ export class TnsModulesCopy {
 
 		const dependenciesFolder = path.join(targetPackageDir, constants.NODE_MODULES_FOLDER_NAME);
 		if (this.$fs.exists(dependenciesFolder)) {
-			const dependencies = this.$fs.readDirectory(dependenciesFolder);
-			dependencies.filter(dir => !!productionDependencies || !productionDependencies.hasOwnProperty(dir))
+			const dependencies = _.flatten(this.$fs.readDirectory(dependenciesFolder)
+				.map(dir => {
+					if (_.startsWith(dir, "@")) {
+						return this.$fs.readDirectory(path.join(dependenciesFolder, dir));
+					}
+
+					return dir;
+				}));
+
+			dependencies.filter(dir => !productionDependencies || !productionDependencies.hasOwnProperty(dir))
 				.forEach(dir => shelljs.rm("-rf", path.join(dependenciesFolder, dir)));
 		}
 	}
