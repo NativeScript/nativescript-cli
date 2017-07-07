@@ -1,7 +1,13 @@
 import BaseError from './base';
 
-export default class ServerError extends BaseError {
-  constructor(message = 'An error occurred on the server.', debug, code = 500, kinveyRequestId) {
-    super('ServerError', message, debug, code, kinveyRequestId);
-  }
+function ServerError(message, debug, code, kinveyRequestId) {
+  this.name = 'ServerError';
+  this.message = message || 'An error occurred on the server.';
+  this.debug = debug || undefined;
+  this.code = code || 500;
+  this.kinveyRequestId = kinveyRequestId || undefined;
+  this.stack = (new Error()).stack;
 }
+ServerError.prototype = Object.create(BaseError.prototype);
+ServerError.prototype.constructor = ServerError;
+export default ServerError;

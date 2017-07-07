@@ -1,7 +1,13 @@
 import BaseError from './base';
 
-export default class NotFoundError extends BaseError {
-  constructor(message = 'The entity was not found.', debug, code = 404, kinveyRequestId) {
-    super('NotFoundError', message, debug, code, kinveyRequestId);
-  }
+function NotFoundError(message, debug, code, kinveyRequestId) {
+  this.name = 'NotFoundError';
+  this.message = message || 'The entity was not found.';
+  this.debug = debug || undefined;
+  this.code = code || 404;
+  this.kinveyRequestId = kinveyRequestId || undefined;
+  this.stack = (new Error()).stack;
 }
+NotFoundError.prototype = Object.create(BaseError.prototype);
+NotFoundError.prototype.constructor = NotFoundError;
+export default NotFoundError;
