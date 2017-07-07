@@ -1,7 +1,13 @@
 import BaseError from './base';
 
-export default class KinveyError extends BaseError {
-  constructor(message, debug, code, kinveyRequestId) {
-    super('KinveyError', message, debug, code, kinveyRequestId);
-  }
+function KinveyError(message, debug, code, kinveyRequestId) {
+  this.name = 'KinveyError';
+  this.message = message || 'An error occurred.';
+  this.debug = debug || undefined;
+  this.code = code || undefined;
+  this.kinveyRequestId = kinveyRequestId || undefined;
+  this.stack = (new Error()).stack;
 }
+KinveyError.prototype = Object.create(BaseError.prototype);
+KinveyError.prototype.constructor = KinveyError;
+export default KinveyError;

@@ -1,7 +1,13 @@
 import BaseError from './base';
 
-export default class PopupError extends BaseError {
-  constructor(message = 'Unable to open a popup on this platform.', debug, code, kinveyRequestId) {
-    super('PopupError', message, debug, code, kinveyRequestId);
-  }
+function PopupError(message, debug, code, kinveyRequestId) {
+  this.name = 'PopupError';
+  this.message = message || 'Unable to open a popup on this platform.';
+  this.debug = debug || undefined;
+  this.code = code || undefined;
+  this.kinveyRequestId = kinveyRequestId || undefined;
+  this.stack = (new Error()).stack;
 }
+PopupError.prototype = Object.create(BaseError.prototype);
+PopupError.prototype.constructor = PopupError;
+export default PopupError;

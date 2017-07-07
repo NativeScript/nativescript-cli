@@ -1,7 +1,13 @@
 import BaseError from './base';
 
-export default class NoActiveUserError extends BaseError {
-  constructor(message = 'There is not an active user.', debug, code, kinveyRequestId) {
-    super('NoActiveUserError', message, debug, code, kinveyRequestId);
-  }
+function NoActiveUserError(message, debug, code, kinveyRequestId) {
+  this.name = 'NoActiveUserError';
+  this.message = message || 'There is not an active user.';
+  this.debug = debug || undefined;
+  this.code = code || undefined;
+  this.kinveyRequestId = kinveyRequestId || undefined;
+  this.stack = (new Error()).stack;
 }
+NoActiveUserError.prototype = Object.create(BaseError.prototype);
+NoActiveUserError.prototype.constructor = NoActiveUserError;
+export default NoActiveUserError;

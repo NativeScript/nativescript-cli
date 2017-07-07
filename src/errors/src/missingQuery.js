@@ -1,7 +1,13 @@
 import BaseError from './base';
 
-export default class MissingQueryError extends BaseError {
-  constructor(message = 'The request is missing a query string.', debug, code, kinveyRequestId) {
-    super('MissingQueryError', message, debug, code, kinveyRequestId);
-  }
+function MissingQueryError(message, debug, code, kinveyRequestId) {
+  this.name = 'MissingQueryError';
+  this.message = message || 'The request is missing a query string.';
+  this.debug = debug || undefined;
+  this.code = code || undefined;
+  this.kinveyRequestId = kinveyRequestId || undefined;
+  this.stack = (new Error()).stack;
 }
+MissingQueryError.prototype = Object.create(BaseError.prototype);
+MissingQueryError.prototype.constructor = MissingQueryError;
+export default MissingQueryError;
