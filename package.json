@@ -34,7 +34,6 @@
   "dependencies": {
     "append-query": "2.0.1",
     "core-js": "2.4.1",
-    "es6-error": "4.0.2",
     "es6-promise": "4.1.0",
     "fast-memory-cache": "2.0.4",
     "hellojs": "1.14.1",
