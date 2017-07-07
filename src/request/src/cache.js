@@ -70,8 +70,8 @@ export default class CacheRequest extends Request {
 
   set url(urlString) {
     super.url = urlString;
-    const pathname = global.escape(url.parse(urlString).pathname);
-    const urlParts = filter(pathname.split('/'), identity);
+    const pathname = global.decodeURIComponent(url.parse(urlString).pathname).replace(/^\//g, '');
+    const urlParts = pathname.split('/');
     // "pathname" has the following form "/namespace/appKey/collection/id"
     this.appKey = urlParts[1];
     this.collection = urlParts[2];
