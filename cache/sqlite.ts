@@ -43,7 +43,10 @@ class SQLiteAdapter {
         const responses = [];
 
         if (query.length === 0) {
-          return isMulti ? responses : responses.shift();
+          return db.close()
+            .then(() => {
+              return isMulti ? responses : responses.shift();
+            });
         }
 
         return query.reduce((prev, parts) => {
@@ -74,7 +77,17 @@ class SQLiteAdapter {
 
               return responses;
             });
-        }, Promise.resolve());
+        }, Promise.resolve())
+          .then((response) => {
+            return db.close()
+              .then(() => response);
+          })
+          .catch((error) => {
+            return db.close()
+              .then(() => {
+                throw error;
+              });
+          });
       });
   }
 
