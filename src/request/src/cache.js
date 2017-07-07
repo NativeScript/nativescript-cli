@@ -1,8 +1,9 @@
 import Promise from 'es6-promise';
 import Queue from 'promise-queue';
-import UrlPattern from 'url-pattern';
 import url from 'url';
 import cloneDeep from 'lodash/cloneDeep';
+import identity from 'lodash/identity';
+import filter from 'lodash/filter';
 
 import Client from 'src/client';
 import { KinveyError } from 'src/errors';
@@ -70,11 +71,11 @@ export default class CacheRequest extends Request {
   set url(urlString) {
     super.url = urlString;
     const pathname = global.escape(url.parse(urlString).pathname);
-    const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:entityId)(/)');
-    const { appKey, collection, entityId } = pattern.match(pathname) || {};
-    this.appKey = appKey;
-    this.collection = collection;
-    this.entityId = entityId;
+    const urlParts = filter(pathname.split('/'), identity);
+    // "pathname" has the following form "/namespace/appKey/collection/id"
+    this.appKey = urlParts[1];
+    this.collection = urlParts[2];
+    this.entityId = urlParts[3];
   }
 
   execute() {
