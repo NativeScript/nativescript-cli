@@ -1,6 +1,6 @@
 import Promise from 'es6-promise';
-import path from 'path';
 import url from 'url';
+import urlJoin from 'url-join';
 import isString from 'lodash/isString';
 
 import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
@@ -77,18 +77,20 @@ export class MobileIdentityConnect extends Identity {
     return promise;
   }
 
-  requestTempLoginUrl(clientId, redirectUri, options = {}) {
-    let pathname = '/';
-
-    if (options.version) {
-      let version = options.version;
-
+  _prependVersion(urlPath, version) {
+    let result = urlPath;
+    if (version) {
       if (!isString(version)) {
         version = String(version);
       }
 
-      pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
+      result = urlJoin(!version.indexOf('v') ? version : `v${version}`, urlPath);
     }
+    return result;
+  }
+
+  requestTempLoginUrl(clientId, redirectUri, options = {}) {
+    const pathname = this._prependVersion(authPathname, options.version);
 
     const request = new KinveyRequest({
       method: RequestMethod.POST,
@@ -98,7 +100,7 @@ export class MobileIdentityConnect extends Identity {
       url: url.format({
         protocol: this.client.micProtocol,
         host: this.client.micHost,
-        pathname: path.join(pathname, authPathname)
+        pathname: pathname
       }),
       properties: options.properties,
       body: {
@@ -113,23 +115,13 @@ export class MobileIdentityConnect extends Identity {
 
   requestCodeWithPopup(clientId, redirectUri, options = {}) {
     const promise = Promise.resolve().then(() => {
-      let pathname = '/';
+      const pathname = this._prependVersion(authPathname, options.version);
       const popup = new Popup();
-
-      if (options.version) {
-        let version = options.version;
-
-        if (!isString(version)) {
-          version = String(version);
-        }
-
-        pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
-      }
 
       return popup.open(url.format({
         protocol: this.client.micProtocol,
         host: this.client.micHost,
-        pathname: path.join(pathname, authPathname),
+        pathname: pathname,
         query: {
           client_id: clientId,
           redirect_uri: redirectUri,

@@ -46,7 +46,7 @@
     "rxjs": "5.2.0",
     "sift": "3.2.7",
     "uid": "0.0.2",
-    "url-pattern": "1.0.3"
+    "url-join": "2.0.2"
   },
   "devDependencies": {
     "app-module-path": "2.2.0",
