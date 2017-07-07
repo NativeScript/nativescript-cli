@@ -128,22 +128,17 @@ class SQLiteAdapter {
   }
 
   removeById(collection, id) {
-    const queries = [
-      ['SELECT value FROM #{collection} WHERE key = ?', [id]],
-      ['DELETE FROM #{collection} WHERE key = ?', [id]],
-    ];
-    return this.openTransaction(collection, queries, null, true)
+    const query = ['DELETE FROM #{collection} WHERE key = ?', [id]];
+    return this.openTransaction(collection, query, null, true)
       .then((response) => {
-        const entities = response[0];
-        let count = response[1];
-        count = count || entities.length;
+        const count = response[0];
 
         if (count === 0) {
-          throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
-            + ` collection on the ${this.name} SQLite database.`);
+          const errMsg = `An entity with _id = ${id} was not found in the ${collection} collection on the ${this.name} SQLite database.`;
+          return Promise.reject(new NotFoundError(errMsg));
         }
 
-        return { count: count };
+        return { count };
       });
   }
 
@@ -167,9 +162,7 @@ class SQLiteAdapter {
           .map(table => [`DROP TABLE IF EXISTS '${table}'`]);
         return this.openTransaction(masterCollectionName, queries, null, true);
       })
-      .then(() => {
-        return null;
-      });
+      .then(() => null);
   }
 }
 
