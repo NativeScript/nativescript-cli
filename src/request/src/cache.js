@@ -70,8 +70,15 @@ export default class CacheRequest extends Request {
 
   set url(urlString) {
     super.url = urlString;
-    const pathname = global.decodeURIComponent(url.parse(urlString).pathname).replace(/^\//g, '');
-    const urlParts = pathname.split('/');
+    let pathname = url.parse(urlString).pathname;
+
+    try {
+      pathname = global.decodeURIComponent(url.parse(urlString).pathname);
+    } catch (error) {
+      // Just catch the URI Malformed error
+    }
+
+    const urlParts = pathname.replace(/^\//g, '').split('/');
     // "pathname" has the following form "/namespace/appKey/collection/id"
     this.appKey = urlParts[1];
     this.collection = urlParts[2];
