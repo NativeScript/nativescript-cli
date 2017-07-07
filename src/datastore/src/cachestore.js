@@ -1,3 +1,4 @@
+import Promise from 'es6-promise';
 import differenceBy from 'lodash/differenceBy';
 import assign from 'lodash/assign';
 import keyBy from 'lodash/keyBy';
