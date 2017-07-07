@@ -386,7 +386,7 @@ describe('SyncStore', function() {
 
     it('should call update() for an entity that contains an _id with special characters', function() {
       const store = new SyncStore(collection);
-      const specialSymbols = ['.' /* , '$', '~', '>', '<', '!', '@', '%' */ ];
+      const specialSymbols = ['.', '$', '~', '>', '<', '!', '@' /*, '%' */];
       const savePromises = specialSymbols.map(symbol => {
         const id = `${randomString()}${symbol}${randomString()}`;
         return store.save({ _id: id })
@@ -395,11 +395,8 @@ describe('SyncStore', function() {
             expect(resp._id).toEqual(id);
           });
       });
-      
-      Promise.all(savePromises)
-        .catch(() => {
-          throw new Error('This test should fail.');
-        });
+
+      return Promise.all(savePromises);
     });
 
     it('should call create() when an array of entities is provided', function() {
