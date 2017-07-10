@@ -182,7 +182,7 @@ export class ErrorsStub implements IErrors {
 	fail(opts: { formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean }, ...args: any[]): void;
 
 	fail(...args: any[]) {
-		throw args;
+		throw new Error(require("util").format.apply(null, args || []));
 	}
 
 	failWithoutHelp(message: string, ...args: any[]): void {

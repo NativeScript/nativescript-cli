@@ -83,7 +83,7 @@ interface IDebugDataService {
 	 * @param {IOptions} options The options based on which debugData will be created
 	 * @returns {IDebugData} Data describing the required information for starting debug process.
 	 */
-	createDebugData(projectData: IProjectData, options: IOptions): IDebugData;
+	createDebugData(projectData: IProjectData, options: IDeviceIdentifier): IDebugData;
 }
 
 /**

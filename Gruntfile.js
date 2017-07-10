@@ -133,7 +133,6 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks("grunt-contrib-watch");
 	grunt.loadNpmTasks("grunt-shell");
 	grunt.loadNpmTasks("grunt-ts");
-	grunt.loadNpmTasks("grunt-tslint");
 
 	grunt.registerTask("set_package_version", function (version) {
 		var buildVersion = version !== undefined ? version : buildNumber;
