@@ -6,7 +6,7 @@ import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import { attachAwaitDetach } from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
-import { PlistSession } from "plist-merge-patch";
+import { PlistSession, Reporter } from "plist-merge-patch";
 import { EOL } from "os";
 import * as temp from "temp";
 import * as plist from "plist";
@@ -723,7 +723,13 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			return;
 		}
 
-		let session = new PlistSession({ log: (txt: string) => this.$logger.trace("Info.plist: " + txt) });
+		const reporterTraceMessage = "Info.plist:";
+		const reporter: Reporter = {
+			log: (txt: string) => this.$logger.trace(`${reporterTraceMessage} ${txt}`),
+			warn: (txt: string) => this.$logger.warn(`${reporterTraceMessage} ${txt}`)
+		};
+
+		let session = new PlistSession(reporter);
 		let makePatch = (plistPath: string) => {
 			if (!this.$fs.exists(plistPath)) {
 				this.$logger.trace("No plist found at: " + plistPath);
@@ -743,17 +749,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			makePatch(pluginInfoPlistPath);
 		}
 
-		if (!buildOptions.release && projectData.projectId) {
-			const modifiedPlistContent = this.updateCFBundleURLSchemes(infoPlistPath, projectData);
-
-			session.patch({
-				name: "CFBundleURLTypes from Info.plist and required one for restarting application",
-				read: () => modifiedPlistContent
-			});
-
-		} else {
-			makePatch(infoPlistPath);
-		}
+		makePatch(infoPlistPath);
 
 		if (projectData.projectId) {
 			session.patch({
@@ -770,40 +766,34 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			});
 		}
 
+		if (!buildOptions.release && projectData.projectId) {
+			session.patch({
+				name: "CFBundleURLTypes from package.json nativescript.id",
+				read: () =>
+					`<?xml version="1.0" encoding="UTF-8"?>
+						<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+						<plist version="1.0">
+						<dict>
+							<key>CFBundleURLTypes</key>
+							<array>
+								<dict>
+									<key>CFBundleTypeRole</key>
+									<string>Editor</string>
+									<key>CFBundleURLSchemes</key>
+									<array>
+										<string>${projectData.projectId.replace(/[^A-Za-z0-9]/g, "")}</string>
+									</array>
+								</dict>
+							</array>
+						</dict>
+						</plist>`
+			});
+		}
+
 		let plistContent = session.build();
 
 		this.$logger.trace("Info.plist: Write to: " + this.getPlatformData(projectData).configurationFilePath);
 		this.$fs.writeFile(this.getPlatformData(projectData).configurationFilePath, plistContent);
-	}
-
-	private updateCFBundleURLSchemes(infoPlistPath: string, projectData: IProjectData): string {
-		// This code is required due to bug in session.patch logic which cannot merge values which are both arrays - it uses the second one directly.
-		// In our case we want to merge the values of CFBundleURLSchemes (which are arrays), which are in CFBundleURLTypes arrays.
-		let parsedPlist: any = plist.parse(this.$fs.readFile(infoPlistPath).toString());
-		parsedPlist.CFBundleURLTypes = parsedPlist.CFBundleURLTypes || [];
-
-		const appIdCfBundleUrlScheme = projectData.projectId.replace(/[^A-Za-z0-9]/g, "");
-
-		let hasAddedCFBundleURLSchemes = false;
-
-		_.each(parsedPlist.CFBundleURLTypes, type => {
-			if (type.CFBundleURLSchemes) {
-				hasAddedCFBundleURLSchemes = true;
-				type.CFBundleURLSchemes.push(appIdCfBundleUrlScheme);
-				return false;
-			}
-		});
-
-		if (!hasAddedCFBundleURLSchemes) {
-			parsedPlist.CFBundleURLTypes.push(
-				{
-					CFBundleURLSchemes: [appIdCfBundleUrlScheme]
-				}
-			);
-		}
-
-		const newPlistContent = plist.build(parsedPlist);
-		return newPlistContent;
 	}
 
 	private getAllInstalledPlugins(projectData: IProjectData): Promise<IPluginData[]> {
