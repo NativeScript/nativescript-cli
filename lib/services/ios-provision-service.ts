@@ -77,7 +77,8 @@ export class IOSProvisionService {
 			devices = [this.$options.device];
 		} else {
 			await this.$devicesService.initialize({
-				platform: "ios"
+				platform: "ios",
+				skipEmulatorStart: true
 			});
 			devices = _(this.$devicesService.getDeviceInstances())
 				.filter(d => this.$mobileHelper.isiOSPlatform(d.deviceInfo.platform))
