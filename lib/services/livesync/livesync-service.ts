@@ -120,9 +120,10 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		liveSyncData: ILiveSyncInfo, projectData: IProjectData): Promise<void> {
 		// In case liveSync is called for a second time for the same projectDir.
 		const isAlreadyLiveSyncing = this.liveSyncProcessesInfo[projectData.projectDir] && !this.liveSyncProcessesInfo[projectData.projectDir].isStopped;
-		this.setLiveSyncProcessInfo(liveSyncData.projectDir, deviceDescriptors);
 
+		// Prevent cases where liveSync is called consecutive times with the same device, for example [ A, B, C ] and then [ A, B, D ] - we want to execute initialSync only for D.
 		const deviceDescriptorsForInitialSync = isAlreadyLiveSyncing ? _.differenceBy(deviceDescriptors, this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors, deviceDescriptorPrimaryKey) : deviceDescriptors;
+		this.setLiveSyncProcessInfo(liveSyncData.projectDir, deviceDescriptors);
 
 		await this.initialSync(projectData, deviceDescriptorsForInitialSync, liveSyncData);
 
@@ -140,7 +141,6 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		this.liveSyncProcessesInfo[projectDir].isStopped = false;
 
 		const currentDeviceDescriptors = this.liveSyncProcessesInfo[projectDir].deviceDescriptors || [];
-		// Prevent cases where liveSync is called consecutive times with the same device, for example [ A, B, C ] and then [ A, B, D ] - we want to execute initialSync only for D.
 		this.liveSyncProcessesInfo[projectDir].deviceDescriptors = _.uniqBy(currentDeviceDescriptors.concat(deviceDescriptors), deviceDescriptorPrimaryKey);
 	}
 
