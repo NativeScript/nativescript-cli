@@ -160,9 +160,10 @@ interface ILiveSyncService {
 	 * Stops LiveSync operation for specified directory.
 	 * @param {string} projectDir The directory for which to stop the operation.
 	 * @param {string[]} @optional deviceIdentifiers Device ids for which to stop the application. In case nothing is passed, LiveSync operation will be stopped for all devices.
+	 * @param { shouldAwaitAllActions: boolean } @optional stopOptions Specifies whether we should await all actions.
 	 * @returns {Promise<void>}
 	 */
-	stopLiveSync(projectDir: string, deviceIdentifiers?: string[]): Promise<void>;
+	stopLiveSync(projectDir: string, deviceIdentifiers?: string[], stopOptions?: { shouldAwaitAllActions: boolean }): Promise<void>;
 }
 
 /**
