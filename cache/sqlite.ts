@@ -142,7 +142,7 @@ class SQLiteAdapter {
 
   removeById(collection, id) {
     const query = 'DELETE FROM #{collection} WHERE key = ?';
-    return this.openTransaction(collection, query, id, true)
+    return this.openTransaction(collection, query, [id], true)
       .then((response) => {
         const count = response[0];
 
