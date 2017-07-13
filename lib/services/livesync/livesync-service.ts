@@ -213,12 +213,6 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		// Now fullSync
 		const deviceAction = async (device: Mobile.IDevice): Promise<void> => {
 			try {
-				this.emit(LiveSyncEvents.liveSyncStarted, {
-					projectDir: projectData.projectDir,
-					deviceIdentifier: device.deviceInfo.identifier,
-					applicationIdentifier: projectData.projectId
-				});
-
 				const platform = device.deviceInfo.platform;
 				const deviceBuildInfoDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 
@@ -240,6 +234,12 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 				});
 				await this.$platformService.trackActionForPlatform({ action: "LiveSync", platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
 				await this.refreshApplication(projectData, liveSyncResultInfo);
+
+				this.emit(LiveSyncEvents.liveSyncStarted, {
+					projectDir: projectData.projectDir,
+					deviceIdentifier: device.deviceInfo.identifier,
+					applicationIdentifier: projectData.projectId
+				});
 			} catch (err) {
 				this.$logger.warn(`Unable to apply changes on device: ${device.deviceInfo.identifier}. Error is: ${err.message}.`);
 
