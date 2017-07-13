@@ -40,7 +40,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		await this.liveSyncOperation(deviceDescriptors, liveSyncData, projectData);
 	}
 
-	public async stopLiveSync(projectDir: string, deviceIdentifiers?: string[]): Promise<void> {
+	public async stopLiveSync(projectDir: string, deviceIdentifiers?: string[], stopOptions?: { shouldAwaitAllActions: boolean }): Promise<void> {
 		const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectDir];
 
 		if (liveSyncProcessInfo) {
@@ -67,7 +67,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 
 				liveSyncProcessInfo.watcherInfo = null;
 
-				if (liveSyncProcessInfo.actionsChain) {
+				if (liveSyncProcessInfo.actionsChain && (!stopOptions || stopOptions.shouldAwaitAllActions)) {
 					await liveSyncProcessInfo.actionsChain;
 				}
 
@@ -127,7 +127,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 
 		await this.initialSync(projectData, deviceDescriptorsForInitialSync, liveSyncData);
 
-		if (!liveSyncData.skipWatcher && deviceDescriptors && deviceDescriptors.length) {
+		if (!liveSyncData.skipWatcher && this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors.length) {
 			// Should be set after prepare
 			this.$injector.resolve<DeprecatedUsbLiveSyncService>("usbLiveSyncService").isInitialized = true;
 
@@ -250,7 +250,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 					applicationIdentifier: projectData.projectId
 				});
 
-				await this.stopLiveSync(projectData.projectDir, [device.deviceInfo.identifier]);
+				await this.stopLiveSync(projectData.projectDir, [device.deviceInfo.identifier], { shouldAwaitAllActions: false });
 			}
 		};
 
@@ -360,7 +360,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 											applicationIdentifier: projectData.projectId
 										});
 
-										await this.stopLiveSync(projectData.projectDir, [deviceError.deviceIdentifier]);
+										await this.stopLiveSync(projectData.projectDir, [deviceError.deviceIdentifier], { shouldAwaitAllActions: false });
 									}
 								}
 							}
