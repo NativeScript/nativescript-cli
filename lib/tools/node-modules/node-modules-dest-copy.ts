@@ -40,14 +40,9 @@ export class TnsModulesCopy {
 
 			shelljs.mkdir("-p", targetPackageDir);
 
-			let isScoped = dependency.name.indexOf("@") === 0;
-
-			if (isScoped) {
-				// copy module into tns_modules/@scope/module instead of tns_modules/module
-				shelljs.cp("-Rf", dependency.directory, path.join(this.outputRoot, dependency.name.substring(0, dependency.name.indexOf("/"))));
-			} else {
-				shelljs.cp("-Rf", dependency.directory, this.outputRoot);
-			}
+			const isScoped = dependency.name.indexOf("@") === 0;
+			const destinationPath = isScoped ? path.join(this.outputRoot, dependency.name.substring(0, dependency.name.indexOf("/"))) : this.outputRoot;
+			shelljs.cp("-RfL", dependency.directory, destinationPath);
 
 			// remove platform-specific files (processed separately by plugin services)
 			shelljs.rm("-rf", path.join(targetPackageDir, "platforms"));
