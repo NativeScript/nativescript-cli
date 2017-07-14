@@ -29,10 +29,10 @@ export class HttpMiddleware extends Middleware {
     const options = {
       method: method,
       headers: headers,
-      url: encodeURI(url),
+      url: url,
       content: body,
       timeout: timeout,
-      dontFollowRedirects: followRedirect
+      dontFollowRedirects: !followRedirect
     };
     return (HttpRequest(options) as any)
       .then((response) => {
