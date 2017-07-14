@@ -81,7 +81,8 @@ export class NpmPluginPrepare {
 	constructor(
 		private $fs: IFileSystem,
 		private $pluginsService: IPluginsService,
-		private $platformsData: IPlatformsData
+		private $platformsData: IPlatformsData,
+		private $logger: ILogger
 	) {
 	}
 
@@ -146,10 +147,33 @@ export class NpmPluginPrepare {
 			const dependency = dependencies[dependencyKey];
 			let isPlugin = !!dependency.nativescript;
 			if (isPlugin) {
-				await this.$pluginsService.prepare(dependency, platform, projectData);
+				let pluginData = this.$pluginsService.convertToPluginData(dependency, projectData.projectDir);
+				await this.$pluginsService.preparePluginNativeCode(pluginData, platform, projectData);
 			}
 		}
 
 		await this.afterPrepare(dependencies, platform, projectData);
+	}
+
+	public async prepareJSPlugins(dependencies: IDependencyData[], platform: string, projectData: IProjectData): Promise<void> {
+		if (_.isEmpty(dependencies) || this.allPrepared(dependencies, platform, projectData)) {
+			return;
+		}
+
+		for (let dependencyKey in dependencies) {
+			const dependency = dependencies[dependencyKey];
+			let isPlugin = !!dependency.nativescript;
+			if (isPlugin) {
+				platform = platform.toLowerCase();
+				let pluginData = this.$pluginsService.convertToPluginData(dependency, projectData.projectDir);
+				let platformData = this.$platformsData.getPlatformData(platform, projectData);
+				let appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
+				if (appFolderExists) {
+					this.$pluginsService.preparePluginScripts(pluginData, platform, projectData);
+					// Show message
+					this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
+				}
+			}
+		}
 	}
 }

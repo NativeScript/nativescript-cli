@@ -221,7 +221,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		let manifestPath = this.getPlatformData(projectData).configurationFilePath;
 		shell.sed('-i', /__PACKAGE__/, projectData.projectId, manifestPath);
 		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
-			const sdk = (platformSpecificData && platformSpecificData.sdk) || (this.$androidToolsInfo.getToolsInfo().compileSdkVersion).toString();
+			const sdk = (platformSpecificData && platformSpecificData.sdk) || (this.$androidToolsInfo.getToolsInfo().compileSdkVersion || "").toString();
 			shell.sed('-i', /__APILEVEL__/, sdk, manifestPath);
 		}
 	}

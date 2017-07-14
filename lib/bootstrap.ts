@@ -105,6 +105,7 @@ $injector.require("devicePathProvider", "./device-path-provider");
 $injector.requireCommand("platform|clean", "./commands/platform-clean");
 
 $injector.requirePublicClass("liveSyncService", "./services/livesync/livesync-service");
+$injector.requirePublicClass("liveSyncCommandHelper", "./services/livesync/livesync-command-helper");
 $injector.require("debugLiveSyncService", "./services/livesync/debug-livesync-service");
 $injector.require("androidLiveSyncService", "./services/livesync/android-livesync-service");
 $injector.require("iOSLiveSyncService", "./services/livesync/ios-livesync-service");

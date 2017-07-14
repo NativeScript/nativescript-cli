@@ -132,6 +132,10 @@ interface IBuildForDevice {
 	buildForDevice: boolean;
 }
 
+interface INativePrepare {
+	skip: boolean;
+}
+
 interface IBuildConfig extends IAndroidBuildOptionsSettings, IiOSBuildConfig {
 	projectDir: string;
 	clean?: boolean;

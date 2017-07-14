@@ -2,22 +2,23 @@
 import { isInteractive } from "../common/helpers";
 import { DebugCommandErrors } from "../constants";
 
-export abstract class DebugPlatformCommand implements ICommand {
+export class DebugPlatformCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 	public platform: string;
 
-	constructor(private debugService: IPlatformDebugService,
-		private $devicesService: Mobile.IDevicesService,
-		private $debugDataService: IDebugDataService,
+	constructor(protected $devicesService: Mobile.IDevicesService,
 		protected $platformService: IPlatformService,
 		protected $projectData: IProjectData,
 		protected $options: IOptions,
 		protected $platformsData: IPlatformsData,
 		protected $logger: ILogger,
 		protected $errors: IErrors,
+		private debugService: IPlatformDebugService,
+		private $debugDataService: IDebugDataService,
 		private $debugLiveSyncService: IDebugLiveSyncService,
 		private $config: IConfiguration,
-		private $prompter: IPrompter) {
+		private $prompter: IPrompter,
+		private $liveSyncCommandHelper: ILiveSyncCommandHelper) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -36,40 +37,7 @@ export abstract class DebugPlatformCommand implements ICommand {
 
 		const selectedDeviceForDebug = await this.getDeviceForDebug();
 
-		const deviceDescriptors: ILiveSyncDeviceInfo[] = [selectedDeviceForDebug]
-			.map(d => {
-				const info: ILiveSyncDeviceInfo = {
-					identifier: d.deviceInfo.identifier,
-					buildAction: async (): Promise<string> => {
-						const buildConfig: IBuildConfig = {
-							buildForDevice: !d.isEmulator,
-							projectDir: this.$options.path,
-							clean: this.$options.clean,
-							teamId: this.$options.teamId,
-							device: this.$options.device,
-							provision: this.$options.provision,
-							release: this.$options.release,
-							keyStoreAlias: this.$options.keyStoreAlias,
-							keyStorePath: this.$options.keyStorePath,
-							keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-							keyStorePassword: this.$options.keyStorePassword
-						};
-
-						await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, this.$projectData);
-						const pathToBuildResult = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, this.$projectData);
-						return pathToBuildResult;
-					}
-				};
-
-				return info;
-			});
-
-		const liveSyncInfo: ILiveSyncInfo = {
-			projectDir: this.$projectData.projectDir,
-			skipWatcher: !this.$options.watch || this.$options.justlaunch,
-			watchAllFiles: this.$options.syncAllFiles
-		};
-
+		const { deviceDescriptors, liveSyncInfo } = await this.$liveSyncCommandHelper.getDevicesLiveSyncInfo(args, [selectedDeviceForDebug]);
 		await this.$debugLiveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 	}
 
@@ -149,23 +117,22 @@ export abstract class DebugPlatformCommand implements ICommand {
 	}
 }
 
-export class DebugIOSCommand extends DebugPlatformCommand {
+export class DebugIOSCommand implements ICommand {
+	private get debugPlatformCommand(): DebugPlatformCommand {
+		return this.$injector.resolve<DebugPlatformCommand>(DebugPlatformCommand);
+	}
+
+	public allowedParameters: ICommandParameter[] = [];
+
 	constructor(protected $errors: IErrors,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$logger: ILogger,
-		$iOSDebugService: IPlatformDebugService,
-		$devicesService: Mobile.IDevicesService,
-		$config: IConfiguration,
-		$debugDataService: IDebugDataService,
-		$platformService: IPlatformService,
-		$options: IOptions,
-		$projectData: IProjectData,
-		$platformsData: IPlatformsData,
-		$iosDeviceOperations: IIOSDeviceOperations,
-		$debugLiveSyncService: IDebugLiveSyncService,
-		$prompter: IPrompter) {
-		super($iOSDebugService, $devicesService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger,
-			$errors, $debugLiveSyncService, $config, $prompter);
+		private $platformService: IPlatformService,
+		private $options: IOptions,
+		private $injector: IInjector,
+		private $projectData: IProjectData,
+		private $platformsData: IPlatformsData,
+		$iosDeviceOperations: IIOSDeviceOperations) {
+
 		// Do not dispose ios-device-lib, so the process will remain alive and the debug application (NativeScript Inspector or Chrome DevTools) will be able to connect to the socket.
 		// In case we dispose ios-device-lib, the socket will be closed and the code will fail when the debug application tries to read/send data to device socket.
 		// That's why the `$ tns debug ios --justlaunch` command will not release the terminal.
@@ -173,12 +140,16 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 		$iosDeviceOperations.setShouldDispose(false);
 	}
 
+	public execute(args: string[]): Promise<void> {
+		return this.debugPlatformCommand.execute(args);
+	}
+
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
-		return await super.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.iOS);
+		return await this.debugPlatformCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.iOS);
 	}
 
 	public platform = this.$devicePlatformsConstants.iOS;
@@ -186,26 +157,26 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 
 $injector.registerCommand("debug|ios", DebugIOSCommand);
 
-export class DebugAndroidCommand extends DebugPlatformCommand {
-	constructor(protected $errors: IErrors,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$logger: ILogger,
-		$androidDebugService: IPlatformDebugService,
-		$devicesService: Mobile.IDevicesService,
-		$config: IConfiguration,
-		$debugDataService: IDebugDataService,
-		$platformService: IPlatformService,
-		$options: IOptions,
-		$projectData: IProjectData,
-		$platformsData: IPlatformsData,
-		$debugLiveSyncService: IDebugLiveSyncService,
-		$prompter: IPrompter) {
-		super($androidDebugService, $devicesService, $debugDataService, $platformService, $projectData, $options, $platformsData, $logger,
-			$errors, $debugLiveSyncService, $config, $prompter);
+export class DebugAndroidCommand implements ICommand {
+	private get debugPlatformCommand(): DebugPlatformCommand {
+		return this.$injector.resolve<DebugPlatformCommand>(DebugPlatformCommand);
 	}
 
+	public allowedParameters: ICommandParameter[] = [];
+
+	constructor(protected $errors: IErrors,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $platformService: IPlatformService,
+		private $options: IOptions,
+		private $injector: IInjector,
+		private $projectData: IProjectData,
+		private $platformsData: IPlatformsData) { }
+
+	public execute(args: string[]): Promise<void> {
+		return this.debugPlatformCommand.execute(args);
+	}
 	public async canExecute(args: string[]): Promise<boolean> {
-		return await super.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.Android);
+		return await this.debugPlatformCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.Android);
 	}
 
 	public platform = this.$devicePlatformsConstants.Android;

@@ -7,15 +7,13 @@ export class RunCommandBase implements ICommand {
 		protected $liveSyncService: ILiveSyncService,
 		protected $projectData: IProjectData,
 		protected $options: IOptions,
-		protected $emulatorPlatformService: IEmulatorPlatformService,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		protected $errors: IErrors,
-		private $devicesService: Mobile.IDevicesService,
+		protected $devicesService: Mobile.IDevicesService,
+		protected $platformsData: IPlatformsData,
 		private $hostInfo: IHostInfo,
-		private $iosDeviceOperations: IIOSDeviceOperations,
-		private $mobileHelper: Mobile.IMobileHelper,
-		protected $platformsData: IPlatformsData) {
-	}
+		private $liveSyncCommandHelper: ILiveSyncCommandHelper
+	) { }
 
 	public allowedParameters: ICommandParameter[] = [];
 	public async execute(args: string[]): Promise<void> {
@@ -47,6 +45,8 @@ export class RunCommandBase implements ICommand {
 			this.$options.watch = false;
 		}
 
+		this.platform = args[0] || this.platform;
+
 		await this.$devicesService.initialize({
 			deviceId: this.$options.device,
 			platform: this.platform,
@@ -56,93 +56,33 @@ export class RunCommandBase implements ICommand {
 		});
 
 		await this.$devicesService.detectCurrentlyAttachedDevices();
-
-		const devices = this.$devicesService.getDeviceInstances();
-		// Now let's take data for each device:
-		const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !this.platform || d.deviceInfo.platform === this.platform)
-			.map(d => {
-				const info: ILiveSyncDeviceInfo = {
-					identifier: d.deviceInfo.identifier,
-					buildAction: async (): Promise<string> => {
-						const buildConfig: IBuildConfig = {
-							buildForDevice: !d.isEmulator,
-							projectDir: this.$options.path,
-							clean: this.$options.clean,
-							teamId: this.$options.teamId,
-							device: this.$options.device,
-							provision: this.$options.provision,
-							release: this.$options.release,
-							keyStoreAlias: this.$options.keyStoreAlias,
-							keyStorePath: this.$options.keyStorePath,
-							keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-							keyStorePassword: this.$options.keyStorePassword
-						};
-
-						await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, this.$projectData);
-						const pathToBuildResult = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, this.$projectData);
-						return pathToBuildResult;
-					}
-				};
-
-				return info;
-			});
-
-		const workingWithiOSDevices = !this.platform || this.$mobileHelper.isiOSPlatform(this.platform);
-		const shouldKeepProcessAlive = this.$options.watch || !this.$options.justlaunch;
-		if (workingWithiOSDevices && shouldKeepProcessAlive) {
-			this.$iosDeviceOperations.setShouldDispose(false);
-		}
-
-		if (this.$options.release || this.$options.bundle) {
-			const runPlatformOptions: IRunPlatformOptions = {
-				device: this.$options.device,
-				emulator: this.$options.emulator,
-				justlaunch: this.$options.justlaunch
-			};
-
-			const deployOptions = _.merge<IDeployPlatformOptions>({
-				projectDir: this.$projectData.projectDir,
-				clean: true,
-			}, this.$options.argv);
-
-			await this.$platformService.deployPlatform(args[0], this.$options, deployOptions, this.$projectData, this.$options);
-			await this.$platformService.startApplication(args[0], runPlatformOptions, this.$projectData.projectId);
-			return this.$platformService.trackProjectType(this.$projectData);
-		}
-
-		const liveSyncInfo: ILiveSyncInfo = {
-			projectDir: this.$projectData.projectDir,
-			skipWatcher: !this.$options.watch,
-			watchAllFiles: this.$options.syncAllFiles,
-			clean: this.$options.clean
-		};
-
+		let devices = this.$devicesService.getDeviceInstances();
+		devices = devices.filter(d => !this.platform || d.deviceInfo.platform.toLowerCase() === this.platform.toLowerCase());
+		const { deviceDescriptors, liveSyncInfo } = await this.$liveSyncCommandHelper.getDevicesLiveSyncInfo(args, devices);
+		liveSyncInfo.skipNativePrepare = true;
 		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 	}
 }
 
 $injector.registerCommand("run|*all", RunCommandBase);
 
-export class RunIosCommand extends RunCommandBase implements ICommand {
+export class RunIosCommand implements ICommand {
+	private get runCommand(): RunCommandBase {
+		return this.$injector.resolve<RunCommandBase>(RunCommandBase);
+	}
+
 	public allowedParameters: ICommandParameter[] = [];
 	public get platform(): string {
 		return this.$devicePlatformsConstants.iOS;
 	}
 
-	constructor($platformService: IPlatformService,
-		protected $platformsData: IPlatformsData,
+	constructor(protected $platformsData: IPlatformsData,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		protected $errors: IErrors,
-		$liveSyncService: ILiveSyncService,
-		$projectData: IProjectData,
-		$options: IOptions,
-		$emulatorPlatformService: IEmulatorPlatformService,
-		$devicesService: Mobile.IDevicesService,
-		$hostInfo: IHostInfo,
-		$iosDeviceOperations: IIOSDeviceOperations,
-		$mobileHelper: Mobile.IMobileHelper) {
-		super($platformService, $liveSyncService, $projectData, $options, $emulatorPlatformService, $devicePlatformsConstants, $errors,
-			$devicesService, $hostInfo, $iosDeviceOperations, $mobileHelper, $platformsData);
+		private $injector: IInjector,
+		private $platformService: IPlatformService,
+		private $projectData: IProjectData,
+		private $options: IOptions) {
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -150,44 +90,41 @@ export class RunIosCommand extends RunCommandBase implements ICommand {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
-		return this.executeCore([this.$platformsData.availablePlatforms.iOS]);
+		return this.runCommand.executeCore([this.$platformsData.availablePlatforms.iOS]);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		return await super.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.iOS);
+		return await this.runCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.iOS);
 	}
 }
 
 $injector.registerCommand("run|ios", RunIosCommand);
 
-export class RunAndroidCommand extends RunCommandBase implements ICommand {
+export class RunAndroidCommand implements ICommand {
+	private get runCommand(): RunCommandBase {
+		return this.$injector.resolve<RunCommandBase>(RunCommandBase);
+	}
+
 	public allowedParameters: ICommandParameter[] = [];
 	public get platform(): string {
 		return this.$devicePlatformsConstants.Android;
 	}
 
-	constructor($platformService: IPlatformService,
-		protected $platformsData: IPlatformsData,
+	constructor(protected $platformsData: IPlatformsData,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		protected $errors: IErrors,
-		$liveSyncService: ILiveSyncService,
-		$projectData: IProjectData,
-		$options: IOptions,
-		$emulatorPlatformService: IEmulatorPlatformService,
-		$devicesService: Mobile.IDevicesService,
-		$hostInfo: IHostInfo,
-		$iosDeviceOperations: IIOSDeviceOperations,
-		$mobileHelper: Mobile.IMobileHelper) {
-		super($platformService, $liveSyncService, $projectData, $options, $emulatorPlatformService, $devicePlatformsConstants, $errors,
-			$devicesService, $hostInfo, $iosDeviceOperations, $mobileHelper, $platformsData);
+		private $injector: IInjector,
+		private $platformService: IPlatformService,
+		private $projectData: IProjectData,
+		private $options: IOptions) {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		return this.executeCore([this.$platformsData.availablePlatforms.Android]);
+		return this.runCommand.executeCore([this.$platformsData.availablePlatforms.Android]);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		await super.canExecute(args);
+		await this.runCommand.canExecute(args);
 		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.Android, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.Android} can not be built on this OS`);
 		}

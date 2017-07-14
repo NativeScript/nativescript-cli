@@ -206,7 +206,7 @@ export class ErrorsStub implements IErrors {
 }
 
 export class NpmInstallationManagerStub implements INpmInstallationManager {
-	async install(packageName: string, pathToSave?: string, options?: INpmInstallOptions ): Promise<string> {
+	async install(packageName: string, pathToSave?: string, options?: INpmInstallOptions): Promise<string> {
 		return Promise.resolve("");
 	}
 
@@ -573,6 +573,10 @@ export class ProjectChangesService implements IProjectChangesService {
 
 	public get currentChanges(): IProjectChangesInfo {
 		return <IProjectChangesInfo>{};
+	}
+
+	public ensurePrepareInfo(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): boolean {
+		return true;
 	}
 }
 

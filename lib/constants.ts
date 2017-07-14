@@ -92,3 +92,9 @@ export class DebugCommandErrors {
 	public static UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR = "The options --for-device and --emulator cannot be used simultaneously. Please use only one of them.";
 	public static NO_DEVICES_EMULATORS_FOUND_FOR_OPTIONS = "Unable to find device or emulator for specified options.";
 }
+
+export const enum NativePlatformStatus {
+	requiresPlatformAdd = "1",
+	requiresPrepare = "2",
+	alreadyPrepared = "3"
+}

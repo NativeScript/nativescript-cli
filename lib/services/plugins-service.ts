@@ -122,7 +122,7 @@ export class PluginsService implements IPluginsService {
 		}
 	}
 
-	private preparePluginScripts(pluginData: IPluginData, platform: string, projectData: IProjectData): void {
+	public preparePluginScripts(pluginData: IPluginData, platform: string, projectData: IProjectData): void {
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		let pluginScriptsDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
 		let scriptsDestinationExists = this.$fs.exists(pluginScriptsDestinationPath);
