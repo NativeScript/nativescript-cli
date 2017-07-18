@@ -33,7 +33,7 @@ export class RunCommandBase implements ICommand {
 			this.platform = this.$devicePlatformsConstants.Android;
 		}
 
-		const availablePlatforms = this.platform ? [this.platform] : this.$platformsData.availablePlatforms;
+		const availablePlatforms = this.platform ? [this.platform] : _.values<string>(this.$platformsData.availablePlatforms);
 		for (let platform of availablePlatforms) {
 			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
 			const platformProjectService = platformData.platformProjectService;
