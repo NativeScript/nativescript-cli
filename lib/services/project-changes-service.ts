@@ -139,6 +139,14 @@ export class ProjectChangesService implements IProjectChangesService {
 		this.$fs.writeJson(prepareInfoFilePath, this._prepareInfo);
 	}
 
+	public setNativePlatformStatus(platform: string, projectData: IProjectData, addedPlatform: IAddedNativePlatform): void {
+		this._prepareInfo = this._prepareInfo || this.getPrepareInfo(platform, projectData);
+		if (this._prepareInfo) {
+			this._prepareInfo.nativePlatformStatus = addedPlatform.nativePlatformStatus;
+			this.savePrepareInfo(platform, projectData);
+		}
+	}
+
 	public ensurePrepareInfo(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): boolean {
 		this._prepareInfo = this.getPrepareInfo(platform, projectData);
 		if (this._prepareInfo) {
@@ -150,7 +158,6 @@ export class ProjectChangesService implements IProjectChangesService {
 			let prepareInfoFile = path.join(platformData.projectRoot, prepareInfoFileName);
 			this._outputProjectMtime = this.$fs.getFsStats(prepareInfoFile).mtime.getTime();
 			this._outputProjectCTime = this.$fs.getFsStats(prepareInfoFile).ctime.getTime();
-			this.savePrepareInfo(platform, projectData);
 			return false;
 		}
 
@@ -171,8 +178,6 @@ export class ProjectChangesService implements IProjectChangesService {
 		this._changesInfo.appResourcesChanged = true;
 		this._changesInfo.modulesChanged = true;
 		this._changesInfo.configChanged = true;
-
-		this.savePrepareInfo(platform, projectData);
 		return true;
 	}
 

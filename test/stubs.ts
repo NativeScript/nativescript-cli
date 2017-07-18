@@ -575,7 +575,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		return <IProjectChangesInfo>{};
 	}
 
-	public ensurePrepareInfo(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): boolean {
+	public setNativePlatformStatus(platform: string, projectData: IProjectData, nativePlatformStatus: IAddedNativePlatform): boolean {
 		return true;
 	}
 }

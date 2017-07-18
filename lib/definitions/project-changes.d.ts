@@ -31,7 +31,7 @@ interface IProjectChangesService {
 	getPrepareInfo(platform: string, projectData: IProjectData): IPrepareInfo;
 	savePrepareInfo(platform: string, projectData: IProjectData): void;
 	getPrepareInfoFilePath(platform: string, projectData: IProjectData): string;
-	ensurePrepareInfo(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): boolean;
+	setNativePlatformStatus(platform: string, projectData: IProjectData, nativePlatformStatus: IAddedNativePlatform): void;
 	currentChanges: IProjectChangesInfo;
 }
 

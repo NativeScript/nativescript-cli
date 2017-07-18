@@ -340,7 +340,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			await platformData.platformProjectService.prepareProject(projectData, platformSpecificData);
 		}
 
-		if (changesInfo && !changesInfo.modulesChanged && appFilesUpdaterOptions.bundle) {
+		if (!changesInfo || changesInfo.modulesChanged || appFilesUpdaterOptions.bundle) {
 			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).mtime : null;
 
@@ -354,8 +354,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		platformData.platformProjectService.interpolateConfigurationFile(projectData, platformSpecificData);
-		this.$projectChangesService.ensurePrepareInfo(platform, projectData,
-			{ nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared, release: appFilesUpdaterOptions.release, bundle: appFilesUpdaterOptions.bundle, provision: platformSpecificData.provision });
+		this.$projectChangesService.setNativePlatformStatus(platform, projectData,
+			{ nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared });
 	}
 
 	private async copyAppFiles(platformData: IPlatformData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData): Promise<void> {
@@ -742,7 +742,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		} else {
 			const shouldAddNativePlatform = !nativePrepare || !nativePrepare.skip;
 			const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
-			requiresNativePlatformAdd = !prepareInfo || prepareInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPlatformAdd;
+			// In case there's no prepare info, it means only platform add had been executed. So we've come from CLI and we do not need to prepare natively.
+			requiresNativePlatformAdd = prepareInfo && prepareInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPlatformAdd;
 			if (requiresNativePlatformAdd && shouldAddNativePlatform) {
 				await this.addPlatform(platform, platformTemplate, projectData, config, "", nativePrepare);
 			}
