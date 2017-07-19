@@ -45,6 +45,9 @@ export default class Client {
       apiHostname = String(apiHostname);
     }
     this.apiHostname = apiHostname.replace(/\/+$/, '');
+    // TODO: remove these, this is a temporary fix
+    this.apiHost = apiHostname.replace(/^https?:\/\//, '');
+    this.apiProtocol = apiHostname.replace('//' + this.apiHost, '');
 
     let micHostname = options.micHostname;
     if (isString(apiHostname) === false) {
