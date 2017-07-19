@@ -133,7 +133,7 @@ interface IBuildForDevice {
 }
 
 interface INativePrepare {
-	skip: boolean;
+	skipNativePrepare: boolean;
 }
 
 interface IBuildConfig extends IAndroidBuildOptionsSettings, IiOSBuildConfig {

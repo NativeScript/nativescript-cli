@@ -143,7 +143,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		const customTemplateOptions = await this.getPathToPlatformTemplate(platformTemplate, platformData.frameworkPackageName, projectData.projectDir);
 		config.pathToTemplate = customTemplateOptions && customTemplateOptions.pathToTemplate;
 
-		if (!nativePrepare || !nativePrepare.skip) {
+		if (!nativePrepare || !nativePrepare.skipNativePrepare) {
 			await this.addPlatformCoreNative(platformData, frameworkDir, installedVersion, projectData, config);
 		}
 
@@ -216,7 +216,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	public async preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions, filesToSync?: Array<String>, nativePrepare?: INativePrepare): Promise<boolean> {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const changesInfo = await this.initialPrepare(platform, platformData, appFilesUpdaterOptions, platformTemplate, projectData, config, nativePrepare);
-		const requiresNativePrepare = (!nativePrepare || !nativePrepare.skip) && changesInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPrepare;
+		const requiresNativePrepare = (!nativePrepare || !nativePrepare.skipNativePrepare) && changesInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPrepare;
 
 		if (changesInfo.hasChanges || appFilesUpdaterOptions.bundle || requiresNativePrepare) {
 			await this.preparePlatformCore(platform, appFilesUpdaterOptions, projectData, config, changesInfo, filesToSync, nativePrepare);
@@ -282,7 +282,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		await this.ensurePlatformInstalled(platform, platformTemplate, projectData, config, nativePrepare);
 
 		const bundle = appFilesUpdaterOptions.bundle;
-		const nativePlatformStatus = (nativePrepare && nativePrepare.skip) ? constants.NativePlatformStatus.requiresPlatformAdd : constants.NativePlatformStatus.requiresPrepare;
+		const nativePlatformStatus = (nativePrepare && nativePrepare.skipNativePrepare) ? constants.NativePlatformStatus.requiresPlatformAdd : constants.NativePlatformStatus.requiresPrepare;
 		const changesInfo = this.$projectChangesService.checkForChanges(platform, projectData, { bundle, release: appFilesUpdaterOptions.release, provision: config.provision, nativePlatformStatus });
 
 		this.$logger.trace("Changes info in prepare platform:", changesInfo);
@@ -297,7 +297,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		await this.preparePlatformCoreJS(platform, platformData, appFilesUpdaterOptions, projectData, platformSpecificData, changesInfo);
 
-		if (!nativePrepare || !nativePrepare.skip) {
+		if (!nativePrepare || !nativePrepare.skipNativePrepare) {
 			await this.preparePlatformCoreNative(platform, platformData, appFilesUpdaterOptions, projectData, platformSpecificData, changesInfo);
 		}
 
@@ -740,7 +740,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		if (!this.isPlatformInstalled(platform, projectData)) {
 			await this.addPlatform(platform, platformTemplate, projectData, config, "", nativePrepare);
 		} else {
-			const shouldAddNativePlatform = !nativePrepare || !nativePrepare.skip;
+			const shouldAddNativePlatform = !nativePrepare || !nativePrepare.skipNativePrepare;
 			const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
 			// In case there's no prepare info, it means only platform add had been executed. So we've come from CLI and we do not need to prepare natively.
 			requiresNativePlatformAdd = prepareInfo && prepareInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPlatformAdd;

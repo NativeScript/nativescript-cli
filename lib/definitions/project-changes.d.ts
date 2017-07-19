@@ -35,6 +35,9 @@ interface IProjectChangesService {
 	currentChanges: IProjectChangesInfo;
 }
 
+/**
+ * NativePlatformStatus.requiresPlatformAdd | NativePlatformStatus.requiresPrepare | NativePlatformStatus.alreadyPrepared
+ */
 interface IAddedNativePlatform {
 	nativePlatformStatus: "1" | "2" | "3";
 }
