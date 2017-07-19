@@ -8,8 +8,8 @@ import { CONNECTION_ERROR_EVENT_NAME } from "../../lib/constants";
 
 const fakeChromeDebugUrl = "fakeChromeDebugUrl";
 class PlatformDebugService extends EventEmitter /* implements IPlatformDebugService */ {
-	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string[]> {
-		return [fakeChromeDebugUrl];
+	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		return fakeChromeDebugUrl;
 	}
 }
 
