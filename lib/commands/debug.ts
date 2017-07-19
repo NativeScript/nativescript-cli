@@ -37,8 +37,7 @@ export class DebugPlatformCommand implements ICommand {
 
 		const selectedDeviceForDebug = await this.getDeviceForDebug();
 
-		const { deviceDescriptors, liveSyncInfo } = await this.$liveSyncCommandHelper.getDevicesLiveSyncInfo(args, [selectedDeviceForDebug]);
-		await this.$debugLiveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
+		await this.$liveSyncCommandHelper.getDevicesLiveSyncInfo([selectedDeviceForDebug], this.$debugLiveSyncService, this.platform);
 	}
 
 	public async getDeviceForDebug(): Promise<Mobile.IDevice> {
