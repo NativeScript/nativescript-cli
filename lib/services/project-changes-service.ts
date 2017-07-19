@@ -147,7 +147,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		}
 	}
 
-	public ensurePrepareInfo(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): boolean {
+	private ensurePrepareInfo(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): boolean {
 		this._prepareInfo = this.getPrepareInfo(platform, projectData);
 		if (this._prepareInfo) {
 			this._prepareInfo.nativePlatformStatus = this._prepareInfo.nativePlatformStatus && this._prepareInfo.nativePlatformStatus < projectChangesOptions.nativePlatformStatus ?

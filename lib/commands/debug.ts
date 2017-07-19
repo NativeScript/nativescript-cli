@@ -1,5 +1,6 @@
 ﻿import { CONNECTED_STATUS } from "../common/constants";
 import { isInteractive } from "../common/helpers";
+import { cache } from "../common/decorators";
 import { DebugCommandErrors } from "../constants";
 
 export class DebugPlatformCommand implements ICommand {
@@ -117,6 +118,8 @@ export class DebugPlatformCommand implements ICommand {
 }
 
 export class DebugIOSCommand implements ICommand {
+
+	@cache()
 	private get debugPlatformCommand(): DebugPlatformCommand {
 		return this.$injector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { debugService: this.$iOSDebugService, platform: this.platform });
 	}
@@ -158,6 +161,8 @@ export class DebugIOSCommand implements ICommand {
 $injector.registerCommand("debug|ios", DebugIOSCommand);
 
 export class DebugAndroidCommand implements ICommand {
+
+	@cache()
 	private get debugPlatformCommand(): DebugPlatformCommand {
 		return this.$injector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { debugService: this.$androidDebugService, platform: this.platform });
 	}

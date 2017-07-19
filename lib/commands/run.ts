@@ -1,4 +1,5 @@
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "../common/constants";
+import { cache } from "../common/decorators";
 
 export class RunCommandBase implements ICommand {
 	protected platform: string;
@@ -66,6 +67,8 @@ export class RunCommandBase implements ICommand {
 $injector.registerCommand("run|*all", RunCommandBase);
 
 export class RunIosCommand implements ICommand {
+
+	@cache()
 	private get runCommand(): RunCommandBase {
 		return this.$injector.resolve<RunCommandBase>(RunCommandBase);
 	}
@@ -100,6 +103,8 @@ export class RunIosCommand implements ICommand {
 $injector.registerCommand("run|ios", RunIosCommand);
 
 export class RunAndroidCommand implements ICommand {
+
+	@cache()
 	private get runCommand(): RunCommandBase {
 		return this.$injector.resolve<RunCommandBase>(RunCommandBase);
 	}
