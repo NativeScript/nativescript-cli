@@ -64,7 +64,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 			result = await debugService.debug(debugData, debugOptions);
 		}
 
-		return _.first(result);
+		return result;
 	}
 
 	public getDebugService(device: Mobile.IDevice): IPlatformDebugService {
