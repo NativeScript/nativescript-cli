@@ -27,6 +27,8 @@ export class RunCommandBase implements ICommand {
 		}
 
 		this.$projectData.initializeProjectData();
+		this.platform = args[0] || this.platform;
+
 		if (!this.platform && !this.$hostInfo.isDarwin) {
 			this.platform = this.$devicePlatformsConstants.Android;
 		}
@@ -45,8 +47,6 @@ export class RunCommandBase implements ICommand {
 		if (this.$options.bundle) {
 			this.$options.watch = false;
 		}
-
-		this.platform = args[0] || this.platform;
 
 		await this.$devicesService.initialize({
 			deviceId: this.$options.device,
