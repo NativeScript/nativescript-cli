@@ -139,15 +139,16 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 				payload.writeInt32BE(length, 0);
 				payload.write(message, 4, length, "utf16le");
 
-				this.socket.once("error", (error: Error) => {
+				const errorCallback = (error: Error) => {
 					if (!isResolved) {
 						isResolved = true;
 						reject(error);
 					}
-				});
+				};
+				this.socket.once("error", errorCallback);
 
 				this.socket.write(payload, "utf16le", () => {
-					this.socket.removeAllListeners("error");
+					this.socket.removeListener("error", errorCallback);
 
 					if (!isResolved) {
 						isResolved = true;
