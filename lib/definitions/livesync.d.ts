@@ -120,6 +120,11 @@ interface ILiveSyncInfo {
 	 * Forces a build before the initial livesync.
 	 */
 	clean?: boolean;
+
+	/**
+	 * Whether to skip preparing the native platform.
+	 */
+	skipNativePrepare?: boolean;
 }
 
 interface ILatestAppPackageInstalledSettings extends IDictionary<IDictionary<boolean>> { /* empty */ }
@@ -248,4 +253,8 @@ interface IDeviceProjectRootOptions {
 interface IDevicePathProvider {
 	getDeviceProjectRootPath(device: Mobile.IDevice, options: IDeviceProjectRootOptions): Promise<string>;
 	getDeviceSyncZipPath(device: Mobile.IDevice): string;
+}
+
+interface ILiveSyncCommandHelper {
+	getDevicesLiveSyncInfo(devices: Mobile.IDevice[], liveSyncService: ILiveSyncService, platform: string): Promise<void>;
 }

@@ -7,7 +7,7 @@ class TestNpmPluginPrepare extends NpmPluginPrepare {
 	public preparedDependencies: IDictionary<boolean> = {};
 
 	constructor(private previouslyPrepared: IDictionary<boolean>) {
-		super(null, null, null);
+		super(null, null, null, null);
 	}
 
 	protected getPreviouslyPreparedDependencies(platform: string): IDictionary<boolean> {

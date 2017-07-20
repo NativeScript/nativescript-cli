@@ -49,6 +49,9 @@ function createTestInjector() {
 	testInjector.register("nodeModulesBuilder", {
 		prepareNodeModules: () => {
 			return Promise.resolve();
+		},
+		prepareJSNodeModules: () => {
+			return Promise.resolve();
 		}
 	});
 	testInjector.register("pluginsService", {
@@ -382,6 +385,12 @@ describe('Platform Service Tests', () => {
 
 			let appDestFolderPath = path.join(tempFolder, "appDest");
 			let appResourcesFolderPath = path.join(appDestFolderPath, "App_Resources");
+			fs.writeJson(path.join(tempFolder, "package.json"), {
+				name: "testname",
+				nativescript: {
+					id: "org.nativescript.testname"
+				}
+			});
 
 			return { tempFolder, appFolderPath, app1FolderPath, appDestFolderPath, appResourcesFolderPath };
 		}

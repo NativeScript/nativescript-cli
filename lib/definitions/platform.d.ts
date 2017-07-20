@@ -47,7 +47,7 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @param {Array} filesToSync Files about to be synced to device.
 	 * @returns {boolean} true indicates that the platform was prepared.
 	 */
-	preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions, filesToSync?: Array<String>): Promise<boolean>;
+	preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions, filesToSync?: Array<String>, nativePrepare?: INativePrepare): Promise<boolean>;
 
 	/**
 	 * Determines whether a build is necessary. A build is necessary when one of the following is true:
@@ -288,6 +288,7 @@ interface IPlatformsData {
 
 interface INodeModulesBuilder {
 	prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData): Promise<void>;
+	prepareJSNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData): Promise<void>;
 	cleanNodeModules(absoluteOutputPath: string, platform: string): void;
 }
 

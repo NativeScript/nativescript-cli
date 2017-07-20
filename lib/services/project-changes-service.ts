@@ -1,5 +1,6 @@
 import * as path from "path";
-import { NODE_MODULES_FOLDER_NAME } from "../constants";
+import { NODE_MODULES_FOLDER_NAME, NativePlatformStatus, PACKAGE_JSON_FILE_NAME } from "../constants";
+import { getHash } from "../common/helpers";
 
 const prepareInfoFileName = ".nsprepareinfo";
 
@@ -12,6 +13,7 @@ class ProjectChangesInfo implements IProjectChangesInfo {
 	public packageChanged: boolean;
 	public nativeChanged: boolean;
 	public signingChanged: boolean;
+	public nativePlatformStatus: NativePlatformStatus;
 
 	public get hasChanges(): boolean {
 		return this.packageChanged ||
@@ -58,7 +60,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		if (!this.ensurePrepareInfo(platform, projectData, projectChangesOptions)) {
 			this._newFiles = 0;
 			this._changesInfo.appFilesChanged = this.containsNewerFiles(projectData.appDirectoryPath, projectData.appResourcesDirectoryPath, projectData);
-			this._changesInfo.packageChanged = this.filesChanged([path.join(projectData.projectDir, "package.json")]);
+			this._changesInfo.packageChanged = this.isProjectFileChanged(projectData, platform);
 			this._changesInfo.appResourcesChanged = this.containsNewerFiles(projectData.appResourcesDirectoryPath, null, projectData);
 			/*done because currently all node_modules are traversed, a possible improvement could be traversing only the production dependencies*/
 			this._changesInfo.nativeChanged = this.containsNewerFiles(
@@ -72,8 +74,8 @@ export class ProjectChangesService implements IProjectChangesService {
 			let platformResourcesDir = path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
 			if (platform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
 				this._changesInfo.configChanged = this.filesChanged([path.join(platformResourcesDir, platformData.configurationFileName),
-					path.join(platformResourcesDir, "LaunchScreen.storyboard"),
-					path.join(platformResourcesDir, "build.xcconfig")
+				path.join(platformResourcesDir, "LaunchScreen.storyboard"),
+				path.join(platformResourcesDir, "build.xcconfig")
 				]);
 			} else {
 				this._changesInfo.configChanged = this.filesChanged([
@@ -107,6 +109,9 @@ export class ProjectChangesService implements IProjectChangesService {
 				this._prepareInfo.changesRequireBuildTime = this._prepareInfo.time;
 			}
 		}
+
+		this._changesInfo.nativePlatformStatus = this._prepareInfo.nativePlatformStatus;
+
 		return this._changesInfo;
 	}
 
@@ -134,29 +139,67 @@ export class ProjectChangesService implements IProjectChangesService {
 		this.$fs.writeJson(prepareInfoFilePath, this._prepareInfo);
 	}
 
+	public setNativePlatformStatus(platform: string, projectData: IProjectData, addedPlatform: IAddedNativePlatform): void {
+		this._prepareInfo = this._prepareInfo || this.getPrepareInfo(platform, projectData);
+		if (this._prepareInfo) {
+			this._prepareInfo.nativePlatformStatus = addedPlatform.nativePlatformStatus;
+			this.savePrepareInfo(platform, projectData);
+		}
+	}
+
 	private ensurePrepareInfo(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): boolean {
 		this._prepareInfo = this.getPrepareInfo(platform, projectData);
 		if (this._prepareInfo) {
+			this._prepareInfo.nativePlatformStatus = this._prepareInfo.nativePlatformStatus && this._prepareInfo.nativePlatformStatus < projectChangesOptions.nativePlatformStatus ?
+				projectChangesOptions.nativePlatformStatus :
+				this._prepareInfo.nativePlatformStatus || projectChangesOptions.nativePlatformStatus;
+
 			let platformData = this.$platformsData.getPlatformData(platform, projectData);
 			let prepareInfoFile = path.join(platformData.projectRoot, prepareInfoFileName);
 			this._outputProjectMtime = this.$fs.getFsStats(prepareInfoFile).mtime.getTime();
 			this._outputProjectCTime = this.$fs.getFsStats(prepareInfoFile).ctime.getTime();
 			return false;
 		}
+
 		this._prepareInfo = {
 			time: "",
+			nativePlatformStatus: projectChangesOptions.nativePlatformStatus,
 			bundle: projectChangesOptions.bundle,
 			release: projectChangesOptions.release,
 			changesRequireBuild: true,
+			projectFileHash: this.getProjectFileStrippedHash(projectData, platform),
 			changesRequireBuildTime: null
 		};
+
 		this._outputProjectMtime = 0;
 		this._outputProjectCTime = 0;
+		this._changesInfo = this._changesInfo || new ProjectChangesInfo();
 		this._changesInfo.appFilesChanged = true;
 		this._changesInfo.appResourcesChanged = true;
 		this._changesInfo.modulesChanged = true;
 		this._changesInfo.configChanged = true;
 		return true;
+	}
+
+	private getProjectFileStrippedHash(projectData: IProjectData, platform: string): string {
+		platform = platform.toLowerCase();
+		const projectFilePath = path.join(projectData.projectDir, PACKAGE_JSON_FILE_NAME);
+		const projectFileContents = this.$fs.readJson(projectFilePath);
+		_(this.$devicePlatformsConstants)
+			.keys()
+			.map(k => k.toLowerCase())
+			.difference([platform])
+			.each(otherPlatform => {
+				delete projectFileContents.nativescript[`tns-${otherPlatform}`];
+			});
+
+		return getHash(JSON.stringify(projectFileContents));
+	}
+
+	private isProjectFileChanged(projectData: IProjectData, platform: string): boolean {
+		const projectFileStrippedContentsHash = this.getProjectFileStrippedHash(projectData, platform);
+		const prepareInfo = this.getPrepareInfo(platform, projectData);
+		return projectFileStrippedContentsHash !== prepareInfo.projectFileHash;
 	}
 
 	private filesChanged(files: string[]): boolean {
@@ -168,6 +211,7 @@ export class ProjectChangesService implements IProjectChangesService {
 				}
 			}
 		}
+
 		return false;
 	}
 

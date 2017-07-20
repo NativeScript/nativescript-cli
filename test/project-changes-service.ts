@@ -32,6 +32,13 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 		this.injector.register("devicePlatformsConstants", {});
 		this.injector.register("projectChangesService", ProjectChangesService);
 
+		const fs = this.injector.resolve<IFileSystem>("fs");
+		fs.writeJson(path.join(this.projectDir, Constants.PACKAGE_JSON_FILE_NAME), {
+			nativescript: {
+				id: "org.nativescript.test"
+			}
+		});
+
 	}
 
 	get projectChangesService(): IProjectChangesService {
@@ -113,13 +120,15 @@ describe("Project Changes Service Tests", () => {
 				// arrange
 				const prepareInfoPath = path.join(serviceTest.projectDir, Constants.PLATFORMS_DIR_NAME,
 					platform, ".nsprepareinfo");
-				const expectedPrepareInfo = {
+				const expectedPrepareInfo: IPrepareInfo = {
 					time: new Date().toString(),
 					bundle: true,
 					release: false,
 					changesRequireBuild: true,
 					changesRequireBuildTime: new Date().toString(),
-					iOSProvisioningProfileUUID: "provisioning_profile_test"
+					iOSProvisioningProfileUUID: "provisioning_profile_test",
+					projectFileHash: "",
+					nativePlatformStatus: Constants.NativePlatformStatus.requiresPlatformAdd
 				};
 				fs.writeJson(prepareInfoPath, expectedPrepareInfo);
 

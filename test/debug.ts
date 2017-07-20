@@ -1,6 +1,6 @@
 import * as stubs from "./stubs";
 import * as yok from "../lib/common/yok";
-import { DebugAndroidCommand } from "../lib/commands/debug";
+import { DebugAndroidCommand, DebugPlatformCommand } from "../lib/commands/debug";
 import { assert } from "chai";
 import { Configuration, StaticConfig } from "../lib/config";
 import { Options } from "../lib/options";
@@ -68,6 +68,11 @@ function createTestInjector(): IInjector {
 
 	testInjector.register("prompter", {});
 	testInjector.registerCommand("debug|android", DebugAndroidCommand);
+	testInjector.register("liveSyncCommandHelper", {
+		getDevicesLiveSyncInfo: async (): Promise<void> => {
+			return null;
+		}
+	});
 
 	return testInjector;
 }
@@ -78,7 +83,7 @@ describe("debug command tests", () => {
 			const testInjector = createTestInjector();
 			const options = testInjector.resolve<IOptions>("options");
 			options.forDevice = options.emulator = true;
-			const debugCommand = <DebugAndroidCommand>testInjector.resolveCommand("debug|android");
+			const debugCommand = testInjector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { debugService: {}, platform: "android" });
 			await assert.isRejected(debugCommand.getDeviceForDebug(), DebugCommandErrors.UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR);
 		});
 
@@ -95,7 +100,7 @@ describe("debug command tests", () => {
 
 			const options = testInjector.resolve<IOptions>("options");
 			options.device = specifiedDeviceOption;
-			const debugCommand = <DebugAndroidCommand>testInjector.resolveCommand("debug|android");
+			const debugCommand = testInjector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { debugService: {}, platform: "android" });
 			const selectedDeviceInstance = await debugCommand.getDeviceForDebug();
 			assert.deepEqual(selectedDeviceInstance, deviceInstance);
 		});
@@ -111,7 +116,7 @@ describe("debug command tests", () => {
 			const devicesService = testInjector.resolve<Mobile.IDevicesService>("devicesService");
 			devicesService.getDeviceInstances = (): Mobile.IDevice[] => getDeviceInstancesResult;
 
-			const debugCommand = <DebugAndroidCommand>testInjector.resolveCommand("debug|android");
+			const debugCommand = testInjector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { debugService: {}, platform: "android" });
 			await assert.isRejected(debugCommand.getDeviceForDebug(), DebugCommandErrors.NO_DEVICES_EMULATORS_FOUND_FOR_OPTIONS);
 		};
 
@@ -184,7 +189,7 @@ describe("debug command tests", () => {
 			const devicesService = testInjector.resolve<Mobile.IDevicesService>("devicesService");
 			devicesService.getDeviceInstances = (): Mobile.IDevice[] => [deviceInstance];
 
-			const debugCommand = <DebugAndroidCommand>testInjector.resolveCommand("debug|android");
+			const debugCommand = testInjector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { debugService: {}, platform: "android" });
 			const actualDeviceInstance = await debugCommand.getDeviceForDebug();
 			assert.deepEqual(actualDeviceInstance, deviceInstance);
 		});
@@ -243,7 +248,7 @@ describe("debug command tests", () => {
 						return choices[1];
 					};
 
-					const debugCommand = <DebugAndroidCommand>testInjector.resolveCommand("debug|android");
+					const debugCommand = testInjector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { debugService: {}, platform: "android" });
 					const actualDeviceInstance = await debugCommand.getDeviceForDebug();
 					const expectedChoicesPassedToPrompter = [deviceInstance1, deviceInstance2].map(d => `${d.deviceInfo.identifier} - ${d.deviceInfo.displayName}`);
 					assert.deepEqual(choicesPassedToPrompter, expectedChoicesPassedToPrompter);
@@ -304,7 +309,7 @@ describe("debug command tests", () => {
 
 					devicesService.getDeviceInstances = (): Mobile.IDevice[] => deviceInstances;
 
-					const debugCommand = <DebugAndroidCommand>testInjector.resolveCommand("debug|android");
+					const debugCommand = testInjector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { debugService: {}, platform: "android" });
 					const actualDeviceInstance = await debugCommand.getDeviceForDebug();
 
 					assert.deepEqual(actualDeviceInstance, deviceInstance2);

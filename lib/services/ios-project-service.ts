@@ -876,7 +876,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 			if (!this.$fs.exists(xcuserDataPath) && !this.$fs.exists(sharedDataPath)) {
 				this.$logger.info("Creating project scheme...");
-
 				await this.checkIfXcodeprojIsRequired();
 
 				let createSchemeRubyScript = `ruby -e "require 'xcodeproj'; xcproj = Xcodeproj::Project.open('${projectData.projectName}.xcodeproj'); xcproj.recreate_user_schemes; xcproj.save"`;
@@ -1123,13 +1122,11 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			this.$fs.writeFile(projectFile, "");
 		}
 
-		if (this.$hostInfo.isDarwin) {
-			await this.checkIfXcodeprojIsRequired();
-			let escapedProjectFile = projectFile.replace(/'/g, "\\'"),
-				escapedPluginFile = pluginFile.replace(/'/g, "\\'"),
-				mergeScript = `require 'xcodeproj'; Xcodeproj::Config.new('${escapedProjectFile}').merge(Xcodeproj::Config.new('${escapedPluginFile}')).save_as(Pathname.new('${escapedProjectFile}'))`;
-			await this.$childProcess.exec(`ruby -e "${mergeScript}"`);
-		}
+		await this.checkIfXcodeprojIsRequired();
+		let escapedProjectFile = projectFile.replace(/'/g, "\\'"),
+			escapedPluginFile = pluginFile.replace(/'/g, "\\'"),
+			mergeScript = `require 'xcodeproj'; Xcodeproj::Config.new('${escapedProjectFile}').merge(Xcodeproj::Config.new('${escapedPluginFile}')).save_as(Pathname.new('${escapedProjectFile}'))`;
+		await this.$childProcess.exec(`ruby -e "${mergeScript}"`);
 	}
 
 	private async mergeProjectXcconfigFiles(release: boolean, projectData: IProjectData): Promise<void> {
