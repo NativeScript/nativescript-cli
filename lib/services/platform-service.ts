@@ -278,7 +278,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			this.$errors.failWithoutHelp(`Unable to install dependencies. Make sure your package.json is valid and all dependencies are correct. Error is: ${err.message}`);
 		}
 
-		await this.$pluginsService.validate(platformData, projectData);
 		await this.ensurePlatformInstalled(platform, platformTemplate, projectData, config, nativePrepare);
 
 		const bundle = appFilesUpdaterOptions.bundle;
@@ -341,6 +340,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		if (!changesInfo || changesInfo.modulesChanged || appFilesUpdaterOptions.bundle) {
+			await this.$pluginsService.validate(platformData, projectData);
+
 			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).mtime : null;
 
