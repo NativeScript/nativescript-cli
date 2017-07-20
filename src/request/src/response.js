@@ -112,6 +112,14 @@ export default class Response {
       || this.statusCode === StatusCode.TemporaryRedirect
       || this.statusCode === StatusCode.PermanentRedirect;
   }
+
+  isServerError() {
+    return this.statusCode >= 500 && this.statusCode < 600;
+  }
+
+  isClientError() {
+    return this.statusCode >= 400 && this.statusCode < 500;
+  }
 }
 
 /**
