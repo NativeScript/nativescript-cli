@@ -237,7 +237,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 					deviceBuildInfoDescriptor,
 					liveSyncData,
 					settings
-				}, { skipNativePrepare: liveSyncData.skipNativePrepare });
+				}, { skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare });
 
 				const liveSyncResultInfo = await this.getLiveSyncService(platform).fullSync({
 					projectData, device,
@@ -339,7 +339,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 										deviceBuildInfoDescriptor,
 										settings: latestAppPackageInstalledSettings,
 										modifiedFiles: allModifiedFiles
-									}, { skipNativePrepare: liveSyncData.skipNativePrepare });
+									}, { skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare });
 
 									const service = this.getLiveSyncService(device.deviceInfo.platform);
 									const settings: ILiveSyncWatchInfo = {

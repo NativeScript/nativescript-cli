@@ -88,6 +88,11 @@ interface ILiveSyncDeviceInfo {
 	 * In case it is not passed, the default output for local builds will be used.
 	 */
 	outputPath?: string;
+
+	/**
+	 * Whether to skip preparing the native platform.
+	 */
+	skipNativePrepare?: boolean;
 }
 
 /**
@@ -120,11 +125,6 @@ interface ILiveSyncInfo {
 	 * Forces a build before the initial livesync.
 	 */
 	clean?: boolean;
-
-	/**
-	 * Whether to skip preparing the native platform.
-	 */
-	skipNativePrepare?: boolean;
 }
 
 interface ILatestAppPackageInstalledSettings extends IDictionary<IDictionary<boolean>> { /* empty */ }
