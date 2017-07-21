@@ -10,7 +10,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	}
 
 	public async getDevicesLiveSyncInfo(devices: Mobile.IDevice[], liveSyncService: ILiveSyncService, platform: string): Promise<void> {
-		await this.$devicesService.detectCurrentlyAttachedDevices();
+		await this.$devicesService.detectCurrentlyAttachedDevices({ shouldReturnImmediateResult: false, platform });
 
 		const workingWithiOSDevices = !platform || this.$mobileHelper.isiOSPlatform(platform);
 		const shouldKeepProcessAlive = this.$options.watch || !this.$options.justlaunch;

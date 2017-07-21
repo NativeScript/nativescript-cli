@@ -56,7 +56,7 @@ export class RunCommandBase implements ICommand {
 			skipInferPlatform: !this.platform
 		});
 
-		await this.$devicesService.detectCurrentlyAttachedDevices();
+		await this.$devicesService.detectCurrentlyAttachedDevices({ shouldReturnImmediateResult: false, platform: this.platform });
 		let devices = this.$devicesService.getDeviceInstances();
 		devices = devices.filter(d => !this.platform || d.deviceInfo.platform.toLowerCase() === this.platform.toLowerCase());
 		await this.$liveSyncCommandHelper.getDevicesLiveSyncInfo(devices, this.$liveSyncService, this.platform);
