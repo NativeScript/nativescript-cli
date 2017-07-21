@@ -17,6 +17,7 @@ export const LIVESYNC_EXCLUDED_FILE_PATTERNS = ["**/*.js.map", "**/*.ts"];
 export const XML_FILE_EXTENSION = ".xml";
 export const PLATFORMS_DIR_NAME = "platforms";
 export const CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
+export const AWAIT_NOTIFICATION_TIMEOUT_SECONDS = 9;
 
 export class PackageVersion {
 	static NEXT = "next";

@@ -37,8 +37,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 				return false;
 			}
 		} else {
-			let timeout = 9000;
-			await this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, timeout, projectId);
+			await this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, projectId);
 			this.socket = await this.device.connectToPort(IOSDeviceLiveSyncService.BACKEND_PORT);
 		}
 
