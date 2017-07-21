@@ -1,7 +1,8 @@
-import { FileStore as BaseFileStore } from 'kinvey-js-sdk/dist/datastore';
-import { KinveyResponse } from 'kinvey-js-sdk/dist/export';
 import { File } from 'tns-core-modules/file-system';
 import { isAndroid } from 'tns-core-modules/platform';
+import { FileStore as BaseFileStore } from 'kinvey-js-sdk/dist/datastore';
+import { KinveyError } from 'kinvey-js-sdk/dist/export';
+import { KinveyResponse } from 'kinvey-js-sdk/dist/export';
 import {
     session,
     Session,
@@ -29,12 +30,16 @@ export class NativeScriptFileStore extends BaseFileStore {
         super();
         this.session = session(NativeScriptFileStore.sessionName);
     }
-    
+
     protected makeUploadRequest(url: string, file: File, metadata: FileUploadMetadata, options: FileUploadOptions)
-    protected makeUploadRequest(url: string, file: string, metadata: FileUploadMetadata, options: FileUploadOptions)
-    protected makeUploadRequest(url: string, file: string|File, metadata: FileUploadMetadata, options: FileUploadOptions) {
-        if (file instanceof File) {
-            file = file.path;
+    protected makeUploadRequest(url: string, filePath: string, metadata: FileUploadMetadata, options: FileUploadOptions)
+    protected makeUploadRequest(url: string, filePath: string | File, metadata: FileUploadMetadata, options: FileUploadOptions) {
+        if (filePath instanceof File) {
+            filePath = filePath.path;
+        }
+        
+        if (!File.exists(filePath)) {
+            return Promise.reject(new KinveyError('File does not exist'));
         }
 
         options.headers['content-type'] = metadata.mimeType;
@@ -47,35 +52,24 @@ export class NativeScriptFileStore extends BaseFileStore {
             description: `Uploading ${metadata._filename || 'file'}`
         };
 
-        const task = this.session.uploadFile(file, request);
+        const task = this.session.uploadFile(filePath, request);
 
         return new Promise((resolve, reject) => {
             const responseData: { statusCode: number, data?: any, headers?: any } = {} as any;
             let wasError = false;
-            
+
             task.on('error', (eventData: ErrorEventData) => {
                 responseData.data = eventData.error;
                 responseData.statusCode = 500;
                 wasError = true;
             });
             task.on('responded', (eventData: ResultEventData) => {
-                let responseBody: any = null;
-                try {
-                    responseBody = JSON.parse(eventData.data);
-                } catch (ex) {
-                    responseBody = eventData.data;
-                }
-                responseData.data = responseBody;
+                const body = this.tryParseResponseBody(eventData.data);
+                responseData.data = body;
             });
             task.on('complete', (eventData: any) => {
                 if (isAndroid) {
-                    responseData.statusCode = eventData.response.getHttpCode();
-                    responseData.headers = {};
-                    const headerMap = eventData.response.getHeaders();
-                    const headerNames = headerMap.keySet().toArray();
-                    for (const header of headerNames) {
-                        responseData.headers[header] = headerMap.get(header);
-                    }
+                    this.javaResponseToJsObject(eventData.response, responseData);
                 }
                 const resp = new KinveyResponse(responseData);
                 if (wasError) {
@@ -85,5 +79,25 @@ export class NativeScriptFileStore extends BaseFileStore {
                 }
             });
         });
+    }
+
+    private tryParseResponseBody(body: string) {
+        let result: any = null;
+        try {
+            result = JSON.parse(body);
+        } catch (ex) {
+            result = body;
+        }
+        return result;
+    }
+
+    private javaResponseToJsObject(javaResponse, jsObject) {
+        jsObject.statusCode = javaResponse.getHttpCode();
+        jsObject.headers = {};
+        const headerMap = javaResponse.getHeaders();
+        const headerNames = headerMap.keySet().toArray();
+        for (const header of headerNames) {
+            jsObject.headers[header] = headerMap.get(header);
+        }
     }
 }
