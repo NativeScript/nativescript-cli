@@ -2,8 +2,6 @@ import Promise from 'es6-promise';
 import Queue from 'promise-queue';
 import url from 'url';
 import cloneDeep from 'lodash/cloneDeep';
-import identity from 'lodash/identity';
-import filter from 'lodash/filter';
 
 import Client from 'src/client';
 import { KinveyError } from 'src/errors';
@@ -70,9 +68,9 @@ export default class CacheRequest extends Request {
 
   set url(urlString) {
     super.url = urlString;
-    let pathname = global.decodeURIComponent(url.parse(urlString).pathname);
-    const urlParts = pathname.replace(/^\//g, '').split('/');
-    // "pathname" has the following form "/namespace/appKey/collection/id"
+    const pathname = global.decodeURIComponent(url.parse(urlString).pathname);
+    const urlParts = pathname.replace(/^\//, '').split('/');
+    // "pathname" has the following form: "/namespace/appKey/collection/id"
     this.appKey = urlParts[1];
     this.collection = urlParts[2];
     this.entityId = urlParts[3];
