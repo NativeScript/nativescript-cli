@@ -113,6 +113,14 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				webSocket.send(buffer.toString(encoding));
 			});
 
+			webSocket.on("error", err => {
+				this.$logger.trace("Error on debugger websocket", err);
+			});
+
+			deviceSocket.on("error", err => {
+				this.$logger.trace("Error on debugger deviceSocket", err);
+			});
+
 			webSocket.on("message", (message, flags) => {
 				let length = Buffer.byteLength(message, encoding);
 				let payload = new Buffer(length + 4);
@@ -121,9 +129,11 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				deviceSocket.write(payload);
 			});
 
-			deviceSocket.on("end", () => {
+			deviceSocket.on("close", () => {
 				this.$logger.info("Backend socket closed!");
-				process.exit(0);
+				if (!this.$options.watch) {
+					process.exit(0);
+				}
 			});
 
 			webSocket.on("close", () => {
