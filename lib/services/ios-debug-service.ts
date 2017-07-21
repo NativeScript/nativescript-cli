@@ -4,7 +4,7 @@ import * as path from "path";
 import * as log4js from "log4js";
 import { ChildProcess } from "child_process";
 import { DebugServiceBase } from "./debug-service-base";
-import { CONNECTION_ERROR_EVENT_NAME } from "../constants";
+import { CONNECTION_ERROR_EVENT_NAME, AWAIT_NOTIFICATION_TIMEOUT_SECONDS } from "../constants";
 import { getPidFromiOSSimulatorLogs } from "../common/helpers";
 
 import byline = require("byline");
@@ -13,7 +13,6 @@ const inspectorBackendPort = 18181;
 const inspectorAppName = "NativeScript Inspector.app";
 const inspectorNpmPackageName = "tns-ios-inspector";
 const inspectorUiDir = "WebInspectorUI/";
-const TIMEOUT_SECONDS = 9;
 
 class IOSDebugService extends DebugServiceBase implements IPlatformDebugService {
 	private _lldbProcess: ChildProcess;
@@ -176,7 +175,7 @@ class IOSDebugService extends DebugServiceBase implements IPlatformDebugService 
 	}
 
 	private async debugBrkCore(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
-		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device.deviceInfo.identifier, TIMEOUT_SECONDS, TIMEOUT_SECONDS, debugData.applicationIdentifier, debugOptions.debugBrk);
+		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device.deviceInfo.identifier, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, debugData.applicationIdentifier, debugOptions.debugBrk);
 		return this.wireDebuggerClient(debugData, debugOptions, device);
 	}
 
@@ -188,7 +187,7 @@ class IOSDebugService extends DebugServiceBase implements IPlatformDebugService 
 	}
 
 	private async deviceStartCore(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
-		await this.$iOSSocketRequestExecutor.executeAttachRequest(device, TIMEOUT_SECONDS, debugData.applicationIdentifier);
+		await this.$iOSSocketRequestExecutor.executeAttachRequest(device, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, debugData.applicationIdentifier);
 		return this.wireDebuggerClient(debugData, debugOptions, device);
 	}
 
