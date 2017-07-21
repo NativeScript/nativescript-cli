@@ -112,8 +112,9 @@ class Memory {
   }
 }
 
-export default {
+const MemoryAdapter = {
   load(name) {
     return new Memory(name);
   }
 };
+export { MemoryAdapter };
