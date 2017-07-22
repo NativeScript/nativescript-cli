@@ -33,7 +33,7 @@ export class RunCommandBase implements ICommand {
 			this.platform = this.$devicePlatformsConstants.Android;
 		}
 
-		const availablePlatforms = this.platform ? [this.platform] : _.values<string>(this.$platformsData.availablePlatforms);
+		const availablePlatforms = this.$liveSyncCommandHelper.getPlatformsForOperation(this.platform);
 		for (let platform of availablePlatforms) {
 			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
 			const platformProjectService = platformData.platformProjectService;
@@ -59,7 +59,7 @@ export class RunCommandBase implements ICommand {
 		await this.$devicesService.detectCurrentlyAttachedDevices({ shouldReturnImmediateResult: false, platform: this.platform });
 		let devices = this.$devicesService.getDeviceInstances();
 		devices = devices.filter(d => !this.platform || d.deviceInfo.platform.toLowerCase() === this.platform.toLowerCase());
-		await this.$liveSyncCommandHelper.getDevicesLiveSyncInfo(devices, this.$liveSyncService, this.platform);
+		await this.$liveSyncCommandHelper.executeLiveSyncOperation(devices, this.$liveSyncService, this.platform);
 	}
 }
 

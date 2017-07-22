@@ -6,10 +6,20 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		protected $devicesService: Mobile.IDevicesService,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $platformsData: IPlatformsData) {
+		private $platformsData: IPlatformsData,
+		private $errors: IErrors) {
 	}
 
-	public async getDevicesLiveSyncInfo(devices: Mobile.IDevice[], liveSyncService: ILiveSyncService, platform: string): Promise<void> {
+	public getPlatformsForOperation(platform: string): string[] {
+		const availablePlatforms = platform ? [platform] : _.values<string>(this.$platformsData.availablePlatforms);
+		return availablePlatforms;
+	}
+
+	public async executeLiveSyncOperation(devices: Mobile.IDevice[], liveSyncService: ILiveSyncService, platform: string): Promise<void> {
+		if (!devices || !devices.length) {
+			this.$errors.failWithoutHelp("Unable to find applicable devices to execute operation and unable to start emulator when platform is not specified.");
+		}
+
 		await this.$devicesService.detectCurrentlyAttachedDevices({ shouldReturnImmediateResult: false, platform });
 
 		const workingWithiOSDevices = !platform || this.$mobileHelper.isiOSPlatform(platform);
@@ -75,7 +85,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			clean: true,
 		}, this.$options.argv);
 
-		const availablePlatforms = platform ? [platform] : _.values<string>(this.$platformsData.availablePlatforms);
+		const availablePlatforms = this.getPlatformsForOperation(platform);
 		for (const currentPlatform of availablePlatforms) {
 			await this.$platformService.deployPlatform(currentPlatform, this.$options, deployOptions, this.$projectData, this.$options);
 			await this.$platformService.startApplication(currentPlatform, runPlatformOptions, this.$projectData.projectId);
