@@ -69,7 +69,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("prompter", {});
 	testInjector.registerCommand("debug|android", DebugAndroidCommand);
 	testInjector.register("liveSyncCommandHelper", {
-		getDevicesLiveSyncInfo: async (): Promise<void> => {
+		executeLiveSyncOperation: async (): Promise<void> => {
 			return null;
 		}
 	});

@@ -256,5 +256,6 @@ interface IDevicePathProvider {
 }
 
 interface ILiveSyncCommandHelper {
-	getDevicesLiveSyncInfo(devices: Mobile.IDevice[], liveSyncService: ILiveSyncService, platform: string): Promise<void>;
+	executeLiveSyncOperation(devices: Mobile.IDevice[], liveSyncService: ILiveSyncService, platform: string): Promise<void>;
+	getPlatformsForOperation(platform: string): string[];
 }
