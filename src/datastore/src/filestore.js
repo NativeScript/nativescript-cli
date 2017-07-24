@@ -325,9 +325,8 @@ export default class FileStore extends NetworkStore {
    */
   upload(file, metadata = {}, options = {}) {
     metadata = this.transformMetadata(file, metadata);
-    let kinveySaveData = null
+    let kinveySaveData = null;
 
-    // Execute the request
     return this.saveFileMetadata(options, metadata)
       .then((response) => {
         kinveySaveData = response.data;
@@ -336,7 +335,7 @@ export default class FileStore extends NetworkStore {
       .then((response) => {
         Log.debug('File upload status check response', response);
 
-        if (response.isSuccess() === false) {
+        if (!response.isSuccess()) {
           return Promise.reject(response.error);
         }
 
@@ -386,7 +385,7 @@ export default class FileStore extends NetworkStore {
 
   /**
    * @private
-   * This function may mutate the options object param - may change its start property
+   * This function may mutate the options object param - may change its start or count properties
    */
   handleReuploadCases(uploadResponse, fileSize, options) {
     let backoff = 0;
@@ -397,7 +396,7 @@ export default class FileStore extends NetworkStore {
 
     if (uploadResponse.isServerError()) { // should retry
       Log.debug('File upload server error. Probably network congestion.', uploadResponse.statusCode, uploadResponse.data);
-      backoff = (2 ** options.count) + (1000 + randomInt(-100, 101)); // Calculate the exponential backoff
+      backoff = (2 ** options.count) + randomInt(1, 1001); // Calculate the exponential backoff
       if (backoff >= options.maxBackoff) {
         return Promise.reject(uploadResponse.error);
       }
@@ -440,6 +439,8 @@ export default class FileStore extends NetworkStore {
       .then((reuploadOptions) => {
         if (reuploadOptions.shouldRetry) { // is retrying after backoff period
           options.count += 1;
+        } else {
+          options.count = 0;
         }
         if (reuploadOptions.shouldResume || reuploadOptions.shouldRetry) { // should continue with upload
           return this.retriableUpload(url, file, metadata, options);
