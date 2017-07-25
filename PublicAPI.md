@@ -635,6 +635,7 @@ tns.liveSyncService.on("liveSyncStarted", data => {
 	 * Full paths to files synced during the operation. In case the `syncedFiles.length` is 0, the operation is "fullSync" (i.e. all project files are synced).
 	 */
 	syncedFiles: string[];
+	isFullSync: boolean;
 }
 ```
 

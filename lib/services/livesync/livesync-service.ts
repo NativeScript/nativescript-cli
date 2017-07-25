@@ -109,7 +109,8 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 			projectDir: projectData.projectDir,
 			applicationIdentifier: projectData.projectId,
 			syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
-			deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier
+			deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
+			isFullSync: liveSyncResultInfo.isFullSync
 		});
 
 		this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
@@ -154,8 +155,9 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		throw new Error(`Invalid platform ${platform}. Supported platforms are: ${this.$mobileHelper.platformNames.join(", ")}`);
 	}
 
-	private async ensureLatestAppPackageIsInstalledOnDevice(options: IEnsureLatestAppPackageIsInstalledOnDeviceOptions, nativePrepare?: INativePrepare): Promise<void> {
+	private async ensureLatestAppPackageIsInstalledOnDevice(options: IEnsureLatestAppPackageIsInstalledOnDeviceOptions, nativePrepare?: INativePrepare): Promise<IAppInstalledOnDeviceResult> {
 		const platform = options.device.deviceInfo.platform;
+		const appInstalledOnDeviceResult: IAppInstalledOnDeviceResult = { appInstalled: false };
 		if (options.preparedPlatforms.indexOf(platform) === -1) {
 			options.preparedPlatforms.push(platform);
 			// TODO: Pass provision and sdk as a fifth argument here
@@ -167,7 +169,8 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 
 		const buildResult = await this.installedCachedAppPackage(platform, options);
 		if (buildResult) {
-			return;
+			appInstalledOnDeviceResult.appInstalled = true;
+			return appInstalledOnDeviceResult;
 		}
 
 		// TODO: Pass provision and sdk as a fifth argument here
@@ -176,7 +179,6 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		let action = LiveSyncTrackActionNames.LIVESYNC_OPERATION;
 		if (shouldBuild) {
 			pathToBuildItem = await options.deviceBuildInfoDescriptor.buildAction();
-			// Is it possible to return shouldBuild for two devices? What about android device and android emulator?
 			options.rebuiltInformation.push({ isEmulator: options.device.isEmulator, platform, pathToBuildItem });
 			action = LiveSyncTrackActionNames.LIVESYNC_OPERATION_BUILD;
 		}
@@ -186,7 +188,10 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		const shouldInstall = await this.$platformService.shouldInstall(options.device, options.projectData, options.deviceBuildInfoDescriptor.outputPath);
 		if (shouldInstall) {
 			await this.$platformService.installApplication(options.device, { release: false }, options.projectData, pathToBuildItem, options.deviceBuildInfoDescriptor.outputPath);
+			appInstalledOnDeviceResult.appInstalled = true;
 		}
+
+		return appInstalledOnDeviceResult;
 	}
 
 	private async trackAction(action: string, platform: string, options: IEnsureLatestAppPackageIsInstalledOnDeviceOptions): Promise<void> {
@@ -331,7 +336,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 									const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];
 									const deviceBuildInfoDescriptor = _.find(liveSyncProcessInfo.deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 
-									await this.ensureLatestAppPackageIsInstalledOnDevice({
+									const appInstalledOnDeviceResult = await this.ensureLatestAppPackageIsInstalledOnDevice({
 										device,
 										preparedPlatforms,
 										rebuiltInformation,
@@ -346,7 +351,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 										projectData,
 										filesToRemove: currentFilesToRemove,
 										filesToSync: currentFilesToSync,
-										isRebuilt: !!_.find(rebuiltInformation, info => info.isEmulator === device.isEmulator && info.platform === device.deviceInfo.platform),
+										isReinstalled: appInstalledOnDeviceResult.appInstalled,
 										syncAllFiles: liveSyncData.watchAllFiles,
 										useLiveEdit: liveSyncData.useLiveEdit
 									};
