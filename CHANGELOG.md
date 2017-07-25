@@ -1,6 +1,28 @@
 NativeScript CLI Changelog
 ================
 
+3.1.3 (2017, July 25)
+==
+
+### New
+
+* [Implemented #2470](https://github.com/NativeScript/nativescript-cli/issues/2470): Establish a recommended workflow for simultaneous Android & iOS development - use `tns run` command.
+* [Implemented #2873](https://github.com/NativeScript/nativescript-cli/issues/2873): Add official support for Node 8.
+* [Implemented #2894](https://github.com/NativeScript/nativescript-cli/issues/2894): Support for Android 8 (API-26) and Android Build Tools 26.0.0.
+
+### Fixed
+* [Fixed #2361](https://github.com/NativeScript/nativescript-cli/issues/2361): 'iTunes is not installed...' on Windows when using `tns run android`.
+* [Fixed #2870](https://github.com/NativeScript/nativescript-cli/issues/2870): CLI can not create projects with custom templates when npm 5 is used	.
+* [Fixed #2871](https://github.com/NativeScript/nativescript-cli/issues/2871): CLI can not add platform from local tgz package when npm 5 is used	.
+* [Fixed #2889](https://github.com/NativeScript/nativescript-cli/issues/2889): `tns prepare ios --provision` starts simulator.
+* [Fixed #2936](https://github.com/NativeScript/nativescript-cli/issues/2936): CFBundleURLTypes cannot be overridden from a plugin.
+* [Fixed #2941](https://github.com/NativeScript/nativescript-cli/issues/2941): Duplicate console logs with LiveSync in 3.1.
+* [Fixed #2965](https://github.com/NativeScript/nativescript-cli/issues/2965): Unmet peerDependencies break adding of platform.
+* [Fixed #2966](https://github.com/NativeScript/nativescript-cli/issues/2966): Improve selection of device/emulator for debugging.
+* [Fixed #2975](https://github.com/NativeScript/nativescript-cli/issues/2975): CLI Process hangs on native build failure.
+* [Fixed #2986](https://github.com/NativeScript/nativescript-cli/issues/2986): Preparing a project for a platform causes changes for the other platform.
+* [Fixed #2988](https://github.com/NativeScript/nativescript-cli/issues/2988): CLI fails with EPIPE during `$ tns run ios`.
+
 3.1.2 (2017, July 06)
 ==
 

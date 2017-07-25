@@ -108,6 +108,8 @@ export class ProjectChangesService implements IProjectChangesService {
 			if (this._prepareInfo.changesRequireBuild) {
 				this._prepareInfo.changesRequireBuildTime = this._prepareInfo.time;
 			}
+
+			this._prepareInfo.projectFileHash = this.getProjectFileStrippedHash(projectData, platform);
 		}
 
 		this._changesInfo.nativePlatformStatus = this._prepareInfo.nativePlatformStatus;
