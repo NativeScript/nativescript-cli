@@ -20,16 +20,7 @@ export class FileStore extends NativeScriptFileStore {
       return Promise.reject(new KinveyError('File does not exist'));
     }
 
-    options.headers['content-type'] = metadata.mimeType;
-    options.headers['content-range'] = `bytes 0-${metadata.size - 1}/${metadata.size}`;
-
-    const request: BackgroundRequest = {
-      method: 'PUT',
-      url: url,
-      headers: options.headers,
-      description: `Uploading ${metadata._filename || 'file'}`
-    };
-
+    const request = this.buildBackgroundRequestObj(url, metadata, options);
     const task = this.session.uploadFile(filePath, request);
     return new Promise((resolve, reject) => {
       const responseData: { statusCode: number, data?: any, headers?: any } = {} as any;
@@ -55,6 +46,18 @@ export class FileStore extends NativeScriptFileStore {
         }
       });
     });
+  }
+
+  private buildBackgroundRequestObj(url: string, metadata: FileMetadata, options: FileUploadRequestOptions) {
+    options.headers['content-type'] = metadata.mimeType;
+    options.headers['content-range'] = `bytes 0-${metadata.size - 1}/${metadata.size}`;
+
+    return {
+      method: 'PUT',
+      url: url,
+      headers: options.headers,
+      description: `Uploading ${metadata._filename || 'file'}`
+    } as BackgroundRequest;
   }
 
   private responseToJsObject(response): {} {
