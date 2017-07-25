@@ -171,6 +171,128 @@ describe('MobileIdentityConnect', function() {
             }));
           });
       });
+
+      it('should ignore an invalid micId', function() {
+        const micId = {};
+        const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
+        const username = 'custom';
+        const password = '1234';
+        const code = randomString();
+        const token = {
+          access_token: randomString(),
+          token_type: 'bearer',
+          expires_in: 3599,
+          refresh_token: randomString()
+        };
+
+        // API Response
+        nock(this.client.micHostname, { encodedQueryParams: true })
+          .post(
+            '/oauth/auth',
+            `client_id=${encodeURIComponent(this.client.appKey)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
+          )
+          .reply(200, {
+            temp_login_uri: tempLoginUriParts.href
+          }, {
+            'Content-Type': 'application/json; charset=utf-8'
+          });
+
+        nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
+          .post(
+            tempLoginUriParts.pathname,
+            `client_id=${encodeURIComponent(this.client.appKey)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}`
+          )
+          .reply(302, null, {
+            'Content-Type': 'application/json; charset=utf-8',
+            Location: `${redirectUri}/?code=${code}`
+          });
+
+        nock(this.client.micHostname, { encodedQueryParams: true })
+          .post(
+            '/oauth/token',
+            `grant_type=authorization_code&client_id=${encodeURIComponent(this.client.appKey)}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
+          )
+          .reply(200, token, {
+            'Content-Type': 'application/json; charset=utf-8'
+          });
+
+        const mic = new MobileIdentityConnect();
+        return mic.login(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
+          micId: micId,
+          username: username,
+          password: password
+        })
+          .then((response) => {
+            expect(response).toEqual(assign(token, {
+              identity: MobileIdentityConnect.identity,
+              client_id: this.client.appKey,
+              redirect_uri: redirectUri,
+              protocol: this.client.micProtocol,
+              host: this.client.micHost
+            }));
+          });
+      });
+
+      it('should accept a valid micId', function() {
+        const micId = randomString();
+        const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
+        const username = 'custom';
+        const password = '1234';
+        const code = randomString();
+        const token = {
+          access_token: randomString(),
+          token_type: 'bearer',
+          expires_in: 3599,
+          refresh_token: randomString()
+        };
+
+        // API Response
+        nock(this.client.micHostname, { encodedQueryParams: true })
+          .post(
+            '/oauth/auth',
+            `client_id=${encodeURIComponent(this.client.appKey+':'+micId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
+          )
+          .reply(200, {
+            temp_login_uri: tempLoginUriParts.href
+          }, {
+            'Content-Type': 'application/json; charset=utf-8'
+          });
+
+        nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
+          .post(
+            tempLoginUriParts.pathname,
+            `client_id=${encodeURIComponent(this.client.appKey+':'+micId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}`
+          )
+          .reply(302, null, {
+            'Content-Type': 'application/json; charset=utf-8',
+            Location: `${redirectUri}/?code=${code}`
+          });
+
+        nock(this.client.micHostname, { encodedQueryParams: true })
+          .post(
+            '/oauth/token',
+            `grant_type=authorization_code&client_id=${encodeURIComponent(this.client.appKey+':'+micId)}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
+          )
+          .reply(200, token, {
+            'Content-Type': 'application/json; charset=utf-8'
+          });
+
+        const mic = new MobileIdentityConnect();
+        return mic.login(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
+          micId: micId,
+          username: username,
+          password: password
+        })
+          .then((response) => {
+            expect(response).toEqual(assign(token, {
+              identity: MobileIdentityConnect.identity,
+              client_id: `${this.client.appKey}:${micId}`,
+              redirect_uri: redirectUri,
+              protocol: this.client.micProtocol,
+              host: this.client.micHost
+            }));
+          });
+      });
     });
   });
 });
