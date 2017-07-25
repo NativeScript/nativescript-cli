@@ -1,15 +1,17 @@
 import { File } from 'tns-core-modules/file-system';
 import { isAndroid } from 'tns-core-modules/platform';
-import { FileStore as BaseFileStore } from 'kinvey-js-sdk/dist/datastore';
-import { KinveyError } from 'kinvey-js-sdk/dist/export';
-import { KinveyResponse } from 'kinvey-js-sdk/dist/export';
 import {
     session,
     Session,
     Request as BackgroundRequest,
     ResultEventData,
-    ErrorEventData
+    ErrorEventData,
+    Task
 } from 'nativescript-background-http';
+
+import { FileStore as BaseFileStore } from 'kinvey-js-sdk/dist/datastore';
+import { KinveyError } from 'kinvey-js-sdk/dist/export';
+import { KinveyResponse } from 'kinvey-js-sdk/dist/export';
 
 export interface FileUploadMetadata {
     mimeType: string,
@@ -22,13 +24,25 @@ export interface FileUploadOptions {
     headers: { [key: string]: string }
 }
 
+interface KinveyResponseData {
+    statusCode: number,
+    data?: any,
+    headers?: any
+}
+
 export class NativeScriptFileStore extends BaseFileStore {
     private static readonly sessionName = 'kinvey-file-upload';
-    private session: Session = null;
+    private _session: Session = null;
 
     constructor() {
         super();
-        this.session = session(NativeScriptFileStore.sessionName);
+    }
+
+    get session() {
+        if (!this._session) {
+            this._session = session(NativeScriptFileStore.sessionName);
+        }
+        return this._session;
     }
 
     protected makeUploadRequest(url: string, file: File, metadata: FileUploadMetadata, options: FileUploadOptions)
@@ -37,25 +51,20 @@ export class NativeScriptFileStore extends BaseFileStore {
         if (filePath instanceof File) {
             filePath = filePath.path;
         }
-        
+
         if (!File.exists(filePath)) {
             return Promise.reject(new KinveyError('File does not exist'));
         }
 
-        options.headers['content-type'] = metadata.mimeType;
-        options.headers['content-range'] = `bytes 0-${metadata.size - 1}/${metadata.size}`;
-
-        const request: BackgroundRequest = {
-            method: 'PUT',
-            url: url,
-            headers: options.headers,
-            description: `Uploading ${metadata._filename || 'file'}`
-        };
-
+        const request = this.buildBackgroundRequestObj(url, metadata, options);
         const task = this.session.uploadFile(filePath, request);
 
+        return this.backgroundTaskToPromise(task);
+    }
+
+    private backgroundTaskToPromise(task: Task) {
         return new Promise((resolve, reject) => {
-            const responseData: { statusCode: number, data?: any, headers?: any } = {} as any;
+            const responseData: KinveyResponseData = {} as any;
             let wasError = false;
 
             task.on('error', (eventData: ErrorEventData) => {
@@ -79,6 +88,18 @@ export class NativeScriptFileStore extends BaseFileStore {
                 }
             });
         });
+    }
+
+    private buildBackgroundRequestObj(url: string, metadata: FileUploadMetadata, options: FileUploadOptions) {
+        options.headers['content-type'] = metadata.mimeType;
+        options.headers['content-range'] = `bytes 0-${metadata.size - 1}/${metadata.size}`;
+
+        return {
+            method: 'PUT',
+            url: url,
+            headers: options.headers,
+            description: `Uploading ${metadata._filename || 'file'}`
+        } as BackgroundRequest;
     }
 
     private tryParseResponseBody(body: string) {
