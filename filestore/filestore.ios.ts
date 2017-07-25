@@ -23,7 +23,7 @@ export class FileStore extends NativeScriptFileStore {
       request.HTTPMethod = 'PUT';
 
       for (const header in options.headers) {
-        request.setValueForHTTPHeaderField(header, options.headers[header]);
+        request.setValueForHTTPHeaderField(options.headers[header], header);
       }
 
       const nsFilePath = NSURL.fileURLWithPath(filePath);

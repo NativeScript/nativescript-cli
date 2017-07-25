@@ -39,50 +39,7 @@ export class NativeScriptFileStore extends CoreFileStore {
   protected makeUploadRequest(url: string, file: File, metadata: FileMetadata, options: FileUploadRequestOptions)
   protected makeUploadRequest(url: string, filePath: string, metadata: FileMetadata, options: FileUploadRequestOptions)
   protected makeUploadRequest(url: string, filePath: string | File, metadata: FileMetadata, options: FileUploadRequestOptions) {
-    if (filePath instanceof File) {
-      filePath = filePath.path;
-    }
-
-    if (File.exists(filePath) === false) {
-      return Promise.reject(new KinveyError('File does not exist'));
-    }
-
-    options.headers['content-type'] = metadata.mimeType;
-    options.headers['content-range'] = `bytes 0-${metadata.size - 1}/${metadata.size}`;
-
-    const request: BackgroundRequest = {
-      method: 'PUT',
-      url: url,
-      headers: options.headers,
-      description: `Uploading ${metadata._filename || 'file'}`
-    };
-
-    const task = this.session.uploadFile(filePath, request);
-    return new Promise((resolve, reject) => {
-      const responseData: { statusCode: number, data?: any, headers?: any } = {} as any;
-      let wasError = false;
-
-      task.on('error', (eventData: ErrorEventData) => {
-        responseData.data = eventData.error;
-        responseData.statusCode = 500;
-        wasError = true;
-      });
-      task.on('responded', (eventData: ResultEventData) => {
-        const body = this.tryParseResponseBody(eventData.data);
-        responseData.data = body;
-      });
-      task.on('complete', (eventData: any) => {
-        if (isAndroid) {
-          this.javaResponseToJsObject(eventData.response, responseData);
-        }
-        const resp = new KinveyResponse(responseData);
-        if (wasError) {
-          reject(resp);
-        } else {
-          resolve(resp);
-        }
-      });
-    });
+    return Promise.reject(new KinveyError('This method must be overridden.'));
   }
 
   protected parseResponseBody(body: string) {
