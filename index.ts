@@ -6,7 +6,7 @@ import { CacheMiddleware } from './cache';
 import { HttpMiddleware } from './http';
 import { Popup } from './popup';
 import { SecureStorage } from './secure';
-import { NativeScriptFileStore } from './datastore';
+import { FileStore } from './filestore';
 
 // Setup racks
 CacheRack.useCacheMiddleware(new CacheMiddleware());
@@ -18,7 +18,7 @@ MobileIdentityConnect.usePopupClass(Popup);
 // Setup Active User Storage class
 ActiveUserHelper.useStorage(SecureStorage);
 
-Kinvey.Files = new NativeScriptFileStore();
+Kinvey.Files = new FileStore();
 
 // Export
 export { Kinvey };

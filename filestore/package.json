@@ -1,0 +1,6 @@
+{
+  "name" : "filestore",
+  "main" : "filestore",
+  "types": "filestore.d.ts",
+  "nativescript": {}
+}
