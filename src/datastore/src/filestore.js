@@ -339,6 +339,10 @@ export default class FileStore extends NetworkStore {
           return Promise.reject(response.error);
         }
 
+        if (response.statusCode === 200) {
+          return; // file is already uploaded
+        }
+
         if (response.statusCode !== 308) {
           // TODO: Here we should handle redirects according to location header, but this generally shouldn't happen
           const err = this.getUnexpectedStatusCheckResponsCode(response);
