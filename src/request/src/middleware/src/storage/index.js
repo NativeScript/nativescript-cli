@@ -32,7 +32,7 @@ export class Storage {
       .then(() => MemoryAdapter.load(this.name))
       .then((adapter) => {
         if (isDefined(adapter) === false) {
-          throw new KinveyError('Unable to load a storage adapter.');
+          return Promise.reject(new KinveyError('Unable to load a storage adapter.'));
         }
 
         return adapter;
@@ -59,7 +59,7 @@ export class Storage {
           return [];
         }
 
-        throw error;
+        return Promise.reject(error);
       })
       .then((entities = []) => entities);
   }
