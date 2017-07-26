@@ -232,90 +232,6 @@ export default class FileStore extends NetworkStore {
   }
 
   /**
-   * Create the file on Kinvey
-   *
-   * @private
-   */
-  saveFileMetadata(options, requestBody) {
-    const isUpdate = isDefined(requestBody._id);
-    const reqMethod = isUpdate ? RequestMethod.PUT : RequestMethod.POST;
-    const reqUrl = url.format({
-      protocol: this.client.apiProtocol,
-      host: this.client.apiHost,
-      pathname: isUpdate ? `${this.pathname}/${requestBody._id}` : this.pathname
-    });
-
-    const reqOptions = {
-      method: reqMethod,
-      authType: AuthType.Default,
-      url: reqUrl,
-      properties: options.properties,
-      timeout: options.timeout,
-      body: requestBody,
-      client: this.client
-    };
-
-    const request = new KinveyRequest(reqOptions);
-    request.headers.set('X-Kinvey-Content-Type', requestBody.mimeType);
-    return request.execute();
-  }
-
-  /**
-   * @private
-   */
-  makeStatusCheckRequest(kinveySaveResponse, metadata, timeout) {
-    const headers = new Headers(kinveySaveResponse._requiredHeaders);
-    headers.set('content-type', metadata.mimeType);
-    headers.set('content-range', `bytes */${metadata.size}`);
-    const request = new NetworkRequest({
-      method: RequestMethod.PUT,
-      url: kinveySaveResponse._uploadURL,
-      timeout: timeout,
-      headers: headers
-    });
-    return request.execute();
-  }
-
-  /**
-   * @private
-   */
-  getUnexpectedStatusCheckResponsCode(response) {
-    const requestId = response.headers.get('X-Kinvey-Request-ID');
-    const msg = 'Unexpected response for upload status request';
-    return new KinveyError(msg, false, response.statusCode, requestId);
-  }
-
-  /**
-   * @private
-   */
-  transformMetadata(file, metaFromUser) {
-    const metadata = assign({
-      filename: file._filename || file.name,
-      public: false,
-      size: file.size || file.length,
-      mimeType: file.mimeType || file.type || 'application/octet-stream'
-    }, metaFromUser);
-
-    metadata._filename = metadata.filename;
-    delete metadata.filename;
-    metadata._public = metadata.public;
-    delete metadata.public;
-
-    return metadata;
-  }
-
-  /**
-   * @private
-   */
-  formUploadResponse(data, file) {
-    delete data._expiresAt;
-    delete data._requiredHeaders;
-    delete data._uploadURL;
-    data._data = file;
-    return data;
-  }
-
-  /**
    * Upload a file.
    *
    * @param {Blob|string} file  File content
@@ -325,12 +241,12 @@ export default class FileStore extends NetworkStore {
    */
   upload(file, metadata = {}, options = {}) {
     metadata = this.transformMetadata(file, metadata);
-    let kinveySaveData = null;
+    let kinveyFileData = null;
 
     return this.saveFileMetadata(options, metadata)
       .then((response) => {
-        kinveySaveData = response.data;
-        return this.makeStatusCheckRequest(response.data, metadata, options.timeout);
+        kinveyFileData = response.data;
+        return this.makeStatusCheckRequest(response.data._uploadURL, response.data._requiredHeaders, metadata, options.timeout);
       })
       .then((response) => {
         Log.debug('File upload status check response', response);
@@ -339,86 +255,96 @@ export default class FileStore extends NetworkStore {
           return Promise.reject(response.error);
         }
 
-        if (response.statusCode === 200) {
-          return; // file is already uploaded
+        if (response.statusCode === 200 || response.statusCode === 201) {
+          return response; // file is already uploaded
         }
 
         if (response.statusCode !== 308) {
           // TODO: Here we should handle redirects according to location header, but this generally shouldn't happen
-          const err = this.getUnexpectedStatusCheckResponsCode(response);
-          return Promise.reject(err);
+          const error = new KinveyError('Unexpected response for upload file status check request.', false, response.statusCode, response.headers.get('X-Kinvey-Request-ID'));
+          return Promise.reject(error);
         }
 
         const uploadOptions = {
           start: getStartIndex(response.headers.get('range'), metadata.size),
           timeout: options.timeout,
           maxBackoff: options.maxBackoff,
-          headers: kinveySaveData._requiredHeaders
+          headers: kinveyFileData._requiredHeaders
         };
-        return this.retriableUpload(kinveySaveData._uploadURL, file, metadata, uploadOptions);
+        return this.retriableUpload(kinveyFileData._uploadURL, file, metadata, uploadOptions);
       })
       .then(() => {
-        return this.formUploadResponse(kinveySaveData, file);
+        delete kinveyFileData._expiresAt;
+        delete kinveyFileData._requiredHeaders;
+        delete kinveyFileData._uploadURL;
+        kinveyFileData._data = file;
+        return kinveyFileData;
       });
   }
 
   /**
    * @private
    */
-  resolvePromiseAfter(timeout, resolveWith) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resolve(resolveWith);
-      }, timeout || 0);
+  transformMetadata(file, metadata) {
+    const fileMetadata = assign({
+      filename: file._filename || file.name,
+      public: false,
+      size: file.size || file.length,
+      mimeType: file.mimeType || file.type || 'application/octet-stream'
+    }, metadata);
+    fileMetadata._filename = metadata.filename;
+    delete fileMetadata.filename;
+    fileMetadata._public = metadata.public;
+    delete fileMetadata.public;
+    return fileMetadata;
+  }
+
+  /**
+   * Save the file to Kinvey
+   *
+   * @private
+   */
+  saveFileMetadata(options, metadata) {
+    const isUpdate = isDefined(metadata._id);
+    const request = new KinveyRequest({
+      method: isUpdate ? RequestMethod.PUT : RequestMethod.POST,
+      authType: AuthType.Default,
+      headers: {
+        'X-Kinvey-Content-Type': metadata.mimeType
+      },
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: isUpdate ? `${this.pathname}/${metadata._id}` : this.pathname
+      }),
+      properties: options.properties,
+      timeout: options.timeout,
+      body: metadata,
+      client: this.client
     });
+    return request.execute();
   }
 
   /**
    * @private
    */
-  handleUploadErrors(uploadResponse) {
-    if (uploadResponse.isClientError()) {
-      return Promise.reject(uploadResponse.error);
-    }
-    if (!uploadResponse.isSuccess() && !uploadResponse.isServerError() && uploadResponse.statusCode !== 308) {
-      // TODO: Here we should handle redirects according to location header
-      return Promise.reject(this.getUnexpectedStatusCheckResponsCode(uploadResponse));
-    }
-    return Promise.resolve(uploadResponse);
-  }
-
-  /**
-   * @private
-   * This function may mutate the options object param - may change its start or count properties
-   */
-  handleReuploadCases(uploadResponse, fileSize, options) {
-    let backoff = 0;
-    const reuploadData = {
-      shouldResume: false,
-      shouldRetry: false
-    };
-
-    if (uploadResponse.isServerError()) { // should retry
-      Log.debug('File upload server error. Probably network congestion.', uploadResponse.statusCode, uploadResponse.data);
-      backoff = (2 ** options.count) + randomInt(1, 1001); // Calculate the exponential backoff
-      if (backoff >= options.maxBackoff) {
-        return Promise.reject(uploadResponse.error);
-      }
-      Log.debug(`File upload will try again in ${backoff} seconds.`);
-      reuploadData.shouldRetry = true;
-    } else if (uploadResponse.statusCode === 308) { // upload isn't complete, must upload the rest of the file
-      Log.debug('File upload was incomplete (statusCode 308). Trying to upload the remainder of file.');
-      options.start = getStartIndex(uploadResponse.headers.get('range'), fileSize);
-      reuploadData.shouldResume = true;
-    }
-
-    return this.resolvePromiseAfter(backoff, reuploadData);
+  makeStatusCheckRequest(uploadUrl, requiredHeaders, metadata, timeout) {
+    const headers = new Headers(requiredHeaders);
+    headers.set('content-type', metadata.mimeType);
+    headers.set('content-range', `bytes */${metadata.size}`);
+    const request = new NetworkRequest({
+      method: RequestMethod.PUT,
+      url: uploadUrl,
+      timeout: timeout,
+      headers: headers
+    });
+    return request.execute();
   }
 
   /**
    * @private
    */
-  retriableUpload(url, file, metadata, options) {
+  retriableUpload(uploadUrl, file, metadata, options) {
     options = assign({
       count: 0,
       start: 0,
@@ -432,43 +358,82 @@ export default class FileStore extends NetworkStore {
     Log.debug('File upload metadata', metadata);
     Log.debug('File upload options', options);
 
-    return this.makeUploadRequest(url, file, metadata, options)
-      .then((uploadResponse) => {
-        Log.debug('File upload response', uploadResponse);
-        return this.handleUploadErrors(uploadResponse);
-      })
-      .then((uploadResponse) => {
-        return this.handleReuploadCases(uploadResponse, metadata.size, options);
-      })
-      .then((reuploadOptions) => {
-        if (reuploadOptions.shouldRetry) { // is retrying after backoff period
-          options.count += 1;
-        } else {
-          options.count = 0;
+    return this.makeUploadRequest(uploadUrl, file, metadata, options)
+      .then((response) => {
+        Log.debug('File upload response', response);
+
+        if (response.isClientError()) {
+          return Promise.reject(response.error);
         }
-        if (reuploadOptions.shouldResume || reuploadOptions.shouldRetry) { // should continue with upload
-          return this.retriableUpload(url, file, metadata, options);
+        if (!response.isSuccess() && !response.isServerError() && response.statusCode !== 308) {
+          // TODO: Here we should handle redirects according to location header
+          const error = new KinveyError('Unexpected response for upload file request.', false, response.statusCode, response.headers.get('X-Kinvey-Request-ID'));
+          return Promise.reject(error);
         }
-        // upload complete
+
+        return response;
+      })
+      .then((response) => {
+        let backoff = 0;
+
+        if (response.isServerError()) { // should retry
+          Log.debug('File upload server error. Probably network congestion.', response.statusCode, response.data);
+          backoff = (2 ** options.count) + randomInt(1, 1001); // Calculate the exponential backoff
+
+          if (backoff >= options.maxBackoff) {
+            return Promise.reject(response.error);
+          }
+
+          Log.debug(`File upload will try again in ${backoff} seconds.`);
+
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              options.count += 1;
+              resolve(true);
+            }, backoff);
+          });
+        }
+
+        if (response.statusCode === 308) { // upload isn't complete, must upload the rest of the file
+          Log.debug('File upload was incomplete (statusCode 308). Trying to upload the remainder of file.');
+          options.start = getStartIndex(response.headers.get('range'), metadata.size);
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              options.count = 0;
+              resolve(true);
+            }, backoff);
+          });
+        }
+
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(false);
+          }, backoff);
+        });
+      })
+      .then((shouldRetry) => {
+        if (shouldRetry) { // should continue with upload
+          return this.retriableUpload(uploadUrl, file, metadata, options);
+        }
+
+        return null;
       });
   }
 
   /**
    * @protected
    */
-  makeUploadRequest(url, file, metadata, options) {
+  makeUploadRequest(uploadUrl, file, metadata, options) {
     const headers = new Headers(options.headers);
     headers.set('content-type', metadata.mimeType);
     headers.set('content-range', `bytes ${options.start}-${metadata.size - 1}/${metadata.size}`);
-
     const request = new NetworkRequest({
       method: RequestMethod.PUT,
-      url: url,
+      url: uploadUrl,
       headers: headers,
       body: isFunction(file.slice) ? file.slice(options.start) : file,
       timeout: options.timeout
     });
-
     return request.execute();
   }
 
