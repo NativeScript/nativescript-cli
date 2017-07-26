@@ -128,7 +128,7 @@ export class Storage {
   removeById(collection, id) {
     return queue.add(() => {
       if (isString(id) === false) {
-        return Promise.reject(new KinveyError('id must be a string'));
+        return Promise.reject(new KinveyError('id must be a string', id));
       }
 
       return this.loadAdapter()
