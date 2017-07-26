@@ -31,7 +31,7 @@ export class Storage {
     return Promise.resolve()
       .then(() => MemoryAdapter.load(this.name))
       .then((adapter) => {
-        if (isDefined(adapter) === false) {
+        if (!isDefined(adapter)) {
           return Promise.reject(new KinveyError('Unable to load a storage adapter.'));
         }
 
@@ -65,7 +65,7 @@ export class Storage {
   }
 
   findById(collection, id) {
-    if (isString(id) === false) {
+    if (!isString(id)) {
       return Promise.reject(new KinveyError('id must be a string', id));
     }
 
@@ -87,7 +87,7 @@ export class Storage {
       }
 
       entities = entities.map((entity) => {
-        if (isDefined(entity._id) === false) {
+        if (!isDefined(entity._id)) {
           const kmd = entity._kmd || {};
           kmd.local = true;
           entity._kmd = kmd;
@@ -127,7 +127,7 @@ export class Storage {
 
   removeById(collection, id) {
     return queue.add(() => {
-      if (isString(id) === false) {
+      if (!isString(id)) {
         return Promise.reject(new KinveyError('id must be a string', id));
       }
 
