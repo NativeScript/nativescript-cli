@@ -44,10 +44,10 @@ export abstract class PlatformLiveSyncServiceBase {
 
 		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 		const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, null, []);
-		await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, true);
+		const modifiedFilesData = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, true);
 
 		return {
-			modifiedFilesData: localToDevicePaths,
+			modifiedFilesData,
 			isFullSync: true,
 			deviceAppData
 		};
@@ -96,19 +96,22 @@ export abstract class PlatformLiveSyncServiceBase {
 
 		return {
 			modifiedFilesData: modifiedLocalToDevicePaths,
-			isFullSync: liveSyncInfo.isRebuilt,
+			isFullSync: liveSyncInfo.isReinstalled,
 			deviceAppData
 		};
 	}
 
-	protected async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<void> {
+	protected async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<Mobile.ILocalToDevicePathData[]> {
+		let transferredFiles = localToDevicePaths;
 		if (isFullSync) {
-			await deviceAppData.device.fileSystem.transferDirectory(deviceAppData, localToDevicePaths, projectFilesPath);
+			transferredFiles = await deviceAppData.device.fileSystem.transferDirectory(deviceAppData, localToDevicePaths, projectFilesPath);
 		} else {
 			await deviceAppData.device.fileSystem.transferFiles(deviceAppData, localToDevicePaths);
 		}
 
-		this.logFilesSyncInformation(localToDevicePaths, "Successfully transferred %s.", this.$logger.info);
+		this.logFilesSyncInformation(transferredFiles, "Successfully transferred %s.", this.$logger.info);
+
+		return transferredFiles;
 	}
 
 	protected async getAppData(syncInfo: IFullSyncInfo): Promise<Mobile.IDeviceAppData> {

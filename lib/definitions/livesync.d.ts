@@ -150,6 +150,16 @@ interface IEnsureLatestAppPackageIsInstalledOnDeviceOptions {
 }
 
 /**
+ * Describes the action that has been executed during ensureLatestAppPackageIsInstalledOnDevice execution.
+ */
+interface IAppInstalledOnDeviceResult {
+	/**
+	 * Defines if the app has been installed on device from the ensureLatestAppPackageIsInstalledOnDevice method.
+	 */
+	appInstalled: boolean;
+}
+
+/**
  * Describes LiveSync operations.
  */
 interface ILiveSyncService {
@@ -187,7 +197,7 @@ interface ILiveSyncWatchInfo {
 	projectData: IProjectData;
 	filesToRemove: string[];
 	filesToSync: string[];
-	isRebuilt: boolean;
+	isReinstalled: boolean;
 	syncAllFiles: boolean;
 	useLiveEdit?: boolean;
 }
