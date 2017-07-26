@@ -18,6 +18,7 @@ MobileIdentityConnect.usePopupClass(Popup);
 // Setup Active User Storage class
 ActiveUserHelper.useStorage(SecureStorage);
 
+// Replace Files implementation
 Kinvey.Files = new FileStore();
 
 // Export
