@@ -1,17 +1,28 @@
 import { File } from 'tns-core-modules/file-system';
 import { KinveyError, KinveyResponse } from 'kinvey-js-sdk/dist/export';
+import { FileStore as CoreFileStore } from 'kinvey-js-sdk/dist/datastore';
 import {
+  session,
+  Session,
   Request as BackgroundRequest,
   ResultEventData,
   ErrorEventData
-} from 'nativescript-background-http';
-import { NativeScriptFileStore, FileMetadata, FileUploadRequestOptions } from './common';
+} from 'nativescript-background-http'
+import { FileMetadata, FileUploadRequestOptions } from './common';
 
 
-export class FileStore extends NativeScriptFileStore {
-  protected makeUploadRequest(url: string, file: File, metadata: FileMetadata, options: FileUploadRequestOptions)
-  protected makeUploadRequest(url: string, filePath: string, metadata: FileMetadata, options: FileUploadRequestOptions)
-  protected makeUploadRequest(url: string, filePath: string | File, metadata: FileMetadata, options: FileUploadRequestOptions) {
+export class FileStore extends CoreFileStore {
+  private static readonly sessionName = 'kinvey-file-upload';
+  private session: Session = null;
+
+  constructor(collection: string, options = {}) {
+    super(collection, options);
+    this.session = session(FileStore.sessionName);
+  }
+
+  private makeUploadRequest(url: string, file: File, metadata: FileMetadata, options: FileUploadRequestOptions)
+  private makeUploadRequest(url: string, filePath: string, metadata: FileMetadata, options: FileUploadRequestOptions)
+  private makeUploadRequest(url: string, filePath: string | File, metadata: FileMetadata, options: FileUploadRequestOptions) {
     if (filePath instanceof File) {
       filePath = filePath.path;
     }
@@ -58,6 +69,16 @@ export class FileStore extends NativeScriptFileStore {
       headers: options.headers,
       description: `Uploading ${metadata._filename || 'file'}`
     } as BackgroundRequest;
+  }
+
+  private parseResponseBody(body: string) {
+    let result: any = null;
+    try {
+      result = JSON.parse(body);
+    } catch (ex) {
+      result = body;
+    }
+    return result;
   }
 
   private responseToJsObject(response): {} {
