@@ -111,7 +111,7 @@ export class Storage {
 
   remove(collection, entities = []) {
     return Promise.all(entities.map((entity) => {
-      if (typeof entity._id === 'undefined') {
+      if (!isDefined(entity._id)) {
         return Promise.reject(new KinveyError('Unable to remove this entity because it does not have _id.'));
       }
 
