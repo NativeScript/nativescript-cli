@@ -137,7 +137,7 @@ export class NpmPluginPrepare {
 		return result;
 	}
 
-	public async preparePlugins(dependencies: IDependencyData[], platform: string, projectData: IProjectData): Promise<void> {
+	public async preparePlugins(dependencies: IDependencyData[], platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
 		if (_.isEmpty(dependencies) || this.allPrepared(dependencies, platform, projectData)) {
 			return;
 		}
@@ -155,10 +155,10 @@ export class NpmPluginPrepare {
 		await this.afterPrepare(dependencies, platform, projectData);
 	}
 
-	public async prepareJSPlugins(dependencies: IDependencyData[], platform: string, projectData: IProjectData): Promise<void> {
+	public async prepareJSPlugins(dependencies: IDependencyData[], platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
 		if (_.isEmpty(dependencies) || this.allPrepared(dependencies, platform, projectData)) {
 			return;
-		}
+}
 
 		for (let dependencyKey in dependencies) {
 			const dependency = dependencies[dependencyKey];
@@ -169,7 +169,7 @@ export class NpmPluginPrepare {
 				let platformData = this.$platformsData.getPlatformData(platform, projectData);
 				let appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
 				if (appFolderExists) {
-					this.$pluginsService.preparePluginScripts(pluginData, platform, projectData);
+					this.$pluginsService.preparePluginScripts(pluginData, platform, projectData, projectFilesConfig);
 					// Show message
 					this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
 				}

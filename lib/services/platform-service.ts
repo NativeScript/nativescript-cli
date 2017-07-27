@@ -294,10 +294,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.$logger.out("Preparing project...");
 
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
-		await this.preparePlatformCoreJS(platform, platformData, appFilesUpdaterOptions, projectData, platformSpecificData, changesInfo);
+		const projectFilesConfig = helpers.getProjectFilesConfig({ isReleaseBuild: appFilesUpdaterOptions.release });
+		await this.preparePlatformCoreJS(platform, platformData, appFilesUpdaterOptions, projectData, platformSpecificData, changesInfo, filesToSync, projectFilesConfig);
 
 		if (!nativePrepare || !nativePrepare.skipNativePrepare) {
-			await this.preparePlatformCoreNative(platform, platformData, appFilesUpdaterOptions, projectData, platformSpecificData, changesInfo);
+			await this.preparePlatformCoreNative(platform, platformData, appFilesUpdaterOptions, projectData, platformSpecificData, changesInfo, projectFilesConfig);
 		}
 
 		let directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
@@ -306,12 +307,12 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			excludedDirs.push(constants.TNS_MODULES_FOLDER_NAME);
 		}
 
-		this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs);
+		this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, projectFilesConfig, excludedDirs);
 
 		this.$logger.out(`Project successfully prepared (${platform})`);
 	}
 
-	private async preparePlatformCoreJS(platform: string, platformData: IPlatformData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, changesInfo?: IProjectChangesInfo, filesToSync?: Array<String>, ): Promise<void> {
+	private async preparePlatformCoreJS(platform: string, platformData: IPlatformData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, changesInfo?: IProjectChangesInfo, filesToSync?: Array<String>, projectFilesConfig?: IProjectFilesConfig): Promise<void> {
 		if (!changesInfo || changesInfo.appFilesChanged) {
 			await this.copyAppFiles(platformData, appFilesUpdaterOptions, projectData);
 
@@ -324,11 +325,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		if (!changesInfo || changesInfo.modulesChanged) {
-			await this.copyTnsModules(platform, platformData, projectData);
+			await this.copyTnsModules(platform, platformData, projectData, projectFilesConfig);
 		}
 	}
 
-	public async preparePlatformCoreNative(platform: string, platformData: IPlatformData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, changesInfo?: IProjectChangesInfo): Promise<void> {
+	public async preparePlatformCoreNative(platform: string, platformData: IPlatformData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, changesInfo?: IProjectChangesInfo, projectFilesConfig?: IProjectFilesConfig): Promise<void> {
 		if (changesInfo.hasChanges) {
 			await this.cleanProject(platform, appFilesUpdaterOptions, platformData, projectData);
 		}
@@ -347,7 +348,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 			let tnsModulesDestinationPath = path.join(appDestinationDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
 			// Process node_modules folder
-			await this.$nodeModulesBuilder.prepareNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime, projectData);
+			await this.$nodeModulesBuilder.prepareNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime, projectData, projectFilesConfig);
 		}
 
 		if (!changesInfo || changesInfo.configChanged || changesInfo.modulesChanged) {
@@ -385,14 +386,14 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	private async copyTnsModules(platform: string, platformData: IPlatformData, projectData: IProjectData): Promise<void> {
+	private async copyTnsModules(platform: string, platformData: IPlatformData, projectData: IProjectData, projectFilesConfig?: IProjectFilesConfig): Promise<void> {
 		let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 		let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).mtime : null;
 
 		try {
 			let tnsModulesDestinationPath = path.join(appDestinationDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
 			// Process node_modules folder
-			await this.$nodeModulesBuilder.prepareJSNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime, projectData);
+			await this.$nodeModulesBuilder.prepareJSNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime, projectData, projectFilesConfig);
 		} catch (error) {
 			this.$logger.debug(error);
 			shell.rm("-rf", appDestinationDirectoryPath);

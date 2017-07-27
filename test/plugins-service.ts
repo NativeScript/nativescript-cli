@@ -516,7 +516,7 @@ describe("Plugins service", () => {
 				`\n@#[line:1,col:39].` +
 				`\n@#[line:1,col:39].`;
 			mockBeginCommand(testInjector, expectedErrorMessage);
-			await pluginsService.prepare(pluginJsonData, "android", projectData);
+			await pluginsService.prepare(pluginJsonData, "android", projectData, {});
 		});
 	});
 });

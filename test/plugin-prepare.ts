@@ -28,7 +28,7 @@ class TestNpmPluginPrepare extends NpmPluginPrepare {
 describe("Plugin preparation", () => {
 	it("skips prepare if no plugins", async () => {
 		const pluginPrepare = new TestNpmPluginPrepare({});
-		await pluginPrepare.preparePlugins([], "android", null);
+		await pluginPrepare.preparePlugins([], "android", null, {});
 		assert.deepEqual({}, pluginPrepare.preparedDependencies);
 	});
 
@@ -42,7 +42,7 @@ describe("Plugin preparation", () => {
 				nativescript: null,
 			}
 		];
-		await pluginPrepare.preparePlugins(testDependencies, "android", null);
+		await pluginPrepare.preparePlugins(testDependencies, "android", null, {});
 		assert.deepEqual({}, pluginPrepare.preparedDependencies);
 	});
 
@@ -62,7 +62,7 @@ describe("Plugin preparation", () => {
 				nativescript: null,
 			}
 		];
-		await pluginPrepare.preparePlugins(testDependencies, "android", null);
+		await pluginPrepare.preparePlugins(testDependencies, "android", null, {});
 		const prepareData = { "tns-core-modules-widgets": true, "nativescript-calendar": true };
 		assert.deepEqual(prepareData, pluginPrepare.preparedDependencies);
 	});

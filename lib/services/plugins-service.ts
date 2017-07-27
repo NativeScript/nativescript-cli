@@ -107,14 +107,14 @@ export class PluginsService implements IPluginsService {
 		return await platformData.platformProjectService.validatePlugins(projectData);
 	}
 
-	public async prepare(dependencyData: IDependencyData, platform: string, projectData: IProjectData): Promise<void> {
+	public async prepare(dependencyData: IDependencyData, platform: string, projectData: IProjectData,  projectFilesConfig: IProjectFilesConfig): Promise<void> {
 		platform = platform.toLowerCase();
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		let pluginData = this.convertToPluginData(dependencyData, projectData.projectDir);
 
 		let appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
 		if (appFolderExists) {
-			this.preparePluginScripts(pluginData, platform, projectData);
+			this.preparePluginScripts(pluginData, platform, projectData, projectFilesConfig);
 			await this.preparePluginNativeCode(pluginData, platform, projectData);
 
 			// Show message
@@ -122,7 +122,7 @@ export class PluginsService implements IPluginsService {
 		}
 	}
 
-	public preparePluginScripts(pluginData: IPluginData, platform: string, projectData: IProjectData): void {
+	public preparePluginScripts(pluginData: IPluginData, platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): void {
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		let pluginScriptsDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
 		let scriptsDestinationExists = this.$fs.exists(pluginScriptsDestinationPath);
@@ -136,7 +136,7 @@ export class PluginsService implements IPluginsService {
 		}
 
 		//prepare platform speciffic files, .map and .ts files
-		this.$projectFilesManager.processPlatformSpecificFiles(pluginScriptsDestinationPath, platform);
+		this.$projectFilesManager.processPlatformSpecificFiles(pluginScriptsDestinationPath, platform, projectFilesConfig);
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, platform: string, projectData: IProjectData): Promise<void> {
