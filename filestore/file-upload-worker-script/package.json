@@ -1,0 +1,5 @@
+{
+  "name" : "file-upload-worker-script",
+  "main" : "file-upload-worker-script",
+  "nativescript": {}
+}

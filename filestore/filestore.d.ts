@@ -1,6 +1,6 @@
 import { Kinvey } from '../kinvey';
 
-export class FileStore<T extends Kinvey.File> {
+export class NativeScriptFileStore<T extends Kinvey.File> {
   useDeltaFetch: boolean;
   find(query?: Kinvey.Query, options?: Kinvey.RequestOptions): Promise<T[]>;
   findById(id: string, options?: Kinvey.RequestOptions): Promise<T>;

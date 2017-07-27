@@ -9,6 +9,13 @@ export interface FileMetadata {
 export interface FileUploadRequestOptions {
   count: number;
   start: number;
+  timeout: number;
   maxBackoff: number;
   headers: { [key: string]: string }
+}
+
+export interface KinveyResponseData {
+  statusCode: number;
+  data?: any;
+  headers?: any;
 }
