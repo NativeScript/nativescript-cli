@@ -44,15 +44,15 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectDir];
 
 		if (liveSyncProcessInfo) {
-			_.each(deviceIdentifiers, deviceId => {
-				_.remove(liveSyncProcessInfo.deviceDescriptors, descriptor => {
-					const shouldRemove = descriptor.identifier === deviceId;
-					if (shouldRemove) {
-						this.emit(LiveSyncEvents.liveSyncStopped, { projectDir, deviceIdentifier: descriptor.identifier });
-					}
+			// In case we are coming from error during livesync, the current action is the one that erred (but we are still executing it),
+			// so we cannot await it as this will cause infinite loop.
+			const shouldAwaitPendingOperation = !stopOptions || stopOptions.shouldAwaitAllActions;
 
-					return shouldRemove;
-				});
+			let removedDeviceIdentifiers: string[] = deviceIdentifiers || [];
+
+			_.each(deviceIdentifiers, deviceId => {
+				removedDeviceIdentifiers = _.remove(liveSyncProcessInfo.deviceDescriptors, descriptor => descriptor.identifier === deviceId)
+					.map(deviceDescriptor => deviceDescriptor.identifier);
 			});
 
 			// In case deviceIdentifiers are not passed, we should stop the whole LiveSync.
@@ -66,16 +66,12 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 				}
 
 				liveSyncProcessInfo.watcherInfo = null;
+				liveSyncProcessInfo.isStopped = true;
 
-				if (liveSyncProcessInfo.actionsChain && (!stopOptions || stopOptions.shouldAwaitAllActions)) {
+				if (liveSyncProcessInfo.actionsChain && shouldAwaitPendingOperation) {
 					await liveSyncProcessInfo.actionsChain;
 				}
 
-				_.each(liveSyncProcessInfo.deviceDescriptors, descriptor => {
-					this.emit(LiveSyncEvents.liveSyncStopped, { projectDir, deviceIdentifier: descriptor.identifier });
-				});
-
-				liveSyncProcessInfo.isStopped = true;
 				liveSyncProcessInfo.deviceDescriptors = [];
 
 				// Kill typescript watcher
@@ -85,7 +81,14 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 						projectData
 					}
 				});
+			} else if (liveSyncProcessInfo.currentSyncAction && shouldAwaitPendingOperation) {
+				await liveSyncProcessInfo.currentSyncAction;
 			}
+
+			// Emit LiveSync stopped when we've really stopped.
+			_.each(removedDeviceIdentifiers, deviceIdentifier => {
+				this.emit(LiveSyncEvents.liveSyncStopped, { projectDir, deviceIdentifier });
+			});
 		}
 	}
 
@@ -139,6 +142,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 	private setLiveSyncProcessInfo(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[]): void {
 		this.liveSyncProcessesInfo[projectDir] = this.liveSyncProcessesInfo[projectDir] || Object.create(null);
 		this.liveSyncProcessesInfo[projectDir].actionsChain = this.liveSyncProcessesInfo[projectDir].actionsChain || Promise.resolve();
+		this.liveSyncProcessesInfo[projectDir].currentSyncAction = this.liveSyncProcessesInfo[projectDir].actionsChain;
 		this.liveSyncProcessesInfo[projectDir].isStopped = false;
 
 		const currentDeviceDescriptors = this.liveSyncProcessesInfo[projectDir].deviceDescriptors || [];
@@ -446,7 +450,8 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		if (liveSyncInfo) {
 			liveSyncInfo.actionsChain = liveSyncInfo.actionsChain.then(async () => {
 				if (!liveSyncInfo.isStopped) {
-					const res = await action();
+					liveSyncInfo.currentSyncAction = action();
+					const res = await liveSyncInfo.currentSyncAction;
 					return res;
 				}
 			});

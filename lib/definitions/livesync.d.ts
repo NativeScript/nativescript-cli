@@ -65,6 +65,7 @@ interface ILiveSyncProcessInfo {
 	actionsChain: Promise<any>;
 	isStopped: boolean;
 	deviceDescriptors: ILiveSyncDeviceInfo[];
+	currentSyncAction: Promise<any>;
 }
 
 /**
