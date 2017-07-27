@@ -1,29 +1,14 @@
 import { File } from 'tns-core-modules/file-system';
 import { KinveyError, KinveyResponse } from 'kinvey-js-sdk/dist/export';
-import { FileStore as CoreFileStore } from 'kinvey-js-sdk/dist/datastore';
-import { FileMetadata, FileUploadRequestOptions } from './common';
+import { FileMetadata, FileUploadRequestOptions, BaseNativeScriptFileStore } from './common';
 
-export class FileStore extends CoreFileStore {
-  public upload(file: File, metadata: any, options: any)
-  public upload(filePath: string, metadata: any, options: any)
-  public upload(filePath: string | File, metadata: any, options: any) {
-    if (filePath instanceof File) {
-      filePath = filePath.path;
-    }
-
-    if (File.exists(filePath) === false) {
-      return Promise.reject(new KinveyError('File does not exist'));
-    }
-
-    return super.upload(filePath, metadata, options);
-  }
-
+export class FileStore extends BaseNativeScriptFileStore {
   private makeUploadRequest(url: string, file: File, metadata: FileMetadata, options: FileUploadRequestOptions)
   private makeUploadRequest(url: string, filePath: string, metadata: FileMetadata, options: FileUploadRequestOptions)
-  private makeUploadRequest(url: string, filePath: string | File, metadata: FileMetadata, options: FileUploadRequestOptions) {
+  private makeUploadRequest(url: string, file: string | File, metadata: FileMetadata, options: FileUploadRequestOptions) {
     return new Promise((resolve, reject) => {
-      if (filePath instanceof File) {
-        filePath = filePath.path;
+      if (file instanceof File) {
+        file = file.path;
       }
 
       options.headers['content-type'] = metadata.mimeType;
@@ -37,7 +22,7 @@ export class FileStore extends CoreFileStore {
         nsRequest.setValueForHTTPHeaderField(options.headers[header], header);
       }
 
-      const nsFileUrl = NSURL.fileURLWithPath(filePath);
+      const nsFileUrl = NSURL.fileURLWithPath(file);
       const uploadTask = NSURLSession.sharedSession.uploadTaskWithRequestFromFileCompletionHandler(nsRequest, nsFileUrl, (nsData: NSData, nsResponse: NSURLResponse, nsError: NSError) => {
         if (nsError) {
           reject(new KinveyError(nsError.localizedDescription));

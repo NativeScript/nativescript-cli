@@ -7,11 +7,6 @@ export class NativeScriptFileStore extends BaseNativeScriptFileStore {
   protected makeUploadRequest(url: string, file: File, metadata: FileMetadata, options: FileUploadRequestOptions)
   protected makeUploadRequest(url: string, filePath: string, metadata: FileMetadata, options: FileUploadRequestOptions)
   protected makeUploadRequest(url: string, file: string | File, metadata: FileMetadata, options: FileUploadRequestOptions) {
-    const err = super.validateFile(file);
-    if (err) {
-      return Promise.reject(err);
-    }
-
     options.headers['content-type'] = metadata.mimeType;
     options.headers['content-range'] = `bytes ${options.start}-${metadata.size - 1}/${metadata.size}`;
 
