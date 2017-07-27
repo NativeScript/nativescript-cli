@@ -256,6 +256,13 @@ interface IDevicePathProvider {
 }
 
 interface ILiveSyncCommandHelper {
+	/**
+	 * Method sets up configuration, before calling livesync and expects that devices are already discovered.
+	 * @param {Mobile.IDevice[]} devices List of discovered devices
+	 * @param {ILiveSyncService} liveSyncService Service expected to do the actual livesyncing
+	 * @param {string} platform The platform for which the livesync will be ran
+	 * @returns {Promise<void>}
+	 */
 	executeLiveSyncOperation(devices: Mobile.IDevice[], liveSyncService: ILiveSyncService, platform: string): Promise<void>;
 	getPlatformsForOperation(platform: string): string[];
 }
