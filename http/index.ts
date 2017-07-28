@@ -36,11 +36,17 @@ export class HttpMiddleware extends Middleware {
     };
     return (HttpRequest(options) as any)
       .then((response) => {
+        let data = response.content.raw;
+
+        try {
+          data = response.content.toString();
+        } catch (e) {}
+
         return {
           response: {
             statusCode: response.statusCode,
             headers: response.headers,
-            data: response.content.toString()
+            data: data
           }
         };
       });
