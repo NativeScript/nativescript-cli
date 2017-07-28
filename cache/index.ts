@@ -1,3 +1,4 @@
+import { isDefined } from 'kinvey-js-sdk/dist/export';
 import { CacheMiddleware as CoreCacheMiddleware } from 'kinvey-js-sdk/dist/request';
 import KinveyStorage from 'kinvey-js-sdk/dist/request/src/middleware/src/storage';
 import { SQLite } from './sqlite';
@@ -10,7 +11,14 @@ class Storage extends KinveyStorage {
   }
 
   loadAdapter() {
-    return SQLite.load(this.name);
+    return SQLite.load(this.name)
+      .then((adapter) => {
+        if (!isDefined(adapter)) {
+          return super.loadAdapter();
+        }
+
+        return adapter;
+      });
   }
 }
 
