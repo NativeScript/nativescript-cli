@@ -1,48 +1,48 @@
 import { File } from 'tns-core-modules/file-system';
 import { KinveyError, KinveyResponse } from 'kinvey-js-sdk/dist/export';
-import { FileMetadata, FileUploadRequestOptions, BaseNativeScriptFileStore } from './common';
+import { CommonFileStore, FileMetadata, FileUploadRequestOptions } from './common';
 
-export class FileStore extends BaseNativeScriptFileStore {
+export class FileStore extends CommonFileStore {
   private makeUploadRequest(url: string, file: File, metadata: FileMetadata, options: FileUploadRequestOptions)
   private makeUploadRequest(url: string, filePath: string, metadata: FileMetadata, options: FileUploadRequestOptions)
   private makeUploadRequest(url: string, file: string | File, metadata: FileMetadata, options: FileUploadRequestOptions) {
     return new Promise((resolve, reject) => {
-      if (file instanceof File) {
-        file = file.path;
-      }
-
-      options.headers['content-type'] = metadata.mimeType;
-      options.headers['content-range'] = `bytes ${options.start}-${metadata.size - 1}/${metadata.size}`;
-
+      const filePath = file instanceof File ? file.path : file;
+      const nsFileUrl = NSURL.fileURLWithPath(filePath);
       const nsUrl = NSURL.URLWithString(url);
       const nsRequest = NSMutableURLRequest.requestWithURL(nsUrl);
       nsRequest.HTTPMethod = 'PUT';
 
+      options.headers['content-type'] = metadata.mimeType;
+      options.headers['content-range'] = `bytes ${options.start}-${metadata.size - 1}/${metadata.size}`;
       for (const header in options.headers) {
         nsRequest.setValueForHTTPHeaderField(options.headers[header], header);
       }
 
-      const nsFileUrl = NSURL.fileURLWithPath(file);
-      const uploadTask = NSURLSession.sharedSession.uploadTaskWithRequestFromFileCompletionHandler(nsRequest, nsFileUrl, (nsData: NSData, nsResponse: NSURLResponse, nsError: NSError) => {
-        if (nsError) {
-          reject(new KinveyError(nsError.localizedDescription));
+      const nsSessionConfig = NSURLSessionConfiguration.defaultSessionConfiguration;
+      nsSessionConfig.timeoutIntervalForRequest = options.timeout / 1000;
+      nsSessionConfig.timeoutIntervalForResource = options.timeout / 1000;
+      const nsSession = NSURLSession.sessionWithConfiguration(nsSessionConfig);
+      const uploadTask = nsSession.uploadTaskWithRequestFromFileCompletionHandler(nsRequest, nsFileUrl, (data: NSData, response: NSURLResponse, error: NSError) => {
+        if (error) {
+          reject(new KinveyError(error.localizedDescription));
         } else {
-          resolve(this.createKinveyResponse(nsData, nsResponse as NSHTTPURLResponse));
+          resolve(this.createKinveyResponse(data, response as NSHTTPURLResponse));
         }
       });
       uploadTask.resume();
     });
   }
 
-  private createKinveyResponse(nsData: NSData, nsResponse: NSHTTPURLResponse) {
+  private createKinveyResponse(data: NSData, response: NSHTTPURLResponse) {
     const config = {
-      statusCode: nsResponse.statusCode,
+      statusCode: response.statusCode,
       headers: {},
-      data: NSString.alloc().initWithDataEncoding(nsData, NSUTF8StringEncoding)
+      data: NSString.alloc().initWithDataEncoding(data, NSUTF8StringEncoding)
     }
 
-    for (const headerField in nsResponse.allHeaderFields) {
-      config[headerField] = nsResponse.allHeaderFields[headerField];
+    for (const headerField in response.allHeaderFields) {
+      config.headers[headerField] = response.allHeaderFields[headerField];
     }
 
     return new KinveyResponse(config);

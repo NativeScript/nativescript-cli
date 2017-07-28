@@ -1,6 +1,7 @@
 import { File } from 'tns-core-modules/file-system';
-import { KinveyError } from 'kinvey-js-sdk/dist/export';
+import { KinveyError, KinveyResponse } from 'kinvey-js-sdk/dist/export';
 import { FileStore as CoreFileStore } from 'kinvey-js-sdk/dist/datastore';
+import { KinveyWorker } from '../worker';
 
 export interface FileMetadata {
   _id?: string;
@@ -18,30 +19,39 @@ export interface FileUploadRequestOptions {
   headers: { [key: string]: string }
 }
 
-export interface KinveyResponseData {
+export interface KinveyResponseConfig {
   statusCode: number;
   data?: any;
   headers?: any;
 }
 
-export class BaseNativeScriptFileStore extends CoreFileStore {
-
+export class CommonFileStore extends CoreFileStore {
   upload(file: File, metadata: any, options: any)
   upload(filePath: string, metadata: any, options: any)
   upload(filePath: string | File, metadata: any, options: any) {
-    const err = this.validateFile(filePath);
-    if (err) {
-      return Promise.reject(err);
+    if (!this.doesFileExist(filePath)) {
+      return Promise.reject(new KinveyError('File does not exist'));
     }
 
     return super.upload(filePath, metadata, options);
   }
 
-  protected validateFile(file: string | File) {
+  protected doesFileExist(file: string | File): boolean {
     const filePath = file instanceof File ? file.path : file;
+    return File.exists(filePath);
+  }
+}
 
-    if (File.exists(filePath) === false) {
-      return Promise.reject(new KinveyError('File does not exist'));
-    }
+export interface FileUploadWorkerOptions {
+  url: string,
+  metadata: FileMetadata,
+  options: FileUploadRequestOptions,
+  filePath: string,
+}
+
+export class FileUploadWorker extends KinveyWorker {
+  upload(options: FileUploadWorkerOptions) {
+    return this.postMessage(options)
+      .then((responseConfig: KinveyResponseConfig) => new KinveyResponse(responseConfig));
   }
 }

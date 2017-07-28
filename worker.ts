@@ -6,10 +6,10 @@ export interface WorkerScriptOptions {
   closeAfterResponse: boolean;
 }
 
-/** 
+/**
  * Executes a script in a NativeScript Worker (a separate thread)
  */
-export class BaseWorker {
+export class KinveyWorker {
   private _worker: Worker;
   private _resolveUploadPromise: (uploadResponse: any) => void;
   private _rejectUploadPromise: (err: KinveyError) => void;
@@ -36,7 +36,6 @@ export class BaseWorker {
     return new Promise((resolve, reject) => {
       this._resolveUploadPromise = resolve;
       this._rejectUploadPromise = reject;
-
       this._worker.postMessage(message);
     });
   }
