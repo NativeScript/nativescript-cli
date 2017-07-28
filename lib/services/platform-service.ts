@@ -133,8 +133,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			spinner.stop();
 		}
 
+		this.$fs.ensureDirectoryExists(platformPath);
 		this.$logger.out("Project successfully created.");
-
 	}
 
 	private async addPlatformCore(platformData: IPlatformData, frameworkDir: string, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions, nativePrepare?: INativePrepare): Promise<string> {
