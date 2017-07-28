@@ -6,7 +6,7 @@ function RunTestCommandFactory(platform: string) {
 		$testExecutionService: ITestExecutionService,
 		$projectData: IProjectData) {
 		$projectData.initializeProjectData();
-		const projectFilesConfig = helpers.getProjectFilesConfig({ isReleaseBuild: this.$options.release });
+		const projectFilesConfig = helpers.getProjectFilesConfig({ isReleaseBuild: $options.release });
 		this.execute = (args: string[]): Promise<void> => $testExecutionService.startTestRunner(platform, $projectData, projectFilesConfig);
 		this.allowedParameters = [];
 	};
@@ -18,7 +18,7 @@ $injector.registerCommand("dev-test|ios", RunTestCommandFactory('iOS'));
 function RunKarmaTestCommandFactory(platform: string) {
 	return function RunKarmaTestCommand($options: IOptions, $testExecutionService: ITestExecutionService, $projectData: IProjectData) {
 		$projectData.initializeProjectData();
-		const projectFilesConfig = helpers.getProjectFilesConfig({ isReleaseBuild: this.$options.release });
+		const projectFilesConfig = helpers.getProjectFilesConfig({ isReleaseBuild: $options.release });
 		this.execute = (args: string[]): Promise<void> => $testExecutionService.startKarmaServer(platform, $projectData, projectFilesConfig);
 		this.allowedParameters = [];
 	};
