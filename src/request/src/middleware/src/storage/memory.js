@@ -15,18 +15,18 @@ const caches = {};
 
 class Memory {
   constructor(name) {
-    if (isDefined(name) === false) {
+    if (!isDefined(name)) {
       throw new Error('A name for the collection is required to use the memory persistence adapter.', name);
     }
 
-    if (isString(name) === false) {
+    if (!isString(name)) {
       throw new Error('The name of the collection must be a string to use the memory persistence adapter', name);
     }
 
     this.name = name;
     this.cache = caches[name];
 
-    if (isDefined(this.cache) === false) {
+    if (!isDefined(this.cache)) {
       this.cache = new MemoryCache();
       caches[name] = this.cache;
     }
@@ -52,8 +52,8 @@ class Memory {
         const entity = find(entities, entity => entity[idAttribute] === id);
 
         if (!entity) {
-          throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
-            + ` collection on the ${this.name} memory database.`);
+          return Promise.reject(new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
+            + ` collection on the ${this.name} memory database.`));
         }
 
         return entity;
@@ -63,7 +63,7 @@ class Memory {
   save(collection, entities) {
     let singular = false;
 
-    if (isArray(entities) === false) {
+    if (!isArray(entities)) {
       entities = [entities];
       singular = true;
     }
@@ -95,9 +95,9 @@ class Memory {
         entities = keyBy(entities, idAttribute);
         const entity = entities[id];
 
-        if (isDefined(entity) === false) {
-          throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
-            + ` collection on the ${this.name} memory database.`);
+        if (!isDefined(entity)) {
+          return Promise.reject(new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
+            + ` collection on the ${this.name} memory database.`));
         }
 
         delete entities[id];
@@ -112,8 +112,9 @@ class Memory {
   }
 }
 
-export default {
+const MemoryAdapter = {
   load(name) {
     return new Memory(name);
   }
 };
+export { MemoryAdapter };
