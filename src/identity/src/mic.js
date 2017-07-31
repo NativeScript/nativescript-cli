@@ -48,7 +48,11 @@ export class MobileIdentityConnect extends Identity {
   }
 
   login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
-    const clientId = this.client.appKey;
+    let clientId = this.client.appKey;
+
+    if (isString(options.micId)) {
+      clientId = `${clientId}:${options.micId}`;
+    }
 
     const promise = Promise.resolve()
       .then(() => {
