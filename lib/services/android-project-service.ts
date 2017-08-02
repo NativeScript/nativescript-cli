@@ -375,22 +375,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void> {
 		if (dependencies) {
-			await this.provideV8Dependants(projectData, dependencies);
 			this.provideDependenciesJson(projectData, dependencies);
-		}
-	}
-
-	private async provideV8Dependants(projectData: IProjectData, dependencies: IDependencyData[]): Promise<void> {
-		const platformDir = path.join(projectData.platformsDir, "android");
-		const buildDir = path.join(platformDir, "build-tools");
-		const checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
-		if (this.$fs.exists(checkV8dependants)) {
-			const stringifiedDependencies = JSON.stringify(dependencies);
-			try {
-				await this.spawn('node', [checkV8dependants, stringifiedDependencies, projectData.platformsDir], { stdio: "inherit" });
-			} catch (e) {
-				this.$logger.info("Checking for dependants on v8 public API failed. This is likely caused because of cyclic production dependencies. Error code: " + e.code + "\nMore information: https://github.com/NativeScript/nativescript-cli/issues/2561");
-			}
 		}
 	}
 
