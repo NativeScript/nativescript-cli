@@ -72,6 +72,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 					await liveSyncProcessInfo.actionsChain;
 				}
 
+				removedDeviceIdentifiers = _.map(liveSyncProcessInfo.deviceDescriptors, d => d.identifier);
 				liveSyncProcessInfo.deviceDescriptors = [];
 
 				// Kill typescript watcher
