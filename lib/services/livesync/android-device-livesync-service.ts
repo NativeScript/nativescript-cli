@@ -36,14 +36,25 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 				`${deviceProjectRootDirname}/sync`]
 		);
 
+		this.reloadResources(deviceAppData, localToDevicePaths);
+
 		const canExecuteFastSync = !liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
 			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
 
-		if (canExecuteFastSync) {
-			return this.reloadPage(deviceAppData, localToDevicePaths);
+		if (!canExecuteFastSync) {
+			return this.restartApplication(deviceAppData);
 		}
+	}
 
-		return this.restartApplication(deviceAppData);
+	private async cleanLivesyncDirectories(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
+		const deviceRootPath = await this.$devicePathProvider.getDeviceProjectRootPath(deviceAppData.device, {
+			appIdentifier: deviceAppData.appIdentifier,
+			getDirname: true
+		});
+
+		await this.device.adb.executeShellCommand(["rm", "-rf", await this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.FULLSYNC_DIR_NAME),
+			this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.SYNC_DIR_NAME),
+			await this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.REMOVEDSYNC_DIR_NAME)]);
 	}
 
 	private async restartApplication(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
@@ -70,15 +81,16 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 			await this.device.adb.executeShellCommand(["rm", "-f", deviceRootPath]);
 		}
 
-		this.device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.FULLSYNC_DIR_NAME),
-			this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.SYNC_DIR_NAME),
-			await this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.REMOVEDSYNC_DIR_NAME)]);
+		await this.cleanLivesyncDirectories(deviceAppData);
 	}
 
-	private async reloadPage(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
+	private async reloadResources(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
 		await this.device.adb.executeCommand(["forward", `tcp:${AndroidDeviceLiveSyncService.BACKEND_PORT.toString()}`, `localabstract:${deviceAppData.appIdentifier}-livesync`]);
-		if (!await this.sendPageReloadMessage()) {
-			await this.restartApplication(deviceAppData);
+
+		if (await this.sendPageReloadMessage()) {
+			await this.cleanLivesyncDirectories(deviceAppData);
+		} else {
+			await this.restartApplication(deviceAppData); //in case runtime socket error/close
 		}
 	}
 
