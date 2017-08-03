@@ -47,10 +47,10 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 			}
 		}
 
-		return this.distinctDependencies(resolvedDependencies);
+		return this.filterUniqueDependencies(resolvedDependencies);
 	}
 
-	private distinctDependencies(dependencies: IDependencyData[]): IDependencyData[] {
+	private filterUniqueDependencies(dependencies: IDependencyData[]): IDependencyData[] {
 		const depsDictionary = dependencies.reduce((dict, dep) => {
 			const collision = dict[dep.name];
 			if (!collision || collision.depth > dep.depth) {

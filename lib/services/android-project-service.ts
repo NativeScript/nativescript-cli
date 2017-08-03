@@ -346,7 +346,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
-		// Add to platforms/android/dependencies.json
+		// Do nothing, the Android Gradle script will configure itself based on the input dependencies.json 
 	}
 
 	public async processConfigurationFilesFromAppResources(): Promise<void> {
@@ -356,7 +356,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
 		try {
 			// check whether the dependency that's being removed has native code
-			const pluginConfigDir = path.join(this.getPlatformData(projectData).projectRoot, "configurations", pluginData.name);
+			const pluginConfigDir = path.join(this.getPlatformData(projectData).projectRoot, "build", "configurations", pluginData.name);
+			
 			if (this.$fs.exists(pluginConfigDir)) {
 				await this.cleanProject(this.getPlatformData(projectData).projectRoot, projectData);
 			}
@@ -386,6 +387,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			.filter(AndroidProjectService.isNativeAndroidDependency)
 			.map(({ name, directory }) => ({ name, directory: path.relative(platformDir, directory) }));
 		const jsonContent = JSON.stringify(nativeDependencies, null, 4);
+
 		this.$fs.writeFile(dependenciesJsonPath, jsonContent);
 	}
 
