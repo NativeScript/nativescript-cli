@@ -92,7 +92,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		}
 	}
 
-	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo): Promise<void> {
+	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, outputPath?: string): Promise<void> {
 		const platformLiveSyncService = this.getLiveSyncService(liveSyncResultInfo.deviceAppData.platform);
 		try {
 			await platformLiveSyncService.refreshApplication(projectData, liveSyncResultInfo);
@@ -255,7 +255,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 					watch: !liveSyncData.skipWatcher
 				});
 				await this.$platformService.trackActionForPlatform({ action: "LiveSync", platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
-				await this.refreshApplication(projectData, liveSyncResultInfo);
+				await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.outputPath);
 
 				this.emit(LiveSyncEvents.liveSyncStarted, {
 					projectDir: projectData.projectDir,

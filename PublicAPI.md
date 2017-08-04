@@ -702,6 +702,12 @@ tns.liveSyncService.on("notify", data => {
 });
 ```
 
+### Module debugLiveSyncService
+> Stability: 1 - Could be changed due to some new requirments.
+
+This module utilizes the same functionality as the [liveSyncService](#livesyncservice) module with the sole exception that this module's purpose is to support LiveSync along with debugging.
+
+
 ## How to add a new method to Public API
 CLI is designed as command line tool and when it is used as a library, it does not give you access to all of the methods. This is mainly implementation detail. Most of the CLI's code is created to work in command line, not as a library, so before adding method to public API, most probably it will require some modification.
 For example the `$options` injected module contains information about all `--` options passed on the terminal. When the CLI is used as a library, the options are not populated. Before adding method to public API, make sure its implementation does not rely on `$options`.
