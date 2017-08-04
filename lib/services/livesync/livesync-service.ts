@@ -1,8 +1,10 @@
 import * as path from "path";
 import * as choki from "chokidar";
+import { parse } from "url";
+import { EOL } from "os";
 import { EventEmitter } from "events";
 import { hook } from "../../common/helpers";
-import { APP_FOLDER_NAME, PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames } from "../../constants";
+import { APP_FOLDER_NAME, PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME } from "../../constants";
 import { FileExtensions, DeviceTypes } from "../../common/constants";
 const deviceDescriptorPrimaryKey = "identifier";
 
@@ -15,21 +17,24 @@ const LiveSyncEvents = {
 	liveSyncNotification: "notify"
 };
 
-export class LiveSyncService extends EventEmitter implements ILiveSyncService {
+export class LiveSyncService extends EventEmitter implements IDebugLiveSyncService {
 	// key is projectDir
 	protected liveSyncProcessesInfo: IDictionary<ILiveSyncProcessInfo> = {};
 
-	constructor(protected $platformService: IPlatformService,
+	constructor(private $platformService: IPlatformService,
 		private $projectDataService: IProjectDataService,
-		protected $devicesService: Mobile.IDevicesService,
+		private $devicesService: Mobile.IDevicesService,
 		private $mobileHelper: Mobile.IMobileHelper,
-		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
-		protected $logger: ILogger,
+		private $logger: ILogger,
 		private $processService: IProcessService,
 		private $hooksService: IHooksService,
 		private $pluginsService: IPluginsService,
-		protected $injector: IInjector) {
+		private $debugService: IDebugService,
+		private $errors: IErrors,
+		private $debugDataService: IDebugDataService,
+		private $injector: IInjector) {
 		super();
 	}
 
@@ -96,7 +101,15 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		return currentDescriptors || [];
 	}
 
-	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo): Promise<void> {
+	private async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string): Promise<void> {
+		const deviceDescriptor = this.getDeviceDescriptor(liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier, projectData.projectDir);
+
+		return deviceDescriptor && deviceDescriptor.debugggingEnabled ?
+			this.refreshApplicationWithDebug(projectData, liveSyncResultInfo, debugOpts, outputPath) :
+			this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, debugOpts, outputPath);
+	}
+
+	private async refreshApplicationWithoutDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string, settings?: IShouldSkipEmitLiveSyncNotification): Promise<void> {
 		const platformLiveSyncService = this.getLiveSyncService(liveSyncResultInfo.deviceAppData.platform);
 		try {
 			await platformLiveSyncService.refreshApplication(projectData, liveSyncResultInfo);
@@ -104,12 +117,14 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 			this.$logger.info(`Error while trying to start application ${projectData.projectId} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
 			const msg = `Unable to start application ${projectData.projectId} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Try starting it manually.`;
 			this.$logger.warn(msg);
-			this.emit(LiveSyncEvents.liveSyncNotification, {
-				projectDir: projectData.projectDir,
-				applicationIdentifier: projectData.projectId,
-				deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
-				notification: msg
-			});
+			if (!settings || !settings.shouldSkipEmitLiveSyncNotification) {
+				this.emit(LiveSyncEvents.liveSyncNotification, {
+					projectDir: projectData.projectDir,
+					applicationIdentifier: projectData.projectId,
+					deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
+					notification: msg
+				});
+			}
 		}
 
 		this.emit(LiveSyncEvents.liveSyncExecuted, {
@@ -121,6 +136,161 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		});
 
 		this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
+	}
+
+	private async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOptions: IDebugOptions, outputPath?: string): Promise<void> {
+		await this.$platformService.trackProjectType(projectData);
+
+		const deviceAppData = liveSyncResultInfo.deviceAppData;
+
+		const deviceIdentifier = liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier;
+		await this.$debugService.debugStop(deviceIdentifier);
+
+		let applicationId = deviceAppData.appIdentifier;
+		const attachDebuggerOptions: IAttachDebuggerOptions = {
+			platform: liveSyncResultInfo.deviceAppData.device.deviceInfo.platform,
+			isEmulator: liveSyncResultInfo.deviceAppData.device.isEmulator,
+			projectDir: projectData.projectDir,
+			deviceIdentifier,
+			debugOptions,
+			outputPath
+		};
+
+		try {
+			await deviceAppData.device.applicationManager.stopApplication(applicationId, projectData.projectName);
+			// Now that we've stopped the application we know it isn't started, so set debugOptions.start to false
+			// so that it doesn't default to true in attachDebugger method
+			debugOptions = debugOptions || {};
+			debugOptions.start = false;
+		} catch (err) {
+			this.$logger.trace("Could not stop application during debug livesync. Will try to restart app instead.", err);
+			if ((err.message || err) === "Could not find developer disk image") {
+				await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, debugOptions, outputPath, { shouldSkipEmitLiveSyncNotification: true });
+				this.emit(USER_INTERACTION_NEEDED_EVENT_NAME, attachDebuggerOptions);
+				return;
+			} else {
+				throw err;
+			}
+		}
+
+		const deviceOption = {
+			deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
+			debugOptions: debugOptions,
+		};
+
+		return this.enableDebuggingCoreWithoutWaitingCurrentAction(deviceOption, { projectDir: projectData.projectDir });
+	}
+
+	public async attachDebugger(settings: IAttachDebuggerOptions): Promise<void> {
+		// Default values
+		if (settings.debugOptions) {
+			settings.debugOptions.chrome = settings.debugOptions.chrome === undefined ? true : settings.debugOptions.chrome;
+			settings.debugOptions.start = settings.debugOptions.start === undefined ? true : settings.debugOptions.start;
+		} else {
+			settings.debugOptions = {
+				chrome: true,
+				start: true
+			};
+		}
+
+		const projectData = this.$projectDataService.getProjectData(settings.projectDir);
+		let debugData = this.$debugDataService.createDebugData(projectData, { device: settings.deviceIdentifier });
+
+		// Of the properties below only `buildForDevice` and `release` are currently used.
+		// Leaving the others with placeholder values so that they may not be forgotten in future implementations.
+		const buildConfig: IBuildConfig = {
+			buildForDevice: !settings.isEmulator,
+			release: false,
+			device: settings.deviceIdentifier,
+			provision: null,
+			teamId: null,
+			projectDir: settings.projectDir
+		};
+		debugData.pathToAppPackage = this.$platformService.lastOutputPath(settings.platform, buildConfig, projectData, settings.outputPath);
+
+		this.printDebugInformation(await this.$debugService.debug(debugData, settings.debugOptions));
+	}
+
+	public printDebugInformation(information: string): void {
+		if (!!information) {
+			const wsQueryParam = parse(information).query.ws;
+			const hostPortSplit = wsQueryParam && wsQueryParam.split(":");
+			this.emit(DEBUGGER_ATTACHED_EVENT_NAME, {
+				url: information,
+				port: hostPortSplit && hostPortSplit[1]
+			});
+			this.$logger.info(`To start debugging, open the following URL in Chrome:${EOL}${information}${EOL}`.cyan);
+		}
+	}
+
+	public enableDebugging(deviceOpts: IEnableDebuggingDeviceOptions[], debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<void>[] {
+		return _.map(deviceOpts, d => this.enableDebuggingCore(d, debuggingAdditionalOptions));
+	}
+
+	private getDeviceDescriptor(deviceIdentifier: string, projectDir: string) {
+		const deviceDescriptors = this.getLiveSyncDeviceDescriptors(projectDir);
+
+		return _.find(deviceDescriptors, d => d.identifier === deviceIdentifier);
+	}
+
+	private async enableDebuggingCoreWithoutWaitingCurrentAction(deviceOption: IEnableDebuggingDeviceOptions, debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<void> {
+		const currentDeviceDescriptor = this.getDeviceDescriptor(deviceOption.deviceIdentifier, debuggingAdditionalOptions.projectDir);
+		if (!currentDeviceDescriptor) {
+			this.$errors.failWithoutHelp(`Couldn't enable debugging for ${deviceOption.deviceIdentifier}`);
+		}
+
+		currentDeviceDescriptor.debugggingEnabled = true;
+		const currentDeviceInstance = this.$devicesService.getDeviceByIdentifier(deviceOption.deviceIdentifier);
+		const attachDebuggerOptions: IAttachDebuggerOptions = {
+			deviceIdentifier: deviceOption.deviceIdentifier,
+			isEmulator: currentDeviceInstance.isEmulator,
+			outputPath: currentDeviceDescriptor.outputPath,
+			platform: currentDeviceInstance.deviceInfo.platform,
+			projectDir: debuggingAdditionalOptions.projectDir,
+			debugOptions: deviceOption.debugOptions
+		};
+
+		try {
+			await this.attachDebugger(attachDebuggerOptions);
+		} catch (err) {
+			this.$logger.trace("Couldn't attach debugger, will modify options and try again.", err);
+			attachDebuggerOptions.debugOptions.start = false;
+			await this.attachDebugger(attachDebuggerOptions);
+		}
+	}
+
+	private async enableDebuggingCore(deviceOption: IEnableDebuggingDeviceOptions, debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<void> {
+		const liveSyncProcessInfo: ILiveSyncProcessInfo = this.liveSyncProcessesInfo[debuggingAdditionalOptions.projectDir];
+		if (liveSyncProcessInfo && liveSyncProcessInfo.currentSyncAction) {
+			await liveSyncProcessInfo.currentSyncAction;
+		}
+
+		return this.enableDebuggingCoreWithoutWaitingCurrentAction(deviceOption, debuggingAdditionalOptions);
+	}
+
+	public disableDebugging(deviceOptions: IDisableDebuggingDeviceOptions[], debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<void>[] {
+		return _.map(deviceOptions, d => this.disableDebuggingCore(d, debuggingAdditionalOptions));
+	}
+
+	public async disableDebuggingCore(deviceOption: IDisableDebuggingDeviceOptions, debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<void> {
+		const liveSyncProcessInfo = this.liveSyncProcessesInfo[debuggingAdditionalOptions.projectDir];
+		if (liveSyncProcessInfo.currentSyncAction) {
+			await liveSyncProcessInfo.currentSyncAction;
+		}
+
+		const currentDeviceDescriptor = this.getDeviceDescriptor(deviceOption.deviceIdentifier, debuggingAdditionalOptions.projectDir);
+		if (currentDeviceDescriptor) {
+			currentDeviceDescriptor.debugggingEnabled = false;
+		} else {
+			this.$errors.failWithoutHelp(`Couldn't disable debugging for ${deviceOption.deviceIdentifier}`);
+		}
+
+		const currentDevice = this.$devicesService.getDeviceByIdentifier(currentDeviceDescriptor.identifier);
+		if (!currentDevice) {
+			this.$errors.failWithoutHelp(`Couldn't disable debugging for ${deviceOption.deviceIdentifier}. Could not find device.`);
+		}
+
+		return this.$debugService.debugStop(currentDevice.deviceInfo.identifier);
 	}
 
 	@hook("liveSync")
@@ -161,7 +331,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 			return this.$injector.resolve("androidLiveSyncService");
 		}
 
-		throw new Error(`Invalid platform ${platform}. Supported platforms are: ${this.$mobileHelper.platformNames.join(", ")}`);
+		this.$errors.failWithoutHelp(`Invalid platform ${platform}. Supported platforms are: ${this.$mobileHelper.platformNames.join(", ")}`);
 	}
 
 	private async ensureLatestAppPackageIsInstalledOnDevice(options: IEnsureLatestAppPackageIsInstalledOnDeviceOptions, nativePrepare?: INativePrepare): Promise<IAppInstalledOnDeviceResult> {
@@ -263,7 +433,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 					watch: !liveSyncData.skipWatcher
 				});
 				await this.$platformService.trackActionForPlatform({ action: "LiveSync", platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
-				await this.refreshApplication(projectData, liveSyncResultInfo);
+				await this.refreshApplication(projectData, liveSyncResultInfo, liveSyncData.debugOptions, deviceBuildInfoDescriptor.outputPath);
 
 				this.emit(LiveSyncEvents.liveSyncStarted, {
 					projectDir: projectData.projectDir,
@@ -369,7 +539,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 									};
 
 									const liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);
-									await this.refreshApplication(projectData, liveSyncResultInfo);
+									await this.refreshApplication(projectData, liveSyncResultInfo, liveSyncData.debugOptions, deviceBuildInfoDescriptor.outputPath);
 								},
 									(device: Mobile.IDevice) => {
 										const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];

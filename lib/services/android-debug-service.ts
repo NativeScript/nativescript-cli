@@ -1,34 +1,24 @@
 import { sleep } from "../common/helpers";
-import { ChildProcess } from "child_process";
 import { DebugServiceBase } from "./debug-service-base";
 
 export class AndroidDebugService extends DebugServiceBase implements IPlatformDebugService {
-	private _device: Mobile.IAndroidDevice = null;
-	private _debuggerClientProcess: ChildProcess;
-
+	private _packageName: string;
 	public get platform() {
 		return "android";
 	}
 
-	private get device(): Mobile.IAndroidDevice {
-		return this._device;
-	}
-
-	private set device(newDevice) {
-		this._device = newDevice;
-	}
-
-	constructor(protected $devicesService: Mobile.IDevicesService,
+	constructor(protected device: Mobile.IAndroidDevice,
+		protected $devicesService: Mobile.IDevicesService,
 		private $errors: IErrors,
 		private $logger: ILogger,
-		private $config: IConfiguration,
 		private $androidDeviceDiscovery: Mobile.IDeviceDiscovery,
 		private $androidProcessService: Mobile.IAndroidProcessService,
 		private $net: INet) {
-		super($devicesService);
+		super(device, $devicesService);
 	}
 
 	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		this._packageName = debugData.applicationIdentifier;
 		return debugOptions.emulator
 			? this.debugOnEmulator(debugData, debugOptions)
 			: this.debugOnDevice(debugData, debugOptions);
@@ -36,17 +26,13 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 
 	public async debugStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
 		await this.$devicesService.initialize({ platform: this.platform, deviceId: debugData.deviceIdentifier });
-		let action = (device: Mobile.IAndroidDevice): Promise<void> => {
-			this.device = device;
-			return this.debugStartCore(debugData.applicationIdentifier, debugOptions);
-		};
+		const action = (device: Mobile.IAndroidDevice): Promise<void> => this.debugStartCore(debugData.applicationIdentifier, debugOptions);
 
 		await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
 	}
 
-	public async debugStop(): Promise<void> {
-		this.stopDebuggerClient();
-		return;
+	public debugStop(): Promise<void> {
+		return this.removePortForwarding();
 	}
 
 	protected getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
@@ -63,6 +49,11 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 		// we need some time to detect it. Let's force detection.
 		await this.$androidDeviceDiscovery.startLookingForDevices();
 		return this.debugOnDevice(debugData, debugOptions);
+	}
+
+	private async removePortForwarding(packageName?: string): Promise<void> {
+		const port = await this.getForwardedLocalDebugPortForPackageName(this.device.deviceInfo.identifier, packageName || this._packageName);
+		return this.device.adb.executeCommand(["forward", "--remove", `tcp:${port}`]);
 	}
 
 	private async getForwardedLocalDebugPortForPackageName(deviceId: string, packageName: string): Promise<number> {
@@ -100,24 +91,22 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 
 		await this.$devicesService.initialize({ platform: this.platform, deviceId: debugData.deviceIdentifier });
 
-		let action = (device: Mobile.IAndroidDevice): Promise<string> => this.debugCore(device, packageFile, debugData.applicationIdentifier, debugOptions);
+		const action = (device: Mobile.IAndroidDevice): Promise<string> => this.debugCore(device, packageFile, debugData.applicationIdentifier, debugOptions);
 
 		const deviceActionResult = await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
 		return deviceActionResult[0].result;
 	}
 
 	private async debugCore(device: Mobile.IAndroidDevice, packageFile: string, packageName: string, debugOptions: IDebugOptions): Promise<string> {
-		this.device = device;
-
 		await this.printDebugPort(device.deviceInfo.identifier, packageName);
 
 		if (debugOptions.start) {
 			return await this.attachDebugger(device.deviceInfo.identifier, packageName, debugOptions);
 		} else if (debugOptions.stop) {
-			await this.detachDebugger(packageName);
+			await this.removePortForwarding();
 			return null;
 		} else {
-			await this.startAppWithDebugger(packageFile, packageName, debugOptions);
+			await this.debugStartCore(packageName, debugOptions);
 			return await this.attachDebugger(device.deviceInfo.identifier, packageName, debugOptions);
 		}
 	}
@@ -132,24 +121,9 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 			this.$errors.failWithoutHelp(`The application ${packageName} does not appear to be running on ${deviceId} or is not built with debugging enabled.`);
 		}
 
-		const startDebuggerCommand = ["am", "broadcast", "-a", `\"${packageName}-debug\"`, "--ez", "enable", "true"];
-		await this.device.adb.executeShellCommand(startDebuggerCommand);
-
 		const port = await this.getForwardedLocalDebugPortForPackageName(deviceId, packageName);
 
 		return this.getChromeDebugUrl(debugOptions, port);
-	}
-
-	private detachDebugger(packageName: string): Promise<void> {
-		return this.device.adb.executeShellCommand(["am", "broadcast", "-a", `${packageName}-debug`, "--ez", "enable", "false"]);
-	}
-
-	private async startAppWithDebugger(packageFile: string, packageName: string, debugOptions: IDebugOptions): Promise<void> {
-		if (!debugOptions.emulator && !this.$config.debugLivesync) {
-			await this.device.applicationManager.uninstallApplication(packageName);
-			await this.device.applicationManager.installApplication(packageFile);
-		}
-		await this.debugStartCore(packageName, debugOptions);
 	}
 
 	private async debugStartCore(packageName: string, debugOptions: IDebugOptions): Promise<void> {
@@ -198,13 +172,6 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 
 		return !!_.find(debuggableApps, a => a.appIdentifier === appIdentifier);
 	}
-
-	private stopDebuggerClient(): void {
-		if (this._debuggerClientProcess) {
-			this._debuggerClientProcess.kill();
-			this._debuggerClientProcess = null;
-		}
-	}
 }
 
-$injector.register("androidDebugService", AndroidDebugService);
+$injector.register("androidDebugService", AndroidDebugService, false);

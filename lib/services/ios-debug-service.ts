@@ -20,10 +20,12 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	private _childProcess: ChildProcess;
 	private _socketProxy: any;
 
-	constructor(protected $devicesService: Mobile.IDevicesService,
+	constructor(protected device: Mobile.IDevice,
+		protected $devicesService: Mobile.IDevicesService,
 		private $platformService: IPlatformService,
 		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $childProcess: IChildProcess,
+		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $errors: IErrors,
 		private $npmInstallationManager: INpmInstallationManager,
@@ -31,7 +33,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $processService: IProcessService,
 		private $socketProxyFactory: ISocketProxyFactory) {
-		super($devicesService);
+		super(device, $devicesService);
 		this.$processService.attachToProcessExitSignals(this, this.debugStop);
 		this.$socketProxyFactory.on(CONNECTION_ERROR_EVENT_NAME, (e: Error) => this.emit(CONNECTION_ERROR_EVENT_NAME, e));
 	}
@@ -40,7 +42,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		return "ios";
 	}
 
-	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+	public debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		if (debugOptions.debugBrk && debugOptions.start) {
 			this.$errors.failWithoutHelp("Expected exactly one of the --debug-brk or --start options.");
 		}
@@ -51,9 +53,9 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 		if (debugOptions.emulator) {
 			if (debugOptions.start) {
-				return await this.emulatorStart(debugData, debugOptions);
+				return this.emulatorStart(debugData, debugOptions);
 			} else {
-				return await this.emulatorDebugBrk(debugData, debugOptions);
+				return this.emulatorDebugBrk(debugData, debugOptions);
 			}
 		} else {
 			if (debugOptions.start) {
@@ -200,7 +202,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	private async wireDebuggerClient(debugData: IDebugData, debugOptions: IDebugOptions, device?: Mobile.IiOSDevice): Promise<string> {
-		if (debugOptions.chrome) {
+		if (debugOptions.chrome || !this.$hostInfo.isDarwin) {
 			this._socketProxy = await this.$socketProxyFactory.createWebSocketProxy(this.getSocketFactory(device));
 
 			return this.getChromeDebugUrl(debugOptions, this._socketProxy.options.port);
@@ -237,4 +239,4 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 }
 
-$injector.register("iOSDebugService", IOSDebugService);
+$injector.register("iOSDebugService", IOSDebugService, false);

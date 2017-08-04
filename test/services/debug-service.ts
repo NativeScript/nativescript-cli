@@ -4,7 +4,7 @@ import * as stubs from "../stubs";
 import { assert } from "chai";
 import { EventEmitter } from "events";
 import * as constants from "../../lib/common/constants";
-import { CONNECTION_ERROR_EVENT_NAME } from "../../lib/constants";
+import { CONNECTION_ERROR_EVENT_NAME, DebugCommandErrors } from "../../lib/constants";
 
 const fakeChromeDebugUrl = "fakeChromeDebugUrl";
 class PlatformDebugService extends EventEmitter /* implements IPlatformDebugService */ {
@@ -57,7 +57,7 @@ describe("debugService", () => {
 		testInjector.register("devicesService", {
 			getDeviceByIdentifier: (identifier: string): Mobile.IDevice => {
 				return testData.isDeviceFound ?
-					<Mobile.IDevice> {
+					<Mobile.IDevice>{
 						deviceInfo: testData.deviceInformation.deviceInfo,
 
 						applicationManager: {
@@ -141,7 +141,7 @@ describe("debugService", () => {
 				const testData = getDefaultTestData();
 				testData.deviceInformation.deviceInfo.platform = "WP8";
 
-				await assertIsRejected(testData, "Unsupported device OS:");
+				await assertIsRejected(testData, DebugCommandErrors.UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING);
 			});
 
 			it("when trying to debug on iOS Simulator on macOS, debug-brk is passed, but pathToAppPackage is not", async () => {
@@ -175,78 +175,6 @@ describe("debugService", () => {
 
 			it("iOSDebugService's debug method fails", async () => {
 				await assertIsRejectedWhenPlatformDebugServiceFails("iOS");
-			});
-		});
-
-		describe("passes correct args to", () => {
-			const assertPassedDebugOptions = async (platform: string, userSpecifiedOptions?: IDebugOptions, hostInfo?: { isWindows: boolean, isDarwin: boolean }): Promise<IDebugOptions> => {
-				const testData = getDefaultTestData();
-				testData.deviceInformation.deviceInfo.platform = platform;
-				if (hostInfo) {
-					testData.hostInfo = hostInfo;
-				}
-
-				const testInjector = getTestInjectorForTestConfiguration(testData);
-				const platformDebugService = testInjector.resolve<IPlatformDebugService>(`${platform}DebugService`);
-				let passedDebugOptions: IDebugOptions = null;
-				platformDebugService.debug = async (debugData: IDebugData, debugOptions: IDebugOptions): Promise<any> => {
-					passedDebugOptions = debugOptions;
-					return [];
-				};
-
-				const debugService = testInjector.resolve<IDebugServiceBase>(DebugService);
-
-				const debugData = getDebugData();
-				await assert.isFulfilled(debugService.debug(debugData, userSpecifiedOptions));
-				assert.isTrue(passedDebugOptions.chrome);
-				assert.isTrue(passedDebugOptions.start);
-
-				return passedDebugOptions;
-			};
-
-			_.each(["android", "iOS"], platform => {
-				describe(`${platform}DebugService's debug method`, () => {
-					describe("on macOS", () => {
-						it("passes chrome and start as true, when no debugOptions are passed to debugService", async () => {
-							await assertPassedDebugOptions(platform);
-						});
-
-						it("when calling debug service with chrome and start set to false, should disregard them and set both to true", async () => {
-							await assertPassedDebugOptions(platform, { chrome: false, start: false });
-						});
-
-						it("passes other custom options without modification", async () => {
-							const passedDebugOptions = await assertPassedDebugOptions(platform, { emulator: true, useBundledDevTools: true });
-							assert.isTrue(passedDebugOptions.useBundledDevTools);
-							assert.isTrue(passedDebugOptions.emulator);
-						});
-					});
-
-					describe("on Windows", () => {
-						const assertEmulatorOption = (passedDebugOptions: IDebugOptions) => {
-							if (platform === "iOS") {
-								assert.isFalse(passedDebugOptions.emulator);
-							}
-						};
-
-						it("passes chrome and start as true, when no debugOptions are passed to debugService", async () => {
-							const passedDebugOptions = await assertPassedDebugOptions(platform, null, { isWindows: true, isDarwin: false });
-							assertEmulatorOption(passedDebugOptions);
-						});
-
-						it("when calling debug service with chrome and start set to false, should disregard them and set both to true", async () => {
-							const passedDebugOptions = await assertPassedDebugOptions(platform, { chrome: false, start: false }, { isWindows: true, isDarwin: false });
-							assertEmulatorOption(passedDebugOptions);
-						});
-
-						it("passes other custom options without modification", async () => {
-							const passedDebugOptions = await assertPassedDebugOptions(platform, { debugBrk: true, useBundledDevTools: true });
-							assert.isTrue(passedDebugOptions.useBundledDevTools);
-							assert.isTrue(passedDebugOptions.debugBrk);
-						});
-					});
-
-				});
 			});
 		});
 

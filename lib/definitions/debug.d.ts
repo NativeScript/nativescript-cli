@@ -1,12 +1,7 @@
 /**
  * Describes information for starting debug process.
  */
-interface IDebugData {
-	/**
-	 * Id of the device on which the debug process will be started.
-	 */
-	deviceIdentifier: string;
-
+interface IDebugData extends Mobile.IDeviceIdentifier {
 	/**
 	 * Application identifier of the app that it will be debugged.
 	 */
@@ -115,14 +110,19 @@ interface IDebugServiceBase extends NodeJS.EventEmitter {
 	debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string>;
 }
 
-interface IDebugService {
-	getDebugService(device: Mobile.IDevice): IPlatformDebugService;
+interface IDebugService extends IDebugServiceBase {
+	/**
+	 * Stops debug operation for a specific device.
+	 * @param {string} deviceIdentifier Identifier of the device fo which debugging will be stopped.
+	 * @returns {Promise<void>}
+	 */
+	debugStop(deviceIdentifier: string): Promise<void>;
 }
 
 /**
  * Describes actions required for debugging on specific platform (Android or iOS).
  */
-interface IPlatformDebugService extends IDebugServiceBase {
+interface IPlatformDebugService extends IDebugServiceBase, IPlatform {
 	/**
 	 * Starts debug operation.
 	 * @param {IDebugData} debugData Describes information for device and application that will be debugged.
@@ -135,10 +135,5 @@ interface IPlatformDebugService extends IDebugServiceBase {
 	 * Stops debug operation.
 	 * @returns {Promise<void>}
 	 */
-	debugStop(): Promise<void>
-
-	/**
-	 * Mobile platform of the device - Android or iOS.
-	 */
-	platform: string;
+	debugStop(): Promise<void>;
 }

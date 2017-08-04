@@ -35,7 +35,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $injector: IInjector,
 		private $pluginVariablesService: IPluginVariablesService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $config: IConfiguration,
 		private $npm: INodePackageManager) {
 		super($fs, $projectDataService);
 		this._androidProjectPropertiesManagers = Object.create(null);
@@ -408,25 +407,23 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void> {
-		if (!this.$config.debugLivesync) {
-			if (dependencies) {
-				let platformDir = path.join(projectData.platformsDir, "android");
-				let buildDir = path.join(platformDir, "build-tools");
-				let checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
-				if (this.$fs.exists(checkV8dependants)) {
-					let stringifiedDependencies = JSON.stringify(dependencies);
-					try {
-						await this.spawn('node', [checkV8dependants, stringifiedDependencies, projectData.platformsDir], { stdio: "inherit" });
-					} catch (e) {
-						this.$logger.info("Checking for dependants on v8 public API failed. This is likely caused because of cyclic production dependencies. Error code: " + e.code + "\nMore information: https://github.com/NativeScript/nativescript-cli/issues/2561");
-					}
+		if (dependencies) {
+			let platformDir = path.join(projectData.platformsDir, "android");
+			let buildDir = path.join(platformDir, "build-tools");
+			let checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
+			if (this.$fs.exists(checkV8dependants)) {
+				let stringifiedDependencies = JSON.stringify(dependencies);
+				try {
+					await this.spawn('node', [checkV8dependants, stringifiedDependencies, projectData.platformsDir], { stdio: "inherit" });
+				} catch (e) {
+					this.$logger.info("Checking for dependants on v8 public API failed. This is likely caused because of cyclic production dependencies. Error code: " + e.code + "\nMore information: https://github.com/NativeScript/nativescript-cli/issues/2561");
 				}
 			}
-
-			let projectRoot = this.getPlatformData(projectData).projectRoot;
-
-			await this.cleanProject(projectRoot, projectData);
 		}
+
+		let projectRoot = this.getPlatformData(projectData).projectRoot;
+
+		await this.cleanProject(projectRoot, projectData);
 	}
 
 	public stopServices(projectRoot: string): Promise<ISpawnResult> {

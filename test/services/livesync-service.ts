@@ -17,6 +17,9 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("nodeModulesDependenciesBuilder", {});
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("processService", {});
+	testInjector.register("debugService", {});
+	testInjector.register("errors", {});
+	testInjector.register("debugDataService", {});
 	testInjector.register("hooksService", {
 		executeAfterHooks: (commandName: string, hookArguments?: IDictionary<any>): Promise<void> => Promise.resolve()
 	});
@@ -38,6 +41,9 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 		$processService: IProcessService,
 		$hooksService: IHooksService,
 		$pluginsService: IPluginsService,
+		$debugService: IDebugService,
+		$errors: IErrors,
+		$debugDataService: IDebugDataService,
 		$injector: IInjector) {
 
 		super(
@@ -51,6 +57,9 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 			$processService,
 			$hooksService,
 			$pluginsService,
+			$debugService,
+			$errors,
+			$debugDataService,
 			$injector
 		);
 	}

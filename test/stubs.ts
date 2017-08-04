@@ -35,6 +35,14 @@ export class LoggerStub implements ILogger {
 	printMarkdown(message: string): void { }
 }
 
+export class ProcessServiceStub implements IProcessService {
+	public listenersCount: number;
+
+	public attachToProcessExitSignals(context: any, callback: () => void): void {
+		return undefined;
+	}
+}
+
 export class FileSystemStub implements IFileSystem {
 	async zipFiles(zipFile: string, files: string[], zipPathCallback: (path: string) => string): Promise<void> {
 		return undefined;

@@ -24,7 +24,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("options", Options);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register('childProcess', stubs.ChildProcessStub);
-	testInjector.register('androidDebugService', stubs.DebugServiceStub);
 	testInjector.register('fs', FileSystem);
 	testInjector.register('errors', stubs.ErrorsStub);
 	testInjector.register('hostInfo', {});
@@ -39,7 +38,7 @@ function createTestInjector(): IInjector {
 		getDeviceInstances: (): any[] => { return []; },
 		execute: async (): Promise<any> => ({})
 	});
-	testInjector.register("debugLiveSyncService", stubs.LiveSyncServiceStub);
+	testInjector.register("liveSyncService", stubs.LiveSyncServiceStub);
 	testInjector.register("androidProjectService", AndroidProjectService);
 	testInjector.register("androidToolsInfo", stubs.AndroidToolsInfoStub);
 	testInjector.register("hostInfo", {});
@@ -50,6 +49,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("pluginVariablesService", {});
 	testInjector.register("deviceAppDataFactory", {});
 	testInjector.register("projectTemplatesService", {});
+	testInjector.register("debugService", {});
 	testInjector.register("xmlValidator", {});
 	testInjector.register("npm", {});
 	testInjector.register("debugDataService", {
@@ -341,40 +341,7 @@ describe("debug command tests", () => {
 			testInjector = createTestInjector();
 		});
 
-		it("Ensures that debugLivesync flag is true when executing debug --watch command", async () => {
-			const debugCommand = testInjector.resolveCommand("debug|android");
-			const options: IOptions = testInjector.resolve("options");
-			options.watch = true;
-			const devicesService = testInjector.resolve<Mobile.IDevicesService>("devicesService");
-			devicesService.getDeviceInstances = (): Mobile.IDevice[] => {
-				return [<any>{ deviceInfo: { status: "Connected", platform: "android" } }];
-			};
-
-			const debugLiveSyncService = testInjector.resolve<IDebugLiveSyncService>("debugLiveSyncService");
-			debugLiveSyncService.liveSync = async (deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo): Promise<void> => {
-				return null;
-			};
-
-			await debugCommand.execute(["android", "--watch"]);
-			const config: IConfiguration = testInjector.resolve("config");
-			assert.isTrue(config.debugLivesync);
-		});
-
-		it("Ensures that beforePrepareAllPlugins will not call gradle when livesyncing", async () => {
-			let config: IConfiguration = testInjector.resolve("config");
-			config.debugLivesync = true;
-			let childProcess: stubs.ChildProcessStub = testInjector.resolve("childProcess");
-			let androidProjectService: IPlatformProjectService = testInjector.resolve("androidProjectService");
-			let projectData: IProjectData = testInjector.resolve("projectData");
-			let spawnFromEventCount = childProcess.spawnFromEventCount;
-			await androidProjectService.beforePrepareAllPlugins(projectData);
-			assert.isTrue(spawnFromEventCount === 0);
-			assert.isTrue(spawnFromEventCount === childProcess.spawnFromEventCount);
-		});
-
 		it("Ensures that beforePrepareAllPlugins will call gradle with clean option when *NOT* livesyncing", async () => {
-			let config: IConfiguration = testInjector.resolve("config");
-			config.debugLivesync = false;
 			let childProcess: stubs.ChildProcessStub = testInjector.resolve("childProcess");
 			let androidProjectService: IPlatformProjectService = testInjector.resolve("androidProjectService");
 			let projectData: IProjectData = testInjector.resolve("projectData");

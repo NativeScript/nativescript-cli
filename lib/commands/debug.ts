@@ -6,8 +6,8 @@ import { DebugCommandErrors } from "../constants";
 export class DebugPlatformCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(private debugService: IPlatformDebugService,
-		private platform: string,
+	constructor(private platform: string,
+		private $debugService: IDebugService,
 		protected $devicesService: Mobile.IDevicesService,
 		protected $platformService: IPlatformService,
 		protected $projectData: IProjectData,
@@ -16,31 +16,29 @@ export class DebugPlatformCommand implements ICommand {
 		protected $logger: ILogger,
 		protected $errors: IErrors,
 		private $debugDataService: IDebugDataService,
-		private $debugLiveSyncService: IDebugLiveSyncService,
-		private $config: IConfiguration,
+		private $liveSyncService: IDebugLiveSyncService,
 		private $prompter: IPrompter,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper) {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		const debugOptions = this.$options;
+		const debugOptions = <IDebugOptions>_.cloneDeep(this.$options.argv);
 
 		let debugData = this.$debugDataService.createDebugData(this.$projectData, this.$options);
 
 		await this.$platformService.trackProjectType(this.$projectData);
-
 		const selectedDeviceForDebug = await this.getDeviceForDebug();
 		debugData.deviceIdentifier = selectedDeviceForDebug.deviceInfo.identifier;
 
 		if (this.$options.start) {
-			return this.$debugLiveSyncService.printDebugInformation(await this.debugService.debug(debugData, debugOptions));
+			return this.$liveSyncService.printDebugInformation(await this.$debugService.debug(debugData, debugOptions));
 		}
-
-		this.$config.debugLivesync = true;
 
 		await this.$devicesService.detectCurrentlyAttachedDevices({ shouldReturnImmediateResult: false, platform: this.platform });
 
-		await this.$liveSyncCommandHelper.executeLiveSyncOperation([selectedDeviceForDebug], this.$debugLiveSyncService, this.platform);
+		await this.$liveSyncCommandHelper.executeLiveSyncOperation([selectedDeviceForDebug], this.platform, {
+			[selectedDeviceForDebug.deviceInfo.identifier]: true
+		});
 	}
 
 	public async getDeviceForDebug(): Promise<Mobile.IDevice> {
@@ -104,6 +102,10 @@ export class DebugPlatformCommand implements ICommand {
 			this.$errors.fail(`Applications for platform ${this.platform} can not be built on this OS`);
 		}
 
+		if (this.$options.release) {
+			this.$errors.fail("--release flag is not applicable to this command");
+		}
+
 		const platformData = this.$platformsData.getPlatformData(this.platform, this.$projectData);
 		const platformProjectService = platformData.platformProjectService;
 		await platformProjectService.validate(this.$projectData);
@@ -123,7 +125,7 @@ export class DebugIOSCommand implements ICommand {
 
 	@cache()
 	private get debugPlatformCommand(): DebugPlatformCommand {
-		return this.$injector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { debugService: this.$iOSDebugService, platform: this.platform });
+		return this.$injector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { platform: this.platform });
 	}
 
 	public allowedParameters: ICommandParameter[] = [];
@@ -135,7 +137,6 @@ export class DebugIOSCommand implements ICommand {
 		private $injector: IInjector,
 		private $projectData: IProjectData,
 		private $platformsData: IPlatformsData,
-		private $iOSDebugService: IDebugService,
 		$iosDeviceOperations: IIOSDeviceOperations) {
 		this.$projectData.initializeProjectData();
 		// Do not dispose ios-device-lib, so the process will remain alive and the debug application (NativeScript Inspector or Chrome DevTools) will be able to connect to the socket.
@@ -166,7 +167,7 @@ export class DebugAndroidCommand implements ICommand {
 
 	@cache()
 	private get debugPlatformCommand(): DebugPlatformCommand {
-		return this.$injector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { debugService: this.$androidDebugService, platform: this.platform });
+		return this.$injector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { platform: this.platform });
 	}
 
 	public allowedParameters: ICommandParameter[] = [];
@@ -177,8 +178,7 @@ export class DebugAndroidCommand implements ICommand {
 		private $options: IOptions,
 		private $injector: IInjector,
 		private $projectData: IProjectData,
-		private $platformsData: IPlatformsData,
-		private $androidDebugService: IDebugService) {
+		private $platformsData: IPlatformsData) {
 		this.$projectData.initializeProjectData();
 	}
 
