@@ -36,7 +36,7 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 				`${deviceProjectRootDirname}/sync`]
 		);
 
-		this.reloadResources(deviceAppData, localToDevicePaths);
+		await this.reloadResources(deviceAppData, localToDevicePaths);
 
 		const canExecuteFastSync = !liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
 			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
