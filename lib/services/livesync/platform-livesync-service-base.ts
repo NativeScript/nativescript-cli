@@ -91,7 +91,7 @@ export abstract class PlatformLiveSyncServiceBase {
 			modifiedLocalToDevicePaths.push(...localToDevicePaths);
 
 			const deviceLiveSyncService = this.getDeviceLiveSyncService(device, projectData.projectId);
-			deviceLiveSyncService.removeFiles(deviceAppData, localToDevicePaths);
+			await deviceLiveSyncService.removeFiles(deviceAppData, localToDevicePaths);
 		}
 
 		return {
