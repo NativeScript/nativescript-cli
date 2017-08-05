@@ -258,6 +258,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 <dict>
     <key>method</key>
     <string>${exportOptionsMethod}</string>
+    <key>uploadBitcode</key>
+    <false/>
 </dict>
 </plist>`;
 
@@ -1346,30 +1348,16 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 	}
 
-	private async getEmbeddedPlistData(projectData: IProjectData): Promise<IDictionary<any>> {
-		let embeddedPlistContents = "";
+	private getExportOptionsMethod(projectData: IProjectData): string {
 		const embeddedMobileProvisionPath = path.join(this.getPlatformData(projectData).deviceBuildOutputPath, `${projectData.projectName}.app`, "embedded.mobileprovision");
+		const provision = mobileprovision.provision.readFromFile(embeddedMobileProvisionPath);
 
-		embeddedPlistContents = await this.$childProcess.exec(`security cms -D -i ${embeddedMobileProvisionPath}`);
-
-		return plist.parse(embeddedPlistContents);
-	}
-
-	private async getExportOptionsMethod(projectData: IProjectData): Promise<"app-store" | "ad-hoc" | "enterprise" | "development"> {
-		const embeddedPlistData = await this.getEmbeddedPlistData(projectData);
-
-		if (embeddedPlistData.ProvisionsAllDevices) {
-			return "enterprise";
-		} else if (embeddedPlistData.ProvisionedDevices && embeddedPlistData.ProvisionedDevices.length) {
-			const entitlements = embeddedPlistData.Entitlements;
-			if (entitlements["get-task-allow"]) {
-				return "development";
-			} else {
-				return "ad-hoc";
-			}
-		} else {
-			return "app-store";
-		}
+		return {
+			"Development": "development",
+			"AdHoc": "ad-hoc",
+			"Distribution": "app-store",
+			"Enterprise": "enterprise"
+		}[provision.Type];
 	}
 }
 
