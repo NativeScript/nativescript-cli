@@ -30,7 +30,7 @@ scratch/
 .idea/
 .settings/
 .vscode/**
-!.vscode/launch.json
+!.vscode/settings.json
 test-reports.xml
 
 npm-debug.log
