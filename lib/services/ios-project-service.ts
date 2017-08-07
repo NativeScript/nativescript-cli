@@ -314,6 +314,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				handler,
 				this.buildForSimulator(projectRoot, basicArgs, projectData, buildConfig.buildOutputStdio));
 		}
+
+		this.validateApplicationIdentifier(projectData);
 	}
 
 	public async validatePlugins(projectData: IProjectData): Promise<void> {
@@ -1311,6 +1313,23 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			}
 		}
 		return teamId;
+	}
+
+	private validateApplicationIdentifier(projectData: IProjectData): void {
+		const projectDir = projectData.projectDir;
+		const infoPlistPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, this.getPlatformData(projectData).configurationFileName);
+		const mergedPlistPath =  this.getPlatformData(projectData).configurationFilePath;
+
+		if (!this.$fs.exists(infoPlistPath) || !this.$fs.exists(mergedPlistPath)) {
+			return;
+		}
+
+		const infoPlist = plist.parse(this.$fs.readText(infoPlistPath));
+		const mergedPlist = plist.parse(this.$fs.readText(mergedPlistPath));
+
+		if (infoPlist.CFBundleIdentifier && infoPlist.CFBundleIdentifier !== mergedPlist.CFBundleIdentifier) {
+			this.$logger.warnWithLabel("The CFBundleIdentifier key inside the 'Info.plist' will be overriden by the 'id' inside 'package.json'.");
+		}
 	}
 }
 
