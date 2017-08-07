@@ -17,6 +17,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private static JAVA_COMPILER_VERSION_REGEXP = /^javac (.*)/im;
 	private static XCODE_VERSION_REGEXP = /Xcode (.*)/;
 	private static VERSION_REGEXP = /(\d{1,})\.(\d{1,})\.*([\w-]{0,})/m;
+	private static CLI_OUTPUT_VERSION_REGEXP = /^(?:\d+\.){2}\d+.*?$/m;
 	private static GIT_VERSION_REGEXP = /^git version (.*)/;
 	private static GRADLE_VERSION_REGEXP = /Gradle (.*)/i;
 
@@ -298,14 +299,14 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	public getNativeScriptCliVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.nativeScriptCliVersionCache, async (): Promise<string> => {
 			const output = await this.execCommand("tns --version");
-			return output ? this.getVersionFromString(output.trim()) : output;
+			return output ? this.getVersionFromCLIOutput(output.trim()) : output;
 		});
 	}
 
 	public getNativeScriptCloudVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.nativeScriptCloudVersionCache, async (): Promise<string> => {
 			const output = await this.execCommand("tns cloud lib version");
-			return output ? this.getVersionFromString(output.trim()) : output;
+			return output ? this.getVersionFromCLIOutput(output.trim()) : output;
 		});
 	}
 
@@ -440,6 +441,11 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		}
 
 		return null;
+	}
+
+	private getVersionFromCLIOutput(commandOutput: string): string {
+		const matches = commandOutput.match(SysInfo.CLI_OUTPUT_VERSION_REGEXP);
+		return matches && matches[0];
 	}
 
 	private async winVer(): Promise<string> {
