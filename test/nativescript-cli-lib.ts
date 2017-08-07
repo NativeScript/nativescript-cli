@@ -21,6 +21,7 @@ describe("nativescript-cli-lib", () => {
 		npm: ["install", "uninstall", "view", "search"],
 		extensibilityService: ["loadExtensions", "loadExtension", "getInstalledExtensions", "installExtension", "uninstallExtension"],
 		liveSyncService: ["liveSync", "stopLiveSync"],
+		debugLiveSyncService: ["liveSync", "stopLiveSync"],
 		analyticsService: ["startEqatecMonitor"],
 		debugService: ["debug"]
 	};

@@ -33,7 +33,7 @@ export class DebugLiveSyncService extends LiveSyncService implements IDebugLiveS
 			$injector);
 	}
 
-	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo): Promise<void> {
+	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, outputPath?: string): Promise<void> {
 		const debugOptions = this.$options;
 		const deployOptions: IDeployPlatformOptions = {
 			clean: this.$options.clean,
@@ -64,7 +64,7 @@ export class DebugLiveSyncService extends LiveSyncService implements IDebugLiveS
 		await deviceAppData.device.applicationManager.stopApplication(applicationId, projectData.projectName);
 
 		const buildConfig: IBuildConfig = _.merge({ buildForDevice: !deviceAppData.device.isEmulator }, deployOptions);
-		debugData.pathToAppPackage = this.$platformService.lastOutputPath(debugService.platform, buildConfig, projectData);
+		debugData.pathToAppPackage = this.$platformService.lastOutputPath(debugService.platform, buildConfig, projectData, outputPath);
 
 		this.printDebugInformation(await debugService.debug(debugData, debugOptions));
 	}
