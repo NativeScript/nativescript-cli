@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as path from "path";
+import { EOL } from "os";
 import { SysInfo } from "../lib/sys-info";
 import { Helpers } from "../lib/helpers";
 import { ChildProcess } from "../lib/wrappers/child-process";
@@ -14,7 +15,13 @@ interface IChildProcessResultDescription {
 	shouldThrowError?: boolean;
 }
 
+interface ICLIOutputVersionTestCase {
+	testedProperty: string;
+	method: (sysInfo: SysInfo) => Promise<string>;
+}
+
 interface IChildProcessResults {
+	[property: string]: IChildProcessResultDescription;
 	uname: IChildProcessResultDescription;
 	npmV: IChildProcessResultDescription;
 	nodeV: IChildProcessResultDescription;
@@ -30,6 +37,7 @@ interface IChildProcessResults {
 	podVersion: IChildProcessResultDescription;
 	pod: IChildProcessResultDescription;
 	nativeScriptCliVersion: IChildProcessResultDescription;
+	nativeScriptCloudVersion: IChildProcessResultDescription;
 	git: IChildProcessResultDescription;
 }
 
@@ -86,6 +94,7 @@ function createChildProcessResults(childProcessResult: IChildProcessResults): ID
 		'"C:\\Program Files/Git/cmd/git.exe" --version': childProcessResult.gitVersion, // When running Windows test on the Non-Windows platform
 		"gradle -v": childProcessResult.gradleVersion,
 		"tns --version": childProcessResult.nativeScriptCliVersion,
+		"tns cloud lib version": childProcessResult.nativeScriptCloudVersion,
 		"emulator": { shouldThrowError: false },
 		"which git": childProcessResult.git
 	};
@@ -150,6 +159,7 @@ function setStdErr(value: string): { stderr: string } {
 
 describe("SysInfo unit tests", () => {
 	let sysInfo: SysInfo;
+	const dotNetVersion = "4.5.1";
 
 	beforeEach(() => {
 		// We need to mock this because on Mac the tests in which the platform is mocked to Windows in the process there will be no CommonProgramFiles.
@@ -230,6 +240,7 @@ describe("SysInfo unit tests", () => {
 				podVersion: { result: setStdOut("0.38.2") },
 				pod: { result: setStdOut("success") },
 				nativeScriptCliVersion: { result: setStdOut("2.5.0") },
+				nativeScriptCloudVersion: { result: setStdOut("0.1.0") },
 				git: { result: setStdOut("git") }
 			};
 
@@ -264,8 +275,8 @@ describe("SysInfo unit tests", () => {
 			it("on Windows", async () => {
 				const originalProgramFiles = process.env[PROGRAM_FILES];
 				process.env[PROGRAM_FILES] = PROGRAM_FILES_ENV_PATH;
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion: "4.5.1" });
-				let result = await sysInfo.getSysInfo();
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion });
+				const result = await sysInfo.getSysInfo();
 				process.env[PROGRAM_FILES] = originalProgramFiles;
 				assertCommonValues(result);
 				assert.deepEqual(result.xcodeVer, null);
@@ -273,16 +284,16 @@ describe("SysInfo unit tests", () => {
 			});
 
 			it("on Mac", async () => {
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
-				let result = await sysInfo.getSysInfo();
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+				const result = await sysInfo.getSysInfo();
 				assertCommonValues(result);
 				assert.deepEqual(result.xcodeVer, "6.4.0");
 				assert.deepEqual(result.cocoaPodsVer, childProcessResult.podVersion.result.stdout);
 			});
 
 			it("on Linux", async () => {
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: false, dotNetVersion: "4.5.1" });
-				let result = await sysInfo.getSysInfo();
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: false, dotNetVersion });
+				const result = await sysInfo.getSysInfo();
 				assertCommonValues(result);
 				assert.deepEqual(result.xcodeVer, null);
 				assert.deepEqual(result.cocoaPodsVer, null);
@@ -293,55 +304,90 @@ describe("SysInfo unit tests", () => {
 			it("is null when cocoapods are not installed", async () => {
 				// simulate error when pod --version command is executed
 				childProcessResult.podVersion = { shouldThrowError: true };
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
-				let result = await sysInfo.getSysInfo();
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+				const result = await sysInfo.getSysInfo();
 				assert.deepEqual(result.cocoaPodsVer, null);
 			});
 
 			it("is null when OS is not Mac", async () => {
 				const originalProgramFiles = process.env[PROGRAM_FILES];
 				process.env[PROGRAM_FILES] = PROGRAM_FILES_ENV_PATH;
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion: "4.5.1" });
-				let result = await sysInfo.getSysInfo();
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion });
+				const result = await sysInfo.getSysInfo();
 				process.env[PROGRAM_FILES] = originalProgramFiles;
 				assert.deepEqual(result.cocoaPodsVer, null);
 			});
 
 			it("is correct when cocoapods output has warning after version output", async () => {
 				childProcessResult.podVersion = { result: setStdOut("0.38.2\nWARNING:\n") };
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
-				let result = await sysInfo.getSysInfo();
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+				const result = await sysInfo.getSysInfo();
 				assert.deepEqual(result.cocoaPodsVer, "0.38.2");
 			});
 
 			it("is correct when cocoapods output has warnings before version output", async () => {
 				childProcessResult.podVersion = { result: setStdOut("WARNING\nWARNING2\n0.38.2") };
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
-				let result = await sysInfo.getSysInfo();
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+				const result = await sysInfo.getSysInfo();
 				assert.deepEqual(result.cocoaPodsVer, "0.38.2");
 			});
 		});
 
-		describe("nativeScriptCliVersion", () => {
-			it("is null when tns is not installed", async () => {
-				childProcessResult.nativeScriptCliVersion = { shouldThrowError: true };
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
-				let result = await sysInfo.getSysInfo();
-				assert.deepEqual(result.nativeScriptCliVersion, null);
-			});
+		const testData: ICLIOutputVersionTestCase[] = [
+			{
+				testedProperty: "nativeScriptCliVersion",
+				method: (currentSysInfo: SysInfo) => currentSysInfo.getNativeScriptCliVersion()
+			},
+			{
+				testedProperty: "nativeScriptCloudVersion",
+				method: (currentSysInfo: SysInfo) => currentSysInfo.getNativeScriptCloudVersion()
+			}];
 
-			it("is correct when the version is the only row in `tns --version` output", async () => {
-				childProcessResult.nativeScriptCliVersion = { result: setStdOut("3.0.0") };
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
-				let result = await sysInfo.getSysInfo();
-				assert.deepEqual(result.nativeScriptCliVersion, "3.0.0");
-			});
+		testData.forEach((testCase) => {
+			describe(testCase.testedProperty, () => {
+				it("is null when tns is not installed", async () => {
+					childProcessResult[testCase.testedProperty] = { shouldThrowError: true };
+					sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+					const result = await testCase.method(sysInfo);
+					assert.deepEqual(result, null);
+				});
 
-			it("is correct when there are warnings in the `tns --version` output", async () => {
-				childProcessResult.nativeScriptCliVersion = { result: setStdOut("Some warning due to invalid extensions\\n3.0.0") };
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
-				let result = await sysInfo.getSysInfo();
-				assert.deepEqual(result.nativeScriptCliVersion, "3.0.0");
+				it("is correct when the version is the only row in command output", async () => {
+					childProcessResult[testCase.testedProperty] = { result: setStdOut("3.0.0") };
+					sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+					const result = await testCase.method(sysInfo);
+					assert.deepEqual(result, "3.0.0");
+				});
+
+				it("is correct when there are warnings in the command's output", async () => {
+					childProcessResult[testCase.testedProperty] = { result: setStdOut(`Some warning due to invalid extensions${EOL}3.0.0`) };
+					sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+					const result = await testCase.method(sysInfo);
+					assert.deepEqual(result, "3.0.0");
+				});
+
+				it("is correct when there are warnings with version in them in the command's output", async () => {
+					const cliOutput = `
+Support for Node.js 7.6.0 is not verified. This CLI might not install or run properly.
+
+3.0.0`;
+					childProcessResult[testCase.testedProperty] = { result: setStdOut(cliOutput) };
+					sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+					const result = await testCase.method(sysInfo);
+					assert.deepEqual(result, "3.0.0");
+				});
+
+				it("is correct when there are warnings in the command's output and searched version is a prerelease", async () => {
+					const expectedCliVersion = "3.2.0-2017-07-21-9480";
+					const cliOutput = `
+Support for Node.js 7.6.0 is not verified. This CLI might not install or run properly.
+
+${expectedCliVersion}`;
+					childProcessResult[testCase.testedProperty] = { result: setStdOut(cliOutput) };
+					sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+					const result = await testCase.method(sysInfo);
+					assert.deepEqual(result, expectedCliVersion);
+				});
 			});
 		});
 
@@ -363,6 +409,7 @@ describe("SysInfo unit tests", () => {
 					podVersion: { shouldThrowError: true },
 					pod: { shouldThrowError: true },
 					nativeScriptCliVersion: { shouldThrowError: true },
+					nativeScriptCloudVersion: { shouldThrowError: true },
 					git: { shouldThrowError: false }
 				};
 				androidToolsInfo.validateAndroidHomeEnvVariable = (): any[] => [1];
@@ -370,7 +417,7 @@ describe("SysInfo unit tests", () => {
 
 			describe("when all of calls throw", () => {
 				let assertAllValuesAreNull = async () => {
-					let result = await sysInfo.getSysInfo();
+					const result = await sysInfo.getSysInfo();
 					assert.deepEqual(result.npmVer, null);
 					assert.deepEqual(result.javaVer, null);
 					assert.deepEqual(result.javacVersion, null);
@@ -387,18 +434,18 @@ describe("SysInfo unit tests", () => {
 				it("on Windows", async () => {
 					const originalProgramFiles = process.env[PROGRAM_FILES];
 					process.env[PROGRAM_FILES] = PROGRAM_FILES_ENV_PATH;
-					sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion: "4.5.1" });
+					sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion });
 					process.env[PROGRAM_FILES] = originalProgramFiles;
 					await assertAllValuesAreNull();
 				});
 
 				it("on Mac", async () => {
-					sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" });
+					sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
 					await assertAllValuesAreNull();
 				});
 
 				it("on Linux", async () => {
-					sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: false, dotNetVersion: "4.5.1" });
+					sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: false, dotNetVersion });
 					await assertAllValuesAreNull();
 				});
 			});
