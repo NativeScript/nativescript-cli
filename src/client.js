@@ -5,7 +5,6 @@ import isNumber from 'lodash/isNumber';
 
 import { KinveyError } from 'src/errors';
 import { Log, isDefined } from 'src/utils';
-import { ActiveUserHelper } from 'src/entity/src/activeUserHelper';
 
 const DEFAULT_TIMEOUT = 60000;
 let sharedInstance = null;

@@ -11,7 +11,6 @@ import { KinveyError, NotFoundError, ActiveUserError } from 'src/errors';
 import DataStore, { UserStore } from 'src/datastore';
 import { MobileIdentityConnect } from 'src/identity';
 import { Log, isDefined } from 'src/utils';
-import { ActiveUserHelper } from './activeUserHelper';
 import Acl from './acl';
 import Metadata from './metadata';
 

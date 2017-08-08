@@ -11,7 +11,6 @@ import Aggregation from 'src/aggregation';
 import { isDefined, appendQuery } from 'src/utils';
 import { InvalidCredentialsError, NoActiveUserError, KinveyError } from 'src/errors';
 import { SocialIdentity } from 'src/identity';
-import { ActiveUserHelper } from 'src/entity/src/activeUserHelper';
 import Request, { RequestMethod } from './request';
 import Headers from './headers';
 import { KinveyResponse } from './response';

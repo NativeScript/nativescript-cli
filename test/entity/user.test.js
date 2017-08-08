@@ -2,7 +2,6 @@ import { Acl, Metadata, User } from 'src/entity';
 import { UserMock } from 'test/mocks';
 import { randomString } from 'src/utils';
 import { ActiveUserError, InvalidCredentialsError, KinveyError } from 'src/errors';
-import { ActiveUserHelper } from 'src/entity/src/activeUserHelper';
 import { CacheStore, SyncStore } from 'src/datastore';
 import Client from 'src/client';
 import Query from 'src/query';
