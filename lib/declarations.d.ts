@@ -607,7 +607,7 @@ interface IVersionsService {
 	 * Gets versions information about the nativescript components with new.
 	 * @return {Promise<IVersionInformation[]>} The version information.
 	 */
-	getComponentsForUpdate(): Promise<IVersionInformation[]>;
+	getComponentsForUpdate(): Promise<void>;
 
 	/**
 	 * Gets versions information about all nativescript components.

@@ -95,7 +95,7 @@ class DoctorService implements IDoctorService {
 				result = true;
 			}
 
-			if (await this.$xcprojService.verifyXcproj(false)) {
+			if (sysInfo.cocoapodVer && sysInfo.cocoapodVer && await this.$xcprojService.verifyXcproj(false)) {
 				result = true;
 			}
 		} else {
@@ -123,26 +123,13 @@ class DoctorService implements IDoctorService {
 			}
 		}
 
-		let versionsInformation: IVersionInformation[] = [];
 		try {
-			versionsInformation = await this.$versionsService.getComponentsForUpdate();
-			this.printVersionsInformation(versionsInformation);
+			await this.$versionsService.getComponentsForUpdate();
 		} catch (err) {
 			this.$logger.error("Cannot get the latest versions information from npm. Please try again later.");
 		}
 
 		return doctorResult;
-	}
-
-	private printVersionsInformation(versionsInformation: IVersionInformation[]) {
-		if (versionsInformation && versionsInformation.length) {
-			let table: any = this.$versionsService.createTableWithVersionsInformation(versionsInformation);
-
-			this.$logger.warn("Updates available");
-			this.$logger.out(table.toString() + EOL);
-		} else {
-			this.$logger.out("Your components are up-to-date." + EOL);
-		}
 	}
 
 	private async promptForDocs(link: string): Promise<void> {

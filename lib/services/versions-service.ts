@@ -1,3 +1,4 @@
+import { EOL } from "os";
 import * as constants from "../constants";
 import * as semver from "semver";
 import * as path from "path";
@@ -14,7 +15,8 @@ class VersionsService implements IVersionsService {
 		private $npmInstallationManager: INpmInstallationManager,
 		private $injector: IInjector,
 		private $staticConfig: Config.IStaticConfig,
-		private $pluginsService: IPluginsService) {
+		private $pluginsService: IPluginsService,
+		private $logger: ILogger) {
 		this.projectData = this.getProjectData();
 	}
 
@@ -84,7 +86,7 @@ class VersionsService implements IVersionsService {
 		return runtimesVersions;
 	}
 
-	public async getComponentsForUpdate(): Promise<IVersionInformation[]> {
+	public async getComponentsForUpdate() {
 		let allComponents: IVersionInformation[] = await this.getAllComponentsVersions();
 		let componentsForUpdate: IVersionInformation[] = [];
 
@@ -94,7 +96,18 @@ class VersionsService implements IVersionsService {
 			}
 		});
 
-		return componentsForUpdate;
+		this.printVersionsInformation(componentsForUpdate, allComponents);
+	}
+
+	private printVersionsInformation(versionsInformation: IVersionInformation[], allComponents: IVersionInformation[]) {
+		if (versionsInformation && versionsInformation.length) {
+			let table: any = this.createTableWithVersionsInformation(versionsInformation);
+
+			this.$logger.warn("Updates available");
+			this.$logger.out(table.toString() + EOL);
+		} else {
+			this.$logger.out(`Your components are up-to-date: ${EOL}${allComponents.map(component => component.componentName)}${EOL}`);
+		}
 	}
 
 	public async getAllComponentsVersions(): Promise<IVersionInformation[]> {
