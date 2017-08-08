@@ -1,3 +1,4 @@
+import MemoryCache from 'fast-memory-cache';
 import url from 'url';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
