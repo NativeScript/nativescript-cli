@@ -10,7 +10,7 @@ export default class ParseMiddleware extends Middleware {
 
   handle(request, response) {
     if (isDefined(response) && isDefined(response.data)) {
-      const contentType = response.headers['content-type'] || response.headers['Content-Type'];
+      const contentType = response.headers.get('Content-Type');
 
       if (contentType) {
         if (contentType.indexOf('application/json') === 0) {

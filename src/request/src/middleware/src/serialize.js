@@ -10,7 +10,7 @@ export default class SerializeMiddleware extends Middleware {
 
   handle(request) {
     if (isDefined(request) && isDefined(request.body)) {
-      const contentType = request.headers['content-type'] || request.headers['Content-Type'];
+      const contentType = request.headers.get('content-type');
 
       if (isDefined(contentType)) {
         if (contentType.indexOf('application/json') === 0) {
