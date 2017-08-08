@@ -1,5 +1,5 @@
 import httpRequest from 'request';
-import { Middleware } from 'src/request';
+import { Middleware, KinveyResponse } from 'src/request';
 import { isDefined } from 'src/utils';
 import { NoNetworkConnectionError, TimeoutError } from 'src/errors';
 import pkg from 'package.json';
@@ -31,19 +31,17 @@ export default class HttpMiddleware extends Middleware {
   }
 
   handle(request) {
-    const promise = new Promise((resolve, reject) => {
-      const { url, method, headers, body, timeout, followRedirect } = request;
-
-      // Add the X-Kinvey-Device-Information header
-      headers['X-Kinvey-Device-Information'] = this.deviceInformation;
+    return new Promise((resolve, reject) => {
+      const headers = request.headers;
+      headers.set('X-Kinvey-Device-Information', this.deviceInformation);
 
       httpRequest({
-        method: method,
-        url: url,
-        headers: headers,
-        body: body,
-        followRedirect: followRedirect,
-        timeout: timeout
+        method: request.method,
+        url: request.url,
+        headers: headers.toPlainObject(),
+        body: request.body,
+        followRedirect: request.followRedirect,
+        timeout: request.timeout
       }, (error, response, body) => {
         if (isDefined(response) === false) {
           if (error.code === 'ESOCKETTIMEDOUT' || error.code === 'ETIMEDOUT') {
@@ -56,15 +54,14 @@ export default class HttpMiddleware extends Middleware {
         }
 
         return resolve({
-          response: {
+          response: new KinveyResponse({
             statusCode: response.statusCode,
             headers: response.headers,
             data: body
-          }
+          })
         });
       });
     });
-    return promise;
   }
 
   cancel() {
