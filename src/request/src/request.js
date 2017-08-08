@@ -153,21 +153,22 @@ export default class Request {
       );
     }
 
-    return this.rack.execute(this.toPlainObject()).then((response) => {
-      if (isDefined(response) === false) {
-        throw new NoResponseError();
-      }
+    return this.rack.execute(this)
+      .then((response) => {
+        if (isDefined(response) === false) {
+          throw new NoResponseError();
+        }
 
-      if ((response instanceof Response) === false) {
-        response = new Response({
-          statusCode: response.statusCode,
-          headers: response.headers,
-          data: response.data
-        });
-      }
+        if ((response instanceof Response) === false) {
+          response = new Response({
+            statusCode: response.statusCode,
+            headers: response.headers,
+            data: response.data
+          });
+        }
 
-      return response;
-    });
+        return response;
+      });
   }
 
   cancel() {

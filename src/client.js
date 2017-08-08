@@ -10,6 +10,28 @@ import { ActiveUserHelper } from 'src/entity/src/activeUserHelper';
 const DEFAULT_TIMEOUT = 60000;
 let sharedInstance = null;
 
+class ActiveUserStorage {
+  memory = new MemoryCache();
+
+  get(key) {
+    try {
+      return JSON.parse(this.memory.get(key));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  set(key, value) {
+    if (isDefined(value)) {
+      this.memory.set(key, JSON.stringify(value));
+    } else {
+      this.memory.delete(key);
+    }
+
+    return value;
+  }
+}
+
 /**
  * The Client class stores information about your application on the Kinvey platform. You can create mutiple clients
  * to send requests to different environments on the Kinvey platform.
@@ -34,110 +56,106 @@ export default class Client {
    *   appSecret: '<appSecret>'
    * });
    */
-  constructor(options = {}) {
-    options = assign({
-      apiHostname: 'https://baas.kinvey.com',
-      micHostname: 'https://auth.kinvey.com',
-      liveServiceHostname: 'https://kls.kinvey.com',
-      defaultTimeout: DEFAULT_TIMEOUT
-    }, options);
-
-    if (options.apiHostname && isString(options.apiHostname)) {
-      let apiHostname = options.apiHostname;
-
-      if (/^https?:\/\//i.test(apiHostname) === false) {
-        apiHostname = `https://${apiHostname}`;
-      }
-
-      const apiHostnameParsed = url.parse(apiHostname);
-
-      /**
-       * @type {string}
-       */
-      this.apiProtocol = apiHostnameParsed.protocol;
-
-      /**
-       * @type {string}
-       */
-      this.apiHost = apiHostnameParsed.host;
+  constructor(config = {}) {
+    let apiHostname = isString(config.apiHostname) ? config.apiHostname : 'https://baas.kinvey.com';
+    if (/^https?:\/\//i.test(apiHostname) === false) {
+      apiHostname = `https://${apiHostname}`;
     }
 
-    if (options.micHostname && isString(options.micHostname)) {
-      let micHostname = options.micHostname;
+    const apiHostnameParsed = url.parse(apiHostname);
 
-      if (/^https?:\/\//i.test(micHostname) === false) {
-        micHostname = `https://${micHostname}`;
-      }
+    /**
+     * @type {string}
+     */
+    this.apiProtocol = apiHostnameParsed.protocol;
 
-      const micHostnameParsed = url.parse(micHostname);
+    /**
+     * @type {string}
+     */
+    this.apiHost = apiHostnameParsed.host;
 
-      /**
-       * @type {string}
-       */
-      this.micProtocol = micHostnameParsed.protocol;
-
-      /**
-       * @type {string}
-       */
-      this.micHost = micHostnameParsed.host;
+    let micHostname = isString(config.micHostname) ? config.micHostname : 'https://auth.kinvey.com';
+    if (/^https?:\/\//i.test(micHostname) === false) {
+      micHostname = `https://${micHostname}`;
     }
 
-    if (options.liveServiceHostname && isString(options.liveServiceHostname)) {
-      let liveServiceHostname = options.liveServiceHostname;
+    const micHostnameParsed = url.parse(micHostname);
 
-      if (/^https?:\/\//i.test(liveServiceHostname) === false) {
-        liveServiceHostname = `https://${liveServiceHostname}`;
-      }
+    /**
+     * @type {string}
+     */
+    this.micProtocol = micHostnameParsed.protocol;
 
-      const liveServiceHostnameParsed = url.parse(liveServiceHostname);
+    /**
+     * @type {string}
+     */
+    this.micHost = micHostnameParsed.host;
 
-      /**
-       * @type {string}
-       */
-      this.liveServiceProtocol = liveServiceHostnameParsed.protocol;
-
-      /**
-       * @type {string}
-       */
-      this.liveServiceHost = liveServiceHostnameParsed.host;
+    let liveServiceHostname = isString(config.liveServiceHostname) ? config.liveServiceHostname : 'https://kls.kinvey.com';
+    if (/^https?:\/\//i.test(liveServiceHostname) === false) {
+      liveServiceHostname = `https://${liveServiceHostname}`;
     }
 
+    const liveServiceHostnameParsed = url.parse(liveServiceHostname);
+
     /**
-     * @type {?string}
+     * @type {string}
      */
-    this.appKey = options.appKey;
+    this.liveServiceProtocol = liveServiceHostnameParsed.protocol;
+
+    /**
+     * @type {string}
+     */
+    this.liveServiceHost = liveServiceHostnameParsed.host;
 
     /**
      * @type {?string}
      */
-    this.appSecret = options.appSecret;
+    this.appKey = config.appKey;
 
     /**
      * @type {?string}
      */
-    this.masterSecret = options.masterSecret;
+    this.appSecret = config.appSecret;
 
     /**
      * @type {?string}
      */
-    this.encryptionKey = options.encryptionKey;
+    this.masterSecret = config.masterSecret;
 
     /**
      * @type {?string}
      */
-    this.appVersion = options.appVersion;
+    this.encryptionKey = config.encryptionKey;
+
+    /**
+     * @type {?string}
+     */
+    this.appVersion = config.appVersion;
 
     /**
      * @type {?number}
      */
-    this.defaultTimeout = isNumber(options.defaultTimeout) && options.defaultTimeout >= 0 ? options.defaultTimeout : DEFAULT_TIMEOUT;
+    this.defaultTimeout = isNumber(config.defaultTimeout) && config.defaultTimeout >= 0 ? config.defaultTimeout : DEFAULT_TIMEOUT;
+
+    /**
+     * @private
+     */
+    this.activeUserStorage = new ActiveUserStorage();
   }
 
   /**
    * Get the active user.
    */
-  get activeUser() {
-    return ActiveUserHelper.get(this);
+  getActiveUser() {
+    return this.activeUserStorage.get(this.appKey);
+  }
+
+  /**
+   * Set the active user
+   */
+  setActiveUser(activeUser) {
+    return this.activeUserStorage.set(this.appKey, activeUser);
   }
 
   /**
@@ -228,10 +246,9 @@ export default class Client {
    * @param {string}    [options.appVersion]                               App Version
    * @return {Promise}                                                     A promise.
    */
-  static init(options) {
-    const client = new Client(options);
-    sharedInstance = client;
-    return client;
+  static init(config) {
+    sharedInstance = new Client(config);
+    return sharedInstance;
   }
 
   /**

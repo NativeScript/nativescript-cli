@@ -307,7 +307,7 @@ describe('User', function() {
           expect(user.data.password).toEqual(undefined);
           expect(user.isActive()).toEqual(true);
 
-          const storedUser = ActiveUserHelper.get(this.client);
+          const storedUser = this.client.getActiveUser();
           expect(storedUser.password).toEqual(undefined);
         });
     });
