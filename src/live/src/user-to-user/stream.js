@@ -1,6 +1,7 @@
-/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "StreamACL" }] */
+import url from 'url';
+import Client from '../../../client';
 import { getLiveService } from './live-service';
-// TODO: imported for type definitions - is there a better way?
+import { KinveyRequest, RequestMethod, AuthType } from '../../../request';
 import { StreamACL } from './stream-acl';
 
 /**
@@ -10,6 +11,7 @@ import { StreamACL } from './stream-acl';
 export class Stream {
   /** @type {string} */
   name;
+  client = Client.sharedInstance();
   liveService = getLiveService(this.client);
   channelSubscriptions = {};
 
@@ -22,22 +24,33 @@ export class Stream {
   }
 
   getSubstreams() {
-    return this.liveService.getStreamSubstreams(this.name);
+    const request = this._getStreamRequestObject('_substreams', RequestMethod.GET);
+
+    return request.execute()
+      .then(response => response.data);
   }
 
   /**
    * @param {string} substreamOwnerId
    * @param {StreamACL} acl
+   * @returns {Promise} Response promise
    */
   setSubstreamACL(substreamOwnerId, acl) {
-    return this.liveService.setSubstreamACL(substreamOwnerId, this.name, acl);
+    const requestBody = (acl instanceof StreamACL) ? acl.toPlainObject() : acl;
+    const request = this._getStreamRequestObject(`${substreamOwnerId}`, RequestMethod.PUT, requestBody);
+
+    return request.execute()
+      .then(response => response.data);
   }
 
   /**
    * @param {string} substreamOwnerId
    */
   requestPublishAccess(substreamOwnerId) {
-    return this.liveService.requestSubstreamPublishAccess(this.name, substreamOwnerId)
+    const request = this._getStreamRequestObject(`${substreamOwnerId}/publish`, RequestMethod.POST);
+
+    return request.execute()
+      .then(response => response.data)
       .then(this._cacheSubstreamChannel.bind(this));
   }
 
@@ -45,15 +58,23 @@ export class Stream {
    * @param {string} substreamOwnerId
    */
   requestSubscribeAccess(substreamOwnerId) {
-    return this.liveService.requestSubstreamSubscribeAccess(this.name, substreamOwnerId)
+    const requestBody = { deviceId: this.client.deviceId };
+    const request = this._getStreamRequestObject(`${substreamOwnerId}/subscribe`, RequestMethod.POST, requestBody);
+
+    return request.execute()
+      .then(response => response.data)
       .then(this._cacheSubstreamChannel.bind(this));
   }
 
   /**
    * @param {string} substreamOwnerId
    */
-  unsubscribeFromSubstream(substreamOwnerId) {
-    return this.liveService.unsubscribeFromSubstream(this.name, substreamOwnerId)
+  unsubscribe(substreamOwnerId) {
+    const path = `${substreamOwnerId}/unsubscribe`;
+    const request = this._getStreamRequestObject(path, RequestMethod.POST, { deviceId: this.client.deviceId });
+
+    return request.execute()
+      .then(response => response.data)
       .then(() => {
         delete this.channelSubscriptions[substreamOwnerId];
       });
@@ -73,5 +94,27 @@ export class Stream {
   _cacheSubstreamChannel(accessRequestResponse, substreamOwnerId) {
     this.channelSubscriptions[substreamOwnerId] = accessRequestResponse.substreamChannelName;
     return accessRequestResponse;
+  }
+
+  /**
+   * @private
+   * @param {string} path The path after the stream/kid part
+   * @param {RequestMethod} method The request method to be used
+   * @param {Object} [body] The body of the request, if applicable
+   * @returns {Promise}
+   */
+  _getStreamRequestObject(path, method, body) {
+    const request = new KinveyRequest({
+      method: method,
+      authType: AuthType.Session,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: `/stream/${this.client.appKey}/${this.name}/${path}`
+      }),
+      body: body
+    });
+
+    return request;
   }
 }
