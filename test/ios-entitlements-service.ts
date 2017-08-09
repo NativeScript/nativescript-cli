@@ -64,6 +64,12 @@ describe("IOSEntitlements Service Tests", () => {
 			let actual = iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData);
 			assert.equal(actual, expected);
 		});
+
+		it("Ensure full path to entitlements in platforms dir is correct", () => {
+			const expected = path.join(projectData.platformsDir, "ios", "testApp", "testApp.entitlements");
+			const actual = iOSEntitlementsService.getPlatformsEntitlementsPath(projectData);
+			assert.equal(actual, expected);
+		});
 	});
 
 	describe("Merge", () => {

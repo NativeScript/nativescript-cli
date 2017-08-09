@@ -22,7 +22,7 @@ export class IOSEntitlementsService {
 	}
 
 	public getPlatformsEntitlementsPath(projectData: IProjectData) : string {
-		return path.join(projectData.platformsDir, this.$devicePlatformsConstants.iOS,
+		return path.join(projectData.platformsDir, this.$devicePlatformsConstants.iOS.toLowerCase(),
 			projectData.projectName, projectData.projectName + ".entitlements");
 	}
 	public getPlatformsEntitlementsRelativePath(projectData: IProjectData): string {
