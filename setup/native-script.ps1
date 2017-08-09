@@ -81,7 +81,7 @@ if (!$env:ANDROID_HOME) {
 		$androidHome = Resolve-Path $androidHomeJoinedPath | Select-Object -ExpandProperty Path
 	}
 	else {
-		$androidHome = "$env:localappdata\Android\android-sdk"
+		$androidHome = "${Env:SystemDrive}\Android\android-sdk"
 	}
 
 	$env:ANDROID_HOME = $androidHome;
