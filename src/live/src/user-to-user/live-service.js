@@ -1,14 +1,10 @@
-/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "User|StreamACL" }] */
 import url from 'url';
 import PubNub from 'pubnub';
 
-import { KinveyError } from '../../../errors';
 import Client from '../../../client';
 import { KinveyRequest, RequestMethod, AuthType } from '../../../request';
-
-// TODO: imported for type definitions - is there a better way?
-import { User } from '../../../entity';
 import { StreamACL } from './stream-acl';
+import { User } from '../../../entity';
 
 class LiveService {
 
@@ -20,6 +16,8 @@ class LiveService {
   pubnubClient;
   /** @type {string} */
   userChannelGroup;
+  /** @type {string} @private @constant */
+  streamEndpoint;
 
   /**
    * @constructor
@@ -27,26 +25,23 @@ class LiveService {
    */
   constructor(client) {
     this.client = client || Client.sharedInstance();
+    this.streamEndpoint = `/stream/${this.client.appKey}`;
   }
 
   /**
-   * @param {User} user
+   * Subscribes the active user for live service
    * @returns {Promise}
    */
-  registerUser(user) {
-    if (!user.isActive()) {
-      const msg = 'This user must be the active user in order to register for real time.';
-      return Promise.reject(new KinveyError(msg));
-    }
-
-    return this._makeRegisterRequest(user._id)
+  registerUser() {
+    const activeUser = User.getActiveUser();
+    return this._makeRegisterRequest(activeUser._id)
       .then((pubnubConfig) => {
-        this.registeredUser = user;
+        this.registeredUser = this.client.activeUser;
         this.userChannelGroup = pubnubConfig.userChannelGroup;
         this.pubnubClient = new PubNub({
           publishKey: pubnubConfig.publishKey,
           subscribeKey: pubnubConfig.subscribeKey,
-          authKey: pubnubConfig.authKey
+          // authKey: pubnubConfig.authKey // appears to be missing
         });
       });
   }
@@ -60,9 +55,9 @@ class LiveService {
   }
 
   /**
-   * @param  {string} streamOwnerId
-   * @param  {string} streamName
-   * @param  {StreamACL} acl
+   * @param {string} streamOwnerId
+   * @param {string} streamName
+   * @param {StreamACL} acl
    * @returns {Promise} Response promise
    */
   setSubstreamACL(streamOwnerId, streamName, acl) {
@@ -72,9 +67,78 @@ class LiveService {
       url: url.format({
         protocol: this.client.apiProtocol,
         host: this.client.apiHost,
-        pathname: `/streams/${this.client.appKey}/${streamName}/${streamOwnerId}`
+        pathname: `${this.streamEndpoint}/${streamName}/${streamOwnerId}`
       }),
-      body: acl.toPlainObject()
+      body: (acl instanceof StreamACL) ? acl.toPlainObject() : acl
+    });
+
+    return request.execute()
+      .then(response => response.data);
+  }
+
+  /**
+   * @param {string} streamName
+   * @param {string} substreamOwnerId
+   */
+  requestSubstreamPublishAccess(streamName, substreamOwnerId) {
+    const request = new KinveyRequest({
+      method: RequestMethod.POST,
+      authType: AuthType.Session,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: `${this.streamEndpoint}/${streamName}/${substreamOwnerId}/publish`
+      })
+    });
+
+    return request.execute()
+      .then(response => response.data);
+  }
+
+  /**
+   * @param {string} streamName
+   * @param {string} substreamOwnerId
+   */
+  requestSubstreamSubscribeAccess(streamName, substreamOwnerId) {
+    const request = new KinveyRequest({
+      method: RequestMethod.POST,
+      authType: AuthType.Session,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: `${this.streamEndpoint}/${streamName}/${substreamOwnerId}/subscribe`
+      }),
+      body: { deviceId: this.client.deviceId }
+    });
+
+    return request.execute()
+      .then(response => response.data);
+  }
+
+  /**
+   * @param {string} streamName
+   * @param {string} substreamOwnerId
+   */
+  unsubscribeFromSubstream(streamName, substreamOwnerId) {
+    const path = `${streamName}/${substreamOwnerId}/unsubscribe`;
+    const request = this._getStreamRequestObject(path, RequestMethod.POST, { deviceId: this.client.deviceId });
+
+    return request.execute()
+      .then(response => response.data);
+  }
+
+  /**
+   * @param {string} streamName
+   */
+  getStreamSubstreams(streamName) {
+    const request = new KinveyRequest({
+      method: RequestMethod.GET,
+      authType: AuthType.Session,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: `${this.streamEndpoint}/${streamName}/_substreams`
+      })
     });
 
     return request.execute()
@@ -121,6 +185,28 @@ class LiveService {
 
     return request.execute()
       .then(response => response.data);
+  }
+
+  /**
+   * @private
+   * @param {string} path The path after the stream/kid part
+   * @param {RequestMethod} method The request method to be used
+   * @param {Object} [body] The body of the request, if applicable
+   * @returns {Promise}
+   */
+  _getStreamRequestObject(path, method, body) {
+    const request = new KinveyRequest({
+      method: method,
+      authType: AuthType.Session,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: `${this.streamEndpoint}/${path}`
+      }),
+      body: body
+    });
+
+    return request;
   }
 }
 
