@@ -47,7 +47,8 @@ export class ProjectChangesService implements IProjectChangesService {
 	constructor(
 		private $platformsData: IPlatformsData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $fs: IFileSystem) {
+		private $fs: IFileSystem,
+		private $hostInfo: IHostInfo) {
 	}
 
 	public get currentChanges(): IProjectChangesInfo {
@@ -227,10 +228,15 @@ export class ProjectChangesService implements IProjectChangesService {
 
 			let fileStats = this.$fs.getFsStats(filePath);
 
-			let changed = fileStats.mtime.getTime() >= this._outputProjectMtime || fileStats.ctime.getTime() >= this._outputProjectCTime;
-			if (!changed) {
-				let lFileStats = this.$fs.getLsStats(filePath);
-				changed = lFileStats.mtime.getTime() >= this._outputProjectMtime || lFileStats.ctime.getTime() >= this._outputProjectCTime;
+			let changed =  fileStats.mtime.getTime() > this._outputProjectMtime ||
+				fileStats.ctime.getTime() >= this._outputProjectCTime;
+
+			if (this.$hostInfo.isDarwin && !fileStats.isDirectory() && !changed) {
+				const parentDirPath: string = path.dirname(filePath);
+				const parentDirStat = this.$fs.getFsStats(parentDirPath);
+
+				changed = parentDirStat.mtime.getTime() > this._outputProjectMtime ||
+					parentDirStat.ctime.getTime() >= this._outputProjectCTime;
 			}
 
 			if (changed) {
