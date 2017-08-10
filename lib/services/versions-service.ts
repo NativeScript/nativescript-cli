@@ -99,7 +99,7 @@ class VersionsService implements IVersionsService {
 		this.printVersionsInformation(componentsForUpdate, allComponents);
 	}
 
-	private printVersionsInformation(versionsInformation: IVersionInformation[], allComponents: IVersionInformation[]) {
+	private printVersionsInformation(versionsInformation: IVersionInformation[], allComponents: IVersionInformation[]): void {
 		if (versionsInformation && versionsInformation.length) {
 			let table: any = this.createTableWithVersionsInformation(versionsInformation);
 
