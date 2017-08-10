@@ -95,7 +95,7 @@ class DoctorService implements IDoctorService {
 				result = true;
 			}
 
-			if (sysInfo.cocoapodVer && sysInfo.cocoapodVer && await this.$xcprojService.verifyXcproj(false)) {
+			if (sysInfo.xcodeVer && sysInfo.cocoapodVer && await this.$xcprojService.verifyXcproj(false)) {
 				result = true;
 			}
 		} else {
@@ -124,7 +124,7 @@ class DoctorService implements IDoctorService {
 		}
 
 		try {
-			await this.$versionsService.getComponentsForUpdate();
+			await this.$versionsService.checkComponentsForUpdate();
 		} catch (err) {
 			this.$logger.error("Cannot get the latest versions information from npm. Please try again later.");
 		}

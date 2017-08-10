@@ -86,7 +86,7 @@ class VersionsService implements IVersionsService {
 		return runtimesVersions;
 	}
 
-	public async getComponentsForUpdate() {
+	public async checkComponentsForUpdate(): Promise<void> {
 		let allComponents: IVersionInformation[] = await this.getAllComponentsVersions();
 		let componentsForUpdate: IVersionInformation[] = [];
 
