@@ -29,13 +29,14 @@ export class DebugPlatformCommand implements ICommand {
 
 		await this.$platformService.trackProjectType(this.$projectData);
 
+		const selectedDeviceForDebug = await this.getDeviceForDebug();
+		debugData.deviceIdentifier = selectedDeviceForDebug.deviceInfo.identifier;
+
 		if (this.$options.start) {
 			return this.$debugLiveSyncService.printDebugInformation(await this.debugService.debug(debugData, debugOptions));
 		}
 
 		this.$config.debugLivesync = true;
-
-		const selectedDeviceForDebug = await this.getDeviceForDebug();
 
 		await this.$devicesService.detectCurrentlyAttachedDevices({ shouldReturnImmediateResult: false, platform: this.platform });
 
