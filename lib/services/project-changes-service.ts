@@ -47,8 +47,7 @@ export class ProjectChangesService implements IProjectChangesService {
 	constructor(
 		private $platformsData: IPlatformsData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $fs: IFileSystem,
-		private $hostInfo: IHostInfo) {
+		private $fs: IFileSystem) {
 	}
 
 	public get currentChanges(): IProjectChangesInfo {
@@ -69,6 +68,7 @@ export class ProjectChangesService implements IProjectChangesService {
 				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME, "tns-ios-inspector"),
 				projectData,
 				this.fileChangeRequiresBuild);
+
 			if (this._newFiles > 0) {
 				this._changesInfo.modulesChanged = true;
 			}
@@ -231,14 +231,6 @@ export class ProjectChangesService implements IProjectChangesService {
 			let changed =  fileStats.mtime.getTime() > this._outputProjectMtime ||
 				fileStats.ctime.getTime() >= this._outputProjectCTime;
 
-			if (this.$hostInfo.isDarwin && !fileStats.isDirectory() && !changed) {
-				const parentDirPath: string = path.dirname(filePath);
-				const parentDirStat = this.$fs.getFsStats(parentDirPath);
-
-				changed = parentDirStat.mtime.getTime() > this._outputProjectMtime ||
-					parentDirStat.ctime.getTime() >= this._outputProjectCTime;
-			}
-
 			if (changed) {
 				if (processFunc) {
 					this._newFiles++;
@@ -252,12 +244,23 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 
 			if (fileStats.isDirectory()) {
+				if (this.isDirectoryModified(dir)) {
+					return true;
+				}
+
 				if (this.containsNewerFiles(filePath, skipDir, projectData, processFunc)) {
 					return true;
 				}
 			}
+
 		}
 		return false;
+	}
+
+	private isDirectoryModified(dirPath: string): boolean {
+		const dirPathStat = this.$fs.getFsStats(dirPath);
+		return  dirPathStat.mtime.getTime() > this._outputProjectMtime ||
+					dirPathStat.ctime.getTime() >= this._outputProjectCTime;
 	}
 
 	private fileChangeRequiresBuild(file: string, projectData: IProjectData) {
