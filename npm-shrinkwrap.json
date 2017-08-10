@@ -2872,9 +2872,9 @@
       }
     },
     "ios-mobileprovision-finder": {
-      "version": "1.0.9",
-      "resolved": "https://registry.npmjs.org/ios-mobileprovision-finder/-/ios-mobileprovision-finder-1.0.9.tgz",
-      "integrity": "sha1-Hc80ywKeP+oMhSkmu79K6GTswKc=",
+      "version": "1.0.10",
+      "resolved": "https://registry.npmjs.org/ios-mobileprovision-finder/-/ios-mobileprovision-finder-1.0.10.tgz",
+      "integrity": "sha1-UaXn+TzUCwN/fI8+JwXjSI11VgE=",
       "requires": {
         "chalk": "1.1.3",
         "plist": "2.1.0",
