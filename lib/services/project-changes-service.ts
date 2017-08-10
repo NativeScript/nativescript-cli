@@ -219,6 +219,10 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	private containsNewerFiles(dir: string, skipDir: string, projectData: IProjectData, processFunc?: (filePath: string, projectData: IProjectData) => boolean): boolean {
+		if (this.isDirectoryModified(dir)) {
+			return true;
+		}
+
 		let files = this.$fs.readDirectory(dir);
 		for (let file of files) {
 			let filePath = path.join(dir, file);
@@ -244,10 +248,6 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 
 			if (fileStats.isDirectory()) {
-				if (this.isDirectoryModified(dir)) {
-					return true;
-				}
-
 				if (this.containsNewerFiles(filePath, skipDir, projectData, processFunc)) {
 					return true;
 				}
