@@ -6,8 +6,6 @@ import { PlatformsData } from "../lib/platforms-data";
 import { ProjectChangesService } from "../lib/services/project-changes-service";
 import * as Constants from "../lib/constants";
 import { FileSystem } from "../lib/common/file-system";
-import * as HostInfoLib from "../lib/common/host-info";
-import * as ErrorsLib from "../lib/common/errors";
 
 // start tracking temporary folders/files
 temp.track();
@@ -28,8 +26,6 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 		this.injector.register("platformsData", PlatformsData);
 		this.injector.register("androidProjectService", {});
 		this.injector.register("iOSProjectService", {});
-		this.injector.register("hostInfo", HostInfoLib.HostInfo);
-		this.injector.register("errors", ErrorsLib.Errors);
 		this.injector.register("fs", FileSystem);
 		this.injector.register("devicePlatformsConstants", {});
 		this.injector.register("devicePlatformsConstants", {});

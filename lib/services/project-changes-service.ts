@@ -219,7 +219,8 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	private containsNewerFiles(dir: string, skipDir: string, projectData: IProjectData, processFunc?: (filePath: string, projectData: IProjectData) => boolean): boolean {
-		if (this.isDirectoryModified(dir)) {
+		const dirFileStat = this.$fs.getFsStats(dir);
+		if (this.isFileModified(dirFileStat)) {
 			return true;
 		}
 
@@ -230,10 +231,8 @@ export class ProjectChangesService implements IProjectChangesService {
 				continue;
 			}
 
-			let fileStats = this.$fs.getFsStats(filePath);
-
-			let changed =  fileStats.mtime.getTime() > this._outputProjectMtime ||
-				fileStats.ctime.getTime() >= this._outputProjectCTime;
+			const fileStats = this.$fs.getFsStats(filePath);
+			let changed = this.isFileModified(fileStats);
 
 			if (changed) {
 				if (processFunc) {
@@ -257,10 +256,9 @@ export class ProjectChangesService implements IProjectChangesService {
 		return false;
 	}
 
-	private isDirectoryModified(dirPath: string): boolean {
-		const dirPathStat = this.$fs.getFsStats(dirPath);
-		return  dirPathStat.mtime.getTime() > this._outputProjectMtime ||
-					dirPathStat.ctime.getTime() >= this._outputProjectCTime;
+	private isFileModified(filePathStat: IFsStats): boolean {
+		return  filePathStat.mtime.getTime() >= this._outputProjectMtime ||
+					filePathStat.ctime.getTime() >= this._outputProjectCTime;
 	}
 
 	private fileChangeRequiresBuild(file: string, projectData: IProjectData) {
