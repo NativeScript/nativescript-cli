@@ -174,6 +174,11 @@ export class KinveyRequest extends NetworkRequest {
     this.trace = options.trace === true;
   }
 
+  static execute(options) {
+    return new KinveyRequest(options)
+      .execute();
+  }
+
   get appVersion() {
     return this.client.appVersion;
   }
