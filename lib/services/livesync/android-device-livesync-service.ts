@@ -36,9 +36,9 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 				`${deviceProjectRootDirname}/sync`]
 		);
 
-		await this.reloadResources(deviceAppData, localToDevicePaths);
+		const reloadedSuccessfully = await this.reloadApplicationFiles(deviceAppData, localToDevicePaths);
 
-		const canExecuteFastSync = !liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
+		const canExecuteFastSync = reloadedSuccessfully && !liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
 			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
 
 		if (!canExecuteFastSync) {
@@ -84,14 +84,15 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 		await this.cleanLivesyncDirectories(deviceAppData);
 	}
 
-	private async reloadResources(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
+	private async reloadApplicationFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<boolean> {
 		await this.device.adb.executeCommand(["forward", `tcp:${AndroidDeviceLiveSyncService.BACKEND_PORT.toString()}`, `localabstract:${deviceAppData.appIdentifier}-livesync`]);
 
-		if (await this.sendPageReloadMessage()) {
+		if (await this.awaitRuntimeReloadSuccessMessage()) {
 			await this.cleanLivesyncDirectories(deviceAppData);
 		} else {
-			await this.restartApplication(deviceAppData); //in case runtime socket error/close
+			return false;
 		}
+		return true;
 	}
 
 	public async removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
@@ -115,7 +116,7 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 		return this.$injector.resolve(AndroidDeviceHashService, { adb, appIdentifier });
 	}
 
-	private async sendPageReloadMessage(): Promise<boolean> {
+	private async awaitRuntimeReloadSuccessMessage(): Promise<boolean> {
 		return new Promise<boolean>((resolve, reject) => {
 			let isResolved = false;
 			let socket = new net.Socket();
