@@ -251,6 +251,22 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		let projectRoot = platformData.projectRoot;
 		let archivePath = options.archivePath;
 		let buildOutputPath = path.join(projectRoot, "build", "device");
+		let exportOptionsMethod = await this.getExportOptionsMethod(projectData);
+		let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>${exportOptionsMethod}</string>
+    <key>uploadBitcode</key>
+    <false/>
+</dict>
+</plist>`;
+
+		// Save the options...
+		temp.track();
+		let exportOptionsPlist = temp.path({ prefix: "export-", suffix: ".plist" });
+		this.$fs.writeFile(exportOptionsPlist, plistTemplate);
 
 		// The xcodebuild exportPath expects directory and writes the <project-name>.ipa at that directory.
 		let exportPath = path.resolve(options.exportDir || buildOutputPath);
@@ -259,7 +275,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		let args = ["-exportArchive",
 			"-archivePath", archivePath,
 			"-exportPath", exportPath,
-			"-exportOptionsPlist", platformData.configurationFilePath
+			"-exportOptionsPlist", exportOptionsPlist
 		];
 		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit",
 			{ stdio: buildConfig.buildOutputStdio || 'inherit', cwd: this.getPlatformData(projectData).projectRoot },
@@ -1330,6 +1346,18 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		if (infoPlist.CFBundleIdentifier && infoPlist.CFBundleIdentifier !== mergedPlist.CFBundleIdentifier) {
 			this.$logger.warnWithLabel("The CFBundleIdentifier key inside the 'Info.plist' will be overriden by the 'id' inside 'package.json'.");
 		}
+	}
+
+	private getExportOptionsMethod(projectData: IProjectData): string {
+		const embeddedMobileProvisionPath = path.join(this.getPlatformData(projectData).deviceBuildOutputPath, `${projectData.projectName}.app`, "embedded.mobileprovision");
+		const provision = mobileprovision.provision.readFromFile(embeddedMobileProvisionPath);
+
+		return {
+			"Development": "development",
+			"AdHoc": "ad-hoc",
+			"Distribution": "app-store",
+			"Enterprise": "enterprise"
+		}[provision.Type];
 	}
 }
 
