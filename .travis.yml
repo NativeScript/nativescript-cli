@@ -46,11 +46,11 @@ deploy:
   on:
     branch: master
   api_key:
-    secure: KzzsvF3eA3j4gRQa8tO//+XWNSR3XiX8Sa18o3PyKyG9/cBZ6PQ3Te74cNS1C3ZiLUOgs5dWA6/TmRVPci4XjvFaWo/B6e2fuVSl5H94Od99bkeBHJsbLSEkLN4ClV/YbGuyKgA5Q2yIFt6p2EJjL90RjbbIk7I4YuyG2Mo3j0Q=
+    secure: "g7Bpo7zX9kHaX8BcrnT/6S9/uuscAb2t+5Zr6okHCTaJXuLGOvzeV9KLFRyKKn93/o6sPlRIVA9welsYhUhdIlOUKz3jlPzejoaURhEY3xFrDWX29beho1Q88/AM5idGtosyElxvpw435WYeu/JlAu3DoYtCQavNXeEz5dY8cY0="
 - provider: npm
   skip_cleanup: true
   email: nativescript@telerik.com
   on:
     branch: release
   api_key:
-    secure: KzzsvF3eA3j4gRQa8tO//+XWNSR3XiX8Sa18o3PyKyG9/cBZ6PQ3Te74cNS1C3ZiLUOgs5dWA6/TmRVPci4XjvFaWo/B6e2fuVSl5H94Od99bkeBHJsbLSEkLN4ClV/YbGuyKgA5Q2yIFt6p2EJjL90RjbbIk7I4YuyG2Mo3j0Q=
+    secure: "g7Bpo7zX9kHaX8BcrnT/6S9/uuscAb2t+5Zr6okHCTaJXuLGOvzeV9KLFRyKKn93/o6sPlRIVA9welsYhUhdIlOUKz3jlPzejoaURhEY3xFrDWX29beho1Q88/AM5idGtosyElxvpw435WYeu/JlAu3DoYtCQavNXeEz5dY8cY0="
