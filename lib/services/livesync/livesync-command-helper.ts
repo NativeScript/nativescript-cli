@@ -17,7 +17,11 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 	public async executeLiveSyncOperation(devices: Mobile.IDevice[], liveSyncService: ILiveSyncService, platform: string): Promise<void> {
 		if (!devices || !devices.length) {
-			this.$errors.failWithoutHelp("Unable to find applicable devices to execute operation and unable to start emulator when platform is not specified.");
+			if (platform) {
+				this.$errors.failWithoutHelp("Unable to find applicable devices to execute operation. Ensure connected devices are trusted and try again.");
+			} else {
+				this.$errors.failWithoutHelp("Unable to find applicable devices to execute operation and unable to start emulator when platform is not specified.");
+			}
 		}
 
 		const workingWithiOSDevices = !platform || this.$mobileHelper.isiOSPlatform(platform);
