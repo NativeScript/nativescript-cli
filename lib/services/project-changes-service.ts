@@ -233,6 +233,10 @@ export class ProjectChangesService implements IProjectChangesService {
 
 			const fileStats = this.$fs.getFsStats(filePath);
 			let changed = this.isFileModified(fileStats);
+			if (!changed) {
+				let lFileStats = this.$fs.getLsStats(filePath);
+				changed = this.isFileModified(lFileStats);
+			}
 
 			if (changed) {
 				if (processFunc) {
