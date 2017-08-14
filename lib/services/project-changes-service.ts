@@ -220,7 +220,7 @@ export class ProjectChangesService implements IProjectChangesService {
 
 	private containsNewerFiles(dir: string, skipDir: string, projectData: IProjectData, processFunc?: (filePath: string, projectData: IProjectData) => boolean): boolean {
 		const dirFileStat = this.$fs.getFsStats(dir);
-		if (this.isFileModified(dirFileStat)) {
+		if(this.isFileModified(dirFileStat, dir)) {
 			return true;
 		}
 
@@ -232,11 +232,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 
 			const fileStats = this.$fs.getFsStats(filePath);
-			let changed = this.isFileModified(fileStats);
-			if (!changed) {
-				let lFileStats = this.$fs.getLsStats(filePath);
-				changed = this.isFileModified(lFileStats);
-			}
+			let changed = this.isFileModified(fileStats, filePath);
 
 			if (changed) {
 				if (processFunc) {
@@ -260,9 +256,17 @@ export class ProjectChangesService implements IProjectChangesService {
 		return false;
 	}
 
-	private isFileModified(filePathStat: IFsStats): boolean {
-		return  filePathStat.mtime.getTime() >= this._outputProjectMtime ||
+	private isFileModified(filePathStat: IFsStats, filePath: string): boolean {
+		let changed = filePathStat.mtime.getTime() >= this._outputProjectMtime ||
 					filePathStat.ctime.getTime() >= this._outputProjectCTime;
+
+		if (!changed) {
+			let lFileStats = this.$fs.getLsStats(filePath);
+			changed = lFileStats.mtime.getTime() >= this._outputProjectMtime ||
+					lFileStats.ctime.getTime() >= this._outputProjectCTime;
+		}
+
+		return changed;
 	}
 
 	private fileChangeRequiresBuild(file: string, projectData: IProjectData) {
