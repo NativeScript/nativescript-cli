@@ -146,6 +146,12 @@ describe("Npm installation manager tests", () => {
 			packageLatestVersion: "1.4.0",
 			cliVersion: "1.6.0-2016-10-01-182",
 			expectedResult: "1.4.0"
+		},
+		"When CLI Version has patch version larger than an existing package, should return max compliant package from the same major.minor version": {
+			versions: ["1.0.0", "1.0.1", "1.4.0", "2.5.0", "2.5.1", "2.5.2", "3.0.0"],
+			packageLatestVersion: "3.0.0",
+			cliVersion: "2.5.4",
+			expectedResult: "2.5.2"
 		}
 	};
 
