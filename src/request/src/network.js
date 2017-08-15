@@ -155,7 +155,7 @@ function byteCount(str) {
 /**
  * @private
  */
-export class Properties extends Headers {}
+export class Properties extends Headers { }
 
 export class KinveyRequest extends NetworkRequest {
   constructor(options = {}) {
@@ -172,6 +172,27 @@ export class KinveyRequest extends NetworkRequest {
     this.properties = options.properties || new Properties();
     this.skipBL = options.skipBL === true;
     this.trace = options.trace === true;
+  }
+
+  static executeShort(options, client, dataOnly = false) {
+    const o = assign({
+      method: RequestMethod.GET,
+      authType: AuthType.Session
+    }, options);
+
+    if (!o.url && o.pathname && client) {
+      o.url = url.format({
+        protocol: client.apiProtocol,
+        host: client.apiHost,
+        pathname: o.pathname
+      });
+    }
+
+    let prm = KinveyRequest.execute(o);
+    if (dataOnly) {
+      prm = prm.then(r => r.data);
+    }
+    return prm;
   }
 
   static execute(options) {

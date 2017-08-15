@@ -1,7 +1,6 @@
-import url from 'url';
 import Client from '../../../client';
 import { getLiveService } from './live-service';
-import { KinveyRequest, RequestMethod, AuthType } from '../../../request';
+import { KinveyRequest, RequestMethod, StatusCode } from '../../../request';
 import { StreamACL } from './stream-acl';
 
 /**
@@ -31,25 +30,24 @@ export class Stream {
   }
 
   getSubstreams() {
-    return this._makeStreamRequest('_substreams', RequestMethod.GET)
-      .then(response => response.data);
+    return this._makeStreamRequest('_substreams', RequestMethod.GET);
   }
 
   /**
-   * @param {string} substreamOwnerId
-   * @param {StreamACL} acl
-   * @returns {Promise} Response promise
+   * Thist method sets (overwrites) the ACL for the given user's message stream
+   * @param {string} userId The ID of the user whose stream ACL is being set
+   * @param {StreamACL} acl The ACL object to be set
+   * @returns {Promise}
    */
-  setStreamACL(substreamOwnerId, acl) {
+  setStreamACL(userId, acl) {
     const requestBody = (acl instanceof StreamACL) ? acl.toPlainObject() : acl;
-
-    return this._makeStreamRequest(substreamOwnerId, RequestMethod.PUT, requestBody)
-      .then(response => response.data);
+    return this._makeStreamRequest(userId, RequestMethod.PUT, requestBody);
   }
 
   // Feed comm
 
   /**
+   * Subscribes the active user to the specified user's channel
    * @param {string} userId
    * @param {MessageReceiver} receiver
    */
@@ -58,14 +56,18 @@ export class Stream {
   }
 
   /**
+   * Unsubscribes the active user from the specified user's channel
    * @param {string} userId
+   * @returns {Promise}
    */
   unfollow(userId) {
     return this._unsubscribe(userId);
   }
 
   /**
+   * Posts a message to the active user's channel
    * @param {Object} message
+   * @returns {Promise}
    */
   post(message) {
     const userId = this.client.activeUser._id;
@@ -75,7 +77,7 @@ export class Stream {
   // Directed comm
 
   /**
-   * In directed communication, listens for messages sent to the active user
+   * Listens for messages sent to the active user
    * @param {MessageReceiver} receiver
    */
   listen(receiver) {
@@ -83,13 +85,16 @@ export class Stream {
     return this._subscribe(userId, receiver);
   }
 
+  /**
+   * Stops listening for messages sent to the active user
+   */
   stopListening() {
     const userId = this.client.activeUser._id;
     return this._unsubscribe(userId);
   }
 
   /**
-   * In directed communication, sends a message to the specified user
+   * Sends a message to the specified user
    * @param {string} userId
    * @param {Object} message
    */
@@ -100,6 +105,7 @@ export class Stream {
   /**
    * @private
    * @param {string} substreamOwnerId
+   * @returns {Promise}
    */
   _unsubscribeFromSubstream(substreamOwnerId) {
     const path = `${substreamOwnerId}/unsubscribe`;
@@ -107,7 +113,7 @@ export class Stream {
     return this._makeStreamRequest(path, RequestMethod.POST, { deviceId: this.client.deviceId })
       .then((response) => {
         delete this.subscribeChannels[substreamOwnerId];
-        return response.data;
+        return response;
       });
   }
 
@@ -115,50 +121,79 @@ export class Stream {
    * @private
    * @param {string} userId
    * @param {MessageReceiver} receiver
+   * @returns {Promise}
    */
   _subscribe(userId, receiver) {
     return this._requestSubscribeAccess(userId)
-      .then((resp) => {
+      .then(() => {
         const channelName = this.subscribeChannels[userId] || this._buildChannelName(userId);
         return this.liveService.subscribeToChannel(channelName, receiver);
-      })
-      .then(() => undefined);
+      });
   }
 
   /**
    * @private
    * @param {string} userId
+   * @returns {Promise<void>}
    */
   _unsubscribe(userId) {
-    // TODO: redo
-    const channelName = this.subscribeChannels[userId] || this._buildChannelName(userId);
-    return this.liveService.unsubscribeFromChannel(channelName);
+    return this._unsubscribeFromSubstream(userId)
+      .then(() => {
+        const channelName = this.subscribeChannels[userId] || this._buildChannelName(userId);
+        this.liveService.unsubscribeFromChannel(channelName);
+      });
   }
 
   /**
    * @private
    * @param {string} userId
    * @param {Object} message
+   * @returns {Promise}
    */
   _publish(userId, message) {
-    // return this._requestPublishAccess(userId)
-    //   .then((resp) => { // TODO: use resp.publishchannel or whatever
-    //     const channelName = this.publishChannels[userId] || this._buildChannelName(userId);
-    //     return this.liveService.publishToChannel(channelName, message);
-    //   });
+    if (this.publishChannels[userId]) {
+      return this._retriablePublish(userId, message);
+    }
+    return this._publishWithAccessRequest(userId, message);
+  }
 
-    const channelName = this.publishChannels[userId] || this._buildChannelName(userId);
-
-    return this.liveService.publishToChannel(channelName, message)
-      .catch((err) => {
-        if (err.statusCode === 401 || err.statusCode === 403) { // TODO: check which is when and use constants
-          return this._requestPublishAccess(userId)
-            .then(() => this.liveService.publishToChannel(channelName, message));
-        }
-        return Promise.reject(err);
+  /**
+   * @private
+   * @param {string} userId
+   * @param {Object} message
+   * @returns {Promise}
+   */
+  _publishWithAccessRequest(userId, message) {
+    return this._requestPublishAccess(userId)
+      .then(() => {
+        const channelName = this.publishChannels[userId] || this._buildChannelName(userId);
+        return this.liveService.publishToChannel(channelName, message);
       });
   }
 
+  /**
+   * @private
+   * @param {string} userId
+   * @param {Object} message
+   * @returns {Promise}
+   */
+  _retriablePublish(userId, message) {
+    const channelName = this.publishChannels[userId] || this._buildChannelName(userId);
+    return this.liveService.publishToChannel(channelName, message)
+      .catch((err) => {
+        let promise = Promise.reject(err);
+        if (err.statusCode === StatusCode.Forbidden) {
+          promise = this._publishWithAccessRequest(userId, message);
+        }
+        return promise;
+      });
+  }
+
+  /**
+   * @private
+   * @param {string} userId
+   * @returns {string} The name of the channel for that user
+   */
   _buildChannelName(userId) {
     return `${this.client.appKey}.s-${this.name}.u-${userId}`;
   }
@@ -166,26 +201,30 @@ export class Stream {
   /**
    * @private
    * @param {string} substreamOwnerId
+   * @returns {Promise}
    */
   _requestPublishAccess(substreamOwnerId) {
     return this._makeStreamRequest(`${substreamOwnerId}/publish`, RequestMethod.POST)
       .then((resp) => {
-        this.publishChannels[substreamOwnerId] = resp.data.substreamChannelName;
-        return resp.data;
+        if (resp.substreamChannelName) {
+          this.publishChannels[substreamOwnerId] = resp.substreamChannelName;
+        }
+        return resp;
       });
   }
 
   /**
    * @private
-   * @param {string} substreamOwnerId
+   * @param {string} userId
+   * @returns {Promise}
    */
-  _requestSubscribeAccess(substreamOwnerId) {
+  _requestSubscribeAccess(userId) {
     const requestBody = { deviceId: this.client.deviceId };
 
-    return this._makeStreamRequest(`${substreamOwnerId}/subscribe`, RequestMethod.POST, requestBody)
+    return this._makeStreamRequest(`${userId}/subscribe`, RequestMethod.POST, requestBody)
       .then((response) => {
-        this.subscribeChannels[substreamOwnerId] = response.data.substreamChannelName;
-        return response.data;
+        this.subscribeChannels[userId] = response.substreamChannelName;
+        return response;
       });
   }
 
@@ -197,17 +236,10 @@ export class Stream {
    * @returns {Promise}
    */
   _makeStreamRequest(path, method, body) {
-    // TODO: put building of the url inside the execute/someother call,
-    // add default value, or methods for each auth type
-    return KinveyRequest.execute({
+    return KinveyRequest.executeShort({
       method: method,
-      authType: AuthType.Session,
-      url: url.format({
-        protocol: this.client.apiProtocol,
-        host: this.client.apiHost,
-        pathname: `/stream/${this.client.appKey}/${this.name}/${path}`
-      }),
+      pathname: `/stream/${this.client.appKey}/${this.name}/${path}`,
       body: body
-    });
+    }, this.client, true);
   }
 }

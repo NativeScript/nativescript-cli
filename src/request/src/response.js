@@ -45,6 +45,7 @@ const StatusCode = {
   TemporaryRedirect: 307,
   PermanentRedirect: 308,
   Unauthorized: 401,
+  Forbidden: 403,
   NotFound: 404,
   ServerError: 500
 };

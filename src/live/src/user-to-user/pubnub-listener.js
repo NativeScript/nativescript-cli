@@ -33,33 +33,24 @@ import { EventEmitter } from 'events';
 
 export class PubNubListener extends EventEmitter {
   static statusPrefix = 'status:';
-  static presencePrefix = 'presence:';
+  static unclassifiedEvents = 'pubNubEventsNotRouted';
 
   /** @param {PubNubMessage} m */
   message(m) {
     this.emit(m.channel, m.message);
-    // this.emit(m.subscription, m.message); // any point in this?
   }
 
   /** @param {PubNubStatus} s */
   status(s) {
-    // TODO: do better
-    // if (s.error) {
-    //   return this.emit();
-    // }
-
     const channels = s.affectedChannels || [];
     const groups = s.affectedChannelGroups || [];
     const allEvents = channels.concat(groups);
-    allEvents.forEach((channelOrGroup) => {
-      this.emit(`${PubNubListener.statusPrefix}${channelOrGroup}`, s);
-    });
-  }
-
-  /** @param {PubNubPresence} p */
-  presence(p) {
-    // this.emit(`${PubNubListener.statusPresence}${p.channel}`, p);
-    // this.emit(`${PubNubListener.statusPresence}${p.subscription}`, p);
-    console.log('presence', p);
+    if (allEvents.length) {
+      allEvents.forEach((channelOrGroup) => {
+        this.emit(`${PubNubListener.statusPrefix}${channelOrGroup}`, s);
+      });
+    } else {
+      this.emit(PubNubListener.unclassifiedEvents, s);
+    }
   }
 }

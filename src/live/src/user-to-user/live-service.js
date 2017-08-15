@@ -1,53 +1,99 @@
-import url from 'url';
 import PubNub from 'pubnub';
+import isFunction from 'lodash/isFunction';
+import isObject from 'lodash/isObject';
+import extend from 'lodash/extend';
 
 import Client from '../../../client';
-import { KinveyRequest, RequestMethod, AuthType } from '../../../request';
-import { KinveyError } from '../../../errors';
-import { User } from '../../../entity';
+import { KinveyRequest, RequestMethod, Response } from '../../../request';
+import { KinveyError, ActiveUserError } from '../../../errors';
 import { PubNubListener } from './pubnub-listener';
 
-class LiveService {
+/**
+ * @typedef LiveServiceReceiver
+ * @property {Function} onNext
+ * @property {Function} onError
+ * @property {Function} onStatus
+ */
 
-  /** @type {Client} */
-  client;
-  /** @type {User} */
-  registeredUser;
-  /** @type {string} */
-  userChannelGroup;
+class LiveService {
+  /** @type {Client} @private */
+  _client;
   /** @type {PubNub} @private */
   _pubnubClient;
-  /** @type {PubNubReceiver} @private */
+  /** @type {PubNubListener} @private */
   _pubnubListener;
+  /** @type {string} @private */
+  _userChannelGroup;
+  /** @type {Object} @private */
+  _pubnubConfig
+  /** @type {User} @private */
+  _registeredUser;
 
   /**
    * @constructor
    * @param {Client} client
    */
   constructor(client) {
-    this.client = client || Client.sharedInstance();
+    this._client = client || Client.sharedInstance();
+  }
+
+  get _pubnubClient() {
+    if (!this.__pubnubClient) {
+      const msg = 'Live service has not been initialized. Please call initialize() first';
+      throw new KinveyError(msg);
+    }
+    return this.__pubnubClient;
+  }
+
+  set _pubnubClient(value) {
+    this.__pubnubClient = value;
+  }
+
+  isInitialized() {
+    return !!this.__pubnubClient && !!this._pubnubListener;
+  }
+
+  shutDown() {
+    this.unsubscribeFromAll();
+    this._pubnubClient = null;
+    this._pubnubListener = null;
+    return this.unregisterUser();
+  }
+
+  onConnectionStatusUpdates(func) {
+    this._pubnubListener.on(PubNubListener.unclassifiedEvents, func);
+  }
+
+  offConnectionStatusUpdates(func) {
+    if (func) {
+      this._pubnubListener.removeListener(PubNubListener.unclassifiedEvents, func);
+    } else {
+      this._pubnubListener.removeAllListeners(PubNubListener.unclassifiedEvents);
+    }
   }
 
   /**
    * Subscribes the active user for live service
    * @returns {Promise}
    */
-  registerUser() {
-    return this._makeRegisterRequest()
+  initialize() {
+    const activeUser = this._client.activeUser;
+    if (!activeUser) {
+      return Promise.reject(new ActiveUserError('There is no active user'));
+    }
+
+    return this._makeRegisterRequest(activeUser._id)
       .then((pubnubConfig) => {
-        this.registeredUser = this.client.activeUser;
-        this.userChannelGroup = pubnubConfig.userChannelGroup;
+        this._registeredUser = activeUser;
+        this._pubnubConfig = extend({
+          ssl: true, // TODO: check if this isn't intentional
+          authKey: this._registeredUser._kmd.authtoken
+        }, pubnubConfig);
 
-        this._pubnubClient = new PubNub({
-          ssl: true,
-          publishKey: pubnubConfig.publishKey,
-          subscribeKey: pubnubConfig.subscribeKey,
-          authKey: this.client.activeUser._kmd.authtoken
-        });
         this._pubnubListener = new PubNubListener();
-        this._pubnubClient.addListener(this._pubnubListener);
-
-        return this.subscribeToChannelGroup(this.userChannelGroup);
+        this._userChannelGroup = pubnubConfig.userChannelGroup;
+        this._initPubNubClient(this._pubnubConfig, this._pubnubListener);
+        return this._subscribeToUserChannelGroup();
       });
   }
 
@@ -56,7 +102,8 @@ class LiveService {
    * @returns {Promise}
    */
   unregisterUser() {
-    return this._makeUnregisterRequst();
+    const id = this._registeredUser && this._registeredUser._id;
+    return this._makeUnregisterRequst(id);
   }
 
   /**
@@ -65,69 +112,109 @@ class LiveService {
    * @returns {Promise}
    */
   publishToChannel(channelName, message) {
+    if (!this.isInitialized()) {
+      return Promise.reject(new KinveyError('Live service is not initialized. Please call its "initialize" method'));
+    }
+
+    if (isObject(message)) {
+      message.senderId = this._registeredUser._id;
+    }
+
     return this._pubnubClient.publish({
       message: message,
       channel: channelName
     })
-      .then((resp) => {
-        // TODO: map response to KinveyResponse
-        return resp;
-      })
       .catch((err) => {
-        err = err.status;
-        return Promise.reject(new KinveyError(err.errorData, null, err.statusCode));
+        err = err.status.errorData;
+        const resp = new Response({ data: err, statusCode: err.status, headers: err.response.headers });
+        return Promise.reject(resp);
       });
   }
 
+  /**
+   * Start listening for events for specified channel
+   * @param {string} channelName
+   * @param {LiveServiceReceiver} receiver
+   */
   subscribeToChannel(channelName, receiver) {
-    // this._pubnubClient.subscribe({
-    //   channels: [channelName]
-    // });
-
+    if (!isObject(receiver)) {
+      receiver = {};
+    }
     this._subscribeToListener(channelName, receiver);
   }
 
-  subscribeToChannelGroup(channelGroup) {
-    this._pubnubClient.subscribe({
-      channelGroups: [channelGroup]
-    });
-
-    // this._subscribeToListener(channelGroup, {
-    //   onNext: resp => console.log('debug: onNext:', resp),
-    //   onError: err => console.log('debug: onError:', err),
-    //   onStatus: status => console.log('debug: onStatus:', status)
-    // });
-  }
-
   /**
+   * Stop listening for events for specified channel
    * @param {string} channelName
    */
   unsubscribeFromChannel(channelName) {
-    this._pubnubClient.unsubscribe({
-      channels: [channelName]
-    });
-    this._unsubscribeToListener(channelName);
+    this._unsubscribeFromListener(channelName);
   }
 
-  unsubscribeFromAllChannels() {
-    // TODO: remove from listener?
+  /**
+   * Subscribes the PubNub client to the user's channel group.
+   * All received messages are published to this channel group
+   * and PubNubListener class routes and emits to their respective channels
+   * @private
+   * @param {string} channelGroup
+   */
+  _subscribeToUserChannelGroup() {
+    this._pubnubClient.subscribe({
+      channelGroups: [this._userChannelGroup]
+    });
+  }
+
+  /**
+   * Unsubscribes from all channels and channel groups, as well as PubNubListener events
+   */
+  unsubscribeFromAll() {
     this._pubnubClient.unsubscribeAll();
+    this._pubnubListener.removeAllListeners(name);
   }
 
+  /**
+   * Listens to respective PubNubListener events, based on channel name
+   * @param  {string} channelName
+   * @param  {LiveServiceReceiver} receiver
+   */
   _subscribeToListener(channelName, receiver) {
-    // TODO: rename on - move subscribe logic to PubNubListener
-    this._pubnubListener.on(channelName, receiver.onNext.bind(receiver));
-    this._pubnubListener.on(`${PubNubListener.statusPrefix}${channelName}`, (status) => {
-      const func = status.error ? receiver.onError : receiver.onStatus;
-      func.call(receiver, status);
-    });
-    // this._pubnubListener.on(`${PubNubListener.presencePrefix}${channelName}`, receiver.onPresence.bind(receiver));
+    if (isFunction(receiver.onNext)) {
+      this._pubnubListener.on(channelName, receiver.onNext);
+    }
+
+    if (isFunction(receiver.onError) || isFunction(receiver.onStatus)) {
+      this._pubnubListener.on(`${PubNubListener.statusPrefix}${channelName}`, (status) => {
+        const func = status.error ? receiver.onError : receiver.onStatus;
+        if (isFunction(func)) {
+          func.call(receiver, status);
+        }
+      });
+    }
   }
 
-  _unsubscribeToListener(channelName) {
-    this._pubnubListener.off(channelName);
-    this._pubnubListener.off(`${PubNubListener.statusPrefix}${channelName}`);
-    // this._pubnubListener.off(`${PubNubListener.presencePrefix}${channelName}`);
+  /**
+   * @private
+   * @param {{subscribeKey: string, publishKey?: string, authKey: string, ssl?: boolean}} config
+   * @param {PubNubListener} listener
+   */
+  _initPubNubClient(config, listener) {
+    this.__pubnubClient = new PubNub({
+      ssl: config.ssl,
+      publishKey: config.publishKey,
+      subscribeKey: config.subscribeKey,
+      authKey: config.authKey
+    });
+    this._pubnubClient.addListener(listener);
+  }
+
+  /**
+   * Stop listening to respective PubNubListener events, based on channel name
+   * @private
+   * @param {string} channelName
+   */
+  _unsubscribeFromListener(channelName) {
+    this._pubnubListener.removeAllListeners(channelName)
+      .removeAllListeners(`${PubNubListener.statusPrefix}${channelName}`);
   }
 
   /**
@@ -135,9 +222,8 @@ class LiveService {
    * @param {string} userId The user id
    * @returns {Promise<{publishKey: string, subscribeKey: string, userChannelGroup: string}>}
    */
-  _makeRegisterRequest() {
-    return this._makeUserManagementRequest('register-realtime')
-      .then(response => response.data);
+  _makeRegisterRequest(userId) {
+    return this._makeUserManagementRequest(userId, 'register-realtime');
   }
 
   /**
@@ -145,33 +231,26 @@ class LiveService {
    * @param {string} userId The user id
    * @returns {Promise}
    */
-  _makeUnregisterRequst() {
-    return this._makeUserManagementRequest('unregister-realtime')
-      .then(response => response.data);
+  _makeUnregisterRequst(userId) {
+    return this._makeUserManagementRequest(userId, 'unregister-realtime');
   }
 
   /**
    * @private
    * @param {string} path
+   * @returns {Promise}
    */
-  _makeUserManagementRequest(path) {
-    const activeUser = User.getActiveUser();
-    return KinveyRequest.execute({
+  _makeUserManagementRequest(userId, path) {
+    return KinveyRequest.executeShort({
       method: RequestMethod.POST,
-      authType: AuthType.Session,
-      url: url.format({
-        protocol: this.client.apiProtocol,
-        host: this.client.apiHost,
-        pathname: `/user/${this.client.appKey}/${activeUser._id}/${path}`
-      }),
-      body: { deviceId: this.client.deviceId }
-    });
+      pathname: `/user/${this._client.appKey}/${userId}/${path}`,
+      body: { deviceId: this._client.deviceId }
+    }, this._client, true);
   }
 }
 
 let liveServiceInstance;
 
-// TODO: passing client here seems odd - think of a better way
 /**
  * Gets a singleton LiveService class instance
  * @param {Client} client
