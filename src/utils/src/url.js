@@ -9,6 +9,7 @@ import { isDefined } from './object';
 
 /**
  * @private
+ * Adapted from https://github.com/lakenen/node-append-query, to fit a non-node runtime.
  */
 function serialize(obj, options = {}, prefix) {
   const str = [];
@@ -35,7 +36,7 @@ function serialize(obj, options = {}, prefix) {
     } else if (isPlainObject(val)) {
       query = serialize(val, options, key);
     } else {
-      query = options.encodeComponent === true ?
+      query = options.encodeComponents ?
         `${encodeURIComponent(key)}=${encodeURIComponent(val)}` :
         `${key}=${val}`;
     }
@@ -53,7 +54,7 @@ export function appendQuery(uri, query, options = {}) {
   const parts = url.parse(uri, true);
   const queryToAppend = isString(query) ? qs.parse(query) : query;
   const parsedQuery = assign({}, parts.query, queryToAppend);
-  options = assign({ encodeComponents: true, removeNull: true }, options);
+  options = assign({ encodeComponents: true, removeNull: false }, options);
   parts.query = null;
   const queryString = serialize(parsedQuery, options);
   parts.search = isDefined(queryString) && isEmpty(queryString) === false ? `?${queryString}` : null;
