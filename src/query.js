@@ -745,8 +745,6 @@ export default class Query {
    * @returns {Array} The processed data.
    */
   process(data) {
-    Log.debug('Proccessing query', this.toPlainObject(), data);
-
     if (this.isSupportedOffline() === false) {
       let message = 'This query is not able to run locally. The following filters are not supported'
         + ' locally:';
@@ -764,14 +762,17 @@ export default class Query {
       throw new QueryError('data argument must be of type: Array.');
     }
 
+    Log.debug('Data length before processiong query', data.length);
+
     // Apply the query
     const json = this.toPlainObject();
     data = sift(json.filter, data);
 
-    Log.debug('After applying query filter to data', data);
+    Log.debug('Data length after applying query filter', json.filter, data.length);
 
     // Remove fields
     if (isArray(json.fields) && json.fields.length > 0) {
+      Log.debug('Removing fields from data', json.fields);
       data = data.map((item) => {
         const keys = Object.keys(item);
         forEach(keys, (key) => {
@@ -784,11 +785,10 @@ export default class Query {
       });
     }
 
-    Log.debug('After removing fields from data', data);
-
     /* eslint-disable no-restricted-syntax, no-prototype-builtins  */
     // Sorting.
     if (isDefined(json.sort)) {
+      Log.debug('Sorting data', json.sort);
       data.sort((a, b) => {
         for (const field in json.sort) {
           if (json.sort.hasOwnProperty(field)) {
@@ -812,18 +812,16 @@ export default class Query {
     }
     /* eslint-enable no-restricted-syntax, no-prototype-builtins */
 
-    Log.debug('After sorting data', data);
-
     // Limit and skip.
     if (isNumber(json.skip)) {
       if (isNumber(json.limit) && json.limit > 0) {
+        Log.debug('Skipping and limiting data', json.skip, json.limit);
         return data.slice(json.skip, json.skip + json.limit);
       }
 
+      Log.debug('Skipping data', json.skip);
       return data.slice(json.skip);
     }
-
-    Log.debug('After limiting and skipping data', data);
 
     return data;
   }
