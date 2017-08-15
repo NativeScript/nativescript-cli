@@ -1,8 +1,13 @@
 import BaseError from './base';
 
-export default class DuplicateEndUsersError extends BaseError {
-  constructor(message = 'More than one user registered with this username for this application.'
-    + ' Please contact support@kinvey.com for assistance.', debug, code, kinveyRequestId) {
-    super('DuplicateEndUsersError', message, debug, code, kinveyRequestId);
-  }
+function DuplicateEndUsersError(message, debug, code, kinveyRequestId) {
+  this.name = 'DuplicateEndUsersError';
+  this.message = message || 'More than one user registered with this username for this application.';
+  this.debug = debug || undefined;
+  this.code = code || undefined;
+  this.kinveyRequestId = kinveyRequestId || undefined;
+  this.stack = (new Error()).stack;
 }
+DuplicateEndUsersError.prototype = Object.create(BaseError.prototype);
+DuplicateEndUsersError.prototype.constructor = DuplicateEndUsersError;
+export default DuplicateEndUsersError;

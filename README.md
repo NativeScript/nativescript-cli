@@ -4,6 +4,7 @@
 
 The JS SDK is used as a way to share common code for platform specific SDK shims. Here is a list of the platforms we currently support.
 
+* [NativeScript](https://github.com/Kinvey/nativescript-sdk)
 * [Angular](https://github.com/Kinvey/angular-sdk)
 * [Angular 2](https://github.com/Kinvey/angular2-sdk)
 * [Backbone](https://github.com/Kinvey/backbone-sdk)

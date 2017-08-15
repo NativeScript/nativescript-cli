@@ -384,6 +384,15 @@ describe('SyncStore', function() {
       expect(spy).toHaveBeenCalled();
     });
 
+    it('should call update() for an entity that contains an _id with special characters', function() {
+      const store = new SyncStore(collection);
+      const id = '.$~<>!@+_#';
+      return store.save({ _id: id })
+        .then((resp) => {
+          expect(resp._id).toEqual(id);
+        });
+    });
+
     it('should call create() when an array of entities is provided', function() {
       const store = new SyncStore(collection);
       const spy = expect.spyOn(store, 'create');

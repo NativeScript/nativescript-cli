@@ -163,7 +163,7 @@ describe('KinveyRequest', () => {
             expect(error).toBeA(InvalidCredentialsError);
             expect(error.name).toEqual('InvalidCredentialsError');
             expect(error.message).toEqual('Invalid credentials. Please retry your request with correct credentials.');
-            expect(error.debug).toEqual('');
+            expect(error.debug).toEqual(undefined);
             expect(error.code).toEqual(401);
           });
       });
@@ -206,7 +206,7 @@ describe('KinveyRequest', () => {
                 expect(error).toBeA(InvalidCredentialsError);
                 expect(error.name).toEqual('InvalidCredentialsError');
                 expect(error.message).toEqual('Invalid credentials. Please retry your request with correct credentials.');
-                expect(error.debug).toEqual('');
+                expect(error.debug).toEqual(undefined);
                 expect(error.code).toEqual(401);
               });
           });

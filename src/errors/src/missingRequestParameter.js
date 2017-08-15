@@ -1,7 +1,13 @@
 import BaseError from './base';
 
-export default class MissingRequestParameterError extends BaseError {
-  constructor(message = 'A required parameter is missing from the request.', debug, code, kinveyRequestId) {
-    super('MissingRequestParameterError', message, debug, code, kinveyRequestId);
-  }
+function MissingRequestParameterError(message, debug, code, kinveyRequestId) {
+  this.name = 'MissingRequestParameterError';
+  this.message = message || 'A required parameter is missing from the request.';
+  this.debug = debug || undefined;
+  this.code = code || undefined;
+  this.kinveyRequestId = kinveyRequestId || undefined;
+  this.stack = (new Error()).stack;
 }
+MissingRequestParameterError.prototype = Object.create(BaseError.prototype);
+MissingRequestParameterError.prototype.constructor = MissingRequestParameterError;
+export default MissingRequestParameterError;

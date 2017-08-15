@@ -4,8 +4,8 @@ import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 
 import { isDefined, Log } from 'src/utils';
-import { NotFoundError } from 'src/errors';
-import MemoryAdapter from './src/memory';
+import { KinveyError, NotFoundError } from 'src/errors';
+import { MemoryAdapter } from './memory';
 
 Queue.configure(Promise);
 const queue = new Queue(1, Infinity);
@@ -14,14 +14,14 @@ export {
   MemoryAdapter
 };
 
-export default class Storage {
+export class Storage {
   constructor(name) {
     if (!name) {
-      throw new Error('Unable to create a Storage instance without a name.');
+      throw new KinveyError('Unable to create a Storage instance without a name.');
     }
 
     if (!isString(name)) {
-      throw new Error('The name is not a string. A name must be a string to create a Storage instance.');
+      throw new KinveyError('The name is not a string. A name must be a string to create a Storage instance.');
     }
 
     this.name = name;
@@ -31,8 +31,8 @@ export default class Storage {
     return Promise.resolve()
       .then(() => MemoryAdapter.load(this.name))
       .then((adapter) => {
-        if (isDefined(adapter) === false) {
-          throw new Error('Unable to load a storage adapter.');
+        if (!isDefined(adapter)) {
+          return Promise.reject(new KinveyError('Unable to load a storage adapter.'));
         }
 
         return adapter;
@@ -63,15 +63,15 @@ export default class Storage {
           return [];
         }
 
-        throw error;
+        return Promise.reject(error);
       })
       .then((entities = []) => entities);
   }
 
   findById(collection, id) {
-    if (isString(id) === false) {
-      const error = new Error('id must be a string', id);
-      Log.error(`Unable to find an entity with id ${id} stored in the ${collection} collection.`, error);
+    if (!isString(id)) {
+      const error = new KinveyError('id must be a string', id);
+      Log.error(`Unable to find an entity with id ${id} stored in the ${collection} collection.`, error.message);
       return Promise.reject(error);
     }
 
@@ -96,7 +96,7 @@ export default class Storage {
       }
 
       entities = entities.map((entity) => {
-        if (isDefined(entity._id) === false) {
+        if (!isDefined(entity._id)) {
           const kmd = entity._kmd || {};
           kmd.local = true;
           entity._kmd = kmd;
@@ -120,8 +120,8 @@ export default class Storage {
 
   remove(collection, entities = []) {
     return Promise.all(entities.map((entity) => {
-      if (typeof entity._id === 'undefined') {
-        return Promise.reject('Unable to remove an entity because it does not have _id.');
+      if (!isDefined(entity._id)) {
+        return Promise.reject(new KinveyError('Unable to remove this entity because it does not have _id.'));
       }
 
       return this.removeById(collection, entity._id);
@@ -137,7 +137,7 @@ export default class Storage {
   removeById(collection, id) {
     return queue.add(() => {
       if (!isString(id)) {
-        return Promise.reject(new Error('id must be a string', id));
+        return Promise.reject(new KinveyError('id must be a string', id));
       }
 
       return this.loadAdapter()

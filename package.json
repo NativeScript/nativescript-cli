@@ -1,6 +1,6 @@
 {
   "name": "kinvey-js-sdk",
-  "version": "3.5.0",
+  "version": "3.5.2",
   "description": "Kinvey JavaScript SDK for developing JavaScript applications. This is the core code used to create specific bundles for all other JavaScript platforms.",
   "homepage": "http://www.kinvey.com",
   "bugs": {
@@ -29,12 +29,11 @@
     "postversion": "git push && git push --tags",
     "test": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/index test",
     "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/index test",
-    "transpile": "BABEL_ENV=production babel --no-comments --out-dir dist src"
+    "transpile": "babel --no-comments --out-dir dist src"
   },
   "dependencies": {
     "append-query": "2.0.1",
     "core-js": "2.4.1",
-    "es6-error": "4.0.2",
     "es6-promise": "4.1.0",
     "fast-memory-cache": "2.0.4",
     "hellojs": "1.14.1",
@@ -44,10 +43,10 @@
     "promise-queue": "2.2.3",
     "qs": "6.4.0",
     "request": "2.81.0",
-    "rxjs": "5.2.0",
+    "rxjs": "5.4.2",
     "sift": "3.2.7",
     "uid": "0.0.2",
-    "url-pattern": "1.0.3"
+    "url-join": "2.0.2"
   },
   "devDependencies": {
     "app-module-path": "2.2.0",

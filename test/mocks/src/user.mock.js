@@ -3,7 +3,6 @@ import { randomString } from 'src/utils';
 import { User } from 'src/entity';
 import nock from 'nock';
 import url from 'url';
-import isEmpty from 'lodash/isEmpty';
 
 export default class UserMock extends User {
   static getActiveUser(client) {

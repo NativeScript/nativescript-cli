@@ -13,16 +13,40 @@ describe('Client', () => {
       expect(client.liveServiceHostname).toEqual('https://kls.kinvey.com');
     });
 
-    it('should be able to provide custom apiHostname', () => {
+    it('should be able to provide custom apiHostname with protocol https:', () => {
       const apiHostname = 'https://mybaas.kinvey.com';
       const client = new Client({ apiHostname: apiHostname });
       expect(client.apiHostname).toEqual(apiHostname);
     });
 
-    it('should be able to provide custom micHostname', () => {
+    it('should be able to provide custom apiHostname with protocol http:', () => {
+      const apiHostname = 'http://mybaas.kinvey.com';
+      const client = new Client({ apiHostname: apiHostname });
+      expect(client.apiHostname).toEqual(apiHostname);
+    });
+
+    it('should be able to provide custom apiHostname without protocol', () => {
+      const apiHostname = 'myauth.kinvey.com';
+      const client = new Client({ apiHostname: apiHostname });
+      expect(client.apiHostname).toEqual(`https://${apiHostname}`);
+    });
+
+    it('should be able to provide custom micHostname with protocol https:', () => {
       const micHostname = 'https://myauth.kinvey.com';
       const client = new Client({ micHostname: micHostname });
       expect(client.micHostname).toEqual(micHostname);
+    });
+
+    it('should be able to provide custom micHostname with protocol http:', () => {
+      const micHostname = 'http://myauth.kinvey.com';
+      const client = new Client({ micHostname: micHostname });
+      expect(client.micHostname).toEqual(micHostname);
+    });
+
+    it('should be able to provide custom micHostname without protocol', () => {
+      const micHostname = 'myauth.kinvey.com';
+      const client = new Client({ micHostname: micHostname });
+      expect(client.micHostname).toEqual(`https://${micHostname}`);
     });
 
     it('should be able to provide custom liveServiceHostname', () => {

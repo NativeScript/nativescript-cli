@@ -1,7 +1,13 @@
 import BaseError from './base';
 
-export default class JSONParseError extends BaseError {
-  constructor(message = 'Unable to parse the JSON in the request.', debug, code, kinveyRequestId) {
-    super('JSONParseError', message, debug, code, kinveyRequestId);
-  }
+function JSONParseError(message, debug, code, kinveyRequestId) {
+  this.name = 'JSONParseError';
+  this.message = message || 'Unable to parse the JSON in the request.';
+  this.debug = debug || undefined;
+  this.code = code || undefined;
+  this.kinveyRequestId = kinveyRequestId || undefined;
+  this.stack = (new Error()).stack;
 }
+JSONParseError.prototype = Object.create(BaseError.prototype);
+JSONParseError.prototype.constructor = JSONParseError;
+export default JSONParseError;

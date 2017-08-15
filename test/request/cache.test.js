@@ -1,5 +1,4 @@
 import expect from 'expect';
-import localStorage from 'local-storage';
 import url from 'url';
 import Request, { CacheRequest, RequestMethod } from 'src/request';
 import { User } from 'src/entity';
@@ -49,15 +48,20 @@ describe('CacheRequest', function() {
           expect(CacheRequest.getActiveUser()).toEqual(user);
         });
     });
+  });
 
-    it('should load an active user from legacy storage', function() {
+  describe('getActiveUser()', function() {
+    it('should return the current active user even if setActiveUser() hasn\'t complete', function() {
       const user = { _id: randomString(), _kmd: { authtoken: randomString() } };
-      localStorage.set(`${this.client.appKey}kinvey_user`, user);
-      return CacheRequest.loadActiveUser(this.client)
-        .then((activeUser) => {
-          expect(activeUser).toEqual(user);
-          expect(CacheRequest.getActiveUser()).toEqual(user);
-        });
+      const promise = CacheRequest.setActiveUser(this.client, user);
+      expect(CacheRequest.getActiveUser()).toEqual(user);
+      return promise;
+    });
+
+    it('should return null user even if setActiveUser() hasn\'t complete', function() {
+      const promise = CacheRequest.setActiveUser(this.client, null);
+      expect(CacheRequest.getActiveUser()).toEqual(null);
+      return promise;
     });
   });
 });

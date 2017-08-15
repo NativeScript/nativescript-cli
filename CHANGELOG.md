@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.5.2](https://github.com/Kinvey/js-sdk/tree/v3.5.2) (2017-07-07)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.5.1...v3.5.2)<br/>
+
+### Added
+_None_
+
+### Removed
+_None_
+
+### Fixed
+- Allow special characters `['.', '$', '~', '>', '<', '!', '@']` to be used in an `_id` for an entity.
+- Import `es6-promise` to fix errors caused by environments that do not provide a promise implementation natively.
+- Fix error inheritance to correctly display error message in `console.log` statements.
+
+
+### Merged Pull Requests
+- Fix URL formation on Windows and URL symbols in custom ID breaking cache storage [#134](https://github.com/Kinvey/js-sdk/pull/134)
+- Fix Promise Undefined Bug [#135](https://github.com/Kinvey/js-sdk/pull/135)
+- Fix Error Inheritance [#136](https://github.com/Kinvey/js-sdk/pull/136)
+
+### Closed Issues
+_None_
+
+## [3.5.1](https://github.com/Kinvey/js-sdk/tree/v3.5.1) (2017-06-30)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.5.0...v3.5.1)<br/>
+
+### Added
+_None_
+
+### Removed
+_None_
+
+### Fixed
+- `https:` will automatically be used when a custom hostname is missing a protocol.
+- Prevent the active user from being `null` for a short period of time when setting the active user.
+
+### Merged Pull Requests
+- Active User Bug [#128](https://github.com/Kinvey/js-sdk/pull/128)
+- Add missing protocol to custom hostnames [#129](https://github.com/Kinvey/js-sdk/pull/129)
+
+### Closed Issues
+_None_
+
 ## [3.5.0](https://github.com/Kinvey/js-sdk/tree/v3.5.0) (2017-04-20)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.4.5...v3.5.0)<br/>
 
@@ -16,7 +59,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `baseUrl`, `protocol`, and `host` properties on a `client` instance. These were deprecated with [v3.0.0](https://github.com/Kinvey/js-sdk/v3.0.0).
 - `syncCount()` and `purge()` on `CacheStore` and `SyncStore` instances. These were deprecated with [v3.2.0](https://github.com/Kinvey/js-sdk/v3.2.0).
 
-### Changed
+### Fixed
 - `restore()` static function from the `User` class to throw an error whenever it is called. This function required an end user to supply their master secret for their application. We strongly advise not to do this in your application.
 - All `toJSON()` functions have now been replaced by `toPlainObject()`. The returned result is the exact same.
 - `save()`, `create()`, and `update()` on datastore instances no longer accepts an array of entities. This is to help with reporting errors that may occur when saving an entity.
