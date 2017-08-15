@@ -22,7 +22,6 @@ log.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
     }
   };
 };
-log.setLevel(log.getLevel());
 
 /**
  * @private
