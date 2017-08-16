@@ -390,10 +390,10 @@ export default class User {
     });
 
     let prm = Promise.resolve();
-    const liveService = getLiveService();
+    const liveService = getLiveService(this.client);
 
     if (liveService.isInitialized()) {
-      prm = liveService.shutDown();
+      prm = liveService.unregister();
     }
 
     return prm.then(() => request.execute())

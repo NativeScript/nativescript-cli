@@ -53,7 +53,7 @@ class LiveService {
     return !!this.__pubnubClient && !!this._pubnubListener;
   }
 
-  shutDown() {
+  unregister() {
     this.unsubscribeFromAll();
     this._pubnubClient = null;
     this._pubnubListener = null;
@@ -73,10 +73,10 @@ class LiveService {
   }
 
   /**
-   * Subscribes the active user for live service
+   * Registers the active user for live service
    * @returns {Promise}
    */
-  initialize() {
+  register() {
     const activeUser = this._client.activeUser;
     if (!activeUser) {
       return Promise.reject(new ActiveUserError('There is no active user'));
@@ -86,13 +86,13 @@ class LiveService {
       .then((pubnubConfig) => {
         this._registeredUser = activeUser;
         this._pubnubConfig = extend({
-          ssl: true, // TODO: check if this isn't intentional
+          ssl: true,
           authKey: this._registeredUser._kmd.authtoken
         }, pubnubConfig);
 
         this._pubnubListener = new PubNubListener();
         this._userChannelGroup = pubnubConfig.userChannelGroup;
-        this._initPubNubClient(this._pubnubConfig, this._pubnubListener);
+        this._pubnubClient = this._initPubNubClient(this._pubnubConfig, this._pubnubListener);
         return this._subscribeToUserChannelGroup();
       });
   }
@@ -198,13 +198,15 @@ class LiveService {
    * @param {PubNubListener} listener
    */
   _initPubNubClient(config, listener) {
-    this.__pubnubClient = new PubNub({
+    const client = new PubNub({
       ssl: config.ssl,
       publishKey: config.publishKey,
       subscribeKey: config.subscribeKey,
       authKey: config.authKey
     });
-    this._pubnubClient.addListener(listener);
+
+    client.addListener(listener);
+    return client;
   }
 
   /**
@@ -261,4 +263,15 @@ export function getLiveService(client) {
     liveServiceInstance = new LiveService(client);
   }
   return liveServiceInstance;
+}
+
+export function getLiveServiceFacade(client) {
+  const liveService = getLiveService(client);
+  return {
+    register: liveService.register.bind(liveService),
+    unregister: liveService.unregister.bind(liveService),
+    onConnectionStatusUpdates: liveService.onConnectionStatusUpdates.bind(liveService),
+    offConnectionStatusUpdates: liveService.offConnectionStatusUpdates.bind(liveService),
+    unsubscribeFromAll: liveService.unsubscribeFromAll.bind(liveService)
+  };
 }

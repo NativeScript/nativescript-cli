@@ -46,7 +46,7 @@ import DataStore, { DataStoreType, FileStore, SyncOperation } from './datastore'
 import { Acl, Metadata, User } from './entity';
 import { AuthorizationGrant } from './identity';
 import { AuthType, CacheRack, NetworkRack, Rack, RequestMethod, KinveyRequest } from './request';
-import { getLiveService, Stream } from './live';
+import { getLiveServiceFacade, Stream } from './live';
 
 /**
  * The Kinvey class is used as the entry point for the Kinvey JavaScript SDK.

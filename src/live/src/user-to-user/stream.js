@@ -39,7 +39,7 @@ export class Stream {
    * @param {StreamACL} acl The ACL object to be set
    * @returns {Promise}
    */
-  setStreamACL(userId, acl) {
+  setACL(userId, acl) {
     const requestBody = (acl instanceof StreamACL) ? acl.toPlainObject() : acl;
     return this._makeStreamRequest(userId, RequestMethod.PUT, requestBody);
   }
