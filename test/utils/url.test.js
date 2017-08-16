@@ -1,5 +1,4 @@
 import { appendQuery } from 'src/utils';
-import nock from 'nock';
 import expect from 'expect';
 
 /**
