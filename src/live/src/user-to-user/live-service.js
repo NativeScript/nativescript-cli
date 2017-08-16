@@ -39,7 +39,7 @@ class LiveService {
 
   get _pubnubClient() {
     if (!this.__pubnubClient) {
-      const msg = 'Live service has not been initialized. Please call initialize() first';
+      const msg = 'Live service has not been initialized. Please call register() first';
       throw new KinveyError(msg);
     }
     return this.__pubnubClient;
@@ -51,25 +51,6 @@ class LiveService {
 
   isInitialized() {
     return !!this.__pubnubClient && !!this._pubnubListener;
-  }
-
-  unregister() {
-    this.unsubscribeFromAll();
-    this._pubnubClient = null;
-    this._pubnubListener = null;
-    return this.unregisterUser();
-  }
-
-  onConnectionStatusUpdates(func) {
-    this._pubnubListener.on(PubNubListener.unclassifiedEvents, func);
-  }
-
-  offConnectionStatusUpdates(func) {
-    if (func) {
-      this._pubnubListener.removeListener(PubNubListener.unclassifiedEvents, func);
-    } else {
-      this._pubnubListener.removeAllListeners(PubNubListener.unclassifiedEvents);
-    }
   }
 
   /**
@@ -97,13 +78,23 @@ class LiveService {
       });
   }
 
-  /**
-   * @param {string} userId The user id
-   * @returns {Promise}
-   */
-  unregisterUser() {
-    const id = this._registeredUser && this._registeredUser._id;
-    return this._makeUnregisterRequst(id);
+  unregister() {
+    this.unsubscribeFromAll();
+    this._pubnubClient = null;
+    this._pubnubListener = null;
+    return this._unregisterUser();
+  }
+
+  onConnectionStatusUpdates(func) {
+    this._pubnubListener.on(PubNubListener.unclassifiedEvents, func);
+  }
+
+  offConnectionStatusUpdates(func) {
+    if (func) {
+      this._pubnubListener.removeListener(PubNubListener.unclassifiedEvents, func);
+    } else {
+      this._pubnubListener.removeAllListeners(PubNubListener.unclassifiedEvents);
+    }
   }
 
   /**
@@ -113,7 +104,7 @@ class LiveService {
    */
   publishToChannel(channelName, message) {
     if (!this.isInitialized()) {
-      return Promise.reject(new KinveyError('Live service is not initialized. Please call its "initialize" method'));
+      return Promise.reject(new KinveyError('Live service is not initialized. Please call its "register()" method'));
     }
 
     if (isObject(message)) {
@@ -152,6 +143,24 @@ class LiveService {
   }
 
   /**
+   * Unsubscribes from all channels and channel groups, as well as PubNubListener events
+   */
+  unsubscribeFromAll() {
+    this._pubnubClient.unsubscribeAll();
+    this._pubnubListener.removeAllListeners();
+  }
+
+  /**
+   * @private
+   * @param {string} userId The user id
+   * @returns {Promise}
+   */
+  _unregisterUser() {
+    const id = this._registeredUser && this._registeredUser._id;
+    return this._makeUnregisterRequst(id);
+  }
+
+  /**
    * Subscribes the PubNub client to the user's channel group.
    * All received messages are published to this channel group
    * and PubNubListener class routes and emits to their respective channels
@@ -162,14 +171,6 @@ class LiveService {
     this._pubnubClient.subscribe({
       channelGroups: [this._userChannelGroup]
     });
-  }
-
-  /**
-   * Unsubscribes from all channels and channel groups, as well as PubNubListener events
-   */
-  unsubscribeFromAll() {
-    this._pubnubClient.unsubscribeAll();
-    this._pubnubListener.removeAllListeners(name);
   }
 
   /**
@@ -252,6 +253,7 @@ class LiveService {
 }
 
 let liveServiceInstance;
+let liveServiceInstanceFacade;
 
 /**
  * Gets a singleton LiveService class instance
@@ -266,12 +268,16 @@ export function getLiveService(client) {
 }
 
 export function getLiveServiceFacade(client) {
-  const liveService = getLiveService(client);
-  return {
-    register: liveService.register.bind(liveService),
-    unregister: liveService.unregister.bind(liveService),
-    onConnectionStatusUpdates: liveService.onConnectionStatusUpdates.bind(liveService),
-    offConnectionStatusUpdates: liveService.offConnectionStatusUpdates.bind(liveService),
-    unsubscribeFromAll: liveService.unsubscribeFromAll.bind(liveService)
-  };
+  if (!liveServiceInstanceFacade) {
+    const liveService = getLiveService(client);
+
+    liveServiceInstanceFacade = {
+      register: liveService.register.bind(liveService),
+      unregister: liveService.unregister.bind(liveService),
+      onConnectionStatusUpdates: liveService.onConnectionStatusUpdates.bind(liveService),
+      offConnectionStatusUpdates: liveService.offConnectionStatusUpdates.bind(liveService),
+      unsubscribeFromAll: liveService.unsubscribeFromAll.bind(liveService)
+    };
+  }
+  return liveServiceInstanceFacade;
 }
