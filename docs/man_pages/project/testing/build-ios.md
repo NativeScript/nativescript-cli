@@ -3,7 +3,7 @@ build ios
 
 Usage | Synopsis
 ---|---
-General | `$ tns build ios [--for-device] [--release] [--copy-to <File Path>]`
+General | `$ tns build ios [--for-device] [--release] [--copy-to <File Path>] [--provision [<UUID/name>]]`
 
 Builds the project for iOS and produces an `APP` or `IPA` that you can manually deploy in the iOS Simulator or on device, respectively.
 
@@ -15,6 +15,7 @@ Builds the project for iOS and produces an `APP` or `IPA` that you can manually 
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
 * `--for-device` - If set, produces an application package that you can deploy on device. Otherwise, produces a build that you can run only in the native iOS Simulator.
 * `--copy-to` - Specifies the file path where the built `.ipa` will be copied. If it points to a non-existent directory, it will be created. If the specified value is directory, the original file name will be used.
+* `--provision` - If used without parameter, lists all eligible provisioning profiles. If used with UUID or name of your provisioning profile, it will switch to manual signing mode and configure the .xcodeproj file of your app. In this case xcconfig should not contain any provisioning/team id flags. This provisioning profile will be further used for codesigning the app.
 <% } %>
 <% if(isHtml) { %>
 ### Command Limitations
