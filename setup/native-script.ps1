@@ -110,8 +110,11 @@ if ((Read-Host "Do you want to install Android emulator?") -eq 'y') {
 		echo y | cmd /c "$androidExecutable" "extras;intel;Hardware_Accelerated_Execution_Manager"
 		$haxmSilentInstaller = [io.path]::combine($env:ANDROID_HOME, "extras", "intel", "Hardware_Accelerated_Execution_Manager", "silent_install.bat")
 		cmd /c "$haxmSilentInstaller"
+		echo y | cmd /c "$androidExecutable" "system-images;android-25;google_apis;x86"
 	}
-	echo y | cmd /c "$androidExecutable" "system-images;android-25;google_apis;armeabi-v7a"
+	else {
+		echo y | cmd /c "$androidExecutable" "system-images;android-25;google_apis;armeabi-v7a"
+	}
 }
 
 Write-Host -ForegroundColor Green "This script has modified your environment. You need to log off and log back on for the changes to take effect."
