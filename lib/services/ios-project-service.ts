@@ -396,8 +396,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			args.push(`PROVISIONING_PROFILE=${buildConfig.mobileProvisionIdentifier}`);
 		}
 
-		if (buildConfig && buildConfig.teamIdentifier) {
-			args.push(`DEVELOPMENT_TEAM=${buildConfig.teamIdentifier}`);
+		if (buildConfig && buildConfig.teamId) {
+			args.push(`DEVELOPMENT_TEAM=${buildConfig.teamId}`);
 		}
 
 		// this.$logger.out("xcodebuild...");
@@ -470,11 +470,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			xcode.setManualSigningStyle(projectData.projectName);
 			xcode.save();
 		} else if (!buildConfig.provision && !(signing && signing.style === "Manual" && !buildConfig.teamId)) {
-			if (buildConfig) {
-				delete buildConfig.teamIdentifier;
-			}
-
 			const teamId = await this.getDevelopmentTeam(projectData, buildConfig.teamId);
+
+			// Remove teamId from build config as we'll set the signing in Xcode project directly.
+			// In case we do not remove it, we'll pass DEVELOPMENT_TEAM=<team id> to xcodebuild, which is unnecessary.
+			if (buildConfig.teamId) {
+				delete buildConfig.teamId;
+			}
 
 			xcode.setAutomaticSigningStyle(projectData.projectName, teamId);
 			xcode.save();
@@ -1328,6 +1330,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				}
 			}
 		}
+
+		this.$logger.trace(`Selected teamId is '${teamId}'.`);
+
 		return teamId;
 	}
 

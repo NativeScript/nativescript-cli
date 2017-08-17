@@ -1,7 +1,7 @@
 interface IPlatformService extends NodeJS.EventEmitter {
-	cleanPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions, framework?: string): Promise<void>;
+	cleanPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, framework?: string): Promise<void>;
 
-	addPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions, frameworkPath?: string): Promise<void>;
+	addPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, frameworkPath?: string): Promise<void>;
 
 	/**
 	 * Gets list of all installed platforms (the ones for which <project dir>/platforms/<platform> exists).
@@ -32,7 +32,7 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 */
 	removePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
 
-	updatePlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions): Promise<void>;
+	updatePlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IPlatformOptions): Promise<void>;
 
 	/**
 	 * Ensures that the specified platform and its dependencies are installed.
@@ -47,7 +47,7 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @param {Array} filesToSync Files about to be synced to device.
 	 * @returns {boolean} true indicates that the platform was prepared.
 	 */
-	preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions, filesToSync?: Array<String>, nativePrepare?: INativePrepare): Promise<boolean>;
+	preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, filesToSync?: Array<String>, nativePrepare?: INativePrepare): Promise<boolean>;
 
 	/**
 	 * Determines whether a build is necessary. A build is necessary when one of the following is true:
@@ -113,7 +113,7 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @param {IAddPlatformCoreOptions} config Options required for project preparation/creation.
 	 * @returns {void}
 	 */
-	deployPlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, deployOptions: IDeployPlatformOptions, projectData: IProjectData, config: IAddPlatformCoreOptions): Promise<void>;
+	deployPlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, deployOptions: IDeployPlatformOptions, projectData: IProjectData, config: IPlatformOptions): Promise<void>;
 
 	/**
 	 * Runs the application on specified platform. Assumes that the application is already build and installed. Fails if this is not true.
@@ -124,7 +124,7 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 */
 	startApplication(platform: string, runOptions: IRunPlatformOptions, projectId: string): Promise<void>;
 
-	cleanDestinationApp(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions): Promise<void>;
+	cleanDestinationApp(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions): Promise<void>;
 	validatePlatformInstalled(platform: string, projectData: IProjectData): void;
 
 	/**
@@ -213,17 +213,12 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void
 }
 
-interface IAddPlatformCoreOptions extends IPlatformSpecificData, ICreateProjectOptions { }
+interface IPlatformOptions extends IPlatformSpecificData, ICreateProjectOptions { }
 
 /**
  * Platform specific data required for project preparation.
  */
-interface IPlatformSpecificData {
-	/**
-	 * UUID of the provisioning profile used in iOS project preparation.
-	 */
-	provision: any;
-
+interface IPlatformSpecificData extends IProvision {
 	/**
 	 * Target SDK for Android.
 	 */

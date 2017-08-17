@@ -155,10 +155,6 @@ interface IiOSBuildConfig extends IBuildForDevice, IDeviceIdentifier, IProvision
 	 * Code sign identity used for build. If not set iPhone Developer is used as a default when building for device.
 	 */
 	codeSignIdentity?: string;
-	/**
-	 * Team identifier.
-	 */
-	teamIdentifier?: string;
 }
 
 interface IPlatformProjectService extends NodeJS.EventEmitter {

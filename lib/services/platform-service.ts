@@ -43,7 +43,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		super();
 	}
 
-	public async cleanPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions, framworkPath?: string): Promise<void> {
+	public async cleanPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, framworkPath?: string): Promise<void> {
 		for (let platform of platforms) {
 			let version: string = this.getCurrentPlatformVersion(platform, projectData);
 
@@ -57,7 +57,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	public async addPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions, frameworkPath?: string): Promise<void> {
+	public async addPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, frameworkPath?: string): Promise<void> {
 		const platformsDir = projectData.platformsDir;
 		this.$fs.ensureDirectoryExists(platformsDir);
 
@@ -84,7 +84,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return version;
 	}
 
-	private async addPlatform(platformParam: string, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions, frameworkPath?: string, nativePrepare?: INativePrepare): Promise<void> {
+	private async addPlatform(platformParam: string, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, frameworkPath?: string, nativePrepare?: INativePrepare): Promise<void> {
 		let data = platformParam.split("@"),
 			platform = data[0].toLowerCase(),
 			version = data[1];
@@ -137,7 +137,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.$logger.out("Project successfully created.");
 	}
 
-	private async addPlatformCore(platformData: IPlatformData, frameworkDir: string, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions, nativePrepare?: INativePrepare): Promise<string> {
+	private async addPlatformCore(platformData: IPlatformData, frameworkDir: string, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, nativePrepare?: INativePrepare): Promise<string> {
 		const coreModuleData = this.$fs.readJson(path.join(frameworkDir, "..", "package.json"));
 		const installedVersion = coreModuleData.version;
 		const customTemplateOptions = await this.getPathToPlatformTemplate(platformTemplate, platformData.frameworkPackageName, projectData.projectDir);
@@ -159,7 +159,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	}
 
-	private async addPlatformCoreNative(platformData: IPlatformData, frameworkDir: string, installedVersion: string, projectData: IProjectData, config: IAddPlatformCoreOptions): Promise<void> {
+	private async addPlatformCoreNative(platformData: IPlatformData, frameworkDir: string, installedVersion: string, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
 		await platformData.platformProjectService.createProject(path.resolve(frameworkDir), installedVersion, projectData, config);
 		platformData.platformProjectService.ensureConfigurationFileInAppResources(projectData);
 		await platformData.platformProjectService.interpolateData(projectData, config);
@@ -213,7 +213,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	public getPreparedPlatforms(projectData: IProjectData): string[] {
 		return _.filter(this.$platformsData.platformsNames, p => { return this.isPlatformPrepared(p, projectData); });
 	}
-	public async preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions, filesToSync?: Array<String>, nativePrepare?: INativePrepare): Promise<boolean> {
+	public async preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, filesToSync?: Array<String>, nativePrepare?: INativePrepare): Promise<boolean> {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const changesInfo = await this.initialPrepare(platform, platformData, appFilesUpdaterOptions, platformTemplate, projectData, config, nativePrepare);
 		const requiresNativePrepare = (!nativePrepare || !nativePrepare.skipNativePrepare) && changesInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPrepare;
@@ -265,7 +265,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	private async initialPrepare(platform: string, platformData: IPlatformData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions, nativePrepare?: INativePrepare): Promise<IProjectChangesInfo> {
+	private async initialPrepare(platform: string, platformData: IPlatformData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, nativePrepare?: INativePrepare): Promise<IProjectChangesInfo> {
 		this.validatePlatform(platform, projectData);
 
 		await this.trackProjectType(projectData);
@@ -532,7 +532,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.$logger.out(`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`);
 	}
 
-	public async deployPlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, deployOptions: IDeployPlatformOptions, projectData: IProjectData, config: IAddPlatformCoreOptions): Promise<void> {
+	public async deployPlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, deployOptions: IDeployPlatformOptions, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
 		await this.preparePlatform(platform, appFilesUpdaterOptions, deployOptions.platformTemplate, projectData, config);
 		let options: Mobile.IDevicesServicesInitializationOptions = {
 			platform: platform, deviceId: deployOptions.device, emulator: deployOptions.emulator
@@ -623,7 +623,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return null;
 	}
 
-	public async cleanDestinationApp(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions): Promise<void> {
+	public async cleanDestinationApp(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
 		await this.ensurePlatformInstalled(platform, platformTemplate, projectData, config);
 
 		const appSourceDirectoryPath = path.join(projectData.projectDir, constants.APP_FOLDER_NAME);
@@ -679,7 +679,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	public async updatePlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions): Promise<void> {
+	public async updatePlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
 		for (let platformParam of platforms) {
 			let data = platformParam.split("@"),
 				platform = data[0],
@@ -736,7 +736,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	public async ensurePlatformInstalled(platform: string, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions, nativePrepare?: INativePrepare): Promise<void> {
+	public async ensurePlatformInstalled(platform: string, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, nativePrepare?: INativePrepare): Promise<void> {
 		let requiresNativePlatformAdd = false;
 
 		if (!this.isPlatformInstalled(platform, projectData)) {
@@ -808,7 +808,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return this.getLatestApplicationPackage(outputPath || platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath, platformData.getValidPackageNames({ isForDevice: false, isReleaseBuild: buildConfig.release }));
 	}
 
-	private async updatePlatform(platform: string, version: string, platformTemplate: string, projectData: IProjectData, config: IAddPlatformCoreOptions): Promise<void> {
+	private async updatePlatform(platform: string, version: string, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 
 		let data = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
@@ -841,7 +841,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	}
 
-	private async updatePlatformCore(platformData: IPlatformData, updateOptions: IUpdatePlatformOptions, projectData: IProjectData, config: IAddPlatformCoreOptions): Promise<void> {
+	private async updatePlatformCore(platformData: IPlatformData, updateOptions: IUpdatePlatformOptions, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
 		let packageName = platformData.normalizedPlatformName.toLowerCase();
 		await this.removePlatforms([packageName], projectData);
 		packageName = updateOptions.newVersion ? `${packageName}@${updateOptions.newVersion}` : packageName;

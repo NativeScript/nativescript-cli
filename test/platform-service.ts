@@ -147,7 +147,7 @@ class DestinationFolderVerifier {
 
 describe('Platform Service Tests', () => {
 	let platformService: IPlatformService, testInjector: IInjector;
-	const config: IAddPlatformCoreOptions = {
+	const config: IPlatformOptions = {
 		ignoreScripts: false,
 		provision: null,
 		sdk: null,
