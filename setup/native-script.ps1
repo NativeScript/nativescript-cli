@@ -81,7 +81,7 @@ if (!$env:ANDROID_HOME) {
 		$androidHome = Resolve-Path $androidHomeJoinedPath | Select-Object -ExpandProperty Path
 	}
 	else {
-		$androidHome = "$env:localappdata\Android\android-sdk"
+		$androidHome = "${Env:SystemDrive}\Android\android-sdk"
 	}
 
 	$env:ANDROID_HOME = $androidHome;
@@ -97,27 +97,23 @@ if (!$env:JAVA_HOME) {
 
 # setup android sdk
 # following commands are separated in case of having to answer to license agreements
-# the android tool will introduce a --accept-license option in subsequent releases
-$androidExecutable = [io.path]::combine($env:ANDROID_HOME, "tools", "android")
-echo y | cmd /c "$androidExecutable" update sdk --filter "platform-tools" --all --no-ui
-echo y | cmd /c "$androidExecutable" update sdk --filter "tools" --all --no-ui
-echo y | cmd /c "$androidExecutable" update sdk --filter "android-23" --all --no-ui
-echo y | cmd /c "$androidExecutable" update sdk --filter "build-tools-25.0.2" --all --no-ui
-echo y | cmd /c "$androidExecutable" update sdk --filter "build-tools-23.0.3" --all --no-ui
-echo y | cmd /c "$androidExecutable" update sdk --filter "extra-android-m2repository" --all --no-ui
+$androidExecutable = [io.path]::combine($env:ANDROID_HOME, "tools", "bin", "sdkmanager")
+echo y | cmd /c "$androidExecutable" "platform-tools"
+echo y | cmd /c "$androidExecutable" "tools"
+echo y | cmd /c "$androidExecutable" "build-tools;25.0.2"
+echo y | cmd /c "$androidExecutable" "platforms;android-23"
+echo y | cmd /c "$androidExecutable" "extras;android;m2repository"
+echo y | cmd /c "$androidExecutable" "extras;google;m2repository"
 
 if ((Read-Host "Do you want to install Android emulator?") -eq 'y') {
 	if ((Read-Host "Do you want to install HAXM (Hardware accelerated Android emulator)?") -eq 'y') {
-		echo y | cmd /c "$androidExecutable" update sdk --filter extra-intel-Hardware_Accelerated_Execution_Manager --all --no-ui
-
+		echo y | cmd /c "$androidExecutable" "extras;intel;Hardware_Accelerated_Execution_Manager"
 		$haxmSilentInstaller = [io.path]::combine($env:ANDROID_HOME, "extras", "intel", "Hardware_Accelerated_Execution_Manager", "silent_install.bat")
 		cmd /c "$haxmSilentInstaller"
-
-		echo y | cmd /c "$androidExecutable" update sdk --filter sys-img-x86-android-23 --all --no-ui
-		echo no | cmd /c "$androidExecutable" create avd -n Emulator-Api23-Default -t android-23 --abi default/x86 -c 12M -f
-	} else {
-		echo y | cmd /c "$androidExecutable" update sdk --filter sys-img-armeabi-v7a-android-23 --all --no-ui
-		echo no | cmd /c "$androidExecutable" create avd -n Emulator-Api23-Default -t android-23 --abi default/armeabi-v7a -c 12M -f
+		echo y | cmd /c "$androidExecutable" "system-images;android-25;google_apis;x86"
+	}
+	else {
+		echo y | cmd /c "$androidExecutable" "system-images;android-25;google_apis;armeabi-v7a"
 	}
 }
 
