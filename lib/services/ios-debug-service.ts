@@ -96,7 +96,6 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	protected getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
 		const debugOpts = _.cloneDeep(debugOptions);
 		debugOpts.useBundledDevTools = debugOpts.useBundledDevTools === undefined ? false : debugOpts.useBundledDevTools;
-		debugOpts.useHttpUrl = debugOpts.useHttpUrl === undefined ? false : debugOpts.useHttpUrl;
 
 		const chromeDebugUrl = super.getChromeDebugUrl(debugOpts, port);
 		return chromeDebugUrl;

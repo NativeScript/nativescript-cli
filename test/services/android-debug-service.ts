@@ -3,6 +3,8 @@ import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
 
+const expectedDevToolsCommitSha = "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
+
 class AndroidDebugServiceInheritor extends AndroidDebugService {
 	constructor(protected $devicesService: Mobile.IDevicesService,
 		$errors: IErrors,
@@ -41,6 +43,8 @@ interface IChromeUrlTestCase {
 describe("androidDebugService", () => {
 	describe("getChromeDebugUrl", () => {
 		const expectedPort = 12345;
+		const customDevToolsCommit = "customDevToolsCommit";
+
 		const chromUrlTestCases: IChromeUrlTestCase[] = [
 			// Default CLI behavior:
 			{
@@ -71,7 +75,7 @@ describe("androidDebugService", () => {
 					useBundledDevTools: true,
 					useHttpUrl: true
 				},
-				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@02e6bde1bbe34e43b309d4ef774b1168d25fd024/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
 			},
 
 			// When useBundledDevTools is false
@@ -80,7 +84,7 @@ describe("androidDebugService", () => {
 				debugOptions: {
 					useBundledDevTools: false
 				},
-				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@02e6bde1bbe34e43b309d4ef774b1168d25fd024/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
 			},
 			{
 				scenarioName: "useBundledDevTools is false and useHttpUrl is false",
@@ -88,7 +92,7 @@ describe("androidDebugService", () => {
 					useBundledDevTools: false,
 					useHttpUrl: false
 				},
-				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@02e6bde1bbe34e43b309d4ef774b1168d25fd024/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
 			},
 			{
 				scenarioName: "useBundledDevTools is false and useHttpUrl is true",
@@ -96,7 +100,7 @@ describe("androidDebugService", () => {
 					useBundledDevTools: false,
 					useHttpUrl: true
 				},
-				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@02e6bde1bbe34e43b309d4ef774b1168d25fd024/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
 			},
 
 			// When useBundledDevTools is not passed
@@ -112,9 +116,38 @@ describe("androidDebugService", () => {
 				debugOptions: {
 					useHttpUrl: true
 				},
-				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@02e6bde1bbe34e43b309d4ef774b1168d25fd024/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
-			}
+				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+			},
 
+			// devToolsCommit tests
+			{
+				scenarioName: "devToolsCommit defaults to ${expectedDevToolsCommitSha} when useBundledDevTools is set to false",
+				debugOptions: {
+					useBundledDevTools: false
+				},
+				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+			},
+			{
+				scenarioName: "devToolsCommit is disregarded when useBundledDevTools is not passed",
+				debugOptions: {},
+				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+			},
+			{
+				scenarioName: "devToolsCommit is set to passed value when useBundledDevTools is set to false",
+				debugOptions: {
+					useBundledDevTools: false,
+					devToolsCommit: customDevToolsCommit
+				},
+				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${customDevToolsCommit}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+			},
+			{
+				scenarioName: "devToolsCommit is set to passed value when useHttpUrl is set to true",
+				debugOptions: {
+					useHttpUrl: true,
+					devToolsCommit: customDevToolsCommit
+				},
+				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@${customDevToolsCommit}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+			}
 		];
 
 		for (const testCase of chromUrlTestCases) {

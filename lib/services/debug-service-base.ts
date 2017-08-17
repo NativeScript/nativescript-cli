@@ -29,7 +29,9 @@ export abstract class DebugServiceBase extends EventEmitter implements IPlatform
 
 	protected getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
 		// corresponds to 55.0.2883 Chrome version
-		const commitSHA = "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
+		const commitSHA = debugOptions.devToolsCommit || "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
+		debugOptions.useHttpUrl = debugOptions.useHttpUrl === undefined ? false : debugOptions.useHttpUrl;
+
 		let chromeDevToolsPrefix = `chrome-devtools://devtools/remote/serve_file/@${commitSHA}`;
 
 		if (debugOptions.useBundledDevTools) {

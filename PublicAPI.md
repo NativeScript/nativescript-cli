@@ -507,6 +507,14 @@ interface IDebugOptions {
 	 * Default value is false.
 	 */
 	useHttpUrl?: boolean;
+
+	/**
+	 * Defines the commit that will be used in cases where remote protocol is required.
+	 * For Android this is the case when useHttpUrl is set to true or useBundledDevTools is set to false.
+	 * For iOS the value is used by default and when useHttpUrl is set to true.
+	 * Default value is 02e6bde1bbe34e43b309d4ef774b1168d25fd024 which corresponds to 55.0.2883 Chrome version
+	 */
+	devToolsCommit?: string;
 }
 ```
 
