@@ -83,7 +83,7 @@ export class PublishIOS implements ICommand {
 				let archivePath = await iOSProjectService.archive(this.$projectData);
 				this.$logger.info("Archive at: " + archivePath);
 
-				let exportPath = await iOSProjectService.exportArchive(this.$projectData, { archivePath, teamID });
+				let exportPath = await iOSProjectService.exportArchive(this.$projectData, { archivePath, teamID, provision: mobileProvisionIdentifier || this.$options.provision });
 				this.$logger.info("Export at: " + exportPath);
 
 				ipaFilePath = exportPath;

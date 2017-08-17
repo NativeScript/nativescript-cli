@@ -194,19 +194,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		let args = ["archive", "-archivePath", archivePath, "-configuration",
 			(!buildConfig || buildConfig.release) ? "Release" : "Debug"]
 			.concat(this.xcbuildProjectArgs(projectRoot, projectData, "scheme"));
-		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { stdio: 'inherit' });
+		await this.xcodebuild(args, projectRoot, buildConfig.buildOutputStdio);
 		return archivePath;
 	}
 
 	/**
 	 * Exports .xcarchive for AppStore distribution.
 	 */
-	public async exportArchive(projectData: IProjectData, options: { archivePath: string, exportDir?: string, teamID?: string }): Promise<string> {
-		let projectRoot = this.getPlatformData(projectData).projectRoot;
-		let archivePath = options.archivePath;
+	public async exportArchive(projectData: IProjectData, options: { archivePath: string, exportDir?: string, teamID?: string, provision?: string }): Promise<string> {
+		const projectRoot = this.getPlatformData(projectData).projectRoot;
+		const archivePath = options.archivePath;
 		// The xcodebuild exportPath expects directory and writes the <project-name>.ipa at that directory.
-		let exportPath = path.resolve(options.exportDir || path.join(projectRoot, "/build/archive"));
-		let exportFile = path.join(exportPath, projectData.projectName + ".ipa");
+		const exportPath = path.resolve(options.exportDir || path.join(projectRoot, "/build/archive"));
+		const exportFile = path.join(exportPath, projectData.projectName + ".ipa");
 
 		// These are the options that you can set in the Xcode UI when exporting for AppStore deployment.
 		let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
@@ -219,6 +219,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
     <string>${options.teamID}</string>
 `;
 		}
+		if (options && options.provision) {
+			plistTemplate += `    <key>provisioningProfiles</key>
+    <dict>
+        <key>${projectData.projectId}</key>
+        <string>${options.provision}</string>
+    </dict>`;
+		}
 		plistTemplate += `    <key>method</key>
     <string>app-store</string>
     <key>uploadBitcode</key>
@@ -230,23 +237,24 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		// Save the options...
 		temp.track();
-		let exportOptionsPlist = temp.path({ prefix: "export-", suffix: ".plist" });
+		const exportOptionsPlist = temp.path({ prefix: "export-", suffix: ".plist" });
 		this.$fs.writeFile(exportOptionsPlist, plistTemplate);
 
-		let args = ["-exportArchive",
-			"-archivePath", archivePath,
-			"-exportPath", exportPath,
-			"-exportOptionsPlist", exportOptionsPlist
-		];
-		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { stdio: 'inherit' });
-
+		await this.xcodebuild(
+			[
+				"-exportArchive",
+				"-archivePath", archivePath,
+				"-exportPath", exportPath,
+				"-exportOptionsPlist", exportOptionsPlist
+			],
+			projectRoot);
 		return exportFile;
 	}
 
 	/**
 	 * Exports .xcarchive for a development device.
 	 */
-	private async exportDevelopmentArchive(projectData: IProjectData, buildConfig: IBuildConfig, options: { archivePath: string, exportDir?: string, teamID?: string }): Promise<string> {
+	private async exportDevelopmentArchive(projectData: IProjectData, buildConfig: IBuildConfig, options: { archivePath: string, exportDir?: string, teamID?: string, provision?: string }): Promise<string> {
 		let platformData = this.getPlatformData(projectData);
 		let projectRoot = platformData.projectRoot;
 		let archivePath = options.archivePath;
@@ -257,7 +265,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 <plist version="1.0">
 <dict>
     <key>method</key>
-    <string>${exportOptionsMethod}</string>
+	<string>${exportOptionsMethod}</string>`;
+	if (options && options.provision) {
+		plistTemplate += `    <key>provisioningProfiles</key>
+<dict>
+	<key>${projectData.projectId}</key>
+	<string>${options.provision}</string>
+</dict>`;
+	}	
+	plistTemplate += `
     <key>uploadBitcode</key>
     <false/>
 </dict>
@@ -272,15 +288,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		let exportPath = path.resolve(options.exportDir || buildOutputPath);
 		let exportFile = path.join(exportPath, projectData.projectName + ".ipa");
 
-		let args = ["-exportArchive",
-			"-archivePath", archivePath,
-			"-exportPath", exportPath,
-			"-exportOptionsPlist", exportOptionsPlist
-		];
-		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit",
-			{ stdio: buildConfig.buildOutputStdio || 'inherit', cwd: this.getPlatformData(projectData).projectRoot },
-			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
-
+		await this.xcodebuild(
+			[
+				"-exportArchive",
+				"-archivePath", archivePath,
+				"-exportPath", exportPath,
+				"-exportOptionsPlist", exportOptionsPlist
+			],
+			projectRoot, buildConfig.buildOutputStdio);
 		return exportFile;
 	}
 
@@ -400,15 +415,25 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			args.push(`DEVELOPMENT_TEAM=${buildConfig.teamId}`);
 		}
 
-		// this.$logger.out("xcodebuild...");
-		await this.$childProcess.spawnFromEvent("xcodebuild",
-			args,
-			"exit",
-			{ stdio: buildConfig.buildOutputStdio || "inherit", cwd: this.getPlatformData(projectData).projectRoot },
-			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
-		// this.$logger.out("xcodebuild build succeded.");
-
+		await this.xcodebuild(args, projectRoot, buildConfig.buildOutputStdio);
 		await this.createIpa(projectRoot, projectData, buildConfig);
+	}
+
+	private async xcodebuild(args: string[], cwd: string, stdio: any = "inherit"): Promise<ISpawnResult> {
+		const localArgs = [...args];
+		const xcodeBuildVersion = await this.getXcodeVersion();
+		if (helpers.versionCompare(xcodeBuildVersion, "9.0") >= 0) {
+			localArgs.push("-allowProvisioningUpdates");
+		}
+		if (this.$logger.getLevel() === "INFO") {
+			localArgs.push("-quiet");
+			this.$logger.info(`xcodebuild ${localArgs.join(" ")}`);
+		}
+		return await this.$childProcess.spawnFromEvent("xcodebuild",
+			localArgs,
+			"exit",
+			{ stdio: stdio || "inherit", cwd },
+			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
 	}
 
 	private async setupSigningFromProvision(projectRoot: string, projectData: IProjectData, provision?: string, mobileProvisionData?: mobileprovision.provision.MobileProvision): Promise<void> {
@@ -493,20 +518,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
 			"CODE_SIGN_IDENTITY="
 		]);
-
-		await this.$childProcess.spawnFromEvent("xcodebuild", args, "exit",
-			{ stdio: buildOutputStdio || "inherit", cwd: this.getPlatformData(projectData).projectRoot },
-			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
+		await this.xcodebuild(args, projectRoot, buildOutputStdio);
 	}
 
 	private async createIpa(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string> {
-		let xarchivePath = await this.archive(projectData, buildConfig);
-		let exportFileIpa = await this.exportDevelopmentArchive(projectData,
-			buildConfig,
-			{
-				archivePath: xarchivePath,
-			});
-
+		const archivePath = await this.archive(projectData, buildConfig);
+		const exportFileIpa = await this.exportDevelopmentArchive(projectData, buildConfig, { archivePath, provision: buildConfig.provision || buildConfig.mobileProvisionIdentifier });
 		return exportFileIpa;
 	}
 

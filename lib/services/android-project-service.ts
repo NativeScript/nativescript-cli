@@ -517,12 +517,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
 			const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
 
+			const localArgs = [...gradleArgs];
+			if (this.$logger.getLevel() === "INFO") {
+				localArgs.push("--quiet");
+				this.$logger.info(`${gradlew} ${localArgs.join(" ")}`);
+			}
+
 			childProcessOpts = childProcessOpts || {};
 			childProcessOpts.cwd = childProcessOpts.cwd || projectRoot;
 			childProcessOpts.stdio = childProcessOpts.stdio || "inherit";
 
 			return await this.spawn(gradlew,
-				gradleArgs,
+				localArgs,
 				childProcessOpts,
 				spawnFromEventOptions);
 		}
