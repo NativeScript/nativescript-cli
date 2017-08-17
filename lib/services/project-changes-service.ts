@@ -68,6 +68,7 @@ export class ProjectChangesService implements IProjectChangesService {
 				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME, "tns-ios-inspector"),
 				projectData,
 				this.fileChangeRequiresBuild);
+
 			if (this._newFiles > 0) {
 				this._changesInfo.modulesChanged = true;
 			}
@@ -218,6 +219,11 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	private containsNewerFiles(dir: string, skipDir: string, projectData: IProjectData, processFunc?: (filePath: string, projectData: IProjectData) => boolean): boolean {
+		const dirFileStat = this.$fs.getFsStats(dir);
+		if (this.isFileModified(dirFileStat, dir)) {
+			return true;
+		}
+
 		let files = this.$fs.readDirectory(dir);
 		for (let file of files) {
 			let filePath = path.join(dir, file);
@@ -225,13 +231,8 @@ export class ProjectChangesService implements IProjectChangesService {
 				continue;
 			}
 
-			let fileStats = this.$fs.getFsStats(filePath);
-
-			let changed = fileStats.mtime.getTime() >= this._outputProjectMtime || fileStats.ctime.getTime() >= this._outputProjectCTime;
-			if (!changed) {
-				let lFileStats = this.$fs.getLsStats(filePath);
-				changed = lFileStats.mtime.getTime() >= this._outputProjectMtime || lFileStats.ctime.getTime() >= this._outputProjectCTime;
-			}
+			const fileStats = this.$fs.getFsStats(filePath);
+			let changed = this.isFileModified(fileStats, filePath);
 
 			if (changed) {
 				if (processFunc) {
@@ -250,8 +251,22 @@ export class ProjectChangesService implements IProjectChangesService {
 					return true;
 				}
 			}
+
 		}
 		return false;
+	}
+
+	private isFileModified(filePathStat: IFsStats, filePath: string): boolean {
+		let changed = filePathStat.mtime.getTime() >= this._outputProjectMtime ||
+			filePathStat.ctime.getTime() >= this._outputProjectCTime;
+
+		if (!changed) {
+			let lFileStats = this.$fs.getLsStats(filePath);
+			changed = lFileStats.mtime.getTime() >= this._outputProjectMtime ||
+				lFileStats.ctime.getTime() >= this._outputProjectCTime;
+		}
+
+		return changed;
 	}
 
 	private fileChangeRequiresBuild(file: string, projectData: IProjectData) {
