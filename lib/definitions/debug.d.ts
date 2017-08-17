@@ -68,9 +68,17 @@ interface IDebugOptions {
 	justlaunch?: boolean;
 
 	/**
-	 * Defines if bundled Chrome DevTools should be used or specific commit. Valid for iOS only.
+	 * Defines if bundled Chrome DevTools should be used or specific commit.
+	 * Default value is true for Android and false for iOS.
 	 */
 	useBundledDevTools?: boolean;
+
+	/**
+	 * Defines if https://chrome-devtools-frontend.appspot.com should be used instead of chrome-devtools://devtools
+	 * In case it is passed, the value of `useBundledDevTools` is disregarded.
+	 * Default value is false.
+	 */
+	useHttpUrl?: boolean;
 }
 
 /**
