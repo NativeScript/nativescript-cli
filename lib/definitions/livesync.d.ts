@@ -94,6 +94,11 @@ interface ILiveSyncDeviceInfo {
 	 * Whether to skip preparing the native platform.
 	 */
 	skipNativePrepare?: boolean;
+
+	/**
+	 * Describes options specific for each platform, like provision for iOS, target sdk for Android, etc.
+	 */
+	platformSpecificOptions?: IPlatformOptions;
 }
 
 /**

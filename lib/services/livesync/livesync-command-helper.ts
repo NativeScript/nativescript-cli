@@ -40,6 +40,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			.map(d => {
 				const info: ILiveSyncDeviceInfo = {
 					identifier: d.deviceInfo.identifier,
+					platformSpecificOptions: this.$options,
+
 					buildAction: async (): Promise<string> => {
 						const buildConfig: IBuildConfig = {
 							buildForDevice: !d.isEmulator,

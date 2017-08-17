@@ -165,11 +165,12 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		const appInstalledOnDeviceResult: IAppInstalledOnDeviceResult = { appInstalled: false };
 		if (options.preparedPlatforms.indexOf(platform) === -1) {
 			options.preparedPlatforms.push(platform);
-			// TODO: Pass provision and sdk as a fifth argument here
+
+			const platformSpecificOptions = options.deviceBuildInfoDescriptor.platformSpecificOptions || <IPlatformOptions>{};
 			await this.$platformService.preparePlatform(platform, {
 				bundle: false,
 				release: false,
-			}, null, options.projectData, <any>{}, options.modifiedFiles, nativePrepare);
+			}, null, options.projectData, platformSpecificOptions, options.modifiedFiles, nativePrepare);
 		}
 
 		const buildResult = await this.installedCachedAppPackage(platform, options);
@@ -178,8 +179,10 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 			return appInstalledOnDeviceResult;
 		}
 
-		// TODO: Pass provision and sdk as a fifth argument here
-		const shouldBuild = await this.$platformService.shouldBuild(platform, options.projectData, <any>{ buildForDevice: !options.device.isEmulator, clean: options.liveSyncData && options.liveSyncData.clean }, options.deviceBuildInfoDescriptor.outputPath);
+		const shouldBuild = await this.$platformService.shouldBuild(platform,
+			options.projectData,
+			<any>{ buildForDevice: !options.device.isEmulator, clean: options.liveSyncData && options.liveSyncData.clean },
+			options.deviceBuildInfoDescriptor.outputPath);
 		let pathToBuildItem = null;
 		let action = LiveSyncTrackActionNames.LIVESYNC_OPERATION;
 		if (shouldBuild) {
