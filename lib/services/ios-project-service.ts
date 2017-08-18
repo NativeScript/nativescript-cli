@@ -433,8 +433,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private async xcodebuild(args: string[], cwd: string, stdio: any = "inherit"): Promise<ISpawnResult> {
 		const localArgs = [...args];
 		const xcodeBuildVersion = await this.getXcodeVersion();
-		if (helpers.versionCompare(xcodeBuildVersion, "9.0") >= 0) {
-			localArgs.push("-allowProvisioningUpdates");
+		try {
+			if (helpers.versionCompare(xcodeBuildVersion, "9.0") >= 0) {
+				localArgs.push("-allowProvisioningUpdates");
+			}
+		} catch (e) {
+			console.warn("Failed to use xcodebuild with -allowProvisioningUpdates due to error: " + e);
 		}
 		if (this.$logger.getLevel() === "INFO") {
 			localArgs.push("-quiet");
@@ -1283,9 +1287,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 
 		let splitedXcodeBuildVersion = xcodeBuildVersion.split(".");
-		if (splitedXcodeBuildVersion.length === 3) {
-			xcodeBuildVersion = `${splitedXcodeBuildVersion[0]}.${splitedXcodeBuildVersion[1]}`;
-		}
+		xcodeBuildVersion = `${splitedXcodeBuildVersion[0] || 0}.${splitedXcodeBuildVersion[1] || 0}`;
 
 		return xcodeBuildVersion;
 	}
