@@ -143,8 +143,10 @@ if gets.chomp.downcase == "y"
     execute("echo y | #{sdk_manager} \"extras;intel;Hardware_Accelerated_Execution_Manager\"", error_msg)
     haxm_silent_installer = File.join(ENV["ANDROID_HOME"], "extras", "intel", "Hardware_Accelerated_Execution_Manager", "silent_install.sh")
     execute("sudo #{haxm_silent_installer}", "There seem to be some problems with the Android configuration")
-  end
-  execute("echo y | #{sdk_manager} \"system-images;android-23;default;x86\"", error_msg)
+    execute("echo y | #{sdk_manager} \"system-images;android-23;default;x86\"", error_msg)
+  else
+    execute("echo y | #{sdk_manager} \"system-images;android-25;google_apis;armeabi-v7a\"", error_msg)
+  end  
 end
 
 puts "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .bash_profile/.zprofile"
