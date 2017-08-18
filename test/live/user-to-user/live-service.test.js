@@ -73,11 +73,16 @@ describe.only('LiveService', () => {
         });
     });
 
-    it('should call /register endpoint for live service', () => {
-      const nockScope = nockHelper.mockRegisterRealtimeCall();
-      return liveService.registerUser(Kinvey.User.getActiveUser())
-        .then(() => {
+    it('should call /register endpoint for live service and return a PubNub config object', () => {
+      const nockScope = nockHelper.mockRegisterRealtimeCall(pubnubConfig);
+      const activeUser = Kinvey.User.getActiveUser();
+      return liveService.registerUser(activeUser)
+        .then((config) => {
           nockScope.done();
+          const clone = Object.assign({}, pubnubConfig);
+          clone.authKey = activeUser._kmd.authtoken;
+          clone.ssl = true;
+          expect(config).toEqual(clone);
         });
     });
 
