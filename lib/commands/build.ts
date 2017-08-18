@@ -57,7 +57,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 
 	public canExecute(args: string[]): Promise<boolean> {
 		super.validatePlatform(this.$devicePlatformsConstants.iOS);
-		return args.length === 0 && this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.iOS);
+		return args.length === 0 && this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.iOS);
 	}
 }
 
@@ -89,7 +89,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		const platformProjectService = platformData.platformProjectService;
 		await platformProjectService.validate(this.$projectData);
 
-		return args.length === 0 && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.Android);
+		return args.length === 0 && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.Android);
 	}
 }
 

@@ -141,10 +141,10 @@ describe("Project Changes Service Tests", () => {
 	});
 
 	describe("Accumulates Changes From Project Services", () => {
-		it("accumulates changes from the project service", () => {
-			let iOSChanges = serviceTest.projectChangesService.checkForChanges("ios", serviceTest.projectData, { bundle: false, release: false, provision: undefined });
+		it("accumulates changes from the project service", async () => {
+			let iOSChanges = await serviceTest.projectChangesService.checkForChanges("ios", serviceTest.projectData, { bundle: false, release: false, provision: undefined, teamId: undefined });
 			assert.isTrue(!!iOSChanges.signingChanged, "iOS signingChanged expected to be true");
-			let androidChanges = serviceTest.projectChangesService.checkForChanges("android", serviceTest.projectData, { bundle: false, release: false, provision: undefined });
+			let androidChanges = await serviceTest.projectChangesService.checkForChanges("android", serviceTest.projectData, { bundle: false, release: false, provision: undefined, teamId: undefined });
 			assert.isFalse(!!androidChanges.signingChanged, "Android signingChanged expected to be false");
 		});
 	});

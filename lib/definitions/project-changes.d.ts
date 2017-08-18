@@ -22,12 +22,12 @@ interface IProjectChangesInfo extends IAddedNativePlatform {
 	readonly changesRequirePrepare: boolean;
 }
 
-interface IProjectChangesOptions extends IAppFilesUpdaterOptions, IProvision {
+interface IProjectChangesOptions extends IAppFilesUpdaterOptions, IProvision, ITeamIdentifier {
 	nativePlatformStatus?: "1" | "2" | "3";
 }
 
 interface IProjectChangesService {
-	checkForChanges(platform: string, projectData: IProjectData, buildOptions: IProjectChangesOptions): IProjectChangesInfo;
+	checkForChanges(platform: string, projectData: IProjectData, buildOptions: IProjectChangesOptions): Promise<IProjectChangesInfo>;
 	getPrepareInfo(platform: string, projectData: IProjectData): IPrepareInfo;
 	savePrepareInfo(platform: string, projectData: IProjectData): void;
 	getPrepareInfoFilePath(platform: string, projectData: IProjectData): string;

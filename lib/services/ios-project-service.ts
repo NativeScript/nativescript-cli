@@ -93,10 +93,20 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return this._platformData;
 	}
 
-	public async validateOptions(projectId: string, provision: true | string): Promise<boolean> {
+	public async validateOptions(projectId: string, provision: true | string, teamId: true | string): Promise<boolean> {
+		if (provision && teamId) {
+			this.$errors.failWithoutHelp("The options --provision and --teamId are mutually exclusive.");
+		}
+
 		if (provision === true) {
-			await this.$iOSProvisionService.list(projectId);
+			await this.$iOSProvisionService.listProvisions(projectId);
 			this.$errors.failWithoutHelp("Please provide provisioning profile uuid or name with the --provision option.");
+			return false;
+		}
+
+		if (teamId === true) {
+			await this.$iOSProvisionService.listTeams();
+			this.$errors.failWithoutHelp("Please provide team id or team name with the --teamId options.");
 			return false;
 		}
 
@@ -194,7 +204,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		let args = ["archive", "-archivePath", archivePath, "-configuration",
 			(!buildConfig || buildConfig.release) ? "Release" : "Debug"]
 			.concat(this.xcbuildProjectArgs(projectRoot, projectData, "scheme"));
-		await this.xcodebuild(args, projectRoot, buildConfig.buildOutputStdio);
+		await this.xcodebuild(args, projectRoot, buildConfig && buildConfig.buildOutputStdio);
 		return archivePath;
 	}
 
@@ -272,7 +282,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	<key>${projectData.projectId}</key>
 	<string>${options.provision}</string>
 </dict>`;
-	}	
+	}
 	plistTemplate += `
     <key>uploadBitcode</key>
     <false/>
@@ -403,17 +413,18 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			await this.setupSigningForDevice(projectRoot, buildConfig, projectData);
 		}
 
-		if (buildConfig && buildConfig.codeSignIdentity) {
-			args.push(`CODE_SIGN_IDENTITY=${buildConfig.codeSignIdentity}`);
-		}
+		// These are now set in the .pbxproj, avoid passing them as arguments!
+		// if (buildConfig && buildConfig.codeSignIdentity) {
+		// 	args.push(`CODE_SIGN_IDENTITY=${buildConfig.codeSignIdentity}`);
+		// }
 
-		if (buildConfig && buildConfig.mobileProvisionIdentifier) {
-			args.push(`PROVISIONING_PROFILE=${buildConfig.mobileProvisionIdentifier}`);
-		}
+		// if (buildConfig && buildConfig.mobileProvisionIdentifier) {
+		// 	args.push(`PROVISIONING_PROFILE=${buildConfig.mobileProvisionIdentifier}`);
+		// }
 
-		if (buildConfig && buildConfig.teamId) {
-			args.push(`DEVELOPMENT_TEAM=${buildConfig.teamId}`);
-		}
+		// if (buildConfig && buildConfig.teamId) {
+		// 	args.push(`DEVELOPMENT_TEAM=${buildConfig.teamId}`);
+		// }
 
 		await this.xcodebuild(args, projectRoot, buildConfig.buildOutputStdio);
 		await this.createIpa(projectRoot, projectData, buildConfig);
@@ -434,6 +445,39 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			"exit",
 			{ stdio: stdio || "inherit", cwd },
 			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
+	}
+
+	private async setupSigningFromTeam(projectRoot: string, projectData: IProjectData, teamId?: string) {
+		const xcode = this.$pbxprojDomXcode.Xcode.open(this.getPbxProjPath(projectData));
+		const signing = xcode.getSigning(projectData.projectName);
+
+		let shouldUpdateXcode = false;
+		if (signing && signing.style === "Automatic") {
+			if (signing.team !== teamId) {
+				// Maybe the provided team is name such as "Telerik AD" and we need to convert it to CH******37
+				const teamIdsForName = await this.$iOSProvisionService.getTeamIdsWithName(teamId);
+				if (!teamIdsForName.some(id => id === signing.team)) {
+					shouldUpdateXcode = true;
+				}
+			}
+		} else {
+			shouldUpdateXcode = true;
+		}
+
+		if (shouldUpdateXcode) {
+			const teamIdsForName = await this.$iOSProvisionService.getTeamIdsWithName(teamId);
+			if (teamIdsForName.length > 0) {
+				this.$logger.trace(`Team id ${teamIdsForName[0]} will be used for team name "${teamId}".`);
+				teamId = teamIdsForName[0];
+			}
+
+			xcode.setAutomaticSigningStyle(projectData.projectName, teamId);
+			xcode.save();
+
+			this.$logger.trace(`Set Automatic signing style and team id ${teamId}.`);
+		} else {
+			this.$logger.trace(`The specified ${teamId} already set in the Xcode.`);
+		}
 	}
 
 	private async setupSigningFromProvision(projectRoot: string, projectData: IProjectData, provision?: string, mobileProvisionData?: mobileprovision.provision.MobileProvision): Promise<void> {
@@ -472,9 +516,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				xcode.save();
 
 				// this.cache(uuid);
-				this.$logger.trace("Set Manual signing style and provisioning profile.");
+				this.$logger.trace(`Set Manual signing style and provisioning profile: ${mobileprovision.Name} (${mobileprovision.UUID})`);
 			} else {
-				this.$logger.trace("The specified provisioning profile allready set in the Xcode.");
+				this.$logger.trace(`The specified provisioning profile already set in the Xcode: ${provision}`);
 			}
 		} else {
 			// read uuid from Xcode and cache...
@@ -496,16 +540,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			xcode.save();
 		} else if (!buildConfig.provision && !(signing && signing.style === "Manual" && !buildConfig.teamId)) {
 			const teamId = await this.getDevelopmentTeam(projectData, buildConfig.teamId);
-
-			// Remove teamId from build config as we'll set the signing in Xcode project directly.
-			// In case we do not remove it, we'll pass DEVELOPMENT_TEAM=<team id> to xcodebuild, which is unnecessary.
-			if (buildConfig.teamId) {
-				delete buildConfig.teamId;
-			}
-
-			xcode.setAutomaticSigningStyle(projectData.projectName, teamId);
-			xcode.save();
-			this.$logger.trace("Set Automatic signing style and team.");
+			await this.setupSigningFromTeam(projectRoot, projectData, teamId);
 		}
 	}
 
@@ -672,11 +707,15 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	public async prepareProject(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
-		let provision = platformSpecificData && platformSpecificData.provision;
+		const projectRoot = path.join(projectData.platformsDir, "ios");
 
+		const provision = platformSpecificData && platformSpecificData.provision;
+		const teamId = platformSpecificData && platformSpecificData.teamId;
 		if (provision) {
-			let projectRoot = path.join(projectData.platformsDir, "ios");
 			await this.setupSigningFromProvision(projectRoot, projectData, provision, platformSpecificData.mobileProvisionData);
+		}
+		if (teamId) {
+			await this.setupSigningFromTeam(projectRoot, projectData, teamId);
 		}
 
 		let project = this.createPbxProj(projectData);
@@ -927,28 +966,44 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return Promise.resolve();
 	}
 
-	public checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void {
-		const provision = options.provision;
-		if (provision !== undefined) {
+	public async checkForChanges(changesInfo: IProjectChangesInfo, {provision, teamId}: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
+		if (provision !== undefined || teamId !== undefined) {
 			// Check if the native project's signing is set to the provided provision...
 			const pbxprojPath = this.getPbxProjPath(projectData);
 
 			if (this.$fs.exists(pbxprojPath)) {
 				const xcode = this.$pbxprojDomXcode.Xcode.open(pbxprojPath);
 				const signing = xcode.getSigning(projectData.projectName);
-				if (signing && signing.style === "Manual") {
-					for (let name in signing.configurations) {
-						let config = signing.configurations[name];
-						if (config.uuid !== provision && config.name !== provision) {
-							changesInfo.signingChanged = true;
-							break;
+
+				if (provision !== undefined) {
+					if (signing && signing.style === "Manual") {
+						for (let name in signing.configurations) {
+							let config = signing.configurations[name];
+							if (config.uuid !== provision && config.name !== provision) {
+								changesInfo.signingChanged = true;
+								break;
+							}
 						}
+					} else {
+						// Specifying provisioning profile requires "Manual" signing style.
+						// If the current signing style was not "Manual" it was probably "Automatic" or,
+						// it was not uniform for the debug and release build configurations.
+						changesInfo.signingChanged = true;
 					}
-				} else {
-					// Specifying provisioning profile requires "Manual" signing style.
-					// If the current signing style was not "Manual" it was probably "Automatic" or,
-					// it was not uniform for the debug and release build configurations.
-					changesInfo.signingChanged = true;
+				}
+				if (teamId !== undefined) {
+					if (signing && signing.style === "Automatic") {
+						if (signing.team !== teamId) {
+							const teamIdsForName = await this.$iOSProvisionService.getTeamIdsWithName(teamId);
+							if (!teamIdsForName.some(id => id === signing.team)) {
+								changesInfo.signingChanged = true;
+							}
+						}
+					} else {
+						// Specifying team id or name requires "Automatic" signing style.
+						// If the current signing style was not "Automatic" it was probably "Manual".
+						changesInfo.signingChanged = true;
+					}
 				}
 			} else {
 				changesInfo.signingChanged = true;
@@ -1235,44 +1290,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return xcodeBuildVersion;
 	}
 
-	private getDevelopmentTeams(): Array<{ id: string, name: string }> {
-		let dir = path.join(process.env.HOME, "Library/MobileDevice/Provisioning Profiles/");
-		let files = this.$fs.readDirectory(dir);
-		let teamIds: any = {};
-		for (let file of files) {
-			let filePath = path.join(dir, file);
-			let data = this.$fs.readText(filePath, "utf8");
-			let teamId = this.getProvisioningProfileValue("TeamIdentifier", data);
-			let teamName = this.getProvisioningProfileValue("TeamName", data);
-			if (teamId) {
-				teamIds[teamId] = teamName;
-			}
-		}
-
-		let teamIdsArray = new Array<{ id: string, name: string }>();
-		for (let teamId in teamIds) {
-			teamIdsArray.push({ id: teamId, name: teamIds[teamId] });
-		}
-
-		return teamIdsArray;
-	}
-
-	private getProvisioningProfileValue(name: string, text: string): string {
-		let findStr = "<key>" + name + "</key>";
-		let index = text.indexOf(findStr);
-		if (index > 0) {
-			index = text.indexOf("<string>", index + findStr.length);
-			if (index > 0) {
-				index += "<string>".length;
-				let endIndex = text.indexOf("</string>", index);
-				let result = text.substring(index, endIndex);
-				return result;
-			}
-		}
-
-		return null;
-	}
-
 	private getBuildXCConfigFilePath(projectData: IProjectData): string {
 		let buildXCConfig = path.join(projectData.appResourcesDirectoryPath,
 			this.getPlatformData(projectData).normalizedPlatformName, "build.xcconfig");
@@ -1310,7 +1327,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		teamId = teamId || this.readTeamId(projectData);
 
 		if (!teamId) {
-			let teams = this.getDevelopmentTeams();
+			let teams = await this.$iOSProvisionService.getDevelopmentTeams();
 			this.$logger.warn("Xcode 8 requires a team id to be specified when building for device.");
 			this.$logger.warn("You can specify the team id by setting the DEVELOPMENT_TEAM setting in build.xcconfig file located in App_Resources folder of your app, or by using the --teamId option when calling run, debug or livesync commands.");
 			if (teams.length === 1) {

@@ -54,7 +54,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		return this._changesInfo;
 	}
 
-	public checkForChanges(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): IProjectChangesInfo {
+	public async checkForChanges(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): Promise<IProjectChangesInfo> {
 		let platformData = this.$platformsData.getPlatformData(platform, projectData);
 		this._changesInfo = new ProjectChangesInfo();
 		if (!this.ensurePrepareInfo(platform, projectData, projectChangesOptions)) {
@@ -87,7 +87,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		}
 
 		let projectService = platformData.platformProjectService;
-		projectService.checkForChanges(this._changesInfo, projectChangesOptions, projectData);
+		await projectService.checkForChanges(this._changesInfo, projectChangesOptions, projectData);
 
 		if (projectChangesOptions.bundle !== this._prepareInfo.bundle || projectChangesOptions.release !== this._prepareInfo.release) {
 			this._changesInfo.appFilesChanged = true;

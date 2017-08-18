@@ -34,7 +34,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			androidTypings: { type: OptionType.Boolean },
 			bundle: { type: OptionType.Boolean },
 			all: { type: OptionType.Boolean },
-			teamId: { type: OptionType.String },
+			teamId: { type: OptionType.Object },
 			syncAllFiles: { type: OptionType.Boolean, default: false },
 			liveEdit: { type: OptionType.Boolean },
 			chrome: { type: OptionType.Boolean },

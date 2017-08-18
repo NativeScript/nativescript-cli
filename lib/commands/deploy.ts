@@ -48,7 +48,7 @@ export class DeployOnDeviceCommand implements ICommand {
 		const platformProjectService = platformData.platformProjectService;
 		await platformProjectService.validate(this.$projectData);
 
-		return this.$platformService.validateOptions(this.$options.provision, this.$projectData, args[0]);
+		return this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, args[0]);
 	}
 }
 

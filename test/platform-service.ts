@@ -150,6 +150,7 @@ describe('Platform Service Tests', () => {
 	const config: IPlatformOptions = {
 		ignoreScripts: false,
 		provision: null,
+		teamId: null,
 		sdk: null,
 		frameworkPath: null
 	};
@@ -441,7 +442,7 @@ describe('Platform Service Tests', () => {
 
 			platformService = testInjector.resolve("platformService");
 			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: release };
-			await platformService.preparePlatform(platformToTest, appFilesUpdaterOptions, "", projectData, { provision: null, sdk: null, frameworkPath: null, ignoreScripts: false });
+			await platformService.preparePlatform(platformToTest, appFilesUpdaterOptions, "", projectData, { provision: null, teamId: null, sdk: null, frameworkPath: null, ignoreScripts: false });
 		}
 
 		async function testPreparePlatform(platformToTest: string, release?: boolean): Promise<CreatedTestData> {
@@ -868,7 +869,7 @@ describe('Platform Service Tests', () => {
 			try {
 				testInjector.resolve("$logger").warn = (text: string) => warnings += text;
 				const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: false };
-				await platformService.preparePlatform("android", appFilesUpdaterOptions, "", projectData, { provision: null, sdk: null, frameworkPath: null, ignoreScripts: false });
+				await platformService.preparePlatform("android", appFilesUpdaterOptions, "", projectData, { provision: null, teamId: null, sdk: null, frameworkPath: null, ignoreScripts: false });
 			} finally {
 				testInjector.resolve("$logger").warn = oldLoggerWarner;
 			}

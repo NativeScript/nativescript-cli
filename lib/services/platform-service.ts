@@ -228,18 +228,18 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return true;
 	}
 
-	public async validateOptions(provision: true | string, projectData: IProjectData, platform?: string): Promise<boolean> {
+	public async validateOptions(provision: true | string, teamId: true | string, projectData: IProjectData, platform?: string): Promise<boolean> {
 		if (platform) {
 			platform = this.$mobileHelper.normalizePlatformName(platform);
 			this.$logger.trace("Validate options for platform: " + platform);
 			let platformData = this.$platformsData.getPlatformData(platform, projectData);
-			return await platformData.platformProjectService.validateOptions(projectData.projectId, provision);
+			return await platformData.platformProjectService.validateOptions(projectData.projectId, provision, teamId);
 		} else {
 			let valid = true;
 			for (let availablePlatform in this.$platformsData.availablePlatforms) {
 				this.$logger.trace("Validate options for platform: " + availablePlatform);
 				let platformData = this.$platformsData.getPlatformData(availablePlatform, projectData);
-				valid = valid && await platformData.platformProjectService.validateOptions(projectData.projectId, provision);
+				valid = valid && await platformData.platformProjectService.validateOptions(projectData.projectId, provision, teamId);
 			}
 
 			return valid;
@@ -282,7 +282,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		const bundle = appFilesUpdaterOptions.bundle;
 		const nativePlatformStatus = (nativePrepare && nativePrepare.skipNativePrepare) ? constants.NativePlatformStatus.requiresPlatformAdd : constants.NativePlatformStatus.requiresPrepare;
-		const changesInfo = this.$projectChangesService.checkForChanges(platform, projectData, { bundle, release: appFilesUpdaterOptions.release, provision: config.provision, nativePlatformStatus });
+		const changesInfo = await this.$projectChangesService.checkForChanges(platform, projectData, { bundle, release: appFilesUpdaterOptions.release, provision: config.provision, teamId: config.teamId, nativePlatformStatus });
 
 		this.$logger.trace("Changes info in prepare platform:", changesInfo);
 		return changesInfo;

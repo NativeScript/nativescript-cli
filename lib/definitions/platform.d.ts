@@ -101,7 +101,7 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * If no platform is provided or a falsy (null, undefined, "", false...) platform is provided,
 	 * the options will be validated for all available platforms.
 	 */
-	validateOptions(provision: any, projectData: IProjectData, platform?: string): Promise<boolean>;
+	validateOptions(provision: true | string, teamId: true | string, projectData: IProjectData, platform?: string): Promise<boolean>;
 
 	/**
 	 * Executes prepare, build and installOnPlatform when necessary to ensure that the latest version of the app is installed on specified platform.
@@ -218,7 +218,7 @@ interface IPlatformOptions extends IPlatformSpecificData, ICreateProjectOptions 
 /**
  * Platform specific data required for project preparation.
  */
-interface IPlatformSpecificData extends IProvision {
+interface IPlatformSpecificData extends IProvision, ITeamIdentifier {
 	/**
 	 * Target SDK for Android.
 	 */

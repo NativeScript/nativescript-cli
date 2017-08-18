@@ -333,7 +333,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
 		return Promise.resolve();
 	}
-	checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void {
+	async checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
 		// Nothing yet.
 	}
 }
@@ -556,7 +556,7 @@ export class ChildProcessStub {
 }
 
 export class ProjectChangesService implements IProjectChangesService {
-	public checkForChanges(platform: string): IProjectChangesInfo {
+	public async checkForChanges(platform: string): Promise<IProjectChangesInfo> {
 		return <IProjectChangesInfo>{};
 	}
 
