@@ -2,7 +2,6 @@ import { Acl, Metadata, User } from 'src/entity';
 import { UserMock } from 'test/mocks';
 import { randomString } from 'src/utils';
 import { ActiveUserError, InvalidCredentialsError, KinveyError } from 'src/errors';
-import { ActiveUserHelper } from 'src/entity/src/activeUserHelper';
 import { CacheStore, SyncStore } from 'src/datastore';
 import Client from 'src/client';
 import Query from 'src/query';
@@ -307,7 +306,7 @@ describe('User', function() {
           expect(user.data.password).toEqual(undefined);
           expect(user.isActive()).toEqual(true);
 
-          const storedUser = ActiveUserHelper.get(this.client);
+          const storedUser = this.client.getActiveUser();
           expect(storedUser.password).toEqual(undefined);
         });
     });

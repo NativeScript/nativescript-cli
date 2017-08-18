@@ -78,6 +78,19 @@ export class MobileIdentityConnect extends Identity {
     return promise;
   }
 
+  refresh(token, clientId, redirectUri, options = {}) {
+    return Promise.resolve()
+      .then(() => this.refreshToken(token, clientId, redirectUri, options))
+      .then((session) => {
+        session.identity = MobileIdentityConnect.identity;
+        session.client_id = clientId;
+        session.redirect_uri = redirectUri;
+        session.protocol = this.client.micProtocol;
+        session.host = this.client.micHost;
+        return session;
+      });
+  }
+
   requestTempLoginUrl(clientId, redirectUri, options = {}) {
     let pathname = '/oauth/auth';
 
@@ -241,6 +254,30 @@ export class MobileIdentityConnect extends Identity {
         redirect_uri: redirectUri,
         code: code
       }
+    });
+    return request.execute().then(response => response.data);
+  }
+
+  refreshToken(token, clientId, redirectUri, options = {}) {
+    const request = new KinveyRequest({
+      method: RequestMethod.POST,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      authType: AuthType.App,
+      url: url.format({
+        protocol: this.client.micProtocol,
+        host: this.client.micHost,
+        pathname: '/oauth/token'
+      }),
+      body: {
+        grant_type: 'refresh_token',
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        refresh_token: token
+      },
+      properties: options.properties,
+      timeout: options.timeout
     });
     return request.execute().then(response => response.data);
   }

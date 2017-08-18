@@ -11,7 +11,6 @@ import { KinveyError, NotFoundError, ActiveUserError } from 'src/errors';
 import DataStore, { UserStore } from 'src/datastore';
 import { MobileIdentityConnect } from 'src/identity';
 import { Log, isDefined } from 'src/utils';
-import { ActiveUserHelper } from './activeUserHelper';
 import Acl from './acl';
 import Metadata from './metadata';
 
@@ -231,10 +230,12 @@ export default class User {
         delete data.password;
 
         // Store the active user
-        this.data = data;
-        return ActiveUserHelper.set(this.client, this.data);
+        return this.client.setActiveUser(data);
       })
-      .then(() => this);
+      .then((data) => {
+        this.data = data;
+        return this;
+      });
   }
 
   /**
@@ -263,11 +264,11 @@ export default class User {
     const activeUser = User.getActiveUser(this.client);
 
     if (isActive) {
-      throw new ActiveUserError('This user is already the active user.');
+      return Promise.reject(new ActiveUserError('This user is already the active user.'));
     }
 
     if (isDefined(activeUser)) {
-      throw new ActiveUserError('An active user already exists. Please logout the active user before you login.');
+      return Promise.reject(new ActiveUserError('An active user already exists. Please logout the active user before you login.'));
     }
 
     const mic = new MobileIdentityConnect({ client: this.client });
@@ -392,7 +393,9 @@ export default class User {
         Log.error(error);
         return null;
       })
-      .then(() => ActiveUserHelper.remove(this.client))
+      .then(() => {
+        return this.client.setActiveUser(null);
+      })
       .catch((error) => {
         Log.error(error);
         return null;
@@ -464,15 +467,16 @@ export default class User {
     return request.execute()
       .then(response => response.data)
       .then((data) => {
-        this.data = data;
-
         if (options.state === true) {
-          return ActiveUserHelper.set(this.client, this.data);
+          return this.client.setActiveUser(data);
         }
 
-        return this;
+        return data;
       })
-      .then(() => this);
+      .then((data) => {
+        this.data = data;
+        return this;
+      });
   }
 
   /**
@@ -534,7 +538,7 @@ export default class User {
     return store.update(data, options)
       .then((data) => {
         if (this.isActive()) {
-          return ActiveUserHelper.set(this.client, data);
+          return this.client.setActiveUser(data);
         }
 
         return data;
@@ -590,17 +594,17 @@ export default class User {
         // Remove sensitive data
         delete data.password;
 
-        // Replace the data
-        this.data = data;
-
         // Store the active user
         if (this.isActive()) {
-          return ActiveUserHelper.set(this.client, this.data);
+          return this.client.setActiveUser(data);
         }
 
         return data;
       })
-      .then(() => this);
+      .then((data) => {
+        this.data = data;
+        return this;
+      });
   }
 
   /**
@@ -627,7 +631,7 @@ export default class User {
    * @return {?User} The active user.
    */
   static getActiveUser(client = Client.sharedInstance()) {
-    const data = ActiveUserHelper.get(client);
+    const data = client.getActiveUser();
 
     if (isDefined(data)) {
       return new this(data, { client: client });
