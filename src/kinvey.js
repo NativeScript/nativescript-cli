@@ -1,3 +1,4 @@
+import Promise from 'es6-promise';
 import {
   ActiveUserError,
   APIVersionNotAvailableError,
@@ -119,8 +120,9 @@ class Kinvey {
    *   // ...
    * });
    */
-  static initialize() {
-    throw new KinveyError('Please use Kinvey.init().');
+  static initialize(config) {
+    const client = Kinvey.init(config);
+    return Promise.resolve(client.getActiveUser());
   }
 
   /**
