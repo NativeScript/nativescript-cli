@@ -13,7 +13,7 @@ import { MobileIdentityConnect } from 'src/identity';
 import { Log, isDefined } from 'src/utils';
 import Acl from './acl';
 import Metadata from './metadata';
-import { getLiveService } from '../../live';
+import { LiveServiceFacade } from '../../live';
 
 /**
  * The User class is used to represent a single user on the Kinvey platform.
@@ -390,10 +390,9 @@ export default class User {
     });
 
     let prm = Promise.resolve();
-    const liveService = getLiveService(this.client);
 
-    if (liveService.isInitialized()) {
-      prm = liveService.unregister();
+    if (LiveServiceFacade.isInitialized()) {
+      prm = LiveServiceFacade.unregister();
     }
 
     return prm.then(() => request.execute())

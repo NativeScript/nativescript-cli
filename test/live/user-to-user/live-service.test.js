@@ -1,44 +1,44 @@
 import expect from 'expect';
-import Proxyquire from 'proxyquire';
 
 import { randomString } from 'src/utils';
 import { UserMock } from 'test/mocks';
 
-// import Kinvey from '../../../src/kinvey';
-import { getLiveService, getLiveServiceFacade } from '../../../src/live';
-import { PubNubListener } from '../../../src/live';
-import * as mock from './nock-helper';
+import Kinvey from '../../../src/kinvey';
+import { PubNubListener, getLiveService } from '../../../src/live';
+import * as nockHelper from './nock-helper';
 import {
   PubNubClientMock,
-  PubNubListenerMock,
-  MockBase as Mock
+  PubNubListenerMock
 } from '../../mocks';
 
 const pathToLiveService = '../../../src/live/src/user-to-user/live-service';
-const proxyquire = Proxyquire.noCallThru();
-const proxyrequireMocks = {
-  pubnub: PubNubClientMock
-};
-
-function addProxyrequireMock(path, mock) {
-  proxyrequireMocks[path] = mock;
-}
-
-function removeProxyrequireMock(path) {
-  delete proxyrequireMocks[path];
-}
+const notInitializedCheckRegexp = new RegExp('not.*initialized', 'i');
+const invalidOrMissingCheckRegexp = new RegExp('(invalid)|(missing)', 'i');
 
 describe.only('LiveService', () => {
+  let client;
   let liveService;
+  let pubnubConfig;
 
   before(function () {
-    mock.setClient(this.client);
+    nockHelper.setClient(this.client);
+    client = this.client;
   });
 
   beforeEach(() => {
-    // use proxyquire here so a new instance is created every time (avoid singleton state)
-    const getMockedLiveService = proxyquire(pathToLiveService, proxyrequireMocks).getLiveService;
-    liveService = getMockedLiveService();
+    pubnubConfig = {
+      publishKey: randomString(),
+      subscribeKey: randomString(),
+      userChannelGroup: randomString()
+    };
+
+    // we want to clear the state of the singleton
+    delete require.cache[require.resolve(pathToLiveService)];
+    liveService = require(pathToLiveService).getLiveService();
+  });
+
+  afterEach(() => {
+    expect.restoreSpies();
   });
 
   it('should be a singleton', () => {
@@ -51,189 +51,387 @@ describe.only('LiveService', () => {
     expect(liveService.isInitialized()).toBe(false);
   });
 
-  describe('registration', () => {
-    let nockScope;
-    let pubnubConfig;
-
-    beforeEach(() => {
-      pubnubConfig = {
-        publishKey: randomString(),
-        subscribeKey: randomString(),
-        userChannelGroup: randomString()
-      };
-      nockScope = mock.mockRegisterRealtimeCall(pubnubConfig);
+  describe('user registration', () => {
+    it('should return an error if no user is passed to registerUser', (done) => {
+      liveService.registerUser()
+        .then(() => done(new Error('registerUser() succeeded without active user')))
+        .catch((err) => {
+          expect(err.message).toEqual('Missing or invalid active user');
+          done();
+        })
+        .catch((err) => {
+          done(err);
+        });
     });
 
-    it('should make a call to /register endpoint for live service', () => {
-      return liveService.register()
+    it('should return an error if a user other than the active user is passed to registerUser', (done) => {
+      liveService.registerUser(new Kinvey.User())
+        .then(() => done(new Error('registerUser() succeeded without active user')))
+        .catch((err) => {
+          expect(err.message).toEqual('Missing or invalid active user');
+          done();
+        });
+    });
+
+    it('should call /register endpoint for live service', () => {
+      const nockScope = nockHelper.mockRegisterRealtimeCall();
+      return liveService.registerUser(Kinvey.User.getActiveUser())
         .then(() => {
           nockScope.done();
         });
     });
 
-    it('should initialize PubNub client with received settings', () => {
-      return liveService.register()
+    it('should should not put LiveService in an initialized state', () => {
+      const nockScope = nockHelper.mockRegisterRealtimeCall();
+      return liveService.registerUser(Kinvey.User.getActiveUser())
         .then(() => {
-          const usedConfig = liveService._pubnubClient.config;
-          expect(usedConfig.publishKey).toEqual(pubnubConfig.publishKey);
-          expect(usedConfig.subscribeKey).toEqual(pubnubConfig.subscribeKey);
-          expect(liveService._userChannelGroup).toEqual(pubnubConfig.userChannelGroup);
+          expect(liveService.isInitialized()).toBe(false);
+          nockScope.done();
+        });
+    });
+  });
+
+  describe('initialization', () => {
+    let pubnubClient;
+    let pubnubListener;
+    let nockScope;
+
+    beforeEach(() => {
+      nockScope = nockHelper.mockRegisterRealtimeCall(pubnubConfig);
+      return liveService.registerUser(Kinvey.User.getActiveUser())
+        .then((config) => {
+          pubnubClient = new PubNubClientMock();
+          pubnubListener = new PubNubListenerMock();
         });
     });
 
-    it('should pass a PubNubListener instance to PubNub client', () => {
-      return liveService.register()
-        .then(() => {
-          expect(liveService._pubnubClient.listeners.length).toBe(1);
-          expect(liveService._pubnubClient.listeners[0]).toBeA(PubNubListener);
-        });
+    afterEach(() => {
+      nockScope.done();
+    });
+
+    it('should register a PubNubListener instance to PubNub client', () => {
+      const addListenerSpy = expect.spyOn(pubnubClient, 'addListener');
+
+      liveService.initialize(pubnubClient, pubnubListener);
+      expect(addListenerSpy).toHaveBeenCalledWith(pubnubListener);
     });
 
     it('should be reflected in its isInitialized() method', () => {
-      expect(liveService.isInitialized()).toBe(false);
-      return liveService.register()
-        .then(() => {
-          expect(liveService.isInitialized()).toBe(true);
-        });
+      liveService.initialize(pubnubClient, pubnubListener);
+      expect(liveService.isInitialized()).toBe(true);
     });
 
     it('should subscribe to the provided user channel group', () => {
-      return liveService.register()
-        .then(() => {
-          expect(Object.keys(liveService._pubnubClient.subObj).length).toBe(1);
-          expect(liveService._pubnubClient.subObj.channelGroups.length).toBe(1);
-          expect(liveService._pubnubClient.subObj.channelGroups[0]).toEqual(pubnubConfig.userChannelGroup);
+      const spy = expect.spyOn(pubnubClient, 'subscribe');
+      liveService.initialize(pubnubClient, pubnubListener);
+      expect(spy).toHaveBeenCalledWith({ channelGroups: [pubnubConfig.userChannelGroup] });
+    });
+  });
+
+  describe('subscribing', () => {
+    it('should throw an error if no channel name is passed', () => {
+      expect(() => {
+        liveService.subscribeToChannel(null, { onMessage: () => { } });
+      })
+        .toThrow(invalidOrMissingCheckRegexp);
+    });
+
+    it('should throw an error if no receiver is passed', () => {
+      expect(() => {
+        liveService.subscribeToChannel('channelName');
+      })
+        .toThrow(invalidOrMissingCheckRegexp);
+    });
+
+    it('should throw an error if receiver with no relevant methods is passed', () => {
+      expect(() => {
+        liveService.subscribeToChannel('channelName', { test: 1 });
+      })
+        .toThrow(invalidOrMissingCheckRegexp);
+    });
+
+    it('should throw an error if LiveService is not initialized', () => {
+      expect(() => {
+        liveService.subscribeToChannel('channelName', { onMessage: () => { } });
+      })
+        .toThrow(notInitializedCheckRegexp);
+    });
+
+    describe('when LiveService has been initialized', () => {
+      const testChannelName = 'someChannel';
+      let nockScope;
+      let pubnubListener;
+      let pubnubClient;
+
+      beforeEach(() => {
+        nockScope = nockHelper.mockRegisterRealtimeCall(pubnubConfig);
+        return liveService.registerUser(Kinvey.User.getActiveUser())
+          .then((config) => {
+            pubnubClient = new PubNubClientMock(config);
+            pubnubListener = new PubNubListenerMock();
+            return liveService.initialize(pubnubClient, pubnubListener);
+          });
+      });
+
+      afterEach(() => {
+        nockScope.done();
+      });
+
+      it('should add listener to PubNubListener\'s events for the specified channel, if onMessage callback is provided', () => {
+        const spy = expect.spyOn(pubnubListener, 'on');
+        const receiver = { onMessage: () => { } };
+        liveService.subscribeToChannel(testChannelName, receiver);
+        expect(spy.calls.length).toEqual(1);
+        expect(spy).toHaveBeenCalledWith(testChannelName, receiver.onMessage);
+      });
+
+      it('should add listener to PubNubListener\'s events for the specified channel, if onStatus or onError callback is provided', () => {
+        const spy = expect.spyOn(pubnubListener, 'on');
+        const receiver = { onMessage: () => { }, onError: () => { } };
+        liveService.subscribeToChannel(testChannelName, receiver);
+        expect(spy.calls.length).toEqual(2);
+        expect(spy.calls[1].arguments[0]).toEqual(`${PubNubListener.statusPrefix}${testChannelName}`);
+      });
+
+      it('should not call "subscribe()" of PubNub client instance', () => {
+        const spy = expect.spyOn(pubnubClient, 'subscribe');
+        liveService.subscribeToChannel(testChannelName, { onMessage: () => { } });
+        expect(spy).toNotHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('publishing', () => {
+    const testChannelName = 'someChannel';
+    let pubnubClient;
+    let pubnubListener;
+    let nockScope;
+
+    beforeEach(() => {
+      nockScope = nockHelper.mockRegisterRealtimeCall(pubnubConfig);
+      return liveService.registerUser(Kinvey.User.getActiveUser())
+        .then((config) => {
+          pubnubClient = new PubNubClientMock();
+          pubnubListener = new PubNubListenerMock();
+          return liveService.initialize(pubnubClient, pubnubListener);
         });
+    });
+
+    afterEach(() => {
+      nockScope.done();
+    });
+
+    describe('correctly', () => {
+      it('should call publish of PubNub client correctly', () => {
+        const publishSpy = expect.spyOn(pubnubClient, 'publish')
+          .andReturn(Promise.resolve());
+
+        return liveService.publishToChannel(testChannelName, { test: 1 })
+          .then(() => {
+            expect(publishSpy.calls.length).toEqual(1);
+            const arg = publishSpy.calls[0].arguments[0];
+            expect(arg).toExist();
+            expect(arg.message).toExist();
+            expect(arg.channel).toEqual(testChannelName);
+          });
+      });
+
+      it('should add a "senderId" property, set to active user\'s _id, when sending an object', () => {
+        const publishSpy = expect.spyOn(pubnubClient, 'publish')
+          .andReturn(Promise.resolve());
+
+        return liveService.publishToChannel(testChannelName, { test: 1 })
+          .then(() => {
+            expect(publishSpy.calls.length).toEqual(1);
+            const arg = publishSpy.calls[0].arguments[0];
+            expect(arg.message.test).toEqual(1);
+            expect(arg.message.senderId).toEqual(client.activeUser._id);
+          });
+      });
+    });
+
+    describe('incorrectly', () => {
+      it('should return an error when LiveService is not initialized', (done) => {
+        liveService.uninitialize()
+        expect(liveService.isInitialized()).toBe(false);
+
+        liveService.publishToChannel('someChannel', { test: 1 })
+          .then(() => done(new Error('publishToChannel() succeeded with LiveService uninitialized')))
+          .catch((err) => {
+            expect(err.message).toEqual('Live service is not initialized');
+            done();
+          })
+          .catch((err) => {
+            done(err);
+          });
+      });
+
+      it('should return error if channel name is invalid', (done) => {
+        liveService.publishToChannel(null, { test: 1 })
+          .then(() => done(new Error('publishToChannel() succeeded with invalid channel name')))
+          .catch((err) => {
+            expect(err.message).toEqual('Invalid channel name');
+            done();
+          })
+          .catch((err) => done(err));
+      });
+
+      it('should return error if message is missing', (done) => {
+        liveService.publishToChannel(testChannelName, undefined)
+          .then(() => done(new Error('publishToChannel() succeeded with invalid message')))
+          .catch((err) => {
+            expect(err.message).toEqual('Missing or invalid message');
+            done();
+          })
+          .catch((err) => done(err));
+      });
     });
   });
 
   describe('unregistration', () => {
-    let nockScope;
-    let pubnubClientMockId = randomString();
-    let pubnubListenerMockId = randomString();
+    let pubnubListener;
+    let pubnubClient;
 
-    before(() => {
-      addProxyrequireMock('./pubnub-listener', { PubNubListener: PubNubListenerMock });
+    it('should fail when no user is registered', (done) => {
+      liveService.unregisterUser()
+        .then(() => done(new Error('unregisterUser() succeeded with no registered user')))
+        .catch((err) => {
+          expect(err.message).toEqual('Cannot unregister when no user has been registered for live service');
+          done();
+        })
+        .catch((err) => done(err));
     });
 
-    beforeEach(() => {
-      let pubnubConfig = {
-        publishKey: randomString(),
-        subscribeKey: randomString(),
-        userChannelGroup: randomString()
-      };
-      mock.mockRegisterRealtimeCall(pubnubConfig);
-      nockScope = mock.mockUnregisterRealtimeCall();
-      return liveService.register()
-        .then(() => {
-          liveService._pubnubClient.mockId = pubnubClientMockId;
-          liveService._pubnubListener.mockId = pubnubListenerMockId;
-          Mock.resetCalledMethods();
-        });
-    });
+    describe('when user is registered', () => {
+      let nockScope;
 
-    after(() => {
-      removeProxyrequireMock('./pubnub-listener');
-    });
+      beforeEach(() => {
+        nockScope = nockHelper.mockRegisterRealtimeCall(pubnubConfig);
+        return liveService.registerUser(Kinvey.User.getActiveUser())
+          .then((config) => {
+            nockHelper.mockUnregisterRealtimeCall();
+            pubnubClient = new PubNubClientMock();
+            pubnubListener = new PubNubListenerMock();
+            return liveService.initialize(pubnubClient, pubnubListener);
+          });
+      });
 
-    it('should call unregister endpoint for live service', () => {
-      return liveService.unregister()
-        .then(() => {
-          nockScope.done();
-        });
-    });
+      afterEach(() => {
+        nockScope.done();
+      });
 
-    it('should unregister from all PubNub subscriptions', () => {
-      expect(Mock.methodWasCalled(pubnubClientMockId, 'unsubscribeAll')).toBe(false);
-      return liveService.unregister()
-        .then(() => {
-          expect(Mock.methodWasCalled(pubnubClientMockId, 'unsubscribeAll')).toBe(true);
-        });
-    });
+      it('should call unregister endpoint for live service', () => {
+        return liveService.unregisterUser()
+          .then(() => {
+            nockScope.done();
+          });
+      });
 
-    it('should remove all listeners from PubNubListener events', () => {
-      expect(Mock.methodWasCalled(pubnubListenerMockId, 'removeAllListeners')).toBe(false);
-      return liveService.unregister()
-        .then(() => {
-          expect(Mock.methodWasCalled(pubnubListenerMockId, 'removeAllListeners')).toBe(true);
-        });
-    });
-
-    it('should be reflected in its isInitialized() method', () => {
-      expect(liveService.isInitialized()).toBe(true);
-      return liveService.unregister()
-        .then(() => {
-          expect(liveService.isInitialized()).toBe(false);
-        });
+      it('should be reflected in its isInitialized() method', () => {
+        expect(liveService.isInitialized()).toBe(true);
+        return liveService.unregisterUser()
+          .then(() => {
+            expect(liveService.isInitialized()).toBe(false);
+          });
+      });
     });
   });
 
-  describe('global PubNub status events', () => {
-    let pubnubListenerMockId;
-
-    before(() => {
-      addProxyrequireMock('./pubnub-listener', { PubNubListener: PubNubListenerMock });
-    });
+  describe('uninitialization', () => {
+    let nockScope;
+    let pubnubClient;
+    let pubnubListener;
 
     beforeEach(() => {
-      mock.mockRegisterRealtimeCall();
-      pubnubListenerMockId = randomString();
-      return liveService.register()
-        .then(() => {
-          liveService._pubnubListener.mockId = pubnubListenerMockId;
-          Mock.resetCalledMethods();
+      nockScope = nockHelper.mockRegisterRealtimeCall();
+      return liveService.registerUser(Kinvey.User.getActiveUser())
+        .then((config) => {
+          pubnubClient = new PubNubClientMock(config);
+          pubnubListener = new PubNubListenerMock();
+          return liveService.initialize(pubnubClient, pubnubListener);
         });
     });
 
-    after(() => {
-      removeProxyrequireMock('./pubnub-listener');
+    afterEach(() => {
+      nockScope.done();
     });
 
-    it('should be received by attaching a handler', () => {
-      expect(Mock.methodWasCalled(pubnubListenerMockId, 'on')).toBe(false);
-      liveService.onConnectionStatusUpdates(() => { });
-      expect(Mock.methodWasCalled(pubnubListenerMockId, 'on')).toBe(true);
+    it('should unregister from all PubNub subscriptions', () => {
+      const spy = expect.spyOn(pubnubClient, 'unsubscribeAll');
+      expect(spy).toNotHaveBeenCalled();
+      liveService.uninitialize();
+      expect(spy).toHaveBeenCalled();
     });
 
-    it('should be ignored if handler is removed', () => {
+    it('should remove all listeners from PubNubListener events', () => {
+      const spy = expect.spyOn(pubnubListener, 'removeAllListeners');
+      expect(spy).toNotHaveBeenCalled();
+      liveService.uninitialize();
+      expect(spy).toHaveBeenCalled();
+    });
+  });
+
+  describe('global PubNub status event handlers', () => {
+    let pubnubClient;
+    let pubnubListener;
+    let nockScope;
+
+    beforeEach(() => {
+      nockScope = nockHelper.mockRegisterRealtimeCall();
+      return liveService.registerUser(Kinvey.User.getActiveUser())
+        .then((config) => {
+          pubnubClient = new PubNubClientMock(config);
+          pubnubListener = new PubNubListenerMock();
+          return liveService.initialize(pubnubClient, pubnubListener);
+        });
+    });
+
+    afterEach(() => {
+      nockScope.done();
+    });
+
+    it('should be attachable to PubNubListener', () => {
       const handler = () => { };
-      expect(Mock.methodWasCalled(pubnubListenerMockId, 'on')).toBe(false);
+      const spy = expect.spyOn(pubnubListener, 'on');
       liveService.onConnectionStatusUpdates(handler);
-      expect(Mock.methodWasCalled(pubnubListenerMockId, 'on')).toBe(true);
-      expect(Mock.methodWasCalled(pubnubListenerMockId, 'removeListener')).toBe(false);
-      liveService.offConnectionStatusUpdates(handler);
-      expect(Mock.methodWasCalled(pubnubListenerMockId, 'removeListener')).toBe(true);
+      expect(spy.calls.length).toBe(1);
+      expect(spy).toHaveBeenCalledWith(PubNubListener.unclassifiedEvents, handler);
     });
 
-    it('should be ignored if all handlers are removed', () => {
-      expect(Mock.methodWasCalled(pubnubListenerMockId, 'on')).toBe(false);
-      liveService.onConnectionStatusUpdates(() => { });
-      expect(Mock.methodWasCalled(pubnubListenerMockId, 'on')).toBe(true);
-      expect(Mock.methodWasCalled(pubnubListenerMockId, 'removeAllListeners')).toBe(false);
-      liveService.offConnectionStatusUpdates();
-      expect(Mock.methodWasCalled(pubnubListenerMockId, 'removeAllListeners')).toBe(true);
+    describe('when attached', () => {
+      let handler;
+
+      beforeEach(() => {
+        handler = () => { };
+        liveService.onConnectionStatusUpdates(handler);
+      });
+
+      it('should be detachable from PubNubListener, when specified', () => {
+        const offSpy = expect.spyOn(pubnubListener, 'removeListener');
+        liveService.offConnectionStatusUpdates(handler);
+        expect(offSpy).toHaveBeenCalledWith(PubNubListener.unclassifiedEvents, handler);
+      });
+
+      it('should all be detached from PubNubListener, if no specific handler is specified', () => {
+        const offSpy = expect.spyOn(pubnubListener, 'removeAllListeners');
+        liveService.offConnectionStatusUpdates();
+        expect(offSpy).toHaveBeenCalledWith(PubNubListener.unclassifiedEvents);
+      });
     });
   });
 
   describe('user-facing facade', () => {
-    let liveServiceFacade;
-
-    beforeEach(() => {
-      liveServiceFacade = getLiveServiceFacade();
-    });
-
-    it('should be a singleton', () => {
-      const facade2 = getLiveServiceFacade();
-      expect(liveServiceFacade === facade2).toBe(true);
-    });
-
     it('should have only the user-facing methods of LiveService', () => {
-      expect(Object.keys(liveServiceFacade).length).toBe(5);
-      expect('register' in liveServiceFacade).toBe(true);
-      expect('unregister' in liveServiceFacade).toBe(true);
-      expect('onConnectionStatusUpdates' in liveServiceFacade).toBe(true);
-      expect('offConnectionStatusUpdates' in liveServiceFacade).toBe(true);
-      expect('unsubscribeFromAll' in liveServiceFacade).toBe(true);
+      const facadeMethods = [
+        'register',
+        'unregister',
+        'onConnectionStatusUpdates',
+        'offConnectionStatusUpdates',
+        'unsubscribeFromAll',
+        'isInitialized'
+      ];
+      expect(Object.keys(Kinvey.LiveService).length).toBe(facadeMethods.length);
+      expect(Kinvey.LiveService).toIncludeKeys(facadeMethods);
     });
   });
 });

@@ -1,7 +1,7 @@
-import PubNub from 'pubnub';
 import isFunction from 'lodash/isFunction';
 import isObject from 'lodash/isObject';
 import extend from 'lodash/extend';
+import isString from 'lodash/isString';
 
 import Client from '../../../client';
 import { KinveyRequest, RequestMethod, Response } from '../../../request';
@@ -10,7 +10,7 @@ import { PubNubListener } from './pubnub-listener';
 
 /**
  * @typedef LiveServiceReceiver
- * @property {Function} onNext
+ * @property {Function} onMessage
  * @property {Function} onError
  * @property {Function} onStatus
  */
@@ -39,8 +39,7 @@ class LiveService {
 
   get _pubnubClient() {
     if (!this.__pubnubClient) {
-      const msg = 'Live service has not been initialized. Please call register() first';
-      throw new KinveyError(msg);
+      this._throwNotInitializedError();
     }
     return this.__pubnubClient;
   }
@@ -49,40 +48,61 @@ class LiveService {
     this.__pubnubClient = value;
   }
 
+  set _pubnubListener(value) {
+    this.__pubnubListener = value;
+  }
+
+  get _pubnubListener() {
+    if (!this.__pubnubListener) {
+      this._throwNotInitializedError();
+    }
+    return this.__pubnubListener;
+  }
+
   isInitialized() {
-    return !!this.__pubnubClient && !!this._pubnubListener;
+    return !!this.__pubnubClient && !!this.__pubnubListener && !!this._registeredUser;
   }
 
   /**
    * Registers the active user for live service
    * @returns {Promise}
    */
-  register() {
-    const activeUser = this._client.activeUser;
-    if (!activeUser) {
-      return Promise.reject(new ActiveUserError('There is no active user'));
+  registerUser(user) {
+    if (!user || !user.isActive()) {
+      return Promise.reject(new ActiveUserError('Missing or invalid active user'));
     }
 
-    return this._makeRegisterRequest(activeUser._id)
-      .then((pubnubConfig) => {
-        this._registeredUser = activeUser;
-        this._pubnubConfig = extend({
+    return this._makeRegisterRequest(user._id)
+      .then((regResponse) => {
+        this._registeredUser = user;
+        this._userChannelGroup = regResponse.userChannelGroup;
+        const config = extend({
           ssl: true,
           authKey: this._registeredUser._kmd.authtoken
-        }, pubnubConfig);
-
-        this._pubnubListener = new PubNubListener();
-        this._userChannelGroup = pubnubConfig.userChannelGroup;
-        this._pubnubClient = this._initPubNubClient(this._pubnubConfig, this._pubnubListener);
-        return this._subscribeToUserChannelGroup();
+        }, regResponse);
+        return config;
       });
   }
 
-  unregister() {
+  /**
+   * @param {PubNub} pubnubClient
+   * @param {PubNubListener} pubnubListener
+   */
+  initialize(pubnubClient, pubnubListener) {
+    this._pubnubListener = pubnubListener;
+    this._pubnubClient = pubnubClient;
+    this._pubnubClient.addListener(this._pubnubListener);
+    this._subscribeToUserChannelGroup();
+  }
+
+  /**
+   * Unsubscribes from all events in PubNub client and in listener.
+   * Unregisters user from live service
+   */
+  uninitialize() {
     this.unsubscribeFromAll();
     this._pubnubClient = null;
     this._pubnubListener = null;
-    return this._unregisterUser();
   }
 
   onConnectionStatusUpdates(func) {
@@ -104,7 +124,12 @@ class LiveService {
    */
   publishToChannel(channelName, message) {
     if (!this.isInitialized()) {
-      return Promise.reject(new KinveyError('Live service is not initialized. Please call its "register()" method'));
+      return Promise.reject(new KinveyError('Live service is not initialized'));
+    }
+
+    const validationErr = this._validatePublishData(channelName, message);
+    if (validationErr) {
+      return Promise.reject(validationErr);
     }
 
     if (isObject(message)) {
@@ -128,8 +153,9 @@ class LiveService {
    * @param {LiveServiceReceiver} receiver
    */
   subscribeToChannel(channelName, receiver) {
-    if (!isObject(receiver)) {
-      receiver = {};
+    const validationError = this._validateSubscribeData(channelName, receiver);
+    if (validationError) {
+      throw validationError;
     }
     this._subscribeToListener(channelName, receiver);
   }
@@ -151,13 +177,68 @@ class LiveService {
   }
 
   /**
-   * @private
-   * @param {string} userId The user id
+   * @param {string} userId
    * @returns {Promise}
    */
-  _unregisterUser() {
-    const id = this._registeredUser && this._registeredUser._id;
-    return this._makeUnregisterRequst(id);
+  unregisterUser() {
+    if (!this._registeredUser) {
+      const msg = 'Cannot unregister when no user has been registered for live service';
+      return Promise.reject(new KinveyError(msg));
+    }
+
+    const userId = this._registeredUser._id;
+    return this._makeUnregisterRequst(userId)
+      .then((resp) => {
+        this._registeredUser = null;
+        return resp;
+      });
+  }
+
+  /**
+   * @param {string} channelName
+   * @param {Object} message
+   * @returns {KinveyError}
+   */
+  _validatePublishData(channelName, message) {
+    let err = null;
+
+    if (!isString(channelName) || channelName === '') {
+      err = new KinveyError('Invalid channel name');
+    }
+
+    if (message === undefined) {
+      err = new KinveyError('Missing or invalid message');
+    }
+
+    return err;
+  }
+
+  /**
+   * @param {string} channelName
+   * @param {LiveServiceReceiver} channelName
+   * @returns {KinveyError}
+   */
+  _validateSubscribeData(channelName, receiver) {
+    let err = null;
+
+    if (!isString(channelName) || channelName === '') {
+      err = new KinveyError('Invalid channel name');
+    }
+
+    if (!receiver || !this._isValidReceiver(receiver)) {
+      err = new KinveyError('Missing or invalid receiver');
+    }
+
+    return err;
+  }
+
+  /**
+   * @param {LiveServiceReceiver} receiver
+   * @returns {Boolean}
+   */
+  _isValidReceiver(receiver) {
+    const { onMessage, onError, onStatus } = receiver;
+    return isFunction(onMessage) || isFunction(onError) || isFunction(onStatus);
   }
 
   /**
@@ -179,8 +260,8 @@ class LiveService {
    * @param  {LiveServiceReceiver} receiver
    */
   _subscribeToListener(channelName, receiver) {
-    if (isFunction(receiver.onNext)) {
-      this._pubnubListener.on(channelName, receiver.onNext);
+    if (isFunction(receiver.onMessage)) {
+      this._pubnubListener.on(channelName, receiver.onMessage);
     }
 
     if (isFunction(receiver.onError) || isFunction(receiver.onStatus)) {
@@ -191,23 +272,6 @@ class LiveService {
         }
       });
     }
-  }
-
-  /**
-   * @private
-   * @param {{subscribeKey: string, publishKey?: string, authKey: string, ssl?: boolean}} config
-   * @param {PubNubListener} listener
-   */
-  _initPubNubClient(config, listener) {
-    const client = new PubNub({
-      ssl: config.ssl,
-      publishKey: config.publishKey,
-      subscribeKey: config.subscribeKey,
-      authKey: config.authKey
-    });
-
-    client.addListener(listener);
-    return client;
   }
 
   /**
@@ -222,7 +286,7 @@ class LiveService {
 
   /**
    * @private
-   * @param {string} userId The user id
+   * @param {string} userId
    * @returns {Promise<{publishKey: string, subscribeKey: string, userChannelGroup: string}>}
    */
   _makeRegisterRequest(userId) {
@@ -231,7 +295,7 @@ class LiveService {
 
   /**
    * @private
-   * @param {string} userId The user id
+   * @param {string} userId
    * @returns {Promise}
    */
   _makeUnregisterRequst(userId) {
@@ -250,10 +314,13 @@ class LiveService {
       body: { deviceId: this._client.deviceId }
     }, this._client, true);
   }
+
+  _throwNotInitializedError() {
+    throw new KinveyError('Live service has not been initialized');
+  }
 }
 
 let liveServiceInstance;
-let liveServiceInstanceFacade;
 
 /**
  * Gets a singleton LiveService class instance
@@ -265,19 +332,4 @@ export function getLiveService(client) {
     liveServiceInstance = new LiveService(client);
   }
   return liveServiceInstance;
-}
-
-export function getLiveServiceFacade(client) {
-  if (!liveServiceInstanceFacade) {
-    const liveService = getLiveService(client);
-
-    liveServiceInstanceFacade = {
-      register: liveService.register.bind(liveService),
-      unregister: liveService.unregister.bind(liveService),
-      onConnectionStatusUpdates: liveService.onConnectionStatusUpdates.bind(liveService),
-      offConnectionStatusUpdates: liveService.offConnectionStatusUpdates.bind(liveService),
-      unsubscribeFromAll: liveService.unsubscribeFromAll.bind(liveService)
-    };
-  }
-  return liveServiceInstanceFacade;
 }

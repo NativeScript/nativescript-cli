@@ -1,19 +1,9 @@
-import { MockBase } from './mock-base';
+export class PubNubListenerMock {
+  removeAllListeners() { }
 
-export class PubNubListenerMock extends MockBase {
-  removeAllListeners() {
-    this.setCalledMethod('removeAllListeners');
-  }
+  on() { }
 
-  on() {
-    this.setCalledMethod('on');
-  }
+  removeListener() { }
 
-  removeListener() {
-    this.setCalledMethod('removeListener');
-  }
-
-  removeAllListeners() {
-    this.setCalledMethod('removeAllListeners');
-  }
+  removeAllListeners() { }
 }

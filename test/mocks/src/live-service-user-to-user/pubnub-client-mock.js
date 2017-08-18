@@ -1,26 +1,15 @@
-import { MockBase } from './mock-base';
-
-export class PubNubClientMock extends MockBase {
+export class PubNubClientMock {
   config;
-  subObj;
-  listeners = [];
 
-  constructor(config, mockId) {
-    super(mockId);
+  constructor(config) {
     this.config = config;
   }
 
-  addListener(listener) {
-    this.setCalledMethod('addListener');
-    this.listeners.push(listener);
-  }
+  addListener() { }
 
-  subscribe(subObj) {
-    this.setCalledMethod('subscribe');
-    this.subObj = subObj;
-  }
+  subscribe() { }
 
-  unsubscribeAll() {
-    this.setCalledMethod('unsubscribeAll');
-  }
+  publish() { }
+
+  unsubscribeAll() { }
 }
