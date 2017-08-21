@@ -153,7 +153,7 @@ export default class Request {
       );
     }
 
-    return this.rack.execute(this)
+    return this.rack.execute(this.toPlainObject())
       .then((response) => {
         if (isDefined(response) === false) {
           throw new NoResponseError();
