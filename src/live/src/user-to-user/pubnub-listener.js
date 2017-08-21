@@ -31,9 +31,18 @@ import { EventEmitter } from 'events';
  * @property {number} currentTimetoken The current timetoken fetched in the subscribe response, which is going to be used in the next request
  */
 
+const statusPrefix = 'status:';
+const unclassifiedEvents = 'pubNubEventsNotRouted';
+
 export class PubNubListener extends EventEmitter {
-  static statusPrefix = 'status:';
-  static unclassifiedEvents = 'pubNubEventsNotRouted';
+
+  static get statusPrefix() {
+    return statusPrefix;
+  }
+
+  static get unclassifiedEvents() {
+    return unclassifiedEvents;
+  }
 
   /** @param {PubNubMessage} m */
   message(m) {
@@ -42,9 +51,7 @@ export class PubNubListener extends EventEmitter {
 
   /** @param {PubNubStatus} s */
   status(s) {
-    const channels = s.affectedChannels || [];
-    const groups = s.affectedChannelGroups || [];
-    const allEvents = channels.concat(groups);
+    const allEvents = this._getEventNamesFromStatus(s.affectedChannels, s.affectedChannelGroups);
     if (allEvents.length) {
       allEvents.forEach((channelOrGroup) => {
         this.emit(`${PubNubListener.statusPrefix}${channelOrGroup}`, s);
@@ -52,5 +59,14 @@ export class PubNubListener extends EventEmitter {
     } else {
       this.emit(PubNubListener.unclassifiedEvents, s);
     }
+  }
+  /**
+   * @param {string[]} [affectedChannels]
+   * @param {string[]} [affectedChannelGroups]
+   */
+  _getEventNamesFromStatus(affectedChannels, affectedChannelGroups) {
+    const channels = affectedChannels || [];
+    const groups = affectedChannelGroups || [];
+    return channels.concat(groups);
   }
 }
