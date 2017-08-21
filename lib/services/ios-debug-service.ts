@@ -14,7 +14,7 @@ const inspectorAppName = "NativeScript Inspector.app";
 const inspectorNpmPackageName = "tns-ios-inspector";
 const inspectorUiDir = "WebInspectorUI/";
 
-class IOSDebugService extends DebugServiceBase implements IPlatformDebugService {
+export class IOSDebugService extends DebugServiceBase implements IPlatformDebugService {
 	private _lldbProcess: ChildProcess;
 	private _sockets: net.Socket[] = [];
 	private _childProcess: ChildProcess;
@@ -91,6 +91,14 @@ class IOSDebugService extends DebugServiceBase implements IPlatformDebugService 
 			await this.killProcess(this._childProcess);
 			this._childProcess = undefined;
 		}
+	}
+
+	protected getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
+		const debugOpts = _.cloneDeep(debugOptions);
+		debugOpts.useBundledDevTools = debugOpts.useBundledDevTools === undefined ? false : debugOpts.useBundledDevTools;
+
+		const chromeDebugUrl = super.getChromeDebugUrl(debugOpts, port);
+		return chromeDebugUrl;
 	}
 
 	private async killProcess(childProcess: ChildProcess): Promise<void> {
@@ -195,17 +203,7 @@ class IOSDebugService extends DebugServiceBase implements IPlatformDebugService 
 		if (debugOptions.chrome) {
 			this._socketProxy = await this.$socketProxyFactory.createWebSocketProxy(this.getSocketFactory(device));
 
-			let chromeDevToolsPrefix = `chrome-devtools://devtools/`;
-
-			if (debugOptions.useBundledDevTools) {
-				chromeDevToolsPrefix += "bundled";
-			} else {
-				// corresponds to 55.0.2883 Chrome version
-				const commitSHA = "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
-				chromeDevToolsPrefix += `remote/serve_file/@${commitSHA}`;
-			}
-
-			return `${chromeDevToolsPrefix}/inspector.html?experiments=true&ws=localhost:${this._socketProxy.options.port}`;
+			return this.getChromeDebugUrl(debugOptions, this._socketProxy.options.port);
 		} else {
 			this._socketProxy = await this.$socketProxyFactory.createTCPSocketProxy(this.getSocketFactory(device));
 			await this.openAppInspector(this._socketProxy.address(), debugData, debugOptions);

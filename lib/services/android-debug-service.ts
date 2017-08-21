@@ -2,7 +2,7 @@ import { sleep } from "../common/helpers";
 import { ChildProcess } from "child_process";
 import { DebugServiceBase } from "./debug-service-base";
 
-class AndroidDebugService extends DebugServiceBase implements IPlatformDebugService {
+export class AndroidDebugService extends DebugServiceBase implements IPlatformDebugService {
 	private _device: Mobile.IAndroidDevice = null;
 	private _debuggerClientProcess: ChildProcess;
 
@@ -47,6 +47,14 @@ class AndroidDebugService extends DebugServiceBase implements IPlatformDebugServ
 	public async debugStop(): Promise<void> {
 		this.stopDebuggerClient();
 		return;
+	}
+
+	protected getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
+		const debugOpts = _.cloneDeep(debugOptions);
+		debugOpts.useBundledDevTools = debugOpts.useBundledDevTools === undefined ? true : debugOpts.useBundledDevTools;
+
+		const chromeDebugUrl = super.getChromeDebugUrl(debugOpts, port);
+		return chromeDebugUrl;
 	}
 
 	private async debugOnEmulator(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
@@ -124,11 +132,12 @@ class AndroidDebugService extends DebugServiceBase implements IPlatformDebugServ
 			this.$errors.failWithoutHelp(`The application ${packageName} does not appear to be running on ${deviceId} or is not built with debugging enabled.`);
 		}
 
-		let startDebuggerCommand = ["am", "broadcast", "-a", `\"${packageName}-debug\"`, "--ez", "enable", "true"];
+		const startDebuggerCommand = ["am", "broadcast", "-a", `\"${packageName}-debug\"`, "--ez", "enable", "true"];
 		await this.device.adb.executeShellCommand(startDebuggerCommand);
 
-		let port = await this.getForwardedLocalDebugPortForPackageName(deviceId, packageName);
-		return `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${port}`;
+		const port = await this.getForwardedLocalDebugPortForPackageName(deviceId, packageName);
+
+		return this.getChromeDebugUrl(debugOptions, port);
 	}
 
 	private detachDebugger(packageName: string): Promise<void> {
