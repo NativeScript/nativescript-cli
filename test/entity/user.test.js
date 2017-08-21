@@ -9,50 +9,51 @@ import expect from 'expect';
 import nock from 'nock';
 import assign from 'lodash/assign';
 import localStorage from 'local-storage';
+import { LiveServiceFacade } from '../../src/live';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
-describe('User', function() {
-  describe('constructor', function() {
-    it('should create a user', function() {
+describe('User', function () {
+  describe('constructor', function () {
+    it('should create a user', function () {
       const user = new User();
       expect(user).toBeA(User);
     });
 
-    it('should set data', function() {
+    it('should set data', function () {
       const data = { prop: randomString() };
       const user = new User(data);
       expect(user.data).toEqual(data);
     });
 
-    it('should set the client', function() {
+    it('should set the client', function () {
       const client = new Client();
       const user = new User({}, { client: client });
       expect(user.client).toEqual(client);
     });
 
-    it('should set the client to the shared instance if one is not provided', function() {
+    it('should set the client to the shared instance if one is not provided', function () {
       const user = new User();
       expect(user.client).toEqual(Client.sharedInstance());
     });
   });
 
-  describe('_id', function() {
-    it('should return the _id', function() {
+  describe('_id', function () {
+    it('should return the _id', function () {
       const data = { _id: randomString() };
       const user = new User(data);
       expect(user._id).toEqual(data._id);
     });
   });
 
-  describe('_acl', function() {
-    it('should return the _acl', function() {
+  describe('_acl', function () {
+    it('should return the _acl', function () {
       const data = { _acl: { authtoken: randomString() } };
       const user = new User(data);
       expect(user._acl).toEqual(new Acl(data));
     });
 
-    it('should not be able to set the _acl', function() {
-      expect(function() {
+    it('should not be able to set the _acl', function () {
+      expect(function () {
         const user = new User();
         const data = { _acl: { creator: randomString() } };
         user._acl = new Acl(data);
@@ -60,15 +61,15 @@ describe('User', function() {
     });
   });
 
-  describe('metadata', function() {
-    it('should return the metadata', function() {
+  describe('metadata', function () {
+    it('should return the metadata', function () {
       const data = { _kmd: { lmt: new Date().toISOString(), ect: new Date().toISOString() } };
       const user = new User(data);
       expect(user.metadata).toEqual(new Metadata(data));
     });
 
-    it('should not be able to set the metadata', function() {
-      expect(function() {
+    it('should not be able to set the metadata', function () {
+      expect(function () {
         const user = new User();
         const data = { _kmd: { lmt: new Date().toISOString(), ect: new Date().toISOString() } };
         user.metadata = new Metadata(data);
@@ -76,15 +77,15 @@ describe('User', function() {
     });
   });
 
-  describe('_kmd', function() {
-    it('should return the metadata', function() {
+  describe('_kmd', function () {
+    it('should return the metadata', function () {
       const data = { _kmd: { lmt: new Date().toISOString(), ect: new Date().toISOString() } };
       const user = new User(data);
       expect(user._kmd).toEqual(new Metadata(data));
     });
 
-    it('should not be able to set the _kmd', function() {
-      expect(function() {
+    it('should not be able to set the _kmd', function () {
+      expect(function () {
         const user = new User();
         const data = { _kmd: { lmt: new Date().toISOString(), ect: new Date().toISOString() } };
         user._kmd = new Metadata(data);
@@ -92,15 +93,15 @@ describe('User', function() {
     });
   });
 
-  describe('_socialIdentity', function() {
-    it('should return the metadata', function() {
+  describe('_socialIdentity', function () {
+    it('should return the metadata', function () {
       const data = { _socialIdentity: { kinvey: {} } };
       const user = new User(data);
       expect(user._socialIdentity).toEqual(data._socialIdentity);
     });
 
-    it('should not be able to set the _socialIdentity', function() {
-      expect(function() {
+    it('should not be able to set the _socialIdentity', function () {
+      expect(function () {
         const user = new User();
         const data = { _socialIdentity: { kinvey: {} } };
         user._socialIdentity = data._socialIdentity;
@@ -108,15 +109,15 @@ describe('User', function() {
     });
   });
 
-  describe('authtoken', function() {
-    it('should return the authtoken', function() {
+  describe('authtoken', function () {
+    it('should return the authtoken', function () {
       const data = { _kmd: { authtoken: randomString() } };
       const user = new User(data);
       expect(user.authtoken).toEqual(new Metadata(data).authtoken);
     });
 
-    it('should not be able to set the authtoken', function() {
-      expect(function() {
+    it('should not be able to set the authtoken', function () {
+      expect(function () {
         const user = new User();
         const data = { _kmd: { authtoken: randomString() } };
         user.authtoken = new Metadata(data).authtoken;
@@ -124,15 +125,15 @@ describe('User', function() {
     });
   });
 
-  describe('username', function() {
-    it('should return the username', function() {
+  describe('username', function () {
+    it('should return the username', function () {
       const data = { username: randomString() };
       const user = new User(data);
       expect(user.username).toEqual(data.username);
     });
 
-    it('should not be able to set the username', function() {
-      expect(function() {
+    it('should not be able to set the username', function () {
+      expect(function () {
         const user = new User();
         const data = { username: randomString() };
         user.username = data.username;
@@ -140,15 +141,15 @@ describe('User', function() {
     });
   });
 
-  describe('email', function() {
-    it('should return the email', function() {
+  describe('email', function () {
+    it('should return the email', function () {
       const data = { email: randomString() };
       const user = new User(data);
       expect(user.email).toEqual(data.email);
     });
 
-    it('should not be able to set the email', function() {
-      expect(function() {
+    it('should not be able to set the email', function () {
+      expect(function () {
         const user = new User();
         const data = { email: randomString() };
         user.email = data.email;
@@ -156,22 +157,22 @@ describe('User', function() {
     });
   });
 
-  describe('pathname', function() {
-    it('should return the pathname', function() {
+  describe('pathname', function () {
+    it('should return the pathname', function () {
       const user = new User();
       expect(user.pathname).toEqual(`/user/${user.client.appKey}`);
     });
 
-    it('should not be able to set the pathname', function() {
-      expect(function() {
+    it('should not be able to set the pathname', function () {
+      expect(function () {
         const user = new User();
         user.pathname = 'user';
       }).toThrow();
     });
   });
 
-  describe('isActive()', function() {
-    it('should return true', function() {
+  describe('isActive()', function () {
+    it('should return true', function () {
       return UserMock.logout()
         .then(() => {
           return UserMock.login('test', 'test');
@@ -181,32 +182,32 @@ describe('User', function() {
         });
     });
 
-    it('should return false', function() {
+    it('should return false', function () {
       const user = new User();
       expect(user.isActive()).toEqual(false);
     });
   });
 
-  describe('isEmailVerified()', function() {
-    it('should return true', function() {
+  describe('isEmailVerified()', function () {
+    it('should return true', function () {
       const data = { _kmd: { emailVerification: { status: 'confirmed' } } };
       const user = new User(data);
       expect(user.isEmailVerified()).toEqual(true);
     });
 
-    it('should return false', function() {
+    it('should return false', function () {
       const data = { _kmd: { emailVerification: { status: 'unconfirmed' } } };
       const user = new User(data);
       expect(user.isEmailVerified()).toEqual(false);
     });
   });
 
-  describe('login()', function() {
-    beforeEach(function() {
+  describe('login()', function () {
+    beforeEach(function () {
       return UserMock.logout();
     });
 
-    it('should throw an error if an active user already exists', function() {
+    it('should throw an error if an active user already exists', function () {
       return UserMock.login(randomString(), randomString())
         .then(() => {
           return User.login(randomString(), randomString());
@@ -216,7 +217,7 @@ describe('User', function() {
         });
     });
 
-    it('should throw an error if a username is not provided', async function() {
+    it('should throw an error if a username is not provided', async function () {
       try {
         await User.login(null, randomString());
       } catch (error) {
@@ -224,7 +225,7 @@ describe('User', function() {
       }
     });
 
-    it('should throw an error if the username is an empty string', async function() {
+    it('should throw an error if the username is an empty string', async function () {
       try {
         await User.login(' ', randomString());
       } catch (error) {
@@ -232,7 +233,7 @@ describe('User', function() {
       }
     });
 
-    it('should throw an error if a password is not provided', async function() {
+    it('should throw an error if a password is not provided', async function () {
       try {
         await User.login(randomString());
       } catch (error) {
@@ -240,7 +241,7 @@ describe('User', function() {
       }
     });
 
-    it('should throw an error if the password is an empty string', async function() {
+    it('should throw an error if the password is an empty string', async function () {
       try {
         await User.login(randomString(), ' ');
       } catch (error) {
@@ -248,7 +249,7 @@ describe('User', function() {
       }
     });
 
-    it('should throw an error if the username and/or password is invalid', function() {
+    it('should throw an error if the username and/or password is invalid', function () {
       const user = new User();
       const username = randomString();
       const password = randomString();
@@ -269,7 +270,7 @@ describe('User', function() {
         });
     });
 
-    it('should login a user', function() {
+    it('should login a user', function () {
       const user = new User();
       const username = randomString();
       const password = randomString();
@@ -311,7 +312,7 @@ describe('User', function() {
         });
     });
 
-    it('should login a user by providing credentials as an object', async function() {
+    it('should login a user by providing credentials as an object', async function () {
       let user = new User();
       const username = randomString();
       const password = randomString();
@@ -353,7 +354,7 @@ describe('User', function() {
       expect(isActive).toEqual(true);
     });
 
-    it('should login a user with _socialIdentity', async function() {
+    it('should login a user with _socialIdentity', async function () {
       const socialIdentity = { foo: { baz: randomString() }, faa: randomString() };
       let user = new User();
       const reply = {
@@ -402,15 +403,15 @@ describe('User', function() {
     });
   });
 
-  describe('logout()', function() {
-    beforeEach(function() {
+  describe('logout()', function () {
+    beforeEach(function () {
       return UserMock.logout()
         .then(() => {
           return UserMock.login(randomString(), randomString());
         });
     });
 
-    beforeEach(function() {
+    beforeEach(function () {
       const entity1 = {
         _id: randomString(),
         title: 'Opela',
@@ -455,7 +456,7 @@ describe('User', function() {
         });
     });
 
-    afterEach(function() {
+    afterEach(function () {
       const store = new SyncStore('foo');
       return store.find().toPromise()
         .then((entities) => {
@@ -463,7 +464,7 @@ describe('User', function() {
         });
     });
 
-    afterEach(function() {
+    afterEach(function () {
       const store = new SyncStore('kinvey_sync');
       return store.find().toPromise()
         .then((entities) => {
@@ -471,19 +472,19 @@ describe('User', function() {
         });
     });
 
-    afterEach(function() {
+    afterEach(function () {
       const user = localStorage.get(`${this.client.appKey}kinvey_user`);
       expect(user).toEqual(null);
     });
 
-    it('should logout the active user', function() {
+    it('should logout the active user', function () {
       return UserMock.logout()
         .then(() => {
           expect(User.getActiveUser()).toEqual(null);
         });
     });
 
-    it('should logout when there is not an active user', function() {
+    it('should logout when there is not an active user', function () {
       return UserMock.logout()
         .then(() => {
           expect(User.getActiveUser()).toEqual(null);
@@ -493,14 +494,44 @@ describe('User', function() {
           expect(User.getActiveUser()).toEqual(null);
         });
     });
+
+    describe('live service interaction', () => {
+      afterEach(() => expect.restoreSpies());
+
+      it('should unregister user from Live Service, if user was registered', () => {
+        const unregisterSpy = expect.spyOn(LiveServiceFacade, 'unregister')
+          .andReturn(Promise.resolve());
+        const initSpy = expect.spyOn(LiveServiceFacade, 'isInitialized')
+          .andReturn(true);
+
+        return UserMock.logout()
+          .then(() => {
+            expect(initSpy).toHaveBeenCalled();
+            expect(unregisterSpy).toHaveBeenCalled();
+          });
+      });
+
+      it('should not unregister user from Live Service, if user was not registered', () => {
+        const unregisterSpy = expect.spyOn(LiveServiceFacade, 'unregister');
+        const unitSpy = expect.spyOn(LiveServiceFacade, 'isInitialized')
+          .andCallThrough();
+        expect(LiveServiceFacade.isInitialized()).toBe(false);
+
+        return UserMock.logout()
+          .then(() => {
+            expect(unitSpy).toHaveBeenCalled();
+            expect(unregisterSpy).toNotHaveBeenCalled();
+          });
+      });
+    });
   });
 
-  describe('signup', function() {
-    beforeEach(function() {
+  describe('signup', function () {
+    beforeEach(function () {
       return UserMock.logout();
     });
 
-    it('should signup and set the user as the active user', function() {
+    it('should signup and set the user as the active user', function () {
       return UserMock.signup({ username: randomString(), password: randomString() })
         .then((user) => {
           expect(user.isActive()).toEqual(true);
@@ -508,7 +539,7 @@ describe('User', function() {
         });
     });
 
-    it('should signup with a user and set the user as the active user', function() {
+    it('should signup with a user and set the user as the active user', function () {
       const user = new UserMock({ username: randomString(), password: randomString() });
       return UserMock.signup(user)
         .then((user) => {
@@ -517,7 +548,7 @@ describe('User', function() {
         });
     });
 
-    it('should signup user and not set the user as the active user', function() {
+    it('should signup user and not set the user as the active user', function () {
       return UserMock.signup({ username: randomString(), password: randomString() }, { state: false })
         .then((user) => {
           expect(user.isActive()).toEqual(false);
@@ -525,7 +556,7 @@ describe('User', function() {
         });
     });
 
-    it('should signup an implicit user and set the user as the active user', function() {
+    it('should signup an implicit user and set the user as the active user', function () {
       return UserMock.signup()
         .then((user) => {
           expect(user.isActive()).toEqual(true);
@@ -533,7 +564,7 @@ describe('User', function() {
         });
     });
 
-    it('should merge the signup data and set the user as the active user', function() {
+    it('should merge the signup data and set the user as the active user', function () {
       const user = new UserMock({ username: randomString(), password: randomString() });
       const username = 'foo';
       return user.signup({ username: username })
@@ -544,7 +575,7 @@ describe('User', function() {
         });
     });
 
-    it('should throw an error if an active user already exists', function() {
+    it('should throw an error if an active user already exists', function () {
       return UserMock.login(randomString(), randomString())
         .then(() => {
           return UserMock.signup({ username: randomString(), password: randomString() });
@@ -554,7 +585,7 @@ describe('User', function() {
         });
     });
 
-    it('should not throw an error with an active user and options.state set to false', function() {
+    it('should not throw an error with an active user and options.state set to false', function () {
       return UserMock.login(randomString(), randomString())
         .then(() => {
           return UserMock.signup({ username: randomString(), password: randomString() }, { state: false });
@@ -566,8 +597,8 @@ describe('User', function() {
     });
   });
 
-  describe('update()', function() {
-    it('should throw an error if the user does not have an _id', function() {
+  describe('update()', function () {
+    it('should throw an error if the user does not have an _id', function () {
       const user = new User({ email: randomString() });
       return user.update({ email: randomString })
         .catch((error) => {
@@ -576,7 +607,7 @@ describe('User', function() {
         });
     });
 
-    it('should update the active user', function() {
+    it('should update the active user', function () {
       return UserMock.logout()
         .then(() => {
           return UserMock.login(randomString(), randomString());
@@ -599,7 +630,7 @@ describe('User', function() {
         });
     });
 
-    it('should update a user and not the active user', function() {
+    it('should update a user and not the active user', function () {
       return UserMock.logout()
         .then(() => {
           return UserMock.login(randomString(), randomString());
@@ -626,8 +657,8 @@ describe('User', function() {
     });
   });
 
-  describe('me()', function() {
-    it('should refresh the users data', function() {
+  describe('me()', function () {
+    it('should refresh the users data', function () {
       const user = new User({ _id: randomString() });
       const reply = {
         _id: user._id,
@@ -645,7 +676,7 @@ describe('User', function() {
         });
     });
 
-    it('should remove any sensitive data', function() {
+    it('should remove any sensitive data', function () {
       const user = new User({ _id: randomString() });
       const reply = {
         _id: user._id,
@@ -665,7 +696,7 @@ describe('User', function() {
         });
     });
 
-    it('should set authtoken if one was not provided and user is active user', function() {
+    it('should set authtoken if one was not provided and user is active user', function () {
       const activeUser = User.getActiveUser();
       const reply = {
         _id: activeUser._id,
@@ -684,7 +715,7 @@ describe('User', function() {
         });
     });
 
-    it('should not set authtoken if one was not provided and user is not active user', function() {
+    it('should not set authtoken if one was not provided and user is not active user', function () {
       const user = new User({ _id: randomString() });
       const reply = {
         _id: user._id,
@@ -703,7 +734,7 @@ describe('User', function() {
         });
     });
 
-    it('should update active user', function() {
+    it('should update active user', function () {
       const user = User.getActiveUser();
       const reply = {
         _id: user._id,
@@ -721,7 +752,7 @@ describe('User', function() {
         });
     });
 
-    it('should not update active user if not active user', function() {
+    it('should not update active user if not active user', function () {
       const user = new User({ _id: randomString() });
       const reply = {
         _id: user._id,
@@ -740,8 +771,8 @@ describe('User', function() {
     });
   });
 
-  describe('getActiveUser()', function() {
-    it('should return the active user', function() {
+  describe('getActiveUser()', function () {
+    it('should return the active user', function () {
       return UserMock.logout()
         .then(() => {
           return UserMock.login(randomString(), randomString());
@@ -751,7 +782,7 @@ describe('User', function() {
         });
     });
 
-    it('should return null', function() {
+    it('should return null', function () {
       return UserMock.logout()
         .then(() => {
           expect(UserMock.getActiveUser()).toEqual(null);
@@ -759,8 +790,8 @@ describe('User', function() {
     });
   });
 
-  describe('verifyEmail()', function() {
-    it('should throw an error if a username is not provided', async function() {
+  describe('verifyEmail()', function () {
+    it('should throw an error if a username is not provided', async function () {
       try {
         await User.verifyEmail();
       } catch (error) {
@@ -768,7 +799,7 @@ describe('User', function() {
       }
     });
 
-    it('should throw an error if the provided username is not a string', async function() {
+    it('should throw an error if the provided username is not a string', async function () {
       try {
         await User.verifyEmail({});
       } catch (error) {
@@ -776,7 +807,7 @@ describe('User', function() {
       }
     });
 
-    it('should verify an email for a user', async function() {
+    it('should verify an email for a user', async function () {
       const username = 'test';
 
       // Kinvey API response
@@ -791,8 +822,8 @@ describe('User', function() {
     });
   });
 
-  describe('forgotUsername()', function() {
-    it('should throw an error if an email is not provided', async function() {
+  describe('forgotUsername()', function () {
+    it('should throw an error if an email is not provided', async function () {
       try {
         await User.forgotUsername();
       } catch (error) {
@@ -800,7 +831,7 @@ describe('User', function() {
       }
     });
 
-    it('should throw an error if the provided email is not a string', async function() {
+    it('should throw an error if the provided email is not a string', async function () {
       try {
         await User.forgotUsername({});
       } catch (error) {
@@ -808,7 +839,7 @@ describe('User', function() {
       }
     });
 
-    it('should retrieve a username for a user', async function() {
+    it('should retrieve a username for a user', async function () {
       const email = 'test@test.com';
 
       // Kinvey API response
@@ -823,8 +854,8 @@ describe('User', function() {
     });
   });
 
-  describe('resetPassword()', function() {
-    it('should throw an error if a username is not provided', async function() {
+  describe('resetPassword()', function () {
+    it('should throw an error if a username is not provided', async function () {
       try {
         await User.resetPassword();
       } catch (error) {
@@ -832,7 +863,7 @@ describe('User', function() {
       }
     });
 
-    it('should throw an error if the provided username is not a string', async function() {
+    it('should throw an error if the provided username is not a string', async function () {
       try {
         await User.resetPassword({});
       } catch (error) {
@@ -840,7 +871,7 @@ describe('User', function() {
       }
     });
 
-    it('should reset the password for a user', async function() {
+    it('should reset the password for a user', async function () {
       const username = 'test';
 
       // Kinvey API response
@@ -855,8 +886,8 @@ describe('User', function() {
     });
   });
 
-  describe('lookup()', function() {
-    it('should throw an error if the query argument is not an instance of the Query class', function() {
+  describe('lookup()', function () {
+    it('should throw an error if the query argument is not an instance of the Query class', function () {
       return User.lookup({}, { discover: true })
         .toPromise()
         .catch((error) => {
@@ -864,7 +895,7 @@ describe('User', function() {
         });
     });
 
-    it('should return an array of users', function() {
+    it('should return an array of users', function () {
       const USERS = [{
         _id: randomString(),
         username: randomString(),
@@ -899,7 +930,7 @@ describe('User', function() {
         });
     });
 
-    it('should return an array of users matching the query', function() {
+    it('should return an array of users matching the query', function () {
       const USERS = [{
         _id: randomString(),
         username: 'foo',
@@ -934,29 +965,29 @@ describe('User', function() {
         .then((users) => {
           expect(users).toEqual(USERS);
 
-          users.forEach(function(user) {
+          users.forEach(function (user) {
             expect(user.username).toEqual('foo');
           });
         });
     });
   });
 
-  describe('remove()', function() {
-    it('should throw a KinveyError if an id is not provided', function() {
+  describe('remove()', function () {
+    it('should throw a KinveyError if an id is not provided', function () {
       return User.remove()
         .catch((error) => {
           expect(error).toBeA(KinveyError);
         });
     });
 
-    it('should throw a KinveyError if an id is not a string', function() {
+    it('should throw a KinveyError if an id is not a string', function () {
       return User.remove(1)
         .catch((error) => {
           expect(error).toBeA(KinveyError);
         });
     });
 
-    it('should remove the user that matches the id argument', function() {
+    it('should remove the user that matches the id argument', function () {
       // Remove the user
       const user = new User({ _id: randomString(), email: randomString() });
 
@@ -970,7 +1001,7 @@ describe('User', function() {
         });
     });
 
-    it('should remove the user that matches the id argument permanently', function() {
+    it('should remove the user that matches the id argument permanently', function () {
       // Remove the user
       const user = new User({ _id: randomString(), email: randomString() });
 

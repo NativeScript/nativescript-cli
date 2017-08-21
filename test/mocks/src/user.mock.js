@@ -2,7 +2,7 @@
 import { randomString } from 'src/utils';
 import { User } from 'src/entity';
 import Client from '../../../src/client';
-import { getLiveService } from '../../../src/live';
+import { LiveServiceFacade } from '../../../src/live';
 import nock from 'nock';
 import url from 'url';
 
@@ -113,8 +113,8 @@ export default class UserMock extends User {
     nock(this.client.apiHostname, { encodedQueryParams: true })
       .post(`${this.pathname}/_logout`)
       .reply(204);
-
-    if (getLiveService().isInitialized()) {
+      
+    if (LiveServiceFacade.isInitialized()) {
       nockHelper.setClient(Client.sharedInstance());
       nockHelper.mockUnregisterRealtimeCall();
     }

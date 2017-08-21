@@ -15,10 +15,10 @@ const pathToLiveService = '../../../src/live/src/user-to-user/live-service';
 const notInitializedCheckRegexp = new RegExp('not.*initialized', 'i');
 const invalidOrMissingCheckRegexp = new RegExp('(invalid)|(missing)', 'i');
 
-describe.only('LiveService', () => {
+describe('LiveService', () => {
   let client;
   let liveService;
-  let pubnubConfig;
+  let registerUserResponse;
 
   before(function () {
     nockHelper.setClient(this.client);
@@ -26,7 +26,7 @@ describe.only('LiveService', () => {
   });
 
   beforeEach(() => {
-    pubnubConfig = {
+    registerUserResponse = {
       publishKey: randomString(),
       subscribeKey: randomString(),
       userChannelGroup: randomString()
@@ -74,12 +74,12 @@ describe.only('LiveService', () => {
     });
 
     it('should call /register endpoint for live service and return a PubNub config object', () => {
-      const nockScope = nockHelper.mockRegisterRealtimeCall(pubnubConfig);
+      const nockScope = nockHelper.mockRegisterRealtimeCall(registerUserResponse);
       const activeUser = Kinvey.User.getActiveUser();
       return liveService.registerUser(activeUser)
         .then((config) => {
           nockScope.done();
-          const clone = Object.assign({}, pubnubConfig);
+          const clone = Object.assign({}, registerUserResponse);
           clone.authKey = activeUser._kmd.authtoken;
           clone.ssl = true;
           expect(config).toEqual(clone);
@@ -102,7 +102,7 @@ describe.only('LiveService', () => {
     let nockScope;
 
     beforeEach(() => {
-      nockScope = nockHelper.mockRegisterRealtimeCall(pubnubConfig);
+      nockScope = nockHelper.mockRegisterRealtimeCall(registerUserResponse);
       return liveService.registerUser(Kinvey.User.getActiveUser())
         .then((config) => {
           pubnubClient = new PubNubClientMock();
@@ -129,7 +129,7 @@ describe.only('LiveService', () => {
     it('should subscribe to the provided user channel group', () => {
       const spy = expect.spyOn(pubnubClient, 'subscribe');
       liveService.initialize(pubnubClient, pubnubListener);
-      expect(spy).toHaveBeenCalledWith({ channelGroups: [pubnubConfig.userChannelGroup] });
+      expect(spy).toHaveBeenCalledWith({ channelGroups: [registerUserResponse.userChannelGroup] });
     });
   });
 
@@ -169,7 +169,7 @@ describe.only('LiveService', () => {
       let pubnubClient;
 
       beforeEach(() => {
-        nockScope = nockHelper.mockRegisterRealtimeCall(pubnubConfig);
+        nockScope = nockHelper.mockRegisterRealtimeCall(registerUserResponse);
         return liveService.registerUser(Kinvey.User.getActiveUser())
           .then((config) => {
             pubnubClient = new PubNubClientMock(config);
@@ -213,7 +213,7 @@ describe.only('LiveService', () => {
     let nockScope;
 
     beforeEach(() => {
-      nockScope = nockHelper.mockRegisterRealtimeCall(pubnubConfig);
+      nockScope = nockHelper.mockRegisterRealtimeCall(registerUserResponse);
       return liveService.registerUser(Kinvey.User.getActiveUser())
         .then((config) => {
           pubnubClient = new PubNubClientMock();
@@ -311,7 +311,7 @@ describe.only('LiveService', () => {
       let nockScope;
 
       beforeEach(() => {
-        nockScope = nockHelper.mockRegisterRealtimeCall(pubnubConfig);
+        nockScope = nockHelper.mockRegisterRealtimeCall(registerUserResponse);
         return liveService.registerUser(Kinvey.User.getActiveUser())
           .then((config) => {
             nockHelper.mockUnregisterRealtimeCall();
