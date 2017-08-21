@@ -130,7 +130,7 @@ export class Stream {
   _subscribe(userId, receiver) {
     return this._requestSubscribeAccess(userId)
       .then(() => {
-        const channelName = this._subscribeChannels[userId] || this._buildChannelName(userId);
+        const channelName = this._subscribeChannels[userId];
         return this._liveService.subscribeToChannel(channelName, receiver);
       });
   }
@@ -143,7 +143,7 @@ export class Stream {
   _unsubscribe(userId) {
     return this._unsubscribeFromSubstream(userId)
       .then(() => {
-        const channelName = this._subscribeChannels[userId] || this._buildChannelName(userId);
+        const channelName = this._subscribeChannels[userId];
         this._liveService.unsubscribeFromChannel(channelName);
       });
   }
@@ -170,7 +170,7 @@ export class Stream {
   _publishWithAccessRequest(userId, message) {
     return this._requestPublishAccess(userId)
       .then(() => {
-        const channelName = this._publishChannels[userId] || this._buildChannelName(userId);
+        const channelName = this._publishChannels[userId];
         return this._liveService.publishToChannel(channelName, message);
       });
   }
@@ -182,7 +182,7 @@ export class Stream {
    * @returns {Promise}
    */
   _retriablePublish(userId, message) {
-    const channelName = this._publishChannels[userId] || this._buildChannelName(userId);
+    const channelName = this._publishChannels[userId];
     return this._liveService.publishToChannel(channelName, message)
       .catch((err) => {
         let promise = Promise.reject(err);
@@ -191,15 +191,6 @@ export class Stream {
         }
         return promise;
       });
-  }
-
-  /**
-   * @private
-   * @param {string} userId
-   * @returns {string} The name of the channel for that user
-   */
-  _buildChannelName(userId) {
-    return `${this._client.appKey}.s-${this.name}.u-${userId}`;
   }
 
   /**
