@@ -8,12 +8,17 @@ import { KinveyError } from 'src/errors';
 import { Log, isDefined } from 'src/utils';
 
 const DEFAULT_TIMEOUT = 60000;
+const ACTIVE_USER_KEY = 'active_user';
 let sharedInstance = null;
 
 class ActiveUserStorage {
   memory = new MemoryCache();
 
   get(key) {
+    if (!isString(key)) {
+      throw new KinveyError('ActiveUserStorage key must be a string.');
+    }
+
     try {
       return JSON.parse(this.memory.get(key));
     } catch (e) {
@@ -22,6 +27,10 @@ class ActiveUserStorage {
   }
 
   set(key, value) {
+    if (!isString(key)) {
+      throw new KinveyError('ActiveUserStorage key must be a string.');
+    }
+
     if (isDefined(value)) {
       this.memory.set(key, JSON.stringify(value));
     } else {
@@ -148,14 +157,14 @@ export default class Client {
    * Get the active user.
    */
   getActiveUser() {
-    return this.activeUserStorage.get(this.appKey);
+    return this.activeUserStorage.get(`${this.appKey}.${ACTIVE_USER_KEY}`);
   }
 
   /**
    * Set the active user
    */
   setActiveUser(activeUser) {
-    return this.activeUserStorage.set(this.appKey, activeUser);
+    return this.activeUserStorage.set(`${this.appKey}.${ACTIVE_USER_KEY}`, activeUser);
   }
 
   /**
