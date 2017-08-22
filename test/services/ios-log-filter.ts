@@ -32,6 +32,7 @@ describe("iOSLogFilter", () => {
 				"May 24 14:44:59 iPad-90 mobile_installation_proxy[355] <Error>: 0x1f197000 LoadInfoPlist: Failed to create CFBundle from URL file:///private/var/mobile/Containers/Bundle/Application/0DA02818-DCAE-407C-979D-D55F4F36F8D2/NativeScript300.app",
 				"  May 24 14:44:59 iPad-90 mobile_installation_proxy[355] <Error>: 0x1f197000 LoadInfoPlist: Failed to create CFBundle from URL file:///private/var/mobile/Containers/Bundle/Application/B0EE9362-7BDD-4FF2-868F-857B76D9D8D3/Cordova370.app",
 				"  May 24 14:44:59 iPad-90 NativeScript250[790] <Notice>: CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3472:32: EXCEPTION: Uncaught (in promise): Error: CUSTOM EXCEPTION",
+				"Aug 22 10:59:20 MCSOFAPPBLD TestApp[52946]: CONSOLE LOG file:///app/home/home-view-model.js:6:20: CUSTOM CONSOLE LOG",
 				""
 			],
 			infoExpectedArr: [
@@ -43,6 +44,7 @@ describe("iOSLogFilter", () => {
 				null,
 				null,
 				"CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3472:32: EXCEPTION: Uncaught (in promise): Error: CUSTOM EXCEPTION",
+				"CONSOLE LOG file:///app/home/home-view-model.js:6:20: CUSTOM CONSOLE LOG",
 				""
 			]
 		},
@@ -65,6 +67,7 @@ describe("iOSLogFilter", () => {
 				"UIApplicationMain@[native code]",
 				"start@file:///app/tns_modules/tns-core-modules/application/application.js:251:26",
 				"bootstrapApp@file:///app/tns_module",
+				"Aug 22 10:59:20 MCSOFAPPBLD TestApp[52946]: CONSOLE LOG file:///app/home/home-view-model.js:6:20: CUSTOM CONSOLE LOG",
 				""
 			],
 			infoExpectedArr: [
@@ -84,6 +87,7 @@ describe("iOSLogFilter", () => {
 				null,
 				null,
 				null,
+				"CONSOLE LOG file:///app/home/home-view-model.js:6:20: CUSTOM CONSOLE LOG",
 				""
 			]
 		}
