@@ -1,13 +1,11 @@
-import isString from 'lodash/isString';
-import { Client as CoreClient, KinveyError, isDefined } from 'kinvey-js-sdk/dist/export';
-import Log from 'kinvey-js-sdk/dist/utils';
+import { Client as CoreClient, KinveyError, isDefined, Log } from 'kinvey-js-sdk/dist/export';
 import { SecureStorage } from './secure';
 const storage = new SecureStorage();
 
 class ActiveUserStorage {
-  get(key) {
-    if (!isString(key)) {
-      throw new KinveyError('ActiveUserStorage key must be a string.');
+  get(key: string) {
+    if (typeof key !== 'string') {
+      throw new KinveyError('The key argument must be a string.');
     }
 
     try {
@@ -18,18 +16,35 @@ class ActiveUserStorage {
     }
   }
 
-  set(key, value) {
-    if (!isString(key)) {
-      throw new KinveyError('ActiveUserStorage key must be a string.');
+  set(key: string, value: string|Object) {
+    if (typeof key !== 'string') {
+      throw new KinveyError('The key argument must be a string.');
+    }
+
+    if (value !== null && value !== undefined && typeof value === 'object') {
+      value = JSON.stringify(value);
+    }
+
+    if (value !== null && value !== undefined && typeof value !== 'string') {
+      value = String(value);
     }
 
     if (isDefined(value)) {
-      storage.set(key, JSON.stringify(value));
+      storage.set(key, value);
     } else {
-      storage.remove(key);
+      this.remove(key);
     }
 
     return value;
+  }
+
+  remove(key: string) {
+    if (typeof key !== 'string') {
+      throw new KinveyError('The key argument must be a string.');
+    }
+
+    storage.remove(key);
+    return null;
   }
 }
 

@@ -4,8 +4,8 @@ export class SecureStorage {
   private defaultService = 'kinvey_nativescript_sdk';
 
   get(key): any {
-    if (key === null || key === undefined) {
-      throw new Error('A key must be provided.');
+    if (typeof key !== 'string') {
+      throw new Error('The key argument must be a string.');
     }
 
     const query = SAMKeychainQuery.new();
@@ -21,15 +21,15 @@ export class SecureStorage {
   }
 
   set(key, value): boolean {
-    if (key === null || key === undefined) {
-      throw new Error('A key must be provided.');
+    if (typeof key !== 'string') {
+      throw new Error('The key argument must be a string.');
     }
 
-    if (value !== null && typeof value === 'object') {
+    if (value !== null && value !== undefined && typeof value === 'object') {
       value = JSON.stringify(value);
     }
 
-    if (value !== null && typeof value !== 'string') {
+    if (value !== null && value !== undefined && typeof value !== 'string') {
       value = String(value);
     }
 
@@ -44,8 +44,8 @@ export class SecureStorage {
   }
 
   remove(key): boolean {
-    if (key === null || key === undefined) {
-      throw new Error('A key must be provided.');
+    if (typeof key !== 'string') {
+      throw new Error('The key argument must be a string.');
     }
 
     const query = SAMKeychainQuery.new();
