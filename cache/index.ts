@@ -1,9 +1,9 @@
 import { isDefined } from 'kinvey-js-sdk/dist/export';
 import { CacheMiddleware as CoreCacheMiddleware } from 'kinvey-js-sdk/dist/request';
-import KinveyStorage from 'kinvey-js-sdk/dist/request/src/middleware/src/storage';
+import { Storage as CoreStorage } from 'kinvey-js-sdk/dist/request/src/middleware/src/storage';
 import { SQLite } from './sqlite';
 
-class Storage extends KinveyStorage {
+class Storage extends CoreStorage {
   name: string;
 
   constructor(name: string) {
@@ -23,7 +23,7 @@ class Storage extends KinveyStorage {
 }
 
 export class CacheMiddleware extends CoreCacheMiddleware {
-  loadStorage(name): KinveyStorage {
+  loadStorage(name): Storage {
     return new Storage(name);
   }
 }
