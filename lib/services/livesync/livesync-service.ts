@@ -17,7 +17,7 @@ const LiveSyncEvents = {
 
 export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 	// key is projectDir
-	private liveSyncProcessesInfo: IDictionary<ILiveSyncProcessInfo> = {};
+	protected liveSyncProcessesInfo: IDictionary<ILiveSyncProcessInfo> = {};
 
 	constructor(protected $platformService: IPlatformService,
 		private $projectDataService: IProjectDataService,
@@ -48,12 +48,10 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 			// so we cannot await it as this will cause infinite loop.
 			const shouldAwaitPendingOperation = !stopOptions || stopOptions.shouldAwaitAllActions;
 
-			let removedDeviceIdentifiers: string[] = deviceIdentifiers || [];
+			const deviceIdentifiersToRemove = deviceIdentifiers || _.map(liveSyncProcessInfo.deviceDescriptors, d => d.identifier);
 
-			_.each(deviceIdentifiers, deviceId => {
-				removedDeviceIdentifiers = _.remove(liveSyncProcessInfo.deviceDescriptors, descriptor => descriptor.identifier === deviceId)
-					.map(deviceDescriptor => deviceDescriptor.identifier);
-			});
+			const removedDeviceIdentifiers = _.remove(liveSyncProcessInfo.deviceDescriptors, descriptor => _.includes(deviceIdentifiersToRemove, descriptor.identifier))
+				.map(descriptor => descriptor.identifier);
 
 			// In case deviceIdentifiers are not passed, we should stop the whole LiveSync.
 			if (!deviceIdentifiers || !deviceIdentifiers.length || !liveSyncProcessInfo.deviceDescriptors || !liveSyncProcessInfo.deviceDescriptors.length) {
@@ -72,7 +70,6 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 					await liveSyncProcessInfo.actionsChain;
 				}
 
-				removedDeviceIdentifiers = _.map(liveSyncProcessInfo.deviceDescriptors, d => d.identifier);
 				liveSyncProcessInfo.deviceDescriptors = [];
 
 				// Kill typescript watcher
@@ -91,6 +88,12 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 				this.emit(LiveSyncEvents.liveSyncStopped, { projectDir, deviceIdentifier });
 			});
 		}
+	}
+
+	public getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[] {
+		const liveSyncProcessesInfo = this.liveSyncProcessesInfo[projectDir] || <ILiveSyncProcessInfo>{};
+		const currentDescriptors = liveSyncProcessesInfo.deviceDescriptors;
+		return currentDescriptors || [];
 	}
 
 	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo): Promise<void> {
@@ -127,7 +130,8 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		const isAlreadyLiveSyncing = this.liveSyncProcessesInfo[projectData.projectDir] && !this.liveSyncProcessesInfo[projectData.projectDir].isStopped;
 
 		// Prevent cases where liveSync is called consecutive times with the same device, for example [ A, B, C ] and then [ A, B, D ] - we want to execute initialSync only for D.
-		const deviceDescriptorsForInitialSync = isAlreadyLiveSyncing ? _.differenceBy(deviceDescriptors, this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors, deviceDescriptorPrimaryKey) : deviceDescriptors;
+		const currentlyRunningDeviceDescriptors = this.getLiveSyncDeviceDescriptors(projectData.projectDir);
+		const deviceDescriptorsForInitialSync = isAlreadyLiveSyncing ? _.differenceBy(deviceDescriptors, currentlyRunningDeviceDescriptors, deviceDescriptorPrimaryKey) : deviceDescriptors;
 		this.setLiveSyncProcessInfo(liveSyncData.projectDir, deviceDescriptors);
 
 		await this.initialSync(projectData, deviceDescriptorsForInitialSync, liveSyncData);
@@ -146,7 +150,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		this.liveSyncProcessesInfo[projectDir].currentSyncAction = this.liveSyncProcessesInfo[projectDir].actionsChain;
 		this.liveSyncProcessesInfo[projectDir].isStopped = false;
 
-		const currentDeviceDescriptors = this.liveSyncProcessesInfo[projectDir].deviceDescriptors || [];
+		const currentDeviceDescriptors = this.getLiveSyncDeviceDescriptors(projectDir);
 		this.liveSyncProcessesInfo[projectDir].deviceDescriptors = _.uniqBy(currentDeviceDescriptors.concat(deviceDescriptors), deviceDescriptorPrimaryKey);
 	}
 
