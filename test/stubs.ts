@@ -500,6 +500,10 @@ export class LiveSyncServiceStub implements ILiveSyncService {
 	public async stopLiveSync(projectDir: string): Promise<void> {
 		return;
 	}
+
+	public getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[] {
+		return [];
+	}
 }
 
 export class AndroidToolsInfoStub implements IAndroidToolsInfo {

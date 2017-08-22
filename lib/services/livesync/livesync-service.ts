@@ -50,7 +50,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 
 			const deviceIdentifiersToRemove = deviceIdentifiers || _.map(liveSyncProcessInfo.deviceDescriptors, d => d.identifier);
 
-			const removedDeviceIdentifiers = _.remove(liveSyncProcessInfo.deviceDescriptors, descriptor => _.indexOf(deviceIdentifiersToRemove, descriptor.identifier) !== -1)
+			const removedDeviceIdentifiers = _.remove(liveSyncProcessInfo.deviceDescriptors, descriptor => _.includes(deviceIdentifiersToRemove, descriptor.identifier))
 				.map(descriptor => descriptor.identifier);
 
 			// In case deviceIdentifiers are not passed, we should stop the whole LiveSync.
@@ -90,6 +90,12 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		}
 	}
 
+	public getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[] {
+		const liveSyncProcessesInfo = this.liveSyncProcessesInfo[projectDir] || <ILiveSyncProcessInfo>{};
+		const currentDescriptors = liveSyncProcessesInfo.deviceDescriptors;
+		return currentDescriptors || [];
+	}
+
 	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo): Promise<void> {
 		const platformLiveSyncService = this.getLiveSyncService(liveSyncResultInfo.deviceAppData.platform);
 		try {
@@ -124,7 +130,8 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		const isAlreadyLiveSyncing = this.liveSyncProcessesInfo[projectData.projectDir] && !this.liveSyncProcessesInfo[projectData.projectDir].isStopped;
 
 		// Prevent cases where liveSync is called consecutive times with the same device, for example [ A, B, C ] and then [ A, B, D ] - we want to execute initialSync only for D.
-		const deviceDescriptorsForInitialSync = isAlreadyLiveSyncing ? _.differenceBy(deviceDescriptors, this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors, deviceDescriptorPrimaryKey) : deviceDescriptors;
+		const currentlyRunningDeviceDescriptors = this.getLiveSyncDeviceDescriptors(projectData.projectDir);
+		const deviceDescriptorsForInitialSync = isAlreadyLiveSyncing ? _.differenceBy(deviceDescriptors, currentlyRunningDeviceDescriptors, deviceDescriptorPrimaryKey) : deviceDescriptors;
 		this.setLiveSyncProcessInfo(liveSyncData.projectDir, deviceDescriptors);
 
 		await this.initialSync(projectData, deviceDescriptorsForInitialSync, liveSyncData);
@@ -143,7 +150,7 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 		this.liveSyncProcessesInfo[projectDir].currentSyncAction = this.liveSyncProcessesInfo[projectDir].actionsChain;
 		this.liveSyncProcessesInfo[projectDir].isStopped = false;
 
-		const currentDeviceDescriptors = this.liveSyncProcessesInfo[projectDir].deviceDescriptors || [];
+		const currentDeviceDescriptors = this.getLiveSyncDeviceDescriptors(projectDir);
 		this.liveSyncProcessesInfo[projectDir].deviceDescriptors = _.uniqBy(currentDeviceDescriptors.concat(deviceDescriptors), deviceDescriptorPrimaryKey);
 	}
 

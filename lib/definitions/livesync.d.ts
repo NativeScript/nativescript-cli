@@ -185,6 +185,15 @@ interface ILiveSyncService {
 	 * @returns {Promise<void>}
 	 */
 	stopLiveSync(projectDir: string, deviceIdentifiers?: string[], stopOptions?: { shouldAwaitAllActions: boolean }): Promise<void>;
+
+	/**
+	 * Returns the device information for current LiveSync operation of specified project.
+	 * In case LiveSync has been started on many devices, but stopped for some of them at a later point,
+	 * calling the method after that will return information only for devices for which LiveSync operation is in progress.
+	 * @param {string} projectDir The path to project for which the LiveSync operation is executed
+	 * @returns {ILiveSyncDeviceInfo[]} Array of elements describing parameters used to start LiveSync on each device.
+	 */
+	getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[];
 }
 
 /**

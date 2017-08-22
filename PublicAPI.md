@@ -623,6 +623,29 @@ tns.liveSyncService.stopLiveSync(projectDir, deviceIdentifiers)
 	});
 ```
 
+### getLiveSyncDeviceDescriptors
+Gives information for currently running LiveSync operation and parameters used to start it on each device.
+
+* Definition
+```TypeScript
+/**
+ * Returns the device information for current LiveSync operation of specified project.
+ * In case LiveSync has been started on many devices, but stopped for some of them at a later point,
+ * calling the method after that will return information only for devices for which LiveSync operation is in progress.
+ * @param {string} projectDir The path to project for which the LiveSync operation is executed
+ * @returns {ILiveSyncDeviceInfo[]} Array of elements describing parameters used to start LiveSync on each device.
+*/
+getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[];
+```
+
+* Usage
+```JavaScript
+const projectDir = "myProjectDir";
+const deviceIdentifiers = [ "4df18f307d8a8f1b", "12318af23ebc0e25" ];
+const currentlyRunningDescriptors = tns.liveSyncService.getLiveSyncDeviceDescriptors(projectDir);
+console.log(`LiveSync for ${projectDir} is currently running on the following devices: ${currentlyRunningDescriptors.map(descriptor => descriptor.identifier)}`);
+```
+
 ### Events
 `liveSyncService` raises several events in order to provide information for current state of the operation.
 * liveSyncStarted - raised whenever CLI starts a LiveSync operation for specific device. When `liveSync` method is called, the initial LiveSync operation will emit `liveSyncStarted` for each specified device. After that the event will be emitted only in case when liveSync method is called again with different device instances. The event is raised with the following data:
