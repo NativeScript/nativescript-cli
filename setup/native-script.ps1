@@ -55,8 +55,8 @@ function Pause {
 }
 
 # Actually installing all other dependencies
-# Install Chocolately
-Install "Chocolately(It's mandatory for the rest of the script)" "Installing Chocolately" "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))"
+# Install Chocolatey
+Install "Chocolatey (It's mandatory for the rest of the script)" "Installing Chocolatey" "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))"
 
 if ((Get-Command "cinst" -ErrorAction SilentlyContinue) -eq $null) {
 	Write-Host -ForegroundColor Red "Chocolatey is not installed or not configured properly. Download it from https://chocolatey.org/, install, set it up and run this script again."
@@ -64,7 +64,7 @@ if ((Get-Command "cinst" -ErrorAction SilentlyContinue) -eq $null) {
 	exit 1
 }
 
-# Install dependenciess with Chocolately
+# Install dependenciess with Chocolatey
 
 Install "Google Chrome" "Installing Google Chrome (required to debug NativeScript apps)" "cinst googlechrome --force --yes"
 
