@@ -144,6 +144,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		config.pathToTemplate = customTemplateOptions && customTemplateOptions.pathToTemplate;
 
 		if (!nativePrepare || !nativePrepare.skipNativePrepare) {
+			const platformDir = path.join(projectData.platformsDir, platformData.normalizedPlatformName.toLowerCase());
+			this.$fs.deleteDirectory(platformDir);
 			await this.addPlatformCoreNative(platformData, frameworkDir, installedVersion, projectData, config);
 		}
 
