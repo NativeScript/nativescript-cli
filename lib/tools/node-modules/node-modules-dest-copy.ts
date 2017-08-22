@@ -65,7 +65,9 @@ export class TnsModulesCopy {
 			const dependencies = _.flatten(this.$fs.readDirectory(dependenciesFolder)
 				.map(dir => {
 					if (_.startsWith(dir, "@")) {
-						return this.$fs.readDirectory(path.join(dependenciesFolder, dir));
+						const pathToDir = path.join(dependenciesFolder, dir);
+						const contents = this.$fs.readDirectory(pathToDir);
+						return _.map(contents, subDir => `${dir}/${subDir}`);
 					}
 
 					return dir;
