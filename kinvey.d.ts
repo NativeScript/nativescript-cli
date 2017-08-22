@@ -7,8 +7,8 @@ import { Observable } from 'rxjs/Observable';
 export namespace Kinvey {
   var appVersion: string;
   function initialize(config: ClientConfig): Promise<User>;
-  function init(config: ClientConfig): void;
-  
+  function init(config: ClientConfig): Client;
+
   interface PingResponse {
     version: string,
     kinvey: string,
