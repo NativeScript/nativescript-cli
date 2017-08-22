@@ -1,3 +1,5 @@
+import PubNub from 'pubnub';
+
 import isFunction from 'lodash/isFunction';
 import isObject from 'lodash/isObject';
 import extend from 'lodash/extend';
@@ -59,6 +61,29 @@ class LiveService {
     return this.__pubnubListener;
   }
 
+  fullInitialization(user) {
+    return this.registerUser(user)
+      .then((pubnubConfig) => {
+        const pubnubClient = new PubNub(pubnubConfig);
+        const listener = new PubNubListener();
+        this.initialize(pubnubClient, listener);
+      });
+  }
+
+  fullUninitialization() {
+    let promise = Promise.resolve();
+
+    if (this.isInitialized()) {
+      promise = this.unregisterUser()
+        .then((resp) => {
+          this.uninitialize();
+          return resp;
+        });
+    }
+
+    return promise;
+  }
+
   isInitialized() {
     return !!this.__pubnubClient && !!this.__pubnubListener && !!this._registeredUser;
   }
@@ -96,8 +121,7 @@ class LiveService {
   }
 
   /**
-   * Unsubscribes from all events in PubNub client and in listener.
-   * Unregisters user from live service
+   * Unsubscribes from all events in PubNub client and in listener
    */
   uninitialize() {
     this.unsubscribeFromAll();

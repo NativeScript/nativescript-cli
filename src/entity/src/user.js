@@ -13,7 +13,7 @@ import { MobileIdentityConnect } from 'src/identity';
 import { Log, isDefined } from 'src/utils';
 import Acl from './acl';
 import Metadata from './metadata';
-import { LiveServiceFacade } from '../../live';
+import { getLiveService } from '../../live';
 
 /**
  * The User class is used to represent a single user on the Kinvey platform.
@@ -389,13 +389,8 @@ export default class User {
       client: this.client
     });
 
-    let prm = Promise.resolve();
-
-    if (LiveServiceFacade.isInitialized()) {
-      prm = LiveServiceFacade.unregister();
-    }
-
-    return prm.then(() => request.execute())
+    return this.unregisterRealTime()
+      .then(() => request.execute())
       .catch((error) => {
         Log.error(error);
         return null;
@@ -614,54 +609,14 @@ export default class User {
       });
   }
 
-  registerRealTime(options = {}) {
-    // Check if this is the active user
-    if (this.isActive() === false) {
-      return Promise.reject(
-        new KinveyError('This user must be the active user in order to register for real time.')
-      );
-    }
-
-    // Register the active user
-    const request = new KinveyRequest({
-      method: RequestMethod.POST,
-      authType: AuthType.Session,
-      url: url.format({
-        protocol: this.client.apiProtocol,
-        host: this.client.apiHost,
-        pathname: `/user/${this.client.appKey}/${this._id}/register-realtime`
-      }),
-      body: { deviceId: this.client.deviceId },
-      properties: options.properties,
-      timeout: options.timeout
-    });
-    return request.execute()
-      .then(response => response.data);
+  registerRealTime() {
+    return getLiveService(this.client)
+      .fullInitialization(this);
   }
 
-  unregisterRealTime(options = {}) {
-    // Check if this is the active user
-    if (this.isActive() === false) {
-      return Promise.reject(
-        new KinveyError('This user must be the active user in order to unregister for real time.')
-      );
-    }
-
-    // Unregister the active user
-    const request = new KinveyRequest({
-      method: RequestMethod.POST,
-      authType: AuthType.Session,
-      url: url.format({
-        protocol: this.client.apiProtocol,
-        host: this.client.apiHost,
-        pathname: `/user/${this.client.appKey}/${this._id}/unregister-realtime`
-      }),
-      body: { deviceId: this.client.deviceId },
-      properties: options.properties,
-      timeout: options.timeout
-    });
-    return request.execute()
-      .then(response => response.data);
+  unregisterRealTime() {
+    return getLiveService()
+      .fullUninitialization();
   }
 
   /**
