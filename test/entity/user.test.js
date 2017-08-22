@@ -9,7 +9,7 @@ import expect from 'expect';
 import nock from 'nock';
 import assign from 'lodash/assign';
 import localStorage from 'local-storage';
-import { LiveServiceFacade } from '../../src/live';
+import { getLiveService } from '../../src/live';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 describe('User', function () {
@@ -495,34 +495,98 @@ describe('User', function () {
         });
     });
 
-    describe('live service interaction', () => {
-      afterEach(() => expect.restoreSpies());
+    it('should unregister user from Live Service', () => {
+      const activeUser = User.getActiveUser();
+      const spy = expect.spyOn(activeUser, 'unregisterFromLiveService')
+        .andReturn(Promise.resolve());
 
-      it('should unregister user from Live Service, if user was registered', () => {
-        const unregisterSpy = expect.spyOn(LiveServiceFacade, 'unregister')
-          .andReturn(Promise.resolve());
-        const initSpy = expect.spyOn(LiveServiceFacade, 'isInitialized')
+      return activeUser.logout()
+        .then(() => {
+          expect(spy).toHaveBeenCalled();
+          expect.restoreSpies();
+        });
+    });
+  });
+
+  describe('live service registration management', () => {
+    let activeUser;
+    let liveService;
+
+    beforeEach(() => {
+      activeUser = User.getActiveUser();
+      liveService = getLiveService(Client.sharedInstance());
+    });
+
+    afterEach(() => expect.restoreSpies());
+
+    describe('registerForLiveService', () => {
+      it('should do nothing, if already registered', () => {
+        const spy = expect.spyOn(liveService, 'fullInitialization');
+        expect.spyOn(liveService, 'isInitialized')
           .andReturn(true);
 
-        return UserMock.logout()
+        return activeUser.registerForLiveService()
           .then(() => {
-            expect(initSpy).toHaveBeenCalled();
-            expect(unregisterSpy).toHaveBeenCalled();
+            expect(spy).toNotHaveBeenCalled();
           });
       });
 
-      it('should not unregister user from Live Service, if user was not registered', () => {
-        const unregisterSpy = expect.spyOn(LiveServiceFacade, 'unregister');
-        const unitSpy = expect.spyOn(LiveServiceFacade, 'isInitialized')
-          .andCallThrough();
-        expect(LiveServiceFacade.isInitialized()).toBe(false);
+      it('should call LiveService\'s fullInitialization() method, if not registered', () => {
+        const spy = expect.spyOn(liveService, 'fullInitialization')
+          .andReturn(Promise.resolve());
+        expect.spyOn(liveService, 'isInitialized')
+          .andReturn(false);
 
-        return UserMock.logout()
+        return activeUser.registerForLiveService()
           .then(() => {
-            expect(unitSpy).toHaveBeenCalled();
-            expect(unregisterSpy).toNotHaveBeenCalled();
+            expect(spy).toHaveBeenCalledWith(activeUser);
           });
       });
+    });
+
+    describe('unregisterFromLiveService', () => {
+      let activeUser;
+      let liveService;
+
+      beforeEach(() => {
+        activeUser = User.getActiveUser();
+        liveService = getLiveService(Client.sharedInstance());
+      });
+
+      it('should do nothing, if not registered', () => {
+        const spy = expect.spyOn(liveService, 'fullUninitialization');
+        expect.spyOn(liveService, 'isInitialized')
+          .andReturn(false);
+
+        return activeUser.unregisterFromLiveService()
+          .then(() => {
+            expect(spy).toNotHaveBeenCalled();
+          });
+      });
+
+      it('should call LiveService\'s fullUninitialization() method, if registered', () => {
+        const spy = expect.spyOn(liveService, 'fullUninitialization')
+          .andReturn(Promise.resolve());
+        expect.spyOn(liveService, 'isInitialized')
+          .andReturn(true);
+
+        return activeUser.unregisterFromLiveService()
+          .then(() => {
+            expect(spy).toHaveBeenCalled();
+          });
+      });
+    });
+  });
+
+  describe('static live service methods', () => {
+    describe('static registerForLiveService', () => {
+      it('should return an error if there is no active user');
+      it('should call the LiveService\'s registerUser() method with the current active user');
+    });
+
+    describe('static unregisterFromLiveService', () => {
+      it('should return an error if there is no active user');
+      it('should call the LiveService\'s unregisterUser() method with the current active user');
     });
   });
 

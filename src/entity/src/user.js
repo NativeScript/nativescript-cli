@@ -389,7 +389,7 @@ export default class User {
       client: this.client
     });
 
-    return this.unregisterRealTime()
+    return this.unregisterFromLiveService()
       .then(() => request.execute())
       .catch((error) => {
         Log.error(error);
@@ -609,14 +609,48 @@ export default class User {
       });
   }
 
-  registerRealTime() {
-    return getLiveService(this.client)
-      .fullInitialization(this);
+  /**
+   * @returns {Promise}
+   */
+  static registerForLiveService() {
+    const activeUser = User.getActiveUser();
+
+    if (activeUser) {
+      return activeUser.registerForLiveService();
+    }
+
+    return Promise.reject(new ActiveUserError('There is no active user'));
   }
 
-  unregisterRealTime() {
-    return getLiveService()
-      .fullUninitialization();
+  /**
+   * @returns {Promise}
+   */
+  static unregisterFromLiveService() {
+    const activeUser = User.getActiveUser();
+
+    if (activeUser) {
+      return activeUser.unregisterFromLiveService();
+    }
+
+    return Promise.reject(new ActiveUserError('There is no active user'));
+  }
+
+  registerForLiveService() {
+    const liveService = getLiveService(this.client);
+    let promise = Promise.resolve();
+    if (!liveService.isInitialized()) {
+      promise = liveService.fullInitialization(this);
+    }
+    return promise;
+  }
+
+  unregisterFromLiveService() {
+    const liveService = getLiveService(this.client);
+    let promise = Promise.resolve();
+    if (liveService.isInitialized()) {
+      promise = liveService.fullUninitialization();
+    }
+    return promise;
   }
 
   /**

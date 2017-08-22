@@ -1,7 +1,7 @@
 import expect from 'expect';
+import PubNub from 'pubnub';
 
 import { randomString } from 'src/utils';
-import { UserMock } from 'test/mocks';
 
 import Kinvey from '../../../src/kinvey';
 import { PubNubListener, getLiveService } from '../../../src/live';
@@ -14,6 +14,7 @@ import {
 const pathToLiveService = '../../../src/live/src/user-to-user/live-service';
 const notInitializedCheckRegexp = new RegExp('not.*initialized', 'i');
 const invalidOrMissingCheckRegexp = new RegExp('(invalid)|(missing)', 'i');
+const alreadyInitializedCheckRegexp = new RegExp('already initialized', 'i');
 
 describe('LiveService', () => {
   let client;
@@ -114,6 +115,16 @@ describe('LiveService', () => {
       nockScope.done();
     });
 
+    it('should fail if already initialized', () => {
+      expect.spyOn(liveService, 'isInitialized')
+        .andReturn(true);
+
+      expect(() => {
+        liveService.initialize();
+      })
+        .toThrow(alreadyInitializedCheckRegexp);
+    });
+
     it('should register a PubNubListener instance to PubNub client', () => {
       const addListenerSpy = expect.spyOn(pubnubClient, 'addListener');
 
@@ -130,6 +141,80 @@ describe('LiveService', () => {
       const spy = expect.spyOn(pubnubClient, 'subscribe');
       liveService.initialize(pubnubClient, pubnubListener);
       expect(spy).toHaveBeenCalledWith({ channelGroups: [registerUserResponse.userChannelGroup] });
+    });
+  });
+
+  describe('fullInitialization', () => {
+    it('should fail if already initialized', (done) => {
+      expect.spyOn(liveService, 'isInitialized')
+        .andReturn(true);
+
+      liveService.fullInitialization(Kinvey.User.getActiveUser())
+        .then(() => done(new Error('fullInitialization succeeded when already initialized')))
+        .catch((err) => {
+          expect(err.message).toMatch(alreadyInitializedCheckRegexp);
+          done();
+        })
+        .catch(err => done(err));
+    });
+
+    it('should fail if no user is passed', (done) => {
+      liveService.fullInitialization()
+        .then(() => done(new Error('registration succeeded with no user')))
+        .catch((err) => {
+          expect(err.message).toMatch(invalidOrMissingCheckRegexp);
+          done();
+        })
+        .catch(err => done(err));
+    });
+
+    it('should fail if passed user is not the active user', (done) => {
+      liveService.fullInitialization(new Kinvey.User())
+        .then(() => done(new Error('registration succeeded with no user')))
+        .catch((err) => {
+          expect(err.message).toMatch(invalidOrMissingCheckRegexp);
+          done();
+        })
+        .catch(err => done(err));
+    });
+
+    it('should call both registerUser() and initialize() methods', () => {
+      const userRegSpy = expect.spyOn(liveService, 'registerUser')
+        .andReturn(Promise.resolve({}));
+      const initializeSpy = expect.spyOn(liveService, 'initialize');
+      const activeUser = Kinvey.User.getActiveUser();
+      return liveService.fullInitialization(activeUser)
+        .then(() => {
+          expect(userRegSpy.calls.length).toBe(1);
+          expect(userRegSpy).toHaveBeenCalledWith(activeUser);
+          expect(initializeSpy.calls.length).toBe(1);
+          expect(initializeSpy.calls[0].arguments.length).toBe(2);
+          expect(initializeSpy.calls[0].arguments[0]).toBeA(PubNub);
+          expect(initializeSpy.calls[0].arguments[1]).toBeA(PubNubListener);
+        });
+    });
+  });
+
+  describe('fullUninitialization', () => {
+    it('should fail if not initialized', () => {
+      expect(liveService.isInitialized()).toBe(false);
+      return liveService.fullUninitialization()
+        .then(() => Promise.reject(new Error('fullUninitialization succeeded when not initialized')))
+        .catch((err) => {
+          expect(err.message).toMatch(/cannot.*unregister/i);
+        });
+    });
+
+    it('should call both unregisterUser() and uninitialize() methods', () => {
+      const unregSpy = expect.spyOn(liveService, 'unregisterUser')
+        .andReturn(Promise.resolve());
+      const uninitSpy = expect.spyOn(liveService, 'uninitialize');
+
+      return liveService.fullUninitialization()
+        .then(() => {
+          expect(unregSpy).toHaveBeenCalled();
+          expect(uninitSpy).toHaveBeenCalled();
+        });
     });
   });
 
@@ -422,21 +507,6 @@ describe('LiveService', () => {
         liveService.offConnectionStatusUpdates();
         expect(offSpy).toHaveBeenCalledWith(PubNubListener.unclassifiedEvents);
       });
-    });
-  });
-
-  describe('user-facing facade', () => {
-    it('should have only the user-facing methods of LiveService', () => {
-      const facadeMethods = [
-        'register',
-        'unregister',
-        'onConnectionStatusUpdates',
-        'offConnectionStatusUpdates',
-        'unsubscribeFromAll',
-        'isInitialized'
-      ];
-      expect(Object.keys(Kinvey.LiveService).length).toBe(facadeMethods.length);
-      expect(Kinvey.LiveService).toIncludeKeys(facadeMethods);
     });
   });
 });

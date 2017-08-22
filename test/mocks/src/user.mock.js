@@ -113,11 +113,6 @@ export default class UserMock extends User {
     nock(this.client.apiHostname, { encodedQueryParams: true })
       .post(`${this.pathname}/_logout`)
       .reply(204);
-      
-    if (LiveServiceFacade.isInitialized()) {
-      nockHelper.setClient(Client.sharedInstance());
-      nockHelper.mockUnregisterRealtimeCall();
-    }
 
     // Logout
     return super.logout(options);

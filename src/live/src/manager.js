@@ -27,7 +27,7 @@ const LiveServiceManager = {
     }
 
     // Register the user for real time
-    return activeUser.registerRealTime(options)
+    return activeUser.registerForLiveService(options)
       .then((pubnubConfig) => {
         pubnubConfig = assign({ authKey: activeUser.authtoken }, pubnubConfig);
         const key = collection;

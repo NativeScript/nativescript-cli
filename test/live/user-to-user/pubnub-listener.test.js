@@ -2,7 +2,7 @@ import expect from 'expect';
 
 import { PubNubListener } from '../../../src/live';
 
-describe.only('PubNubListener', function () {
+describe('PubNubListener', function () {
   /** @type {PubNubListener} */
   let listener;
   const channelName = 'someChannel';

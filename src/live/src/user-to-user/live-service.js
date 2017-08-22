@@ -32,7 +32,6 @@ class LiveService {
   _registeredUser;
 
   /**
-   * @constructor
    * @param {Client} client
    */
   constructor(client) {
@@ -61,6 +60,11 @@ class LiveService {
     return this.__pubnubListener;
   }
 
+  /**
+   * Registers user for live service and initializes LiveService instance
+   * @param {User} user
+   * @returns {Promise}
+   */
   fullInitialization(user) {
     return this.registerUser(user)
       .then((pubnubConfig) => {
@@ -70,18 +74,17 @@ class LiveService {
       });
   }
 
+  /**
+   * Unregisters user from live service and uninitializes LiveService instance
+   * @param {User} user
+   * @returns {Promise}
+   */
   fullUninitialization() {
-    let promise = Promise.resolve();
-
-    if (this.isInitialized()) {
-      promise = this.unregisterUser()
-        .then((resp) => {
-          this.uninitialize();
-          return resp;
-        });
-    }
-
-    return promise;
+    return this.unregisterUser()
+      .then((resp) => {
+        this.uninitialize();
+        return resp;
+      });
   }
 
   isInitialized() {
@@ -90,11 +93,16 @@ class LiveService {
 
   /**
    * Registers the active user for live service
+   * @param {User} user
    * @returns {Promise}
    */
   registerUser(user) {
     if (!user || !user.isActive()) {
       return Promise.reject(new ActiveUserError('Missing or invalid active user'));
+    }
+
+    if (this.isInitialized()) {
+      return Promise.reject(new KinveyError('Live service already initialized'));
     }
 
     return this._makeRegisterRequest(user._id)
@@ -114,6 +122,10 @@ class LiveService {
    * @param {PubNubListener} pubnubListener
    */
   initialize(pubnubClient, pubnubListener) {
+    if (this.isInitialized()) {
+      throw new KinveyError('Live service already initialized');
+    }
+
     this._pubnubListener = pubnubListener;
     this._pubnubClient = pubnubClient;
     this._pubnubClient.addListener(this._pubnubListener);

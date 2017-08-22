@@ -34,40 +34,12 @@ describe('LiveServiceFacade', () => {
 
   it('should have only user-facing LiveService methods', () => {
     const expectedMethods = [
-      'register',
-      'unregister',
       'onConnectionStatusUpdates',
       'offConnectionStatusUpdates',
       'unsubscribeFromAll',
       'isInitialized'
     ];
     expect(LiveServiceFacade).toContainKeys(expectedMethods);
-  });
-
-  describe('register', () => {
-    it('should call LiveService\'s registerUser() and initialize() methods', () => {
-      const initializeSpy = expect.spyOn(liveServiceMock, 'initialize');
-      const registerUserSpy = expect.spyOn(liveServiceMock, 'registerUser')
-        .andReturn(Promise.resolve({}));
-
-      return LiveServiceFacade.register()
-        .then((resp) => {
-          expect(registerUserSpy).toHaveBeenCalledWith(Kinvey.User.getActiveUser());
-          expect(initializeSpy.calls.length).toBe(1);
-          expect(initializeSpy.calls[0].arguments[0]).toBeA(PubNub);
-          expect(initializeSpy.calls[0].arguments[1]).toBeA(PubNubListener);
-        });
-    });
-  });
-
-  describe('unregister', () => {
-    it('should call LiveService\'s unregisterUser() and uninitialize() methods', () => {
-      const uninitSpy = expect.spyOn(liveServiceMock, 'uninitialize');
-      const unregisterUserSpy = expect.spyOn(liveServiceMock, 'unregisterUser')
-        .andReturn(Promise.resolve({}));
-
-      return LiveServiceFacade.unregister();
-    });
   });
 
   describe('onConnectionStatusUpdates', () => {
