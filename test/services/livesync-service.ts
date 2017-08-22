@@ -1,0 +1,147 @@
+import { Yok } from "../../lib/common/yok";
+import { assert } from "chai";
+import { LiveSyncService } from "../../lib/services/livesync/livesync-service";
+import { LoggerStub } from "../stubs";
+
+const createTestInjector = (): IInjector => {
+	const testInjector = new Yok();
+
+	testInjector.register("platformService", {});
+	testInjector.register("projectDataService", {
+		getProjectData: (projectDir: string): IProjectData => (<any>{})
+	});
+
+	testInjector.register("devicesService", {});
+	testInjector.register("mobileHelper", {});
+	testInjector.register("devicePlatformsConstants", {});
+	testInjector.register("nodeModulesDependenciesBuilder", {});
+	testInjector.register("logger", LoggerStub);
+	testInjector.register("processService", {});
+	testInjector.register("hooksService", {
+		executeAfterHooks: (commandName: string, hookArguments?: IDictionary<any>): Promise<void> => Promise.resolve()
+	});
+
+	testInjector.register("pluginsService", {});
+	testInjector.register("injector", testInjector);
+
+	return testInjector;
+};
+
+class LiveSyncServiceInheritor extends LiveSyncService {
+	constructor($platformService: IPlatformService,
+		$projectDataService: IProjectDataService,
+		$devicesService: Mobile.IDevicesService,
+		$mobileHelper: Mobile.IMobileHelper,
+		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		$nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
+		$logger: ILogger,
+		$processService: IProcessService,
+		$hooksService: IHooksService,
+		$pluginsService: IPluginsService,
+		$injector: IInjector) {
+
+		super(
+			$platformService,
+			$projectDataService,
+			$devicesService,
+			$mobileHelper,
+			$devicePlatformsConstants,
+			$nodeModulesDependenciesBuilder,
+			$logger,
+			$processService,
+			$hooksService,
+			$pluginsService,
+			$injector
+		);
+	}
+
+	public liveSyncProcessesInfo: IDictionary<ILiveSyncProcessInfo> = {};
+}
+
+interface IStopLiveSyncTestCase {
+	name: string;
+	currentDeviceIdentifiers: string[];
+	expectedDeviceIdentifiers: string[];
+	deviceIdentifiersToBeStopped?: string[];
+}
+
+describe("liveSyncService", () => {
+	describe("stopLiveSync", () => {
+		const getLiveSyncProcessInfo = (): ILiveSyncProcessInfo => ({
+			actionsChain: Promise.resolve(),
+			currentSyncAction: Promise.resolve(),
+			isStopped: false,
+			timer: setTimeout(() => undefined, 1000),
+			watcherInfo: {
+				watcher: <any>{
+					close: (): any => undefined
+				},
+				pattern: "pattern"
+			},
+			deviceDescriptors: []
+		});
+
+		const getDeviceDescriptor = (identifier: string): ILiveSyncDeviceInfo => ({
+			identifier,
+			outputPath: "",
+			skipNativePrepare: false,
+			platformSpecificOptions: null,
+			buildAction: () => Promise.resolve("")
+		});
+
+		const testCases: IStopLiveSyncTestCase[] = [
+			{
+				name: "stops LiveSync operation for all devices and emits liveSyncStopped for all of them when stopLiveSync is called without deviceIdentifiers",
+				currentDeviceIdentifiers: ["device1", "device2", "device3"],
+				expectedDeviceIdentifiers: ["device1", "device2", "device3"]
+			},
+			{
+				name: "stops LiveSync operation for all devices and emits liveSyncStopped for all of them when stopLiveSync is called without deviceIdentifiers (when a single device is attached)",
+				currentDeviceIdentifiers: ["device1"],
+				expectedDeviceIdentifiers: ["device1"]
+			},
+			{
+				name: "stops LiveSync operation for specified devices and emits liveSyncStopped for each of them (when a single device is attached)",
+				currentDeviceIdentifiers: ["device1"],
+				expectedDeviceIdentifiers: ["device1"],
+				deviceIdentifiersToBeStopped: ["device1"]
+			},
+			{
+				name: "stops LiveSync operation for specified devices and emits liveSyncStopped for each of them",
+				currentDeviceIdentifiers: ["device1", "device2", "device3"],
+				expectedDeviceIdentifiers: ["device1", "device3"],
+				deviceIdentifiersToBeStopped: ["device1", "device3"]
+			},
+			{
+				name: "does not raise liveSyncStopped event for device, which is not currently being liveSynced",
+				currentDeviceIdentifiers: ["device1", "device2", "device3"],
+				expectedDeviceIdentifiers: ["device1"],
+				deviceIdentifiersToBeStopped: ["device1", "device4"]
+			}
+		];
+
+		for (const testCase of testCases) {
+			it(testCase.name, async () => {
+				const testInjector = createTestInjector();
+				const liveSyncService = testInjector.resolve<LiveSyncServiceInheritor>(LiveSyncServiceInheritor);
+				const projectDir = "projectDir";
+				const emittedDeviceIdentifiersForLiveSyncStoppedEvent: string[] = [];
+				liveSyncService.on("liveSyncStopped", (data: { projectDir: string, deviceIdentifier: string }) => {
+					assert.equal(data.projectDir, projectDir);
+					emittedDeviceIdentifiersForLiveSyncStoppedEvent.push(data.deviceIdentifier);
+				});
+
+				// Setup liveSyncProcessesInfo for current test
+				liveSyncService.liveSyncProcessesInfo[projectDir] = getLiveSyncProcessInfo();
+				const deviceDescriptors = testCase.currentDeviceIdentifiers.map(d => getDeviceDescriptor(d));
+				liveSyncService.liveSyncProcessesInfo[projectDir].deviceDescriptors.push(...deviceDescriptors);
+
+				await liveSyncService.stopLiveSync(projectDir, testCase.deviceIdentifiersToBeStopped);
+
+				assert.deepEqual(emittedDeviceIdentifiersForLiveSyncStoppedEvent, testCase.expectedDeviceIdentifiers);
+			});
+		}
+
+	});
+
+});

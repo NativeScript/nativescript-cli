@@ -17,7 +17,7 @@ const LiveSyncEvents = {
 
 export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 	// key is projectDir
-	private liveSyncProcessesInfo: IDictionary<ILiveSyncProcessInfo> = {};
+	protected liveSyncProcessesInfo: IDictionary<ILiveSyncProcessInfo> = {};
 
 	constructor(protected $platformService: IPlatformService,
 		private $projectDataService: IProjectDataService,
@@ -48,12 +48,10 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 			// so we cannot await it as this will cause infinite loop.
 			const shouldAwaitPendingOperation = !stopOptions || stopOptions.shouldAwaitAllActions;
 
-			let removedDeviceIdentifiers: string[] = deviceIdentifiers || [];
+			const deviceIdentifiersToRemove = deviceIdentifiers || _.map(liveSyncProcessInfo.deviceDescriptors, d => d.identifier);
 
-			_.each(deviceIdentifiers, deviceId => {
-				removedDeviceIdentifiers = _.remove(liveSyncProcessInfo.deviceDescriptors, descriptor => descriptor.identifier === deviceId)
-					.map(deviceDescriptor => deviceDescriptor.identifier);
-			});
+			const removedDeviceIdentifiers = _.remove(liveSyncProcessInfo.deviceDescriptors, descriptor => _.indexOf(deviceIdentifiersToRemove, descriptor.identifier) !== -1)
+				.map(descriptor => descriptor.identifier);
 
 			// In case deviceIdentifiers are not passed, we should stop the whole LiveSync.
 			if (!deviceIdentifiers || !deviceIdentifiers.length || !liveSyncProcessInfo.deviceDescriptors || !liveSyncProcessInfo.deviceDescriptors.length) {
@@ -72,7 +70,6 @@ export class LiveSyncService extends EventEmitter implements ILiveSyncService {
 					await liveSyncProcessInfo.actionsChain;
 				}
 
-				removedDeviceIdentifiers = _.map(liveSyncProcessInfo.deviceDescriptors, d => d.identifier);
 				liveSyncProcessInfo.deviceDescriptors = [];
 
 				// Kill typescript watcher
