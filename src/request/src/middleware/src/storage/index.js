@@ -2,7 +2,7 @@ import Promise from 'es6-promise';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 
-import { isDefined, Queue } from 'src/utils';
+import { isDefined, Queue, Log } from 'src/utils';
 import { KinveyError, NotFoundError } from 'src/errors';
 import { MemoryAdapter } from './memory';
 
@@ -51,8 +51,12 @@ export class Storage {
 
   find(collection) {
     return this.loadAdapter()
-      .then(adapter => adapter.find(collection))
+      .then((adapter) => {
+        Log.debug(`Find all the entities stored in the ${collection} collection.`, adapter);
+        return adapter.find(collection);
+      })
       .catch((error) => {
+        Log.error(`Unable to find all the entities stored in the ${collection} collection.`, error);
         if (error instanceof NotFoundError || error.code === 404) {
           return [];
         }
@@ -64,18 +68,23 @@ export class Storage {
 
   findById(collection, id) {
     if (!isString(id)) {
-      return Promise.reject(new KinveyError('id must be a string', id));
+      const error = new KinveyError('id must be a string', id);
+      Log.error(`Unable to find an entity with id ${id} stored in the ${collection} collection.`, error.message);
+      return Promise.reject(error);
     }
 
     return this.loadAdapter()
-      .then(adapter => adapter.findById(collection, id));
+      .then((adapter) => {
+        Log.debug(`Find an entity with id ${id} stored in the ${collection} collection.`, adapter);
+        return adapter.findById(collection, id);
+      });
   }
 
   save(collection, entities = []) {
     return queue.add(() => {
       let singular = false;
 
-      if (!entities) {
+      if (isDefined(entities) === false) {
         return Promise.resolve(null);
       }
 

@@ -371,7 +371,7 @@ export class KinveyRequest extends NetworkRequest {
         return super.execute();
       })
       .then((response) => {
-        if (!(response instanceof KinveyResponse)) {
+        if ((response instanceof KinveyResponse) === false) {
           response = new KinveyResponse({
             statusCode: response.statusCode,
             headers: response.headers,

@@ -1,11 +1,15 @@
-import Log from 'loglevel';
-
-const originalFactory = Log.methodFactory;
+import log from 'loglevel';
 
 /**
  * @private
  */
-Log.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
+log.setDefaultLevel(log.levels.SILENT);
+
+/**
+ * @private
+ */
+const originalFactory = log.methodFactory;
+log.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
   const rawMethod = originalFactory(methodName, logLevel, loggerName);
 
   return function log(message, ...args) {
@@ -22,9 +26,4 @@ Log.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
 /**
  * @private
  */
-Log.setDefaultLevel(Log.levels.SILENT);
-
-/**
- * @private
- */
-export default Log;
+export default log;

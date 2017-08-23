@@ -3,10 +3,11 @@ import qs from 'qs';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
+import uid from 'uid';
 
 import Client from 'src/client';
 import { KinveyError, NoResponseError } from 'src/errors';
-import { isDefined, appendQuery } from 'src/utils';
+import { isDefined, appendQuery, Log } from 'src/utils';
 import Response from './response';
 import Headers from './headers';
 
@@ -33,6 +34,7 @@ export default class Request {
       followRedirect: true
     }, options);
 
+    this.id = uid();
     this.client = options.client;
     this.method = options.method || RequestMethod.GET;
     this.headers = options.headers || new Headers();
@@ -148,6 +150,7 @@ export default class Request {
 
   execute() {
     if (isDefined(this.rack) === false) {
+      Log.error('Unable to execute the request. Please provide a rack to execute the request.');
       return Promise.reject(
         new KinveyError('Unable to execute the request. Please provide a rack to execute the request.')
       );
@@ -177,6 +180,7 @@ export default class Request {
 
   toPlainObject() {
     return {
+      id: this.id,
       method: this.method,
       headers: this.headers.toPlainObject(),
       url: this.url,

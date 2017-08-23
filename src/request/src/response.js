@@ -120,6 +120,14 @@ export default class Response {
   isClientError() {
     return this.statusCode >= 400 && this.statusCode < 500;
   }
+
+  toPlainObject() {
+    return {
+      statusCode: this.statusCode,
+      headers: this.headers.toPlainObject(),
+      data: this.data
+    };
+  }
 }
 
 /**
