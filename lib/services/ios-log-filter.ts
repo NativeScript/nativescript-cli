@@ -4,7 +4,7 @@ import { cache } from "../common/decorators";
 import * as iOSLogFilterBase from "../common/mobile/ios/ios-log-filter";
 
 export class IOSLogFilter extends iOSLogFilterBase.IOSLogFilter implements Mobile.IPlatformLogFilter {
-	protected infoFilterRegex = /^.*?(<Notice>:.*?(((?:CONSOLE|JS) (?:LOG|ERROR)).*?))$/im;
+	protected infoFilterRegex = /^.*?((?:<Notice>:)?.*?(((?:CONSOLE|JS) (?:LOG|ERROR)).*?))$/im;
 
 	private partialLine: string = null;
 
