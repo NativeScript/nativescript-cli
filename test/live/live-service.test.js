@@ -1,17 +1,14 @@
 import expect from 'expect';
 import PubNub from 'pubnub';
 
-import { randomString } from 'src/utils';
+import Kinvey from '../../src/kinvey';
+import { randomString } from '../../src/utils';
 
-import Kinvey from '../../../src/kinvey';
-import { PubNubListener, getLiveService } from '../../../src/live';
 import * as nockHelper from './nock-helper';
-import {
-  PubNubClientMock,
-  PubNubListenerMock
-} from '../../mocks';
+import { PubNubListener, getLiveService } from '../../src/live';
+import { PubNubClientMock, PubNubListenerMock } from '../mocks';
 
-const pathToLiveService = '../../../src/live/src/user-to-user/live-service';
+const pathToLiveService = '../../src/live/live-service';
 const notInitializedCheckRegexp = new RegExp('not.*initialized', 'i');
 const invalidOrMissingCheckRegexp = new RegExp('(invalid)|(missing)', 'i');
 const alreadyInitializedCheckRegexp = new RegExp('already initialized', 'i');
@@ -484,8 +481,9 @@ describe('LiveService', () => {
       const handler = () => { };
       const spy = expect.spyOn(pubnubListener, 'on');
       liveService.onConnectionStatusUpdates(handler);
-      expect(spy.calls.length).toBe(1);
+      expect(spy.calls.length).toBe(2);
       expect(spy).toHaveBeenCalledWith(PubNubListener.unclassifiedEvents, handler);
+      expect(spy).toHaveBeenCalledWith(undefined, handler);
     });
 
     describe('when attached', () => {

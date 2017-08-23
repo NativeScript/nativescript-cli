@@ -60,7 +60,9 @@ export class PubNubListener extends EventEmitter {
       this.emit(PubNubListener.unclassifiedEvents, s);
     }
   }
+
   /**
+   * @private
    * @param {string[]} [affectedChannels]
    * @param {string[]} [affectedChannelGroups]
    */

@@ -1,20 +1,24 @@
-import { NetworkStore, SyncStore } from 'src/datastore';
+import nock from 'nock';
+import expect from 'expect';
+
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
 import { KinveyError, NotFoundError, ServerError } from 'src/errors';
 import { randomString } from 'src/utils';
-import nock from 'nock';
-import expect from 'expect';
+import { NetworkStore, SyncStore } from '../../src/datastore';
+
+import { mockRequiresIn } from '../mocks';
+
 const collection = 'Books';
 
-describe('NetworkStore', function() {
-  describe('pathname', function() {
-    it(`should equal /appdata/<appkey>/${collection}`, function() {
+describe('NetworkStore', function () {
+  describe('pathname', function () {
+    it(`should equal /appdata/<appkey>/${collection}`, function () {
       const store = new NetworkStore(collection);
       expect(store.pathname).toEqual(`/appdata/${store.client.appKey}/${collection}`);
     });
 
-    it('should not be able to be changed', function() {
+    it('should not be able to be changed', function () {
       expect(() => {
         const store = new NetworkStore(collection);
         store.pathname = `/tests/${collection}`;
@@ -22,8 +26,8 @@ describe('NetworkStore', function() {
     });
   });
 
-  describe('find()', function() {
-    it('should throw an error if the query argument is not an instance of the Query class', function(done) {
+  describe('find()', function () {
+    it('should throw an error if the query argument is not an instance of the Query class', function (done) {
       const store = new NetworkStore(collection);
       store.find({})
         .subscribe(null, (error) => {
@@ -37,7 +41,7 @@ describe('NetworkStore', function() {
         });
     });
 
-    it('should return all the entities from the backend', function() {
+    it('should return all the entities from the backend', function () {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
@@ -52,7 +56,7 @@ describe('NetworkStore', function() {
         });
     });
 
-    it('should find the entities that match the query', function() {
+    it('should find the entities that match the query', function () {
       const store = new NetworkStore();
       const entity1 = { _id: randomString() };
       const query = new Query();
@@ -70,8 +74,8 @@ describe('NetworkStore', function() {
     });
   });
 
-  describe('findById()', function() {
-    it('should throw a NotFoundError if the id argument does not exist', function() {
+  describe('findById()', function () {
+    it('should throw a NotFoundError if the id argument does not exist', function () {
       const entityId = 1;
       nock(this.client.apiHostname)
         .get(`/appdata/${this.client.appKey}/${collection}/${entityId}`)
@@ -84,7 +88,7 @@ describe('NetworkStore', function() {
         });
     });
 
-    it('should return the entity that matches the id argument', function() {
+    it('should return the entity that matches the id argument', function () {
       const entityId = randomString();
       const entity1 = { _id: entityId };
 
@@ -100,8 +104,8 @@ describe('NetworkStore', function() {
     });
   });
 
-  describe('group()', function() {
-    it('should throw an error for an invlad aggregation', function() {
+  describe('group()', function () {
+    it('should throw an error for an invlad aggregation', function () {
       const store = new NetworkStore(collection);
       return store.group({}).toPromise()
         .catch((error) => {
@@ -110,7 +114,7 @@ describe('NetworkStore', function() {
         });
     });
 
-    it('should throw a ServerError', function() {
+    it('should throw a ServerError', function () {
       nock(this.client.apiHostname)
         .post(`/appdata/${this.client.appKey}/${collection}/_group`)
         .reply(500);
@@ -124,7 +128,7 @@ describe('NetworkStore', function() {
         });
     });
 
-    it('should return the count of all unique properties on the collection', function() {
+    it('should return the count of all unique properties on the collection', function () {
       const reply = [{ title: randomString(), count: 2 }, { title: randomString(), count: 1 }];
       nock(this.client.apiHostname)
         .post(`/appdata/${this.client.appKey}/${collection}/_group`)
@@ -140,8 +144,8 @@ describe('NetworkStore', function() {
     });
   });
 
-  describe('count()', function() {
-    it('should throw an error for an invalid query', function() {
+  describe('count()', function () {
+    it('should throw an error for an invalid query', function () {
       const store = new NetworkStore(collection);
       return store.count({}).toPromise()
         .catch((error) => {
@@ -150,7 +154,7 @@ describe('NetworkStore', function() {
         });
     });
 
-    it('should throw a ServerError', function() {
+    it('should throw a ServerError', function () {
       nock(this.client.apiHostname)
         .get(`/appdata/${this.client.appKey}/${collection}/_count`)
         .reply(500);
@@ -163,7 +167,7 @@ describe('NetworkStore', function() {
         });
     });
 
-    it('should return the count for the collection', function() {
+    it('should return the count for the collection', function () {
       nock(this.client.apiHostname)
         .get(`/appdata/${this.client.appKey}/${collection}/_count`)
         .reply(200, { count: 1 });
@@ -176,8 +180,8 @@ describe('NetworkStore', function() {
     });
   });
 
-  describe('create()', function() {
-    it('should throw an error if trying to create an array of entities', async function() {
+  describe('create()', function () {
+    it('should throw an error if trying to create an array of entities', async function () {
       const store = new NetworkStore(collection);
       const entity1 = {
         title: randomString(),
@@ -197,7 +201,7 @@ describe('NetworkStore', function() {
         });
     });
 
-    it('should create an entity', async function() {
+    it('should create an entity', async function () {
       const store = new NetworkStore(collection);
       const entity = {
         title: randomString(),
@@ -231,7 +235,7 @@ describe('NetworkStore', function() {
         });
     });
 
-    it('should create an entity if it contains an _id', async function() {
+    it('should create an entity if it contains an _id', async function () {
       const store = new NetworkStore(collection);
       const entity = {
         _id: randomString(),
@@ -261,8 +265,8 @@ describe('NetworkStore', function() {
     });
   });
 
-  describe('update()', function() {
-    it('should throw an error if trying to update an array of entities', async function() {
+  describe('update()', function () {
+    it('should throw an error if trying to update an array of entities', async function () {
       const store = new NetworkStore(collection);
       const entity1 = {
         _id: randomString(),
@@ -284,7 +288,7 @@ describe('NetworkStore', function() {
         });
     });
 
-    it('should throw an error if an entity does not have an _id', async function() {
+    it('should throw an error if an entity does not have an _id', async function () {
       const store = new NetworkStore(collection);
       const entity = {
         title: randomString(),
@@ -299,7 +303,7 @@ describe('NetworkStore', function() {
         });
     });
 
-    it('should update an entity with an _id', async function() {
+    it('should update an entity with an _id', async function () {
       const store = new NetworkStore(collection);
       const entity = {
         _id: randomString(),
@@ -328,26 +332,26 @@ describe('NetworkStore', function() {
     });
   });
 
-  describe('save()', function() {
+  describe('save()', function () {
     afterEach(function () {
       expect.restoreSpies();
     });
 
-    it('should call create() for an entity that does not contain an _id', function() {
+    it('should call create() for an entity that does not contain an _id', function () {
       const store = new NetworkStore(collection);
       const spy = expect.spyOn(store, 'create');
       store.save({});
       expect(spy).toHaveBeenCalled();
     });
 
-    it('should call update() for an entity that contains an _id', function() {
+    it('should call update() for an entity that contains an _id', function () {
       const store = new NetworkStore(collection);
       const spy = expect.spyOn(store, 'update');
       store.save({ _id: randomString() });
       expect(spy).toHaveBeenCalled();
     });
 
-    it('should call create() when an array of entities is provided', function() {
+    it('should call create() when an array of entities is provided', function () {
       const store = new NetworkStore(collection);
       const spy = expect.spyOn(store, 'create');
       store.save([{ _id: randomString() }, {}]);
@@ -355,8 +359,8 @@ describe('NetworkStore', function() {
     });
   });
 
-  describe('remove()', function() {
-    it('should throw an error for an invalid query', function() {
+  describe('remove()', function () {
+    it('should throw an error for an invalid query', function () {
       const store = new NetworkStore(collection);
       return store.remove({})
         .catch((error) => {
@@ -365,7 +369,7 @@ describe('NetworkStore', function() {
         });
     });
 
-    it('should throw a ServerError', function() {
+    it('should throw a ServerError', function () {
       nock(this.client.apiHostname)
         .delete(`/appdata/${this.client.appKey}/${collection}`)
         .reply(500);
@@ -378,7 +382,7 @@ describe('NetworkStore', function() {
         });
     });
 
-    it('should remove all entities from the cache', function() {
+    it('should remove all entities from the cache', function () {
       const reply = { count: 2 };
 
       nock(this.client.apiHostname)
@@ -393,8 +397,8 @@ describe('NetworkStore', function() {
     });
   });
 
-  describe('removeById()', function() {
-    it('should throw a NotFoundError if the id argument does not exist', function() {
+  describe('removeById()', function () {
+    it('should throw a NotFoundError if the id argument does not exist', function () {
       const store = new NetworkStore(collection);
       const _id = randomString();
 
@@ -408,7 +412,7 @@ describe('NetworkStore', function() {
         });
     });
 
-    it('should remove the entity that matches the id argument', function() {
+    it('should remove the entity that matches the id argument', function () {
       const store = new NetworkStore(collection);
       const _id = randomString();
       const reply = { count: 1 };
@@ -421,6 +425,44 @@ describe('NetworkStore', function() {
         .then((response) => {
           expect(response).toEqual(reply);
         });
+    });
+  });
+
+  describe('when working with live service', () => {
+    const path = '../../src/datastore/src/networkstore';
+    const managerMock = {
+      subscribeCollection: () => { },
+      unsubscribeCollection: () => { }
+    };
+    const requireMocks = {
+      '../../live': { getLiveCollectionManager: () => managerMock }
+    };
+
+    /** @type {NetworkStore} */
+    let proxiedStore;
+
+    beforeEach(() => {
+      const ProxiedNetworkStore = mockRequiresIn(__dirname, path, requireMocks, 'default');
+      proxiedStore = new ProxiedNetworkStore(collection);
+    });
+
+    afterEach(() => expect.restoreSpies());
+
+    describe('subscribe()', () => {
+      it('should call subscribeCollection() method of LiveCollectionManager class', () => {
+        const spy = expect.spyOn(managerMock, 'subscribeCollection');
+        const handler = { onMessage: () => { } };
+        proxiedStore.subscribe(handler);
+        expect(spy).toHaveBeenCalledWith(collection, handler);
+      });
+    });
+
+    describe('unsubscribe()', () => {
+      it('should call unsubscribeCollection() method of LiveCollectionManager class', () => {
+        const spy = expect.spyOn(managerMock, 'unsubscribeCollection');
+        proxiedStore.unsubscribe();
+        expect(spy).toHaveBeenCalledWith(collection);
+      });
     });
   });
 });

@@ -2,7 +2,7 @@ import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
 import every from 'lodash/every';
 
-import { KinveyError } from '../../../errors';
+import { KinveyError } from '../../errors';
 
 const invalidValueMsg = 'Invalid ACL object value';
 

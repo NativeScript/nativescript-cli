@@ -1,13 +1,12 @@
 import PubNub from 'pubnub';
-
 import isFunction from 'lodash/isFunction';
 import isObject from 'lodash/isObject';
 import extend from 'lodash/extend';
-import isString from 'lodash/isString';
 
-import Client from '../../../client';
-import { KinveyRequest, RequestMethod, Response } from '../../../request';
-import { KinveyError, ActiveUserError } from '../../../errors';
+import Client from '../client';
+import { KinveyRequest, RequestMethod, Response } from '../request';
+import { KinveyError, ActiveUserError } from '../errors';
+import { isNonemptyString } from '../utils';
 import { PubNubListener } from './pubnub-listener';
 
 /**
@@ -16,6 +15,22 @@ import { PubNubListener } from './pubnub-listener';
  * @property {Function} onError
  * @property {Function} onStatus
  */
+
+/**
+ * @param {Object} obj
+ * @returns {Boolean}
+ */
+function isValidReceiver(obj) {
+  if (!obj) {
+    return false;
+  }
+  const { onMessage, onError, onStatus } = obj;
+  return isFunction(onMessage) || isFunction(onError) || isFunction(onStatus);
+}
+
+function isValidChannelName(str) {
+  return isNonemptyString(str);
+}
 
 class LiveService {
   /** @type {Client} @private */
@@ -68,9 +83,11 @@ class LiveService {
   fullInitialization(user) {
     return this.registerUser(user)
       .then((pubnubConfig) => {
+        // const copy = extend({}, pubnubConfig);
         const pubnubClient = new PubNub(pubnubConfig);
         const listener = new PubNubListener();
         this.initialize(pubnubClient, listener);
+        // return copy;
       });
   }
 
@@ -87,6 +104,10 @@ class LiveService {
       });
   }
 
+  /**
+   * Checks whether live service is ready to subscribe or publish messages
+   * @returns {boolean}
+   */
   isInitialized() {
     return !!this.__pubnubClient && !!this.__pubnubListener && !!this._registeredUser;
   }
@@ -141,15 +162,27 @@ class LiveService {
     this._pubnubListener = null;
   }
 
+  /**
+   * Attaches a handler for connection status updates
+   * @param {Function} func
+   */
   onConnectionStatusUpdates(func) {
     this._pubnubListener.on(PubNubListener.unclassifiedEvents, func);
+    this._pubnubListener.on(this._userChannelGroup, func);
   }
 
+  /**
+   * Removes a handler for connection status updates.
+   * If no handler is specified, removes all handlers
+   * @param {Function} [func]
+   */
   offConnectionStatusUpdates(func) {
     if (func) {
       this._pubnubListener.removeListener(PubNubListener.unclassifiedEvents, func);
+      this._pubnubListener.removeListener(this._userChannelGroup, func);
     } else {
       this._pubnubListener.removeAllListeners(PubNubListener.unclassifiedEvents);
+      this._pubnubListener.removeAllListeners(this._userChannelGroup);
     }
   }
 
@@ -168,6 +201,7 @@ class LiveService {
       return Promise.reject(validationErr);
     }
 
+    // TODO: decide if this is necessary
     if (isObject(message)) {
       message.senderId = this._registeredUser._id;
     }
@@ -238,7 +272,7 @@ class LiveService {
   _validatePublishData(channelName, message) {
     let err = null;
 
-    if (!isString(channelName) || channelName === '') {
+    if (!isValidChannelName(channelName)) {
       err = new KinveyError('Invalid channel name');
     }
 
@@ -257,24 +291,15 @@ class LiveService {
   _validateSubscribeData(channelName, receiver) {
     let err = null;
 
-    if (!isString(channelName) || channelName === '') {
+    if (!isValidChannelName(channelName)) {
       err = new KinveyError('Invalid channel name');
     }
 
-    if (!receiver || !this._isValidReceiver(receiver)) {
+    if (!receiver || !isValidReceiver(receiver)) {
       err = new KinveyError('Missing or invalid receiver');
     }
 
     return err;
-  }
-
-  /**
-   * @param {LiveServiceReceiver} receiver
-   * @returns {Boolean}
-   */
-  _isValidReceiver(receiver) {
-    const { onMessage, onError, onStatus } = receiver;
-    return isFunction(onMessage) || isFunction(onError) || isFunction(onStatus);
   }
 
   /**
@@ -348,7 +373,7 @@ class LiveService {
       method: RequestMethod.POST,
       pathname: `/user/${this._client.appKey}/${userId}/${path}`,
       body: { deviceId: this._client.deviceId }
-    }, this._client, true);
+    }, this._client);
   }
 
   _throwNotInitializedError() {
@@ -369,3 +394,8 @@ export function getLiveService(client) {
   }
   return liveServiceInstance;
 }
+
+export {
+  isValidChannelName,
+  isValidReceiver
+};

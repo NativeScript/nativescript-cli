@@ -4,7 +4,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import { Stream } from '../../../src/live';
 
 import { randomString } from '../../../src/utils';
-import * as nockHelper from './nock-helper';
+import * as nockHelper from '../nock-helper';
 
 // TODO: add more tests
 
@@ -44,7 +44,8 @@ describe('Stream', () => {
         .catch((err) => {
           expect(err.message).toMatch(/invalid/i);
           done();
-        });
+        })
+        .catch(e => done(e));
     });
 
     it('should make an PUT request to appropriate URL, with expected body', () => {

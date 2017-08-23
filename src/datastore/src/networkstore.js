@@ -3,12 +3,12 @@ import isArray from 'lodash/isArray';
 import url from 'url';
 
 import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod } from 'src/request';
-import { LiveServiceManager } from 'src/live';
 import { KinveyError } from 'src/errors';
 import Query from 'src/query';
 import Client from 'src/client';
 import { KinveyObservable, isDefined } from 'src/utils';
 import Aggregation from 'src/aggregation';
+import { getLiveCollectionManager } from '../../live';
 
 /**
  * The NetworkStore class is used to find, create, update, remove, count and group entities over the network.
@@ -475,14 +475,14 @@ export default class NetworkStore {
   /**
    * Subscribes to the live stream for the collection
    */
-  subscribe(options = {}) {
-    return LiveServiceManager.subscribe(this.collection, options);
+  subscribe(receiver) {
+    return getLiveCollectionManager().subscribeCollection(this.collection, receiver);
   }
 
   /**
    * Unsubscribes from the live stream for the collection
    */
-  unsubscribe(options = {}) {
-    return LiveServiceManager.unsubscribe(this.collection, options);
+  unsubscribe() {
+    return getLiveCollectionManager().unsubscribeCollection(this.collection);
   }
 }

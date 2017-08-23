@@ -1,9 +1,9 @@
 import isString from 'lodash/isString';
 
-import { KinveyError } from '../../../errors';
-import Client from '../../../client';
-import { getLiveService } from './live-service';
-import { KinveyRequest, RequestMethod, StatusCode } from '../../../request';
+import { KinveyError } from '../../errors';
+import Client from '../../client';
+import { getLiveService } from '../live-service';
+import { KinveyRequest, RequestMethod, StatusCode } from '../../request';
 import { StreamACL } from './stream-acl';
 
 /**
@@ -252,6 +252,6 @@ export class Stream {
       method: method,
       pathname: `/stream/${this._client.appKey}/${this.name}/${path}`,
       body: body
-    }, this._client, true);
+    }, this._client);
   }
 }

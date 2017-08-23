@@ -182,7 +182,6 @@ Kinvey.AuthorizationGrant = AuthorizationGrant;
 Kinvey.CustomEndpoint = CustomEndpoint;
 Kinvey.DataStore = DataStore;
 Kinvey.DataStoreType = DataStoreType;
-Kinvey.Stream = Stream;
 Kinvey.LiveService = LiveServiceFacade;
 Kinvey.Files = new FileStore();
 Kinvey.Group = Aggregation;

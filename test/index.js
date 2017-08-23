@@ -1,8 +1,10 @@
+import nock from 'nock';
+import expect from 'expect';
+
+import Kinvey from 'src/kinvey';
 import { HttpMiddlewareMock, UserMock } from 'test/mocks';
 import { NetworkRack } from 'src/request';
 import { randomString } from 'src/utils';
-import { Kinvey } from 'src/kinvey';
-import nock from 'nock';
 
 // Setup network rack
 NetworkRack.useHttpMiddleware(new HttpMiddlewareMock());
@@ -34,7 +36,10 @@ after(function() {
 beforeEach(() => UserMock.login('test', 'test'));
 
 // Logout the active user
-afterEach(() => UserMock.logout());
+afterEach(() => {
+  expect.restoreSpies();
+  return UserMock.logout();
+});
 
 // Clean up nock
 afterEach(function() {

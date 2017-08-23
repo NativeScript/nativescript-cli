@@ -1,9 +1,10 @@
 import expect from 'expect';
-import Proxyquire from 'proxyquire';
 import PubNub from 'pubnub';
 
-import Kinvey from '../../../src';
-import { PubNubListener } from '../../../src/live';
+import Kinvey from '../../src';
+import { PubNubListener } from '../../src/live';
+
+import { mockRequiresIn } from '../mocks';
 
 const liveServiceMock = {
   registerUser: () => { },
@@ -16,16 +17,15 @@ const liveServiceMock = {
   isInitialized: () => { }
 };
 
-const pathToFacade = '../../../src/live/src/user-to-user/live-service-facade';
-const proxyquireMocks = { './live-service': { getLiveService: () => liveServiceMock } };
-const proxyquire = Proxyquire.noCallThru();
+const pathToFacade = '../../src/live/live-service-facade';
+const requireMocks = { './live-service': { getLiveService: () => liveServiceMock } };
 
 describe('LiveServiceFacade', () => {
   let LiveServiceFacade;
 
   beforeEach(() => {
     // avoid LiveService singleton state
-    LiveServiceFacade = proxyquire(pathToFacade, proxyquireMocks).LiveServiceFacade;;
+    LiveServiceFacade = mockRequiresIn(__dirname, pathToFacade, requireMocks, 'LiveServiceFacade');
   });
 
   afterEach(() => {
@@ -34,12 +34,14 @@ describe('LiveServiceFacade', () => {
 
   it('should have only user-facing LiveService methods', () => {
     const expectedMethods = [
+      'Stream',
       'onConnectionStatusUpdates',
       'offConnectionStatusUpdates',
       'unsubscribeFromAll',
       'isInitialized'
     ];
     expect(LiveServiceFacade).toContainKeys(expectedMethods);
+    expect(Object.keys(LiveServiceFacade).length).toBe(expectedMethods.length);
   });
 
   describe('onConnectionStatusUpdates', () => {

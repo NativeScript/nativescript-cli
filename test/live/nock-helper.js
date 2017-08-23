@@ -1,8 +1,8 @@
 import nock from 'nock';
 
-import Client from '../../../src/client'; // imported for type info
+import Client from '../../src/client'; // imported for type info
 
-import { StreamACL } from '../../../src/live';
+import { StreamACL } from '../../src/live';
 
 /** @type {Client} */
 let _client;
@@ -13,6 +13,10 @@ function _baseNockCall() {
 
 function _buildStreamUrl(streamName, path) {
   return `/stream/${_client.appKey}/${streamName}/${path}`;
+}
+
+function _buildCollectionSubscriptionUrl(collectionName, path) {
+  return `/appdata/${_client.appKey}/${collectionName}/${path}`;
 }
 
 function _buildSubstreamACLUrl(streamName, substreamId) {
@@ -52,4 +56,16 @@ export function mockSetStreamACLRequest(streamName, substreamId, aclObj) {
       return new StreamACL(aclObj)
         .toPlainObject();
     });
+}
+
+export function mockCollectionSubscribeRequest(collectionName) {
+  return _baseNockCall()
+    .post(_buildCollectionSubscriptionUrl(collectionName, '_subscribe'), { deviceId: _client.deviceId })
+    .reply(204);
+}
+
+export function mockCollectionUnsubscribeRequest(collectionName) {
+  return _baseNockCall()
+    .post(_buildCollectionSubscriptionUrl(collectionName, '_unsubscribe'), { deviceId: _client.deviceId })
+    .reply(204);
 }
