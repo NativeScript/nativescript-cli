@@ -29,7 +29,7 @@ if (-not $isElevated) {
 }
 
 # Help with installing other dependencies
-$script:answer = $SilentMode
+$script:answer = if ($SilentMode) {"a"} else {""}
 function Install($programName, $message, $script, $shouldExit) {
 	if ($script:answer -ne "a") {
 		Write-Host -ForegroundColor Green "Allow the script to install $($programName)?"
