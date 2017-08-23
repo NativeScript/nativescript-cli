@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.8.0](https://github.com/Kinvey/js-sdk/tree/v3.8.0) (2017-08-23)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.5.2...v3.8.0)<br/>
+
+### Added
+- Log requests made by the SDK
+- Allow a `micId` to be added to the `client_id` value sent for a Mobile Identity Connect request. See [#140](https://github.com/Kinvey/js-sdk/pull/140).
+- Replace native node modules with npm packages. This allows us to support platforms that do not run in a Node or Web environment such as NativeScript and React Native.
+
+### Removed/Deprecated
+- Deprecated `Kinvey.initialize()`. Please use `Kinvey.init()` instead. If you use `Kinvey.init()` you might not have an active user even though you had already logged in. To fix this, use `Kinvey.initialize()` to move the active user to the correct storage. From then on you will be able to use `Kinvey.init()` and retrieve your active user. `Kinvey.init()` does not return a promise and is synchronous.
+
+```javascript
+// Will return the shared client instance
+Kinvey.init({
+  appKey: '<appKey>',
+  appSecret: '<appSecret>'
+});
+```
+
+### Fixed
+- SDK shims can now override the way an active user is stored. This allows the SDK shim to use the preferred storage for that platform.
+- Default to removing a user with `hard` equal to `false`.
+- SDK shims can now override file uploads.
+- Queries will properly be encoding.
+
+### Merged Pull Requests
+- NativeScript [#132](https://github.com/Kinvey/js-sdk/pull/132)
+- SDK on Windows OS [#137](https://github.com/Kinvey/js-sdk/pull/137)
+- Fix Storage API [#139](https://github.com/Kinvey/js-sdk/pull/139)
+- Add micId to client_id used for MIC [#140](https://github.com/Kinvey/js-sdk/pull/140)
+- Changes to handle active user storage as a sync or async operation [#143](https://github.com/Kinvey/js-sdk/pull/143)
+- Fix for URL / query encoding issues [#145](https://github.com/Kinvey/js-sdk/pull/145)
+
+### Closed Issues
+_None_
+
 ## [3.5.2](https://github.com/Kinvey/js-sdk/tree/v3.5.2) (2017-07-07)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.5.1...v3.5.2)<br/>
 
