@@ -429,7 +429,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 		if (this.$logger.getLevel() === "INFO") {
 			localArgs.push("-quiet");
-			this.$logger.info(`xcodebuild ${localArgs.join(" ")}`);
+			this.$logger.info("Xcode build...");
 		}
 		return this.$childProcess.spawnFromEvent("xcodebuild",
 			localArgs,

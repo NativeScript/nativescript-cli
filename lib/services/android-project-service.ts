@@ -520,7 +520,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			const localArgs = [...gradleArgs];
 			if (this.$logger.getLevel() === "INFO") {
 				localArgs.push("--quiet");
-				this.$logger.info(`${gradlew} ${localArgs.join(" ")}`);
+				this.$logger.info("Gradle build...");
 			}
 
 			childProcessOpts = childProcessOpts || {};
