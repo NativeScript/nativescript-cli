@@ -46,11 +46,11 @@ class PlatformData implements IPlatformData {
 class ErrorsNoFailStub implements IErrors {
 	printCallStack: boolean = false;
 
-	fail(formatStr: string, ...args: any[]): void;
-	fail(opts: { formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean }, ...args: any[]): void;
+	fail(formatStr: string, ...args: any[]): never;
+	fail(opts: { formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean }, ...args: any[]): never;
 
-	fail(...args: any[]) { throw new Error(); }
-	failWithoutHelp(message: string, ...args: any[]): void {
+	fail(...args: any[]): never { throw new Error(); }
+	failWithoutHelp(message: string, ...args: any[]): never {
 		throw new Error();
 	}
 

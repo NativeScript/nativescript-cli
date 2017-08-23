@@ -611,12 +611,12 @@ describe("iOS Project Service Signing", () => {
 	});
 
 	describe("Check for Changes", () => {
-		it("sets signingChanged if no Xcode project exists", () => {
+		it("sets signingChanged if no Xcode project exists", async () => {
 			let changes = <IProjectChangesInfo>{};
-			iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev" }, projectData);
+			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined }, projectData);
 			assert.isTrue(!!changes.signingChanged);
 		});
-		it("sets signingChanged if the Xcode projects is configured with Automatic signing, but proivsion is specified", () => {
+		it("sets signingChanged if the Xcode projects is configured with Automatic signing, but proivsion is specified", async () => {
 			files[pbxproj] = "";
 			pbxprojDomXcode.Xcode.open = <any>function (path: string) {
 				assert.equal(path, pbxproj);
@@ -627,10 +627,10 @@ describe("iOS Project Service Signing", () => {
 				};
 			};
 			let changes = <IProjectChangesInfo>{};
-			iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev" }, projectData);
+			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined }, projectData);
 			assert.isTrue(!!changes.signingChanged);
 		});
-		it("sets signingChanged if the Xcode projects is configured with Manual signing, but the proivsion specified differs the selected in the pbxproj", () => {
+		it("sets signingChanged if the Xcode projects is configured with Manual signing, but the proivsion specified differs the selected in the pbxproj", async () => {
 			files[pbxproj] = "";
 			pbxprojDomXcode.Xcode.open = <any>function (path: string) {
 				assert.equal(path, pbxproj);
@@ -646,10 +646,10 @@ describe("iOS Project Service Signing", () => {
 				};
 			};
 			let changes = <IProjectChangesInfo>{};
-			iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev" }, projectData);
+			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined }, projectData);
 			assert.isTrue(!!changes.signingChanged);
 		});
-		it("does not set signingChanged if the Xcode projects is configured with Manual signing and proivsion matches", () => {
+		it("does not set signingChanged if the Xcode projects is configured with Manual signing and proivsion matches", async () => {
 			files[pbxproj] = "";
 			pbxprojDomXcode.Xcode.open = <any>function (path: string) {
 				assert.equal(path, pbxproj);
@@ -665,7 +665,7 @@ describe("iOS Project Service Signing", () => {
 				};
 			};
 			let changes = <IProjectChangesInfo>{};
-			iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev" }, projectData);
+			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined }, projectData);
 			assert.isFalse(!!changes.signingChanged);
 		});
 	});
@@ -684,7 +684,7 @@ describe("iOS Project Service Signing", () => {
 			});
 			it("fails with proper error if the provision can not be found", async () => {
 				try {
-					await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDev2" });
+					await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDev2", teamId: undefined });
 				} catch (e) {
 					assert.isTrue(e.toString().indexOf("Failed to find mobile provision with UUID or Name: NativeScriptDev2") >= 0);
 				}
@@ -705,7 +705,7 @@ describe("iOS Project Service Signing", () => {
 						}
 					};
 				};
-				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDev" });
+				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDev", teamId: undefined });
 				assert.deepEqual(stack, [{ targetName: projectDirName, manualSigning: { team: "TKID101", uuid: "12345", name: "NativeScriptDev", identity: "iPhone Developer" } }, "save()"]);
 			});
 			it("succeds if the provision name is provided for distribution cert", async () => {
@@ -724,7 +724,7 @@ describe("iOS Project Service Signing", () => {
 						}
 					};
 				};
-				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDist" });
+				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDist", teamId: undefined });
 				assert.deepEqual(stack, [{ targetName: projectDirName, manualSigning: { team: "TKID202", uuid: "6789", name: "NativeScriptDist", identity: "iPhone Distribution" } }, "save()"]);
 			});
 			it("succeds if the provision name is provided for adhoc cert", async () => {
@@ -743,7 +743,7 @@ describe("iOS Project Service Signing", () => {
 						}
 					};
 				};
-				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptAdHoc" });
+				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptAdHoc", teamId: undefined });
 				assert.deepEqual(stack, [{ targetName: projectDirName, manualSigning: { team: "TKID303", uuid: "1010", name: "NativeScriptAdHoc", identity: "iPhone Distribution" } }, "save()"]);
 			});
 		});

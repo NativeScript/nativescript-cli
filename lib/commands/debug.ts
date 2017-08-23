@@ -154,7 +154,7 @@ export class DebugIOSCommand implements ICommand {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
-		return await this.debugPlatformCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.iOS);
+		return await this.debugPlatformCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.iOS);
 	}
 
 	public platform = this.$devicePlatformsConstants.iOS;
@@ -186,7 +186,7 @@ export class DebugAndroidCommand implements ICommand {
 		return this.debugPlatformCommand.execute(args);
 	}
 	public async canExecute(args: string[]): Promise<boolean> {
-		return await this.debugPlatformCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$projectData, this.$platformsData.availablePlatforms.Android);
+		return await this.debugPlatformCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.Android);
 	}
 
 	public platform = this.$devicePlatformsConstants.Android;

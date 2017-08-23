@@ -178,7 +178,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	 * @param {any} provision UUID of the provisioning profile used in iOS option validation.
 	 * @returns {void}
 	 */
-	validateOptions(projectId?: string, provision?: true | string): Promise<boolean>;
+	validateOptions(projectId?: string, provision?: true | string, teamId?: true | string): Promise<boolean>;
 
 	validatePlugins(projectData: IProjectData): Promise<void>;
 
@@ -265,7 +265,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	 * Check the current state of the project, and validate against the options.
 	 * If there are parts in the project that are inconsistent with the desired options, marks them in the changeset flags.
 	 */
-	checkForChanges(changeset: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void;
+	checkForChanges(changeset: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): Promise<void>;
 }
 
 interface IAndroidProjectPropertiesManager {

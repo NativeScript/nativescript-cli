@@ -178,14 +178,14 @@ export class FileSystemStub implements IFileSystem {
 }
 
 export class ErrorsStub implements IErrors {
-	fail(formatStr: string, ...args: any[]): void;
-	fail(opts: { formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean }, ...args: any[]): void;
+	fail(formatStr: string, ...args: any[]): never;
+	fail(opts: { formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean }, ...args: any[]): never;
 
-	fail(...args: any[]) {
+	fail(...args: any[]): never {
 		throw new Error(require("util").format.apply(null, args || []));
 	}
 
-	failWithoutHelp(message: string, ...args: any[]): void {
+	failWithoutHelp(message: string, ...args: any[]): never {
 		throw new Error(message);
 	}
 
@@ -333,7 +333,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
 		return Promise.resolve();
 	}
-	checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void {
+	async checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
 		// Nothing yet.
 	}
 }
@@ -560,7 +560,7 @@ export class ChildProcessStub {
 }
 
 export class ProjectChangesService implements IProjectChangesService {
-	public checkForChanges(platform: string): IProjectChangesInfo {
+	public async checkForChanges(platform: string): Promise<IProjectChangesInfo> {
 		return <IProjectChangesInfo>{};
 	}
 

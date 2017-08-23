@@ -447,7 +447,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
 	}
 
-	public checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void {
+	public async checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
 		// Nothing android specific to check yet.
 	}
 
@@ -517,12 +517,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
 			const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
 
+			const localArgs = [...gradleArgs];
+			if (this.$logger.getLevel() === "INFO") {
+				localArgs.push("--quiet");
+				this.$logger.info("Gradle build...");
+			}
+
 			childProcessOpts = childProcessOpts || {};
 			childProcessOpts.cwd = childProcessOpts.cwd || projectRoot;
 			childProcessOpts.stdio = childProcessOpts.stdio || "inherit";
 
 			return await this.spawn(gradlew,
-				gradleArgs,
+				localArgs,
 				childProcessOpts,
 				spawnFromEventOptions);
 		}
