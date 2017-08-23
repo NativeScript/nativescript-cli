@@ -178,14 +178,14 @@ export class FileSystemStub implements IFileSystem {
 }
 
 export class ErrorsStub implements IErrors {
-	fail(formatStr: string, ...args: any[]): void;
-	fail(opts: { formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean }, ...args: any[]): void;
+	fail(formatStr: string, ...args: any[]): never;
+	fail(opts: { formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean }, ...args: any[]): never;
 
-	fail(...args: any[]) {
+	fail(...args: any[]): never {
 		throw new Error(require("util").format.apply(null, args || []));
 	}
 
-	failWithoutHelp(message: string, ...args: any[]): void {
+	failWithoutHelp(message: string, ...args: any[]): never {
 		throw new Error(message);
 	}
 

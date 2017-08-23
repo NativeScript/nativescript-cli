@@ -1,17 +1,9 @@
 import * as mobileprovision from "ios-mobileprovision-finder";
-import { createTable } from "../common/helpers";
+import { createTable, quoteString } from "../common/helpers";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function formatDate(date: Date): string {
 	return `${date.getDay()} ${months[date.getMonth()]} ${date.getFullYear()}`;
-}
-
-/**
- * Formats the argument so it can easily be copied from the terminal and provided as value for an option.
- * @param arg The string to format.
- */
-function cmdEscape(arg: string): string {
-	return `"${arg}"`;
 }
 
 export class IOSProvisionService {
@@ -57,7 +49,7 @@ export class IOSProvisionService {
 
 		function pushProvision(prov: mobileprovision.provision.MobileProvision) {
 			table.push(["", "", "", ""]);
-			table.push([cmdEscape(prov.Name), prov.TeamName, prov.Type, formatTotalDeviceCount(prov)]);
+			table.push([quoteString(prov.Name), prov.TeamName, prov.Type, formatTotalDeviceCount(prov)]);
 			table.push([prov.UUID, prov.TeamIdentifier && prov.TeamIdentifier.length > 0 ? "(" + prov.TeamIdentifier[0] + ")" : "", formatDate(prov.ExpirationDate), formatSupportedDeviceCount(prov)]);
 			table.push([prov.Entitlements["application-identifier"], "", "", ""]);
 		}
@@ -71,7 +63,7 @@ export class IOSProvisionService {
 
 	public async listTeams(): Promise<void> {
 		const teams = await this.getDevelopmentTeams();
-		const table = createTable(["Team Name", "Team ID"], teams.map(team => [cmdEscape(team.name), team.id]));
+		const table = createTable(["Team Name", "Team ID"], teams.map(team => [quoteString(team.name), team.id]));
 		this.$logger.out(table.toString());
 	}
 
