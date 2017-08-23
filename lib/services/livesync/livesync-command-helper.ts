@@ -1,9 +1,9 @@
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
-	constructor(protected $platformService: IPlatformService,
-		protected $projectData: IProjectData,
-		protected $options: IOptions,
-		protected $devicesService: Mobile.IDevicesService,
+	constructor(private $platformService: IPlatformService,
+		private $projectData: IProjectData,
+		private $options: IOptions,
+		private $liveSyncService: ILiveSyncService,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $platformsData: IPlatformsData,
@@ -15,7 +15,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		return availablePlatforms;
 	}
 
-	public async executeLiveSyncOperation(devices: Mobile.IDevice[], liveSyncService: ILiveSyncService, platform: string): Promise<void> {
+	public async executeLiveSyncOperation(devices: Mobile.IDevice[], platform: string, deviceDebugMap?: IDictionary<boolean>): Promise<void> {
 		if (!devices || !devices.length) {
 			if (platform) {
 				this.$errors.failWithoutHelp("Unable to find applicable devices to execute operation. Ensure connected devices are trusted and try again.");
@@ -60,7 +60,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 						await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, this.$projectData);
 						const result = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, this.$projectData);
 						return result;
-					}
+					},
+					debugggingEnabled: deviceDebugMap && deviceDebugMap[d.deviceInfo.identifier]
 				};
 
 				return info;
@@ -70,10 +71,11 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			projectDir: this.$projectData.projectDir,
 			skipWatcher: !this.$options.watch,
 			watchAllFiles: this.$options.syncAllFiles,
-			clean: this.$options.clean
+			clean: this.$options.clean,
+			debugOptions: this.$options
 		};
 
-		await liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
+		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 
 	}
 

@@ -9,7 +9,6 @@ import temp = require("temp");
 export class SocketProxyFactory extends EventEmitter implements ISocketProxyFactory {
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
-		private $config: IConfiguration,
 		private $options: IOptions,
 		private $net: INet) {
 		super();
@@ -29,7 +28,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 
 			frontendSocket.on("end", () => {
 				this.$logger.info('Frontend socket closed!');
-				if (!(this.$config.debugLivesync && this.$options.watch)) {
+				if (!this.$options.watch) {
 					process.exit(0);
 				}
 			});
@@ -39,7 +38,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 
 				backendSocket.on("end", () => {
 					this.$logger.info("Backend socket closed!");
-					if (!(this.$config.debugLivesync && this.$options.watch)) {
+					if (!this.$options.watch) {
 						process.exit(0);
 					}
 				});

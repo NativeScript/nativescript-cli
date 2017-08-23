@@ -68,10 +68,19 @@ interface ILiveSyncProcessInfo {
 	currentSyncAction: Promise<any>;
 }
 
+interface IOptionalOutputPath {
+	/**
+	 * Path where the build result is located (directory containing .ipa, .apk or .zip).
+	 * This is required for initial checks where LiveSync will skip the rebuild in case there's already a build result and no change requiring rebuild is made since then.
+	 * In case it is not passed, the default output for local builds will be used.
+	 */
+	outputPath?: string;
+}
+
 /**
  * Describes information for LiveSync on a device.
  */
-interface ILiveSyncDeviceInfo {
+interface ILiveSyncDeviceInfo extends IOptionalOutputPath {
 	/**
 	 * Device identifier.
 	 */
@@ -84,16 +93,14 @@ interface ILiveSyncDeviceInfo {
 	buildAction: () => Promise<string>;
 
 	/**
-	 * Path where the build result is located (directory containing .ipa, .apk or .zip).
-	 * This is required for initial checks where LiveSync will skip the rebuild in case there's already a build result and no change requiring rebuild is made since then.
-	 * In case it is not passed, the default output for local builds will be used.
-	 */
-	outputPath?: string;
-
-	/**
 	 * Whether to skip preparing the native platform.
 	 */
 	skipNativePrepare?: boolean;
+
+	/**
+	 * Whether debugging has been enabled for this device or not
+	 */
+	debugggingEnabled?: boolean;
 
 	/**
 	 * Describes options specific for each platform, like provision for iOS, target sdk for Android, etc.
@@ -104,12 +111,7 @@ interface ILiveSyncDeviceInfo {
 /**
  * Describes a LiveSync operation.
  */
-interface ILiveSyncInfo {
-	/**
-	 * Directory of the project that will be synced.
-	 */
-	projectDir: string;
-
+interface ILiveSyncInfo extends IProjectDir, IOptionalDebuggingOptions {
 	/**
 	 * Defines if the watcher should be skipped. If not passed, fs.Watcher will be started.
 	 */
@@ -135,9 +137,11 @@ interface ILiveSyncInfo {
 
 interface ILatestAppPackageInstalledSettings extends IDictionary<IDictionary<boolean>> { /* empty */ }
 
-interface ILiveSyncBuildInfo {
-	platform: string;
+interface IIsEmulator {
 	isEmulator: boolean;
+}
+
+interface ILiveSyncBuildInfo extends IIsEmulator, IPlatform {
 	pathToBuildItem: string;
 }
 
@@ -206,6 +210,67 @@ interface IDebugLiveSyncService extends ILiveSyncService {
 	 * @returns {void}
 	 */
 	printDebugInformation(information: string): void;
+
+	/**
+	 * Enables debugging for the specified devices
+	 * @param {IEnableDebuggingDeviceOptions[]} deviceOpts Settings used for enabling debugging for each device.
+	 * @param {IDebuggingAdditionalOptions} enableDebuggingOptions Settings used for enabling debugging.
+	 * @returns {Promise<void>[]} Array of promises for each device.
+	 */
+	enableDebugging(deviceOpts: IEnableDebuggingDeviceOptions[], enableDebuggingOptions: IDebuggingAdditionalOptions): Promise<void>[];
+
+	/**
+	 * Disables debugging for the specified devices
+	 * @param {IDisableDebuggingDeviceOptions[]} deviceOptions Settings used for disabling debugging for each device.
+	 * @param {IDebuggingAdditionalOptions} debuggingAdditionalOptions Settings used for disabling debugging.
+	 * @returns {Promise<void>[]} Array of promises for each device.
+	 */
+	disableDebugging(deviceOptions: IDisableDebuggingDeviceOptions[], debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<void>[];
+
+	/**
+	 * Attaches a debugger to the specified device.
+	 * @param {IAttachDebuggerOptions} settings Settings used for controling the attaching process.
+	 * @returns {Promise<void>}
+	 */
+	attachDebugger(settings: IAttachDebuggerOptions): Promise<void>;
+}
+
+/**
+ * Describes additional debugging settings.
+ */
+interface IDebuggingAdditionalOptions extends IProjectDir { }
+
+/**
+ * Describes settings used when disabling debugging.
+ */
+interface IDisableDebuggingDeviceOptions extends Mobile.IDeviceIdentifier { }
+
+interface IOptionalDebuggingOptions {
+	/**
+	 * Optional debug options - can be used to control the start of a debug process.
+	*/
+	debugOptions?: IDebugOptions;
+}
+
+/**
+ * Describes settings used when enabling debugging.
+ */
+interface IEnableDebuggingDeviceOptions extends Mobile.IDeviceIdentifier, IOptionalDebuggingOptions { }
+
+/**
+ * Describes settings passed to livesync service in order to control event emitting during refresh application.
+ */
+interface IShouldSkipEmitLiveSyncNotification {
+	/**
+ 	* Whether to skip emitting an event during refresh. Default is false.
+ 	*/
+	shouldSkipEmitLiveSyncNotification: boolean;
+}
+
+/**
+ * Describes settings used for attaching a debugger.
+ */
+interface IAttachDebuggerOptions extends IDebuggingAdditionalOptions, IEnableDebuggingDeviceOptions, IIsEmulator, IPlatform, IOptionalOutputPath {
 }
 
 interface ILiveSyncWatchInfo {
@@ -284,10 +349,10 @@ interface ILiveSyncCommandHelper {
 	/**
 	 * Method sets up configuration, before calling livesync and expects that devices are already discovered.
 	 * @param {Mobile.IDevice[]} devices List of discovered devices
-	 * @param {ILiveSyncService} liveSyncService Service expected to do the actual livesyncing
 	 * @param {string} platform The platform for which the livesync will be ran
+	 * @param {IDictionary<boolean>} deviceDebugMap @optional A map representing devices which have debugging enabled initially.
 	 * @returns {Promise<void>}
 	 */
-	executeLiveSyncOperation(devices: Mobile.IDevice[], liveSyncService: ILiveSyncService, platform: string): Promise<void>;
+	executeLiveSyncOperation(devices: Mobile.IDevice[], platform: string, deviceDebugMap?: IDictionary<boolean>): Promise<void>;
 	getPlatformsForOperation(platform: string): string[];
 }

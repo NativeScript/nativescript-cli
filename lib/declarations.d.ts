@@ -311,7 +311,6 @@ interface IStaticConfig extends Config.IStaticConfig { }
 interface IConfiguration extends Config.IConfig {
 	ANDROID_DEBUG_UI: string;
 	USE_POD_SANDBOX: boolean;
-	debugLivesync: boolean;
 }
 
 interface IApplicationPackage {
@@ -405,8 +404,7 @@ interface IDeviceEmulator extends IEmulator, IDeviceIdentifier { }
 
 interface IRunPlatformOptions extends IJustLaunch, IDeviceEmulator { }
 
-interface IDeployPlatformOptions extends IAndroidReleaseOptions, IPlatformTemplate, IRelease, IClean, IDeviceEmulator, IProvision, ITeamIdentifier {
-	projectDir: string;
+interface IDeployPlatformOptions extends IAndroidReleaseOptions, IPlatformTemplate, IRelease, IClean, IDeviceEmulator, IProvision, ITeamIdentifier, IProjectDir {
 	forceInstall?: boolean;
 }
 

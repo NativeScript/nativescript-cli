@@ -53,8 +53,7 @@ interface IProjectService {
 	isValidNativeScriptProject(pathToProject?: string): boolean;
 }
 
-interface IProjectData {
-	projectDir: string;
+interface IProjectData extends IProjectDir {
 	projectName: string;
 	platformsDir: string;
 	projectFilePath: string;
@@ -136,8 +135,7 @@ interface INativePrepare {
 	skipNativePrepare: boolean;
 }
 
-interface IBuildConfig extends IAndroidBuildOptionsSettings, IiOSBuildConfig {
-	projectDir: string;
+interface IBuildConfig extends IAndroidBuildOptionsSettings, IiOSBuildConfig, IProjectDir {
 	clean?: boolean;
 	architectures?: string[];
 	buildOutputStdio?: string;

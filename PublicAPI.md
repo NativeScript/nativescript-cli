@@ -552,6 +552,8 @@ After calling the method once, you can add new devices to the same LiveSync oper
 
 > NOTE: In case a consecutive call to `liveSync` method requires change in the pattern for watching files (i.e. `liveSyncData.syncAllFiles` option has changed), current watch operation will be stopped and a new one will be started.
 
+> NOTE: In case `debugggingEnabled` is set to `true` in a deviceDescriptor, debugging will initially be enabled for that device and a debugger will be attached after a successful livesync operation.
+
 * Definition
 ```TypeScript
 /**
@@ -620,6 +622,92 @@ tns.liveSyncService.stopLiveSync(projectDir, deviceIdentifiers)
 		console.log("LiveSync operation stopped.");
 	}, err => {
 		console.log("An error occurred during stopage.", err);
+	});
+```
+
+### enableDebugging
+Enables debugging during a LiveSync operation. This method will try to attach a debugger to the application. Note that `userInteractionNeeded` event may be raised. Additional details about the arguments can be seen [here](https://github.com/NativeScript/nativescript-cli/blob/master/lib/definitions/livesync.d.ts).
+
+* Definition
+```TypeScript
+/**
+* Enables debugging for the specified devices
+* @param {IEnableDebuggingDeviceOptions[]} deviceOpts Settings used for enabling debugging for each device.
+* @param {IDebuggingAdditionalOptions} enableDebuggingOptions Settings used for enabling debugging.
+* @returns {Promise<void>[]} Array of promises for each device.
+*/
+enableDebugging(deviceOpts: IEnableDebuggingDeviceOptions[], enableDebuggingOptions: IDebuggingAdditionalOptions): Promise<void>[];
+```
+
+* Usage
+```JavaScript
+const projectDir = "/tmp/myProject";
+const liveSyncData = { projectDir };
+const devices = [androidDeviceDescriptor, iOSDeviceDescriptor];
+tns.liveSyncService.liveSync(devices, liveSyncData)
+	.then(() => {
+		console.log("LiveSync operation started.");
+		devices.forEach(device => {
+			tns.liveSyncService.enableDebugging([{
+				deviceIdentifier: device.identifier
+			}], { projectDir });
+		});
+	});
+```
+
+### attachDebugger
+Attaches a debugger to the specified device. Additional details about the argument can be seen [here](https://github.com/NativeScript/nativescript-cli/blob/master/lib/definitions/livesync.d.ts).
+
+* Definition
+```TypeScript
+/**
+* Attaches a debugger to the specified device.
+* @param {IAttachDebuggerOptions} settings Settings used for controling the attaching process.
+* @returns {Promise<void>}
+*/
+attachDebugger(settings: IAttachDebuggerOptions): Promise<void>;
+```
+
+* Usage
+```JavaScript
+tns.liveSyncService.on("userInteractionNeeded", data => {
+	console.log("Please restart the app manually");
+	return tns.liveSyncService.attachDebugger(data);
+});
+```
+
+### disableDebugging
+Disables debugging during a LiveSync operation. This method will try to detach a debugger from the application. Additional details about the arguments can be seen [here](https://github.com/NativeScript/nativescript-cli/blob/master/lib/definitions/livesync.d.ts).
+
+* Definition
+```TypeScript
+/**
+* Disables debugging for the specified devices
+* @param {IDisableDebuggingDeviceOptions[]} deviceOptions Settings used for disabling debugging for each device.
+* @param {IDebuggingAdditionalOptions} debuggingAdditionalOptions Settings used for disabling debugging.
+* @returns {Promise<void>[]} Array of promises for each device.
+*/
+disableDebugging(deviceOptions: IDisableDebuggingDeviceOptions[], debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<void>[];
+```
+
+* Usage
+```JavaScript
+const projectDir = "/tmp/myProject";
+const liveSyncData = { projectDir };
+const devices = [androidDeviceDescriptor, iOSDeviceDescriptor];
+tns.liveSyncService.liveSync(devices, liveSyncData)
+	.then(() => {
+		console.log("LiveSync operation started.");
+		devices.forEach(device => {
+			tns.liveSyncService.enableDebugging([{
+				deviceIdentifier: device.identifier
+			}], { projectDir });
+			setTimeout(() => {
+				tns.liveSyncService.disableDebugging([{
+								deviceIdentifier: device.identifier
+							}], { projectDir });
+			}, 1000 * 30);
+		});
 	});
 ```
 
@@ -738,6 +826,16 @@ Example:
 ```JavaScript
 tns.liveSyncService.on("notify", data => {
 	console.log(`Notification: ${data.notification} for LiveSync operation on ${data.deviceIdentifier} for ${data.projectDir}. `);
+});
+```
+
+* userInteractionNeeded - raised whenever CLI needs to restart an application but cannot so the user has to restart it manually. The event is raised with an object, which can later be passed to `attachDebugger` method of `liveSyncService`:
+
+Example:
+```JavaScript
+tns.liveSyncService.on("userInteractionNeeded", data => {
+	console.log("Please restart the app manually");
+	return tns.liveSyncService.attachDebugger(data);
 });
 ```
 

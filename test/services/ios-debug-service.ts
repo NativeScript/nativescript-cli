@@ -10,6 +10,7 @@ class IOSDebugServiceInheritor extends IOSDebugService {
 		$platformService: IPlatformService,
 		$iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
 		$childProcess: IChildProcess,
+		$hostInfo: IHostInfo,
 		$logger: ILogger,
 		$errors: IErrors,
 		$npmInstallationManager: INpmInstallationManager,
@@ -17,7 +18,7 @@ class IOSDebugServiceInheritor extends IOSDebugService {
 		$iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		$processService: IProcessService,
 		$socketProxyFactory: ISocketProxyFactory) {
-		super($devicesService, $platformService, $iOSEmulatorServices, $childProcess, $logger, $errors,
+		super(<any>{}, $devicesService, $platformService, $iOSEmulatorServices, $childProcess, $hostInfo, $logger, $errors,
 			$npmInstallationManager, $iOSNotification, $iOSSocketRequestExecutor, $processService, $socketProxyFactory);
 	}
 
@@ -35,6 +36,7 @@ const createTestInjector = (): IInjector => {
 
 	testInjector.register("errors", stubs.ErrorsStub);
 	testInjector.register("logger", stubs.LoggerStub);
+	testInjector.register("hostInfo", {});
 	testInjector.register("npmInstallationManager", {});
 	testInjector.register("iOSNotification", {});
 	testInjector.register("iOSSocketRequestExecutor", {});

@@ -16,7 +16,6 @@ class TestExecutionService implements ITestExecutionService {
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		private $liveSyncService: ILiveSyncService,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $debugDataService: IDebugDataService,
 		private $httpClient: Server.IHttpClient,
 		private $config: IConfiguration,
@@ -25,8 +24,7 @@ class TestExecutionService implements ITestExecutionService {
 		private $options: IOptions,
 		private $pluginsService: IPluginsService,
 		private $errors: IErrors,
-		private $androidDebugService: IPlatformDebugService,
-		private $iOSDebugService: IPlatformDebugService,
+		private $debugService: IDebugService,
 		private $devicesService: Mobile.IDevicesService,
 		private $childProcess: IChildProcess) {
 	}
@@ -112,7 +110,12 @@ class TestExecutionService implements ITestExecutionService {
 							return info;
 						});
 
-					const liveSyncInfo: ILiveSyncInfo = { projectDir: projectData.projectDir, skipWatcher: !this.$options.watch || this.$options.justlaunch, watchAllFiles: this.$options.syncAllFiles };
+					const liveSyncInfo: ILiveSyncInfo = {
+						projectDir: projectData.projectDir,
+						skipWatcher: !this.$options.watch || this.$options.justlaunch,
+						watchAllFiles: this.$options.syncAllFiles,
+						debugOptions: this.$options
+					};
 
 					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 
@@ -188,9 +191,8 @@ class TestExecutionService implements ITestExecutionService {
 				};
 
 				if (this.$options.debugBrk) {
-					const debugService = this.getDebugService(platform);
 					const debugData = this.getDebugData(platform, projectData, deployOptions);
-					await debugService.debug(debugData, this.$options);
+					await this.$debugService.debug(debugData, this.$options);
 				} else {
 					const devices = this.$devicesService.getDeviceInstances();
 					// Now let's take data for each device:
@@ -223,7 +225,13 @@ class TestExecutionService implements ITestExecutionService {
 							return info;
 						});
 
-					const liveSyncInfo: ILiveSyncInfo = { projectDir: projectData.projectDir, skipWatcher: !this.$options.watch || this.$options.justlaunch, watchAllFiles: this.$options.syncAllFiles };
+					const liveSyncInfo: ILiveSyncInfo = {
+						projectDir: projectData.projectDir,
+						skipWatcher: !this.$options.watch || this.$options.justlaunch,
+						watchAllFiles: this.$options.syncAllFiles,
+						debugOptions: this.$options
+					};
+
 					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 				}
 			};
@@ -275,17 +283,6 @@ class TestExecutionService implements ITestExecutionService {
 		};
 
 		return 'module.exports = ' + JSON.stringify(config);
-	}
-
-	private getDebugService(platform: string): IPlatformDebugService {
-		let lowerCasedPlatform = platform.toLowerCase();
-		if (lowerCasedPlatform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
-			return this.$iOSDebugService;
-		} else if (lowerCasedPlatform === this.$devicePlatformsConstants.Android.toLowerCase()) {
-			return this.$androidDebugService;
-		}
-
-		throw new Error(`Invalid platform ${platform}. Valid platforms are ${this.$devicePlatformsConstants.iOS} and ${this.$devicePlatformsConstants.Android}`);
 	}
 
 	private getKarmaConfiguration(platform: string, projectData: IProjectData): any {

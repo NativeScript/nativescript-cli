@@ -1,7 +1,12 @@
 import { EventEmitter } from "events";
 
 export abstract class DebugServiceBase extends EventEmitter implements IPlatformDebugService {
-	constructor(protected $devicesService: Mobile.IDevicesService) { super(); }
+	constructor(
+		protected device: Mobile.IDevice,
+		protected $devicesService: Mobile.IDevicesService
+	) {
+		super();
+	}
 
 	public abstract get platform(): string;
 

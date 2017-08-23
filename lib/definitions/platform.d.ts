@@ -233,16 +233,11 @@ interface IPlatformSpecificData extends IProvision, ITeamIdentifier {
 /**
  * Describes information that will be tracked for specific action related for platforms - build, livesync, etc.
  */
-interface ITrackPlatformAction {
+interface ITrackPlatformAction extends IPlatform {
 	/**
 	 * Name of the action.
 	 */
 	action: string;
-
-	/**
-	 * Platform for which the action will be executed.
-	 */
-	platform: string;
 
 	/**
 	 * Defines if the action is for device or emulator.

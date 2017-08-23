@@ -1,7 +1,6 @@
-interface IEmulatorInfo {
+interface IEmulatorInfo extends IPlatform {
 	name: string;
 	version: string;
-	platform: string;
 	id: string;
 	type: string;
 	isRunning?: boolean;

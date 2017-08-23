@@ -85,6 +85,8 @@ export const ANGULAR_NAME = "angular";
 export const TYPESCRIPT_NAME = "typescript";
 export const BUILD_OUTPUT_EVENT_NAME = "buildOutput";
 export const CONNECTION_ERROR_EVENT_NAME = "connectionError";
+export const USER_INTERACTION_NEEDED_EVENT_NAME = "userInteractionNeeded";
+export const DEBUGGER_ATTACHED_EVENT_NAME = "debuggerAttached";
 export const VERSION_STRING = "version";
 export const INSPECTOR_CACHE_DIRNAME = "ios-inspector";
 export const POST_INSTALL_COMMAND_NAME = "post-install-cli";
@@ -92,6 +94,7 @@ export const POST_INSTALL_COMMAND_NAME = "post-install-cli";
 export class DebugCommandErrors {
 	public static UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR = "The options --for-device and --emulator cannot be used simultaneously. Please use only one of them.";
 	public static NO_DEVICES_EMULATORS_FOUND_FOR_OPTIONS = "Unable to find device or emulator for specified options.";
+	public static UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING = "Unsupported device OS for debugging";
 }
 
 export const enum NativePlatformStatus {
