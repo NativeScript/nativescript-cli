@@ -578,18 +578,6 @@ describe('User', function () {
     });
   });
 
-  describe('static live service methods', () => {
-    describe('static registerForLiveService', () => {
-      it('should return an error if there is no active user');
-      it('should call the LiveService\'s registerUser() method with the current active user');
-    });
-
-    describe('static unregisterFromLiveService', () => {
-      it('should return an error if there is no active user');
-      it('should call the LiveService\'s unregisterUser() method with the current active user');
-    });
-  });
-
   describe('signup', function () {
     beforeEach(function () {
       return UserMock.logout();

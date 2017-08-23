@@ -1,3 +1,6 @@
+import isString from 'lodash/isString';
+
+import { KinveyError } from '../../../errors';
 import Client from '../../../client';
 import { getLiveService } from './live-service';
 import { KinveyRequest, RequestMethod, StatusCode } from '../../../request';
@@ -26,6 +29,8 @@ export class Stream {
   /** @private */
   _publishChannels = {};
 
+  static StreamACL = StreamACL;
+
   /**
    * @param {string} name
    */
@@ -44,8 +49,19 @@ export class Stream {
    * @returns {Promise}
    */
   setACL(userId, acl) {
-    const requestBody = (acl instanceof StreamACL) ? acl.toPlainObject() : acl;
-    return this._makeStreamRequest(userId, RequestMethod.PUT, requestBody);
+    if (!isString(userId) || userId === '') {
+      return Promise.reject(new KinveyError('Invalid or missing id'));
+    }
+
+    if (!StreamACL.isValidACLObject(acl)) {
+      return Promise.reject(new KinveyError('Invalid or missing ACL object'));
+    }
+
+    if (!(acl instanceof StreamACL)) {
+      acl = new StreamACL(acl);
+    }
+
+    return this._makeStreamRequest(userId, RequestMethod.PUT, acl.toPlainObject());
   }
 
   // Feed comm
@@ -54,6 +70,7 @@ export class Stream {
    * Subscribes the active user to the specified user's channel
    * @param {string} userId
    * @param {MessageReceiver} receiver
+   * @returns {Promise}
    */
   follow(userId, receiver) {
     return this._subscribe(userId, receiver);
