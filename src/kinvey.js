@@ -110,15 +110,7 @@ class Kinvey {
    * @throws  {KinveyError}  If an `options.appKey` is not provided.
    * @throws  {KinveyError}  If neither an `options.appSecret` or `options.masterSecret` is provided.
    *
-   * @example
-   * Kinvey.initialize({
-   *   appKey: 'appKey',
-   *   appSecret: 'appSecret'
-   * }).then(function(client) {
-   *   // ...
-   * }).catch(function(error) {
-   *   // ...
-   * });
+   * @deprecated Please use Kinvey.init().
    */
   static initialize(config) {
     const client = Kinvey.init(config);
@@ -126,8 +118,7 @@ class Kinvey {
   }
 
   /**
-   * Initializes the SDK with your app's information. The SDK is initialized when the returned
-   * promise resolves.
+   * Initializes the SDK with your app's configuration.
    *
    * @param {Object}    options                                            Options
    * @param {string}    [options.apiHostname='https://baas.kinvey.com']    Host name used for Kinvey API requests
@@ -141,12 +132,6 @@ class Kinvey {
    *
    * @throws  {KinveyError}  If an `options.appKey` is not provided.
    * @throws  {KinveyError}  If neither an `options.appSecret` or `options.masterSecret` is provided.
-   *
-   * @example
-   * const client = Kinvey.init({
-   *   appKey: 'appKey',
-   *   appSecret: 'appSecret'
-   * });
    */
   static init(options = {}) {
     // Check that an appKey or appId was provided
@@ -158,7 +143,7 @@ class Kinvey {
     // Check that an appSecret or masterSecret was provided
     if (isDefined(options.appSecret) === false && isDefined(options.masterSecret) === false) {
       throw new KinveyError('No App Secret or Master Secret was provided.'
-        + ' Unable to create a new Client without an App Key.');
+        + ' Unable to create a new Client without an App Secret.');
     }
 
     // Initialize the client
