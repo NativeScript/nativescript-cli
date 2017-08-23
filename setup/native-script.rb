@@ -132,7 +132,7 @@ sdk_manager = File.join(ENV["ANDROID_HOME"], "tools", "bin", "sdkmanager")
 execute("echo y | #{sdk_manager} \"platform-tools\"", error_msg)
 execute("echo y | #{sdk_manager} \"tools\"", error_msg)
 execute("echo y | #{sdk_manager} \"build-tools;25.0.2\"", error_msg)
-execute("echo y | #{sdk_manager} \"platforms;android-23\"", error_msg)
+execute("echo y | #{sdk_manager} \"platforms;android-25\"", error_msg)
 execute("echo y | #{sdk_manager} \"extras;android;m2repository\"", error_msg)
 execute("echo y | #{sdk_manager} \"extras;google;m2repository\"", error_msg)
 
@@ -143,7 +143,7 @@ if gets.chomp.downcase == "y"
     execute("echo y | #{sdk_manager} \"extras;intel;Hardware_Accelerated_Execution_Manager\"", error_msg)
     haxm_silent_installer = File.join(ENV["ANDROID_HOME"], "extras", "intel", "Hardware_Accelerated_Execution_Manager", "silent_install.sh")
     execute("sudo #{haxm_silent_installer}", "There seem to be some problems with the Android configuration")
-    execute("echo y | #{sdk_manager} \"system-images;android-23;default;x86\"", error_msg)
+    execute("echo y | #{sdk_manager} \"system-images;android-25;default;x86\"", error_msg)
   else
     execute("echo y | #{sdk_manager} \"system-images;android-25;google_apis;armeabi-v7a\"", error_msg)
   end  
