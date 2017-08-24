@@ -148,7 +148,7 @@ export class Stream {
     return this._requestSubscribeAccess(userId)
       .then(() => {
         const channelName = this._subscribeChannels[userId];
-        return this._liveService.subscribeToChannel(channelName, receiver);
+        this._liveService.subscribeToChannel(channelName, receiver);
       });
   }
 

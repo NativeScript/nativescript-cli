@@ -476,13 +476,15 @@ export default class NetworkStore {
    * Subscribes to the live stream for the collection
    */
   subscribe(receiver) {
-    return getLiveCollectionManager().subscribeCollection(this.collection, receiver);
+    const manager = getLiveCollectionManager();
+    return manager.subscribeCollection(this.collection, receiver);
   }
 
   /**
    * Unsubscribes from the live stream for the collection
    */
   unsubscribe() {
-    return getLiveCollectionManager().unsubscribeCollection(this.collection);
+    const manager = getLiveCollectionManager();
+    return manager.unsubscribeCollection(this.collection);
   }
 }
