@@ -199,16 +199,21 @@ describe("iOSProjectService", () => {
 				}
 			};
 		}
-		it("by default exports xcodearchive to platforms/ios/build/archive/<projname>.xcarchive", async () => {
-			let setup = await setupArchive();
-			await setup.run();
-			setup.assert();
-		});
-		it("can pass archivePath to xcodebuild -archivePath", async () => {
-			let setup = await setupArchive({ archivePath: "myarchive.xcarchive" });
-			await setup.run();
-			setup.assert();
-		});
+
+		if (require("os").platform() !== "darwin") {
+			console.log("Skipping iOS archive tests. They can work only on macOS");
+		} else {
+			it("by default exports xcodearchive to platforms/ios/build/archive/<projname>.xcarchive", async () => {
+				let setup = await setupArchive();
+				await setup.run();
+				setup.assert();
+			});
+			it("can pass archivePath to xcodebuild -archivePath", async () => {
+				let setup = await setupArchive({ archivePath: "myarchive.xcarchive" });
+				await setup.run();
+				setup.assert();
+			});
+		}
 	});
 
 	describe("exportArchive", () => {
@@ -282,13 +287,17 @@ describe("iOSProjectService", () => {
 			assert.ok(xcodebuildExeced, "Expected xcodebuild to be executed");
 		}
 
-		it("calls xcodebuild -exportArchive to produce .IPA", async () => {
-			await testExportArchive({}, noTeamPlist);
-		});
+		if (require("os").platform() !== "darwin") {
+			console.log("Skipping iOS export archive tests. They can work only on macOS");
+		} else {
+			it("calls xcodebuild -exportArchive to produce .IPA", async () => {
+				await testExportArchive({}, noTeamPlist);
+			});
 
-		it("passes the --team-id option down the xcodebuild -exportArchive throug the -exportOptionsPlist", async () => {
-			await testExportArchive({ teamID: "MyTeam" }, myTeamPlist);
-		});
+			it("passes the --team-id option down the xcodebuild -exportArchive throug the -exportOptionsPlist", async () => {
+				await testExportArchive({ teamID: "MyTeam" }, myTeamPlist);
+			});
+		}
 	});
 });
 
