@@ -7,6 +7,7 @@ import { Observable } from 'rxjs/Observable';
 export namespace Kinvey {
   var appVersion: string;
   function initialize(config: ClientConfig): Promise<User>;
+  function init(config: ClientConfig): Client;
 
   interface PingResponse {
     version: string,
@@ -15,7 +16,6 @@ export namespace Kinvey {
     environmentName: string
   }
   function ping(): Promise<PingResponse>;
-
 
   // Request Options interface
   interface RequestOptions {
@@ -245,13 +245,11 @@ export namespace Kinvey {
 
   // Query class
   class Query {
-    constructor(options?: {
-      fields?: any[]
-      filter?: {}
-      sort?: string
-      limit?: number
-      skip?: number
-    })
+    fields: any[];
+    filter: {};
+    sort: string;
+    limit: number;
+    skip: number;
     isSupportedOffline(): boolean;
     equalTo(field: string, value: any): this;
     contains(field: string, values: any[]): this;
