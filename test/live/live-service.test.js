@@ -322,19 +322,6 @@ describe('LiveService', () => {
             expect(arg.channel).toEqual(testChannelName);
           });
       });
-
-      it('should add a "senderId" property, set to active user\'s _id, when sending an object', () => {
-        const publishSpy = expect.spyOn(pubnubClient, 'publish')
-          .andReturn(Promise.resolve());
-
-        return liveService.publishToChannel(testChannelName, { test: 1 })
-          .then(() => {
-            expect(publishSpy.calls.length).toEqual(1);
-            const arg = publishSpy.calls[0].arguments[0];
-            expect(arg.message.test).toEqual(1);
-            expect(arg.message.senderId).toEqual(client.activeUser._id);
-          });
-      });
     });
 
     describe('incorrectly', () => {
@@ -371,6 +358,73 @@ describe('LiveService', () => {
             done();
           })
           .catch((err) => done(err));
+      });
+    });
+  });
+
+  describe('unsubscribing', () => {
+    const channelName = 'someChannel';
+
+    describe('when LiveService is not initialized', () => {
+      it('should fail for unsubscribeFromChannel()', () => {
+        expect(() => {
+          liveService.unsubscribeFromChannel(channelName);
+        })
+          .toThrow(notInitializedCheckRegexp);
+      });
+
+      it('should fail for unsubscribeFromAll()', () => {
+        expect(() => {
+          liveService.unsubscribeFromAll();
+        })
+          .toThrow(notInitializedCheckRegexp);
+      });
+    });
+
+    describe('when LiveService is initialized', () => {
+      let pubnubClient;
+      let pubnubListener;
+      let nockScope;
+
+      beforeEach(() => {
+        nockScope = nockHelper.mockRegisterRealtimeCall(registerUserResponse);
+        return liveService.registerUser(Kinvey.User.getActiveUser())
+          .then((config) => {
+            pubnubClient = new PubNubClientMock();
+            pubnubListener = new PubNubListenerMock();
+            return liveService.initialize(pubnubClient, pubnubListener);
+          });
+      });
+
+      afterEach(() => {
+        nockScope.done();
+      });
+
+      describe('unsubscribeFromChannel()', () => {
+        it('should unsubscribe from PubNubListener\'s events for the channel', () => {
+          const spy = expect.spyOn(pubnubListener, 'removeAllListeners');
+
+          liveService.unsubscribeFromChannel(channelName);
+          expect(spy.calls.length).toBe(2);
+          expect(spy).toHaveBeenCalledWith(channelName);
+          expect(spy).toHaveBeenCalledWith(`${PubNubListener.statusPrefix}${channelName}`);
+        });
+      });
+
+      describe('unsubscribeFromAll()', () => {
+        it('should call unsubscribeAll() of PubNub client', () => {
+          const clientSpy = expect.spyOn(pubnubClient, 'unsubscribeAll');
+
+          liveService.unsubscribeFromAll();
+          expect(clientSpy).toHaveBeenCalledWith();
+        });
+
+        it('should call removeAllListeners() of PubNubListener', () => {
+          const listenerSpy = expect.spyOn(pubnubListener, 'removeAllListeners');
+
+          liveService.unsubscribeFromAll();
+          expect(listenerSpy).toHaveBeenCalledWith();
+        });
       });
     });
   });

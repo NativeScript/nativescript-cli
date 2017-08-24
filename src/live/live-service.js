@@ -1,6 +1,5 @@
 import PubNub from 'pubnub';
 import isFunction from 'lodash/isFunction';
-import isObject from 'lodash/isObject';
 import extend from 'lodash/extend';
 
 import Client from '../client';
@@ -201,18 +200,13 @@ class LiveService {
       return Promise.reject(validationErr);
     }
 
-    // TODO: decide if this is necessary
-    if (isObject(message)) {
-      message.senderId = this._registeredUser._id;
-    }
-
     return this._pubnubClient.publish({
       message: message,
       channel: channelName
     })
       .catch((err) => {
-        err = err.status.errorData;
-        const resp = new Response({ data: err, statusCode: err.status, headers: err.response.headers });
+        err = err.status && err.status.errorData;
+        const resp = new Response({ data: err, statusCode: err.status, headers: err.response && err.response.headers });
         return Promise.reject(resp);
       });
   }
@@ -341,8 +335,8 @@ class LiveService {
    * @param {string} channelName
    */
   _unsubscribeFromListener(channelName) {
-    this._pubnubListener.removeAllListeners(channelName)
-      .removeAllListeners(`${PubNubListener.statusPrefix}${channelName}`);
+    this._pubnubListener.removeAllListeners(channelName);
+    this._pubnubListener.removeAllListeners(`${PubNubListener.statusPrefix}${channelName}`);
   }
 
   /**
