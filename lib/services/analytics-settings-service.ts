@@ -1,7 +1,6 @@
 import { createGUID } from "../common/helpers";
 
 class AnalyticsSettingsService implements IAnalyticsSettingsService {
-	private static SESSIONS_STARTED_OBSOLETE_KEY = "SESSIONS_STARTED";
 	private static SESSIONS_STARTED_KEY_PREFIX = "SESSIONS_STARTED_";
 
 	constructor(private $userSettingsService: UserSettings.IUserSettingsService,
@@ -33,14 +32,8 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	}
 
 	public async getUserSessionsCount(projectName: string): Promise<number> {
-		const oldSessionCount = await this.$userSettingsService.getSettingValue<number>(AnalyticsSettingsService.SESSIONS_STARTED_OBSOLETE_KEY);
-
-		if (oldSessionCount) {
-			// remove the old property for sessions count
-			await this.$userSettingsService.removeSetting(AnalyticsSettingsService.SESSIONS_STARTED_OBSOLETE_KEY);
-		}
-
-		return await this.$userSettingsService.getSettingValue<number>(this.getSessionsProjectKey(projectName)) || oldSessionCount || 0;
+		const sessionsCountForProject = await this.$userSettingsService.getSettingValue<number>(this.getSessionsProjectKey(projectName));
+		return sessionsCountForProject || 0;
 	}
 
 	public async setUserSessionsCount(count: number, projectName: string): Promise<void> {
