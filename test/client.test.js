@@ -48,12 +48,6 @@ describe('Client', () => {
       expect(client.micHostname).toEqual(`https://${micHostname}`);
     });
 
-    it('should be able to provide custom liveServiceHostname', () => {
-      const liveServiceHostname = 'https://mylive.kinvey.com';
-      const client = new Client({ liveServiceHostname: liveServiceHostname });
-      expect(client.liveServiceHostname).toEqual(liveServiceHostname);
-    });
-
     it('should be able to provide an appKey', () => {
       const appKey = randomString();
       const client = new Client({ appKey: appKey });

@@ -12,10 +12,7 @@ describe('Kinvey', function () {
     // Reintialize with the previous client
     Kinvey.init({
       appKey: this.client.appKey,
-      appSecret: this.client.appSecret,
-      masterSecret: this.client.masterSecret,
-      encryptionKey: this.client.encryptionKey,
-      appVersion: this.client.appVersion
+      appSecret: this.client.appSecret
     });
   });
 

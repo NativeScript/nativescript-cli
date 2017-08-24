@@ -66,16 +66,11 @@ export default class Client {
    *   appSecret: '<appSecret>'
    * });
    */
-  constructor(options = {}) {
-    options = assign({
-      apiHostname: 'https://baas.kinvey.com',
-      micHostname: 'https://auth.kinvey.com'
-    }, options);
-
-    if (options.apiHostname && isString(options.apiHostname)) {
-      const apiHostnameParsed = url.parse(options.apiHostname);
-      options.apiProtocol = apiHostnameParsed.protocol || 'https:';
-      options.apiHost = apiHostnameParsed.host;
+  
+  constructor(config = {}) {
+    let apiHostname = isString(config.apiHostname) ? config.apiHostname : 'https://baas.kinvey.com';
+    if (/^https?:\/\//i.test(apiHostname) === false) {
+      apiHostname = `https://${apiHostname}`;
     }
 
     const apiHostnameParsed = url.parse(apiHostname);

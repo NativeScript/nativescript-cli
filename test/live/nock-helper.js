@@ -29,13 +29,13 @@ export function setClient(client) {
 
 export function mockRegisterRealtimeCall(response) {
   return _baseNockCall()
-    .post(`/user/${_client.appKey}/${_client.activeUser._id}/register-realtime`, { deviceId: _client.deviceId })
+    .post(`/user/${_client.appKey}/${_client.getActiveUser()._id}/register-realtime`, { deviceId: _client.deviceId })
     .reply(200, response);
 }
 
 export function mockUnregisterRealtimeCall() {
   return _baseNockCall()
-    .post(`/user/${_client.appKey}/${_client.activeUser._id}/unregister-realtime`, { deviceId: _client.deviceId })
+    .post(`/user/${_client.appKey}/${_client.getActiveUser()._id}/unregister-realtime`, { deviceId: _client.deviceId })
     .reply(204);
 }
 

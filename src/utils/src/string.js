@@ -16,7 +16,7 @@ function uid(size = 10) {
  * @private
  */
 export function randomString(size = 18, prefix = '') {
-  return `${prefix}${uid.sync(size)}`;
+  return `${prefix}${uid(size)}`;
 }
 
 export function isNonemptyString(obj) {
