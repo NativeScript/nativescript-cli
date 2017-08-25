@@ -131,11 +131,7 @@ export class Stream {
   _unsubscribeFromSubstream(substreamOwnerId) {
     const path = `${substreamOwnerId}/unsubscribe`;
 
-    return this._makeStreamRequest(path, RequestMethod.POST, { deviceId: this._client.deviceId })
-      .then((response) => {
-        delete this._subscribeChannels[substreamOwnerId];
-        return response;
-      });
+    return this._makeStreamRequest(path, RequestMethod.POST, { deviceId: this._client.deviceId });
   }
 
   /**
@@ -162,6 +158,7 @@ export class Stream {
       .then(() => {
         const channelName = this._subscribeChannels[userId];
         this._liveService.unsubscribeFromChannel(channelName);
+        delete this._subscribeChannels[userId];
       });
   }
 

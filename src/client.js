@@ -107,13 +107,6 @@ export default class Client {
      */
     this.micHost = micHostnameParsed.host;
 
-    let liveServiceHostname = isString(config.liveServiceHostname) ? config.liveServiceHostname : 'https://kls.kinvey.com';
-    if (/^https?:\/\//i.test(liveServiceHostname) === false) {
-      liveServiceHostname = `https://${liveServiceHostname}`;
-    }
-
-    const liveServiceHostnameParsed = url.parse(liveServiceHostname);
-
     /**
      * @type {?string}
      */
