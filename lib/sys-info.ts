@@ -13,7 +13,7 @@ export class SysInfo extends SysInfoBase {
 	}
 
 	public async getSysInfo(pathToPackageJson: string, androidToolsInfo?: { pathToAdb: string }): Promise<ISysInfoData> {
-		let defaultAndroidToolsInfo = {
+		const defaultAndroidToolsInfo = {
 			pathToAdb: await this.$androidToolsInfo.getPathToAdbFromAndroidHome()
 		};
 

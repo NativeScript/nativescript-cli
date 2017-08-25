@@ -21,9 +21,9 @@ describe("XCConfig Service Tests", () => {
 	};
 
 	const assertPropertyValues = (expected: any, injector: IInjector) => {
-		let service = getXCConfigService(injector);
+		const service = getXCConfigService(injector);
 		_.forOwn(expected, (value, key) => {
-			let actual = service.readPropertyValue("any", key);
+			const actual = service.readPropertyValue("any", key);
 			assert.equal(actual, value);
 		});
 	};
@@ -38,22 +38,22 @@ describe("XCConfig Service Tests", () => {
 
 	describe("Read Property Value", () => {
 		it("Return empty value, for unexistent file", () => {
-			let injector = createTestInjector();
+			const injector = createTestInjector();
 			injector.register("fs", {
 				exists: (path: string) => {
 					return false;
 				}
 			});
 
-			let service = getXCConfigService(injector);
-			let actual = service.readPropertyValue("any", "any");
+			const service = getXCConfigService(injector);
+			const actual = service.readPropertyValue("any", "any");
 
 			assert.isNull(actual);
 		});
 
 		it("Returns correct value for well-formatted document", () => {
-			let injector = createTestInjector();
-			let fs = getFileSystemMock(injector);
+			const injector = createTestInjector();
+			const fs = getFileSystemMock(injector);
 			fs.readText = (filename: string, options?: IReadFileOptions | string): string => {
 				return `// You can add custom settings here
 						// for example you can uncomment the following line to force distribution code signing
@@ -64,7 +64,7 @@ describe("XCConfig Service Tests", () => {
 						ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;`;
 			};
 
-			let expected = {
+			const expected = {
 				'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
 				'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
 				'CODE_SIGN_IDENTITY': 'iPhone Distribution'
@@ -74,8 +74,8 @@ describe("XCConfig Service Tests", () => {
 		});
 
 		it("Returns correct value for values with missing ; at the end of the line.", () => {
-			let injector = createTestInjector();
-			let fs = getFileSystemMock(injector);
+			const injector = createTestInjector();
+			const fs = getFileSystemMock(injector);
 			fs.readText = (filename: string, options?: IReadFileOptions | string): string => {
 				return `// You can add custom settings here
 						// for example you can uncomment the following line to force distribution code signing
@@ -86,7 +86,7 @@ describe("XCConfig Service Tests", () => {
 						ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage`;
 			};
 
-			let expected = {
+			const expected = {
 				'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
 				'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
 				'CODE_SIGN_IDENTITY': 'iPhone Distribution'
@@ -96,14 +96,14 @@ describe("XCConfig Service Tests", () => {
 		});
 
 		it("Doesn't read value from a commented-out line.", () => {
-			let injector = createTestInjector();
-			let fs = getFileSystemMock(injector);
+			const injector = createTestInjector();
+			const fs = getFileSystemMock(injector);
 			fs.readText = (filename: string, options?: IReadFileOptions | string): string => {
 				return `// DEVELOPMENT_TEAM = YOUR_TEAM_ID;
 						ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;`;
 			};
 
-			let expected = {
+			const expected = {
 				'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
 				'DEVELOPMENT_TEAM': <any>null
 			};
@@ -112,8 +112,8 @@ describe("XCConfig Service Tests", () => {
 		});
 
 		it("Returns correct empty value.", () => {
-			let injector = createTestInjector();
-			let fs = getFileSystemMock(injector);
+			const injector = createTestInjector();
+			const fs = getFileSystemMock(injector);
 			fs.readText = (filename: string, options?: IReadFileOptions | string): string => {
 				return `
 						ASSETCATALOG_COMPILER_APPICON_NAME = ;
@@ -121,7 +121,7 @@ describe("XCConfig Service Tests", () => {
 						`;
 			};
 
-			let expected = {
+			const expected = {
 				'ASSETCATALOG_COMPILER_APPICON_NAME': '',
 				'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage'
 			};
@@ -130,13 +130,13 @@ describe("XCConfig Service Tests", () => {
 		});
 
 		it("First part only property doesn't break the service.", () => {
-			let injector = createTestInjector();
-			let fs = getFileSystemMock(injector);
+			const injector = createTestInjector();
+			const fs = getFileSystemMock(injector);
 			fs.readText = (filename: string, options?: IReadFileOptions | string): string => {
 				return `ASSETCATALOG_COMPILER_APPICON_NAME`;
 			};
 
-			let expected = {
+			const expected = {
 				'ASSETCATALOG_COMPILER_APPICON_NAME': <any>null
 			};
 
@@ -144,13 +144,13 @@ describe("XCConfig Service Tests", () => {
 		});
 
 		it("Invalid config property value with = doesn't break the service.", () => {
-			let injector = createTestInjector();
-			let fs = getFileSystemMock(injector);
+			const injector = createTestInjector();
+			const fs = getFileSystemMock(injector);
 			fs.readText = (filename: string, options?: IReadFileOptions | string): string => {
 				return `ASSETCATALOG_COMPILER_APPICON_NAME=`;
 			};
 
-			let expected = {
+			const expected = {
 				'ASSETCATALOG_COMPILER_APPICON_NAME': <any>null
 			};
 
@@ -158,13 +158,13 @@ describe("XCConfig Service Tests", () => {
 		});
 
 		it("Property with space is read correctly.", () => {
-			let injector = createTestInjector();
-			let fs = getFileSystemMock(injector);
+			const injector = createTestInjector();
+			const fs = getFileSystemMock(injector);
 			fs.readText = (filename: string, options?: IReadFileOptions | string): string => {
 				return `ASSETCATALOG_COMPILER_APPICON_NAME= `;
 			};
 
-			let expected = {
+			const expected = {
 				'ASSETCATALOG_COMPILER_APPICON_NAME': ''
 			};
 
@@ -172,13 +172,13 @@ describe("XCConfig Service Tests", () => {
 		});
 
 		it("Ensure property can be an empty value.", () => {
-			let injector = createTestInjector();
-			let fs = getFileSystemMock(injector);
+			const injector = createTestInjector();
+			const fs = getFileSystemMock(injector);
 			fs.readText = (filename: string, options?: IReadFileOptions | string): string => {
 				return `ASSETCATALOG_COMPILER_APPICON_NAME= ;`;
 			};
 
-			let expected = {
+			const expected = {
 				'ASSETCATALOG_COMPILER_APPICON_NAME': ''
 			};
 

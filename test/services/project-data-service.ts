@@ -61,7 +61,7 @@ const createTestInjector = (readTextData?: string): IInjector => {
 describe("projectDataService", () => {
 	const generateJsonDataFromTestData = (currentTestData: any, skipNativeScriptKey?: boolean) => {
 		const props = currentTestData.propertyName.split(".");
-		let data: any = {};
+		const data: any = {};
 		let currentData: any = skipNativeScriptKey ? data : (data[CLIENT_NAME_KEY_IN_PROJECT_FILE] = {});
 
 		_.each(props, (prop, index: number) => {
@@ -157,7 +157,7 @@ describe("projectDataService", () => {
 			const props = currentTestData.propertyName.split(".");
 			props.splice(props.length - 1, 1);
 
-			let data: any = {};
+			const data: any = {};
 			let currentData: any = data[CLIENT_NAME_KEY_IN_PROJECT_FILE] = {};
 
 			_.each(props, (prop) => {
@@ -214,7 +214,7 @@ describe("projectDataService", () => {
 
 	describe("removeDependency", () => {
 		it("removes specified dependency from project file", () => {
-			let currentTestData = {
+			const currentTestData = {
 				propertyName: "dependencies.myDeps",
 				propertyValue: "1.0.0"
 			};

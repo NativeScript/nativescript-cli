@@ -21,8 +21,8 @@ class VersionsService implements IVersionsService {
 	}
 
 	public async getNativescriptCliVersion(): Promise<IVersionInformation> {
-		let currentCliVersion = this.$staticConfig.version;
-		let latestCliVersion = await this.$npmInstallationManager.getLatestVersion(constants.NATIVESCRIPT_KEY_NAME);
+		const currentCliVersion = this.$staticConfig.version;
+		const latestCliVersion = await this.$npmInstallationManager.getLatestVersion(constants.NATIVESCRIPT_KEY_NAME);
 
 		return {
 			componentName: constants.NATIVESCRIPT_KEY_NAME,
@@ -32,21 +32,21 @@ class VersionsService implements IVersionsService {
 	}
 
 	public async getTnsCoreModulesVersion(): Promise<IVersionInformation> {
-		let latestTnsCoreModulesVersion = await this.$npmInstallationManager.getLatestVersion(constants.TNS_CORE_MODULES_NAME);
-		let nativescriptCoreModulesInfo: IVersionInformation = {
+		const latestTnsCoreModulesVersion = await this.$npmInstallationManager.getLatestVersion(constants.TNS_CORE_MODULES_NAME);
+		const nativescriptCoreModulesInfo: IVersionInformation = {
 			componentName: constants.TNS_CORE_MODULES_NAME,
 			latestVersion: latestTnsCoreModulesVersion
 		};
 
 		if (this.projectData) {
-			let nodeModulesPath = path.join(this.projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME);
-			let tnsCoreModulesPath = path.join(nodeModulesPath, constants.TNS_CORE_MODULES_NAME);
+			const nodeModulesPath = path.join(this.projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME);
+			const tnsCoreModulesPath = path.join(nodeModulesPath, constants.TNS_CORE_MODULES_NAME);
 			if (!this.$fs.exists(nodeModulesPath) ||
 				!this.$fs.exists(tnsCoreModulesPath)) {
 				await this.$pluginsService.ensureAllDependenciesAreInstalled(this.projectData);
 			}
 
-			let currentTnsCoreModulesVersion = this.$fs.readJson(path.join(tnsCoreModulesPath, constants.PACKAGE_JSON_FILE_NAME)).version;
+			const currentTnsCoreModulesVersion = this.$fs.readJson(path.join(tnsCoreModulesPath, constants.PACKAGE_JSON_FILE_NAME)).version;
 			nativescriptCoreModulesInfo.currentVersion = currentTnsCoreModulesVersion;
 		}
 
@@ -54,7 +54,7 @@ class VersionsService implements IVersionsService {
 	}
 
 	public async getRuntimesVersions(): Promise<IVersionInformation[]> {
-		let runtimes: string[] = [
+		const runtimes: string[] = [
 			constants.TNS_ANDROID_RUNTIME_NAME,
 			constants.TNS_IOS_RUNTIME_NAME
 		];
@@ -65,17 +65,17 @@ class VersionsService implements IVersionsService {
 			projectConfig = this.$fs.readJson(this.projectData.projectFilePath);
 		}
 
-		let runtimesVersions: IVersionInformation[] = await Promise.all(runtimes.map(async (runtime: string) => {
-			let latestRuntimeVersion = await this.$npmInstallationManager.getLatestVersion(runtime);
-			let runtimeInformation: IVersionInformation = {
+		const runtimesVersions: IVersionInformation[] = await Promise.all(runtimes.map(async (runtime: string) => {
+			const latestRuntimeVersion = await this.$npmInstallationManager.getLatestVersion(runtime);
+			const runtimeInformation: IVersionInformation = {
 				componentName: runtime,
 				latestVersion: latestRuntimeVersion
 			};
 
 			if (projectConfig) {
-				let projectRuntimeInformation = projectConfig.nativescript && projectConfig.nativescript[runtime];
+				const projectRuntimeInformation = projectConfig.nativescript && projectConfig.nativescript[runtime];
 				if (projectRuntimeInformation) {
-					let runtimeVersionInProject = projectRuntimeInformation.version;
+					const runtimeVersionInProject = projectRuntimeInformation.version;
 					runtimeInformation.currentVersion = runtimeVersionInProject;
 				}
 			}
@@ -87,8 +87,8 @@ class VersionsService implements IVersionsService {
 	}
 
 	public async checkComponentsForUpdate(): Promise<void> {
-		let allComponents: IVersionInformation[] = await this.getAllComponentsVersions();
-		let componentsForUpdate: IVersionInformation[] = [];
+		const allComponents: IVersionInformation[] = await this.getAllComponentsVersions();
+		const componentsForUpdate: IVersionInformation[] = [];
 
 		_.forEach(allComponents, (component: IVersionInformation) => {
 			if (component.currentVersion && this.hasUpdate(component)) {
@@ -101,7 +101,7 @@ class VersionsService implements IVersionsService {
 
 	private printVersionsInformation(versionsInformation: IVersionInformation[], allComponents: IVersionInformation[]): void {
 		if (versionsInformation && versionsInformation.length) {
-			let table: any = this.createTableWithVersionsInformation(versionsInformation);
+			const table: any = this.createTableWithVersionsInformation(versionsInformation);
 
 			this.$logger.warn("Updates available");
 			this.$logger.out(table.toString() + EOL);
@@ -113,17 +113,17 @@ class VersionsService implements IVersionsService {
 	public async getAllComponentsVersions(): Promise<IVersionInformation[]> {
 		let allComponents: IVersionInformation[] = [];
 
-		let nativescriptCliInformation: IVersionInformation = await this.getNativescriptCliVersion();
+		const nativescriptCliInformation: IVersionInformation = await this.getNativescriptCliVersion();
 		if (nativescriptCliInformation) {
 			allComponents.push(nativescriptCliInformation);
 		}
 
-		let nativescriptCoreModulesInformation: IVersionInformation = await this.getTnsCoreModulesVersion();
+		const nativescriptCoreModulesInformation: IVersionInformation = await this.getTnsCoreModulesVersion();
 		if (nativescriptCoreModulesInformation) {
 			allComponents.push(nativescriptCoreModulesInformation);
 		}
 
-		let runtimesVersions: IVersionInformation[] = await this.getRuntimesVersions();
+		const runtimesVersions: IVersionInformation[] = await this.getRuntimesVersions();
 
 		allComponents = allComponents.concat(runtimesVersions);
 
@@ -131,11 +131,11 @@ class VersionsService implements IVersionsService {
 	}
 
 	public createTableWithVersionsInformation(versionsInformation: IVersionInformation[]): any {
-		let headers = ["Component", "Current version", "Latest version", "Information"];
-		let data: string[][] = [];
+		const headers = ["Component", "Current version", "Latest version", "Information"];
+		const data: string[][] = [];
 
 		_.forEach(versionsInformation, (componentInformation: IVersionInformation) => {
-			let row: string[] = [
+			const row: string[] = [
 				componentInformation.componentName,
 				componentInformation.currentVersion,
 				componentInformation.latestVersion
@@ -155,7 +155,7 @@ class VersionsService implements IVersionsService {
 
 	private getProjectData(): IProjectData {
 		try {
-			let projectData: IProjectData = this.$injector.resolve("projectData");
+			const projectData: IProjectData = this.$injector.resolve("projectData");
 			projectData.initializeProjectData();
 			return projectData;
 		} catch (error) {

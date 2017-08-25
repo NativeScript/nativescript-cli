@@ -16,15 +16,15 @@ export class UpdateCommand implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		let folders = ["lib", "hooks", "platforms", "node_modules"];
-		let tmpDir = path.join(this.$projectData.projectDir, ".tmp_backup");
+		const folders = ["lib", "hooks", "platforms", "node_modules"];
+		const tmpDir = path.join(this.$projectData.projectDir, ".tmp_backup");
 
 		try {
 			shelljs.rm("-fr", tmpDir);
 			shelljs.mkdir(tmpDir);
 			shelljs.cp(path.join(this.$projectData.projectDir, "package.json"), tmpDir);
-			for (let folder of folders) {
-				let folderToCopy = path.join(this.$projectData.projectDir, folder);
+			for (const folder of folders) {
+				const folderToCopy = path.join(this.$projectData.projectDir, folder);
 				if (this.$fs.exists(folderToCopy)) {
 					shelljs.cp("-rf", folderToCopy, tmpDir);
 				}
@@ -38,10 +38,10 @@ export class UpdateCommand implements ICommand {
 			await this.executeCore(args, folders);
 		} catch (error) {
 			shelljs.cp("-f", path.join(tmpDir, "package.json"), this.$projectData.projectDir);
-			for (let folder of folders) {
+			for (const folder of folders) {
 				shelljs.rm("-rf", path.join(this.$projectData.projectDir, folder));
 
-				let folderToCopy = path.join(tmpDir, folder);
+				const folderToCopy = path.join(tmpDir, folder);
 
 				if (this.$fs.exists(folderToCopy)) {
 					shelljs.cp("-fr", folderToCopy, this.$projectData.projectDir);
@@ -55,7 +55,7 @@ export class UpdateCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		for (let arg of args) {
+		for (const arg of args) {
 			const platform = arg.split("@")[0];
 			this.$platformService.validatePlatformInstalled(platform, this.$projectData);
 			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
@@ -68,11 +68,11 @@ export class UpdateCommand implements ICommand {
 
 	private async executeCore(args: string[], folders: string[]): Promise<void> {
 		let platforms = this.$platformService.getInstalledPlatforms(this.$projectData);
-		let availablePlatforms = this.$platformService.getAvailablePlatforms(this.$projectData);
-		let packagePlatforms: string[] = [];
+		const availablePlatforms = this.$platformService.getAvailablePlatforms(this.$projectData);
+		const packagePlatforms: string[] = [];
 
-		for (let platform of availablePlatforms) {
-			let platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+		for (const platform of availablePlatforms) {
+			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
 			const platformVersion = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
 			if (platformVersion) {
 				packagePlatforms.push(platform);
@@ -84,13 +84,13 @@ export class UpdateCommand implements ICommand {
 		await this.$pluginsService.remove("tns-core-modules", this.$projectData);
 		await this.$pluginsService.remove("tns-core-modules-widgets", this.$projectData);
 
-		for (let folder of folders) {
+		for (const folder of folders) {
 			shelljs.rm("-fr", folder);
 		}
 
 		platforms = platforms.concat(packagePlatforms);
 		if (args.length === 1) {
-			for (let platform of platforms) {
+			for (const platform of platforms) {
 				await this.$platformService.addPlatforms([platform + "@" + args[0]], this.$options.platformTemplate, this.$projectData, this.$options, this.$options.frameworkPath);
 			}
 

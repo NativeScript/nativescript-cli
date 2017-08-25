@@ -10,7 +10,7 @@ interface IMergePodfileHooksTestCase {
 }
 
 function createTestInjector(): IInjector {
-	let testInjector: IInjector = new yok.Yok();
+	const testInjector: IInjector = new yok.Yok();
 
 	testInjector.register("fs", {});
 	testInjector.register("cocoapodsService", CocoaPodsService);
@@ -31,8 +31,8 @@ describe("Cocoapods service", () => {
 		let cocoapodsService: ICocoaPodsService;
 		let newPodfileContent: string;
 
-		let mockFileSystem = (injector: IInjector, podfileContent: string): void => {
-			let fs: IFileSystem = injector.resolve("fs");
+		const mockFileSystem = (injector: IInjector, podfileContent: string): void => {
+			const fs: IFileSystem = injector.resolve("fs");
 
 			fs.exists = () => true;
 			fs.readText = () => podfileContent;
@@ -41,7 +41,7 @@ describe("Cocoapods service", () => {
 			};
 		};
 
-		let testCaces: IMergePodfileHooksTestCase[] = [
+		const testCaces: IMergePodfileHooksTestCase[] = [
 			{
 				input: `
 target 'MyApp' do

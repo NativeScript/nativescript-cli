@@ -12,7 +12,7 @@ export class SubscriptionService implements ISubscriptionService {
 	public async subscribeForNewsletter(): Promise<void> {
 		if (await this.shouldAskForEmail()) {
 			this.$logger.out("Leave your e-mail address here to subscribe for NativeScript newsletter and product updates, tips and tricks:");
-			let email = await this.getEmail("(press Enter for blank)");
+			const email = await this.getEmail("(press Enter for blank)");
 			await this.$userSettingsService.saveSetting("EMAIL_REGISTERED", true);
 			await this.sendEmail(email);
 		}
@@ -28,7 +28,7 @@ export class SubscriptionService implements ISubscriptionService {
 	}
 
 	private async getEmail(prompt: string, options?: IPrompterOptions): Promise<string> {
-		let schema: IPromptSchema = {
+		const schema: IPromptSchema = {
 			message: prompt,
 			type: "input",
 			name: "inputEmail",
@@ -41,20 +41,20 @@ export class SubscriptionService implements ISubscriptionService {
 			}
 		};
 
-		let result = await this.$prompter.get([schema]);
+		const result = await this.$prompter.get([schema]);
 		return result.inputEmail;
 	}
 
 	private async sendEmail(email: string): Promise<void> {
 		if (email) {
-			let postData = queryString.stringify({
+			const postData = queryString.stringify({
 				'elqFormName': "dev_uins_cli",
 				'elqSiteID': '1325',
 				'emailAddress': email,
 				'elqCookieWrite': '0'
 			});
 
-			let options = {
+			const options = {
 				url: 'https://s1325.t.eloqua.com/e/f2',
 				method: 'POST',
 				headers: {

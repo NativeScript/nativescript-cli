@@ -11,7 +11,7 @@ import * as yok from "../lib/common/yok";
 import ChildProcessLib = require("../lib/common/child-process");
 
 function createTestInjector(): IInjector {
-	let testInjector = new yok.Yok();
+	const testInjector = new yok.Yok();
 
 	testInjector.register("config", ConfigLib.Configuration);
 	testInjector.register("logger", LoggerLib.Logger);
@@ -63,7 +63,7 @@ interface ITestData {
 }
 
 describe("Npm installation manager tests", () => {
-	let testData: IDictionary<ITestData> = {
+	const testData: IDictionary<ITestData> = {
 		"when there's only one available version and it matches CLI's version": {
 			versions: ["1.4.0"],
 			packageLatestVersion: "1.4.0",
@@ -157,19 +157,19 @@ describe("Npm installation manager tests", () => {
 
 	_.each(testData, (currentTestData: ITestData, testName: string) => {
 		it(`returns correct latest compatible version, ${testName}`, async () => {
-			let testInjector = createTestInjector();
+			const testInjector = createTestInjector();
 
 			mockNpm(testInjector, currentTestData.versions, currentTestData.packageLatestVersion);
 
 			// Mock staticConfig.version
-			let staticConfig = testInjector.resolve("staticConfig");
+			const staticConfig = testInjector.resolve("staticConfig");
 			staticConfig.version = currentTestData.cliVersion;
 
 			// Mock npmInstallationManager.getLatestVersion
-			let npmInstallationManager = testInjector.resolve("npmInstallationManager");
+			const npmInstallationManager = testInjector.resolve("npmInstallationManager");
 			npmInstallationManager.getLatestVersion = (packageName: string) => Promise.resolve(currentTestData.packageLatestVersion);
 
-			let actualLatestCompatibleVersion = await npmInstallationManager.getLatestCompatibleVersion("");
+			const actualLatestCompatibleVersion = await npmInstallationManager.getLatestCompatibleVersion("");
 			assert.equal(actualLatestCompatibleVersion, currentTestData.expectedResult);
 		});
 	});

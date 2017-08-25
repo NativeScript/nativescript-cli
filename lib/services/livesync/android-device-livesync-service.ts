@@ -58,8 +58,8 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 	}
 
 	private async restartApplication(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
-		let devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;
-		let devicePath = this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb");
+		const devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;
+		const devicePath = this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb");
 		await this.device.adb.executeShellCommand(["rm", "-rf", devicePath]);
 
 		await this.device.applicationManager.restartApplication(deviceAppData.appIdentifier);
@@ -112,14 +112,14 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 
 	@cache()
 	public getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService {
-		let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
+		const adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
 		return this.$injector.resolve(AndroidDeviceHashService, { adb, appIdentifier });
 	}
 
 	private async awaitRuntimeReloadSuccessMessage(): Promise<boolean> {
 		return new Promise<boolean>((resolve, reject) => {
 			let isResolved = false;
-			let socket = new net.Socket();
+			const socket = new net.Socket();
 
 			socket.connect(AndroidDeviceLiveSyncService.BACKEND_PORT, '127.0.0.1', () => {
 				socket.write(new Buffer([0, 0, 0, 1, 1]));

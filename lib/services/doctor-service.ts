@@ -2,7 +2,7 @@ import { EOL } from "os";
 import * as semver from "semver";
 import * as path from "path";
 import * as helpers from "../common/helpers";
-let clui = require("clui");
+const clui = require("clui");
 
 class DoctorService implements IDoctorService {
 	private static PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
@@ -33,7 +33,7 @@ class DoctorService implements IDoctorService {
 
 	public async printWarnings(configOptions?: { trackResult: boolean }): Promise<boolean> {
 		let result = false;
-		let sysInfo = await this.$sysInfo.getSysInfo(this.$staticConfig.pathToPackageJson);
+		const sysInfo = await this.$sysInfo.getSysInfo(this.$staticConfig.pathToPackageJson);
 
 		if (!sysInfo.adbVer) {
 			this.$logger.warn("WARNING: adb from the Android SDK is not installed or is not configured properly.");
@@ -80,7 +80,7 @@ class DoctorService implements IDoctorService {
 			}
 
 			if (sysInfo.xcodeVer && sysInfo.cocoapodVer) {
-				let problemWithCocoaPods = await this.verifyCocoaPods();
+				const problemWithCocoaPods = await this.verifyCocoaPods();
 				if (problemWithCocoaPods) {
 					this.$logger.warn("WARNING: There was a problem with CocoaPods");
 					this.$logger.out("Verify that CocoaPods are configured properly.");
@@ -103,10 +103,10 @@ class DoctorService implements IDoctorService {
 			this.$logger.out("To be able to work with iOS devices and projects, you need Mac OS X Mavericks or later." + EOL);
 		}
 
-		let androidToolsIssues = this.$androidToolsInfo.validateInfo();
-		let javaVersionIssue = await this.$androidToolsInfo.validateJavacVersion(sysInfo.javacVersion);
-		let pythonIssues = await this.validatePythonPackages();
-		let doctorResult = result || androidToolsIssues || javaVersionIssue || pythonIssues;
+		const androidToolsIssues = this.$androidToolsInfo.validateInfo();
+		const javaVersionIssue = await this.$androidToolsInfo.validateJavacVersion(sysInfo.javacVersion);
+		const pythonIssues = await this.validatePythonPackages();
+		const doctorResult = result || androidToolsIssues || javaVersionIssue || pythonIssues;
 
 		if (!configOptions || configOptions.trackResult) {
 			await this.$analyticsService.track("DoctorEnvironmentSetup", doctorResult ? "incorrect" : "correct");
@@ -157,16 +157,16 @@ class DoctorService implements IDoctorService {
 	private async verifyCocoaPods(): Promise<boolean> {
 		this.$logger.out("Verifying CocoaPods. This may take more than a minute, please be patient.");
 
-		let temp = require("temp");
+		const temp = require("temp");
 		temp.track();
-		let projDir = temp.mkdirSync("nativescript-check-cocoapods");
-		let packageJsonData = {
+		const projDir = temp.mkdirSync("nativescript-check-cocoapods");
+		const packageJsonData = {
 			"name": "nativescript-check-cocoapods",
 			"version": "0.0.1"
 		};
 		this.$fs.writeJson(path.join(projDir, "package.json"), packageJsonData);
 
-		let spinner = new clui.Spinner("Installing iOS runtime.");
+		const spinner = new clui.Spinner("Installing iOS runtime.");
 		try {
 			spinner.start();
 			await this.$npm.install("tns-ios", projDir, {
@@ -178,7 +178,7 @@ class DoctorService implements IDoctorService {
 				ignoreScripts: true
 			});
 			spinner.stop();
-			let iosDir = path.join(projDir, "node_modules", "tns-ios", "framework");
+			const iosDir = path.join(projDir, "node_modules", "tns-ios", "framework");
 			this.$fs.writeFile(
 				path.join(iosDir, "Podfile"),
 				`${this.$cocoapodsService.getPodfileHeader(DoctorService.PROJECT_NAME_PLACEHOLDER)}pod 'AFNetworking', '~> 1.0'${this.$cocoapodsService.getPodfileFooter()}`
@@ -186,7 +186,7 @@ class DoctorService implements IDoctorService {
 
 			spinner.message("Verifying CocoaPods. This may take some time, please be patient.");
 			spinner.start();
-			let future = this.$childProcess.spawnFromEvent(
+			const future = this.$childProcess.spawnFromEvent(
 				this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod",
 				["install"],
 				"exit",
@@ -194,7 +194,7 @@ class DoctorService implements IDoctorService {
 				{ throwError: false }
 			);
 
-			let result = await this.$progressIndicator.showProgressIndicator(future, 5000);
+			const result = await this.$progressIndicator.showProgressIndicator(future, 5000);
 			if (result.exitCode) {
 				this.$logger.out(result.stdout, result.stderr);
 				return true;

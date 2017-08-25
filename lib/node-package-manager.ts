@@ -21,10 +21,10 @@ export class NodePackageManager implements INodePackageManager {
 			config["ignore-scripts"] = true;
 		}
 
-		let packageJsonPath = path.join(pathToSave, "package.json");
-		let jsonContentBefore = this.$fs.readJson(packageJsonPath);
+		const packageJsonPath = path.join(pathToSave, "package.json");
+		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
-		let flags = this.getFlagsString(config, true);
+		const flags = this.getFlagsString(config, true);
 		let params = ["install"];
 		const isInstallingAllDependencies = packageName === pathToSave;
 		if (!isInstallingAllDependencies) {
@@ -32,7 +32,7 @@ export class NodePackageManager implements INodePackageManager {
 		}
 
 		params = params.concat(flags);
-		let cwd = pathToSave;
+		const cwd = pathToSave;
 		// Npm creates `etc` directory in installation dir when --prefix is passed
 		// https://github.com/npm/npm/issues/11486
 		// we should delete it if it was created because of us
@@ -51,7 +51,7 @@ export class NodePackageManager implements INodePackageManager {
 		}
 
 		try {
-			let spawnResult: ISpawnResult = await this.getNpmInstallResult(params, cwd);
+			const spawnResult: ISpawnResult = await this.getNpmInstallResult(params, cwd);
 
 			// Whenever calling npm install without any arguments (hence installing all dependencies) no output is emitted on stdout
 			// Luckily, whenever you call npm install to install all dependencies chances are you won't need the name/version of the package you're installing because there is none.
@@ -64,7 +64,7 @@ export class NodePackageManager implements INodePackageManager {
 			// We cannot use the actual install with --json to get the information because of post-install scripts which may print on stdout
 			// dry-run install is quite fast when the dependencies are already installed even for many dependencies (e.g. angular) so we can live with this approach
 			// We need the --prefix here because without it no output is emitted on stdout because all the dependencies are already installed.
-			let spawnNpmDryRunResult = await this.$childProcess.spawnFromEvent(this.getNpmExecutableName(), params, "close");
+			const spawnNpmDryRunResult = await this.$childProcess.spawnFromEvent(this.getNpmExecutableName(), params, "close");
 			return this.parseNpmInstallResult(spawnNpmDryRunResult.stdout, spawnResult.stdout, packageName);
 		} catch (err) {
 			if (err.message && err.message.indexOf("EPEERINVALID") !== -1) {
@@ -100,7 +100,7 @@ export class NodePackageManager implements INodePackageManager {
 	public async view(packageName: string, config: Object): Promise<any> {
 		const wrappedConfig = _.extend({}, config, { json: true }); // always require view response as JSON
 
-		let flags = this.getFlagsString(wrappedConfig, false);
+		const flags = this.getFlagsString(wrappedConfig, false);
 		let viewResult: any;
 		try {
 			viewResult = await this.$childProcess.exec(`npm view ${packageName} ${flags}`);
@@ -121,8 +121,8 @@ export class NodePackageManager implements INodePackageManager {
 	}
 
 	private getFlagsString(config: any, asArray: boolean): any {
-		let array: Array<string> = [];
-		for (let flag in config) {
+		const array: Array<string> = [];
+		for (const flag in config) {
 			if (flag === "global") {
 				array.push(`--${flag}`);
 				array.push(`${config[flag]}`);
@@ -176,7 +176,7 @@ export class NodePackageManager implements INodePackageManager {
 			this.$logger.trace(`Unable to parse result of npm --dry-run operation. Output is: ${npmDryRunInstallOutput}.`);
 			this.$logger.trace("Now we'll try to parse the real output of npm install command.");
 
-			let npmOutputMatchRegExp = /^.--\s+(?!UNMET)(.*)@((?:\d+\.){2}\d+)/m;
+			const npmOutputMatchRegExp = /^.--\s+(?!UNMET)(.*)@((?:\d+\.){2}\d+)/m;
 			const match = npmInstallOutput.match(npmOutputMatchRegExp);
 			if (match) {
 				return {
@@ -192,8 +192,8 @@ export class NodePackageManager implements INodePackageManager {
 
 	private getDependencyInformation(dependency: string): INpmInstallResultInfo {
 		const scopeDependencyMatch = dependency.match(NodePackageManager.SCOPED_DEPENDENCY_REGEXP);
-		let name: string = null,
-			version: string = null;
+		let name: string = null;
+		let version: string = null;
 
 		if (scopeDependencyMatch) {
 			name = scopeDependencyMatch[1];

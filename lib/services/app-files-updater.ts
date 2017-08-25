@@ -50,7 +50,7 @@ export class AppFilesUpdater {
 	}
 
 	protected readSourceDir(): string[] {
-		let tnsDir = path.join(this.appSourceDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
+		const tnsDir = path.join(this.appSourceDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
 		return this.fs.enumerateFilesInDirectorySync(this.appSourceDirectoryPath, null, { includeEmptyDirectories: true }).filter(dirName => dirName !== tnsDir);
 	}
 
@@ -59,7 +59,7 @@ export class AppFilesUpdater {
 		let sourceFiles = this.readSourceDir();
 
 		if (this.options.release) {
-			let testsFolderPath = path.join(this.appSourceDirectoryPath, 'tests');
+			const testsFolderPath = path.join(this.appSourceDirectoryPath, 'tests');
 			sourceFiles = sourceFiles.filter(source => source.indexOf(testsFolderPath) === -1);
 		}
 
@@ -76,7 +76,7 @@ export class AppFilesUpdater {
 
 	protected copyAppSourceFiles(sourceFiles: string[]): void {
 		sourceFiles.map(source => {
-			let destinationPath = path.join(this.appDestinationDirectoryPath, path.relative(this.appSourceDirectoryPath, source));
+			const destinationPath = path.join(this.appDestinationDirectoryPath, path.relative(this.appSourceDirectoryPath, source));
 
 			let exists = fs.lstatSync(source);
 			if (exists.isSymbolicLink()) {

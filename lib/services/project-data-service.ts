@@ -63,7 +63,7 @@ export class ProjectDataService implements IProjectDataService {
 		const props = dottedPropertyName.split(".");
 		let result = jsonData[props.shift()];
 
-		for (let prop of props) {
+		for (const prop of props) {
 			result = result[prop];
 		}
 
@@ -74,7 +74,7 @@ export class ProjectDataService implements IProjectDataService {
 		const projectFileInfo = this.getProjectFileData(projectDir);
 
 		const props = key.split(".");
-		let data: any = projectFileInfo.projectData;
+		const data: any = projectFileInfo.projectData;
 		let currentData = data;
 
 		_.each(props, (prop, index: number) => {
@@ -92,7 +92,7 @@ export class ProjectDataService implements IProjectDataService {
 
 	private removeProperty(projectDir: string, propertyName: string): void {
 		const projectFileInfo = this.getProjectFileData(projectDir);
-		let data: any = projectFileInfo.projectData;
+		const data: any = projectFileInfo.projectData;
 		let currentData = data;
 		const props = propertyName.split(".");
 		const propertyToDelete = props.splice(props.length - 1, 1)[0];

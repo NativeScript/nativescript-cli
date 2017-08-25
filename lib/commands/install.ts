@@ -26,8 +26,8 @@ export class InstallCommand implements ICommand {
 
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(this.$projectData);
 
-		for (let platform of this.$platformsData.platformsNames) {
-			let platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+		for (const platform of this.$platformsData.platformsNames) {
+			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
 			const frameworkPackageData = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
 			if (frameworkPackageData && frameworkPackageData.version) {
 				try {
@@ -47,9 +47,9 @@ export class InstallCommand implements ICommand {
 	}
 
 	private async installModule(moduleName: string): Promise<void> {
-		let projectDir = this.$projectData.projectDir;
+		const projectDir = this.$projectData.projectDir;
 
-		let devPrefix = 'nativescript-dev-';
+		const devPrefix = 'nativescript-dev-';
 		if (!this.$fs.exists(moduleName) && moduleName.indexOf(devPrefix) !== 0) {
 			moduleName = devPrefix + moduleName;
 		}

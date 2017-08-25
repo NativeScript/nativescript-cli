@@ -11,11 +11,11 @@ export class PlatformProjectServiceBase extends EventEmitter implements IPlatfor
 	}
 
 	protected getAllNativeLibrariesForPlugin(pluginData: IPluginData, platform: string, filter: (fileName: string, _pluginPlatformsFolderPath: string) => boolean): string[] {
-		let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, platform),
-			nativeLibraries: string[] = [];
+		const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, platform);
+		let nativeLibraries: string[] = [];
 
 		if (pluginPlatformsFolderPath && this.$fs.exists(pluginPlatformsFolderPath)) {
-			let platformsContents = this.$fs.readDirectory(pluginPlatformsFolderPath);
+			const platformsContents = this.$fs.readDirectory(pluginPlatformsFolderPath);
 			nativeLibraries = _(platformsContents)
 				.filter(platformItemName => filter(platformItemName, pluginPlatformsFolderPath))
 				.value();

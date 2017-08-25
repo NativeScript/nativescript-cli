@@ -72,10 +72,10 @@ class AppStore {
 	initInjector(services?: { commands?: { [service: string]: any }, services?: { [service: string]: any } }) {
 		this.injector = new yok.Yok();
 		if (services) {
-			for (let cmd in services.commands) {
+			for (const cmd in services.commands) {
 				this.injector.registerCommand(cmd, services.commands[cmd]);
 			}
-			for (let serv in services.services) {
+			for (const serv in services.services) {
 				this.injector.register(serv, services.services[serv]);
 			}
 		}

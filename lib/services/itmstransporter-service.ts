@@ -30,7 +30,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		}
 
 		temp.track();
-		let itmsTransporterPath = await this.getITMSTransporterPath(),
+		const itmsTransporterPath = await this.getITMSTransporterPath(),
 			ipaFileName = "app.ipa",
 			itmsDirectory = temp.mkdirSync("itms-"),
 			innerDirectory = path.join(itmsDirectory, "mybundle.itmsp"),
@@ -43,7 +43,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 
 		this.$fs.copyFile(data.ipaFilePath, ipaFileLocation);
 
-		let ipaFileHash = await this.$fs.getFileShasum(ipaFileLocation, { algorithm: "md5" }),
+		const ipaFileHash = await this.$fs.getFileShasum(ipaFileLocation, { algorithm: "md5" }),
 			ipaFileSize = this.$fs.getFileSize(ipaFileLocation),
 			metadata = this.getITMSMetadataXml(iOSApplication.adamId, ipaFileName, ipaFileHash, ipaFileSize);
 
@@ -54,7 +54,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 
 	public async getiOSApplications(credentials: ICredentials): Promise<IiTunesConnectApplication[]> {
 		if (!this._itunesConnectApplications) {
-			let requestBody = this.getContentDeliveryRequestBody(credentials),
+			const requestBody = this.getContentDeliveryRequestBody(credentials),
 				contentDeliveryResponse = await this.$httpClient.httpRequest({
 					url: "https://contentdelivery.itunes.apple.com/WebObjects/MZLabelService.woa/json/MZITunesProducerService",
 					method: "POST",
@@ -88,12 +88,12 @@ export class ITMSTransporterService implements IITMSTransporterService {
 	 * @return {IFuture<IiTunesConnectApplication>}          The iTunes Connect application.
 	 */
 	private async getiOSApplication(username: string, password: string, bundleId: string): Promise<IiTunesConnectApplication> {
-		let iOSApplications = await this.getiOSApplications({ username, password });
+		const iOSApplications = await this.getiOSApplications({ username, password });
 		if (!iOSApplications || !iOSApplications.length) {
 			this.$errors.failWithoutHelp(`Cannot find any registered applications for Apple ID ${username} in iTunes Connect.`);
 		}
 
-		let iOSApplication = _.find(iOSApplications, app => app.bundleId === bundleId);
+		const iOSApplication = _.find(iOSApplications, app => app.bundleId === bundleId);
 
 		if (!iOSApplication) {
 			this.$errors.failWithoutHelp(`Cannot find registered applications that match the specified identifier ${bundleId} in iTunes Connect.`);
@@ -118,10 +118,10 @@ export class ITMSTransporterService implements IITMSTransporterService {
 
 				this.$logger.trace("--ipa set - extracting .ipa file to get app's bundle identifier");
 				temp.track();
-				let destinationDir = temp.mkdirSync("ipa-");
+				const destinationDir = temp.mkdirSync("ipa-");
 				await this.$fs.unzip(ipaFileFullPath, destinationDir);
 
-				let payloadDir = path.join(destinationDir, "Payload");
+				const payloadDir = path.join(destinationDir, "Payload");
 				let allApps = this.$fs.readDirectory(payloadDir);
 
 				this.$logger.debug("ITMSTransporter .ipa Payload files:");
@@ -133,10 +133,10 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				} else if (allApps.length <= 0) {
 					this.$errors.failWithoutHelp("In the .ipa the ITMSTransporter is uploading there must be at least one .app file.");
 				}
-				let appFile = path.join(payloadDir, allApps[0]);
+				const appFile = path.join(payloadDir, allApps[0]);
 
-				let plistObject = await this.$bplistParser.parseFile(path.join(appFile, "Info.plist"));
-				let bundleId = plistObject && plistObject[0] && plistObject[0].CFBundleIdentifier;
+				const plistObject = await this.$bplistParser.parseFile(path.join(appFile, "Info.plist"));
+				const bundleId = plistObject && plistObject[0] && plistObject[0].CFBundleIdentifier;
 				if (!bundleId) {
 					this.$errors.failWithoutHelp(`Unable to determine bundle identifier from ${ipaFileFullPath}.`);
 				}
@@ -151,9 +151,9 @@ export class ITMSTransporterService implements IITMSTransporterService {
 
 	private async getITMSTransporterPath(): Promise<string> {
 		if (!this._itmsTransporterPath) {
-			let xcodePath = await this.$xcodeSelectService.getContentsDirectoryPath(),
-				xcodeVersion = await this.$xcodeSelectService.getXcodeVersion(),
-				result = path.join(xcodePath, "Applications", "Application Loader.app", "Contents");
+			const xcodePath = await this.$xcodeSelectService.getContentsDirectoryPath();
+			const xcodeVersion = await this.$xcodeSelectService.getXcodeVersion();
+			let result = path.join(xcodePath, "Applications", "Application Loader.app", "Contents");
 
 			xcodeVersion.patch = xcodeVersion.patch || "0";
 			// iTMS Transporter's path has been modified in Xcode 6.3

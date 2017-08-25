@@ -34,7 +34,7 @@ export class RunCommandBase implements ICommand {
 		}
 
 		const availablePlatforms = this.$liveSyncCommandHelper.getPlatformsForOperation(this.platform);
-		for (let platform of availablePlatforms) {
+		for (const platform of availablePlatforms) {
 			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
 			const platformProjectService = platformData.platformProjectService;
 			await platformProjectService.validate(this.$projectData);

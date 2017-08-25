@@ -84,7 +84,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 
 	private async reloadPage(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
 		if (localToDevicePaths.length) {
-			let message = JSON.stringify({
+			const message = JSON.stringify({
 				method: "Page.reload",
 				params: {
 					ignoreCache: false
@@ -97,9 +97,9 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 	}
 
 	private async liveEdit(localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
-		for (let localToDevicePath of localToDevicePaths) {
-			let content = this.$fs.readText(localToDevicePath.getLocalPath());
-			let message = JSON.stringify({
+		for (const localToDevicePath of localToDevicePaths) {
+			const content = this.$fs.readText(localToDevicePath.getLocalPath());
+			const message = JSON.stringify({
 				method: "Debugger.setScriptSource",
 				params: {
 					scriptUrl: localToDevicePath.getRelativeToProjectBasePath(),
@@ -133,8 +133,8 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		try {
 			await new Promise<void>((resolve, reject) => {
 				let isResolved = false;
-				let length = Buffer.byteLength(message, "utf16le");
-				let payload = new Buffer(length + 4);
+				const length = Buffer.byteLength(message, "utf16le");
+				const payload = new Buffer(length + 4);
 				payload.writeInt32BE(length, 0);
 				payload.write(message, 4, length, "utf16le");
 

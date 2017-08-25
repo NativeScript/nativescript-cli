@@ -78,7 +78,7 @@ export class StaticConfig extends StaticConfigBase implements IStaticConfig {
 
 	public async getAdbFilePath(): Promise<string> {
 		if (!this._adbFilePath) {
-			let androidToolsInfo: IAndroidToolsInfo = this.$injector.resolve("androidToolsInfo");
+			const androidToolsInfo: IAndroidToolsInfo = this.$injector.resolve("androidToolsInfo");
 			this._adbFilePath = await androidToolsInfo.getPathToAdbFromAndroidHome() || await super.getAdbFilePath();
 		}
 

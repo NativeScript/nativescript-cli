@@ -13,7 +13,7 @@ export class DevicePathProvider implements IDevicePathProvider {
 		let projectRoot = "";
 		if (this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform)) {
 			if (device.isEmulator) {
-				let applicationPath = this.$iOSSimResolver.iOSSim.getApplicationPath(device.deviceInfo.identifier, options.appIdentifier);
+				const applicationPath = this.$iOSSimResolver.iOSSim.getApplicationPath(device.deviceInfo.identifier, options.appIdentifier);
 				projectRoot = path.join(applicationPath);
 			} else {
 				projectRoot = LiveSyncPaths.IOS_DEVICE_PROJECT_ROOT_PATH;

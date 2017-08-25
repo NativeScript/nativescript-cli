@@ -16,9 +16,9 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 		const packageJsonContent = this.$fs.readJson(projectPackageJsonPath);
 		const dependencies = packageJsonContent && packageJsonContent.dependencies;
 
-		let resolvedDependencies: IDependencyData[] = [];
+		const resolvedDependencies: IDependencyData[] = [];
 
-		let queue: IDependencyDescription[] = _.keys(dependencies)
+		const queue: IDependencyDescription[] = _.keys(dependencies)
 			.map(dependencyName => ({
 				parentDir: projectPath,
 				name: dependencyName,
@@ -83,7 +83,7 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 		const packageJsonExists = this.$fs.getLsStats(packageJsonPath).isFile();
 
 		if (packageJsonExists) {
-			let packageJsonContents = this.$fs.readJson(packageJsonPath);
+			const packageJsonContents = this.$fs.readJson(packageJsonPath);
 
 			if (!!packageJsonContents.nativescript) {
 				// add `nativescript` property, necessary for resolving plugins

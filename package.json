@@ -16,7 +16,8 @@
     "mocha": "node test-scripts/mocha.js",
     "tsc": "tsc",
     "tslint": "tslint -p tsconfig.json --type-check",
-    "test-watch": "node ./dev/tsc-to-mocha-watch.js"
+	"test-watch": "node ./dev/tsc-to-mocha-watch.js",
+	"tslint-fix": "tslint -p tsconfig.json --type-check --fix"
   },
   "repository": {
     "type": "git",

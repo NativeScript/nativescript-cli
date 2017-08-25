@@ -8,7 +8,7 @@ import { AppFilesUpdater } from "./app-files-updater";
 import { attachAwaitDetach } from "../common/helpers";
 import * as temp from "temp";
 temp.track();
-let clui = require("clui");
+const clui = require("clui");
 
 const buildInfoFileName = ".nsbuildinfo";
 
@@ -44,8 +44,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public async cleanPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, framworkPath?: string): Promise<void> {
-		for (let platform of platforms) {
-			let version: string = this.getCurrentPlatformVersion(platform, projectData);
+		for (const platform of platforms) {
+			const version: string = this.getCurrentPlatformVersion(platform, projectData);
 
 			let platformWithVersion: string = platform;
 			if (version !== undefined) {
@@ -61,7 +61,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		const platformsDir = projectData.platformsDir;
 		this.$fs.ensureDirectoryExists(platformsDir);
 
-		for (let platform of platforms) {
+		for (const platform of platforms) {
 			this.validatePlatform(platform, projectData);
 			const platformPath = path.join(projectData.platformsDir, platform);
 
@@ -74,8 +74,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	private getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
-		let currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
 		let version: string;
 		if (currentPlatformData && currentPlatformData[constants.VERSION_STRING]) {
 			version = currentPlatformData[constants.VERSION_STRING];
@@ -85,11 +85,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	private async addPlatform(platformParam: string, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, frameworkPath?: string, nativePrepare?: INativePrepare): Promise<void> {
-		let data = platformParam.split("@"),
-			platform = data[0].toLowerCase(),
-			version = data[1];
+		const data = platformParam.split("@");
+		const platform = data[0].toLowerCase();
+		let version = data[1];
 
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 
 		if (version === undefined) {
 			version = this.getCurrentPlatformVersion(platform, projectData);
@@ -104,7 +104,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.$logger.out("Copying template files...");
 
 		let packageToInstall = "";
-		let npmOptions: IStringDictionary = {
+		const npmOptions: IStringDictionary = {
 			pathToSave: path.join(projectData.platformsDir, platform),
 			dependencyType: "save"
 		};
@@ -120,7 +120,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		try {
 			spinner.start();
-			let downloadedPackagePath = await this.$npmInstallationManager.install(packageToInstall, projectDir, npmOptions);
+			const downloadedPackagePath = await this.$npmInstallationManager.install(packageToInstall, projectDir, npmOptions);
 			let frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
 			frameworkDir = path.resolve(frameworkDir);
 
@@ -149,7 +149,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			await this.addPlatformCoreNative(platformData, frameworkDir, installedVersion, projectData, config);
 		}
 
-		let frameworkPackageNameData: any = { version: installedVersion };
+		const frameworkPackageNameData: any = { version: installedVersion };
 		if (customTemplateOptions) {
 			frameworkPackageNameData.template = customTemplateOptions.selectedTemplate;
 		}
@@ -177,7 +177,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		if (selectedTemplate) {
-			let tempDir = temp.mkdirSync("platform-template");
+			const tempDir = temp.mkdirSync("platform-template");
 			this.$fs.writeJson(path.join(tempDir, constants.PACKAGE_JSON_FILE_NAME), {});
 			try {
 				const npmInstallResult = await this.$npm.install(selectedTemplate, tempDir, {
@@ -185,7 +185,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 					frameworkPath: null,
 					ignoreScripts: false
 				});
-				let pathToTemplate = path.join(tempDir, constants.NODE_MODULES_FOLDER_NAME, npmInstallResult.name);
+				const pathToTemplate = path.join(tempDir, constants.NODE_MODULES_FOLDER_NAME, npmInstallResult.name);
 				return { selectedTemplate, pathToTemplate };
 			} catch (err) {
 				this.$logger.trace("Error while trying to install specified template: ", err);
@@ -201,12 +201,12 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			return [];
 		}
 
-		let subDirs = this.$fs.readDirectory(projectData.platformsDir);
+		const subDirs = this.$fs.readDirectory(projectData.platformsDir);
 		return _.filter(subDirs, p => this.$platformsData.platformsNames.indexOf(p) > -1);
 	}
 
 	public getAvailablePlatforms(projectData: IProjectData): string[] {
-		let installedPlatforms = this.getInstalledPlatforms(projectData);
+		const installedPlatforms = this.getInstalledPlatforms(projectData);
 		return _.filter(this.$platformsData.platformsNames, p => {
 			return installedPlatforms.indexOf(p) < 0 && this.isPlatformSupportedForOS(p, projectData); // Only those not already installed
 		});
@@ -234,13 +234,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		if (platform) {
 			platform = this.$mobileHelper.normalizePlatformName(platform);
 			this.$logger.trace("Validate options for platform: " + platform);
-			let platformData = this.$platformsData.getPlatformData(platform, projectData);
+			const platformData = this.$platformsData.getPlatformData(platform, projectData);
 			return await platformData.platformProjectService.validateOptions(projectData.projectId, provision, teamId);
 		} else {
 			let valid = true;
-			for (let availablePlatform in this.$platformsData.availablePlatforms) {
+			for (const availablePlatform in this.$platformsData.availablePlatforms) {
 				this.$logger.trace("Validate options for platform: " + availablePlatform);
-				let platformData = this.$platformsData.getPlatformData(availablePlatform, projectData);
+				const platformData = this.$platformsData.getPlatformData(availablePlatform, projectData);
 				valid = valid && await platformData.platformProjectService.validateOptions(projectData.projectId, provision, teamId);
 			}
 
@@ -295,7 +295,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	private async preparePlatformCore(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, changesInfo?: IProjectChangesInfo, filesToSync?: Array<String>, nativePrepare?: INativePrepare): Promise<void> {
 		this.$logger.out("Preparing project...");
 
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const projectFilesConfig = helpers.getProjectFilesConfig({ isReleaseBuild: appFilesUpdaterOptions.release });
 		await this.preparePlatformCoreJS(platform, platformData, appFilesUpdaterOptions, projectData, platformSpecificData, changesInfo, filesToSync, projectFilesConfig);
 
@@ -303,8 +303,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			await this.preparePlatformCoreNative(platform, platformData, appFilesUpdaterOptions, projectData, platformSpecificData, changesInfo, projectFilesConfig);
 		}
 
-		let directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-		let excludedDirs = [constants.APP_RESOURCES_FOLDER_NAME];
+		const directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+		const excludedDirs = [constants.APP_RESOURCES_FOLDER_NAME];
 		if (!changesInfo || !changesInfo.modulesChanged) {
 			excludedDirs.push(constants.TNS_MODULES_FOLDER_NAME);
 		}
@@ -345,10 +345,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		if (!changesInfo || changesInfo.modulesChanged || appFilesUpdaterOptions.bundle) {
 			await this.$pluginsService.validate(platformData, projectData);
 
-			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).mtime : null;
+			const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+			const lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).mtime : null;
 
-			let tnsModulesDestinationPath = path.join(appDestinationDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
+			const tnsModulesDestinationPath = path.join(appDestinationDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
 			// Process node_modules folder
 			await this.$nodeModulesBuilder.prepareNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime, projectData, projectFilesConfig);
 		}
@@ -364,11 +364,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	private async copyAppFiles(platformData: IPlatformData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData): Promise<void> {
 		platformData.platformProjectService.ensureConfigurationFileInAppResources(projectData);
-		let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
 		// Copy app folder to native project
 		this.$fs.ensureDirectoryExists(appDestinationDirectoryPath);
-		let appSourceDirectoryPath = path.join(projectData.projectDir, constants.APP_FOLDER_NAME);
+		const appSourceDirectoryPath = path.join(projectData.projectDir, constants.APP_FOLDER_NAME);
 
 		const appUpdater = new AppFilesUpdater(appSourceDirectoryPath, appDestinationDirectoryPath, appFilesUpdaterOptions, this.$fs);
 		appUpdater.updateApp(sourceFiles => {
@@ -377,11 +377,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	private copyAppResources(platformData: IPlatformData, projectData: IProjectData): void {
-		let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-		let appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
+		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+		const appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
 		if (this.$fs.exists(appResourcesDirectoryPath)) {
 			platformData.platformProjectService.prepareAppResources(appResourcesDirectoryPath, projectData);
-			let appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath(projectData);
+			const appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath(projectData);
 			this.$fs.ensureDirectoryExists(appResourcesDestination);
 			shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), appResourcesDestination);
 			this.$fs.deleteDirectory(appResourcesDirectoryPath);
@@ -389,11 +389,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	private async copyTnsModules(platform: string, platformData: IPlatformData, projectData: IProjectData, projectFilesConfig?: IProjectFilesConfig): Promise<void> {
-		let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-		let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).mtime : null;
+		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+		const lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).mtime : null;
 
 		try {
-			let tnsModulesDestinationPath = path.join(appDestinationDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
+			const tnsModulesDestinationPath = path.join(appDestinationDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
 			// Process node_modules folder
 			await this.$nodeModulesBuilder.prepareJSNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime, projectData, projectFilesConfig);
 		} catch (error) {
@@ -408,21 +408,21 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			return true;
 		}
 
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
-		let forDevice = !buildConfig || buildConfig.buildForDevice;
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const forDevice = !buildConfig || buildConfig.buildForDevice;
 		outputPath = outputPath || (forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath);
 		if (!this.$fs.exists(outputPath)) {
 			return true;
 		}
 
-		let packageNames = platformData.getValidPackageNames({ isForDevice: forDevice });
-		let packages = this.getApplicationPackages(outputPath, packageNames);
+		const packageNames = platformData.getValidPackageNames({ isForDevice: forDevice });
+		const packages = this.getApplicationPackages(outputPath, packageNames);
 		if (packages.length === 0) {
 			return true;
 		}
 
-		let prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
-		let buildInfo = this.getBuildInfo(platform, platformData, buildConfig, outputPath);
+		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
+		const buildInfo = this.getBuildInfo(platform, platformData, buildConfig, outputPath);
 		if (!prepareInfo || !buildInfo) {
 			return true;
 		}
@@ -470,7 +470,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		const isForDevice = this.$mobileHelper.isAndroidPlatform(platform) ? null : buildConfig && buildConfig.buildForDevice;
 		await this.trackActionForPlatform({ action: "Build", platform, isForDevice });
 
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
 			this.$logger.printInfoMessageOnSameLine(data.data.toString());
@@ -485,10 +485,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void {
-		let buildInfoFile = path.join(buildInfoFileDirname, buildInfoFileName);
+		const buildInfoFile = path.join(buildInfoFileDirname, buildInfoFileName);
 
-		let prepareInfo = this.$projectChangesService.getPrepareInfo(platform, this.$projectDataService.getProjectData(projectDir));
-		let buildInfo = {
+		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, this.$projectDataService.getProjectData(projectDir));
+		const buildInfo = {
 			prepareTime: prepareInfo.changesRequireBuildTime,
 			buildTime: new Date().toString()
 		};
@@ -497,20 +497,20 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public async shouldInstall(device: Mobile.IDevice, projectData: IProjectData, outputPath?: string): Promise<boolean> {
-		let platform = device.deviceInfo.platform;
+		const platform = device.deviceInfo.platform;
 		if (!(await device.applicationManager.isApplicationInstalled(projectData.projectId))) {
 			return true;
 		}
 
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
-		let deviceBuildInfo: IBuildInfo = await this.getDeviceBuildInfo(device, projectData);
-		let localBuildInfo = this.getBuildInfo(platform, platformData, { buildForDevice: !device.isEmulator }, outputPath);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const deviceBuildInfo: IBuildInfo = await this.getDeviceBuildInfo(device, projectData);
+		const localBuildInfo = this.getBuildInfo(platform, platformData, { buildForDevice: !device.isEmulator }, outputPath);
 		return !localBuildInfo || !deviceBuildInfo || deviceBuildInfo.buildTime !== localBuildInfo.buildTime;
 	}
 
 	public async installApplication(device: Mobile.IDevice, buildConfig: IBuildConfig, projectData: IProjectData, packageFile?: string, outputFilePath?: string): Promise<void> {
 		this.$logger.out("Installing...");
-		let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
+		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 		if (!packageFile) {
 			if (this.$devicesService.isiOSSimulator(device)) {
 				packageFile = this.getLatestApplicationPackageForEmulator(platformData, buildConfig, outputFilePath).packageName;
@@ -524,9 +524,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		await device.applicationManager.reinstallApplication(projectData.projectId, packageFile);
 
 		if (!buildConfig.release) {
-			let deviceFilePath = await this.getDeviceBuildInfoFilePath(device, projectData);
-			let buildInfoFilePath = outputFilePath || this.getBuildOutputPath(device.deviceInfo.platform, platformData, { buildForDevice: !device.isEmulator });
-			let appIdentifier = projectData.projectId;
+			const deviceFilePath = await this.getDeviceBuildInfoFilePath(device, projectData);
+			const buildInfoFilePath = outputFilePath || this.getBuildOutputPath(device.deviceInfo.platform, platformData, { buildForDevice: !device.isEmulator });
+			const appIdentifier = projectData.projectId;
 
 			await device.fileSystem.putFile(path.join(buildInfoFilePath, buildInfoFileName), deviceFilePath, appIdentifier);
 		}
@@ -536,12 +536,12 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	public async deployPlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, deployOptions: IDeployPlatformOptions, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
 		await this.preparePlatform(platform, appFilesUpdaterOptions, deployOptions.platformTemplate, projectData, config);
-		let options: Mobile.IDevicesServicesInitializationOptions = {
+		const options: Mobile.IDevicesServicesInitializationOptions = {
 			platform: platform, deviceId: deployOptions.device, emulator: deployOptions.emulator
 		};
 		await this.$devicesService.initialize(options);
-		let action = async (device: Mobile.IDevice): Promise<void> => {
-			let buildConfig: IBuildConfig = {
+		const action = async (device: Mobile.IDevice): Promise<void> => {
+			const buildConfig: IBuildConfig = {
 				buildForDevice: !this.$devicesService.isiOSSimulator(device),
 				projectDir: deployOptions.projectDir,
 				release: deployOptions.release,
@@ -554,7 +554,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				keyStorePath: deployOptions.keyStorePath,
 				clean: deployOptions.clean
 			};
-			let shouldBuild = await this.shouldBuild(platform, projectData, buildConfig);
+			const shouldBuild = await this.shouldBuild(platform, projectData, buildConfig);
 			if (shouldBuild) {
 				await this.buildPlatform(platform, buildConfig, projectData);
 			} else {
@@ -576,7 +576,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	public async startApplication(platform: string, runOptions: IRunPlatformOptions, projectId: string): Promise<void> {
 		this.$logger.out("Starting...");
 
-		let action = async (device: Mobile.IDevice) => {
+		const action = async (device: Mobile.IDevice) => {
 			await device.applicationManager.startApplication(projectId);
 			this.$logger.out(`Successfully started on device with identifier '${device.deviceInfo.identifier}'.`);
 		};
@@ -602,7 +602,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	private async getDeviceBuildInfo(device: Mobile.IDevice, projectData: IProjectData): Promise<IBuildInfo> {
-		let deviceFilePath = await this.getDeviceBuildInfoFilePath(device, projectData);
+		const deviceFilePath = await this.getDeviceBuildInfoFilePath(device, projectData);
 		try {
 			return JSON.parse(await this.readFile(device, deviceFilePath, projectData));
 		} catch (e) {
@@ -612,10 +612,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	private getBuildInfo(platform: string, platformData: IPlatformData, options: IBuildForDevice, buildOutputPath?: string): IBuildInfo {
 		buildOutputPath = buildOutputPath || this.getBuildOutputPath(platform, platformData, options);
-		let buildInfoFile = path.join(buildOutputPath, buildInfoFileName);
+		const buildInfoFile = path.join(buildOutputPath, buildInfoFileName);
 		if (this.$fs.exists(buildInfoFile)) {
 			try {
-				let buildInfoTime = this.$fs.readJson(buildInfoFile);
+				const buildInfoTime = this.$fs.readJson(buildInfoFile);
 				return buildInfoTime;
 			} catch (e) {
 				return null;
@@ -629,15 +629,15 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		await this.ensurePlatformInstalled(platform, platformTemplate, projectData, config);
 
 		const appSourceDirectoryPath = path.join(projectData.projectDir, constants.APP_FOLDER_NAME);
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
-		let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 		const appUpdater = new AppFilesUpdater(appSourceDirectoryPath, appDestinationDirectoryPath, appFilesUpdaterOptions, this.$fs);
 		appUpdater.cleanDestinationApp();
 	}
 
 	public lastOutputPath(platform: string, buildConfig: IBuildConfig, projectData: IProjectData, outputPath?: string): string {
 		let packageFile: string;
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		if (buildConfig.buildForDevice) {
 			packageFile = this.getLatestApplicationPackageForDevice(platformData, buildConfig, outputPath).packageName;
 		} else {
@@ -653,12 +653,12 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		platform = platform.toLowerCase();
 		targetPath = path.resolve(targetPath);
 
-		let packageFile = this.lastOutputPath(platform, buildConfig, projectData);
+		const packageFile = this.lastOutputPath(platform, buildConfig, projectData);
 
 		this.$fs.ensureDirectoryExists(path.dirname(targetPath));
 
 		if (this.$fs.exists(targetPath) && this.$fs.getFsStats(targetPath).isDirectory()) {
-			let sourceFileName = path.basename(packageFile);
+			const sourceFileName = path.basename(packageFile);
 			this.$logger.trace(`Specified target path: '${targetPath}' is directory. Same filename will be used: '${sourceFileName}'.`);
 			targetPath = path.join(targetPath, sourceFileName);
 		}
@@ -667,13 +667,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public async removePlatforms(platforms: string[], projectData: IProjectData): Promise<void> {
-		for (let platform of platforms) {
+		for (const platform of platforms) {
 			this.validatePlatformInstalled(platform, projectData);
-			let platformData = this.$platformsData.getPlatformData(platform, projectData);
+			const platformData = this.$platformsData.getPlatformData(platform, projectData);
 
 			await platformData.platformProjectService.stopServices(platformData.projectRoot);
 
-			let platformDir = path.join(projectData.platformsDir, platform);
+			const platformDir = path.join(projectData.platformsDir, platform);
 			this.$fs.deleteDirectory(platformDir);
 			this.$projectDataService.removeNSProperty(projectData.projectDir, platformData.frameworkPackageName);
 
@@ -682,8 +682,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public async updatePlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
-		for (let platformParam of platforms) {
-			let data = platformParam.split("@"),
+		for (const platformParam of platforms) {
+			const data = platformParam.split("@"),
 				platform = data[0],
 				version = data[1];
 
@@ -696,9 +696,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	private getCanExecuteAction(platform: string, options: IDeviceEmulator): any {
-		let canExecute = (currentDevice: Mobile.IDevice): boolean => {
+		const canExecute = (currentDevice: Mobile.IDevice): boolean => {
 			if (options.device && currentDevice && currentDevice.deviceInfo) {
-				let device = this.$devicesService.getDeviceByDeviceOption();
+				const device = this.$devicesService.getDeviceByDeviceOption();
 				if (device && device.deviceInfo) {
 					return currentDevice.deviceInfo.identifier === device.deviceInfo.identifier;
 				}
@@ -763,20 +763,20 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean {
-		let targetedOS = this.$platformsData.getPlatformData(platform, projectData).targetedOS;
-		let res = !targetedOS || targetedOS.indexOf("*") >= 0 || targetedOS.indexOf(process.platform) >= 0;
+		const targetedOS = this.$platformsData.getPlatformData(platform, projectData).targetedOS;
+		const res = !targetedOS || targetedOS.indexOf("*") >= 0 || targetedOS.indexOf(process.platform) >= 0;
 		return res;
 	}
 
 	private isPlatformPrepared(platform: string, projectData: IProjectData): boolean {
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		return platformData.platformProjectService.isPlatformPrepared(platformData.projectRoot, projectData);
 	}
 
 	private getApplicationPackages(buildOutputPath: string, validPackageNames: string[]): IApplicationPackage[] {
 		// Get latest package` that is produced from build
-		let candidates = this.$fs.readDirectory(buildOutputPath);
-		let packages = _.filter(candidates, candidate => {
+		const candidates = this.$fs.readDirectory(buildOutputPath);
+		const packages = _.filter(candidates, candidate => {
 			return _.includes(validPackageNames, candidate);
 		}).map(currentPackage => {
 			currentPackage = path.join(buildOutputPath, currentPackage);
@@ -793,7 +793,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	private getLatestApplicationPackage(buildOutputPath: string, validPackageNames: string[]): IApplicationPackage {
 		let packages = this.getApplicationPackages(buildOutputPath, validPackageNames);
 		if (packages.length === 0) {
-			let packageExtName = path.extname(validPackageNames[0]);
+			const packageExtName = path.extname(validPackageNames[0]);
 			this.$errors.fail("No %s found in %s directory", packageExtName, buildOutputPath);
 		}
 
@@ -811,19 +811,19 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	private async updatePlatform(platform: string, version: string, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 
-		let data = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-		let currentVersion = data && data.version ? data.version : "0.2.0";
+		const data = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+		const currentVersion = data && data.version ? data.version : "0.2.0";
 
 		let newVersion = version === constants.PackageVersion.NEXT ?
 			await this.$npmInstallationManager.getNextVersion(platformData.frameworkPackageName) :
 			version || await this.$npmInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
-		let installedModuleDir = await this.$npmInstallationManager.install(platformData.frameworkPackageName, projectData.projectDir, { version: newVersion, dependencyType: "save" });
-		let cachedPackageData = this.$fs.readJson(path.join(installedModuleDir, "package.json"));
+		const installedModuleDir = await this.$npmInstallationManager.install(platformData.frameworkPackageName, projectData.projectDir, { version: newVersion, dependencyType: "save" });
+		const cachedPackageData = this.$fs.readJson(path.join(installedModuleDir, "package.json"));
 		newVersion = (cachedPackageData && cachedPackageData.version) || newVersion;
 
-		let canUpdate = platformData.platformProjectService.canUpdatePlatform(installedModuleDir, projectData);
+		const canUpdate = platformData.platformProjectService.canUpdatePlatform(installedModuleDir, projectData);
 		await this.$npm.uninstall(platformData.frameworkPackageName, { save: true }, projectData.projectDir);
 		if (canUpdate) {
 			if (!semver.valid(newVersion)) {
@@ -854,7 +854,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	// TODO: Remove this method from here. It has nothing to do with platform
 	public async readFile(device: Mobile.IDevice, deviceFilePath: string, projectData: IProjectData): Promise<string> {
 		temp.track();
-		let uniqueFilePath = temp.path({ suffix: ".tmp" });
+		const uniqueFilePath = temp.path({ suffix: ".tmp" });
 		try {
 			await device.fileSystem.getFile(deviceFilePath, projectData.projectId, uniqueFilePath);
 		} catch (e) {
@@ -862,7 +862,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		if (this.$fs.exists(uniqueFilePath)) {
-			let text = this.$fs.readText(uniqueFilePath);
+			const text = this.$fs.readText(uniqueFilePath);
 			shell.rm(uniqueFilePath);
 			return text;
 		}

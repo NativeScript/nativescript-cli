@@ -146,7 +146,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		const deviceIdentifier = liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier;
 		await this.$debugService.debugStop(deviceIdentifier);
 
-		let applicationId = deviceAppData.appIdentifier;
+		const applicationId = deviceAppData.appIdentifier;
 		const attachDebuggerOptions: IAttachDebuggerOptions = {
 			platform: liveSyncResultInfo.deviceAppData.device.deviceInfo.platform,
 			isEmulator: liveSyncResultInfo.deviceAppData.device.isEmulator,
@@ -194,7 +194,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		}
 
 		const projectData = this.$projectDataService.getProjectData(settings.projectDir);
-		let debugData = this.$debugDataService.createDebugData(projectData, { device: settings.deviceIdentifier });
+		const debugData = this.$debugDataService.createDebugData(projectData, { device: settings.deviceIdentifier });
 
 		// Of the properties below only `buildForDevice` and `release` are currently used.
 		// Leaving the others with placeholder values so that they may not be forgotten in future implementations.
@@ -473,14 +473,14 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	private async startWatcher(projectData: IProjectData, liveSyncData: ILiveSyncInfo): Promise<void> {
-		let pattern = [APP_FOLDER_NAME];
+		const pattern = [APP_FOLDER_NAME];
 
 		if (liveSyncData.watchAllFiles) {
 			const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
 			pattern.push(PACKAGE_JSON_FILE_NAME);
 
 			// watch only production node_module/packages same one prepare uses
-			for (let index in productionDependencies) {
+			for (const index in productionDependencies) {
 				pattern.push(productionDependencies[index].directory);
 			}
 		}
@@ -492,8 +492,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				currentWatcherInfo.watcher.close();
 			}
 
-			let filesToSync: string[] = [],
-				filesToRemove: string[] = [];
+			let filesToSync: string[] = [];
+			let filesToRemove: string[] = [];
 			let timeoutTimer: NodeJS.Timer;
 
 			const startTimeout = () => {
@@ -502,10 +502,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					await this.addActionToChain(projectData.projectDir, async () => {
 						if (filesToSync.length || filesToRemove.length) {
 							try {
-								let currentFilesToSync = _.cloneDeep(filesToSync);
+								const currentFilesToSync = _.cloneDeep(filesToSync);
 								filesToSync = [];
 
-								let currentFilesToRemove = _.cloneDeep(filesToRemove);
+								const currentFilesToRemove = _.cloneDeep(filesToRemove);
 								filesToRemove = [];
 
 								const allModifiedFiles = [].concat(currentFilesToSync).concat(currentFilesToRemove);
@@ -550,7 +550,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 								const allErrors = (<Mobile.IDevicesOperationError>err).allErrors;
 
 								if (allErrors && _.isArray(allErrors)) {
-									for (let deviceError of allErrors) {
+									for (const deviceError of allErrors) {
 										this.$logger.warn(`Unable to apply changes for device: ${deviceError.deviceIdentifier}. Error is: ${deviceError.message}.`);
 
 										this.emit(LiveSyncEvents.liveSyncError, {

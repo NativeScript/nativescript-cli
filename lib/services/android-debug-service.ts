@@ -58,13 +58,13 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 
 	private async getForwardedLocalDebugPortForPackageName(deviceId: string, packageName: string): Promise<number> {
 		let port = -1;
-		let forwardsResult = await this.device.adb.executeCommand(["forward", "--list"]);
+		const forwardsResult = await this.device.adb.executeCommand(["forward", "--list"]);
 
-		let unixSocketName = `${packageName}-inspectorServer`;
+		const unixSocketName = `${packageName}-inspectorServer`;
 
 		//matches 123a188909e6czzc tcp:40001 localabstract:org.nativescript.testUnixSockets-debug
-		let regexp = new RegExp(`(?:${deviceId} tcp:)([\\d]+)(?= localabstract:${unixSocketName})`, "g");
-		let match = regexp.exec(forwardsResult);
+		const regexp = new RegExp(`(?:${deviceId} tcp:)([\\d]+)(?= localabstract:${unixSocketName})`, "g");
+		const match = regexp.exec(forwardsResult);
 
 		if (match) {
 			port = parseInt(match[1]);
@@ -112,7 +112,7 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 	}
 
 	private async printDebugPort(deviceId: string, packageName: string): Promise<void> {
-		let port = await this.getForwardedLocalDebugPortForPackageName(deviceId, packageName);
+		const port = await this.getForwardedLocalDebugPortForPackageName(deviceId, packageName);
 		this.$logger.info("device: " + deviceId + " debug port: " + port + "\n");
 	}
 
@@ -145,11 +145,11 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 	}
 
 	private async waitForDebugger(packageName: String): Promise<void> {
-		let waitText: string = `0 /data/local/tmp/${packageName}-debugger-started`;
+		const waitText: string = `0 /data/local/tmp/${packageName}-debugger-started`;
 		let maxWait = 12;
 		let debuggerStarted: boolean = false;
 		while (maxWait > 0 && !debuggerStarted) {
-			let forwardsResult = await this.device.adb.executeShellCommand(["ls", "-s", `/data/local/tmp/${packageName}-debugger-started`]);
+			const forwardsResult = await this.device.adb.executeShellCommand(["ls", "-s", `/data/local/tmp/${packageName}-debugger-started`]);
 
 			maxWait--;
 

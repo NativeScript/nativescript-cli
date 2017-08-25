@@ -32,12 +32,12 @@ import path = require("path");
 import temp = require("temp");
 temp.track();
 
-let assert = require("chai").assert;
-let nodeModulesFolderName = "node_modules";
-let packageJsonName = "package.json";
+const assert = require("chai").assert;
+const nodeModulesFolderName = "node_modules";
+const packageJsonName = "package.json";
 
 function createTestInjector(): IInjector {
-	let testInjector = new yok.Yok();
+	const testInjector = new yok.Yok();
 	testInjector.register("fs", FsLib.FileSystem);
 	testInjector.register("adb", {});
 	testInjector.register("options", OptionsLib.Options);
@@ -91,15 +91,15 @@ function createTestInjector(): IInjector {
 }
 
 function createProject(testInjector: IInjector, dependencies?: any): string {
-	let tempFolder = temp.mkdirSync("npmSupportTests");
-	let options = testInjector.resolve("options");
+	const tempFolder = temp.mkdirSync("npmSupportTests");
+	const options = testInjector.resolve("options");
 	options.path = tempFolder;
 
 	dependencies = dependencies || {
 		"lodash": "3.9.3"
 	};
 
-	let packageJsonData: any = {
+	const packageJsonData: any = {
 		"name": "testModuleName",
 		"version": "0.1.0",
 		"nativescript": {
@@ -121,27 +121,27 @@ function createProject(testInjector: IInjector, dependencies?: any): string {
 }
 
 async function setupProject(dependencies?: any): Promise<any> {
-	let testInjector = createTestInjector();
-	let projectFolder = createProject(testInjector, dependencies);
+	const testInjector = createTestInjector();
+	const projectFolder = createProject(testInjector, dependencies);
 
-	let fs = testInjector.resolve("fs");
+	const fs = testInjector.resolve("fs");
 
 	// Creates app folder
-	let appFolderPath = path.join(projectFolder, "app");
+	const appFolderPath = path.join(projectFolder, "app");
 	fs.createDirectory(appFolderPath);
-	let appResourcesFolderPath = path.join(appFolderPath, "App_Resources");
+	const appResourcesFolderPath = path.join(appFolderPath, "App_Resources");
 	fs.createDirectory(appResourcesFolderPath);
 	fs.createDirectory(path.join(appResourcesFolderPath, "Android"));
 	fs.createDirectory(path.join(appResourcesFolderPath, "Android", "mockdir"));
 	fs.createDirectory(path.join(appFolderPath, "tns_modules"));
 
 	// Creates platforms/android folder
-	let androidFolderPath = path.join(projectFolder, "platforms", "android");
+	const androidFolderPath = path.join(projectFolder, "platforms", "android");
 	fs.ensureDirectoryExists(androidFolderPath);
 
 	// Mock platform data
-	let appDestinationFolderPath = path.join(androidFolderPath, "assets");
-	let platformsData = testInjector.resolve("platformsData");
+	const appDestinationFolderPath = path.join(androidFolderPath, "assets");
+	const platformsData = testInjector.resolve("platformsData");
 
 	platformsData.getPlatformData = (platform: string) => {
 		return {
@@ -176,15 +176,15 @@ async function setupProject(dependencies?: any): Promise<any> {
 }
 
 async function addDependencies(testInjector: IInjector, projectFolder: string, dependencies: any, devDependencies?: any): Promise<void> {
-	let fs = testInjector.resolve("fs");
-	let packageJsonPath = path.join(projectFolder, "package.json");
-	let packageJsonData = fs.readJson(packageJsonPath);
+	const fs = testInjector.resolve("fs");
+	const packageJsonPath = path.join(projectFolder, "package.json");
+	const packageJsonData = fs.readJson(packageJsonPath);
 
-	let currentDependencies = packageJsonData.dependencies;
+	const currentDependencies = packageJsonData.dependencies;
 	_.extend(currentDependencies, dependencies);
 
 	if (devDependencies) {
-		let currentDevDependencies = packageJsonData.devDependencies;
+		const currentDevDependencies = packageJsonData.devDependencies;
 		_.extend(currentDevDependencies, devDependencies);
 	}
 	fs.writeJson(packageJsonPath, packageJsonData);
@@ -202,13 +202,13 @@ async function preparePlatform(testInjector: IInjector): Promise<void> {
 describe("Npm support tests", () => {
 	let testInjector: IInjector, projectFolder: string, appDestinationFolderPath: string;
 	beforeEach(async () => {
-		let projectSetup = await setupProject();
+		const projectSetup = await setupProject();
 		testInjector = projectSetup.testInjector;
 		projectFolder = projectSetup.projectFolder;
 		appDestinationFolderPath = projectSetup.appDestinationFolderPath;
 	});
 	it("Ensures that the installed dependencies are prepared correctly", async () => {
-		let fs: IFileSystem = testInjector.resolve("fs");
+		const fs: IFileSystem = testInjector.resolve("fs");
 		// Setup
 		await addDependencies(testInjector, projectFolder, { "bplist": "0.0.4" });
 
@@ -216,9 +216,9 @@ describe("Npm support tests", () => {
 		await preparePlatform(testInjector);
 
 		// Assert
-		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
+		const tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
 
-		let results = fs.enumerateFilesInDirectorySync(tnsModulesFolderPath, (file, stat) => {
+		const results = fs.enumerateFilesInDirectorySync(tnsModulesFolderPath, (file, stat) => {
 			return true;
 		}, { enumerateDirectories: true });
 
@@ -229,38 +229,38 @@ describe("Npm support tests", () => {
 	});
 	it("Ensures that scoped dependencies are prepared correctly", async () => {
 		// Setup
-		let fs = testInjector.resolve("fs");
-		let scopedName = "@reactivex/rxjs";
-		let dependencies: any = {};
+		const fs = testInjector.resolve("fs");
+		const scopedName = "@reactivex/rxjs";
+		const dependencies: any = {};
 		dependencies[scopedName] = "0.0.0-prealpha.3";
 		// Do not pass dependencies object as the sinopia cannot work with scoped dependencies. Instead move them manually.
 		await addDependencies(testInjector, projectFolder, dependencies);
 		// Act
 		await preparePlatform(testInjector);
 		// Assert
-		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
-		let scopedDependencyPath = path.join(tnsModulesFolderPath, "@reactivex", "rxjs");
+		const tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
+		const scopedDependencyPath = path.join(tnsModulesFolderPath, "@reactivex", "rxjs");
 		assert.isTrue(fs.exists(scopedDependencyPath));
 	});
 
 	it("Ensures that scoped dependencies are prepared correctly when are not in root level", async () => {
 		// Setup
-		let customPluginName = "plugin-with-scoped-dependency";
-		let customPluginDirectory = temp.mkdirSync("custom-plugin-directory");
+		const customPluginName = "plugin-with-scoped-dependency";
+		const customPluginDirectory = temp.mkdirSync("custom-plugin-directory");
 
-		let fs: IFileSystem = testInjector.resolve("fs");
+		const fs: IFileSystem = testInjector.resolve("fs");
 		await fs.unzip(path.join("resources", "test", `${customPluginName}.zip`), customPluginDirectory);
 
 		await addDependencies(testInjector, projectFolder, { "plugin-with-scoped-dependency": `file:${path.join(customPluginDirectory, customPluginName)}` });
 		// Act
 		await preparePlatform(testInjector);
 		// Assert
-		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
-		let results = fs.enumerateFilesInDirectorySync(tnsModulesFolderPath, (file, stat) => {
+		const tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
+		const results = fs.enumerateFilesInDirectorySync(tnsModulesFolderPath, (file, stat) => {
 			return true;
 		}, { enumerateDirectories: true });
 
-		let filteredResults = results.filter((val) => {
+		const filteredResults = results.filter((val) => {
 			return _.endsWith(val, path.join("@scoped-plugin", "inner-plugin"));
 		});
 
@@ -268,9 +268,9 @@ describe("Npm support tests", () => {
 	});
 
 	it("Ensures that tns_modules absent when bundling", async () => {
-		let fs = testInjector.resolve("fs");
-		let options = testInjector.resolve("options");
-		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
+		const fs = testInjector.resolve("fs");
+		const options = testInjector.resolve("options");
+		const tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
 
 		try {
 			options.bundle = false;
@@ -292,12 +292,12 @@ describe("Npm support tests", () => {
 
 describe("Flatten npm modules tests", () => {
 	it("Doesn't handle the dependencies of devDependencies", async () => {
-		let projectSetup = await setupProject({});
-		let testInjector = projectSetup.testInjector;
-		let projectFolder = projectSetup.projectFolder;
-		let appDestinationFolderPath = projectSetup.appDestinationFolderPath;
+		const projectSetup = await setupProject({});
+		const testInjector = projectSetup.testInjector;
+		const projectFolder = projectSetup.projectFolder;
+		const appDestinationFolderPath = projectSetup.appDestinationFolderPath;
 
-		let devDependencies = {
+		const devDependencies = {
 			"gulp": "3.9.0",
 			"gulp-jscs": "1.6.0",
 			"gulp-jshint": "1.11.0"
@@ -308,32 +308,32 @@ describe("Flatten npm modules tests", () => {
 		await preparePlatform(testInjector);
 
 		// Assert
-		let fs = testInjector.resolve("fs");
-		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
+		const fs = testInjector.resolve("fs");
+		const tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
 
-		let gulpFolderPath = path.join(tnsModulesFolderPath, "gulp");
+		const gulpFolderPath = path.join(tnsModulesFolderPath, "gulp");
 		assert.isFalse(fs.exists(gulpFolderPath));
 
-		let gulpJscsFolderPath = path.join(tnsModulesFolderPath, "gulp-jscs");
+		const gulpJscsFolderPath = path.join(tnsModulesFolderPath, "gulp-jscs");
 		assert.isFalse(fs.exists(gulpJscsFolderPath));
 
-		let gulpJshint = path.join(tnsModulesFolderPath, "gulp-jshint");
+		const gulpJshint = path.join(tnsModulesFolderPath, "gulp-jshint");
 		assert.isFalse(fs.exists(gulpJshint));
 
 		// Get	all gulp dependencies
-		let gulpJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp", packageJsonName));
+		const gulpJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp", packageJsonName));
 		_.each(_.keys(gulpJsonContent.dependencies), dependency => {
 			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)));
 		});
 
 		// Get all gulp-jscs dependencies
-		let gulpJscsJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jscs", packageJsonName));
+		const gulpJscsJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jscs", packageJsonName));
 		_.each(_.keys(gulpJscsJsonContent.dependencies), dependency => {
 			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)));
 		});
 
 		// Get all gulp-jshint dependencies
-		let gulpJshintJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jshint", packageJsonName));
+		const gulpJshintJsonContent = fs.readJson(path.join(projectFolder, nodeModulesFolderName, "gulp-jshint", packageJsonName));
 		_.each(_.keys(gulpJshintJsonContent.dependencies), dependency => {
 			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)));
 		});

@@ -48,7 +48,7 @@ class IOSSimulatorDiscoveryMock extends DeviceDiscovery {
 }
 
 function createTestInjector(projectPath: string, projectName: string): IInjector {
-	let testInjector = new yok.Yok();
+	const testInjector = new yok.Yok();
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register("config", ConfigLib.Configuration);
 	testInjector.register("errors", ErrorsLib.Errors);
@@ -118,7 +118,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 }
 
 function createPackageJson(testInjector: IInjector, projectPath: string, projectName: string) {
-	let packageJsonData = {
+	const packageJsonData = {
 		"name": projectName,
 		"version": "0.1.0",
 		"nativescript": {
@@ -134,14 +134,14 @@ function createPackageJson(testInjector: IInjector, projectPath: string, project
 }
 
 function expectOption(args: string[], option: string, value: string, message?: string): void {
-	let index = args.indexOf(option);
+	const index = args.indexOf(option);
 	assert.ok(index >= 0, "Expected " + option + " to be set.");
 	assert.ok(args.length > index + 1, "Expected " + option + " to have value");
 	assert.equal(args[index + 1], value, message);
 }
 
 function readOption(args: string[], option: string): string {
-	let index = args.indexOf(option);
+	const index = args.indexOf(option);
 	assert.ok(index >= 0, "Expected " + option + " to be set.");
 	assert.ok(args.length > index + 1, "Expected " + option + " to have value");
 	return args[index + 1];
@@ -150,16 +150,16 @@ function readOption(args: string[], option: string): string {
 describe("iOSProjectService", () => {
 	describe("archive", () => {
 		async function setupArchive(options?: { archivePath?: string }): Promise<{ run: () => Promise<void>, assert: () => void }> {
-			let hasCustomArchivePath = options && options.archivePath;
+			const hasCustomArchivePath = options && options.archivePath;
 
-			let projectName = "projectDirectory";
-			let projectPath = temp.mkdirSync(projectName);
+			const projectName = "projectDirectory";
+			const projectPath = temp.mkdirSync(projectName);
 
-			let testInjector = createTestInjector(projectPath, projectName);
-			let iOSProjectService = <IOSProjectService>testInjector.resolve("iOSProjectService");
-			let projectData: IProjectData = testInjector.resolve("projectData");
+			const testInjector = createTestInjector(projectPath, projectName);
+			const iOSProjectService = <IOSProjectService>testInjector.resolve("iOSProjectService");
+			const projectData: IProjectData = testInjector.resolve("projectData");
 
-			let childProcess = testInjector.resolve("childProcess");
+			const childProcess = testInjector.resolve("childProcess");
 			let xcodebuildExeced = false;
 
 			let archivePath: string;
@@ -204,12 +204,12 @@ describe("iOSProjectService", () => {
 			console.log("Skipping iOS archive tests. They can work only on macOS");
 		} else {
 			it("by default exports xcodearchive to platforms/ios/build/archive/<projname>.xcarchive", async () => {
-				let setup = await setupArchive();
+				const setup = await setupArchive();
 				await setup.run();
 				setup.assert();
 			});
 			it("can pass archivePath to xcodebuild -archivePath", async () => {
-				let setup = await setupArchive({ archivePath: "myarchive.xcarchive" });
+				const setup = await setupArchive({ archivePath: "myarchive.xcarchive" });
 				await setup.run();
 				setup.assert();
 			});
@@ -217,7 +217,7 @@ describe("iOSProjectService", () => {
 	});
 
 	describe("exportArchive", () => {
-		let noTeamPlist = `<?xml version="1.0" encoding="UTF-8"?>
+		const noTeamPlist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -230,7 +230,7 @@ describe("iOSProjectService", () => {
 </dict>
 </plist>`;
 
-		let myTeamPlist = `<?xml version="1.0" encoding="UTF-8"?>
+		const myTeamPlist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -246,17 +246,17 @@ describe("iOSProjectService", () => {
 </plist>`;
 
 		async function testExportArchive(options: { teamID?: string }, expectedPlistContent: string): Promise<void> {
-			let projectName = "projectDirectory";
-			let projectPath = temp.mkdirSync(projectName);
+			const projectName = "projectDirectory";
+			const projectPath = temp.mkdirSync(projectName);
 
-			let testInjector = createTestInjector(projectPath, projectName);
-			let iOSProjectService = <IOSProjectService>testInjector.resolve("iOSProjectService");
-			let projectData: IProjectData = testInjector.resolve("projectData");
+			const testInjector = createTestInjector(projectPath, projectName);
+			const iOSProjectService = <IOSProjectService>testInjector.resolve("iOSProjectService");
+			const projectData: IProjectData = testInjector.resolve("projectData");
 
-			let archivePath = path.join(projectPath, "platforms", "ios", "build", "archive", projectName + ".xcarchive");
+			const archivePath = path.join(projectPath, "platforms", "ios", "build", "archive", projectName + ".xcarchive");
 
-			let childProcess = testInjector.resolve("childProcess");
-			let fs = <IFileSystem>testInjector.resolve("fs");
+			const childProcess = testInjector.resolve("childProcess");
+			const fs = <IFileSystem>testInjector.resolve("fs");
 
 			let xcodebuildExeced = false;
 
@@ -268,19 +268,19 @@ describe("iOSProjectService", () => {
 
 				expectOption(args, "-archivePath", archivePath, "Expected the -archivePath to be passed to xcodebuild.");
 				expectOption(args, "-exportPath", path.join(projectPath, "platforms", "ios", "build", "archive"), "Expected the -archivePath to be passed to xcodebuild.");
-				let plist = readOption(args, "-exportOptionsPlist");
+				const plist = readOption(args, "-exportOptionsPlist");
 
 				assert.ok(plist);
 
-				let plistContent = fs.readText(plist);
+				const plistContent = fs.readText(plist);
 				// There may be better way to equal property lists
 				assert.equal(plistContent, expectedPlistContent, "Mismatch in exportOptionsPlist content");
 
 				return Promise.resolve();
 			};
 
-			let resultIpa = await iOSProjectService.exportArchive(projectData, { archivePath, teamID: options.teamID });
-			let expectedIpa = path.join(projectPath, "platforms", "ios", "build", "archive", projectName + ".ipa");
+			const resultIpa = await iOSProjectService.exportArchive(projectData, { archivePath, teamID: options.teamID });
+			const expectedIpa = path.join(projectPath, "platforms", "ios", "build", "archive", projectName + ".ipa");
 
 			assert.equal(resultIpa, expectedIpa, "Expected IPA at the specified location");
 
@@ -306,13 +306,13 @@ describe("Cocoapods support", () => {
 		console.log("Skipping Cocoapods tests. They cannot work on windows");
 	} else {
 		it("adds plugin with Podfile", async () => {
-			let projectName = "projectDirectory";
-			let projectPath = temp.mkdirSync(projectName);
+			const projectName = "projectDirectory";
+			const projectPath = temp.mkdirSync(projectName);
 
-			let testInjector = createTestInjector(projectPath, projectName);
-			let fs: IFileSystem = testInjector.resolve("fs");
+			const testInjector = createTestInjector(projectPath, projectName);
+			const fs: IFileSystem = testInjector.resolve("fs");
 
-			let packageJsonData = {
+			const packageJsonData = {
 				"name": "myProject",
 				"version": "0.1.0",
 				"nativescript": {
@@ -324,10 +324,10 @@ describe("Cocoapods support", () => {
 			};
 			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData);
 
-			let platformsFolderPath = path.join(projectPath, "platforms", "ios");
+			const platformsFolderPath = path.join(projectPath, "platforms", "ios");
 			fs.createDirectory(platformsFolderPath);
 
-			let iOSProjectService = testInjector.resolve("iOSProjectService");
+			const iOSProjectService = testInjector.resolve("iOSProjectService");
 			iOSProjectService.prepareFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> => {
 				return Promise.resolve();
 			};
@@ -342,26 +342,26 @@ describe("Cocoapods support", () => {
 			};
 			iOSProjectService.savePbxProj = (): Promise<void> => Promise.resolve();
 
-			let pluginPath = temp.mkdirSync("pluginDirectory");
-			let pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
-			let pluginPodfilePath = path.join(pluginPlatformsFolderPath, "Podfile");
-			let pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
+			const pluginPath = temp.mkdirSync("pluginDirectory");
+			const pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
+			const pluginPodfilePath = path.join(pluginPlatformsFolderPath, "Podfile");
+			const pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
 			fs.writeFile(pluginPodfilePath, pluginPodfileContent);
 
-			let pluginData = {
+			const pluginData = {
 				pluginPlatformsFolderPath(platform: string): string {
 					return pluginPlatformsFolderPath;
 				}
 			};
-			let projectData: IProjectData = testInjector.resolve("projectData");
+			const projectData: IProjectData = testInjector.resolve("projectData");
 
 			await iOSProjectService.preparePluginNativeCode(pluginData, projectData);
 
-			let projectPodfilePath = path.join(platformsFolderPath, "Podfile");
+			const projectPodfilePath = path.join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath));
 
-			let actualProjectPodfileContent = fs.readText(projectPodfilePath);
-			let expectedProjectPodfileContent = ["use_frameworks!\n",
+			const actualProjectPodfileContent = fs.readText(projectPodfilePath);
+			const expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
 				`# Begin Podfile - ${pluginPodfilePath} `,
 				` ${pluginPodfileContent} `,
@@ -371,13 +371,13 @@ describe("Cocoapods support", () => {
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
 		});
 		it("adds and removes plugin with Podfile", async () => {
-			let projectName = "projectDirectory2";
-			let projectPath = temp.mkdirSync(projectName);
+			const projectName = "projectDirectory2";
+			const projectPath = temp.mkdirSync(projectName);
 
-			let testInjector = createTestInjector(projectPath, projectName);
-			let fs: IFileSystem = testInjector.resolve("fs");
+			const testInjector = createTestInjector(projectPath, projectName);
+			const fs: IFileSystem = testInjector.resolve("fs");
 
-			let packageJsonData = {
+			const packageJsonData = {
 				"name": "myProject2",
 				"version": "0.1.0",
 				"nativescript": {
@@ -389,10 +389,10 @@ describe("Cocoapods support", () => {
 			};
 			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData);
 
-			let platformsFolderPath = path.join(projectPath, "platforms", "ios");
+			const platformsFolderPath = path.join(projectPath, "platforms", "ios");
 			fs.createDirectory(platformsFolderPath);
 
-			let iOSProjectService = testInjector.resolve("iOSProjectService");
+			const iOSProjectService = testInjector.resolve("iOSProjectService");
 			iOSProjectService.prepareFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> => {
 				return Promise.resolve();
 			};
@@ -413,26 +413,26 @@ describe("Cocoapods support", () => {
 			};
 			iOSProjectService.savePbxProj = (): Promise<void> => Promise.resolve();
 
-			let pluginPath = temp.mkdirSync("pluginDirectory");
-			let pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
-			let pluginPodfilePath = path.join(pluginPlatformsFolderPath, "Podfile");
-			let pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
+			const pluginPath = temp.mkdirSync("pluginDirectory");
+			const pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
+			const pluginPodfilePath = path.join(pluginPlatformsFolderPath, "Podfile");
+			const pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
 			fs.writeFile(pluginPodfilePath, pluginPodfileContent);
 
-			let pluginData = {
+			const pluginData = {
 				pluginPlatformsFolderPath(platform: string): string {
 					return pluginPlatformsFolderPath;
 				}
 			};
-			let projectData: IProjectData = testInjector.resolve("projectData");
+			const projectData: IProjectData = testInjector.resolve("projectData");
 
 			await iOSProjectService.preparePluginNativeCode(pluginData, projectData);
 
-			let projectPodfilePath = path.join(platformsFolderPath, "Podfile");
+			const projectPodfilePath = path.join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath));
 
-			let actualProjectPodfileContent = fs.readText(projectPodfilePath);
-			let expectedProjectPodfileContent = ["use_frameworks!\n",
+			const actualProjectPodfileContent = fs.readText(projectPodfilePath);
+			const expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
 				`# Begin Podfile - ${pluginPodfilePath} `,
 				` ${pluginPodfileContent} `,
@@ -454,17 +454,17 @@ describe("Static libraries support", () => {
 		return;
 	}
 
-	let projectName = "TNSApp";
-	let projectPath = temp.mkdirSync(projectName);
-	let libraryName = "testLibrary1";
-	let headers = ["TestHeader1.h", "TestHeader2.h"];
-	let testInjector = createTestInjector(projectPath, projectName);
-	let fs: IFileSystem = testInjector.resolve("fs");
-	let staticLibraryPath = path.join(path.join(temp.mkdirSync("pluginDirectory"), "platforms", "ios"));
-	let staticLibraryHeadersPath = path.join(staticLibraryPath, "include", libraryName);
+	const projectName = "TNSApp";
+	const projectPath = temp.mkdirSync(projectName);
+	const libraryName = "testLibrary1";
+	const headers = ["TestHeader1.h", "TestHeader2.h"];
+	const testInjector = createTestInjector(projectPath, projectName);
+	const fs: IFileSystem = testInjector.resolve("fs");
+	const staticLibraryPath = path.join(path.join(temp.mkdirSync("pluginDirectory"), "platforms", "ios"));
+	const staticLibraryHeadersPath = path.join(staticLibraryPath, "include", libraryName);
 
 	it("checks validation of header files", async () => {
-		let iOSProjectService = testInjector.resolve("iOSProjectService");
+		const iOSProjectService = testInjector.resolve("iOSProjectService");
 		fs.ensureDirectoryExists(staticLibraryHeadersPath);
 		_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), ""); });
 
@@ -482,15 +482,15 @@ describe("Static libraries support", () => {
 	});
 
 	it("checks generation of modulemaps", () => {
-		let iOSProjectService = testInjector.resolve("iOSProjectService");
+		const iOSProjectService = testInjector.resolve("iOSProjectService");
 		fs.ensureDirectoryExists(staticLibraryHeadersPath);
 		_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), ""); });
 
 		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);
 		// Read the generated modulemap and verify it.
 		let modulemap = fs.readFile(path.join(staticLibraryHeadersPath, "module.modulemap"));
-		let headerCommands = _.map(headers, value => `header "${value}"`);
-		let modulemapExpectation = `module ${libraryName} { explicit module ${libraryName} { ${headerCommands.join(" ")} } }`;
+		const headerCommands = _.map(headers, value => `header "${value}"`);
+		const modulemapExpectation = `module ${libraryName} { explicit module ${libraryName} { ${headerCommands.join(" ")} } }`;
 
 		assert.equal(modulemap, modulemapExpectation);
 
@@ -511,16 +511,16 @@ describe("Static libraries support", () => {
 
 describe("Relative paths", () => {
 	it("checks for correct calculation of relative paths", () => {
-		let projectName = "projectDirectory";
-		let projectPath = temp.mkdirSync(projectName);
-		let subpath = path.join(projectPath, "sub", "path");
+		const projectName = "projectDirectory";
+		const projectPath = temp.mkdirSync(projectName);
+		const subpath = path.join(projectPath, "sub", "path");
 
-		let testInjector = createTestInjector(projectPath, projectName);
+		const testInjector = createTestInjector(projectPath, projectName);
 		createPackageJson(testInjector, projectPath, projectName);
-		let iOSProjectService = testInjector.resolve("iOSProjectService");
-		let projectData: IProjectData = testInjector.resolve("projectData");
+		const iOSProjectService = testInjector.resolve("iOSProjectService");
+		const projectData: IProjectData = testInjector.resolve("projectData");
 
-		let result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath, projectData);
+		const result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath, projectData);
 		assert.equal(result, path.join("..", "..", "sub", "path"));
 	});
 });
@@ -621,7 +621,7 @@ describe("iOS Project Service Signing", () => {
 
 	describe("Check for Changes", () => {
 		it("sets signingChanged if no Xcode project exists", async () => {
-			let changes = <IProjectChangesInfo>{};
+			const changes = <IProjectChangesInfo>{};
 			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined }, projectData);
 			assert.isTrue(!!changes.signingChanged);
 		});
@@ -635,7 +635,7 @@ describe("iOS Project Service Signing", () => {
 					}
 				};
 			};
-			let changes = <IProjectChangesInfo>{};
+			const changes = <IProjectChangesInfo>{};
 			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined }, projectData);
 			assert.isTrue(!!changes.signingChanged);
 		});
@@ -654,7 +654,7 @@ describe("iOS Project Service Signing", () => {
 					}
 				};
 			};
-			let changes = <IProjectChangesInfo>{};
+			const changes = <IProjectChangesInfo>{};
 			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined }, projectData);
 			assert.isTrue(!!changes.signingChanged);
 		});
@@ -673,7 +673,7 @@ describe("iOS Project Service Signing", () => {
 					}
 				};
 			};
-			let changes = <IProjectChangesInfo>{};
+			const changes = <IProjectChangesInfo>{};
 			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined }, projectData);
 			assert.isFalse(!!changes.signingChanged);
 		});
@@ -699,7 +699,7 @@ describe("iOS Project Service Signing", () => {
 				}
 			});
 			it("succeeds if the provision name is provided for development cert", async () => {
-				let stack: any = [];
+				const stack: any = [];
 				pbxprojDomXcode.Xcode.open = <any>function (path: string) {
 					assert.equal(path, pbxproj);
 					return {
@@ -718,7 +718,7 @@ describe("iOS Project Service Signing", () => {
 				assert.deepEqual(stack, [{ targetName: projectDirName, manualSigning: { team: "TKID101", uuid: "12345", name: "NativeScriptDev", identity: "iPhone Developer" } }, "save()"]);
 			});
 			it("succeds if the provision name is provided for distribution cert", async () => {
-				let stack: any = [];
+				const stack: any = [];
 				pbxprojDomXcode.Xcode.open = <any>function (path: string) {
 					assert.equal(path, pbxproj);
 					return {
@@ -737,7 +737,7 @@ describe("iOS Project Service Signing", () => {
 				assert.deepEqual(stack, [{ targetName: projectDirName, manualSigning: { team: "TKID202", uuid: "6789", name: "NativeScriptDist", identity: "iPhone Distribution" } }, "save()"]);
 			});
 			it("succeds if the provision name is provided for adhoc cert", async () => {
-				let stack: any = [];
+				const stack: any = [];
 				pbxprojDomXcode.Xcode.open = <any>function (path: string) {
 					assert.equal(path, pbxproj);
 					return {
@@ -765,22 +765,22 @@ describe("Merge Project XCConfig files", () => {
 		return;
 	}
 	const assertPropertyValues = (expected: any, xcconfigPath: string, injector: IInjector) => {
-		let service = <XCConfigService>injector.resolve('xCConfigService');
+		const service = <XCConfigService>injector.resolve('xCConfigService');
 		_.forOwn(expected, (value, key) => {
-			let actual = service.readPropertyValue(xcconfigPath, key);
+			const actual = service.readPropertyValue(xcconfigPath, key);
 			assert.equal(actual, value);
 		});
 	};
 
-	let projectName: string,
-		projectPath: string,
-		testInjector: IInjector,
-		iOSProjectService: IOSProjectService,
-		projectData: IProjectData,
-		fs: IFileSystem,
-		appResourcesXcconfigPath: string,
-		appResourceXCConfigContent: string,
-		iOSEntitlementsService: IOSEntitlementsService;
+	let projectName: string;
+	let projectPath: string;
+	let testInjector: IInjector;
+	let iOSProjectService: IOSProjectService;
+	let projectData: IProjectData;
+	let fs: IFileSystem;
+	let appResourcesXcconfigPath: string;
+	let appResourceXCConfigContent: string;
+	let iOSEntitlementsService: IOSEntitlementsService;
 
 	beforeEach(() => {
 		projectName = "projectDirectory";
@@ -801,7 +801,7 @@ describe("Merge Project XCConfig files", () => {
 			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 			ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 			`;
-		let testPackageJson = {
+		const testPackageJson = {
 			"name": "test-project",
 			"version": "0.0.1"
 		};
@@ -814,14 +814,14 @@ describe("Merge Project XCConfig files", () => {
 		fs.writeFile(appResourcesXcconfigPath, appResourceXCConfigContent);
 
 		// run merge for all release: debug|release
-		for (let release in [true, false]) {
+		for (const release in [true, false]) {
 			await (<any>iOSProjectService).mergeProjectXcconfigFiles(release, projectData);
 
-			let destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
+			const destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
 				: (<any>iOSProjectService).getPluginsDebugXcconfigFilePath(projectData);
 
 			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
-			let expected = {
+			const expected = {
 				'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
 				'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
 				'CODE_SIGN_IDENTITY': 'iPhone Distribution'
@@ -831,14 +831,14 @@ describe("Merge Project XCConfig files", () => {
 	});
 
 	it("Adds the entitlements property if not set by the user", async () => {
-		for (let release in [true, false]) {
+		for (const release in [true, false]) {
 			await (<any>iOSProjectService).mergeProjectXcconfigFiles(release, projectData);
 
-			let destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
+			const destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
 				: (<any>iOSProjectService).getPluginsDebugXcconfigFilePath(projectData);
 
 			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
-			let expected = {
+			const expected = {
 				'CODE_SIGN_ENTITLEMENTS': iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData)
 			};
 			assertPropertyValues(expected, destinationFilePath, testInjector);
@@ -848,18 +848,18 @@ describe("Merge Project XCConfig files", () => {
 	it("The user specified entitlements property takes precedence", async () => {
 		// setup app_resource build.xcconfig
 		const expectedEntitlementsFile = 'user.entitlements';
-		let xcconfigEntitlements = appResourceXCConfigContent + `${EOL}CODE_SIGN_ENTITLEMENTS = ${expectedEntitlementsFile}`;
+		const xcconfigEntitlements = appResourceXCConfigContent + `${EOL}CODE_SIGN_ENTITLEMENTS = ${expectedEntitlementsFile}`;
 		fs.writeFile(appResourcesXcconfigPath, xcconfigEntitlements);
 
 		// run merge for all release: debug|release
-		for (let release in [true, false]) {
+		for (const release in [true, false]) {
 			await (<any>iOSProjectService).mergeProjectXcconfigFiles(release, projectData);
 
-			let destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
+			const destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
 				: (<any>iOSProjectService).getPluginsDebugXcconfigFilePath(projectData);
 
 			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
-			let expected = {
+			const expected = {
 				'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
 				'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
 				'CODE_SIGN_IDENTITY': 'iPhone Distribution',

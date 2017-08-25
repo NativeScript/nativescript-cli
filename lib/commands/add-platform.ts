@@ -18,7 +18,7 @@ export class AddPlatformCommand implements ICommand {
 			this.$errors.fail("No platform specified. Please specify a platform to add");
 		}
 
-		for (let arg of args) {
+		for (const arg of args) {
 			this.$platformService.validatePlatform(arg, this.$projectData);
 			const platformData = this.$platformsData.getPlatformData(arg, this.$projectData);
 			const platformProjectService = platformData.platformProjectService;

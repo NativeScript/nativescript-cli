@@ -17,7 +17,7 @@ export class RemovePlatformCommand implements ICommand {
 			this.$errors.fail("No platform specified. Please specify a platform to remove");
 		}
 
-		for (let platform of args) {
+		for (const platform of args) {
 			this.$platformService.validatePlatformInstalled(platform, this.$projectData);
 			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
 			const platformProjectService = platformData.platformProjectService;

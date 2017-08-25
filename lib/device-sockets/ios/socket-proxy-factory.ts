@@ -19,7 +19,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 
 		this.$logger.info("\nSetting up proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
 
-		let server = net.createServer({
+		const server = net.createServer({
 			allowHalfOpen: true
 		});
 
@@ -63,7 +63,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 			});
 		});
 
-		let socketFileLocation = temp.path({ suffix: ".sock" });
+		const socketFileLocation = temp.path({ suffix: ".sock" });
 		server.listen(socketFileLocation);
 		if (!this.$options.client) {
 			this.$logger.info("socket-file-location: " + socketFileLocation);
@@ -83,7 +83,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 		// We store the socket that connects us to the device in the upgrade request object itself and later on retrieve it
 		// in the connection callback.
 
-		let server = new ws.Server(<any>{
+		const server = new ws.Server(<any>{
 			port: localPort,
 			verifyClient: async (info: any, callback: Function) => {
 				this.$logger.info("Frontend client connected.");
@@ -102,10 +102,10 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 			}
 		});
 		server.on("connection", (webSocket) => {
-			let encoding = "utf16le";
+			const encoding = "utf16le";
 
-			let deviceSocket: net.Socket = (<any>webSocket.upgradeReq)["__deviceSocket"];
-			let packets = new PacketStream();
+			const deviceSocket: net.Socket = (<any>webSocket.upgradeReq)["__deviceSocket"];
+			const packets = new PacketStream();
 			deviceSocket.pipe(packets);
 
 			packets.on("data", (buffer: Buffer) => {
@@ -121,8 +121,8 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 			});
 
 			webSocket.on("message", (message, flags) => {
-				let length = Buffer.byteLength(message, encoding);
-				let payload = new Buffer(length + 4);
+				const length = Buffer.byteLength(message, encoding);
+				const payload = new Buffer(length + 4);
 				payload.writeInt32BE(length, 0);
 				payload.write(message, 4, length, encoding);
 				deviceSocket.write(payload);

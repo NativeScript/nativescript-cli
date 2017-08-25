@@ -444,13 +444,13 @@ export class PrompterStub implements IPrompter {
 	}
 	async getPassword(prompt: string, options?: IAllowEmpty): Promise<string> {
 		chai.assert.ok(prompt in this.passwords, `PrompterStub didn't expect to give password for: ${prompt}`);
-		let result = this.passwords[prompt];
+		const result = this.passwords[prompt];
 		delete this.passwords[prompt];
 		return result;
 	}
 	async getString(prompt: string, options?: IPrompterOptions): Promise<string> {
 		chai.assert.ok(prompt in this.strings, `PrompterStub didn't expect to be asked for: ${prompt}`);
-		let result = this.strings[prompt];
+		const result = this.strings[prompt];
 		delete this.strings[prompt];
 		return result;
 	}
@@ -465,10 +465,10 @@ export class PrompterStub implements IPrompter {
 	}
 
 	assert() {
-		for (let key in this.strings) {
+		for (const key in this.strings) {
 			throw unexpected(`PrompterStub was instructed to reply with "${this.strings[key]}" to a "${key}" question, but was never asked!`);
 		}
-		for (let key in this.passwords) {
+		for (const key in this.passwords) {
 			throw unexpected(`PrompterStub was instructed to reply with "${this.passwords[key]}" to a "${key}" password request, but was never asked!`);
 		}
 	}
@@ -479,7 +479,7 @@ function unreachable(): Error {
 }
 
 function unexpected(msg: string): Error {
-	let err = new chai.AssertionError(msg);
+	const err = new chai.AssertionError(msg);
 	err.showDiff = false;
 	return err;
 }
@@ -516,7 +516,7 @@ export class LiveSyncServiceStub implements ILiveSyncService {
 
 export class AndroidToolsInfoStub implements IAndroidToolsInfo {
 	public getToolsInfo(): IAndroidToolsInfoData {
-		let infoData: IAndroidToolsInfoData = Object.create(null);
+		const infoData: IAndroidToolsInfoData = Object.create(null);
 		infoData.androidHomeEnvVar = "ANDROID_HOME";
 		infoData.compileSdkVersion = 23;
 		infoData.buildToolsVersion = "23";

@@ -29,7 +29,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	@cache()
 	public getToolsInfo(): IAndroidToolsInfoData {
 		if (!this.toolsInfo) {
-			let infoData: IAndroidToolsInfoData = Object.create(null);
+			const infoData: IAndroidToolsInfoData = Object.create(null);
 			infoData.androidHomeEnvVar = this.androidHome;
 			infoData.compileSdkVersion = this.getCompileSdkVersion();
 			infoData.buildToolsVersion = this.getBuildToolsVersion();
@@ -46,8 +46,8 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	public validateInfo(options?: { showWarningsAsErrors: boolean, validateTargetSdk: boolean }): boolean {
 		let detectedErrors = false;
 		this.showWarningsAsErrors = options && options.showWarningsAsErrors;
-		let toolsInfoData = this.getToolsInfo();
-		let isAndroidHomeValid = this.validateAndroidHomeEnvVariable();
+		const toolsInfoData = this.getToolsInfo();
+		const isAndroidHomeValid = this.validateAndroidHomeEnvVariable();
 		if (!toolsInfoData.compileSdkVersion) {
 			this.printMessage(`Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later.`,
 				`Run \`\$ ${this.getPathToSdkManagementTool()}\` to manage your Android SDK versions.`);
@@ -55,8 +55,8 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		}
 
 		if (!toolsInfoData.buildToolsVersion) {
-			let buildToolsRange = this.getBuildToolsRange();
-			let versionRangeMatches = buildToolsRange.match(/^.*?([\d\.]+)\s+.*?([\d\.]+)$/);
+			const buildToolsRange = this.getBuildToolsRange();
+			const versionRangeMatches = buildToolsRange.match(/^.*?([\d\.]+)\s+.*?([\d\.]+)$/);
 			let message = `You can install any version in the following range: '${buildToolsRange}'.`;
 
 			// Improve message in case buildToolsRange is something like: ">=22.0.0 <=22.0.0" - same numbers on both sides
@@ -83,11 +83,11 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		}
 
 		if (options && options.validateTargetSdk) {
-			let targetSdk = toolsInfoData.targetSdkVersion;
-			let newTarget = `${AndroidToolsInfo.ANDROID_TARGET_PREFIX}-${targetSdk}`;
+			const targetSdk = toolsInfoData.targetSdkVersion;
+			const newTarget = `${AndroidToolsInfo.ANDROID_TARGET_PREFIX}-${targetSdk}`;
 			if (!_.includes(AndroidToolsInfo.SUPPORTED_TARGETS, newTarget)) {
-				let supportedVersions = AndroidToolsInfo.SUPPORTED_TARGETS.sort();
-				let minSupportedVersion = this.parseAndroidSdkString(_.first(supportedVersions));
+				const supportedVersions = AndroidToolsInfo.SUPPORTED_TARGETS.sort();
+				const minSupportedVersion = this.parseAndroidSdkString(_.first(supportedVersions));
 
 				if (targetSdk && (targetSdk < minSupportedVersion)) {
 					this.printMessage(`The selected Android target SDK ${newTarget} is not supported. You must target ${minSupportedVersion} or later.`);
@@ -107,10 +107,10 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			this.showWarningsAsErrors = options.showWarningsAsErrors;
 		}
 
-		let additionalMessage = "You will not be able to build your projects for Android." + EOL
+		const additionalMessage = "You will not be able to build your projects for Android." + EOL
 			+ "To be able to build for Android, verify that you have installed The Java Development Kit (JDK) and configured it according to system requirements as" + EOL +
 			" described in " + this.$staticConfig.SYS_REQUIREMENTS_LINK;
-		let matchingVersion = (installedJavaVersion || "").match(AndroidToolsInfo.VERSION_REGEX);
+		const matchingVersion = (installedJavaVersion || "").match(AndroidToolsInfo.VERSION_REGEX);
 		if (matchingVersion && matchingVersion[1]) {
 			if (semver.lt(matchingVersion[1], AndroidToolsInfo.MIN_JAVA_VERSION)) {
 				hasProblemWithJavaVersion = true;
@@ -126,7 +126,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 	public async getPathToAdbFromAndroidHome(): Promise<string> {
 		if (this.androidHome) {
-			let pathToAdb = path.join(this.androidHome, "platform-tools", "adb");
+			const pathToAdb = path.join(this.androidHome, "platform-tools", "adb");
 			try {
 				await this.$childProcess.execFile(pathToAdb, ["help"]);
 				return pathToAdb;
@@ -212,19 +212,19 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 	private getCompileSdkVersion(): number {
 		if (!this.selectedCompileSdk) {
-			let userSpecifiedCompileSdk = this.$options.compileSdk;
+			const userSpecifiedCompileSdk = this.$options.compileSdk;
 			if (userSpecifiedCompileSdk) {
-				let installedTargets = this.getInstalledTargets();
-				let androidCompileSdk = `${AndroidToolsInfo.ANDROID_TARGET_PREFIX}-${userSpecifiedCompileSdk}`;
+				const installedTargets = this.getInstalledTargets();
+				const androidCompileSdk = `${AndroidToolsInfo.ANDROID_TARGET_PREFIX}-${userSpecifiedCompileSdk}`;
 				if (!_.includes(installedTargets, androidCompileSdk)) {
 					this.$errors.failWithoutHelp(`You have specified '${userSpecifiedCompileSdk}' for compile sdk, but it is not installed on your system.`);
 				}
 
 				this.selectedCompileSdk = userSpecifiedCompileSdk;
 			} else {
-				let latestValidAndroidTarget = this.getLatestValidAndroidTarget();
+				const latestValidAndroidTarget = this.getLatestValidAndroidTarget();
 				if (latestValidAndroidTarget) {
-					let integerVersion = this.parseAndroidSdkString(latestValidAndroidTarget);
+					const integerVersion = this.parseAndroidSdkString(latestValidAndroidTarget);
 
 					if (integerVersion && integerVersion >= AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET) {
 						this.selectedCompileSdk = integerVersion;
@@ -237,7 +237,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	}
 
 	private getTargetSdk(): number {
-		let targetSdk = this.$options.sdk ? parseInt(this.$options.sdk) : this.getCompileSdkVersion();
+		const targetSdk = this.$options.sdk ? parseInt(this.$options.sdk) : this.getCompileSdkVersion();
 		this.$logger.trace(`Selected targetSdk is: ${targetSdk}`);
 		return targetSdk;
 	}
@@ -245,12 +245,12 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private getMatchingDir(pathToDir: string, versionRange: string): string {
 		let selectedVersion: string;
 		if (this.$fs.exists(pathToDir)) {
-			let subDirs = this.$fs.readDirectory(pathToDir);
+			const subDirs = this.$fs.readDirectory(pathToDir);
 			this.$logger.trace(`Directories found in ${pathToDir} are ${subDirs.join(", ")}`);
 
-			let subDirsVersions = subDirs
+			const subDirsVersions = subDirs
 				.map(dirName => {
-					let dirNameGroups = dirName.match(AndroidToolsInfo.VERSION_REGEX);
+					const dirNameGroups = dirName.match(AndroidToolsInfo.VERSION_REGEX);
 					if (dirNameGroups) {
 						return dirNameGroups[1];
 					}
@@ -259,7 +259,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 				})
 				.filter(dirName => !!dirName);
 			this.$logger.trace(`Versions found in ${pathToDir} are ${subDirsVersions.join(", ")}`);
-			let version = semver.maxSatisfying(subDirsVersions, versionRange);
+			const version = semver.maxSatisfying(subDirsVersions, versionRange);
 			if (version) {
 				selectedVersion = _.find(subDirs, dir => dir.indexOf(version) !== -1);
 			}
@@ -275,8 +275,8 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private getBuildToolsVersion(): string {
 		let buildToolsVersion: string;
 		if (this.androidHome) {
-			let pathToBuildTools = path.join(this.androidHome, "build-tools");
-			let buildToolsRange = this.getBuildToolsRange();
+			const pathToBuildTools = path.join(this.androidHome, "build-tools");
+			const buildToolsRange = this.getBuildToolsRange();
 			buildToolsVersion = this.getMatchingDir(pathToBuildTools, buildToolsRange);
 		}
 
@@ -284,7 +284,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	}
 
 	private getAppCompatRange(): string {
-		let compileSdkVersion = this.getCompileSdkVersion();
+		const compileSdkVersion = this.getCompileSdkVersion();
 		let requiredAppCompatRange: string;
 		if (compileSdkVersion) {
 			requiredAppCompatRange = `>=${compileSdkVersion} <${compileSdkVersion + 1}`;
@@ -295,9 +295,9 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 	private getAndroidSupportRepositoryVersion(): string {
 		let selectedAppCompatVersion: string;
-		let requiredAppCompatRange = this.getAppCompatRange();
+		const requiredAppCompatRange = this.getAppCompatRange();
 		if (this.androidHome && requiredAppCompatRange) {
-			let pathToAppCompat = path.join(this.androidHome, "extras", "android", "m2repository", "com", "android", "support", "appcompat-v7");
+			const pathToAppCompat = path.join(this.androidHome, "extras", "android", "m2repository", "com", "android", "support", "appcompat-v7");
 			selectedAppCompatVersion = this.getMatchingDir(pathToAppCompat, requiredAppCompatRange);
 		}
 
@@ -306,7 +306,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	}
 
 	private getLatestValidAndroidTarget(): string {
-		let installedTargets = this.getInstalledTargets();
+		const installedTargets = this.getInstalledTargets();
 		return _.findLast(AndroidToolsInfo.SUPPORTED_TARGETS.sort(), supportedTarget => _.includes(installedTargets, supportedTarget));
 	}
 

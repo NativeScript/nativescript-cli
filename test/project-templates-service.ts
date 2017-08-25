@@ -7,10 +7,10 @@ import temp = require("temp");
 import * as constants from "../lib/constants";
 
 let isDeleteDirectoryCalledForNodeModulesDir = false;
-let nativeScriptValidatedTemplatePath = "nsValidatedTemplatePath";
+const nativeScriptValidatedTemplatePath = "nsValidatedTemplatePath";
 
 function createTestInjector(configuration?: { shouldNpmInstallThrow: boolean, npmInstallationDirContents: string[], npmInstallationDirNodeModulesContents: string[] }): IInjector {
-	let injector = new Yok();
+	const injector = new Yok();
 	injector.register("errors", stubs.ErrorsStub);
 	injector.register("logger", stubs.LoggerStub);
 	injector.register("fs", {
@@ -67,7 +67,7 @@ describe("project-templates-service", () => {
 			it("when npm install fails", async () => {
 				testInjector = createTestInjector({ shouldNpmInstallThrow: true, npmInstallationDirContents: [], npmInstallationDirNodeModulesContents: null });
 				projectTemplatesService = testInjector.resolve("projectTemplatesService");
-				let tempFolder = temp.mkdirSync("preparetemplate");
+				const tempFolder = temp.mkdirSync("preparetemplate");
 				await assert.isRejected(projectTemplatesService.prepareTemplate("invalidName", tempFolder));
 			});
 		});
@@ -76,8 +76,8 @@ describe("project-templates-service", () => {
 			it("when reserved template name is used", async () => {
 				testInjector = createTestInjector({ shouldNpmInstallThrow: false, npmInstallationDirContents: [], npmInstallationDirNodeModulesContents: [] });
 				projectTemplatesService = testInjector.resolve("projectTemplatesService");
-				let tempFolder = temp.mkdirSync("preparetemplate");
-				let actualPathToTemplate = await projectTemplatesService.prepareTemplate("typescript", tempFolder);
+				const tempFolder = temp.mkdirSync("preparetemplate");
+				const actualPathToTemplate = await projectTemplatesService.prepareTemplate("typescript", tempFolder);
 				assert.strictEqual(path.basename(actualPathToTemplate), nativeScriptValidatedTemplatePath);
 				assert.strictEqual(isDeleteDirectoryCalledForNodeModulesDir, true, "When correct path is returned, template's node_modules directory should be deleted.");
 			});
@@ -85,8 +85,8 @@ describe("project-templates-service", () => {
 			it("when reserved template name is used (case-insensitive test)", async () => {
 				testInjector = createTestInjector({ shouldNpmInstallThrow: false, npmInstallationDirContents: [], npmInstallationDirNodeModulesContents: [] });
 				projectTemplatesService = testInjector.resolve("projectTemplatesService");
-				let tempFolder = temp.mkdirSync("preparetemplate");
-				let actualPathToTemplate = await projectTemplatesService.prepareTemplate("tYpEsCriPT", tempFolder);
+				const tempFolder = temp.mkdirSync("preparetemplate");
+				const actualPathToTemplate = await projectTemplatesService.prepareTemplate("tYpEsCriPT", tempFolder);
 				assert.strictEqual(path.basename(actualPathToTemplate), nativeScriptValidatedTemplatePath);
 				assert.strictEqual(isDeleteDirectoryCalledForNodeModulesDir, true, "When correct path is returned, template's node_modules directory should be deleted.");
 			});
@@ -94,8 +94,8 @@ describe("project-templates-service", () => {
 			it("uses defaultTemplate when undefined is passed as parameter", async () => {
 				testInjector = createTestInjector({ shouldNpmInstallThrow: false, npmInstallationDirContents: [], npmInstallationDirNodeModulesContents: [] });
 				projectTemplatesService = testInjector.resolve("projectTemplatesService");
-				let tempFolder = temp.mkdirSync("preparetemplate");
-				let actualPathToTemplate = await projectTemplatesService.prepareTemplate(constants.RESERVED_TEMPLATE_NAMES["default"], tempFolder);
+				const tempFolder = temp.mkdirSync("preparetemplate");
+				const actualPathToTemplate = await projectTemplatesService.prepareTemplate(constants.RESERVED_TEMPLATE_NAMES["default"], tempFolder);
 				assert.strictEqual(path.basename(actualPathToTemplate), nativeScriptValidatedTemplatePath);
 				assert.strictEqual(isDeleteDirectoryCalledForNodeModulesDir, true, "When correct path is returned, template's node_modules directory should be deleted.");
 			});
