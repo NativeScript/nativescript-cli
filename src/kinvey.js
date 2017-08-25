@@ -114,7 +114,7 @@ class Kinvey {
    */
   static initialize(config) {
     const client = Kinvey.init(config);
-    return Promise.resolve(client.getActiveUser());
+    return Promise.resolve(User.getActiveUser(client));
   }
 
   /**
