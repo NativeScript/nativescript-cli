@@ -250,6 +250,13 @@ export namespace Kinvey {
     sort: string;
     limit: number;
     skip: number;
+    constructor(options?: {
+      fields?: any[]
+      filter?: {}
+      sort?: string
+      limit?: number
+      skip?: number
+    });
     isSupportedOffline(): boolean;
     equalTo(field: string, value: any): this;
     contains(field: string, values: any[]): this;
