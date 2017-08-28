@@ -9,11 +9,11 @@ export class UpdatePluginCommand implements ICommand {
 		let pluginNames = args;
 
 		if (!pluginNames || args.length === 0) {
-			let installedPlugins = await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
+			const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
 			pluginNames = installedPlugins.map(p => p.name);
 		}
 
-		for (let pluginName of pluginNames) {
+		for (const pluginName of pluginNames) {
 			await this.$pluginsService.remove(pluginName, this.$projectData);
 			await this.$pluginsService.add(pluginName, this.$projectData);
 		}
@@ -24,10 +24,10 @@ export class UpdatePluginCommand implements ICommand {
 			return true;
 		}
 
-		let installedPlugins = await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
-		let installedPluginNames: string[] = installedPlugins.map(pl => pl.name);
+		const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
+		const installedPluginNames: string[] = installedPlugins.map(pl => pl.name);
 
-		let pluginName = args[0].toLowerCase();
+		const pluginName = args[0].toLowerCase();
 		if (!_.some(installedPluginNames, name => name.toLowerCase() === pluginName)) {
 			this.$errors.failWithoutHelp(`Plugin "${pluginName}" is not installed.`);
 		}

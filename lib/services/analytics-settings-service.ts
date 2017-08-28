@@ -33,7 +33,7 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	}
 
 	public async getUserSessionsCount(projectName: string): Promise<number> {
-		let oldSessionCount = await this.$userSettingsService.getSettingValue<number>(AnalyticsSettingsService.SESSIONS_STARTED_OBSOLETE_KEY);
+		const oldSessionCount = await this.$userSettingsService.getSettingValue<number>(AnalyticsSettingsService.SESSIONS_STARTED_OBSOLETE_KEY);
 
 		if (oldSessionCount) {
 			// remove the old property for sessions count

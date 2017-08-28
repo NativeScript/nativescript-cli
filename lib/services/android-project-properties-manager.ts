@@ -14,8 +14,8 @@ export class AndroidProjectPropertiesManager implements IAndroidProjectPropertie
 
 	public async getProjectReferences(): Promise<ILibRef[]> {
 		if (!this.projectReferences || this.dirty) {
-			let allProjectProperties = await this.getAllProjectProperties();
-			let allProjectPropertiesKeys = _.keys(allProjectProperties);
+			const allProjectProperties = await this.getAllProjectProperties();
+			const allProjectPropertiesKeys = _.keys(allProjectProperties);
 			this.projectReferences = _(allProjectPropertiesKeys)
 				.filter(key => _.startsWith(key, "android.library.reference."))
 				.map(key => this.createLibraryReference(key, allProjectProperties[key]))
@@ -26,16 +26,16 @@ export class AndroidProjectPropertiesManager implements IAndroidProjectPropertie
 	}
 
 	public async addProjectReference(referencePath: string): Promise<void> {
-		let references = await this.getProjectReferences();
-		let libRefExists = _.some(references, r => path.normalize(r.path) === path.normalize(referencePath));
+		const references = await this.getProjectReferences();
+		const libRefExists = _.some(references, r => path.normalize(r.path) === path.normalize(referencePath));
 		if (!libRefExists) {
 			await this.addToPropertyList("android.library.reference", referencePath);
 		}
 	}
 
 	public async removeProjectReference(referencePath: string): Promise<void> {
-		let references = await this.getProjectReferences();
-		let libRefExists = _.some(references, r => path.normalize(r.path) === path.normalize(referencePath));
+		const references = await this.getProjectReferences();
+		const libRefExists = _.some(references, r => path.normalize(r.path) === path.normalize(referencePath));
 		if (libRefExists) {
 			await this.removeFromPropertyList("android.library.reference", referencePath);
 		} else {
@@ -65,7 +65,7 @@ export class AndroidProjectPropertiesManager implements IAndroidProjectPropertie
 	}
 
 	private async addToPropertyList(key: string, value: string): Promise<void> {
-		let editor = await this.createEditor();
+		const editor = await this.createEditor();
 		let i = 1;
 		while (editor.get(this.buildKeyName(key, i))) {
 			i++;
@@ -77,8 +77,8 @@ export class AndroidProjectPropertiesManager implements IAndroidProjectPropertie
 	}
 
 	private async removeFromPropertyList(key: string, value: string): Promise<void> {
-		let editor = await this.createEditor();
-		let valueLowerCase = value.toLowerCase();
+		const editor = await this.createEditor();
+		const valueLowerCase = value.toLowerCase();
 		let i = 1;
 		let currentValue: any;
 		while (currentValue = editor.get(this.buildKeyName(key, i))) {

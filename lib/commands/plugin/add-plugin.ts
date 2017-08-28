@@ -16,8 +16,8 @@ export class AddPluginCommand implements ICommand {
 			this.$errors.fail("You must specify plugin name.");
 		}
 
-		let installedPlugins = await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
-		let pluginName = args[0].toLowerCase();
+		const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
+		const pluginName = args[0].toLowerCase();
 		if (_.some(installedPlugins, (plugin: IPluginData) => plugin.name.toLowerCase() === pluginName)) {
 			this.$errors.failWithoutHelp(`Plugin "${pluginName}" is already installed.`);
 		}

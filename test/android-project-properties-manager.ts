@@ -14,7 +14,7 @@ temp.track();
 import { assert } from "chai";
 
 function createTestInjector(): IInjector {
-	let testInjector = new yok.Yok();
+	const testInjector = new yok.Yok();
 	testInjector.register("propertiesParser", ProjectPropertiesParserLib.PropertiesParser);
 	testInjector.register("fs", FsLib.FileSystem);
 	testInjector.register("hostInfo", HostInfoLib.HostInfo);
@@ -29,113 +29,113 @@ function createTestInjector(): IInjector {
 
 describe("Android project properties parser tests", () => {
 	it("adds project reference", async () => {
-		let testInjector = createTestInjector();
-		let fs = testInjector.resolve("fs");
+		const testInjector = createTestInjector();
+		const fs = testInjector.resolve("fs");
 
-		let projectPropertiesFileContent = 'target=android-21';
-		let tempFolder = temp.mkdirSync("AndroidProjectPropertiesManager");
+		const projectPropertiesFileContent = 'target=android-21';
+		const tempFolder = temp.mkdirSync("AndroidProjectPropertiesManager");
 		fs.writeFile(path.join(tempFolder, "project.properties"), projectPropertiesFileContent);
 
-		let projectPropertiesManager: IAndroidProjectPropertiesManager = testInjector.resolve(
+		const projectPropertiesManager: IAndroidProjectPropertiesManager = testInjector.resolve(
 			ProjectPropertiesManagerLib.AndroidProjectPropertiesManager, { directoryPath: tempFolder });
 		await projectPropertiesManager.addProjectReference("testValue");
 
-		let expectedContent = 'target=android-21' + '\n' +
+		const expectedContent = 'target=android-21' + '\n' +
 			'android.library.reference.1=testValue';
-		let actualContent = fs.readText(path.join(tempFolder, "project.properties"));
+		const actualContent = fs.readText(path.join(tempFolder, "project.properties"));
 
 		assert.equal(expectedContent, actualContent);
 		assert.equal(1, _.keys(await projectPropertiesManager.getProjectReferences()).length);
 	});
 
 	it("adds project reference if another referencence already exists in project.properties file", async () => {
-		let testInjector = createTestInjector();
-		let fs = testInjector.resolve("fs");
+		const testInjector = createTestInjector();
+		const fs = testInjector.resolve("fs");
 
-		let projectPropertiesFileContent = 'target=android-21' + '\n' +
+		const projectPropertiesFileContent = 'target=android-21' + '\n' +
 			'android.library.reference.1=someValue';
-		let tempFolder = temp.mkdirSync("AndroidProjectPropertiesManager");
+		const tempFolder = temp.mkdirSync("AndroidProjectPropertiesManager");
 		fs.writeFile(path.join(tempFolder, "project.properties"), projectPropertiesFileContent);
 
-		let projectPropertiesManager = testInjector.resolve(
+		const projectPropertiesManager = testInjector.resolve(
 			ProjectPropertiesManagerLib.AndroidProjectPropertiesManager, { directoryPath: tempFolder });
 		await projectPropertiesManager.addProjectReference("testValue");
 
-		let expectedContent = ['target=android-21',
+		const expectedContent = ['target=android-21',
 			'android.library.reference.1=someValue',
 			'android.library.reference.2=testValue'].join('\n');
-		let actualContent = fs.readText(path.join(tempFolder, "project.properties"));
+		const actualContent = fs.readText(path.join(tempFolder, "project.properties"));
 
 		assert.equal(expectedContent, actualContent);
 		assert.equal(2, _.keys(await projectPropertiesManager.getProjectReferences()).length);
 	});
 	it("adds project reference if more than one references exist in project.properties file", async () => {
-		let testInjector = createTestInjector();
-		let fs = testInjector.resolve("fs");
+		const testInjector = createTestInjector();
+		const fs = testInjector.resolve("fs");
 
-		let projectPropertiesFileContent = ['target=android-21',
+		const projectPropertiesFileContent = ['target=android-21',
 			'android.library.reference.1=value1',
 			'android.library.reference.2=value2',
 			'android.library.reference.3=value3',
 			'android.library.reference.4=value4',
 			'android.library.reference.5=value5'].join('\n');
-		let tempFolder = temp.mkdirSync("AndroidProjectPropertiesManager");
+		const tempFolder = temp.mkdirSync("AndroidProjectPropertiesManager");
 		fs.writeFile(path.join(tempFolder, "project.properties"), projectPropertiesFileContent);
 
-		let projectPropertiesManager: IAndroidProjectPropertiesManager = testInjector.resolve(
+		const projectPropertiesManager: IAndroidProjectPropertiesManager = testInjector.resolve(
 			ProjectPropertiesManagerLib.AndroidProjectPropertiesManager, { directoryPath: tempFolder });
 		await projectPropertiesManager.addProjectReference("testValue");
 
-		let expectedContent = projectPropertiesFileContent + '\n' +
+		const expectedContent = projectPropertiesFileContent + '\n' +
 			'android.library.reference.6=testValue';
 
-		let actualContent = fs.readText(path.join(tempFolder, "project.properties"));
+		const actualContent = fs.readText(path.join(tempFolder, "project.properties"));
 
 		assert.equal(expectedContent, actualContent);
 		assert.equal(6, _.keys(await projectPropertiesManager.getProjectReferences()).length);
 	});
 	it("removes project reference if only one reference exists", async () => {
-		let testInjector = createTestInjector();
-		let fs = testInjector.resolve("fs");
+		const testInjector = createTestInjector();
+		const fs = testInjector.resolve("fs");
 
-		let projectPropertiesFileContent = 'android.library.reference.1=value1' + '\n' +
+		const projectPropertiesFileContent = 'android.library.reference.1=value1' + '\n' +
 			'target=android-21';
-		let tempFolder = temp.mkdirSync("AndroidProjectPropertiesManager");
+		const tempFolder = temp.mkdirSync("AndroidProjectPropertiesManager");
 		fs.writeFile(path.join(tempFolder, "project.properties"), projectPropertiesFileContent);
 
-		let projectPropertiesManager: IAndroidProjectPropertiesManager = testInjector.resolve(
+		const projectPropertiesManager: IAndroidProjectPropertiesManager = testInjector.resolve(
 			ProjectPropertiesManagerLib.AndroidProjectPropertiesManager, { directoryPath: tempFolder });
 		await projectPropertiesManager.removeProjectReference("value1");
 
-		let expectedContent = 'target=android-21';
-		let actualContent = fs.readText(path.join(tempFolder, "project.properties"));
+		const expectedContent = 'target=android-21';
+		const actualContent = fs.readText(path.join(tempFolder, "project.properties"));
 
 		assert.equal(expectedContent, actualContent);
 		assert.equal(0, _.keys(await projectPropertiesManager.getProjectReferences()).length);
 	});
 	it("removes project reference when another references exist before and after the specified reference", async () => {
-		let testInjector = createTestInjector();
-		let fs = testInjector.resolve("fs");
+		const testInjector = createTestInjector();
+		const fs = testInjector.resolve("fs");
 
-		let projectPropertiesFileContent = ['target=android-17',
+		const projectPropertiesFileContent = ['target=android-17',
 			'android.library.reference.1=value1',
 			'android.library.reference.2=value2',
 			'android.library.reference.3=value3',
 			'android.library.reference.4=value4',
 			'android.library.reference.5=value5'].join('\n');
-		let tempFolder = temp.mkdirSync("AndroidProjectPropertiesManager");
+		const tempFolder = temp.mkdirSync("AndroidProjectPropertiesManager");
 		fs.writeFile(path.join(tempFolder, "project.properties"), projectPropertiesFileContent);
 
-		let projectPropertiesManager: IAndroidProjectPropertiesManager = testInjector.resolve(
+		const projectPropertiesManager: IAndroidProjectPropertiesManager = testInjector.resolve(
 			ProjectPropertiesManagerLib.AndroidProjectPropertiesManager, { directoryPath: tempFolder });
 		await projectPropertiesManager.removeProjectReference("value3");
 
-		let expectedContent = ['target=android-17',
+		const expectedContent = ['target=android-17',
 			'android.library.reference.1=value1',
 			'android.library.reference.2=value2',
 			'android.library.reference.3=value4',
 			'android.library.reference.4=value5'].join('\n') + '\n';
-		let actualContent = fs.readText(path.join(tempFolder, "project.properties"));
+		const actualContent = fs.readText(path.join(tempFolder, "project.properties"));
 
 		assert.equal(expectedContent, actualContent);
 		assert.equal(4, _.keys(await projectPropertiesManager.getProjectReferences()).length);

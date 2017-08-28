@@ -15,7 +15,7 @@ const helpers = require("../lib/common/helpers");
 const originalIsInteracive = helpers.isInteractive;
 
 function createTestInjector(): IInjector {
-	let testInjector: IInjector = new yok.Yok();
+	const testInjector: IInjector = new yok.Yok();
 
 	testInjector.register("debug|android", DebugAndroidCommand);
 	testInjector.register("config", Configuration);
@@ -342,10 +342,10 @@ describe("debug command tests", () => {
 		});
 
 		it("Ensures that beforePrepareAllPlugins will call gradle with clean option when *NOT* livesyncing", async () => {
-			let childProcess: stubs.ChildProcessStub = testInjector.resolve("childProcess");
-			let androidProjectService: IPlatformProjectService = testInjector.resolve("androidProjectService");
-			let projectData: IProjectData = testInjector.resolve("projectData");
-			let spawnFromEventCount = childProcess.spawnFromEventCount;
+			const childProcess: stubs.ChildProcessStub = testInjector.resolve("childProcess");
+			const androidProjectService: IPlatformProjectService = testInjector.resolve("androidProjectService");
+			const projectData: IProjectData = testInjector.resolve("projectData");
+			const spawnFromEventCount = childProcess.spawnFromEventCount;
 			await androidProjectService.beforePrepareAllPlugins(projectData);
 			assert.isTrue(childProcess.lastCommand.indexOf("gradle") !== -1);
 			assert.isTrue(childProcess.lastCommandArgs[0] === "clean");

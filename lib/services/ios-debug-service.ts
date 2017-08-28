@@ -113,8 +113,8 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	private async emulatorDebugBrk(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
-		let args = debugOptions.debugBrk ? "--nativescript-debug-brk" : "--nativescript-debug-start";
-		let child_process = await this.$iOSEmulatorServices.runApplicationOnEmulator(debugData.pathToAppPackage, {
+		const args = debugOptions.debugBrk ? "--nativescript-debug-brk" : "--nativescript-debug-start";
+		const child_process = await this.$iOSEmulatorServices.runApplicationOnEmulator(debugData.pathToAppPackage, {
 			waitForDebugger: true,
 			captureStdin: true,
 			args: args,
@@ -122,11 +122,11 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 			skipInstall: true
 		});
 
-		let lineStream = byline(child_process.stdout);
+		const lineStream = byline(child_process.stdout);
 		this._childProcess = child_process;
 
 		lineStream.on('data', (line: NodeBuffer) => {
-			let lineText = line.toString();
+			const lineText = line.toString();
 			if (lineText && _.startsWith(lineText, debugData.applicationIdentifier)) {
 				const pid = getPidFromiOSSimulatorLogs(debugData.applicationIdentifier, lineText);
 				if (!pid) {
@@ -151,9 +151,9 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	private async emulatorStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		const result = await this.wireDebuggerClient(debugData, debugOptions);
 
-		let attachRequestMessage = this.$iOSNotification.getAttachRequest(debugData.applicationIdentifier);
+		const attachRequestMessage = this.$iOSNotification.getAttachRequest(debugData.applicationIdentifier);
 
-		let iOSEmulator = <Mobile.IiOSSimulatorService>this.$iOSEmulatorServices;
+		const iOSEmulator = <Mobile.IiOSSimulatorService>this.$iOSEmulatorServices;
 		await iOSEmulator.postDarwinNotification(attachRequestMessage);
 		return result;
 	}
@@ -171,7 +171,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 				justlaunch: debugOptions.justlaunch
 			};
 			// we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
-			let startApplicationAction = this.$platformService.startApplication(this.platform, runOptions, debugData.applicationIdentifier);
+			const startApplicationAction = this.$platformService.startApplication(this.platform, runOptions, debugData.applicationIdentifier);
 
 			const result = await this.debugBrkCore(device, debugData, debugOptions);
 
@@ -215,12 +215,12 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 	private async openAppInspector(fileDescriptor: string, debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
 		if (debugOptions.client) {
-			let inspectorPath = await this.$npmInstallationManager.getInspectorFromCache(inspectorNpmPackageName, debugData.projectDir);
+			const inspectorPath = await this.$npmInstallationManager.getInspectorFromCache(inspectorNpmPackageName, debugData.projectDir);
 
-			let inspectorSourceLocation = path.join(inspectorPath, inspectorUiDir, "Main.html");
-			let inspectorApplicationPath = path.join(inspectorPath, inspectorAppName);
+			const inspectorSourceLocation = path.join(inspectorPath, inspectorUiDir, "Main.html");
+			const inspectorApplicationPath = path.join(inspectorPath, inspectorAppName);
 
-			let cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${debugData.projectName}' '${fileDescriptor}'`;
+			const cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${debugData.projectName}' '${fileDescriptor}'`;
 			await this.$childProcess.exec(cmd);
 		} else {
 			this.$logger.info("Suppressing debugging client.");

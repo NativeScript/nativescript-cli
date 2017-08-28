@@ -20,8 +20,8 @@ export class ListiOSApps implements ICommand {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
-		let username = args[0],
-			password = args[1];
+		let username = args[0];
+		let password = args[1];
 
 		if (!username) {
 			username = await this.$prompter.getString("Apple ID", { allowEmpty: false });
@@ -31,12 +31,12 @@ export class ListiOSApps implements ICommand {
 			password = await this.$prompter.getPassword("Apple ID password");
 		}
 
-		let iOSApplications = await this.$itmsTransporterService.getiOSApplications({ username, password });
+		const iOSApplications = await this.$itmsTransporterService.getiOSApplications({ username, password });
 
 		if (!iOSApplications || !iOSApplications.length) {
 			this.$logger.out("Seems you don't have any applications yet.");
 		} else {
-			let table: any = createTable(["Application Name", "Bundle Identifier", "Version"], iOSApplications.map(element => {
+			const table: any = createTable(["Application Name", "Bundle Identifier", "Version"], iOSApplications.map(element => {
 				return [element.name, element.bundleId, element.version];
 			}));
 

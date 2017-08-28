@@ -16,17 +16,17 @@ export class TnsModulesCopy {
 	}
 
 	public copyModules(dependencies: IDependencyData[], platform: string): void {
-		for (let entry in dependencies) {
-			let dependency = dependencies[entry];
+		for (const entry in dependencies) {
+			const dependency = dependencies[entry];
 
 			this.copyDependencyDir(dependency);
 
 			if (dependency.name === constants.TNS_CORE_MODULES_NAME) {
-				let tnsCoreModulesResourcePath = path.join(this.outputRoot, constants.TNS_CORE_MODULES_NAME);
+				const tnsCoreModulesResourcePath = path.join(this.outputRoot, constants.TNS_CORE_MODULES_NAME);
 
 				// Remove .ts files
-				let allFiles = this.$fs.enumerateFilesInDirectorySync(tnsCoreModulesResourcePath);
-				let matchPattern = this.$options.release ? "**/*.ts" : "**/*.d.ts";
+				const allFiles = this.$fs.enumerateFilesInDirectorySync(tnsCoreModulesResourcePath);
+				const matchPattern = this.$options.release ? "**/*.ts" : "**/*.d.ts";
 				allFiles.filter(file => minimatch(file, matchPattern, { nocase: true })).map(file => this.$fs.deleteFile(file));
 
 				shelljs.rm("-rf", path.join(tnsCoreModulesResourcePath, constants.NODE_MODULES_FOLDER_NAME));
@@ -98,7 +98,7 @@ export class NpmPluginPrepare {
 	}
 
 	private writePreparedDependencyInfo(dependencies: IDependencyData[], platform: string, projectData: IProjectData): void {
-		let prepareData: IDictionary<boolean> = {};
+		const prepareData: IDictionary<boolean> = {};
 		_.each(dependencies, d => {
 			prepareData[d.name] = true;
 		});
@@ -145,11 +145,11 @@ export class NpmPluginPrepare {
 		}
 
 		await this.beforePrepare(dependencies, platform, projectData);
-		for (let dependencyKey in dependencies) {
+		for (const dependencyKey in dependencies) {
 			const dependency = dependencies[dependencyKey];
-			let isPlugin = !!dependency.nativescript;
+			const isPlugin = !!dependency.nativescript;
 			if (isPlugin) {
-				let pluginData = this.$pluginsService.convertToPluginData(dependency, projectData.projectDir);
+				const pluginData = this.$pluginsService.convertToPluginData(dependency, projectData.projectDir);
 				await this.$pluginsService.preparePluginNativeCode(pluginData, platform, projectData);
 			}
 		}
@@ -162,14 +162,14 @@ export class NpmPluginPrepare {
 			return;
 }
 
-		for (let dependencyKey in dependencies) {
+		for (const dependencyKey in dependencies) {
 			const dependency = dependencies[dependencyKey];
-			let isPlugin = !!dependency.nativescript;
+			const isPlugin = !!dependency.nativescript;
 			if (isPlugin) {
 				platform = platform.toLowerCase();
-				let pluginData = this.$pluginsService.convertToPluginData(dependency, projectData.projectDir);
-				let platformData = this.$platformsData.getPlatformData(platform, projectData);
-				let appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
+				const pluginData = this.$pluginsService.convertToPluginData(dependency, projectData.projectDir);
+				const platformData = this.$platformsData.getPlatformData(platform, projectData);
+				const appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
 				if (appFolderExists) {
 					this.$pluginsService.preparePluginScripts(pluginData, platform, projectData, projectFilesConfig);
 					// Show message

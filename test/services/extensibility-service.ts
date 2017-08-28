@@ -72,7 +72,7 @@ describe("extensibilityService", () => {
 				fs.readDirectory = (dir: string): string[] => [userSpecifiedValue];
 
 				const npm: INodePackageManager = testInjector.resolve("npm");
-				let argsPassedToNpmInstall: any = {};
+				const argsPassedToNpmInstall: any = {};
 				npm.install = async (packageName: string, pathToSave: string, config?: any): Promise<any> => {
 					argsPassedToNpmInstall.packageName = packageName;
 					argsPassedToNpmInstall.pathToSave = pathToSave;
@@ -468,7 +468,7 @@ describe("extensibilityService", () => {
 				fs.readDirectory = (dir: string): string[] => [userSpecifiedValue];
 
 				const npm: INodePackageManager = testInjector.resolve("npm");
-				let argsPassedToNpmInstall: any = {};
+				const argsPassedToNpmInstall: any = {};
 				npm.uninstall = async (packageName: string, config?: any, path?: string): Promise<any> => {
 					argsPassedToNpmInstall.packageName = packageName;
 					argsPassedToNpmInstall.pathToSave = path;

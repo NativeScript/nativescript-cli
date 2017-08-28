@@ -13,9 +13,9 @@ class XcprojService implements IXcprojService {
 	}
 
 	public async verifyXcproj(shouldFail: boolean): Promise<boolean> {
-		let xcprojInfo = await this.getXcprojInfo();
+		const xcprojInfo = await this.getXcprojInfo();
 		if (xcprojInfo.shouldUseXcproj && !xcprojInfo.xcprojAvailable) {
-			let errorMessage = `You are using CocoaPods version ${xcprojInfo.cocoapodVer} which does not support Xcode ${xcprojInfo.xcodeVersion.major}.${xcprojInfo.xcodeVersion.minor} yet.${EOL}${EOL}You can update your cocoapods by running $sudo gem install cocoapods from a terminal.${EOL}${EOL}In order for the NativeScript CLI to be able to work correctly with this setup you need to install xcproj command line tool and add it to your PATH. Xcproj can be installed with homebrew by running $ brew install xcproj from the terminal`;
+			const errorMessage = `You are using CocoaPods version ${xcprojInfo.cocoapodVer} which does not support Xcode ${xcprojInfo.xcodeVersion.major}.${xcprojInfo.xcodeVersion.minor} yet.${EOL}${EOL}You can update your cocoapods by running $sudo gem install cocoapods from a terminal.${EOL}${EOL}In order for the NativeScript CLI to be able to work correctly with this setup you need to install xcproj command line tool and add it to your PATH. Xcproj can be installed with homebrew by running $ brew install xcproj from the terminal`;
 			if (shouldFail) {
 				this.$errors.failWithoutHelp(errorMessage);
 			} else {
@@ -30,8 +30,8 @@ class XcprojService implements IXcprojService {
 
 	public async getXcprojInfo(): Promise<IXcprojInfo> {
 		if (!this.xcprojInfoCache) {
-			let cocoapodVer = await this.$sysInfo.getCocoapodVersion(),
-				xcodeVersion = await this.$xcodeSelectService.getXcodeVersion();
+			let cocoapodVer = await this.$sysInfo.getCocoapodVersion();
+			const xcodeVersion = await this.$xcodeSelectService.getXcodeVersion();
 
 			if (cocoapodVer && !semver.valid(cocoapodVer)) {
 				// Cocoapods betas have names like 1.0.0.beta.8
@@ -44,8 +44,8 @@ class XcprojService implements IXcprojService {
 			// CocoaPods with version lower than 1.0.0 don't support Xcode 7.3 yet
 			// https://github.com/CocoaPods/CocoaPods/issues/2530#issuecomment-210470123
 			// as a result of this all .pbxprojects touched by CocoaPods get converted to XML plist format
-			let shouldUseXcproj = cocoapodVer && !!(semver.lt(cocoapodVer, "1.0.0") && ~helpers.versionCompare(xcodeVersion, "7.3.0")),
-				xcprojAvailable: boolean;
+			const shouldUseXcproj = cocoapodVer && !!(semver.lt(cocoapodVer, "1.0.0") && ~helpers.versionCompare(xcodeVersion, "7.3.0"));
+			let xcprojAvailable: boolean;
 
 			if (shouldUseXcproj) {
 				// if that's the case we can use xcproj gem to convert them back to ASCII plist format

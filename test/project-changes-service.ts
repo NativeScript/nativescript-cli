@@ -91,8 +91,8 @@ describe("Project Changes Service Tests", () => {
 
 	describe("Get Prepare Info File Path", () => {
 		it("Gets the correct Prepare Info path for ios/android", () => {
-			for (let platform of ["ios", "android"]) {
-				let actualPrepareInfoPath = serviceTest.projectChangesService
+			for (const platform of ["ios", "android"]) {
+				const actualPrepareInfoPath = serviceTest.projectChangesService
 					.getPrepareInfoFilePath(platform, this.projectData);
 
 				const expectedPrepareInfoPath = path.join(serviceTest.projectDir,
@@ -106,8 +106,8 @@ describe("Project Changes Service Tests", () => {
 
 	describe("Get Prepare Info", () => {
 		it("Returns empty if file path doesn't exists", () => {
-			for (let platform of ["ios", "android"]) {
-				let projectInfo = serviceTest.projectChangesService.getPrepareInfo(platform, this.projectData);
+			for (const platform of ["ios", "android"]) {
+				const projectInfo = serviceTest.projectChangesService.getPrepareInfo(platform, this.projectData);
 
 				assert.isNull(projectInfo);
 			}
@@ -115,7 +115,7 @@ describe("Project Changes Service Tests", () => {
 
 		it("Reads the Prepare Info correctly", () => {
 			const fs: FileSystem = serviceTest.resolve("fs");
-			for (let platform of ["ios", "android"]) {
+			for (const platform of ["ios", "android"]) {
 				// arrange
 				const prepareInfoPath = path.join(serviceTest.projectDir, Constants.PLATFORMS_DIR_NAME,
 					platform, ".nsprepareinfo");
@@ -132,7 +132,7 @@ describe("Project Changes Service Tests", () => {
 				fs.writeJson(prepareInfoPath, expectedPrepareInfo);
 
 				// act
-				let actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(platform, this.projectData);
+				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(platform, this.projectData);
 
 				// assert
 				assert.deepEqual(actualPrepareInfo, expectedPrepareInfo);
@@ -142,9 +142,9 @@ describe("Project Changes Service Tests", () => {
 
 	describe("Accumulates Changes From Project Services", () => {
 		it("accumulates changes from the project service", async () => {
-			let iOSChanges = await serviceTest.projectChangesService.checkForChanges("ios", serviceTest.projectData, { bundle: false, release: false, provision: undefined, teamId: undefined });
+			const iOSChanges = await serviceTest.projectChangesService.checkForChanges("ios", serviceTest.projectData, { bundle: false, release: false, provision: undefined, teamId: undefined });
 			assert.isTrue(!!iOSChanges.signingChanged, "iOS signingChanged expected to be true");
-			let androidChanges = await serviceTest.projectChangesService.checkForChanges("android", serviceTest.projectData, { bundle: false, release: false, provision: undefined, teamId: undefined });
+			const androidChanges = await serviceTest.projectChangesService.checkForChanges("android", serviceTest.projectData, { bundle: false, release: false, provision: undefined, teamId: undefined });
 			assert.isFalse(!!androidChanges.signingChanged, "Android signingChanged expected to be false");
 		});
 	});

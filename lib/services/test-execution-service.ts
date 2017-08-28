@@ -37,24 +37,24 @@ class TestExecutionService implements ITestExecutionService {
 		await new Promise<void>((resolve, reject) => {
 			process.on('message', async (launcherConfig: any) => {
 				try {
-					let platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
-					let projectDir = projectData.projectDir;
+					const platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
+					const projectDir = projectData.projectDir;
 					await this.$devicesService.initialize({
 						platform: platform,
 						deviceId: this.$options.device,
 						emulator: this.$options.emulator
 					});
 					await this.$devicesService.detectCurrentlyAttachedDevices();
-					let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+					const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
-					let configOptions: IKarmaConfigOptions = JSON.parse(launcherConfig);
+					const configOptions: IKarmaConfigOptions = JSON.parse(launcherConfig);
 					this.$options.debugBrk = configOptions.debugBrk;
 					this.$options.debugTransport = configOptions.debugTransport;
-					let configJs = this.generateConfig(this.$options.port.toString(), configOptions);
+					const configJs = this.generateConfig(this.$options.port.toString(), configOptions);
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
 
-					let socketIoJsUrl = `http://localhost:${this.$options.port}/socket.io/socket.io.js`;
-					let socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
+					const socketIoJsUrl = `http://localhost:${this.$options.port}/socket.io/socket.io.js`;
+					const socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
 					const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
 
@@ -121,7 +121,7 @@ class TestExecutionService implements ITestExecutionService {
 
 					if (this.$options.debugBrk) {
 						this.$logger.info('Starting debugger...');
-						let debugService: IPlatformDebugService = this.$injector.resolve(`${platform}DebugService`);
+						const debugService: IPlatformDebugService = this.$injector.resolve(`${platform}DebugService`);
 						const debugData = this.getDebugData(platform, projectData, deployOptions);
 						await debugService.debugStart(debugData, this.$options);
 					}
@@ -147,28 +147,28 @@ class TestExecutionService implements ITestExecutionService {
 		// We need the dependencies installed here, so we can start the Karma server.
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 
-		let projectDir = projectData.projectDir;
+		const projectDir = projectData.projectDir;
 		await this.$devicesService.initialize({
 			platform: platform,
 			deviceId: this.$options.device,
 			emulator: this.$options.emulator
 		});
 
-		let karmaConfig = this.getKarmaConfiguration(platform, projectData),
+		const karmaConfig = this.getKarmaConfiguration(platform, projectData),
 			karmaRunner = this.$childProcess.fork(path.join(__dirname, "karma-execution.js")),
 			launchKarmaTests = async (karmaData: any) => {
 				this.$logger.trace("## Unit-testing: Parent process received message", karmaData);
 				let port: string;
 				if (karmaData.url) {
 					port = karmaData.url.port;
-					let socketIoJsUrl = `http://${karmaData.url.host}/socket.io/socket.io.js`;
-					let socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
+					const socketIoJsUrl = `http://${karmaData.url.host}/socket.io/socket.io.js`;
+					const socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
 				}
 
 				if (karmaData.launcherConfig) {
-					let configOptions: IKarmaConfigOptions = JSON.parse(karmaData.launcherConfig);
-					let configJs = this.generateConfig(port, configOptions);
+					const configOptions: IKarmaConfigOptions = JSON.parse(karmaData.launcherConfig);
+					const configJs = this.generateConfig(port, configOptions);
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
 				}
 
@@ -263,20 +263,20 @@ class TestExecutionService implements ITestExecutionService {
 	allowedParameters: ICommandParameter[] = [];
 
 	private detourEntryPoint(projectFilesPath: string): void {
-		let packageJsonPath = path.join(projectFilesPath, 'package.json');
-		let packageJson = this.$fs.readJson(packageJsonPath);
+		const packageJsonPath = path.join(projectFilesPath, 'package.json');
+		const packageJson = this.$fs.readJson(packageJsonPath);
 		packageJson.main = TestExecutionService.MAIN_APP_NAME;
 		this.$fs.writeJson(packageJsonPath, packageJson);
 	}
 
 	private generateConfig(port: string, options: any): string {
-		let nics = os.networkInterfaces();
-		let ips = Object.keys(nics)
+		const nics = os.networkInterfaces();
+		const ips = Object.keys(nics)
 			.map(nicName => nics[nicName].filter((binding: any) => binding.family === 'IPv4')[0])
 			.filter(binding => binding)
 			.map(binding => binding.address);
 
-		let config = {
+		const config = {
 			port,
 			ips,
 			options,
@@ -286,7 +286,7 @@ class TestExecutionService implements ITestExecutionService {
 	}
 
 	private getKarmaConfiguration(platform: string, projectData: IProjectData): any {
-		let karmaConfig: any = {
+		const karmaConfig: any = {
 			browsers: [platform],
 			configFile: path.join(projectData.projectDir, 'karma.conf.js'),
 			_NS: {
@@ -323,7 +323,7 @@ class TestExecutionService implements ITestExecutionService {
 
 	private getDebugData(platform: string, projectData: IProjectData, deployOptions: IDeployPlatformOptions): IDebugData {
 		const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
-		let debugData = this.$debugDataService.createDebugData(projectData, this.$options);
+		const debugData = this.$debugDataService.createDebugData(projectData, this.$options);
 		debugData.pathToAppPackage = this.$platformService.lastOutputPath(platform, buildConfig, projectData);
 
 		return debugData;

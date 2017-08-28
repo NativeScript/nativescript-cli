@@ -15,7 +15,7 @@ export class ProjectNameService implements IProjectNameService {
 			return await this.promptForNewName("The project name is invalid.", projectName, validateOptions);
 		}
 
-		let userCanInteract = isInteractive();
+		const userCanInteract = isInteractive();
 
 		if (!this.checkIfNameStartsWithLetter(projectName)) {
 			if (!userCanInteract) {
@@ -37,7 +37,7 @@ export class ProjectNameService implements IProjectNameService {
 	}
 
 	private checkIfNameStartsWithLetter(projectName: string): boolean {
-		let startsWithLetterExpression = /^[a-zA-Z]/;
+		const startsWithLetterExpression = /^[a-zA-Z]/;
 		return startsWithLetterExpression.test(projectName);
 	}
 
@@ -46,7 +46,7 @@ export class ProjectNameService implements IProjectNameService {
 			return projectName;
 		}
 
-		let newProjectName = await this.$prompter.getString("Enter the new project name:");
+		const newProjectName = await this.$prompter.getString("Enter the new project name:");
 		return await this.ensureValidName(newProjectName, validateOptions);
 	}
 

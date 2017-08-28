@@ -21,18 +21,18 @@ export class CocoaPodsService implements ICocoaPodsService {
 			throw new Error(`The Podfile ${pathToPodfile} does not exist.`);
 		}
 
-		let podfileContent = this.$fs.readText(pathToPodfile);
-		let hookStart = `${hookName} do`;
+		const podfileContent = this.$fs.readText(pathToPodfile);
+		const hookStart = `${hookName} do`;
 
-		let hookDefinitionRegExp = new RegExp(`${hookStart} *(\\|(\\w+)\\|)?`, "g");
+		const hookDefinitionRegExp = new RegExp(`${hookStart} *(\\|(\\w+)\\|)?`, "g");
 		let newFunctionNameIndex = 1;
-		let newFunctions: IRubyFunction[] = [];
+		const newFunctions: IRubyFunction[] = [];
 
-		let replacedContent = podfileContent.replace(hookDefinitionRegExp, (substring: string, firstGroup: string, secondGroup: string, index: number): string => {
-			let newFunctionName = `${hookName}${newFunctionNameIndex++}`;
+		const replacedContent = podfileContent.replace(hookDefinitionRegExp, (substring: string, firstGroup: string, secondGroup: string, index: number): string => {
+			const newFunctionName = `${hookName}${newFunctionNameIndex++}`;
 			let newDefinition = `def ${newFunctionName}`;
 
-			let rubyFunction: IRubyFunction = { functionName: newFunctionName };
+			const rubyFunction: IRubyFunction = { functionName: newFunctionName };
 			// firstGroup is the block parameter, secondGroup is the block parameter name.
 			if (firstGroup && secondGroup) {
 				newDefinition = `${newDefinition} (${secondGroup})`;
@@ -45,7 +45,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 
 		if (newFunctions.length > 1) {
 			// Execute all methods in the hook and pass the parameter to them.
-			let blokParameterName = "installer";
+			const blokParameterName = "installer";
 			let mergedHookContent = `${hookStart} |${blokParameterName}|${EOL}`;
 
 			_.each(newFunctions, (rubyFunction: IRubyFunction) => {
@@ -59,7 +59,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 
 			mergedHookContent = `${mergedHookContent}end`;
 
-			let newPodfileContent = `${replacedContent}${EOL}${mergedHookContent}`;
+			const newPodfileContent = `${replacedContent}${EOL}${mergedHookContent}`;
 			this.$fs.writeFile(pathToPodfile, newPodfileContent);
 		}
 	}

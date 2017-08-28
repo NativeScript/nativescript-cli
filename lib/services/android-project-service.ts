@@ -49,8 +49,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		if (projectData && projectData.platformsDir && this._platformsDirCache !== projectData.platformsDir) {
 			this._platformsDirCache = projectData.platformsDir;
-			let projectRoot = path.join(projectData.platformsDir, "android");
-			let packageName = this.getProjectNameFromId(projectData);
+			const projectRoot = path.join(projectData.platformsDir, "android");
+			const packageName = this.getProjectNameFromId(projectData);
 			this._platformData = {
 				frameworkPackageName: "tns-android",
 				normalizedPlatformName: "Android",
@@ -97,7 +97,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		this.$androidToolsInfo.validateAndroidHomeEnvVariable({ showWarningsAsErrors: true });
 
-		let javaCompilerVersion = await this.$sysInfo.getJavaCompilerVersion();
+		const javaCompilerVersion = await this.$sysInfo.getJavaCompilerVersion();
 
 		await this.$androidToolsInfo.validateJavacVersion(javaCompilerVersion, { showWarningsAsErrors: true });
 
@@ -114,13 +114,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		this.$fs.ensureDirectoryExists(this.getPlatformData(projectData).projectRoot);
-		let androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
-		let targetSdkVersion = androidToolsInfo && androidToolsInfo.targetSdkVersion;
+		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
+		const targetSdkVersion = androidToolsInfo && androidToolsInfo.targetSdkVersion;
 		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
 		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "libs", "-R");
 
 		if (config.pathToTemplate) {
-			let mainPath = path.join(this.getPlatformData(projectData).projectRoot, "src", "main");
+			const mainPath = path.join(this.getPlatformData(projectData).projectRoot, "src", "main");
 			this.$fs.createDirectory(mainPath);
 			shell.cp("-R", path.join(path.resolve(config.pathToTemplate), "*"), mainPath);
 		} else {
@@ -139,7 +139,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		this.cleanResValues(targetSdkVersion, projectData, frameworkVersion);
 
-		let npmConfig: INodePackageManagerInstallOptions = {
+		const npmConfig: INodePackageManagerInstallOptions = {
 			save: true,
 			"save-dev": true,
 			"save-exact": true,
@@ -149,20 +149,20 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			ignoreScripts: config.ignoreScripts
 		};
 
-		let projectPackageJson: any = this.$fs.readJson(projectData.projectFilePath);
+		const projectPackageJson: any = this.$fs.readJson(projectData.projectFilePath);
 
-		for (let dependency of AndroidProjectService.REQUIRED_DEV_DEPENDENCIES) {
+		for (const dependency of AndroidProjectService.REQUIRED_DEV_DEPENDENCIES) {
 			let dependencyVersionInProject = (projectPackageJson.dependencies && projectPackageJson.dependencies[dependency.name]) ||
 				(projectPackageJson.devDependencies && projectPackageJson.devDependencies[dependency.name]);
 
 			if (!dependencyVersionInProject) {
 				await this.$npm.install(`${dependency.name}@${dependency.version}`, projectData.projectDir, npmConfig);
 			} else {
-				let cleanedVerson = semver.clean(dependencyVersionInProject);
+				const cleanedVerson = semver.clean(dependencyVersionInProject);
 
 				// The plugin version is not valid. Check node_modules for the valid version.
 				if (!cleanedVerson) {
-					let pathToPluginPackageJson = path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, dependency.name, constants.PACKAGE_JSON_FILE_NAME);
+					const pathToPluginPackageJson = path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, dependency.name, constants.PACKAGE_JSON_FILE_NAME);
 					dependencyVersionInProject = this.$fs.exists(pathToPluginPackageJson) && this.$fs.readJson(pathToPluginPackageJson).version;
 				}
 
@@ -174,9 +174,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	private cleanResValues(targetSdkVersion: number, projectData: IProjectData, frameworkVersion: string): void {
-		let resDestinationDir = this.getAppResourcesDestinationDirectoryPath(projectData, frameworkVersion);
-		let directoriesInResFolder = this.$fs.readDirectory(resDestinationDir);
-		let directoriesToClean = directoriesInResFolder
+		const resDestinationDir = this.getAppResourcesDestinationDirectoryPath(projectData, frameworkVersion);
+		const directoriesInResFolder = this.$fs.readDirectory(resDestinationDir);
+		const directoriesToClean = directoriesInResFolder
 			.map(dir => {
 				return {
 					dirName: dir,
@@ -199,15 +199,15 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		// Interpolate the apilevel and package
 		this.interpolateConfigurationFile(projectData, platformSpecificData);
 
-		let stringsFilePath = path.join(this.getAppResourcesDestinationDirectoryPath(projectData), 'values', 'strings.xml');
+		const stringsFilePath = path.join(this.getAppResourcesDestinationDirectoryPath(projectData), 'values', 'strings.xml');
 		shell.sed('-i', /__NAME__/, projectData.projectName, stringsFilePath);
 		shell.sed('-i', /__TITLE_ACTIVITY__/, projectData.projectName, stringsFilePath);
 
-		let gradleSettingsFilePath = path.join(this.getPlatformData(projectData).projectRoot, "settings.gradle");
+		const gradleSettingsFilePath = path.join(this.getPlatformData(projectData).projectRoot, "settings.gradle");
 		shell.sed('-i', /__PROJECT_NAME__/, this.getProjectNameFromId(projectData), gradleSettingsFilePath);
 
 		// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
-		let userAppGradleFilePath = path.join(projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, "app.gradle");
+		const userAppGradleFilePath = path.join(projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, "app.gradle");
 
 		try {
 			shell.sed('-i', /__PACKAGE__/, projectData.projectId, userAppGradleFilePath);
@@ -217,7 +217,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): void {
-		let manifestPath = this.getPlatformData(projectData).configurationFilePath;
+		const manifestPath = this.getPlatformData(projectData).configurationFilePath;
 		shell.sed('-i', /__PACKAGE__/, projectData.projectId, manifestPath);
 		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
 			const sdk = (platformSpecificData && platformSpecificData.sdk) || (this.$androidToolsInfo.getToolsInfo().compileSdkVersion || "").toString();
@@ -228,7 +228,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private getProjectNameFromId(projectData: IProjectData): string {
 		let id: string;
 		if (projectData && projectData.projectId) {
-			let idParts = projectData.projectId.split(".");
+			const idParts = projectData.projectId.split(".");
 			id = idParts[idParts.length - 1];
 		}
 
@@ -245,7 +245,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean, projectData: IProjectData, addPlatform?: Function, removePlatforms?: (platforms: string[]) => Promise<void>): Promise<boolean> {
 		if (semver.eq(newVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
-			let platformLowercase = this.getPlatformData(projectData).normalizedPlatformName.toLowerCase();
+			const platformLowercase = this.getPlatformData(projectData).normalizedPlatformName.toLowerCase();
 			await removePlatforms([platformLowercase.split("@")[0]]);
 			await addPlatform(platformLowercase);
 			return false;
@@ -256,7 +256,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
 		if (this.canUseGradle(projectData)) {
-			let buildOptions = this.getBuildOptions(buildConfig, projectData);
+			const buildOptions = this.getBuildOptions(buildConfig, projectData);
 			if (this.$logger.getLevel() === "TRACE") {
 				buildOptions.unshift("--stacktrace");
 				buildOptions.unshift("--debug");
@@ -284,13 +284,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private getBuildOptions(settings: IAndroidBuildOptionsSettings, projectData: IProjectData): Array<string> {
 		this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
 
-		let androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
-		let compileSdk = androidToolsInfo.compileSdkVersion;
-		let targetSdk = this.getTargetFromAndroidManifest(projectData) || compileSdk;
-		let buildToolsVersion = androidToolsInfo.buildToolsVersion;
-		let appCompatVersion = androidToolsInfo.supportRepositoryVersion;
-		let generateTypings = androidToolsInfo.generateTypings;
-		let buildOptions = [
+		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
+		const compileSdk = androidToolsInfo.compileSdkVersion;
+		const targetSdk = this.getTargetFromAndroidManifest(projectData) || compileSdk;
+		const buildToolsVersion = androidToolsInfo.buildToolsVersion;
+		const appCompatVersion = androidToolsInfo.supportRepositoryVersion;
+		const generateTypings = androidToolsInfo.generateTypings;
+		const buildOptions = [
 			`-PcompileSdk=android-${compileSdk}`,
 			`-PtargetSdk=${targetSdk}`,
 			`-PbuildToolsVersion=${buildToolsVersion}`,
@@ -326,9 +326,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public ensureConfigurationFileInAppResources(projectData: IProjectData): void {
-		let originalAndroidManifestFilePath = path.join(projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, this.getPlatformData(projectData).configurationFileName);
+		const originalAndroidManifestFilePath = path.join(projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, this.getPlatformData(projectData).configurationFileName);
 
-		let manifestExists = this.$fs.exists(originalAndroidManifestFilePath);
+		const manifestExists = this.$fs.exists(originalAndroidManifestFilePath);
 
 		if (!manifestExists) {
 			this.$logger.warn('No manifest found in ' + originalAndroidManifestFilePath);
@@ -339,16 +339,16 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public prepareAppResources(appResourcesDirectoryPath: string, projectData: IProjectData): void {
-		let resourcesDirPath = path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName);
-		let valuesDirRegExp = /^values/;
-		let resourcesDirs = this.$fs.readDirectory(resourcesDirPath).filter(resDir => !resDir.match(valuesDirRegExp));
+		const resourcesDirPath = path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName);
+		const valuesDirRegExp = /^values/;
+		const resourcesDirs = this.$fs.readDirectory(resourcesDirPath).filter(resDir => !resDir.match(valuesDirRegExp));
 		_.each(resourcesDirs, resourceDir => {
 			this.$fs.deleteDirectory(path.join(this.getAppResourcesDestinationDirectoryPath(projectData), resourceDir));
 		});
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
-		let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
+		const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
 		await this.processResourcesFromPlugin(pluginData, pluginPlatformsFolderPath, projectData);
 	}
 
@@ -357,30 +357,30 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	private async processResourcesFromPlugin(pluginData: IPluginData, pluginPlatformsFolderPath: string, projectData: IProjectData): Promise<void> {
-		let configurationsDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "configurations");
+		const configurationsDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "configurations");
 		this.$fs.ensureDirectoryExists(configurationsDirectoryPath);
 
-		let pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginData.name);
+		const pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginData.name);
 		if (this.$fs.exists(pluginPlatformsFolderPath)) {
 			this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath);
 
-			let isScoped = pluginData.name.indexOf("@") === 0;
-			let flattenedDependencyName = isScoped ? pluginData.name.replace("/", "_") : pluginData.name;
+			const isScoped = pluginData.name.indexOf("@") === 0;
+			const flattenedDependencyName = isScoped ? pluginData.name.replace("/", "_") : pluginData.name;
 
 			// Copy all resources from plugin
-			let resourcesDestinationDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "src", flattenedDependencyName);
+			const resourcesDestinationDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "src", flattenedDependencyName);
 			this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath);
 			shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
 
 			const filesForInterpolation = this.$fs.enumerateFilesInDirectorySync(resourcesDestinationDirectoryPath, file => this.$fs.getFsStats(file).isDirectory() || path.extname(file) === constants.XML_FILE_EXTENSION) || [];
-			for (let file of filesForInterpolation) {
+			for (const file of filesForInterpolation) {
 				this.$logger.trace(`Interpolate data for plugin file: ${file}`);
 				await this.$pluginVariablesService.interpolate(pluginData, file, projectData);
 			}
 		}
 
 		// Copy include.gradle file
-		let includeGradleFilePath = path.join(pluginPlatformsFolderPath, "include.gradle");
+		const includeGradleFilePath = path.join(pluginPlatformsFolderPath, "include.gradle");
 		if (this.$fs.exists(includeGradleFilePath)) {
 			shell.cp("-f", includeGradleFilePath, pluginConfigurationDirectoryPath);
 		}
@@ -389,7 +389,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
 		try {
 			// check whether the dependency that's being removed has native code
-			let pluginConfigDir = path.join(this.getPlatformData(projectData).projectRoot, "configurations", pluginData.name);
+			const pluginConfigDir = path.join(this.getPlatformData(projectData).projectRoot, "configurations", pluginData.name);
 			if (this.$fs.exists(pluginConfigDir)) {
 				await this.cleanProject(this.getPlatformData(projectData).projectRoot, projectData);
 			}
@@ -408,11 +408,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void> {
 		if (dependencies) {
-			let platformDir = path.join(projectData.platformsDir, "android");
-			let buildDir = path.join(platformDir, "build-tools");
-			let checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
+			const platformDir = path.join(projectData.platformsDir, "android");
+			const buildDir = path.join(platformDir, "build-tools");
+			const checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
 			if (this.$fs.exists(checkV8dependants)) {
-				let stringifiedDependencies = JSON.stringify(dependencies);
+				const stringifiedDependencies = JSON.stringify(dependencies);
 				try {
 					await this.spawn('node', [checkV8dependants, stringifiedDependencies, projectData.platformsDir], { stdio: "inherit" });
 				} catch (e) {
@@ -421,7 +421,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 		}
 
-		let projectRoot = this.getPlatformData(projectData).projectRoot;
+		const projectRoot = this.getPlatformData(projectData).projectRoot;
 
 		await this.cleanProject(projectRoot, projectData);
 	}
@@ -439,8 +439,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void> {
-		let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
-		let deviceRootPath = `/data/local/tmp/${projectData.projectId}`;
+		const adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
+		const deviceRootPath = `/data/local/tmp/${projectData.projectId}`;
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
 	}
 
@@ -463,7 +463,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	private copy(projectRoot: string, frameworkDir: string, files: string, cpArg: string): void {
-		let paths = files.split(' ').map(p => path.join(frameworkDir, p));
+		const paths = files.split(' ').map(p => path.join(frameworkDir, p));
 		shell.cp(cpArg, paths, projectRoot);
 	}
 
@@ -498,9 +498,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private getTargetFromAndroidManifest(projectData: IProjectData): string {
 		let versionInManifest: string;
 		if (this.$fs.exists(this.getPlatformData(projectData).configurationFilePath)) {
-			let targetFromAndroidManifest: string = this.$fs.readText(this.getPlatformData(projectData).configurationFilePath);
+			const targetFromAndroidManifest: string = this.$fs.readText(this.getPlatformData(projectData).configurationFilePath);
 			if (targetFromAndroidManifest) {
-				let match = targetFromAndroidManifest.match(/.*?android:targetSdkVersion=\"(.*?)\"/);
+				const match = targetFromAndroidManifest.match(/.*?android:targetSdkVersion=\"(.*?)\"/);
 				if (match && match[1]) {
 					versionInManifest = match[1];
 				}

@@ -2,7 +2,7 @@ import * as commonOptionsLibPath from "./common/options";
 import * as osenv from "osenv";
 import * as path from "path";
 
-let OptionType = commonOptionsLibPath.OptionType;
+const OptionType = commonOptionsLibPath.OptionType;
 
 export class Options extends commonOptionsLibPath.OptionsBase {
 	constructor($errors: IErrors,
@@ -48,7 +48,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 		// I guess we can remove this code after some grace period, say after 1.7 is out
 		if ($hostInfo.isWindows) {
 			try {
-				let shelljs = require("shelljs"),
+				const shelljs = require("shelljs"),
 					oldSettings = path.join(process.env.LocalAppData, ".nativescript-cli", "user-settings.json"),
 					newSettings = path.join(process.env.AppData, ".nativescript-cli", "user-settings.json");
 				if (shelljs.test("-e", oldSettings) && !shelljs.test("-e", newSettings)) {
@@ -60,7 +60,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			}
 		}
 
-		let that = (<any>this);
+		const that = (<any>this);
 		// if justlaunch is set, it takes precedence over the --watch flag and the default true value
 		if (that.justlaunch) {
 			that.watch = false;

@@ -6,7 +6,7 @@ export class DynamicHelpProvider implements IDynamicHelpProvider {
 	}
 
 	public getLocalVariables(options: { isHtml: boolean }): IDictionary<any> {
-		let localVariables: IDictionary<any> = {
+		const localVariables: IDictionary<any> = {
 			constants: constants
 		};
 		return localVariables;

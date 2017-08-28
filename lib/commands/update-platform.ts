@@ -18,7 +18,7 @@ export class UpdatePlatformCommand implements ICommand {
 			this.$errors.fail("No platform specified. Please specify platforms to update.");
 		}
 
-		for (let arg of args) {
+		for (const arg of args) {
 			const platform = arg.split("@")[0];
 			this.$platformService.validatePlatform(platform, this.$projectData);
 			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);

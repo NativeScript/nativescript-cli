@@ -58,7 +58,7 @@ export abstract class PlatformLiveSyncServiceBase {
 		const syncInfo = _.merge<IFullSyncInfo>({ device, watch: true }, liveSyncInfo);
 		const deviceAppData = await this.getAppData(syncInfo);
 
-		let modifiedLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
+		const modifiedLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
 		if (liveSyncInfo.filesToSync.length) {
 			const filesToSync = liveSyncInfo.filesToSync;
 			const mappedFiles = _.map(filesToSync, filePath => this.$projectFilesProvider.mapFilePath(filePath, device.deviceInfo.platform, projectData));

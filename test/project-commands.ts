@@ -7,7 +7,7 @@ import { assert } from "chai";
 
 let selectedTemplateName: string;
 let isProjectCreated: boolean;
-let dummyArgs = ["dummyArgsString"];
+const dummyArgs = ["dummyArgsString"];
 
 class ProjectServiceMock implements IProjectService {
 	async createProject(projectOptions: IProjectSettings): Promise<void> {
@@ -27,7 +27,7 @@ class ProjectNameValidatorMock implements IProjectNameValidator {
 }
 
 function createTestInjector() {
-	let testInjector = new Yok();
+	const testInjector = new Yok();
 
 	testInjector.register("injector", testInjector);
 	testInjector.register("staticConfig", {});

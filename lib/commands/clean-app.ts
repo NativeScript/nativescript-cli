@@ -23,8 +23,8 @@ export class CleanAppCommandBase implements ICommand {
 			this.$errors.fail(`Applications for platform ${this.platform} can not be built on this OS`);
 		}
 
-		let platformData = this.$platformsData.getPlatformData(this.platform, this.$projectData);
-		let platformProjectService = platformData.platformProjectService;
+		const platformData = this.$platformsData.getPlatformData(this.platform, this.$projectData);
+		const platformProjectService = platformData.platformProjectService;
 		await platformProjectService.validate(this.$projectData);
 		return true;
 	}

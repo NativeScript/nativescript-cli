@@ -1,4 +1,4 @@
-﻿import { CONNECTED_STATUS } from "../common/constants";
+import { CONNECTED_STATUS } from "../common/constants";
 import { isInteractive } from "../common/helpers";
 import { cache } from "../common/decorators";
 import { DebugCommandErrors } from "../constants";
@@ -24,7 +24,7 @@ export class DebugPlatformCommand implements ICommand {
 	public async execute(args: string[]): Promise<void> {
 		const debugOptions = <IDebugOptions>_.cloneDeep(this.$options.argv);
 
-		let debugData = this.$debugDataService.createDebugData(this.$projectData, this.$options);
+		const debugData = this.$debugDataService.createDebugData(this.$projectData, this.$options);
 
 		await this.$platformService.trackProjectType(this.$projectData);
 		const selectedDeviceForDebug = await this.getDeviceForDebug();

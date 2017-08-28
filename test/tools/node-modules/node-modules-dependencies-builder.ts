@@ -59,7 +59,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 			};
 
 			const getNodeModuleInfoForExpecteDependency = (name: string, depth: number, nativescript?: any, dependencies?: string[]): IDependencyData => {
-				let result: IDependencyData = {
+				const result: IDependencyData = {
 					name: path.basename(name),
 					directory: getPathToDependencyInNodeModules(name),
 					depth,
@@ -83,7 +83,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 					dependencies[innerDependency.name] = innerDependency.version;
 				});
 
-				let result: any = {
+				const result: any = {
 					dependencies
 				};
 
@@ -96,7 +96,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 
 			const getDependenciesObject = (filename: string, deps: IDependencyInfo[], parentDir: string): { dependencies: any } => {
 				let result: { dependencies: any } = null;
-				for (let dependencyInfo of deps) {
+				for (const dependencyInfo of deps) {
 					const pathToPackageJson = getPathToPackageJsonOfDependency(dependencyInfo.name, parentDir);
 					if (filename === pathToPackageJson) {
 						return getDependenciesObjectFromDependencyInfo(dependencyInfo.dependencies, dependencyInfo.nativescript);
@@ -126,7 +126,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 				const isDirectory = (searchedPath: string, currentRootPath: string, deps: IDependencyInfo[], currentDepthLevel: number): boolean => {
 					let result = false;
 
-					for (let dependencyInfo of deps) {
+					for (const dependencyInfo of deps) {
 						const pathToDependency = path.join(currentRootPath, constants.NODE_MODULES_FOLDER_NAME, dependencyInfo.name);
 
 						if (pathToDependency === searchedPath && currentDepthLevel === dependencyInfo.depth) {
@@ -146,7 +146,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 
 				const isPackageJsonOfDependency = (searchedPath: string, currentRootPath: string, deps: IDependencyInfo[], currentDepthLevel: number): boolean => {
 					let result = false;
-					for (let dependencyInfo of deps) {
+					for (const dependencyInfo of deps) {
 						const pathToDependency = path.join(currentRootPath, constants.NODE_MODULES_FOLDER_NAME, dependencyInfo.name);
 
 						const pathToPackageJson = path.join(pathToDependency, constants.PACKAGE_JSON_FILE_NAME);

@@ -3,11 +3,11 @@ import { ProjectNameService } from "../lib/services/project-name-service";
 import { assert } from "chai";
 import { ErrorsStub, LoggerStub } from "./stubs";
 
-let mockProjectNameValidator = {
+const mockProjectNameValidator = {
 	validate: () => true
 };
 
-let dummyString: string = "dummyString";
+const dummyString: string = "dummyString";
 
 function createTestInjector(): IInjector {
 	let testInjector: IInjector;
@@ -28,8 +28,8 @@ function createTestInjector(): IInjector {
 describe("Project Name Service Tests", () => {
 	let testInjector: IInjector;
 	let projectNameService: IProjectNameService;
-	let validProjectName = "valid";
-	let invalidProjectNames = ["1invalid", "app"];
+	const validProjectName = "valid";
+	const invalidProjectNames = ["1invalid", "app"];
 
 	beforeEach(() => {
 		testInjector = createTestInjector();
@@ -37,17 +37,17 @@ describe("Project Name Service Tests", () => {
 	});
 
 	it("returns correct name when valid name is entered", async () => {
-		let actualProjectName = await projectNameService.ensureValidName(validProjectName);
+		const actualProjectName = await projectNameService.ensureValidName(validProjectName);
 
 		assert.deepEqual(actualProjectName, validProjectName);
 	});
 
 	_.each(invalidProjectNames, invalidProjectName => {
 		it(`returns correct name when "${invalidProjectName}" is entered several times and then valid name is entered`, async () => {
-			let prompter = testInjector.resolve("prompter");
+			const prompter = testInjector.resolve("prompter");
 			prompter.confirm = (message: string): Promise<boolean> => Promise.resolve(false);
 
-			let incorrectInputsLimit = 5;
+			const incorrectInputsLimit = 5;
 			let incorrectInputsCount = 0;
 
 			prompter.getString = async (message: string): Promise<string> => {
@@ -60,13 +60,13 @@ describe("Project Name Service Tests", () => {
 				}
 			};
 
-			let actualProjectName = await projectNameService.ensureValidName(invalidProjectName);
+			const actualProjectName = await projectNameService.ensureValidName(invalidProjectName);
 
 			assert.deepEqual(actualProjectName, validProjectName);
 		});
 
 		it(`returns the invalid name when "${invalidProjectName}" is entered and --force flag is present`, async () => {
-			let actualProjectName = await projectNameService.ensureValidName(validProjectName, { force: true });
+			const actualProjectName = await projectNameService.ensureValidName(validProjectName, { force: true });
 
 			assert.deepEqual(actualProjectName, validProjectName);
 		});

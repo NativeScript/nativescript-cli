@@ -9,14 +9,14 @@ export class XCConfigService {
 	 */
 	public readPropertyValue(xcconfigFilePath: string, propertyName: string): string {
 		if (this.$fs.exists(xcconfigFilePath)) {
-			let text = this.$fs.readText(xcconfigFilePath);
+			const text = this.$fs.readText(xcconfigFilePath);
 
 			let property: string;
 			let isPropertyParsed: boolean = false;
 			text.split(/\r?\n/).forEach((line) => {
 				line = line.replace(/\/(\/)[^\n]*$/, "");
 				if (line.indexOf(propertyName) >= 0) {
-					let parts = line.split("=");
+					const parts = line.split("=");
 					if (parts.length > 1 && parts[1]) {
 						property = parts[1].trim();
 						isPropertyParsed = true;

@@ -21,11 +21,11 @@ import ProjectChangesLib = require("../lib/services/project-changes-service");
 import { Messages } from "../lib/common/messages/messages";
 
 require("should");
-let temp = require("temp");
+const temp = require("temp");
 temp.track();
 
 function createTestInjector() {
-	let testInjector = new yok.Yok();
+	const testInjector = new yok.Yok();
 
 	testInjector.register('platformService', PlatformServiceLib.PlatformService);
 	testInjector.register('errors', stubs.ErrorsStub);
@@ -164,9 +164,9 @@ describe('Platform Service Tests', () => {
 	describe("add platform unit tests", () => {
 		describe("#add platform()", () => {
 			it("should not fail if platform is not normalized", async () => {
-				let fs = testInjector.resolve("fs");
+				const fs = testInjector.resolve("fs");
 				fs.exists = () => false;
-				let projectData: IProjectData = testInjector.resolve("projectData");
+				const projectData: IProjectData = testInjector.resolve("projectData");
 				await platformService.addPlatforms(["Android"], "", projectData, config);
 				await platformService.addPlatforms(["ANDROID"], "", projectData, config);
 				await platformService.addPlatforms(["AnDrOiD"], "", projectData, config);
@@ -178,19 +178,19 @@ describe('Platform Service Tests', () => {
 				await platformService.addPlatforms(["iOs"], "", projectData, config);
 			});
 			it("should fail if platform is already installed", async () => {
-				let projectData: IProjectData = testInjector.resolve("projectData");
+				const projectData: IProjectData = testInjector.resolve("projectData");
 				// By default fs.exists returns true, so the platforms directory should exists
 				await assert.isRejected(platformService.addPlatforms(["android"], "", projectData, config));
 				await assert.isRejected(platformService.addPlatforms(["ios"], "", projectData, config));
 			});
 			it("should fail if npm is unavalible", async () => {
-				let fs = testInjector.resolve("fs");
+				const fs = testInjector.resolve("fs");
 				fs.exists = () => false;
 
-				let errorMessage = "Npm is unavalible";
-				let npmInstallationManager = testInjector.resolve("npmInstallationManager");
+				const errorMessage = "Npm is unavalible";
+				const npmInstallationManager = testInjector.resolve("npmInstallationManager");
 				npmInstallationManager.install = () => { throw new Error(errorMessage); };
-				let projectData: IProjectData = testInjector.resolve("projectData");
+				const projectData: IProjectData = testInjector.resolve("projectData");
 
 				try {
 					await platformService.addPlatforms(["android"], "", projectData, config);
@@ -200,39 +200,39 @@ describe('Platform Service Tests', () => {
 			});
 			it("should respect platform version in package.json's nativescript key", async () => {
 				const versionString = "2.5.0";
-				let fs = testInjector.resolve("fs");
+				const fs = testInjector.resolve("fs");
 				fs.exists = () => false;
 
-				let nsValueObject: any = {};
+				const nsValueObject: any = {};
 				nsValueObject[VERSION_STRING] = versionString;
-				let projectDataService = testInjector.resolve("projectDataService");
+				const projectDataService = testInjector.resolve("projectDataService");
 				projectDataService.getNSValue = () => nsValueObject;
 
-				let npmInstallationManager = testInjector.resolve("npmInstallationManager");
+				const npmInstallationManager = testInjector.resolve("npmInstallationManager");
 				npmInstallationManager.install = (packageName: string, packageDir: string, options: INpmInstallOptions) => {
 					assert.deepEqual(options.version, versionString);
 					return "";
 				};
 
-				let projectData: IProjectData = testInjector.resolve("projectData");
+				const projectData: IProjectData = testInjector.resolve("projectData");
 
 				await platformService.addPlatforms(["android"], "", projectData, config);
 				await platformService.addPlatforms(["ios"], "", projectData, config);
 			});
 			it("should install latest platform if no information found in package.json's nativescript key", async () => {
-				let fs = testInjector.resolve("fs");
+				const fs = testInjector.resolve("fs");
 				fs.exists = () => false;
 
-				let projectDataService = testInjector.resolve("projectDataService");
+				const projectDataService = testInjector.resolve("projectDataService");
 				projectDataService.getNSValue = (): any => null;
 
-				let npmInstallationManager = testInjector.resolve("npmInstallationManager");
+				const npmInstallationManager = testInjector.resolve("npmInstallationManager");
 				npmInstallationManager.install = (packageName: string, packageDir: string, options: INpmInstallOptions) => {
 					assert.deepEqual(options.version, undefined);
 					return "";
 				};
 
-				let projectData: IProjectData = testInjector.resolve("projectData");
+				const projectData: IProjectData = testInjector.resolve("projectData");
 
 				await platformService.addPlatforms(["android"], "", projectData, config);
 				await platformService.addPlatforms(["ios"], "", projectData, config);
@@ -240,13 +240,13 @@ describe('Platform Service Tests', () => {
 		});
 		describe("#add platform(ios)", () => {
 			it("should call validate method", async () => {
-				let fs = testInjector.resolve("fs");
+				const fs = testInjector.resolve("fs");
 				fs.exists = () => false;
 
-				let errorMessage = "Xcode is not installed or Xcode version is smaller that 5.0";
-				let platformsData = testInjector.resolve("platformsData");
-				let platformProjectService = platformsData.getPlatformData().platformProjectService;
-				let projectData: IProjectData = testInjector.resolve("projectData");
+				const errorMessage = "Xcode is not installed or Xcode version is smaller that 5.0";
+				const platformsData = testInjector.resolve("platformsData");
+				const platformProjectService = platformsData.getPlatformData().platformProjectService;
+				const projectData: IProjectData = testInjector.resolve("projectData");
 				platformProjectService.validate = () => {
 					throw new Error(errorMessage);
 				};
@@ -260,16 +260,16 @@ describe('Platform Service Tests', () => {
 		});
 		describe("#add platform(android)", () => {
 			it("should fail if java, ant or android are not installed", async () => {
-				let fs = testInjector.resolve("fs");
+				const fs = testInjector.resolve("fs");
 				fs.exists = () => false;
 
-				let errorMessage = "Java, ant or android are not installed";
-				let platformsData = testInjector.resolve("platformsData");
-				let platformProjectService = platformsData.getPlatformData().platformProjectService;
+				const errorMessage = "Java, ant or android are not installed";
+				const platformsData = testInjector.resolve("platformsData");
+				const platformProjectService = platformsData.getPlatformData().platformProjectService;
 				platformProjectService.validate = () => {
 					throw new Error(errorMessage);
 				};
-				let projectData: IProjectData = testInjector.resolve("projectData");
+				const projectData: IProjectData = testInjector.resolve("projectData");
 
 				try {
 					await platformService.addPlatforms(["android"], "", projectData, config);
@@ -284,7 +284,7 @@ describe('Platform Service Tests', () => {
 		it("should fail when platforms are not added", async () => {
 			const ExpectedErrorsCaught = 2;
 			let errorsCaught = 0;
-			let projectData: IProjectData = testInjector.resolve("projectData");
+			const projectData: IProjectData = testInjector.resolve("projectData");
 			testInjector.resolve("fs").exists = () => false;
 
 			try {
@@ -302,7 +302,7 @@ describe('Platform Service Tests', () => {
 			assert.isTrue(errorsCaught === ExpectedErrorsCaught);
 		});
 		it("shouldn't fail when platforms are added", async () => {
-			let projectData: IProjectData = testInjector.resolve("projectData");
+			const projectData: IProjectData = testInjector.resolve("projectData");
 			testInjector.resolve("fs").exists = () => false;
 			await platformService.addPlatforms(["android"], "", projectData, config);
 
@@ -314,21 +314,21 @@ describe('Platform Service Tests', () => {
 	describe("clean platform unit tests", () => {
 		it("should preserve the specified in the project nativescript version", async () => {
 			const versionString = "2.4.1";
-			let fs = testInjector.resolve("fs");
+			const fs = testInjector.resolve("fs");
 			fs.exists = () => false;
 
-			let nsValueObject: any = {};
+			const nsValueObject: any = {};
 			nsValueObject[VERSION_STRING] = versionString;
-			let projectDataService = testInjector.resolve("projectDataService");
+			const projectDataService = testInjector.resolve("projectDataService");
 			projectDataService.getNSValue = () => nsValueObject;
 
-			let npmInstallationManager = testInjector.resolve("npmInstallationManager");
+			const npmInstallationManager = testInjector.resolve("npmInstallationManager");
 			npmInstallationManager.install = (packageName: string, packageDir: string, options: INpmInstallOptions) => {
 				assert.deepEqual(options.version, versionString);
 				return "";
 			};
 
-			let projectData: IProjectData = testInjector.resolve("projectData");
+			const projectData: IProjectData = testInjector.resolve("projectData");
 			platformService.removePlatforms = (platforms: string[], prjctData: IProjectData): Promise<void> => {
 				nsValueObject[VERSION_STRING] = undefined;
 				return Promise.resolve();
@@ -351,9 +351,9 @@ describe('Platform Service Tests', () => {
 	describe("update Platform", () => {
 		describe("#updatePlatform(platform)", () => {
 			it("should fail when the versions are the same", async () => {
-				let npmInstallationManager: INpmInstallationManager = testInjector.resolve("npmInstallationManager");
+				const npmInstallationManager: INpmInstallationManager = testInjector.resolve("npmInstallationManager");
 				npmInstallationManager.getLatestVersion = async () => "0.2.0";
-				let projectData: IProjectData = testInjector.resolve("projectData");
+				const projectData: IProjectData = testInjector.resolve("projectData");
 
 				await assert.isRejected(platformService.updatePlatforms(["android"], "", projectData, null));
 			});
@@ -370,22 +370,22 @@ describe('Platform Service Tests', () => {
 		});
 
 		function prepareDirStructure() {
-			let tempFolder = temp.mkdirSync("prepare_platform");
+			const tempFolder = temp.mkdirSync("prepare_platform");
 
-			let appFolderPath = path.join(tempFolder, "app");
+			const appFolderPath = path.join(tempFolder, "app");
 			fs.createDirectory(appFolderPath);
 
-			let nodeModulesPath = path.join(tempFolder, "node_modules");
+			const nodeModulesPath = path.join(tempFolder, "node_modules");
 			fs.createDirectory(nodeModulesPath);
 
-			let testsFolderPath = path.join(appFolderPath, "tests");
+			const testsFolderPath = path.join(appFolderPath, "tests");
 			fs.createDirectory(testsFolderPath);
 
-			let app1FolderPath = path.join(tempFolder, "app1");
+			const app1FolderPath = path.join(tempFolder, "app1");
 			fs.createDirectory(app1FolderPath);
 
-			let appDestFolderPath = path.join(tempFolder, "appDest");
-			let appResourcesFolderPath = path.join(appDestFolderPath, "App_Resources");
+			const appDestFolderPath = path.join(tempFolder, "appDest");
+			const appResourcesFolderPath = path.join(appDestFolderPath, "App_Resources");
 			fs.writeJson(path.join(tempFolder, "package.json"), {
 				name: "testname",
 				nativescript: {
@@ -398,7 +398,7 @@ describe('Platform Service Tests', () => {
 
 		async function execPreparePlatform(platformToTest: string, testDirData: any,
 			release?: boolean) {
-			let platformsData = testInjector.resolve("platformsData");
+			const platformsData = testInjector.resolve("platformsData");
 			platformsData.platformsNames = ["ios", "android"];
 			platformsData.getPlatformData = (platform: string) => {
 				return {
@@ -415,11 +415,11 @@ describe('Platform Service Tests', () => {
 						afterCreateProject: (projectRoot: string): any => null,
 						getAppResourcesDestinationDirectoryPath: (projectData: IProjectData, frameworkVersion?: string): string => {
 							if (platform.toLowerCase() === "ios") {
-								let dirPath = path.join(testDirData.appDestFolderPath, "Resources");
+								const dirPath = path.join(testDirData.appDestFolderPath, "Resources");
 								fs.ensureDirectoryExists(dirPath);
 								return dirPath;
 							} else {
-								let dirPath = path.join(testDirData.appDestFolderPath, "src", "main", "res");
+								const dirPath = path.join(testDirData.appDestFolderPath, "src", "main", "res");
 								fs.ensureDirectoryExists(dirPath);
 								return dirPath;
 							}
@@ -434,7 +434,7 @@ describe('Platform Service Tests', () => {
 				};
 			};
 
-			let projectData = testInjector.resolve("projectData");
+			const projectData = testInjector.resolve("projectData");
 			projectData.projectDir = testDirData.tempFolder;
 			projectData.appDirectoryPath = testDirData.appFolderPath;
 			projectData.appResourcesDirectoryPath = path.join(testDirData.appFolderPath, "App_Resources");
@@ -446,21 +446,21 @@ describe('Platform Service Tests', () => {
 		}
 
 		async function testPreparePlatform(platformToTest: string, release?: boolean): Promise<CreatedTestData> {
-			let testDirData = prepareDirStructure();
-			let created: CreatedTestData = new CreatedTestData();
+			const testDirData = prepareDirStructure();
+			const created: CreatedTestData = new CreatedTestData();
 			created.testDirData = testDirData;
 
 			// Add platform specific files to app and app1 folders
-			let platformSpecificFiles = [
+			const platformSpecificFiles = [
 				"test1.ios.js", "test1-ios-js", "test2.android.js", "test2-android-js",
 				"main.js"
 			];
 
-			let destinationDirectories = [testDirData.appFolderPath, testDirData.app1FolderPath];
+			const destinationDirectories = [testDirData.appFolderPath, testDirData.app1FolderPath];
 
 			_.each(destinationDirectories, directoryPath => {
 				_.each(platformSpecificFiles, filePath => {
-					let fileFullPath = path.join(directoryPath, filePath);
+					const fileFullPath = path.join(directoryPath, filePath);
 					fs.writeFile(fileFullPath, "testData");
 
 					created.files.push(fileFullPath);
@@ -469,19 +469,19 @@ describe('Platform Service Tests', () => {
 
 			// Add App_Resources file to app and app1 folders
 			_.each(destinationDirectories, directoryPath => {
-				let iosIconFullPath = path.join(directoryPath, "App_Resources/iOS/icon.png");
+				const iosIconFullPath = path.join(directoryPath, "App_Resources/iOS/icon.png");
 				fs.writeFile(iosIconFullPath, "test-image");
 				created.resources.ios.push(iosIconFullPath);
 
-				let androidFullPath = path.join(directoryPath, "App_Resources/Android/icon.png");
+				const androidFullPath = path.join(directoryPath, "App_Resources/Android/icon.png");
 				fs.writeFile(androidFullPath, "test-image");
 				created.resources.android.push(androidFullPath);
 			});
 
 			await execPreparePlatform(platformToTest, testDirData, release);
 
-			let test1FileName = platformToTest.toLowerCase() === "ios" ? "test1.js" : "test2.js";
-			let test2FileName = platformToTest.toLowerCase() === "ios" ? "test2.js" : "test1.js";
+			const test1FileName = platformToTest.toLowerCase() === "ios" ? "test1.js" : "test2.js";
+			const test2FileName = platformToTest.toLowerCase() === "ios" ? "test2.js" : "test1.js";
 
 			// Asserts that the files in app folder are process as platform specific
 			assert.isTrue(fs.exists(path.join(testDirData.appDestFolderPath, "app", test1FileName)));
@@ -502,7 +502,7 @@ describe('Platform Service Tests', () => {
 		}
 
 		function updateFile(files: string[], fileName: string, content: string) {
-			let fileToUpdate = _.find(files, (f) => f.indexOf(fileName) !== -1);
+			const fileToUpdate = _.find(files, (f) => f.indexOf(fileName) !== -1);
 			fs.writeFile(fileToUpdate, content);
 		}
 
@@ -523,7 +523,7 @@ describe('Platform Service Tests', () => {
 		});
 
 		function getDefaultFolderVerificationData(platform: string, appDestFolderPath: string) {
-			let data: any = {};
+			const data: any = {};
 			if (platform.toLowerCase() === "ios") {
 				data[path.join(appDestFolderPath, "app")] = {
 					missingFiles: ["test1.ios.js", "test2.android.js", "test2.js", "App_Resources"],
@@ -559,13 +559,13 @@ describe('Platform Service Tests', () => {
 
 		function mergeModifications(def: any, mod: any) {
 			// custom merge to reflect changes
-			let merged: any = _.cloneDeep(def);
+			const merged: any = _.cloneDeep(def);
 			_.forOwn(mod, (modFolder, folderRoot) => {
 				// whole folder not present in Default
 				if (!def.hasOwnProperty(folderRoot)) {
 					merged[folderRoot] = _.cloneDeep(modFolder[folderRoot]);
 				} else {
-					let defFolder = def[folderRoot];
+					const defFolder = def[folderRoot];
 					merged[folderRoot].filesWithContent = _.merge(defFolder.filesWithContent || [], modFolder.filesWithContent || []);
 					merged[folderRoot].missingFiles = (defFolder.missingFiles || []).concat(modFolder.missingFiles || []);
 					merged[folderRoot].presentFiles = (defFolder.presentFiles || []).concat(modFolder.presentFiles || []);
@@ -592,27 +592,27 @@ describe('Platform Service Tests', () => {
 		// 4. Gets the Default Destination App Structure and merges it with the Modifications
 		// 5. Asserts the Destination App matches our expectations
 		async function testChangesApplied(platform: string, applyChangesFn: (createdTestData: CreatedTestData) => any) {
-			let createdTestData = await testPreparePlatform(platform);
+			const createdTestData = await testPreparePlatform(platform);
 
-			let modifications = applyChangesFn(createdTestData);
+			const modifications = applyChangesFn(createdTestData);
 
 			await execPreparePlatform(platform, createdTestData.testDirData);
 
-			let defaultStructure = getDefaultFolderVerificationData(platform, createdTestData.testDirData.appDestFolderPath);
+			const defaultStructure = getDefaultFolderVerificationData(platform, createdTestData.testDirData.appDestFolderPath);
 
-			let merged = mergeModifications(defaultStructure, modifications);
+			const merged = mergeModifications(defaultStructure, modifications);
 
 			DestinationFolderVerifier.verify(merged, fs);
 		}
 
 		it("should sync only changed files, without special folders (iOS)", async () => {
-			let applyChangesFn = (createdTestData: CreatedTestData) => {
+			const applyChangesFn = (createdTestData: CreatedTestData) => {
 				// apply changes
 				const expectedFileContent = "updated-content-ios";
 				updateFile(createdTestData.files, "test1.ios.js", expectedFileContent);
 
 				// construct the folder modifications data
-				let modifications: any = {};
+				const modifications: any = {};
 				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
 					filesWithContent: [
 						{
@@ -627,13 +627,13 @@ describe('Platform Service Tests', () => {
 		});
 
 		it("should sync only changed files, without special folders (Android) #2697", async () => {
-			let applyChangesFn = (createdTestData: CreatedTestData) => {
+			const applyChangesFn = (createdTestData: CreatedTestData) => {
 				// apply changes
 				const expectedFileContent = "updated-content-android";
 				updateFile(createdTestData.files, "test2.android.js", expectedFileContent);
 
 				// construct the folder modifications data
-				let modifications: any = {};
+				const modifications: any = {};
 				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
 					filesWithContent: [
 						{
@@ -648,14 +648,14 @@ describe('Platform Service Tests', () => {
 		});
 
 		it("Ensure App_Resources get reloaded after change in the app folder (iOS) #2560", async () => {
-			let applyChangesFn = (createdTestData: CreatedTestData) => {
+			const applyChangesFn = (createdTestData: CreatedTestData) => {
 				// apply changes
 				const expectedFileContent = "updated-icon-content";
-				let iconPngPath = path.join(createdTestData.testDirData.appFolderPath, "App_Resources/iOS/icon.png");
+				const iconPngPath = path.join(createdTestData.testDirData.appFolderPath, "App_Resources/iOS/icon.png");
 				fs.writeFile(iconPngPath, expectedFileContent);
 
 				// construct the folder modifications data
-				let modifications: any = {};
+				const modifications: any = {};
 				modifications[createdTestData.testDirData.appDestFolderPath] = {
 					filesWithContent: [
 						{
@@ -671,14 +671,14 @@ describe('Platform Service Tests', () => {
 		});
 
 		it("Ensure App_Resources get reloaded after change in the app folder (Android) #2560", async () => {
-			let applyChangesFn = (createdTestData: CreatedTestData) => {
+			const applyChangesFn = (createdTestData: CreatedTestData) => {
 				// apply changes
 				const expectedFileContent = "updated-icon-content";
-				let iconPngPath = path.join(createdTestData.testDirData.appFolderPath, "App_Resources/Android/icon.png");
+				const iconPngPath = path.join(createdTestData.testDirData.appFolderPath, "App_Resources/Android/icon.png");
 				fs.writeFile(iconPngPath, expectedFileContent);
 
 				// construct the folder modifications data
-				let modifications: any = {};
+				const modifications: any = {};
 				modifications[createdTestData.testDirData.appDestFolderPath] = {
 					filesWithContent: [
 						{
@@ -694,14 +694,14 @@ describe('Platform Service Tests', () => {
 		});
 
 		it("Ensure App_Resources get reloaded after a new file appears in the app folder (iOS) #2560", async () => {
-			let applyChangesFn = (createdTestData: CreatedTestData) => {
+			const applyChangesFn = (createdTestData: CreatedTestData) => {
 				// apply changes
 				const expectedFileContent = "new-file-content";
-				let iconPngPath = path.join(createdTestData.testDirData.appFolderPath, "App_Resources/iOS/new-file.png");
+				const iconPngPath = path.join(createdTestData.testDirData.appFolderPath, "App_Resources/iOS/new-file.png");
 				fs.writeFile(iconPngPath, expectedFileContent);
 
 				// construct the folder modifications data
-				let modifications: any = {};
+				const modifications: any = {};
 				modifications[createdTestData.testDirData.appDestFolderPath] = {
 					filesWithContent: [
 						{
@@ -717,14 +717,14 @@ describe('Platform Service Tests', () => {
 		});
 
 		it("Ensure App_Resources get reloaded after a new file appears in the app folder (Android) #2560", async () => {
-			let applyChangesFn = (createdTestData: CreatedTestData) => {
+			const applyChangesFn = (createdTestData: CreatedTestData) => {
 				// apply changes
 				const expectedFileContent = "new-file-content";
-				let iconPngPath = path.join(createdTestData.testDirData.appFolderPath, "App_Resources/Android/new-file.png");
+				const iconPngPath = path.join(createdTestData.testDirData.appFolderPath, "App_Resources/Android/new-file.png");
 				fs.writeFile(iconPngPath, expectedFileContent);
 
 				// construct the folder modifications data
-				let modifications: any = {};
+				const modifications: any = {};
 				modifications[createdTestData.testDirData.appDestFolderPath] = {
 					filesWithContent: [
 						{
@@ -740,13 +740,13 @@ describe('Platform Service Tests', () => {
 		});
 
 		it("should sync new platform specific files (iOS)", async () => {
-			let applyChangesFn = (createdTestData: CreatedTestData) => {
+			const applyChangesFn = (createdTestData: CreatedTestData) => {
 				// apply changes
 				const expectedFileContent = "new-content-ios";
 				fs.writeFile(path.join(createdTestData.testDirData.appFolderPath, "test3.ios.js"), expectedFileContent);
 
 				// construct the folder modifications data
-				let modifications: any = {};
+				const modifications: any = {};
 				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
 					filesWithContent: [
 						{
@@ -762,13 +762,13 @@ describe('Platform Service Tests', () => {
 		});
 
 		it("should sync new platform specific files (Android)", async () => {
-			let applyChangesFn = (createdTestData: CreatedTestData) => {
+			const applyChangesFn = (createdTestData: CreatedTestData) => {
 				// apply changes
 				const expectedFileContent = "new-content-android";
 				fs.writeFile(path.join(createdTestData.testDirData.appFolderPath, "test3.android.js"), expectedFileContent);
 
 				// construct the folder modifications data
-				let modifications: any = {};
+				const modifications: any = {};
 				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
 					filesWithContent: [
 						{
@@ -784,13 +784,13 @@ describe('Platform Service Tests', () => {
 		});
 
 		it("should sync new common files (iOS)", async () => {
-			let applyChangesFn = (createdTestData: CreatedTestData) => {
+			const applyChangesFn = (createdTestData: CreatedTestData) => {
 				// apply changes
 				const expectedFileContent = "new-content-ios";
 				fs.writeFile(path.join(createdTestData.testDirData.appFolderPath, "test3.js"), expectedFileContent);
 
 				// construct the folder modifications data
-				let modifications: any = {};
+				const modifications: any = {};
 				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
 					filesWithContent: [
 						{
@@ -806,13 +806,13 @@ describe('Platform Service Tests', () => {
 		});
 
 		it("should sync new common file (Android)", async () => {
-			let applyChangesFn = (createdTestData: CreatedTestData) => {
+			const applyChangesFn = (createdTestData: CreatedTestData) => {
 				// apply changes
 				const expectedFileContent = "new-content-android";
 				fs.writeFile(path.join(createdTestData.testDirData.appFolderPath, "test3.js"), expectedFileContent);
 
 				// construct the folder modifications data
-				let modifications: any = {};
+				const modifications: any = {};
 				modifications[path.join(createdTestData.testDirData.appDestFolderPath, "app")] = {
 					filesWithContent: [
 						{
@@ -829,13 +829,13 @@ describe('Platform Service Tests', () => {
 
 		it("invalid xml is caught", async () => {
 			require("colors");
-			let testDirData = prepareDirStructure();
+			const testDirData = prepareDirStructure();
 
 			// generate invalid xml
-			let fileFullPath = path.join(testDirData.appFolderPath, "file.xml");
+			const fileFullPath = path.join(testDirData.appFolderPath, "file.xml");
 			fs.writeFile(fileFullPath, "<xml><unclosedTag></xml>");
 
-			let platformsData = testInjector.resolve("platformsData");
+			const platformsData = testInjector.resolve("platformsData");
 			platformsData.platformsNames = ["android"];
 			platformsData.getPlatformData = (platform: string) => {
 				return {
@@ -860,11 +860,11 @@ describe('Platform Service Tests', () => {
 				};
 			};
 
-			let projectData = testInjector.resolve("projectData");
+			const projectData = testInjector.resolve("projectData");
 			projectData.projectDir = testDirData.tempFolder;
 
 			platformService = testInjector.resolve("platformService");
-			let oldLoggerWarner = testInjector.resolve("$logger").warn;
+			const oldLoggerWarner = testInjector.resolve("$logger").warn;
 			let warnings: string = "";
 			try {
 				testInjector.resolve("$logger").warn = (text: string) => warnings += text;

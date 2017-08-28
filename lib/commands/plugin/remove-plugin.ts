@@ -20,14 +20,14 @@ export class RemovePluginCommand implements ICommand {
 		let pluginNames: string[] = [];
 		try {
 			// try installing the plugins, so we can get information from node_modules about their native code, libs, etc.
-			let installedPlugins = await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
+			const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
 			pluginNames = installedPlugins.map(pl => pl.name);
 		} catch (err) {
 			this.$logger.trace("Error while installing plugins. Error is:", err);
 			pluginNames = _.keys(this.$projectData.dependencies);
 		}
 
-		let pluginName = args[0].toLowerCase();
+		const pluginName = args[0].toLowerCase();
 		if (!_.some(pluginNames, name => name.toLowerCase() === pluginName)) {
 			this.$errors.failWithoutHelp(`Plugin "${pluginName}" is not installed.`);
 		}

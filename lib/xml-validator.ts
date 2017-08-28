@@ -10,8 +10,8 @@ export class XmlValidator implements IXmlValidator {
 		sourceFiles
 			.filter(file => _.endsWith(file, constants.XML_FILE_EXTENSION))
 			.forEach(file => {
-				let errorOutput = this.getXmlFileErrors(file);
-				let hasErrors = !!errorOutput;
+				const errorOutput = this.getXmlFileErrors(file);
+				const hasErrors = !!errorOutput;
 				xmlHasErrors = xmlHasErrors || hasErrors;
 				if (hasErrors) {
 					this.$logger.info(`${file} has syntax errors.`.red.bold);
@@ -23,8 +23,8 @@ export class XmlValidator implements IXmlValidator {
 
 	public getXmlFileErrors(sourceFile: string): string {
 		let errorOutput = "";
-		let fileContents = this.$fs.readText(sourceFile);
-		let domErrorHandler = (level: any, msg: string) => {
+		const fileContents = this.$fs.readText(sourceFile);
+		const domErrorHandler = (level: any, msg: string) => {
 			errorOutput += level + EOL + msg + EOL;
 		};
 		this.getDomParser(domErrorHandler).parseFromString(fileContents, "text/xml");
@@ -33,8 +33,8 @@ export class XmlValidator implements IXmlValidator {
 	}
 
 	private getDomParser(errorHandler: (level: any, msg: string) => void): any {
-		let DomParser = require("xmldom").DOMParser;
-		let parser = new DomParser({
+		const DomParser = require("xmldom").DOMParser;
+		const parser = new DomParser({
 			locator: {},
 			errorHandler: errorHandler
 		});

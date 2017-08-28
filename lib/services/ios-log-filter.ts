@@ -1,4 +1,4 @@
-let sourcemap = require("source-map");
+const sourcemap = require("source-map");
 import * as path from "path";
 import { cache } from "../common/decorators";
 import * as iOSLogFilterBase from "../common/mobile/ios/ios-log-filter";
@@ -21,8 +21,8 @@ export class IOSLogFilter extends iOSLogFilterBase.IOSLogFilter implements Mobil
 		}
 
 		if (data) {
-			let skipLastLine = data[data.length - 1] !== "\n";
-			let lines = data.split("\n");
+			const skipLastLine = data[data.length - 1] !== "\n";
+			const lines = data.split("\n");
 			let result = "";
 			for (let i = 0; i < lines.length; i++) {
 				let line = lines[i];
@@ -41,8 +41,8 @@ export class IOSLogFilter extends iOSLogFilterBase.IOSLogFilter implements Mobil
 				// This code removes unnecessary information from log messages. The output looks like:
 				// CONSOLE LOG file:///location:row:column: <actual message goes here>
 				if (pid) {
-					let searchString = "[" + pid + "]: ";
-					let pidIndex = line.indexOf(searchString);
+					const searchString = "[" + pid + "]: ";
+					const pidIndex = line.indexOf(searchString);
 					if (pidIndex > 0) {
 						line = line.substring(pidIndex + searchString.length, line.length);
 						this.getOriginalFileLocation(line);
@@ -68,17 +68,17 @@ export class IOSLogFilter extends iOSLogFilterBase.IOSLogFilter implements Mobil
 		const projectDir = this.getProjectDir();
 
 		if (fileIndex >= 0 && projectDir) {
-			let parts = data.substring(fileIndex + fileString.length).split(":");
+			const parts = data.substring(fileIndex + fileString.length).split(":");
 			if (parts.length >= 4) {
-				let file = parts[0];
-				let sourceMapFile = path.join(projectDir, file + ".map");
-				let row = parseInt(parts[1]);
-				let column = parseInt(parts[2]);
+				const file = parts[0];
+				const sourceMapFile = path.join(projectDir, file + ".map");
+				const row = parseInt(parts[1]);
+				const column = parseInt(parts[2]);
 				if (this.$fs.exists(sourceMapFile)) {
-					let sourceMap = this.$fs.readText(sourceMapFile);
-					let smc = new sourcemap.SourceMapConsumer(sourceMap);
-					let originalPosition = smc.originalPositionFor({ line: row, column: column });
-					let sourceFile = smc.sources.length > 0 ? file.replace(smc.file, smc.sources[0]) : file;
+					const sourceMap = this.$fs.readText(sourceMapFile);
+					const smc = new sourcemap.SourceMapConsumer(sourceMap);
+					const originalPosition = smc.originalPositionFor({ line: row, column: column });
+					const sourceFile = smc.sources.length > 0 ? file.replace(smc.file, smc.sources[0]) : file;
 					data = data.substring(0, fileIndex + fileString.length)
 						+ sourceFile + ":"
 						+ originalPosition.line + ":"

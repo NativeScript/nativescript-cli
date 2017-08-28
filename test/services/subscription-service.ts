@@ -3,7 +3,7 @@ import { assert } from "chai";
 import { SubscriptionService } from "../../lib/services/subscription-service";
 import { LoggerStub } from "../stubs";
 import { stringify } from "querystring";
-let helpers = require("../../lib/common/helpers");
+const helpers = require("../../lib/common/helpers");
 
 interface IValidateTestData {
 	name: string;

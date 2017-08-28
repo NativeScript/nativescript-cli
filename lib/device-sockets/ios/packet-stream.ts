@@ -12,14 +12,14 @@ export class PacketStream extends stream.Transform {
 		while (packet.length > 0) {
 			if (!this.buffer) {
 				// read length
-				let length = packet.readInt32BE(0);
+				const length = packet.readInt32BE(0);
 				this.buffer = new Buffer(length);
 				this.offset = 0;
 				packet = packet.slice(4);
 			}
 
 			packet.copy(this.buffer, this.offset);
-			let copied = Math.min(this.buffer.length - this.offset, packet.length);
+			const copied = Math.min(this.buffer.length - this.offset, packet.length);
 			this.offset += copied;
 			packet = packet.slice(copied);
 

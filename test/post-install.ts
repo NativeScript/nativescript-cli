@@ -1,7 +1,7 @@
 import { assert } from "chai";
 
 // Use require instead of import in order to replace the `spawn` method of child_process
-let childProcess = require("child_process");
+const childProcess = require("child_process");
 
 import { SpawnOptions, ChildProcess } from "child_process";
 import * as path from "path";

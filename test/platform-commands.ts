@@ -91,7 +91,7 @@ class PlatformsData implements IPlatformsData {
 }
 
 function createTestInjector() {
-	let testInjector = new yok.Yok();
+	const testInjector = new yok.Yok();
 
 	testInjector.register("injector", testInjector);
 	testInjector.register("hooksService", stubs.HooksServiceStub);
@@ -438,8 +438,8 @@ describe('Platform Service Tests', () => {
 			});
 
 			it("will call removePlatform and addPlatform on the platformService passing the provided platforms", async () => {
-				let platformActions: { action: string, platforms: string[] }[] = [];
-				let cleanCommand = testInjector.resolveCommand("platform|clean");
+				const platformActions: { action: string, platforms: string[] }[] = [];
+				const cleanCommand = testInjector.resolveCommand("platform|clean");
 
 				platformService.removePlatforms = async (platforms: string[]) => {
 					platformActions.push({ action: "removePlatforms", platforms });
@@ -453,7 +453,7 @@ describe('Platform Service Tests', () => {
 
 				await cleanCommand.execute(["ios"]);
 
-				let expectedPlatformActions = [
+				const expectedPlatformActions = [
 					{ action: "removePlatforms", platforms: ["ios"] },
 					{ action: "addPlatforms", platforms: ["ios"] },
 				];

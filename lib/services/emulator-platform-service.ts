@@ -16,9 +16,9 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 			if (this.$mobileHelper.isAndroidPlatform(info.platform)) {
 				this.$options.avd = this.$options.device;
 				this.$options.device = null;
-				let platformsData: IPlatformsData = $injector.resolve("platformsData");
-				let platformData = platformsData.getPlatformData(info.platform, projectData);
-				let emulatorServices = platformData.emulatorServices;
+				const platformsData: IPlatformsData = $injector.resolve("platformsData");
+				const platformData = platformsData.getPlatformData(info.platform, projectData);
+				const emulatorServices = platformData.emulatorServices;
 				emulatorServices.checkAvailability();
 				await emulatorServices.checkDependencies();
 				await emulatorServices.startEmulator();
@@ -28,13 +28,13 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 
 			if (this.$mobileHelper.isiOSPlatform(info.platform)) {
 				await this.stopEmulator(info.platform);
-				let deferred = deferPromise<void>();
+				const deferred = deferPromise<void>();
 				await this.$childProcess.exec(`open -a Simulator --args -CurrentDeviceUDID ${info.id}`);
-				let timeoutFunc = async () => {
+				const timeoutFunc = async () => {
 					info = await this.getEmulatorInfo("ios", info.id);
 					if (info.isRunning) {
 						await this.$devicesService.initialize({ platform: info.platform, deviceId: info.id });
-						let device = this.$devicesService.getDeviceByIdentifier(info.id);
+						const device = this.$devicesService.getDeviceByIdentifier(info.id);
 						await device.applicationManager.checkForApplicationUpdates();
 						deferred.resolve();
 						return;
@@ -56,15 +56,15 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 
 	public async getEmulatorInfo(platform: string, idOrName: string): Promise<IEmulatorInfo> {
 		if (this.$mobileHelper.isAndroidPlatform(platform)) {
-			let androidEmulators = this.getAndroidEmulators();
-			let found = androidEmulators.filter((info: IEmulatorInfo) => info.id === idOrName);
+			const androidEmulators = this.getAndroidEmulators();
+			const found = androidEmulators.filter((info: IEmulatorInfo) => info.id === idOrName);
 			if (found.length > 0) {
 				return found[0];
 			}
 
 			await this.$devicesService.initialize({ platform: platform, deviceId: null, skipInferPlatform: true });
 			let info: IEmulatorInfo = null;
-			let action = async (device: Mobile.IDevice) => {
+			const action = async (device: Mobile.IDevice) => {
 				if (device.deviceInfo.identifier === idOrName) {
 					info = {
 						id: device.deviceInfo.identifier,
@@ -81,15 +81,15 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 		}
 
 		if (this.$mobileHelper.isiOSPlatform(platform)) {
-			let emulators = await this.getiOSEmulators();
+			const emulators = await this.getiOSEmulators();
 			let sdk: string = null;
-			let versionStart = idOrName.indexOf("(");
+			const versionStart = idOrName.indexOf("(");
 			if (versionStart > 0) {
 				sdk = idOrName.substring(versionStart + 1, idOrName.indexOf(")", versionStart)).trim();
 				idOrName = idOrName.substring(0, versionStart - 1).trim();
 			}
-			let found = emulators.filter((info: IEmulatorInfo) => {
-				let sdkMatch = sdk ? info.version === sdk : true;
+			const found = emulators.filter((info: IEmulatorInfo) => {
+				const sdkMatch = sdk ? info.version === sdk : true;
 				return sdkMatch && info.id === idOrName || info.name === idOrName;
 			});
 			return found.length > 0 ? found[0] : null;
@@ -102,14 +102,14 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 	public async listAvailableEmulators(platform: string): Promise<void> {
 		let emulators: IEmulatorInfo[] = [];
 		if (!platform || this.$mobileHelper.isiOSPlatform(platform)) {
-			let iosEmulators = await this.getiOSEmulators();
+			const iosEmulators = await this.getiOSEmulators();
 			if (iosEmulators) {
 				emulators = emulators.concat(iosEmulators);
 			}
 		}
 
 		if (!platform || this.$mobileHelper.isAndroidPlatform(platform)) {
-			let androidEmulators = this.getAndroidEmulators();
+			const androidEmulators = this.getAndroidEmulators();
 			if (androidEmulators) {
 				emulators = emulators.concat(androidEmulators);
 			}
@@ -119,20 +119,20 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 	}
 
 	public async getiOSEmulators(): Promise<IEmulatorInfo[]> {
-		let output = await this.$childProcess.exec("xcrun simctl list --json");
-		let list = JSON.parse(output);
-		let emulators: IEmulatorInfo[] = [];
-		for (let osName in list["devices"]) {
+		const output = await this.$childProcess.exec("xcrun simctl list --json");
+		const list = JSON.parse(output);
+		const emulators: IEmulatorInfo[] = [];
+		for (const osName in list["devices"]) {
 			if (osName.indexOf("iOS") === -1) {
 				continue;
 			}
-			let os = list["devices"][osName];
-			let version = this.parseiOSVersion(osName);
-			for (let device of os) {
+			const os = list["devices"][osName];
+			const version = this.parseiOSVersion(osName);
+			for (const device of os) {
 				if (device["availability"] !== "(available)") {
 					continue;
 				}
-				let emulatorInfo: IEmulatorInfo = {
+				const emulatorInfo: IEmulatorInfo = {
 					id: device["udid"],
 					name: device["name"],
 					isRunning: device["state"] === "Booted",
@@ -167,8 +167,8 @@ export class EmulatorPlatformService implements IEmulatorPlatformService {
 
 	private outputEmulators(title: string, emulators: IEmulatorInfo[]) {
 		this.$logger.out(title);
-		let table: any = createTable(["Device Name", "Platform", "Version", "Device Identifier"], []);
-		for (let info of emulators) {
+		const table: any = createTable(["Device Name", "Platform", "Version", "Device Identifier"], []);
+		for (const info of emulators) {
 			table.push([info.name, info.platform, info.version, info.id]);
 		}
 

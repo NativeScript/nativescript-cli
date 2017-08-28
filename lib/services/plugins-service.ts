@@ -45,15 +45,15 @@ export class PluginsService implements IPluginsService {
 			plugin = possiblePackageName;
 		}
 
-		let name = (await this.$npm.install(plugin, projectData.projectDir, this.npmInstallOptions)).name;
-		let pathToRealNpmPackageJson = path.join(projectData.projectDir, "node_modules", name, "package.json");
-		let realNpmPackageJson = this.$fs.readJson(pathToRealNpmPackageJson);
+		const name = (await this.$npm.install(plugin, projectData.projectDir, this.npmInstallOptions)).name;
+		const pathToRealNpmPackageJson = path.join(projectData.projectDir, "node_modules", name, "package.json");
+		const realNpmPackageJson = this.$fs.readJson(pathToRealNpmPackageJson);
 
 		if (realNpmPackageJson.nativescript) {
-			let pluginData = this.convertToPluginData(realNpmPackageJson, projectData.projectDir);
+			const pluginData = this.convertToPluginData(realNpmPackageJson, projectData.projectDir);
 
 			// Validate
-			let action = async (pluginDestinationPath: string, platform: string, platformData: IPlatformData): Promise<void> => {
+			const action = async (pluginDestinationPath: string, platform: string, platformData: IPlatformData): Promise<void> => {
 				this.isPluginDataValidForPlatform(pluginData, platform, projectData);
 			};
 
@@ -77,8 +77,8 @@ export class PluginsService implements IPluginsService {
 	}
 
 	public async remove(pluginName: string, projectData: IProjectData): Promise<void> {
-		let removePluginNativeCodeAction = async (modulesDestinationPath: string, platform: string, platformData: IPlatformData): Promise<void> => {
-			let pluginData = this.convertToPluginData(this.getNodeModuleData(pluginName, projectData.projectDir), projectData.projectDir);
+		const removePluginNativeCodeAction = async (modulesDestinationPath: string, platform: string, platformData: IPlatformData): Promise<void> => {
+			const pluginData = this.convertToPluginData(this.getNodeModuleData(pluginName, projectData.projectDir), projectData.projectDir);
 
 			await platformData.platformProjectService.removePluginNativeCode(pluginData, projectData);
 		};
@@ -89,7 +89,7 @@ export class PluginsService implements IPluginsService {
 		await this.executeNpmCommand(PluginsService.UNINSTALL_COMMAND_NAME, pluginName, projectData);
 
 		let showMessage = true;
-		let action = async (modulesDestinationPath: string, platform: string, platformData: IPlatformData): Promise<void> => {
+		const action = async (modulesDestinationPath: string, platform: string, platformData: IPlatformData): Promise<void> => {
 			shelljs.rm("-rf", path.join(modulesDestinationPath, pluginName));
 
 			this.$logger.out(`Successfully removed plugin ${pluginName} for ${platform}.`);
@@ -109,10 +109,10 @@ export class PluginsService implements IPluginsService {
 
 	public async prepare(dependencyData: IDependencyData, platform: string, projectData: IProjectData,  projectFilesConfig: IProjectFilesConfig): Promise<void> {
 		platform = platform.toLowerCase();
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
-		let pluginData = this.convertToPluginData(dependencyData, projectData.projectDir);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const pluginData = this.convertToPluginData(dependencyData, projectData.projectDir);
 
-		let appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
+		const appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
 		if (appFolderExists) {
 			this.preparePluginScripts(pluginData, platform, projectData, projectFilesConfig);
 			await this.preparePluginNativeCode(pluginData, platform, projectData);
@@ -123,9 +123,9 @@ export class PluginsService implements IPluginsService {
 	}
 
 	public preparePluginScripts(pluginData: IPluginData, platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): void {
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
-		let pluginScriptsDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
-		let scriptsDestinationExists = this.$fs.exists(pluginScriptsDestinationPath);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const pluginScriptsDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
+		const scriptsDestinationExists = this.$fs.exists(pluginScriptsDestinationPath);
 		if (!scriptsDestinationExists) {
 			//tns_modules/<plugin> doesn't exist. Assuming we're running a bundled prepare.
 			return;
@@ -140,7 +140,7 @@ export class PluginsService implements IPluginsService {
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, platform: string, projectData: IProjectData): Promise<void> {
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 
 		pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform);
 		await platformData.platformProjectService.preparePluginNativeCode(pluginData, projectData);
@@ -154,13 +154,13 @@ export class PluginsService implements IPluginsService {
 		_(installedDependencies)
 			.filter(dependencyName => _.startsWith(dependencyName, "@"))
 			.each(scopedDependencyDir => {
-				let contents = this.$fs.readDirectory(path.join(this.getNodeModulesPath(projectData.projectDir), scopedDependencyDir));
+				const contents = this.$fs.readDirectory(path.join(this.getNodeModulesPath(projectData.projectDir), scopedDependencyDir));
 				installedDependencies = installedDependencies.concat(contents.map(dependencyName => `${scopedDependencyDir}/${dependencyName}`));
 			});
 
-		let packageJsonContent = this.$fs.readJson(this.getPackageJsonFilePath(projectData.projectDir));
-		let allDependencies = _.keys(packageJsonContent.dependencies).concat(_.keys(packageJsonContent.devDependencies));
-		let notInstalledDependencies = _.difference(allDependencies, installedDependencies);
+		const packageJsonContent = this.$fs.readJson(this.getPackageJsonFilePath(projectData.projectDir));
+		const allDependencies = _.keys(packageJsonContent.dependencies).concat(_.keys(packageJsonContent.devDependencies));
+		const notInstalledDependencies = _.difference(allDependencies, installedDependencies);
 		if (this.$options.force || notInstalledDependencies.length) {
 			this.$logger.trace("Npm install will be called from CLI. Force option is: ", this.$options.force, " Not installed dependencies are: ", notInstalledDependencies);
 			await this.$npm.install(projectData.projectDir, projectData.projectDir, {
@@ -173,15 +173,15 @@ export class PluginsService implements IPluginsService {
 	}
 
 	public async getAllInstalledPlugins(projectData: IProjectData): Promise<IPluginData[]> {
-		let nodeModules = (await this.getAllInstalledModules(projectData)).map(nodeModuleData => this.convertToPluginData(nodeModuleData, projectData.projectDir));
+		const nodeModules = (await this.getAllInstalledModules(projectData)).map(nodeModuleData => this.convertToPluginData(nodeModuleData, projectData.projectDir));
 		return _.filter(nodeModules, nodeModuleData => nodeModuleData && nodeModuleData.isPlugin);
 	}
 
 	public getDependenciesFromPackageJson(projectDir: string): IPackageJsonDepedenciesResult {
-		let packageJson = this.$fs.readJson(this.getPackageJsonFilePath(projectDir));
-		let dependencies: IBasePluginData[] = this.getBasicPluginInformation(packageJson.dependencies);
+		const packageJson = this.$fs.readJson(this.getPackageJsonFilePath(projectDir));
+		const dependencies: IBasePluginData[] = this.getBasicPluginInformation(packageJson.dependencies);
 
-		let devDependencies: IBasePluginData[] = this.getBasicPluginInformation(packageJson.devDependencies);
+		const devDependencies: IBasePluginData[] = this.getBasicPluginInformation(packageJson.devDependencies);
 
 		return {
 			dependencies,
@@ -209,7 +209,7 @@ export class PluginsService implements IPluginsService {
 	}
 
 	private getDependencies(projectDir: string): string[] {
-		let packageJsonFilePath = this.getPackageJsonFilePath(projectDir);
+		const packageJsonFilePath = this.getPackageJsonFilePath(projectDir);
 		return _.keys(require(packageJsonFilePath).dependencies);
 	}
 
@@ -218,7 +218,7 @@ export class PluginsService implements IPluginsService {
 			module = this.getPackageJsonFilePathForModule(module, projectDir);
 		}
 
-		let data = this.$fs.readJson(module);
+		const data = this.$fs.readJson(module);
 		return {
 			name: data.name,
 			version: data.version,
@@ -229,13 +229,13 @@ export class PluginsService implements IPluginsService {
 	}
 
 	public convertToPluginData(cacheData: any, projectDir: string): IPluginData {
-		let pluginData: any = {};
+		const pluginData: any = {};
 		pluginData.name = cacheData.name;
 		pluginData.version = cacheData.version;
 		pluginData.fullPath = cacheData.directory || path.dirname(this.getPackageJsonFilePathForModule(cacheData.name, projectDir));
 		pluginData.isPlugin = !!cacheData.nativescript || !!cacheData.moduleInfo;
 		pluginData.pluginPlatformsFolderPath = (platform: string) => path.join(pluginData.fullPath, "platforms", platform);
-		let data = cacheData.nativescript || cacheData.moduleInfo;
+		const data = cacheData.nativescript || cacheData.moduleInfo;
 
 		if (pluginData.isPlugin) {
 			pluginData.platformsData = data.platforms;
@@ -253,7 +253,7 @@ export class PluginsService implements IPluginsService {
 	private async getAllInstalledModules(projectData: IProjectData): Promise<INodeModuleData[]> {
 		await this.ensure(projectData);
 
-		let nodeModules = this.getDependencies(projectData.projectDir);
+		const nodeModules = this.getDependencies(projectData.projectDir);
 		return _.map(nodeModules, nodeModuleName => this.getNodeModuleData(nodeModuleName, projectData.projectDir));
 	}
 
@@ -272,19 +272,19 @@ export class PluginsService implements IPluginsService {
 	}
 
 	private async executeForAllInstalledPlatforms(action: (_pluginDestinationPath: string, pl: string, _platformData: IPlatformData) => Promise<void>, projectData: IProjectData): Promise<void> {
-		let availablePlatforms = _.keys(this.$platformsData.availablePlatforms);
-		for (let platform of availablePlatforms) {
-			let isPlatformInstalled = this.$fs.exists(path.join(projectData.platformsDir, platform.toLowerCase()));
+		const availablePlatforms = _.keys(this.$platformsData.availablePlatforms);
+		for (const platform of availablePlatforms) {
+			const isPlatformInstalled = this.$fs.exists(path.join(projectData.platformsDir, platform.toLowerCase()));
 			if (isPlatformInstalled) {
-				let platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
-				let pluginDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
+				const platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
+				const pluginDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
 				await action(pluginDestinationPath, platform.toLowerCase(), platformData);
 			}
 		}
 	}
 
 	private getInstalledFrameworkVersion(platform: string, projectData: IProjectData): string {
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const frameworkData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
 		return frameworkData.version;
 	}
@@ -292,10 +292,10 @@ export class PluginsService implements IPluginsService {
 	private isPluginDataValidForPlatform(pluginData: IPluginData, platform: string, projectData: IProjectData): boolean {
 		let isValid = true;
 
-		let installedFrameworkVersion = this.getInstalledFrameworkVersion(platform, projectData);
-		let pluginPlatformsData = pluginData.platformsData;
+		const installedFrameworkVersion = this.getInstalledFrameworkVersion(platform, projectData);
+		const pluginPlatformsData = pluginData.platformsData;
 		if (pluginPlatformsData) {
-			let pluginVersion = (<any>pluginPlatformsData)[platform];
+			const pluginVersion = (<any>pluginPlatformsData)[platform];
 			if (!pluginVersion) {
 				this.$logger.warn(`${pluginData.name} is not supported for ${platform}.`);
 				isValid = false;

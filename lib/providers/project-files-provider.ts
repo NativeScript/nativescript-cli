@@ -13,24 +13,24 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 	private static INTERNAL_NONPROJECT_FILES = [ "**/*.ts" ];
 
 	public mapFilePath(filePath: string, platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): string {
-		let platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
-		let parsedFilePath = this.getPreparedFilePath(filePath, projectFilesConfig);
+		const platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
+		const parsedFilePath = this.getPreparedFilePath(filePath, projectFilesConfig);
 		let mappedFilePath = "";
 		if (parsedFilePath.indexOf(constants.NODE_MODULES_FOLDER_NAME) > -1) {
-			let relativePath = path.relative(path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME), parsedFilePath);
+			const relativePath = path.relative(path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME), parsedFilePath);
 			mappedFilePath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.TNS_MODULES_FOLDER_NAME, relativePath);
 		} else {
 			mappedFilePath = path.join(platformData.appDestinationDirectoryPath, path.relative(projectData.projectDir, parsedFilePath));
 		}
 
-		let appResourcesDirectoryPath = path.join(constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
-		let platformSpecificAppResourcesDirectoryPath = path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName);
+		const appResourcesDirectoryPath = path.join(constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
+		const platformSpecificAppResourcesDirectoryPath = path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName);
 		if (parsedFilePath.indexOf(appResourcesDirectoryPath) > -1 && parsedFilePath.indexOf(platformSpecificAppResourcesDirectoryPath) === -1) {
 			return null;
 		}
 
 		if (parsedFilePath.indexOf(platformSpecificAppResourcesDirectoryPath) > -1) {
-			let appResourcesRelativePath = path.relative(path.join(projectData.projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME,
+			const appResourcesRelativePath = path.relative(path.join(projectData.projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME,
 				platformData.normalizedPlatformName), parsedFilePath);
 			mappedFilePath = path.join(platformData.platformProjectService.getAppResourcesDestinationDirectoryPath(projectData), appResourcesRelativePath);
 		}

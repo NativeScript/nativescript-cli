@@ -55,7 +55,7 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	public async checkForChanges(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): Promise<IProjectChangesInfo> {
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		this._changesInfo = new ProjectChangesInfo();
 		if (!this.ensurePrepareInfo(platform, projectData, projectChangesOptions)) {
 			this._newFiles = 0;
@@ -72,7 +72,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			if (this._newFiles > 0) {
 				this._changesInfo.modulesChanged = true;
 			}
-			let platformResourcesDir = path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
+			const platformResourcesDir = path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
 			if (platform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
 				this._changesInfo.configChanged = this.filesChanged([path.join(platformResourcesDir, platformData.configurationFileName),
 				path.join(platformResourcesDir, "LaunchScreen.storyboard"),
@@ -86,7 +86,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 		}
 
-		let projectService = platformData.platformProjectService;
+		const projectService = platformData.platformProjectService;
 		await projectService.checkForChanges(this._changesInfo, projectChangesOptions, projectData);
 
 		if (projectChangesOptions.bundle !== this._prepareInfo.bundle || projectChangesOptions.release !== this._prepareInfo.release) {
@@ -119,13 +119,13 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	public getPrepareInfoFilePath(platform: string, projectData: IProjectData): string {
-		let platformData = this.$platformsData.getPlatformData(platform, projectData);
-		let prepareInfoFilePath = path.join(platformData.projectRoot, prepareInfoFileName);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const prepareInfoFilePath = path.join(platformData.projectRoot, prepareInfoFileName);
 		return prepareInfoFilePath;
 	}
 
 	public getPrepareInfo(platform: string, projectData: IProjectData): IPrepareInfo {
-		let prepareInfoFilePath = this.getPrepareInfoFilePath(platform, projectData);
+		const prepareInfoFilePath = this.getPrepareInfoFilePath(platform, projectData);
 		let prepareInfo: IPrepareInfo = null;
 		if (this.$fs.exists(prepareInfoFilePath)) {
 			try {
@@ -138,7 +138,7 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	public savePrepareInfo(platform: string, projectData: IProjectData): void {
-		let prepareInfoFilePath = this.getPrepareInfoFilePath(platform, projectData);
+		const prepareInfoFilePath = this.getPrepareInfoFilePath(platform, projectData);
 		this.$fs.writeJson(prepareInfoFilePath, this._prepareInfo);
 	}
 
@@ -157,8 +157,8 @@ export class ProjectChangesService implements IProjectChangesService {
 				projectChangesOptions.nativePlatformStatus :
 				this._prepareInfo.nativePlatformStatus || projectChangesOptions.nativePlatformStatus;
 
-			let platformData = this.$platformsData.getPlatformData(platform, projectData);
-			let prepareInfoFile = path.join(platformData.projectRoot, prepareInfoFileName);
+			const platformData = this.$platformsData.getPlatformData(platform, projectData);
+			const prepareInfoFile = path.join(platformData.projectRoot, prepareInfoFileName);
 			this._outputProjectMtime = this.$fs.getFsStats(prepareInfoFile).mtime.getTime();
 			this._outputProjectCTime = this.$fs.getFsStats(prepareInfoFile).ctime.getTime();
 			return false;
@@ -206,9 +206,9 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	private filesChanged(files: string[]): boolean {
-		for (let file of files) {
+		for (const file of files) {
 			if (this.$fs.exists(file)) {
-				let fileStats = this.$fs.getFsStats(file);
+				const fileStats = this.$fs.getFsStats(file);
 				if (fileStats.mtime.getTime() >= this._outputProjectMtime || fileStats.ctime.getTime() >= this._outputProjectCTime) {
 					return true;
 				}
@@ -224,20 +224,20 @@ export class ProjectChangesService implements IProjectChangesService {
 			return true;
 		}
 
-		let files = this.$fs.readDirectory(dir);
-		for (let file of files) {
-			let filePath = path.join(dir, file);
+		const files = this.$fs.readDirectory(dir);
+		for (const file of files) {
+			const filePath = path.join(dir, file);
 			if (filePath === skipDir) {
 				continue;
 			}
 
 			const fileStats = this.$fs.getFsStats(filePath);
-			let changed = this.isFileModified(fileStats, filePath);
+			const changed = this.isFileModified(fileStats, filePath);
 
 			if (changed) {
 				if (processFunc) {
 					this._newFiles++;
-					let filePathRelative = path.relative(projectData.projectDir, filePath);
+					const filePathRelative = path.relative(projectData.projectDir, filePath);
 					if (processFunc.call(this, filePathRelative, projectData)) {
 						return true;
 					}
@@ -261,7 +261,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			filePathStat.ctime.getTime() >= this._outputProjectCTime;
 
 		if (!changed) {
-			let lFileStats = this.$fs.getLsStats(filePath);
+			const lFileStats = this.$fs.getLsStats(filePath);
 			changed = lFileStats.mtime.getTime() >= this._outputProjectMtime ||
 				lFileStats.ctime.getTime() >= this._outputProjectCTime;
 		}
@@ -273,7 +273,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		if (path.basename(file) === "package.json") {
 			return true;
 		}
-		let projectDir = projectData.projectDir;
+		const projectDir = projectData.projectDir;
 		if (_.startsWith(path.join(projectDir, file), projectData.appResourcesDirectoryPath)) {
 			return true;
 		}
@@ -281,9 +281,9 @@ export class ProjectChangesService implements IProjectChangesService {
 			let filePath = file;
 			while (filePath !== NODE_MODULES_FOLDER_NAME) {
 				filePath = path.dirname(filePath);
-				let fullFilePath = path.join(projectDir, path.join(filePath, "package.json"));
+				const fullFilePath = path.join(projectDir, path.join(filePath, "package.json"));
 				if (this.$fs.exists(fullFilePath)) {
-					let json = this.$fs.readJson(fullFilePath);
+					const json = this.$fs.readJson(fullFilePath);
 					if (json["nativescript"] && _.startsWith(file, path.join(filePath, "platforms"))) {
 						return true;
 					}

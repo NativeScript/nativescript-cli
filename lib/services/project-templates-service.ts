@@ -12,7 +12,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 
 	public async prepareTemplate(originalTemplateName: string, projectDir: string): Promise<string> {
 		// support <reserved_name>@<version> syntax
-		let data = originalTemplateName.split("@"),
+		const data = originalTemplateName.split("@"),
 			name = data[0],
 			version = data[1];
 

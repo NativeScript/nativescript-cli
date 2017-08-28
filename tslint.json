@@ -13,6 +13,7 @@
 			false,
 			140
 		],
+		"prefer-const": true,
 		"no-consecutive-blank-lines": true,
 		"no-construct": true,
 		"no-debugger": true,

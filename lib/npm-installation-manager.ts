@@ -41,10 +41,10 @@ export class NpmInstallationManager implements INpmInstallationManager {
 
 	public async install(packageName: string, projectDir: string, opts?: INpmInstallOptions): Promise<any> {
 		try {
-			let packageToInstall = this.$options.frameworkPath || packageName;
-			let pathToSave = projectDir;
-			let version = (opts && opts.version) || null;
-			let dependencyType = (opts && opts.dependencyType) || null;
+			const packageToInstall = this.$options.frameworkPath || packageName;
+			const pathToSave = projectDir;
+			const version = (opts && opts.version) || null;
+			const dependencyType = (opts && opts.dependencyType) || null;
 
 			return await this.installCore(packageToInstall, pathToSave, version, dependencyType);
 		} catch (error) {
@@ -55,7 +55,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	}
 
 	public async getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string): Promise<string> {
-		let inspectorPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME, inspectorNpmPackageName);
+		const inspectorPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME, inspectorNpmPackageName);
 
 		// local installation takes precedence over cache
 		if (!this.inspectorAlreadyInstalled(inspectorPath)) {
@@ -107,10 +107,10 @@ export class NpmInstallationManager implements INpmInstallationManager {
 			version = version || await this.getLatestCompatibleVersion(packageName);
 		}
 
-		let installResultInfo = await this.npmInstall(packageName, pathToSave, version, dependencyType);
-		let installedPackageName = installResultInfo.name;
+		const installResultInfo = await this.npmInstall(packageName, pathToSave, version, dependencyType);
+		const installedPackageName = installResultInfo.name;
 
-		let pathToInstalledPackage = path.join(pathToSave, "node_modules", installedPackageName);
+		const pathToInstalledPackage = path.join(pathToSave, "node_modules", installedPackageName);
 		return pathToInstalledPackage;
 	}
 
@@ -119,8 +119,8 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	}
 
 	private isURL(str: string): boolean {
-		let urlRegex = '^(?!mailto:)(?:(?:http|https|ftp)://)(?:\\S+(?::\\S*)?@)?(?:(?:(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[0-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)(?:\\.(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)*(?:\\.(?:[a-z\\u00a1-\\uffff]{2,})))|localhost)(?::\\d{2,5})?(?:(/|\\?|#)[^\\s]*)?$';
-		let url = new RegExp(urlRegex, 'i');
+		const urlRegex = '^(?!mailto:)(?:(?:http|https|ftp)://)(?:\\S+(?::\\S*)?@)?(?:(?:(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[0-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)(?:\\.(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)*(?:\\.(?:[a-z\\u00a1-\\uffff]{2,})))|localhost)(?::\\d{2,5})?(?:(/|\\?|#)[^\\s]*)?$';
+		const url = new RegExp(urlRegex, 'i');
 		return str.length < 2083 && url.test(str);
 	}
 
@@ -129,7 +129,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 
 		packageName = packageName + (version ? `@${version}` : "");
 
-		let npmOptions: any = { silent: true, "save-exact": true };
+		const npmOptions: any = { silent: true, "save-exact": true };
 
 		if (dependencyType) {
 			npmOptions[dependencyType] = true;
@@ -143,7 +143,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	 * because npm view doens't work with those
 	 */
 	private async getVersion(packageName: string, version: string): Promise<string> {
-		let data: any = await this.$npm.view(packageName, { "dist-tags": true });
+		const data: any = await this.$npm.view(packageName, { "dist-tags": true });
 		this.$logger.trace("Using version %s. ", data[version]);
 
 		return data[version];

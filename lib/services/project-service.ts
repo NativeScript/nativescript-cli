@@ -19,8 +19,8 @@ export class ProjectService implements IProjectService {
 
 	@exported("projectService")
 	public async createProject(projectOptions: IProjectSettings): Promise<void> {
-		let projectName = projectOptions.projectName,
-			selectedTemplate = projectOptions.template;
+		let projectName = projectOptions.projectName;
+		let selectedTemplate = projectOptions.template;
 
 		if (!projectName) {
 			this.$errors.fail("You must specify <App name> when creating a new project.");
@@ -37,7 +37,7 @@ export class ProjectService implements IProjectService {
 			this.$errors.fail("Path already exists and is not empty %s", projectDir);
 		}
 
-		let projectId = projectOptions.appId || this.$projectHelper.generateDefaultAppId(projectName, constants.DEFAULT_APP_IDENTIFIER_PREFIX);
+		const projectId = projectOptions.appId || this.$projectHelper.generateDefaultAppId(projectName, constants.DEFAULT_APP_IDENTIFIER_PREFIX);
 		this.createPackageJson(projectDir, projectId);
 
 		this.$logger.trace(`Creating a new NativeScript project with name ${projectName} and id ${projectId} at location ${projectDir}`);
@@ -46,12 +46,12 @@ export class ProjectService implements IProjectService {
 		}
 
 		try {
-			let templatePath = await this.$projectTemplatesService.prepareTemplate(selectedTemplate, projectDir);
+			const templatePath = await this.$projectTemplatesService.prepareTemplate(selectedTemplate, projectDir);
 			await this.extractTemplate(projectDir, templatePath);
 
 			await this.ensureAppResourcesExist(projectDir);
 
-			let templatePackageJsonData = this.getDataFromJson(templatePath);
+			const templatePackageJsonData = this.getDataFromJson(templatePath);
 
 			if (!(templatePackageJsonData && templatePackageJsonData.dependencies && templatePackageJsonData.dependencies[constants.TNS_CORE_MODULES_NAME])) {
 				await this.$npmInstallationManager.install(constants.TNS_CORE_MODULES_NAME, projectDir, { dependencyType: "save" });
@@ -66,7 +66,7 @@ export class ProjectService implements IProjectService {
 				ignoreScripts: projectOptions.ignoreScripts
 			});
 
-			let templatePackageJson = this.$fs.readJson(path.join(templatePath, "package.json"));
+			const templatePackageJson = this.$fs.readJson(path.join(templatePath, "package.json"));
 			await this.$npm.uninstall(templatePackageJson.name, { save: true }, projectDir);
 		} catch (err) {
 			this.$fs.deleteDirectory(projectDir);
@@ -87,9 +87,9 @@ export class ProjectService implements IProjectService {
 	}
 
 	private getDataFromJson(templatePath: string): any {
-		let templatePackageJsonPath = path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME);
+		const templatePackageJsonPath = path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME);
 		if (this.$fs.exists(templatePackageJsonPath)) {
-			let templatePackageJsonData = this.$fs.readJson(templatePackageJsonPath);
+			const templatePackageJsonData = this.$fs.readJson(templatePackageJsonPath);
 			return templatePackageJsonData;
 		} else {
 			this.$logger.trace(`Template ${templatePath} does not have ${constants.PACKAGE_JSON_FILE_NAME} file.`);
@@ -101,7 +101,7 @@ export class ProjectService implements IProjectService {
 	private async extractTemplate(projectDir: string, realTemplatePath: string): Promise<void> {
 		this.$fs.ensureDirectoryExists(projectDir);
 
-		let appDestinationPath = path.join(projectDir, constants.APP_FOLDER_NAME);
+		const appDestinationPath = path.join(projectDir, constants.APP_FOLDER_NAME);
 		this.$fs.createDirectory(appDestinationPath);
 
 		this.$logger.trace(`Copying application from '${realTemplatePath}' into '${appDestinationPath}'.`);
@@ -111,14 +111,14 @@ export class ProjectService implements IProjectService {
 	}
 
 	private async ensureAppResourcesExist(projectDir: string): Promise<void> {
-		let appPath = path.join(projectDir, constants.APP_FOLDER_NAME),
+		const appPath = path.join(projectDir, constants.APP_FOLDER_NAME),
 			appResourcesDestinationPath = path.join(appPath, constants.APP_RESOURCES_FOLDER_NAME);
 
 		if (!this.$fs.exists(appResourcesDestinationPath)) {
 			this.$fs.createDirectory(appResourcesDestinationPath);
 
 			// the template installed doesn't have App_Resources -> get from a default template
-			let defaultTemplateName = constants.RESERVED_TEMPLATE_NAMES["default"];
+			const defaultTemplateName = constants.RESERVED_TEMPLATE_NAMES["default"];
 			await this.$npm.install(defaultTemplateName, projectDir, {
 				save: true,
 				disableNpmInstall: false,
@@ -126,7 +126,7 @@ export class ProjectService implements IProjectService {
 				ignoreScripts: false
 			});
 
-			let defaultTemplateAppResourcesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME,
+			const defaultTemplateAppResourcesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME,
 				defaultTemplateName, constants.APP_RESOURCES_FOLDER_NAME);
 
 			if (this.$fs.exists(defaultTemplateAppResourcesPath)) {
@@ -138,8 +138,8 @@ export class ProjectService implements IProjectService {
 	}
 
 	private removeMergedDependencies(projectDir: string, templatePackageJsonData: any): void {
-		let extractedTemplatePackageJsonPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.PACKAGE_JSON_FILE_NAME);
-		for (let key in templatePackageJsonData) {
+		const extractedTemplatePackageJsonPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.PACKAGE_JSON_FILE_NAME);
+		for (const key in templatePackageJsonData) {
 			if (constants.PackageJsonKeysToKeep.indexOf(key) === -1) {
 				delete templatePackageJsonData[key];
 			}
@@ -151,8 +151,8 @@ export class ProjectService implements IProjectService {
 
 	private mergeProjectAndTemplateProperties(projectDir: string, templatePackageJsonData: any): void {
 		if (templatePackageJsonData) {
-			let projectPackageJsonPath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
-			let projectPackageJsonData = this.$fs.readJson(projectPackageJsonPath);
+			const projectPackageJsonPath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
+			const projectPackageJsonData = this.$fs.readJson(projectPackageJsonPath);
 			this.$logger.trace("Initial project package.json data: ", projectPackageJsonData);
 			if (projectPackageJsonData.dependencies || templatePackageJsonData.dependencies) {
 				projectPackageJsonData.dependencies = this.mergeDependencies(projectPackageJsonData.dependencies, templatePackageJsonData.dependencies);
@@ -174,8 +174,8 @@ export class ProjectService implements IProjectService {
 		this.$logger.trace("Merging dependencies, projectDependencies are: ", <any>projectDependencies, " templateDependencies are: ", <any>templateDependencies);
 		projectDependencies = projectDependencies || {};
 		_.extend(projectDependencies, templateDependencies || {});
-		let sortedDeps: IStringDictionary = {};
-		let dependenciesNames = _.keys(projectDependencies).sort();
+		const sortedDeps: IStringDictionary = {};
+		const dependenciesNames = _.keys(projectDependencies).sort();
 		_.each(dependenciesNames, (key: string) => {
 			sortedDeps[key] = projectDependencies[key];
 		});

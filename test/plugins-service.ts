@@ -38,7 +38,7 @@ temp.track();
 let isErrorThrown = false;
 
 function createTestInjector() {
-	let testInjector = new Yok();
+	const testInjector = new Yok();
 	testInjector.register("messagesService", MessagesService);
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("fs", FileSystem);
@@ -101,11 +101,11 @@ function createTestInjector() {
 }
 
 function createProjectFile(testInjector: IInjector): string {
-	let tempFolder = temp.mkdirSync("pluginsService");
-	let options = testInjector.resolve("options");
+	const tempFolder = temp.mkdirSync("pluginsService");
+	const options = testInjector.resolve("options");
 	options.path = tempFolder;
 
-	let packageJsonData = {
+	const packageJsonData = {
 		"name": "testModuleName",
 		"version": "0.1.0",
 		"nativescript": {
@@ -121,7 +121,7 @@ function createProjectFile(testInjector: IInjector): string {
 }
 
 function mockBeginCommand(testInjector: IInjector, expectedErrorMessage: string) {
-	let errors = testInjector.resolve("errors");
+	const errors = testInjector.resolve("errors");
 	errors.beginCommand = async (action: () => Promise<boolean>): Promise<boolean> => {
 		try {
 			return await action();
@@ -135,7 +135,7 @@ function mockBeginCommand(testInjector: IInjector, expectedErrorMessage: string)
 async function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: string, expectedErrorMessage: string, command?: string) {
 	createProjectFile(testInjector);
 
-	let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+	const pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 	pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 		return <any[]>[{ name: "" }];
 	};
@@ -146,14 +146,14 @@ async function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: str
 	mockBeginCommand(testInjector, "Exception: " + expectedErrorMessage);
 
 	isErrorThrown = false;
-	let commandsService = testInjector.resolve(CommandsService);
+	const commandsService = testInjector.resolve(CommandsService);
 	await commandsService.tryExecuteCommand(`plugin|${command}`, [plugin]);
 
 	assert.isTrue(isErrorThrown);
 }
 
 function createAndroidManifestFile(projectFolder: string, fs: IFileSystem): void {
-	let manifest = `
+	const manifest = `
         <?xml version="1.0" encoding="UTF-8"?>
 		<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >
             <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
@@ -179,7 +179,7 @@ function createAndroidManifestFile(projectFolder: string, fs: IFileSystem): void
 
 describe("Plugins service", () => {
 	let testInjector: IInjector;
-	let commands = ["add", "install"];
+	const commands = ["add", "install"];
 	beforeEach(() => {
 		testInjector = createTestInjector();
 		testInjector.registerCommand("plugin|add", AddPluginCommand);
@@ -195,18 +195,18 @@ describe("Plugins service", () => {
 				await addPluginWhenExpectingToFail(testInjector, "lodash", "lodash is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.", command);
 			});
 			it("fails when the plugin is already installed", async () => {
-				let pluginName = "plugin1";
-				let projectFolder = createProjectFile(testInjector);
-				let fs = testInjector.resolve("fs");
+				const pluginName = "plugin1";
+				const projectFolder = createProjectFile(testInjector);
+				const fs = testInjector.resolve("fs");
 
 				// Add plugin
-				let projectFilePath = path.join(projectFolder, "package.json");
-				let projectData = require(projectFilePath);
+				const projectFilePath = path.join(projectFolder, "package.json");
+				const projectData = require(projectFilePath);
 				projectData.dependencies = {};
 				projectData.dependencies[pluginName] = "^1.0.0";
 				fs.writeJson(projectFilePath, projectData);
 
-				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+				const pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (projData: IProjectData) => {
 					return <any[]>[{ name: "plugin1" }];
 				};
@@ -214,20 +214,20 @@ describe("Plugins service", () => {
 				mockBeginCommand(testInjector, "Exception: " + 'Plugin "plugin1" is already installed.');
 
 				isErrorThrown = false;
-				let commandsService = testInjector.resolve(CommandsService);
+				const commandsService = testInjector.resolve(CommandsService);
 				await commandsService.tryExecuteCommand(`plugin|${command}`, [pluginName]);
 
 				assert.isTrue(isErrorThrown);
 			});
 			it("fails when the plugin does not support the installed framework", async () => {
 				let isWarningMessageShown = false;
-				let expectedWarningMessage = "mySamplePlugin 1.5.0 for android is not compatible with the currently installed framework version 1.4.0.";
+				const expectedWarningMessage = "mySamplePlugin 1.5.0 for android is not compatible with the currently installed framework version 1.4.0.";
 
 				// Creates plugin in temp folder
-				let pluginName = "mySamplePlugin";
-				let projectFolder = createProjectFile(testInjector);
-				let pluginFolderPath = path.join(projectFolder, pluginName);
-				let pluginJsonData = {
+				const pluginName = "mySamplePlugin";
+				const projectFolder = createProjectFile(testInjector);
+				const pluginFolderPath = path.join(projectFolder, pluginName);
+				const pluginJsonData = {
 					"name": pluginName,
 					"version": "0.0.1",
 					"nativescript": {
@@ -236,7 +236,7 @@ describe("Plugins service", () => {
 						}
 					},
 				};
-				let fs = testInjector.resolve("fs");
+				const fs = testInjector.resolve("fs");
 				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
 
 				// Adds android platform
@@ -245,22 +245,22 @@ describe("Plugins service", () => {
 				fs.createDirectory(path.join(projectFolder, "platforms", "android", "app"));
 
 				// Mock logger.warn
-				let logger = testInjector.resolve("logger");
+				const logger = testInjector.resolve("logger");
 				logger.warn = (message: string) => {
 					assert.equal(message, expectedWarningMessage);
 					isWarningMessageShown = true;
 				};
 
 				// Mock pluginsService
-				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
-				let projectData: IProjectData = testInjector.resolve("projectData");
+				const pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+				const projectData: IProjectData = testInjector.resolve("projectData");
 				projectData.initializeProjectData();
 				pluginsService.getAllInstalledPlugins = async (projData: IProjectData) => {
 					return <any[]>[{ name: "" }];
 				};
 
 				// Mock platformsData
-				let platformsData = testInjector.resolve("platformsData");
+				const platformsData = testInjector.resolve("platformsData");
 				platformsData.getPlatformData = (platform: string) => {
 					return {
 						appDestinationDirectoryPath: path.join(projectFolder, "platforms", "android"),
@@ -274,77 +274,77 @@ describe("Plugins service", () => {
 				assert.isTrue(isWarningMessageShown);
 			});
 			it("adds plugin by name", async () => {
-				let pluginName = "plugin1";
-				let projectFolder = createProjectFile(testInjector);
+				const pluginName = "plugin1";
+				const projectFolder = createProjectFile(testInjector);
 
-				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+				const pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 					return <any[]>[{ name: "" }];
 				};
 
-				let commandsService = testInjector.resolve(CommandsService);
+				const commandsService = testInjector.resolve(CommandsService);
 				await commandsService.tryExecuteCommand(`plugin|${command}`, [pluginName]);
 
-				let fs = testInjector.resolve("fs");
+				const fs = testInjector.resolve("fs");
 
 				// Asserts that the all plugin's content is successfully added to node_modules folder
-				let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
+				const nodeModulesFolderPath = path.join(projectFolder, "node_modules");
 				assert.isTrue(fs.exists(nodeModulesFolderPath));
 
-				let pluginFolderPath = path.join(nodeModulesFolderPath, pluginName);
+				const pluginFolderPath = path.join(nodeModulesFolderPath, pluginName);
 				assert.isTrue(fs.exists(pluginFolderPath));
 
-				let pluginFiles = ["injex.js", "main.js", "package.json"];
+				const pluginFiles = ["injex.js", "main.js", "package.json"];
 				_.each(pluginFiles, pluginFile => {
 					assert.isTrue(fs.exists(path.join(pluginFolderPath, pluginFile)));
 				});
 
 				// Asserts that the plugin is added in package.json file
-				let packageJsonContent = fs.readJson(path.join(projectFolder, "package.json"));
-				let actualDependencies = packageJsonContent.dependencies;
-				let expectedDependencies = { "plugin1": "^1.0.3" };
-				let expectedDependenciesExact = { "plugin1": "1.0.3" };
+				const packageJsonContent = fs.readJson(path.join(projectFolder, "package.json"));
+				const actualDependencies = packageJsonContent.dependencies;
+				const expectedDependencies = { "plugin1": "^1.0.3" };
+				const expectedDependenciesExact = { "plugin1": "1.0.3" };
 				assert.isTrue(_.isEqual(actualDependencies, expectedDependencies) || _.isEqual(actualDependencies, expectedDependenciesExact));
 			});
 			it("adds plugin by name and version", async () => {
-				let pluginName = "plugin1";
-				let projectFolder = createProjectFile(testInjector);
+				const pluginName = "plugin1";
+				const projectFolder = createProjectFile(testInjector);
 
-				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+				const pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 					return <any[]>[{ name: "" }];
 				};
 
-				let commandsService = testInjector.resolve(CommandsService);
+				const commandsService = testInjector.resolve(CommandsService);
 				await commandsService.tryExecuteCommand(`plugin|${command}`, [pluginName + "@1.0.0"]);
 
-				let fs = testInjector.resolve("fs");
+				const fs = testInjector.resolve("fs");
 
 				// Assert that the all plugin's content is successfully added to node_modules folder
-				let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
+				const nodeModulesFolderPath = path.join(projectFolder, "node_modules");
 				assert.isTrue(fs.exists(nodeModulesFolderPath));
 
-				let pluginFolderPath = path.join(nodeModulesFolderPath, pluginName);
+				const pluginFolderPath = path.join(nodeModulesFolderPath, pluginName);
 				assert.isTrue(fs.exists(pluginFolderPath));
 
-				let pluginFiles = ["injex.js", "main.js", "package.json"];
+				const pluginFiles = ["injex.js", "main.js", "package.json"];
 				_.each(pluginFiles, pluginFile => {
 					assert.isTrue(fs.exists(path.join(pluginFolderPath, pluginFile)));
 				});
 
 				// Assert that the plugin is added in package.json file
-				let packageJsonContent = fs.readJson(path.join(projectFolder, "package.json"));
-				let actualDependencies = packageJsonContent.dependencies;
-				let expectedDependencies = { "plugin1": "^1.0.0" };
-				let expectedDependenciesExact = { "plugin1": "1.0.0" };
+				const packageJsonContent = fs.readJson(path.join(projectFolder, "package.json"));
+				const actualDependencies = packageJsonContent.dependencies;
+				const expectedDependencies = { "plugin1": "^1.0.0" };
+				const expectedDependenciesExact = { "plugin1": "1.0.0" };
 				assert.isTrue(_.isEqual(actualDependencies, expectedDependencies) || _.isEqual(actualDependencies, expectedDependenciesExact));
 			});
 			it("adds plugin by local path", async () => {
 				// Creates a plugin in tempFolder
-				let pluginName = "mySamplePlugin";
-				let projectFolder = createProjectFile(testInjector);
-				let pluginFolderPath = path.join(projectFolder, pluginName);
-				let pluginJsonData = {
+				const pluginName = "mySamplePlugin";
+				const projectFolder = createProjectFile(testInjector);
+				const pluginFolderPath = path.join(projectFolder, pluginName);
+				const pluginJsonData = {
 					"name": pluginName,
 					"version": "0.0.1",
 					"nativescript": {
@@ -353,23 +353,23 @@ describe("Plugins service", () => {
 						}
 					},
 				};
-				let fs = testInjector.resolve("fs");
+				const fs = testInjector.resolve("fs");
 				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
 
-				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+				const pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 					return <any[]>[{ name: "" }];
 				};
 
-				let commandsService = testInjector.resolve(CommandsService);
+				const commandsService = testInjector.resolve(CommandsService);
 				await commandsService.tryExecuteCommand(`plugin|${command}`, [pluginFolderPath]);
 
 				// Assert that the all plugin's content is successfully added to node_modules folder
-				let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
+				const nodeModulesFolderPath = path.join(projectFolder, "node_modules");
 				assert.isTrue(fs.exists(nodeModulesFolderPath));
 				assert.isTrue(fs.exists(path.join(nodeModulesFolderPath, pluginName)));
 
-				let pluginFiles = ["package.json"];
+				const pluginFiles = ["package.json"];
 				_.each(pluginFiles, pluginFile => {
 					assert.isTrue(fs.exists(path.join(nodeModulesFolderPath, pluginName, pluginFile)));
 				});
@@ -379,10 +379,10 @@ describe("Plugins service", () => {
 			});
 			it("doesn't install dev dependencies when --production option is specified", async () => {
 				// Creates a plugin in tempFolder
-				let pluginName = "mySamplePlugin";
-				let projectFolder = createProjectFile(testInjector);
-				let pluginFolderPath = path.join(projectFolder, pluginName);
-				let pluginJsonData = {
+				const pluginName = "mySamplePlugin";
+				const projectFolder = createProjectFile(testInjector);
+				const pluginFolderPath = path.join(projectFolder, pluginName);
+				const pluginJsonData = {
 					"name": pluginName,
 					"version": "0.0.1",
 					"nativescript": {
@@ -394,30 +394,30 @@ describe("Plugins service", () => {
 						"grunt": "0.4.2"
 					}
 				};
-				let fs = testInjector.resolve("fs");
+				const fs = testInjector.resolve("fs");
 				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
 
-				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+				const pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 					return <any[]>[{ name: "" }];
 				};
 
 				// Mock options
-				let options = testInjector.resolve("options");
+				const options = testInjector.resolve("options");
 				options.production = true;
 
-				let commandsService = testInjector.resolve(CommandsService);
+				const commandsService = testInjector.resolve(CommandsService);
 				await commandsService.tryExecuteCommand(`plugin|${command}`, [pluginFolderPath]);
 
-				let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
+				const nodeModulesFolderPath = path.join(projectFolder, "node_modules");
 				assert.isFalse(fs.exists(path.join(nodeModulesFolderPath, pluginName, "node_modules", "grunt")));
 			});
 			it("install dev dependencies when --production option is not specified", async () => {
 				// Creates a plugin in tempFolder
-				let pluginName = "mySamplePlugin";
-				let projectFolder = createProjectFile(testInjector);
-				let pluginFolderPath = path.join(projectFolder, pluginName);
-				let pluginJsonData = {
+				const pluginName = "mySamplePlugin";
+				const projectFolder = createProjectFile(testInjector);
+				const pluginFolderPath = path.join(projectFolder, pluginName);
+				const pluginJsonData = {
 					"name": pluginName,
 					"version": "0.0.1",
 					"nativescript": {
@@ -432,19 +432,19 @@ describe("Plugins service", () => {
 						"grunt": "0.4.2"
 					}
 				};
-				let fs = testInjector.resolve("fs");
+				const fs = testInjector.resolve("fs");
 				fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
 
-				let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+				const pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 					return <any[]>[{ name: "" }];
 				};
 
 				// Mock options
-				let options = testInjector.resolve("options");
+				const options = testInjector.resolve("options");
 				options.production = false;
 
-				let commandsService = testInjector.resolve(CommandsService);
+				const commandsService = testInjector.resolve(CommandsService);
 				await commandsService.tryExecuteCommand(`plugin|${command}`, [pluginFolderPath]);
 			});
 		});
@@ -456,10 +456,10 @@ describe("Plugins service", () => {
 			testInjector.registerCommand("plugin|add", AddPluginCommand);
 		});
 		it("fails if the plugin contains incorrect xml", async () => {
-			let pluginName = "mySamplePlugin";
-			let projectFolder = createProjectFile(testInjector);
-			let pluginFolderPath = path.join(projectFolder, pluginName);
-			let pluginJsonData: IDependencyData = {
+			const pluginName = "mySamplePlugin";
+			const projectFolder = createProjectFile(testInjector);
+			const pluginFolderPath = path.join(projectFolder, pluginName);
+			const pluginJsonData: IDependencyData = {
 				name: pluginName,
 				nativescript: {
 					platforms: {
@@ -469,22 +469,22 @@ describe("Plugins service", () => {
 				depth: 0,
 				directory: "some dir"
 			};
-			let fs = testInjector.resolve("fs");
+			const fs = testInjector.resolve("fs");
 			fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
 
 			// Adds AndroidManifest.xml file in platforms/android folder
 			createAndroidManifestFile(projectFolder, fs);
 
 			// Mock plugins service
-			let pluginsService: IPluginsService = testInjector.resolve("pluginsService");
+			const pluginsService: IPluginsService = testInjector.resolve("pluginsService");
 			pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 				return <any[]>[{ name: "" }];
 			};
 
-			let appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
+			const appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
 
 			// Mock platformsData
-			let platformsData = testInjector.resolve("platformsData");
+			const platformsData = testInjector.resolve("platformsData");
 			platformsData.getPlatformData = (platform: string) => {
 				return {
 					appDestinationDirectoryPath: appDestinationDirectoryPath,
@@ -498,20 +498,20 @@ describe("Plugins service", () => {
 			};
 
 			// Ensure the pluginDestinationPath folder exists
-			let pluginPlatformsDirPath = path.join(projectFolder, "node_modules", pluginName, "platforms", "android");
-			let projectData: IProjectData = testInjector.resolve("projectData");
+			const pluginPlatformsDirPath = path.join(projectFolder, "node_modules", pluginName, "platforms", "android");
+			const projectData: IProjectData = testInjector.resolve("projectData");
 			projectData.initializeProjectData();
 			fs.ensureDirectoryExists(pluginPlatformsDirPath);
 
 			// Creates invalid plugin's AndroidManifest.xml file
-			let xml = '<?xml version="1.0" encoding="UTF-8"?>' +
+			const xml = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
 				'<uses-permission android:name="android.permission.READ_CONTACTS"/>';
-			let pluginConfigurationFilePath = path.join(pluginPlatformsDirPath, "AndroidManifest.xml");
+			const pluginConfigurationFilePath = path.join(pluginPlatformsDirPath, "AndroidManifest.xml");
 			fs.writeFile(pluginConfigurationFilePath, xml);
 
 			// Expected error message. The assertion happens in mockBeginCommand
-			let expectedErrorMessage = `Exception: Invalid xml file ${pluginConfigurationFilePath}. Additional technical information: element parse error: Exception: Invalid xml file ` +
+			const expectedErrorMessage = `Exception: Invalid xml file ${pluginConfigurationFilePath}. Additional technical information: element parse error: Exception: Invalid xml file ` +
 				`${pluginConfigurationFilePath}. Additional technical information: unclosed xml attribute` +
 				`\n@#[line:1,col:39].` +
 				`\n@#[line:1,col:39].`;
