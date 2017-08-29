@@ -20,6 +20,9 @@ Sets proxy settings.
 ### Command Limitations
 
 * You can set credentials only on Windows Systems.
+* Proxy settings for npm and (Android) Gradle need to be set separately.
+    * configuring `npm` proxy - https://docs.npmjs.com/misc/config#https-proxy
+    * (Android) configuring Gradle proxy - set global configuration in the user directory - _<USER_HOME>/.gradle/gradle.properties_ - https://docs.gradle.org/3.3/userguide/build_environment.html#sec:accessing_the_web_via_a_proxy
 
 ### Related Commands
 
