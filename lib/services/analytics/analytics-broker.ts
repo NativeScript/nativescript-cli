@@ -20,10 +20,13 @@ export class AnalyticsBroker implements IAnalyticsBroker {
 		for (const provider of this.analyticsProviders) {
 			switch (trackInfo.type) {
 				case TrackingTypes.Exception:
-					await provider.trackException(<IExceptionsTrackingInformation>trackInfo);
+					await provider.trackError(<IExceptionsTrackingInformation>trackInfo);
 					break;
 				case TrackingTypes.Feature:
-					await provider.trackFeature(<IFeatureTrackingInformation>trackInfo);
+					await provider.trackInformation(<IFeatureTrackingInformation>trackInfo);
+					break;
+				case TrackingTypes.AcceptTrackFeatureUsage:
+					await provider.acceptFeatureUsageTracking(<IAcceptUsageReportingInformation>trackInfo);
 					break;
 				case TrackingTypes.Finish:
 					await provider.finishTracking();

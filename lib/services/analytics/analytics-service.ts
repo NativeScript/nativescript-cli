@@ -4,7 +4,6 @@ import * as path from "path";
 import { cache } from "../../common/decorators";
 
 export class AnalyticsService extends AnalyticsServiceBase implements IAnalyticsService {
-	private static ANALYTICS_FEATURE_USAGE_TRACKING_API_KEY = "9912cff308334c6d9ad9c33f76a983e3";
 	private static ANALYTICS_BROKER_START_TIMEOUT = 30 * 1000;
 
 	constructor(protected $logger: ILogger,
@@ -13,11 +12,10 @@ export class AnalyticsService extends AnalyticsServiceBase implements IAnalytics
 		$prompter: IPrompter,
 		$userSettingsService: UserSettings.IUserSettingsService,
 		$analyticsSettingsService: IAnalyticsSettingsService,
-		$progressIndicator: IProgressIndicator,
 		$osInfo: IOsInfo,
 		private $childProcess: IChildProcess,
 		private $processService: IProcessService) {
-		super($logger, $options, $staticConfig, $prompter, $userSettingsService, $analyticsSettingsService, $progressIndicator, $osInfo);
+		super($logger, $options, $staticConfig, $prompter, $userSettingsService, $analyticsSettingsService, $osInfo);
 	}
 
 	public track(featureName: string, featureValue: string): Promise<void> {
@@ -28,12 +26,12 @@ export class AnalyticsService extends AnalyticsServiceBase implements IAnalytics
 		return this.sendExceptionForTracking(exception, message);
 	}
 
-	protected async checkConsentCore(trackFeatureUsage: boolean): Promise<void> {
-		await this.restartEqatecMonitor(AnalyticsService.ANALYTICS_FEATURE_USAGE_TRACKING_API_KEY);
-		await super.checkConsentCore(trackFeatureUsage);
+	public async trackAcceptFeatureUsage(settings: { acceptTrackFeatureUsage: boolean }): Promise<void> {
 
-		// Stop the monitor, so correct API_KEY will be used when features are tracked.
-		this.tryStopEqatecMonitor();
+		this.sendMessageToBroker(<IAcceptUsageReportingInformation> {
+			type: TrackingTypes.AcceptTrackFeatureUsage,
+			acceptTrackFeatureUsage: settings.acceptTrackFeatureUsage
+		});
 	}
 
 	@cache()
@@ -93,7 +91,7 @@ export class AnalyticsService extends AnalyticsServiceBase implements IAnalytics
 
 		if (this.analyticsStatuses[this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME] === AnalyticsStatus.enabled) {
 			return this.sendMessageToBroker(
-				{
+				<IFeatureTrackingInformation> {
 					type: TrackingTypes.Feature,
 					featureName: featureName,
 					featureValue: featureValue
@@ -107,7 +105,7 @@ export class AnalyticsService extends AnalyticsServiceBase implements IAnalytics
 
 		if (this.analyticsStatuses[this.$staticConfig.ERROR_REPORT_SETTING_NAME] === AnalyticsStatus.enabled) {
 			return this.sendMessageToBroker(
-				{
+				<IExceptionsTrackingInformation> {
 					type: TrackingTypes.Exception,
 					exception,
 					message
@@ -116,7 +114,7 @@ export class AnalyticsService extends AnalyticsServiceBase implements IAnalytics
 		}
 	}
 
-	private async sendMessageToBroker(message: any): Promise<void> {
+	private async sendMessageToBroker(message: ITrackingInformation): Promise<void> {
 		const broker = await this.getAnalyticsBroker();
 		return new Promise<void>((resolve, reject) => broker.send(message, resolve));
 	}
