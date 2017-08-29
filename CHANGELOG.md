@@ -1,6 +1,32 @@
 NativeScript CLI Changelog
 ================
 
+3.2.0 - RC.1 (2017, August 29)
+==
+
+### Fixed
+* [Fixed #3073](https://github.com/NativeScript/nativescript-cli/issues/3073): Saving two platform-specific files during livesync causes an exception
+* [Fixed #3054](https://github.com/NativeScript/nativescript-cli/issues/3054): `tns prepare <platform>` fails with Unhandled promise rejection
+* [Fixed #3048](https://github.com/NativeScript/nativescript-cli/issues/3048): Fixed setup script for Windows
+* [Fixed #3046](https://github.com/NativeScript/nativescript-cli/issues/3046): Export fails for Xcode 9 beta 5
+* [Fixed #3026](https://github.com/NativeScript/nativescript-cli/issues/3026): Fixed scripts for local installation of NativeScript on macOS
+* [Fixed #3021](https://github.com/NativeScript/nativescript-cli/issues/3021): If multiple devices from the same platform are connected `tns debug <platform> --start` should ask you which of them to use
+* [Fixed #3020](https://github.com/NativeScript/nativescript-cli/issues/3020): iOS Archive Export unexpected behavior when using AdHoc or AppStore provisioning
+* [Fixed #3007](https://github.com/NativeScript/nativescript-cli/issues/3007): Application hangs on iOS during LiveSync
+* [Fixed #3006](https://github.com/NativeScript/nativescript-cli/issues/3006): Add help for --provision option
+* [Fixed #2952](https://github.com/NativeScript/nativescript-cli/issues/2952): Do not select automatically on which android device to start debugging
+* [Fixed #2946](https://github.com/NativeScript/nativescript-cli/issues/2946): Can't run ios app on case-sensitive filesystem on macOS
+* [Fixed #2934](https://github.com/NativeScript/nativescript-cli/issues/2934): Running `tns build android --release ...` uses *.debug.* files in build output
+* [Fixed #2888](https://github.com/NativeScript/nativescript-cli/issues/2888): Build in release mode for iOS doesn't seem to set the production mode for APN
+* [Fixed #2825](https://github.com/NativeScript/nativescript-cli/issues/2825): Livesync won't work if appId doesn't match - no warning/error
+* [Fixed #2818](https://github.com/NativeScript/nativescript-cli/issues/2818): Exception and stack trace is not shown in terminal for android
+* [Fixed #2810](https://github.com/NativeScript/nativescript-cli/issues/2810): Cannot read property 'match' of null error when installing nativescript cli
+* [Fixed #2728](https://github.com/NativeScript/nativescript-cli/issues/2728): `tns run ios --device fakeID` starts iOS Simulator
+* [Fixed #2716](https://github.com/NativeScript/nativescript-cli/issues/2716): Web pack issues when build in release mode
+* [Fixed #2657](https://github.com/NativeScript/nativescript-cli/issues/2657): `tns run android/ios` does not remove folders correctly
+* [Fixed #2515](https://github.com/NativeScript/nativescript-cli/issues/2515): CLI captures logs from Chrome and Cordova apps
+* [Fixed #2501](https://github.com/NativeScript/nativescript-cli/issues/2501): Manual signing with distribution provisioning profile fails with NS 2.5
+
 3.1.3 (2017, July 25)
 ==
 
