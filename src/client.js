@@ -1,11 +1,10 @@
 import MemoryCache from 'fast-memory-cache';
 import url from 'url';
-import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
 
 import { KinveyError } from 'src/errors';
-import { Log, isDefined } from 'src/utils';
+import { isDefined } from 'src/utils';
 
 const DEFAULT_TIMEOUT = 60000;
 const ACTIVE_USER_KEY = 'active_user';
