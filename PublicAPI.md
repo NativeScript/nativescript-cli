@@ -839,6 +839,24 @@ tns.liveSyncService.on("userInteractionNeeded", data => {
 });
 ```
 
+* debuggerAttached - raised whenever CLI attaches the backend debugging socket and a frontend debugging client may be attached. The event is raised with an object containing the device's identifier:
+
+Example:
+```JavaScript
+tns.liveSyncService.on("debuggerAttached", debugInfo => {
+	console.log(`Backend client connected, frontend client may be connected at ${debugInfo.url}`);
+});
+```
+
+* debuggerDetached - raised whenever CLI detaches the backend debugging socket. The event is raised with an object of the `IDebugInformation` type:
+
+Example:
+```JavaScript
+tns.liveSyncService.on("debuggerDetached", debugInfo => {
+	console.log(`Detached debugger for device with id ${debugInfo.deviceIdentifier}`);
+});
+```
+
 ## How to add a new method to Public API
 CLI is designed as command line tool and when it is used as a library, it does not give you access to all of the methods. This is mainly implementation detail. Most of the CLI's code is created to work in command line, not as a library, so before adding method to public API, most probably it will require some modification.
 For example the `$options` injected module contains information about all `--` options passed on the terminal. When the CLI is used as a library, the options are not populated. Before adding method to public API, make sure its implementation does not rely on `$options`.

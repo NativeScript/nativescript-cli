@@ -372,7 +372,15 @@ interface ICreateProjectOptions extends INpmInstallConfigurationOptionsBase {
 	pathToTemplate?: string;
 }
 
-interface IOptions extends ICommonOptions, IBundle, IPlatformTemplate, IEmulator, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions {
+interface IDebugInformation extends IPort {
+	url: string;
+}
+
+interface IPort {
+	port: Number;
+}
+
+interface IOptions extends ICommonOptions, IBundle, IPlatformTemplate, IEmulator, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort {
 	all: boolean;
 	client: boolean;
 	compileSdk: number;
@@ -386,7 +394,6 @@ interface IOptions extends ICommonOptions, IBundle, IPlatformTemplate, IEmulator
 	tsc: boolean;
 	ng: boolean;
 	androidTypings: boolean;
-	port: Number;
 	production: boolean; //npm flag
 	sdk: string;
 	syncAllFiles: boolean;

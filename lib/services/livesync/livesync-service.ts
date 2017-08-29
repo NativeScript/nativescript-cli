@@ -1,10 +1,9 @@
 import * as path from "path";
 import * as choki from "chokidar";
-import { parse } from "url";
 import { EOL } from "os";
 import { EventEmitter } from "events";
 import { hook } from "../../common/helpers";
-import { APP_FOLDER_NAME, PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME } from "../../constants";
+import { APP_FOLDER_NAME, PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME } from "../../constants";
 import { FileExtensions, DeviceTypes } from "../../common/constants";
 const deviceDescriptorPrimaryKey = "identifier";
 
@@ -101,7 +100,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		return currentDescriptors || [];
 	}
 
-	private async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string): Promise<void> {
+	private async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string): Promise<void | IDebugInformation> {
 		const deviceDescriptor = this.getDeviceDescriptor(liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier, projectData.projectDir);
 
 		return deviceDescriptor && deviceDescriptor.debugggingEnabled ?
@@ -138,13 +137,14 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
 	}
 
-	private async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOptions: IDebugOptions, outputPath?: string): Promise<void> {
+	private async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOptions: IDebugOptions, outputPath?: string): Promise<IDebugInformation> {
 		await this.$platformService.trackProjectType(projectData);
 
 		const deviceAppData = liveSyncResultInfo.deviceAppData;
 
 		const deviceIdentifier = liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier;
 		await this.$debugService.debugStop(deviceIdentifier);
+		this.emit(DEBUGGER_DETACHED_EVENT_NAME, { deviceIdentifier });
 
 		const applicationId = deviceAppData.appIdentifier;
 		const attachDebuggerOptions: IAttachDebuggerOptions = {
@@ -181,7 +181,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		return this.enableDebuggingCoreWithoutWaitingCurrentAction(deviceOption, { projectDir: projectData.projectDir });
 	}
 
-	public async attachDebugger(settings: IAttachDebuggerOptions): Promise<void> {
+	public async attachDebugger(settings: IAttachDebuggerOptions): Promise<IDebugInformation> {
 		// Default values
 		if (settings.debugOptions) {
 			settings.debugOptions.chrome = settings.debugOptions.chrome === undefined ? true : settings.debugOptions.chrome;
@@ -208,22 +208,19 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		};
 		debugData.pathToAppPackage = this.$platformService.lastOutputPath(settings.platform, buildConfig, projectData, settings.outputPath);
 
-		this.printDebugInformation(await this.$debugService.debug(debugData, settings.debugOptions));
+		return this.printDebugInformation(await this.$debugService.debug(debugData, settings.debugOptions));
 	}
 
-	public printDebugInformation(information: string): void {
-		if (!!information) {
-			const wsQueryParam = parse(information).query.ws;
-			const hostPortSplit = wsQueryParam && wsQueryParam.split(":");
-			this.emit(DEBUGGER_ATTACHED_EVENT_NAME, {
-				url: information,
-				port: hostPortSplit && hostPortSplit[1]
-			});
-			this.$logger.info(`To start debugging, open the following URL in Chrome:${EOL}${information}${EOL}`.cyan);
+	public printDebugInformation(debugInformation: IDebugInformation): IDebugInformation {
+		if (!!debugInformation.url) {
+			this.emit(DEBUGGER_ATTACHED_EVENT_NAME, debugInformation);
+			this.$logger.info(`To start debugging, open the following URL in Chrome:${EOL}${debugInformation.url}${EOL}`.cyan);
 		}
+
+		return debugInformation;
 	}
 
-	public enableDebugging(deviceOpts: IEnableDebuggingDeviceOptions[], debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<void>[] {
+	public enableDebugging(deviceOpts: IEnableDebuggingDeviceOptions[], debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<IDebugInformation>[] {
 		return _.map(deviceOpts, d => this.enableDebuggingCore(d, debuggingAdditionalOptions));
 	}
 
@@ -233,7 +230,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		return _.find(deviceDescriptors, d => d.identifier === deviceIdentifier);
 	}
 
-	private async enableDebuggingCoreWithoutWaitingCurrentAction(deviceOption: IEnableDebuggingDeviceOptions, debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<void> {
+	private async enableDebuggingCoreWithoutWaitingCurrentAction(deviceOption: IEnableDebuggingDeviceOptions, debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<IDebugInformation> {
 		const currentDeviceDescriptor = this.getDeviceDescriptor(deviceOption.deviceIdentifier, debuggingAdditionalOptions.projectDir);
 		if (!currentDeviceDescriptor) {
 			this.$errors.failWithoutHelp(`Couldn't enable debugging for ${deviceOption.deviceIdentifier}`);
@@ -250,16 +247,19 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			debugOptions: deviceOption.debugOptions
 		};
 
+		let debugInformation: IDebugInformation;
 		try {
-			await this.attachDebugger(attachDebuggerOptions);
+			debugInformation = await this.attachDebugger(attachDebuggerOptions);
 		} catch (err) {
 			this.$logger.trace("Couldn't attach debugger, will modify options and try again.", err);
 			attachDebuggerOptions.debugOptions.start = false;
-			await this.attachDebugger(attachDebuggerOptions);
+			debugInformation = await this.attachDebugger(attachDebuggerOptions);
 		}
+
+		return debugInformation;
 	}
 
-	private async enableDebuggingCore(deviceOption: IEnableDebuggingDeviceOptions, debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<void> {
+	private async enableDebuggingCore(deviceOption: IEnableDebuggingDeviceOptions, debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<IDebugInformation> {
 		const liveSyncProcessInfo: ILiveSyncProcessInfo = this.liveSyncProcessesInfo[debuggingAdditionalOptions.projectDir];
 		if (liveSyncProcessInfo && liveSyncProcessInfo.currentSyncAction) {
 			await liveSyncProcessInfo.currentSyncAction;

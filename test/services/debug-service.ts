@@ -6,7 +6,8 @@ import { EventEmitter } from "events";
 import * as constants from "../../lib/common/constants";
 import { CONNECTION_ERROR_EVENT_NAME, DebugCommandErrors } from "../../lib/constants";
 
-const fakeChromeDebugUrl = "fakeChromeDebugUrl";
+const fakeChromeDebugPort = 123;
+const fakeChromeDebugUrl = `fakeChromeDebugUrl?experiments=true&ws=localhost:${fakeChromeDebugPort}`;
 class PlatformDebugService extends EventEmitter /* implements IPlatformDebugService */ {
 	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		return fakeChromeDebugUrl;
@@ -202,7 +203,7 @@ describe("debugService", () => {
 			});
 		});
 
-		describe("returns chrome url returned by platform specific debug service", () => {
+		describe("returns chrome url along with port returned by platform specific debug service", () => {
 			_.each(["android", "iOS"], platform => {
 				it(`for ${platform} device`, async () => {
 					const testData = getDefaultTestData();
@@ -214,7 +215,8 @@ describe("debugService", () => {
 					const debugData = getDebugData();
 					const url = await debugService.debug(debugData, null);
 
-					assert.deepEqual(url, fakeChromeDebugUrl);
+					assert.deepEqual(url.url, fakeChromeDebugUrl);
+					assert.deepEqual(url.port, fakeChromeDebugPort);
 				});
 			});
 		});
