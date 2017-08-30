@@ -290,7 +290,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			this.$errors.failWithoutHelp(`Couldn't disable debugging for ${deviceOption.deviceIdentifier}. Could not find device.`);
 		}
 
-		return this.$debugService.debugStop(currentDevice.deviceInfo.identifier);
+		await this.$debugService.debugStop(currentDevice.deviceInfo.identifier);
+		this.emit(DEBUGGER_DETACHED_EVENT_NAME, { deviceIdentifier: currentDeviceDescriptor.identifier });
 	}
 
 	@hook("liveSync")

@@ -213,10 +213,12 @@ describe("debugService", () => {
 					const debugService = testInjector.resolve<IDebugServiceBase>(DebugService);
 
 					const debugData = getDebugData();
-					const url = await debugService.debug(debugData, null);
+					const debugInfo = await debugService.debug(debugData, null);
 
-					assert.deepEqual(url.url, fakeChromeDebugUrl);
-					assert.deepEqual(url.port, fakeChromeDebugPort);
+					assert.deepEqual(debugInfo, {
+						url: fakeChromeDebugUrl,
+						port: fakeChromeDebugPort
+					});
 				});
 			});
 		});
