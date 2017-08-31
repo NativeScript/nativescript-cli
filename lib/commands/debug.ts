@@ -31,7 +31,8 @@ export class DebugPlatformCommand implements ICommand {
 		debugData.deviceIdentifier = selectedDeviceForDebug.deviceInfo.identifier;
 
 		if (this.$options.start) {
-			return this.$liveSyncService.printDebugInformation(await this.$debugService.debug(debugData, debugOptions));
+			await this.$liveSyncService.printDebugInformation(await this.$debugService.debug(debugData, debugOptions));
+			return;
 		}
 
 		await this.$devicesService.detectCurrentlyAttachedDevices({ shouldReturnImmediateResult: false, platform: this.platform });

@@ -105,9 +105,9 @@ interface IDebugServiceBase extends NodeJS.EventEmitter {
 	 * Starts debug operation based on the specified debug data.
 	 * @param {IDebugData} debugData Describes information for device and application that will be debugged.
 	 * @param {IDebugOptions} debugOptions Describe possible options to modify the behaivor of the debug operation, for example stop on the first line.
-	 * @returns {Promise<T>} Array of URLs that can be used for debugging or a string representing a single url that can be used for debugging.
+	 * @returns {Promise<IDebugInformation>} Full url and port where the frontend client can be connected.
 	 */
-	debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string>;
+	debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugInformation>;
 }
 
 interface IDebugService extends IDebugServiceBase {
@@ -122,7 +122,7 @@ interface IDebugService extends IDebugServiceBase {
 /**
  * Describes actions required for debugging on specific platform (Android or iOS).
  */
-interface IPlatformDebugService extends IDebugServiceBase, IPlatform {
+interface IPlatformDebugService extends IPlatform, NodeJS.EventEmitter {
 	/**
 	 * Starts debug operation.
 	 * @param {IDebugData} debugData Describes information for device and application that will be debugged.
@@ -136,4 +136,12 @@ interface IPlatformDebugService extends IDebugServiceBase, IPlatform {
 	 * @returns {Promise<void>}
 	 */
 	debugStop(): Promise<void>;
+
+	/**
+	 * Starts debug operation based on the specified debug data.
+	 * @param {IDebugData} debugData Describes information for device and application that will be debugged.
+	 * @param {IDebugOptions} debugOptions Describe possible options to modify the behaivor of the debug operation, for example stop on the first line.
+	 * @returns {Promise<string>} Full url where the frontend client may be connected.
+	 */
+	debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string>;
 }

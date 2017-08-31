@@ -87,6 +87,7 @@ export const BUILD_OUTPUT_EVENT_NAME = "buildOutput";
 export const CONNECTION_ERROR_EVENT_NAME = "connectionError";
 export const USER_INTERACTION_NEEDED_EVENT_NAME = "userInteractionNeeded";
 export const DEBUGGER_ATTACHED_EVENT_NAME = "debuggerAttached";
+export const DEBUGGER_DETACHED_EVENT_NAME = "debuggerDetached";
 export const VERSION_STRING = "version";
 export const INSPECTOR_CACHE_DIRNAME = "ios-inspector";
 export const POST_INSTALL_COMMAND_NAME = "post-install-cli";

@@ -206,18 +206,18 @@ interface ILiveSyncService {
 interface IDebugLiveSyncService extends ILiveSyncService {
 	/**
 	 * Prints debug information.
-	 * @param {string[]} information Array of information to be printed. Note that false-like values will be stripped from the array.
-	 * @returns {void}
+	 * @param {IDebugInformation} debugInformation Information to be printed.
+	 * @returns {IDebugInformation} Full url and port where the frontend client can be connected.
 	 */
-	printDebugInformation(information: string): void;
+	printDebugInformation(debugInformation: IDebugInformation): IDebugInformation;
 
 	/**
 	 * Enables debugging for the specified devices
 	 * @param {IEnableDebuggingDeviceOptions[]} deviceOpts Settings used for enabling debugging for each device.
 	 * @param {IDebuggingAdditionalOptions} enableDebuggingOptions Settings used for enabling debugging.
-	 * @returns {Promise<void>[]} Array of promises for each device.
+	 * @returns {Promise<IDebugInformation>[]} Array of promises for each device.
 	 */
-	enableDebugging(deviceOpts: IEnableDebuggingDeviceOptions[], enableDebuggingOptions: IDebuggingAdditionalOptions): Promise<void>[];
+	enableDebugging(deviceOpts: IEnableDebuggingDeviceOptions[], enableDebuggingOptions: IDebuggingAdditionalOptions): Promise<IDebugInformation>[];
 
 	/**
 	 * Disables debugging for the specified devices
@@ -230,9 +230,9 @@ interface IDebugLiveSyncService extends ILiveSyncService {
 	/**
 	 * Attaches a debugger to the specified device.
 	 * @param {IAttachDebuggerOptions} settings Settings used for controling the attaching process.
-	 * @returns {Promise<void>}
+	 * @returns {Promise<IDebugInformation>} Full url and port where the frontend client can be connected.
 	 */
-	attachDebugger(settings: IAttachDebuggerOptions): Promise<void>;
+	attachDebugger(settings: IAttachDebuggerOptions): Promise<IDebugInformation>;
 }
 
 /**

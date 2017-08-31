@@ -1,4 +1,5 @@
 import { platform } from "os";
+import { parse } from "url";
 import { EventEmitter } from "events";
 import { CONNECTION_ERROR_EVENT_NAME, DebugCommandErrors } from "../constants";
 import { CONNECTED_STATUS } from "../common/constants";
@@ -14,7 +15,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 		this._platformDebugServices = {};
 	}
 
-	public async debug(debugData: IDebugData, options: IDebugOptions): Promise<string> {
+	public async debug(debugData: IDebugData, options: IDebugOptions): Promise<IDebugInformation> {
 		const device = this.$devicesService.getDeviceByIdentifier(debugData.deviceIdentifier);
 
 		if (!device) {
@@ -57,7 +58,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 			result = await debugService.debug(debugData, debugOptions);
 		}
 
-		return result;
+		return this.getDebugInformation(result);
 	}
 
 	public debugStop(deviceIdentifier: string): Promise<void> {
@@ -91,6 +92,16 @@ export class DebugService extends EventEmitter implements IDebugService {
 		let connectionErrorHandler = (e: Error) => this.emit(CONNECTION_ERROR_EVENT_NAME, e);
 		connectionErrorHandler = connectionErrorHandler.bind(this);
 		platformDebugService.on(CONNECTION_ERROR_EVENT_NAME, connectionErrorHandler);
+	}
+
+	private getDebugInformation(fullUrl: string): IDebugInformation {
+		const parseQueryString = true;
+		const wsQueryParam = parse(fullUrl, parseQueryString).query.ws;
+		const hostPortSplit = wsQueryParam && wsQueryParam.split(":");
+		return {
+			url: fullUrl,
+			port: hostPortSplit && +hostPortSplit[1]
+		};
 	}
 }
 
