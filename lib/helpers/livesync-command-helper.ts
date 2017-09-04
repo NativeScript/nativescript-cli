@@ -167,7 +167,15 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			};
 
 			await this.$platformService.deployPlatform(deployPlatformInfo);
-			await this.$platformService.startApplication(currentPlatform, runPlatformOptions, { appId: this.$projectData.projectId, projectName: this.$projectData.projectName });
+
+			await this.$platformService.startApplication(
+				currentPlatform,
+				runPlatformOptions,
+				{
+					appId: this.$projectData.projectIdentifiers[currentPlatform.toLowerCase()],
+					projectName: this.$projectData.projectName
+				}
+			);
 			await this.$platformService.trackProjectType(this.$projectData);
 		}
 	}

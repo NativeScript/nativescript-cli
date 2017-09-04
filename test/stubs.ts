@@ -252,6 +252,7 @@ export class ProjectDataStub implements IProjectData {
 	set platformsDir(value) {
 	}
 	projectFilePath: string;
+	projectIdentifiers: Mobile.IProjectIdentifier;
 	projectId: string;
 	dependencies: any;
 	nsConfig: any;
@@ -267,6 +268,8 @@ export class ProjectDataStub implements IProjectData {
 
 	public initializeProjectData(projectDir?: string): void {
 		this.projectDir = this.projectDir || projectDir;
+		this.projectIdentifiers = { android: "", ios: ""};
+		this.projectId = "";
 	}
 	public initializeProjectDataFromContent(): void {
 		return;

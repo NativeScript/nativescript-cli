@@ -100,7 +100,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 			// Emit LiveSync stopped when we've really stopped.
 			_.each(removedDeviceIdentifiers, deviceIdentifier => {
-				this.emit(LiveSyncEvents.liveSyncStopped, { projectDir, deviceIdentifier });
+				this.emitLivesyncEvent(LiveSyncEvents.liveSyncStopped, { projectDir, deviceIdentifier });
 			});
 		}
 	}
@@ -120,26 +120,28 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	private async refreshApplicationWithoutDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string, settings?: IShouldSkipEmitLiveSyncNotification): Promise<void> {
-		const platformLiveSyncService = this.getLiveSyncService(liveSyncResultInfo.deviceAppData.platform);
+		const platform = liveSyncResultInfo.deviceAppData.platform;
+		const platformLiveSyncService = this.getLiveSyncService(platform);
+		const applicationIdentifier = projectData.projectIdentifiers[platform.toLowerCase()];
 		try {
 			await platformLiveSyncService.refreshApplication(projectData, liveSyncResultInfo);
 		} catch (err) {
-			this.$logger.info(`Error while trying to start application ${projectData.projectId} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
-			const msg = `Unable to start application ${projectData.projectId} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Try starting it manually.`;
+			this.$logger.info(`Error while trying to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
+			const msg = `Unable to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Try starting it manually.`;
 			this.$logger.warn(msg);
 			if (!settings || !settings.shouldSkipEmitLiveSyncNotification) {
-				this.emit(LiveSyncEvents.liveSyncNotification, {
+				this.emitLivesyncEvent(LiveSyncEvents.liveSyncNotification, {
 					projectDir: projectData.projectDir,
-					applicationIdentifier: projectData.projectId,
+					applicationIdentifier,
 					deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
 					notification: msg
 				});
 			}
 		}
 
-		this.emit(LiveSyncEvents.liveSyncExecuted, {
+		this.emitLivesyncEvent(LiveSyncEvents.liveSyncExecuted, {
 			projectDir: projectData.projectDir,
-			applicationIdentifier: projectData.projectId,
+			applicationIdentifier,
 			syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
 			deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
 			isFullSync: liveSyncResultInfo.isFullSync
@@ -483,9 +485,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		const settings = this.getDefaultLatestAppPackageInstalledSettings();
 		// Now fullSync
 		const deviceAction = async (device: Mobile.IDevice): Promise<void> => {
+			const platform = device.deviceInfo.platform;
 			try {
-				const platform = device.deviceInfo.platform;
 				const platformLiveSyncService = this.getLiveSyncService(platform);
+
 				const deviceBuildInfoDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 
 				await this.ensureLatestAppPackageIsInstalledOnDevice({
@@ -516,19 +519,19 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				await this.$platformService.trackActionForPlatform({ action: "LiveSync", platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
 				await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
 
-				this.emit(LiveSyncEvents.liveSyncStarted, {
+				this.emitLivesyncEvent(LiveSyncEvents.liveSyncStarted, {
 					projectDir: projectData.projectDir,
 					deviceIdentifier: device.deviceInfo.identifier,
-					applicationIdentifier: projectData.projectId
+					applicationIdentifier: projectData.projectIdentifiers[platform.toLowerCase()]
 				});
 			} catch (err) {
 				this.$logger.warn(`Unable to apply changes on device: ${device.deviceInfo.identifier}. Error is: ${err.message}.`);
 
-				this.emit(LiveSyncEvents.liveSyncError, {
+				this.emitLivesyncEvent(LiveSyncEvents.liveSyncError, {
 					error: err,
 					deviceIdentifier: device.deviceInfo.identifier,
 					projectDir: projectData.projectDir,
-					applicationIdentifier: projectData.projectId
+					applicationIdentifier: projectData.projectIdentifiers[platform.toLowerCase()]
 				});
 
 				await this.stopLiveSync(projectData.projectDir, [device.deviceInfo.identifier], { shouldAwaitAllActions: false });
@@ -666,12 +669,12 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 									if (allErrors && _.isArray(allErrors)) {
 										for (const deviceError of allErrors) {
 											this.$logger.warn(`Unable to apply changes for device: ${deviceError.deviceIdentifier}. Error is: ${deviceError.message}.`);
-
-											this.emit(LiveSyncEvents.liveSyncError, {
+											const device = this.$devicesService.getDeviceByIdentifier(deviceError.deviceIdentifier);
+											this.emitLivesyncEvent(LiveSyncEvents.liveSyncError, {
 												error: deviceError,
 												deviceIdentifier: deviceError.deviceIdentifier,
 												projectDir: projectData.projectDir,
-												applicationIdentifier: projectData.projectId
+												applicationIdentifier: projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()]
 											});
 
 											await this.stopLiveSync(projectData.projectDir, [deviceError.deviceIdentifier], { shouldAwaitAllActions: false });
@@ -788,6 +791,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			const result = await liveSyncInfo.actionsChain;
 			return result;
 		}
+	}
+
+	public emitLivesyncEvent (event: string, livesyncData: ILiveSyncEventData): boolean {
+		return this.emit(event, livesyncData);
 	}
 
 }

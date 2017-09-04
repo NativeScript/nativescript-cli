@@ -50,40 +50,39 @@ interface IPluginVariablesService {
 	/**
 	 * Saves plugin variables in project package.json file.
 	 * @param  {IPluginData}		pluginData for the plugin.
-	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @param {string} projectDir: Specifies the directory of the project.
 	 * @return {Promise<void>}
 	 */
-	savePluginVariablesInProjectFile(pluginData: IPluginData, projectData: IProjectData): Promise<void>;
+	savePluginVariablesInProjectFile(pluginData: IPluginData, projectDir: string): Promise<void>;
 
 	/**
 	 * Removes plugin variables from project package.json file.
 	 * @param  {string}		pluginName Name of the plugin.
-	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @param {string} projectDir: Specifies the directory of the project.
 	 * @return {void}
 	 */
-	removePluginVariablesFromProjectFile(pluginName: string, projectData: IProjectData): void;
+	removePluginVariablesFromProjectFile(pluginName: string, projectDir: string): void;
 
 	/**
 	 * Replaces all plugin variables with their corresponding values.
 	 * @param {IPluginData}		pluginData for the plugin.
 	 * @param {pluginConfigurationFilePath}		pluginConfigurationFilePath for the plugin.
-	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @param {string} projectDir: Specifies the directory of the project.
 	 * @return {Promise<void>}
 	 */
-	interpolatePluginVariables(pluginData: IPluginData, pluginConfigurationFilePath: string, projectData: IProjectData): Promise<void>;
+	interpolatePluginVariables(pluginData: IPluginData, pluginConfigurationFilePath: string, projectDir: string): Promise<void>;
 
 	/**
 	 * Replaces {nativescript.id} expression with the application identifier from package.json.
 	 * @param {pluginConfigurationFilePath}	pluginConfigurationFilePath for the plugin.
-	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @return {void}
 	 */
-	interpolateAppIdentifier(pluginConfigurationFilePath: string, projectData: IProjectData): void;
+	interpolateAppIdentifier(pluginConfigurationFilePath: string, projectIdentifier: string): void;
 
 	/**
 	 * Replaces both plugin variables and appIdentifier
 	 */
-	interpolate(pluginData: IPluginData, pluginConfigurationFilePath: string, projectData: IProjectData): Promise<void>;
+	interpolate(pluginData: IPluginData, pluginConfigurationFilePath: string, projectDir: string, projectIdentifier: string): Promise<void>;
 
 	/**
 	 * Returns the

@@ -446,7 +446,8 @@ describe("Project Service Tests", () => {
 		it("returns true when getProjectData does not throw, projectDir and projectId are valid", () => {
 			const testInjector = getTestInjector({
 				projectDir: "projectDir",
-				projectId: "projectId"
+				projectId: "projectId",
+				projectIdentifiers: { android: "projectId", ios: "projectId"},
 			});
 
 			const projectService: IProjectService = testInjector.resolve(ProjectServiceLib.ProjectService);

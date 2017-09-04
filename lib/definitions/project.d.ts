@@ -77,7 +77,8 @@ interface INsConfig {
 interface IProjectData extends ICreateProjectData {
 	platformsDir: string;
 	projectFilePath: string;
-	projectId?: string;
+	projectId: string;
+	projectIdentifiers?: Mobile.IProjectIdentifier;
 	dependencies: any;
 	devDependencies: IStringDictionary;
 	appDirectoryPath: string;
