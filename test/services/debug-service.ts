@@ -93,6 +93,10 @@ describe("debugService", () => {
 
 		testInjector.register("logger", stubs.LoggerStub);
 
+		testInjector.register("analyticsService", {
+			trackEventActionInGoogleAnalytics: (data: IEventActionData) => Promise.resolve()
+		});
+
 		return testInjector;
 	};
 

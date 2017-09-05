@@ -13,3 +13,4 @@ $injector.requirePublicClass("localBuildService", "./services/local-build-servic
 // We need this because some services check if (!$options.justlaunch) to start the device log after some operation.
 // We don't want this behaviour when the CLI is required as library.
 $injector.resolve("options").justlaunch = true;
+$injector.resolve<IStaticConfig>("staticConfig").disableAnalytics = true;

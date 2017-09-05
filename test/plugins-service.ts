@@ -76,7 +76,10 @@ function createTestInjector() {
 	testInjector.register("analyticsService", {
 		trackException: () => { return Promise.resolve(); },
 		checkConsent: () => { return Promise.resolve(); },
-		trackFeature: () => { return Promise.resolve(); }
+		trackFeature: () => { return Promise.resolve(); },
+		trackEventActionInGoogleAnalytics: (data: IEventActionData) => Promise.resolve(),
+		trackInGoogleAnalytics: (data: IGoogleAnalyticsData) => Promise.resolve(),
+		trackAcceptFeatureUsage: (settings: { acceptTrackFeatureUsage: boolean }) => Promise.resolve()
 	});
 	testInjector.register("projectFilesManager", ProjectFilesManager);
 	testInjector.register("pluginVariablesService", {

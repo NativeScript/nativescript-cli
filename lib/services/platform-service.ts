@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as shell from "shelljs";
 import * as constants from "../constants";
+import { Configurations } from "../common/constants";
 import * as helpers from "../common/helpers";
 import * as semver from "semver";
 import { EventEmitter } from "events";
@@ -466,9 +467,18 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	public async buildPlatform(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {
 		this.$logger.out("Building project...");
 
+		const action = constants.TrackActionNames.Build;
 		await this.trackProjectType(projectData);
 		const isForDevice = this.$mobileHelper.isAndroidPlatform(platform) ? null : buildConfig && buildConfig.buildForDevice;
-		await this.trackActionForPlatform({ action: "Build", platform, isForDevice });
+		await this.trackActionForPlatform({ action, platform, isForDevice });
+
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action,
+			isForDevice,
+			platform,
+			projectDir: projectData.projectDir,
+			additionalData: `${buildConfig.release ? Configurations.Release : Configurations.Debug}_${buildConfig.clean ? constants.BuildStates.Clean : constants.BuildStates.Incremental}`
+		});
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const handler = (data: any) => {
@@ -510,6 +520,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	public async installApplication(device: Mobile.IDevice, buildConfig: IBuildConfig, projectData: IProjectData, packageFile?: string, outputFilePath?: string): Promise<void> {
 		this.$logger.out("Installing...");
+
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: constants.TrackActionNames.Deploy,
+			device,
+			projectDir: projectData.projectDir
+		});
+
 		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 		if (!packageFile) {
 			if (this.$devicesService.isiOSSimulator(device)) {
@@ -567,7 +584,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				this.$logger.out("Skipping install.");
 			}
 
-			await this.trackActionForPlatform({ action: "Deploy", platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
+			await this.trackActionForPlatform({ action: constants.TrackActionNames.Deploy, platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
 		};
 
 		await this.$devicesService.execute(action, this.getCanExecuteAction(platform, deployOptions));

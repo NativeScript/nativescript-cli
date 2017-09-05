@@ -25,6 +25,7 @@ const createTestInjector = (): IInjector => {
 	});
 
 	testInjector.register("pluginsService", {});
+	testInjector.register("analyticsService", {});
 	testInjector.register("injector", testInjector);
 
 	return testInjector;
@@ -44,6 +45,7 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 		$debugService: IDebugService,
 		$errors: IErrors,
 		$debugDataService: IDebugDataService,
+		$analyticsService: IAnalyticsService,
 		$injector: IInjector) {
 
 		super(
@@ -60,6 +62,7 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 			$debugService,
 			$errors,
 			$debugDataService,
+			$analyticsService,
 			$injector
 		);
 	}

@@ -81,3 +81,17 @@ interface IAnalyticsProvider {
 	 */
 	finishTracking(): Promise<void>;
 }
+
+interface IGoogleAnalyticsTrackingInformation extends IGoogleAnalyticsData, ITrackingInformation { }
+
+/**
+ * Describes methods required to track in Google Analytics.
+ */
+interface IGoogleAnalyticsProvider {
+	/**
+	 * Tracks hit types.
+	 * @param {IGoogleAnalyticsData} data Data that has to be tracked.
+	 * @returns {Promise<void>}
+	 */
+	trackHit(data: IGoogleAnalyticsData): Promise<void>;
+}
