@@ -372,7 +372,7 @@ interface ICreateProjectOptions extends INpmInstallConfigurationOptionsBase {
 	pathToTemplate?: string;
 }
 
-interface IDebugInformation extends IPort {
+interface IDebugInformation extends IPort, Mobile.IDeviceIdentifier {
 	url: string;
 }
 
