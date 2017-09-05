@@ -5,7 +5,9 @@
 # @powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((new-object net.webclient).DownloadString('https://www.nativescript.org/setup/win'))"
 # To run it inside a WINDOWS POWERSHELL console against the production branch (only one supported with self-elevation) use
 # start-process -FilePath PowerShell.exe -Verb Runas -Wait -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString('https://www.nativescript.org/setup/win'))"
-
+param(
+	[switch] $SilentMode
+)
 # Check if latest .NET framework installed is at least 4
 $dotNetVersions = Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP' -recurse | Get-ItemProperty -name Version,Release -EA 0 | Where { $_.PSChildName -match '^(?!S)\p{L}'} | Select Version
 $latestDotNetVersion = $dotNetVersions.GetEnumerator() | Sort-Object Version | Select-Object -Last 1
@@ -27,7 +29,7 @@ if (-not $isElevated) {
 }
 
 # Help with installing other dependencies
-$script:answer = ""
+$script:answer = if ($SilentMode) {"a"} else {""}
 function Install($programName, $message, $script, $shouldExit) {
 	if ($script:answer -ne "a") {
 		Write-Host -ForegroundColor Green "Allow the script to install $($programName)?"
