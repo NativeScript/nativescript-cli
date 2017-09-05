@@ -202,7 +202,7 @@ export namespace Kinvey {
     pendingSyncEntities(query?: Query, options?: RequestOptions): Promise<SyncEntity[]>;
     push(query?: Query, options?: RequestOptions): Promise<PushResult<T>[]>;
     pull(query?: Query, options?: RequestOptions): Promise<T[]>;
-    sync(query?: Query, options?: RequestOptions): { push: PushResult<T>[], pull: T[] };
+    sync(query?: Query, options?: RequestOptions): Promise<{ push: PushResult<T>[], pull: T[] }>;
     clearSync(query?: Query, options?: RequestOptions): Promise<{ count: number }>;
   }
 
