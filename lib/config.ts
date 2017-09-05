@@ -73,7 +73,7 @@ export class StaticConfig extends StaticConfigBase implements IStaticConfig {
 	}
 
 	public get PATH_TO_BOOTSTRAP(): string {
-		return path.join(__dirname, "bootstrap");
+		return path.join(__dirname, "bootstrap.js");
 	}
 
 	public async getAdbFilePath(): Promise<string> {

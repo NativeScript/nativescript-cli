@@ -1,6 +1,6 @@
 {
   "name": "nativescript",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -72,6 +72,12 @@
       "version": "0.5.0",
       "resolved": "https://registry.npmjs.org/@types/source-map/-/source-map-0.5.0.tgz",
       "integrity": "sha1-3TS72OMv5OdPLj2KwH+KpbRaR6w=",
+      "dev": true
+    },
+    "@types/universal-analytics": {
+      "version": "0.4.1",
+      "resolved": "https://registry.npmjs.org/@types/universal-analytics/-/universal-analytics-0.4.1.tgz",
+      "integrity": "sha512-AZSPpDUEZ4mAgO9geHc62dp/xCLmBJ1yIpbgTq5W/cWcVQsxmU/FyKwYKHXk2hnT9TAmYVFFdAijMrCdYjuHsA==",
       "dev": true
     },
     "abbrev": {
@@ -1838,8 +1844,7 @@
         },
         "jsbn": {
           "version": "0.1.1",
-          "bundled": true,
-          "optional": true
+          "bundled": true
         },
         "json-schema": {
           "version": "0.2.3",
@@ -2207,8 +2212,7 @@
         },
         "tweetnacl": {
           "version": "0.14.5",
-          "bundled": true,
-          "optional": true
+          "bundled": true
         },
         "uid-number": {
           "version": "0.0.6",
@@ -5163,6 +5167,24 @@
       "resolved": "https://registry.npmjs.org/underscore.string/-/underscore.string-3.2.3.tgz",
       "integrity": "sha1-gGmSYzZl1eX8tNsfs6hi62jp5to=",
       "dev": true
+    },
+    "universal-analytics": {
+      "version": "0.4.15",
+      "resolved": "https://registry.npmjs.org/universal-analytics/-/universal-analytics-0.4.15.tgz",
+      "integrity": "sha512-9Dt6WBWsHsmv74G+N/rmEgi6KFZxVvQXkVhr0disegeUryybQAUQwMD1l5EtqaOu+hSOGbhL/hPPQYisZIqPRw==",
+      "requires": {
+        "async": "1.2.1",
+        "request": "2.81.0",
+        "underscore": "1.5.2",
+        "uuid": "3.0.1"
+      },
+      "dependencies": {
+        "async": {
+          "version": "1.2.1",
+          "resolved": "https://registry.npmjs.org/async/-/async-1.2.1.tgz",
+          "integrity": "sha1-pIFqF81f9RbfosdpikUzabl5DeA="
+        }
+      }
     },
     "unpipe": {
       "version": "1.0.0",

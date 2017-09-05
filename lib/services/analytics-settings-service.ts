@@ -1,7 +1,6 @@
 import { createGUID } from "../common/helpers";
 
 class AnalyticsSettingsService implements IAnalyticsSettingsService {
-	private static SESSIONS_STARTED_OBSOLETE_KEY = "SESSIONS_STARTED";
 	private static SESSIONS_STARTED_KEY_PREFIX = "SESSIONS_STARTED_";
 
 	constructor(private $userSettingsService: UserSettings.IUserSettingsService,
@@ -12,16 +11,12 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 		return true;
 	}
 
-	public async getUserId(): Promise<string> {
-		let currentUserId = await this.$userSettingsService.getSettingValue<string>("USER_ID");
-		if (!currentUserId) {
-			currentUserId = createGUID(false);
+	public getUserId(): Promise<string> {
+		return this.getSettingValueOrDefault("USER_ID");
+	}
 
-			this.$logger.trace(`Setting new USER_ID: ${currentUserId}.`);
-			await this.$userSettingsService.saveSetting<string>("USER_ID", currentUserId);
-		}
-
-		return currentUserId;
+	public getClientId(): Promise<string> {
+		return this.getSettingValueOrDefault(this.$staticConfig.ANALYTICS_INSTALLATION_ID_SETTING_NAME);
 	}
 
 	public getClientName(): string {
@@ -33,14 +28,8 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	}
 
 	public async getUserSessionsCount(projectName: string): Promise<number> {
-		const oldSessionCount = await this.$userSettingsService.getSettingValue<number>(AnalyticsSettingsService.SESSIONS_STARTED_OBSOLETE_KEY);
-
-		if (oldSessionCount) {
-			// remove the old property for sessions count
-			await this.$userSettingsService.removeSetting(AnalyticsSettingsService.SESSIONS_STARTED_OBSOLETE_KEY);
-		}
-
-		return await this.$userSettingsService.getSettingValue<number>(this.getSessionsProjectKey(projectName)) || oldSessionCount || 0;
+		const sessionsCountForProject = await this.$userSettingsService.getSettingValue<number>(this.getSessionsProjectKey(projectName));
+		return sessionsCountForProject || 0;
 	}
 
 	public async setUserSessionsCount(count: number, projectName: string): Promise<void> {
@@ -49,6 +38,18 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 
 	private getSessionsProjectKey(projectName: string): string {
 		return `${AnalyticsSettingsService.SESSIONS_STARTED_KEY_PREFIX}${projectName}`;
+	}
+
+	private async getSettingValueOrDefault(settingName: string): Promise<string> {
+		let guid = await this.$userSettingsService.getSettingValue<string>(settingName);
+		if (!guid) {
+			guid = createGUID(false);
+
+			this.$logger.trace(`Setting new ${settingName}: ${guid}.`);
+			await this.$userSettingsService.saveSetting<string>(settingName, guid);
+		}
+
+		return guid;
 	}
 }
 $injector.register("analyticsSettingsService", AnalyticsSettingsService);

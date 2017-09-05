@@ -394,21 +394,6 @@ tns.npm.view(["nativescript"], {}).then(result => {
 });
 ```
 
-## analyticsService
-Provides a way to configure analytics.
-
-### startEqatecMonitor
-* Definition:
-```TypeScript
-/**
- * Starts analytics monitor with provided key.
- * @param {string} projectApiKey API key with which to start analytics monitor.
- * @returns {Promise<void>}.
- */
-startEqatecMonitor(projectApiKey: string): Promise<void>;
-```
-
-
 ## debugService
 Provides methods for debugging applications on devices. The service is also event emitter, that raises the following events:
 * `connectionError` event - this event is raised when the debug operation cannot start on iOS device. The causes can be:

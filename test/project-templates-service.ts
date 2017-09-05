@@ -50,7 +50,10 @@ function createTestInjector(configuration?: { shouldNpmInstallThrow: boolean, np
 
 	injector.register("projectTemplatesService", ProjectTemplatesService);
 
-	injector.register("analyticsService", { track: async (): Promise<any[]> => undefined });
+	injector.register("analyticsService", {
+		track: async (): Promise<any[]> => undefined,
+		trackEventActionInGoogleAnalytics: (data: IEventActionData) => Promise.resolve()
+	});
 
 	return injector;
 }

@@ -20,6 +20,12 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 
 		await this.$analyticsService.track("Template used for project creation", templateName);
 
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: constants.TrackActionNames.CreateProject,
+			isForDevice: null,
+			additionalData: templateName
+		});
+
 		const realTemplatePath = await this.prepareNativeScriptTemplate(templateName, version, projectDir);
 
 		// this removes dependencies from templates so they are not copied to app folder

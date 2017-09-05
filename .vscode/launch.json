@@ -67,8 +67,19 @@
 		{
 			"type": "node",
 			"request": "attach",
-			"name": "Attach to Process",
-			"port": 5858,
+			"name": "Attach to Broker Process",
+			// In case you want to debug Analytics Broker process, add `--debug-brk=9897` (or --inspect-brk=9897) when spawning analytics-broker-process.
+			"port": 9897,
+			"sourceMaps": true
+		},
+
+		{
+			"type": "node",
+			"request": "attach",
+			"name": "Attach to Eqatec Process",
+			// In case you want to debug Eqatec Analytics process, add `--debug-brk=9855` (or --inspect-brk=9855) when spawning eqatec-analytics-process.
+			// NOTE: Ensure you set it only for one of the analytics processes.
+			"port": 9855,
 			"sourceMaps": true
 		}
 

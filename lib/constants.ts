@@ -103,3 +103,21 @@ export const enum NativePlatformStatus {
 	requiresPrepare = "2",
 	alreadyPrepared = "3"
 }
+
+export const enum DebugTools {
+	Chrome = "Chrome",
+	Inspector = "Inspector"
+}
+
+export const enum TrackActionNames {
+	Build = "Build",
+	CreateProject = "Create project",
+	Debug = "Debug",
+	Deploy = "Deploy",
+	LiveSync = "LiveSync"
+}
+
+export const enum BuildStates {
+	Clean = "Clean",
+	Incremental = "Incremental"
+}

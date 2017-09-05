@@ -30,7 +30,9 @@ $injector.require("androidDebugService", "./services/android-debug-service");
 
 $injector.require("userSettingsService", "./services/user-settings-service");
 $injector.require("analyticsSettingsService", "./services/analytics-settings-service");
-$injector.requirePublic("analyticsService", "./services/analytics-service");
+$injector.require("analyticsService", "./services/analytics/analytics-service");
+$injector.require("eqatecAnalyticsProvider", "./services/analytics/eqatec-analytics-provider");
+$injector.require("googleAnalyticsProvider", "./services/analytics/google-analytics-provider");
 
 $injector.require("emulatorSettingsService", "./services/emulator-settings-service");
 

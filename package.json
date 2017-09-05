@@ -16,8 +16,8 @@
     "mocha": "node test-scripts/mocha.js",
     "tsc": "tsc",
     "tslint": "tslint -p tsconfig.json --type-check",
-	"test-watch": "node ./dev/tsc-to-mocha-watch.js",
-	"tslint-fix": "tslint -p tsconfig.json --type-check --fix"
+    "test-watch": "node ./dev/tsc-to-mocha-watch.js",
+    "tslint-fix": "tslint -p tsconfig.json --type-check --fix"
   },
   "repository": {
     "type": "git",
@@ -72,6 +72,7 @@
     "source-map": "0.5.6",
     "tabtab": "https://github.com/Icenium/node-tabtab/tarball/master",
     "temp": "0.8.3",
+    "universal-analytics": "0.4.15",
     "uuid": "3.0.1",
     "winreg": "0.0.17",
     "ws": "2.2.0",
@@ -91,6 +92,7 @@
     "@types/request": "0.0.45",
     "@types/semver": "^5.3.31",
     "@types/source-map": "0.5.0",
+    "@types/universal-analytics": "0.4.1",
     "chai": "4.0.2",
     "chai-as-promised": "7.0.0",
     "grunt": "1.0.1",

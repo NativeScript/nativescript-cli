@@ -3,6 +3,7 @@ import { parse } from "url";
 import { EventEmitter } from "events";
 import { CONNECTION_ERROR_EVENT_NAME, DebugCommandErrors } from "../constants";
 import { CONNECTED_STATUS } from "../common/constants";
+import { DebugTools, TrackActionNames } from "../constants";
 
 export class DebugService extends EventEmitter implements IDebugService {
 	private _platformDebugServices: IDictionary<IPlatformDebugService>;
@@ -10,7 +11,8 @@ export class DebugService extends EventEmitter implements IDebugService {
 		private $errors: IErrors,
 		private $injector: IInjector,
 		private $hostInfo: IHostInfo,
-		private $mobileHelper: Mobile.IMobileHelper) {
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $analyticsService: IAnalyticsService) {
 		super();
 		this._platformDebugServices = {};
 	}
@@ -25,6 +27,13 @@ export class DebugService extends EventEmitter implements IDebugService {
 		if (device.deviceInfo.status !== CONNECTED_STATUS) {
 			this.$errors.failWithoutHelp(`The device with identifier ${debugData.deviceIdentifier} is unreachable. Make sure it is Trusted and try again.`);
 		}
+
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: TrackActionNames.Debug,
+			device,
+			additionalData: this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform) && (!options || !options.chrome) ? DebugTools.Inspector : DebugTools.Chrome,
+			projectDir: debugData.projectDir
+		});
 
 		if (!(await device.applicationManager.isApplicationInstalled(debugData.applicationIdentifier))) {
 			this.$errors.failWithoutHelp(`The application ${debugData.applicationIdentifier} is not installed on device with identifier ${debugData.deviceIdentifier}.`);

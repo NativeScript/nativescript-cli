@@ -3,7 +3,7 @@ import * as choki from "chokidar";
 import { EOL } from "os";
 import { EventEmitter } from "events";
 import { hook } from "../../common/helpers";
-import { APP_FOLDER_NAME, PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME } from "../../constants";
+import { APP_FOLDER_NAME, PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME, TrackActionNames } from "../../constants";
 import { FileExtensions, DeviceTypes } from "../../common/constants";
 const deviceDescriptorPrimaryKey = "identifier";
 
@@ -33,6 +33,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		private $debugService: IDebugService,
 		private $errors: IErrors,
 		private $debugDataService: IDebugDataService,
+		private $analyticsService: IAnalyticsService,
 		private $injector: IInjector) {
 		super();
 	}
@@ -365,6 +366,12 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			options.rebuiltInformation.push({ isEmulator: options.device.isEmulator, platform, pathToBuildItem });
 			action = LiveSyncTrackActionNames.LIVESYNC_OPERATION_BUILD;
 		}
+
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: TrackActionNames.LiveSync,
+			device: options.device,
+			projectDir: options.projectData.projectDir
+		});
 
 		await this.trackAction(action, platform, options);
 

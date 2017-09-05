@@ -7,7 +7,9 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $platformsData: IPlatformsData,
+		private $analyticsService: IAnalyticsService,
 		private $errors: IErrors) {
+			this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
 	}
 
 	public getPlatformsForOperation(platform: string): string[] {

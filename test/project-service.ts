@@ -137,7 +137,10 @@ class ProjectIntegrationTest {
 		this.testInjector.register("fs", FileSystem);
 		this.testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
 		this.testInjector.register("staticConfig", StaticConfig);
-		this.testInjector.register("analyticsService", { track: async (): Promise<any> => undefined });
+		this.testInjector.register("analyticsService", {
+			track: async (): Promise<any> => undefined,
+			trackEventActionInGoogleAnalytics: (data: IEventActionData) => Promise.resolve()
+		});
 
 		this.testInjector.register("npmInstallationManager", NpmInstallationManager);
 		this.testInjector.register("npm", NpmLib.NodePackageManager);
