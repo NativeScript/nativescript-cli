@@ -103,7 +103,7 @@ $androidExecutable = [io.path]::combine($env:ANDROID_HOME, "tools", "bin", "sdkm
 echo y | cmd /c "$androidExecutable" "platform-tools"
 echo y | cmd /c "$androidExecutable" "tools"
 echo y | cmd /c "$androidExecutable" "build-tools;25.0.2"
-echo y | cmd /c "$androidExecutable" "platforms;android-23"
+echo y | cmd /c "$androidExecutable" "platforms;android-25"
 echo y | cmd /c "$androidExecutable" "extras;android;m2repository"
 echo y | cmd /c "$androidExecutable" "extras;google;m2repository"
 
