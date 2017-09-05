@@ -170,7 +170,7 @@ export namespace Kinvey {
 
   // DataStore class
   abstract class DataStore {
-    static collection<T extends Entity>(collection: string, type?: DataStoreType, options?: {
+    static collection<T extends Entity = Entity>(collection: string, type?: DataStoreType, options?: {
       client?: Client;
       ttl?: number;
       useDeltaFetch?: boolean;
@@ -179,7 +179,7 @@ export namespace Kinvey {
   }
 
   // NetworkStore class
-  class NetworkStore<T extends Entity> {
+  class NetworkStore<T extends Entity = Entity> {
     protected constructor();
     client: Client;
     pathname: string;
@@ -196,7 +196,7 @@ export namespace Kinvey {
   }
 
   // CacheStore class
-  class CacheStore<T extends Entity> extends NetworkStore<T> {
+  class CacheStore<T extends Entity = Entity> extends NetworkStore<T> {
     clear(query?: Query, options?: RequestOptions): Promise<{ count: number }>;
     pendingSyncCount(query?: Query, options?: RequestOptions): Promise<{ count: number }>;
     pendingSyncEntities(query?: Query, options?: RequestOptions): Promise<SyncEntity[]>;
@@ -207,7 +207,7 @@ export namespace Kinvey {
   }
 
   // SyncStore class
-  class SyncStore<T extends Entity> extends CacheStore<T> {}
+  class SyncStore<T extends Entity = Entity> extends CacheStore<T> {}
 
   // File Metadata interface
   interface FileMetadata {
@@ -231,14 +231,14 @@ export namespace Kinvey {
   // Files class
   class Files {
     static useDeltaFetch: boolean;
-    static find<T extends File>(query?: Query, options?: RequestOptions): Promise<T[]>;
-    static findById<T extends File>(id: string, options?: RequestOptions): Promise<T>;
-    static download<T extends File>(name: string, options?: RequestOptions): Promise<T>;
+    static find<T extends File = File>(query?: Query, options?: RequestOptions): Promise<T[]>;
+    static findById<T extends File = File>(id: string, options?: RequestOptions): Promise<T>;
+    static download<T extends File = File>(name: string, options?: RequestOptions): Promise<T>;
     static downloadByUrl(url: string, options?: RequestOptions): Promise<{}>;
-    static stream<T extends File>(name: string, options?: RequestOptions): Promise<T>;
+    static stream<T extends File = File>(name: string, options?: RequestOptions): Promise<T>;
     static group(aggregation: Aggregation, options?: RequestOptions): Promise<{}>;
     static count(query?: Query, options?: RequestOptions): Promise<{ count: number }>;
-    static upload<T extends File>(file: {}, metadata?: FileMetadata, options?: RequestOptions): Promise<T>;
+    static upload<T extends File = File>(file: {}, metadata?: FileMetadata, options?: RequestOptions): Promise<T>;
     static remove(query?: Query, options?: RequestOptions): Promise<{ count: number }>;
     static removeById(id: string, options?: RequestOptions): Promise<{ count: number }>;
   }
