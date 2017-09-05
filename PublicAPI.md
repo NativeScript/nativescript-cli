@@ -30,6 +30,10 @@ const tns = require("nativescript");
 * [liveSyncService](#livesyncservice)
 	* [liveSync](#livesync)
 	* [stopLiveSync](#stopLiveSync)
+	* [enableDebugging](#enableDebugging)
+	* [attachDebugger](#attachDebugger)
+	* [disableDebugging](#disableDebugging)
+	* [getLiveSyncDeviceDescriptors](#getLiveSyncDeviceDescriptors)
 	* [events](#events)
 
 
@@ -454,9 +458,9 @@ The returned Promise will be rejected in case any error occurs. It will also be 
  * Starts debug operation based on the specified debug data.
  * @param {IDebugData} debugData Describes information for device and application that will be debugged.
  * @param {IDebugOptions} debugOptions Describe possible options to modify the behaivor of the debug operation, for example stop on the first line.
- * @returns {Promise<string>} URL that should be opened in Chrome DevTools.
+ * @returns {Promise<IDebugInformation>} Device Identifier, full url and port where the frontend client can be connected.
  */
-debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string>;
+debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugInformation>;
 ```
 
 The type of arguments that you can pass are described below:
@@ -515,6 +519,16 @@ interface IDebugOptions {
 	 * Default value is 02e6bde1bbe34e43b309d4ef774b1168d25fd024 which corresponds to 55.0.2883 Chrome version
 	 */
 	devToolsCommit?: string;
+
+	/**
+	 * Defines if Chrome DevTools should be used for debugging.
+	 */
+	chrome?: boolean;
+
+	/**
+	 * Defines if thе application is already started on device.
+	 */
+	start?: boolean;
 }
 ```
 
@@ -536,7 +550,7 @@ const debugOptions = {
 };
 
 tns.debugService.debug(debugData, debugOptions)
-	.then(url => console.log(`Open the following url in Chrome DevTools: ${url}`))
+	.then(debugInfo => console.log(`Open the following url in Chrome DevTools: ${debugInfo.url}, port is: ${debugInfo.port} and deviceIdentifier is: ${debugInfo.deviceIdentifier}`))
 	.catch(err => console.log(`Unable to start debug operation, reason: ${err.message}.`));
 ```
 
@@ -839,12 +853,12 @@ tns.liveSyncService.on("userInteractionNeeded", data => {
 });
 ```
 
-* debuggerAttached - raised whenever CLI attaches the backend debugging socket and a frontend debugging client may be attached. The event is raised with an object containing the device's identifier:
+* debuggerAttached - raised whenever CLI attaches the backend debugging socket and a frontend debugging client may be attached. The event is raised with an object containing the device's identifier, url for debugging and port
 
 Example:
 ```JavaScript
 tns.liveSyncService.on("debuggerAttached", debugInfo => {
-	console.log(`Backend client connected, frontend client may be connected at ${debugInfo.url}`);
+	console.log(`Backend client connected, frontend client may be connected at ${debugInfo.url} to debug app on device ${debugInfo.deviceIdentifier}. Port is: ${debugInfo.port}`);
 });
 ```
 

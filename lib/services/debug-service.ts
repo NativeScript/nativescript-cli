@@ -58,7 +58,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 			result = await debugService.debug(debugData, debugOptions);
 		}
 
-		return this.getDebugInformation(result);
+		return this.getDebugInformation(result, device.deviceInfo.identifier);
 	}
 
 	public debugStop(deviceIdentifier: string): Promise<void> {
@@ -94,20 +94,18 @@ export class DebugService extends EventEmitter implements IDebugService {
 		platformDebugService.on(CONNECTION_ERROR_EVENT_NAME, connectionErrorHandler);
 	}
 
-	private getDebugInformation(fullUrl: string): IDebugInformation {
-		let debugInfo: IDebugInformation = {
+	private getDebugInformation(fullUrl: string, deviceIdentifier: string): IDebugInformation {
+		const debugInfo: IDebugInformation = {
 			url: fullUrl,
-			port: 0
+			port: 0,
+			deviceIdentifier
 		};
 
 		if (fullUrl) {
 			const parseQueryString = true;
 			const wsQueryParam = parse(fullUrl, parseQueryString).query.ws;
 			const hostPortSplit = wsQueryParam && wsQueryParam.split(":");
-			debugInfo = {
-				url: fullUrl,
-				port: hostPortSplit && +hostPortSplit[1]
-			};
+			debugInfo.port = hostPortSplit && +hostPortSplit[1];
 		}
 
 		return debugInfo;

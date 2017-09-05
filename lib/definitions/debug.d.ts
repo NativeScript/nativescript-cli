@@ -105,7 +105,7 @@ interface IDebugServiceBase extends NodeJS.EventEmitter {
 	 * Starts debug operation based on the specified debug data.
 	 * @param {IDebugData} debugData Describes information for device and application that will be debugged.
 	 * @param {IDebugOptions} debugOptions Describe possible options to modify the behaivor of the debug operation, for example stop on the first line.
-	 * @returns {Promise<IDebugInformation>} Full url and port where the frontend client can be connected.
+	 * @returns {Promise<IDebugInformation>} Device Identifier, full url and port where the frontend client can be connected.
 	 */
 	debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugInformation>;
 }

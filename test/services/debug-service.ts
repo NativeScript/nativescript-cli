@@ -8,6 +8,8 @@ import { CONNECTION_ERROR_EVENT_NAME, DebugCommandErrors } from "../../lib/const
 
 const fakeChromeDebugPort = 123;
 const fakeChromeDebugUrl = `fakeChromeDebugUrl?experiments=true&ws=localhost:${fakeChromeDebugPort}`;
+const defaultDeviceIdentifier = "Nexus5";
+
 class PlatformDebugService extends EventEmitter /* implements IPlatformDebugService */ {
 	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		return fakeChromeDebugUrl;
@@ -18,6 +20,7 @@ interface IDebugTestDeviceInfo {
 	deviceInfo: {
 		status: string;
 		platform: string;
+		identifier: string;
 	};
 
 	isEmulator: boolean;
@@ -36,7 +39,8 @@ interface IDebugTestData {
 const getDefaultDeviceInformation = (platform?: string): IDebugTestDeviceInfo => ({
 	deviceInfo: {
 		status: constants.CONNECTED_STATUS,
-		platform: platform || "Android"
+		platform: platform || "Android",
+		identifier: defaultDeviceIdentifier
 	},
 
 	isEmulator: false
@@ -95,7 +99,7 @@ describe("debugService", () => {
 	describe("debug", () => {
 		const getDebugData = (deviceIdentifier?: string): IDebugData => ({
 			applicationIdentifier: "org.nativescript.app1",
-			deviceIdentifier: deviceIdentifier || "Nexus5",
+			deviceIdentifier: deviceIdentifier || defaultDeviceIdentifier,
 			projectDir: "/Users/user/app1",
 			projectName: "app1"
 		});
@@ -217,7 +221,8 @@ describe("debugService", () => {
 
 					assert.deepEqual(debugInfo, {
 						url: fakeChromeDebugUrl,
-						port: fakeChromeDebugPort
+						port: fakeChromeDebugPort,
+						deviceIdentifier: debugData.deviceIdentifier
 					});
 				});
 			});
