@@ -95,13 +95,22 @@ export class DebugService extends EventEmitter implements IDebugService {
 	}
 
 	private getDebugInformation(fullUrl: string): IDebugInformation {
-		const parseQueryString = true;
-		const wsQueryParam = parse(fullUrl, parseQueryString).query.ws;
-		const hostPortSplit = wsQueryParam && wsQueryParam.split(":");
-		return {
+		let debugInfo: IDebugInformation = {
 			url: fullUrl,
-			port: hostPortSplit && +hostPortSplit[1]
+			port: 0
 		};
+
+		if (fullUrl) {
+			const parseQueryString = true;
+			const wsQueryParam = parse(fullUrl, parseQueryString).query.ws;
+			const hostPortSplit = wsQueryParam && wsQueryParam.split(":");
+			debugInfo = {
+				url: fullUrl,
+				port: hostPortSplit && +hostPortSplit[1]
+			};
+		}
+
+		return debugInfo;
 	}
 }
 
