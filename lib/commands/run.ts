@@ -5,7 +5,6 @@ export class RunCommandBase implements ICommand {
 
 	public platform: string;
 	constructor(protected $platformService: IPlatformService,
-		protected $liveSyncService: ILiveSyncService,
 		protected $projectData: IProjectData,
 		protected $options: IOptions,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,

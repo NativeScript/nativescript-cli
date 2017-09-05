@@ -51,6 +51,10 @@ export class EqatecAnalyticsProvider extends AnalyticsServiceBase implements IAn
 		this.tryStopEqatecMonitors();
 	}
 
+	public dispose(): void {
+		// Intentionally left blank.
+	}
+
 }
 
 $injector.register("eqatecAnalyticsProvider", EqatecAnalyticsProvider);

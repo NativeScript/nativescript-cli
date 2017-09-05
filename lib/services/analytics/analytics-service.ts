@@ -5,8 +5,9 @@ import { cache } from "../../common/decorators";
 import { isInteractive } from '../../common/helpers';
 import { DeviceTypes, AnalyticsClients } from "../../common/constants";
 
-export class AnalyticsService extends AnalyticsServiceBase implements IAnalyticsService {
+export class AnalyticsService extends AnalyticsServiceBase {
 	private static ANALYTICS_BROKER_START_TIMEOUT = 30 * 1000;
+	private brokerProcess: ChildProcess;
 
 	constructor(protected $logger: ILogger,
 		protected $options: IOptions,
@@ -56,7 +57,7 @@ export class AnalyticsService extends AnalyticsServiceBase implements IAnalytics
 			gaSettings.customDimensions = gaSettings.customDimensions || {};
 			gaSettings.customDimensions[GoogleAnalyticsCustomDimensions.client] = this.$options.analyticsClient || (isInteractive() ? AnalyticsClients.Cli : AnalyticsClients.Unknown);
 
-			const googleAnalyticsData: IGoogleAnalyticsTrackingInformation = _.merge({ type: TrackingTypes.GoogleAnalyticsData }, gaSettings, { category: AnalyticsClients.Cli });
+			const googleAnalyticsData: IGoogleAnalyticsTrackingInformation = _.merge({ type: TrackingTypes.GoogleAnalyticsData, category: AnalyticsClients.Cli }, gaSettings);
 			return this.sendMessageToBroker(googleAnalyticsData);
 		}
 	}
@@ -69,9 +70,9 @@ export class AnalyticsService extends AnalyticsServiceBase implements IAnalytics
 		let label: string = "";
 		label = this.addDataToLabel(label, platform);
 
+		// In some cases (like in case action is Build and platform is Android), we do not know if the deviceType is emulator or device.
+		// Just exclude the device_type in this case.
 		if (isForDevice !== null) {
-			// In case action is Build and platform is Android, we do not know if the deviceType is emulator or device.
-			// Just exclude the device_type in this case.
 			const deviceType = isForDevice ? DeviceTypes.Device : (this.$mobileHelper.isAndroidPlatform(platform) ? DeviceTypes.Emulator : DeviceTypes.Simulator);
 			label = this.addDataToLabel(label, deviceType);
 		}
@@ -100,6 +101,12 @@ export class AnalyticsService extends AnalyticsServiceBase implements IAnalytics
 		this.$logger.trace("Will send the following information to Google Analytics:", googleAnalyticsEventData);
 
 		await this.trackInGoogleAnalytics(googleAnalyticsEventData);
+	}
+
+	public dispose(): void {
+		if (this.brokerProcess && this.shouldDisposeInstance) {
+			this.brokerProcess.disconnect();
+		}
 	}
 
 	private addDataToLabel(label: string, newData: string): string {
@@ -155,6 +162,8 @@ export class AnalyticsService extends AnalyticsServiceBase implements IAnalytics
 								type: TrackingTypes.Finish
 							});
 						});
+
+						this.brokerProcess = broker;
 
 						resolve(broker);
 					}

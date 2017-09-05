@@ -109,7 +109,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 
 	private getMacOSReleaseVersion(osRelease: string): string {
 		// https://en.wikipedia.org/wiki/Darwin_(operating_system)#Release_history
-		// Each macOS version is labeled 10.<version>, where it looks like <versions> is taken from the major version returned by os.release() (16.x.x for example) and substituting 4 from it.
+		// Each macOS version is labeled 10.<version>, where it looks like <versions> is taken from the major version returned by os.release() (16.x.x for example) and subtracting 4 from it.
 		// So the version becomes "10.12" in this case.
 		// Could be improved by spawning `system_profiler SPSoftwareDataType` and getting the System Version line from the result.
 		const majorVersion = osRelease && _.first(osRelease.split("."));
