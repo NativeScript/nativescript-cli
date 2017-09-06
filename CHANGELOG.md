@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.8.1](https://github.com/Kinvey/js-sdk/tree/v3.8.1) (2017-08-25)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.8.0...v3.8.1)<br/>
+
+### Added
+_None_
+
+### Removed
+_None_
+
+### Fixed
+- Resolve `Kinvey.initialize()` with an instance of `Kinvey.User` or `null`.
+
+### Merged Pull Requests
+- Fix Initialize [#148](https://github.com/Kinvey/js-sdk/pull/148)
+
+### Closed Issues
+_None_
+
 ## [3.8.0](https://github.com/Kinvey/js-sdk/tree/v3.8.0) (2017-08-23)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.5.2...v3.8.0)<br/>
 
@@ -53,7 +71,6 @@ _None_
 - Allow special characters `['.', '$', '~', '>', '<', '!', '@']` to be used in an `_id` for an entity.
 - Import `es6-promise` to fix errors caused by environments that do not provide a promise implementation natively.
 - Fix error inheritance to correctly display error message in `console.log` statements.
-
 
 ### Merged Pull Requests
 - Fix URL formation on Windows and URL symbols in custom ID breaking cache storage [#134](https://github.com/Kinvey/js-sdk/pull/134)
