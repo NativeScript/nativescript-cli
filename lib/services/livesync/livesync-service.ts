@@ -166,6 +166,9 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		} catch (err) {
 			this.$logger.trace("Could not stop application during debug livesync. Will try to restart app instead.", err);
 			if ((err.message || err) === "Could not find developer disk image") {
+				// Set isFullSync here to true because we are refreshing with debugger
+				// We want to force a restart instead of accidentally performing LiveEdit or FastSync
+				liveSyncResultInfo.isFullSync = true;
 				await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, debugOptions, outputPath, { shouldSkipEmitLiveSyncNotification: true });
 				this.emit(USER_INTERACTION_NEEDED_EVENT_NAME, attachDebuggerOptions);
 				return;
@@ -254,7 +257,12 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		} catch (err) {
 			this.$logger.trace("Couldn't attach debugger, will modify options and try again.", err);
 			attachDebuggerOptions.debugOptions.start = false;
-			debugInformation = await this.attachDebugger(attachDebuggerOptions);
+			try {
+				debugInformation = await this.attachDebugger(attachDebuggerOptions);
+			} catch (innerErr) {
+				this.$logger.trace("Couldn't attach debugger with modified options.", innerErr);
+				throw err;
+			}
 		}
 
 		return debugInformation;
