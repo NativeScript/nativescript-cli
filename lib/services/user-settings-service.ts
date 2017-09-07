@@ -3,9 +3,14 @@ import * as userSettingsServiceBaseLib from "../common/services/user-settings-se
 
 class UserSettingsService extends userSettingsServiceBaseLib.UserSettingsServiceBase {
 	constructor($fs: IFileSystem,
-		$options: IOptions) {
+		$options: IOptions,
+		$lockfile: ILockFile) {
 		const userSettingsFilePath = path.join($options.profileDir, "user-settings.json");
-		super(userSettingsFilePath, $fs);
+		super(userSettingsFilePath, $fs, $lockfile);
+	}
+
+	public async loadUserSettingsFile(): Promise<void> {
+		await this.loadUserSettingsData();
 	}
 }
 $injector.register("userSettingsService", UserSettingsService);

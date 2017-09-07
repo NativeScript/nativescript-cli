@@ -145,7 +145,6 @@ class ProjectIntegrationTest {
 		this.testInjector.register("npmInstallationManager", NpmInstallationManager);
 		this.testInjector.register("npm", NpmLib.NodePackageManager);
 		this.testInjector.register("httpClient", HttpClientLib.HttpClient);
-		this.testInjector.register("lockfile", stubs.LockFile);
 
 		this.testInjector.register("options", Options);
 		this.testInjector.register("hostInfo", HostInfo);

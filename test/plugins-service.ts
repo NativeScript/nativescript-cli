@@ -69,7 +69,6 @@ function createTestInjector() {
 		registerDynamicSubCommands: () => { /* intentionally empty body */ }
 	});
 	testInjector.register("hostInfo", HostInfo);
-	testInjector.register("lockfile", {});
 	testInjector.register("projectHelper", ProjectHelper);
 
 	testInjector.register("pluginsService", PluginsService);
