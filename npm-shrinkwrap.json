@@ -1844,7 +1844,8 @@
         },
         "jsbn": {
           "version": "0.1.1",
-          "bundled": true
+          "bundled": true,
+          "optional": true
         },
         "json-schema": {
           "version": "0.2.3",
@@ -2212,7 +2213,8 @@
         },
         "tweetnacl": {
           "version": "0.14.5",
-          "bundled": true
+          "bundled": true,
+          "optional": true
         },
         "uid-number": {
           "version": "0.0.6",
@@ -2867,12 +2869,19 @@
       "integrity": "sha1-EEqOSqym09jNFXqO+L+rLXo//bY="
     },
     "ios-device-lib": {
-      "version": "0.4.8",
-      "resolved": "https://registry.npmjs.org/ios-device-lib/-/ios-device-lib-0.4.8.tgz",
-      "integrity": "sha1-VJJWQk+3HzrCnJHuxTqVYrybxhY=",
+      "version": "0.4.9",
+      "resolved": "https://registry.npmjs.org/ios-device-lib/-/ios-device-lib-0.4.9.tgz",
+      "integrity": "sha1-aSmddfsrTeNakIb/CbQMQFWv1fY=",
       "requires": {
         "bufferpack": "0.0.6",
-        "node-uuid": "1.3.3"
+        "node-uuid": "1.4.7"
+      },
+      "dependencies": {
+        "node-uuid": {
+          "version": "1.4.7",
+          "resolved": "https://registry.npmjs.org/node-uuid/-/node-uuid-1.4.7.tgz",
+          "integrity": "sha1-baWhdmjEs91ZYjvaEc9/pMH2Cm8="
+        }
       }
     },
     "ios-mobileprovision-finder": {
@@ -4075,9 +4084,9 @@
       }
     },
     "plist-merge-patch": {
-      "version": "0.1.0",
-      "resolved": "https://registry.npmjs.org/plist-merge-patch/-/plist-merge-patch-0.1.0.tgz",
-      "integrity": "sha1-eOTAlL6dtLpHWdpktvGkz2rTIJE=",
+      "version": "0.1.1",
+      "resolved": "https://registry.npmjs.org/plist-merge-patch/-/plist-merge-patch-0.1.1.tgz",
+      "integrity": "sha1-1xceGwXAh+W6BpN1QK385QQot/w=",
       "requires": {
         "lodash": "4.17.4",
         "plist": "2.1.0"
