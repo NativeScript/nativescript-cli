@@ -16,7 +16,7 @@ export interface FileUploadRequestOptions {
   start: number;
   timeout: number;
   maxBackoff: number;
-  headers: { [key: string]: string }
+  headers: { [key: string]: string };
 }
 
 export interface KinveyResponseConfig {
@@ -26,8 +26,8 @@ export interface KinveyResponseConfig {
 }
 
 export class CommonFileStore extends CoreFileStore {
-  upload(file: File, metadata: any, options: any)
-  upload(filePath: string, metadata: any, options: any)
+  upload(file: File, metadata: any, options: any);
+  upload(filePath: string, metadata: any, options: any);
   upload(filePath: string | File, metadata: any, options: any) {
     if (!this.doesFileExist(filePath)) {
       return Promise.reject(new KinveyError('File does not exist'));
@@ -43,10 +43,10 @@ export class CommonFileStore extends CoreFileStore {
 }
 
 export interface FileUploadWorkerOptions {
-  url: string,
-  metadata: FileMetadata,
-  options: FileUploadRequestOptions,
-  filePath: string,
+  url: string;
+  metadata: FileMetadata;
+  options: FileUploadRequestOptions;
+  filePath: string;
 }
 
 export class FileUploadWorker extends KinveyWorker {

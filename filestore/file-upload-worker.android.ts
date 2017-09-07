@@ -15,7 +15,7 @@ global.onmessage = function (msg: { data: FileUploadWorkerOptions }) {
     headers: mapHeaders(response.headers()),
     data: response.body().string()
   });
-}
+};
 
 function upload(workerOptions: FileUploadWorkerOptions): okhttp3.Response {
   const { url, filePath, metadata, options } = workerOptions;

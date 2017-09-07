@@ -13,7 +13,7 @@ import { WebView } from 'ui/web-view';
  */
 
 class OAuthWebViewHelper extends android.webkit.WebViewClient {
-  private _view: any
+  private _view: any;
   private _origClient: any;
   private _webViewIntercept: (WebView, error?, url?) => boolean;
 
@@ -92,21 +92,21 @@ class OAuthWebViewHelper extends android.webkit.WebViewClient {
     const view: android.webkit.WebView = arguments[0];
 
     if (arguments.length === 4) {
-      var errorCode: number = arguments[1];
-      var description: string = arguments[2];
-      var failingUrl: string = arguments[3];
+      let errorCode: number = arguments[1];
+      let description: string = arguments[2];
+      let failingUrl: string = arguments[3];
 
-      this._webViewIntercept(this._view, null, failingUrl)
+      this._webViewIntercept(this._view, null, failingUrl);
       super.onReceivedError(view, errorCode, description, failingUrl);
 
       if (this._view) {
         this._view._onLoadFinished(failingUrl, `${description}(${errorCode})`);
       }
     } else {
-      var request: any = arguments[1];
-      var error: any = arguments[2];
+      let request: any = arguments[1];
+      let error: any = arguments[2];
 
-      this._webViewIntercept(this._view, error)
+      this._webViewIntercept(this._view, error);
       super.onReceivedError(view, request, error);
 
       if (this._view) {

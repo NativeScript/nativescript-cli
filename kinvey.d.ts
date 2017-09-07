@@ -5,15 +5,15 @@ import { Observable } from 'rxjs/Observable';
 
 // Kinvey namespace
 export namespace Kinvey {
-  var appVersion: string;
+  let appVersion: string;
   function initialize(config: ClientConfig): Promise<User>;
   function init(config: ClientConfig): Client;
 
   interface PingResponse {
-    version: string,
-    kinvey: string,
-    appName: string,
-    environmentName: string
+    version: string;
+    kinvey: string;
+    appName: string;
+    environmentName: string;
   }
   function ping(): Promise<PingResponse>;
 
@@ -26,14 +26,14 @@ export namespace Kinvey {
 
   // ClientConfig interface
   interface ClientConfig {
-    apiHostname?: string,
-    micHostname?: string,
-    liveServiceHostname?: string,
-    appKey: string,
-    appSecret?: string,
-    masterSecret?: string,
-    encryptionKey?: string,
-    defaultTimeout?: number
+    apiHostname?: string;
+    micHostname?: string;
+    liveServiceHostname?: string;
+    appKey: string;
+    appSecret?: string;
+    masterSecret?: string;
+    encryptionKey?: string;
+    defaultTimeout?: number;
   }
 
   // Client class
@@ -285,7 +285,7 @@ export namespace Kinvey {
       sort?: string
       limit?: number
       skip?: number
-    }
+    };
     toQueryString(): {};
     toString(): string;
   }
@@ -328,7 +328,7 @@ export namespace Kinvey {
     static resetPassword(username: string, options?: RequestOptions): Promise<{}>;
     static lookup(query?: Query, options?: RequestOptions): Promise<{}>;
     static exists(username: string, options?: RequestOptions): Promise<{}>;
-    static getActiveUser(client?: Client): User|null
+    static getActiveUser(client?: Client): User|null;
   }
 
   // Error classes

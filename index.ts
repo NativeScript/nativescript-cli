@@ -1,4 +1,4 @@
-import { CacheRack, NetworkRack } from 'kinvey-js-sdk/dist/request'
+import { CacheRack, NetworkRack } from 'kinvey-js-sdk/dist/request';
 import { MobileIdentityConnect } from 'kinvey-js-sdk/dist/identity';
 import { Kinvey } from './kinvey';
 import { CacheMiddleware } from './cache';

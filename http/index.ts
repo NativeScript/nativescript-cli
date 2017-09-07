@@ -1,6 +1,6 @@
 import { Middleware } from 'kinvey-js-sdk/dist/request';
 import { request as HttpRequest } from 'http';
-import { device } from 'platform'
+import { device } from 'platform';
 const pkg = require('../../package.json');
 
 function deviceInformation() {

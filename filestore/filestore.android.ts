@@ -2,8 +2,8 @@ import { File } from 'tns-core-modules/file-system';
 import { CommonFileStore, FileMetadata, FileUploadRequestOptions, FileUploadWorker } from './common';
 
 export class FileStore extends CommonFileStore {
-  private makeUploadRequest(url: string, file: File, metadata: FileMetadata, options: FileUploadRequestOptions)
-  private makeUploadRequest(url: string, filePath: string, metadata: FileMetadata, options: FileUploadRequestOptions)
+  private makeUploadRequest(url: string, file: File, metadata: FileMetadata, options: FileUploadRequestOptions);
+  private makeUploadRequest(url: string, filePath: string, metadata: FileMetadata, options: FileUploadRequestOptions);
   private makeUploadRequest(url: string, file: string | File, metadata: FileMetadata, options: FileUploadRequestOptions) {
     const filePath = file instanceof File ? file.path : file;
     const worker = new FileUploadWorker(__dirname, './file-upload-worker');

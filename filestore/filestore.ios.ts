@@ -3,8 +3,8 @@ import { KinveyError, KinveyResponse } from 'kinvey-js-sdk/dist/export';
 import { CommonFileStore, FileMetadata, FileUploadRequestOptions } from './common';
 
 export class FileStore extends CommonFileStore {
-  private makeUploadRequest(url: string, file: File, metadata: FileMetadata, options: FileUploadRequestOptions)
-  private makeUploadRequest(url: string, filePath: string, metadata: FileMetadata, options: FileUploadRequestOptions)
+  private makeUploadRequest(url: string, file: File, metadata: FileMetadata, options: FileUploadRequestOptions);
+  private makeUploadRequest(url: string, filePath: string, metadata: FileMetadata, options: FileUploadRequestOptions);
   private makeUploadRequest(url: string, file: string | File, metadata: FileMetadata, options: FileUploadRequestOptions) {
     return new Promise((resolve, reject) => {
       const filePath = file instanceof File ? file.path : file;
@@ -39,7 +39,7 @@ export class FileStore extends CommonFileStore {
       statusCode: response.statusCode,
       headers: {},
       data: NSString.alloc().initWithDataEncoding(data, NSUTF8StringEncoding)
-    }
+    };
 
     for (const headerField in response.allHeaderFields) {
       config.headers[headerField] = response.allHeaderFields[headerField];

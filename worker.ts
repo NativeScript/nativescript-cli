@@ -13,7 +13,7 @@ export class KinveyWorker {
   private _worker: Worker;
   private _resolveUploadPromise: (uploadResponse: any) => void;
   private _rejectUploadPromise: (err: KinveyError) => void;
-  private _uploadScript: string
+  private _uploadScript: string;
   private _workerTimeout: number;
   private _closeAfterResponse: boolean;
 
