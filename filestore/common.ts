@@ -28,17 +28,27 @@ export interface KinveyResponseConfig {
 export class CommonFileStore extends CoreFileStore {
   upload(file: File, metadata: any, options: any)
   upload(filePath: string, metadata: any, options: any)
-  upload(filePath: string | File, metadata: any, options: any) {
+  upload(filePath: string | File, metadata = <any>{}, options: any) {
     if (!this.doesFileExist(filePath)) {
       return Promise.reject(new KinveyError('File does not exist'));
     }
 
+    metadata.size = metadata.size || this.getFileSize(filePath);
     return super.upload(filePath, metadata, options);
   }
 
   protected doesFileExist(file: string | File): boolean {
     const filePath = file instanceof File ? file.path : file;
     return File.exists(filePath);
+  }
+
+  protected getFileSize(file: string | File): number {
+    if (!(file instanceof File)) {
+      file = File.fromPath(file);
+    }
+
+    const content = file.readSync();
+    return content.length;
   }
 }
 
