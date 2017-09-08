@@ -4,7 +4,9 @@ import { EOL } from "os";
 import { EventEmitter } from "events";
 import { hook } from "../../common/helpers";
 import { APP_FOLDER_NAME, PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME, TrackActionNames } from "../../constants";
-import { FileExtensions, DeviceTypes } from "../../common/constants";
+import { FileExtensions, DeviceTypes, DeviceDiscoveryEventNames } from "../../common/constants";
+import { cache } from "../../common/decorators";
+
 const deviceDescriptorPrimaryKey = "identifier";
 
 const LiveSyncEvents = {
@@ -473,6 +475,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		// Execute the action only on the deviceDescriptors passed to initialSync.
 		// In case where we add deviceDescriptors to already running application, we've already executed initialSync for them.
 		await this.addActionToChain(projectData.projectDir, () => this.$devicesService.execute(deviceAction, (device: Mobile.IDevice) => _.some(deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier)));
+
+		this.attachDeviceLostHandler();
 	}
 
 	private getDefaultLatestAppPackageInstalledSettings(): ILatestAppPackageInstalledSettings {
@@ -632,11 +636,22 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					this.stopLiveSync(projectDir);
 				});
 			});
-
-			this.$devicesService.on("deviceLost", async (device: Mobile.IDevice) => {
-				await this.stopLiveSync(projectData.projectDir, [device.deviceInfo.identifier]);
-			});
 		}
+	}
+
+	@cache()
+	private attachDeviceLostHandler(): void {
+		this.$devicesService.on(DeviceDiscoveryEventNames.DEVICE_LOST, async (device: Mobile.IDevice) => {
+			this.$logger.trace(`Received ${DeviceDiscoveryEventNames.DEVICE_LOST} event in LiveSync service for ${device.deviceInfo.identifier}. Will stop LiveSync operation for this device.`);
+
+			for (const projectDir in this.liveSyncProcessesInfo) {
+				try {
+					await this.stopLiveSync(projectDir, [device.deviceInfo.identifier]);
+				} catch (err) {
+					this.$logger.warn(`Unable to stop LiveSync operation for ${device.deviceInfo.identifier}.`, err);
+				}
+			}
+		});
 	}
 
 	private async addActionToChain<T>(projectDir: string, action: () => Promise<T>): Promise<T> {

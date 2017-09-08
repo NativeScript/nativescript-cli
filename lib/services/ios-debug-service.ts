@@ -160,7 +160,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 	private async deviceDebugBrk(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		await this.$devicesService.initialize({ platform: this.platform, deviceId: debugData.deviceIdentifier });
-		const action = async (device: iOSDevice.IOSDevice) => {
+		const action = async (device: iOSDevice.IOSDevice): Promise<string> => {
 			if (device.isEmulator) {
 				return await this.emulatorDebugBrk(debugData, debugOptions);
 			}
@@ -170,14 +170,13 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 				emulator: debugOptions.emulator,
 				justlaunch: debugOptions.justlaunch
 			};
-			// we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
-			const startApplicationAction = this.$platformService.startApplication(this.platform, runOptions, debugData.applicationIdentifier);
 
-			const result = await this.debugBrkCore(device, debugData, debugOptions);
+			const promisesResults = await Promise.all<any>([
+				this.$platformService.startApplication(this.platform, runOptions, debugData.applicationIdentifier),
+				this.debugBrkCore(device, debugData, debugOptions)
+			]);
 
-			await startApplicationAction;
-
-			return result;
+			return _.last(promisesResults);
 		};
 
 		const deviceActionResult = await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));

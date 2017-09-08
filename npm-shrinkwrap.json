@@ -83,7 +83,7 @@
     "@types/universal-analytics": {
       "version": "0.4.1",
       "resolved": "https://registry.npmjs.org/@types/universal-analytics/-/universal-analytics-0.4.1.tgz",
-      "integrity": "sha512-AZSPpDUEZ4mAgO9geHc62dp/xCLmBJ1yIpbgTq5W/cWcVQsxmU/FyKwYKHXk2hnT9TAmYVFFdAijMrCdYjuHsA==",
+      "integrity": "sha1-7mESGwqJiwvqXuskcgCJjg+o8Jw=",
       "dev": true
     },
     "abbrev": {
@@ -2945,9 +2945,9 @@
       }
     },
     "ios-sim-portable": {
-      "version": "3.1.1",
-      "resolved": "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-3.1.1.tgz",
-      "integrity": "sha1-AmL3x3N6ZnfyAI48rem2KMEIN6c=",
+      "version": "3.1.2",
+      "resolved": "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-3.1.2.tgz",
+      "integrity": "sha1-Fq6f+F2gUE0K+4gyj73sCQafFG0=",
       "requires": {
         "bplist-parser": "https://github.com/telerik/node-bplist-parser/tarball/master",
         "colors": "0.6.2",
@@ -5186,7 +5186,7 @@
     "universal-analytics": {
       "version": "0.4.15",
       "resolved": "https://registry.npmjs.org/universal-analytics/-/universal-analytics-0.4.15.tgz",
-      "integrity": "sha512-9Dt6WBWsHsmv74G+N/rmEgi6KFZxVvQXkVhr0disegeUryybQAUQwMD1l5EtqaOu+hSOGbhL/hPPQYisZIqPRw==",
+      "integrity": "sha1-SrxhsVn/52W+FE4Ht7c54O57iKs=",
       "requires": {
         "async": "1.2.1",
         "request": "2.81.0",
