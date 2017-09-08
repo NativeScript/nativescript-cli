@@ -290,3 +290,16 @@ interface IBuildInfo {
 	prepareTime: string;
 	buildTime: string;
 }
+
+interface IPreparePlatformService extends NodeJS.EventEmitter {
+	addPlatform(platformData: IPlatformData, frameworkDir: string, installedVersion: string, projectData: IProjectData, config: IPlatformOptions, platformTemplate?: string, ): Promise<void>;
+	preparePlatform(platform: string, platformData: IPlatformData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, changesInfo?: IProjectChangesInfo, filesToSync?: Array<String>, projectFilesConfig?: IProjectFilesConfig): Promise<void>;
+}
+
+interface IPreparePlatformJSService extends IPreparePlatformService {
+
+}
+
+interface IPreparePlatformNativeService extends IPreparePlatformService {
+
+}
