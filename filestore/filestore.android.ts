@@ -11,4 +11,12 @@ export class FileStore extends CommonFileStore {
     options.headers['content-range'] = `bytes ${options.start}-${metadata.size - 1}/${metadata.size}`;
     return worker.upload({ url, metadata, options, filePath });
   }
+
+  protected getFileSize(filePath: string | File): number {
+    if (filePath instanceof File) {
+      filePath = filePath.path;
+    }
+
+    return new java.io.File(filePath).length();
+  }
 }
