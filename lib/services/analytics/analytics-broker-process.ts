@@ -1,3 +1,5 @@
+// NOTE: This file is used to track data in a separate process.
+// The instances here are not shared with the ones in main CLI process.
 import * as fs from "fs";
 import { AnalyticsBroker } from "./analytics-broker";
 

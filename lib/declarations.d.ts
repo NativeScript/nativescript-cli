@@ -318,12 +318,6 @@ interface IApplicationPackage {
 	time: Date;
 }
 
-interface ILockFile {
-	lock(): void;
-	unlock(): void;
-	check(): boolean;
-}
-
 interface IOpener {
 	open(target: string, appname: string): void;
 }

@@ -15,7 +15,6 @@ function createTestInjector(): IInjector {
 
 	testInjector.register("config", ConfigLib.Configuration);
 	testInjector.register("logger", LoggerLib.Logger);
-	testInjector.register("lockfile", {});
 	testInjector.register("errors", ErrorsLib.Errors);
 	testInjector.register("options", OptionsLib.Options);
 	testInjector.register("fs", FsLib.FileSystem);

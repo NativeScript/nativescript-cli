@@ -65,10 +65,11 @@ export class AnalyticsService extends AnalyticsServiceBase {
 	public async trackEventActionInGoogleAnalytics(data: IEventActionData): Promise<void> {
 		const device = data.device;
 		const platform = device ? device.deviceInfo.platform : data.platform;
+		const normalizedPlatform = platform ? this.$mobileHelper.normalizePlatformName(platform) : platform;
 		const isForDevice = device ? !device.isEmulator : data.isForDevice;
 
 		let label: string = "";
-		label = this.addDataToLabel(label, platform);
+		label = this.addDataToLabel(label, normalizedPlatform);
 
 		// In some cases (like in case action is Build and platform is Android), we do not know if the deviceType is emulator or device.
 		// Just exclude the device_type in this case.
@@ -182,7 +183,15 @@ export class AnalyticsService extends AnalyticsServiceBase {
 
 	private async sendMessageToBroker(message: ITrackingInformation): Promise<void> {
 		const broker = await this.getAnalyticsBroker();
-		return new Promise<void>((resolve, reject) => broker.send(message, resolve));
+		return new Promise<void>((resolve, reject) => {
+			if (broker && broker.connected) {
+				try {
+					broker.send(message, resolve);
+				} catch (err) {
+					this.$logger.trace("Error while trying to send message to broker:", err);
+				}
+			}
+		});
 	}
 }
 

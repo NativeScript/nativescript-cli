@@ -71,7 +71,6 @@ $injector.require("itmsTransporterService", "./services/itmstransporter-service"
 
 $injector.requirePublic("npm", "./node-package-manager");
 $injector.require("npmInstallationManager", "./npm-installation-manager");
-$injector.require("lockfile", "./lockfile");
 $injector.require("dynamicHelpProvider", "./dynamic-help-provider");
 $injector.require("mobilePlatformsCapabilities", "./mobile-platforms-capabilities");
 $injector.require("commandsServiceProvider", "./providers/commands-service-provider");

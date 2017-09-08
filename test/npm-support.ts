@@ -23,7 +23,6 @@ import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
 import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilities";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
-import { LockFile } from "../lib/lockfile";
 import ProjectChangesLib = require("../lib/services/project-changes-service");
 import { Messages } from "../lib/common/messages/messages";
 import { NodeModulesDependenciesBuilder } from "../lib/tools/node-modules/node-modules-dependencies-builder";
@@ -48,7 +47,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("platformService", PlatformServiceLib.PlatformService);
 	testInjector.register("logger", stubs.LoggerStub);
 	testInjector.register("npmInstallationManager", {});
-	testInjector.register("lockfile", LockFile);
 	testInjector.register("prompter", {});
 	testInjector.register("sysInfo", {});
 	testInjector.register("androidProjectService", {});
