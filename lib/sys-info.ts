@@ -313,7 +313,10 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	public getXcprojInfo(): Promise<NativeScriptDoctor.IXcprojInfo> {
 		return this.getValueForProperty(() => this.xcprojInfoCache, async (): Promise<NativeScriptDoctor.IXcprojInfo> => {
 			const cocoaPodsVersion = await this.getCocoaPodsVersion();
-			const xcodeVersion = await this.getXcodeVersion();
+			let xcodeVersion = await this.getXcodeVersion();
+			if (xcodeVersion) {
+				xcodeVersion = this.helpers.appendZeroesToVersion(xcodeVersion, 3);
+			}
 
 			// CocoaPods with version lower than 1.0.0 don't support Xcode 7.3 yet
 			// https://github.com/CocoaPods/CocoaPods/issues/2530#issuecomment-210470123
