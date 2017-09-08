@@ -46,7 +46,7 @@
     "inquirer": "0.9.0",
     "ios-device-lib": "0.4.9",
     "ios-mobileprovision-finder": "1.0.10",
-    "ios-sim-portable": "3.1.1",
+    "ios-sim-portable": "3.1.2",
     "lockfile": "1.0.3",
     "lodash": "4.13.1",
     "log4js": "1.0.1",
