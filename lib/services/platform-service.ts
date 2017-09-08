@@ -587,6 +587,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			await this.trackActionForPlatform({ action: constants.TrackActionNames.Deploy, platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
 		};
 
+		if (deployOptions.device) {
+			const device = await this.$devicesService.getDevice(deployOptions.device);
+			deployOptions.device = device.deviceInfo.identifier;
+		}
+
 		await this.$devicesService.execute(action, this.getCanExecuteAction(platform, deployOptions));
 	}
 
@@ -599,6 +604,12 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		};
 
 		await this.$devicesService.initialize({ platform: platform, deviceId: runOptions.device });
+
+		if (runOptions.device) {
+			const device = await this.$devicesService.getDevice(runOptions.device);
+			runOptions.device = device.deviceInfo.identifier;
+		}
+
 		await this.$devicesService.execute(action, this.getCanExecuteAction(platform, runOptions));
 	}
 
@@ -715,10 +726,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	private getCanExecuteAction(platform: string, options: IDeviceEmulator): any {
 		const canExecute = (currentDevice: Mobile.IDevice): boolean => {
 			if (options.device && currentDevice && currentDevice.deviceInfo) {
-				const device = this.$devicesService.getDeviceByDeviceOption();
-				if (device && device.deviceInfo) {
-					return currentDevice.deviceInfo.identifier === device.deviceInfo.identifier;
-				}
+				return currentDevice.deviceInfo.identifier === options.device;
 			}
 
 			if (this.$mobileHelper.isiOSPlatform(platform) && this.$hostInfo.isDarwin) {
