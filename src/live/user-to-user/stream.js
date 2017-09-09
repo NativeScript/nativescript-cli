@@ -91,7 +91,7 @@ export class Stream {
    * @returns {Promise}
    */
   post(message) {
-    const userId = this._client.activeUser._id;
+    const userId = this._client.getActiveUser()._id;
     return this._publish(userId, message);
   }
 
@@ -102,7 +102,7 @@ export class Stream {
    * @param {MessageReceiver} receiver
    */
   listen(receiver) {
-    const userId = this._client.activeUser._id;
+    const userId = this._client.getActiveUser()._id;
     return this._subscribe(userId, receiver);
   }
 
@@ -110,7 +110,7 @@ export class Stream {
    * Stops listening for messages sent to the active user
    */
   stopListening() {
-    const userId = this._client.activeUser._id;
+    const userId = this._client.getActiveUser()._id;
     return this._unsubscribe(userId);
   }
 
