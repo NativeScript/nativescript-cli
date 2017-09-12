@@ -22,6 +22,15 @@ export class Helpers {
 		return this.hostInfo.isWindows ? this.cmdQuote(value) : this.bashQuote(value);
 	}
 
+	public appendZeroesToVersion(version: string, requiredVersionLength: number): string {
+		const zeroesToAppend = requiredVersionLength - version.split(".").length;
+		for (let index = 0; index < zeroesToAppend; index++) {
+			version += ".0";
+		}
+
+		return version;
+	}
+
 	private bashQuote(s: string): string {
 		if (s[0] === "'" && s[s.length - 1] === "'") {
 			return s;

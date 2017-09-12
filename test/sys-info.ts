@@ -333,6 +333,16 @@ describe("SysInfo unit tests", () => {
 			});
 		});
 
+		describe("getXcprojInfo", () => {
+			it("does not fail when cocoapods version is below 1.0.0 and Xcode version contains only two digits", async () => {
+				childProcessResult.podVersion = { result: setStdOut("0.39.0") };
+				childProcessResult.xCodeVersion = { result: setStdOut("Xcode 8.3") };
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+				const result = await sysInfo.getXcprojInfo();
+				assert.deepEqual(result, { shouldUseXcproj: true, xcprojAvailable: false });
+			});
+		});
+
 		const testData: ICLIOutputVersionTestCase[] = [
 			{
 				testedProperty: "nativeScriptCliVersion",
