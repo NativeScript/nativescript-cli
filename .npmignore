@@ -30,3 +30,6 @@ docs/html/
 dev/
 
 tscommand*.tmp.txt
+
+tslint.json
+tsconfig.json
