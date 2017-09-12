@@ -63,7 +63,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 						const result = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, this.$projectData);
 						return result;
 					},
-					debugggingEnabled: deviceDebugMap && deviceDebugMap[d.deviceInfo.identifier]
+					debugggingEnabled: deviceDebugMap && deviceDebugMap[d.deviceInfo.identifier],
+					debugOptions: this.$options
 				};
 
 				return info;
@@ -73,8 +74,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			projectDir: this.$projectData.projectDir,
 			skipWatcher: !this.$options.watch,
 			watchAllFiles: this.$options.syncAllFiles,
-			clean: this.$options.clean,
-			debugOptions: this.$options
+			clean: this.$options.clean
 		};
 
 		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
