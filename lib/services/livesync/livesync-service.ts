@@ -375,13 +375,13 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			pathToBuildItem = await options.deviceBuildInfoDescriptor.buildAction();
 			options.rebuiltInformation.push({ isEmulator: options.device.isEmulator, platform, pathToBuildItem });
 			action = LiveSyncTrackActionNames.LIVESYNC_OPERATION_BUILD;
+		} else {
+			await this.$analyticsService.trackEventActionInGoogleAnalytics({
+				action: TrackActionNames.LiveSync,
+				device: options.device,
+				projectDir: options.projectData.projectDir
+			});
 		}
-
-		await this.$analyticsService.trackEventActionInGoogleAnalytics({
-			action: TrackActionNames.LiveSync,
-			device: options.device,
-			projectDir: options.projectData.projectDir
-		});
 
 		await this.trackAction(action, platform, options);
 

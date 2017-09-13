@@ -17,10 +17,10 @@ export class AnalyticsService extends AnalyticsServiceBase {
 		$analyticsSettingsService: IAnalyticsSettingsService,
 		$osInfo: IOsInfo,
 		private $childProcess: IChildProcess,
-		private $processService: IProcessService,
+		protected $processService: IProcessService,
 		private $projectDataService: IProjectDataService,
 		private $mobileHelper: Mobile.IMobileHelper) {
-		super($logger, $options, $staticConfig, $prompter, $userSettingsService, $analyticsSettingsService, $osInfo);
+		super($logger, $options, $staticConfig, $processService, $prompter, $userSettingsService, $analyticsSettingsService, $osInfo);
 	}
 
 	public track(featureName: string, featureValue: string): Promise<void> {
@@ -189,7 +189,11 @@ export class AnalyticsService extends AnalyticsServiceBase {
 					broker.send(message, resolve);
 				} catch (err) {
 					this.$logger.trace("Error while trying to send message to broker:", err);
+					resolve();
 				}
+			} else {
+				this.$logger.trace("Broker not found or not connected.");
+				resolve();
 			}
 		});
 	}
