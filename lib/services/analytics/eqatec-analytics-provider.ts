@@ -15,12 +15,13 @@ export class EqatecAnalyticsProvider extends AnalyticsServiceBase implements IAn
 
 	constructor(protected $logger: ILogger,
 		protected $options: IOptions,
+		$processService: IProcessService,
 		$staticConfig: Config.IStaticConfig,
 		$prompter: IPrompter,
 		$userSettingsService: UserSettings.IUserSettingsService,
 		$analyticsSettingsService: IAnalyticsSettingsService,
 		$osInfo: IOsInfo) {
-		super($logger, $options, $staticConfig, $prompter, $userSettingsService, $analyticsSettingsService, $osInfo);
+		super($logger, $options, $staticConfig, $processService, $prompter, $userSettingsService, $analyticsSettingsService, $osInfo);
 	}
 
 	public async trackInformation(data: IFeatureTrackingInformation): Promise<void> {
