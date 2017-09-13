@@ -80,7 +80,7 @@ interface IOptionalOutputPath {
 /**
  * Describes information for LiveSync on a device.
  */
-interface ILiveSyncDeviceInfo extends IOptionalOutputPath {
+interface ILiveSyncDeviceInfo extends IOptionalOutputPath, IOptionalDebuggingOptions {
 	/**
 	 * Device identifier.
 	 */
@@ -111,7 +111,7 @@ interface ILiveSyncDeviceInfo extends IOptionalOutputPath {
 /**
  * Describes a LiveSync operation.
  */
-interface ILiveSyncInfo extends IProjectDir, IOptionalDebuggingOptions {
+interface ILiveSyncInfo extends IProjectDir {
 	/**
 	 * Defines if the watcher should be skipped. If not passed, fs.Watcher will be started.
 	 */

@@ -28,7 +28,7 @@ class TestExecutionService implements ITestExecutionService {
 		private $devicesService: Mobile.IDevicesService,
 		private $analyticsService: IAnalyticsService,
 		private $childProcess: IChildProcess) {
-			this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
+		this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
 	}
 
 	public platform: string;
@@ -106,7 +106,8 @@ class TestExecutionService implements ITestExecutionService {
 									await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, projectData);
 									const pathToBuildResult = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, projectData);
 									return pathToBuildResult;
-								}
+								},
+								debugOptions: this.$options
 							};
 
 							return info;
@@ -116,7 +117,6 @@ class TestExecutionService implements ITestExecutionService {
 						projectDir: projectData.projectDir,
 						skipWatcher: !this.$options.watch || this.$options.justlaunch,
 						watchAllFiles: this.$options.syncAllFiles,
-						debugOptions: this.$options
 					};
 
 					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
@@ -221,7 +221,8 @@ class TestExecutionService implements ITestExecutionService {
 									await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, projectData);
 									const pathToBuildResult = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, projectData);
 									return pathToBuildResult;
-								}
+								},
+								debugOptions: this.$options
 							};
 
 							return info;
@@ -231,7 +232,6 @@ class TestExecutionService implements ITestExecutionService {
 						projectDir: projectData.projectDir,
 						skipWatcher: !this.$options.watch || this.$options.justlaunch,
 						watchAllFiles: this.$options.syncAllFiles,
-						debugOptions: this.$options
 					};
 
 					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);

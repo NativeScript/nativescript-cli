@@ -243,6 +243,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		}
 
 		currentDeviceDescriptor.debugggingEnabled = true;
+		currentDeviceDescriptor.debugOptions = deviceOption.debugOptions;
 		const currentDeviceInstance = this.$devicesService.getDeviceByIdentifier(deviceOption.deviceIdentifier);
 		const attachDebuggerOptions: IAttachDebuggerOptions = {
 			deviceIdentifier: deviceOption.deviceIdentifier,
@@ -451,7 +452,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					watch: !liveSyncData.skipWatcher
 				});
 				await this.$platformService.trackActionForPlatform({ action: "LiveSync", platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
-				await this.refreshApplication(projectData, liveSyncResultInfo, liveSyncData.debugOptions, deviceBuildInfoDescriptor.outputPath);
+				await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
 
 				this.emit(LiveSyncEvents.liveSyncStarted, {
 					projectDir: projectData.projectDir,
@@ -559,7 +560,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 									};
 
 									const liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);
-									await this.refreshApplication(projectData, liveSyncResultInfo, liveSyncData.debugOptions, deviceBuildInfoDescriptor.outputPath);
+									await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
 								},
 									(device: Mobile.IDevice) => {
 										const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];
