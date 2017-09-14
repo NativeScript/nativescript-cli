@@ -18,8 +18,16 @@ export class KinveyWorker {
   private _closeAfterResponse: boolean;
 
   constructor(asboluteScriptPath: string, options?: WorkerScriptOptions)
-  constructor(callerDir: string, scriptPathRelativeToCallerDir: string | WorkerScriptOptions, options?: WorkerScriptOptions)
-  constructor(callerDir: string, scriptPathRelativeToCallerDir: string | WorkerScriptOptions, options: WorkerScriptOptions = { timeout: 30 * 60 * 1000, closeAfterResponse: true }) {
+  constructor(
+    callerDir: string,
+    scriptPathRelativeToCallerDir: string | WorkerScriptOptions,
+    options?: WorkerScriptOptions
+  )
+  constructor(
+    callerDir: string,
+    scriptPathRelativeToCallerDir: string | WorkerScriptOptions,
+    options: WorkerScriptOptions = { timeout: 30 * 60 * 1000, closeAfterResponse: true }
+  ) {
     let opts = options;
     if (typeof scriptPathRelativeToCallerDir === 'string') {
       this._uploadScript = path.join(callerDir, scriptPathRelativeToCallerDir);
