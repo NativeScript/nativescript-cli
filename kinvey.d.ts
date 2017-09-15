@@ -170,7 +170,7 @@ export namespace Kinvey {
 
   // DataStore class
   abstract class DataStore {
-    static collection<T extends Entity = Entity>(collection: string, type?: DataStoreType, options?: {
+    static collection<T extends Entity>(collection: string, type?: DataStoreType, options?: {
       client?: Client;
       ttl?: number;
       useDeltaFetch?: boolean;
