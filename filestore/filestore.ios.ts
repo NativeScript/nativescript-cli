@@ -47,4 +47,12 @@ export class FileStore extends CommonFileStore {
 
     return new KinveyResponse(config);
   }
+
+  protected getFileSize(filePath: string | File): number {
+    if (filePath instanceof File) {
+      filePath = filePath.path;
+    }
+
+    return NSFileManager.defaultManager.attributesOfItemAtPathError(filePath).fileSize();
+  }
 }
