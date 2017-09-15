@@ -1,4 +1,6 @@
-declare const SAMKeychainQuery, SAMKeychain, kSecAttrAccessibleAlwaysThisDeviceOnly: any;
+declare const SAMKeychainQuery: any;
+declare const SAMKeychain: any;
+declare const kSecAttrAccessibleAlwaysThisDeviceOnly: any;
 
 export class SecureStorage {
   private defaultService = 'kinvey_nativescript_sdk';

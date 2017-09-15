@@ -13,11 +13,11 @@ import { WebView } from 'ui/web-view';
  */
 
 class OAuthWebViewHelper extends NSObject implements UIWebViewDelegate {
-  public static ObjCProtocols = [UIWebViewDelegate];
+  public static objCProtocols = [UIWebViewDelegate];
 
   private _owner: WeakRef<WebView>;
   private _origDelegate: any; // UIWebViewDelegateImpl
-  private _webViewIntercept: (WebView, error?, url?) => boolean;
+  private _webViewIntercept: (webView, error?, url?) => boolean;
 
   constructor() {
     super();
@@ -28,7 +28,7 @@ class OAuthWebViewHelper extends NSObject implements UIWebViewDelegate {
   }
 
   private static initWithOwner(owner: WeakRef<WebView>, webViewIntercept): OAuthWebViewHelper {
-    let delegate = new OAuthWebViewHelper();
+    const delegate = new OAuthWebViewHelper();
     delegate._owner = owner;
     delegate._origDelegate = (<any>owner.get())._delegate;
     delegate._webViewIntercept = webViewIntercept;
@@ -56,7 +56,7 @@ class OAuthWebViewHelper extends NSObject implements UIWebViewDelegate {
 
 class OAuthPageProvider {
   private _authUrl: string;
-  private _webViewIntercept: (WebView, error?, url?) => boolean;
+  private _webViewIntercept: (webView, error?, url?) => boolean;
 
   constructor(authUrl, webViewIntercept) {
     this._authUrl = authUrl;
@@ -92,7 +92,7 @@ export class Popup extends EventEmitter {
 
         try {
           if (error && error.userInfo && error.userInfo.allValues && error.userInfo.allValues.count > 0) {
-            let val0 = error.userInfo.allValues[0];
+            const val0 = error.userInfo.allValues[0];
             if (val0.absoluteString) {
               urlStr = val0.absoluteString;
             } else if (val0.userInfo && val0.userInfo.allValues && val0.userInfo.allValues.count > 0) {

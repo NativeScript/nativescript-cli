@@ -1,6 +1,6 @@
 import { isDefined } from 'kinvey-js-sdk/dist/utils';
 import { NotFoundError } from 'kinvey-js-sdk/dist/errors';
-const NativeScriptSQLite = require('nativescript-sqlite');
+const nativeScriptSQLite = require('nativescript-sqlite');
 
 const masterCollectionName = 'sqlite_master';
 let isSupported;
@@ -26,10 +26,10 @@ class SQLiteAdapter {
     const isMulti = Array.isArray(query);
     query = isMulti ? query : [[query, parameters]];
 
-    return new NativeScriptSQLite(this.name)
+    return new nativeScriptSQLite(this.name)
       .then((db) => {
         // This will set the database to return the results as an array of objects
-        db.resultType(NativeScriptSQLite.RESULTSASOBJECT);
+        db.resultType(nativeScriptSQLite.RESULTSASOBJECT);
 
         if (write && isMaster === false) {
           return db.execSQL(`CREATE TABLE IF NOT EXISTS ${escapedCollection}`
@@ -179,11 +179,11 @@ class SQLiteAdapter {
   }
 }
 
-export const SQLite = {
+export const sqLite = {
   load(name) {
     const db = new SQLiteAdapter(name);
 
-    if (isDefined(NativeScriptSQLite) === false) {
+    if (isDefined(nativeScriptSQLite) === false) {
       return Promise.resolve(undefined);
     }
 

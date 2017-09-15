@@ -15,7 +15,7 @@ export class SecureStorage {
       throw new Error('The key argument must be a string.');
     }
 
-     return Hawk.get(key);
+    return Hawk.get(key);
   }
 
   set(key, value): boolean {
