@@ -155,6 +155,20 @@ interface IiOSBuildConfig extends IBuildForDevice, IDeviceIdentifier, IProvision
 	codeSignIdentity?: string;
 }
 
+/**
+ * Describes service used for building a project locally.
+ */
+interface ILocalBuildService {
+	/**
+	 * Builds a project locally.
+	 * @param {string} platform Platform for which to build.
+	 * @param {IPlatformBuildData} platformBuildOptions Additional options for controlling the build.
+	 * @param {string} platformTemplate The name of the template.
+	 * @return {Promise<string>} Path to the build output.
+	 */
+	build(platform: string, platformBuildOptions: IPlatformBuildData, platformTemplate?: string): Promise<string>;
+}
+
 interface IPlatformProjectService extends NodeJS.EventEmitter {
 	getPlatformData(projectData: IProjectData): IPlatformData;
 	validate(projectData: IProjectData): Promise<void>;

@@ -1,4 +1,5 @@
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "../common/constants";
+import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
 import { cache } from "../common/decorators";
 
 export class RunCommandBase implements ICommand {
@@ -137,7 +138,7 @@ export class RunAndroidCommand implements ICommand {
 		}
 
 		if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
-			this.$errors.fail("When producing a release build, you need to specify all --key-store-* options.");
+			this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 		}
 		return this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.Android);
 	}
