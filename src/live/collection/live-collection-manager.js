@@ -13,7 +13,6 @@ export class LiveCollectionManager {
   _client;
 
   /**
-   * @param {LiveService} liveService
    * @param {Client} client
    */
   constructor(client) {

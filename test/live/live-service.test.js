@@ -9,9 +9,11 @@ import { PubNubListener, getLiveService } from '../../src/live';
 import { PubNubClientMock, PubNubListenerMock } from '../mocks';
 
 const pathToLiveService = '../../src/live/live-service';
-const notInitializedCheckRegexp = new RegExp('not.*initialized', 'i');
-const invalidOrMissingCheckRegexp = new RegExp('(invalid)|(missing)', 'i');
-const alreadyInitializedCheckRegexp = new RegExp('already initialized', 'i');
+import {
+  notInitializedCheckRegexp,
+  invalidOrMissingCheckRegexp,
+  alreadyInitializedCheckRegexp
+} from './utilities';
 
 describe('LiveService', () => {
   let client;

@@ -4,8 +4,7 @@ import { getLiveCollectionManager, LiveCollectionManager } from '../../../src/li
 
 import * as nockHelper from '../';
 import { mockRequiresIn } from '../../mocks';
-
-const invalidOrMissingCheckRegexp = new RegExp('(invalid)|(missing)', 'i');
+import { invalidOrMissingCheckRegexp } from '../utilities';
 
 describe('LiveCollectionManager', () => {
   /** @type {LiveCollectionManager} */

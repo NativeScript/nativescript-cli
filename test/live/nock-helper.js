@@ -58,6 +58,12 @@ export function mockSetStreamACLRequest(streamName, substreamId, aclObj) {
     });
 }
 
+export function mockGetStreamACLRequest(streamName, substreamId, response) {
+  return _baseNockCall()
+    .get(_buildSubstreamACLUrl(streamName, substreamId))
+    .reply(200, response);
+}
+
 export function mockCollectionSubscribeRequest(collectionName) {
   return _baseNockCall()
     .post(_buildCollectionSubscriptionUrl(collectionName, '_subscribe'), { deviceId: _client.deviceId })

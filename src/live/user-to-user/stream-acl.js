@@ -50,6 +50,7 @@ export class StreamACL {
 
   /**
    * @param  {(User|User[]|string|string[])} publishers
+   * @returns {this}
    */
   addPublishers(publishers) {
     this._addToAcl(this.publishers, publishers);
@@ -58,6 +59,7 @@ export class StreamACL {
 
   /**
    * @param  {(User|User[]|string|string[])} subscribers
+   * @returns {this}
    */
   addSubscribers(subscribers) {
     this._addToAcl(this.subscribers, subscribers);
@@ -66,6 +68,7 @@ export class StreamACL {
 
   /**
    * @param  {(string|string[]|{_id: string})} groups
+   * @returns {this}
    */
   addPublisherGroups(groups) {
     this._addToAcl(this.publisherGroups, groups);
@@ -74,11 +77,13 @@ export class StreamACL {
 
   /**
    * @param  {(string|string[]|{_id: string})} groups
+   * @returns {this}
    */
   addSubscriberGroups(groups) {
     this._addToAcl(this.publisherGroups, groups);
     return this;
   }
+
   /**
    * Indicates whether the current object has any user IDs,
    * in any of its fields

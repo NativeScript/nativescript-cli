@@ -1,16 +1,15 @@
-import isString from 'lodash/isString';
-
 import { KinveyError } from '../../errors';
 import Client from '../../client';
+import { isNonemptyString } from '../../utils';
 import { getLiveService } from '../live-service';
 import { KinveyRequest, RequestMethod, StatusCode } from '../../request';
 import { StreamACL } from './stream-acl';
 
 /**
  * @typedef MessageReceiver
- * @property {Function} status
- * @property {Function} message
- * @property {Function} presence
+ * @property {Function} onMessage
+ * @property {Function} onStatus
+ * @property {Function} onError
  */
 
 /**
@@ -38,18 +37,35 @@ export class Stream {
     this.name = name;
   }
 
+  /**
+   * Gets all substreams of this Stream
+   * @returns {Promise}
+   */
   getSubstreams() {
     return this._makeStreamRequest('_substreams', RequestMethod.GET);
   }
 
   /**
-   * Thist method sets (overwrites) the ACL for the given user's message stream
+   * Gets the current ACL for the given user's message stream
+   * @param {string} userId The ID of the user whose stream ACL is being retrieved
+   * @returns {Promise} Promise for the ACL object returned
+   */
+  getACL(userId) {
+    if (!isNonemptyString(userId)) {
+      return Promise.reject(new KinveyError('Invalid or missing id'));
+    }
+
+    return this._makeStreamRequest(userId, RequestMethod.GET);
+  }
+
+  /**
+   * Sets (overwrites) the ACL for the given user's message stream
    * @param {string} userId The ID of the user whose stream ACL is being set
    * @param {StreamACL} acl The ACL object to be set
    * @returns {Promise}
    */
   setACL(userId, acl) {
-    if (!isString(userId) || userId === '') {
+    if (!isNonemptyString(userId)) {
       return Promise.reject(new KinveyError('Invalid or missing id'));
     }
 
@@ -100,6 +116,7 @@ export class Stream {
   /**
    * Listens for messages sent to the active user
    * @param {MessageReceiver} receiver
+   * @returns {Promise<void>}
    */
   listen(receiver) {
     const userId = this._client.getActiveUser()._id;
@@ -108,6 +125,7 @@ export class Stream {
 
   /**
    * Stops listening for messages sent to the active user
+   * @returns {Promise<void>}
    */
   stopListening() {
     const userId = this._client.getActiveUser()._id;
