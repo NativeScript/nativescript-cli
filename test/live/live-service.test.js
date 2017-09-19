@@ -374,13 +374,6 @@ describe('LiveService', () => {
         })
           .toThrow(notInitializedCheckRegexp);
       });
-
-      it('should fail for unsubscribeFromAll()', () => {
-        expect(() => {
-          liveService.unsubscribeFromAll();
-        })
-          .toThrow(notInitializedCheckRegexp);
-      });
     });
 
     describe('when LiveService is initialized', () => {
@@ -410,22 +403,6 @@ describe('LiveService', () => {
           expect(spy.calls.length).toBe(2);
           expect(spy).toHaveBeenCalledWith(channelName);
           expect(spy).toHaveBeenCalledWith(`${PubNubListener.statusPrefix}${channelName}`);
-        });
-      });
-
-      describe('unsubscribeFromAll()', () => {
-        it('should call unsubscribeAll() of PubNub client', () => {
-          const clientSpy = expect.spyOn(pubnubClient, 'unsubscribeAll');
-
-          liveService.unsubscribeFromAll();
-          expect(clientSpy).toHaveBeenCalledWith();
-        });
-
-        it('should call removeAllListeners() of PubNubListener', () => {
-          const listenerSpy = expect.spyOn(pubnubListener, 'removeAllListeners');
-
-          liveService.unsubscribeFromAll();
-          expect(listenerSpy).toHaveBeenCalledWith();
         });
       });
     });

@@ -156,7 +156,7 @@ class LiveService {
    * Unsubscribes from all events in PubNub client and in listener
    */
   uninitialize() {
-    this.unsubscribeFromAll();
+    this._unsubscribeFromAll();
     this._pubnubClient = null;
     this._pubnubListener = null;
   }
@@ -233,14 +233,6 @@ class LiveService {
   }
 
   /**
-   * Unsubscribes from all channels and channel groups, as well as PubNubListener events
-   */
-  unsubscribeFromAll() {
-    this._pubnubClient.unsubscribeAll();
-    this._pubnubListener.removeAllListeners();
-  }
-
-  /**
    * @param {string} userId
    * @returns {Promise}
    */
@@ -256,6 +248,15 @@ class LiveService {
         this._registeredUser = null;
         return resp;
       });
+  }
+
+  /**
+   * Unsubscribes from all channels and channel groups, as well as PubNubListener events
+   * @private
+   */
+  _unsubscribeFromAll() {
+    this._pubnubClient.unsubscribeAll();
+    this._pubnubListener.removeAllListeners();
   }
 
   /**
