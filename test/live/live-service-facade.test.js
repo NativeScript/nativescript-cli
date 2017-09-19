@@ -13,7 +13,6 @@ const liveServiceMock = {
   unregisterUser: () => { },
   onConnectionStatusUpdates: () => { },
   offConnectionStatusUpdates: () => { },
-  unsubscribeFromAll: () => { },
   isInitialized: () => { }
 };
 
@@ -37,7 +36,6 @@ describe('LiveServiceFacade', () => {
       'Stream',
       'onConnectionStatusUpdates',
       'offConnectionStatusUpdates',
-      'unsubscribeFromAll',
       'isInitialized'
     ];
     expect(LiveServiceFacade).toContainKeys(expectedMethods);
@@ -59,16 +57,6 @@ describe('LiveServiceFacade', () => {
       const handler = () => { };
       LiveServiceFacade.offConnectionStatusUpdates(handler);
       expect(spy).toHaveBeenCalledWith(handler);
-    });
-  });
-
-  describe('unsubscribeFromAll', () => {
-    it('should call LiveService\'s unsubscribeFromAll() method', () => {
-      const spy = expect.spyOn(liveServiceMock, 'unsubscribeFromAll');
-      LiveServiceFacade.unsubscribeFromAll();
-      expect(spy).toHaveBeenCalled();
-      expect(spy.calls.length).toBe(1);
-      expect(spy.calls[0].arguments.length).toBe(0);
     });
   });
 

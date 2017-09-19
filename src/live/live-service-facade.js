@@ -25,13 +25,6 @@ function offConnectionStatusUpdates(func) {
 }
 
 /**
- * Unsubscribes from all channels and channel groups
- */
-function unsubscribeFromAll() {
-  _getLiveService().unsubscribeFromAll();
-}
-
-/**
  * Checks whether live service is ready to subscribe or publish messages
  */
 function isInitialized() {
@@ -42,6 +35,5 @@ export const LiveServiceFacade = {
   Stream,
   onConnectionStatusUpdates,
   offConnectionStatusUpdates,
-  unsubscribeFromAll,
   isInitialized
 };

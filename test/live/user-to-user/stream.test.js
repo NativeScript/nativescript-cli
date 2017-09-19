@@ -5,6 +5,7 @@ import { Stream } from '../../../src/live';
 
 import { randomString } from '../../../src/utils';
 import * as nockHelper from '../nock-helper';
+import { invalidOrMissingCheckRegexp } from '../utilities';
 
 // TODO: add more tests
 
@@ -31,6 +32,39 @@ describe('Stream', () => {
         .then((resp) => {
           scope.done();
           expect(resp).toEqual(responseMock);
+        });
+    });
+  });
+
+  describe('getACL', () => {
+    it('should throw an error if supplied substream id is invalid', (done) => {
+      stream.getACL('')
+        .then(() => done(new Error('getACL succeeded with invalid id')))
+        .catch((err) => {
+          expect(err).toExist();
+          expect(err.message).toMatch(invalidOrMissingCheckRegexp);
+          done();
+        });
+    });
+
+    it('should throw an error if no substream is provided', (done) => {
+      stream.getACL()
+        .then(() => done(new Error('getACL succeeded with invalid id')))
+        .catch((err) => {
+          expect(err).toExist();
+          expect(err.message).toMatch(invalidOrMissingCheckRegexp);
+          done();
+        });
+    });
+
+    it('should make a request to the provided substream id', () => {
+      const mockResponse = { anyObject: true };
+      const scope = nockHelper.mockGetStreamACLRequest(streamName, substreamId, mockResponse);
+
+      return stream.getACL(substreamId)
+        .then((aclObj) => {
+          scope.done();
+          expect(aclObj).toEqual(mockResponse);
         });
     });
   });
@@ -66,7 +100,7 @@ describe('Stream', () => {
         .addPublishers('some id')
         .addSubscribers('some other id');
 
-      const scope = nockHelper.mockSetStreamACLRequest(streamName, substreamId, acl.toPlainObject())
+      const scope = nockHelper.mockSetStreamACLRequest(streamName, substreamId, acl.toPlainObject());
       return stream.setACL(substreamId, acl)
         .then((resp) => {
           scope.done();
