@@ -1,5 +1,5 @@
 import { Acl, Metadata, User } from 'src/entity';
-import { UserMock } from 'test/mocks';
+import { UserMock } from 'test/unit/mocks';
 import { randomString } from 'src/utils';
 import { ActiveUserError, InvalidCredentialsError, KinveyError } from 'src/errors';
 import { CacheStore, SyncStore } from 'src/datastore';

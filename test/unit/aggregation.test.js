@@ -1,4 +1,5 @@
 import Aggregation from 'src/aggregation';
+import Query from 'src/query';
 import { SyncStore } from 'src/datastore';
 import { isDefined, randomString } from 'src/utils';
 import nock from 'nock';
@@ -6,6 +7,29 @@ import expect from 'expect';
 const collection = 'books';
 
 describe('Aggregation', function() {
+  describe('query', function() {
+    it('should not set an invalid query', () => {
+      expect(() => {
+        const aggregation = new Aggregation();
+        aggregation.query = {};
+      }).toThrow();
+    });
+
+    it('should set the query', () => {
+      const aggregation = new Aggregation();
+      const query = new Query();
+      aggregation.query = query;
+      expect(aggregation.query).toEqual(query);
+    });
+
+    it('should set the query to null', () => {
+      const aggregation = new Aggregation();
+      aggregation.query = new Query();
+      aggregation.query = null;
+      expect(aggregation.query).toEqual(null);
+    });
+  });
+
   describe('count()', function() {
     const commonName = 'Kinvey';
 
