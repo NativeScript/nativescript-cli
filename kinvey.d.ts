@@ -36,6 +36,77 @@ export namespace Kinvey {
     defaultTimeout?: number;
   }
 
+  namespace LiveService {
+    type StatusHandler = (status: StatusMessage) => void;
+    type MessageHandler = (payload: any) => void;
+    type ErrorHandler = (error: Kinvey.KinveyError) => void;
+
+    interface StatusMessage {
+      category: string;
+      operation: string;
+      affectedChannels: string[];
+      subscribedChannels: string[];
+      affectedChannelGroups: string[];
+      lastTimetoken: number;
+      currentTimetoken: number;
+    }
+
+    interface PlainStreamACLObject {
+      _id?: string;
+      publish?: string[];
+      subscribe?: string[];
+      groups?: { publish?: string, subscribe?: string[] }
+    }
+
+    interface MessageReceiver {
+      onMessage?: MessageHandler;
+      onStatus?: StatusHandler;
+      onError?: ErrorHandler;
+    }
+
+    namespace Stream {
+      class StreamACL {
+        publishers: string[];
+        subscribers: string[];
+        publisherGroups: string[];
+        subscriberGroups: string[];
+
+        static isValidACLObject: (obj: any) => boolean;
+
+        constructor(obj: StreamACL | PlainStreamACLObject);
+
+        addPublishers(publishers: Kinvey.User | Kinvey.User[] | string | string[]): this;
+        addSubscribers(publishers: Kinvey.User | Kinvey.User[] | string | string[]): this;
+        addPublisherGroups(groups: string | string[] | { _id: string } | { _id: string }[]): this;
+        addSubscriberGroups(groups: string | string[] | { _id: string } | { _id: string }[]): this;
+        isNotEmpty(): boolean;
+        toPlainObject(): PlainStreamACLObject;
+      }
+    }
+
+    class Stream {
+      name: string;
+
+      constructor(name: string);
+
+      getSubstreams(): Promise<{ _id: string }>;
+      getACL(userId: string): Promise<PlainStreamACLObject>;
+      setACL(userId: string, acl: PlainStreamACLObject | Stream.StreamACL): Promise<PlainStreamACLObject>;
+
+      follow(userId: string, receiver: MessageReceiver): Promise<void>;
+      unfollow(userId: string): Promise<void>;
+      post(message: any): Promise<{ timetoken: string }>;
+
+      listen(receiver: MessageReceiver): Promise<void>;
+      stopListening(): Promise<void>;
+      send(userId: string, message: any): Promise<{ timetoken: string }>;
+    }
+
+    function onConnectionStatusUpdates(handler: StatusHandler): void;
+    function offConnectionStatusUpdates(handler?: StatusHandler): void;
+    function isInitialized(): boolean;
+  }
+
   // Client class
   class Client {
     constructor(config: ClientConfig);
@@ -46,9 +117,6 @@ export namespace Kinvey {
     micProtocol: string;
     micHost: string;
     readonly micHostname: string;
-    liveServiceProtocol: string;
-    liveServiceHost: string;
-    readonly liveServiceHostname: string;
     appVersion: string;
     defaultTimeout: number;
     toPlainObject(): {};
@@ -111,7 +179,7 @@ export namespace Kinvey {
   }
 
   // Group class
-  class Group extends Aggregation {}
+  class Group extends Aggregation { }
 
   // Custom Endpoint class
   class CustomEndpoint {
@@ -121,7 +189,7 @@ export namespace Kinvey {
   // Properties class
   class Properties {
     constructor(properties?: {});
-    get(name: string): string|undefined;
+    get(name: string): string | undefined;
     set(name: string, value: any): this;
     has(name: string): boolean;
     add(property: {}): this;
@@ -157,8 +225,8 @@ export namespace Kinvey {
   // Entity interface
   interface Entity {
     _id: string;
-    _acl?: {};
-    _kmd?: {};
+    _acl?: Acl;
+    _kmd?: any;
   }
 
   // SyncEntity interface
@@ -179,11 +247,12 @@ export namespace Kinvey {
   }
 
   // NetworkStore class
-  class NetworkStore<T extends Entity> {
+  class NetworkStore<T extends Entity = Entity> {
     protected constructor();
     client: Client;
     pathname: string;
     useDeltaFetch: boolean;
+
     find(query?: Query, options?: RequestOptions): Observable<T[]>;
     findById(id: string, options?: RequestOptions): Observable<T>;
     group(aggregation: Aggregation, options?: RequestOptions): Observable<{}>;
@@ -193,21 +262,24 @@ export namespace Kinvey {
     save(entity: {}, options?: RequestOptions): Promise<T>;
     remove(query?: Query, options?: RequestOptions): Promise<{ count: number }>;
     removeById(id: string, options?: RequestOptions): Promise<{ count: number }>;
+
+    subscribe(receiver: Kinvey.LiveService.MessageReceiver): Promise<void>;
+    unsubscribe(): Promise<void>;
   }
 
   // CacheStore class
-  class CacheStore<T extends Entity> extends NetworkStore<T> {
+  class CacheStore<T extends Entity = Entity> extends NetworkStore<T> {
     clear(query?: Query, options?: RequestOptions): Promise<{ count: number }>;
     pendingSyncCount(query?: Query, options?: RequestOptions): Promise<{ count: number }>;
     pendingSyncEntities(query?: Query, options?: RequestOptions): Promise<SyncEntity[]>;
     push(query?: Query, options?: RequestOptions): Promise<PushResult<T>[]>;
     pull(query?: Query, options?: RequestOptions): Promise<T[]>;
-    sync(query?: Query, options?: RequestOptions): { push: PushResult<T>[], pull: T[] };
+    sync(query?: Query, options?: RequestOptions): Promise<{ push: PushResult<T>[], pull: T[] }>;
     clearSync(query?: Query, options?: RequestOptions): Promise<{ count: number }>;
   }
 
   // SyncStore class
-  class SyncStore<T extends Entity> extends CacheStore<T> {}
+  class SyncStore<T extends Entity = Entity> extends CacheStore<T> { }
 
   // File Metadata interface
   interface FileMetadata {
@@ -231,14 +303,14 @@ export namespace Kinvey {
   // Files class
   class Files {
     static useDeltaFetch: boolean;
-    static find<T extends File>(query?: Query, options?: RequestOptions): Promise<T[]>;
-    static findById<T extends File>(id: string, options?: RequestOptions): Promise<T>;
-    static download<T extends File>(name: string, options?: RequestOptions): Promise<T>;
+    static find<T extends File = File>(query?: Query, options?: RequestOptions): Promise<T[]>;
+    static findById<T extends File = File>(id: string, options?: RequestOptions): Promise<T>;
+    static download<T extends File = File>(name: string, options?: RequestOptions): Promise<T>;
     static downloadByUrl(url: string, options?: RequestOptions): Promise<{}>;
-    static stream<T extends File>(name: string, options?: RequestOptions): Promise<T>;
+    static stream<T extends File = File>(name: string, options?: RequestOptions): Promise<T>;
     static group(aggregation: Aggregation, options?: RequestOptions): Promise<{}>;
     static count(query?: Query, options?: RequestOptions): Promise<{ count: number }>;
-    static upload<T extends File>(file: {}, metadata?: FileMetadata, options?: RequestOptions): Promise<T>;
+    static upload<T extends File = File>(file: {}, metadata?: FileMetadata, options?: RequestOptions): Promise<T>;
     static remove(query?: Query, options?: RequestOptions): Promise<{ count: number }>;
     static removeById(id: string, options?: RequestOptions): Promise<{ count: number }>;
   }
@@ -261,18 +333,18 @@ export namespace Kinvey {
     equalTo(field: string, value: any): this;
     contains(field: string, values: any[]): this;
     containsAll(field: string, values: any[]): this;
-    greaterThan(field: string, value: number|string): this;
-    greaterThanOrEqualTo(field: string, value: number|string): this;
-    lessThan(field: string, value: number|string): this;
-    lessThanOrEqualTo(field: string, value: number|string): this;
+    greaterThan(field: string, value: number | string): this;
+    greaterThanOrEqualTo(field: string, value: number | string): this;
+    lessThan(field: string, value: number | string): this;
+    lessThanOrEqualTo(field: string, value: number | string): this;
     notEqualTo(field: string, value: any): this;
     notContainedIn(field: string, values: any[]): this;
-    and(queries?: {}|Query|{}[]|Query[]): this;
-    nor(queries?: {}|Query|{}[]|Query[]): this;
-    or(queries?: {}|Query|{}[]|Query[]): this;
+    and(queries?: {} | Query | {}[] | Query[]): this;
+    nor(queries?: {} | Query | {}[] | Query[]): this;
+    or(queries?: {} | Query | {}[] | Query[]): this;
     exists(field: string, flag: boolean): this;
     mod(field: string, divisor: number, remainder: number): this;
-    matches(field: string, regExp: string|RegExp, options?: {}): this;
+    matches(field: string, regExp: string | RegExp, options?: {}): this;
     near(field: string, coord: number[], maxDistance?: number): this;
     withinBox(field: string, bottomLeftCoord: number, upperRightCoord: number): this;
     withinPolygon(field: string, coords: number[]): this;
@@ -300,14 +372,14 @@ export namespace Kinvey {
   class User {
     constructor(data?: {}, options?: { client?: Client })
     data: {};
-    _id: string|undefined;
+    _id: string | undefined;
     _acl: Acl;
     metadata: Metadata;
     _kmd: Metadata;
-    _socialIdentity: {}|undefined;
-    authtoken: string|undefined;
-    username: string|undefined;
-    email: string|undefined;
+    _socialIdentity: {} | undefined;
+    authtoken: string | undefined;
+    username: string | undefined;
+    email: string | undefined;
     pathname: string;
     isActive(): boolean;
     isEmailVerified(): boolean;
@@ -328,7 +400,11 @@ export namespace Kinvey {
     static resetPassword(username: string, options?: RequestOptions): Promise<{}>;
     static lookup(query?: Query, options?: RequestOptions): Promise<{}>;
     static exists(username: string, options?: RequestOptions): Promise<{}>;
-    static getActiveUser(client?: Client): User|null;
+    static getActiveUser(client?: Client): User | null;
+    static registerForLiveService(): Promise<void>;
+    static unregisterFromLiveService(): Promise<void>;
+    registerForLiveService(): Promise<void>;
+    unregisterFromLiveService(): Promise<void>;
   }
 
   // PushOptions interface
@@ -359,39 +435,39 @@ export namespace Kinvey {
     stack: string;
     constructor(message: string, debug: string, code: number, kinveyRequestId: string);
   }
-  class ActiveUserError extends BaseError {}
-  class ApiVersionNotAvailableError extends BaseError {}
-  class ApiVersionNotImplemented extends BaseError {}
-  class AppPromblemError extends BaseError {}
-  class BadRequestError extends BaseError {}
-  class BusinessLogicError extends BaseError {}
-  class CORSDisabledError extends BaseError {}
-  class DuplicateEndUsersError extends BaseError {}
-  class FeatureUnavailableError extends BaseError {}
-  class IncompleteRequestBodyError extends BaseError {}
-  class IndirectCollectionAccessDisallowedError extends BaseError {}
-  class InsufficientCredentialsError extends BaseError {}
-  class InvalidCredentialsError extends BaseError {}
-  class InvalidIdentifierError extends BaseError {}
-  class InvalidQuerySyntaxError extends BaseError {}
-  class JSONParseError extends BaseError {}
-  class KinveyError extends BaseError {}
-  class KinveyInternalErrorRetry extends BaseError {}
-  class KinveyInternalErrorStop extends BaseError {}
-  class MissingQueryError extends BaseError {}
-  class MissingRequestHeaderError extends BaseError {}
-  class MobileIdentityConnectError extends BaseError {}
-  class NetworkConnectionError extends BaseError {}
-  class NoActiveUserError extends BaseError {}
-  class NoResponseError extends BaseError {}
-  class NotFoundError extends BaseError {}
-  class ParameterValueOutOfRangeError extends BaseError {}
-  class PopupError extends BaseError {}
-  class QueryError extends BaseError {}
-  class ServerError extends BaseError {}
-  class StaleRequestError extends BaseError {}
-  class SyncError extends BaseError {}
-  class TimeoutError extends BaseError {}
-  class UserAlreadyExistsError extends BaseError {}
-  class WritesToCollectionDisallowedError extends BaseError {}
+  class ActiveUserError extends BaseError { }
+  class ApiVersionNotAvailableError extends BaseError { }
+  class ApiVersionNotImplemented extends BaseError { }
+  class AppPromblemError extends BaseError { }
+  class BadRequestError extends BaseError { }
+  class BusinessLogicError extends BaseError { }
+  class CORSDisabledError extends BaseError { }
+  class DuplicateEndUsersError extends BaseError { }
+  class FeatureUnavailableError extends BaseError { }
+  class IncompleteRequestBodyError extends BaseError { }
+  class IndirectCollectionAccessDisallowedError extends BaseError { }
+  class InsufficientCredentialsError extends BaseError { }
+  class InvalidCredentialsError extends BaseError { }
+  class InvalidIdentifierError extends BaseError { }
+  class InvalidQuerySyntaxError extends BaseError { }
+  class JSONParseError extends BaseError { }
+  class KinveyError extends BaseError { }
+  class KinveyInternalErrorRetry extends BaseError { }
+  class KinveyInternalErrorStop extends BaseError { }
+  class MissingQueryError extends BaseError { }
+  class MissingRequestHeaderError extends BaseError { }
+  class MobileIdentityConnectError extends BaseError { }
+  class NetworkConnectionError extends BaseError { }
+  class NoActiveUserError extends BaseError { }
+  class NoResponseError extends BaseError { }
+  class NotFoundError extends BaseError { }
+  class ParameterValueOutOfRangeError extends BaseError { }
+  class PopupError extends BaseError { }
+  class QueryError extends BaseError { }
+  class ServerError extends BaseError { }
+  class StaleRequestError extends BaseError { }
+  class SyncError extends BaseError { }
+  class TimeoutError extends BaseError { }
+  class UserAlreadyExistsError extends BaseError { }
+  class WritesToCollectionDisallowedError extends BaseError { }
 }
