@@ -1,8 +1,8 @@
 /* eslint-disable max-len */
 import { randomString } from 'src/utils';
 import { User } from 'src/entity';
-import Client from '../../../src/client';
-import { LiveServiceFacade } from '../../../src/live';
+import Client from 'src/client';
+import { LiveServiceFacade } from 'src/live';
 import nock from 'nock';
 import url from 'url';
 
