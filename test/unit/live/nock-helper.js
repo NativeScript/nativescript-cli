@@ -1,11 +1,13 @@
 import nock from 'nock';
 
-import { StreamACL } from 'src/live';
+import Client from '../../../src/client';
+import { StreamACL } from '../../../src/live';
 
 /** @type {Client} */
 let _client;
 
 function _baseNockCall() {
+  _client = Client.sharedInstance();
   return nock(_client.apiHostname, { encodedQueryParams: true });
 }
 
