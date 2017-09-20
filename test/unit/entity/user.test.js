@@ -9,7 +9,7 @@ import expect from 'expect';
 import nock from 'nock';
 import assign from 'lodash/assign';
 import localStorage from 'local-storage';
-import { getLiveService } from '../../src/live';
+import { getLiveService } from 'src/live';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 describe('User', function () {

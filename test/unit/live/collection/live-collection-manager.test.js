@@ -1,6 +1,6 @@
 import expect from 'expect';
 
-import { getLiveCollectionManager, LiveCollectionManager } from '../../../src/live';
+import { getLiveCollectionManager, LiveCollectionManager } from 'src/live';
 
 import * as nockHelper from '../';
 import { mockRequiresIn } from '../../mocks';
@@ -24,7 +24,7 @@ describe('LiveCollectionManager', () => {
   });
 
   beforeEach(() => {
-    const pathToLiveManager = '../../../src/live/collection/live-collection-manager';
+    const pathToLiveManager = '../../../../src/live/collection/live-collection-manager';
     const mocks = {
       '../live-service': { getLiveService: () => liveServiceMock }
     };

@@ -4,6 +4,4 @@ export class PubNubListenerMock {
   on() { }
 
   removeListener() { }
-
-  removeAllListeners() { }
 }

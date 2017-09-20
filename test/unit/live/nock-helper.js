@@ -1,8 +1,6 @@
 import nock from 'nock';
 
-import Client from '../../src/client'; // imported for type info
-
-import { StreamACL } from '../../src/live';
+import { StreamACL } from 'src/live';
 
 /** @type {Client} */
 let _client;
@@ -52,7 +50,7 @@ export function mockSetStreamACLRequest(streamName, substreamId, aclObj) {
       const acl = new StreamACL(suppliedBody);
       return acl.isNotEmpty();
     })
-    .reply(200, (url, reqBody) => {
+    .reply(200, () => {
       return new StreamACL(aclObj)
         .toPlainObject();
     });

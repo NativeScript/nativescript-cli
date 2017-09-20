@@ -1,9 +1,8 @@
 import expect from 'expect';
 import cloneDeep from 'lodash/cloneDeep';
 
-import { Stream } from '../../../src/live';
+import { Stream } from 'src/live';
 
-import { randomString } from '../../../src/utils';
 import * as nockHelper from '../nock-helper';
 import { invalidOrMissingCheckRegexp } from '../utilities';
 

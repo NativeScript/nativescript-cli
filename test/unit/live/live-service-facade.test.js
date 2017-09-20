@@ -1,8 +1,4 @@
 import expect from 'expect';
-import PubNub from 'pubnub';
-
-import Kinvey from '../../src';
-import { PubNubListener } from '../../src/live';
 
 import { mockRequiresIn } from '../mocks';
 
@@ -16,7 +12,7 @@ const liveServiceMock = {
   isInitialized: () => { }
 };
 
-const pathToFacade = '../../src/live/live-service-facade';
+const pathToFacade = '../../../src/live/live-service-facade';
 const requireMocks = { './live-service': { getLiveService: () => liveServiceMock } };
 
 describe('LiveServiceFacade', () => {

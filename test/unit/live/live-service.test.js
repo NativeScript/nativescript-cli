@@ -1,28 +1,26 @@
 import expect from 'expect';
 import PubNub from 'pubnub';
 
-import Kinvey from '../../src/kinvey';
-import { randomString } from '../../src/utils';
+import { Kinvey } from 'src/kinvey';
+import { randomString } from 'src/utils';
+import { PubNubListener, getLiveService } from 'src/live';
 
 import * as nockHelper from './nock-helper';
-import { PubNubListener, getLiveService } from '../../src/live';
 import { PubNubClientMock, PubNubListenerMock } from '../mocks';
-
-const pathToLiveService = '../../src/live/live-service';
 import {
   notInitializedCheckRegexp,
   invalidOrMissingCheckRegexp,
   alreadyInitializedCheckRegexp
 } from './utilities';
 
+const pathToLiveService = '../../../src/live/live-service';
+
 describe('LiveService', () => {
-  let client;
   let liveService;
   let registerUserResponse;
 
   before(function () {
     nockHelper.setClient(this.client);
-    client = this.client;
   });
 
   beforeEach(() => {
@@ -104,7 +102,7 @@ describe('LiveService', () => {
     beforeEach(() => {
       nockScope = nockHelper.mockRegisterRealtimeCall(registerUserResponse);
       return liveService.registerUser(Kinvey.User.getActiveUser())
-        .then((config) => {
+        .then(() => {
           pubnubClient = new PubNubClientMock();
           pubnubListener = new PubNubListenerMock();
         });
@@ -299,7 +297,7 @@ describe('LiveService', () => {
     beforeEach(() => {
       nockScope = nockHelper.mockRegisterRealtimeCall(registerUserResponse);
       return liveService.registerUser(Kinvey.User.getActiveUser())
-        .then((config) => {
+        .then(() => {
           pubnubClient = new PubNubClientMock();
           pubnubListener = new PubNubListenerMock();
           return liveService.initialize(pubnubClient, pubnubListener);
@@ -384,7 +382,7 @@ describe('LiveService', () => {
       beforeEach(() => {
         nockScope = nockHelper.mockRegisterRealtimeCall(registerUserResponse);
         return liveService.registerUser(Kinvey.User.getActiveUser())
-          .then((config) => {
+          .then(() => {
             pubnubClient = new PubNubClientMock();
             pubnubListener = new PubNubListenerMock();
             return liveService.initialize(pubnubClient, pubnubListener);
@@ -428,7 +426,7 @@ describe('LiveService', () => {
       beforeEach(() => {
         nockScope = nockHelper.mockRegisterRealtimeCall(registerUserResponse);
         return liveService.registerUser(Kinvey.User.getActiveUser())
-          .then((config) => {
+          .then(() => {
             nockHelper.mockUnregisterRealtimeCall();
             pubnubClient = new PubNubClientMock();
             pubnubListener = new PubNubListenerMock();

@@ -1,14 +1,9 @@
 import { HttpMiddlewareMock, UserMock } from 'test/unit/mocks';
-import { SerializeMiddleware, ParseMiddleware, NetworkRack } from 'src/request';
+import { NetworkRack } from 'src/request';
 import { randomString } from 'src/utils';
 import { Kinvey } from 'src/kinvey';
 import nock from 'nock';
 import expect from 'expect';
-
-import Kinvey from 'src/kinvey';
-import { HttpMiddlewareMock, UserMock } from 'test/mocks';
-import { NetworkRack } from 'src/request';
-import { randomString } from 'src/utils';
 
 // Setup network rack
 NetworkRack.useHttpMiddleware(new HttpMiddlewareMock());

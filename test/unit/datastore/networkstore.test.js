@@ -5,7 +5,7 @@ import Query from 'src/query';
 import Aggregation from 'src/aggregation';
 import { KinveyError, NotFoundError, ServerError } from 'src/errors';
 import { randomString } from 'src/utils';
-import { NetworkStore, SyncStore } from '../../src/datastore';
+import { NetworkStore, SyncStore } from 'src/datastore';
 
 import { mockRequiresIn } from '../mocks';
 
@@ -429,7 +429,7 @@ describe('NetworkStore', function () {
   });
 
   describe('when working with live service', () => {
-    const path = '../../src/datastore/src/networkstore';
+    const path = '../../../src/datastore/src/networkstore';
     const managerMock = {
       subscribeCollection: () => { },
       unsubscribeCollection: () => { }
