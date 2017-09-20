@@ -250,7 +250,7 @@ describe('MobileIdentityConnect', function() {
         nock(this.client.micHostname, { encodedQueryParams: true })
           .post(
             '/oauth/auth',
-            `client_id=${encodeURIComponent(this.client.appKey+':'+micId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
+            `client_id=${encodeURIComponent(this.client.appKey+'.'+micId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
           )
           .reply(200, {
             temp_login_uri: tempLoginUriParts.href
@@ -261,7 +261,7 @@ describe('MobileIdentityConnect', function() {
         nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
           .post(
             tempLoginUriParts.pathname,
-            `client_id=${encodeURIComponent(this.client.appKey+':'+micId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}`
+            `client_id=${encodeURIComponent(this.client.appKey+'.'+micId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}`
           )
           .reply(302, null, {
             'Content-Type': 'application/json; charset=utf-8',
@@ -271,7 +271,7 @@ describe('MobileIdentityConnect', function() {
         nock(this.client.micHostname, { encodedQueryParams: true })
           .post(
             '/oauth/token',
-            `grant_type=authorization_code&client_id=${encodeURIComponent(this.client.appKey+':'+micId)}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
+            `grant_type=authorization_code&client_id=${encodeURIComponent(this.client.appKey+'.'+micId)}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
           )
           .reply(200, token, {
             'Content-Type': 'application/json; charset=utf-8'
@@ -286,7 +286,7 @@ describe('MobileIdentityConnect', function() {
           .then((response) => {
             expect(response).toEqual(assign(token, {
               identity: MobileIdentityConnect.identity,
-              client_id: `${this.client.appKey}:${micId}`,
+              client_id: `${this.client.appKey}.${micId}`,
               redirect_uri: redirectUri,
               protocol: this.client.micProtocol,
               host: this.client.micHost
