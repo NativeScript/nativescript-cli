@@ -20,15 +20,15 @@
   "scripts": {
     "build": "npm run clean && npm run transpile",
     "clean": "rm -rf dist && rm -rf coverage",
-    "cover": "istanbul cover _mocha -- --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/index test",
+    "cover": "istanbul cover _mocha -- --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test",
     "docs": "esdoc -c esdoc.json",
     "lint": "npm run lint:src",
     "lint:src": "eslint src/**",
     "lint:test": "eslint test/**",
     "preversion": "rm -rf node_modules && npm install && npm test",
     "postversion": "git push && git push --tags",
-    "test": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/index test",
-    "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/index test",
+    "test": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test",
+    "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test",
     "transpile": "babel --no-comments --out-dir dist src"
   },
   "dependencies": {

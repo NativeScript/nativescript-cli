@@ -1,4 +1,4 @@
-import { HttpMiddlewareMock, UserMock } from 'test/mocks';
+import { HttpMiddlewareMock, UserMock } from 'test/unit/mocks';
 import { SerializeMiddleware, ParseMiddleware, NetworkRack } from 'src/request';
 import { randomString } from 'src/utils';
 import { Kinvey } from 'src/kinvey';
