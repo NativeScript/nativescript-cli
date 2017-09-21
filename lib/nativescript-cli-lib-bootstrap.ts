@@ -8,7 +8,6 @@ $injector.overrideAlreadyRequiredModule = true;
 $injector.requirePublic("companionAppsService", "./common/appbuilder/services/livesync/companion-apps-service");
 $injector.requirePublicClass("deviceEmitter", "./common/appbuilder/device-emitter");
 $injector.requirePublicClass("deviceLogProvider", "./common/appbuilder/device-log-provider");
-$injector.requirePublicClass("localBuildService", "./services/local-build-service");
 
 // We need this because some services check if (!$options.justlaunch) to start the device log after some operation.
 // We don't want this behaviour when the CLI is required as library.

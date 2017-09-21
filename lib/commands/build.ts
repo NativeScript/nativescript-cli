@@ -1,3 +1,5 @@
+import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
+
 export class BuildCommandBase {
 	constructor(protected $options: IOptions,
 		protected $errors: IErrors,
@@ -82,7 +84,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 	public async canExecute(args: string[]): Promise<boolean> {
 		super.validatePlatform(this.$devicePlatformsConstants.Android);
 		if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
-			this.$errors.fail("When producing a release build, you need to specify all --key-store-* options.");
+			this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 		}
 
 		const platformData = this.$platformsData.getPlatformData(this.$devicePlatformsConstants.Android, this.$projectData);

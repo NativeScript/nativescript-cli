@@ -2,8 +2,6 @@ import * as commonOptionsLibPath from "./common/options";
 import * as osenv from "osenv";
 import * as path from "path";
 
-const OptionType = commonOptionsLibPath.OptionType;
-
 export class Options extends commonOptionsLibPath.OptionsBase {
 	constructor($errors: IErrors,
 		$staticConfig: IStaticConfig,

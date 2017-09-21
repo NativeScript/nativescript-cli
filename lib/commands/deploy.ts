@@ -1,3 +1,5 @@
+import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
+
 export class DeployOnDeviceCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
@@ -41,7 +43,7 @@ export class DeployOnDeviceCommand implements ICommand {
 		}
 
 		if (this.$mobileHelper.isAndroidPlatform(args[0]) && this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
-			this.$errors.fail("When producing a release build, you need to specify all --key-store-* options.");
+			this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 		}
 
 		const platformData = this.$platformsData.getPlatformData(args[0], this.$projectData);
