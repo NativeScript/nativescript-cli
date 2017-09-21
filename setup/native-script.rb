@@ -11,26 +11,36 @@ unless Process.uid == 0
   exec('sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/NativeScript/nativescript-cli/production/setup/native-script.rb)"')
 end
 
-puts "NativeScript requires Xcode."
-puts "If you do not have Xcode installed, download and install it from App Store and run it once to complete its setup."
-puts "Do you have Xcode installed? (y/n)"
-
-xcode = gets.chomp
-
-if xcode.downcase == "n"
-  exit
-end
-
-if !(`xcodebuild -version`.include? "version")
-  puts "Xcode is not installed or not configured properly. Download, install, set it up and run this script again."
-  exit
-end
-
-puts "You need to accept the Xcode license agreement to be able to use the Xcode command-line tools."
-system('xcodebuild -license')
-
-# Help with installing other dependencies
+$silentMode = false
 $answer = ""
+ARGV.each do|a|
+  if a == "--silentMode"
+    $silentMode = true
+    $answer = "a"
+  end
+end
+
+if !$silentMode
+  puts "NativeScript requires Xcode."
+  puts "If you do not have Xcode installed, download and install it from App Store and run it once to complete its setup."
+  puts "Do you have Xcode installed? (y/n)"
+
+  xcode = gets.chomp
+
+  if xcode.downcase == "n"
+    exit
+  end
+
+  if !(`xcodebuild -version`.include? "version")
+    puts "Xcode is not installed or not configured properly. Download, install, set it up and run this script again."
+    exit
+  end
+
+  puts "You need to accept the Xcode license agreement to be able to use the Xcode command-line tools."
+  system('xcodebuild -license')
+end
+# Help with installing other dependencies
+
 
 def execute(script, warning_message, run_as_root = false)
   if run_as_root
@@ -138,9 +148,9 @@ execute("echo y | #{sdk_manager} \"extras;android;m2repository\"", error_msg)
 execute("echo y | #{sdk_manager} \"extras;google;m2repository\"", error_msg)
 
 puts "Do you want to install Android emulator? (y/n)"
-if gets.chomp.downcase == "y"
+if $silentMode || gets.chomp.downcase == "y"
   puts "Do you want to install HAXM (Hardware accelerated Android emulator)? (y/n)"
-  if gets.chomp.downcase == "y"
+  if $silentMode || gets.chomp.downcase == "y"
     execute("echo y | #{sdk_manager} \"extras;intel;Hardware_Accelerated_Execution_Manager\"", error_msg)
     haxm_silent_installer = File.join(ENV["ANDROID_HOME"], "extras", "intel", "Hardware_Accelerated_Execution_Manager", "silent_install.sh")
     execute("sudo #{haxm_silent_installer}", "There seem to be some problems with the Android configuration")
