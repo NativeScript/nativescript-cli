@@ -7,7 +7,7 @@ import { StreamACL } from '../../../src/live';
 let _client;
 
 function _baseNockCall() {
-  _client = Client.sharedInstance();
+  setClient(Client.sharedInstance());
   return nock(_client.apiHostname, { encodedQueryParams: true });
 }
 
