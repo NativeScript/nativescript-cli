@@ -1,6 +1,6 @@
 import expect from 'expect';
 
-import { getLiveCollectionManager, LiveCollectionManager } from 'src/live';
+import { getLiveCollectionManager } from 'src/live';
 
 import * as nockHelper from '../';
 import { mockRequiresIn } from '../../mocks';
@@ -11,7 +11,7 @@ describe('LiveCollectionManager', () => {
   let manager;
   let client;
   let expectedCollectionChannel;
-  let liveServiceMock = {
+  const liveServiceMock = {
     subscribeToChannel: () => { },
     unsubscribeFromChannel: () => { }
   };
@@ -32,7 +32,7 @@ describe('LiveCollectionManager', () => {
     delete require.cache[require.resolve(pathToLiveManager)];
     const getManager = mockRequiresIn(__dirname, pathToLiveManager, mocks, 'getLiveCollectionManager');
 
-    manager = getManager(client);
+    manager = getManager();
   });
 
   it('should be a singleton', () => {
@@ -87,7 +87,6 @@ describe('LiveCollectionManager', () => {
     it('should make POST request to /_subscribe endpoint', () => {
       const scope = nockHelper.mockCollectionSubscribeRequest(collectionName);
       const receiver = { onMessage: () => { } };
-      const subSpy = expect.spyOn(liveServiceMock, 'subscribeToChannel');
       return manager.subscribeCollection(collectionName, receiver)
         .then(() => {
           scope.done();
@@ -95,13 +94,14 @@ describe('LiveCollectionManager', () => {
     });
 
     it('should call LiveService\'s subscribeToChannel() method', () => {
-      nockHelper.mockCollectionSubscribeRequest(collectionName);
+      const scope = nockHelper.mockCollectionSubscribeRequest(collectionName);
       const receiver = { onError: () => { } };
       const spy = expect.spyOn(liveServiceMock, 'subscribeToChannel');
 
       return manager.subscribeCollection(collectionName, receiver)
         .then(() => {
           expect(spy).toHaveBeenCalledWith(expectedCollectionChannel, receiver);
+          scope.done();
         });
     });
   });
@@ -132,7 +132,7 @@ describe('LiveCollectionManager', () => {
       return manager.unsubscribeCollection(collectionName)
         .then(() => {
           scope.done();
-        })
+        });
     });
 
     it('should call LiveService\'s unsubscribeFromChannel() method', () => {
@@ -141,6 +141,7 @@ describe('LiveCollectionManager', () => {
       return manager.unsubscribeCollection(collectionName)
         .then(() => {
           expect(spy).toHaveBeenCalledWith(expectedCollectionChannel);
+          scope.done();
         });
     });
   });
