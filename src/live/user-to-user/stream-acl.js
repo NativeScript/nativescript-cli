@@ -3,6 +3,7 @@ import isString from 'lodash/isString';
 import every from 'lodash/every';
 
 import { KinveyError } from '../../errors';
+import { isNonemptyString } from '../../utils';
 
 const invalidValueMsg = 'Invalid ACL object value';
 
@@ -155,7 +156,7 @@ export class StreamACL {
    * @returns {string[]} The same array, if it is valid
    */
   _ensureValidIdArray(arr) {
-    const isValid = this._isNonemptyStringArray(arr);
+    const isValid = this._isValidIdArray(arr);
     if (!isValid) {
       throw new KinveyError(invalidValueMsg);
     }
@@ -166,8 +167,11 @@ export class StreamACL {
    * @param {string[]} arr
    * @returns {boolean}
    */
-  _isNonemptyStringArray(arr) {
-    return isArray(arr) && every(arr, id => isString(id) && id !== '');
+  _isValidIdArray(arr) {
+    return isArray(arr) && every(arr, (o) => {
+      const id = o._id ? o._id : o;
+      return isNonemptyString(id);
+    });
   }
 
   /**
@@ -178,7 +182,7 @@ export class StreamACL {
    */
   _addToAcl(arr, users) {
     const usersArr = isArray(users) ? users : [users];
-    const isValid = this._isNonemptyStringArray(usersArr);
+    const isValid = this._isValidIdArray(usersArr);
     if (!isValid) {
       throw new KinveyError(invalidValueMsg);
     }
