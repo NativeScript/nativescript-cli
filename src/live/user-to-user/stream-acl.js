@@ -81,7 +81,43 @@ export class StreamACL {
    * @returns {this}
    */
   addSubscriberGroups(groups) {
-    this._addToAcl(this.publisherGroups, groups);
+    this._addToAcl(this.subscriberGroups, groups);
+    return this;
+  }
+
+  /**
+   * @param  {(User|User[]|string|string[])} publishers
+   * @returns {this}
+   */
+  removePublishers(publishers) {
+    this._removeFromAcl(this.publishers, publishers);
+    return this;
+  }
+
+  /**
+   * @param  {(User|User[]|string|string[])} subscribers
+   * @returns {this}
+   */
+  removeSubscribers(subscribers) {
+    this._removeFromAcl(this.subscribers, subscribers);
+    return this;
+  }
+
+  /**
+   * @param  {(string|string[]|{_id: string})} groups
+   * @returns {this}
+   */
+  removePublisherGroups(groups) {
+    this._removeFromAcl(this.publisherGroups, groups);
+    return this;
+  }
+
+  /**
+   * @param  {(string|string[]|{_id: string})} groups
+   * @returns {this}
+   */
+  removeSubscriberGroups(groups) {
+    this._removeFromAcl(this.subscriberGroups, groups);
     return this;
   }
 
@@ -148,6 +184,7 @@ export class StreamACL {
       }
     }
   }
+
   /**
    * Ensures that the specified array contains only nonempty strings
    * so that it can be assigned to a {@link StreamACL} property
@@ -162,6 +199,7 @@ export class StreamACL {
     }
     return arr;
   }
+
   /**
    * @private
    * @param {string[]} arr
@@ -169,7 +207,7 @@ export class StreamACL {
    */
   _isValidIdArray(arr) {
     return isArray(arr) && every(arr, (o) => {
-      const id = o._id ? o._id : o;
+      const id = this._getAsId(o);
       return isNonemptyString(id);
     });
   }
@@ -187,9 +225,36 @@ export class StreamACL {
       throw new KinveyError(invalidValueMsg);
     }
 
-    usersArr.forEach((subscriber) => {
-      const id = subscriber._id ? subscriber._id : subscriber;
+    usersArr.forEach((u) => {
+      const id = this._getAsId(u);
       arr.push(id);
     });
+  }
+
+  /**
+   * @private
+   * @param {string[]} arr The appropriate array to add users to -
+   *    subscribers (or groups of them) or publishers (or groups of them)
+   * @param {(User|User[]|string|string[])} users
+   */
+  _removeFromAcl(arr, users) {
+    const usersArr = isArray(users) ? users : [users];
+
+    usersArr.forEach((u) => {
+      const id = this._getAsId(u);
+      const index = arr.indexOf(id);
+      if (index >= 0) {
+        arr.splice(index, 1);
+      }
+    });
+  }
+
+  /**
+   * @private
+   * @param {Object} object Object which contains an "_id" property or is itself an id
+   * @returns {string} The value of the "_id" property of the object, or the object itself, if it doesn't have such a property
+   */
+  _getAsId(o) {
+    return (o && o._id) ? o._id : o;
   }
 }
