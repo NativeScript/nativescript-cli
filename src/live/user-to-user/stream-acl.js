@@ -1,5 +1,4 @@
 import isArray from 'lodash/isArray';
-import isString from 'lodash/isString';
 import every from 'lodash/every';
 
 import { KinveyError } from '../../errors';
