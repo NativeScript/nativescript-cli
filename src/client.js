@@ -1,12 +1,10 @@
 import MemoryCache from 'fast-memory-cache';
 import url from 'url';
-import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
-import uuidV4 from 'uuid/v4';
 
 import { KinveyError } from 'src/errors';
-import { Log, isDefined } from 'src/utils';
+import { Log, isDefined, uuidv4 } from 'src/utils';
 
 const DEFAULT_TIMEOUT = 60000;
 const ACTIVE_USER_KEY = 'active_user';
@@ -66,7 +64,7 @@ export default class Client {
    *   appSecret: '<appSecret>'
    * });
    */
-  
+
   constructor(config = {}) {
     let apiHostname = isString(config.apiHostname) ? config.apiHostname : 'https://baas.kinvey.com';
     if (/^https?:\/\//i.test(apiHostname) === false) {
@@ -78,7 +76,7 @@ export default class Client {
     /**
      * @type {string}
      */
-    this.deviceId = uuidV4();
+    this.deviceId = uuidv4();
 
     /**
      * @type {string}
@@ -140,7 +138,7 @@ export default class Client {
     /**
      * @private
      */
-    this.activeUserStorage = new ActiveUserStorage();    
+    this.activeUserStorage = new ActiveUserStorage();
 
   }
 
