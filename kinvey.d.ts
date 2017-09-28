@@ -36,6 +36,77 @@ export namespace Kinvey {
     defaultTimeout?: number;
   }
 
+  namespace LiveService {
+    type StatusHandler = (status: StatusMessage) => void;
+    type MessageHandler = (payload: any) => void;
+    type ErrorHandler = (error: Kinvey.KinveyError) => void;
+
+    interface StatusMessage {
+      category: string;
+      operation: string;
+      affectedChannels: string[];
+      subscribedChannels: string[];
+      affectedChannelGroups: string[];
+      lastTimetoken: number;
+      currentTimetoken: number;
+    }
+
+    interface PlainStreamACLObject {
+      _id?: string;
+      publish?: string[];
+      subscribe?: string[];
+      groups?: { publish?: string, subscribe?: string[] }
+    }
+
+    interface MessageReceiver {
+      onMessage?: MessageHandler;
+      onStatus?: StatusHandler;
+      onError?: ErrorHandler;
+    }
+
+    namespace Stream {
+      class StreamACL {
+        publishers: string[];
+        subscribers: string[];
+        publisherGroups: string[];
+        subscriberGroups: string[];
+
+        static isValidACLObject: (obj: any) => boolean;
+
+        constructor(obj: StreamACL | PlainStreamACLObject);
+
+        addPublishers(publishers: Kinvey.User | Kinvey.User[] | string | string[]): this;
+        addSubscribers(publishers: Kinvey.User | Kinvey.User[] | string | string[]): this;
+        addPublisherGroups(groups: string | string[] | { _id: string } | { _id: string }[]): this;
+        addSubscriberGroups(groups: string | string[] | { _id: string } | { _id: string }[]): this;
+        isNotEmpty(): boolean;
+        toPlainObject(): PlainStreamACLObject;
+      }
+    }
+
+    class Stream {
+      name: string;
+
+      constructor(name: string);
+
+      getSubstreams(): Promise<{ _id: string }>;
+      getACL(userId: string): Promise<PlainStreamACLObject>;
+      setACL(userId: string, acl: PlainStreamACLObject | Stream.StreamACL): Promise<PlainStreamACLObject>;
+
+      follow(userId: string, receiver: MessageReceiver): Promise<void>;
+      unfollow(userId: string): Promise<void>;
+      post(message: any): Promise<{ timetoken: string }>;
+
+      listen(receiver: MessageReceiver): Promise<void>;
+      stopListening(): Promise<void>;
+      send(userId: string, message: any): Promise<{ timetoken: string }>;
+    }
+
+    function onConnectionStatusUpdates(handler: StatusHandler): void;
+    function offConnectionStatusUpdates(handler?: StatusHandler): void;
+    function isInitialized(): boolean;
+  }
+
   // Client class
   class Client {
     constructor(config: ClientConfig);
@@ -46,9 +117,6 @@ export namespace Kinvey {
     micProtocol: string;
     micHost: string;
     readonly micHostname: string;
-    liveServiceProtocol: string;
-    liveServiceHost: string;
-    readonly liveServiceHostname: string;
     appVersion: string;
     defaultTimeout: number;
     toPlainObject(): {};
@@ -157,8 +225,8 @@ export namespace Kinvey {
   // Entity interface
   interface Entity {
     _id: string;
-    _acl?: {};
-    _kmd?: {};
+    _acl?: Acl;
+    _kmd?: any;
   }
 
   // SyncEntity interface
@@ -193,6 +261,9 @@ export namespace Kinvey {
     save(entity: {}, options?: RequestOptions): Promise<T>;
     remove(query?: Query, options?: RequestOptions): Promise<{ count: number }>;
     removeById(id: string, options?: RequestOptions): Promise<{ count: number }>;
+
+    subscribe(receiver: Kinvey.LiveService.MessageReceiver): Promise<void>;
+    unsubscribe(): Promise<void>;
   }
 
   // CacheStore class
@@ -317,8 +388,8 @@ export namespace Kinvey {
     static loginWithMIC(redirectUri: string, authorizationGrant?: AuthorizationGrant, options?: RequestOptions): Promise<User>;
     logout(options?: RequestOptions): Promise<void>;
     static logout(options?: RequestOptions): Promise<void>;
-    signup(data: {}, options?: RequestOptions): Promise<this>;
-    static signup(data: {}, options?: RequestOptions): Promise<User>;
+    signup(data?: {}, options?: RequestOptions): Promise<this>;
+    static signup(data?: {}, options?: RequestOptions): Promise<User>;
     update(data: {}, options?: RequestOptions): Promise<this>;
     static update(data: {}, options?: RequestOptions): Promise<User>;
     me(options?: RequestOptions): Promise<this>;
@@ -329,6 +400,26 @@ export namespace Kinvey {
     static lookup(query?: Query, options?: RequestOptions): Promise<{}>;
     static exists(username: string, options?: RequestOptions): Promise<{}>;
     static getActiveUser(client?: Client): User|null;
+    static registerForLiveService(): Promise<void>;
+    static unregisterFromLiveService(): Promise<void>;
+    registerForLiveService(): Promise<void>;
+    unregisterFromLiveService(): Promise<void>;
+  }
+
+  // PushOptions interface
+  interface PushOptions {
+    android?: { senderID: string };
+    ios?: { alert?: boolean, badge?: boolean, sound?: boolean };
+  }
+
+  // Push class
+  class Push {
+    private constructor();
+    static client: Client;
+    static onNotification(listener: (notifaction: any) => void);
+    static onceNotification(listener: (notifaction: any) => void);
+    static register(options: PushOptions): Promise<string>;
+    static unregister(): Promise<null>;
   }
 
   // Error classes
