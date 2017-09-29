@@ -36,6 +36,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		private $errors: IErrors,
 		private $debugDataService: IDebugDataService,
 		private $analyticsService: IAnalyticsService,
+		private $usbLiveSyncService: DeprecatedUsbLiveSyncService,
 		private $injector: IInjector) {
 		super();
 	}
@@ -86,6 +87,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 						projectData
 					}
 				});
+
+				// In case we are stopping the LiveSync we must set usbLiveSyncService.isInitialized to false,
+				// as in case we execute nativescript-dev-typescript's before-prepare hook again in the same process, it MUST transpile the files.
+				this.$usbLiveSyncService.isInitialized = false;
 			} else if (liveSyncProcessInfo.currentSyncAction && shouldAwaitPendingOperation) {
 				await liveSyncProcessInfo.currentSyncAction;
 			}
@@ -321,7 +326,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 		if (!liveSyncData.skipWatcher && this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors.length) {
 			// Should be set after prepare
-			this.$injector.resolve<DeprecatedUsbLiveSyncService>("usbLiveSyncService").isInitialized = true;
+			this.$usbLiveSyncService.isInitialized = true;
 
 			await this.startWatcher(projectData, liveSyncData);
 		}
