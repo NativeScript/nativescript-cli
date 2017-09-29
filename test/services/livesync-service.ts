@@ -1,6 +1,6 @@
 import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
-import { LiveSyncService } from "../../lib/services/livesync/livesync-service";
+import { LiveSyncService, DeprecatedUsbLiveSyncService } from "../../lib/services/livesync/livesync-service";
 import { LoggerStub } from "../stubs";
 
 const createTestInjector = (): IInjector => {
@@ -27,6 +27,9 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("pluginsService", {});
 	testInjector.register("analyticsService", {});
 	testInjector.register("injector", testInjector);
+	testInjector.register("usbLiveSyncService", {
+		isInitialized: false
+	});
 
 	return testInjector;
 };
@@ -46,6 +49,7 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 		$errors: IErrors,
 		$debugDataService: IDebugDataService,
 		$analyticsService: IAnalyticsService,
+		$usbLiveSyncService: DeprecatedUsbLiveSyncService,
 		$injector: IInjector) {
 
 		super(
@@ -63,7 +67,9 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 			$errors,
 			$debugDataService,
 			$analyticsService,
-			$injector
+			$usbLiveSyncService,
+			$injector,
+
 		);
 	}
 
@@ -153,6 +159,34 @@ describe("liveSyncService", () => {
 				assert.deepEqual(emittedDeviceIdentifiersForLiveSyncStoppedEvent, testCase.expectedDeviceIdentifiers);
 			});
 		}
+
+		const prepareTestForUsbLiveSyncService = (): any => {
+			const testInjector = createTestInjector();
+			const liveSyncService = testInjector.resolve<LiveSyncServiceInheritor>(LiveSyncServiceInheritor);
+			const projectDir = "projectDir";
+			const usbLiveSyncService = testInjector.resolve<DeprecatedUsbLiveSyncService>("usbLiveSyncService");
+			usbLiveSyncService.isInitialized = true;
+
+			// Setup liveSyncProcessesInfo for current test
+			liveSyncService.liveSyncProcessesInfo[projectDir] = getLiveSyncProcessInfo();
+			const deviceDescriptors = ["device1", "device2", "device3"].map(d => getDeviceDescriptor(d));
+			liveSyncService.liveSyncProcessesInfo[projectDir].deviceDescriptors.push(...deviceDescriptors);
+			return { projectDir, liveSyncService, usbLiveSyncService };
+		};
+
+		it("sets usbLiveSyncService.isInitialized to false when LiveSync is stopped for all devices", async () => {
+			const { projectDir, liveSyncService, usbLiveSyncService } = prepareTestForUsbLiveSyncService();
+			await liveSyncService.stopLiveSync(projectDir, ["device1", "device2", "device3"]);
+
+			assert.isFalse(usbLiveSyncService.isInitialized, "When the LiveSync process is stopped, we must set usbLiveSyncService.isInitialized to false");
+		});
+
+		it("does not set usbLiveSyncService.isInitialized to false when LiveSync is stopped for some of devices only", async () => {
+			const { projectDir, liveSyncService, usbLiveSyncService } = prepareTestForUsbLiveSyncService();
+			await liveSyncService.stopLiveSync(projectDir, ["device1", "device2"]);
+
+			assert.isTrue(usbLiveSyncService.isInitialized, "When the LiveSync process is stopped only for some of the devices, we must not set usbLiveSyncService.isInitialized to false");
+		});
 
 	});
 
