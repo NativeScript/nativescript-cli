@@ -41,7 +41,6 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private sysInfoCache: NativeScriptDoctor.ISysInfoData;
 	private isCocoaPodsWorkingCorrectlyCache: boolean;
 	private nativeScriptCliVersionCache: string;
-	private nativeScriptCloudVersionCache: string;
 	private xcprojInfoCache: NativeScriptDoctor.IXcprojInfo;
 	private isCocoaPodsUpdateRequiredCache: boolean;
 	private shouldCache: boolean = true;
@@ -260,7 +259,6 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			result.isCocoaPodsWorkingCorrectly = await this.isCocoaPodsWorkingCorrectly();
 
 			result.nativeScriptCliVersion = await this.getNativeScriptCliVersion();
-			result.nativeScriptCloudVersion = await this.getNativeScriptCloudVersion();
 
 			result.isCocoaPodsUpdateRequired = await this.isCocoaPodsUpdateRequired();
 			result.isAndroidSdkConfiguredCorrectly = await this.isAndroidSdkConfiguredCorrectly();
@@ -299,13 +297,6 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	public getNativeScriptCliVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.nativeScriptCliVersionCache, async (): Promise<string> => {
 			const output = await this.execCommand("tns --version");
-			return output ? this.getVersionFromCLIOutput(output.trim()) : output;
-		});
-	}
-
-	public getNativeScriptCloudVersion(): Promise<string> {
-		return this.getValueForProperty(() => this.nativeScriptCloudVersionCache, async (): Promise<string> => {
-			const output = await this.execCommand("tns cloud lib version");
 			return output ? this.getVersionFromCLIOutput(output.trim()) : output;
 		});
 	}

@@ -415,12 +415,6 @@ Library that helps identifying if the environment can be used for development of
 		nativeScriptCliVersion: string;
 
 		/**
-		 * The version of `nativescript-cloud` library, as returned by `tns cloud lib version`.
-		 * @type {string}
-		 */
-		nativeScriptCloudVersion: string;
-
-		/**
 		 * Information about xcproj.
 		 * @type {string}
 		 */
