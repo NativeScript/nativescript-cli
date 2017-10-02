@@ -37,7 +37,6 @@ interface IChildProcessResults {
 	podVersion: IChildProcessResultDescription;
 	pod: IChildProcessResultDescription;
 	nativeScriptCliVersion: IChildProcessResultDescription;
-	nativeScriptCloudVersion: IChildProcessResultDescription;
 	git: IChildProcessResultDescription;
 }
 
@@ -94,7 +93,6 @@ function createChildProcessResults(childProcessResult: IChildProcessResults): ID
 		'"C:\\Program Files/Git/cmd/git.exe" --version': childProcessResult.gitVersion, // When running Windows test on the Non-Windows platform
 		"gradle -v": childProcessResult.gradleVersion,
 		"tns --version": childProcessResult.nativeScriptCliVersion,
-		"tns cloud lib version": childProcessResult.nativeScriptCloudVersion,
 		"emulator": { shouldThrowError: false },
 		"which git": childProcessResult.git
 	};
@@ -240,7 +238,6 @@ describe("SysInfo unit tests", () => {
 				podVersion: { result: setStdOut("0.38.2") },
 				pod: { result: setStdOut("success") },
 				nativeScriptCliVersion: { result: setStdOut("2.5.0") },
-				nativeScriptCloudVersion: { result: setStdOut("0.1.0") },
 				git: { result: setStdOut("git") }
 			};
 
@@ -347,10 +344,6 @@ describe("SysInfo unit tests", () => {
 			{
 				testedProperty: "nativeScriptCliVersion",
 				method: (currentSysInfo: SysInfo) => currentSysInfo.getNativeScriptCliVersion()
-			},
-			{
-				testedProperty: "nativeScriptCloudVersion",
-				method: (currentSysInfo: SysInfo) => currentSysInfo.getNativeScriptCloudVersion()
 			}];
 
 		testData.forEach((testCase) => {
@@ -419,7 +412,6 @@ ${expectedCliVersion}`;
 					podVersion: { shouldThrowError: true },
 					pod: { shouldThrowError: true },
 					nativeScriptCliVersion: { shouldThrowError: true },
-					nativeScriptCloudVersion: { shouldThrowError: true },
 					git: { shouldThrowError: false }
 				};
 				androidToolsInfo.validateAndroidHomeEnvVariable = (): any[] => [1];

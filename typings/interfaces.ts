@@ -106,12 +106,6 @@ declare module NativeScriptDoctor {
 		getNativeScriptCliVersion(): Promise<string>;
 
 		/**
-		 * Returns the version of the installed `nativescript-cloud` version.
-		 * @return {Promise<string>} Returns the version of the installed `nativescript-cloud` version.
-		 */
-		getNativeScriptCloudVersion(): Promise<string>;
-
-		/**
 		 * Checks if xcproj is required to build projects and if it is installed.
 		 * @return {Promise<IXcprojInfo>} Returns the collected information aboud xcproj.
 		 */
@@ -290,12 +284,6 @@ declare module NativeScriptDoctor {
 		 * @type {string}
 		 */
 		nativeScriptCliVersion: string;
-
-		/**
-		 * The version of `nativescript-cloud` library, as returned by `tns cloud lib version`.
-		 * @type {string}
-		 */
-		nativeScriptCloudVersion: string;
 
 		/**
 		 * Information about xcproj.
