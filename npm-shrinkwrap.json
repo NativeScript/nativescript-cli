@@ -2144,13 +2144,6 @@
             }
           }
         },
-        "string_decoder": {
-          "version": "1.0.1",
-          "bundled": true,
-          "requires": {
-            "safe-buffer": "5.0.1"
-          }
-        },
         "string-width": {
           "version": "1.0.2",
           "bundled": true,
@@ -2158,6 +2151,13 @@
             "code-point-at": "1.1.0",
             "is-fullwidth-code-point": "1.0.0",
             "strip-ansi": "3.0.1"
+          }
+        },
+        "string_decoder": {
+          "version": "1.0.1",
+          "bundled": true,
+          "requires": {
+            "safe-buffer": "5.0.1"
           }
         },
         "stringstream": {
@@ -2875,9 +2875,9 @@
       "integrity": "sha1-EEqOSqym09jNFXqO+L+rLXo//bY="
     },
     "ios-device-lib": {
-      "version": "0.4.9",
-      "resolved": "https://registry.npmjs.org/ios-device-lib/-/ios-device-lib-0.4.9.tgz",
-      "integrity": "sha1-aSmddfsrTeNakIb/CbQMQFWv1fY=",
+      "version": "0.4.10",
+      "resolved": "https://registry.npmjs.org/ios-device-lib/-/ios-device-lib-0.4.10.tgz",
+      "integrity": "sha1-1wENLPSJ0y4zSMKrZd9tILaJ8xA=",
       "requires": {
         "bufferpack": "0.0.6",
         "node-uuid": "1.4.7"
@@ -4739,14 +4739,6 @@
         }
       }
     },
-    "string_decoder": {
-      "version": "1.0.3",
-      "resolved": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.0.3.tgz",
-      "integrity": "sha1-D8Z9fBQYJd6UKC3VNr7GubzoYKs=",
-      "requires": {
-        "safe-buffer": "5.1.1"
-      }
-    },
     "string-width": {
       "version": "1.0.2",
       "resolved": "https://registry.npmjs.org/string-width/-/string-width-1.0.2.tgz",
@@ -4761,6 +4753,14 @@
       "version": "0.2.0",
       "resolved": "https://registry.npmjs.org/string.prototype.codepointat/-/string.prototype.codepointat-0.2.0.tgz",
       "integrity": "sha1-aybpvTr8qnvjtCabUm3huCAArHg="
+    },
+    "string_decoder": {
+      "version": "1.0.3",
+      "resolved": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.0.3.tgz",
+      "integrity": "sha1-D8Z9fBQYJd6UKC3VNr7GubzoYKs=",
+      "requires": {
+        "safe-buffer": "5.1.1"
+      }
     },
     "stringstream": {
       "version": "0.0.5",
