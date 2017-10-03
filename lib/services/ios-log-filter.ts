@@ -16,7 +16,7 @@ export class IOSLogFilter extends iOSLogFilterBase.IOSLogFilter implements Mobil
 
 	public filterData(data: string, logLevel: string, pid?: string): string {
 		data = super.filterData(data, logLevel, pid);
-		if (pid && data && data.indexOf(`[${pid}]`) === -1) {
+		if (pid && data && data.search(new RegExp(`[\\[\\s]${pid}[\\]\\s]`)) === -1) {
 			return null;
 		}
 
@@ -41,14 +41,16 @@ export class IOSLogFilter extends iOSLogFilterBase.IOSLogFilter implements Mobil
 				// This code removes unnecessary information from log messages. The output looks like:
 				// CONSOLE LOG file:///location:row:column: <actual message goes here>
 				if (pid) {
-					const searchString = "[" + pid + "]: ";
-					const pidIndex = line.indexOf(searchString);
-					if (pidIndex > 0) {
-						line = line.substring(pidIndex + searchString.length, line.length);
+					const pidIndex = line.indexOf(`[${pid}]`);
+					const ios11PidIndex = line.indexOf(` ${pid} `);
+					if (pidIndex > 0 || ios11PidIndex > 0) {
+						const pidRegex = new RegExp(`.*[\\[\\s]{1}${pid}[\\s\\]]{1}.*?:(?:.*?\\(NativeScript\\) )*`);
+						line = line.replace(pidRegex, "").trim();
 						this.getOriginalFileLocation(line);
 						result += this.getOriginalFileLocation(line) + "\n";
-						continue;
 					}
+
+					continue;
 				}
 				if (skipLastLine && i === lines.length - 1 && lines.length > 1) {
 					this.partialLine = line;
