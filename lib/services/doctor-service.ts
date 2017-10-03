@@ -10,7 +10,7 @@ class DoctorService implements IDoctorService {
 	private static DarwinSetupScriptLocation = path.join(__dirname, "..", "..", "setup", "mac-startup-shell-script.sh");
 	private static DarwinSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-os-x";
 	private static WindowsSetupScriptExecutable = "powershell.exe";
-	private static WindowsSetupScriptArguments = ["start-process", "-FilePath", "PowerShell.exe", "-NoNewWindow", "-Wait", "-ArgumentList", '"-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString(\'https://raw.githubusercontent.com/NativeScript/nativescript-cli/production/setup/native-script.ps1\'))"'];
+	private static WindowsSetupScriptArguments = ["start-process", "-FilePath", "PowerShell.exe", "-NoNewWindow", "-Wait", "-ArgumentList", '"-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString(\'https://www.nativescript.org/setup/win\'))"'];
 	private static WindowsSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-win";
 	private static LinuxSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-linux";
 
