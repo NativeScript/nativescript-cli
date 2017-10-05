@@ -41,7 +41,7 @@
     "lodash": "4.17.4",
     "loglevel": "1.5.0",
     "promise-queue": "2.2.3",
-    "pubnub": "4.15.1",
+    "pubnub": "github:thomasconner/javascript#add_nativescript_support",
     "qs": "6.5.1",
     "rxjs": "5.4.3",
     "sift": "3.3.10",
