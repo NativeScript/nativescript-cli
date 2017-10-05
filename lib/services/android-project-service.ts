@@ -12,6 +12,7 @@ import { SpawnOptions } from "child_process";
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static VALUES_DIRNAME = "values";
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
+	private static ANDROID_PLATFORM_NAME = "android";
 	private static MIN_RUNTIME_VERSION_WITH_GRADLE = "1.5.0";
 	private static REQUIRED_DEV_DEPENDENCIES = [
 		{ name: "babel-traverse", version: "^6.4.5" },
@@ -32,6 +33,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		$projectDataService: IProjectDataService,
 		private $sysInfo: ISysInfo,
 		private $injector: IInjector,
+		private $pluginVariablesService: IPluginVariablesService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $npm: INodePackageManager) {
 		super($fs, $projectDataService);
@@ -47,7 +49,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		if (projectData && projectData.platformsDir && this._platformsDirCache !== projectData.platformsDir) {
 			this._platformsDirCache = projectData.platformsDir;
-			const projectRoot = path.join(projectData.platformsDir, "android");
+			const projectRoot = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
 			const packageName = this.getProjectNameFromId(projectData);
 			this._platformData = {
 				frameworkPackageName: "tns-android",
@@ -75,6 +77,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		return this._platformData;
+	}
+
+	// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
+	// Similar to the private method of the same name in platform-service.
+	private getCurrentPlatformVersion(platformData: IPlatformData, projectData: IProjectData): string {
+		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+
+		return currentPlatformData && currentPlatformData[constants.VERSION_STRING];
 	}
 
 	public validateOptions(): Promise<boolean> {
@@ -346,20 +356,58 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
-		// Do nothing, the Android Gradle script will configure itself based on the input dependencies.json 
+		if (!this.shouldUseNewRuntimeGradleRoutine(projectData)) {
+			const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
+			await this.processResourcesFromPlugin(pluginData, pluginPlatformsFolderPath, projectData);
+		}
+
+		// Do nothing, the Android Gradle script will configure itself based on the input dependencies.json
 	}
 
 	public async processConfigurationFilesFromAppResources(): Promise<void> {
 		return;
 	}
 
+	private async processResourcesFromPlugin(pluginData: IPluginData, pluginPlatformsFolderPath: string, projectData: IProjectData): Promise<void> {
+		const configurationsDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "configurations");
+		this.$fs.ensureDirectoryExists(configurationsDirectoryPath);
+
+		const pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginData.name);
+		if (this.$fs.exists(pluginPlatformsFolderPath)) {
+			this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath);
+
+			const isScoped = pluginData.name.indexOf("@") === 0;
+			const flattenedDependencyName = isScoped ? pluginData.name.replace("/", "_") : pluginData.name;
+
+			// Copy all resources from plugin
+			const resourcesDestinationDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "src", flattenedDependencyName);
+			this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath);
+			shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
+
+			const filesForInterpolation = this.$fs.enumerateFilesInDirectorySync(resourcesDestinationDirectoryPath, file => this.$fs.getFsStats(file).isDirectory() || path.extname(file) === constants.XML_FILE_EXTENSION) || [];
+			for (const file of filesForInterpolation) {
+				this.$logger.trace(`Interpolate data for plugin file: ${file}`);
+				await this.$pluginVariablesService.interpolate(pluginData, file, projectData);
+			}
+		}
+
+		// Copy include.gradle file
+		const includeGradleFilePath = path.join(pluginPlatformsFolderPath, "include.gradle");
+		if (this.$fs.exists(includeGradleFilePath)) {
+			shell.cp("-f", includeGradleFilePath, pluginConfigurationDirectoryPath);
+		}
+	}
+
 	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
 		try {
 			// check whether the dependency that's being removed has native code
-			const pluginConfigDir = path.join(this.getPlatformData(projectData).projectRoot, "build", "configurations", pluginData.name);
-			
-			if (this.$fs.exists(pluginConfigDir)) {
-				await this.cleanProject(this.getPlatformData(projectData).projectRoot, projectData);
+			// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
+			// the updated gradle script will take care of cleaning the prepared android plugins
+			if (!this.shouldUseNewRuntimeGradleRoutine(projectData)) {
+				const pluginConfigDir = path.join(this.getPlatformData(projectData).projectRoot, "configurations", pluginData.name);
+				if (this.$fs.exists(pluginConfigDir)) {
+					await this.cleanProject(this.getPlatformData(projectData).projectRoot, projectData);
+				}
 			}
 		} catch (e) {
 			if (e.code === "ENOENT") {
@@ -375,13 +423,50 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void> {
+		const shouldUseNewRoutine = this.shouldUseNewRuntimeGradleRoutine(projectData);
+
 		if (dependencies) {
-			this.provideDependenciesJson(projectData, dependencies);
+			dependencies = this.filterUniqueDependencies(dependencies);
+			if (shouldUseNewRoutine) {
+				this.provideDependenciesJson(projectData, dependencies);
+			} else {
+				// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
+
+				const platformDir = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
+				const buildDir = path.join(platformDir, "build-tools");
+				const checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
+				if (this.$fs.exists(checkV8dependants)) {
+					const stringifiedDependencies = JSON.stringify(dependencies);
+					try {
+						await this.spawn('node', [checkV8dependants, stringifiedDependencies, projectData.platformsDir], { stdio: "inherit" });
+					} catch (e) {
+						this.$logger.info("Checking for dependants on v8 public API failed. This is likely caused because of cyclic production dependencies. Error code: " + e.code + "\nMore information: https://github.com/NativeScript/nativescript-cli/issues/2561");
+					}
+				}
+			}
+		}
+
+		if (!shouldUseNewRoutine) {
+			// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
+			const projectRoot = this.getPlatformData(projectData).projectRoot;
+			await this.cleanProject(projectRoot, projectData);
 		}
 	}
 
+	private filterUniqueDependencies(dependencies: IDependencyData[]): IDependencyData[] {
+		const depsDictionary = dependencies.reduce((dict, dep) => {
+			const collision = dict[dep.name];
+			// in case there are multiple dependencies to the same module, the one declared in the package.json takes precedence
+			if (!collision || collision.depth > dep.depth) {
+				dict[dep.name] = dep;
+			}
+			return dict;
+		}, <IDictionary<IDependencyData>>{});
+		return _.values(depsDictionary);
+	}
+
 	private provideDependenciesJson(projectData: IProjectData, dependencies: IDependencyData[]): void {
-		const platformDir = path.join(projectData.platformsDir, "android")
+		const platformDir = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
 		const dependenciesJsonPath = path.join(platformDir, "dependencies.json");
 		const nativeDependencies = dependencies
 			.filter(AndroidProjectService.isNativeAndroidDependency)
@@ -498,6 +583,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				childProcessOpts,
 				spawnFromEventOptions);
 		}
+	}
+
+	// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
+	private shouldUseNewRuntimeGradleRoutine(projectData: IProjectData): boolean {
+		const platformVersion = this.getCurrentPlatformVersion(this.getPlatformData(projectData), projectData);
+		const newRuntimeGradleRoutineVersion = "3.3.0";
+
+		return semver.gte(platformVersion, newRuntimeGradleRoutineVersion);
 	}
 }
 
