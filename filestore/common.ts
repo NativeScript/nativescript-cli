@@ -26,8 +26,8 @@ export interface KinveyResponseConfig {
 }
 
 export class CommonFileStore extends CoreFileStore {
-  upload(file: File, metadata: any, options: any)
-  upload(filePath: string, metadata: any, options: any)
+  upload(file: File, metadata: any, options: any);
+  upload(filePath: string, metadata: any, options: any);
   upload(filePath: string | File, metadata = <any>{}, options: any) {
     if (!this.doesFileExist(filePath)) {
       return Promise.reject(new KinveyError('File does not exist'));
