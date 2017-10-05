@@ -55,7 +55,7 @@ export namespace Kinvey {
       _id?: string;
       publish?: string[];
       subscribe?: string[];
-      groups?: { publish?: string, subscribe?: string[] }
+      groups?: { publish?: string, subscribe?: string[] };
     }
 
     interface MessageReceiver {
