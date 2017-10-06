@@ -6,7 +6,7 @@
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
   "author": "Kinvey, Inc.",
-  "main": "html5",
+  "main": "node",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "babel --no-comments --out-dir dist src",
