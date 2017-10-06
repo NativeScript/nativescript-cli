@@ -342,8 +342,20 @@ describe("debug command tests", () => {
 		});
 
 		it("Ensures that beforePrepareAllPlugins will call gradle with clean option when *NOT* livesyncing", async () => {
+			const platformData = testInjector.resolve<IPlatformData>("platformsData");
+			platformData.frameworkPackageName = "tns-android";
+
+			// only test that 'clean' is performed on android <=3.2. See https://github.com/NativeScript/nativescript-cli/pull/3032
+			const projectDataService: IProjectDataService = testInjector.resolve("projectDataService");
+			projectDataService.getNSValue = (projectDir: string, propertyName: string) => {
+				return { version: "3.2.0" };
+			};
+
 			const childProcess: stubs.ChildProcessStub = testInjector.resolve("childProcess");
 			const androidProjectService: IPlatformProjectService = testInjector.resolve("androidProjectService");
+			androidProjectService.getPlatformData = (projectData: IProjectData): IPlatformData => {
+				return platformData;
+			};
 			const projectData: IProjectData = testInjector.resolve("projectData");
 			const spawnFromEventCount = childProcess.spawnFromEventCount;
 			await androidProjectService.beforePrepareAllPlugins(projectData);

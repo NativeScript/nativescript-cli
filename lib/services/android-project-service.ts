@@ -49,7 +49,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		if (projectData && projectData.platformsDir && this._platformsDirCache !== projectData.platformsDir) {
 			this._platformsDirCache = projectData.platformsDir;
-			const projectRoot = path.join(projectData.platformsDir, "android");
+			const projectRoot = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
 			const packageName = this.getProjectNameFromId(projectData);
 			this._platformData = {
 				frameworkPackageName: "tns-android",
@@ -77,6 +77,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		return this._platformData;
+	}
+
+	// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
+	// Similar to the private method of the same name in platform-service.
+	private getCurrentPlatformVersion(platformData: IPlatformData, projectData: IProjectData): string {
+		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+
+		return currentPlatformData && currentPlatformData[constants.VERSION_STRING];
 	}
 
 	public validateOptions(): Promise<boolean> {
@@ -348,8 +356,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
-		const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
-		await this.processResourcesFromPlugin(pluginData, pluginPlatformsFolderPath, projectData);
+		if (!this.shouldUseNewRuntimeGradleRoutine(projectData)) {
+			const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
+			await this.processResourcesFromPlugin(pluginData, pluginPlatformsFolderPath, projectData);
+		}
+
+		// Do nothing, the Android Gradle script will configure itself based on the input dependencies.json
 	}
 
 	public async processConfigurationFilesFromAppResources(): Promise<void> {
@@ -389,9 +401,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
 		try {
 			// check whether the dependency that's being removed has native code
-			const pluginConfigDir = path.join(this.getPlatformData(projectData).projectRoot, "configurations", pluginData.name);
-			if (this.$fs.exists(pluginConfigDir)) {
-				await this.cleanProject(this.getPlatformData(projectData).projectRoot, projectData);
+			// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
+			// the updated gradle script will take care of cleaning the prepared android plugins
+			if (!this.shouldUseNewRuntimeGradleRoutine(projectData)) {
+				const pluginConfigDir = path.join(this.getPlatformData(projectData).projectRoot, "configurations", pluginData.name);
+				if (this.$fs.exists(pluginConfigDir)) {
+					await this.cleanProject(this.getPlatformData(projectData).projectRoot, projectData);
+				}
 			}
 		} catch (e) {
 			if (e.code === "ENOENT") {
@@ -407,23 +423,61 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void> {
+		const shouldUseNewRoutine = this.shouldUseNewRuntimeGradleRoutine(projectData);
+
 		if (dependencies) {
-			const platformDir = path.join(projectData.platformsDir, "android");
-			const buildDir = path.join(platformDir, "build-tools");
-			const checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
-			if (this.$fs.exists(checkV8dependants)) {
-				const stringifiedDependencies = JSON.stringify(dependencies);
-				try {
-					await this.spawn('node', [checkV8dependants, stringifiedDependencies, projectData.platformsDir], { stdio: "inherit" });
-				} catch (e) {
-					this.$logger.info("Checking for dependants on v8 public API failed. This is likely caused because of cyclic production dependencies. Error code: " + e.code + "\nMore information: https://github.com/NativeScript/nativescript-cli/issues/2561");
+			dependencies = this.filterUniqueDependencies(dependencies);
+			if (shouldUseNewRoutine) {
+				this.provideDependenciesJson(projectData, dependencies);
+			} else {
+				// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
+
+				const platformDir = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
+				const buildDir = path.join(platformDir, "build-tools");
+				const checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
+				if (this.$fs.exists(checkV8dependants)) {
+					const stringifiedDependencies = JSON.stringify(dependencies);
+					try {
+						await this.spawn('node', [checkV8dependants, stringifiedDependencies, projectData.platformsDir], { stdio: "inherit" });
+					} catch (e) {
+						this.$logger.info("Checking for dependants on v8 public API failed. This is likely caused because of cyclic production dependencies. Error code: " + e.code + "\nMore information: https://github.com/NativeScript/nativescript-cli/issues/2561");
+					}
 				}
 			}
 		}
 
-		const projectRoot = this.getPlatformData(projectData).projectRoot;
+		if (!shouldUseNewRoutine) {
+			// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
+			const projectRoot = this.getPlatformData(projectData).projectRoot;
+			await this.cleanProject(projectRoot, projectData);
+		}
+	}
 
-		await this.cleanProject(projectRoot, projectData);
+	private filterUniqueDependencies(dependencies: IDependencyData[]): IDependencyData[] {
+		const depsDictionary = dependencies.reduce((dict, dep) => {
+			const collision = dict[dep.name];
+			// in case there are multiple dependencies to the same module, the one declared in the package.json takes precedence
+			if (!collision || collision.depth > dep.depth) {
+				dict[dep.name] = dep;
+			}
+			return dict;
+		}, <IDictionary<IDependencyData>>{});
+		return _.values(depsDictionary);
+	}
+
+	private provideDependenciesJson(projectData: IProjectData, dependencies: IDependencyData[]): void {
+		const platformDir = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
+		const dependenciesJsonPath = path.join(platformDir, "dependencies.json");
+		const nativeDependencies = dependencies
+			.filter(AndroidProjectService.isNativeAndroidDependency)
+			.map(({ name, directory }) => ({ name, directory: path.relative(platformDir, directory) }));
+		const jsonContent = JSON.stringify(nativeDependencies, null, 4);
+
+		this.$fs.writeFile(dependenciesJsonPath, jsonContent);
+	}
+
+	private static isNativeAndroidDependency({ nativescript }: IDependencyData): boolean {
+		return nativescript && (nativescript.android || (nativescript.platforms && nativescript.platforms.android));
 	}
 
 	public stopServices(projectRoot: string): Promise<ISpawnResult> {
@@ -529,6 +583,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				childProcessOpts,
 				spawnFromEventOptions);
 		}
+	}
+
+	// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
+	private shouldUseNewRuntimeGradleRoutine(projectData: IProjectData): boolean {
+		const platformVersion = this.getCurrentPlatformVersion(this.getPlatformData(projectData), projectData);
+		const newRuntimeGradleRoutineVersion = "3.3.0";
+
+		return semver.gte(platformVersion, newRuntimeGradleRoutineVersion);
 	}
 }
 
