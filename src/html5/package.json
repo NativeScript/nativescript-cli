@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "name": "kinvey-html5-sdk",
+  "version": "3.9.0",
+  "description": "Kinvey JavaScript SDK for HTML5 applications.",
+  "homepage": "http://www.kinvey.com",
+  "license": "Apache-2.0",
+  "author": "Kinvey",
+  "main": "./index.js",
+  "dependencies": {
+    "es6-promise": "4.1.0",
+    "local-storage-fallback": "4.0.0",
+    "url": "0.11.0",
+    "xhr": "2.3.3"
+  }
+}
