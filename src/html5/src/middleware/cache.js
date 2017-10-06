@@ -1,4 +1,4 @@
-import { CacheMiddleware } from '../../core/request';
+import { CacheMiddleware } from '../../../core/src/request';
 import { Storage } from './storage';
 
 export class HTML5CacheMiddleware extends CacheMiddleware {

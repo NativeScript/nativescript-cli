@@ -1,5 +1,5 @@
-import { KinveyError, NotFoundError } from '../../../core/errors';
-import { isDefined } from '../../../core/utils';
+import { KinveyError, NotFoundError } from '../../../../core/src/errors';
+import { isDefined } from '../../../../core/src/utils';
 
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const masterCollectionName = 'sqlite_master';

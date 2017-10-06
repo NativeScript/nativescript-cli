@@ -1,5 +1,5 @@
-import { KinveyError, NotFoundError } from '../../../core/errors';
-import { isDefined } from '../../../core/utils';
+import { KinveyError, NotFoundError } from '../../../../core/src/errors';
+import { isDefined } from '../../../../core/src/utils';
 
 let dbCache = {};
 let isSupported;

@@ -1,8 +1,8 @@
-import CoreKinvey from '../core/kinvey';
-import { isDefined } from '../core/utils';
-import { KinveyError } from '../core/errors';
-import { CacheRequest, RequestMethod } from '../core/request';
-import { User } from '../core/entity';
+import CoreKinvey from '../../core/src/kinvey';
+import { isDefined } from '../../core/src/utils';
+import { KinveyError } from '../../core/src/errors';
+import { CacheRequest, RequestMethod } from '../../core/src/request';
+import { User } from '../../core/src/entity';
 import { Client } from './client';
 
 const USERS_NAMESPACE = 'user';

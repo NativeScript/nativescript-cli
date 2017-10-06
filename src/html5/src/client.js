@@ -1,7 +1,7 @@
 import storage from 'local-storage-fallback';
-import CoreClient from '../core/client';
-import { KinveyError } from '../core/errors';
-import { Log, isDefined } from '../core/utils';
+import CoreClient from '../../core/src/client';
+import { KinveyError } from '../../core/src/errors';
+import { Log, isDefined } from '../../core/src/utils';
 
 class ActiveUserStorage {
   get(key) {

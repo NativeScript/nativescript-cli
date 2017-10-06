@@ -1,5 +1,5 @@
-import { NotFoundError } from '../../../core/errors';
-import { keyBy, isDefined } from '../../../core/utils';
+import { NotFoundError } from '../../../../core/src/errors';
+import { keyBy, isDefined } from '../../../../core/src/utils';
 
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const masterCollectionName = 'master';

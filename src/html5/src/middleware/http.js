@@ -1,8 +1,8 @@
 import xhr from 'xhr';
-import { Middleware } from '../../core/request';
-import { NetworkConnectionError, TimeoutError } from '../../core/errors';
-import { isDefined } from '../../core/utils';
-import pkg from '../package.json';
+import { Middleware } from '../../../core/src/request';
+import { NetworkConnectionError, TimeoutError } from '../../../core/src/errors';
+import { isDefined } from '../../../core/src/utils';
+import pkg from '../../package.json';
 
 // Helper function to detect the browser name and version.
 function browserDetect(ua) {

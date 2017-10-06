@@ -1,5 +1,5 @@
-import { CacheRack, NetworkRack } from '../core/request';
-import { MobileIdentityConnect } from '../core/entity';
+import { CacheRack, NetworkRack } from '../../core/src/request';
+import { MobileIdentityConnect } from '../../core/src/entity';
 import { Kinvey } from './kinvey';
 import { CacheMiddleware, HttpMiddleware } from './middleware';
 import { Popup } from './popup';

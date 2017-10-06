@@ -1,5 +1,5 @@
-import { isDefined } from '../../../core/utils';
-import { Storage as CoreStorage } from '../../../core/request/src/middleware/src/storage';
+import { isDefined } from '../../../../core/src/utils';
+import { Storage as CoreStorage } from '../../../../core/src/request/src/middleware/src/storage';
 import { IndexedDBAdapter } from './indexeddb';
 import { WebSQLAdapter } from './websql';
 import { LocalStorageAdapter } from './webstorage';
