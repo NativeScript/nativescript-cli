@@ -2,7 +2,7 @@ import { CacheRack, NetworkRack } from '../core/request';
 import { MobileIdentityConnect } from '../core/entity';
 import { Kinvey } from './kinvey';
 import { CacheMiddleware, HttpMiddleware } from './middleware';
-import Popup from './popup';
+import { Popup } from './popup';
 
 // Setup racks
 CacheRack.useCacheMiddleware(new CacheMiddleware());
@@ -12,4 +12,4 @@ NetworkRack.useHttpMiddleware(new HttpMiddleware());
 MobileIdentityConnect.usePopupClass(Popup);
 
 // Export
-module.exports = Kinvey;
+export default Kinvey;

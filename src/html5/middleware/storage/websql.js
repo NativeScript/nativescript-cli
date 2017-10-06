@@ -1,6 +1,6 @@
 import Promise from 'es6-promise';
-import { KinveyError, NotFoundError } from '../../../../core/errors';
-import { isDefined } from '../../../../core/utils';
+import { KinveyError, NotFoundError } from '../../../core/errors';
+import { isDefined } from '../../../core/utils';
 
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const masterCollectionName = 'sqlite_master';

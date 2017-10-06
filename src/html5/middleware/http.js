@@ -1,9 +1,9 @@
 import xhr from 'xhr';
-import Promise from 'es6-promise';
-import { Middleware } from '../../../core/request';
-import { NetworkConnectionError, TimeoutError } from '../../../core/errors';
-import { isDefined } from '../../../core/utils';
-import pkg from '../../package.json';
+import { Promise } from 'es6-promise';
+import { Middleware } from '../../core/request';
+import { NetworkConnectionError, TimeoutError } from '../../core/errors';
+import { isDefined } from '../../core/utils';
+import pkg from '../package.json';
 
 // Helper function to detect the browser name and version.
 function browserDetect(ua) {
@@ -72,7 +72,7 @@ function deviceInformation() {
   }).join(' ');
 }
 
-export default class HttpMiddleware extends Middleware {
+export class HttpMiddleware extends Middleware {
   constructor(name = 'Http Middleware') {
     super(name);
   }

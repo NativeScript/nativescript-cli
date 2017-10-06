@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 
-export default class Popup extends EventEmitter {
+export class Popup extends EventEmitter {
   open(url = '/') {
     let interval;
     let eventListeners;

@@ -1,6 +1,6 @@
 import Promise from 'es6-promise';
-import { NotFoundError } from '../../../../core/errors';
-import { keyBy, isDefined } from '../../../../core/utils';
+import { NotFoundError } from '../../../core/errors';
+import { keyBy, isDefined } from '../../../core/utils';
 
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const masterCollectionName = 'master';
