@@ -1,9 +1,9 @@
 import Promise from 'es6-promise';
 import reduce from 'lodash/reduce';
 import isFunction from 'lodash/isFunction';
-import { isDefined, Log } from 'src/utils';
 import values from 'lodash/values';
 
+import { isDefined, Log } from '../../utils';
 import Middleware, {
   CacheMiddleware,
   HttpMiddleware,

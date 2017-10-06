@@ -28,7 +28,7 @@ import {
   StaleRequestError,
   UserAlreadyExistsError,
   WritesToCollectionDisallowedError
-} from 'src/errors';
+} from '../../errors';
 import Headers from './headers';
 
 /**

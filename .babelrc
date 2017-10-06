@@ -1,16 +1,13 @@
 {
-  "plugins": [
-    "inline-dotenv",
-    ["module-resolver", {
-      "alias": {
-        "package.json": "./package.json",
-        "src": "./src",
-        "test": "./test"
+  "ignore": [
+    "node_modules"
+  ],
+  "presets": [
+    ["env", {
+      "targets": {
+        "browsers": ["last 2 versions", "safari >= 7"]
       }
     }]
   ],
-  "presets": [
-    "es2015",
-    "stage-2"
-  ]
+  "sourceMaps": true
 }

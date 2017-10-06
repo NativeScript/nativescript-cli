@@ -3,9 +3,9 @@ import isString from 'lodash/isString';
 import url from 'url';
 import urljoin from 'url-join';
 
-import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
-import { KinveyError, MobileIdentityConnectError } from 'src/errors';
-import { isDefined } from 'src/utils';
+import { AuthType, RequestMethod, KinveyRequest } from '../../request';
+import { KinveyError, MobileIdentityConnectError } from '../../errors';
+import { isDefined } from '../../utils';
 import CorePopup from './popup';
 import Identity from './identity';
 import { SocialIdentity } from './enums';

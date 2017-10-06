@@ -2,8 +2,8 @@ import isPlainObject from 'lodash/isPlainObject';
 import isArray from 'lodash/isArray';
 import assign from 'lodash/assign';
 
-import { KinveyError } from 'src/errors';
-import { isDefined } from 'src/utils';
+import { KinveyError } from '../../errors';
+import { isDefined } from '../../utils';
 
 /**
  * The Acl class is used as a wrapper for reading and setting permissions on an entity level.

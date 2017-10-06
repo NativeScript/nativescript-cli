@@ -1,6 +1,6 @@
 import isEmpty from 'lodash/isEmpty';
 
-import { isDefined } from 'src/utils';
+import { isDefined } from '../../../../utils';
 import Middleware from './middleware';
 import { Storage } from './storage';
 

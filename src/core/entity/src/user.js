@@ -5,12 +5,12 @@ import isObject from 'lodash/isObject';
 import isEmpty from 'lodash/isEmpty';
 import url from 'url';
 
-import Client from 'src/client';
-import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
-import { KinveyError, NotFoundError, ActiveUserError } from 'src/errors';
-import DataStore, { UserStore } from 'src/datastore';
-import { MobileIdentityConnect } from 'src/identity';
-import { Log, isDefined } from 'src/utils';
+import Client from '../../client';
+import { AuthType, RequestMethod, KinveyRequest } from '../../request';
+import { KinveyError, NotFoundError, ActiveUserError } from '../../errors';
+import DataStore, { UserStore } from '../../datastore';
+import { MobileIdentityConnect } from '../../identity';
+import { Log, isDefined } from '../../utils';
 import Acl from './acl';
 import Metadata from './metadata';
 import { getLiveService } from '../../live';

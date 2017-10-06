@@ -2,8 +2,8 @@ import Promise from 'es6-promise';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 
-import { isDefined, Queue, Log } from 'src/utils';
-import { KinveyError, NotFoundError } from 'src/errors';
+import { isDefined, Queue, Log } from '../../../../../utils';
+import { KinveyError, NotFoundError } from '../../../../../errors';
 import { MemoryAdapter } from './memory';
 
 const queue = new Queue(1, Infinity);

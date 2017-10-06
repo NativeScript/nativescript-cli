@@ -5,8 +5,8 @@ import isObject from 'lodash/isObject';
 import isFunction from 'lodash/isFunction';
 import cloneDeep from 'lodash/cloneDeep';
 
-import { KinveyError } from 'src/errors';
-import { isDefined } from 'src/utils';
+import { KinveyError } from './errors';
+import { isDefined } from './utils';
 import Query from './query';
 
 /**

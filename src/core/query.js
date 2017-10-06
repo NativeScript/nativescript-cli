@@ -10,8 +10,8 @@ import forEach from 'lodash/forEach';
 import findKey from 'lodash/findKey';
 import has from 'lodash/has';
 
-import { QueryError } from 'src/errors';
-import { nested, isDefined, Log } from 'src/utils';
+import { QueryError } from './errors';
+import { nested, isDefined, Log } from './utils';
 
 const unsupportedFilters = ['$nearSphere'];
 

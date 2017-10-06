@@ -14,17 +14,12 @@ const invalidValueMsg = 'Invalid ACL object value';
  */
 
 export class StreamACL {
-
-  /** @type {string[]} */
-  publishers = [];
-  /** @type {string[]} */
-  subscribers = [];
-  /** @type {string[]} */
-  publisherGroups = [];
-  /** @type {string[]} */
-  subscriberGroups = [];
-
   constructor(obj) {
+    this.publishers = [];
+    this.subscribers = [];
+    this.publisherGroups = [];
+    this.subscriberGroups = [];
+
     if (obj) {
       if ((obj instanceof StreamACL)) {
         obj = obj.toPlainObject();

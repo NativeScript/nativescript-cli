@@ -3,15 +3,17 @@ import url from 'url';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
 
-import { KinveyError } from 'src/errors';
-import { Log, isDefined, uuidv4 } from 'src/utils';
+import { KinveyError } from './errors';
+import { Log, isDefined, uuidv4 } from './utils';
 
 const DEFAULT_TIMEOUT = 60000;
 const ACTIVE_USER_KEY = 'active_user';
 let sharedInstance = null;
 
 class ActiveUserStorage {
-  memory = new MemoryCache();
+  constructor() {
+    this.memory = new MemoryCache();
+  }
 
   get(key) {
     if (!isString(key)) {

@@ -8,11 +8,10 @@ import url from 'url';
 import isString from 'lodash/isString';
 
 import Client from '../../client';
-import Query from 'src/query';
-import Aggregation from 'src/aggregation';
-import { isDefined, appendQuery } from 'src/utils';
-import { InvalidCredentialsError, NoActiveUserError, KinveyError } from 'src/errors';
-import { SocialIdentity } from 'src/identity';
+import Query from '../../query';
+import Aggregation from '../../aggregation';
+import { isDefined, appendQuery } from '../../utils';
+import { InvalidCredentialsError, NoActiveUserError, KinveyError } from '../../errors';
 import Request, { RequestMethod } from './request';
 import Headers from './headers';
 import { KinveyResponse } from './response';

@@ -32,24 +32,16 @@ function isValidChannelName(str) {
 }
 
 class LiveService {
-  /** @type {Client} @private */
-  _client;
-  /** @type {PubNub} @private */
-  _pubnubClient;
-  /** @type {PubNubListener} @private */
-  _pubnubListener;
-  /** @type {string} @private */
-  _userChannelGroup;
-  /** @type {Object} @private */
-  _pubnubConfig
-  /** @type {User} @private */
-  _registeredUser;
-
   /**
    * @param {Client} client
    */
   constructor(client) {
     this._client = client || Client.sharedInstance();
+    this._pubnubClient = undefined;
+    this._pubnubListener = undefined;
+    this._userChannelGroup = undefined;
+    this._pubnubConfig = undefined;
+    this._registeredUser = undefined;
   }
 
   get _pubnubClient() {

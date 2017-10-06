@@ -7,8 +7,8 @@ import find from 'lodash/find';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 
-import { isDefined } from 'src/utils';
-import { NotFoundError } from 'src/errors';
+import { isDefined } from '../../../../../utils';
+import { NotFoundError } from '../../../../../errors';
 
 const caches = {};
 

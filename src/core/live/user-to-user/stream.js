@@ -17,24 +17,16 @@ import { StreamACL } from './stream-acl';
  * @class Stream
  */
 export class Stream {
-  /** @type {string} */
-  name;
-  /** @type {Client} @private */
-  _client = Client.sharedInstance();
-  /** @private */
-  _liveService = getLiveService(this._client);
-  /** @private */
-  _subscribeChannels = {};
-  /** @private */
-  _publishChannels = {};
-
-  static StreamACL = StreamACL;
-
-  /**
-   * @param {string} name
-   */
   constructor(name) {
     this.name = name;
+    this._client = Client.sharedInstance();
+    this._liveService = getLiveService(this._client);
+    this._subscribeChannels = {};
+    this._publishChannels = {};
+  }
+
+  static get StreamACL() {
+    return StreamACL;
   }
 
   /**

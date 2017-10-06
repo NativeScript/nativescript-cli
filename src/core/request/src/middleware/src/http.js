@@ -1,6 +1,6 @@
 import Promise from 'es6-promise';
 
-import { KinveyError } from 'src/errors';
+import { KinveyError } from '../../../../errors';
 import Middleware from './middleware';
 
 export default class HttpMiddleware extends Middleware {

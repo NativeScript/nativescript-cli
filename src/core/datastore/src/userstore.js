@@ -3,10 +3,10 @@ import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
 import url from 'url';
 
-import { AuthType, RequestMethod, KinveyRequest } from 'src/request';
-import { KinveyError } from 'src/errors';
-import { KinveyObservable, isDefined } from 'src/utils';
-import Query from 'src/query';
+import { AuthType, RequestMethod, KinveyRequest } from '../../request';
+import { KinveyError } from '../../errors';
+import { KinveyObservable, isDefined } from '../../utils';
+import Query from '../../query';
 import NetworkStore from './networkstore';
 
 /**

@@ -11,11 +11,11 @@ import {
   AuthType,
   CacheRequest,
   DeltaFetchRequest
-} from 'src/request';
-import { SyncError } from 'src/errors';
-import { isDefined } from 'src/utils';
-import Client from 'src/client';
-import Query from 'src/query';
+} from '../../request';
+import { SyncError } from '../../errors';
+import { isDefined } from '../../utils';
+import Client from '../../client';
+import Query from '../../query';
 
 const pushInProgress = new Map();
 

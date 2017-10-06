@@ -1,10 +1,10 @@
 import isString from 'lodash/isString';
 import url from 'url';
 
-import { CacheRequest, RequestMethod } from 'src/request';
-import { KinveyError } from 'src/errors';
-import { isDefined } from 'src/utils';
-import Client from 'src/client';
+import { CacheRequest, RequestMethod } from '../../request';
+import { KinveyError } from '../../errors';
+import { isDefined } from '../../utils';
+import Client from '../../client';
 import NetworkStore from './networkstore';
 import CacheStore from './cachestore';
 import SyncStore from './syncstore';

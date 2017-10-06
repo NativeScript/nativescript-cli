@@ -11,10 +11,10 @@ import {
   AuthType,
   RequestMethod,
   Headers
-} from 'src/request';
-import { KinveyError } from 'src/errors';
-import { KinveyObservable, Log, isDefined } from 'src/utils';
-import Query from 'src/query';
+} from '../../request';
+import { KinveyError } from '../../errors';
+import { KinveyObservable, Log, isDefined } from '../../utils';
+import Query from '../../query';
 import NetworkStore from './networkstore';
 
 function randomInt(min, max) {

@@ -4,17 +4,16 @@ import assign from 'lodash/assign';
 import keyBy from 'lodash/keyBy';
 import remove from 'lodash/remove';
 import isArray from 'lodash/isArray';
-import isFunction from 'lodash/isFunction';
 import reduce from 'lodash/reduce';
 import map from 'lodash/map';
 import url from 'url';
 
-import { CacheRequest, AuthType, RequestMethod } from 'src/request';
-import { KinveyError, NotFoundError } from 'src/errors';
-import Query from 'src/query';
-import Aggregation from 'src/aggregation';
-import { Metadata } from 'src/entity';
-import { KinveyObservable, isDefined } from 'src/utils';
+import { CacheRequest, AuthType, RequestMethod } from '../../request';
+import { KinveyError, NotFoundError } from '../../errors';
+import Query from '../../query';
+import Aggregation from '../../aggregation';
+import { Metadata } from '../../entity';
+import { KinveyObservable, isDefined } from '../../utils';
 import NetworkStore from './networkstore';
 import SyncManager from './sync';
 

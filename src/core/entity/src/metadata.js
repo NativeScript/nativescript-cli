@@ -1,7 +1,7 @@
 import isPlainObject from 'lodash/isPlainObject';
 
-import { KinveyError } from 'src/errors';
-import { isDefined } from 'src/utils';
+import { KinveyError } from '../../errors';
+import { isDefined } from '../../utils';
 
 /**
  * The Metadata class is used to as a wrapper for accessing the `_kmd` properties of an entity.

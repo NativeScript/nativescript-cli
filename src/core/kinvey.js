@@ -36,8 +36,8 @@ import {
   TimeoutError,
   UserAlreadyExistsError,
   WritesToCollectionDisallowedError
-} from 'src/errors';
-import { Log, isDefined } from 'src/utils';
+} from './errors';
+import { Log, isDefined } from './utils';
 import Client from './client';
 import CustomEndpoint from './endpoint';
 import Query from './query';

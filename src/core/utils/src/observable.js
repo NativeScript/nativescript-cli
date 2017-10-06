@@ -4,7 +4,7 @@ import { Subscriber } from 'rxjs/Subscriber';
 import { rxSubscriber as rxSubscriberSymbol } from 'rxjs/symbol/rxSubscriber';
 import isFunction from 'lodash/isFunction';
 
-import { isDefined } from 'src/utils';
+import { isDefined } from './object';
 
 /**
  * @private

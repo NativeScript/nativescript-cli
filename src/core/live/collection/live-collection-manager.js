@@ -9,9 +9,6 @@ import {
 } from '../live-service';
 
 export class LiveCollectionManager {
-  /** @type {Client} @private */
-  _client;
-
   /**
    * @param {Client} client
    */

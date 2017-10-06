@@ -1,5 +1,5 @@
-import Client from 'src/client';
-import { KinveyError } from 'src/errors';
+import Client from '../../client';
+import { KinveyError } from '../../errors';
 
 /**
  * @private
