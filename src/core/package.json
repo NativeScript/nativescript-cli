@@ -1,35 +1,5 @@
 {
   "private": true,
-  "name": "kinvey-js-sdk",
-  "version": "3.9.2",
-  "description": "Kinvey JavaScript SDK for developing JavaScript applications. This is the core code used to create specific bundles for all other JavaScript platforms.",
-  "homepage": "http://www.kinvey.com",
-  "license": "Apache-2.0",
-  "author": "Kinvey, Inc.",
-  "main": "src/index.js",
-  "dependencies": {
-    "buffer": "5.0.7",
-    "es6-error": "4.0.2",
-    "es6-promise": "4.1.1",
-    "events": "1.1.1",
-    "fast-memory-cache": "2.0.4",
-    "local-storage": "1.4.2",
-    "lodash": "4.17.4",
-    "loglevel": "1.5.0",
-    "promise-queue": "2.2.3",
-    "pubnub": "github:thomasconner/javascript#add_nativescript_support",
-    "qs": "6.5.1",
-    "rxjs": "5.4.3",
-    "sift": "3.3.10",
-    "uid-safe": "2.1.5",
-    "url": "0.11.0",
-    "url-join": "2.0.2",
-    "url-pattern": "1.0.3"
-  },
-  "keywords": [
-    "Kinvey",
-    "JavaScript",
-    "SDK"
-  ]
+  "main": "src/index.js"
 }
 

@@ -1,19 +1,16 @@
 {
   "private": true,
-  "name": "kinvey",
-  "description": "Kinvey JavaScript SDKs.",
+  "name": "kinvey-js-sdk",
+  "version": "3.9.2",
+  "description": "Kinvey JavaScript SDK for developing JavaScript applications.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "author": "Kinvey",
+  "author": "Kinvey, Inc.",
+  "main": "html5",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "concurrently \"npm run build:core\" \"npm run build:html5\"",
-    "build:core": "babel --no-comments --out-dir dist/core src/core",
-    "build:html5": "babel --no-comments --out-dir dist/html5 src/html5",
-    "postbuild": "npm run copyfiles",
-    "copyfiles": "concurrently \"npm run copyfiles:html5\" \"npm run copyfiles:core\"",
-    "copyfiles:core": "node scripts/copy-core-files.js",
-    "copyfiles:html5": "node scripts/copy-html5-files.js",
+    "build": "babel --no-comments --out-dir dist src",
+    "postbuild": "node scripts/copy-files.js",
     "cover": "istanbul cover _mocha -- --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test",
     "docs": "esdoc -c esdoc.json",
     "lint": "npm run lint:src",
@@ -23,6 +20,27 @@
     "postversion": "git push && git push --tags",
     "test": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test",
     "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test"
+  },
+  "dependencies": {
+    "buffer": "5.0.7",
+    "es6-error": "4.0.2",
+    "es6-promise": "4.1.1",
+    "events": "1.1.1",
+    "fast-memory-cache": "2.0.4",
+    "local-storage": "1.4.2",
+    "local-storage-fallback": "4.0.0",
+    "lodash": "4.17.4",
+    "loglevel": "1.5.0",
+    "promise-queue": "2.2.3",
+    "pubnub": "github:thomasconner/javascript#add_nativescript_support",
+    "qs": "6.5.1",
+    "rxjs": "5.4.3",
+    "sift": "3.3.10",
+    "uid-safe": "2.1.5",
+    "url": "0.11.0",
+    "url-join": "2.0.2",
+    "url-pattern": "1.0.3",
+    "xhr": "2.4.0"
   },
   "devDependencies": {
     "app-module-path": "2.2.0",
@@ -51,5 +69,10 @@
     "regenerator-runtime": "^0.9.5",
     "request": "2.82.0",
     "rimraf": "2.6.2"
-  }
+  },
+  "keywords": [
+    "Kinvey",
+    "JavaScript",
+    "HTML5"
+  ]
 }
