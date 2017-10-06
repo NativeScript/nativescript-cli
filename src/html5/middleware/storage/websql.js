@@ -1,4 +1,3 @@
-import Promise from 'es6-promise';
 import { KinveyError, NotFoundError } from '../../../core/errors';
 import { isDefined } from '../../../core/utils';
 

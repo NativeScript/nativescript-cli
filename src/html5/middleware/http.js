@@ -1,5 +1,4 @@
 import xhr from 'xhr';
-import { Promise } from 'es6-promise';
 import { Middleware } from '../../core/request';
 import { NetworkConnectionError, TimeoutError } from '../../core/errors';
 import { isDefined } from '../../core/utils';

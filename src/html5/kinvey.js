@@ -1,5 +1,3 @@
-import { Promise } from 'es6-promise';
-import url from 'url';
 import CoreKinvey from '../core/kinvey';
 import { isDefined } from '../core/utils';
 import { KinveyError } from '../core/errors';
