@@ -1,5 +1,6 @@
 import Promise from 'es6-promise';
-import { KinveyError, NotFoundError, isDefined } from 'kinvey-js-sdk/dist/export';
+import { KinveyError, NotFoundError } from '../../../../core/errors';
+import { isDefined } from '../../../../core/utils';
 import map from 'lodash/map';
 import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';

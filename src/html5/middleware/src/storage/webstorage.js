@@ -1,5 +1,6 @@
 import Promise from 'es6-promise';
-import { NotFoundError, isDefined } from 'kinvey-js-sdk/dist/export';
+import { NotFoundError } from '../../../../core/errors';
+import { isDefined } from '../../../../core/utils';
 import keyBy from 'lodash/keyBy';
 import merge from 'lodash/merge';
 import values from 'lodash/values';

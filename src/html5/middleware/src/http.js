@@ -1,8 +1,9 @@
-import { Middleware, NetworkConnectionError, TimeoutError, isDefined } from 'kinvey-js-sdk/dist/export';
 import xhr from 'xhr';
 import Promise from 'es6-promise';
-import isFunction from 'lodash/isFunction';
-import pkg from 'package.json';
+import { Middleware } from '../../../core/request';
+import { NetworkConnectionError, TimeoutError } from '../../../core/errors';
+import { isDefined } from '../../../core/utils';
+import pkg from '../../package.json';
 
 // Helper function to detect the browser name and version.
 function browserDetect(ua) {

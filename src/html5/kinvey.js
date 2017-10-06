@@ -1,13 +1,10 @@
 import { Promise } from 'es6-promise';
 import url from 'url';
-import {
-  Kinvey as CoreKinvey,
-  isDefined,
-  KinveyError,
-  CacheRequest,
-  RequestMethod,
-  User
-} from 'kinvey-js-sdk/dist/export';
+import CoreKinvey from '../core/kinvey';
+import { isDefined } from '../core/utils';
+import { KinveyError } from '../core/errors';
+import { CacheRequest, RequestMethod } from '../core/request';
+import { User } from '../core/entity';
 import { Client } from './client';
 
 const USERS_NAMESPACE = 'user';
