@@ -1,11 +1,6 @@
 import Promise from 'es6-promise';
 import { NotFoundError } from '../../../../core/errors';
-import { isDefined } from '../../../../core/utils';
-import keyBy from 'lodash/keyBy';
-import merge from 'lodash/merge';
-import values from 'lodash/values';
-import forEach from 'lodash/forEach';
-import find from 'lodash/find';
+import { keyBy, isDefined } from '../../../../core/utils';
 
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const masterCollectionName = 'master';
@@ -73,22 +68,22 @@ export class LocalStorageAdapter extends WebStorageAdapter {
         return this.find(collection);
       })
       .then((existingEntities) => {
-        const existingEntitiesById = keyBy(existingEntities, idAttribute);
-        const entitiesById = keyBy(entities, idAttribute);
+        const existingEntitiesById = keyBy(existingEntities, '_id');
+        const entitiesById = keyBy(entities, '_id');
         const existingEntityIds = Object.keys(existingEntitiesById);
 
-        forEach(existingEntityIds, (id) => {
+        existingEntityIds.forEach((id) => {
           const existingEntity = existingEntitiesById[id];
           const entity = entitiesById[id];
 
           if (isDefined(entity)) {
-            entitiesById[id] = merge(existingEntity, entity);
+            entitiesById[id] = Object.assign(existingEntity, entity);
           } else {
             entitiesById[id] = existingEntity;
           }
         });
 
-        global.localStorage.setItem(`${this.name}${collection}`, JSON.stringify(values(entitiesById)));
+        global.localStorage.setItem(`${this.name}${collection}`, JSON.stringify(Object.values(entitiesById)));
         return entities;
       });
   }
@@ -105,7 +100,7 @@ export class LocalStorageAdapter extends WebStorageAdapter {
         }
 
         delete entitiesById[id];
-        global.localStorage.setItem(`${this.name}${collection}`, JSON.stringify(values(entitiesById)));
+        global.localStorage.setItem(`${this.name}${collection}`, JSON.stringify(Object.values(entitiesById)));
         return { count: 1 };
       });
   }
@@ -113,7 +108,7 @@ export class LocalStorageAdapter extends WebStorageAdapter {
   clear() {
     return this._find(this.masterCollectionName)
       .then((collections) => {
-        forEach(collections, (collection) => {
+        collections.forEach((collection) => {
           global.localStorage.removeItem(`${this.name}${collection}`);
         });
 
@@ -196,18 +191,18 @@ export class SessionStorageAdapter extends WebStorageAdapter {
         const entitiesById = keyBy(entities, idAttribute);
         const existingEntityIds = Object.keys(existingEntitiesById);
 
-        forEach(existingEntityIds, (id) => {
+        existingEntityIds.forEach((id) => {
           const existingEntity = existingEntitiesById[id];
           const entity = entitiesById[id];
 
           if (isDefined(entity)) {
-            entitiesById[id] = merge(existingEntity, entity);
+            entitiesById[id] = Object.assign(existingEntity, entity);
           } else {
             entitiesById[id] = existingEntity;
           }
         });
 
-        global.sessionStorage.setItem(`${this.name}${collection}`, JSON.stringify(values(entitiesById)));
+        global.sessionStorage.setItem(`${this.name}${collection}`, JSON.stringify(Object.values(entitiesById)));
         return entities;
       });
   }
@@ -224,7 +219,7 @@ export class SessionStorageAdapter extends WebStorageAdapter {
         }
 
         delete entitiesById[id];
-        global.sessionStorage.setItem(`${this.name}${collection}`, JSON.stringify(values(entitiesById)));
+        global.sessionStorage.setItem(`${this.name}${collection}`, JSON.stringify(Object.values(entitiesById)));
         return { count: 1 };
       });
   }
@@ -232,7 +227,7 @@ export class SessionStorageAdapter extends WebStorageAdapter {
   clear() {
     return this._find(this.masterCollectionName)
       .then((collections) => {
-        forEach(collections, (collection) => {
+        collections.forEach((collection) => {
           global.sessionStorage.removeItem(`${this.name}${collection}`);
         });
 
@@ -329,12 +324,12 @@ export class CookieStorageAdapter extends WebStorageAdapter {
         const existingEntityIds = Object.keys(existingEntitiesById);
         const entitiesById = keyBy(entities, idAttribute);
 
-        forEach(existingEntityIds, (id) => {
+        existingEntityIds.forEach((id) => {
           const existingEntity = existingEntitiesById[id];
           const entity = entitiesById[id];
 
           if (isDefined(entity)) {
-            entitiesById[id] = merge(existingEntity, entity);
+            entitiesById[id] = Object.assign(existingEntity, entity);
           } else {
             entitiesById[id] = existingEntity;
           }
@@ -342,7 +337,7 @@ export class CookieStorageAdapter extends WebStorageAdapter {
 
         const expires = new Date();
         expires.setTime(expires.getTime() + (100 * 365 * 24 * 60 * 60 * 1000)); // Expire in 100 years
-        global.document.cookie = `${this.name}${collection}=${encodeURIComponent(JSON.stringify(values(entitiesById)))}; expires=${expires.toUTCString()}; path=/`;
+        global.document.cookie = `${this.name}${collection}=${encodeURIComponent(JSON.stringify(Object.values(entitiesById)))}; expires=${expires.toUTCString()}; path=/`;
         return entities;
       });
   }
@@ -361,7 +356,7 @@ export class CookieStorageAdapter extends WebStorageAdapter {
         delete entitiesById[id];
         const expires = new Date();
         expires.setTime(expires.getTime() + (100 * 365 * 24 * 60 * 60 * 1000)); // Expire in 100 years
-        global.document.cookie = `${this.name}${collection}=${encodeURIComponent(JSON.stringify(values(entitiesById)))}; expires=${expires.toUTCString()}; path=/`;
+        global.document.cookie = `${this.name}${collection}=${encodeURIComponent(JSON.stringify(Object.values(entitiesById)))}; expires=${expires.toUTCString()}; path=/`;
         return { count: 1 };
       });
   }
@@ -369,7 +364,7 @@ export class CookieStorageAdapter extends WebStorageAdapter {
   clear() {
     return this._find(this.masterCollectionName)
       .then((collections) => {
-        forEach(collections, (collection) => {
+        collections.forEach((collection) => {
           const expires = new Date();
           expires.setTime(expires.getTime() + (100 * 365 * 24 * 60 * 60 * 1000)); // Expire in 100 years
           global.document.cookie = `${this.name}${collection}=${encodeURIComponent(JSON.stringify([]))}; expires=${expires.toUTCString()}; path=/`;

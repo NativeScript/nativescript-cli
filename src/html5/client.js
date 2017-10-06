@@ -1,4 +1,3 @@
-import isString from 'lodash/isString';
 import storage from 'local-storage-fallback';
 import CoreClient from '../core/client';
 import { KinveyError } from '../core/errors';
@@ -6,7 +5,7 @@ import { Log, isDefined } from '../core/utils';
 
 class ActiveUserStorage {
   get(key) {
-    if (!isString(key)) {
+    if (typeof key !== 'string') {
       throw new KinveyError('ActiveUserStorage key must be a string.');
     }
 
@@ -19,7 +18,7 @@ class ActiveUserStorage {
   }
 
   set(key, value) {
-    if (!isString(key)) {
+    if (typeof key !== 'string') {
       throw new KinveyError('ActiveUserStorage key must be a string.');
     }
 

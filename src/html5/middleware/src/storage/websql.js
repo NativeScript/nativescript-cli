@@ -1,11 +1,6 @@
 import Promise from 'es6-promise';
 import { KinveyError, NotFoundError } from '../../../../core/errors';
 import { isDefined } from '../../../../core/utils';
-import map from 'lodash/map';
-import forEach from 'lodash/forEach';
-import isArray from 'lodash/isArray';
-import isFunction from 'lodash/isFunction';
-import isString from 'lodash/isString';
 
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const masterCollectionName = 'sqlite_master';
@@ -19,7 +14,7 @@ export class WebSQLAdapter {
       throw new KinveyError('A name is required to use the WebSQL adapter.', name);
     }
 
-    if (isString(name) === false) {
+    if (typeof name !== 'string') {
       throw new KinveyError('The name must be a string to use the WebSQL adapter', name);
     }
 
@@ -30,7 +25,7 @@ export class WebSQLAdapter {
     let db = dbCache[this.name];
     const escapedCollection = `"${collection}"`;
     const isMaster = collection === masterCollectionName;
-    const isMulti = isArray(query);
+    const isMulti = Array.isArray(query);
     query = isMulti ? query : [[query, parameters]];
 
     return new Promise((resolve, reject) => {
@@ -40,7 +35,7 @@ export class WebSQLAdapter {
           dbCache[this.name] = db;
         }
 
-        const writeTxn = write || isFunction(db.readTransaction) === false;
+        const writeTxn = write || typeof db.readTransaction !== 'function';
         db[writeTxn ? 'transaction' : 'readTransaction']((tx) => {
           if (write && isMaster === false) {
             tx.executeSql(`CREATE TABLE IF NOT EXISTS ${escapedCollection} ` +
@@ -53,7 +48,7 @@ export class WebSQLAdapter {
           if (pending === 0) {
             resolve(isMulti ? responses : responses.shift());
           } else {
-            forEach(query, (parts) => {
+            query.forEach((parts) => {
               const sql = parts[0].replace('#{collection}', escapedCollection);
 
               tx.executeSql(sql, parts[1], (_, resultSet) => {
@@ -84,7 +79,7 @@ export class WebSQLAdapter {
             });
           }
         }, (error) => {
-          error = isString(error) ? error : error.message;
+          error = typeof error === 'string' ? error : error.message;
 
           if (error && error.indexOf('no such table') === -1) {
             return reject(new NotFoundError(`The ${collection} collection was not found on`
@@ -136,7 +131,7 @@ export class WebSQLAdapter {
     const queries = [];
     let singular = false;
 
-    if (!isArray(entities)) {
+    if (!Array.isArray(entities)) {
       singular = true;
       entities = [entities];
     }
@@ -145,7 +140,7 @@ export class WebSQLAdapter {
       return Promise.resolve(null);
     }
 
-    entities = map(entities, (entity) => {
+    entities = entities.map((entity) => {
       queries.push([
         'REPLACE INTO #{collection} (key, value) VALUES (?, ?)',
         [entity[idAttribute], JSON.stringify(entity)]

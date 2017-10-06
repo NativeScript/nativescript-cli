@@ -26,3 +26,14 @@ export function nested(obj, dotProperty, value) {
 
   return value || obj;
 }
+
+
+/**
+ * @private
+ */
+export function keyBy(array, iteratee) {
+  return array.reduce((result, value) => {
+    result[iteratee] = value[iteratee];
+    return result;
+  }, {});
+}

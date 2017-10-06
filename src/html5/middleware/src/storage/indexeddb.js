@@ -1,10 +1,6 @@
 import Promise from 'es6-promise';
 import { KinveyError, NotFoundError } from '../../../../core/errors';
 import { isDefined } from '../../../../core/utils';
-import forEach from 'lodash/forEach';
-import isString from 'lodash/isString';
-import isArray from 'lodash/isArray';
-import isFunction from 'lodash/isFunction';
 
 let dbCache = {};
 let isSupported;
@@ -21,7 +17,7 @@ export class IndexedDBAdapter {
       throw new Error('A name is required to use the IndexedDB adapter.', name);
     }
 
-    if (isString(name) === false) {
+    if (typeof name !== 'string') {
       throw new Error('The name must be a string to use the IndexedDB adapter', name);
     }
 
@@ -35,7 +31,7 @@ export class IndexedDBAdapter {
     let db = dbCache[this.name];
 
     if (isDefined(db)) {
-      const containsCollection = isFunction(db.objectStoreNames.contains) ?
+      const containsCollection = typeof db.objectStoreNames.contains === 'function' ?
         db.objectStoreNames.contains(collection) : db.objectStoreNames.indexOf(collection) !== -1;
 
       if (containsCollection) {
@@ -125,7 +121,7 @@ export class IndexedDBAdapter {
           if (this.queue.length > 0) {
             const pending = this.queue;
             this.queue = [];
-            forEach(pending, (fn) => {
+            pending.forEach((fn) => {
               fn.call(this);
             });
           }
@@ -210,7 +206,7 @@ export class IndexedDBAdapter {
   save(collection, entities) {
     let singular = false;
 
-    if (!isArray(entities)) {
+    if (!Array.isArray(entities)) {
       singular = true;
       entities = [entities];
     }
@@ -223,7 +219,7 @@ export class IndexedDBAdapter {
       this.openTransaction(collection, true, (txn) => {
         const store = txn.objectStore(collection);
 
-        forEach(entities, (entity) => {
+        entities.forEach((entity) => {
           store.put(entity);
         });
 

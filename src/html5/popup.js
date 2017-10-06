@@ -1,6 +1,4 @@
 import { EventEmitter } from 'events';
-import bind from 'lodash/bind';
-import isFunction from 'lodash/isFunction';
 
 export default class Popup extends EventEmitter {
   open(url = '/') {
@@ -33,7 +31,7 @@ export default class Popup extends EventEmitter {
       this.popupWindow = null;
 
       // Remove event listeners
-      if (popupWindow && isFunction(popupWindow.removeEventListener)) {
+      if (popupWindow && typeof popupWindow.removeEventListener === 'function') {
         popupWindow.removeEventListener('loadstart', eventListeners.loadStopCallback);
         popupWindow.removeEventListener('loadstop', eventListeners.loadStopCallback);
         popupWindow.removeEventListener('loaderror', eventListeners.loadErrorCallback);
@@ -46,17 +44,17 @@ export default class Popup extends EventEmitter {
 
     // Bind event listeners
     eventListeners = {
-      loadStartCallback: bind(loadStartCallback, this),
-      loadStopCallback: bind(loadStopCallback, this),
-      loadErrorCallback: bind(loadErrorCallback, this),
-      exitCallback: bind(exitCallback, this)
+      loadStartCallback: loadStartCallback.bind(this),
+      loadStopCallback: loadStopCallback.bind(this),
+      loadErrorCallback: loadErrorCallback.bind(this),
+      exitCallback: exitCallback.bind(this)
     };
 
     // Open the popup
     popupWindow = global.open(url, '_blank', 'toolbar=no,location=no');
 
     if (popupWindow) {
-      if (isFunction(popupWindow.addEventListener)) {
+      if (typeof popupWindow.addEventListener === 'function') {
         popupWindow.addEventListener('loadstart', eventListeners.loadStartCallback);
         popupWindow.addEventListener('loadstop', eventListeners.loadStopCallback);
         popupWindow.addEventListener('loaderror', eventListeners.loadErrorCallback);
