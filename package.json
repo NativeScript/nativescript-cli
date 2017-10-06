@@ -1,23 +1,19 @@
 {
-  "name": "kinvey-js-sdk",
-  "version": "3.9.2",
-  "description": "Kinvey JavaScript SDK for developing JavaScript applications. This is the core code used to create specific bundles for all other JavaScript platforms.",
+  "private": true,
+  "name": "kinvey",
+  "description": "Kinvey JavaScript SDKs.",
   "homepage": "http://www.kinvey.com",
-  "bugs": {
-    "url": "https://github.com/Kinvey/js-sdk/issues"
-  },
   "license": "Apache-2.0",
-  "author": "Kinvey, Inc.",
-  "main": "./dist/index.js",
-  "es6": true,
-  "contributors": [
-    "Thomas Conner <thomas@kinvey.com>"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:Kinvey/js-sdk"
-  },
+  "author": "Kinvey",
   "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "concurrently \"npm run build:core\" \"npm run build:html5\"",
+    "build:core": "babel --no-comments --out-dir dist/core src/core",
+    "build:html5": "babel --no-comments --out-dir dist/html5 src/html5",
+    "postbuild": "npm run copyfiles",
+    "copyfiles": "concurrently \"npm run copyfiles:html5\" \"npm run copyfiles:core\"",
+    "copyfiles:core": "node scripts/copy-core-files.js",
+    "copyfiles:html5": "node scripts/copy-html5-files.js",
     "cover": "istanbul cover _mocha -- --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test",
     "docs": "esdoc -c esdoc.json",
     "lint": "npm run lint:src",
@@ -26,34 +22,7 @@
     "preversion": "rimraf node_modules && npm install && npm test",
     "postversion": "git push && git push --tags",
     "test": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test",
-    "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test",
-
-    "prebuild": "rimraf dist",
-    "build": "concurrently \"npm run build:core\" \"npm run build:html5\"",
-    "build:core": "babel --no-comments --out-dir dist/core src/core",
-    "build:html5": "babel --no-comments --out-dir dist/html5 src/html5",
-    "postbuild": "npm run copyfiles",
-    "copyfiles": "concurrently \"npm run copyfiles:html5\"",
-    "copyfiles:html5": "node scripts/copy-html5-files.js"
-  },
-  "dependencies": {
-    "buffer": "5.0.7",
-    "es6-error": "4.0.2",
-    "es6-promise": "4.1.1",
-    "events": "1.1.1",
-    "fast-memory-cache": "2.0.4",
-    "local-storage": "1.4.2",
-    "lodash": "4.17.4",
-    "loglevel": "1.5.0",
-    "promise-queue": "2.2.3",
-    "pubnub": "github:thomasconner/javascript#add_nativescript_support",
-    "qs": "6.5.1",
-    "rxjs": "5.4.3",
-    "sift": "3.3.10",
-    "uid-safe": "2.1.5",
-    "url": "0.11.0",
-    "url-join": "2.0.2",
-    "url-pattern": "1.0.3"
+    "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test"
   },
   "devDependencies": {
     "app-module-path": "2.2.0",
@@ -82,13 +51,5 @@
     "regenerator-runtime": "^0.9.5",
     "request": "2.82.0",
     "rimraf": "2.6.2"
-  },
-  "engines": {
-    "node": "6.9.1"
-  },
-  "keywords": [
-    "Kinvey",
-    "JavaScript",
-    "SDK"
-  ]
+  }
 }

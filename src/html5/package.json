@@ -10,5 +10,10 @@
   "dependencies": {
     "local-storage-fallback": "4.0.0",
     "xhr": "2.4.0"
-  }
+  },
+  "keywords": [
+    "Kinvey",
+    "JavaScript",
+    "HTML5"
+  ]
 }
