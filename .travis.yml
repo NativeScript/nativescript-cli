@@ -1,7 +1,12 @@
 language: node_js
 node_js:
 - '8'
-before_deploy: npm run build
+script:
+- npm run ci
+after_success:
+- bash <(curl -s https://codecov.io/bash)
+before_deploy:
+- npm run build
 deploy:
   skip_cleanup: true
   provider: npm
@@ -19,6 +24,3 @@ notifications:
     on_success: change
     on_failure: always
     secure: zhQEKSmoMrI5yj180Z8NtAqujmMgRI3TIO/DrnFEDjuXziBanKr2Thnzup0Gmr5vfOA1c3yh/HVs671188UDsE6YSf/r8ephjE+dzlk3iyYE6ViHUHB7ju+DKyGOeNPk8yMFUqDhLhtQ9wA8Bvlzbfn/ZwPk2ArDZgp3ixBEmIzB/gkcq4EC+2ciJbBUh99fOPUYspvAvf4xLlQRPNiuZ/BSCfeASRkvYdUp9kAMZecIt2EfAneTAOyEBKc+8ob24Yu5L8GfSnNa8qeAmzwki6WGaVR7EantJ0SA/dXyISlj08ckW/MEY5hoBhy1x0/gsaPaLNfq/GRz1Zj69Qmqz359tknuRBC4lMmEyutG9SKNBB8OAtNyUUnnNi45P+fyTUP/4l+4tYEN4hj/ncnFKvW5P5ls/LZ84wpjfAiUlkVqSwKXUnzccYDYNBfeVMEpTwoxctBgRp9Akalf3nVYfZHvH+/Sy3VGzDqagF+55+kTgfPmf763lKbOanr2HNzpvIfT21UyZ2EEDAoAkqr65HbA+yYgs/Awni02qzalafmIbP3aF9a3yULftubAvfsKALjrde38iqE5kOvsyiFOjescA7chdpJqudn6sT6SuYHaVoaBzqKX0t2aLWq8a9rMoS1qKW22IQ2CQilAtVG5Nb19mcUSjkisoIYnrCvK700=
-script: npm run cover
-after_success:
-- bash <(curl -s https://codecov.io/bash)
