@@ -19,5 +19,7 @@ Desktop.ini
 .DS_Store
 
 # Temporary files
+coverage
 dist
+docs
 src/**/*.js.map
