@@ -18,8 +18,8 @@
     "lint:test": "eslint test/**",
     "preversion": "rimraf node_modules && npm install && npm test",
     "postversion": "git push && git push --tags",
-    "test": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test",
-    "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test"
+    "test": "mocha --require babel-polyfill --compilers js:babel-register -s 100 src/**/*.spec.js",
+    "test:watch": "mocha -w --require babel-polyfill --compilers js:babel-register -s 100 src/**/*.spec.js"
   },
   "dependencies": {
     "buffer": "5.0.7",
@@ -65,6 +65,7 @@
     "json-loader": "^0.5.4",
     "mocha": "^3.0.0",
     "nock": "9.0.17",
+    "pre-commit": "1.2.2",
     "proxyquire": "1.8.0",
     "regenerator-runtime": "^0.9.5",
     "request": "2.82.0",
@@ -74,5 +75,8 @@
     "Kinvey",
     "JavaScript",
     "HTML5"
+  ],
+  "pre-commit": [
+    "test"
   ]
 }

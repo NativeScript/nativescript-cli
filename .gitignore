@@ -20,5 +20,4 @@ Desktop.ini
 
 # Temporary files
 dist
-src/**/*.js
 src/**/*.js.map
