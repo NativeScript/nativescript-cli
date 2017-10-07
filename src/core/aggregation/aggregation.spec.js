@@ -1,22 +1,20 @@
-import nock from 'nock';
 import expect from 'expect';
 
 import Aggregation from './aggregation';
 import Query from '../query';
-import { SyncStore } from '../datastore';
 import { isDefined, randomString } from '../utils';
 import { Kinvey } from '../kinvey';
 
-const client = Kinvey.init({
+Kinvey.init({
   appKey: randomString(),
   appSecret: randomString()
 });
 
-describe('Aggregation', function() {
+describe('Aggregation', () => {
   const commonTitle = 'Kinvey';
   const entities = [];
 
-  before(function() {
+  before(() => {
     // Returns a random integer between min (included) and max (included)
     // Using Math.round() will give you a non-uniform distribution!
     function getRandomIntInclusive(min, max) {
@@ -49,7 +47,7 @@ describe('Aggregation', function() {
     }
   });
 
-  describe('query', function() {
+  describe('query', () => {
     it('should not set an invalid query', () => {
       expect(() => {
         const aggregation = new Aggregation();
@@ -81,8 +79,8 @@ describe('Aggregation', function() {
     });
   });
 
-  describe('count()', function() {
-    it('should return the count of a unique property value for all entities', function() {
+  describe('count()', () => {
+    it('should return the count of a unique property value for all entities', () => {
       const aggregation = Aggregation.count('title');
       const results = aggregation.process(entities);
       expect(results).toBeA(Array);
@@ -96,8 +94,8 @@ describe('Aggregation', function() {
     });
   });
 
-  describe('sum()', function() {
-    it('should return the sum of a property for all entities', function() {
+  describe('sum()', () => {
+    it('should return the sum of a property for all entities', () => {
       const sum = entities.reduce((sum, entity) => sum + entity.count, 0);
       const aggregation = Aggregation.sum('count');
       const result = aggregation.process(entities);
@@ -106,8 +104,8 @@ describe('Aggregation', function() {
     });
   });
 
-  describe('min()', function() {
-    it('should return the min value of a property for all entities', function() {
+  describe('min()', () => {
+    it('should return the min value of a property for all entities', () => {
       const min = entities.reduce((min, entity) => Math.min(min, entity.count), Infinity);
       const aggregation = Aggregation.min('count');
       const result = aggregation.process(entities);
@@ -116,8 +114,8 @@ describe('Aggregation', function() {
     });
   });
 
-  describe('max()', function() {
-    it('should return the max value of a property for all entities', function() {
+  describe('max()', () => {
+    it('should return the max value of a property for all entities', () => {
       const max = entities.reduce((max, entity) => Math.max(max, entity.count), -Infinity);
       const aggregation = Aggregation.max('count');
       const result = aggregation.process(entities);
@@ -126,8 +124,8 @@ describe('Aggregation', function() {
     });
   });
 
-  describe('average()', function() {
-    it('should return the count and average of a property for all entities', function() {
+  describe('average()', () => {
+    it('should return the count and average of a property for all entities', () => {
       let count = 0;
       const average = entities.reduce((average, entity) => {
         average = ((average * count) + entity.count) / (count + 1);
