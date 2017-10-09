@@ -72,7 +72,9 @@
     "proxyquire": "1.8.0",
     "regenerator-runtime": "^0.9.5",
     "request": "2.82.0",
-    "rimraf": "2.6.2"
+    "rimraf": "2.6.2",
+    "sinon": "4.0.1",
+    "sinon-chai": "2.14.0"
   },
   "keywords": [
     "Kinvey",
