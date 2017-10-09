@@ -1,4 +1,5 @@
 import xhr from 'xhr';
+import { Promise } from 'es6-promise';
 import { Middleware } from '../../core/request';
 import { NetworkConnectionError, TimeoutError } from '../../core/errors';
 import { isDefined } from '../../core/utils';
@@ -85,7 +86,7 @@ export class HttpMiddleware extends Middleware {
       const { url, method, headers, body, timeout, followRedirect } = request;
 
       // Add the X-Kinvey-Device-Information header
-      headers['X-Kinvey-Device-Information'] = this.deviceInformation;
+      // headers['X-Kinvey-Device-Information'] = this.deviceInformation;
 
       this.xhrRequest = xhr({
         method: method,

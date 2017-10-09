@@ -1,3 +1,4 @@
+import { Promise } from 'es6-promise';
 import CoreKinvey from '../core/kinvey';
 import { isDefined } from '../core/utils';
 import { KinveyError } from '../core/errors';

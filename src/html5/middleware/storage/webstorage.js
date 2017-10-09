@@ -1,3 +1,4 @@
+import { Promise } from 'es6-promise';
 import { NotFoundError } from '../../../core/errors';
 import { keyBy, isDefined } from '../../../core/utils';
 
