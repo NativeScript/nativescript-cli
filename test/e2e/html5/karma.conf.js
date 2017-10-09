@@ -1,15 +1,44 @@
+/* eslint-disable */
 require('dotenv').config();
 var path = require('path');
 
 // Example set of browsers to run on Sauce Labs
 // Check out https://saucelabs.com/platforms for all browser/platform combos
 var customLaunchers = {
+  bs_safari_mac: {
+    base: 'BrowserStack',
+    browser: 'safari',
+    browser_version: '10.1',
+    os: 'OS X',
+    os_version: 'Sierra'
+  },
+  bs_chrome_mac: {
+    base: 'BrowserStack',
+    browser: 'chrome',
+    browser_version: '61.0',
+    os: 'OS X',
+    os_version: 'Sierra'
+  },
   bs_firefox_mac: {
     base: 'BrowserStack',
     browser: 'firefox',
-    browser_version: '21.0',
+    browser_version: '56.0',
     os: 'OS X',
-    os_version: 'Mountain Lion'
+    os_version: 'Sierra'
+  },
+  bs_ie_windows: {
+    base: 'BrowserStack',
+    browser: 'ie',
+    browser_version: '11',
+    os: 'Windows',
+    os_version: '10'
+  },
+  bs_edge_windows: {
+    base: 'BrowserStack',
+    browser: 'edge',
+    browser_version: '15',
+    os: 'Windows',
+    os_version: '10'
   }
 };
 
@@ -90,6 +119,8 @@ module.exports = function(config) {
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
     // browsers: ['Chrome', 'Firefox', 'Safari'],
     browsers: Object.keys(customLaunchers),
+    browserDisconnectTimeout: 60000,
+    browserNoActivityTimeout: 60000,
 
     // BrowserStack
     browserStack: {
