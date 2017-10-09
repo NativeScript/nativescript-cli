@@ -13,7 +13,7 @@
     "build": "babel --no-comments --out-dir dist src",
     "postbuild": "node scripts/copy-files.js",
     "preci": "rimraf coverage",
-    "ci": "istanbul cover _mocha -- --require babel-polyfill --compilers js:babel-register -s 100 src/**/*.spec.js",
+    "ci": "concurrently \"npm run test:cover\" \"npm run e2e\"",
     "predocs": "rimraf docs",
     "docs": "esdoc -c esdoc.json",
     "lint": "npm run lint:src",
@@ -22,7 +22,9 @@
     "preversion": "rimraf node_modules && npm install && npm test",
     "postversion": "git push && git push --tags",
     "test": "mocha --require babel-polyfill --compilers js:babel-register -s 100 src/**/*.spec.js",
+    "test:cover": "istanbul cover _mocha -- --require babel-polyfill --compilers js:babel-register -s 100 src/**/*.spec.js",
     "test:watch": "mocha -w --require babel-polyfill --compilers js:babel-register -s 100 src/**/*.spec.js",
+    "e2e": "concurrently \"npm run e2e:html5\"",
     "e2e:html5": "karma start test/e2e/html5/karma.conf.js"
   },
   "dependencies": {
@@ -58,6 +60,7 @@
     "babel-preset-env": "1.6.0",
     "chai": "3.5.0",
     "chai-as-promised": "6.0.0",
+    "concurrently": "3.5.0",
     "dotenv": "4.0.0",
     "esdoc": "0.5.2",
     "esdoc-es7-plugin": "0.0.3",
