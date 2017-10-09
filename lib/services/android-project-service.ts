@@ -590,7 +590,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const platformVersion = this.getCurrentPlatformVersion(this.getPlatformData(projectData), projectData);
 		const newRuntimeGradleRoutineVersion = "3.3.0";
 
-		return semver.gte(platformVersion, newRuntimeGradleRoutineVersion);
+		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
+		return semver.gte(normalizedPlatformVersion, newRuntimeGradleRoutineVersion);
 	}
 }
 
