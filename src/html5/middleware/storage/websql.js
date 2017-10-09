@@ -31,7 +31,7 @@ export class WebSQLAdapter {
     return new Promise((resolve, reject) => {
       try {
         if (isDefined(db) === false) {
-          db = openDatabase(this.name, 1, 'Kinvey Cache', size);
+          db = global.openDatabase(this.name, 1, 'Kinvey Cache', size);
           dbCache[this.name] = db;
         }
 
@@ -60,7 +60,7 @@ export class WebSQLAdapter {
                 if (resultSet.rows.length > 0) {
                   for (let i = 0, len = resultSet.rows.length; i < len; i += 1) {
                     try {
-                      const value = resultSet.rows.item(i).value;
+                      const value = resultSet.rows.item(i).value; // eslint-disable-line prefer-destructuring
                       const entity = isMaster ? value : JSON.parse(value);
                       response.result.push(entity);
                     } catch (error) {
@@ -203,7 +203,7 @@ export class WebSQLAdapter {
   static load(name) {
     const adapter = new WebSQLAdapter(name);
 
-    if (isDefined(openDatabase) === false) {
+    if (isDefined(global.openDatabase) === false) {
       return Promise.resolve(undefined);
     }
 

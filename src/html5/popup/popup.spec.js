@@ -1,5 +1,7 @@
+/* eslint-env mocha */
+
 import { URL } from 'url';
-import { expect, use } from 'chai';
+import { expect } from 'chai';
 import { spy, stub } from 'sinon';
 import { Popup } from './popup';
 
@@ -79,7 +81,7 @@ describe('HTML5:Popup', () => {
       const popup = Popup.open('http://test.com');
       const exitSpy = spy(() => {
         try {
-          expect(exitSpy.calledOnce).to.be.true;
+          expect(exitSpy.calledOnce).to.equal(true);
           done();
         } catch (e) {
           done(e);
@@ -95,7 +97,7 @@ describe('HTML5:Popup', () => {
       const popup = Popup.open('http://test.com');
       const exitSpy = spy(() => {
         try {
-          expect(exitSpy.calledOnce).to.be.true;
+          expect(exitSpy.calledOnce).to.equal(true);
           done();
         } catch (e) {
           done(e);

@@ -27,7 +27,7 @@ export class IndexedDBAdapter {
   }
 
   openTransaction(collection, write = false, success, error, force = false) {
-    const indexedDB = indexedDB || webkitIndexedDB || mozIndexedDB || msIndexedDB;
+    const indexedDB = global.indexedDB || global.webkitIndexedDB || global.mozIndexedDB || global.msIndexedDB;
     let db = dbCache[this.name];
 
     if (isDefined(db)) {
@@ -267,7 +267,7 @@ export class IndexedDBAdapter {
 
     // Delete the database
     return new Promise((resolve, reject) => {
-      const indexedDB = indexedDB || webkitIndexedDB || mozIndexedDB || msIndexedDB;
+      const indexedDB = global.indexedDB || global.webkitIndexedDB || global.mozIndexedDB || global.msIndexedDB;
       const request = indexedDB.deleteDatabase(this.name);
 
       request.onsuccess = () => {
@@ -288,7 +288,7 @@ export class IndexedDBAdapter {
   }
 
   static load(name) {
-    const indexedDB = indexedDB || webkitIndexedDB || mozIndexedDB || msIndexedDB;
+    const indexedDB = global.indexedDB || global.webkitIndexedDB || global.mozIndexedDB || global.msIndexedDB;
     const adapter = new IndexedDBAdapter(name);
 
     if (isDefined(indexedDB) === false) {

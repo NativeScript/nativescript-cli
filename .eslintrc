@@ -3,7 +3,7 @@
   "parser": "babel-eslint",
   "rules": {
     "arrow-body-style": "off",
-    "arrow-parens": "warn",
+    "arrow-parens": "off",
     "class-methods-use-this": "off",
     "comma-dangle": "off",
     "func-names": "off",

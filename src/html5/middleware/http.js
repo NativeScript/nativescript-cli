@@ -29,30 +29,30 @@ function deviceInformation() {
   let manufacturer;
 
   // Default platform, most likely this is just a plain web app.
-  if ((platform === null || platform === undefined) && navigator) {
-    browser = browserDetect(navigator.userAgent);
-    platform = browser[1];
-    version = browser[2];
-    manufacturer = navigator.platform;
+  if ((platform === null || platform === undefined) && global.navigator) {
+    browser = browserDetect(global.navigator.userAgent);
+    platform = browser[1]; // eslint-disable-line prefer-destructuring
+    version = browser[2]; // eslint-disable-line prefer-destructuring
+    manufacturer = global.navigator.platform;
   }
 
   // Libraries.
-  if (angular !== undefined) { // AngularJS.
-    libraries.push(`angularjs/${angular.version.full}`);
+  if (global.angular !== undefined) { // AngularJS.
+    libraries.push(`angularjs/${global.angular.version.full}`);
   }
-  if (Backbone !== undefined) { // Backbone.js.
-    libraries.push(`backbonejs/${Backbone.VERSION}`);
+  if (global.Backbone !== undefined) { // Backbone.js.
+    libraries.push(`backbonejs/${global.Backbone.VERSION}`);
   }
-  if (Ember !== undefined) { // Ember.js.
-    libraries.push(`emberjs/${Ember.VERSION}`);
+  if (global.Ember !== undefined) { // Ember.js.
+    libraries.push(`emberjs/${global.Ember.VERSION}`);
   }
-  if (jQuery !== undefined) { // jQuery.
-    libraries.push(`jquery/${jQuery.fn.jquery}`);
+  if (global.jQuery !== undefined) { // jQuery.
+    libraries.push(`jquery/${global.jQuery.fn.jquery}`);
   }
-  if (ko !== undefined) { // Knockout.
-    libraries.push(`knockout/${ko.version}`);
+  if (global.ko !== undefined) { // Knockout.
+    libraries.push(`knockout/${global.ko.version}`);
   }
-  if (Zepto !== undefined) { // Zepto.js.
+  if (global.Zepto !== undefined) { // Zepto.js.
     libraries.push('zeptojs');
   }
 
@@ -83,7 +83,14 @@ export class HttpMiddleware extends Middleware {
 
   handle(request) {
     const promise = new Promise((resolve, reject) => {
-      const { url, method, headers, body, timeout, followRedirect } = request;
+      const {
+        url,
+        method,
+        headers,
+        body,
+        timeout,
+        followRedirect
+      } = request;
 
       // Add the X-Kinvey-Device-Information header
       // headers['X-Kinvey-Device-Information'] = this.deviceInformation;
@@ -117,7 +124,7 @@ export class HttpMiddleware extends Middleware {
   }
 
   cancel() {
-    if (isDefined(this.xhrRequest) && isFunction(this.xhrRequest.abort)) {
+    if (isDefined(this.xhrRequest) && typeof this.xhrRequest.abort === 'function') {
       this.xhrRequest.abort();
     }
 

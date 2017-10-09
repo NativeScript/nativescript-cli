@@ -13,7 +13,7 @@
     "build": "babel --no-comments --out-dir dist src",
     "postbuild": "node scripts/copy-files.js",
     "preci": "rimraf coverage",
-    "ci": "concurrently \"npm run lint\" \"npm run test:cover\" \"npm run e2e\"",
+    "ci": "concurrently \"npm run test:cover\" \"npm run e2e\"",
     "predocs": "rimraf docs",
     "docs": "esdoc -c esdoc.json",
     "lint": "concurrently \"npm run lint:html5\"",
@@ -95,6 +95,7 @@
     "HTML5"
   ],
   "pre-commit": [
+    "lint",
     "test"
   ]
 }
