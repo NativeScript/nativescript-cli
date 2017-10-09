@@ -19,6 +19,7 @@ Desktop.ini
 .DS_Store
 
 # Temporary files
+.env
 coverage
 dist
 docs
