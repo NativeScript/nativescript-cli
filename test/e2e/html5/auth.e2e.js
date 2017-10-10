@@ -1,25 +1,20 @@
+/* eslint-env mocha */
+
 import { expect } from 'chai';
+import { Client } from '../../../src/html5/client';
+import { randomString } from '../../../src/core/utils';
 
-import { Kinvey } from '../../../src/html5/kinvey';
-import { User } from '../../../src/core/entity';
+describe('HTML5:Client', () => {
+  const client = Client.init({
+    appKey: randomString(),
+    appSecret: randomString()
+  });
 
-import { CacheRack, NetworkRack } from '../../../src/core/request';
-import { CacheMiddleware, HttpMiddleware } from '../../../src/html5/middleware';
-
-CacheRack.useCacheMiddleware(new CacheMiddleware());
-NetworkRack.useHttpMiddleware(new HttpMiddleware());
-
-const client = Kinvey.init({
-  appKey: 'kid_HkTD2CJc',
-  appSecret: 'cd7f658ed0a548dd8dfadf5a1787568b'
-});
-
-describe('HTML5:Auth', () => {
-  it('should store the active user in localStorage', () => {
-    return User.login('test', 'test')
-      .then((activeUser) => {
-        const storedActiveUser = JSON.parse(window.localStorage.getItem(`${client.appKey}.active_user`));
-        expect(storedActiveUser).to.deep.equal(activeUser.data);
-      });
+  describe('setActiveUser()', () => {
+    it('should store the active user with localStorage', () => {
+      const activeUser = { _id: randomString() };
+      client.setActiveUser(activeUser);
+      expect(JSON.parse(global.localStorage.getItem(`${client.appKey}.active_user`))).to.deep.equal(activeUser);
+    });
   });
 });

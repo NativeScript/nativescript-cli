@@ -1,8 +1,7 @@
 import { Promise } from 'es6-promise';
-import { KinveyError, NotFoundError } from '../../../core/errors';
-import { isDefined } from '../../../core/utils';
+import { KinveyError, NotFoundError } from '../../../../core/errors';
+import { isDefined } from '../../../../core/utils';
 
-const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const masterCollectionName = 'sqlite_master';
 const size = 5 * 1000 * 1000; // Database size in bytes
 let dbCache = {};
@@ -143,7 +142,7 @@ export class WebSQLAdapter {
     entities = entities.map((entity) => {
       queries.push([
         'REPLACE INTO #{collection} (key, value) VALUES (?, ?)',
-        [entity[idAttribute], JSON.stringify(entity)]
+        [entity._id, JSON.stringify(entity)]
       ]);
 
       return entity;

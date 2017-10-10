@@ -13,18 +13,16 @@
     "build": "babel --no-comments --out-dir dist src",
     "postbuild": "node scripts/copy-files.js",
     "preci": "rimraf coverage",
-    "ci": "concurrently \"npm run test:cover\" \"npm run e2e\"",
+    "ci": "concurrently \"npm run lint\" \"npm run test:cover\" \"npm run test:karma\"",
     "predocs": "rimraf docs",
     "docs": "esdoc -c esdoc.json",
-    "lint": "concurrently \"npm run lint:html5\"",
-    "lint:html5": "eslint src/html5/**",
-    "preversion": "rimraf node_modules && npm install && npm test",
-    "postversion": "git push && git push --tags",
+    "lint": "eslint src/html5/**",
     "test": "mocha --require babel-polyfill --compilers js:babel-register -s 100 src/**/*.spec.js",
     "test:cover": "istanbul cover _mocha -- --require babel-polyfill --compilers js:babel-register -s 100 src/**/*.spec.js",
+    "test:karma": "karma start karma.conf.js",
     "test:watch": "mocha -w --require babel-polyfill --compilers js:babel-register -s 100 src/**/*.spec.js",
-    "e2e": "concurrently \"npm run e2e:html5\"",
-    "e2e:html5": "karma start test/e2e/html5/karma.conf.js"
+    "preversion": "rimraf node_modules && npm install && npm test",
+    "postversion": "git push && git push --tags"
   },
   "dependencies": {
     "buffer": "5.0.7",

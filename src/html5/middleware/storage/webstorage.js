@@ -2,7 +2,6 @@ import { Promise } from 'es6-promise';
 import { NotFoundError } from '../../../core/errors';
 import { keyBy, isDefined } from '../../../core/utils';
 
-const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const masterCollectionName = 'master';
 
 export class WebStorageAdapter {
@@ -46,7 +45,7 @@ export class LocalStorageAdapter extends WebStorageAdapter {
   findById(collection, id) {
     return this.find(collection)
       .then((entities) => {
-        const entity = entities.find((entity) => entity[idAttribute] === id);
+        const entity = entities.find((entity) => entity._id === id);
 
         if (isDefined(entity) === false) {
           throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
@@ -91,7 +90,7 @@ export class LocalStorageAdapter extends WebStorageAdapter {
   removeById(collection, id) {
     return this.find(collection)
       .then((entities) => {
-        const entitiesById = keyBy(entities, idAttribute);
+        const entitiesById = keyBy(entities, '_id');
         const entity = entitiesById[id];
 
         if (isDefined(entity) === false) {
@@ -165,7 +164,7 @@ export class SessionStorageAdapter extends WebStorageAdapter {
   findById(collection, id) {
     return this.find(collection)
       .then((entities) => {
-        const entity = entities.find((entity) => entity[idAttribute] === id);
+        const entity = entities.find((entity) => entity._id === id);
 
         if (isDefined(entity) === false) {
           throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
@@ -187,8 +186,8 @@ export class SessionStorageAdapter extends WebStorageAdapter {
         return this.find(collection);
       })
       .then((existingEntities) => {
-        const existingEntitiesById = keyBy(existingEntities, idAttribute);
-        const entitiesById = keyBy(entities, idAttribute);
+        const existingEntitiesById = keyBy(existingEntities, '_id');
+        const entitiesById = keyBy(entities, '_id');
         const existingEntityIds = Object.keys(existingEntitiesById);
 
         existingEntityIds.forEach((id) => {
@@ -210,7 +209,7 @@ export class SessionStorageAdapter extends WebStorageAdapter {
   removeById(collection, id) {
     return this.find(collection)
       .then((entities) => {
-        const entitiesById = keyBy(entities, idAttribute);
+        const entitiesById = keyBy(entities, '_id');
         const entity = entitiesById[id];
 
         if (isDefined(entity) === false) {
@@ -296,7 +295,7 @@ export class CookieStorageAdapter extends WebStorageAdapter {
   findById(collection, id) {
     return this.find(collection)
       .then((entities) => {
-        const entity = entities.find((entity) => entity[idAttribute] === id);
+        const entity = entities.find((entity) => entity._id === id);
 
         if (isDefined(entity) === false) {
           throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
@@ -320,9 +319,9 @@ export class CookieStorageAdapter extends WebStorageAdapter {
         return this.find(collection);
       })
       .then((existingEntities) => {
-        const existingEntitiesById = keyBy(existingEntities, idAttribute);
+        const existingEntitiesById = keyBy(existingEntities, '_id');
         const existingEntityIds = Object.keys(existingEntitiesById);
-        const entitiesById = keyBy(entities, idAttribute);
+        const entitiesById = keyBy(entities, '_id');
 
         existingEntityIds.forEach((id) => {
           const existingEntity = existingEntitiesById[id];
@@ -345,7 +344,7 @@ export class CookieStorageAdapter extends WebStorageAdapter {
   removeById(collection, id) {
     return this.find(collection)
       .then((entities) => {
-        const entitiesById = keyBy(entities, idAttribute);
+        const entitiesById = keyBy(entities, '_id');
         const entity = entitiesById[id];
 
         if (isDefined(entity) === false) {

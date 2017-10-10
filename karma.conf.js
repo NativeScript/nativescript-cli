@@ -1,6 +1,7 @@
 /* eslint-disable */
 require('dotenv').config();
 var path = require('path');
+var webpack = require('webpack');
 
 // Example set of browsers to run on Sauce Labs
 // Check out https://saucelabs.com/platforms for all browser/platform combos
@@ -56,7 +57,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      '**/*.e2e.js'
+      'src/**/*.karma.js'
     ],
 
 
@@ -67,7 +68,7 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      '**/*.e2e.js': ['webpack', 'sourcemap']
+      '**/*.karma.js': ['webpack', 'sourcemap']
     },
 
     // webpack config
@@ -126,12 +127,19 @@ module.exports = function(config) {
     browserStack: {
       username: process.env.BROWSERSTACK_USERNAME,
       accessKey: process.env.BROWSERSTACK_ACCESSKEY,
-      name: 'Kinvey HTML5 SDK E2E Tests'
+      name: 'Kinvey JavaScript SDK'
     },
     customLaunchers: customLaunchers,
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: true
+    singleRun: true,
+
+    // Mocha options
+    client: {
+      mocha: {
+        timeout: 10000
+      }
+    }
   })
 }
