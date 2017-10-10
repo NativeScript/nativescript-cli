@@ -13,6 +13,14 @@ The JS SDK is used as a way to share common code for platform specific SDK shims
 * [PhoneGap](https://github.com/Kinvey/phonegap-sdk)
 * [Titanium](https://github.com/Kinvey/titanium-sdk)
 
+## Thanks
+Thanks to [BrowserStack](http://browserstack.com) for providing us with a free account.
+<p align="left">
+  <a href="http://browserstack.com" style="display: inline-block;">
+    <img src="logo-browserstack.png">
+  </a>
+</p>
+
 ## License
 See [LICENSE](LICENSE) for details.
 
