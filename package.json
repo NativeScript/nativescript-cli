@@ -17,10 +17,10 @@
     "predocs": "rimraf docs",
     "docs": "esdoc -c esdoc.json",
     "lint": "eslint src/html5/**",
-    "test": "mocha --require babel-polyfill --compilers js:babel-register -s 100 src/**/*.spec.js",
-    "test:cover": "istanbul cover _mocha -- --require babel-polyfill --compilers js:babel-register -s 100 src/**/*.spec.js",
+    "test": "mocha --require babel-polyfill --compilers js:babel-register -s 250 src/**/*.spec.js",
+    "test:cover": "istanbul cover _mocha -- --require babel-polyfill --compilers js:babel-register -s 250 src/**/*.spec.js",
     "test:karma": "karma start karma.conf.js",
-    "test:watch": "mocha -w --require babel-polyfill --compilers js:babel-register -s 100 src/**/*.spec.js",
+    "test:watch": "mocha -w --require babel-polyfill --compilers js:babel-register -s 250 src/**/*.spec.js",
     "preversion": "rimraf node_modules && npm install && npm test",
     "postversion": "git push && git push --tags"
   },

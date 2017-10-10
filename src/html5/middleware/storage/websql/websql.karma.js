@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { WebSQLAdapter } from './websql';
 import { randomString } from '../../../../core/utils';
 
-describe('WebSQL', () => {
+describe('HTML5:WebSQL', () => {
   let storageAdapter;
 
   before(() => {

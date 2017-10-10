@@ -23,21 +23,15 @@ class Window {
     this._closed = true;
   }
 }
-Window.prototype.setInterval = setInterval;
-Window.prototype.clearInterval = clearInterval;
 
 describe('HTML5:Popup', () => {
   before(() => {
     const window = new Window();
     global.open = window.open;
-    global.setInterval = window.setInterval;
-    global.clearInterval = window.clearInterval;
   });
 
   after(() => {
     delete global.open;
-    delete global.setInterval;
-    delete global.clearInterval;
   });
 
   describe('open()', () => {
