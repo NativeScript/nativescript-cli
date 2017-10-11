@@ -49,7 +49,9 @@ module.exports = function(config) {
 
 
     // list of files to exclude
-    exclude: [],
+    exclude: [
+      'src/html5/popup/popup.karma.js'
+    ],
 
 
     // preprocess matching files before serving them to the browser
