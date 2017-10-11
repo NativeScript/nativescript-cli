@@ -8,6 +8,10 @@ export function isDefined(obj) {
   return isUndefined(obj) === false && isNull(obj) === false;
 }
 
+export function isNumber(num) {
+  return !Number.isNaN(parseFloat(num)) && Number.isFinite(num);
+}
+
 /**
  * @private
  */

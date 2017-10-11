@@ -1,19 +1,9 @@
 import sift from 'sift';
-import assign from 'lodash/assign';
-import isArray from 'lodash/isArray';
-import isNumber from 'lodash/isNumber';
-import isString from 'lodash/isString';
-import isObject from 'lodash/isObject';
-import isRegExp from 'lodash/isRegExp';
-import isEmpty from 'lodash/isEmpty';
-import forEach from 'lodash/forEach';
-import findKey from 'lodash/findKey';
-import has from 'lodash/has';
+import isPlainObject from 'lodash/isPlainObject';
+import { QueryError } from '../errors';
+import { nested, isDefined, Log, isNumber } from '../utils';
 
-import { QueryError } from './errors';
-import { nested, isDefined, Log } from './utils';
-
-const unsupportedFilters = ['$nearSphere'];
+const UNSUPPORTED_CONDITIONS = ['$nearSphere'];
 
 /**
  * The Query class is used to query for a subset of
@@ -36,7 +26,7 @@ export class Query {
    * @return {Query} The query.
    */
   constructor(options) {
-    options = assign({
+    options = Object.assign({
       fields: [],
       filter: {},
       sort: null,
@@ -101,7 +91,7 @@ export class Query {
   set fields(fields) {
     fields = fields || [];
 
-    if (!isArray(fields)) {
+    if (!Array.isArray(fields)) {
       throw new QueryError('fields must be an Array');
     }
 
@@ -137,7 +127,7 @@ export class Query {
    * @type {Object}
    */
   set sort(sort) {
-    if (sort && isObject(sort) === false) {
+    if (sort && !isPlainObject(sort)) {
       throw new QueryError('sort must an Object');
     }
 
@@ -159,7 +149,7 @@ export class Query {
    * @type {?number}
    */
   set limit(limit) {
-    if (isString(limit)) {
+    if (typeof limit === 'string') {
       limit = parseFloat(limit);
     }
 
@@ -185,7 +175,7 @@ export class Query {
    * @type {number}
    */
   set skip(skip) {
-    if (isString(skip)) {
+    if (typeof skip === 'string') {
       skip = parseFloat(skip);
     }
 
@@ -200,19 +190,19 @@ export class Query {
     }
   }
 
-  /**
-   * Checks if the query is able to be run offline on the local cache.
-   * @return {Boolean} True if it is able to be run offline otherwise false.
-   */
   isSupportedOffline() {
-    let supported = true;
+    return Object.keys(this.filter).reduce((supported, key) => {
+      if (supported) {
+        const value = this.filter[key];
+        return UNSUPPORTED_CONDITIONS.some((unsupportedConditions) => {
+          return !Object.keys(value).some((condition) => {
+            return condition === unsupportedConditions;
+          });
+        });
+      }
 
-    forEach(unsupportedFilters, (filter) => {
-      supported = !findKey(this.filter, filter);
       return supported;
-    });
-
-    return supported;
+    }, true);
   }
 
   /**
@@ -243,7 +233,7 @@ export class Query {
       throw new QueryError('You must supply a value.');
     }
 
-    if (isArray(values) === false) {
+    if (Array.isArray(values) === false) {
       values = [values];
     }
 
@@ -265,7 +255,7 @@ export class Query {
       throw new QueryError('You must supply a value.');
     }
 
-    if (isArray(values) === false) {
+    if (Array.isArray(values) === false) {
       values = [values];
     }
 
@@ -283,7 +273,7 @@ export class Query {
    * @returns {Query} The query.
    */
   greaterThan(field, value) {
-    if (isNumber(value) === false && isString(value) === false) {
+    if (isNumber(value) === false && typeof value !== 'string') {
       throw new QueryError('You must supply a number or string.');
     }
 
@@ -301,7 +291,7 @@ export class Query {
    * @returns {Query} The query.
    */
   greaterThanOrEqualTo(field, value) {
-    if (isNumber(value) === false && isString(value) === false) {
+    if (isNumber(value) === false && typeof value !== 'string') {
       throw new QueryError('You must supply a number or string.');
     }
 
@@ -319,7 +309,7 @@ export class Query {
    * @returns {Query} The query.
    */
   lessThan(field, value) {
-    if (isNumber(value) === false && isString(value) === false) {
+    if (isNumber(value) === false && typeof value !== 'string') {
       throw new QueryError('You must supply a number or string.');
     }
 
@@ -337,7 +327,7 @@ export class Query {
    * @returns {Query} The query.
    */
   lessThanOrEqualTo(field, value) {
-    if (isNumber(value) === false && isString(value) === false) {
+    if (isNumber(value) === false && typeof value !== 'string') {
       throw new QueryError('You must supply a number or string.');
     }
 
@@ -368,7 +358,7 @@ export class Query {
    * @returns {Query} The query.
    */
   notContainedIn(field, values) {
-    if (isArray(values) === false) {
+    if (Array.isArray(values) === false) {
       values = [values];
     }
 
@@ -400,7 +390,7 @@ export class Query {
   nor(...args) {
     // NOR is preceded by AND. Therefore, if this query is part of an AND-join,
     // apply the NOR onto the parent to make sure AND indeed precedes NOR.
-    if (isDefined(this._parent) && has(this._parent.filter, '$and')) {
+    if (isDefined(this._parent) && Object.hasOwnProperty.call(this._parent.filter, '$and')) {
       return this._parent.nor(...args);
     }
 
@@ -453,11 +443,11 @@ export class Query {
    * @returns {Query} The query.
    */
   mod(field, divisor, remainder = 0) {
-    if (isString(divisor)) {
+    if (typeof divisor === 'string') {
       divisor = parseFloat(divisor);
     }
 
-    if (isString(remainder)) {
+    if (typeof remainder === 'string') {
       remainder = parseFloat(remainder);
     }
 
@@ -488,7 +478,7 @@ export class Query {
   matches(field, regExp, options = {}) {
     const flags = [];
 
-    if (!isRegExp(regExp)) {
+    if (!(regExp instanceof RegExp)) {
       regExp = new RegExp(regExp);
     }
 
@@ -532,7 +522,7 @@ export class Query {
    * @returns {Query} The query.
    */
   near(field, coord, maxDistance) {
-    if (!isArray(coord) || !isNumber(coord[0]) || !isNumber(coord[1])) {
+    if (!Array.isArray(coord) || !isNumber(coord[0]) || !isNumber(coord[1])) {
       throw new QueryError('coord must be a [number, number]');
     }
 
@@ -559,11 +549,11 @@ export class Query {
    * @returns {Query} The query.
    */
   withinBox(field, bottomLeftCoord, upperRightCoord) {
-    if (!isArray(bottomLeftCoord) || !isNumber(bottomLeftCoord[0]) || !isNumber(bottomLeftCoord[1])) {
+    if (!Array.isArray(bottomLeftCoord) || !isNumber(bottomLeftCoord[0]) || !isNumber(bottomLeftCoord[1])) {
       throw new QueryError('bottomLeftCoord must be a [number, number]');
     }
 
-    if (!isArray(upperRightCoord) || !isNumber(upperRightCoord[0]) || !isNumber(upperRightCoord[1])) {
+    if (!Array.isArray(upperRightCoord) || !isNumber(upperRightCoord[0]) || !isNumber(upperRightCoord[1])) {
       throw new QueryError('upperRightCoord must be a [number, number]');
     }
 
@@ -590,7 +580,7 @@ export class Query {
    * @returns {Query} The query.
    */
   withinPolygon(field, coords) {
-    if (isArray(coords) === false || coords.length === 0 || coords.length > 3) {
+    if (Array.isArray(coords) === false || coords.length === 0 || coords.length > 3) {
       throw new QueryError('coords must be a [[number, number]]');
     }
 
@@ -616,7 +606,7 @@ export class Query {
    * @returns {Query} The query.
    */
   size(field, size) {
-    if (isString(size)) {
+    if (typeof size === 'string') {
       size = parseFloat(size);
     }
 
@@ -669,11 +659,11 @@ export class Query {
    * @returns {Query} The query.
    */
   addFilter(field, condition, values) {
-    if (!isObject(this.filter[field])) {
-      this.filter[field] = {};
-    }
-
     if (isDefined(condition) && isDefined(values)) {
+      if (!isPlainObject(this.filter[field])) {
+        this.filter[field] = {};
+      }
+
       this.filter[field][condition] = values;
     } else {
       this.filter[field] = condition;
@@ -700,7 +690,7 @@ export class Query {
     // current query.
     queries = queries.map((query) => {
       if (!(query instanceof Query)) {
-        if (isObject(query)) {
+        if (isPlainObject(query)) {
           query = new Query(query);
         } else {
           throw new QueryError('query argument must be of type: Kinvey.Query[] or Object[].');
@@ -723,7 +713,7 @@ export class Query {
     // magic requires `filter` to be passed by reference, we cannot simply re-
     // assign `filter`. Instead, empty it without losing the reference.
     const members = Object.keys(this.filter);
-    forEach(members, (member) => {
+    members.forEach((member) => {
       currentQuery[member] = this.filter[member];
       delete this.filter[member];
     });
@@ -745,11 +735,11 @@ export class Query {
    * @returns {Array} The processed data.
    */
   process(data) {
-    if (this.isSupportedOffline() === false) {
+    if (!this.isSupportedOffline()) {
       let message = 'This query is not able to run locally. The following filters are not supported'
         + ' locally:';
 
-      forEach(unsupportedFilters, (filter) => {
+      UNSUPPORTED_CONDITIONS.forEach((filter) => {
         message = `${message} ${filter}`;
       });
 
@@ -758,7 +748,7 @@ export class Query {
     }
 
     // Validate arguments.
-    if (!isArray(data)) {
+    if (!Array.isArray(data)) {
       throw new QueryError('data argument must be of type: Array.');
     }
 
@@ -771,11 +761,11 @@ export class Query {
     Log.debug('Data length after applying query filter', json.filter, data.length);
 
     // Remove fields
-    if (isArray(json.fields) && json.fields.length > 0) {
+    if (Array.isArray(json.fields) && json.fields.length > 0) {
       Log.debug('Removing fields from data', json.fields);
       data = data.map((item) => {
         const keys = Object.keys(item);
-        forEach(keys, (key) => {
+        keys.forEach((key) => {
           if (json.fields.indexOf(key) === -1) {
             delete item[key];
           }
@@ -856,11 +846,11 @@ export class Query {
   toQueryString() {
     const queryString = {};
 
-    if (!isEmpty(this.filter)) {
+    if (Object.keys(this.filter).length > 0) {
       queryString.query = this.filter;
     }
 
-    if (!isEmpty(this.fields)) {
+    if (this.fields.length > 0) {
       queryString.fields = this.fields.join(',');
     }
 
@@ -872,13 +862,13 @@ export class Query {
       queryString.skip = this.skip;
     }
 
-    if (!isEmpty(this.sort)) {
+    if (Object.keys(this.sort).length > 0) {
       queryString.sort = this.sort;
     }
 
     const keys = Object.keys(queryString);
-    forEach(keys, (key) => {
-      queryString[key] = isString(queryString[key]) ? queryString[key] : JSON.stringify(queryString[key]);
+    keys.forEach((key) => {
+      queryString[key] = typeof queryString[key] === 'string' ? queryString[key] : JSON.stringify(queryString[key]);
     });
 
     return queryString;
