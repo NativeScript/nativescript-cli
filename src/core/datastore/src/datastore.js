@@ -4,7 +4,7 @@ import url from 'url';
 import { CacheRequest, RequestMethod } from '../../request';
 import { KinveyError } from '../../errors';
 import { isDefined } from '../../utils';
-import Client from '../../client';
+import { Client } from '../../client';
 import NetworkStore from './networkstore';
 import CacheStore from './cachestore';
 import SyncStore from './syncstore';
@@ -26,7 +26,7 @@ export { DataStoreType };
 /**
  * The DataStore class is used to find, create, update, remove, count and group entities.
  */
-export default class DataStore {
+export class DataStore {
   constructor() {
     throw new KinveyError('Not allowed to construct a DataStore instance.'
       + ' Please use the collection() function to get an instance of a DataStore instance.');

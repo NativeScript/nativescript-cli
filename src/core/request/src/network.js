@@ -7,9 +7,9 @@ import isEmpty from 'lodash/isEmpty';
 import url from 'url';
 import isString from 'lodash/isString';
 
-import Client from '../../client';
-import Query from '../../query';
-import Aggregation from '../../aggregation';
+import { Client } from '../../client';
+import { Query } from '../../query';
+import { Aggregation }  from '../../aggregation';
 import { isDefined, appendQuery } from '../../utils';
 import { InvalidCredentialsError, NoActiveUserError, KinveyError } from '../../errors';
 import Request, { RequestMethod } from './request';

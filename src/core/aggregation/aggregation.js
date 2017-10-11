@@ -7,12 +7,12 @@ import cloneDeep from 'lodash/cloneDeep';
 
 import { KinveyError } from '../errors';
 import { isDefined } from '../utils';
-import Query from '../query';
+import { Query } from '../query';
 
 /**
  * @private
  */
-export default class Aggregation {
+export class Aggregation {
   constructor(options) {
     options = assign({
       query: null,

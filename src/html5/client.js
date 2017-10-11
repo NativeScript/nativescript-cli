@@ -1,5 +1,5 @@
 import storage from 'local-storage-fallback';
-import CoreClient from '../core/client';
+import { Client as CoreClient } from '../core/client';
 import { KinveyError } from '../core/errors';
 import { Log, isDefined } from '../core/utils';
 

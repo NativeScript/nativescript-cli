@@ -1,5 +1,5 @@
 import { KinveyError } from '../../errors';
-import Client from '../../client';
+import { Client } from '../../client';
 import { isNonemptyString } from '../../utils';
 import { getLiveService } from '../live-service';
 import { KinveyRequest, RequestMethod, StatusCode } from '../../request';

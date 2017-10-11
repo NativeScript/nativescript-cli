@@ -14,8 +14,8 @@ import {
 } from '../../request';
 import { SyncError } from '../../errors';
 import { isDefined } from '../../utils';
-import Client from '../../client';
-import Query from '../../query';
+import { Client } from '../../client';
+import { Query } from '../../query';
 
 const pushInProgress = new Map();
 

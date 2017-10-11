@@ -1,4 +1,4 @@
-import Client from '../../client';
+import { Client } from '../../client';
 import { KinveyError } from '../../errors';
 import { KinveyRequest, RequestMethod } from '../../request';
 

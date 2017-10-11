@@ -2,8 +2,8 @@ import url from 'url';
 
 import { CacheRequest, RequestMethod } from '../../request';
 import { KinveyError } from '../../errors';
-import Query from '../../query';
-import Aggregation from '../../aggregation';
+import { Query } from '../../query';
+import { Aggregation } from '../../aggregation';
 import { KinveyObservable, isDefined } from '../../utils';
 import CacheStore from './cachestore';
 

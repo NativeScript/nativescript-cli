@@ -1,4 +1,4 @@
-import Client from '../client';
+import { Client } from '../client';
 import { Stream } from './user-to-user';
 import { getLiveService } from './live-service';
 

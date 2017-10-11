@@ -10,8 +10,8 @@ import url from 'url';
 
 import { CacheRequest, AuthType, RequestMethod } from '../../request';
 import { KinveyError, NotFoundError } from '../../errors';
-import Query from '../../query';
-import Aggregation from '../../aggregation';
+import { Query } from '../../query';
+import { Aggregation } from '../../aggregation';
 import { Metadata } from '../../entity';
 import { KinveyObservable, isDefined } from '../../utils';
 import NetworkStore from './networkstore';

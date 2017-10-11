@@ -1,18 +1,21 @@
-import expect from 'expect';
+/* eslint-env mocha */
 
-import Aggregation from './aggregation';
-import Query from '../query';
+import { expect } from 'chai';
+import { Aggregation } from './aggregation';
+import { Query } from '../query';
 import { isDefined, randomString } from '../utils';
 import { Kinvey } from '../kinvey';
-
-Kinvey.init({
-  appKey: randomString(),
-  appSecret: randomString()
-});
 
 describe('Aggregation', () => {
   const commonTitle = 'Kinvey';
   const entities = [];
+
+  before(() => {
+    Kinvey.init({
+      appKey: randomString(),
+      appSecret: randomString()
+    });
+  });
 
   before(() => {
     // Returns a random integer between min (included) and max (included)
@@ -52,21 +55,21 @@ describe('Aggregation', () => {
       expect(() => {
         const aggregation = new Aggregation();
         aggregation.query = {};
-      }).toThrow();
+      }).to.throw();
     });
 
     it('should set the query', () => {
       const aggregation = new Aggregation();
       const query = new Query();
       aggregation.query = query;
-      expect(aggregation.query).toEqual(query);
+      expect(aggregation.query).to.equal(query);
     });
 
     it('should set the query to null', () => {
       const aggregation = new Aggregation();
       aggregation.query = new Query();
       aggregation.query = null;
-      expect(aggregation.query).toEqual(null);
+      expect(aggregation.query).to.equal(null);
     });
 
     it('should filter the entities processed using the query', () => {
@@ -74,8 +77,8 @@ describe('Aggregation', () => {
       const query = new Query().equalTo('title', commonTitle);
       aggregation.query = query;
       const results = aggregation.process(entities);
-      expect(results.length).toEqual(1);
-      expect(results[0].count).toEqual(26);
+      expect(results.length).to.equal(1);
+      expect(results[0].count).to.equal(26);
     });
   });
 
@@ -83,12 +86,12 @@ describe('Aggregation', () => {
     it('should return the count of a unique property value for all entities', () => {
       const aggregation = Aggregation.count('title');
       const results = aggregation.process(entities);
-      expect(results).toBeA(Array);
+      expect(results).to.be.an.instanceOf(Array);
       results.forEach((result) => {
         if (result.title === commonTitle) {
-          expect(result.count).toEqual(26);
+          expect(result.count).to.equal(26);
         } else {
-          expect(result.count).toEqual(1);
+          expect(result.count).to.equal(1);
         }
       });
     });
@@ -99,8 +102,8 @@ describe('Aggregation', () => {
       const sum = entities.reduce((sum, entity) => sum + entity.count, 0);
       const aggregation = Aggregation.sum('count');
       const result = aggregation.process(entities);
-      expect(result).toBeA(Object);
-      expect(result.sum).toEqual(sum);
+      expect(result).to.be.an.instanceof(Object);
+      expect(result.sum).to.equal(sum);
     });
   });
 
@@ -109,8 +112,8 @@ describe('Aggregation', () => {
       const min = entities.reduce((min, entity) => Math.min(min, entity.count), Infinity);
       const aggregation = Aggregation.min('count');
       const result = aggregation.process(entities);
-      expect(result).toBeA(Object);
-      expect(result.min).toEqual(min);
+      expect(result).to.be.an.instanceof(Object);
+      expect(result.min).to.equal(min);
     });
   });
 
@@ -119,8 +122,8 @@ describe('Aggregation', () => {
       const max = entities.reduce((max, entity) => Math.max(max, entity.count), -Infinity);
       const aggregation = Aggregation.max('count');
       const result = aggregation.process(entities);
-      expect(result).toBeA(Object);
-      expect(result.max).toEqual(max);
+      expect(result).to.be.an.instanceof(Object);
+      expect(result.max).to.equal(max);
     });
   });
 
@@ -134,9 +137,9 @@ describe('Aggregation', () => {
       }, 0);
       const aggregation = Aggregation.average('count');
       const result = aggregation.process(entities);
-      expect(result).toBeA(Object);
-      expect(result.average).toEqual(average);
-      expect(result.count).toEqual(count);
+      expect(result).to.be.an.instanceof(Object);
+      expect(result.average).to.equal(average);
+      expect(result.count).to.equal(count);
     });
   });
 });

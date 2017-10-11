@@ -14,7 +14,7 @@ import {
 } from '../../request';
 import { KinveyError } from '../../errors';
 import { KinveyObservable, Log, isDefined } from '../../utils';
-import Query from '../../query';
+import { Query } from '../../query';
 import NetworkStore from './networkstore';
 
 function randomInt(min, max) {
@@ -30,7 +30,7 @@ function getStartIndex(rangeHeader, max) {
 /**
  * The FileStore class is used to find, save, update, remove, count and group files.
  */
-export default class FileStore extends NetworkStore {
+class FileStore extends NetworkStore {
   /**
    * @private
    * The pathname for the store.
@@ -458,3 +458,6 @@ export default class FileStore extends NetworkStore {
     throw new KinveyError('Please use removeById() to remove files one by one.');
   }
 }
+
+const Files = new FileStore();
+export { Files };

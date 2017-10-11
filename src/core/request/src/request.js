@@ -4,7 +4,7 @@ import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
 
-import Client from '../../client';
+import { Client } from '../../client';
 import { KinveyError, NoResponseError } from '../../errors';
 import { isDefined, appendQuery, Log, randomString } from '../../utils';
 import Response from './response';

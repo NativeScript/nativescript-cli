@@ -2,8 +2,8 @@ import url from 'url';
 import cloneDeep from 'lodash/cloneDeep';
 
 import { KinveyError } from '../../errors';
-import Query from '../../query';
-import Aggregation from '../../aggregation';
+import { Query } from '../../query';
+import { Aggregation } from '../../aggregation';
 import { isDefined } from '../../utils';
 import Request from './request';
 import { KinveyResponse } from './response';

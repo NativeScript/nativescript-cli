@@ -1,57 +1,14 @@
-import Promise from 'es6-promise';
-import {
-  ActiveUserError,
-  APIVersionNotAvailableError,
-  APIVersionNotImplementedError,
-  AppProblemError,
-  BadRequestError,
-  BLError,
-  CORSDisabledError,
-  DuplicateEndUsersError,
-  FeatureUnavailableError,
-  IncompleteRequestBodyError,
-  IndirectCollectionAccessDisallowedError,
-  InsufficientCredentialsError,
-  InvalidCredentialsError,
-  InvalidIdentifierError,
-  InvalidQuerySyntaxError,
-  JSONParseError,
-  KinveyError,
-  KinveyInternalErrorRetry,
-  KinveyInternalErrorStop,
-  MissingQueryError,
-  MissingRequestHeaderError,
-  MissingRequestParameterError,
-  MobileIdentityConnectError,
-  NetworkConnectionError,
-  NoActiveUserError,
-  NoResponseError,
-  NotFoundError,
-  ParameterValueOutOfRangeError,
-  PopupError,
-  QueryError,
-  ServerError,
-  StaleRequestError,
-  SyncError,
-  TimeoutError,
-  UserAlreadyExistsError,
-  WritesToCollectionDisallowedError
-} from './errors';
-import { Log, isDefined } from './utils';
-import Client from './client';
-import CustomEndpoint from './endpoint';
-import Query from './query';
-import Aggregation from './aggregation';
-import DataStore, { DataStoreType, FileStore, SyncOperation } from './datastore';
-import { Acl, Metadata, User } from './entity';
-import { AuthorizationGrant } from './identity';
-import { AuthType, CacheRack, NetworkRack, Rack, RequestMethod, KinveyRequest } from './request';
-import { LiveServiceFacade } from './live';
+import { Promise } from 'es6-promise';
+import { KinveyError } from './errors';
+import { isDefined } from './utils';
+import { Client } from './client';
+import { User } from './entity';
+import { AuthType, RequestMethod, KinveyRequest } from './request';
 
 /**
  * The Kinvey class is used as the entry point for the Kinvey JavaScript SDK.
  */
-class Kinvey {
+export class Kinvey {
   /**
    * Returns the shared instance of the Client class used by the SDK.
    *
@@ -174,66 +131,3 @@ class Kinvey {
       .then(response => response.data);
   }
 }
-
-// Add modules
-Kinvey.Acl = Acl;
-Kinvey.Aggregation = Aggregation;
-Kinvey.AuthorizationGrant = AuthorizationGrant;
-Kinvey.CustomEndpoint = CustomEndpoint;
-Kinvey.DataStore = DataStore;
-Kinvey.DataStoreType = DataStoreType;
-Kinvey.LiveService = LiveServiceFacade;
-Kinvey.Files = new FileStore();
-Kinvey.Group = Aggregation;
-Kinvey.Log = Log;
-Kinvey.Metadata = Metadata;
-Kinvey.Query = Query;
-Kinvey.SyncOperation = SyncOperation;
-Kinvey.User = User;
-
-// Add errors
-Kinvey.ActiveUserError = ActiveUserError;
-Kinvey.APIVersionNotAvailableError = APIVersionNotAvailableError;
-Kinvey.APIVersionNotImplementedError = APIVersionNotImplementedError;
-Kinvey.AppProblemError = AppProblemError;
-Kinvey.BadRequestError = BadRequestError;
-Kinvey.BLError = BLError;
-Kinvey.CORSDisabledError = CORSDisabledError;
-Kinvey.DuplicateEndUsersError = DuplicateEndUsersError;
-Kinvey.FeatureUnavailableError = FeatureUnavailableError;
-Kinvey.IncompleteRequestBodyError = IncompleteRequestBodyError;
-Kinvey.IndirectCollectionAccessDisallowedError = IndirectCollectionAccessDisallowedError;
-Kinvey.InsufficientCredentialsError = InsufficientCredentialsError;
-Kinvey.InvalidCredentialsError = InvalidCredentialsError;
-Kinvey.InvalidIdentifierError = InvalidIdentifierError;
-Kinvey.InvalidQuerySyntaxError = InvalidQuerySyntaxError;
-Kinvey.JSONParseError = JSONParseError;
-Kinvey.KinveyError = KinveyError;
-Kinvey.KinveyInternalErrorRetry = KinveyInternalErrorRetry;
-Kinvey.KinveyInternalErrorStop = KinveyInternalErrorStop;
-Kinvey.MissingQueryError = MissingQueryError;
-Kinvey.MissingRequestHeaderError = MissingRequestHeaderError;
-Kinvey.MissingRequestParameterError = MissingRequestParameterError;
-Kinvey.MobileIdentityConnectError = MobileIdentityConnectError;
-Kinvey.NoActiveUserError = NoActiveUserError;
-Kinvey.NetworkConnectionError = NetworkConnectionError;
-Kinvey.NoResponseError = NoResponseError;
-Kinvey.NotFoundError = NotFoundError;
-Kinvey.ParameterValueOutOfRangeError = ParameterValueOutOfRangeError;
-Kinvey.PopupError = PopupError;
-Kinvey.QueryError = QueryError;
-Kinvey.ServerError = ServerError;
-Kinvey.StaleRequestError = StaleRequestError;
-Kinvey.SyncError = SyncError;
-Kinvey.TimeoutError = TimeoutError;
-Kinvey.UserAlreadyExistsError = UserAlreadyExistsError;
-Kinvey.WritesToCollectionDisallowedError = WritesToCollectionDisallowedError;
-
-// Add Racks
-Kinvey.CacheRack = CacheRack;
-Kinvey.NetworkRack = NetworkRack;
-Kinvey.Rack = Rack;
-
-// Export
-export { Kinvey };
-export default Kinvey;

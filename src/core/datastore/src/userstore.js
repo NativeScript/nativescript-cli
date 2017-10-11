@@ -6,7 +6,7 @@ import url from 'url';
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
 import { KinveyError } from '../../errors';
 import { KinveyObservable, isDefined } from '../../utils';
-import Query from '../../query';
+import { Query } from '../../query';
 import NetworkStore from './networkstore';
 
 /**

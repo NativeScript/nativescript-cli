@@ -3,7 +3,7 @@ import { KinveyError, NotFoundError } from '../../../../core/errors';
 import { isDefined } from '../../../../core/utils';
 
 const masterCollectionName = 'sqlite_master';
-const size = 5 * 1000 * 1000; // Database size in bytes
+const size = 2 * 1024 * 1024; // Database size in bytes
 let dbCache = {};
 let isSupported;
 

@@ -1,6 +1,6 @@
 import url from 'url';
 import { Promise } from 'es6-promise';
-import CoreKinvey from '../../core/kinvey';
+import { Kinvey as CoreKinvey } from '../../core/kinvey';
 import { isDefined } from '../../core/utils';
 import { KinveyError } from '../../core/errors';
 import { CacheRequest, RequestMethod } from '../../core/request';

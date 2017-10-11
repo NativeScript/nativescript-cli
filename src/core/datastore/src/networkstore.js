@@ -4,10 +4,10 @@ import url from 'url';
 
 import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod } from '../../request';
 import { KinveyError } from '../../errors';
-import Query from '../../query';
-import Client from '../../client';
+import { Query } from '../../query';
+import { Client } from '../../client';
 import { KinveyObservable, isDefined } from '../../utils';
-import Aggregation from '../../aggregation';
+import { Aggregation } from '../../aggregation';
 import { getLiveCollectionManager } from '../../live';
 
 /**

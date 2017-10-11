@@ -5,7 +5,7 @@ import isObject from 'lodash/isObject';
 import isEmpty from 'lodash/isEmpty';
 import url from 'url';
 
-import Client from '../../client';
+import { Client } from '../../client';
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
 import { KinveyError, NotFoundError, ActiveUserError } from '../../errors';
 import DataStore, { UserStore } from '../../datastore';

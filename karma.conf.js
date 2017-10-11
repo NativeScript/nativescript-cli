@@ -11,7 +11,8 @@ var customLaunchers = {
     browser: 'safari',
     browser_version: '10.1',
     os: 'OS X',
-    os_version: 'Sierra'
+    os_version: 'Sierra',
+    'browserstack.safari.enablePopups': true
   },
   bs_chrome_mac: {
     base: 'BrowserStack',
@@ -26,20 +27,6 @@ var customLaunchers = {
     browser_version: '56.0',
     os: 'OS X',
     os_version: 'Sierra'
-  },
-  bs_ie_windows: {
-    base: 'BrowserStack',
-    browser: 'ie',
-    browser_version: '11',
-    os: 'Windows',
-    os_version: '10'
-  },
-  bs_edge_windows: {
-    base: 'BrowserStack',
-    browser: 'edge',
-    browser_version: '15',
-    os: 'Windows',
-    os_version: '10'
   }
 };
 
@@ -127,7 +114,9 @@ module.exports = function(config) {
     browserStack: {
       username: process.env.BROWSERSTACK_USERNAME,
       accessKey: process.env.BROWSERSTACK_ACCESSKEY,
-      name: 'Kinvey JavaScript SDK'
+      project: 'Kinvey JavaScript SDK',
+      name: process.env.TRAVIS_COMMIT,
+      video: false
     },
     customLaunchers: customLaunchers,
 

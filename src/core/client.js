@@ -46,7 +46,7 @@ class ActiveUserStorage {
  * The Client class stores information about your application on the Kinvey platform. You can create mutiple clients
  * to send requests to different environments on the Kinvey platform.
  */
-export default class Client {
+export class Client {
   /**
    * Creates a new instance of the Client class.
    *

@@ -1,48 +1,19 @@
 /* eslint-env mocha */
 
-import { URL } from 'url';
 import { expect } from 'chai';
 import { spy, stub } from 'sinon';
 import { Popup } from './popup';
 
-class Window {
-  constructor(url = 'http://test.com') {
-    this.location = new URL(url);
-    this._closed = false;
-  }
-
-  get closed() {
-    return this._closed;
-  }
-
-  open(url) {
-    return new Window(url);
-  }
-
-  close() {
-    this._closed = true;
-  }
-}
-
 describe('HTML5:Popup', () => {
-  before(() => {
-    const window = new Window();
-    global.open = window.open;
-  });
-
-  after(() => {
-    delete global.open;
-  });
-
   describe('open()', () => {
     it('should throw an error if the popup was blocked', () => {
       stub(global, 'open').callsFake(() => null);
-      expect(() => Popup.open('http://test.com')).to.throw(Error, 'blocked');
+      expect(() => Popup.open('http://kinvey.com')).to.throw(Error, 'blocked');
       global.open.restore();
     });
 
     it('should emit load event with popup url', (done) => {
-      const popup = Popup.open('http://test.com');
+      const popup = Popup.open('http://kinvey.com');
       const loadSpy = spy((event) => {
         try {
           expect(event).to.have.property('url');
@@ -56,7 +27,7 @@ describe('HTML5:Popup', () => {
     });
 
     it('should emit loadstart event with popup url', (done) => {
-      const popup = Popup.open('http://test.com');
+      const popup = Popup.open('http://kinvey.com');
       const loadstartSpy = spy((event) => {
         try {
           expect(event).to.have.property('url');
@@ -72,7 +43,7 @@ describe('HTML5:Popup', () => {
     it('should emit error event if an error occurs');
 
     it('should emit exit event when popup is closed', (done) => {
-      const popup = Popup.open('http://test.com');
+      const popup = Popup.open('http://kinvey.com');
       const exitSpy = spy(() => {
         try {
           expect(exitSpy.calledOnce).to.equal(true);
@@ -88,7 +59,7 @@ describe('HTML5:Popup', () => {
 
   describe('close()', () => {
     it('should close the popup', (done) => {
-      const popup = Popup.open('http://test.com');
+      const popup = Popup.open('http://kinvey.com');
       const exitSpy = spy(() => {
         try {
           expect(exitSpy.calledOnce).to.equal(true);

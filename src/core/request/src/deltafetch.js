@@ -9,7 +9,7 @@ import isString from 'lodash/isString';
 
 import { KinveyError, NotFoundError } from '../../errors';
 import { isDefined } from '../../utils';
-import Query from '../../query';
+import { Query } from '../../query';
 import { RequestMethod } from './request';
 import { KinveyRequest } from './network';
 import CacheRequest from './cache';
