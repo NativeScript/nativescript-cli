@@ -28,6 +28,7 @@
       }
     ],
     "no-console": "error",
+    "no-fallthrough": "warn",
     "no-loop-func": "warn",
     "no-param-reassign": "off",
     "no-shadow": "off",

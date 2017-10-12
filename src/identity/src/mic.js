@@ -48,7 +48,7 @@ export class MobileIdentityConnect extends Identity {
     let clientId = this.client.appKey;
 
     if (isString(options.micId)) {
-      clientId = `${clientId}:${options.micId}`;
+      clientId = `${clientId}.${options.micId}`;
     }
 
     const promise = Promise.resolve()

@@ -46,6 +46,7 @@ import DataStore, { DataStoreType, FileStore, SyncOperation } from './datastore'
 import { Acl, Metadata, User } from './entity';
 import { AuthorizationGrant } from './identity';
 import { AuthType, CacheRack, NetworkRack, Rack, RequestMethod, KinveyRequest } from './request';
+import { LiveServiceFacade } from './live';
 
 /**
  * The Kinvey class is used as the entry point for the Kinvey JavaScript SDK.
@@ -181,6 +182,7 @@ Kinvey.AuthorizationGrant = AuthorizationGrant;
 Kinvey.CustomEndpoint = CustomEndpoint;
 Kinvey.DataStore = DataStore;
 Kinvey.DataStoreType = DataStoreType;
+Kinvey.LiveService = LiveServiceFacade;
 Kinvey.Files = new FileStore();
 Kinvey.Group = Aggregation;
 Kinvey.Log = Log;

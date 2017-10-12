@@ -13,6 +13,7 @@ import { MobileIdentityConnect } from 'src/identity';
 import { Log, isDefined } from 'src/utils';
 import Acl from './acl';
 import Metadata from './metadata';
+import { getLiveService } from '../../live';
 
 /**
  * The User class is used to represent a single user on the Kinvey platform.
@@ -188,10 +189,10 @@ export default class User {
     }
 
     if ((!isDefined(credentials.username)
-        || credentials.username === ''
-        || !isDefined(credentials.password)
-        || credentials.password === ''
-      ) && !isDefined(credentials._socialIdentity)) {
+      || credentials.username === ''
+      || !isDefined(credentials.password)
+      || credentials.password === ''
+    ) && !isDefined(credentials._socialIdentity)) {
       return Promise.reject(
         new KinveyError('Username and/or password missing. Please provide both a username and password to login.')
       );
@@ -388,7 +389,8 @@ export default class User {
       client: this.client
     });
 
-    return request.execute()
+    return this.unregisterFromLiveService()
+      .then(() => request.execute())
       .catch((error) => {
         Log.error(error);
         return null;
@@ -605,6 +607,50 @@ export default class User {
         this.data = data;
         return this;
       });
+  }
+
+  /**
+   * @returns {Promise}
+   */
+  static registerForLiveService() {
+    const activeUser = User.getActiveUser();
+
+    if (activeUser) {
+      return activeUser.registerForLiveService();
+    }
+
+    return Promise.reject(new ActiveUserError('There is no active user'));
+  }
+
+  /**
+   * @returns {Promise}
+   */
+  static unregisterFromLiveService() {
+    const activeUser = User.getActiveUser();
+
+    if (activeUser) {
+      return activeUser.unregisterFromLiveService();
+    }
+
+    return Promise.reject(new ActiveUserError('There is no active user'));
+  }
+
+  registerForLiveService() {
+    const liveService = getLiveService(this.client);
+    let promise = Promise.resolve();
+    if (!liveService.isInitialized()) {
+      promise = liveService.fullInitialization(this);
+    }
+    return promise;
+  }
+
+  unregisterFromLiveService() {
+    const liveService = getLiveService(this.client);
+    let promise = Promise.resolve();
+    if (liveService.isInitialized()) {
+      promise = liveService.fullUninitialization();
+    }
+    return promise;
   }
 
   /**

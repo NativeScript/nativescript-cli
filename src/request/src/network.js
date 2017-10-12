@@ -5,7 +5,9 @@ import assign from 'lodash/assign';
 import defaults from 'lodash/defaults';
 import isEmpty from 'lodash/isEmpty';
 import url from 'url';
+import isString from 'lodash/isString';
 
+import Client from '../../client';
 import Query from 'src/query';
 import Aggregation from 'src/aggregation';
 import { isDefined, appendQuery } from 'src/utils';
@@ -155,7 +157,7 @@ function byteCount(str) {
 /**
  * @private
  */
-export class Properties extends Headers {}
+export class Properties extends Headers { }
 
 export class KinveyRequest extends NetworkRequest {
   constructor(options = {}) {
@@ -172,6 +174,33 @@ export class KinveyRequest extends NetworkRequest {
     this.properties = options.properties || new Properties();
     this.skipBL = options.skipBL === true;
     this.trace = options.trace === true;
+  }
+
+  static executeShort(options, client, dataOnly = true) {
+    const o = assign({
+      method: RequestMethod.GET,
+      authType: AuthType.Session
+    }, options);
+    client = client || Client.sharedInstance();
+
+    if (!o.url && isString(o.pathname) && client) {
+      o.url = url.format({
+        protocol: client.apiProtocol,
+        host: client.apiHost,
+        pathname: o.pathname
+      });
+    }
+
+    let prm = KinveyRequest.execute(o);
+    if (dataOnly) {
+      prm = prm.then(r => r.data);
+    }
+    return prm;
+  }
+
+  static execute(options) {
+    return new KinveyRequest(options)
+      .execute();
   }
 
   get appVersion() {
@@ -358,6 +387,7 @@ export class KinveyRequest extends NetworkRequest {
       });
   }
 
+  /** @returns {Promise} */
   execute(rawResponse = false, retry = true) {
     return this.getAuthorizationHeader()
       .then((authorizationHeader) => {

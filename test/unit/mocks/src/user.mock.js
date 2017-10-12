@@ -1,8 +1,12 @@
 /* eslint-disable max-len */
 import { randomString } from 'src/utils';
 import { User } from 'src/entity';
+import Client from 'src/client';
+import { LiveServiceFacade } from 'src/live';
 import nock from 'nock';
 import url from 'url';
+
+import * as nockHelper from '../../live';
 
 export default class UserMock extends User {
   static getActiveUser(client) {
@@ -60,8 +64,8 @@ export default class UserMock extends User {
         // API Response
         nock(this.client.micHostname, { encodedQueryParams: true })
           .post(
-            '/oauth/auth',
-            `client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
+          '/oauth/auth',
+          `client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
           )
           .reply(200, {
             temp_login_uri: tempLoginUriParts.href
@@ -69,8 +73,8 @@ export default class UserMock extends User {
 
         nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
           .post(
-            tempLoginUriParts.pathname,
-            `client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${options.username}&password=${options.password}`
+          tempLoginUriParts.pathname,
+          `client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${options.username}&password=${options.password}`
           )
           .reply(302, null, {
             Location: `${redirectUri}/?code=${code}`
@@ -78,8 +82,8 @@ export default class UserMock extends User {
 
         nock(this.client.micHostname, { encodedQueryParams: true })
           .post(
-            '/oauth/token',
-            `grant_type=authorization_code&client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
+          '/oauth/token',
+          `grant_type=authorization_code&client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
           )
           .reply(200, token);
 

@@ -7,7 +7,7 @@ import cloneDeep from 'lodash/cloneDeep';
 
 import { KinveyError } from 'src/errors';
 import { isDefined } from 'src/utils';
-import { Query } from './query';
+import Query from './query';
 
 /**
  * @private

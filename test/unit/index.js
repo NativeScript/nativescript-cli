@@ -1,14 +1,12 @@
-import { HttpMiddlewareMock, UserMock } from 'test/mocks';
-import { SerializeMiddleware, ParseMiddleware, NetworkRack } from 'src/request';
+import { HttpMiddlewareMock, UserMock } from 'test/unit/mocks';
+import { NetworkRack } from 'src/request';
 import { randomString } from 'src/utils';
 import { Kinvey } from 'src/kinvey';
 import nock from 'nock';
+import expect from 'expect';
 
 // Setup network rack
-NetworkRack.reset();
-NetworkRack.use(new SerializeMiddleware());
-NetworkRack.use(new HttpMiddlewareMock());
-NetworkRack.use(new ParseMiddleware());
+NetworkRack.useHttpMiddleware(new HttpMiddlewareMock());
 
 // Record for nock
 // nock.recorder.rec();
@@ -37,7 +35,10 @@ after(function() {
 beforeEach(() => UserMock.login('test', 'test'));
 
 // Logout the active user
-afterEach(() => UserMock.logout());
+afterEach(() => {
+  expect.restoreSpies();
+  return UserMock.logout();
+});
 
 // Clean up nock
 afterEach(function() {

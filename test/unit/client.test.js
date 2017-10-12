@@ -10,7 +10,6 @@ describe('Client', () => {
       expect(client).toBeA(Client);
       expect(client.apiHostname).toEqual('https://baas.kinvey.com');
       expect(client.micHostname).toEqual('https://auth.kinvey.com');
-      expect(client.liveServiceHostname).toEqual('https://kls.kinvey.com');
     });
 
     it('should be able to provide custom apiHostname with protocol https:', () => {
@@ -47,12 +46,6 @@ describe('Client', () => {
       const micHostname = 'myauth.kinvey.com';
       const client = new Client({ micHostname: micHostname });
       expect(client.micHostname).toEqual(`https://${micHostname}`);
-    });
-
-    it('should be able to provide custom liveServiceHostname', () => {
-      const liveServiceHostname = 'https://mylive.kinvey.com';
-      const client = new Client({ liveServiceHostname: liveServiceHostname });
-      expect(client.liveServiceHostname).toEqual(liveServiceHostname);
     });
 
     it('should be able to provide an appKey', () => {
@@ -95,8 +88,9 @@ describe('Client', () => {
   describe('appVersion', function() {
     it('should set the appVersion', function() {
       const appVersion = randomString();
-      const client = new Client();
-      client.appVersion = appVersion;
+      const client = new Client({
+        appVersion: appVersion
+      });
       expect(client.appVersion).toEqual(appVersion);
     });
   });

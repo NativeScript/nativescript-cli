@@ -15,6 +15,19 @@ function uid(size = 10) {
 /**
  * @private
  */
-export function randomString(size, prefix = '') {
+export function randomString(size = 18, prefix = '') {
   return `${prefix}${uid(size)}`;
+}
+
+export function isNonemptyString(obj) {
+  return (typeof obj === 'string') && obj !== '';
+}
+
+export function uuidv4() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return `${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
 }

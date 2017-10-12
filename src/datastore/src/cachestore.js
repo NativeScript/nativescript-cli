@@ -4,6 +4,7 @@ import assign from 'lodash/assign';
 import keyBy from 'lodash/keyBy';
 import remove from 'lodash/remove';
 import isArray from 'lodash/isArray';
+import isFunction from 'lodash/isFunction';
 import reduce from 'lodash/reduce';
 import map from 'lodash/map';
 import url from 'url';

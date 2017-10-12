@@ -6,8 +6,9 @@ import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod } from 'src/r
 import { KinveyError } from 'src/errors';
 import Query from 'src/query';
 import Client from 'src/client';
-import { KinveyObservable, Log, isDefined } from 'src/utils';
+import { KinveyObservable, isDefined } from 'src/utils';
 import Aggregation from 'src/aggregation';
+import { getLiveCollectionManager } from '../../live';
 
 /**
  * The NetworkStore class is used to find, create, update, remove, count and group entities over the network.
@@ -70,55 +71,6 @@ export default class NetworkStore {
     }
 
     return pathname;
-  }
-
-  /**
-   * Returns the live stream for the store.
-   * @return {Observable} Observable
-   */
-  get liveStream() {
-    if (typeof EventSource === 'undefined') {
-      throw new KinveyError('Your environment does not support server-sent events.');
-    }
-
-    if (!this._liveStream) {
-      // Subscribe to KLS
-      const source = new EventSource(`${this.client.liveServiceHostname}${this.pathname}`);
-
-       // Create a live stream
-      this._liveStream = KinveyObservable.create((observer) => {
-        // Open event
-        source.onopen = (event) => {
-          Log.info(`Subscription to Kinvey Live Service is now open at ${source.url}.`);
-          Log.info(event);
-        };
-
-        // Message event
-        source.onmessage = (message) => {
-          try {
-            observer.next(JSON.parse(message.data));
-          } catch (error) {
-            observer.error(error);
-          }
-        };
-
-        // Error event
-        source.onerror = (error) => {
-          observer.error(error);
-        };
-
-        // Dispose function
-        return () => {
-          observer.complete();
-        };
-      }).finally(() => {
-        source.close();
-        delete this._liveStream;
-      });
-    }
-
-    // Return the stream
-    return this._liveStream;
   }
 
   /**
@@ -521,9 +473,18 @@ export default class NetworkStore {
   }
 
   /**
-   * Subscribes to a live stream
+   * Subscribes to the live stream for the collection
    */
-  subscribe(onNext, onError, onComplete) {
-    return this.liveStream.subscribe(onNext, onError, onComplete);
+  subscribe(receiver) {
+    const manager = getLiveCollectionManager();
+    return manager.subscribeCollection(this.collection, receiver);
+  }
+
+  /**
+   * Unsubscribes from the live stream for the collection
+   */
+  unsubscribe() {
+    const manager = getLiveCollectionManager();
+    return manager.unsubscribeCollection(this.collection);
   }
 }

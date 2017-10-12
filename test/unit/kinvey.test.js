@@ -1,9 +1,10 @@
 import { Kinvey } from 'src/kinvey';
 import { randomString } from 'src/utils';
 import Client from 'src/client';
-import { UserMock } from 'test/mocks';
+import { UserMock } from 'test/unit/mocks';
 import expect from 'expect';
 import nock from 'nock';
+
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 describe('Kinvey', function () {
