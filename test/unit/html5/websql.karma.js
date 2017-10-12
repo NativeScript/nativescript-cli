@@ -2,14 +2,14 @@
 /* eslint-disable consistent-return */
 
 import { expect } from 'chai';
-import { LocalStorageAdapter } from './localstorage';
-import { randomString } from '../../../../core/utils';
+import { WebSQLAdapter } from '../../../src/html5/middleware/storage/websql';
+import { randomString } from '../../../src/core/utils';
 
-describe('HTML5:LocalStorageAdapter', () => {
+describe('HTML5:WebSQLAdapter', () => {
   let storageAdapter;
 
   before(() => {
-    return LocalStorageAdapter.load(randomString())
+    return WebSQLAdapter.load(randomString())
       .then((adapter) => {
         storageAdapter = adapter;
       });
@@ -110,17 +110,17 @@ describe('HTML5:LocalStorageAdapter', () => {
     it('should overwrite saved data', () => {
       if (storageAdapter) {
         const collection = randomString();
-        const data = { _id: randomString(), title: randomString(), count: randomString() };
+        const data = { _id: randomString() };
         const updateData = { _id: data._id, title: randomString() };
         return storageAdapter.save(collection, data)
           .then(() => {
             return storageAdapter.save(collection, updateData);
           })
           .then(() => {
-            return storageAdapter.findById(collection, updateData._id);
+            return storageAdapter.find(collection);
           })
           .then((storedData) => {
-            expect(storedData).to.deep.equal(updateData);
+            expect(storedData).to.deep.equal([updateData]);
           });
       }
     });

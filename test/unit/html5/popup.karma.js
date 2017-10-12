@@ -2,7 +2,7 @@
 
 import { expect } from 'chai';
 import { spy, stub } from 'sinon';
-import { Popup } from './popup';
+import { Popup } from '../../../src/html5/popup';
 
 describe('HTML5:Popup', () => {
   describe('open()', () => {

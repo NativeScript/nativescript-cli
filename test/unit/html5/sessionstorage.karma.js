@@ -2,8 +2,8 @@
 /* eslint-disable consistent-return */
 
 import { expect } from 'chai';
-import { SessionStorageAdapter } from './sessionstorage';
-import { randomString } from '../../../../core/utils';
+import { SessionStorageAdapter } from '../../../src/html5/middleware/storage/webstorage';
+import { randomString } from '../../../src/core/utils';
 
 describe('HTML5:SessionStorageAdapter', () => {
   let storageAdapter;

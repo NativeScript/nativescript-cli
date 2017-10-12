@@ -1,9 +1,9 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai';
-import { Query } from './query';
-import { randomString } from '../utils';
-import { Kinvey } from '../kinvey';
+import { Query } from '../../../src/core/query';
+import { randomString } from '../../../src/core/utils';
+import { Kinvey } from '../../../src/core/kinvey';
 
 describe('Query', () => {
   before(() => {

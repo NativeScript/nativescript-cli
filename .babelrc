@@ -1,7 +1,6 @@
 {
   "ignore": [
-    "node_modules",
-    "src/**/*.karma.js"
+    "node_modules"
   ],
   "presets": [
     ["env", {

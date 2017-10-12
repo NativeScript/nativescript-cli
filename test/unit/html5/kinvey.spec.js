@@ -1,9 +1,9 @@
 /* eslint-env mocha */
 
 import * as chai from 'chai';
-import { Kinvey } from './kinvey';
-import { KinveyError } from '../../core/errors';
-import { randomString } from '../../core/utils';
+import { Kinvey } from '../../../src/html5/kinvey';
+import { KinveyError } from '../../../src/core/errors';
+import { randomString } from '../../../src/core/utils';
 
 chai.use(require('chai-as-promised'));
 const { expect } = chai;

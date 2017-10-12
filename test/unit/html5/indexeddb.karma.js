@@ -2,8 +2,8 @@
 /* eslint-disable consistent-return */
 
 import { expect } from 'chai';
-import { IndexedDBAdapter } from './indexeddb';
-import { randomString } from '../../../../core/utils';
+import { IndexedDBAdapter } from '../../../src/html5/middleware/storage/indexeddb';
+import { randomString } from '../../../src/core/utils';
 
 describe('HTML5:IndexedDBAdapter', () => {
   let storageAdapter;

@@ -1,2 +1,3 @@
-**/*{.,-}min.js
-**/*.json
+**/package.json
+**/README.md
+**/LICENSE

@@ -1,10 +1,10 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai';
-import { Aggregation } from './aggregation';
-import { Query } from '../query';
-import { isDefined, randomString } from '../utils';
-import { Kinvey } from '../kinvey';
+import { Aggregation } from '../../../src/core/aggregation';
+import { Query } from '../../../src/core/query';
+import { isDefined, randomString } from '../../../src/core/utils';
+import { Kinvey } from '../../../src/core/kinvey';
 
 describe('Aggregation', () => {
   const commonTitle = 'Kinvey';

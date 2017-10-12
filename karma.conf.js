@@ -44,14 +44,12 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'src/**/*.karma.js'
+      'test/unit/**/*.karma.js'
     ],
 
 
     // list of files to exclude
-    exclude: [
-      // 'src/html5/popup/popup.karma.js'
-    ],
+    exclude: [],
 
 
     // preprocess matching files before serving them to the browser

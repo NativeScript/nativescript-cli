@@ -3,11 +3,11 @@
 
 import url from 'url';
 import { expect } from 'chai';
-import { Kinvey } from './kinvey';
-import { CacheMiddleware } from '../middleware';
-import { CacheRack, CacheRequest, RequestMethod } from '../../core/request';
-import { randomString } from '../../core/utils';
-import { User } from '../../core/entity';
+import { Kinvey } from '../../../src/html5/kinvey';
+import { CacheMiddleware } from '../../../src/html5/middleware';
+import { CacheRack, CacheRequest, RequestMethod } from '../../../src/core/request';
+import { randomString } from '../../../src/core/utils';
+import { User } from '../../../src/core/entity';
 
 describe('HTML5:Kinvey', () => {
   before(() => {
