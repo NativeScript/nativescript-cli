@@ -2,14 +2,14 @@
 /* eslint-disable consistent-return */
 
 import { expect } from 'chai';
-import { WebSQLAdapter } from './websql';
+import { SessionStorageAdapter } from './sessionstorage';
 import { randomString } from '../../../../core/utils';
 
-describe('HTML5:WebSQLAdapter', () => {
+describe('HTML5:SessionStorageAdapter', () => {
   let storageAdapter;
 
   before(() => {
-    return WebSQLAdapter.load(randomString())
+    return SessionStorageAdapter.load(randomString())
       .then((adapter) => {
         storageAdapter = adapter;
       });

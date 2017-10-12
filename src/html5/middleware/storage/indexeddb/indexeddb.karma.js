@@ -2,14 +2,14 @@
 /* eslint-disable consistent-return */
 
 import { expect } from 'chai';
-import { WebSQLAdapter } from './websql';
+import { IndexedDBAdapter } from './indexeddb';
 import { randomString } from '../../../../core/utils';
 
-describe('HTML5:WebSQLAdapter', () => {
+describe('HTML5:IndexedDBAdapter', () => {
   let storageAdapter;
 
   before(() => {
-    return WebSQLAdapter.load(randomString())
+    return IndexedDBAdapter.load(randomString())
       .then((adapter) => {
         storageAdapter = adapter;
       });
@@ -41,7 +41,7 @@ describe('HTML5:WebSQLAdapter', () => {
             return storageAdapter.find(collection);
           })
           .then((storedData) => {
-            expect(storedData).to.deep.equal(data);
+            expect(storedData).to.have.deep.members(data);
           });
       }
     });
@@ -102,7 +102,7 @@ describe('HTML5:WebSQLAdapter', () => {
             return storageAdapter.find(collection);
           })
           .then((storedData) => {
-            expect(storedData).to.deep.equal(data);
+            expect(storedData).to.have.deep.members(data);
           });
       }
     });
@@ -117,10 +117,10 @@ describe('HTML5:WebSQLAdapter', () => {
             return storageAdapter.save(collection, updateData);
           })
           .then(() => {
-            return storageAdapter.find(collection);
+            return storageAdapter.findById(collection, data._id);
           })
           .then((storedData) => {
-            expect(storedData).to.deep.equal([updateData]);
+            expect(storedData).to.deep.equal(updateData);
           });
       }
     });
@@ -138,7 +138,7 @@ describe('HTML5:WebSQLAdapter', () => {
             return storageAdapter.find(collection);
           })
           .then((storedData) => {
-            expect(storedData).to.deep.equal([data, data2]);
+            expect(storedData).to.have.deep.members([data, data2]);
           });
       }
     });

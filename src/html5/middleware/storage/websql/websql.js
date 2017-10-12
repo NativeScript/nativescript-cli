@@ -1,13 +1,12 @@
 import { Promise } from 'es6-promise';
-import { KinveyError, NotFoundError } from '../../../../core/errors';
+import { KinveyError } from '../../../../core/errors';
 import { isDefined } from '../../../../core/utils';
 
 const masterCollectionName = 'sqlite_master';
 const size = 2 * 1024 * 1024; // Database size in bytes
-let dbCache = {};
 let isSupported;
 
-export class WebSQLAdapter {
+export class WebSQL {
   constructor(name = 'kinvey') {
     if (isDefined(name) === false) {
       throw new KinveyError('A name is required to use the WebSQL adapter.', name);
@@ -21,7 +20,6 @@ export class WebSQLAdapter {
   }
 
   openTransaction(collection, query, parameters, write = false) {
-    let db = dbCache[this.name];
     const escapedCollection = `"${collection}"`;
     const isMaster = collection === masterCollectionName;
     const isMulti = Array.isArray(query);
@@ -29,14 +27,11 @@ export class WebSQLAdapter {
 
     return new Promise((resolve, reject) => {
       try {
-        if (isDefined(db) === false) {
-          db = global.openDatabase(this.name, 1, 'Kinvey Cache', size);
-          dbCache[this.name] = db;
-        }
-
+        const db = global.openDatabase(this.name, 1, 'Kinvey Cache', size);
         const writeTxn = write || typeof db.readTransaction !== 'function';
+
         db[writeTxn ? 'transaction' : 'readTransaction']((tx) => {
-          if (write && isMaster === false) {
+          if (write && !isMaster) {
             tx.executeSql(`CREATE TABLE IF NOT EXISTS ${escapedCollection} ` +
               '(key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)');
           }
@@ -81,8 +76,7 @@ export class WebSQLAdapter {
           error = typeof error === 'string' ? error : error.message;
 
           if (error && error.indexOf('no such table') === -1) {
-            return reject(new NotFoundError(`The ${collection} collection was not found on`
-              + ` the ${this.name} WebSQL database.`));
+            return resolve({ result: [] });
           }
 
           const query = 'SELECT name AS value from #{collection} WHERE type = ? AND name = ?';
@@ -90,15 +84,12 @@ export class WebSQLAdapter {
 
           return this.openTransaction(masterCollectionName, query, parameters).then((response) => {
             if (response.result.length === 0) {
-              return reject(new NotFoundError(`The ${collection} collection was not found on`
-                + ` the ${this.name} WebSQL database.`));
+              return resolve({ result: [] });
             }
 
             return reject(new KinveyError(`Unable to open a transaction for the ${collection}`
               + ` collection on the ${this.name} WebSQL database.`));
-          }).catch((error) => {
-            reject(error);
-          });
+          }).catch(reject);
         });
       } catch (error) {
         reject(error);
@@ -116,14 +107,7 @@ export class WebSQLAdapter {
     const sql = 'SELECT value FROM #{collection} WHERE key = ?';
     return this.openTransaction(collection, sql, [id])
       .then(response => response.result)
-      .then((entities) => {
-        if (entities.length === 0) {
-          throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
-            + ` collection on the ${this.name} WebSQL database.`);
-        }
-
-        return entities[0];
-      });
+      .then((entities) => entities[0]);
   }
 
   save(collection, entities) {
@@ -153,22 +137,9 @@ export class WebSQLAdapter {
   }
 
   removeById(collection, id) {
-    const queries = [
-      ['SELECT value FROM #{collection} WHERE key = ?', [id]],
-      ['DELETE FROM #{collection} WHERE key = ?', [id]],
-    ];
-    return this.openTransaction(collection, queries, null, true)
+    return this.openTransaction(collection, 'DELETE FROM #{collection} WHERE key = ?', [id], true)
       .then((response) => {
-        const entities = response[0].result;
-        let count = response[1].rowCount;
-        count = count || entities.length;
-
-        if (count === 0) {
-          throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
-            + ` collection on the ${this.name} WebSQL database.`);
-        }
-
-        return { count: count };
+        return { count: response.rowCount };
       });
   }
 
@@ -193,14 +164,13 @@ export class WebSQLAdapter {
           .map(table => [`DROP TABLE IF EXISTS '${table}'`]);
         return this.openTransaction(masterCollectionName, queries, null, true);
       })
-      .then(() => {
-        dbCache = {};
-        return null;
-      });
+      .then(() => null);
   }
+}
 
-  static load(name) {
-    const adapter = new WebSQLAdapter(name);
+const WebSQLAdapter = {
+  load(name) {
+    const adapter = new WebSQL(name);
 
     if (isDefined(global.openDatabase) === false) {
       return Promise.resolve(undefined);
@@ -214,7 +184,7 @@ export class WebSQLAdapter {
       return Promise.resolve(undefined);
     }
 
-    return adapter.save('__testSupport', { _id: '1' })
+    return adapter.save('__testSupport__', { _id: '1' })
       .then(() => {
         isSupported = true;
         return adapter;
@@ -224,4 +194,5 @@ export class WebSQLAdapter {
         return undefined;
       });
   }
-}
+};
+export { WebSQLAdapter };

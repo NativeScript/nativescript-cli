@@ -36,6 +36,10 @@ export function nested(obj, dotProperty, value) {
  * @private
  */
 export function keyBy(array, iteratee) {
+  if (!array) {
+    return {};
+  }
+
   return array.reduce((result, value) => {
     result[iteratee] = value[iteratee];
     return result;

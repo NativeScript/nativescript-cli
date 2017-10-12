@@ -1,6 +1,6 @@
 import { Promise } from 'es6-promise';
-import { KinveyError, NotFoundError } from '../../../core/errors';
-import { isDefined } from '../../../core/utils';
+import { KinveyError, NotFoundError } from '../../../../core/errors';
+import { isDefined } from '../../../../core/utils';
 
 let dbCache = {};
 let isSupported;
@@ -11,7 +11,7 @@ const TransactionMode = {
 };
 Object.freeze(TransactionMode);
 
-export class IndexedDBAdapter {
+class IndexedDB {
   constructor(name) {
     if (isDefined(name) === false) {
       throw new Error('A name is required to use the IndexedDB adapter.', name);
@@ -174,7 +174,13 @@ export class IndexedDBAdapter {
         request.onerror = (e) => {
           reject(e);
         };
-      }, reject);
+      }, (error) => {
+        if (error instanceof NotFoundError) {
+          resolve([]);
+        }
+
+        reject(error);
+      });
     });
   }
 
@@ -190,8 +196,7 @@ export class IndexedDBAdapter {
           if (isDefined(entity)) {
             resolve(entity);
           } else {
-            reject(new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
-             + ` collection on the ${this.name} IndexedDB database.`));
+            resolve(undefined);
           }
         };
 
@@ -248,8 +253,7 @@ export class IndexedDBAdapter {
           if (isDefined(entity)) {
             resolve({ count: 1 });
           } else {
-            reject(new NotFoundError(`An entity with id = ${id} was not found in the ${collection}`
-              + ` collection on the ${this.name} IndexedDB database.`));
+            resolve({ count: 0 });
           }
         };
 
@@ -272,7 +276,7 @@ export class IndexedDBAdapter {
 
       request.onsuccess = () => {
         dbCache = {};
-        resolve();
+        resolve(null);
       };
 
       request.onerror = (e) => {
@@ -286,10 +290,12 @@ export class IndexedDBAdapter {
       };
     });
   }
+}
 
-  static load(name) {
+const IndexedDBAdapter = {
+  load(name) {
     const indexedDB = global.indexedDB || global.webkitIndexedDB || global.mozIndexedDB || global.msIndexedDB;
-    const adapter = new IndexedDBAdapter(name);
+    const adapter = new IndexedDB(name);
 
     if (isDefined(indexedDB) === false) {
       return Promise.resolve(undefined);
@@ -303,7 +309,7 @@ export class IndexedDBAdapter {
       return Promise.resolve(undefined);
     }
 
-    return adapter.save('__testSupport', { _id: '1' })
+    return adapter.save('__testSupport__', { _id: '1' })
       .then(() => {
         isSupported = true;
         return adapter;
@@ -313,4 +319,5 @@ export class IndexedDBAdapter {
         return undefined;
       });
   }
-}
+};
+export { IndexedDBAdapter };

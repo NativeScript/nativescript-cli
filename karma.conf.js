@@ -50,7 +50,7 @@ module.exports = function(config) {
 
     // list of files to exclude
     exclude: [
-      'src/html5/popup/popup.karma.js'
+      // 'src/html5/popup/popup.karma.js'
     ],
 
 
@@ -76,16 +76,14 @@ module.exports = function(config) {
       }
     },
     webpackMiddleware: {
-      // webpack-dev-middleware configuration
-      // i. e.
-      stats: 'errors-only'
+      noInfo: true
     },
 
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['mocha', 'saucelabs'],
+    reporters: process.env.CI === true ? ['mocha', 'saucelabs'] : ['mocha'],
 
 
     // web server port
@@ -108,7 +106,7 @@ module.exports = function(config) {
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
     // browsers: ['Chrome', 'Firefox', 'Safari'],
-    browsers: Object.keys(customLaunchers),
+    browsers: process.env.CI === true ? Object.keys(customLaunchers) : ['ChromeHeadless' /*, 'Chrome', 'Firefox', 'Safari' */],
     browserDisconnectTimeout: 60000,
     browserNoActivityTimeout: 60000,
 
