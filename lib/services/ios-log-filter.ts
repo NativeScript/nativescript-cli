@@ -42,7 +42,7 @@ export class IOSLogFilter extends iOSLogFilterBase.IOSLogFilter implements Mobil
 				// CONSOLE LOG file:///location:row:column: <actual message goes here>
 				if (pid) {
 					if (line.indexOf(`[${pid}]: `) !== -1) {
-						const pidRegex = new RegExp(`^.*[\\[]${pid}[\\]]:\\s(?:\\(NativeScript\\)\\s)?`);
+						const pidRegex = new RegExp(`^.*\\[${pid}\\]:\\s(?:\\(NativeScript\\)\\s)?`);
 						line = line.replace(pidRegex, "").trim();
 						this.getOriginalFileLocation(line);
 						result += this.getOriginalFileLocation(line) + "\n";
