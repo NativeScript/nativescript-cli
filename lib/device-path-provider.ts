@@ -6,17 +6,17 @@ import * as path from "path";
 export class DevicePathProvider implements IDevicePathProvider {
 	constructor(private $mobileHelper: Mobile.IMobileHelper,
 		private $injector: IInjector,
-		private $iOSSimResolver: Mobile.IiOSSimResolver) {
+		private $iOSSimResolver: Mobile.IiOSSimResolver,
+		private $errors: IErrors) {
 	}
 
 	public async getDeviceProjectRootPath(device: Mobile.IDevice, options: IDeviceProjectRootOptions): Promise<string> {
 		let projectRoot = "";
 		if (this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform)) {
-			if (device.isEmulator) {
-				const applicationPath = this.$iOSSimResolver.iOSSim.getApplicationPath(device.deviceInfo.identifier, options.appIdentifier);
-				projectRoot = path.join(applicationPath);
-			} else {
-				projectRoot = LiveSyncPaths.IOS_DEVICE_PROJECT_ROOT_PATH;
+			projectRoot = device.isEmulator ? this.$iOSSimResolver.iOSSim.getApplicationPath(device.deviceInfo.identifier, options.appIdentifier) : LiveSyncPaths.IOS_DEVICE_PROJECT_ROOT_PATH;
+
+			if (!projectRoot) {
+				this.$errors.failWithoutHelp("Unable to get application path on device.");
 			}
 
 			if (!options.getDirname) {
