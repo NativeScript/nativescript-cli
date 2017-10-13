@@ -14,8 +14,8 @@ export default class CacheMiddleware extends Middleware {
   }
 
   handle(request) {
-    const { method, body, appKey, collection, entityId } = request;
-    const storage = this.loadStorage(appKey);
+    const { method, body, appKey, collection, entityId, encryptionKey } = request;
+    const storage = this.loadStorage(appKey, encryptionKey);
     let promise;
 
     if (method === 'GET') {

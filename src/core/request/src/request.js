@@ -185,7 +185,8 @@ export default class Request {
       url: this.url,
       body: this.body,
       timeout: this.timeout,
-      followRedirect: this.followRedirect
+      followRedirect: this.followRedirect,
+      encryptionKey: this.client.encryptionKey
     };
   }
 }
