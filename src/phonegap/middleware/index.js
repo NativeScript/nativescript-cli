@@ -1,5 +1,2 @@
-import HttpMiddleware from './src/http';
-
-export {
-  HttpMiddleware
-};
+export * from './cache';
+export * from './http';

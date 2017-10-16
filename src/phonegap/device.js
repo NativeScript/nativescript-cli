@@ -1,34 +1,34 @@
-import Promise from 'es6-promise';
+import { Promise } from 'es6-promise';
 
 let deviceReady;
 
-export default class Device {
-  static isPhoneGap() {
-    if (typeof document !== 'undefined') {
-      return document.URL.indexOf('http://') === -1 && document.URL.indexOf('https://') === -1;
+const Device = {
+  isPhoneGap() {
+    if (typeof global.document !== 'undefined') {
+      return global.document.URL.indexOf('http://') === -1 && global.document.URL.indexOf('https://') === -1;
     }
 
     return false;
-  }
+  },
 
-  static isiOS() {
+  isiOS() {
     return typeof global.device !== 'undefined' && global.device.platform.toLowerCase() === 'ios';
-  }
+  },
 
-  static isAndroid() {
+  isAndroid() {
     return typeof global.device !== 'undefined' && global.device.platform.toLowerCase() === 'android';
-  }
+  },
 
-  static ready() {
+  ready() {
     if (typeof deviceReady === 'undefined') {
       if (this.isPhoneGap()) {
         deviceReady = new Promise((resolve) => {
           const onDeviceReady = () => {
-            document.removeEventListener('deviceready', onDeviceReady);
+            global.document.removeEventListener('deviceready', onDeviceReady);
             resolve();
           };
 
-          document.addEventListener('deviceready', onDeviceReady, false);
+          global.document.addEventListener('deviceready', onDeviceReady, false);
         });
       } else {
         deviceReady = Promise.resolve();
@@ -37,7 +37,7 @@ export default class Device {
 
     return deviceReady;
   }
-}
+};
 
 // Check that cordova plugins are installed
 if (Device.isPhoneGap()) {

@@ -1,18 +1,10 @@
-import {
-  AuthType,
-  RequestMethod,
-  KinveyRequest,
-  CacheRequest,
-  KinveyError,
-  NotFoundError,
-  Client,
-  User,
-  isDefined
-} from 'kinvey-js-sdk/dist/export';
-import Promise from 'es6-promise';
+import { Promise } from 'es6-promise';
 import { EventEmitter } from 'events';
 import url from 'url';
-
+import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from '../core/request';
+import { KinveyError, NotFoundError } from '../core/errors';
+import { User } from '../core/entity';
+import { Client } from './client';
 import Device from './device';
 
 const APP_DATA_NAMESPACE = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
@@ -21,7 +13,7 @@ const NOTIFICATION_EVENT = process.env.KINVEY_NOTIFICATION_EVENT || 'notificatio
 const DEVICE_COLLECTION = '__device';
 let phonegapPush;
 
-class Push extends EventEmitter {
+class PushNotification extends EventEmitter {
   get pathname() {
     return `/${PUSH_NAMESPACE}/${this.client.appKey}`;
   }
@@ -61,13 +53,13 @@ class Push extends EventEmitter {
           throw new KinveyError('Kinvey currently only supports push notifications on iOS and Android platforms.');
         }
 
-        if (isDefined(global.device) === false) {
+        if (!global.device) {
           throw new KinveyError('Cordova Device Plugin is not installed.',
             'Please refer to http://devcenter.kinvey.com/phonegap/guides/push#ProjectSetUp for help with'
             + ' setting up your project.');
         }
 
-        if (isDefined(global.PushNotification) === false) {
+        if (!global.PushNotification) {
           throw new KinveyError('PhoneGap Push Notification Plugin is not installed.',
             'Please refer to http://devcenter.kinvey.com/phonegap/guides/push#ProjectSetUp for help with'
             + ' setting up your project.');
@@ -105,11 +97,11 @@ class Push extends EventEmitter {
       .then((deviceId) => {
         const user = User.getActiveUser(this.client);
 
-        if (isDefined(deviceId) === false) {
+        if (!deviceId) {
           throw new KinveyError('Unable to retrieve the device id to register this device for push notifications.');
         }
 
-        if (isDefined(user) === false && isDefined(options.userId) === false) {
+        if (!user && !options.userId) {
           throw new KinveyError('Unable to register this device for push notifications.',
             'You must login a user or provide a userId to assign the device token.');
         }
@@ -139,7 +131,7 @@ class Push extends EventEmitter {
         const user = User.getActiveUser(this.client);
         let _id = options.userId;
 
-        if (isDefined(user)) {
+        if (user) {
           _id = user._id;
         }
 
@@ -184,12 +176,12 @@ class Push extends EventEmitter {
         const user = User.getActiveUser(this.client);
         let _id = options.userId;
 
-        if (isDefined(user) === false && isDefined(options.userId) === false) {
+        if (!user && !options.userId) {
           throw new KinveyError('Unable to unregister this device for push notificaitons.',
             'You must login a user or provide a userId to unassign the device token.');
         }
 
-        if (isDefined(user)) {
+        if (user) {
           _id = user._id;
         }
 
@@ -211,7 +203,7 @@ class Push extends EventEmitter {
             throw error;
           })
           .then((response) => {
-            if (isDefined(response)) {
+            if (response) {
               return response.data;
             }
 
@@ -222,11 +214,11 @@ class Push extends EventEmitter {
         const user = User.getActiveUser(this.client);
         let deviceId;
 
-        if (isDefined(device)) {
+        if (device) {
           deviceId = device.deviceId;
         }
 
-        if (isDefined(deviceId) === false) {
+        if (!deviceId) {
           return null;
         }
 
@@ -255,7 +247,7 @@ class Push extends EventEmitter {
         const user = User.getActiveUser(this.client);
         let _id = options.userId;
 
-        if (isDefined(user)) {
+        if (user) {
           _id = user._id;
         }
 
@@ -283,5 +275,5 @@ class Push extends EventEmitter {
 }
 
 // Export
+const Push = new PushNotification();
 export { Push };
-export default new Push();

@@ -21,7 +21,8 @@
   },
   "dependencies": {
     "kinvey-js-sdk": "file:src/core",
-    "kinvey-html5-sdk": "file:src/html5"
+    "kinvey-html5-sdk": "file:src/html5",
+    "kinvey-phonegap-sdk": "file:src/phonegap"
   },
   "devDependencies": {
     "babel-cli": "6.26.0",
