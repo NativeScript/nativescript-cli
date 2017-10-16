@@ -41,14 +41,14 @@ export class IOSLogFilter extends iOSLogFilterBase.IOSLogFilter implements Mobil
 				// This code removes unnecessary information from log messages. The output looks like:
 				// CONSOLE LOG file:///location:row:column: <actual message goes here>
 				if (pid) {
-					const searchString = "[" + pid + "]: ";
-					const pidIndex = line.indexOf(searchString);
-					if (pidIndex > 0) {
-						line = line.substring(pidIndex + searchString.length, line.length);
+					if (line.indexOf(`[${pid}]: `) !== -1) {
+						const pidRegex = new RegExp(`^.*\\[${pid}\\]:\\s(?:\\(NativeScript\\)\\s)?`);
+						line = line.replace(pidRegex, "").trim();
 						this.getOriginalFileLocation(line);
 						result += this.getOriginalFileLocation(line) + "\n";
-						continue;
 					}
+
+					continue;
 				}
 				if (skipLastLine && i === lines.length - 1 && lines.length > 1) {
 					this.partialLine = line;
