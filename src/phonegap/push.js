@@ -54,15 +54,17 @@ class PushNotification extends EventEmitter {
         }
 
         if (!global.device) {
-          throw new KinveyError('Cordova Device Plugin is not installed.',
-            'Please refer to http://devcenter.kinvey.com/phonegap/guides/push#ProjectSetUp for help with'
-            + ' setting up your project.');
+          throw new KinveyError(
+            'Cordova Device Plugin is not installed.',
+            'Please refer to http://devcenter.kinvey.com/phonegap/guides/push#ProjectSetUp for help with setting up your project.'
+          );
         }
 
         if (!global.PushNotification) {
-          throw new KinveyError('PhoneGap Push Notification Plugin is not installed.',
-            'Please refer to http://devcenter.kinvey.com/phonegap/guides/push#ProjectSetUp for help with'
-            + ' setting up your project.');
+          throw new KinveyError(
+            'PhoneGap Push Notification Plugin is not installed.',
+            'Please refer to http://devcenter.kinvey.com/phonegap/guides/push#ProjectSetUp for help with setting up your project.'
+          );
         }
 
         return new Promise((resolve) => {
@@ -102,8 +104,10 @@ class PushNotification extends EventEmitter {
         }
 
         if (!user && !options.userId) {
-          throw new KinveyError('Unable to register this device for push notifications.',
-            'You must login a user or provide a userId to assign the device token.');
+          throw new KinveyError(
+            'Unable to register this device for push notifications.',
+            'You must login a user or provide a userId to assign the device token.'
+          );
         }
 
         const request = new KinveyRequest({
@@ -129,11 +133,7 @@ class PushNotification extends EventEmitter {
       })
       .then((deviceId) => {
         const user = User.getActiveUser(this.client);
-        let _id = options.userId;
-
-        if (user) {
-          _id = user._id;
-        }
+        const _id = user ? user._id : options.userId;
 
         const request = new CacheRequest({
           method: RequestMethod.PUT,
@@ -174,15 +174,13 @@ class PushNotification extends EventEmitter {
       })
       .then(() => {
         const user = User.getActiveUser(this.client);
-        let _id = options.userId;
+        const _id = user ? user._id : options.userId;
 
-        if (!user && !options.userId) {
-          throw new KinveyError('Unable to unregister this device for push notificaitons.',
-            'You must login a user or provide a userId to unassign the device token.');
-        }
-
-        if (user) {
-          _id = user._id;
+        if (!_id) {
+          throw new KinveyError(
+            'Unable to unregister this device for push notificaitons.',
+            'You must login a user or provide a userId to unassign the device token.'
+          );
         }
 
         const request = new CacheRequest({
@@ -212,11 +210,7 @@ class PushNotification extends EventEmitter {
       })
       .then((device) => {
         const user = User.getActiveUser(this.client);
-        let deviceId;
-
-        if (device) {
-          deviceId = device.deviceId;
-        }
+        const deviceId = device ? device.deviceId : undefined;
 
         if (!deviceId) {
           return null;
@@ -245,11 +239,7 @@ class PushNotification extends EventEmitter {
       })
       .then(() => {
         const user = User.getActiveUser(this.client);
-        let _id = options.userId;
-
-        if (user) {
-          _id = user._id;
-        }
+        const _id = user ? user._id : options.userId;
 
         const request = new CacheRequest({
           method: RequestMethod.DELETE,

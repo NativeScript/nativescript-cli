@@ -3,7 +3,7 @@ import { isEmpty } from '../../core/utils';
 import { Storage } from './storage';
 import { Device } from '../device';
 
-export default class CacheMiddleware extends Middleware {
+export class CacheMiddleware extends Middleware {
   constructor(name = 'PhoneGap Cache Middleware') {
     super(name);
   }

@@ -38,7 +38,7 @@ const Device = {
     return deviceReady;
   }
 };
-export { Device }
+export { Device };
 
 // Check that cordova plugins are installed
 if (Device.isPhoneGap()) {
