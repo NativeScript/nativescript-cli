@@ -1,14 +1,20 @@
 language: node_js
 node_js:
-- '8'
+  - 'stable'
 env:
   secure: HQ8ytPTRHx5gF2+UzAuq94vL3Xu17KPvJrbB87C3qYL1dTyqUYEJz65N53MmO5TtYdA5fp3B+QOb5rm+B3WUTBxuaS7w0rr4YRI7AJxg5qh0thUzx3jTLubYNdZtskAy5V5gN5Kzn+eYGPFxp/Kuntxp3y3HDi8ihc0qMTk5aqBbry5I/iQjXzwDL1xNQFbmEpSSy1vAmYWv4IdaQvVhfreLqKU8tYeWH/zd+2UhGXMG/s6t40KXGIasIwXjiZS0Mux6l/r/lUYpaxLgRbyyodTNFZwMYkzhmUTLBJCpPCMdBxjhcRfyUWmzjSugs1vmNP0fc7kcclXxt6BH0l2rDoH88zJnksvWPyZaYDfYYjRb9fL5n7VKMAwUyY6IVbsL9jEyLAgkCTyucnGDl2ZXHCaucfLBMtSkIAlRncHOZMWOkO+U+aBsWCYS73/QnOXm35e697EpDjcQqjb5c6M+rDhB3XrtLCARVbU8O23iaAgQEEtV6ja+guh0MCMTnX+huJs81Q2Ggr5dfMxXCIx3ad23gwTuGZ6icuhOtwYzy8wZB6xJuqqi2Tl+/pBkUVPT044jZzeXrauZz2gT1i/Cdi1mniYNraXCCsnZDhQqpGCCe2ASNZC1ESPts7XpE0Rfro7ILGxhlOKFCuVWyxlLE/uO+XxSeSci2u9Bk32nNkQ=
+
+install:
+  - npm config set spin=false
+  - npm install
+
 script:
-- npm run ci
+  - npm run ci
 after_success:
-- bash <(curl -s https://codecov.io/bash)
+  - bash <(curl -s https://codecov.io/bash)
+
 before_deploy:
-- npm run build
+  - npm run build
 deploy:
   skip_cleanup: true
   provider: npm
@@ -18,6 +24,7 @@ deploy:
   on:
     tags: true
     repo: Kinvey/js-sdk
+
 notifications:
   email:
     on_success: change

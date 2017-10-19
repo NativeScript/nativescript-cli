@@ -43,7 +43,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'test/unit/**/*.karma.js'
+      '**/*.karma.js'
     ],
 
 
@@ -111,7 +111,7 @@ module.exports = function(config) {
     browserStack: {
       username: process.env.BROWSERSTACK_USERNAME,
       accessKey: process.env.BROWSERSTACK_ACCESSKEY,
-      project: 'Kinvey JavaScript SDK',
+      project: 'Kinvey HTML5 SDK',
       name: process.env.TRAVIS_COMMIT,
       video: false
     },

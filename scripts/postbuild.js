@@ -5,7 +5,8 @@ const path = require('path');
 const glob = require('glob');
 const replace = require('replace-in-file');
 const SDKS = [
-  'html5'
+  'html5',
+  'phonegap'
 ];
 
 SDKS.forEach(function(sdk) {
