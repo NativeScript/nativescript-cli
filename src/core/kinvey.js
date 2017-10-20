@@ -71,8 +71,12 @@ export class Kinvey {
    * @deprecated Please use Kinvey.init().
    */
   static initialize(config) {
-    const client = Kinvey.init(config);
-    return Promise.resolve(User.getActiveUser(client));
+    try {
+      const client = Kinvey.init(config);
+      return Promise.resolve(User.getActiveUser(client));
+    } catch (error) {
+      return Promise.reject(error);
+    }
   }
 
   /**

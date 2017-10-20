@@ -11,12 +11,14 @@
     "ci": "concurrently \"npm run lint\" \"npm run test:cover\" \"npm run test:karma\"",
     "predocs": "rimraf docs",
     "docs": "esdoc -c esdoc.json",
-    "lint": "concurrently \"npm run lint:html5\" \"npm run lint:phonegap\"",
+    "lint": "concurrently \"npm run lint:html5\" \"npm run lint:node\" \"npm run lint:phonegap\"",
     "lint:core": "eslint src/core/**",
     "lint:html5": "eslint src/html5/**",
+    "lint:node": "eslint src/node/**",
     "lint:phonegap": "eslint src/phonegap/**",
-    "test": "concurrently \"npm run test:html5\" \"npm run test:phonegap\"",
+    "test": "concurrently \"npm run test:html5\" \"npm run test:node\" \"npm run test:phonegap\"",
     "test:html5": "mocha --require babel-register -s 250 test/unit/html5/**/*.spec.js",
+    "test:node": "mocha --require babel-register -s 250 test/unit/node/**/*.spec.js",
     "test:phonegap": "mocha --require babel-register -s 250 test/unit/phonegap/**/*.spec.js",
     "test:cover": "istanbul cover _mocha -- --require babel-register -s 250 test/unit/**/*.spec.js",
     "test:karma": "concurrently \"npm run test:karma:html5\" \"npm run test:karma:phonegap\"",
@@ -28,6 +30,7 @@
   "dependencies": {
     "kinvey-js-sdk": "file:src/core",
     "kinvey-html5-sdk": "file:src/html5",
+    "kinvey-node-sdk": "file:src/node",
     "kinvey-phonegap-sdk": "file:src/phonegap"
   },
   "devDependencies": {
