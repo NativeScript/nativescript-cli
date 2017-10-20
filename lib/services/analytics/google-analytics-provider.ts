@@ -3,7 +3,7 @@ import * as ua from "universal-analytics";
 import { AnalyticsClients } from "../../common/constants";
 
 export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
-	private static GA_TRACKING_ID = "UA-111455-44";
+	private static GA_TRACKING_IDs = ["UA-111455-44"];
 	private currentPage: string;
 
 	constructor(private clientId: string,
@@ -13,8 +13,14 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	}
 
 	public async trackHit(trackInfo: IGoogleAnalyticsData): Promise<void> {
+		_.each(GoogleAnalyticsProvider.GA_TRACKING_IDs, (gaTrackingId) => {
+			this.track(gaTrackingId, trackInfo);
+		});
+	}
+
+	private async track(gaTrackingId: string, trackInfo: IGoogleAnalyticsData): Promise<void> {
 		const visitor = ua({
-			tid: GoogleAnalyticsProvider.GA_TRACKING_ID,
+			tid: gaTrackingId,
 			cid: this.clientId,
 			headers: {
 				["User-Agent"]: this.getUserAgentString()
