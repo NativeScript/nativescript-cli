@@ -3,7 +3,8 @@ import * as ua from "universal-analytics";
 import { AnalyticsClients } from "../../common/constants";
 
 export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
-	private static GA_TRACKING_IDs = ["UA-111455-44"];
+	private static GA_TRACKING_ID = "UA-111455-44";
+	private static GA_CROSS_CLIENT_TRACKING_ID = "UA-90319637-1";
 	private currentPage: string;
 
 	constructor(private clientId: string,
@@ -13,7 +14,9 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	}
 
 	public async trackHit(trackInfo: IGoogleAnalyticsData): Promise<void> {
-		_.each(GoogleAnalyticsProvider.GA_TRACKING_IDs, (gaTrackingId) => {
+		const trackingIds = [GoogleAnalyticsProvider.GA_TRACKING_ID, GoogleAnalyticsProvider.GA_CROSS_CLIENT_TRACKING_ID];
+
+		_.each(trackingIds, (gaTrackingId) => {
 			this.track(gaTrackingId, trackInfo);
 		});
 	}
@@ -27,7 +30,14 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 			}
 		});
 
-		this.setCustomDimensions(visitor, trackInfo.customDimensions);
+		switch (gaTrackingId) {
+			case GoogleAnalyticsProvider.GA_CROSS_CLIENT_TRACKING_ID:
+				this.setCrossClientCustomDimensions(visitor);
+				break;
+			default:
+				this.setCustomDimensions(visitor, trackInfo.customDimensions);
+				break;
+		}
 
 		switch (trackInfo.googleAnalyticsDataType) {
 			case GoogleAnalyticsDataType.Page:
@@ -50,6 +60,28 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		};
 
 		customDimensions = _.merge(defaultValues, customDimensions);
+
+		_.each(customDimensions, (value, key) => {
+			visitor.set(key, value);
+		});
+	}
+
+	private setCrossClientCustomDimensions(visitor: ua.Visitor): void {
+		const customDimensions: IStringDictionary = {
+			[GoogleAnalyticsCrossClientCustomDimensions.shellVersion]: null,
+			[GoogleAnalyticsCrossClientCustomDimensions.nodeVersion]: process.version,
+			[GoogleAnalyticsCrossClientCustomDimensions.npmVersion]: null,
+			[GoogleAnalyticsCrossClientCustomDimensions.tnsVersion]: this.$staticConfig.version,
+			[GoogleAnalyticsCrossClientCustomDimensions.accountType]: null,
+			[GoogleAnalyticsCrossClientCustomDimensions.localBuildEnv]: null,
+			[GoogleAnalyticsCrossClientCustomDimensions.dayFromFirstRun]: null,
+			[GoogleAnalyticsCrossClientCustomDimensions.dayFromFirstLogin]: null,
+			[GoogleAnalyticsCrossClientCustomDimensions.sessionId]: null,
+			[GoogleAnalyticsCrossClientCustomDimensions.clientId]: this.clientId,
+			[GoogleAnalyticsCrossClientCustomDimensions.timestampPerHit]: new Date().toJSON(),
+			[GoogleAnalyticsCrossClientCustomDimensions.crossClientId]: this.clientId,
+			[GoogleAnalyticsCrossClientCustomDimensions.uiVersion]: null
+		};
 
 		_.each(customDimensions, (value, key) => {
 			visitor.set(key, value);
