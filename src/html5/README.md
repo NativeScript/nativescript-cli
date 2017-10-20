@@ -20,10 +20,11 @@ import { Kinvey } from 'kinvey-html5-sdk';
 
 The Kinvey HTML5 SDK supports the following browsers:
 
-- On macOS: Safari, Chrome, Firefox
-- On iOS: Safari, Chrome
-- On Windows: Chrome, Firefox, Edge, Internet Explorer 11
-- On Android: Chrome (Performance depends on device)
+- Safari 10+
+- Chrome 56+
+- Firefox 50+
+- IE 11+
+- Edge
 
 ## Documentation
 
