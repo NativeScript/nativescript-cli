@@ -5,12 +5,15 @@ import { AnalyticsClients } from "../../common/constants";
 export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	private static GA_TRACKING_ID = "UA-111455-44";
 	private static GA_CROSS_CLIENT_TRACKING_ID = "UA-90319637-1";
+	private static FIRST_RUN_DATE = "FirstRunDate";
 	private currentPage: string;
 
 	constructor(private clientId: string,
 		private $staticConfig: IStaticConfig,
 		private $hostInfo: IHostInfo,
-		private $osInfo: IOsInfo) {
+		private $osInfo: IOsInfo,
+		private $sysInfo: ISysInfo,
+		private $userSettingsService: IUserSettingsService) {
 	}
 
 	public async trackHit(trackInfo: IGoogleAnalyticsData): Promise<void> {
@@ -32,7 +35,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 
 		switch (gaTrackingId) {
 			case GoogleAnalyticsProvider.GA_CROSS_CLIENT_TRACKING_ID:
-				this.setCrossClientCustomDimensions(visitor);
+				await this.setCrossClientCustomDimensions(visitor);
 				break;
 			default:
 				this.setCustomDimensions(visitor, trackInfo.customDimensions);
@@ -66,15 +69,23 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		});
 	}
 
-	private setCrossClientCustomDimensions(visitor: ua.Visitor): void {
+	private async setCrossClientCustomDimensions(visitor: ua.Visitor): Promise<void> {
+		let firstRunDate = <string>(await this.$userSettingsService.getSettingValue(GoogleAnalyticsProvider.FIRST_RUN_DATE));
+
+		if (!firstRunDate || !_.isString(firstRunDate)) {
+			firstRunDate = new Date().toJSON();
+
+			await this.$userSettingsService.saveSetting(GoogleAnalyticsProvider.FIRST_RUN_DATE, firstRunDate);
+		}
+
 		const customDimensions: IStringDictionary = {
 			[GoogleAnalyticsCrossClientCustomDimensions.shellVersion]: null,
 			[GoogleAnalyticsCrossClientCustomDimensions.nodeVersion]: process.version,
-			[GoogleAnalyticsCrossClientCustomDimensions.npmVersion]: null,
+			[GoogleAnalyticsCrossClientCustomDimensions.npmVersion]: await this.$sysInfo.getNpmVersion(),
 			[GoogleAnalyticsCrossClientCustomDimensions.tnsVersion]: this.$staticConfig.version,
 			[GoogleAnalyticsCrossClientCustomDimensions.accountType]: null,
 			[GoogleAnalyticsCrossClientCustomDimensions.localBuildEnv]: null,
-			[GoogleAnalyticsCrossClientCustomDimensions.dayFromFirstRun]: null,
+			[GoogleAnalyticsCrossClientCustomDimensions.dayFromFirstRun]: this.getDaysDiffFromToday(firstRunDate),
 			[GoogleAnalyticsCrossClientCustomDimensions.dayFromFirstLogin]: null,
 			[GoogleAnalyticsCrossClientCustomDimensions.sessionId]: null,
 			[GoogleAnalyticsCrossClientCustomDimensions.clientId]: this.clientId,
@@ -152,6 +163,17 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		// Could be improved by spawning `system_profiler SPSoftwareDataType` and getting the System Version line from the result.
 		const majorVersion = osRelease && _.first(osRelease.split("."));
 		return majorVersion && `10.${+majorVersion - 4}`;
+	}
+
+	private getDaysDiffFromToday(dateJson: string): string {
+		const millisecondsPerDay = 1000 * 60 * 60 * 24;
+
+		const date1 = new Date(dateJson);
+		const date2 = new Date();
+		const utc1 = Date.UTC(date1.getFullYear(), date1.getMonth(), date1.getDate());
+		const utc2 = Date.UTC(date2.getFullYear(), date2.getMonth(), date2.getDate());
+
+		return Math.floor((utc2 - utc1) / millisecondsPerDay).toString();
 	}
 }
 
