@@ -4,7 +4,7 @@ import { AnalyticsClients } from "../../common/constants";
 
 export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	private static GA_TRACKING_ID = "UA-111455-44";
-	private static GA_CROSS_CLIENT_TRACKING_ID = "UA-90319637-1";
+	private static GA_CROSS_CLIENT_TRACKING_ID = "UA-111455-51";
 	private static FIRST_RUN_DATE = "FirstRunDate";
 	private currentPage: string;
 
