@@ -111,7 +111,7 @@ interface ILiveSyncDeviceInfo extends IOptionalOutputPath, IOptionalDebuggingOpt
 /**
  * Describes a LiveSync operation.
  */
-interface ILiveSyncInfo extends IProjectDir {
+interface ILiveSyncInfo extends IProjectDir, IEnvOptions {
 	/**
 	 * Defines if the watcher should be skipped. If not passed, fs.Watcher will be started.
 	 */
@@ -145,14 +145,17 @@ interface ILiveSyncBuildInfo extends IIsEmulator, IPlatform {
 	pathToBuildItem: string;
 }
 
+interface IProjectDataComposition {
+	projectData: IProjectData;
+}
+
 /**
  * Desribes object that can be passed to ensureLatestAppPackageIsInstalledOnDevice method.
  */
-interface IEnsureLatestAppPackageIsInstalledOnDeviceOptions {
+interface IEnsureLatestAppPackageIsInstalledOnDeviceOptions extends IProjectDataComposition, IEnvOptions {
 	device: Mobile.IDevice;
 	preparedPlatforms: string[];
 	rebuiltInformation: ILiveSyncBuildInfo[];
-	projectData: IProjectData;
 	deviceBuildInfoDescriptor: ILiveSyncDeviceInfo;
 	settings: ILatestAppPackageInstalledSettings;
 	liveSyncData?: ILiveSyncInfo;
@@ -273,8 +276,7 @@ interface IShouldSkipEmitLiveSyncNotification {
 interface IAttachDebuggerOptions extends IDebuggingAdditionalOptions, IEnableDebuggingDeviceOptions, IIsEmulator, IPlatform, IOptionalOutputPath {
 }
 
-interface ILiveSyncWatchInfo {
-	projectData: IProjectData;
+interface ILiveSyncWatchInfo extends IProjectDataComposition {
 	filesToRemove: string[];
 	filesToSync: string[];
 	isReinstalled: boolean;
@@ -289,8 +291,7 @@ interface ILiveSyncResultInfo {
 	useLiveEdit?: boolean;
 }
 
-interface IFullSyncInfo {
-	projectData: IProjectData;
+interface IFullSyncInfo extends IProjectDataComposition {
 	device: Mobile.IDevice;
 	watch: boolean;
 	syncAllFiles: boolean;

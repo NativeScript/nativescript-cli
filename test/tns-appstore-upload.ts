@@ -98,8 +98,8 @@ class AppStore {
 
 	expectPreparePlatform() {
 		this.expectedPreparePlatformCalls = 1;
-		this.platformService.preparePlatform = (platform: string) => {
-			chai.assert.equal(platform, "iOS");
+		this.platformService.preparePlatform = (platformInfo: IPreparePlatformInfo) => {
+			chai.assert.equal(platformInfo.platform, "iOS");
 			this.preparePlatformCalls++;
 			return Promise.resolve(true);
 		};

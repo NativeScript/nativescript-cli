@@ -23,8 +23,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	private _trackedProjectFilePath: string = null;
 
 	constructor(private $devicesService: Mobile.IDevicesService,
-		private $preparePlatformNativeService: IPreparePlatformNativeService,
-		private $preparePlatformJSService: IPreparePlatformJSService,
+		private $preparePlatformNativeService: IPreparePlatformService,
+		private $preparePlatformJSService: IPreparePlatformService,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
@@ -142,12 +142,25 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		const coreModuleData = this.$fs.readJson(path.join(frameworkDir, "..", "package.json"));
 		const installedVersion = coreModuleData.version;
 
-		await this.$preparePlatformJSService.addPlatform(platformData, frameworkDir, installedVersion, projectData, config, platformTemplate);
+		await this.$preparePlatformJSService.addPlatform({
+			platformData,
+			frameworkDir,
+			installedVersion,
+			projectData,
+			config,
+			platformTemplate
+		});
 
 		if (!nativePrepare || !nativePrepare.skipNativePrepare) {
 			const platformDir = path.join(projectData.platformsDir, platformData.normalizedPlatformName.toLowerCase());
 			this.$fs.deleteDirectory(platformDir);
-			await this.$preparePlatformNativeService.addPlatform(platformData, frameworkDir, installedVersion, projectData, config);
+			await this.$preparePlatformNativeService.addPlatform({
+				platformData,
+				frameworkDir,
+				installedVersion,
+				projectData,
+				config
+			});
 		}
 
 		const coreModuleName = coreModuleData.name;
@@ -174,15 +187,24 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return _.filter(this.$platformsData.platformsNames, p => { return this.isPlatformPrepared(p, projectData); });
 	}
 
-	public async preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, filesToSync?: Array<String>, nativePrepare?: INativePrepare): Promise<boolean> {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+	public async preparePlatform(platformInfo: IPreparePlatformInfo): Promise<boolean> {
+		const platformData = this.$platformsData.getPlatformData(platformInfo.platform, platformInfo.projectData);
 
-		const changesInfo = await this.initialPrepare(platform, platformData, appFilesUpdaterOptions, platformTemplate, projectData, config, nativePrepare);
-		const requiresNativePrepare = (!nativePrepare || !nativePrepare.skipNativePrepare) && changesInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPrepare;
+		const changesInfo = await this.initialPrepare(platformInfo.platform, platformData, platformInfo.appFilesUpdaterOptions, platformInfo.platformTemplate, platformInfo.projectData, platformInfo.config, platformInfo.nativePrepare);
+		const requiresNativePrepare = (!platformInfo.nativePrepare || !platformInfo.nativePrepare.skipNativePrepare) && changesInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPrepare;
 
-		if (changesInfo.hasChanges || appFilesUpdaterOptions.bundle || requiresNativePrepare) {
-			await this.preparePlatformCore(platform, appFilesUpdaterOptions, projectData, config, changesInfo, filesToSync, nativePrepare);
-			this.$projectChangesService.savePrepareInfo(platform, projectData);
+		if (changesInfo.hasChanges || platformInfo.appFilesUpdaterOptions.bundle || requiresNativePrepare) {
+			await this.preparePlatformCore(
+				platformInfo.platform,
+				platformInfo.appFilesUpdaterOptions,
+				platformInfo.projectData,
+				platformInfo.config,
+				platformInfo.env,
+				changesInfo,
+				platformInfo.filesToSync,
+				platformInfo.nativePrepare,
+			);
+			this.$projectChangesService.savePrepareInfo(platformInfo.platform, platformInfo.projectData);
 		} else {
 			this.$logger.out("Skipping prepare.");
 		}
@@ -233,15 +255,35 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	/* Hooks are expected to use "filesToSync" parameter, as to give plugin authors additional information about the sync process.*/
 	@helpers.hook('prepare')
-	private async preparePlatformCore(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, changesInfo?: IProjectChangesInfo, filesToSync?: Array<String>, nativePrepare?: INativePrepare): Promise<void> {
+	private async preparePlatformCore(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, env: Object, changesInfo?: IProjectChangesInfo, filesToSync?: string[], nativePrepare?: INativePrepare): Promise<void> {
 		this.$logger.out("Preparing project...");
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const projectFilesConfig = helpers.getProjectFilesConfig({ isReleaseBuild: appFilesUpdaterOptions.release });
-		await this.$preparePlatformJSService.preparePlatform(platform, platformData, appFilesUpdaterOptions, projectData, platformSpecificData, changesInfo, filesToSync, projectFilesConfig);
+		await this.$preparePlatformJSService.preparePlatform({
+			platform,
+			platformData,
+			projectFilesConfig,
+			appFilesUpdaterOptions,
+			projectData,
+			platformSpecificData,
+			changesInfo,
+			filesToSync,
+			env
+		});
 
 		if (!nativePrepare || !nativePrepare.skipNativePrepare) {
-			await this.$preparePlatformNativeService.preparePlatform(platform, platformData, appFilesUpdaterOptions, projectData, platformSpecificData, changesInfo, filesToSync, projectFilesConfig);
+			await this.$preparePlatformNativeService.preparePlatform({
+				platform,
+				platformData,
+				appFilesUpdaterOptions,
+				projectData,
+				platformSpecificData,
+				changesInfo,
+				filesToSync,
+				projectFilesConfig,
+				env
+			});
 		}
 
 		const directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
@@ -402,35 +444,42 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.$logger.out(`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`);
 	}
 
-	public async deployPlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, deployOptions: IDeployPlatformOptions, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
-		await this.preparePlatform(platform, appFilesUpdaterOptions, deployOptions.platformTemplate, projectData, config);
+	public async deployPlatform(deployInfo: IDeployPlatformInfo): Promise<void> {
+		await this.preparePlatform({
+			platform: deployInfo.platform,
+			appFilesUpdaterOptions: deployInfo.appFilesUpdaterOptions,
+			platformTemplate: deployInfo.deployOptions.platformTemplate,
+			projectData: deployInfo.projectData,
+			config: deployInfo.config,
+			env: deployInfo.env
+		});
 		const options: Mobile.IDevicesServicesInitializationOptions = {
-			platform: platform, deviceId: deployOptions.device, emulator: deployOptions.emulator
+			platform: deployInfo.platform, deviceId: deployInfo.deployOptions.device, emulator: deployInfo.deployOptions.emulator
 		};
 		await this.$devicesService.initialize(options);
 		const action = async (device: Mobile.IDevice): Promise<void> => {
 			const buildConfig: IBuildConfig = {
 				buildForDevice: !this.$devicesService.isiOSSimulator(device),
-				projectDir: deployOptions.projectDir,
-				release: deployOptions.release,
-				device: deployOptions.device,
-				provision: deployOptions.provision,
-				teamId: deployOptions.teamId,
-				keyStoreAlias: deployOptions.keyStoreAlias,
-				keyStoreAliasPassword: deployOptions.keyStoreAliasPassword,
-				keyStorePassword: deployOptions.keyStorePassword,
-				keyStorePath: deployOptions.keyStorePath,
-				clean: deployOptions.clean
+				projectDir: deployInfo.deployOptions.projectDir,
+				release: deployInfo.deployOptions.release,
+				device: deployInfo.deployOptions.device,
+				provision: deployInfo.deployOptions.provision,
+				teamId: deployInfo.deployOptions.teamId,
+				keyStoreAlias: deployInfo.deployOptions.keyStoreAlias,
+				keyStoreAliasPassword: deployInfo.deployOptions.keyStoreAliasPassword,
+				keyStorePassword: deployInfo.deployOptions.keyStorePassword,
+				keyStorePath: deployInfo.deployOptions.keyStorePath,
+				clean: deployInfo.deployOptions.clean
 			};
-			const shouldBuild = await this.shouldBuild(platform, projectData, buildConfig);
+			const shouldBuild = await this.shouldBuild(deployInfo.platform, deployInfo.projectData, buildConfig);
 			if (shouldBuild) {
-				await this.buildPlatform(platform, buildConfig, projectData);
+				await this.buildPlatform(deployInfo.platform, buildConfig, deployInfo.projectData);
 			} else {
 				this.$logger.out("Skipping package build. No changes detected on the native side. This will be fast!");
 			}
 
-			if (deployOptions.forceInstall || shouldBuild || (await this.shouldInstall(device, projectData))) {
-				await this.installApplication(device, buildConfig, projectData);
+			if (deployInfo.deployOptions.forceInstall || shouldBuild || (await this.shouldInstall(device, deployInfo.projectData))) {
+				await this.installApplication(device, buildConfig, deployInfo.projectData);
 			} else {
 				this.$logger.out("Skipping install.");
 			}
@@ -438,12 +487,12 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			await this.trackActionForPlatform({ action: constants.TrackActionNames.Deploy, platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
 		};
 
-		if (deployOptions.device) {
-			const device = await this.$devicesService.getDevice(deployOptions.device);
-			deployOptions.device = device.deviceInfo.identifier;
+		if (deployInfo.deployOptions.device) {
+			const device = await this.$devicesService.getDevice(deployInfo.deployOptions.device);
+			deployInfo.deployOptions.device = device.deviceInfo.identifier;
 		}
 
-		await this.$devicesService.execute(action, this.getCanExecuteAction(platform, deployOptions));
+		await this.$devicesService.execute(action, this.getCanExecuteAction(deployInfo.platform, deployInfo.deployOptions));
 	}
 
 	public async startApplication(platform: string, runOptions: IRunPlatformOptions, projectId: string): Promise<void> {

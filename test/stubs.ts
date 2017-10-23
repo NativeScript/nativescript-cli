@@ -647,7 +647,7 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 		return Promise.resolve();
 	}
 
-	public preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string): Promise<boolean> {
+	public preparePlatform(platformInfo: IPreparePlatformInfo): Promise<boolean> {
 		return Promise.resolve(true);
 	}
 
@@ -667,7 +667,7 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 		return Promise.resolve();
 	}
 
-	public deployPlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, deployOptions: IDeployPlatformOptions): Promise<void> {
+	public deployPlatform(config: IDeployPlatformInfo): Promise<void> {
 		return Promise.resolve();
 	}
 

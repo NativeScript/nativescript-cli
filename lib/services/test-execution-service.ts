@@ -59,8 +59,16 @@ class TestExecutionService implements ITestExecutionService {
 					const socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
 					const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+					const preparePlatformInfo: IPreparePlatformInfo = {
+						platform,
+						appFilesUpdaterOptions,
+						platformTemplate: this.$options.platformTemplate,
+						projectData,
+						config: this.$options,
+						env: this.$options.env
+					};
 
-					if (!await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, this.$options)) {
+					if (!await this.$platformService.preparePlatform(preparePlatformInfo)) {
 						this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 					}
 
@@ -117,6 +125,7 @@ class TestExecutionService implements ITestExecutionService {
 						projectDir: projectData.projectDir,
 						skipWatcher: !this.$options.watch || this.$options.justlaunch,
 						watchAllFiles: this.$options.syncAllFiles,
+						env: this.$options.env
 					};
 
 					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
@@ -175,9 +184,18 @@ class TestExecutionService implements ITestExecutionService {
 				}
 
 				const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+				const preparePlatformInfo: IPreparePlatformInfo = {
+					platform,
+					appFilesUpdaterOptions,
+					platformTemplate: this.$options.platformTemplate,
+					projectData,
+					config: this.$options,
+					env: this.$options.env
+				};
+
 				// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
 				// so it will be sent to device.
-				if (!await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, projectData, this.$options)) {
+				if (!await this.$platformService.preparePlatform(preparePlatformInfo)) {
 					this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 				}
 
@@ -232,6 +250,7 @@ class TestExecutionService implements ITestExecutionService {
 						projectDir: projectData.projectDir,
 						skipWatcher: !this.$options.watch || this.$options.justlaunch,
 						watchAllFiles: this.$options.syncAllFiles,
+						env: this.$options.env
 					};
 
 					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);

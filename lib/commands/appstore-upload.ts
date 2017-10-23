@@ -57,6 +57,15 @@ export class PublishIOS implements ICommand {
 			const platform = this.$devicePlatformsConstants.iOS;
 			// No .ipa path provided, build .ipa on out own.
 			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+			const platformInfo: IPreparePlatformInfo = {
+				platform,
+				appFilesUpdaterOptions,
+				platformTemplate: this.$options.platformTemplate,
+				projectData: this.$projectData,
+				config: this.$options,
+				env: this.$options.env
+			};
+
 			if (mobileProvisionIdentifier || codeSignIdentity) {
 				const iOSBuildConfig: IBuildConfig = {
 					projectDir: this.$options.path,
@@ -70,12 +79,12 @@ export class PublishIOS implements ICommand {
 				};
 				this.$logger.info("Building .ipa with the selected mobile provision and/or certificate.");
 				// This is not very correct as if we build multiple targets we will try to sign all of them using the signing identity here.
-				await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData, this.$options);
+				await this.$platformService.preparePlatform(platformInfo);
 				await this.$platformService.buildPlatform(platform, iOSBuildConfig, this.$projectData);
 				ipaFilePath = this.$platformService.lastOutputPath(platform, iOSBuildConfig, this.$projectData);
 			} else {
 				this.$logger.info("No .ipa, mobile provision or certificate set. Perfect! Now we'll build .xcarchive and let Xcode pick the distribution certificate and provisioning profile for you when exporting .ipa for AppStore submission.");
-				await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData, this.$options);
+				await this.$platformService.preparePlatform(platformInfo);
 
 				const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
 				const iOSProjectService = <IOSProjectService>platformData.platformProjectService;

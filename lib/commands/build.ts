@@ -13,7 +13,16 @@ export class BuildCommandBase {
 	public async executeCore(args: string[]): Promise<void> {
 		const platform = args[0].toLowerCase();
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
-		await this.$platformService.preparePlatform(platform, appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData, this.$options);
+		const platformInfo: IPreparePlatformInfo = {
+			platform,
+			appFilesUpdaterOptions,
+			platformTemplate: this.$options.platformTemplate,
+			projectData: this.$projectData,
+			config: this.$options,
+			env: this.$options.env
+		};
+
+		await this.$platformService.preparePlatform(platformInfo);
 		this.$options.clean = true;
 		const buildConfig: IBuildConfig = {
 			buildForDevice: this.$options.forDevice,

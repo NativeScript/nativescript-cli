@@ -69,7 +69,7 @@ export class ProjectChangesService implements IProjectChangesService {
 				projectData,
 				this.fileChangeRequiresBuild);
 
-			if (this._newFiles > 0) {
+			if (this._newFiles > 0 || this._changesInfo.nativeChanged) {
 				this._changesInfo.modulesChanged = true;
 			}
 			const platformResourcesDir = path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);

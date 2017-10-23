@@ -39,15 +39,10 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * When there are changes to be prepared, it prepares the native project for the specified platform.
 	 * When finishes, prepare saves the .nsprepareinfo file in platform folder.
 	 * This file contains information about current project configuration and allows skipping unnecessary build, deploy and livesync steps.
-	 * @param {string} platform The platform to be prepared.
-	 * @param {IAppFilesUpdaterOptions} appFilesUpdaterOptions Options needed to instantiate AppFilesUpdater class.
-	 * @param {string} platformTemplate The name of the platform template.
-	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @param {IAddPlatformCoreOptions} config Options required for project preparation/creation.
-	 * @param {Array} filesToSync Files about to be synced to device.
+	 * @param {IPreparePlatformInfo} platformInfo Options to control the preparation.
 	 * @returns {boolean} true indicates that the platform was prepared.
 	 */
-	preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, filesToSync?: Array<String>, nativePrepare?: INativePrepare): Promise<boolean>;
+	preparePlatform(platformInfo: IPreparePlatformInfo): Promise<boolean>;
 
 	/**
 	 * Determines whether a build is necessary. A build is necessary when one of the following is true:
@@ -106,14 +101,10 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	/**
 	 * Executes prepare, build and installOnPlatform when necessary to ensure that the latest version of the app is installed on specified platform.
 	 * - When --clean option is specified it builds the app on every change. If not, build is executed only when there are native changes.
-	 * @param {string} platform The platform to deploy.
-	 * @param {IAppFilesUpdaterOptions} appFilesUpdaterOptions Options needed to instantiate AppFilesUpdater class.
-	 * @param {IDeployPlatformOptions} deployOptions Various options that can manage the deploy operation.
-	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @param {IAddPlatformCoreOptions} config Options required for project preparation/creation.
+	 * @param {IDeployPlatformInfo} deployInfo Options required for project preparation and deployment.
 	 * @returns {void}
 	 */
-	deployPlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, deployOptions: IDeployPlatformOptions, projectData: IProjectData, config: IPlatformOptions): Promise<void>;
+	deployPlatform(deployInfo: IDeployPlatformInfo): Promise<void>;
 
 	/**
 	 * Runs the application on specified platform. Assumes that the application is already build and installed. Fails if this is not true.
@@ -276,9 +267,19 @@ interface IPlatformsData {
 	getPlatformData(platform: string, projectData: IProjectData): IPlatformData;
 }
 
+interface IAppFilesUpdaterOptionsComposition {
+	appFilesUpdaterOptions: IAppFilesUpdaterOptions;
+}
+
+interface IJsNodeModulesData extends IPlatform, IProjectDataComposition, IAppFilesUpdaterOptionsComposition {
+	absoluteOutputPath: string;
+	lastModifiedTime: Date;
+	projectFilesConfig: IProjectFilesConfig;
+}
+
 interface INodeModulesBuilder {
 	prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void>;
-	prepareJSNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void>;
+	prepareJSNodeModules(jsNodeModulesData: IJsNodeModulesData): Promise<void>;
 	cleanNodeModules(absoluteOutputPath: string, platform: string): void;
 }
 
@@ -291,15 +292,44 @@ interface IBuildInfo {
 	buildTime: string;
 }
 
-interface IPreparePlatformService extends NodeJS.EventEmitter {
-	addPlatform(platformData: IPlatformData, frameworkDir: string, installedVersion: string, projectData: IProjectData, config: IPlatformOptions, platformTemplate?: string, ): Promise<void>;
-	preparePlatform(platform: string, platformData: IPlatformData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, changesInfo?: IProjectChangesInfo, filesToSync?: Array<String>, projectFilesConfig?: IProjectFilesConfig): Promise<void>;
+interface IPlatformDataComposition {
+	platformData: IPlatformData;
 }
 
-interface IPreparePlatformJSService extends IPreparePlatformService {
+interface ICopyAppFilesData extends IProjectDataComposition, IAppFilesUpdaterOptionsComposition, IPlatformDataComposition { }
 
+interface IPreparePlatformService {
+	addPlatform(info: IAddPlatformInfo): Promise<void>;
+	preparePlatform(config: IPreparePlatformJSInfo): Promise<void>;
 }
 
-interface IPreparePlatformNativeService extends IPreparePlatformService {
+interface IAddPlatformInfo extends IProjectDataComposition, IPlatformDataComposition {
+	frameworkDir: string;
+	installedVersion: string;
+	config: IPlatformOptions;
+	platformTemplate?: string;
+}
 
+interface IPreparePlatformJSInfo extends IPreparePlatformCoreInfo, ICopyAppFilesData {
+	projectFilesConfig?: IProjectFilesConfig;
+}
+
+interface IPreparePlatformCoreInfo extends IPreparePlatformInfoBase {
+	platformSpecificData: IPlatformSpecificData
+	changesInfo?: IProjectChangesInfo;
+}
+
+interface IPreparePlatformInfo extends IPreparePlatformInfoBase, IPlatformConfig, IPlatformTemplate { }
+
+interface IPlatformConfig {
+	config: IPlatformOptions;
+}
+
+interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions {
+	filesToSync?: string[];
+	nativePrepare?: INativePrepare;
+}
+
+interface IDeployPlatformInfo extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IPlatformConfig, IEnvOptions {
+	deployOptions: IDeployPlatformOptions
 }

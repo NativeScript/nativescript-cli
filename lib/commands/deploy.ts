@@ -30,7 +30,17 @@ export class DeployOnDeviceCommand implements ICommand {
 			keyStorePassword: this.$options.keyStorePassword,
 			keyStorePath: this.$options.keyStorePath
 		};
-		return this.$platformService.deployPlatform(args[0], appFilesUpdaterOptions, deployOptions, this.$projectData, this.$options);
+
+		const deployPlatformInfo: IDeployPlatformInfo = {
+			platform: args[0],
+			appFilesUpdaterOptions,
+			deployOptions,
+			projectData: this.$projectData,
+			config: this.$options,
+			env: this.$options.env
+		};
+
+		return this.$platformService.deployPlatform(deployPlatformInfo);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

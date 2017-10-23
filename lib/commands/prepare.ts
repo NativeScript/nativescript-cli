@@ -11,7 +11,16 @@ export class PrepareCommand implements ICommand {
 
 	public async execute(args: string[]): Promise<void> {
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
-		await this.$platformService.preparePlatform(args[0], appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData, this.$options);
+		const platformInfo: IPreparePlatformInfo = {
+			platform: args[0],
+			appFilesUpdaterOptions,
+			platformTemplate: this.$options.platformTemplate,
+			projectData: this.$projectData,
+			config: this.$options,
+			env: this.$options.env
+		};
+
+		await this.$platformService.preparePlatform(platformInfo);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

@@ -16,6 +16,8 @@ import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
 import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilities";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
+import { PreparePlatformNativeService } from "../lib/services/prepare-platform-native-service";
+import { PreparePlatformJSService } from "../lib/services/prepare-platform-js-service";
 import * as ChildProcessLib from "../lib/common/child-process";
 import ProjectChangesLib = require("../lib/services/project-changes-service");
 import { Messages } from "../lib/common/messages/messages";
@@ -74,6 +76,8 @@ function createTestInjector() {
 	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("xmlValidator", XmlValidator);
+	testInjector.register("preparePlatformNativeService", PreparePlatformNativeService);
+	testInjector.register("preparePlatformJSService", PreparePlatformJSService);
 	testInjector.register("npm", {
 		uninstall: async () => {
 			return true;
@@ -441,7 +445,14 @@ describe('Platform Service Tests', () => {
 
 			platformService = testInjector.resolve("platformService");
 			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: release };
-			await platformService.preparePlatform(platformToTest, appFilesUpdaterOptions, "", projectData, { provision: null, teamId: null, sdk: null, frameworkPath: null, ignoreScripts: false });
+			await platformService.preparePlatform({
+				platform: platformToTest,
+				appFilesUpdaterOptions,
+				platformTemplate: "",
+				projectData,
+				config: { provision: null, teamId: null, sdk: null, frameworkPath: null, ignoreScripts: false },
+				env: {}
+			});
 		}
 
 		async function testPreparePlatform(platformToTest: string, release?: boolean): Promise<CreatedTestData> {
@@ -525,7 +536,7 @@ describe('Platform Service Tests', () => {
 			const data: any = {};
 			if (platform.toLowerCase() === "ios") {
 				data[path.join(appDestFolderPath, "app")] = {
-					missingFiles: ["test1.ios.js", "test2.android.js", "test2.js", "App_Resources"],
+					missingFiles: ["test1.ios.js", "test2.android.js", "test2.js"],
 					presentFiles: ["test1.js", "test2-android-js", "test1-ios-js", "main.js"]
 				};
 
@@ -868,7 +879,14 @@ describe('Platform Service Tests', () => {
 			try {
 				testInjector.resolve("$logger").warn = (text: string) => warnings += text;
 				const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: false };
-				await platformService.preparePlatform("android", appFilesUpdaterOptions, "", projectData, { provision: null, teamId: null, sdk: null, frameworkPath: null, ignoreScripts: false });
+				await platformService.preparePlatform({
+					platform: "android",
+					appFilesUpdaterOptions,
+					platformTemplate: "",
+					projectData,
+					config: { provision: null, teamId: null, sdk: null, frameworkPath: null, ignoreScripts: false },
+					env: {}
+				});
 			} finally {
 				testInjector.resolve("$logger").warn = oldLoggerWarner;
 			}

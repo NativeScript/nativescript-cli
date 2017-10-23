@@ -3,51 +3,51 @@ import * as path from "path";
 import * as shell from "shelljs";
 import { PreparePlatformService } from "./prepare-platform-service";
 
-export class PreparePlatformNativeService extends PreparePlatformService implements IPreparePlatformNativeService {
+export class PreparePlatformNativeService extends PreparePlatformService implements IPreparePlatformService {
 
 	constructor($fs: IFileSystem,
 		$xmlValidator: IXmlValidator,
+		$hooksService: IHooksService,
 		private $nodeModulesBuilder: INodeModulesBuilder,
 		private $pluginsService: IPluginsService,
 		private $projectChangesService: IProjectChangesService) {
-		super($fs, $xmlValidator);
+		super($fs, $hooksService, $xmlValidator);
 	}
 
-	public async addPlatform(platformData: IPlatformData, frameworkDir: string, installedVersion: string, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
-		await platformData.platformProjectService.createProject(path.resolve(frameworkDir), installedVersion, projectData, config);
-		platformData.platformProjectService.ensureConfigurationFileInAppResources(projectData);
-		await platformData.platformProjectService.interpolateData(projectData, config);
-		platformData.platformProjectService.afterCreateProject(platformData.projectRoot, projectData);
+	public async addPlatform(info: IAddPlatformInfo): Promise<void> {
+		await info.platformData.platformProjectService.createProject(path.resolve(info.frameworkDir), info.installedVersion, info.projectData, info.config);
+		info.platformData.platformProjectService.ensureConfigurationFileInAppResources(info.projectData);
+		await info.platformData.platformProjectService.interpolateData(info.projectData, info.config);
+		info.platformData.platformProjectService.afterCreateProject(info.platformData.projectRoot, info.projectData);
 	}
 
-	public async preparePlatform(platform: string, platformData: IPlatformData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, changesInfo?: IProjectChangesInfo, filesToSync?: Array<String>, projectFilesConfig?: IProjectFilesConfig): Promise<void> {
-		if (changesInfo.hasChanges) {
-			await this.cleanProject(platform, appFilesUpdaterOptions, platformData, projectData);
+	public async preparePlatform(config: IPreparePlatformJSInfo): Promise<void> {
+		if (config.changesInfo.hasChanges) {
+			await this.cleanProject(config.platform, config.appFilesUpdaterOptions, config.platformData, config.projectData);
 		}
 
-		if (!changesInfo || changesInfo.changesRequirePrepare) {
-			await this.copyAppFiles(platformData, appFilesUpdaterOptions, projectData);
-			this.copyAppResources(platformData, projectData);
-			await platformData.platformProjectService.prepareProject(projectData, platformSpecificData);
+		if (!config.changesInfo || config.changesInfo.changesRequirePrepare) {
+			this.copyAppResources(config.platformData, config.projectData);
+			await config.platformData.platformProjectService.prepareProject(config.projectData, config.platformSpecificData);
 		}
 
-		if (!changesInfo || changesInfo.modulesChanged || appFilesUpdaterOptions.bundle) {
-			await this.$pluginsService.validate(platformData, projectData);
+		if (!config.changesInfo || config.changesInfo.modulesChanged || config.appFilesUpdaterOptions.bundle) {
+			await this.$pluginsService.validate(config.platformData, config.projectData);
 
-			const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+			const appDestinationDirectoryPath = path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			const lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).mtime : null;
 
 			const tnsModulesDestinationPath = path.join(appDestinationDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
 			// Process node_modules folder
-			await this.$nodeModulesBuilder.prepareNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime, projectData, projectFilesConfig);
+			await this.$nodeModulesBuilder.prepareNodeModules(tnsModulesDestinationPath, config.platform, lastModifiedTime, config.projectData, config.projectFilesConfig);
 		}
 
-		if (!changesInfo || changesInfo.configChanged || changesInfo.modulesChanged) {
-			await platformData.platformProjectService.processConfigurationFilesFromAppResources(appFilesUpdaterOptions.release, projectData);
+		if (!config.changesInfo || config.changesInfo.configChanged || config.changesInfo.modulesChanged) {
+			await config.platformData.platformProjectService.processConfigurationFilesFromAppResources(config.appFilesUpdaterOptions.release, config.projectData);
 		}
 
-		platformData.platformProjectService.interpolateConfigurationFile(projectData, platformSpecificData);
-		this.$projectChangesService.setNativePlatformStatus(platform, projectData,
+		config.platformData.platformProjectService.interpolateConfigurationFile(config.projectData, config.platformSpecificData);
+		this.$projectChangesService.setNativePlatformStatus(config.platform, config.projectData,
 			{ nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared });
 	}
 
