@@ -1,4 +1,4 @@
-const enum GoogleAnalyticsCustomDimensions {
+declare const enum GoogleAnalyticsCustomDimensions {
 	cliVersion = "cd1",
 	projectType = "cd2",
 	clientID = "cd3",

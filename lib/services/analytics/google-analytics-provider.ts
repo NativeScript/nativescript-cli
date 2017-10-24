@@ -4,24 +4,46 @@ import { AnalyticsClients } from "../../common/constants";
 
 export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	private static GA_TRACKING_ID = "UA-111455-44";
+	private static GA_CROSS_CLIENT_TRACKING_ID = "UA-111455-51";
 	private currentPage: string;
 
 	constructor(private clientId: string,
 		private $staticConfig: IStaticConfig,
 		private $hostInfo: IHostInfo,
-		private $osInfo: IOsInfo) {
+		private $osInfo: IOsInfo,
+		private $logger: ILogger) {
 	}
 
 	public async trackHit(trackInfo: IGoogleAnalyticsData): Promise<void> {
+		const trackingIds = [GoogleAnalyticsProvider.GA_TRACKING_ID, GoogleAnalyticsProvider.GA_CROSS_CLIENT_TRACKING_ID];
+		const sessionId = uuid.v4();
+
+		for (const gaTrackingId of trackingIds) {
+			try {
+				await this.track(gaTrackingId, trackInfo, sessionId);
+			} catch (e) {
+				this.$logger.trace("Analytics exception: ", e);
+			}
+		}
+	}
+
+	private async track(gaTrackingId: string, trackInfo: IGoogleAnalyticsData, sessionId: string): Promise<void> {
 		const visitor = ua({
-			tid: GoogleAnalyticsProvider.GA_TRACKING_ID,
+			tid: gaTrackingId,
 			cid: this.clientId,
 			headers: {
 				["User-Agent"]: this.getUserAgentString()
 			}
 		});
 
-		this.setCustomDimensions(visitor, trackInfo.customDimensions);
+		switch (gaTrackingId) {
+			case GoogleAnalyticsProvider.GA_CROSS_CLIENT_TRACKING_ID:
+				this.setCrossClientCustomDimensions(visitor, sessionId);
+				break;
+			default:
+				this.setCustomDimensions(visitor, trackInfo.customDimensions, sessionId);
+				break;
+		}
 
 		switch (trackInfo.googleAnalyticsDataType) {
 			case GoogleAnalyticsDataType.Page:
@@ -33,17 +55,29 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		}
 	}
 
-	private setCustomDimensions(visitor: ua.Visitor, customDimensions: IStringDictionary): void {
+	private setCustomDimensions(visitor: ua.Visitor, customDimensions: IStringDictionary, sessionId: string): void {
 		const defaultValues: IStringDictionary = {
 			[GoogleAnalyticsCustomDimensions.cliVersion]: this.$staticConfig.version,
 			[GoogleAnalyticsCustomDimensions.nodeVersion]: process.version,
 			[GoogleAnalyticsCustomDimensions.clientID]: this.clientId,
 			[GoogleAnalyticsCustomDimensions.projectType]: null,
-			[GoogleAnalyticsCustomDimensions.sessionID]: uuid.v4(),
+			[GoogleAnalyticsCustomDimensions.sessionID]: sessionId,
 			[GoogleAnalyticsCustomDimensions.client]: AnalyticsClients.Unknown
 		};
 
 		customDimensions = _.merge(defaultValues, customDimensions);
+
+		_.each(customDimensions, (value, key) => {
+			visitor.set(key, value);
+		});
+	}
+
+	private async setCrossClientCustomDimensions(visitor: ua.Visitor, sessionId: string): Promise<void> {
+		const customDimensions: IStringDictionary = {
+			[GoogleAnalyticsCrossClientCustomDimensions.sessionId]: sessionId,
+			[GoogleAnalyticsCrossClientCustomDimensions.clientId]: this.clientId,
+			[GoogleAnalyticsCrossClientCustomDimensions.crossClientId]: this.clientId,
+		};
 
 		_.each(customDimensions, (value, key) => {
 			visitor.set(key, value);
