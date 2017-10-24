@@ -207,7 +207,17 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 			return this.getChromeDebugUrl(debugOptions, this._socketProxy.options.port);
 		} else {
 			this._socketProxy = await this.$socketProxyFactory.createTCPSocketProxy(this.getSocketFactory(device));
-			await this.openAppInspector(this._socketProxy.address(), debugData, debugOptions);
+			// delay opening the AppInspector until after the runtime has finished initializing the
+			// dynamically registered Chrome DevTools agent implementations in JavaScript using the tns-core-modules
+			// The workaround is necessary to prevent an unexpected timing crash introduced in the 3.3 modules
+			const inspectorStartDelay = 6000;
+			try {
+				setTimeout(async () => {
+					await this.openAppInspector(this._socketProxy.address(), debugData, debugOptions);
+				}, inspectorStartDelay);
+			} catch (e) {
+				this.$logger.error(e.message);
+			}
 			return null;
 		}
 	}
