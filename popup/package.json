@@ -1,0 +1,6 @@
+{
+  "name" : "popup",
+  "main" : "popup",
+  "types": "popup.d.ts",
+  "nativescript": {}
+}
