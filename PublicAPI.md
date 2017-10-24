@@ -35,6 +35,8 @@ const tns = require("nativescript");
 	* [disableDebugging](#disableDebugging)
 	* [getLiveSyncDeviceDescriptors](#getLiveSyncDeviceDescriptors)
 	* [events](#events)
+* [analyticsSettingsService](#analyticsSettingsService)
+	* [getClientId](#getClientId)
 
 
 ## Module projectService
@@ -854,6 +856,26 @@ Example:
 tns.liveSyncService.on("debuggerDetached", debugInfo => {
 	console.log(`Detached debugger for device with id ${debugInfo.deviceIdentifier}`);
 });
+```
+## analyticsSettingsService
+Provides methods for accessing the analytics settings file data.
+
+### getClientId
+The `getClientId` method allows retrieving the clientId used in the analytics tracking
+
+* Definition:
+```TypeScript
+/**
+ * Gets the clientId used for analytics tracking
+ * @returns {Promise<string>} Client identifier in UUIDv4 standard.
+ */
+getClientId(): Promise<string>;
+```
+
+* Usage:
+```JavaScript
+tns.analyticsSettingsService.getClientId()
+	.then(clientId => console.log(clientId));
 ```
 
 ## How to add a new method to Public API
