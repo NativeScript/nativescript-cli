@@ -1,5 +1,5 @@
 import { path } from 'tns-core-modules/file-system';
-import { KinveyError } from 'kinvey-js-sdk/dist/export';
+import { KinveyError } from '../core/errors';
 
 export interface WorkerScriptOptions {
   timeout: number;

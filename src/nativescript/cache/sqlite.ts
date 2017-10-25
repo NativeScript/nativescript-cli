@@ -1,5 +1,5 @@
-import { isDefined } from 'kinvey-js-sdk/dist/utils';
-import { NotFoundError } from 'kinvey-js-sdk/dist/errors';
+import { isDefined } from '../../core/utils';
+import { NotFoundError } from '../../core/errors';
 const nativeScriptSQLite = require('nativescript-sqlite');
 
 const masterCollectionName = 'sqlite_master';

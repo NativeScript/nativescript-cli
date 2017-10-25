@@ -1,4 +1,6 @@
-import { Client as CoreClient, KinveyError, isDefined, Log } from 'kinvey-js-sdk/dist/export';
+import { Client as CoreClient } from '../core/client';
+import { KinveyError } from '../core/errors';
+import { isDefined, Log } from '../core/utils';
 import { SecureStorage } from './secure';
 const storage = new SecureStorage();
 
