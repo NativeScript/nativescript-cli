@@ -22,6 +22,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	];
 
 	private _androidProjectPropertiesManagers: IDictionary<IAndroidProjectPropertiesManager>;
+	private isASTemplate: boolean;
 
 	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $androidToolsInfo: IAndroidToolsInfo,
@@ -38,6 +39,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $npm: INodePackageManager) {
 		super($fs, $projectDataService);
 		this._androidProjectPropertiesManagers = Object.create(null);
+		this.isASTemplate = false;
 	}
 
 	private _platformsDirCache: string = null;
@@ -46,19 +48,40 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		if (!projectData && !this._platformData) {
 			throw new Error("First call of getPlatformData without providing projectData.");
 		}
-
-		if (projectData && projectData.platformsDir && this._platformsDirCache !== projectData.platformsDir) {
-			this._platformsDirCache = projectData.platformsDir;
+		if (projectData && projectData.platformsDir) {
 			const projectRoot = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
+			if (this.$fs.exists(path.join(projectRoot, "app")) ||
+				this.$fs.exists(path.join(projectRoot, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_ANDROID_RUNTIME_NAME, constants.PROJECT_FRAMEWORK_FOLDER_NAME, constants.APP_FOLDER_NAME))) {
+				this.isASTemplate = true;
+			}
+			let appDestinationDirectoryArr = ["src", "main", "assets"];
+			if (this.isASTemplate) {
+				appDestinationDirectoryArr.unshift("app");
+			}
+			appDestinationDirectoryArr.unshift(projectRoot);
+			let configurationsDirectoryArr = ["src", "main", "AndroidManifest.xml"];
+			if (this.isASTemplate) {
+				configurationsDirectoryArr.unshift("app");
+			}
+			configurationsDirectoryArr.unshift(projectRoot);
+
+			let deviceBuildOutputArr = ["build", "outputs", "apk"];
+			if (this.isASTemplate) {
+				deviceBuildOutputArr.unshift("app");
+			}
+			deviceBuildOutputArr.unshift(projectRoot);
+
+			this._platformsDirCache = projectData.platformsDir;
 			const packageName = this.getProjectNameFromId(projectData);
+
 			this._platformData = {
 				frameworkPackageName: "tns-android",
 				normalizedPlatformName: "Android",
-				appDestinationDirectoryPath: path.join(projectRoot, "src", "main", "assets"),
+				appDestinationDirectoryPath: path.join.apply(null, appDestinationDirectoryArr),
 				platformProjectService: this,
 				emulatorServices: this.$androidEmulatorServices,
 				projectRoot: projectRoot,
-				deviceBuildOutputPath: path.join(projectRoot, "build", "outputs", "apk"),
+				deviceBuildOutputPath: path.join.apply(null, deviceBuildOutputArr),
 				getValidPackageNames: (buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[] => {
 					const buildMode = buildOptions.isReleaseBuild ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
 
@@ -70,10 +93,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				},
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
 				configurationFileName: "AndroidManifest.xml",
-				configurationFilePath: path.join(projectRoot, "src", "main", "AndroidManifest.xml"),
+				configurationFilePath: path.join.apply(null, configurationsDirectoryArr),
 				relativeToFrameworkConfigurationFilePath: path.join("src", "main", "AndroidManifest.xml"),
 				fastLivesyncFileExtensions: [".jpg", ".gif", ".png", ".bmp", ".webp"] // http://developer.android.com/guide/appendix/media-formats.html
 			};
+
 		}
 
 		return this._platformData;
@@ -93,7 +117,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public getAppResourcesDestinationDirectoryPath(projectData: IProjectData, frameworkVersion?: string): string {
 		if (this.canUseGradle(projectData, frameworkVersion)) {
-			return path.join(this.getPlatformData(projectData).projectRoot, "src", "main", "res");
+			let resourcePath: string[] = ["src", "main", "res"];
+			if (this.isASTemplate) {
+				resourcePath.unshift("app")
+			}
+
+			return path.join(this.getPlatformData(projectData).projectRoot, path.join.apply(null, resourcePath));
 		}
 
 		return path.join(this.getPlatformData(projectData).projectRoot, "res");
@@ -125,25 +154,29 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
 		const targetSdkVersion = androidToolsInfo && androidToolsInfo.targetSdkVersion;
 		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
-		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "libs", "-R");
 
-		if (config.pathToTemplate) {
-			const mainPath = path.join(this.getPlatformData(projectData).projectRoot, "src", "main");
-			this.$fs.createDirectory(mainPath);
-			shell.cp("-R", path.join(path.resolve(config.pathToTemplate), "*"), mainPath);
+		this.isASTemplate = this.$fs.exists(path.join(frameworkDir, "app"));
+		if (this.isASTemplate) {
+			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "*", "-R");
 		} else {
-			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "src", "-R");
-		}
-		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "build.gradle settings.gradle build-tools", "-Rf");
+			if (config.pathToTemplate) {
+				const mainPath = path.join(this.getPlatformData(projectData).projectRoot, "src", "main");
+				this.$fs.createDirectory(mainPath);
+				shell.cp("-R", path.join(path.resolve(config.pathToTemplate), "*"), mainPath);
+			} else {
+				this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "src", "-R");
+			}
+			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "build.gradle settings.gradle build-tools", "-Rf");
 
-		try {
-			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradle.properties", "-Rf");
-		} catch (e) {
-			this.$logger.warn(`\n${e}\nIt's possible, the final .apk file will contain all architectures instead of the ones described in the abiFilters!\nYou can fix this by using the latest android platform.`);
-		}
+			try {
+				this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradle.properties", "-Rf");
+			} catch (e) {
+				this.$logger.warn(`\n${e}\nIt's possible, the final .apk file will contain all architectures instead of the ones described in the abiFilters!\nYou can fix this by using the latest android platform.`);
+			}
 
-		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradle", "-R");
-		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
+			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradle", "-R");
+			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
+		}
 
 		this.cleanResValues(targetSdkVersion, projectData, frameworkVersion);
 
@@ -269,8 +302,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				buildOptions.unshift("--stacktrace");
 				buildOptions.unshift("--debug");
 			}
-
-			buildOptions.unshift("buildapk");
+			if (buildConfig.release) {
+				buildOptions.unshift("assembleRelease");
+			} else {
+				buildOptions.unshift("assembleDebug");
+			}
 
 			const handler = (data: any) => {
 				this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
