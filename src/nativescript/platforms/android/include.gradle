@@ -1,0 +1,16 @@
+android {
+  productFlavors {
+    "kinveynativescriptsdk" {
+      dimension "kinveynativescriptsdk"
+    }
+  }
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile 'com.orhanobut:hawk:2.0.1'
+  compile 'com.squareup.okhttp3:okhttp:3.8.1'
+}

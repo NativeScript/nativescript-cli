@@ -7,6 +7,7 @@ const SDKS = [
   'angular',
   'angular2',
   'html5',
+  'nativescript',
   'node',
   'phonegap'
 ];

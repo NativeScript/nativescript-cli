@@ -30,7 +30,7 @@ function getStartIndex(rangeHeader, max) {
 /**
  * The FileStore class is used to find, save, update, remove, count and group files.
  */
-class FileStore extends NetworkStore {
+export class FileStore extends NetworkStore {
   /**
    * @private
    * The pathname for the store.
