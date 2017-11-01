@@ -54,18 +54,20 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				this.$fs.exists(path.join(projectRoot, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_ANDROID_RUNTIME_NAME, constants.PROJECT_FRAMEWORK_FOLDER_NAME, constants.APP_FOLDER_NAME))) {
 				this.isASTemplate = true;
 			}
-			let appDestinationDirectoryArr = ["src", "main", "assets"];
+
+			const appDestinationDirectoryArr = ["src", "main", "assets"];
 			if (this.isASTemplate) {
 				appDestinationDirectoryArr.unshift("app");
 			}
 			appDestinationDirectoryArr.unshift(projectRoot);
-			let configurationsDirectoryArr = ["src", "main", "AndroidManifest.xml"];
+
+			const configurationsDirectoryArr = ["src", "main", "AndroidManifest.xml"];
 			if (this.isASTemplate) {
 				configurationsDirectoryArr.unshift("app");
 			}
 			configurationsDirectoryArr.unshift(projectRoot);
 
-			let deviceBuildOutputArr = ["build", "outputs", "apk"];
+			const deviceBuildOutputArr = ["build", "outputs", "apk"];
 			if (this.isASTemplate) {
 				deviceBuildOutputArr.unshift("app");
 			}
@@ -117,9 +119,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public getAppResourcesDestinationDirectoryPath(projectData: IProjectData, frameworkVersion?: string): string {
 		if (this.canUseGradle(projectData, frameworkVersion)) {
-			let resourcePath: string[] = ["src", "main", "res"];
+			const resourcePath: string[] = ["src", "main", "res"];
 			if (this.isASTemplate) {
-				resourcePath.unshift("app")
+				resourcePath.unshift("app");
 			}
 
 			return path.join(this.getPlatformData(projectData).projectRoot, path.join.apply(null, resourcePath));
@@ -159,6 +161,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		if (this.isASTemplate) {
 			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "*", "-R");
 		} else {
+			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "libs", "-R");
+
 			if (config.pathToTemplate) {
 				const mainPath = path.join(this.getPlatformData(projectData).projectRoot, "src", "main");
 				this.$fs.createDirectory(mainPath);
