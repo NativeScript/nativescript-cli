@@ -2,9 +2,10 @@
 
 const fs = require('fs-extra');
 const path = require('path');
-const glob = require('glob');
 const replace = require('replace-in-file');
 const SDKS = [
+  'angular',
+  'angular2',
   'html5',
   'nativescript',
   'node',
@@ -30,6 +31,11 @@ SDKS.forEach(function(sdk) {
       from: /core/g,
       to: './core'
     });
+
+    try {
+      // Copy .d.ts files
+      fs.copySync(path.join(__dirname, '../src', sdk, 'kinvey.d.ts'), path.join(__dirname, '../dist', sdk, 'kinvey.d.ts'));
+    } catch (error) { }
 
     // Copy package.json files
     fs.copySync(path.join(__dirname, '../src', sdk, 'package.json'), path.join(__dirname, '../dist', sdk, 'package.json'));

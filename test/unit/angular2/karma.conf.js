@@ -111,7 +111,7 @@ module.exports = function(config) {
     browserStack: {
       username: process.env.BROWSERSTACK_USERNAME,
       accessKey: process.env.BROWSERSTACK_ACCESSKEY,
-      project: 'Kinvey Angular SDK',
+      project: 'Kinvey Angular2 SDK',
       name: process.env.TRAVIS_COMMIT,
       video: false
     },
