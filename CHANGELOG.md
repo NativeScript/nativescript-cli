@@ -1,7 +1,21 @@
 NativeScript CLI Changelog
 ================
 
-3.2.0 - RC.1 (2017, August 29)
+3.3.0 (2017, July 25)
+==
+
+### New
+
+* [Implemented #2470](https://github.com/NativeScript/nativescript-cli/issues/2470): Establish a recommended workflow for simultaneous Android & iOS development - use `tns run` command.
+* [Implemented #2873](https://github.com/NativeScript/nativescript-cli/issues/2873): Add official support for Node 8.
+* [Implemented #3076](https://github.com/NativeScript/nativescript-cli/issues/3076): NativeScript setup scripts should have silent installer mode.
+
+### Fixed
+* [Fixed #3141](https://github.com/NativeScript/nativescript-cli/issues/3141): No console.log output Xcode 9 iOS 11.
+* [Fixed #3016](https://github.com/NativeScript/nativescript-cli/issues/3016): tns_modules randomly appears in app folder and breaks build.
+* [Fixed #2967](https://github.com/NativeScript/nativescript-cli/issues/2967): Create plugin by static static libraries error.
+
+3.2.0 (2017, September 7)
 ==
 
 ### Fixed
