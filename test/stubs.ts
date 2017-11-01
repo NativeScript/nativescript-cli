@@ -398,12 +398,6 @@ export class ProjectHelperStub implements IProjectHelper {
 	}
 }
 
-export class ProjectTemplatesService implements IProjectTemplatesService {
-	async prepareTemplate(templateName: string): Promise<string> {
-		return Promise.resolve("");
-	}
-}
-
 export class HooksServiceStub implements IHooksService {
 	async executeBeforeHooks(commandName: string): Promise<void> {
 		return Promise.resolve();
