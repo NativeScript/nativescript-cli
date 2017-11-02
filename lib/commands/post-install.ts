@@ -5,12 +5,12 @@ export class PostInstallCliCommand extends PostInstallCommand {
 		private $subscriptionService: ISubscriptionService,
 		$staticConfig: Config.IStaticConfig,
 		$commandsService: ICommandsService,
-		$htmlHelpService: IHtmlHelpService,
+		$helpService: IHelpService,
 		$options: ICommonOptions,
 		$doctorService: IDoctorService,
 		$analyticsService: IAnalyticsService,
 		$logger: ILogger) {
-		super($fs, $staticConfig, $commandsService, $htmlHelpService, $options, $doctorService, $analyticsService, $logger);
+		super($fs, $staticConfig, $commandsService, $helpService, $options, $doctorService, $analyticsService, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {

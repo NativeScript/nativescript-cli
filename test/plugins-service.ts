@@ -98,6 +98,9 @@ function createTestInjector() {
 	});
 	testInjector.register("xmlValidator", XmlValidator);
 	testInjector.register("config", StaticConfigLib.Configuration);
+	testInjector.register("helpService", {
+		showCommandLineHelp: async (): Promise<void> => (undefined)
+	});
 
 	return testInjector;
 }

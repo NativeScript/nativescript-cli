@@ -91,6 +91,9 @@ function createTestInjector() {
 	});
 	testInjector.register("messages", Messages);
 	testInjector.register("devicePathProvider", {});
+	testInjector.register("helpService", {
+		showCommandLineHelp: async (): Promise<void> => (undefined)
+	});
 
 	return testInjector;
 }

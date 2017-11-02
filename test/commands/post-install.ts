@@ -18,7 +18,7 @@ const createTestInjector = (): IInjector => {
 		tryExecuteCommand: async (commandName: string, commandArguments: string[]): Promise<void> => undefined
 	});
 
-	testInjector.register("htmlHelpService", {
+	testInjector.register("helpService", {
 		generateHtmlPages: async (): Promise<void> => undefined
 	});
 
