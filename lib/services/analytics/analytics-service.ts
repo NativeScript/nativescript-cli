@@ -11,13 +11,13 @@ export class AnalyticsService extends AnalyticsServiceBase {
 
 	constructor(protected $logger: ILogger,
 		protected $options: IOptions,
+		protected $processService: IProcessService,
 		$staticConfig: Config.IStaticConfig,
 		$prompter: IPrompter,
 		$userSettingsService: UserSettings.IUserSettingsService,
 		$analyticsSettingsService: IAnalyticsSettingsService,
 		$osInfo: IOsInfo,
 		private $childProcess: IChildProcess,
-		protected $processService: IProcessService,
 		private $projectDataService: IProjectDataService,
 		private $mobileHelper: Mobile.IMobileHelper) {
 		super($logger, $options, $staticConfig, $processService, $prompter, $userSettingsService, $analyticsSettingsService, $osInfo);

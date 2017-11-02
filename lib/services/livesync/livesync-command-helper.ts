@@ -9,7 +9,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $platformsData: IPlatformsData,
 		private $analyticsService: IAnalyticsService,
 		private $errors: IErrors) {
-			this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
+		this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
 	}
 
 	public getPlatformsForOperation(platform: string): string[] {
@@ -74,7 +74,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			projectDir: this.$projectData.projectDir,
 			skipWatcher: !this.$options.watch,
 			watchAllFiles: this.$options.syncAllFiles,
-			clean: this.$options.clean
+			clean: this.$options.clean,
+			env: this.$options.env
 		};
 
 		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
@@ -95,7 +96,16 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 		const availablePlatforms = this.getPlatformsForOperation(platform);
 		for (const currentPlatform of availablePlatforms) {
-			await this.$platformService.deployPlatform(currentPlatform, this.$options, deployOptions, this.$projectData, this.$options);
+			const deployPlatformInfo: IDeployPlatformInfo = {
+				platform: currentPlatform,
+				appFilesUpdaterOptions: this.$options,
+				deployOptions,
+				projectData: this.$projectData,
+				config: this.$options,
+				env: this.$options.env
+			};
+
+			await this.$platformService.deployPlatform(deployPlatformInfo);
 			await this.$platformService.startApplication(currentPlatform, runPlatformOptions, this.$projectData.projectId);
 			this.$platformService.trackProjectType(this.$projectData);
 		}

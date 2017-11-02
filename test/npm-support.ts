@@ -16,6 +16,8 @@ import NodeModulesLib = require("../lib/tools/node-modules/node-modules-builder"
 import PluginsServiceLib = require("../lib/services/plugins-service");
 import ChildProcessLib = require("../lib/common/child-process");
 import ProjectFilesManagerLib = require("../lib/common/services/project-files-manager");
+import { PreparePlatformNativeService } from "../lib/services/prepare-platform-native-service";
+import { PreparePlatformJSService } from "../lib/services/prepare-platform-js-service";
 import { DeviceAppDataFactory } from "../lib/common/mobile/device-app-data/device-app-data-factory";
 import { LocalToDevicePathDataFactory } from "../lib/common/mobile/local-to-device-path-data-factory";
 import { MobileHelper } from "../lib/common/mobile/mobile-helper";
@@ -66,6 +68,8 @@ function createTestInjector(): IInjector {
 	testInjector.register("commandsServiceProvider", {
 		registerDynamicSubCommands: () => { /* intentionally left blank */ }
 	});
+	testInjector.register("preparePlatformNativeService", PreparePlatformNativeService);
+	testInjector.register("preparePlatformJSService", PreparePlatformJSService);
 	testInjector.register("pluginVariablesService", {});
 	testInjector.register("deviceAppDataFactory", DeviceAppDataFactory);
 	testInjector.register("localToDevicePathDataFactory", LocalToDevicePathDataFactory);
@@ -194,7 +198,14 @@ async function preparePlatform(testInjector: IInjector): Promise<void> {
 	projectData.initializeProjectData();
 	const options: IOptions = testInjector.resolve("options");
 
-	await platformService.preparePlatform("android", { bundle: options.bundle, release: options.release }, "", projectData, options);
+	await platformService.preparePlatform({
+		platform: "android",
+		appFilesUpdaterOptions: { bundle: options.bundle, release: options.release },
+		platformTemplate: "",
+		projectData,
+		config: options,
+		env: {}
+	});
 }
 
 describe("Npm support tests", () => {

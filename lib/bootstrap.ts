@@ -22,6 +22,8 @@ $injector.require("tnsModulesService", "./services/tns-modules-service");
 
 $injector.require("platformsData", "./platforms-data");
 $injector.require("platformService", "./services/platform-service");
+$injector.require("preparePlatformJSService", "./services/prepare-platform-js-service");
+$injector.require("preparePlatformNativeService", "./services/prepare-platform-native-service");
 
 $injector.require("debugDataService", "./services/debug-data-service");
 $injector.requirePublicClass("debugService", "./services/debug-service");

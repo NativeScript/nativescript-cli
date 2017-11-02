@@ -359,10 +359,21 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			options.preparedPlatforms.push(platform);
 
 			const platformSpecificOptions = options.deviceBuildInfoDescriptor.platformSpecificOptions || <IPlatformOptions>{};
-			await this.$platformService.preparePlatform(platform, {
-				bundle: false,
-				release: false,
-			}, null, options.projectData, platformSpecificOptions, options.modifiedFiles, nativePrepare);
+			const prepareInfo: IPreparePlatformInfo = {
+				platform,
+				appFilesUpdaterOptions: {
+					bundle: false,
+					release: false,
+				},
+				projectData: options.projectData,
+				env: options.env,
+				nativePrepare: nativePrepare,
+				filesToSync: options.modifiedFiles,
+				platformTemplate: null,
+				config: platformSpecificOptions
+			};
+
+			await this.$platformService.preparePlatform(prepareInfo);
 		}
 
 		const buildResult = await this.installedCachedAppPackage(platform, options);
@@ -447,7 +458,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					projectData,
 					deviceBuildInfoDescriptor,
 					liveSyncData,
-					settings
+					settings,
+					env: liveSyncData.env
 				}, { skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare });
 
 				const liveSyncResultInfo = await this.getLiveSyncService(platform).fullSync({
@@ -551,7 +563,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 										projectData,
 										deviceBuildInfoDescriptor,
 										settings: latestAppPackageInstalledSettings,
-										modifiedFiles: allModifiedFiles
+										modifiedFiles: allModifiedFiles,
+										env: liveSyncData.env
 									}, { skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare });
 
 									const service = this.getLiveSyncService(device.deviceInfo.platform);

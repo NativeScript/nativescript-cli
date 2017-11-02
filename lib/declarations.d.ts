@@ -374,7 +374,7 @@ interface IPort {
 	port: Number;
 }
 
-interface IOptions extends ICommonOptions, IBundle, IPlatformTemplate, IEmulator, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort {
+interface IOptions extends ICommonOptions, IBundle, IPlatformTemplate, IEmulator, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions {
 	all: boolean;
 	client: boolean;
 	compileSdk: number;
@@ -395,11 +395,15 @@ interface IOptions extends ICommonOptions, IBundle, IPlatformTemplate, IEmulator
 	chrome: boolean;
 }
 
+interface IEnvOptions {
+	env: Object;
+}
+
 interface IAndroidBuildOptionsSettings extends IAndroidReleaseOptions, IRelease { }
 
 interface IAppFilesUpdaterOptions extends IBundle, IRelease { }
 
-interface IPlatformBuildData extends IAppFilesUpdaterOptions, IBuildConfig { }
+interface IPlatformBuildData extends IAppFilesUpdaterOptions, IBuildConfig, IEnvOptions { }
 
 interface IDeviceEmulator extends IEmulator, IDeviceIdentifier { }
 

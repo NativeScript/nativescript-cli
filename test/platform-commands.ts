@@ -138,6 +138,8 @@ function createTestInjector() {
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("xmlValidator", XmlValidator);
 	testInjector.register("npm", {});
+	testInjector.register("preparePlatformNativeService", {});
+	testInjector.register("preparePlatformJSService", {});
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
 	testInjector.register("emulatorPlatformService", stubs.EmulatorPlatformService);

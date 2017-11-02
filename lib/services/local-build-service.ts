@@ -16,13 +16,22 @@ export class LocalBuildService extends EventEmitter implements ILocalBuildServic
 		}
 
 		this.$projectData.initializeProjectData(platformBuildOptions.projectDir);
-		await this.$platformService.preparePlatform(platform, platformBuildOptions, platformTemplate, this.$projectData, {
-			provision: platformBuildOptions.provision,
-			teamId: platformBuildOptions.teamId,
-			sdk: null,
-			frameworkPath: null,
-			ignoreScripts: false
-		});
+		const prepareInfo: IPreparePlatformInfo = {
+			platform,
+			appFilesUpdaterOptions: platformBuildOptions,
+			platformTemplate,
+			projectData: this.$projectData,
+			env: platformBuildOptions.env,
+			config: {
+				provision: platformBuildOptions.provision,
+				teamId: platformBuildOptions.teamId,
+				sdk: null,
+				frameworkPath: null,
+				ignoreScripts: false
+			}
+		};
+
+		await this.$platformService.preparePlatform(prepareInfo);
 		const handler = (data: any) => {
 			data.projectDir = platformBuildOptions.projectDir;
 			this.emit(BUILD_OUTPUT_EVENT_NAME, data);

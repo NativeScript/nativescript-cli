@@ -14,10 +14,10 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 		await npmPluginPrepare.preparePlugins(productionDependencies, platform, projectData, projectFilesConfig);
 	}
 
-	public async prepareJSNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
-		const productionDependencies = this.initialPrepareNodeModules(absoluteOutputPath, platform, lastModifiedTime, projectData);
+	public async prepareJSNodeModules(jsNodeModulesData: IJsNodeModulesData): Promise<void> {
+		const productionDependencies = this.initialPrepareNodeModules(jsNodeModulesData.absoluteOutputPath, jsNodeModulesData.platform, jsNodeModulesData.lastModifiedTime, jsNodeModulesData.projectData);
 		const npmPluginPrepare: NpmPluginPrepare = this.$injector.resolve(NpmPluginPrepare);
-		await npmPluginPrepare.prepareJSPlugins(productionDependencies, platform, projectData, projectFilesConfig);
+		await npmPluginPrepare.prepareJSPlugins(productionDependencies, jsNodeModulesData.platform, jsNodeModulesData.projectData, jsNodeModulesData.projectFilesConfig);
 	}
 
 	public cleanNodeModules(absoluteOutputPath: string, platform: string): void {
