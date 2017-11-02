@@ -50,8 +50,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 		if (projectData && projectData.platformsDir) {
 			const projectRoot = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
-			if (this.$fs.exists(path.join(projectRoot, "app")) ||
-				this.$fs.exists(path.join(projectRoot, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_ANDROID_RUNTIME_NAME, constants.PROJECT_FRAMEWORK_FOLDER_NAME, constants.APP_FOLDER_NAME))) {
+			if (this.isAndroidStudioCompattibleTemplate(projectData)) {
 				this.isASTemplate = true;
 			}
 
@@ -157,7 +156,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const targetSdkVersion = androidToolsInfo && androidToolsInfo.targetSdkVersion;
 		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
 
-		this.isASTemplate = this.$fs.exists(path.join(frameworkDir, "app"));
+		this.isASTemplate = this.isAndroidStudioCompattibleTemplate(projectData);
 		if (this.isASTemplate) {
 			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "*", "-R");
 		} else {
@@ -632,6 +631,28 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
 		return semver.gte(normalizedPlatformVersion, newRuntimeGradleRoutineVersion);
+	}
+
+	private isAndroidStudioCompattibleTemplate(projectData: IProjectData): boolean {
+		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, constants.TNS_ANDROID_RUNTIME_NAME);
+		let platformVersion = currentPlatformData && currentPlatformData[constants.VERSION_STRING];
+
+		if (!platformVersion) {
+			const tnsAndroidPackageJsonPath = path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_ANDROID_RUNTIME_NAME, constants.PACKAGE_JSON_FILE_NAME);
+			if(this.$fs.exists(tnsAndroidPackageJsonPath)) {
+				const projectPackageJson: any = this.$fs.readJson(tnsAndroidPackageJsonPath);
+				if (projectPackageJson && projectPackageJson.version) {
+					platformVersion = projectPackageJson.version;
+				}
+			} else {
+				return false;
+			}
+		}
+
+		const asCompatibleTemplate = "3.4.0";
+		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
+
+		return semver.gte(normalizedPlatformVersion, asCompatibleTemplate);
 	}
 }
 
