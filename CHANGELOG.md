@@ -6,8 +6,6 @@ NativeScript CLI Changelog
 
 ### New
 
-* [Implemented #2470](https://github.com/NativeScript/nativescript-cli/issues/2470): Establish a recommended workflow for simultaneous Android & iOS development - use `tns run` command.
-* [Implemented #2873](https://github.com/NativeScript/nativescript-cli/issues/2873): Add official support for Node 8.
 * [Implemented #3076](https://github.com/NativeScript/nativescript-cli/issues/3076): NativeScript setup scripts should have silent installer mode.
 
 ### Fixed
