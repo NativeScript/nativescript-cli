@@ -6,6 +6,8 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 
 	constructor(private $userSettingsService: UserSettings.IUserSettingsService,
 		private $staticConfig: IStaticConfig,
+		private $hostInfo: IHostInfo,
+		private $osInfo: IOsInfo,
 		private $logger: ILogger) { }
 
 	public async canDoRequest(): Promise<boolean> {
@@ -36,6 +38,40 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 
 	public async setUserSessionsCount(count: number, projectName: string): Promise<void> {
 		return this.$userSettingsService.saveSetting<number>(this.getSessionsProjectKey(projectName), count);
+	}
+
+	@exported("analyticsSettingsService")
+	public getUserAgentString(identifier: string): string {
+		let osString = "";
+		const osRelease = this.$osInfo.release();
+
+		if (this.$hostInfo.isWindows) {
+			osString = `Windows NT ${osRelease}`;
+		} else if (this.$hostInfo.isDarwin) {
+			osString = `Macintosh`;
+			const macRelease = this.getMacOSReleaseVersion(osRelease);
+			if (macRelease) {
+				osString += `; Intel Mac OS X ${macRelease}`;
+			}
+		} else {
+			osString = `Linux x86`;
+			if (this.$osInfo.arch() === "x64") {
+				osString += "_64";
+			}
+		}
+
+		const userAgent = `${identifier} (${osString}; ${this.$osInfo.arch()})`;
+
+		return userAgent;
+	}
+
+	private getMacOSReleaseVersion(osRelease: string): string {
+		// https://en.wikipedia.org/wiki/Darwin_(operating_system)#Release_history
+		// Each macOS version is labeled 10.<version>, where it looks like <versions> is taken from the major version returned by os.release() (16.x.x for example) and subtracting 4 from it.
+		// So the version becomes "10.12" in this case.
+		// Could be improved by spawning `system_profiler SPSoftwareDataType` and getting the System Version line from the result.
+		const majorVersion = osRelease && _.first(osRelease.split("."));
+		return majorVersion && `10.${+majorVersion - 4}`;
 	}
 
 	private getSessionsProjectKey(projectName: string): string {
