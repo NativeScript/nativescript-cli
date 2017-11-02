@@ -639,7 +639,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		if (!platformVersion) {
 			const tnsAndroidPackageJsonPath = path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_ANDROID_RUNTIME_NAME, constants.PACKAGE_JSON_FILE_NAME);
-			if(this.$fs.exists(tnsAndroidPackageJsonPath)) {
+			if (this.$fs.exists(tnsAndroidPackageJsonPath)) {
 				const projectPackageJson: any = this.$fs.readJson(tnsAndroidPackageJsonPath);
 				if (projectPackageJson && projectPackageJson.version) {
 					platformVersion = projectPackageJson.version;
