@@ -78,11 +78,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this._platformData = {
 				frameworkPackageName: "tns-android",
 				normalizedPlatformName: "Android",
-				appDestinationDirectoryPath: path.join.apply(null, appDestinationDirectoryArr),
+				appDestinationDirectoryPath: path.join(...appDestinationDirectoryArr),
 				platformProjectService: this,
 				emulatorServices: this.$androidEmulatorServices,
 				projectRoot: projectRoot,
-				deviceBuildOutputPath: path.join.apply(null, deviceBuildOutputArr),
+				deviceBuildOutputPath: path.join(...deviceBuildOutputArr),
 				getValidPackageNames: (buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[] => {
 					const buildMode = buildOptions.isReleaseBuild ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
 
@@ -94,7 +94,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				},
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
 				configurationFileName: "AndroidManifest.xml",
-				configurationFilePath: path.join.apply(null, configurationsDirectoryArr),
+				configurationFilePath: path.join(...configurationsDirectoryArr),
 				relativeToFrameworkConfigurationFilePath: path.join("src", "main", "AndroidManifest.xml"),
 				fastLivesyncFileExtensions: [".jpg", ".gif", ".png", ".bmp", ".webp"] // http://developer.android.com/guide/appendix/media-formats.html
 			};
@@ -123,7 +123,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				resourcePath.unshift("app");
 			}
 
-			return path.join(this.getPlatformData(projectData).projectRoot, path.join.apply(null, resourcePath));
+			return path.join(this.getPlatformData(projectData).projectRoot, path.join(...resourcePath));
 		}
 
 		return path.join(this.getPlatformData(projectData).projectRoot, "res");
