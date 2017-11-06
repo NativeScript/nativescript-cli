@@ -18,6 +18,14 @@ export const XML_FILE_EXTENSION = ".xml";
 export const PLATFORMS_DIR_NAME = "platforms";
 export const CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
 export const AWAIT_NOTIFICATION_TIMEOUT_SECONDS = 9;
+export const SRC_DIR = "src";
+export const MAIN_DIR = "main";
+export const ASSETS_DIR = "assets";
+export const MANIFEST_FILE_NAME = "AndroidManifest.xml";
+export const BUILD_DIR = "build";
+export const OUTPUTS_DIR = "outputs";
+export const APK_DIR = "apk";
+export const RESOURCES_DIR = "res";
 
 export class PackageVersion {
 	static NEXT = "next";

@@ -22,7 +22,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	];
 
 	private _androidProjectPropertiesManagers: IDictionary<IAndroidProjectPropertiesManager>;
-	private isASTemplate: boolean;
+	private isAndroidStudioTemplate: boolean;
 
 	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $androidToolsInfo: IAndroidToolsInfo,
@@ -39,7 +39,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $npm: INodePackageManager) {
 		super($fs, $projectDataService);
 		this._androidProjectPropertiesManagers = Object.create(null);
-		this.isASTemplate = false;
+		this.isAndroidStudioTemplate = false;
 	}
 
 	private _platformsDirCache: string = null;
@@ -50,33 +50,33 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 		if (projectData && projectData.platformsDir) {
 			const projectRoot = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
-			if (this.isAndroidStudioCompattibleTemplate(projectData)) {
-				this.isASTemplate = true;
+			if (this.isAndroidStudioCompatibleTemplate(projectData)) {
+				this.isAndroidStudioTemplate = true;
 			}
 
-			const appDestinationDirectoryArr = ["src", "main", "assets"];
-			if (this.isASTemplate) {
-				appDestinationDirectoryArr.unshift("app");
+			const appDestinationDirectoryArr = [projectRoot];
+			if (this.isAndroidStudioTemplate) {
+				appDestinationDirectoryArr.push(constants.APP_FOLDER_NAME);
 			}
-			appDestinationDirectoryArr.unshift(projectRoot);
+			appDestinationDirectoryArr.push(constants.SRC_DIR, constants.MAIN_DIR, constants.ASSETS_DIR);
 
-			const configurationsDirectoryArr = ["src", "main", "AndroidManifest.xml"];
-			if (this.isASTemplate) {
-				configurationsDirectoryArr.unshift("app");
+			const configurationsDirectoryArr = [projectRoot];
+			if (this.isAndroidStudioTemplate) {
+				configurationsDirectoryArr.push(constants.APP_FOLDER_NAME);
 			}
-			configurationsDirectoryArr.unshift(projectRoot);
+			configurationsDirectoryArr.push(constants.SRC_DIR, constants.MAIN_DIR, constants.MANIFEST_FILE_NAME);
 
-			const deviceBuildOutputArr = ["build", "outputs", "apk"];
-			if (this.isASTemplate) {
-				deviceBuildOutputArr.unshift("app");
+			const deviceBuildOutputArr = [projectRoot];
+			if (this.isAndroidStudioTemplate) {
+				deviceBuildOutputArr.push(constants.APP_FOLDER_NAME);
 			}
-			deviceBuildOutputArr.unshift(projectRoot);
+			deviceBuildOutputArr.push(constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.APK_DIR);
 
 			this._platformsDirCache = projectData.platformsDir;
 			const packageName = this.getProjectNameFromId(projectData);
 
 			this._platformData = {
-				frameworkPackageName: "tns-android",
+				frameworkPackageName: constants.TNS_ANDROID_RUNTIME_NAME,
 				normalizedPlatformName: "Android",
 				appDestinationDirectoryPath: path.join(...appDestinationDirectoryArr),
 				platformProjectService: this,
@@ -93,9 +93,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					];
 				},
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
-				configurationFileName: "AndroidManifest.xml",
+				configurationFileName: constants.MANIFEST_FILE_NAME,
 				configurationFilePath: path.join(...configurationsDirectoryArr),
-				relativeToFrameworkConfigurationFilePath: path.join("src", "main", "AndroidManifest.xml"),
+				relativeToFrameworkConfigurationFilePath: path.join(constants.SRC_DIR, constants.MAIN_DIR, constants.MANIFEST_FILE_NAME),
 				fastLivesyncFileExtensions: [".jpg", ".gif", ".png", ".bmp", ".webp"] // http://developer.android.com/guide/appendix/media-formats.html
 			};
 
@@ -118,15 +118,16 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public getAppResourcesDestinationDirectoryPath(projectData: IProjectData, frameworkVersion?: string): string {
 		if (this.canUseGradle(projectData, frameworkVersion)) {
-			const resourcePath: string[] = ["src", "main", "res"];
-			if (this.isASTemplate) {
-				resourcePath.unshift("app");
+			const resourcePath: string[] = [constants.SRC_DIR, constants.MAIN_DIR, constants.RESOURCES_DIR];
+			if (this.isAndroidStudioTemplate) {
+				resourcePath.unshift(constants.APP_FOLDER_NAME);
 			}
 
-			return path.join(this.getPlatformData(projectData).projectRoot, path.join(...resourcePath));
+			return path.join(this.getPlatformData(projectData).projectRoot, ...resourcePath);
+
 		}
 
-		return path.join(this.getPlatformData(projectData).projectRoot, "res");
+		return path.join(this.getPlatformData(projectData).projectRoot, constants.RESOURCES_DIR);
 	}
 
 	public async validate(projectData: IProjectData): Promise<void> {
@@ -156,18 +157,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const targetSdkVersion = androidToolsInfo && androidToolsInfo.targetSdkVersion;
 		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
 
-		this.isASTemplate = this.isAndroidStudioCompattibleTemplate(projectData);
-		if (this.isASTemplate) {
+		this.isAndroidStudioTemplate = this.isAndroidStudioCompatibleTemplate(projectData);
+		if (this.isAndroidStudioTemplate) {
 			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "*", "-R");
 		} else {
 			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "libs", "-R");
 
 			if (config.pathToTemplate) {
-				const mainPath = path.join(this.getPlatformData(projectData).projectRoot, "src", "main");
+				const mainPath = path.join(this.getPlatformData(projectData).projectRoot, constants.SRC_DIR, constants.MAIN_DIR);
 				this.$fs.createDirectory(mainPath);
 				shell.cp("-R", path.join(path.resolve(config.pathToTemplate), "*"), mainPath);
 			} else {
-				this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "src", "-R");
+				this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, constants.SRC_DIR, "-R");
 			}
 			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "build.gradle settings.gradle build-tools", "-Rf");
 
@@ -419,7 +420,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			const flattenedDependencyName = isScoped ? pluginData.name.replace("/", "_") : pluginData.name;
 
 			// Copy all resources from plugin
-			const resourcesDestinationDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "src", flattenedDependencyName);
+			const resourcesDestinationDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, constants.SRC_DIR, flattenedDependencyName);
 			this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath);
 			shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
 
@@ -633,7 +634,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return semver.gte(normalizedPlatformVersion, newRuntimeGradleRoutineVersion);
 	}
 
-	private isAndroidStudioCompattibleTemplate(projectData: IProjectData): boolean {
+	private isAndroidStudioCompatibleTemplate(projectData: IProjectData): boolean {
 		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, constants.TNS_ANDROID_RUNTIME_NAME);
 		let platformVersion = currentPlatformData && currentPlatformData[constants.VERSION_STRING];
 
@@ -649,10 +650,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 		}
 
-		const asCompatibleTemplate = "3.4.0";
+		const androidStudioCompatibleTemplate = "3.4.0";
 		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
 
-		return semver.gte(normalizedPlatformVersion, asCompatibleTemplate);
+		return semver.gte(normalizedPlatformVersion, androidStudioCompatibleTemplate);
 	}
 }
 
