@@ -3,9 +3,18 @@ import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
 import * as constants from "../../lib/constants";
-import * as path from "path";
+const path = require("path");
+const originalResolve = path.resolve;
 
 describe("extensibilityService", () => {
+	before(() => {
+		path.resolve = (p: string) => p;
+	});
+
+	after(() => {
+		path.resolve = originalResolve;
+	});
+
 	const getTestInjector = (): IInjector => {
 		const testInjector = new Yok();
 		testInjector.register("fs", {});
@@ -450,7 +459,7 @@ describe("extensibilityService", () => {
 				const fs: IFileSystem = testInjector.resolve("fs");
 				fs.exists = (pathToCheck: string): boolean => true;
 				const npm: INodePackageManager = testInjector.resolve("npm");
-				npm.uninstall = async (packageName: string, config?: any, path?: string): Promise<any> => {
+				npm.uninstall = async (packageName: string, config?: any, p?: string): Promise<any> => {
 					throw new Error(expectedErrorMessage);
 				};
 
@@ -469,9 +478,9 @@ describe("extensibilityService", () => {
 
 				const npm: INodePackageManager = testInjector.resolve("npm");
 				const argsPassedToNpmInstall: any = {};
-				npm.uninstall = async (packageName: string, config?: any, path?: string): Promise<any> => {
+				npm.uninstall = async (packageName: string, config?: any, p?: string): Promise<any> => {
 					argsPassedToNpmInstall.packageName = packageName;
-					argsPassedToNpmInstall.pathToSave = path;
+					argsPassedToNpmInstall.pathToSave = p;
 					argsPassedToNpmInstall.config = config;
 					return [userSpecifiedValue];
 				};
@@ -523,7 +532,7 @@ describe("extensibilityService", () => {
 			fs.readDirectory = (dir: string): string[] => [extensionName];
 
 			const npm: INodePackageManager = testInjector.resolve("npm");
-			npm.uninstall = async (packageName: string, config?: any, path?: string): Promise<any> => [extensionName];
+			npm.uninstall = async (packageName: string, config?: any, p?: string): Promise<any> => [extensionName];
 
 			const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 			await extensibilityService.uninstallExtension(extensionName);
