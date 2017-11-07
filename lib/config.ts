@@ -60,10 +60,6 @@ export class StaticConfig extends StaticConfigBase implements IStaticConfig {
 
 	public version = require("../package.json").version;
 
-	public get helpTextPath(): string {
-		return path.join(__dirname, "../resources/help.txt");
-	}
-
 	public get HTML_CLI_HELPERS_DIR(): string {
 		return path.join(__dirname, "../docs/helpers");
 	}
