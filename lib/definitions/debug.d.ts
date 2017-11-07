@@ -82,6 +82,11 @@ interface IDebugOptions {
 	 * Default value is 02e6bde1bbe34e43b309d4ef774b1168d25fd024 which corresponds to 55.0.2883 Chrome version
 	 */
 	devToolsCommit?: string;
+
+	/**
+	 * Defines if the iOS App Inspector should be used instead of providing URL to debug the application with Chrome DevTools
+	 */
+	inspector?: boolean;
 }
 
 /**

@@ -393,6 +393,7 @@ interface IOptions extends ICommonOptions, IBundle, IPlatformTemplate, IEmulator
 	syncAllFiles: boolean;
 	liveEdit: boolean;
 	chrome: boolean;
+	inspector: boolean; // the counterpart to --chrome
 }
 
 interface IEnvOptions {
