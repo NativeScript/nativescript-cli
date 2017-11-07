@@ -4,7 +4,7 @@ import * as constants from "../constants";
 
 export class ExtensibilityService implements IExtensibilityService {
 	private get pathToExtensions(): string {
-		return path.join(this.$options.profileDir, "extensions");
+		return path.join(path.resolve(this.$options.profileDir), "extensions");
 	}
 
 	private get pathToPackageJson(): string {
