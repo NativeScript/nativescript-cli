@@ -9,7 +9,4 @@ $injector.requirePublic("companionAppsService", "./common/appbuilder/services/li
 $injector.requirePublicClass("deviceEmitter", "./common/appbuilder/device-emitter");
 $injector.requirePublicClass("deviceLogProvider", "./common/appbuilder/device-log-provider");
 
-// We need this because some services check if (!$options.justlaunch) to start the device log after some operation.
-// We don't want this behaviour when the CLI is required as library.
-$injector.resolve("options").justlaunch = true;
 $injector.resolve<IStaticConfig>("staticConfig").disableAnalytics = true;
