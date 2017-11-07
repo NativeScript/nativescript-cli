@@ -13,9 +13,12 @@ export class LoggerStub implements ILogger {
 	warnWithLabel(...args: string[]): void { }
 	info(...args: string[]): void { }
 	debug(...args: string[]): void { }
-	trace(...args: string[]): void { }
+	trace(...args: string[]): void {
+		this.traceOutput += util.format.apply(null, args) + "\n";
+	}
 
 	public output = "";
+	public traceOutput = "";
 
 	out(...args: string[]): void {
 		this.output += util.format.apply(null, args) + "\n";
