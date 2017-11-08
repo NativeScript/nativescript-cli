@@ -22,6 +22,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	];
 
 	private _androidProjectPropertiesManagers: IDictionary<IAndroidProjectPropertiesManager>;
+	private isAndroidStudioTemplate: boolean;
 
 	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $androidToolsInfo: IAndroidToolsInfo,
@@ -38,6 +39,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $npm: INodePackageManager) {
 		super($fs, $projectDataService);
 		this._androidProjectPropertiesManagers = Object.create(null);
+		this.isAndroidStudioTemplate = false;
 	}
 
 	private _platformsDirCache: string = null;
@@ -46,19 +48,41 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		if (!projectData && !this._platformData) {
 			throw new Error("First call of getPlatformData without providing projectData.");
 		}
-
-		if (projectData && projectData.platformsDir && this._platformsDirCache !== projectData.platformsDir) {
-			this._platformsDirCache = projectData.platformsDir;
+		if (projectData && projectData.platformsDir) {
 			const projectRoot = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
+			if (this.isAndroidStudioCompatibleTemplate(projectData)) {
+				this.isAndroidStudioTemplate = true;
+			}
+
+			const appDestinationDirectoryArr = [projectRoot];
+			if (this.isAndroidStudioTemplate) {
+				appDestinationDirectoryArr.push(constants.APP_FOLDER_NAME);
+			}
+			appDestinationDirectoryArr.push(constants.SRC_DIR, constants.MAIN_DIR, constants.ASSETS_DIR);
+
+			const configurationsDirectoryArr = [projectRoot];
+			if (this.isAndroidStudioTemplate) {
+				configurationsDirectoryArr.push(constants.APP_FOLDER_NAME);
+			}
+			configurationsDirectoryArr.push(constants.SRC_DIR, constants.MAIN_DIR, constants.MANIFEST_FILE_NAME);
+
+			const deviceBuildOutputArr = [projectRoot];
+			if (this.isAndroidStudioTemplate) {
+				deviceBuildOutputArr.push(constants.APP_FOLDER_NAME);
+			}
+			deviceBuildOutputArr.push(constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.APK_DIR);
+
+			this._platformsDirCache = projectData.platformsDir;
 			const packageName = this.getProjectNameFromId(projectData);
+
 			this._platformData = {
-				frameworkPackageName: "tns-android",
+				frameworkPackageName: constants.TNS_ANDROID_RUNTIME_NAME,
 				normalizedPlatformName: "Android",
-				appDestinationDirectoryPath: path.join(projectRoot, "src", "main", "assets"),
+				appDestinationDirectoryPath: path.join(...appDestinationDirectoryArr),
 				platformProjectService: this,
 				emulatorServices: this.$androidEmulatorServices,
 				projectRoot: projectRoot,
-				deviceBuildOutputPath: path.join(projectRoot, "build", "outputs", "apk"),
+				deviceBuildOutputPath: path.join(...deviceBuildOutputArr),
 				getValidPackageNames: (buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[] => {
 					const buildMode = buildOptions.isReleaseBuild ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
 
@@ -69,11 +93,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					];
 				},
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
-				configurationFileName: "AndroidManifest.xml",
-				configurationFilePath: path.join(projectRoot, "src", "main", "AndroidManifest.xml"),
-				relativeToFrameworkConfigurationFilePath: path.join("src", "main", "AndroidManifest.xml"),
+				configurationFileName: constants.MANIFEST_FILE_NAME,
+				configurationFilePath: path.join(...configurationsDirectoryArr),
+				relativeToFrameworkConfigurationFilePath: path.join(constants.SRC_DIR, constants.MAIN_DIR, constants.MANIFEST_FILE_NAME),
 				fastLivesyncFileExtensions: [".jpg", ".gif", ".png", ".bmp", ".webp"] // http://developer.android.com/guide/appendix/media-formats.html
 			};
+
 		}
 
 		return this._platformData;
@@ -93,10 +118,16 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public getAppResourcesDestinationDirectoryPath(projectData: IProjectData, frameworkVersion?: string): string {
 		if (this.canUseGradle(projectData, frameworkVersion)) {
-			return path.join(this.getPlatformData(projectData).projectRoot, "src", "main", "res");
+			const resourcePath: string[] = [constants.SRC_DIR, constants.MAIN_DIR, constants.RESOURCES_DIR];
+			if (this.isAndroidStudioTemplate) {
+				resourcePath.unshift(constants.APP_FOLDER_NAME);
+			}
+
+			return path.join(this.getPlatformData(projectData).projectRoot, ...resourcePath);
+
 		}
 
-		return path.join(this.getPlatformData(projectData).projectRoot, "res");
+		return path.join(this.getPlatformData(projectData).projectRoot, constants.RESOURCES_DIR);
 	}
 
 	public async validate(projectData: IProjectData): Promise<void> {
@@ -125,25 +156,31 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
 		const targetSdkVersion = androidToolsInfo && androidToolsInfo.targetSdkVersion;
 		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
-		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "libs", "-R");
 
-		if (config.pathToTemplate) {
-			const mainPath = path.join(this.getPlatformData(projectData).projectRoot, "src", "main");
-			this.$fs.createDirectory(mainPath);
-			shell.cp("-R", path.join(path.resolve(config.pathToTemplate), "*"), mainPath);
+		this.isAndroidStudioTemplate = this.isAndroidStudioCompatibleTemplate(projectData);
+		if (this.isAndroidStudioTemplate) {
+			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "*", "-R");
 		} else {
-			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "src", "-R");
-		}
-		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "build.gradle settings.gradle build-tools", "-Rf");
+			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "libs", "-R");
 
-		try {
-			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradle.properties", "-Rf");
-		} catch (e) {
-			this.$logger.warn(`\n${e}\nIt's possible, the final .apk file will contain all architectures instead of the ones described in the abiFilters!\nYou can fix this by using the latest android platform.`);
-		}
+			if (config.pathToTemplate) {
+				const mainPath = path.join(this.getPlatformData(projectData).projectRoot, constants.SRC_DIR, constants.MAIN_DIR);
+				this.$fs.createDirectory(mainPath);
+				shell.cp("-R", path.join(path.resolve(config.pathToTemplate), "*"), mainPath);
+			} else {
+				this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, constants.SRC_DIR, "-R");
+			}
+			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "build.gradle settings.gradle build-tools", "-Rf");
 
-		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradle", "-R");
-		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
+			try {
+				this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradle.properties", "-Rf");
+			} catch (e) {
+				this.$logger.warn(`\n${e}\nIt's possible, the final .apk file will contain all architectures instead of the ones described in the abiFilters!\nYou can fix this by using the latest android platform.`);
+			}
+
+			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradle", "-R");
+			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
+		}
 
 		this.cleanResValues(targetSdkVersion, projectData, frameworkVersion);
 
@@ -269,8 +306,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				buildOptions.unshift("--stacktrace");
 				buildOptions.unshift("--debug");
 			}
-
-			buildOptions.unshift("buildapk");
+			if (buildConfig.release) {
+				buildOptions.unshift("assembleRelease");
+			} else {
+				buildOptions.unshift("assembleDebug");
+			}
 
 			const handler = (data: any) => {
 				this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
@@ -380,7 +420,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			const flattenedDependencyName = isScoped ? pluginData.name.replace("/", "_") : pluginData.name;
 
 			// Copy all resources from plugin
-			const resourcesDestinationDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "src", flattenedDependencyName);
+			const resourcesDestinationDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, constants.SRC_DIR, flattenedDependencyName);
 			this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath);
 			shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
 
@@ -592,6 +632,28 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
 		return semver.gte(normalizedPlatformVersion, newRuntimeGradleRoutineVersion);
+	}
+
+	private isAndroidStudioCompatibleTemplate(projectData: IProjectData): boolean {
+		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, constants.TNS_ANDROID_RUNTIME_NAME);
+		let platformVersion = currentPlatformData && currentPlatformData[constants.VERSION_STRING];
+
+		if (!platformVersion) {
+			const tnsAndroidPackageJsonPath = path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_ANDROID_RUNTIME_NAME, constants.PACKAGE_JSON_FILE_NAME);
+			if (this.$fs.exists(tnsAndroidPackageJsonPath)) {
+				const projectPackageJson: any = this.$fs.readJson(tnsAndroidPackageJsonPath);
+				if (projectPackageJson && projectPackageJson.version) {
+					platformVersion = projectPackageJson.version;
+				}
+			} else {
+				return false;
+			}
+		}
+
+		const androidStudioCompatibleTemplate = "3.4.0";
+		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
+
+		return semver.gte(normalizedPlatformVersion, androidStudioCompatibleTemplate);
 	}
 }
 
