@@ -273,7 +273,7 @@ interface ISettingsService {
 
 * Usage:
 ```JavaScript
-tns.settingsService.setSettings({ userAgentName: "myUserAgent" });
+tns.settingsService.setSettings({ userAgentName: "myUserAgent", profileDir: "customProfileDir" });
 ```
 
 ## npm

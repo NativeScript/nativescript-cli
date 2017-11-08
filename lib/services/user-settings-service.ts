@@ -3,9 +3,9 @@ import * as userSettingsServiceBaseLib from "../common/services/user-settings-se
 
 class UserSettingsService extends userSettingsServiceBaseLib.UserSettingsServiceBase {
 	constructor($fs: IFileSystem,
-		$options: IOptions,
+		$settingsService: ISettingsService,
 		$lockfile: ILockFile) {
-		const userSettingsFilePath = path.join($options.profileDir, "user-settings.json");
+		const userSettingsFilePath = path.join($settingsService.getProfileDir(), "user-settings.json");
 		super(userSettingsFilePath, $fs, $lockfile);
 	}
 
