@@ -28,6 +28,7 @@ import { XmlValidator } from "../lib/xml-validator";
 import ProjectChangesLib = require("../lib/services/project-changes-service");
 import { Messages } from "../lib/common/messages/messages";
 import { NodeModulesDependenciesBuilder } from "../lib/tools/node-modules/node-modules-dependencies-builder";
+import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 
 import path = require("path");
 import temp = require("temp");
@@ -86,7 +87,7 @@ function createTestInjector(): IInjector {
 	});
 	testInjector.register("messages", Messages);
 	testInjector.register("nodeModulesDependenciesBuilder", NodeModulesDependenciesBuilder);
-
+	testInjector.register("settingsService", SettingsService);
 	testInjector.register("devicePathProvider", {});
 
 	return testInjector;

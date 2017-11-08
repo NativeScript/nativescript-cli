@@ -11,6 +11,7 @@ import { ProjectHelper } from "../lib/common/project-helper";
 import { StaticConfig } from "../lib/config";
 import { MessagesService } from "../lib/common/services/messages-service";
 import { Yok } from '../lib/common/yok';
+import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import * as stubs from './stubs';
 import * as path from "path";
 import * as temp from "temp";
@@ -37,6 +38,7 @@ function createTestInjector(): IInjector {
 		}
 	});
 	testInjector.register("staticConfig", StaticConfig);
+	testInjector.register("settingsService", SettingsService);
 
 	return testInjector;
 }
