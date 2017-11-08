@@ -18,6 +18,7 @@ import { assert } from "chai";
 import { Options } from "../lib/options";
 import { HostInfo } from "../lib/common/host-info";
 import { ProjectTemplatesService } from "../lib/services/project-templates-service";
+import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 
 const mockProjectNameValidator = {
 	validate: () => true
@@ -156,6 +157,7 @@ class ProjectIntegrationTest {
 			}
 		});
 		this.testInjector.register("npmInstallationManager", NpmInstallationManager);
+		this.testInjector.register("settingsService", SettingsService);
 	}
 }
 
@@ -429,6 +431,7 @@ describe("Project Service Tests", () => {
 			testInjector.register("staticConfig", {});
 			testInjector.register("projectHelper", {});
 			testInjector.register("npmInstallationManager", {});
+			testInjector.register("settingsService", SettingsService);
 
 			return testInjector;
 		};

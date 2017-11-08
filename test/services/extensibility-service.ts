@@ -3,6 +3,7 @@ import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
 import * as constants from "../../lib/constants";
+import { SettingsService } from "../../lib/common/test/unit-tests/stubs";
 const path = require("path");
 const originalResolve = path.resolve;
 
@@ -20,9 +21,7 @@ describe("extensibilityService", () => {
 		testInjector.register("fs", {});
 		testInjector.register("logger", stubs.LoggerStub);
 		testInjector.register("npm", {});
-		testInjector.register("options", {
-			profileDir: "profileDir"
-		});
+		testInjector.register("settingsService", SettingsService);
 		testInjector.register("requireService", {
 			require: (pathToRequire: string): any => undefined
 		});
@@ -121,10 +120,11 @@ describe("extensibilityService", () => {
 			it("passes full path to extensions dir for installation", async () => {
 				const extensionName = "extension1";
 				const testInjector = getTestInjector();
-				const options: IOptions = testInjector.resolve("options");
-				options.profileDir = "my-profile-dir";
+				const settingsService: ISettingsService = testInjector.resolve("settingsService");
+				const profileDir = "my-profile-dir";
+				settingsService.getProfileDir = () => profileDir;
 
-				const expectedDirForInstallation = path.join(options.profileDir, "extensions");
+				const expectedDirForInstallation = path.join(profileDir, "extensions");
 				const argsPassedToNpmInstall = await getArgsPassedToNpmInstallDuringInstallExtensionCall(extensionName, testInjector);
 				assert.deepEqual(argsPassedToNpmInstall.pathToSave, expectedDirForInstallation);
 			});
@@ -514,12 +514,13 @@ describe("extensibilityService", () => {
 			it("passes full path to extensions dir for uninstallation", async () => {
 				const extensionName = "extension1";
 				const testInjector = getTestInjector();
-				const options: IOptions = testInjector.resolve("options");
-				options.profileDir = "my-profile-dir";
+				const settingsService: ISettingsService = testInjector.resolve("settingsService");
+				const profileDir = "my-profile-dir";
+				settingsService.getProfileDir = () => profileDir;
 
-				const expectedDirForInstallation = path.join(options.profileDir, "extensions");
+				const expectedDirForUninstall = path.join(profileDir, "extensions");
 				const argsPassedToNpmUninstall = await getArgsPassedToNpmUninstallDuringUninstallExtensionCall(extensionName, testInjector);
-				assert.deepEqual(argsPassedToNpmUninstall.pathToSave, expectedDirForInstallation);
+				assert.deepEqual(argsPassedToNpmUninstall.pathToSave, expectedDirForUninstall);
 			});
 		});
 

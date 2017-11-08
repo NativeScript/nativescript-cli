@@ -1,6 +1,7 @@
 import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import { PostInstallCliCommand } from "../../lib/commands/post-install";
+import { SettingsService } from "../../lib/common/test/unit-tests/stubs";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
@@ -37,6 +38,8 @@ const createTestInjector = (): IInjector => {
 		out: (formatStr?: any, ...args: any[]): void => undefined,
 		printMarkdown: (...args: any[]): void => undefined
 	});
+
+	testInjector.register("settingsService", SettingsService);
 
 	testInjector.registerCommand("post-install-cli", PostInstallCliCommand);
 

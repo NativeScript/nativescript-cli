@@ -11,6 +11,8 @@ import { AndroidDebugBridge } from "../lib/common/mobile/android/android-debug-b
 import { AndroidDebugBridgeResultHandler } from "../lib/common/mobile/android/android-debug-bridge-result-handler";
 import { DebugCommandErrors } from "../lib/constants";
 import { CONNECTED_STATUS, UNREACHABLE_STATUS } from "../lib/common/constants";
+import { SettingsService } from "../lib/common/test/unit-tests/stubs";
+
 const helpers = require("../lib/common/helpers");
 const originalIsInteracive = helpers.isInteractive;
 
@@ -73,6 +75,7 @@ function createTestInjector(): IInjector {
 			return null;
 		}
 	});
+	testInjector.register("settingsService", SettingsService);
 
 	return testInjector;
 }

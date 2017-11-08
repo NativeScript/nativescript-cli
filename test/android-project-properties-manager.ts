@@ -8,6 +8,7 @@ import * as LoggerLib from "../lib/common/logger";
 import * as ConfigLib from "../lib/config";
 import * as OptionsLib from "../lib/options";
 import * as yok from "../lib/common/yok";
+import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import * as path from "path";
 import temp = require("temp");
 temp.track();
@@ -23,6 +24,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("logger", LoggerLib.Logger);
 	testInjector.register("config", ConfigLib.Configuration);
 	testInjector.register("options", OptionsLib.Options);
+	testInjector.register("settingsService", SettingsService);
 
 	return testInjector;
 }
