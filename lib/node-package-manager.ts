@@ -159,7 +159,7 @@ export class NodePackageManager implements INodePackageManager {
 			// Considering that the dependency is already installed we should
 			// find it in the `updated` key as a first element of the array.
 			if (!name && npm5Output.updated) {
-				const updatedDependency = npm5Output.updated[0];
+				const updatedDependency = npm5Output.updated.find(dependencyInfo => dependencyInfo.name === userSpecifiedPackageName);
 				return {
 					name: updatedDependency.name,
 					originalOutput,
