@@ -1,7 +1,12 @@
 NativeScript CLI Changelog
 ================
 
-3.3.0 (2017, July 25)
+3.3.1 (2017, November 17)
+### Fixed
+* [Fixed #3164](https://github.com/NativeScript/nativescript-cli/issues/3164): `npm run build-*-bundle` gets stuck at nativescript-unit-test-runner hook.
+* [Fixed #3182](https://github.com/NativeScript/nativescript-cli/issues/3182): CLI fails when unable to start Analytics Broker process.
+
+3.3.0 (2017, October 26)
 ==
 
 ### New

@@ -582,7 +582,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private async addStaticLibrary(staticLibPath: string, projectData: IProjectData): Promise<void> {
-		await this.validateStaticLibrary(staticLibPath);
 		// Copy files to lib folder.
 		const libraryName = path.basename(staticLibPath, ".a");
 		const headersSubpath = path.join(path.dirname(staticLibPath), "include", libraryName);
@@ -1029,21 +1028,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		if (packageType !== "FMWK") {
 			this.$errors.failWithoutHelp("The bundle at %s does not appear to be a dynamic framework.", libraryPath);
 		}
-	}
-
-	private async validateStaticLibrary(libraryPath: string): Promise<void> {
-		if (path.extname(libraryPath) !== ".a") {
-			this.$errors.failWithoutHelp(`The bundle at ${libraryPath} does not contain a valid static library in the '.a' file format.`);
-		}
-
-		const expectedArchs = ["armv7", "arm64", "i386"];
-		const archsInTheFatFile = await this.$childProcess.exec("lipo -i " + libraryPath);
-
-		expectedArchs.forEach(expectedArch => {
-			if (archsInTheFatFile.indexOf(expectedArch) < 0) {
-				this.$errors.failWithoutHelp(`The static library at ${libraryPath} is not built for one or more of the following required architectures: ${expectedArchs.join(", ")}. The static library must be built for all required architectures.`);
-			}
-		});
 	}
 
 	private replaceFileContent(file: string, projectData: IProjectData): void {
