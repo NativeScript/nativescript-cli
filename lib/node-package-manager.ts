@@ -156,10 +156,12 @@ export class NodePackageManager implements INodePackageManager {
 			});
 
 			// Npm 5 return different object after performing `npm install --dry-run`.
-			// Considering that the dependency is already installed we should
-			// find it in the `updated` key as a first element of the array.
+			// We find the correct dependency by searching for the `userSpecifiedPackageName` in the
+			// `npm5Output.updated` array and as a fallback, considering that the dependency is already installed,
+			// we find it as the first element.
 			if (!name && npm5Output.updated) {
-				const updatedDependency = npm5Output.updated[0];
+				const packageNameWithoutVersion = userSpecifiedPackageName.split('@')[0];
+				const updatedDependency = _.find(npm5Output.updated, ['name', packageNameWithoutVersion]) || npm5Output.updated[0];
 				return {
 					name: updatedDependency.name,
 					originalOutput,
