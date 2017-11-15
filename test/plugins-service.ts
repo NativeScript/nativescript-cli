@@ -30,6 +30,7 @@ import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
 import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilities";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
+import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import StaticConfigLib = require("../lib/config");
 import * as path from "path";
 import * as temp from "temp";
@@ -98,6 +99,10 @@ function createTestInjector() {
 	});
 	testInjector.register("xmlValidator", XmlValidator);
 	testInjector.register("config", StaticConfigLib.Configuration);
+	testInjector.register("helpService", {
+		showCommandLineHelp: async (): Promise<void> => (undefined)
+	});
+	testInjector.register("settingsService", SettingsService);
 
 	return testInjector;
 }

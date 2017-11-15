@@ -13,9 +13,12 @@ export class LoggerStub implements ILogger {
 	warnWithLabel(...args: string[]): void { }
 	info(...args: string[]): void { }
 	debug(...args: string[]): void { }
-	trace(...args: string[]): void { }
+	trace(...args: string[]): void {
+		this.traceOutput += util.format.apply(null, args) + "\n";
+	}
 
 	public output = "";
+	public traceOutput = "";
 
 	out(...args: string[]): void {
 		this.output += util.format.apply(null, args) + "\n";
@@ -197,7 +200,7 @@ export class ErrorsStub implements IErrors {
 		throw new Error(message);
 	}
 
-	async beginCommand(action: () => Promise<boolean>, printHelpCommand: () => Promise<boolean>): Promise<boolean> {
+	async beginCommand(action: () => Promise<boolean>, printHelpCommand: () => Promise<void>): Promise<boolean> {
 		throw new Error("not supported");
 	}
 

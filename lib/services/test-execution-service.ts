@@ -26,9 +26,7 @@ class TestExecutionService implements ITestExecutionService {
 		private $errors: IErrors,
 		private $debugService: IDebugService,
 		private $devicesService: Mobile.IDevicesService,
-		private $analyticsService: IAnalyticsService,
 		private $childProcess: IChildProcess) {
-		this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
 	}
 
 	public platform: string;

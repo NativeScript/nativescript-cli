@@ -19,6 +19,7 @@ import { XmlValidator } from "../lib/xml-validator";
 import * as ChildProcessLib from "../lib/common/child-process";
 import ProjectChangesLib = require("../lib/services/project-changes-service");
 import { Messages } from "../lib/common/messages/messages";
+import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 
 require("should");
 const temp = require("temp");
@@ -87,6 +88,10 @@ function createTestInjector() {
 	});
 	testInjector.register("messages", Messages);
 	testInjector.register("devicePathProvider", {});
+	testInjector.register("helpService", {
+		showCommandLineHelp: async (): Promise<void> => (undefined)
+	});
+	testInjector.register("settingsService", SettingsService);
 
 	return testInjector;
 }

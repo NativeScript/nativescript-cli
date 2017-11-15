@@ -35,6 +35,8 @@ const tns = require("nativescript");
 	* [disableDebugging](#disableDebugging)
 	* [getLiveSyncDeviceDescriptors](#getLiveSyncDeviceDescriptors)
 	* [events](#events)
+* [analyticsSettingsService](#analyticsSettingsService)
+	* [getClientId](#getClientId)
 
 
 ## Module projectService
@@ -271,7 +273,7 @@ interface ISettingsService {
 
 * Usage:
 ```JavaScript
-tns.settingsService.setSettings({ userAgentName: "myUserAgent" });
+tns.settingsService.setSettings({ userAgentName: "myUserAgent", profileDir: "customProfileDir" });
 ```
 
 ## npm
@@ -854,6 +856,44 @@ Example:
 tns.liveSyncService.on("debuggerDetached", debugInfo => {
 	console.log(`Detached debugger for device with id ${debugInfo.deviceIdentifier}`);
 });
+```
+## analyticsSettingsService
+Provides methods for accessing the analytics settings file data.
+
+### getClientId
+The `getClientId` method allows retrieving the clientId used in the analytics tracking
+
+* Definition:
+```TypeScript
+/**
+ * Gets the clientId used for analytics tracking
+ * @returns {Promise<string>} Client identifier in UUIDv4 standard.
+ */
+getClientId(): Promise<string>;
+```
+
+* Usage:
+```JavaScript
+tns.analyticsSettingsService.getClientId()
+	.then(clientId => console.log(clientId));
+```
+
+### getUserAgentString
+The `getUserAgentString` method allows retrieving a user agent string identifying the current system
+
+* Definition:
+```TypeScript
+/**
+ * Gets user agent string identifing the current system in the following format: `${identifier} (${systemInfo}) ${osArch}`
+ * @param {string} identifier The product identifier.
+ * @returns {string} The user agent string.
+ */
+getUserAgentString(identifier: string): string;
+```
+
+* Usage:
+```JavaScript
+const userAgentString = tns.analyticsSettingsService.getUserAgentString("tns/3.3.0");
 ```
 
 ## How to add a new method to Public API

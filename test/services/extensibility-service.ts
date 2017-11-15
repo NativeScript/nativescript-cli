@@ -3,17 +3,25 @@ import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
 import * as constants from "../../lib/constants";
-import * as path from "path";
+import { SettingsService } from "../../lib/common/test/unit-tests/stubs";
+const path = require("path");
+const originalResolve = path.resolve;
 
 describe("extensibilityService", () => {
+	before(() => {
+		path.resolve = (p: string) => p;
+	});
+
+	after(() => {
+		path.resolve = originalResolve;
+	});
+
 	const getTestInjector = (): IInjector => {
 		const testInjector = new Yok();
 		testInjector.register("fs", {});
 		testInjector.register("logger", stubs.LoggerStub);
 		testInjector.register("npm", {});
-		testInjector.register("options", {
-			profileDir: "profileDir"
-		});
+		testInjector.register("settingsService", SettingsService);
 		testInjector.register("requireService", {
 			require: (pathToRequire: string): any => undefined
 		});
@@ -112,10 +120,11 @@ describe("extensibilityService", () => {
 			it("passes full path to extensions dir for installation", async () => {
 				const extensionName = "extension1";
 				const testInjector = getTestInjector();
-				const options: IOptions = testInjector.resolve("options");
-				options.profileDir = "my-profile-dir";
+				const settingsService: ISettingsService = testInjector.resolve("settingsService");
+				const profileDir = "my-profile-dir";
+				settingsService.getProfileDir = () => profileDir;
 
-				const expectedDirForInstallation = path.join(options.profileDir, "extensions");
+				const expectedDirForInstallation = path.join(profileDir, "extensions");
 				const argsPassedToNpmInstall = await getArgsPassedToNpmInstallDuringInstallExtensionCall(extensionName, testInjector);
 				assert.deepEqual(argsPassedToNpmInstall.pathToSave, expectedDirForInstallation);
 			});
@@ -450,7 +459,7 @@ describe("extensibilityService", () => {
 				const fs: IFileSystem = testInjector.resolve("fs");
 				fs.exists = (pathToCheck: string): boolean => true;
 				const npm: INodePackageManager = testInjector.resolve("npm");
-				npm.uninstall = async (packageName: string, config?: any, path?: string): Promise<any> => {
+				npm.uninstall = async (packageName: string, config?: any, p?: string): Promise<any> => {
 					throw new Error(expectedErrorMessage);
 				};
 
@@ -469,9 +478,9 @@ describe("extensibilityService", () => {
 
 				const npm: INodePackageManager = testInjector.resolve("npm");
 				const argsPassedToNpmInstall: any = {};
-				npm.uninstall = async (packageName: string, config?: any, path?: string): Promise<any> => {
+				npm.uninstall = async (packageName: string, config?: any, p?: string): Promise<any> => {
 					argsPassedToNpmInstall.packageName = packageName;
-					argsPassedToNpmInstall.pathToSave = path;
+					argsPassedToNpmInstall.pathToSave = p;
 					argsPassedToNpmInstall.config = config;
 					return [userSpecifiedValue];
 				};
@@ -505,12 +514,13 @@ describe("extensibilityService", () => {
 			it("passes full path to extensions dir for uninstallation", async () => {
 				const extensionName = "extension1";
 				const testInjector = getTestInjector();
-				const options: IOptions = testInjector.resolve("options");
-				options.profileDir = "my-profile-dir";
+				const settingsService: ISettingsService = testInjector.resolve("settingsService");
+				const profileDir = "my-profile-dir";
+				settingsService.getProfileDir = () => profileDir;
 
-				const expectedDirForInstallation = path.join(options.profileDir, "extensions");
+				const expectedDirForUninstall = path.join(profileDir, "extensions");
 				const argsPassedToNpmUninstall = await getArgsPassedToNpmUninstallDuringUninstallExtensionCall(extensionName, testInjector);
-				assert.deepEqual(argsPassedToNpmUninstall.pathToSave, expectedDirForInstallation);
+				assert.deepEqual(argsPassedToNpmUninstall.pathToSave, expectedDirForUninstall);
 			});
 		});
 
@@ -523,7 +533,7 @@ describe("extensibilityService", () => {
 			fs.readDirectory = (dir: string): string[] => [extensionName];
 
 			const npm: INodePackageManager = testInjector.resolve("npm");
-			npm.uninstall = async (packageName: string, config?: any, path?: string): Promise<any> => [extensionName];
+			npm.uninstall = async (packageName: string, config?: any, p?: string): Promise<any> => [extensionName];
 
 			const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 			await extensibilityService.uninstallExtension(extensionName);

@@ -21,6 +21,7 @@ import { XmlValidator } from "../lib/xml-validator";
 import * as ChildProcessLib from "../lib/common/child-process";
 import ProjectChangesLib = require("../lib/services/project-changes-service");
 import { Messages } from "../lib/common/messages/messages";
+import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 
 let isCommandExecuted = true;
 
@@ -54,7 +55,7 @@ class ErrorsNoFailStub implements IErrors {
 		throw new Error();
 	}
 
-	async beginCommand(action: () => Promise<boolean>, printHelpCommand: () => Promise<boolean>): Promise<boolean> {
+	async beginCommand(action: () => Promise<boolean>, printHelpCommand: () => Promise<void>): Promise<boolean> {
 		let result = false;
 		try {
 			result = await action();
@@ -146,6 +147,10 @@ function createTestInjector() {
 	});
 	testInjector.register("messages", Messages);
 	testInjector.register("devicePathProvider", {});
+	testInjector.register("helpService", {
+		showCommandLineHelp: async (): Promise<void> => (undefined)
+	});
+	testInjector.register("settingsService", SettingsService);
 
 	return testInjector;
 }

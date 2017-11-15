@@ -6,7 +6,7 @@ import { isInteractive } from '../../common/helpers';
 import { DeviceTypes, AnalyticsClients } from "../../common/constants";
 
 export class AnalyticsService extends AnalyticsServiceBase {
-	private static ANALYTICS_BROKER_START_TIMEOUT = 30 * 1000;
+	private static ANALYTICS_BROKER_START_TIMEOUT = 10 * 1000;
 	private brokerProcess: ChildProcess;
 
 	constructor(protected $logger: ILogger,
@@ -182,7 +182,14 @@ export class AnalyticsService extends AnalyticsServiceBase {
 	}
 
 	private async sendMessageToBroker(message: ITrackingInformation): Promise<void> {
-		const broker = await this.getAnalyticsBroker();
+		let broker: ChildProcess;
+		try {
+			broker = await this.getAnalyticsBroker();
+		} catch (err) {
+			this.$logger.trace("Unable to get broker instance due to error: ", err);
+			return;
+		}
+
 		return new Promise<void>((resolve, reject) => {
 			if (broker && broker.connected) {
 				try {

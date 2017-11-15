@@ -7,6 +7,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		private $childProcess: IChildProcess,
 		private $logger: ILogger,
 		private $options: IOptions,
+		private $settingsService: ISettingsService,
 		private $fs: IFileSystem,
 		private $staticConfig: IStaticConfig) {
 	}
@@ -59,7 +60,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 
 		// local installation takes precedence over cache
 		if (!this.inspectorAlreadyInstalled(inspectorPath)) {
-			const cachePath = path.join(this.$options.profileDir, constants.INSPECTOR_CACHE_DIRNAME);
+			const cachePath = path.join(this.$settingsService.getProfileDir(), constants.INSPECTOR_CACHE_DIRNAME);
 			this.prepareCacheDir(cachePath);
 			const pathToPackageInCache = path.join(cachePath, constants.NODE_MODULES_FOLDER_NAME, inspectorNpmPackageName);
 

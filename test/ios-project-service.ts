@@ -33,6 +33,7 @@ import * as constants from "../lib/constants";
 
 import { assert } from "chai";
 import { IOSProvisionService } from "../lib/services/ios-provision-service";
+import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import temp = require("temp");
 
 temp.track();
@@ -114,6 +115,8 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("npmInstallationManager", NpmInstallationManager);
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("xCConfigService", XCConfigService);
+	testInjector.register("settingsService", SettingsService);
+
 	return testInjector;
 }
 
