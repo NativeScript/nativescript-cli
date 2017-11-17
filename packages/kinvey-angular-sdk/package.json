@@ -1,0 +1,46 @@
+{
+  "private": true,
+  "version": "3.9.3-beta.3",
+  "name": "kinvey-angular-sdk",
+  "description": "Kinvey JavaScript SDK for Angular/Ionic applications.",
+  "author": "Kinvey, Inc.",
+  "homepage": "http://www.kinvey.com",
+  "license": "Apache-2.0",
+  "main": "kinvey-angular-sdk.min.js",
+  "dependencies": {
+    "fs-extra": "4.0.2",
+    "json-loader": "^0.5.4",
+    "kinvey-acl": "^3.9.3-beta.3",
+    "kinvey-aggregation": "^3.9.3-beta.3",
+    "kinvey-datastore": "^3.9.3-beta.3",
+    "kinvey-endpoint": "^3.9.3-beta.3",
+    "kinvey-errors": "^3.9.3-beta.3",
+    "kinvey-filestore": "^3.9.3-beta.3",
+    "kinvey-html5": "^3.9.3-beta.3",
+    "kinvey-html5-cache": "^3.9.3-beta.3",
+    "kinvey-html5-http": "^3.9.3-beta.3",
+    "kinvey-identity": "^3.9.3-beta.3",
+    "kinvey-live": "^3.9.3-beta.3",
+    "kinvey-log": "^3.9.3-beta.3",
+    "kinvey-metadata": "^3.9.3-beta.3",
+    "kinvey-phonegap-popup": "^3.9.3-beta.3",
+    "kinvey-phonegap-push": "^3.9.3-beta.3",
+    "kinvey-query": "^3.9.3-beta.3",
+    "kinvey-request": "^3.9.3-beta.3",
+    "kinvey-user": "^3.9.3-beta.3",
+    "rimraf": "2.6.2",
+    "uglifyjs-webpack-plugin": "1.0.1",
+    "webpack": "^2.5.1"
+  },
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "webpack --config webpack.config.js",
+    "postbuild": "node scripts/copyfiles",
+    "release": "npm run build && ./scripts/push.sh",
+    "postrelease": "rimraf tmp"
+  },
+  "files": [
+    "kinvey-angular-sdk.min.js",
+    "kinvey-angular-sdk.min.js.map"
+  ]
+}

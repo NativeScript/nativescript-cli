@@ -1,0 +1,11 @@
+{
+  "name": "kinvey-phonegap-sdk",
+  "description": "Kinvey JavaScript SDK for Cordova/Phonegap applications.",
+  "homepage": "https://www.kinvey.com",
+  "license": "Apache-2.0",
+  "author": "Kinvey, Inc.",
+  "main": "kinvey-phonegap-sdk.min.js",
+  "ignore": [
+    ".travis.yml"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "private": true,
+  "version": "3.9.3-beta.7",
+  "name": "kinvey-node-sdk",
+  "description": "Kinvey JavaScript SDK for Node.js applications.",
+  "author": "Kinvey, Inc.",
+  "homepage": "http://www.kinvey.com",
+  "license": "Apache-2.0",
+  "main": "kinvey-node-sdk.min.js",
+  "dependencies": {
+    "es6-promise": "4.1.1",
+    "request": "^2.81.0"
+  },
+  "devDependencies": {
+    "fs-extra": "4.0.2",
+    "json-loader": "^0.5.4",
+    "kinvey": "^3.9.3-beta.7",
+    "kinvey-acl": "^3.9.3-beta.7",
+    "kinvey-aggregation": "^3.9.3-beta.7",
+    "kinvey-datastore": "^3.9.3-beta.7",
+    "kinvey-endpoint": "^3.9.3-beta.7",
+    "kinvey-errors": "^3.9.3-beta.7",
+    "kinvey-filestore": "^3.9.3-beta.7",
+    "kinvey-identity": "^3.9.3-beta.7",
+    "kinvey-live": "^3.9.3-beta.7",
+    "kinvey-log": "^3.9.3-beta.7",
+    "kinvey-metadata": "^3.9.3-beta.7",
+    "kinvey-query": "^3.9.3-beta.7",
+    "kinvey-request": "^3.9.3-beta.7",
+    "kinvey-user": "^3.9.3-beta.7",
+    "rimraf": "2.6.2",
+    "uglifyjs-webpack-plugin": "1.0.1",
+    "webpack": "^2.5.1"
+  },
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "webpack --config webpack.config.js",
+    "postbuild": "node scripts/copyfiles",
+    "release": "npm run build && ./scripts/push.sh",
+    "postrelease": "rimraf tmp"
+  },
+  "files": [
+    "kinvey-node-sdk.min.js",
+    "kinvey-node-sdk.min.js.map"
+  ]
+}

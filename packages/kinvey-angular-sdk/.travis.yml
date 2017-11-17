@@ -1,0 +1,27 @@
+language: node_js
+node_js:
+- '9'
+script: echo "No tests to run"
+jobs:
+  include:
+  - name: deploy stable
+    if: tag =~ ^((?!-\w).)*$
+    deploy:
+      provider: npm
+      email: thomas.conner@me.com
+      api_key:
+        secure: cui3bKkkNjejmaFLmSOP+DO2foHg/ErezaN9Nu00982g223wRVHsTXRppenmYxakoMKm62nysTcYLi9fYIeuptV/b5Z0vL+cU+8sbE+8sy0ukxAbvt4XvdCYVdlBc8pm9Aqbs2STQiH67e+5VgP4ZVK9RmNRsiGXk8TVWQETFOz8qwrPuupgHhkjhbateCRr+pjJ8yHAYOYJauqN7pgPgV1dud47xB6OLSN4zJNFf4LGtL6EfN7L5uak5aSmZxEZFyatS0CO5z84HidMfrz+DO9Roocefr5XttQANLo2Td6BrPNuFJSiHaJplMmq3r/wCR7PtMrNRNOxp9T5rA8zRcQlWdNGBowk0jzi2oqx0nyhKjtsSuTdME7IXmECpIKO+Pmkl8COk3Ia/lGgtVe4Bznn5pXyYGZXfjZtvHBs79G/IDZFN1HCfPKdRkYR/BkT1FPPzDww7mCg6unNR4V8OoTmThA+GReY4k7YMdm6LdOcO7MYK8mYmp7N1rDUZZHMDGg1ToEUoNrv8rttchzK4biAFR1yNpOwlsv3IrssamXRoL1NNVRwa6fLgBJy7OZZ4PYT04GulUbITVie1DbFbQdqOt0oZqchpj3aaSs3wgrnHSA6l5H1ruY8G0HsGT9Xj9AzyQhCN3lUdY7dgmreEe9LGmoHdCczvMIuD5u9mYU=
+      on:
+        all_branches: true
+        tags: true
+  - name: deploy beta
+    if: tag =~ tag =~ ^v?([0-9])*\.[0-9]*\.[0-9]*-\w+$
+    deploy:
+      provider: npm
+      tag: beta
+      email: thomas.conner@me.com
+      api_key:
+        secure: cui3bKkkNjejmaFLmSOP+DO2foHg/ErezaN9Nu00982g223wRVHsTXRppenmYxakoMKm62nysTcYLi9fYIeuptV/b5Z0vL+cU+8sbE+8sy0ukxAbvt4XvdCYVdlBc8pm9Aqbs2STQiH67e+5VgP4ZVK9RmNRsiGXk8TVWQETFOz8qwrPuupgHhkjhbateCRr+pjJ8yHAYOYJauqN7pgPgV1dud47xB6OLSN4zJNFf4LGtL6EfN7L5uak5aSmZxEZFyatS0CO5z84HidMfrz+DO9Roocefr5XttQANLo2Td6BrPNuFJSiHaJplMmq3r/wCR7PtMrNRNOxp9T5rA8zRcQlWdNGBowk0jzi2oqx0nyhKjtsSuTdME7IXmECpIKO+Pmkl8COk3Ia/lGgtVe4Bznn5pXyYGZXfjZtvHBs79G/IDZFN1HCfPKdRkYR/BkT1FPPzDww7mCg6unNR4V8OoTmThA+GReY4k7YMdm6LdOcO7MYK8mYmp7N1rDUZZHMDGg1ToEUoNrv8rttchzK4biAFR1yNpOwlsv3IrssamXRoL1NNVRwa6fLgBJy7OZZ4PYT04GulUbITVie1DbFbQdqOt0oZqchpj3aaSs3wgrnHSA6l5H1ruY8G0HsGT9Xj9AzyQhCN3lUdY7dgmreEe9LGmoHdCczvMIuD5u9mYU=
+      on:
+        all_branches: true
+        tags: true

@@ -5,6 +5,9 @@ npm-debug.log
 # Yarn
 yarn-error.log
 
+# Lerna
+lerna-debug.log
+
 # JetBrains
 .idea/
 
@@ -23,3 +26,4 @@ Desktop.ini
 coverage
 dist
 docs
+dist

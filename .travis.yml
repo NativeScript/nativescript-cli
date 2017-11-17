@@ -1,29 +1,29 @@
 language: node_js
 node_js:
-  - 'stable'
+- '9'
+
 env:
-  secure: HQ8ytPTRHx5gF2+UzAuq94vL3Xu17KPvJrbB87C3qYL1dTyqUYEJz65N53MmO5TtYdA5fp3B+QOb5rm+B3WUTBxuaS7w0rr4YRI7AJxg5qh0thUzx3jTLubYNdZtskAy5V5gN5Kzn+eYGPFxp/Kuntxp3y3HDi8ihc0qMTk5aqBbry5I/iQjXzwDL1xNQFbmEpSSy1vAmYWv4IdaQvVhfreLqKU8tYeWH/zd+2UhGXMG/s6t40KXGIasIwXjiZS0Mux6l/r/lUYpaxLgRbyyodTNFZwMYkzhmUTLBJCpPCMdBxjhcRfyUWmzjSugs1vmNP0fc7kcclXxt6BH0l2rDoH88zJnksvWPyZaYDfYYjRb9fL5n7VKMAwUyY6IVbsL9jEyLAgkCTyucnGDl2ZXHCaucfLBMtSkIAlRncHOZMWOkO+U+aBsWCYS73/QnOXm35e697EpDjcQqjb5c6M+rDhB3XrtLCARVbU8O23iaAgQEEtV6ja+guh0MCMTnX+huJs81Q2Ggr5dfMxXCIx3ad23gwTuGZ6icuhOtwYzy8wZB6xJuqqi2Tl+/pBkUVPT044jZzeXrauZz2gT1i/Cdi1mniYNraXCCsnZDhQqpGCCe2ASNZC1ESPts7XpE0Rfro7ILGxhlOKFCuVWyxlLE/uO+XxSeSci2u9Bk32nNkQ=
+  secure: aqcGPDGxdYhbW6Cq6JFKHmyjYBqkDgDlONgM43o5ES1yIiqdFG0LySL75XE2QBocyyG/a1tNMj6aX4nrLrsukmNlEgXieWjuQs3EaTjVHiw+JWhU6yDcI4PqF4ZoD3ANdghxkBWQ8YjL+tfHfwCSnewI0UnRBsrb76Yv81o/Frkr+1zAkw4kG/6ubS5eRGcA9xOOvo0VDkz8HtsWnbxfAfLMBhsPICmdj7KlZJZY2hjfD+okf3DcKQqZZPi7bqfDb7AGmTKufX2QUVFRbT1p6yp+xH5hOB5QK2/2YeSXNntkzO2NhXsiyVybBTAhnulTsQMbCv6RELmXIm0/BHS0bhPzrK8NbQJPrYHPVYV93Z3S4Lpg1rzPAPIDf124V7CAcTYZEXgjS6YRUMMPwA0GJJDbNuJnwGiVGL4J95dkllf9h2BSym0zsPhtU94OPQvWs3VyfaK3uz6z9X/CmeeCuhOcPYV9NWX5J+6swI/tttYdnNdOa5j5PCoVtRD6hIB0YsBpxLSOIOjugXyQXNn+rWQbvoTZjQMPInAk/Bhav5IGXC+Xa2MesXJh6Nu7WXdwXxXEwVNJ4/jJULNsP7NTer0G43akzkI4m4Fairw3mo8HXdhQ+nmMyUU9xqmPWvgSNsI9JiBxTMu8xmN36cdmNiBqW+GWa0iBzlXTq2zK9lQ=
 
+before_install:
+- curl -o- -L https://yarnpkg.com/install.sh | bash
+- export PATH="$HOME/.yarn/bin:$PATH"
 install:
-  - npm config set spin=false
-  - npm install
+- yarn install
 
-script:
-  - npm run ci
-after_success:
-  - bash <(curl -s https://codecov.io/bash)
+script: npm run test
 
-before_deploy:
-  - npm run build
-deploy:
-  skip_cleanup: true
-  provider: npm
-  email: thomas.conner@me.com
-  api_key:
-    secure: zs64wz+OIVD9gKu2qZ+zjDJZsFqBPAM0umhYxdCXvBPfxPnHiy5CYJJWhzi8E/bY9o5jfPRc04OFWcKRYVI0k65fCImpnuettO/ADXJ1fB/9H7YuKyNz/TwFsehmbRiiyyqRQn4neIrXs0ewxZFoh/4+HBN29PCrTj5s2o5Xt+c+44ijON2hpSFZA8emTLscdL0shuWHOv9PCxbfm6E/eBrC0/NW3pWQDOCDFJX7ZQzYX8M3DmSwKyf1U7XOLlUAwZ0FmmncXHrzDGRL2hypbOLae6sY3b34/cE+zi/CGoot5k4QvTrAQewX6ufwu2iAxSU8Fq4zF0Qb1Ry4T20j2XB9IBzEc79nHJT20naBAtZVJ5eKPCeU1yzoWJbM51lAUm2SGzNU3dQue6P71r/PsKD4oJLT2SdGHi+uq492SWWnBN8EJU0w82q1/UnKpUPMazN+lYGNmxCXeQbm5MLOJ0g783LH2XV6vOaESr97B3tNkE30krrwCH148UVcHkBOhkY5U8vwMp+EKv4IFTGZmoBylUMAHCpr7XrYRubHPseFva+pCTd4BfhhEZx8F1ikzC0rbN4/X0yGOnumKbH5s1QL9iU/AvSksyLLEnTQ5ZlCS1yaB02MBt8jK19VT1WWZc66QGpwDsgOSMyvN6Wyju1zpD1clYEEbqIwZgs9kR0=
-  on:
-    tags: true
-    repo: Kinvey/js-sdk
+jobs:
+  include:
+    - stage: deploy
+      node_js: '9'
+      deploy:
+        provider: script
+        script: ./node_modules/.bin/lerna run release --parallel
+        skip_cleanup: true
+        on:
+          all_branches: true
+          tags: true
 
 notifications:
   email:

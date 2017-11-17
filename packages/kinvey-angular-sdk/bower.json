@@ -1,0 +1,11 @@
+{
+  "name": "kinvey-angular-sdk",
+  "description": "Kinvey JavaScript SDK for Angular/Ionic applications.",
+  "homepage": "https://www.kinvey.com",
+  "license": "Apache-2.0",
+  "author": "Kinvey, Inc.",
+  "main": "kinvey-angular-sdk.min.js",
+  "ignore": [
+    ".travis.yml"
+  ]
+}

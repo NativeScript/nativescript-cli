@@ -1,0 +1,11 @@
+{
+  "name": "kinvey-html5-sdk",
+  "description": "Kinvey JavaScript SDK for HTML5 applications.",
+  "homepage": "https://www.kinvey.com",
+  "license": "Apache-2.0",
+  "author": "Kinvey, Inc.",
+  "main": "kinvey-html5-sdk.min.js",
+  "ignore": [
+    ".travis.yml"
+  ]
+}
