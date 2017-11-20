@@ -15,39 +15,24 @@ export class UpdateCommand implements ICommand {
 		this.$projectData.initializeProjectData();
 	}
 
+	private folders: string[] = ["lib", "hooks", "platforms", "node_modules"];
+	private tempFolder: string = ".tmp_backup";
+
 	public async execute(args: string[]): Promise<void> {
-		const folders = ["lib", "hooks", "platforms", "node_modules"];
-		const tmpDir = path.join(this.$projectData.projectDir, ".tmp_backup");
+		const tmpDir = path.join(this.$projectData.projectDir, this.tempFolder);
 
 		try {
-			shelljs.rm("-fr", tmpDir);
-			shelljs.mkdir(tmpDir);
-			shelljs.cp(path.join(this.$projectData.projectDir, "package.json"), tmpDir);
-			for (const folder of folders) {
-				const folderToCopy = path.join(this.$projectData.projectDir, folder);
-				if (this.$fs.exists(folderToCopy)) {
-					shelljs.cp("-rf", folderToCopy, tmpDir);
-				}
-			}
+			this.backup(tmpDir);
 		} catch (error) {
 			this.$logger.error("Could not backup project folders!");
+			shelljs.rm("-fr", tmpDir);
 			return;
 		}
 
 		try {
-			await this.executeCore(args, folders);
+			await this.executeCore(args);
 		} catch (error) {
-			shelljs.cp("-f", path.join(tmpDir, "package.json"), this.$projectData.projectDir);
-			for (const folder of folders) {
-				shelljs.rm("-rf", path.join(this.$projectData.projectDir, folder));
-
-				const folderToCopy = path.join(tmpDir, folder);
-
-				if (this.$fs.exists(folderToCopy)) {
-					shelljs.cp("-fr", folderToCopy, this.$projectData.projectDir);
-				}
-			}
-
+			this.restoreBackup(tmpDir);
 			this.$logger.error("Could not update the project!");
 		} finally {
 			shelljs.rm("-fr", tmpDir);
@@ -55,9 +40,9 @@ export class UpdateCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		for (const arg of args) {
-			const platform = arg.split("@")[0];
-			this.$platformService.validatePlatformInstalled(platform, this.$projectData);
+		const platforms = this.getPlatforms();
+
+		for (const platform of platforms.packagePlatforms) {
 			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
 			const platformProjectService = platformData.platformProjectService;
 			await platformProjectService.validate(this.$projectData);
@@ -66,8 +51,38 @@ export class UpdateCommand implements ICommand {
 		return args.length < 2 && this.$projectData.projectDir !== "";
 	}
 
-	private async executeCore(args: string[], folders: string[]): Promise<void> {
-		let platforms = this.$platformService.getInstalledPlatforms(this.$projectData);
+	private async executeCore(args: string[]): Promise<void> {
+		const platforms = this.getPlatforms();
+
+		for (const platform of _.xor(platforms.installed, platforms.packagePlatforms)) {
+			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+			this.$projectDataService.removeNSProperty(this.$projectData.projectDir, platformData.frameworkPackageName);
+		}
+
+		await this.$platformService.removePlatforms(platforms.installed, this.$projectData);
+		await this.$pluginsService.remove("tns-core-modules", this.$projectData);
+		await this.$pluginsService.remove("tns-core-modules-widgets", this.$projectData);
+
+		for (const folder of this.folders) {
+			shelljs.rm("-rf", path.join(this.$projectData.projectDir, folder));
+		}
+
+		if (args.length === 1) {
+			for (const platform of platforms.packagePlatforms) {
+				await this.$platformService.addPlatforms([platform + "@" + args[0]], this.$options.platformTemplate, this.$projectData, this.$options, this.$options.frameworkPath);
+			}
+
+			await this.$pluginsService.add("tns-core-modules@" + args[0], this.$projectData);
+		} else {
+			await this.$platformService.addPlatforms(platforms.packagePlatforms, this.$options.platformTemplate, this.$projectData, this.$options, this.$options.frameworkPath);
+			await this.$pluginsService.add("tns-core-modules", this.$projectData);
+		}
+
+		await this.$pluginsService.ensureAllDependenciesAreInstalled(this.$projectData);
+	}
+
+	private getPlatforms(): {installed: string[], packagePlatforms: string[]} {
+		const installedPlatforms = this.$platformService.getInstalledPlatforms(this.$projectData);
 		const availablePlatforms = this.$platformService.getAvailablePlatforms(this.$projectData);
 		const packagePlatforms: string[] = [];
 
@@ -76,31 +91,38 @@ export class UpdateCommand implements ICommand {
 			const platformVersion = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
 			if (platformVersion) {
 				packagePlatforms.push(platform);
-				this.$projectDataService.removeNSProperty(this.$projectData.projectDir, platformData.frameworkPackageName);
 			}
 		}
 
-		await this.$platformService.removePlatforms(platforms, this.$projectData);
-		await this.$pluginsService.remove("tns-core-modules", this.$projectData);
-		await this.$pluginsService.remove("tns-core-modules-widgets", this.$projectData);
+		return {
+			installed: installedPlatforms,
+			packagePlatforms: installedPlatforms.concat(packagePlatforms)
+		};
+	}
 
-		for (const folder of folders) {
-			shelljs.rm("-fr", folder);
-		}
+	private restoreBackup(tmpDir: string): void {
+		shelljs.cp("-f", path.join(tmpDir, "package.json"), this.$projectData.projectDir);
+		for (const folder of this.folders) {
+			shelljs.rm("-rf", path.join(this.$projectData.projectDir, folder));
 
-		platforms = platforms.concat(packagePlatforms);
-		if (args.length === 1) {
-			for (const platform of platforms) {
-				await this.$platformService.addPlatforms([platform + "@" + args[0]], this.$options.platformTemplate, this.$projectData, this.$options, this.$options.frameworkPath);
+			const folderToCopy = path.join(tmpDir, folder);
+
+			if (this.$fs.exists(folderToCopy)) {
+				shelljs.cp("-fr", folderToCopy, this.$projectData.projectDir);
 			}
-
-			await this.$pluginsService.add("tns-core-modules@" + args[0], this.$projectData);
-		} else {
-			await this.$platformService.addPlatforms(platforms, this.$options.platformTemplate, this.$projectData, this.$options, this.$options.frameworkPath);
-			await this.$pluginsService.add("tns-core-modules", this.$projectData);
 		}
+	}
 
-		await this.$pluginsService.ensureAllDependenciesAreInstalled(this.$projectData);
+	private backup(tmpDir: string): void {
+		shelljs.rm("-fr", tmpDir);
+		shelljs.mkdir(tmpDir);
+		shelljs.cp(path.join(this.$projectData.projectDir, "package.json"), tmpDir);
+		for (const folder of this.folders) {
+			const folderToCopy = path.join(this.$projectData.projectDir, folder);
+			if (this.$fs.exists(folderToCopy)) {
+				shelljs.cp("-rf", folderToCopy, tmpDir);
+			}
+		}
 	}
 }
 
