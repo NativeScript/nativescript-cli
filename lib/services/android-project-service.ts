@@ -650,6 +650,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 		}
 
+		if (platformVersion === constants.PackageVersion.NEXT || platformVersion === constants.PackageVersion.LATEST) {
+			return true;
+		}
+
 		const androidStudioCompatibleTemplate = "3.4.0";
 		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
 
