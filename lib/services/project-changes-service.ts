@@ -220,7 +220,15 @@ export class ProjectChangesService implements IProjectChangesService {
 		return false;
 	}
 
-	private containsNewerFiles(dir: string, skipDir: string, projectData: IProjectData, processFunc?: (filePath: string, projectData: IProjectData) => boolean): boolean {
+	private containsNewerFiles(dir: string, skipDir: string, projectData: IProjectData, processFunc?: (filePath: string, projectData: IProjectData) => boolean, visitedRealPaths?: Set<string>): boolean {
+
+		visitedRealPaths = visitedRealPaths || new Set<string>();
+
+		const dirRPath = this.$fs.realpath(dir);
+		if (visitedRealPaths.has(dirRPath)) {
+			return false;
+		}
+		visitedRealPaths.add(dirRPath);
 
 		const dirName = path.basename(dir);
 		if (_.startsWith(dirName, '.')) {
@@ -255,7 +263,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 
 			if (fileStats.isDirectory()) {
-				if (this.containsNewerFiles(filePath, skipDir, projectData, processFunc)) {
+				if (this.containsNewerFiles(filePath, skipDir, projectData, processFunc, visitedRealPaths)) {
 					return true;
 				}
 			}
