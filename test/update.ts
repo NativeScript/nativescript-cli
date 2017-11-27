@@ -8,7 +8,6 @@ import { Options } from "../lib/options";
 import { AndroidProjectService } from "../lib/services/android-project-service";
 import {StaticConfig } from "../lib/config";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
-import * as shelljs from "shelljs";
 const projectFolder = "test";
 
 function createTestInjector(
@@ -72,7 +71,7 @@ function createTestInjector(
 	return testInjector;
 }
 
-describe("update command method tests", () => {
+describe.only("update command method tests", () => {
 	describe("canExecute", () => {
 		it("calls platform service validate", async () => {
 			let validated = false;
@@ -129,7 +128,6 @@ describe("update command method tests", () => {
 		});
 
 		it("calls backup and executeCore", async () => {
-			sandbox.stub(shelljs);
 			const testInjector = createTestInjector();
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
 			const executeCoreStub: sinon.SinonStub = sinon.stub(updateCommand as any, "executeCore");
@@ -141,16 +139,16 @@ describe("update command method tests", () => {
 		});
 
 		it("if backup fails, execute core not called and temp removed", async () => {
-			sandbox.stub(shelljs);
-			const rmStub: sinon.SinonStub = shelljs.rm as sinon.SinonStub;
 			const testInjector = createTestInjector();
+			const fs = testInjector.resolve("fs");
+			const deleteDirectory: sinon.SinonStub = sandbox.stub(fs, "deleteDirectory");
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
 			sandbox.stub(updateCommand as any, "backup").throws();
 			const executeCoreStub: sinon.SinonStub = sinon.stub(updateCommand as any, "executeCore");
 			updateCommand.execute(["3.3.0"]);
 
 			assert.isFalse(executeCoreStub.called);
-			assert.isTrue(rmStub.calledWith("-fr", path.join(projectFolder, (updateCommand as any).tempFolder)));
+			assert.isTrue(deleteDirectory.calledWith(path.join(projectFolder, (updateCommand as any).tempFolder)));
 		});
 	});
 
@@ -166,16 +164,16 @@ describe("update command method tests", () => {
 		});
 
 		it("calls copy to temp for package.json and folders", async () => {
-			sandbox.stub(shelljs);
-			const cpStub: sinon.SinonStub = shelljs.cp as sinon.SinonStub;
 			const testInjector = createTestInjector();
+			const fs = testInjector.resolve("fs");
+			const copyFileStub = sandbox.stub(fs, "copyFile");
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
 			sinon.stub(updateCommand as any, "executeCore");
 			updateCommand.execute(["3.3.0"]);
 
-			assert.isTrue(cpStub.calledWith(path.join(projectFolder, "package.json")));
+			assert.isTrue(copyFileStub.calledWith(path.join(projectFolder, "package.json")));
 			for (const folder of (updateCommand as any).folders) {
-				assert.isTrue(cpStub.calledWith("-rf", path.join(projectFolder, folder)));
+				assert.isTrue(copyFileStub.calledWith(path.join(projectFolder, folder)));
 			}
 		});
 	});
@@ -192,17 +190,17 @@ describe("update command method tests", () => {
 		});
 
 		it("calls copy to temp for package.json and folders", async () => {
-			sandbox.stub(shelljs);
-			const cpStub: sinon.SinonStub = shelljs.cp as sinon.SinonStub;
 			const testInjector = createTestInjector();
+			const fs = testInjector.resolve("fs");
+			const copyFileStub = sandbox.stub(fs, "copyFile");
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
 			const tempDir = path.join(projectFolder, (updateCommand as any).tempFolder);
 			sinon.stub(updateCommand as any, "executeCore");
 			(updateCommand as any).backup(tempDir);
 
-			assert.isTrue(cpStub.calledWith(path.join(projectFolder, "package.json")));
+			assert.isTrue(copyFileStub.calledWith(path.join(projectFolder, "package.json")));
 			for (const folder of (updateCommand as any).folders) {
-				assert.isTrue(cpStub.calledWith("-rf", path.join(projectFolder, folder)));
+				assert.isTrue(copyFileStub.calledWith(path.join(projectFolder, folder)));
 			}
 		});
 	});
@@ -219,17 +217,17 @@ describe("update command method tests", () => {
 		});
 
 		it("calls copy to temp for package.json and folders", async () => {
-			sandbox.stub(shelljs);
-			const cpStub: sinon.SinonStub = shelljs.cp as sinon.SinonStub;
 			const testInjector = createTestInjector();
+			const fs = testInjector.resolve("fs");
+			const copyFileStub = sandbox.stub(fs, "copyFile");
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
 			const tempDir = path.join(projectFolder, (updateCommand as any).tempFolder, projectFolder);
 			sinon.stub(updateCommand as any, "executeCore");
 			(updateCommand as any).restoreBackup(tempDir);
 
-			assert.isTrue(cpStub.calledWith("-f", path.join(tempDir, "package.json"), projectFolder));
+			assert.isTrue(copyFileStub.calledWith(path.join(tempDir, "package.json"), projectFolder));
 			for (const folder of (updateCommand as any).folders) {
-				assert.isTrue(cpStub.calledWith("-fr", path.join(tempDir, folder), projectFolder));
+				assert.isTrue(copyFileStub.calledWith(path.join(tempDir, folder), projectFolder));
 			}
 		});
 	});
@@ -246,19 +244,18 @@ describe("update command method tests", () => {
 		});
 
 		it("calls remove for all falders", async () => {
-			sandbox.stub(shelljs);
-			const rmStub: sinon.SinonStub = shelljs.rm as sinon.SinonStub;
 			const testInjector = createTestInjector();
+			const fs = testInjector.resolve("fs");
+			const deleteDirectory: sinon.SinonStub = sandbox.stub(fs, "deleteDirectory");
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
 			return (updateCommand as any).executeCore([]).then(() => {
 				for (const folder of (updateCommand as any).folders) {
-					assert.isTrue(rmStub.calledWith("-rf", path.join(projectFolder, folder)));
+					assert.isTrue(deleteDirectory.calledWith(path.join(projectFolder, folder)));
 				}
 			});
 		});
 
 		it("calls remove platforms and add platforms", async () => {
-			sandbox.stub(shelljs);
 			const installedPlatforms: string[] = ["android"];
 			const testInjector = createTestInjector(installedPlatforms);
 			const platformService = testInjector.resolve("platformService");
@@ -272,7 +269,6 @@ describe("update command method tests", () => {
 		});
 
 		it("call add platforms with specific verison", async () => {
-			sandbox.stub(shelljs);
 			const version = "3.3.0";
 			const installedPlatforms: string[] = ["android"];
 			const testInjector = createTestInjector(installedPlatforms);
@@ -286,7 +282,6 @@ describe("update command method tests", () => {
 		});
 
 		it("calls remove and add of core modules and widgets", async () => {
-			sandbox.stub(shelljs);
 			const testInjector = createTestInjector();
 			const pluginsService = testInjector.resolve("pluginsService");
 			sandbox.spy(pluginsService, "remove");
@@ -302,7 +297,6 @@ describe("update command method tests", () => {
 		});
 
 		it("calls add of core modules with specific version", async () => {
-			sandbox.stub(shelljs);
 			const version = "3.3.0";
 			const testInjector = createTestInjector();
 			const pluginsService = testInjector.resolve("pluginsService");

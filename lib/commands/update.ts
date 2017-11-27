@@ -1,5 +1,4 @@
 import * as path from "path";
-import * as shelljs from "shelljs";
 
 export class UpdateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -25,7 +24,7 @@ export class UpdateCommand implements ICommand {
 			this.backup(tmpDir);
 		} catch (error) {
 			this.$logger.error("Could not backup project folders!");
-			shelljs.rm("-fr", tmpDir);
+			this.$fs.deleteDirectory(tmpDir);
 			return;
 		}
 
@@ -35,7 +34,7 @@ export class UpdateCommand implements ICommand {
 			this.restoreBackup(tmpDir);
 			this.$logger.error("Could not update the project!");
 		} finally {
-			shelljs.rm("-fr", tmpDir);
+			this.$fs.deleteDirectory(tmpDir);
 		}
 	}
 
@@ -64,7 +63,7 @@ export class UpdateCommand implements ICommand {
 		await this.$pluginsService.remove("tns-core-modules-widgets", this.$projectData);
 
 		for (const folder of this.folders) {
-			shelljs.rm("-rf", path.join(this.$projectData.projectDir, folder));
+			this.$fs.deleteDirectory(path.join(this.$projectData.projectDir, folder));
 		}
 
 		if (args.length === 1) {
@@ -101,26 +100,26 @@ export class UpdateCommand implements ICommand {
 	}
 
 	private restoreBackup(tmpDir: string): void {
-		shelljs.cp("-f", path.join(tmpDir, "package.json"), this.$projectData.projectDir);
+		this.$fs.copyFile(path.join(tmpDir, "package.json"), this.$projectData.projectDir);
 		for (const folder of this.folders) {
-			shelljs.rm("-rf", path.join(this.$projectData.projectDir, folder));
+			this.$fs.deleteDirectory(path.join(this.$projectData.projectDir, folder));
 
 			const folderToCopy = path.join(tmpDir, folder);
 
 			if (this.$fs.exists(folderToCopy)) {
-				shelljs.cp("-fr", folderToCopy, this.$projectData.projectDir);
+				this.$fs.copyFile(folderToCopy, this.$projectData.projectDir);
 			}
 		}
 	}
 
 	private backup(tmpDir: string): void {
-		shelljs.rm("-fr", tmpDir);
-		shelljs.mkdir(tmpDir);
-		shelljs.cp(path.join(this.$projectData.projectDir, "package.json"), tmpDir);
+		this.$fs.deleteDirectory(tmpDir);
+		this.$fs.createDirectory(tmpDir);
+		this.$fs.copyFile(path.join(this.$projectData.projectDir, "package.json"), tmpDir);
 		for (const folder of this.folders) {
 			const folderToCopy = path.join(this.$projectData.projectDir, folder);
 			if (this.$fs.exists(folderToCopy)) {
-				shelljs.cp("-rf", folderToCopy, tmpDir);
+				this.$fs.copyFile(folderToCopy, tmpDir);
 			}
 		}
 	}
