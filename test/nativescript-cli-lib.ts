@@ -22,7 +22,20 @@ describe("nativescript-cli-lib", () => {
 		extensibilityService: ["loadExtensions", "loadExtension", "getInstalledExtensions", "installExtension", "uninstallExtension"],
 		liveSyncService: ["liveSync", "stopLiveSync", "enableDebugging", "disableDebugging", "attachDebugger"],
 		debugService: ["debug"],
-		analyticsSettingsService: ["getClientId"]
+		analyticsSettingsService: ["getClientId"],
+		devicesService: [
+			"addDeviceDiscovery",
+			"deployOnDevices",
+			"getDebuggableApps",
+			"getDebuggableViews",
+			"getDevices",
+			"getInstalledApplications",
+			"initialize",
+			"isAppInstalledOnDevices",
+			"isCompanionAppInstalledOnDevices",
+			"mapAbstractToTcpPort",
+			"setLogLevel"
+		]
 	};
 
 	const pathToEntryPoint = path.join(__dirname, "..", "lib", "nativescript-cli-lib.js").replace(/\\/g, "\\\\");
