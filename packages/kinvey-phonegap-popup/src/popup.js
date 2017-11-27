@@ -84,6 +84,10 @@ class PhoneGapPopup extends Popup {
         }
 
         return this;
+      },
+
+      removeAllListeners(...args) {
+        return that.removeAllListeners(...args);
       }
     };
   }

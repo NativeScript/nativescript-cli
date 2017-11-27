@@ -17,7 +17,9 @@ exports.Popup = class Popup extends EventEmitter {
             this.emit('loadstart', event);
             this.emit('load', event);
           } catch (error) {
-            this.emit('error', error);
+            if (error.code !== global.DOMException.SECURITY_ERR) {
+              this.emit('error', error);
+            }
           }
         }
       }, 100);
@@ -36,6 +38,10 @@ exports.Popup = class Popup extends EventEmitter {
         }
 
         return this;
+      },
+
+      removeAllListeners(...args) {
+        return that.removeAllListeners(...args);
       }
     };
   }
