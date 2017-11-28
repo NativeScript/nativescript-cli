@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as constants from "../constants";
 
 export class UpdateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -14,11 +15,11 @@ export class UpdateCommand implements ICommand {
 		this.$projectData.initializeProjectData();
 	}
 
-	private folders: string[] = ["lib", "hooks", "platforms", "node_modules"];
-	private tempFolder: string = ".tmp_backup";
+	static readonly folders: string[] = ["lib", "hooks", "platforms", "node_modules"];
+	static readonly tempFolder: string = ".tmp_backup";
 
 	public async execute(args: string[]): Promise<void> {
-		const tmpDir = path.join(this.$projectData.projectDir, this.tempFolder);
+		const tmpDir = path.join(this.$projectData.projectDir, UpdateCommand.tempFolder);
 
 		try {
 			this.backup(tmpDir);
@@ -62,7 +63,7 @@ export class UpdateCommand implements ICommand {
 		await this.$pluginsService.remove("tns-core-modules", this.$projectData);
 		await this.$pluginsService.remove("tns-core-modules-widgets", this.$projectData);
 
-		for (const folder of this.folders) {
+		for (const folder of UpdateCommand.folders) {
 			this.$fs.deleteDirectory(path.join(this.$projectData.projectDir, folder));
 		}
 
@@ -100,8 +101,8 @@ export class UpdateCommand implements ICommand {
 	}
 
 	private restoreBackup(tmpDir: string): void {
-		this.$fs.copyFile(path.join(tmpDir, "package.json"), this.$projectData.projectDir);
-		for (const folder of this.folders) {
+		this.$fs.copyFile(path.join(tmpDir, constants.PACKAGE_JSON_FILE_NAME), this.$projectData.projectDir);
+		for (const folder of UpdateCommand.folders) {
 			this.$fs.deleteDirectory(path.join(this.$projectData.projectDir, folder));
 
 			const folderToCopy = path.join(tmpDir, folder);
@@ -115,8 +116,8 @@ export class UpdateCommand implements ICommand {
 	private backup(tmpDir: string): void {
 		this.$fs.deleteDirectory(tmpDir);
 		this.$fs.createDirectory(tmpDir);
-		this.$fs.copyFile(path.join(this.$projectData.projectDir, "package.json"), tmpDir);
-		for (const folder of this.folders) {
+		this.$fs.copyFile(path.join(this.$projectData.projectDir, constants.PACKAGE_JSON_FILE_NAME), tmpDir);
+		for (const folder of UpdateCommand.folders) {
 			const folderToCopy = path.join(this.$projectData.projectDir, folder);
 			if (this.$fs.exists(folderToCopy)) {
 				this.$fs.copyFile(folderToCopy, tmpDir);
