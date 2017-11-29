@@ -12,6 +12,7 @@ const { Query } = require('kinvey-query');
 const { User } = require('kinvey-user');
 const { CacheRack, NetworkRack, Middleware, CacheMiddleware } = require('kinvey-request');
 const { isDefined } = require('kinvey-utils/object');
+const { MobileIdentityConnect } = require('kinvey-identity');
 const {
   ActiveUserError,
   APIVersionNotAvailableError,
@@ -108,6 +109,7 @@ module.exports = {
   UserAlreadyExistsError,
   WritesToCollectionDisallowedError,
 
+  MobileIdentityConnect,
   CacheRack,
   NetworkRack,
   Middleware,
