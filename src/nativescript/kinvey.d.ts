@@ -256,9 +256,9 @@ export namespace Kinvey {
     findById(id: string, options?: RequestOptions): Observable<T>;
     group(aggregation: Aggregation, options?: RequestOptions): Observable<{}>;
     count(query?: Query, options?: RequestOptions): Observable<{ count: number }>;
-    create(entities: {}, options?: RequestOptions): Promise<T>;
-    update(entities: {}, options?: RequestOptions): Promise<T>;
-    save(entity: {}, options?: RequestOptions): Promise<T>;
+    create(entity: T, options?: RequestOptions): Promise<T>;
+    update(entity: T, options?: RequestOptions): Promise<T>;
+    save(entity: T, options?: RequestOptions): Promise<T>;
     remove(query?: Query, options?: RequestOptions): Promise<{ count: number }>;
     removeById(id: string, options?: RequestOptions): Promise<{ count: number }>;
 
