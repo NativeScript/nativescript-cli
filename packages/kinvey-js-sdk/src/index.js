@@ -10,6 +10,8 @@ const { Log } = require('kinvey-log');
 const { Metadata } = require('kinvey-metadata');
 const { Query } = require('kinvey-query');
 const { User } = require('kinvey-user');
+const { CacheRack, NetworkRack, Middleware, CacheMiddleware } = require('kinvey-request');
+const { isDefined } = require('kinvey-utils/object');
 const {
   ActiveUserError,
   APIVersionNotAvailableError,
@@ -104,5 +106,11 @@ module.exports = {
   SyncError,
   TimeoutError,
   UserAlreadyExistsError,
-  WritesToCollectionDisallowedError
+  WritesToCollectionDisallowedError,
+
+  CacheRack,
+  NetworkRack,
+  Middleware,
+  CacheMiddleware,
+  isDefined
 };
