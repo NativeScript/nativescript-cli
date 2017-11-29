@@ -73,7 +73,7 @@ export namespace LiveService {
 
       static isValidACLObject: (obj: any) => boolean;
 
-      constructor(obj: StreamACL | PlainStreamACLObject);
+      constructor(obj?: StreamACL | PlainStreamACLObject);
 
       addPublishers(publishers: User | User[] | string | string[]): this;
       addSubscribers(publishers: User | User[] | string | string[]): this;
@@ -89,7 +89,7 @@ export namespace LiveService {
 
     constructor(name: string);
 
-    getSubstreams(): Promise<{ _id: string }>;
+    getSubstreams(): Promise<{ _id: string }[]>;
     getACL(userId: string): Promise<PlainStreamACLObject>;
     setACL(userId: string, acl: PlainStreamACLObject | Stream.StreamACL): Promise<PlainStreamACLObject>;
 
@@ -371,7 +371,7 @@ export enum AuthorizationGrant {
 // User class
 export class User {
   constructor(data?: {}, options?: { client?: Client })
-  data: {};
+  data: any;
   _id: string | undefined;
   _acl: Acl;
   metadata: Metadata;

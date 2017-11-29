@@ -73,7 +73,7 @@ export namespace Kinvey {
 
         static isValidACLObject: (obj: any) => boolean;
 
-        constructor(obj: StreamACL | PlainStreamACLObject);
+        constructor(obj?: StreamACL | PlainStreamACLObject);
 
         addPublishers(publishers: Kinvey.User | Kinvey.User[] | string | string[]): this;
         addSubscribers(publishers: Kinvey.User | Kinvey.User[] | string | string[]): this;
@@ -89,7 +89,7 @@ export namespace Kinvey {
 
       constructor(name: string);
 
-      getSubstreams(): Promise<{ _id: string }>;
+      getSubstreams(): Promise<{ _id: string }[]>;
       getACL(userId: string): Promise<PlainStreamACLObject>;
       setACL(userId: string, acl: PlainStreamACLObject | Stream.StreamACL): Promise<PlainStreamACLObject>;
 
@@ -370,7 +370,7 @@ export namespace Kinvey {
   // User class
   class User {
     constructor(data?: {}, options?: { client?: Client })
-    data: {};
+    data: any;
     _id: string|undefined;
     _acl: Acl;
     metadata: Metadata;
