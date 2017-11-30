@@ -115,7 +115,7 @@ Quick Start
 
 ## The Commands
 
-Run `tns help` to view all available commands in the browser. Run `tns help <Command>` to view more information about a selected command in the browser.
+Run `tns help` to view all available commands in the browser. Run `tns help <Command>` to view more information about a selected command in the browser. `tns --help` opens console help, where help information is shown in the console.
 
 [Back to Top][1]
 
