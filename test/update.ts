@@ -178,7 +178,7 @@ describe("update command method tests", () => {
 			});
 		});
 
-		it("calls remove for all falders", async () => {
+		it("calls remove for all folders", async () => {
 			const testInjector = createTestInjector();
 			const fs = testInjector.resolve("fs");
 			const deleteDirectory: sinon.SinonStub = sandbox.stub(fs, "deleteDirectory");

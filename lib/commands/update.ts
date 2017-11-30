@@ -15,8 +15,15 @@ export class UpdateCommand implements ICommand {
 		this.$projectData.initializeProjectData();
 	}
 
-	static readonly folders: string[] = ["lib", "hooks", "platforms", "node_modules"];
+	static readonly folders: string[] = [
+		constants.LIB_DIR_NAME,
+		constants.HOOKS_DIR_NAME,
+		constants.PLATFORMS_DIR_NAME,
+		constants.NODE_MODULES_FOLDER_NAME
+	];
 	static readonly tempFolder: string = ".tmp_backup";
+	static readonly updateFailMessage: string = "Could not update the project!";
+	static readonly backupFailMessage: string = "Could not backup project folders!";
 
 	public async execute(args: string[]): Promise<void> {
 		const tmpDir = path.join(this.$projectData.projectDir, UpdateCommand.tempFolder);
@@ -24,7 +31,7 @@ export class UpdateCommand implements ICommand {
 		try {
 			this.backup(tmpDir);
 		} catch (error) {
-			this.$logger.error("Could not backup project folders!");
+			this.$logger.error(UpdateCommand.backupFailMessage);
 			this.$fs.deleteDirectory(tmpDir);
 			return;
 		}
@@ -33,7 +40,7 @@ export class UpdateCommand implements ICommand {
 			await this.executeCore(args);
 		} catch (error) {
 			this.restoreBackup(tmpDir);
-			this.$logger.error("Could not update the project!");
+			this.$logger.error(UpdateCommand.updateFailMessage);
 		} finally {
 			this.$fs.deleteDirectory(tmpDir);
 		}
