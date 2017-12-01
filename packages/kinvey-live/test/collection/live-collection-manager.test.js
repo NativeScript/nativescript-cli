@@ -1,6 +1,6 @@
 import expect from 'expect';
 
-import { getLiveCollectionManager } from 'src/live';
+import { getLiveCollectionManager } from 'kinvey-live';
 
 import * as nockHelper from '../';
 import { mockRequiresIn } from '../../mocks';
@@ -11,6 +11,7 @@ describe('LiveCollectionManager', () => {
   let manager;
   let client;
   let expectedCollectionChannel;
+  let expectedPersonalCollectionChannel;
   const liveServiceMock = {
     subscribeToChannel: () => { },
     unsubscribeFromChannel: () => { }
@@ -21,6 +22,7 @@ describe('LiveCollectionManager', () => {
     client = this.client;
     nockHelper.setClient(client);
     expectedCollectionChannel = `${client.appKey}.c-${collectionName}`;
+    expectedPersonalCollectionChannel = `${expectedCollectionChannel}.u-${client.getActiveUser()._id}`;
   });
 
   beforeEach(() => {
@@ -100,7 +102,9 @@ describe('LiveCollectionManager', () => {
 
       return manager.subscribeCollection(collectionName, receiver)
         .then(() => {
+          expect(spy.calls.length).toBe(2);
           expect(spy).toHaveBeenCalledWith(expectedCollectionChannel, receiver);
+          expect(spy).toHaveBeenCalledWith(expectedPersonalCollectionChannel, receiver);
           scope.done();
         });
     });
@@ -140,7 +144,9 @@ describe('LiveCollectionManager', () => {
       const spy = expect.spyOn(liveServiceMock, 'unsubscribeFromChannel');
       return manager.unsubscribeCollection(collectionName)
         .then(() => {
+          expect(spy.calls.length).toBe(2);
           expect(spy).toHaveBeenCalledWith(expectedCollectionChannel);
+          expect(spy).toHaveBeenCalledWith(expectedPersonalCollectionChannel);
           scope.done();
         });
     });
