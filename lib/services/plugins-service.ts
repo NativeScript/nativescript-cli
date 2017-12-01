@@ -99,7 +99,7 @@ export class PluginsService implements IPluginsService {
 		this.executeForAllInstalledPlatforms(action, projectData);
 
 		if (showMessage) {
-			this.$logger.out(`Succsessfully removed plugin ${pluginName}`);
+			this.$logger.out(`Successfully removed plugin ${pluginName}`);
 		}
 	}
 
