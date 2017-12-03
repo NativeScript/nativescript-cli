@@ -1,9 +1,0 @@
-{
-  "private": true,
-  "version": "3.9.3-beta.7",
-  "name": "kinvey-log",
-  "main": "src/index.js",
-  "dependencies": {
-    "loglevel": "1.5.1"
-  }
-}
