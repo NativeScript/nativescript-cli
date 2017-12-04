@@ -55,25 +55,17 @@ function testFunc() {
           it('find() should remove entities that no longer exist in the backend from the cache', (done) => {
             const entity = utilities.getEntity(utilities.randomString());
             storeToTest.save(entity)
-              .then((entity) => {
-                return networkStore.removeById(entity._id)
-              })
-              .then(() => {
-                return storeToTest.find().toPromise()
-              })
-              .then(() => {
-                return syncStore.findById(entity._id).toPromise()
-              })
-              .then(() => {
-                return done(new Error(shouldNotBeCalledErrorMessage));
-              })
+              .then((entity) => networkStore.removeById(entity._id))
+              .then(() => storeToTest.find().toPromise())
+              .then(() => syncStore.findById(entity._id).toPromise())
+              .then(() => done(new Error(shouldNotBeCalledErrorMessage)))
               .catch((error) => {
                 expect(error.name).to.equal(notFoundErrorName);
-                return syncStore.count().toPromise()
-              })
-              .then((count) => {
-                expect(count).to.equal(1);
-                done();
+                syncStore.count().toPromise()
+                  .then((count) => {
+                    expect(count).to.equal(1);
+                    done();
+                  });
               })
               .catch(done);
           });
