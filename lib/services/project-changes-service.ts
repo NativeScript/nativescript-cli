@@ -219,6 +219,12 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	private containsNewerFiles(dir: string, skipDir: string, projectData: IProjectData, processFunc?: (filePath: string, projectData: IProjectData) => boolean): boolean {
+
+		const dirName = path.basename(dir);
+		if (_.startsWith(dirName, '.')) {
+			return false;
+		}
+
 		const dirFileStat = this.$fs.getFsStats(dir);
 		if (this.isFileModified(dirFileStat, dir)) {
 			return true;
