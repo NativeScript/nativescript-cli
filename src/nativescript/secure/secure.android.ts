@@ -1,4 +1,4 @@
-import * as utils from 'utils/utils';
+import * as utils from 'tns-core-modules/utils/utils';
 
 declare const com: any;
 const Hawk = com.orhanobut.hawk.Hawk;

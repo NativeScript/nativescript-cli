@@ -6,31 +6,13 @@
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "kinvey-js-sdk.min.js",
-  "dependencies": {
-    "fs-extra": "4.0.2",
-    "json-loader": "^0.5.4",
-    "kinvey": "^3.9.3-beta.7",
-    "kinvey-acl": "^3.9.3-beta.7",
-    "kinvey-aggregation": "^3.9.3-beta.7",
-    "kinvey-datastore": "^3.9.3-beta.7",
-    "kinvey-endpoint": "^3.9.3-beta.7",
-    "kinvey-errors": "^3.9.3-beta.7",
-    "kinvey-filestore": "^3.9.3-beta.7",
-    "kinvey-identity": "^3.9.3-beta.7",
-    "kinvey-live": "^3.9.3-beta.7",
-    "kinvey-log": "^3.9.3-beta.7",
-    "kinvey-metadata": "^3.9.3-beta.7",
-    "kinvey-query": "^3.9.3-beta.7",
-    "kinvey-request": "^3.9.3-beta.7",
-    "kinvey-user": "^3.9.3-beta.7",
-    "rimraf": "2.6.2",
-    "uglifyjs-webpack-plugin": "1.0.1",
-    "webpack": "^2.5.1"
-  },
+  "main": "kinvey-js-sdk.js",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "webpack --config webpack.config.js",
-    "postbuild": "node scripts/postbuild"
-  }
+    "build": "webpack --config webpack.config.js"
+  },
+  "files": [
+    "kinvey-js-sdk.js",
+    "kinvey-js-sdk.js.map"
+  ]
 }

@@ -1,0 +1,39 @@
+{
+  "private": true,
+  "version": "3.9.3-beta.7",
+  "name": "kinvey-nativescript-sdk",
+  "description": "Kinvey NativeScript SDK for developing NativeScript applications.",
+  "author": "Kinvey, Inc.",
+  "homepage": "http://www.kinvey.com",
+  "license": "Apache-2.0",
+  "main": "kinvey-nativescript-sdk.js",
+  "typings": "kinvey.d.ts",
+  "dependencies": {
+    "nativescript-push-notifications": "~0.1.5",
+    "nativescript-sqlite": "~1.1.11"
+  },
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "npm run build:android && npm run build:ios",
+    "build:android": "webpack --config webpack.config.js --env.android",
+    "build:ios": "webpack --config webpack.config.js --env.ios",
+    "lint": "tslint **/*.ts --exclude **/node_modules/**/* --exclude **/*.d.ts",
+    "release": "npm run build && ./scripts/push.sh",
+    "postrelease": "rimraf tmp"
+  },
+  "files": [
+    "kinvey-nativescript-sdk.ios.js",
+    "kinvey-nativescript-sdk.ios.js.map",
+    "kinvey-nativescript-sdk.android.js",
+    "kinvey-nativescript-sdk.android.js.map",
+    "kinvey.d.ts",
+    "platforms/android/include.gradle",
+    "platforms/ios/Podfile"
+  ],
+  "nativescript": {
+    "platforms": {
+      "ios": "3.0.0",
+      "android": "3.0.0"
+    }
+  }
+}

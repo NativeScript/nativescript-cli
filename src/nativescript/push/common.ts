@@ -1,11 +1,11 @@
 import { Promise } from 'es6-promise';
 import { EventEmitter } from 'events';
-import { device as Device } from 'platform';
-import Client from 'kinvey-js-sdk/dist/client';
-import { KinveyError, NotFoundError } from 'kinvey-js-sdk/dist/errors';
-import { isDefined } from 'kinvey-js-sdk/dist/utils';
-import { User } from 'kinvey-js-sdk/dist/entity';
-import { AuthType, CacheRequest, KinveyRequest, RequestMethod } from 'kinvey-js-sdk/dist/request';
+import { device as Device } from 'tns-core-modules/platform';
+import { Client } from '../../core/client';
+import { KinveyError, NotFoundError } from '../../core/errors';
+import { isDefined } from '../../core/utils';
+import { User } from '../../core/user';
+import { AuthType, CacheRequest, KinveyRequest, RequestMethod } from '../../core/request';
 import { PushConfig } from './';
 
 export class PushCommon extends EventEmitter {

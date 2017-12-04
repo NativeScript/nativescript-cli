@@ -1,6 +1,7 @@
 import { Client as CoreClient } from '../core/client';
 import { KinveyError } from '../core/errors';
-import { isDefined, Log } from '../core/utils';
+import { isDefined } from '../core/utils';
+import { Log } from '../core/log';
 import { SecureStorage } from './secure';
 const storage = new SecureStorage();
 

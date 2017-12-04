@@ -1,6 +1,5 @@
 import { isDefined, isEmpty } from '../../core/utils';
-import { Middleware, RequestMethod, StatusCode } from '../../core/request';
-import { Storage as CoreStorage } from '../../core/request/src/middleware/src/storage';
+import { Middleware, RequestMethod, StatusCode, Storage as CoreStorage } from '../../core/request';
 import { sqLite } from './sqlite';
 
 class Storage extends CoreStorage {

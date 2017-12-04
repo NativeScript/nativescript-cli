@@ -1,5 +1,5 @@
 declare const global: any;
-require('globals'); // necessary to bootstrap tns modules on the new thread
+import 'globals'; // necessary to bootstrap tns modules on the new thread
 import { File } from 'tns-core-modules/file-system';
 import {
   FileUploadRequestOptions,
