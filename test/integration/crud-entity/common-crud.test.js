@@ -155,6 +155,7 @@ function testFunc() {
           it('should throw a NotFoundError if the id argument does not exist', (done) => {
             const entityId = utilities.randomString();
             storeToTest.findById(entityId).toPromise()
+              .then(() => done(new Error('Should not be called')))
               .catch((error) => {
                 expect(error.name).to.contain(notFoundErrorName);
                 done();
