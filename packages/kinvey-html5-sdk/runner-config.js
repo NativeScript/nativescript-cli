@@ -16,6 +16,7 @@ const {
 
 const serveTests = require('./test/tasks/serveTests');
 const webRunTests = require('./test/tasks/webRunTests');
+const rootMonoRepoPath = path.join(__dirname, '../../');
 
 let logServerPort;
 let staticPort;
@@ -25,7 +26,7 @@ const shimSpecificTests = walk(path.join(__dirname, 'test', 'tests'), {
     filter: jsFilesFilter,
     nodir: true
 });
-const commonTests = walk(path.join(__dirname, 'node_modules', 'kinvey-js-sdk', 'test', 'integration'), {
+const commonTests = walk(path.join(rootMonoRepoPath, 'test', 'integration'), {
     filter: jsFilesFilter,
     nodir: true
 });
@@ -49,9 +50,9 @@ const runner = new Runner({
                 ),
                 logServerPort
             }),
-            path.join(__dirname, 'test', 'index.html')
+            path.join(rootMonoRepoPath, 'packages', 'kinvey-html5-sdk', 'test', 'index.html')
         ),
-        serveTests(__dirname),
+        serveTests(rootMonoRepoPath),
         webRunTests(() => staticPort)
     ]
 });
