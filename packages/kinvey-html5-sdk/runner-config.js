@@ -34,10 +34,11 @@ const commonTests = walk(path.join(rootMonoRepoPath, 'test', 'integration'), {
 const runner = new Runner({
     pipeline: [
         logServer(),
-        // runCommand({
-        //     command: 'npm',
-        //     args: ['run', 'build']
-        // }),
+        runCommand({
+            command: 'npm',
+            args: ['run', 'build'],
+            cwd: rootMonoRepoPath
+        }),
         processTemplateFile(
             path.join(__dirname, 'test', 'index.template.hbs'),
             () => ({
