@@ -201,14 +201,17 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	private async wireDebuggerClient(debugData: IDebugData, debugOptions: IDebugOptions, device?: Mobile.IiOSDevice): Promise<string> {
-		if (debugOptions.chrome || !this.$hostInfo.isDarwin) {
-			this._socketProxy = await this.$socketProxyFactory.createWebSocketProxy(this.getSocketFactory(device));
-
-			return this.getChromeDebugUrl(debugOptions, this._socketProxy.options.port);
-		} else {
+		if (debugOptions.inspector && this.$hostInfo.isDarwin) {
 			this._socketProxy = await this.$socketProxyFactory.createTCPSocketProxy(this.getSocketFactory(device));
 			await this.openAppInspector(this._socketProxy.address(), debugData, debugOptions);
 			return null;
+		} else {
+			if (debugOptions.chrome) {
+				this.$logger.info("'--chrome' is the default behavior. Use --inspector to debug iOS applications using the Safari Web Inspector.");
+			}
+
+			this._socketProxy = await this.$socketProxyFactory.createWebSocketProxy(this.getSocketFactory(device));
+			return this.getChromeDebugUrl(debugOptions, this._socketProxy.options.port);
 		}
 	}
 

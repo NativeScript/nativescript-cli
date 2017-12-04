@@ -26,7 +26,8 @@ While debugging, prints the output from the application in the console and watch
 * `--timeout` - Sets the number of seconds that NativeScript CLI will wait for the simulator/device to boot. If not set, the default timeout is 90 seconds.
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--clean` - If set, forces rebuilding the native application.
-* `--chrome` - Allows debugging in Chrome Developer Tools. If set Safari Web Inspector is not started and debugging is attached to Chrome Developer Tools.
+* `--chrome` - Deprecated - default behavior uses '--chrome' implicitly. Allows debugging in Chrome Developer Tools. If set, Safari Web Inspector is not started and debugging is attached to Chrome Developer Tools.
+* `--inspector` - If set, the developer tools in the Safari Web Inspector are used for debugging the application.
 
 ### Attributes
 * `<Device ID>` is the device identifier of the target device as listed by `$ tns device ios`
