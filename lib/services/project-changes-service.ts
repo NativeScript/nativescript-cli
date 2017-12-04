@@ -222,7 +222,7 @@ export class ProjectChangesService implements IProjectChangesService {
 
 		const dirName = path.basename(dir);
 		if (_.startsWith(dirName, '.')) {
-		    return false;
+			return false;
 		}
 
 		const dirFileStat = this.$fs.getFsStats(dir);
