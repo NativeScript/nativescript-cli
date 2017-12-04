@@ -26,4 +26,6 @@ Desktop.ini
 coverage
 dist
 docs
-dist
+
+# generated html file
+packages/kinvey-html5-sdk/test/index.html
