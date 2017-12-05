@@ -36,6 +36,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			syncAllFiles: { type: OptionType.Boolean, default: false },
 			liveEdit: { type: OptionType.Boolean },
 			chrome: { type: OptionType.Boolean },
+			inspector: { type: OptionType.Boolean },
 			clean: { type: OptionType.Boolean },
 			watch: { type: OptionType.Boolean, default: true }
 		},
