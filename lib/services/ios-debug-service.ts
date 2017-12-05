@@ -201,7 +201,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	private async wireDebuggerClient(debugData: IDebugData, debugOptions: IDebugOptions, device?: Mobile.IiOSDevice): Promise<string> {
-		if (debugOptions.inspector && this.$hostInfo.isDarwin) {
+		if ((debugOptions.inspector || !debugOptions.client) && this.$hostInfo.isDarwin) {
 			this._socketProxy = await this.$socketProxyFactory.createTCPSocketProxy(this.getSocketFactory(device));
 			await this.openAppInspector(this._socketProxy.address(), debugData, debugOptions);
 			return null;
