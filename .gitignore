@@ -26,10 +26,4 @@ Desktop.ini
 coverage
 dist
 docs
-
-# generated html file
-packages/kinvey-html5-sdk/test/index.html
-
-# the test app
-KinveyNativescriptTestApp/
-.vscode
+dist
