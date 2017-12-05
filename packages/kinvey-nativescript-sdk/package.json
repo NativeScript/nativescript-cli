@@ -9,7 +9,6 @@
   "main": "kinvey-nativescript-sdk.js",
   "typings": "kinvey.d.ts",
   "dependencies": {
-    "nativescript-push-notifications": "~0.1.5",
     "nativescript-sqlite": "~1.1.11"
   },
   "scripts": {

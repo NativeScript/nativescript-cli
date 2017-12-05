@@ -190,6 +190,8 @@
         return Kinvey.User.signup();
       })
       .then((user) => {
+        //the next row is a temporary workaround, until the bug with user.signup is fixed  
+        user = Kinvey.User.getActiveUser();
         createdUserIds.push(user.data._id);
         return cleanUpCollectionData(collectionName);
       })
