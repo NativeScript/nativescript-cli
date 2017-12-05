@@ -1,8 +1,9 @@
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "../common/constants";
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
 import { cache } from "../common/decorators";
+import { BundleBase } from "./base-bundler";
 
-export class RunCommandBase implements ICommand {
+export class RunCommandBase extends BundleBase implements ICommand {
 
 	public platform: string;
 	constructor(protected $platformService: IPlatformService,
@@ -14,7 +15,9 @@ export class RunCommandBase implements ICommand {
 		protected $platformsData: IPlatformsData,
 		private $hostInfo: IHostInfo,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper
-	) { }
+	) {
+		super($projectData, $errors, $options);
+	}
 
 	public allowedParameters: ICommandParameter[] = [];
 	public async execute(args: string[]): Promise<void> {
@@ -39,6 +42,8 @@ export class RunCommandBase implements ICommand {
 			const platformProjectService = platformData.platformProjectService;
 			await platformProjectService.validate(this.$projectData);
 		}
+
+		super.validateBundling();
 
 		return true;
 	}
