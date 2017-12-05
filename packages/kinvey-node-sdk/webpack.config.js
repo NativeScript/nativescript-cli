@@ -1,47 +1,104 @@
 const webpack = require('webpack');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
 const fs = require('fs');
 const pkg = require('./package.json');
 
-module.exports = {
-  target: 'node',
-  entry: {
-    'kinvey-node-sdk.min': './src/index.js',
-  },
-  externals: {
-    'es6-promise': 'es6-promise',
-    request: 'request'
-  },
-  output: {
-    path: path.join(__dirname, 'dist'),
-    filename: '[name].js',
-    libraryTarget: 'umd',
-    library: 'Kinvey'
-  },
-  resolve: {
-    extensions: ['.js', '.json']
-  },
-  devtool: 'source-map',
-  module: {
-    rules: [
-      {
-        test: /\.json$/,
-        use: 'json-loader'
+module.exports = (env = {}) => {
+  return {
+    target: 'node',
+    entry: {
+      'kinvey-node-sdk': './index.js',
+    },
+    output: {
+      filename: '[name].js',
+      pathinfo: true,
+      path: path.join(__dirname, 'dist'),
+      libraryTarget: 'umd',
+      library: 'Kinvey'
+    },
+    externals: {
+      'es6-promise': 'es6-promise',
+      'fast-memory-cache': 'fast-memory-cache',
+      lodash: 'lodash',
+      loglevel: 'loglevel',
+      pubnub: 'pubnub',
+      qs: 'qs',
+      request: 'request',
+      rxjs: 'rxjs',
+      sift: 'sift',
+      'url-join': 'url-join'
+    },
+    resolve: {
+      extensions: ['.js', '.json']
+    },
+    devtool: 'source-map',
+    module: {
+      rules: getRules()
+    },
+    plugins: getPlugins(env)
+  };
+}
+
+function getRules() {
+  return [
+    {
+      test: /\.js$/,
+      exclude: /(node_modules)/,
+      use: {
+        loader: 'babel-loader',
+        options: {
+          sourceMaps: true
+        }
       }
-    ]
-  },
-  plugins: [
-    new UglifyJSPlugin({
+    },
+    {
+      test: /\.json$/,
+      loaders: [
+        'json-loader'
+      ]
+    }
+  ];
+}
+
+function getPlugins(env) {
+  let plugins = [
+    // Copy assets to out dir. Add your own globs as needed.
+    new CopyWebpackPlugin([
+      {
+        from: 'package.json',
+        transform: (content) => {
+          const pkg = JSON.parse(content.toString('utf8'));
+          delete pkg.private;
+          delete pkg.devDependencies;
+          delete pkg.scripts;
+          return new Buffer(JSON.stringify(pkg, null, 2));
+        }
+      },
+      { from: '.travis.yml' },
+      { from: 'LICENSE' },
+      { from: 'README.md' }
+    ])
+  ];
+
+  if (env.uglify) {
+    plugins.push(new webpack.LoaderOptionsPlugin({ minimize: true }));
+
+    // Work around an Android issue by setting compress = false
+    plugins.push(new UglifyJSPlugin({
       sourceMap: true,
       uglifyOptions: {
+        mangle: { reserved: mangleExcludes },
         output: {
           comments: false
         }
       }
-    }),
-    new webpack.BannerPlugin({
-      banner: `
+    }));
+  }
+
+  plugins.push(new webpack.BannerPlugin({
+    banner: `
 /**
  * ${pkg.name} - ${pkg.description}
  * @version v${pkg.version}
@@ -50,8 +107,9 @@ module.exports = {
  * @license ${pkg.license}
  */
       `.trim(),
-      raw: true,
-      entryOnly: true
-    })
-  ]
+    raw: true,
+    entryOnly: true
+  }));
+
+  return plugins;
 }

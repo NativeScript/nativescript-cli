@@ -1,12 +1,12 @@
-/// <reference path="../../node_modules/tns-platform-declarations/android.d.ts" />
+/// <reference path= "../../../../node_modules/tns-platform-declarations/android.d.ts" />
 
 import { EventEmitter } from 'events';
-import * as app from 'application';
-import * as frameModule from 'ui/frame';
-import { Page } from 'ui/page';
-import { GridLayout } from 'ui/layouts/grid-layout';
-import { StackLayout } from 'ui/layouts/stack-layout';
-import { WebView } from 'ui/web-view';
+import * as app from 'tns-core-modules/application';
+import * as frameModule from 'tns-core-modules/ui/frame';
+import { Page } from 'tns-core-modules/ui/page';
+import { GridLayout } from 'tns-core-modules/ui/layouts/grid-layout';
+import { StackLayout } from 'tns-core-modules/ui/layouts/stack-layout';
+import { WebView } from 'tns-core-modules/ui/web-view';
 
 /**
  * Implementation details have been copied from https://github.com/alexziskind1/nativescript-oauth.
