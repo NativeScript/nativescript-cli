@@ -15,14 +15,16 @@ const {
     }
 } = require('kinvey-universal-runner');
 
-const testedSdkVersion = '3.7.2'
+const testedSdkVersion = '3.9.3-beta.7'
 const appName = 'KinveyNativescriptTestApp';
 const currentVersionArchiveFileName = `kinvey-nativescript-sdk-${testedSdkVersion}.tgz`;
 const appRootPath = path.join(__dirname, appName);
 const appPath = path.join(appRootPath, 'app');
 const appTestsPath = path.join(appPath, 'tests');
 const shimSpecificTestsPath = path.join(__dirname, 'test', 'tests');
-const commonTestsPath = path.join(__dirname, 'node_modules', 'kinvey-js-sdk', 'test', 'integration');
+const rootMonoRepoPath = path.join(__dirname, '../../');
+const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration');
+const distPath = path.join(__dirname, 'dist');
 
 let logServerPort;
 
@@ -55,11 +57,12 @@ const runner = new Runner({
         ),
         runCommand({
             command: 'npm',
-            args: ['pack']
+            args: ['pack'],
+            cwd: distPath
         }),
         runCommand({
             command: 'npm',
-            args: ['install', '--production' , `../${currentVersionArchiveFileName}`],
+            args: ['install', '--production' , `../dist/${currentVersionArchiveFileName}`],
             cwd: appRootPath
         }),
         copyTestRunner(appPath),
