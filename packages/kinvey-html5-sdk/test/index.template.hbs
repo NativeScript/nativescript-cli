@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Kinvey sdk tests</title>
+</head>
+
+<body>
+  <script src="../../../node_modules/kinvey-universal-runner/injectables/bundles/testRunner.bundle.js"></script>
+
+  {{#each tests}}
+  <script src="{{.}}"></script>
+  {{/each}}
+
+  <script src="../dist/kinvey-html5-sdk.js"></script>
+
+  <script src="./config.js"></script>
+
+  <script>
+    runner.initialize(null, {
+      logServerPort: '{{logServerPort}}'
+    });
+  </script>
+</body>
+
+</html>
