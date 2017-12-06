@@ -98,7 +98,10 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		for (const currentPlatform of availablePlatforms) {
 			const deployPlatformInfo: IDeployPlatformInfo = {
 				platform: currentPlatform,
-				appFilesUpdaterOptions: this.$options,
+				appFilesUpdaterOptions: {
+					bundle: !!this.$options.bundle,
+					release: this.$options.release
+				},
 				deployOptions,
 				projectData: this.$projectData,
 				config: this.$options,

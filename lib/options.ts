@@ -30,7 +30,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			ng: { type: OptionType.Boolean },
 			tsc: { type: OptionType.Boolean },
 			androidTypings: { type: OptionType.Boolean },
-			bundle: { type: OptionType.Boolean },
+			bundle: { type: OptionType.String },
 			all: { type: OptionType.Boolean },
 			teamId: { type: OptionType.Object },
 			syncAllFiles: { type: OptionType.Boolean, default: false },

@@ -6,8 +6,7 @@ export abstract class BundleBase {
 	}
 
 	protected validateBundling(): void {
-		const bundlerPluginName = "nativescript-dev-webpack";
-		if (!this.$projectData.devDependencies[bundlerPluginName] && !this.$projectData.dependencies[bundlerPluginName] && this.$options.bundle) {
+		if (this.$options.bundle && !this.$projectData.devDependencies[this.$options.bundle] && !this.$projectData.dependencies[this.$options.bundle]) {
 			this.$errors.fail("Passing --bundle requires a bundling plugin.");
 		}
 	}

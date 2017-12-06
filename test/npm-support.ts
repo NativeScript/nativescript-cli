@@ -201,7 +201,7 @@ async function preparePlatform(testInjector: IInjector): Promise<void> {
 
 	await platformService.preparePlatform({
 		platform: "android",
-		appFilesUpdaterOptions: { bundle: options.bundle, release: options.release },
+		appFilesUpdaterOptions: { bundle: !!options.bundle, release: options.release },
 		platformTemplate: "",
 		projectData,
 		config: options,
