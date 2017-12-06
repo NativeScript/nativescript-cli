@@ -20,13 +20,19 @@ const appRootPath = path.join(__dirname, appName);
 const appPath = path.join(appRootPath, 'www');
 const appTestsPath = path.join(appPath, 'tests');
 const shimTestsPath = path.join(__dirname, 'test', 'tests');
-const commonTestsPath = path.join(__dirname, 'node_modules', 'kinvey-js-sdk', 'test', 'integration');
+const rootMonoRepoPath = path.join(__dirname, '../../');
+const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration');
 
 let logServerPort;
 
 const runner = new Runner({
     pipeline: [
         logServer(),
+		 runCommand({
+            command: 'npm',
+            args: ['run', 'build'],
+            cwd: rootMonoRepoPath
+        }),
         remove(appRootPath),
         runCommand({
             command: 'cordova',
