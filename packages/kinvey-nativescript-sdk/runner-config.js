@@ -31,7 +31,13 @@ let logServerPort;
 const runner = new Runner({
     pipeline: [
         logServer(),
+        remove(distPath),
         remove(appRootPath),
+        runCommand({
+            command: 'npm',
+            args: ['run', 'build'],
+            cwd: rootMonoRepoPath
+        }),
         runCommand({
             command: 'tns',
             args: ['create', appName]
@@ -62,7 +68,7 @@ const runner = new Runner({
         }),
         runCommand({
             command: 'npm',
-            args: ['install', '--production' , `../dist/${currentVersionArchiveFileName}`],
+            args: ['install', '--production' , '--save', `../dist/${currentVersionArchiveFileName}`],
             cwd: appRootPath
         }),
         copyTestRunner(appPath),
