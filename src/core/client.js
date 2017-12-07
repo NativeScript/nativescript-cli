@@ -2,6 +2,7 @@ import MemoryCache from 'fast-memory-cache';
 import url from 'url';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
+import isNaN from 'lodash/isNaN';
 import { KinveyError } from './errors';
 import { Log } from './log';
 import { isDefined, uuidv4 } from './utils';
@@ -216,8 +217,8 @@ export class Client {
     }
 
     if (timeout < 0) {
-      Log.info(`Default timeout is less than 0. Setting default timeout to ${defaultTimeout}ms.`);
-      timeout = defaultTimeout;
+      Log.info(`Default timeout is less than 0. Setting default timeout to ${this.defaultTimeout}ms.`);
+      timeout = this.defaultTimeout;
     }
 
     this._defaultTimeout = timeout;

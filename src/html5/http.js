@@ -74,7 +74,7 @@ function deviceInformation(pkg) {
 export class Html5HttpMiddleware extends Middleware {
   constructor(pkg) {
     super();
-    this.pkg = pkg
+    this.pkg = pkg;
   }
 
   handle(request) {
