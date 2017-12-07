@@ -22,24 +22,25 @@ const appTestsPath = path.join(appPath, 'tests');
 const shimTestsPath = path.join(__dirname, 'test', 'tests');
 const rootMonoRepoPath = path.join(__dirname, '../../');
 const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration');
-
+const distPath = path.join(__dirname, 'dist');
 let logServerPort;
 
 const runner = new Runner({
     pipeline: [
         logServer(),
+        remove(distPath),
+        remove(appRootPath),
 		 runCommand({
             command: 'npm',
             args: ['run', 'build'],
             cwd: rootMonoRepoPath
         }),
-        remove(appRootPath),
         runCommand({
             command: 'cordova',
             args: ['create', appName]
         }),
         copy(path.join(__dirname, 'test', 'template'), appPath),
-        copy(path.join(__dirname, 'dist'), appPath),
+        copy(distPath, appPath),
         copy(
             shimTestsPath,
             appTestsPath
