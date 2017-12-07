@@ -20,7 +20,7 @@ Runs your project on a connected Android device or in a native Android emulator,
 * `--key-store-password` - Provides the password for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-alias` - Provides the alias for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-alias-password` - Provides the password for the alias specified with `--key-store-alias-password`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
-* `--bundle` - Specifies that a bundler (e.g. webpack) should be used if one is present. If no value is passed will default to `nativescript-dev-webpack`.
+* `--bundle` - Specifies that a bundler (e.g. webpack) should be used if one is present. If no value is passed will default to `webpack`.
 * `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. For example: `--env.uglify --env.snapshot`.
 
 ### Attributes

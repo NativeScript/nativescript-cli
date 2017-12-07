@@ -17,7 +17,7 @@ Builds the project for iOS and produces an `APP` or `IPA` that you can manually 
 * `--copy-to` - Specifies the file path where the built `.ipa` will be copied. If it points to a non-existent directory, it will be created. If the specified value is directory, the original file name will be used.
 * `--team-id` - If used without parameter, lists all team names and ids. If used with team name or id, it will switch to automatic signing mode and configure the .xcodeproj file of your app. In this case .xcconfig should not contain any provisioning/team id flags. This team id will be further used for codesigning the app. For Xcode 9.0+, xcodebuild will be allowed to update and modify automatically managed provisioning profiles.
 * `--provision` - If used without parameter, lists all eligible provisioning profiles. If used with UUID or name of your provisioning profile, it will switch to manual signing mode and configure the .xcodeproj file of your app. In this case xcconfig should not contain any provisioning/team id flags. This provisioning profile will be further used for codesigning the app.
-* `--bundle` - Specifies that a bundler (e.g. webpack) should be used if one is present. If no value is passed will default to `nativescript-dev-webpack`.
+* `--bundle` - Specifies that a bundler (e.g. webpack) should be used if one is present. If no value is passed will default to `webpack`.
 * `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. For example: `--env.uglify --env.snapshot`.
 <% } %>
 <% if(isHtml) { %>

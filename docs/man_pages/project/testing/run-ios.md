@@ -20,7 +20,7 @@ Runs your project on a connected iOS device or in the iOS Simulator, if configur
 * `--clean` - If set, forces rebuilding the native application.
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
-* `--bundle` - Specifies that a bundler (e.g. webpack) should be used if one is present. If no value is passed will default to `nativescript-dev-webpack`.
+* `--bundle` - Specifies that a bundler (e.g. webpack) should be used if one is present. If no value is passed will default to `webpack`.
 * `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. For example: `--env.uglify --env.snapshot`.
 
 ### Attributes
