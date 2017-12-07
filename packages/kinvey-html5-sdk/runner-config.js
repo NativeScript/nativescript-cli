@@ -17,6 +17,7 @@ const {
 const serveTests = require('./test/tasks/serveTests');
 const webRunTests = require('./test/tasks/webRunTests');
 const rootMonoRepoPath = path.join(__dirname, '../../');
+const distPath =  path.join(__dirname, 'dist');
 
 let logServerPort;
 let staticPort;
@@ -34,6 +35,7 @@ const commonTests = walk(path.join(rootMonoRepoPath, 'test', 'integration'), {
 const runner = new Runner({
     pipeline: [
         logServer(),
+        remove(distPath),
         runCommand({
             command: 'npm',
             args: ['run', 'build'],
