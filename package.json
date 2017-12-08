@@ -46,6 +46,12 @@
     "tslint-config-airbnb": "5.3.0",
     "typescript": "2.3.4",
     "uglifyjs-webpack-plugin": "~1.0.1",
-    "webpack": "~3.9.1"
+    "webpack": "~3.9.1",
+    "klaw-sync": "^3.0.0",
+    "kinvey-universal-runner": "^1.0.0",
+    "finalhandler": "^1.0.4",
+    "opn": "^5.1.0",
+    "run-headless-chromium": "^0.1.1",
+    "serve-static": "^1.12.4"
   }
 }
