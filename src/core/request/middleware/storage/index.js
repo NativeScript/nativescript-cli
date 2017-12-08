@@ -1,13 +1,12 @@
 import Promise from 'es6-promise';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
-import { isDefined } from '../../../utils';
-import { Queue } from './promise-queue';
+import { isDefined, PromiseQueue } from '../../../utils';
 import { Log } from '../../../log';
 import { KinveyError, NotFoundError } from '../../../errors';
 import { MemoryAdapter } from './memory';
 
-const queue = new Queue(1, Infinity);
+const queue = new PromiseQueue(1, Infinity);
 
 export const StorageProvider = {
   Memory: 'Memory'
@@ -100,7 +99,7 @@ export class Storage {
   }
 
   save(collection, entities = []) {
-    return queue.add(() => {
+    return queue.enqueue(() => {
       let singular = false;
 
       if (!isDefined(entities)) {
@@ -152,7 +151,7 @@ export class Storage {
   }
 
   removeById(collection, id) {
-    return queue.add(() => {
+    return queue.enqueue(() => {
       if (!isString(id)) {
         return Promise.reject(new KinveyError('id must be a string', id));
       }
@@ -163,7 +162,7 @@ export class Storage {
   }
 
   clear() {
-    return queue.add(() => {
+    return queue.enqueue(() => {
       return this.loadAdapter()
         .then(adapter => adapter.clear());
     });
