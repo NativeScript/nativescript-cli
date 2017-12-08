@@ -56,7 +56,7 @@ class TestExecutionService implements ITestExecutionService {
 					const socketIoJsUrl = `http://localhost:${this.$options.port}/socket.io/socket.io.js`;
 					const socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
-					const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+					const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: !!this.$options.bundle, release: this.$options.release };
 					const preparePlatformInfo: IPreparePlatformInfo = {
 						platform,
 						appFilesUpdaterOptions,
@@ -181,7 +181,7 @@ class TestExecutionService implements ITestExecutionService {
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
 				}
 
-				const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+				const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: !!this.$options.bundle, release: this.$options.release };
 				const preparePlatformInfo: IPreparePlatformInfo = {
 					platform,
 					appFilesUpdaterOptions,

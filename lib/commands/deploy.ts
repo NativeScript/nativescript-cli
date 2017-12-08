@@ -14,7 +14,7 @@ export class DeployOnDeviceCommand implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: !!this.$options.bundle, release: this.$options.release };
 		const deployOptions: IDeployPlatformOptions = {
 			clean: this.$options.clean,
 			device: this.$options.device,

@@ -3,9 +3,9 @@ run ios
 
 Usage | Synopsis
 ---|---
-Run on all connected devices | `$ tns run ios [--release] [--justlaunch]`
-Run on a selected connected device. Will start simulator with specified `Device Identifier`, if not already running. | `$ tns run ios [--device <Device ID>] [--release] [--justlaunch]`
-Start an emulator and run the app inside it | `$ tns run ios --emulator [--release]`
+Run on all connected devices | `$ tns run ios [--release] [--justlaunch] [--bundle [<value>] [--env.*]]`
+Run on a selected connected device. Will start simulator with specified `Device Identifier`, if not already running. | `$ tns run ios [--device <Device ID>] [--release] [--justlaunch] [--bundle [<value>] [--env.*]]`
+Start an emulator and run the app inside it | `$ tns run ios --emulator [--release] [--bundle [<value>] [--env.*]]`
 
 Runs your project on a connected iOS device or in the iOS Simulator, if configured. This is shorthand for prepare, build and deploy. While your app is running, prints the output from the application in the console and watches for changes in your code. Once a change is detected, it synchronizes the change with all selected devices and restarts/refreshes the application.
 
@@ -20,6 +20,8 @@ Runs your project on a connected iOS device or in the iOS Simulator, if configur
 * `--clean` - If set, forces rebuilding the native application.
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
+* `--bundle` - Specifies that a bundler (e.g. webpack) should be used if one is present. If no value is passed will default to `webpack`.
+* `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. For example: `--env.uglify --env.snapshot`.
 
 ### Attributes
 * `<Device ID>` is the index or `Device Identifier` of the target device as listed by `$ tns device ios --available-devices`

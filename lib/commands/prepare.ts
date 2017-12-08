@@ -10,7 +10,7 @@ export class PrepareCommand implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: !!this.$options.bundle, release: this.$options.release };
 		const platformInfo: IPreparePlatformInfo = {
 			platform: args[0],
 			appFilesUpdaterOptions,

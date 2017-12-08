@@ -326,6 +326,10 @@ interface IBundle {
 	bundle: boolean;
 }
 
+interface IBundleString {
+	bundle: string;
+}
+
 interface IPlatformTemplate {
 	platformTemplate: string;
 }
@@ -374,7 +378,7 @@ interface IPort {
 	port: Number;
 }
 
-interface IOptions extends ICommonOptions, IBundle, IPlatformTemplate, IEmulator, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions {
+interface IOptions extends ICommonOptions, IBundleString, IPlatformTemplate, IEmulator, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions {
 	all: boolean;
 	client: boolean;
 	compileSdk: number;

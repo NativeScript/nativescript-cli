@@ -1,18 +1,20 @@
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
+import { BundleBase } from "./base-bundler";
 
-export class BuildCommandBase {
+export class BuildCommandBase extends BundleBase {
 	constructor(protected $options: IOptions,
 		protected $errors: IErrors,
 		protected $projectData: IProjectData,
 		protected $platformsData: IPlatformsData,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		protected $platformService: IPlatformService) {
+		super($projectData, $errors, $options);
 		this.$projectData.initializeProjectData();
 	}
 
 	public async executeCore(args: string[]): Promise<void> {
 		const platform = args[0].toLowerCase();
-		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: this.$options.bundle, release: this.$options.release };
+		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: !!this.$options.bundle, release: this.$options.release };
 		const platformInfo: IPreparePlatformInfo = {
 			platform,
 			appFilesUpdaterOptions,
@@ -47,6 +49,8 @@ export class BuildCommandBase {
 		if (!this.$platformService.isPlatformSupportedForOS(platform, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${platform} can not be built on this OS`);
 		}
+
+		super.validateBundling();
 	}
 }
 

@@ -7,7 +7,7 @@ export class AppFilesUpdater {
 	constructor(
 		private appSourceDirectoryPath: string,
 		private appDestinationDirectoryPath: string,
-		public options: { release: boolean; bundle: boolean },
+		public options: IAppFilesUpdaterOptions,
 		public fs: IFileSystem
 	) {
 	}
