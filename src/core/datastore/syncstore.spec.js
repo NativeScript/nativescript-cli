@@ -58,7 +58,7 @@ describe('SyncStore', () => {
       });
   });
 
-  describe('pathname', () => {
+  describe.skip('pathname', () => {
     it(`should equal /appdata/<appkey>/${collection}`, () => {
       const store = new SyncStore(collection);
       expect(store.pathname).toEqual(`/appdata/${client.appKey}/${collection}`);
@@ -72,7 +72,7 @@ describe('SyncStore', () => {
     });
   });
 
-  describe('syncAutomatically', () => {
+  describe.skip('syncAutomatically', () => {
     it('should be true', () => {
       const store = new SyncStore(collection);
       expect(store.syncAutomatically).toEqual(false);
@@ -128,19 +128,19 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should throw an error if the tag is not a string', () => {
+    it.skip('should throw an error if the tag is not a string', () => {
       expect(() => {
         new SyncStore(collection, { tag: {} });
       }).toThrow();
     });
 
-    it('should throw an error if the tag is an emptry string', () => {
+    it.skip('should throw an error if the tag is an emptry string', () => {
       expect(() => {
         new SyncStore(collection, { tag: ' ' });
       }).toThrow();
     });
 
-    it('should return the entities by tag', () => {
+    it.skip('should return the entities by tag', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
       const store1 = new SyncStore(collection, { tag: randomString() });
@@ -257,7 +257,7 @@ describe('SyncStore', () => {
     });
   });
 
-  describe('group()', () => {
+  describe.skip('group()', () => {
     it('should throw an error if the query argument is not an instance of the Query class', (done) => {
       const store = new SyncStore(collection);
       store.group({})
@@ -340,7 +340,8 @@ describe('SyncStore', () => {
                 done(error);
               }
             });
-        });
+        })
+        .catch(done);
     });
   });
 
@@ -694,7 +695,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should clear entities by tag', () => {
+    it.skip('should clear entities by tag', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
       const store1 = new SyncStore(collection, { tag: randomString() });
@@ -798,7 +799,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should push the entities by tag', () => {
+    it.skip('should push the entities by tag', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
       const store1 = new SyncStore(collection, { tag: randomString() });

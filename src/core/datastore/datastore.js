@@ -1,12 +1,12 @@
 import isString from 'lodash/isString';
-import url from 'url';
-import { CacheRequest, RequestMethod } from '../request';
+
 import { KinveyError } from '../errors';
 import { isDefined } from '../utils';
-import { Client } from '../client';
 import { NetworkStore } from './networkstore';
 import { CacheStore } from './cachestore';
 import { SyncStore } from './syncstore';
+import { processorFactory } from './processors';
+import { repositoryProvider } from './repositories';
 
 /**
  * @typedef   {Object}    DataStoreType
@@ -33,9 +33,9 @@ export class DataStore {
   /**
    * Returns an instance of the Store class based on the type provided.
    *
-   * @param  {string}       [collection]                  Name of the collection.
-   * @param  {StoreType}    [type=DataStoreType.Network]  Type of store to return.
-   * @return {DataStore}                                  DataStore instance.
+   * @param  {string}           [collection]                  Name of the collection.
+   * @param  {DataStoreType}    [type=DataStoreType.Cache]    Type of store to return.
+   * @return {DataStore}                                      DataStore instance.
    */
   static collection(collection, type = DataStoreType.Cache, options) {
     let store;
@@ -45,16 +45,21 @@ export class DataStore {
     }
 
     switch (type) {
-      case DataStoreType.Network:
-        store = new NetworkStore(collection, options);
+      case DataStoreType.Network: {
+        const processor = processorFactory.getNetworkProcessor();
+        store = new NetworkStore(collection, options, processor);
         break;
-      case DataStoreType.Sync:
-        store = new SyncStore(collection, options);
+      }
+      case DataStoreType.Sync: {
+        const processor = processorFactory.getOfflineProcessor();
+        store = new SyncStore(collection, options, processor);
         break;
+      }
       case DataStoreType.Cache:
-      default:
-        store = new CacheStore(collection, options);
-
+      default: {
+        const operator = processorFactory.getCacheOfflineDataProcessor();
+        store = new CacheStore(collection, options, operator);
+      }
     }
 
     return store;
@@ -74,19 +79,7 @@ export class DataStore {
    * @return {Promise<Object>} The result of clearing the cache.
    */
   static clearCache(options = {}) {
-    const client = options.client || Client.sharedInstance();
-    const pathname = `/appdata/${client.appKey}`;
-    const request = new CacheRequest({
-      method: RequestMethod.DELETE,
-      url: url.format({
-        protocol: client.apiProtocol,
-        host: client.apiHost,
-        pathname: pathname
-      }),
-      properties: options.properties,
-      timeout: options.timeout
-    });
-    return request.execute()
-      .then(response => response.data);
+    const repo = repositoryProvider.getOfflineRepository();
+    return repo.clear();
   }
 }

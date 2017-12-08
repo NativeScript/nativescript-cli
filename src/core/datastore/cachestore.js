@@ -1,29 +1,28 @@
 import Promise from 'es6-promise';
-import differenceBy from 'lodash/differenceBy';
 import assign from 'lodash/assign';
-import keyBy from 'lodash/keyBy';
-import remove from 'lodash/remove';
 import isArray from 'lodash/isArray';
-import reduce from 'lodash/reduce';
-import map from 'lodash/map';
 import url from 'url';
-import { CacheRequest, AuthType, RequestMethod } from '../request';
-import { KinveyError, NotFoundError } from '../errors';
+
+import { CacheRequest, RequestMethod } from '../request';
+import { KinveyError } from '../errors';
 import { Query } from '../query';
 import { Aggregation } from '../aggregation';
-import { Metadata } from '../metadata';
-import { isDefined } from '../utils';
-import { KinveyObservable } from '../observable';
+import { isDefined, isNonemptyString } from '../utils';
+import { KinveyObservable, wrapInObservable } from '../observable';
 import { NetworkStore } from './networkstore';
-import { SyncManager } from './sync';
+
+import { OperationType } from './operations';
+import { processorFactory } from './processors';
+import { syncManagerProvider } from './sync';
 
 /**
  * The CacheStore class is used to find, create, update, remove, count and group entities. Entities are stored
  * in a cache and synced with the backend.
  */
 export class CacheStore extends NetworkStore {
-  constructor(collection, options = {}) {
-    super(collection, options);
+  constructor(collection, options = {}, processor) {
+    const proc = processor || processorFactory.getCacheOfflineDataProcessor();
+    super(collection, options, proc);
 
     /**
      * @type {number|undefined}
@@ -33,7 +32,7 @@ export class CacheStore extends NetworkStore {
     /**
      * @type {SyncManager}
      */
-    this.syncManager = new SyncManager(this.collection, options);
+    this.syncManager = syncManagerProvider.getSyncManager();
   }
 
   get syncAutomatically() {
@@ -55,185 +54,29 @@ export class CacheStore extends NetworkStore {
    * @return  {Observable}                                                Observable.
    */
   find(query, options = {}) {
-    options = assign({ syncAutomatically: this.syncAutomatically }, options);
-    const syncAutomatically = options.syncAutomatically === true;
-    const stream = KinveyObservable.create((observer) => {
-      // Check that the query is valid
-      if (query && !(query instanceof Query)) {
-        return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
-      }
-
-      // Fetch the cache entities
-      const request = new CacheRequest({
-        method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout,
-        tag: this.tag
+    // return super.find(query, options);
+    if (query && !(query instanceof Query)) {
+      const err = new KinveyError('Invalid query. It must be an instance of the Query class.');
+      return KinveyObservable.create((o) => {
+        o.error(err);
+        o.complete();
       });
+    }
 
-      // Execute the request
-      return request.execute()
-        .then(response => response.data)
-        .catch(() => [])
-        .then((cacheEntities = []) => {
-          observer.next(cacheEntities);
-
-          if (syncAutomatically === true) {
-            // Attempt to push any pending sync data before fetching from the network.
-            return this.pendingSyncCount(query, options)
-              .then((syncCount) => {
-                if (syncCount > 0) {
-                  return this.push(query, options)
-                    .then(() => this.pendingSyncCount(query, options));
-                }
-
-                return syncCount;
-              })
-              .then((syncCount) => {
-                // Throw an error if there are still entities that need to be synced
-                if (syncCount > 0) {
-                  throw new KinveyError('Unable to fetch the entities on the backend.'
-                    + ` There are ${syncCount} entities that need`
-                    + ' to be synced.');
-                }
-
-                // Fetch the network entities
-                return super.find(query, options).toPromise();
-              })
-              .then((networkEntities) => {
-                // Remove entities from the cache that no longer exists
-                const removedEntities = differenceBy(cacheEntities, networkEntities, '_id');
-                const removedIds = Object.keys(keyBy(removedEntities, '_id'));
-                const removeQuery = new Query().contains('_id', removedIds);
-                return this.clear(removeQuery, options)
-                  .then(() => networkEntities);
-              })
-              .then((networkEntities) => {
-                // Save network entities to cache
-                const request = new CacheRequest({
-                  method: RequestMethod.PUT,
-                  url: url.format({
-                    protocol: this.client.apiProtocol,
-                    host: this.client.apiHost,
-                    pathname: this.pathname
-                  }),
-                  properties: options.properties,
-                  body: networkEntities,
-                  timeout: options.timeout,
-                  tag: this.tag
-                });
-                return request.execute()
-                  .then(response => response.data);
-              });
-          }
-
-          return cacheEntities;
-        })
-        .then((entities) => {
-          observer.next(entities);
-        })
-        .then(() => {
-          observer.complete();
-        })
-        .catch(error => observer.error(error));
-    });
-
-    return stream;
+    const operation = this._buildOperationObject(OperationType.Read, query);
+    return this._executeOperation(operation, options);
   }
 
-  /**
-   * Find a single entity in the data store by id.
-   *
-   * @param   {string}                id                               Entity by id to find.
-   * @param   {Object}                [options]                        Options
-   * @param   {Properties}            [options.properties]             Custom properties to send with
-   *                                                                   the request.
-   * @param   {Number}                [options.timeout]                Timeout for the request.
-   * @param   {Boolean}               [options.useDeltaFetch]          Turn on or off the use of delta fetch.
-   * @return  {Observable}                                             Observable.
-   */
   findById(id, options = {}) {
-    options = assign({ syncAutomatically: this.syncAutomatically }, options);
-    const syncAutomatically = options.syncAutomatically === true;
-    const stream = KinveyObservable.create((observer) => {
-      if (isDefined(id) === false) {
-        observer.next(undefined);
-        return observer.complete();
-      }
-
-      // Fetch from the cache
-      const request = new CacheRequest({
-        method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/${id}`
-        }),
-        properties: options.properties,
-        timeout: options.timeout,
-        tag: this.tag
+    if (!id) {
+      return wrapInObservable((observer) => {
+        observer.next();
+        observer.complete();
       });
-      return request.execute()
-        .then(response => response.data)
-        .catch(() => undefined)
-        .then((cacheEntity) => {
-          observer.next(cacheEntity);
+    }
 
-          if (syncAutomatically === true) {
-            // Attempt to push any pending sync data before fetching from the network.
-            const query = new Query();
-            query.equalTo('_id', id);
-            return this.pendingSyncCount(query, options)
-              .then((syncCount) => {
-                if (syncCount > 0) {
-                  return this.push(query, options)
-                    .then(() => this.pendingSyncCount(query, options));
-                }
-
-                return syncCount;
-              })
-              .then((syncCount) => {
-                // Throw an error if there are still items that need to be synced
-                if (syncCount > 0) {
-                  throw new KinveyError('Unable to find the entity on the backend.'
-                    + ` There are ${syncCount} entities that need`
-                    + ' to be synced.');
-                }
-              })
-              .then(() => super.findById(id, options).toPromise())
-              .then((networkEntity) => {
-                // Save the network entity to cache
-                const request = new CacheRequest({
-                  method: RequestMethod.PUT,
-                  url: url.format({
-                    protocol: this.client.apiProtocol,
-                    host: this.client.apiHost,
-                    pathname: this.pathname
-                  }),
-                  properties: options.properties,
-                  body: networkEntity,
-                  timeout: options.timeout,
-                  tag: this.tag
-                });
-                return request.execute()
-                  .then(response => response.data);
-              });
-          }
-
-          return cacheEntity;
-        })
-        .then(entity => observer.next(entity))
-        .then(() => observer.complete())
-        .catch(error => observer.error(error));
-    });
-
-    return stream;
+    const operation = this._buildOperationObject(OperationType.ReadById, null, null, id);
+    return this._executeOperation(operation, options);
   }
 
   /**
@@ -265,8 +108,7 @@ export class CacheStore extends NetworkStore {
         }),
         properties: options.properties,
         aggregation: aggregation,
-        timeout: options.timeout,
-        tag: this.tag
+        timeout: options.timeout
       });
 
       // Execute the request
@@ -323,65 +165,12 @@ export class CacheStore extends NetworkStore {
    * @return  {Observable}                                             Observable.
    */
   count(query, options = {}) {
-    options = assign({ syncAutomatically: this.syncAutomatically }, options);
-    const syncAutomatically = options.syncAutomatically === true;
-    const stream = KinveyObservable.create((observer) => {
-      if (query && !(query instanceof Query)) {
-        return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
-      }
-
-      // Count the entities in the cache
-      const request = new CacheRequest({
-        method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout,
-        tag: this.tag
-      });
-
-      // Execute the request
-      return request.execute()
-        .then(response => response.data)
-        .catch(() => [])
-        .then((data = []) => data.length)
-        .then((cacheCount) => {
-          observer.next(cacheCount);
-
-          if (syncAutomatically === true) {
-            // Attempt to push any pending sync data before fetching from the network.
-            return this.pendingSyncCount(query, options)
-              .then((syncCount) => {
-                if (syncCount > 0) {
-                  return this.push(query, options)
-                    .then(() => this.pendingSyncCount(query, options));
-                }
-
-                return syncCount;
-              })
-              .then((syncCount) => {
-                // Throw an error if there are still items that need to be synced
-                if (syncCount > 0) {
-                  throw new KinveyError('Unable to count entities on the backend.'
-                    + ` There are ${syncCount} entities that need`
-                    + ' to be synced.');
-                }
-              })
-              .then(() => super.count(query, options).toPromise());
-          }
-
-          return cacheCount;
-        })
-        .then(count => observer.next(count))
-        .then(() => observer.complete())
-        .catch(error => observer.error(error));
-    });
-
-    return stream;
+    const err = this._ensureValidQuery(query);
+    if (err) {
+      return err;
+    }
+    const operation = this._buildOperationObject(OperationType.Count, query);
+    return this._executeOperation(operation, options);
   }
 
   /**
@@ -408,51 +197,14 @@ export class CacheStore extends NetworkStore {
         ));
       }
 
-      // Save the entity to the cache
-      const request = new CacheRequest({
-        method: RequestMethod.POST,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
-        properties: options.properties,
-        body: entity,
-        timeout: options.timeout,
-        tag: this.tag
-      });
-
-      // Execute the request
-      return request.execute()
-        .then(response => response.data)
-        .then((entity) => {
-          return this.syncManager.addCreateOperation(entity, options)
-            .then(() => entity);
-        })
-        .then((entity) => {
-          // Push the entity
-          if (this.syncAutomatically === true) {
-            const query = new Query().equalTo('_id', entity._id);
-            return this.push(query, options)
-              .then((results) => {
-                const result = results[0];
-
-                if (isDefined(result.error)) {
-                  throw result.error;
-                }
-
-                return result.entity;
-              });
-          }
-
-          return entity;
-        })
-        .then(entity => observer.next(entity))
-        .then(() => observer.complete())
-        .catch(error => observer.error(error));
+      return observer.complete();
     });
 
-    return stream.toPromise();
+    return stream.toPromise()
+      .then(() => {
+        const operation = this._buildOperationObject(OperationType.Create, null, entity);
+        return this._executeOperation(operation, options);
+      });
   }
 
   /**
@@ -486,45 +238,8 @@ export class CacheStore extends NetworkStore {
         ));
       }
 
-      // Save the entity to the cache
-      const request = new CacheRequest({
-        method: RequestMethod.PUT,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/${entity._id}`
-        }),
-        properties: options.properties,
-        body: entity,
-        timeout: options.timeout,
-        tag: this.tag
-      });
-
-      // Execute the request
-      return request.execute()
-        .then(response => response.data)
-        .then((entity) => {
-          return this.syncManager.addUpdateOperation(entity, options)
-            .then(() => entity);
-        })
-        .then((entity) => {
-          // Push the entity
-          if (this.syncAutomatically === true) {
-            const query = new Query().equalTo('_id', entity._id);
-            return this.push(query, options)
-              .then((results) => {
-                const result = results[0];
-
-                if (isDefined(result.error)) {
-                  throw result.error;
-                }
-
-                return result.entity;
-              });
-          }
-
-          return entity;
-        })
+      const operation = this._buildOperationObject(OperationType.Update, null, entity);
+      return this._executeOperation(operation, options)
         .then(entity => observer.next(entity))
         .then(() => observer.complete())
         .catch(error => observer.error(error));
@@ -547,103 +262,13 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   remove(query, options = {}) {
-    const stream = KinveyObservable.create((observer) => {
-      if (query && !(query instanceof Query)) {
-        return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
-      }
+    if (query && !(query instanceof Query)) {
+      return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Query class.'));
+    }
 
-      // Fetch the cache entities
-      const request = new CacheRequest({
-        method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout,
-        tag: this.tag
-      });
-
-      // Execute the request
-      return request.execute()
-        .then(response => response.data)
-        .then((entities = []) => {
-          if (entities.length > 0) {
-            return Promise.all(map(entities, (entity) => {
-              const metadata = new Metadata(entity);
-
-              // Clear any pending sync items if the entity
-              // was created locally
-              if (metadata.isLocal()) {
-                const query = new Query();
-                query.equalTo('_id', entity._id);
-                return this.clearSync(query, options)
-                  .then(() => entity);
-              }
-
-              // Add a delete operation to sync
-              return this.syncManager.addDeleteOperation(entity, options)
-                .then(() => entity);
-            }))
-            .then(() => entities);
-          }
-
-          return entities;
-        })
-        .then((entities) => {
-          // Push the entities
-          if (entities.length > 0 && this.syncAutomatically === true) {
-            // Remove the localEntities
-            const localEntities = remove(entities, (entity) => {
-              const metadata = new Metadata(entity);
-              return metadata.isLocal();
-            });
-
-            const ids = Object.keys(keyBy(entities, '_id'));
-            const query = new Query().contains('_id', ids);
-            return this.push(query, options)
-              .then(results => results.concat(localEntities));
-          }
-
-          return entities;
-        })
-        .then((results) => {
-          return Promise.all(map(results, (result) => {
-            if (isDefined(result.error) === false) {
-              const request = new CacheRequest({
-                method: RequestMethod.DELETE,
-                url: url.format({
-                  protocol: this.client.apiProtocol,
-                  host: this.client.apiHost,
-                  pathname: `${this.pathname}/${result._id}`
-                }),
-                properties: options.properties,
-                authType: AuthType.Default,
-                timeout: options.timeout,
-                tag: this.tag
-              });
-              return request.execute()
-                .then(response => response.data);
-            }
-
-            return { count: 0 };
-          }));
-        })
-        .then((results) => {
-          return reduce(results, (totalResult, result) => {
-            totalResult.count += result.count;
-            return totalResult;
-          }, { count: 0 });
-        })
-        .then()
-        .then(result => observer.next(result))
-        .then(() => observer.complete())
-        .catch(error => observer.error(error));
-    });
-
-    return stream.toPromise();
+    const operation = this._buildOperationObject(OperationType.Delete, query);
+    return this._executeOperation(operation, options)
+      .then(count => ({ count }));
   }
 
   /**
@@ -657,89 +282,13 @@ export class CacheStore extends NetworkStore {
    * @return  {Observable}                                             Observable.
    */
   removeById(id, options = {}) {
-    const stream = KinveyObservable.create((observer) => {
-      if (isDefined(id) === false) {
-        observer.next({ count: 0 });
-        return observer.complete();
-      }
-
-      // Get the entity from cache
-      const request = new CacheRequest({
-        method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/${id}`
-        }),
-        properties: options.properties,
-        authType: AuthType.Default,
-        timeout: options.timeout,
-        tag: this.tag
-      });
-
-      // Execute the request
-      return request.execute()
-        .then(response => response.data)
-        .catch((error) => {
-          if (error instanceof NotFoundError) {
-            return null;
-          }
-
-          throw error;
-        })
-        .then((entity) => {
-          if (isDefined(entity)) {
-            const metadata = new Metadata(entity);
-
-            // Clear any pending sync items if the entity
-            // was created locally
-            if (metadata.isLocal()) {
-              const query = new Query();
-              query.equalTo('_id', entity._id);
-              return this.clearSync(query, options)
-                .then(() => entity);
-            }
-
-            // Add a delete operation to sync
-            return this.syncManager.addDeleteOperation(entity, options)
-              .then(() => entity);
-          }
-
-          return entity;
-        })
-        .then((entity) => {
-          // Push the entity
-          if (this.syncAutomatically === true) {
-            const query = new Query().equalTo('_id', entity._id);
-            return this.push(query, options)
-              .then(() => entity);
-          }
-
-          return entity;
-        })
-        .then((entity) => {
-          // Remove from cache
-          const request = new CacheRequest({
-            method: RequestMethod.DELETE,
-            url: url.format({
-              protocol: this.client.apiProtocol,
-              host: this.client.apiHost,
-              pathname: `${this.pathname}/${entity._id}`
-            }),
-            properties: options.properties,
-            authType: AuthType.Default,
-            timeout: options.timeout,
-            tag: this.tag
-          });
-          return request.execute()
-            .then(response => response.data);
-        })
-        .then(result => observer.next(result))
-        .then(() => observer.complete())
-        .catch(error => observer.error(error));
-    });
-
-    return stream.toPromise();
+    if (!isNonemptyString(id)) {
+      // return Promise.reject(new KinveyError('Invalid id')); // TODO: why not?
+      return Promise.resolve({ count: 0 }); // TODO: why not?
+    }
+    const operation = this._buildOperationObject(OperationType.DeleteById, null, null, id);
+    return this._executeOperation(operation, options)
+      .then(count => ({ count }));
   }
 
   /**
@@ -753,76 +302,9 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   clear(query, options = {}) {
-    const stream = KinveyObservable.create((observer) => {
-      if (query && !(query instanceof Query)) {
-        return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
-      }
-
-      // Fetch the cache entities
-      const request = new CacheRequest({
-        method: RequestMethod.GET,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout,
-        tag: this.tag
-      });
-
-      // Execute the request
-      return request.execute()
-        .then(response => response.data)
-        .then((entities = []) => {
-          return Promise.all(map(entities, (entity) => {
-            return Promise.resolve(entity)
-              .then((entity) => {
-                const metadata = new Metadata(entity);
-
-                // Clear any pending sync items if the entity
-                // was created locally
-                if (metadata.isLocal()) {
-                  const query = new Query();
-                  query.equalTo('_id', entity._id);
-                  return this.clearSync(query, options)
-                    .then(() => entity);
-                }
-
-                return entity;
-              })
-              .then((entity) => {
-                // Remove from cache
-                const request = new CacheRequest({
-                  method: RequestMethod.DELETE,
-                  url: url.format({
-                    protocol: this.client.apiProtocol,
-                    host: this.client.apiHost,
-                    pathname: `${this.pathname}/${entity._id}`
-                  }),
-                  properties: options.properties,
-                  authType: AuthType.Default,
-                  timeout: options.timeout,
-                  tag: this.tag
-                });
-                return request.execute()
-                  .then(response => response.data);
-              });
-          }));
-        })
-        .then((results) => {
-          return reduce(results, (totalResult, result) => {
-            totalResult.count += result.count;
-            return totalResult;
-          }, { count: 0 });
-        })
-        .then(result => observer.next(result))
-        .then(() => observer.complete())
-        .catch(error => observer.error(error));
-    });
-
-    return stream.toPromise();
+    const operation = this._buildOperationObject(OperationType.Clear, query);
+    return this._executeOperation(operation, options)
+      .then(count => ({ count }));
   }
 
   /**
@@ -839,11 +321,11 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   pendingSyncCount(query, options) {
-    return this.syncManager.count(query, options);
+    return this.syncManager.getSyncItemCount(this.collection);
   }
 
   pendingSyncEntities(query, options) {
-    return this.syncManager.find(query, options);
+    return this.syncManager.getSyncEntities(this.collection, query);
   }
 
   /**
@@ -858,7 +340,7 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   push(query, options) {
-    return this.syncManager.push(query, options);
+    return this.syncManager.push(this.collection, query, options);
   }
 
   /**
@@ -873,28 +355,18 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   pull(query, options = {}) {
-    options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
-    return this.syncManager.pull(query, options)
-      .then((entities) => {
-        // Clear the cache
-        return this.clear(query, options)
-          .then(() => {
-            // Save network entities to cache
-            const saveRequest = new CacheRequest({
-              method: RequestMethod.PUT,
-              url: url.format({
-                protocol: this.client.apiProtocol,
-                host: this.client.apiHost,
-                pathname: this.pathname
-              }),
-              properties: options.properties,
-              body: entities,
-              timeout: options.timeout,
-              tag: this.tag
-            });
-            return saveRequest.execute();
-          })
-          .then(() => entities);
+    // options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
+    // const operation = this._buildOperationObject(OperationType.Pull, query);
+    // return this._executeOperation(operation, options);
+    return this.syncManager.getSyncItemCount(this.collection)
+      .then((count) => {
+        if (count > 0) {
+          // const msg = `There are ${count} entities awaiting push. Please push before you attempt to pull`;
+          // const err = new KinveyError(msg);
+          // return Promise.reject(err);
+          return this.syncManager.push(this.collection, query);
+        }
+        return this.syncManager.pull(this.collection, query, options);
       });
   }
 
@@ -927,6 +399,18 @@ export class CacheStore extends NetworkStore {
   }
 
   clearSync(query, options) {
-    return this.syncManager.clear(query, options);
+    // return this.syncManager.clearSync(query, options);
+    return this.syncManager.clearSync(this.collection);
+  }
+
+  // protected
+
+  _ensureValidQuery(query) {
+    if (query && !(query instanceof Query)) {
+      return wrapInObservable((observer) => {
+        observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
+      });
+    }
+    return null;
   }
 }

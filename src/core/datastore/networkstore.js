@@ -1,20 +1,29 @@
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 import url from 'url';
-import { DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod } from '../request';
+
+import { KinveyRequest, AuthType, RequestMethod } from '../request';
 import { KinveyError } from '../errors';
 import { Query } from '../query';
 import { Client } from '../client';
 import { isDefined } from '../utils';
-import { KinveyObservable } from '../observable';
+import { KinveyObservable, wrapInObservable } from '../observable';
 import { Aggregation } from '../aggregation';
 import { getLiveCollectionManager } from '../live';
+
+import { Operation, OperationType } from './operations';
+import { processorFactory } from './processors';
 
 /**
  * The NetworkStore class is used to find, create, update, remove, count and group entities over the network.
  */
 export class NetworkStore {
-  constructor(collection, options = {}) {
+  /** @type {CacheOperator} */
+  _processor;
+
+  constructor(collection, options = {}, processor) {
+    this._processor = processor || processorFactory.getNetworkProcessor();
+
     if (collection && !isString(collection)) {
       throw new KinveyError('Collection must be a string.');
     }
@@ -23,20 +32,6 @@ export class NetworkStore {
      * @type {string}
      */
     this.collection = collection;
-
-    if (options.tag) {
-      let tag = options.tag;
-
-      if (!isString(tag)) {
-        throw new KinveyError('A tag must be a string.');
-      }
-
-      if (!/^[a-zA-Z0-9-]+$/.test(tag)) {
-        throw new KinveyError('A tag can only contain letters, numbers, and "-".');
-      }
-
-      this.tag = tag;
-    }
 
     /**
      * @type {Client}
@@ -102,43 +97,31 @@ export class NetworkStore {
    * @return  {Observable}                                                Observable.
    */
   find(query, options = {}) {
-    const useDeltaFetch = options.useDeltaFetch === true || this.useDeltaFetch;
+    // TODO: wrap in observable elsewhere
     const stream = KinveyObservable.create((observer) => {
       // Check that the query is valid
       if (isDefined(query) && !(query instanceof Query)) {
-        return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
+        const err = new KinveyError('Invalid query. It must be an instance of the Query class.');
+        return observer.error(err);
       }
 
-      // Create the request
-      const config = {
-        method: RequestMethod.GET,
-        authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout,
-        client: this.client,
-        tag: this.tag
-      };
-      let request = new KinveyRequest(config);
-
-      // Should we use delta fetch?
-      if (useDeltaFetch === true) {
-        request = new DeltaFetchRequest(config);
-      }
-
-      // Execute the request
-      return request.execute()
-        .then(response => response.data)
+      const operation = this._buildOperationObject(OperationType.Read, query);
+      return this._executeOperation(operation, options)
         .then(data => observer.next(data))
         .then(() => observer.complete())
         .catch(error => observer.error(error));
     });
+
     return stream;
+  }
+
+  _buildOperationObject(type, query, data, id) {
+    // TODO: op factory?
+    return new Operation(type, this.collection, query, data, id);
+  }
+
+  _executeOperation(operation, options) {
+    return this._processor.process(operation, options);
   }
 
   /**
@@ -153,41 +136,12 @@ export class NetworkStore {
    * @return  {Observable}                                             Observable.
    */
   findById(id, options = {}) {
-    const useDeltaFetch = options.useDeltaFetch || this.useDeltaFetch;
-    const stream = KinveyObservable.create((observer) => {
-      if (!id) {
-        observer.next(undefined);
-        return observer.complete();
-      }
+    const operation = this._buildOperationObject(OperationType.ReadById, null, null, id);
+    const entityPromise = this._executeOperation(operation, options);
 
-      // Fetch data from the network
-      const config = {
-        method: RequestMethod.GET,
-        authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/${id}`
-        }),
-        properties: options.properties,
-        timeout: options.timeout,
-        client: this.client,
-        tag: this.tag
-      };
-      let request = new KinveyRequest(config);
-
-      if (useDeltaFetch === true) {
-        request = new DeltaFetchRequest(config);
-      }
-
-      return request.execute()
-        .then(response => response.data)
-        .then(data => observer.next(data))
-        .then(() => observer.complete())
-        .catch(error => observer.error(error));
+    return wrapInObservable((observer) => {
+      return entityPromise.then(entity => observer.next(entity));
     });
-
-    return stream;
   }
 
   /**
@@ -292,40 +246,29 @@ export class NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   create(entity, options = {}) {
-    const stream = KinveyObservable.create((observer) => {
-      if (isDefined(entity) === false) {
-        observer.next(null);
-        return observer.complete();
-      }
+    // const stream = KinveyObservable.create((observer) => {
+    //   if (isDefined(entity) === false) {
+    //     observer.next(null);
+    //     return observer.complete();
+    //   }
 
-      if (isArray(entity)) {
-        return observer.error(new KinveyError(
-          'Unable to create an array of entities.',
-          'Please create entities one by one.'
-        ));
-      }
+    //   if (isArray(entity)) {
+    //     return observer.error(new KinveyError(
+    //       'Unable to create an array of entities.',
+    //       'Please create entities one by one.'
+    //     ));
+    //   }
+    // });
 
-      const request = new KinveyRequest({
-        method: RequestMethod.POST,
-        authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: this.pathname
-        }),
-        properties: options.properties,
-        data: entity,
-        timeout: options.timeout,
-        client: this.client
-      });
-      return request.execute()
-        .then(response => response.data)
-        .then(data => observer.next(data))
-        .then(() => observer.complete())
-        .catch(error => observer.error(error));
-    });
+    if (isArray(entity)) {
+      return Promise.reject(new KinveyError(
+        'Unable to create an array of entities.',
+        'Please create entities one by one.'
+      ));
+    }
 
-    return stream.toPromise();
+    const operation = this._buildOperationObject(OperationType.Create, null, entity);
+    return this._executeOperation(operation, options);
   }
 
   /**
