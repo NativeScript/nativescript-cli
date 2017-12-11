@@ -54,7 +54,6 @@
     "marked-terminal": "2.0.0",
     "minimatch": "3.0.2",
     "mkdirp": "0.5.1",
-    "moment": "2.10.6",
     "mute-stream": "0.0.5",
     "open": "0.0.5",
     "osenv": "0.1.3",
