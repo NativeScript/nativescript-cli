@@ -3766,11 +3766,6 @@
         }
       }
     },
-    "moment": {
-      "version": "2.10.6",
-      "resolved": "https://registry.npmjs.org/moment/-/moment-2.10.6.tgz",
-      "integrity": "sha1-bLIZZ8ecunsMpeZmRPFzZis++nc="
-    },
     "ms": {
       "version": "2.0.0",
       "resolved": "https://registry.npmjs.org/ms/-/ms-2.0.0.tgz",
