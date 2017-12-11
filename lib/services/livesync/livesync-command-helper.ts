@@ -32,7 +32,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			this.$iosDeviceOperations.setShouldDispose(false);
 		}
 
-		if (this.$options.release || this.$options.bundle) {
+		if (this.$options.release) {
 			await this.runInReleaseMode(platform);
 			return;
 		}
@@ -75,11 +75,12 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			skipWatcher: !this.$options.watch,
 			watchAllFiles: this.$options.syncAllFiles,
 			clean: this.$options.clean,
+			bundle: !!this.$options.bundle,
+			release: this.$options.release,
 			env: this.$options.env
 		};
 
 		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
-
 	}
 
 	private async runInReleaseMode(platform: string): Promise<void> {
