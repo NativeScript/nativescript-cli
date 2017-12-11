@@ -111,7 +111,7 @@ interface ILiveSyncDeviceInfo extends IOptionalOutputPath, IOptionalDebuggingOpt
 /**
  * Describes a LiveSync operation.
  */
-interface ILiveSyncInfo extends IProjectDir, IEnvOptions {
+interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IBundle, IRelease {
 	/**
 	 * Defines if the watcher should be skipped. If not passed, fs.Watcher will be started.
 	 */
@@ -152,7 +152,7 @@ interface IProjectDataComposition {
 /**
  * Desribes object that can be passed to ensureLatestAppPackageIsInstalledOnDevice method.
  */
-interface IEnsureLatestAppPackageIsInstalledOnDeviceOptions extends IProjectDataComposition, IEnvOptions {
+interface IEnsureLatestAppPackageIsInstalledOnDeviceOptions extends IProjectDataComposition, IEnvOptions, IBundle, IRelease {
 	device: Mobile.IDevice;
 	preparedPlatforms: string[];
 	rebuiltInformation: ILiveSyncBuildInfo[];

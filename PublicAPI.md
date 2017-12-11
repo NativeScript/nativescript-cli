@@ -589,6 +589,8 @@ const liveSyncData = {
 	projectDir,
 	skipWatcher: false,
 	watchAllFiles: false,
+	bundle: false,
+	release: false,
 	useLiveEdit: false
 };
 

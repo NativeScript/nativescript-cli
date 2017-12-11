@@ -362,8 +362,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			const prepareInfo: IPreparePlatformInfo = {
 				platform,
 				appFilesUpdaterOptions: {
-					bundle: false,
-					release: false,
+					bundle: options.bundle,
+					release: options.release,
 				},
 				projectData: options.projectData,
 				env: options.env,
@@ -459,6 +459,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					deviceBuildInfoDescriptor,
 					liveSyncData,
 					settings,
+					bundle: liveSyncData.bundle,
+					release: liveSyncData.release,
 					env: liveSyncData.env
 				}, { skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare });
 
@@ -564,6 +566,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 										deviceBuildInfoDescriptor,
 										settings: latestAppPackageInstalledSettings,
 										modifiedFiles: allModifiedFiles,
+										bundle: liveSyncData.bundle,
+										release: liveSyncData.release,
 										env: liveSyncData.env
 									}, { skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare });
 
