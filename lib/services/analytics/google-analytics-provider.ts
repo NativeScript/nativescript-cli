@@ -10,7 +10,8 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	constructor(private clientId: string,
 		private $staticConfig: IStaticConfig,
 		private $analyticsSettingsService: IAnalyticsSettingsService,
-		private $logger: ILogger) {
+		private $logger: ILogger,
+		private $proxyService: IProxyService) {
 	}
 
 	public async trackHit(trackInfo: IGoogleAnalyticsData): Promise<void> {
@@ -27,11 +28,16 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	}
 
 	private async track(gaTrackingId: string, trackInfo: IGoogleAnalyticsData, sessionId: string): Promise<void> {
+		const proxySettings = await this.$proxyService.getCache();
+		const proxy = proxySettings && proxySettings.proxy;
 		const visitor = ua({
 			tid: gaTrackingId,
 			cid: this.clientId,
 			headers: {
 				["User-Agent"]: this.$analyticsSettingsService.getUserAgentString(`tnsCli/${this.$staticConfig.version}`)
+			},
+			requestOptions: {
+				proxy
 			}
 		});
 
