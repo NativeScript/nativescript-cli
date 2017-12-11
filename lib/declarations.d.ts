@@ -433,14 +433,6 @@ interface IInfoService {
 }
 
 /**
- * Describes standard username/password type credentials.
- */
-interface ICredentials {
-	username: string;
-	password: string;
-}
-
-/**
  * Describes properties needed for uploading a package to iTunes Connect
  */
 interface IITMSData extends ICredentials {

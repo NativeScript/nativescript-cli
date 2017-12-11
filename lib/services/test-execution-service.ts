@@ -123,6 +123,8 @@ class TestExecutionService implements ITestExecutionService {
 						projectDir: projectData.projectDir,
 						skipWatcher: !this.$options.watch || this.$options.justlaunch,
 						watchAllFiles: this.$options.syncAllFiles,
+						bundle: !!this.$options.bundle,
+						release: this.$options.release,
 						env: this.$options.env
 					};
 
@@ -248,6 +250,8 @@ class TestExecutionService implements ITestExecutionService {
 						projectDir: projectData.projectDir,
 						skipWatcher: !this.$options.watch || this.$options.justlaunch,
 						watchAllFiles: this.$options.syncAllFiles,
+						bundle: !!this.$options.bundle,
+						release: this.$options.release,
 						env: this.$options.env
 					};
 
