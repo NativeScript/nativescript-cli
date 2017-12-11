@@ -24,16 +24,18 @@ class ActiveUserStorage {
       throw new KinveyError('The key argument must be a string.');
     }
 
+    let valueToSave = value;
+
     if (value !== null && value !== undefined && typeof value === 'object') {
-      value = JSON.stringify(value);
+      valueToSave = JSON.stringify(value);
     }
 
     if (value !== null && value !== undefined && typeof value !== 'string') {
-      value = String(value);
+      valueToSave = String(value);
     }
 
     if (isDefined(value)) {
-      storage.set(key, value);
+      storage.set(key, valueToSave);
     } else {
       this.remove(key);
     }
