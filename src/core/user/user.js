@@ -249,7 +249,7 @@ export class User {
    * @return {Promise<User>} The user.
    */
   static login(username, password, options = {}) {
-    const user = new this({}, options);
+    const user = new User({}, options);
     return user.login(username, password, options);
   }
 
