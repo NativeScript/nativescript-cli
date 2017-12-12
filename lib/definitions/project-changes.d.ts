@@ -15,6 +15,7 @@ interface IProjectChangesInfo extends IAddedNativePlatform {
 	configChanged: boolean;
 	packageChanged: boolean;
 	nativeChanged: boolean;
+	bundleChanged: boolean;
 	signingChanged: boolean;
 
 	readonly hasChanges: boolean;
