@@ -678,7 +678,7 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 		return Promise.resolve();
 	}
 
-	public cleanDestinationApp(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string): Promise<void> {
+	public cleanDestinationApp(platformInfo: IPreparePlatformInfo): Promise<void> {
 		return Promise.resolve();
 	}
 

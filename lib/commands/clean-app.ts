@@ -15,7 +15,16 @@ export class CleanAppCommandBase implements ICommand {
 
 	public async execute(args: string[]): Promise<void> {
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: !!this.$options.bundle, release: this.$options.release };
-		return this.$platformService.cleanDestinationApp(this.platform.toLowerCase(), appFilesUpdaterOptions, this.$options.platformTemplate, this.$projectData, this.$options);
+		const platformInfo: IPreparePlatformInfo = {
+			appFilesUpdaterOptions,
+			platform: this.platform.toLowerCase(),
+			config: this.$options,
+			platformTemplate: this.$options.platformTemplate,
+			projectData: this.$projectData,
+			env: this.$options.env
+		};
+
+		return this.$platformService.cleanDestinationApp(platformInfo);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

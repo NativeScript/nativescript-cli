@@ -21,12 +21,6 @@ export class AppFilesUpdater {
 	}
 
 	public cleanDestinationApp(): void {
-		if (this.options.bundle) {
-			//Assuming an the bundle has updated the dest folder already.
-			//Skip cleaning up completely.
-			return;
-		}
-
 		// Delete the destination app in order to prevent EEXIST errors when symlinks are used.
 		let destinationAppContents = this.readDestinationDir();
 		destinationAppContents = destinationAppContents.filter(

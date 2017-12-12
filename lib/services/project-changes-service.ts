@@ -12,6 +12,7 @@ class ProjectChangesInfo implements IProjectChangesInfo {
 	public configChanged: boolean;
 	public packageChanged: boolean;
 	public nativeChanged: boolean;
+	public bundleChanged: boolean;
 	public signingChanged: boolean;
 	public nativePlatformStatus: NativePlatformStatus;
 
@@ -93,6 +94,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			this._changesInfo.appFilesChanged = true;
 			this._changesInfo.appResourcesChanged = true;
 			this._changesInfo.modulesChanged = true;
+			this._changesInfo.bundleChanged = true;
 			this._changesInfo.configChanged = true;
 			this._prepareInfo.release = projectChangesOptions.release;
 			this._prepareInfo.bundle = projectChangesOptions.bundle;
