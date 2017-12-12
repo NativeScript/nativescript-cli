@@ -1,12 +1,12 @@
 import Promise from 'es6-promise';
-import { KinveyError } from '../../core/errors';
+import { KinveyError, NotFoundError } from '../../core/errors';
 import { isDefined } from '../../core/utils';
 
 const masterCollectionName = 'sqlite_master';
 const size = 2 * 1024 * 1024; // Database size in bytes
 let isSupported;
 
-class WebSQL {
+export class WebSQL {
   constructor(name = 'kinvey') {
     if (isDefined(name) === false) {
       throw new KinveyError('A name is required to use the WebSQL adapter.', name);
