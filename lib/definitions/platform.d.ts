@@ -115,7 +115,7 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 */
 	startApplication(platform: string, runOptions: IRunPlatformOptions, projectId: string): Promise<void>;
 
-	cleanDestinationApp(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions): Promise<void>;
+	cleanDestinationApp(platformInfo: IPreparePlatformInfo): Promise<void>;
 	validatePlatformInstalled(platform: string, projectData: IProjectData): void;
 
 	/**

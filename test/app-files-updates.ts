@@ -27,20 +27,14 @@ describe("App files cleanup", () => {
 		}
 	}
 
-	it("cleans up entire app when not bundling", () => {
-		const updater = new CleanUpAppFilesUpdater([
-			"file1", "dir1/file2", "App_Resources/Android/blah.png"
-		], { bundle: false });
-		updater.clean();
-		assert.deepEqual(["file1", "dir1/file2", "App_Resources/Android/blah.png"], updater.deletedDestinationItems);
-	});
-
-	it("does not clean up destination when bundling", () => {
-		const updater = new CleanUpAppFilesUpdater([
-			"file1", "dir1/file2", "App_Resources/Android/blah.png"
-		], { bundle: true });
-		updater.clean();
-		assert.deepEqual([], updater.deletedDestinationItems);
+	_.each([true, false], bundle => {
+		it(`cleans up entire app when bundle is ${bundle}`, () => {
+			const updater = new CleanUpAppFilesUpdater([
+				"file1", "dir1/file2", "App_Resources/Android/blah.png"
+			], { bundle });
+			updater.clean();
+			assert.deepEqual(["file1", "dir1/file2", "App_Resources/Android/blah.png"], updater.deletedDestinationItems);
+		});
 	});
 });
 
