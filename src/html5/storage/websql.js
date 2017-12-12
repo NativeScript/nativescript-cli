@@ -107,7 +107,14 @@ class WebSQL {
     const sql = 'SELECT value FROM #{collection} WHERE key = ?';
     return this.openTransaction(collection, sql, [id])
       .then(response => response.result)
-      .then((entities) => entities[0]);
+      .then((entities) => {
+        if (entities.length === 0) {
+          throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}` +
+            ` collection on the ${this.name} WebSQL database.`);
+        }
+
+        return entities[0];
+      });
   }
 
   save(collection, entities) {
