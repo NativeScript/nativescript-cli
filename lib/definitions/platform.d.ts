@@ -271,15 +271,15 @@ interface IAppFilesUpdaterOptionsComposition {
 	appFilesUpdaterOptions: IAppFilesUpdaterOptions;
 }
 
-interface IJsNodeModulesData extends IPlatform, IProjectDataComposition, IAppFilesUpdaterOptionsComposition {
+interface INodeModulesData extends IPlatform, IProjectDataComposition, IAppFilesUpdaterOptionsComposition {
 	absoluteOutputPath: string;
 	lastModifiedTime: Date;
 	projectFilesConfig: IProjectFilesConfig;
 }
 
 interface INodeModulesBuilder {
-	prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void>;
-	prepareJSNodeModules(jsNodeModulesData: IJsNodeModulesData): Promise<void>;
+	prepareNodeModules(nodeModulesData: INodeModulesData): Promise<void>;
+	prepareJSNodeModules(jsNodeModulesData: INodeModulesData): Promise<void>;
 	cleanNodeModules(absoluteOutputPath: string, platform: string): void;
 }
 
