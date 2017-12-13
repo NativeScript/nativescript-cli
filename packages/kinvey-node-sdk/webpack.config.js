@@ -9,7 +9,7 @@ module.exports = (env = {}) => {
   return {
     target: 'node',
     entry: {
-      'kinvey-node-sdk': './index.js',
+      'kinvey-node-sdk': './src/index.js',
     },
     output: {
       filename: '[name].js',

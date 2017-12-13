@@ -53,7 +53,7 @@ module.exports = (env) => {
     plugins: plugins,
     devtool: 'source-map'
   };
-  config.entry[`kinvey-nativescript-sdk.${platform}`] = './index.ts';
+  config.entry[`kinvey-nativescript-sdk.${platform}`] = './src/index.ts';
   return config;
 };
 

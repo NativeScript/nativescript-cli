@@ -8,7 +8,7 @@ const pkg = require('./package.json');
 module.exports = (env = {}) => {
   return {
     entry: {
-      'kinvey-html5-sdk': './index.js',
+      'kinvey-html5-sdk': './src/index.js',
     },
     output: {
       filename: '[name].js',

@@ -1,13 +1,13 @@
-import { MobileIdentityConnect} from '../../src/core/identity';
-import { NetworkRack, CacheRack } from '../../src/core/request';
-import { CacheMiddleware } from '../../src/nativescript/cache';
-import { HttpMiddleware } from '../../src/nativescript/http';
-import { Popup } from '../../src/nativescript/popup';
-import pkg from './package.json';
+import { NetworkRack, CacheRack } from '../../../src/core/request';
+import { Html5HttpMiddleware } from '../../../src/html5/http';
+import { Html5CacheMiddleware } from '../../../src/html5/cache';
+import { MobileIdentityConnect } from '../../../src/core/identity';
+import { Popup } from '../../../src/phonegap/popup';
+import pkg from '../package.json';
 
 // Setup racks
-CacheRack.useCacheMiddleware(new CacheMiddleware());
-NetworkRack.useHttpMiddleware(new HttpMiddleware(pkg));
+CacheRack.useCacheMiddleware(new Html5CacheMiddleware());
+NetworkRack.useHttpMiddleware(new Html5HttpMiddleware(pkg));
 
 // Setup popup
 MobileIdentityConnect.usePopupClass(Popup);
@@ -66,5 +66,6 @@ export {
   TimeoutError,
   UserAlreadyExistsError,
   WritesToCollectionDisallowedError
-} from '../../src/core';
-export *  from '../../src/nativescript';
+} from '../../../src/core';
+export * from '../../../src/html5';
+export { Push } from '../../../src/phonegap/push';

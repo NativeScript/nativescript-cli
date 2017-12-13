@@ -8,7 +8,7 @@ const pkg = require('./package.json');
 module.exports = (env = {}) => {
   return {
     entry: {
-      'kinvey-angular-sdk': './index.js',
+      'kinvey-angular-sdk': './src/index.js',
     },
     externals: {
       angular: 'angular'

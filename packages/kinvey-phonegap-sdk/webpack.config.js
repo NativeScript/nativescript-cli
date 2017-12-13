@@ -8,7 +8,7 @@ const pkg = require('./package.json');
 module.exports = (env = {}) => {
   return {
     entry: {
-      'kinvey-phonegap-sdk': './index.js',
+      'kinvey-phonegap-sdk': './src/index.js',
     },
     output: {
       filename: '[name].js',
