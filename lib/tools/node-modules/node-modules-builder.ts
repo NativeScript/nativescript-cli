@@ -4,18 +4,17 @@ import { TnsModulesCopy, NpmPluginPrepare } from "./node-modules-dest-copy";
 export class NodeModulesBuilder implements INodeModulesBuilder {
 	constructor(private $fs: IFileSystem,
 		private $injector: IInjector,
-		private $options: IOptions,
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder
 	) { }
 
-	public async prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
-		const productionDependencies = this.initialPrepareNodeModules(absoluteOutputPath, platform, lastModifiedTime, projectData);
+	public async prepareNodeModules(nodeModulesData: INodeModulesData): Promise<void> {
+		const productionDependencies = this.initialPrepareNodeModules(nodeModulesData);
 		const npmPluginPrepare: NpmPluginPrepare = this.$injector.resolve(NpmPluginPrepare);
-		await npmPluginPrepare.preparePlugins(productionDependencies, platform, projectData, projectFilesConfig);
+		await npmPluginPrepare.preparePlugins(productionDependencies, nodeModulesData.platform, nodeModulesData.projectData, nodeModulesData.projectFilesConfig);
 	}
 
-	public async prepareJSNodeModules(jsNodeModulesData: IJsNodeModulesData): Promise<void> {
-		const productionDependencies = this.initialPrepareNodeModules(jsNodeModulesData.absoluteOutputPath, jsNodeModulesData.platform, jsNodeModulesData.lastModifiedTime, jsNodeModulesData.projectData);
+	public async prepareJSNodeModules(jsNodeModulesData: INodeModulesData): Promise<void> {
+		const productionDependencies = this.initialPrepareNodeModules(jsNodeModulesData);
 		const npmPluginPrepare: NpmPluginPrepare = this.$injector.resolve(NpmPluginPrepare);
 		await npmPluginPrepare.prepareJSPlugins(productionDependencies, jsNodeModulesData.platform, jsNodeModulesData.projectData, jsNodeModulesData.projectFilesConfig);
 	}
@@ -24,21 +23,21 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 		shelljs.rm("-rf", absoluteOutputPath);
 	}
 
-	private initialPrepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime: Date, projectData: IProjectData, ): IDependencyData[] {
-		const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
+	private initialPrepareNodeModules(nodeModulesData: INodeModulesData): IDependencyData[] {
+		const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(nodeModulesData.projectData.projectDir);
 
-		if (!this.$fs.exists(absoluteOutputPath)) {
+		if (!this.$fs.exists(nodeModulesData.absoluteOutputPath)) {
 			// Force copying if the destination doesn't exist.
-			lastModifiedTime = null;
+			nodeModulesData.lastModifiedTime = null;
 		}
 
-		if (!this.$options.bundle) {
+		if (!nodeModulesData.appFilesUpdaterOptions.bundle) {
 			const tnsModulesCopy = this.$injector.resolve(TnsModulesCopy, {
-				outputRoot: absoluteOutputPath
+				outputRoot: nodeModulesData.absoluteOutputPath
 			});
-			tnsModulesCopy.copyModules(productionDependencies, platform);
+			tnsModulesCopy.copyModules(productionDependencies, nodeModulesData.platform);
 		} else {
-			this.cleanNodeModules(absoluteOutputPath, platform);
+			this.cleanNodeModules(nodeModulesData.absoluteOutputPath, nodeModulesData.platform);
 		}
 
 		return productionDependencies;

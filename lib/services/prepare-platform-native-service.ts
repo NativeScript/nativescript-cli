@@ -38,8 +38,17 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 			const lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).mtime : null;
 
 			const tnsModulesDestinationPath = path.join(appDestinationDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
+			const nodeModulesData: INodeModulesData = {
+				absoluteOutputPath: tnsModulesDestinationPath,
+				appFilesUpdaterOptions: config.appFilesUpdaterOptions,
+				lastModifiedTime,
+				platform: config.platform,
+				projectData: config.projectData,
+				projectFilesConfig: config.projectFilesConfig
+			};
+
 			// Process node_modules folder
-			await this.$nodeModulesBuilder.prepareNodeModules(tnsModulesDestinationPath, config.platform, lastModifiedTime, config.projectData, config.projectFilesConfig);
+			await this.$nodeModulesBuilder.prepareNodeModules(nodeModulesData);
 		}
 
 		if (!config.changesInfo || config.changesInfo.configChanged || config.changesInfo.modulesChanged) {
