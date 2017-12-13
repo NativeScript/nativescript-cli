@@ -6,11 +6,11 @@ const fs = require('fs');
 const mangleExcludes = require('./mangle-excludes');
 const pkg = require('./package.json');
 
-module.exports = (env) => {
+module.exports = (env = {}) => {
   const platform = getPlatform(env);
   const extensions = getExtensions(platform);
   const rules = getRules();
-  const plugins = getPlugins(platform, env);
+  const plugins = getPlugins(platform);
 
   const config = {
     entry: {},
@@ -105,8 +105,11 @@ function getRules() {
   ];
 }
 
-function getPlugins(platform, env) {
-  let plugins = [
+function getPlugins(platform) {
+  // Work around an Android issue by setting compress = false
+  const compress = platform !== "android";
+
+  return [
     // Copy assets to out dir. Add your own globs as needed.
     new CopyWebpackPlugin([
       {
@@ -128,15 +131,9 @@ function getPlugins(platform, env) {
 
     new webpack.NormalModuleReplacementPlugin(/^pubnub$/, (resource) => {
       resource.request = resource.request.replace(/^pubnub$/, 'pubnub/lib/nativescript/index.js');
-    })
-  ];
+    }),
 
-  if (env.uglify) {
-    plugins.push(new webpack.LoaderOptionsPlugin({ minimize: true }));
-
-    // Work around an Android issue by setting compress = false
-    const compress = platform !== "android";
-    plugins.push(new UglifyJSPlugin({
+    new UglifyJSPlugin({
       sourceMap: true,
       uglifyOptions: {
         mangle: { reserved: mangleExcludes },
@@ -145,11 +142,10 @@ function getPlugins(platform, env) {
           comments: false
         }
       }
-    }));
-  }
+    }),
 
-  plugins.push(new webpack.BannerPlugin({
-    banner: `
+    new webpack.BannerPlugin({
+      banner: `
 /**
  * ${pkg.name} - ${pkg.description}
  * @version v${pkg.version}
@@ -158,9 +154,8 @@ function getPlugins(platform, env) {
  * @license ${pkg.license}
  */
       `.trim(),
-    raw: true,
-    entryOnly: true
-  }));
-
-  return plugins;
+      raw: true,
+      entryOnly: true
+    })
+  ];
 }

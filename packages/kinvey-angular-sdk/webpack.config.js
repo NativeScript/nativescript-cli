@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const pkg = require('./package.json');
 
-module.exports = (env = {}) => {
+module.exports = () => {
   return {
     entry: {
       'kinvey-angular-sdk': './src/index.js',
@@ -27,7 +27,7 @@ module.exports = (env = {}) => {
     module: {
       rules: getRules()
     },
-    plugins: getPlugins(env)
+    plugins: getPlugins()
   };
 }
 
@@ -52,8 +52,8 @@ function getRules() {
   ];
 }
 
-function getPlugins(env) {
-  let plugins = [
+function getPlugins() {
+  return [
     // Copy assets to out dir. Add your own globs as needed.
     new CopyWebpackPlugin([
       {
@@ -70,26 +70,19 @@ function getPlugins(env) {
       { from: '.travis.yml' },
       { from: 'LICENSE' },
       { from: 'README.md' }
-    ])
-  ];
+    ]),
 
-  if (env.uglify) {
-    plugins.push(new webpack.LoaderOptionsPlugin({ minimize: true }));
-
-    // Work around an Android issue by setting compress = false
-    plugins.push(new UglifyJSPlugin({
+    new UglifyJSPlugin({
       sourceMap: true,
       uglifyOptions: {
-        mangle: { reserved: mangleExcludes },
         output: {
           comments: false
         }
       }
-    }));
-  }
+    }),
 
-  plugins.push(new webpack.BannerPlugin({
-    banner: `
+    new webpack.BannerPlugin({
+      banner: `
 /**
  * ${pkg.name} - ${pkg.description}
  * @version v${pkg.version}
@@ -98,10 +91,9 @@ function getPlugins(env) {
  * @license ${pkg.license}
  */
       `.trim(),
-    raw: true,
-    entryOnly: true
-  }));
-
-  return plugins;
+      raw: true,
+      entryOnly: true
+    })
+  ];
 }
 
