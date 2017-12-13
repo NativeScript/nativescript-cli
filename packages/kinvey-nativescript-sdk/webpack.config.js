@@ -26,6 +26,7 @@ module.exports = (env) => {
       'nativescript-push-notifications': 'nativescript-push-notifications',
       'nativescript-sqlite': 'nativescript-sqlite',
       'tns-core-modules/application': 'application',
+      'http': 'http',
       'tns-core-modules/http': 'http',
       'tns-core-modules/file-system': 'file-system',
       'tns-core-modules/ui/frame': 'ui/frame',
@@ -41,10 +42,10 @@ module.exports = (env) => {
     },
     node: {
       // Disable node shims that conflict with NativeScript
-      "http": false,
-      "timers": false,
-      "setImmediate": false,
-      "fs": "empty",
+      http: false,
+      timers: false,
+      setImmediate: false,
+      fs: 'empty',
     },
     module: {
       rules: rules
@@ -123,7 +124,11 @@ function getPlugins(platform, env) {
       { from: 'platforms/**/*' },
       { from: 'LICENSE' },
       { from: 'README.md' },
-    ])
+    ]),
+
+    new webpack.NormalModuleReplacementPlugin(/^pubnub$/, (resource) => {
+      resource.request = resource.request.replace(/^pubnub$/, 'pubnub/lib/nativescript/index.js');
+    })
   ];
 
   if (env.uglify) {

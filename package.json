@@ -12,7 +12,7 @@
     "local-storage-fallback": "~4.0.0",
     "lodash": "~4.17.4",
     "loglevel": "~1.5.1",
-    "pubnub": "~4.17.0",
+    "pubnub": "^4.19.0",
     "qs": "~6.5.1",
     "request": "~2.83.0",
     "rxjs": "~5.5.2",
