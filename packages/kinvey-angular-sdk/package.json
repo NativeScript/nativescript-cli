@@ -10,8 +10,9 @@
   "scripts": {
     "prebuild": "rm -rf dist",
     "build": "webpack --config webpack.config.js",
-    "release": "npm run build && ./scripts/push.sh",
-    "postrelease": "rm -rf tmp"
+    "release": "npm run build -- --env.uglify && ./scripts/push.sh",
+    "postrelease": "rm -rf tmp",
+    "s3": "npm run build -- --env.uglify --env.s3"
   },
   "files": [
     "kinvey-angular-sdk.js",

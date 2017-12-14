@@ -4,6 +4,7 @@
   "author": "Kinvey, Inc.",
   "scripts": {
     "build": "lerna run build --parallel",
+    "s3": "lerna run s3 --parallel",
     "test": "mocha --require babel-polyfill --require babel-register 'src/**/*.spec.js'"
   },
   "dependencies": {

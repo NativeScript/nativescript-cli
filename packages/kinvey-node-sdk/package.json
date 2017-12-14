@@ -22,7 +22,7 @@
   "scripts": {
     "prebuild": "rm -rf dist",
     "build": "webpack --config webpack.config.js",
-    "release": "npm run build && ./scripts/push.sh",
+    "release": "npm run build -- --env.uglify && ./scripts/push.sh",
     "postrelease": "rm -rf tmp"
   },
   "files": [
