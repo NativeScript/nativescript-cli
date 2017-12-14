@@ -18,7 +18,7 @@ const Kinvey = require('kinvey-nativescript-sdk');
 
 ## Mobile OS Compatibility
 
-The Kinvey NativeScript SDK supports the following BMobile OS versions:
+The Kinvey NativeScript SDK supports the following Mobile OS versions:
 
 - iOS: 10.0+
 - Android: 2.3.3+
