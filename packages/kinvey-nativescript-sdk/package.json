@@ -13,13 +13,13 @@
     "rxjs": "~5.5.5"
   },
   "scripts": {
-    "prebuild": "rimraf dist",
+    "prebuild": "rm -rf dist",
     "build": "npm run build:android && npm run build:ios",
     "build:android": "webpack --config webpack.config.js --env.android",
     "build:ios": "webpack --config webpack.config.js --env.ios",
     "lint": "tslint **/*.ts --exclude **/node_modules/**/* --exclude **/*.d.ts",
     "release": "npm run build && ./scripts/push.sh",
-    "postrelease": "rimraf tmp"
+    "postrelease": "rm -rf tmp"
   },
   "files": [
     "kinvey-nativescript-sdk.ios.js",

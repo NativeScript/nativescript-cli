@@ -8,7 +8,7 @@
   "license": "Apache-2.0",
   "main": "kinvey-js-sdk.js",
   "scripts": {
-    "prebuild": "rimraf dist",
+    "prebuild": "rm -rf dist",
     "build": "webpack --config webpack.config.js"
   },
   "files": [

@@ -20,10 +20,10 @@
     "url-join": "~2.0.2"
   },
   "scripts": {
-    "prebuild": "rimraf dist",
+    "prebuild": "rm -rf dist",
     "build": "webpack --config webpack.config.js",
     "release": "npm run build && ./scripts/push.sh",
-    "postrelease": "rimraf tmp"
+    "postrelease": "rm -rf tmp"
   },
   "files": [
     "kinvey-node-sdk.js",
