@@ -4,8 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [3.10.0](https://github.com/Kinvey/js-sdk/tree/v3.10.0) (2017-12-12)
-[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.9.2...v3.10.0)<br/>
+## [3.9.3](https://github.com/Kinvey/js-sdk/tree/v3.9.3) (2017-12-14)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.9.2...v3.9.3)<br/>
 
 We have moved all the code from our JavaScript SDKs spread across mutiple repositories into this repository. We have adopted the [Mono Repo](https://danluu.com/monorepo/) approach.
 
@@ -19,7 +19,16 @@ _None_
 - Cannot find module `kinvey-nativescript-sdk/push` [#28](https://github.com/Kinvey/nativescript-sdk/issues/28)
 
 ### Merge Pull Requests
-- Update TypeScript definitions to allow `Kinvey.User` data to be `any` [#183](https://github.com/Kinvey/js-sdk/pull/183)
+- MLIBZ-2247: Add `rxjs` as a dependency to use in the TypeScript definitions file [#197](https://github.com/Kinvey/js-sdk/pull/197)
+- MLIBZ-2150: Fix setting active user in NativeScript SDK [#196](https://github.com/Kinvey/js-sdk/pull/196)
+- Update `webpack.config.js` for each SDK package [#195](https://github.com/Kinvey/js-sdk/pull/195)
+- Remove `nativescript-push-notifications` as a dependency of `kinvey-nativescript-sdk` [#194](https://github.com/Kinvey/js-sdk/pull/194)
+- Use updated PubNub version that supports NativeScript [#193](https://github.com/Kinvey/js-sdk/pull/193)
+- MLIBZ-2234: Export the Kinvey namespace as a module for new bundles created from Mono repo [#185](https://github.com/Kinvey/js-sdk/pull/185)
+- MLIBZ-2225: `datastore.findById()` should throw a `NotFoundError` if the id does not exist [#184](https://github.com/Kinvey/js-sdk/pull/184)
+- MLIBZ-2129: TypeScript definitions update [#183](https://github.com/Kinvey/js-sdk/pull/183)
+- QA-120: Mono Repo [#181](https://github.com/Kinvey/js-sdk/pull/181)
+- MLIBZ-2150: Fix return value of ActiveUserStorage.set() for NativeScript [#173](https://github.com/Kinvey/js-sdk/pull/173)
 - Mono Repo [#171](https://github.com/Kinvey/js-sdk/pull/171)
 
 ## [3.8.1](https://github.com/Kinvey/js-sdk/tree/v3.8.1) (2017-08-25)
