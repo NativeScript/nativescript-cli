@@ -6,7 +6,7 @@
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "kinvey-html5-sdk.js",
+  "main": "kinvey-html5-sdk.min.js",
   "scripts": {
     "prebuild": "rm -rf dist",
     "build": "webpack --config webpack.config.js",
@@ -15,7 +15,7 @@
     "s3": "npm run build -- --env.uglify --env.s3"
   },
   "files": [
-    "kinvey-html5-sdk.js",
-    "kinvey-html5-sdk.js.map"
+    "kinvey-html5-sdk.min.js",
+    "kinvey-html5-sdk.min.js.map"
   ]
 }

@@ -5,11 +5,11 @@ const path = require('path');
 const fs = require('fs');
 const pkg = require('./package.json');
 
-module.exports = () => {
-  return {
-    entry: {
-      'kinvey-js-sdk': './src/index.js',
-    },
+module.exports = (env = {}) => {
+  let bundleName = pkg.name;
+
+  const config = {
+    entry: {},
     output: {
       filename: '[name].js',
       pathinfo: true,
@@ -26,6 +26,17 @@ module.exports = () => {
     },
     plugins: getPlugins()
   };
+
+  if (env.s3) {
+    bundleName = `${bundleName}-${pkg.version}`;
+  }
+
+  if (env.uglify) {
+    bundleName = `${bundleName}.min`;
+  }
+
+  config.entry[bundleName] = './src/index.js';
+  return config;
 }
 
 function getRules() {
@@ -49,8 +60,8 @@ function getRules() {
   ];
 }
 
-function getPlugins() {
-  return [
+function getPlugins(env = {}) {
+  const plugins = [
     // Copy assets to out dir. Add your own globs as needed.
     new CopyWebpackPlugin([
       {
@@ -65,17 +76,23 @@ function getPlugins() {
       },
       { from: 'LICENSE' },
       { from: 'README.md' }
-    ]),
+    ])
+  ];
 
-    new UglifyJSPlugin({
-      sourceMap: true,
-      uglifyOptions: {
-        output: {
-          comments: false
+  if (env.uglify) {
+    plugins.push(
+      new UglifyJSPlugin({
+        sourceMap: true,
+        uglifyOptions: {
+          output: {
+            comments: false
+          }
         }
-      }
-    }),
+      })
+    );
+  }
 
+  plugins.push(
     new webpack.BannerPlugin({
       banner: `
 /**
@@ -89,5 +106,7 @@ function getPlugins() {
       raw: true,
       entryOnly: true
     })
-  ];
+  );
+
+  return plugins;
 }

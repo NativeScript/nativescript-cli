@@ -6,7 +6,7 @@
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "kinvey-angular2-sdk.js",
+  "main": "kinvey-angular2-sdk.min.js",
   "typings": "kinvey.d.ts",
   "scripts": {
     "prebuild": "rm -rf dist",

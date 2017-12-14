@@ -10,7 +10,8 @@ module.exports = (env = {}) => {
   const platform = getPlatform(env);
   const extensions = getExtensions(platform);
   const rules = getRules();
-  const plugins = getPlugins(platform);
+  const plugins = getPlugins(env, platform);
+  let bundleName = pkg.name;
 
   const config = {
     entry: {},
@@ -53,7 +54,18 @@ module.exports = (env = {}) => {
     plugins: plugins,
     devtool: 'source-map'
   };
-  config.entry[`kinvey-nativescript-sdk.${platform}`] = './src/index.ts';
+
+  if (env.s3) {
+    bundleName = `${bundleName}-${pkg.version}`;
+  }
+
+  bundleName = `${bundleName}.${platform}`;
+
+  if (env.uglify) {
+    bundleName = `${bundleName}.min`;
+  }
+
+  config.entry[bundleName] = './src/index.ts';
   return config;
 };
 
@@ -105,11 +117,8 @@ function getRules() {
   ];
 }
 
-function getPlugins(platform) {
-  // Work around an Android issue by setting compress = false
-  const compress = platform !== "android";
-
-  return [
+function getPlugins(env, platform) {
+  const plugins = [
     // Copy assets to out dir. Add your own globs as needed.
     new CopyWebpackPlugin([
       {
@@ -131,19 +140,27 @@ function getPlugins(platform) {
 
     new webpack.NormalModuleReplacementPlugin(/^pubnub$/, (resource) => {
       resource.request = resource.request.replace(/^pubnub$/, 'pubnub/lib/nativescript/index.js');
-    }),
+    })
+  ];
 
-    new UglifyJSPlugin({
-      sourceMap: true,
-      uglifyOptions: {
-        mangle: { reserved: mangleExcludes },
-        compress,
-        output: {
-          comments: false
+  if (env.uglify) {
+    // Work around an Android issue by setting compress = false
+    const compress = platform !== 'android';
+    plugins.push(
+      new UglifyJSPlugin({
+        sourceMap: true,
+        uglifyOptions: {
+          mangle: { reserved: mangleExcludes },
+          compress,
+          output: {
+            comments: false
+          }
         }
-      }
-    }),
+      })
+    );
+  }
 
+  plugins.push(
     new webpack.BannerPlugin({
       banner: `
 /**
@@ -157,5 +174,7 @@ function getPlugins(platform) {
       raw: true,
       entryOnly: true
     })
-  ];
+  );
+
+  return plugins;
 }
