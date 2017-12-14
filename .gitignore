@@ -1,21 +1,31 @@
-# NodeJS
-.npm_cache
+# Node
 node_modules
 npm-debug.log
 
-# Src files
+# Yarn
+yarn-error.log
+
+# Lerna
+lerna-debug.log
+
+# JetBrains
+.idea/
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Mac
+.DS_Store
+
+# Temporary files
+.env
+coverage
+dist
 docs
 
-# Build Files
-.tmp
-tmp
-dist
-
-# Test Files
-coverage
-report.xml
-*.tap
-*.log
-
-# MacOS Files
-.DS_Store
+# generated html file
+packages/kinvey-html5-sdk/test/index.html
