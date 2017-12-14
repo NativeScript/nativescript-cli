@@ -15,7 +15,7 @@
     "s3": "npm run build -- --env.uglify --env.s3"
   },
   "files": [
-    "kinvey-angular-sdk.js",
-    "kinvey-angular-sdk.js.map"
+    "kinvey-angular-sdk.min.js",
+    "kinvey-angular-sdk.min.js.map"
   ]
 }
