@@ -11,7 +11,7 @@ export class SubscriptionService implements ISubscriptionService {
 
 	public async subscribeForNewsletter(): Promise<void> {
 		if (await this.shouldAskForEmail()) {
-			this.$logger.out("Leave your e-mail address here to subscribe for NativeScript newsletter and product updates, tips and tricks:");
+			this.$logger.out("Enter your e-mail address to subscribe to the NativeScript Newsletter and hear about product updates, tips & tricks, and community happenings:");
 			const email = await this.getEmail("(press Enter for blank)");
 			await this.$userSettingsService.saveSetting("EMAIL_REGISTERED", true);
 			await this.sendEmail(email);
