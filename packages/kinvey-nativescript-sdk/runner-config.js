@@ -1,6 +1,7 @@
 const path = require('path');
 const walk = require('klaw-sync');
 const fs = require('fs-extra');
+const osType = process.argv[2];
 
 const {
     Runner,
@@ -84,7 +85,7 @@ const runner = new Runner({
         }),
         runCommand({
             command: 'tns',
-            args: ['run', 'android', '--justlaunch'],
+            args: ['run', osType, '--justlaunch'],
             cwd: appPath
         })
     ]
