@@ -15,7 +15,7 @@ const {
     }
 } = require('kinvey-universal-runner');
 
-const testedSdkVersion = '3.9.3-beta.7'
+const testedSdkVersion = '3.9.4'
 const appName = 'TestApp';
 const currentVersionArchiveFileName = `kinvey-nativescript-sdk-${testedSdkVersion}.tgz`;
 const appRootPath = path.join(__dirname, appName);
