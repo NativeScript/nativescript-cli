@@ -5,12 +5,6 @@ node_js:
 env:
   secure: aqcGPDGxdYhbW6Cq6JFKHmyjYBqkDgDlONgM43o5ES1yIiqdFG0LySL75XE2QBocyyG/a1tNMj6aX4nrLrsukmNlEgXieWjuQs3EaTjVHiw+JWhU6yDcI4PqF4ZoD3ANdghxkBWQ8YjL+tfHfwCSnewI0UnRBsrb76Yv81o/Frkr+1zAkw4kG/6ubS5eRGcA9xOOvo0VDkz8HtsWnbxfAfLMBhsPICmdj7KlZJZY2hjfD+okf3DcKQqZZPi7bqfDb7AGmTKufX2QUVFRbT1p6yp+xH5hOB5QK2/2YeSXNntkzO2NhXsiyVybBTAhnulTsQMbCv6RELmXIm0/BHS0bhPzrK8NbQJPrYHPVYV93Z3S4Lpg1rzPAPIDf124V7CAcTYZEXgjS6YRUMMPwA0GJJDbNuJnwGiVGL4J95dkllf9h2BSym0zsPhtU94OPQvWs3VyfaK3uz6z9X/CmeeCuhOcPYV9NWX5J+6swI/tttYdnNdOa5j5PCoVtRD6hIB0YsBpxLSOIOjugXyQXNn+rWQbvoTZjQMPInAk/Bhav5IGXC+Xa2MesXJh6Nu7WXdwXxXEwVNJ4/jJULNsP7NTer0G43akzkI4m4Fairw3mo8HXdhQ+nmMyUU9xqmPWvgSNsI9JiBxTMu8xmN36cdmNiBqW+GWa0iBzlXTq2zK9lQ=
 
-before_install:
-- curl -o- -L https://yarnpkg.com/install.sh | bash
-- export PATH="$HOME/.yarn/bin:$PATH"
-install:
-- yarn install
-
 script: npm run test
 
 jobs:

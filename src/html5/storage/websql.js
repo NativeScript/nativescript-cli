@@ -1,12 +1,12 @@
 import Promise from 'es6-promise';
-import { KinveyError } from '../../core/errors';
+import { KinveyError, NotFoundError } from '../../core/errors';
 import { isDefined } from '../../core/utils';
 
 const masterCollectionName = 'sqlite_master';
 const size = 2 * 1024 * 1024; // Database size in bytes
 let isSupported;
 
-class WebSQL {
+export class WebSQL {
   constructor(name = 'kinvey') {
     if (isDefined(name) === false) {
       throw new KinveyError('A name is required to use the WebSQL adapter.', name);
@@ -107,7 +107,14 @@ class WebSQL {
     const sql = 'SELECT value FROM #{collection} WHERE key = ?';
     return this.openTransaction(collection, sql, [id])
       .then(response => response.result)
-      .then((entities) => entities[0]);
+      .then((entities) => {
+        if (entities.length === 0) {
+          throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}` +
+            ` collection on the ${this.name} WebSQL database.`);
+        }
+
+        return entities[0];
+      });
   }
 
   save(collection, entities) {

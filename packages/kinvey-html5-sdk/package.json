@@ -1,20 +1,21 @@
 {
   "private": true,
-  "version": "3.9.3-beta.7",
+  "version": "3.9.3",
   "name": "kinvey-html5-sdk",
   "description": "Kinvey JavaScript SDK for HTML5 applications.",
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "kinvey-html5-sdk.js",
+  "main": "kinvey-html5-sdk.min.js",
   "scripts": {
-    "prebuild": "rimraf dist",
+    "prebuild": "rm -rf dist",
     "build": "webpack --config webpack.config.js",
-    "release": "npm run build && ./scripts/push.sh",
-    "postrelease": "rimraf tmp"
+    "release": "npm run build -- --env.uglify && ./scripts/push.sh",
+    "postrelease": "rm -rf tmp",
+    "s3": "npm run build -- --env.uglify --env.s3"
   },
   "files": [
-    "kinvey-html5-sdk.js",
-    "kinvey-html5-sdk.js.map"
+    "kinvey-html5-sdk.min.js",
+    "kinvey-html5-sdk.min.js.map"
   ]
 }

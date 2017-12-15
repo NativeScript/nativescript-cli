@@ -6,11 +6,12 @@ const fs = require('fs');
 const mangleExcludes = require('./mangle-excludes');
 const pkg = require('./package.json');
 
-module.exports = (env) => {
+module.exports = (env = {}) => {
   const platform = getPlatform(env);
   const extensions = getExtensions(platform);
   const rules = getRules();
-  const plugins = getPlugins(platform, env);
+  const plugins = getPlugins(env, platform);
+  let bundleName = pkg.name;
 
   const config = {
     entry: {},
@@ -26,6 +27,7 @@ module.exports = (env) => {
       'nativescript-push-notifications': 'nativescript-push-notifications',
       'nativescript-sqlite': 'nativescript-sqlite',
       'tns-core-modules/application': 'application',
+      'http': 'http',
       'tns-core-modules/http': 'http',
       'tns-core-modules/file-system': 'file-system',
       'tns-core-modules/ui/frame': 'ui/frame',
@@ -41,10 +43,10 @@ module.exports = (env) => {
     },
     node: {
       // Disable node shims that conflict with NativeScript
-      "http": false,
-      "timers": false,
-      "setImmediate": false,
-      "fs": "empty",
+      http: false,
+      timers: false,
+      setImmediate: false,
+      fs: 'empty',
     },
     module: {
       rules: rules
@@ -52,7 +54,18 @@ module.exports = (env) => {
     plugins: plugins,
     devtool: 'source-map'
   };
-  config.entry[`kinvey-nativescript-sdk.${platform}`] = './index.ts';
+
+  if (env.s3) {
+    bundleName = `${bundleName}-${pkg.version}`;
+  }
+
+  bundleName = `${bundleName}.${platform}`;
+
+  if (env.uglify) {
+    bundleName = `${bundleName}.min`;
+  }
+
+  config.entry[bundleName] = './src/index.ts';
   return config;
 };
 
@@ -104,8 +117,8 @@ function getRules() {
   ];
 }
 
-function getPlugins(platform, env) {
-  let plugins = [
+function getPlugins(env, platform) {
+  const plugins = [
     // Copy assets to out dir. Add your own globs as needed.
     new CopyWebpackPlugin([
       {
@@ -123,28 +136,33 @@ function getPlugins(platform, env) {
       { from: 'platforms/**/*' },
       { from: 'LICENSE' },
       { from: 'README.md' },
-    ])
+    ]),
+
+    new webpack.NormalModuleReplacementPlugin(/^pubnub$/, (resource) => {
+      resource.request = resource.request.replace(/^pubnub$/, 'pubnub/lib/nativescript/index.js');
+    })
   ];
 
   if (env.uglify) {
-    plugins.push(new webpack.LoaderOptionsPlugin({ minimize: true }));
-
     // Work around an Android issue by setting compress = false
-    const compress = platform !== "android";
-    plugins.push(new UglifyJSPlugin({
-      sourceMap: true,
-      uglifyOptions: {
-        mangle: { reserved: mangleExcludes },
-        compress,
-        output: {
-          comments: false
+    const compress = platform !== 'android';
+    plugins.push(
+      new UglifyJSPlugin({
+        sourceMap: true,
+        uglifyOptions: {
+          mangle: { reserved: mangleExcludes },
+          compress,
+          output: {
+            comments: false
+          }
         }
-      }
-    }));
+      })
+    );
   }
 
-  plugins.push(new webpack.BannerPlugin({
-    banner: `
+  plugins.push(
+    new webpack.BannerPlugin({
+      banner: `
 /**
  * ${pkg.name} - ${pkg.description}
  * @version v${pkg.version}
@@ -153,9 +171,10 @@ function getPlugins(platform, env) {
  * @license ${pkg.license}
  */
       `.trim(),
-    raw: true,
-    entryOnly: true
-  }));
+      raw: true,
+      entryOnly: true
+    })
+  );
 
   return plugins;
 }
