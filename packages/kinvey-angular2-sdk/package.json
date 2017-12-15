@@ -1,18 +1,22 @@
 {
   "private": true,
-  "version": "3.9.3-beta.5",
+  "version": "3.9.4",
   "name": "kinvey-angular2-sdk",
   "description": "Kinvey JavaScript SDK for Angular 2+/Ionic 2+ applications.",
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "kinvey-angular2-sdk.js",
+  "main": "kinvey-angular2-sdk.min.js",
   "typings": "kinvey.d.ts",
   "scripts": {
-    "prebuild": "rimraf dist",
+    "prebuild": "rm -rf dist",
     "build": "webpack --config webpack.config.js",
-    "release": "npm run build && ./scripts/push.sh",
-    "postrelease": "rimraf tmp"
+    "release": "npm run build -- --env.uglify && ./scripts/push.sh",
+    "postrelease": "rm -rf tmp",
+    "s3": "npm run build -- --env.uglify --env.s3"
+  },
+  "dependencies": {
+    "rxjs": "~5.5.5"
   },
   "files": [
     "kinvey-angular2-sdk.js",

@@ -1,20 +1,21 @@
 {
   "private": true,
-  "version": "3.9.3-beta.3",
+  "version": "3.9.3",
   "name": "kinvey-angular-sdk",
   "description": "Kinvey JavaScript SDK for Angular/Ionic applications.",
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "kinvey-angular-sdk.js",
+  "main": "kinvey-angular-sdk.min.js",
   "scripts": {
-    "prebuild": "rimraf dist",
+    "prebuild": "rm -rf dist",
     "build": "webpack --config webpack.config.js",
-    "release": "npm run build && ./scripts/push.sh",
-    "postrelease": "rimraf tmp"
+    "release": "npm run build -- --env.uglify && ./scripts/push.sh",
+    "postrelease": "rm -rf tmp",
+    "s3": "npm run build -- --env.uglify --env.s3"
   },
   "files": [
-    "kinvey-angular-sdk.js",
-    "kinvey-angular-sdk.js.map"
+    "kinvey-angular-sdk.min.js",
+    "kinvey-angular-sdk.min.js.map"
   ]
 }

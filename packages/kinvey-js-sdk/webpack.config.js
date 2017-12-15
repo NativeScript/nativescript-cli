@@ -6,10 +6,10 @@ const fs = require('fs');
 const pkg = require('./package.json');
 
 module.exports = (env = {}) => {
-  return {
-    entry: {
-      'kinvey-js-sdk': './index.js',
-    },
+  let bundleName = pkg.name;
+
+  const config = {
+    entry: {},
     output: {
       filename: '[name].js',
       pathinfo: true,
@@ -24,8 +24,19 @@ module.exports = (env = {}) => {
     module: {
       rules: getRules()
     },
-    plugins: getPlugins(env)
+    plugins: getPlugins()
   };
+
+  if (env.s3) {
+    bundleName = `${bundleName}-${pkg.version}`;
+  }
+
+  if (env.uglify) {
+    bundleName = `${bundleName}.min`;
+  }
+
+  config.entry[bundleName] = './src/index.js';
+  return config;
 }
 
 function getRules() {
@@ -49,8 +60,8 @@ function getRules() {
   ];
 }
 
-function getPlugins(env) {
-  let plugins = [
+function getPlugins(env = {}) {
+  const plugins = [
     // Copy assets to out dir. Add your own globs as needed.
     new CopyWebpackPlugin([
       {
@@ -69,22 +80,21 @@ function getPlugins(env) {
   ];
 
   if (env.uglify) {
-    plugins.push(new webpack.LoaderOptionsPlugin({ minimize: true }));
-
-    // Work around an Android issue by setting compress = false
-    plugins.push(new UglifyJSPlugin({
-      sourceMap: true,
-      uglifyOptions: {
-        mangle: { reserved: mangleExcludes },
-        output: {
-          comments: false
+    plugins.push(
+      new UglifyJSPlugin({
+        sourceMap: true,
+        uglifyOptions: {
+          output: {
+            comments: false
+          }
         }
-      }
-    }));
+      })
+    );
   }
 
-  plugins.push(new webpack.BannerPlugin({
-    banner: `
+  plugins.push(
+    new webpack.BannerPlugin({
+      banner: `
 /**
  * ${pkg.name} - ${pkg.description}
  * @version v${pkg.version}
@@ -93,9 +103,10 @@ function getPlugins(env) {
  * @license ${pkg.license}
  */
       `.trim(),
-    raw: true,
-    entryOnly: true
-  }));
+      raw: true,
+      entryOnly: true
+    })
+  );
 
   return plugins;
 }

@@ -1,20 +1,21 @@
 {
   "private": true,
-  "version": "3.9.3-beta.7",
+  "version": "3.9.3",
   "name": "kinvey-phonegap-sdk",
   "description": "Kinvey JavaScript SDK for Cordova/PhoneGap applications.",
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "kinvey-phonegap-sdk.js",
+  "main": "kinvey-phonegap-sdk.min.js",
   "scripts": {
-    "prebuild": "rimraf dist",
+    "prebuild": "rm -rf dist",
     "build": "webpack --config webpack.config.js",
-    "release": "npm run build && ./scripts/push.sh",
-    "postrelease": "rimraf tmp"
+    "release": "npm run build -- --env.uglify && ./scripts/push.sh",
+    "postrelease": "rm -rf tmp",
+    "s3": "npm run build -- --env.uglify --env.s3"
   },
   "files": [
-    "kinvey-phonegap-sdk.js",
-    "kinvey-phonegap-sdk.js.map"
+    "kinvey-phonegap-sdk.min.js",
+    "kinvey-phonegap-sdk.min.js.map"
   ]
 }
