@@ -24,15 +24,11 @@ module.exports = (env = {}) => {
     module: {
       rules: getRules()
     },
-    plugins: getPlugins()
+    plugins: getPlugins(env)
   };
 
   if (env.s3) {
     bundleName = `${bundleName}-${pkg.version}`;
-  }
-
-  if (env.uglify) {
-    bundleName = `${bundleName}.min`;
   }
 
   config.entry[bundleName] = './src/index.js';

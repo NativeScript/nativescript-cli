@@ -1,18 +1,18 @@
 {
   "private": true,
-  "version": "3.9.3",
+  "version": "3.9.4",
   "name": "kinvey-js-sdk",
   "description": "Kinvey JavaScript SDK for developing JavaScript applications.",
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "kinvey-js-sdk.min.js",
+  "main": "kinvey-js-sdk.js",
   "scripts": {
     "prebuild": "rm -rf dist",
     "build": "webpack --config webpack.config.js"
   },
   "files": [
-    "kinvey-js-sdk.min.js",
-    "kinvey-js-sdk.min.js.map"
+    "kinvey-js-sdk.js",
+    "kinvey-js-sdk.js.map"
   ]
 }
