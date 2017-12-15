@@ -25,6 +25,7 @@ const shimSpecificTestsPath = path.join(__dirname, 'test', 'tests');
 const rootMonoRepoPath = path.join(__dirname, '../../');
 const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration');
 const distPath = path.join(__dirname, 'dist');
+const jsFilesFilter = item => path.extname(item.path) === '.js';
 
 let logServerPort;
 
@@ -55,6 +56,7 @@ const runner = new Runner({
             path.join(appPath, 'testConfig.template.hbs'),
             () => ({
                 tests: walk(path.join(appName, 'app', 'tests'), {
+                    filter: jsFilesFilter,
                     nodir: true
                 }).map(f => String.raw`./${path.relative(appPath, f.path)}`.replace(/\\/g, '/')),
                 logServerPort
