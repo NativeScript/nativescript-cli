@@ -1,6 +1,7 @@
 const path = require('path');
 const walk = require('klaw-sync');
 const fs = require('fs-extra');
+const osType = process.argv[2] || 'android';
 
 const {
     Runner,
@@ -70,7 +71,7 @@ const runner = new Runner({
         }),
         runCommand({
             command: 'cordova',
-            args: ['platform', 'add', 'android@5.x.x'],
+            args: ['platform', 'add', osType],
             cwd: appPath
         }),
         ...[
@@ -87,7 +88,7 @@ const runner = new Runner({
         }),
         runCommand({
             command: 'cordova',
-            args: ['run', 'android'],
+            args: ['run', osType],
             cwd: appPath
         })
     ]
