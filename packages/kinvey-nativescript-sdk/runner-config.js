@@ -1,7 +1,7 @@
 const path = require('path');
 const walk = require('klaw-sync');
 const fs = require('fs-extra');
-const osType = process.argv[2];
+const osType = process.argv[2] || 'android';
 
 const {
     Runner,
