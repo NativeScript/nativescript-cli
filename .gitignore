@@ -29,3 +29,7 @@ docs
 
 # generated html file
 packages/kinvey-html5-sdk/test/index.html
+
+#generated test apps
+packages/kinvey-nativescript-sdk/TestApp/
+packages/kinvey-phonegap-sdk/KinveyCordovaTestApp/
