@@ -35,11 +35,11 @@ const runner = new Runner({
         logServer(),
         remove(distPath),
         remove(appRootPath),
-        runCommand({
-            command: 'npm',
-            args: ['run', 'build'],
-            cwd: rootMonoRepoPath
-        }),
+        // runCommand({
+            // command: 'npm',
+            // args: ['run', 'build'],
+            // cwd: rootMonoRepoPath
+        // }),
         runCommand({
             command: 'tns',
             args: ['create', appName]
@@ -64,14 +64,14 @@ const runner = new Runner({
             }),
             path.join(appPath, 'testConfig.js')
         ),
+        // runCommand({
+            // command: 'npm',
+            // args: ['pack'],
+            // cwd: distPath
+        // }),
         runCommand({
             command: 'npm',
-            args: ['pack'],
-            cwd: distPath
-        }),
-        runCommand({
-            command: 'npm',
-            args: ['install', '--save', `../dist/${currentVersionArchiveFileName}`],
+            args: ['install', '--save', 'kinvey-nativescript-sdk'],
             cwd: appRootPath
         }),
         copyTestRunner(appPath),
