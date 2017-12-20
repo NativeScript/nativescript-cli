@@ -89,7 +89,7 @@ const runner = new Runner({
         runCommand({
             command: 'cordova',
             args: ['run', osType],
-            cwd: appPath
+            cwd: appRootPath
         })
     ]
 });
