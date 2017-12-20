@@ -86,7 +86,7 @@ const runner = new Runner({
         runCommand({
             command: 'tns',
             args: ['run', osType, '--justlaunch'],
-            cwd: appPath
+            cwd: appRootPath
         })
     ]
 });
