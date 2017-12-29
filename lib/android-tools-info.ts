@@ -10,6 +10,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private static REQUIRED_BUILD_TOOLS_RANGE_PREFIX = ">=23";
 	private static VERSION_REGEX = /((\d+\.){2}\d+)/;
 	private static MIN_JAVA_VERSION = "1.8.0";
+	private static MAX_JAVA_VERSION = "1.9.0";
 
 	private showWarningsAsErrors: boolean;
 	private toolsInfo: IAndroidToolsInfoData;
@@ -111,10 +112,14 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			+ "To be able to build for Android, verify that you have installed The Java Development Kit (JDK) and configured it according to system requirements as" + EOL +
 			" described in " + this.$staticConfig.SYS_REQUIREMENTS_LINK;
 		const matchingVersion = (installedJavaVersion || "").match(AndroidToolsInfo.VERSION_REGEX);
-		if (matchingVersion && matchingVersion[1]) {
-			if (semver.lt(matchingVersion[1], AndroidToolsInfo.MIN_JAVA_VERSION)) {
+		const installedJavaCompilerVersion = matchingVersion && matchingVersion[1];
+		if (installedJavaCompilerVersion) {
+			if (semver.lt(installedJavaCompilerVersion, AndroidToolsInfo.MIN_JAVA_VERSION)) {
 				hasProblemWithJavaVersion = true;
 				this.printMessage(`Javac version ${installedJavaVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION}.`, additionalMessage);
+			} else if (semver.gt(installedJavaCompilerVersion, AndroidToolsInfo.MAX_JAVA_VERSION)) {
+				hasProblemWithJavaVersion = true;
+				this.printMessage(`Javac version ${installedJavaVersion} is not supported. You have to install version ${AndroidToolsInfo.MIN_JAVA_VERSION}.`, additionalMessage);
 			}
 		} else {
 			hasProblemWithJavaVersion = true;
