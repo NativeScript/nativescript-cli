@@ -11,7 +11,6 @@ import { isDefined } from '../utils';
 import { Query } from '../query';
 import { RequestMethod } from './request';
 import { KinveyRequest } from './network';
-import { CacheRequest } from './cache';
 import { Response, StatusCode } from './response';
 import { repositoryProvider } from '../datastore/repositories';
 

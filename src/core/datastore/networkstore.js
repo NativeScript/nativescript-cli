@@ -97,22 +97,14 @@ export class NetworkStore {
    * @return  {Observable}                                                Observable.
    */
   find(query, options = {}) {
-    // TODO: wrap in observable elsewhere
-    const stream = KinveyObservable.create((observer) => {
-      // Check that the query is valid
-      if (isDefined(query) && !(query instanceof Query)) {
-        const err = new KinveyError('Invalid query. It must be an instance of the Query class.');
-        return observer.error(err);
-      }
+    const errPromise = this._ensureValidQuery(query);
+    if (errPromise) {
+      return wrapInObservable(errPromise);
+    }
 
-      const operation = this._buildOperationObject(OperationType.Read, query);
-      return this._executeOperation(operation, options)
-        .then(data => observer.next(data))
-        .then(() => observer.complete())
-        .catch(error => observer.error(error));
-    });
-
-    return stream;
+    const operation = this._buildOperationObject(OperationType.Read, query);
+    const opPromise = this._executeOperation(operation, options);
+    return wrapInObservable(opPromise);
   }
 
   _buildOperationObject(type, query, data, id) {
@@ -138,10 +130,7 @@ export class NetworkStore {
   findById(id, options = {}) {
     const operation = this._buildOperationObject(OperationType.ReadById, null, null, id);
     const entityPromise = this._executeOperation(operation, options);
-
-    return wrapInObservable((observer) => {
-      return entityPromise.then(entity => observer.next(entity));
-    });
+    return wrapInObservable(entityPromise);
   }
 
   /**
@@ -200,39 +189,14 @@ export class NetworkStore {
    * @return  {Observable}                                             Observable.
    */
   count(query, options = {}) {
-    const stream = KinveyObservable.create((observer) => {
-      try {
-        if (query && !(query instanceof Query)) {
-          throw new KinveyError('Invalid query. It must be an instance of the Query class.');
-        }
+    const errPromise = this._ensureValidQuery(query);
+    if (errPromise) {
+      return wrapInObservable(errPromise);
+    }
 
-        // Create the request
-        const request = new KinveyRequest({
-          method: RequestMethod.GET,
-          authType: AuthType.Default,
-          url: url.format({
-            protocol: this.client.apiProtocol,
-            host: this.client.apiHost,
-            pathname: `${this.pathname}/_count`
-          }),
-          properties: options.properties,
-          query: query,
-          timeout: options.timeout,
-          client: this.client
-        });
-
-        // Execute the request
-        return request.execute()
-          .then(response => response.data)
-          .then(data => observer.next(data ? data.count : 0))
-          .then(() => observer.complete())
-          .catch(error => observer.error(error));
-      } catch (error) {
-        return observer.error(error);
-      }
-    });
-
-    return stream;
+    const operation = this._buildOperationObject(OperationType.Count, query);
+    const opPromise = this._executeOperation(operation, options);
+    return wrapInObservable(opPromise);
   }
 
   /**
@@ -246,19 +210,11 @@ export class NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   create(entity, options = {}) {
-    // const stream = KinveyObservable.create((observer) => {
+    // TODO: decide what to do about this old code
     //   if (isDefined(entity) === false) {
     //     observer.next(null);
     //     return observer.complete();
     //   }
-
-    //   if (isArray(entity)) {
-    //     return observer.error(new KinveyError(
-    //       'Unable to create an array of entities.',
-    //       'Please create entities one by one.'
-    //     ));
-    //   }
-    // });
 
     if (isArray(entity)) {
       return Promise.reject(new KinveyError(
@@ -282,47 +238,22 @@ export class NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   update(entity, options = {}) {
-    const stream = KinveyObservable.create((observer) => {
-      if (isDefined(entity) === false) {
-        observer.next(null);
-        return observer.complete();
-      }
+    if (!isDefined(entity)) {
+      return Promise.resolve(null); // TODO: really?
+    }
 
-      if (isArray(entity)) {
-        return observer.error(new KinveyError(
-          'Unable to update an array of entities.',
-          'Please update entities one by one.'
-        ));
-      }
+    if (isArray(entity)) {
+      const err = new KinveyError('Unable to update an array of entities.', 'Please update entities one by one.');
+      return Promise.reject(err);
+    }
 
-      if (isDefined(entity._id) === false) {
-        return observer.error(new KinveyError(
-          'Unable to update entity.',
-          'Entity must contain an _id to be updated.'
-        ));
-      }
+    if (!isDefined(entity._id)) {
+      const err = new KinveyError('Unable to update entity.', 'Entity must contain an _id to be updated.');
+      return Promise.reject(err);
+    }
 
-      const request = new KinveyRequest({
-        method: RequestMethod.PUT,
-        authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/${entity._id}`
-        }),
-        properties: options.properties,
-        data: entity,
-        timeout: options.timeout,
-        client: this.client
-      });
-      return request.execute()
-        .then(response => response.data)
-        .then(data => observer.next(data))
-        .then(() => observer.complete())
-        .catch(error => observer.error(error));
-    });
-
-    return stream.toPromise();
+    const operation = this._buildOperationObject(OperationType.Update, null, entity);
+    return this._executeOperation(operation, options);
   }
 
   /**
@@ -357,36 +288,13 @@ export class NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   remove(query, options = {}) {
-    const stream = KinveyObservable.create((observer) => {
-      try {
-        if (query && !(query instanceof Query)) {
-          throw new KinveyError('Invalid query. It must be an instance of the Query class.');
-        }
+    const errPromise = this._ensureValidQuery(query);
+    if (errPromise) {
+      return errPromise;
+    }
 
-        const request = new KinveyRequest({
-          method: RequestMethod.DELETE,
-          authType: AuthType.Default,
-          url: url.format({
-            protocol: this.client.apiProtocol,
-            host: this.client.apiHost,
-            pathname: this.pathname
-          }),
-          properties: options.properties,
-          query: query,
-          timeout: options.timeout,
-          client: this.client
-        });
-        return request.execute()
-          .then(response => response.data)
-          .then(data => observer.next(data))
-          .then(() => observer.complete())
-          .catch(error => observer.error(error));
-      } catch (error) {
-        return observer.error(error);
-      }
-    });
-
-    return stream.toPromise();
+    const operation = this._buildOperationObject(OperationType.Delete, query);
+    return this._executeOperation(operation, options);
   }
 
   /**
@@ -400,35 +308,12 @@ export class NetworkStore {
    * @return  {Observable}                                             Observable.
    */
   removeById(id, options = {}) {
-    const stream = KinveyObservable.create((observer) => {
-      try {
-        if (isDefined(id) === false) {
-          observer.next(undefined);
-          return observer.complete();
-        }
+    if (!isDefined(id)) {
+      return Promise.resolve(undefined); // TODO: decide on this
+    }
 
-        const request = new KinveyRequest({
-          method: RequestMethod.DELETE,
-          authType: AuthType.Default,
-          url: url.format({
-            protocol: this.client.apiProtocol,
-            host: this.client.apiHost,
-            pathname: `${this.pathname}/${id}`
-          }),
-          properties: options.properties,
-          timeout: options.timeout
-        });
-        return request.execute()
-          .then(response => response.data)
-          .then(data => observer.next(data))
-          .then(() => observer.complete())
-          .catch(error => observer.error(error));
-      } catch (error) {
-        return observer.error(error);
-      }
-    });
-
-    return stream.toPromise();
+    const operation = this._buildOperationObject(OperationType.DeleteById, null, null, id);
+    return this._executeOperation(operation, options);
   }
 
   /**
@@ -445,5 +330,14 @@ export class NetworkStore {
   unsubscribe() {
     const manager = getLiveCollectionManager();
     return manager.unsubscribeCollection(this.collection);
+  }
+
+  // protected
+
+  _ensureValidQuery(query) {
+    if (query && !(query instanceof Query)) {
+      return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Query class.'));
+    }
+    return null;
   }
 }

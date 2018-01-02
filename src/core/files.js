@@ -446,6 +446,38 @@ export class FileStore extends NetworkStore {
     return this.upload(file, metadata, options);
   }
 
+  removeById(id, options = {}) {
+    const stream = KinveyObservable.create((observer) => {
+      try {
+        if (isDefined(id) === false) {
+          observer.next(undefined);
+          return observer.complete();
+        }
+
+        const request = new KinveyRequest({
+          method: RequestMethod.DELETE,
+          authType: AuthType.Default,
+          url: url.format({
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
+            pathname: `${this.pathname}/${id}`
+          }),
+          properties: options.properties,
+          timeout: options.timeout
+        });
+        return request.execute()
+          .then(response => response.data)
+          .then(data => observer.next(data))
+          .then(() => observer.complete())
+          .catch(error => observer.error(error));
+      } catch (error) {
+        return observer.error(error);
+      }
+    });
+
+    return stream.toPromise();
+  }
+
   /**
    * @private
    */

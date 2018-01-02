@@ -149,9 +149,9 @@ export class SyncStore extends CacheStore {
    * @return  {Observable}                                             Observable.
    */
   count(query, options = {}) {
-    const err = this._ensureValidQuery(query);
-    if (err) {
-      return err;
+    const errPromise = this._ensureValidQuery(query);
+    if (errPromise) {
+      return wrapInObservable(errPromise);
     }
 
     return wrapInObservable((observer) => {

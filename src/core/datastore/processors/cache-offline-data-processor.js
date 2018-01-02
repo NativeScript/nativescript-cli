@@ -119,7 +119,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
           return this._networkRepository.count(collection, query, options);
         })
         .then((networkCount) => {
-          observer.next(networkCount.count);
+          observer.next(networkCount);
         });
     });
   }
@@ -176,6 +176,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
       .then(() => this._syncManager.removeSyncEntitiesForIds(entityIds));
   }
 
+  // TODO: passing the error message as an argument?
   _ensureCountBeforeRead(collection, prefix) {
     return this._syncManager.getSyncItemCount(collection)
       .then((count) => {

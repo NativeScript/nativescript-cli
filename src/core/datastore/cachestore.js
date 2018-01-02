@@ -165,10 +165,11 @@ export class CacheStore extends NetworkStore {
    * @return  {Observable}                                             Observable.
    */
   count(query, options = {}) {
-    const err = this._ensureValidQuery(query);
-    if (err) {
-      return err;
+    const errPromise = this._ensureValidQuery(query);
+    if (errPromise) {
+      return wrapInObservable(errPromise);
     }
+
     const operation = this._buildOperationObject(OperationType.Count, query);
     return this._executeOperation(operation, options);
   }
@@ -401,16 +402,5 @@ export class CacheStore extends NetworkStore {
   clearSync(query, options) {
     // return this.syncManager.clearSync(query, options);
     return this.syncManager.clearSync(this.collection);
-  }
-
-  // protected
-
-  _ensureValidQuery(query) {
-    if (query && !(query instanceof Query)) {
-      return wrapInObservable((observer) => {
-        observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
-      });
-    }
-    return null;
   }
 }

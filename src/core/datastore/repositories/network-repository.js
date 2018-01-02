@@ -48,7 +48,8 @@ export class NetworkRepository extends Repository {
 
   count(collection, query, options) {
     const requestConfig = this._buildRequestConfig(collection, RequestMethod.GET, null, query, null, '_count', null, options);
-    return this._makeHttpRequest(requestConfig);
+    return this._makeHttpRequest(requestConfig)
+      .then(response => response.count);
   }
 
   _processBatch(collection, method, entities, options) {
