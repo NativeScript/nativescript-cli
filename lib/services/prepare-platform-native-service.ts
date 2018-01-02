@@ -26,7 +26,7 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 			await this.cleanProject(config.platform, config.appFilesUpdaterOptions, config.platformData, config.projectData);
 		}
 
-		if (!config.changesInfo || config.changesInfo.changesRequirePrepare) {
+		if (!config.changesInfo || config.changesInfo.changesRequirePrepare || config.appFilesUpdaterOptions.bundle) {
 			this.copyAppResources(config.platformData, config.projectData);
 			await config.platformData.platformProjectService.prepareProject(config.projectData, config.platformSpecificData);
 		}
