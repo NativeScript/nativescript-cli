@@ -490,7 +490,7 @@ interface IAndroidToolsInfo {
 	 * @param {any} options Defines if the warning messages should treated as error.
 	 * @return {boolean} True if there are detected issues, false otherwise.
 	 */
-	validateJavacVersion(installedJavaVersion: string, options?: { showWarningsAsErrors: boolean }): Promise<boolean>;
+	validateJavacVersion(installedJavaVersion: string, options?: { showWarningsAsErrors: boolean }): boolean;
 
 	/**
 	 * Validates if ANDROID_HOME environment variable is set correctly.

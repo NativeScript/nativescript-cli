@@ -104,7 +104,7 @@ class DoctorService implements IDoctorService {
 		}
 
 		const androidToolsIssues = this.$androidToolsInfo.validateInfo();
-		const javaCompilerVersionIssue = await this.$androidToolsInfo.validateJavacVersion(sysInfo.javacVersion);
+		const javaCompilerVersionIssue = this.$androidToolsInfo.validateJavacVersion(sysInfo.javacVersion);
 		const pythonIssues = await this.validatePythonPackages();
 		const doctorResult = result || androidToolsIssues || javaCompilerVersionIssue || pythonIssues;
 

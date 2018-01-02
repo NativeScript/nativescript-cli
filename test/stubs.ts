@@ -532,7 +532,7 @@ export class AndroidToolsInfoStub implements IAndroidToolsInfo {
 		return true;
 	}
 
-	public async validateJavacVersion(installedJavaVersion: string, options?: { showWarningsAsErrors: boolean }): Promise<boolean> {
+	public validateJavacVersion(installedJavaVersion: string, options?: { showWarningsAsErrors: boolean }): boolean {
 		return true;
 	}
 
