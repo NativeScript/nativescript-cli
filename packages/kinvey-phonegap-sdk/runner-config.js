@@ -31,14 +31,15 @@ const runner = new Runner({
         logServer(),
         remove(distPath),
         remove(appRootPath),
-		 runCommand({
+        runCommand({
             command: 'npm',
             args: ['run', 'build'],
             cwd: rootMonoRepoPath
         }),
         runCommand({
             command: 'cordova',
-            args: ['create', appName]
+            args: ['create', appName],
+            cwd: __dirname
         }),
         copy(path.join(__dirname, 'test', 'template'), appPath),
         copy(distPath, appPath),
@@ -53,7 +54,7 @@ const runner = new Runner({
         processTemplateFile(
             path.join(appPath, 'index.template.hbs'),
             () => ({
-                tests: walk(path.join(appName, 'www', 'tests'), {
+                tests: walk(path.join(appPath, 'tests'), {
                     nodir: true
                 }).map(f => `./${path.relative(appPath, f.path)}`),
                 logServerPort
@@ -72,7 +73,7 @@ const runner = new Runner({
         runCommand({
             command: 'cordova',
             args: ['platform', 'add', osType],
-            cwd: appPath
+            cwd: appRootPath
         }),
         ...[
             'https://github.com/apache/cordova-plugin-file.git',
@@ -83,7 +84,7 @@ const runner = new Runner({
             return runCommand({
                 command: 'cordova',
                 args: ['plugin', 'add', '--force', p],
-                cwd: appPath
+                cwd: appRootPath
             });
         }),
         runCommand({
