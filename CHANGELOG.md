@@ -1,7 +1,19 @@
 NativeScript CLI Changelog
 ================
 
+3.4.0 (2017, December 20)
+==
+
+### Fixed
+* [Fixed #3268](https://github.com/NativeScript/nativescript-cli/issues/3268): tns run android - EMFILE: too many open files
+* [Fixed #3202](https://github.com/NativeScript/nativescript-cli/issues/3202): `tns update <version>` does not work
+* [Fixed #3187](https://github.com/NativeScript/nativescript-cli/issues/3187): Android tns debug, crashing when there is a response from server
+* [Fixed #2968](https://github.com/NativeScript/nativescript-cli/issues/2968): Separate prepare of JavaScript from preparation of native code
+* [Fixed #3171](https://github.com/NativeScript/nativescript-cli/issues/3171): Make --chrome the default for tns debug ios
+
 3.3.1 (2017, November 17)
+==
+
 ### Fixed
 * [Fixed #3164](https://github.com/NativeScript/nativescript-cli/issues/3164): `npm run build-*-bundle` gets stuck at nativescript-unit-test-runner hook.
 * [Fixed #3182](https://github.com/NativeScript/nativescript-cli/issues/3182): CLI fails when unable to start Analytics Broker process.
