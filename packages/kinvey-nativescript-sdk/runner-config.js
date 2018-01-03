@@ -42,7 +42,8 @@ const runner = new Runner({
         // }),
         runCommand({
             command: 'tns',
-            args: ['create', appName]
+            args: ['create', appName],
+            cwd: __dirname
         }),
         copy(path.join(__dirname, 'test', 'template'), appPath),
         copy(
@@ -56,7 +57,7 @@ const runner = new Runner({
         processTemplateFile(
             path.join(appPath, 'testConfig.template.hbs'),
             () => ({
-                tests: walk(path.join(appName, 'app', 'tests'), {
+                tests: walk(path.join(appTestsPath), {
                     filter: jsFilesFilter,
                     nodir: true
                 }).map(f => String.raw`./${path.relative(appPath, f.path)}`.replace(/\\/g, '/')),
