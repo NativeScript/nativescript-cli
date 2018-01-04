@@ -726,18 +726,21 @@ describe('CacheStore', () => {
   describe('remove()', () => {
     it('should throw an error if the query argument is not an instance of the Query class', () => {
       const store = new CacheStore(collection);
-      store.remove({})
+      return store.remove({})
+        .then(() => Promise.reject(new Error('This should not happen.')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Invalid query. It must be an instance of the Query class.');
-        })
-        .then(() => {
-          throw new Error('This test should fail.');
         });
     });
 
     it('should return a { count: 0 } when no entities are removed', () => {
       const store = new CacheStore(collection);
+
+      nock(store.client.apiHostname)
+        .delete(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200);
+
       return store.remove()
         .then((result) => {
           expect(result).toEqual({ count: 0 });
@@ -753,23 +756,12 @@ describe('CacheStore', () => {
         .get(`/appdata/${store.client.appKey}/${collection}`)
         .reply(200, [entity1, entity2]);
 
+      nock(store.client.apiHostname)
+        .delete(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200);
+
       return store.pull()
-        .then(() => {
-          nock(store.client.apiHostname)
-            .delete(`/appdata/${store.client.appKey}/${collection}`)
-            .query(true)
-            .reply(200);
-
-          // nock(store.client.apiHostname)
-          //   .delete(`/appdata/${store.client.appKey}/${collection}/${entity1._id}`)
-          //   .reply(200);
-
-          // nock(store.client.apiHostname)
-          //   .delete(`/appdata/${store.client.appKey}/${collection}/${entity2._id}`)
-          //   .reply(200);
-
-          return store.remove();
-        })
+        .then(() => store.remove())
         .then((result) => {
           expect(result).toEqual({ count: 2 });
           const syncStore = new SyncStore(collection);
@@ -827,26 +819,23 @@ describe('CacheStore', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
-      nock(store.client.apiHostname)
+      const pullScope = nock(store.client.apiHostname)
         .get(`/appdata/${store.client.appKey}/${collection}`)
         .reply(200, [entity1, entity2]);
 
+      const deleteScope = nock(store.client.apiHostname)
+        .delete(`/appdata/${store.client.appKey}/${collection}`)
+        .query(true)
+        .reply(500);
+
       return store.pull()
         .then(() => {
+          pullScope.done();
           const query = new Query().equalTo('_id', entity1._id);
-
-          nock(store.client.apiHostname)
-            .delete(`/appdata/${store.client.appKey}/${collection}`)
-            .query(true)
-            .reply(500);
-
-          // nock(store.client.apiHostname)
-          //   .delete(`/appdata/${store.client.appKey}/${collection}/${entity1._id}`)
-          //   .reply(500);
-
           return store.remove(query);
         })
         .then((result) => {
+          deleteScope.done();
           expect(result).toEqual({ count: 0 });
           const syncStore = new SyncStore(collection);
           return syncStore.find().toPromise();
@@ -876,15 +865,7 @@ describe('CacheStore', () => {
         .then(() => {
           nock(store.client.apiHostname)
             .delete(`${store.pathname}`)
-            .query(true)
             .reply(200);
-          // nock(store.client.apiHostname)
-          //   .delete(`${store.pathname}/${entity1._id}`)
-          //   .reply(200);
-
-          // nock(store.client.apiHostname)
-          //   .delete(`${store.pathname}/${entity2._id}`)
-          //   .reply(200);
 
           return store.remove();
         })
@@ -915,19 +896,21 @@ describe('CacheStore', () => {
       const store = new CacheStore(collection);
       const entity = { _id: randomString() };
 
-      nock(store.client.apiHostname)
+      const pullScope = nock(store.client.apiHostname)
         .get(`/appdata/${store.client.appKey}/${collection}`)
         .reply(200, [entity]);
 
+      const deleteScope = nock(store.client.apiHostname)
+        .delete(`/appdata/${store.client.appKey}/${collection}/${entity._id}`)
+        .reply(404);
+
       return store.pull()
         .then(() => {
-          nock(store.client.apiHostname)
-            .delete(`/appdata/${store.client.appKey}/${collection}/${entity._id}`)
-            .reply(404);
-
+          pullScope.done();
           return store.removeById(entity._id);
         })
         .then((result) => {
+          deleteScope.done();
           expect(result).toEqual({ count: 1 });
           const syncStore = new SyncStore(collection);
           const query = new Query().equalTo('_id', entity._id);
@@ -942,19 +925,21 @@ describe('CacheStore', () => {
       const store = new CacheStore(collection);
       const entity = { _id: randomString() };
 
-      nock(store.client.apiHostname)
+      const pullScope = nock(store.client.apiHostname)
         .get(`/appdata/${store.client.appKey}/${collection}`)
         .reply(200, [entity]);
 
+      const deleteScope = nock(store.client.apiHostname)
+        .delete(`/appdata/${store.client.appKey}/${collection}/${entity._id}`)
+        .reply(200, { count: 1 });
+
       return store.pull()
         .then(() => {
-          nock(store.client.apiHostname)
-            .delete(`/appdata/${store.client.appKey}/${collection}/${entity._id}`)
-            .reply(200, { count: 1 });
-
+          pullScope.done();
           return store.removeById(entity._id);
         })
         .then((result) => {
+          deleteScope.done();
           expect(result).toEqual({ count: 1 });
           const syncStore = new SyncStore(collection);
           const query = new Query().equalTo('_id', entity._id);
@@ -965,7 +950,7 @@ describe('CacheStore', () => {
         });
     });
 
-    it('should remove the entity from the cache and sync table', () => {
+    it('should remove the entity from the cache and sync table and not make a request for a local entity', () => {
       const store = new CacheStore(collection);
       const syncStore = new SyncStore(collection);
       const entity = {};

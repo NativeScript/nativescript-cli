@@ -1,7 +1,13 @@
+import { Observable } from 'rxjs/Observable';
+
 export function noop() { }
 
 export function isPromiseLike(obj) {
-  return obj && (typeof obj.then === 'function') && (typeof obj.catch === 'function');
+  return !!obj && (typeof obj.then === 'function') && (typeof obj.catch === 'function');
+}
+
+export function isObservable(obj) {
+  return obj instanceof Observable;
 }
 
 export function wrapInPromise(value) {

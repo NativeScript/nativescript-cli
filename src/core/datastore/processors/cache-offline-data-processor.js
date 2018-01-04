@@ -21,27 +21,39 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
   }
 
   // TODO: think of a better way to do this, or at least remove duplication
-  // override protected method for deletebyid
   _deleteEntityAndHandleOfflineState(collection, entity, options) {
-    return super._deleteEntityAndHandleOfflineState(collection, entity, options)
-      .then((deletedOfflineCount) => {
-        if (isLocalEntity(entity)) {
-          return deletedOfflineCount;
+    if (isLocalEntity(entity)) { // no need for request, just a regular offline delete
+      return super._deleteEntityAndHandleOfflineState(collection, entity, options);
+    }
+
+    let deleteSucceeded;
+    return this._attemptDeleteByIdOverNetwork(collection, entity._id, options)
+      .then((didDelete) => {
+        deleteSucceeded = didDelete;
+        if (deleteSucceeded) {
+          return this._syncManager.removeSyncItemForEntityId(entity._id)
+            .then(() => this._getRepository())
+            .then(repo => repo.deleteById(collection, entity._id, options));
         }
-        return this._deleteEntityOverNetwork(collection, entity, options)
-          .then(() => deletedOfflineCount);
+        return this._syncManager.addDeleteByIdEvent(collection, entity)
+          .then(() => 0);
       });
   }
 
-  _deleteEntitiesAndHandleOfflineState(collection, entities, deleteQuery, options) {
-    return super._deleteEntitiesAndHandleOfflineState(collection, entities, deleteQuery, options)
-      .then((deletedOfflineCount) => {
-        const networkEntities = entities.filter(e => !isLocalEntity(e));
-        if (networkEntities.length) {
-          return this._deleteEntitiesOverNetwork(collection, networkEntities, options)
-            .then(() => deletedOfflineCount);
+  _processDelete(collection, query, options) {
+    let deleteSucceeded;
+    return this._attemptDeleteOverNetwork(collection, query, options)
+      .then((didDelete) => {
+        deleteSucceeded = didDelete;
+        return this._getRepository();
+      })
+      .then(repo => repo.read(collection, query, options))
+      .then((offlineEntities) => {
+        if (deleteSucceeded) {
+          return this._deleteEntitiesOffline(collection, query, offlineEntities, options);
         }
-        return deletedOfflineCount;
+        return this._syncManager.addDeleteEvent(collection, offlineEntities)
+          .then(() => 0);
       });
   }
 
@@ -156,24 +168,35 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
       .then(repo => repo.create(collection, networkEntities));
   }
 
-  _deleteEntityOverNetwork(collection, entity, options) {
-    return this._networkRepository.deleteById(collection, entity._id, options)
-      .then(res => res.count)
-      .catch((err) => {
-        if (err instanceof NotFoundError) {
-          // TODO: is this the behaviour we want?
-          return Promise.resolve(1);
-        }
-        return Promise.reject(err);
-      })
-      .then(() => this._syncManager.removeSyncItemForEntityId(entity._id));
+  _attemptDeleteByIdOverNetwork(collection, entityId, options) {
+    return new Promise((resolve) => {
+      return this._networkRepository.deleteById(collection, entityId, options)
+        .then(() => resolve(true))
+        .catch((err) => {
+          if (err instanceof NotFoundError) {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        });
+    });
   }
 
-  _deleteEntitiesOverNetwork(collection, entities, options) {
-    const entityIds = entities.map(e => e._id);
-    const query = new Query().contains('_id', entityIds);
-    return this._networkRepository.delete(collection, query, options)
-      .then(() => this._syncManager.removeSyncEntitiesForIds(entityIds));
+  _attemptDeleteOverNetwork(collection, query, options) {
+    return new Promise((resolve) => {
+      this._networkRepository.delete(collection, query, options)
+        .then(() => resolve(true))
+        .catch(() => resolve(false)); // ignore the error - this is the current behaviour
+    });
+  }
+
+  _deleteEntitiesOffline(collection, deleteQuery, offlineEntities, options) {
+    return this._getRepository()
+      .then(repo => repo.delete(collection, deleteQuery, options))
+      .then((deletedCount) => {
+        return this._syncManager.removeSyncEntitiesForIds(offlineEntities.map(e => e._id))
+          .then(() => deletedCount);
+      });
   }
 
   // TODO: passing the error message as an argument?

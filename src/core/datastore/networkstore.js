@@ -6,7 +6,7 @@ import { KinveyRequest, AuthType, RequestMethod } from '../request';
 import { KinveyError } from '../errors';
 import { Query } from '../query';
 import { Client } from '../client';
-import { isDefined } from '../utils';
+import { isDefined, isPromiseLike, isObservable } from '../utils';
 import { KinveyObservable, wrapInObservable } from '../observable';
 import { Aggregation } from '../aggregation';
 import { getLiveCollectionManager } from '../live';
@@ -104,16 +104,7 @@ export class NetworkStore {
 
     const operation = this._buildOperationObject(OperationType.Read, query);
     const opPromise = this._executeOperation(operation, options);
-    return wrapInObservable(opPromise);
-  }
-
-  _buildOperationObject(type, query, data, id) {
-    // TODO: op factory?
-    return new Operation(type, this.collection, query, data, id);
-  }
-
-  _executeOperation(operation, options) {
-    return this._processor.process(operation, options);
+    return this._ensureObservable(opPromise);
   }
 
   /**
@@ -128,9 +119,16 @@ export class NetworkStore {
    * @return  {Observable}                                             Observable.
    */
   findById(id, options = {}) {
+    if (!id) {
+      return wrapInObservable((observer) => {
+        observer.next(undefined); // TODO: decide on this behaviour
+        observer.complete();
+      });
+    }
+
     const operation = this._buildOperationObject(OperationType.ReadById, null, null, id);
     const entityPromise = this._executeOperation(operation, options);
-    return wrapInObservable(entityPromise);
+    return this._ensureObservable(entityPromise);
   }
 
   /**
@@ -196,7 +194,7 @@ export class NetworkStore {
 
     const operation = this._buildOperationObject(OperationType.Count, query);
     const opPromise = this._executeOperation(operation, options);
-    return wrapInObservable(opPromise);
+    return this._ensureObservable(opPromise);
   }
 
   /**
@@ -210,11 +208,10 @@ export class NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   create(entity, options = {}) {
-    // TODO: decide what to do about this old code
-    //   if (isDefined(entity) === false) {
-    //     observer.next(null);
-    //     return observer.complete();
-    //   }
+    // TODO: decide on this behaviour
+    if (!isDefined(entity)) {
+      return Promise.resolve(null);
+    }
 
     if (isArray(entity)) {
       return Promise.reject(new KinveyError(
@@ -248,12 +245,13 @@ export class NetworkStore {
     }
 
     if (!isDefined(entity._id)) {
-      const err = new KinveyError('Unable to update entity.', 'Entity must contain an _id to be updated.');
-      return Promise.reject(err);
+      const errMsg = 'The entity provided does not contain an _id. An _id is required to update the entity.';
+      return Promise.reject(new KinveyError(errMsg, entity));
     }
 
     const operation = this._buildOperationObject(OperationType.Update, null, entity);
-    return this._executeOperation(operation, options);
+    const opPromise = this._executeOperation(operation, options);
+    return this._ensurePromise(opPromise);
   }
 
   /**
@@ -294,7 +292,10 @@ export class NetworkStore {
     }
 
     const operation = this._buildOperationObject(OperationType.Delete, query);
-    return this._executeOperation(operation, options);
+    const opPromise = this._executeOperation(operation, options)
+      .then(count => ({ count }));
+
+    return this._ensurePromise(opPromise);
   }
 
   /**
@@ -308,12 +309,17 @@ export class NetworkStore {
    * @return  {Observable}                                             Observable.
    */
   removeById(id, options = {}) {
+    // TODO: this should be the behaviour, I think
+    // if (!id) {
+    //   return Promise.reject(new KinveyError('Invalid or missing id'));
+    // }
     if (!isDefined(id)) {
-      return Promise.resolve(undefined); // TODO: decide on this
+      return Promise.resolve(undefined);
     }
 
     const operation = this._buildOperationObject(OperationType.DeleteById, null, null, id);
-    return this._executeOperation(operation, options);
+    return this._executeOperation(operation, options)
+      .then(count => ({ count }));
   }
 
   /**
@@ -339,5 +345,32 @@ export class NetworkStore {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Query class.'));
     }
     return null;
+  }
+
+  _buildOperationObject(type, query, data, id) {
+    // TODO: op factory?
+    return new Operation(type, this.collection, query, data, id);
+  }
+
+  _executeOperation(operation, options) {
+    return this._processor.process(operation, options);
+  }
+
+  // private
+
+  _ensureObservable(promiseOrObservable) {
+    if (isPromiseLike(promiseOrObservable)) {
+      return wrapInObservable(promiseOrObservable);
+    } else if (isObservable(promiseOrObservable)) {
+      return promiseOrObservable;
+    }
+    throw new KinveyError('Unexpected result type.'); // should not happen
+  }
+
+  _ensurePromise(object) {
+    if (isPromiseLike(object)) {
+      return object;
+    }
+    throw new KinveyError('Unexpected result type.'); // should not happen
   }
 }

@@ -38,12 +38,14 @@ export class NetworkRepository extends Repository {
 
   deleteById(collection, entityId, options) {
     const requestConfig = this._buildRequestConfig(collection, RequestMethod.DELETE, null, null, entityId, null, options);
-    return this._makeHttpRequest(requestConfig);
+    return this._makeHttpRequest(requestConfig)
+      .then(response => response.count);
   }
 
   delete(collection, query, options) {
     const requestConfig = this._buildRequestConfig(collection, RequestMethod.DELETE, null, query, null, null, options);
-    return this._makeHttpRequest(requestConfig);
+    return this._makeHttpRequest(requestConfig)
+      .then(response => response.count);
   }
 
   count(collection, query, options) {

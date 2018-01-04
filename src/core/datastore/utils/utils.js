@@ -1,4 +1,3 @@
-import { Metadata } from '../../metadata';
 import { Client } from '../../client';
 
 export function buildCollectionUrl(collectionName, id, restAction) {
@@ -33,6 +32,6 @@ export function isEmpty(object) {
 }
 
 export function isLocalEntity(entity) {
-  const metadata = new Metadata(entity);
-  return metadata.isLocal();
+  // not using Metadata class because it mutates the entity
+  return !!entity && !!entity._kmd && entity._kmd.local === true;
 }

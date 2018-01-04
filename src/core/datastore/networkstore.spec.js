@@ -338,7 +338,8 @@ describe('NetworkStore', () => {
       return store.update(entity)
         .catch((error) => {
           expect(error).toBeA(KinveyError);
-          expect(error.message).toEqual('Unable to update entity.');
+          const errMsg = 'The entity provided does not contain an _id. An _id is required to update the entity.';
+          expect(error.message).toEqual(errMsg);
         });
     });
 
