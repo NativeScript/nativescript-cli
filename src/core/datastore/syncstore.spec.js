@@ -58,7 +58,7 @@ describe('SyncStore', () => {
       });
   });
 
-  describe.skip('pathname', () => {
+  describe('pathname', () => {
     it(`should equal /appdata/<appkey>/${collection}`, () => {
       const store = new SyncStore(collection);
       expect(store.pathname).toEqual(`/appdata/${client.appKey}/${collection}`);
@@ -68,20 +68,6 @@ describe('SyncStore', () => {
       expect(() => {
         const store = new SyncStore(collection);
         store.pathname = `/tests/${collection}`;
-      }).toThrow(TypeError, /which has only a getter/);
-    });
-  });
-
-  describe.skip('syncAutomatically', () => {
-    it('should be true', () => {
-      const store = new SyncStore(collection);
-      expect(store.syncAutomatically).toEqual(false);
-    });
-
-    it('should not be able to be changed', () => {
-      expect(() => {
-        const store = new SyncStore(collection);
-        store.syncAutomatically = true;
       }).toThrow(TypeError, /which has only a getter/);
     });
   });
@@ -352,6 +338,7 @@ describe('SyncStore', () => {
       const entity2 = {};
 
       return store.create([entity1, entity2])
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Unable to create an array of entities.');
@@ -411,6 +398,7 @@ describe('SyncStore', () => {
       const entity2 = { _id: randomString() };
 
       return store.update([entity1, entity2])
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Unable to update an array of entities.');
@@ -422,6 +410,7 @@ describe('SyncStore', () => {
       const entity = {};
 
       return store.update(entity)
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('The entity provided does not contain an _id. An _id is required to update the entity.');
@@ -491,13 +480,13 @@ describe('SyncStore', () => {
   describe('remove()', () => {
     it('should throw an error if the query argument is not an instance of the Query class', () => {
       const store = new SyncStore(collection);
-      store.remove({})
+      return store.remove({})
+        .then(() => {
+          throw new Error('This test should fail.');
+        })
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Invalid query. It must be an instance of the Query class.');
-        })
-        .then(() => {
-          throw new Error('This test should fail.');
         });
     });
 

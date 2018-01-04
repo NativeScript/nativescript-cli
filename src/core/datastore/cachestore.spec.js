@@ -73,20 +73,6 @@ describe('CacheStore', () => {
     });
   });
 
-  describe('syncAutomatically', () => {
-    it('should be true', () => {
-      const store = new CacheStore(collection);
-      expect(store.syncAutomatically).toEqual(true);
-    });
-
-    it('should not be able to be changed', () => {
-      expect(() => {
-        const store = new CacheStore(collection);
-        store.syncAutomatically = false;
-      }).toThrow(TypeError, /which has only a getter/);
-    });
-  });
-
   describe('find()', () => {
     it('should throw an error if the query argument is not an instance of the Query class', (done) => {
       const store = new CacheStore(collection);
@@ -576,6 +562,7 @@ describe('CacheStore', () => {
       const entity2 = {};
 
       return store.create([entity1, entity2])
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Unable to create an array of entities.');
@@ -649,6 +636,7 @@ describe('CacheStore', () => {
       const entity2 = { _id: randomString() };
 
       return store.update([entity1, entity2])
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Unable to update an array of entities.');
@@ -660,6 +648,7 @@ describe('CacheStore', () => {
       const entity = {};
 
       return store.update(entity)
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('The entity provided does not contain an _id. An _id is required to update the entity.');

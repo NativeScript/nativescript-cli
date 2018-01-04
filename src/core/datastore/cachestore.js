@@ -33,10 +33,6 @@ export class CacheStore extends NetworkStore {
     this.syncManager = syncManagerProvider.getSyncManager();
   }
 
-  get syncAutomatically() {
-    return true;
-  }
-
   /**
    * Group entities.
    *

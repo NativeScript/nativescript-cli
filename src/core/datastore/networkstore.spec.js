@@ -51,7 +51,7 @@ describe('NetworkStore', () => {
     return User.login(username, password);
   });
 
-  describe.skip('pathname', () => {
+  describe('pathname', () => {
     it(`should equal /appdata/<appkey>/${collection}`, () => {
       const store = new NetworkStore(collection);
       expect(store.pathname).toEqual(`/appdata/${store.client.appKey}/${collection}`);
@@ -234,6 +234,7 @@ describe('NetworkStore', () => {
       };
 
       return store.create([entity1, entity2])
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Unable to create an array of entities.');
@@ -321,6 +322,7 @@ describe('NetworkStore', () => {
       };
 
       return store.update([entity1, entity2])
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Unable to update an array of entities.');
@@ -336,6 +338,7 @@ describe('NetworkStore', () => {
       };
 
       return store.update(entity)
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           const errMsg = 'The entity provided does not contain an _id. An _id is required to update the entity.';
@@ -403,6 +406,7 @@ describe('NetworkStore', () => {
     it('should throw an error for an invalid query', () => {
       const store = new NetworkStore(collection);
       return store.remove({})
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Invalid query. It must be an instance of the Query class.');
@@ -416,6 +420,7 @@ describe('NetworkStore', () => {
 
       const store = new NetworkStore(collection);
       return store.remove()
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(ServerError);
           expect(error.message).toEqual('An error occurred on the server.');
@@ -447,6 +452,7 @@ describe('NetworkStore', () => {
         .reply(404);
 
       return store.removeById(_id)
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(NotFoundError);
         });
