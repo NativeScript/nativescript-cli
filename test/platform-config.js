@@ -17,8 +17,3 @@ switch (program.platform) {
     runPipeline(program.os);
     break;
 }
-
-
-
-
-
