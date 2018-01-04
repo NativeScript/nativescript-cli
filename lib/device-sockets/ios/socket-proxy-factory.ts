@@ -85,6 +85,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 
 		const server = new ws.Server(<any>{
 			port: localPort,
+			host: "localhost",
 			verifyClient: async (info: any, callback: Function) => {
 				this.$logger.info("Frontend client connected.");
 				let _socket;
