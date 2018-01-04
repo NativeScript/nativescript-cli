@@ -102,6 +102,7 @@ export class NetworkStore {
       return wrapInObservable(errPromise);
     }
 
+    options.useDeltaFetch = options.useDeltaFetch || this.useDeltaFetch;
     const operation = this._buildOperationObject(OperationType.Read, query);
     const opPromise = this._executeOperation(operation, options);
     return this._ensureObservable(opPromise);

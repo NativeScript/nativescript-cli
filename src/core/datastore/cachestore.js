@@ -134,6 +134,11 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   clear(query, options = {}) {
+    const errPromise = this._ensureValidQuery(query);
+    if (errPromise) {
+      return errPromise;
+    }
+
     const operation = this._buildOperationObject(OperationType.Clear, query);
     return this._executeOperation(operation, options)
       .then(count => ({ count }));
@@ -187,19 +192,18 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   pull(query, options = {}) {
-    // options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
-    // const operation = this._buildOperationObject(OperationType.Pull, query);
-    // return this._executeOperation(operation, options);
+    options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
     return this.syncManager.getSyncItemCount(this.collection)
       .then((count) => {
         if (count > 0) {
+          // TODO: I think this should happen, but keeping current behaviour
           // const msg = `There are ${count} entities awaiting push. Please push before you attempt to pull`;
-          // const err = new KinveyError(msg);
-          // return Promise.reject(err);
+          // return Promise.reject(new KinveyError(msg));
           return this.syncManager.push(this.collection, query);
         }
-        return this.syncManager.pull(this.collection, query, options);
-      });
+        return Promise.resolve();
+      })
+      .then(() => this.syncManager.pull(this.collection, query, options));
   }
 
   /**
