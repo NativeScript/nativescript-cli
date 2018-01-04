@@ -11,7 +11,6 @@ NativeScript CLI Changelog
 * [Fixed #3268](https://github.com/NativeScript/nativescript-cli/issues/3268): tns run android - EMFILE: too many open files
 * [Fixed #3202](https://github.com/NativeScript/nativescript-cli/issues/3202): `tns update <version>` does not work
 * [Fixed #3187](https://github.com/NativeScript/nativescript-cli/issues/3187): Android tns debug, crashing when there is a response from server
-* [Fixed #2968](https://github.com/NativeScript/nativescript-cli/issues/2968): Separate prepare of JavaScript from preparation of native code
 
 3.3.1 (2017, November 17)
 ==
