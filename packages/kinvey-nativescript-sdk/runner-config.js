@@ -1,7 +1,6 @@
 const path = require('path');
 const walk = require('klaw-sync');
 const fs = require('fs-extra');
-const osType = process.argv[2] || 'android';
 
 const {
     Runner,
@@ -29,6 +28,8 @@ const distPath = path.join(__dirname, 'dist');
 const jsFilesFilter = item => path.extname(item.path) === '.js';
 
 let logServerPort;
+
+function runPipeline(osName) {
 
 const runner = new Runner({
     pipeline: [
@@ -86,7 +87,7 @@ const runner = new Runner({
         }),
         runCommand({
             command: 'tns',
-            args: ['run', osType, '--justlaunch'],
+            args: ['run', osName, '--justlaunch'],
             cwd: appRootPath
         })
     ]
@@ -95,3 +96,6 @@ const runner = new Runner({
 runner.on('log.start', port => (logServerPort = port));
 
 runner.run().then(() => console.log('done')).catch(err => console.log(err));
+}
+
+module.exports = runPipeline;
