@@ -9,7 +9,8 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		private $options: IOptions,
 		private $settingsService: ISettingsService,
 		private $fs: IFileSystem,
-		private $staticConfig: IStaticConfig) {
+		private $staticConfig: IStaticConfig,
+		private $projectDataService: IProjectDataService) {
 	}
 
 	public async getLatestVersion(packageName: string): Promise<string> {
@@ -20,23 +21,21 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		return await this.getVersion(packageName, constants.PackageVersion.NEXT);
 	}
 
-	public async getLatestCompatibleVersion(packageName: string): Promise<string> {
-		const configVersion = this.$staticConfig.version;
-		const isPreReleaseVersion = semver.prerelease(configVersion) !== null;
-		let cliVersionRange = `~${semver.major(configVersion)}.${semver.minor(configVersion)}.0`;
-		if (isPreReleaseVersion) {
-			// if the user has some 0-19 pre-release version, include pre-release versions in the search query.
-			cliVersionRange = `~${configVersion}`;
-		}
-
+	public async getLatestCompatibleVersion(packageName: string, referenceVersion?: string): Promise<string> {
+		referenceVersion = referenceVersion || this.$staticConfig.version;
+		const isPreReleaseVersion = semver.prerelease(referenceVersion) !== null;
+		// if the user has some v.v.v-prerelease-xx.xx pre-release version, include pre-release versions in the search query.
+		const compatibleVersionRange = isPreReleaseVersion
+			? `~${referenceVersion}`
+			: `~${semver.major(referenceVersion)}.${semver.minor(referenceVersion)}.0`;
 		const latestVersion = await this.getLatestVersion(packageName);
-		if (semver.satisfies(latestVersion, cliVersionRange)) {
+		if (semver.satisfies(latestVersion, compatibleVersionRange)) {
 			return latestVersion;
 		}
 
 		const data = await this.$npm.view(packageName, { "versions": true });
 
-		const maxSatisfying = semver.maxSatisfying(data, cliVersionRange);
+		const maxSatisfying = semver.maxSatisfying(data, compatibleVersionRange);
 		return maxSatisfying || latestVersion;
 	}
 
@@ -59,21 +58,32 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		const inspectorPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME, inspectorNpmPackageName);
 
 		// local installation takes precedence over cache
-		if (!this.inspectorAlreadyInstalled(inspectorPath)) {
-			const cachePath = path.join(this.$settingsService.getProfileDir(), constants.INSPECTOR_CACHE_DIRNAME);
-			this.prepareCacheDir(cachePath);
-			const pathToPackageInCache = path.join(cachePath, constants.NODE_MODULES_FOLDER_NAME, inspectorNpmPackageName);
-
-			if (!this.$fs.exists(pathToPackageInCache)) {
-				const version = await this.getLatestCompatibleVersion(inspectorNpmPackageName);
-				await this.$childProcess.exec(`npm install ${inspectorNpmPackageName}@${version} --prefix ${cachePath}`);
-			}
-
-			this.$logger.out("Using inspector from cache.");
-			return pathToPackageInCache;
+		if (this.inspectorAlreadyInstalled(inspectorPath)) {
+			return inspectorPath;
 		}
 
-		return inspectorPath;
+		const cachePath = path.join(this.$settingsService.getProfileDir(), constants.INSPECTOR_CACHE_DIRNAME);
+		this.prepareCacheDir(cachePath);
+		const pathToPackageInCache = path.join(cachePath, constants.NODE_MODULES_FOLDER_NAME, inspectorNpmPackageName);
+		const iOSFrameworkNSValue = this.$projectDataService.getNSValue(projectDir, constants.TNS_IOS_RUNTIME_NAME);
+		const version = await this.getLatestCompatibleVersion(inspectorNpmPackageName, iOSFrameworkNSValue.version);
+		let shouldInstall = !this.$fs.exists(pathToPackageInCache);
+
+		if (!shouldInstall) {
+			try {
+				const installedVersion = this.$fs.readJson(path.join(pathToPackageInCache, constants.PACKAGE_JSON_FILE_NAME)).version;
+				shouldInstall = version !== installedVersion;
+			} catch (err) {
+				shouldInstall = true;
+			}
+		}
+
+		if (shouldInstall) {
+			await this.$childProcess.exec(`npm install ${inspectorNpmPackageName}@${version} --prefix ${cachePath}`);
+		}
+
+		this.$logger.out("Using inspector from cache.");
+		return pathToPackageInCache;
 	}
 
 	private prepareCacheDir(cacheDirName: string): void {
