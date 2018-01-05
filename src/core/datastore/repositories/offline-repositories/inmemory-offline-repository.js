@@ -104,53 +104,55 @@ export class InmemoryOfflineRepository extends OfflineRepository {
   }
 
   read(collection, query) {
-    return this._enqueueCrudOperation(collection, () => {
-      return this._readAll(collection)
-        .then((allEntities) => {
-          if (query) {
-            return applyQueryToDataset(allEntities, query);
-          }
-          return allEntities;
-        });
-    });
+    return this._readAll(collection)
+      .then((allEntities) => {
+        if (query) {
+          return applyQueryToDataset(allEntities, query);
+        }
+        return allEntities;
+      });
   }
 
   readById(collection, id) {
-    return this._enqueueCrudOperation(collection, () => {
-      return this._readAll(collection)
-        .then((allEntities) => {
-          const entity = allEntities.find(e => e._id === id);
-          if (!entity) {
-            return Promise.reject(new NotFoundError('Not found'));
-          }
-          return entity;
-        });
-    });
+    return this._readAll(collection)
+      .then((allEntities) => {
+        const entity = allEntities.find(e => e._id === id);
+        if (!entity) {
+          const errMsg = `An entity with id ${id} was not found in the collection "${collection}"`;
+          return Promise.reject(new NotFoundError(errMsg));
+        }
+        return entity;
+      });
   }
 
   count(collection, query) {
-    return this._enqueueCrudOperation(collection, () => {
-      return this._readAll(collection)
-        .then(allEntities => applyQueryToDataset(allEntities, query).length);
-    });
+    return this._readAll(collection)
+      .then(allEntities => applyQueryToDataset(allEntities, query).length);
   }
 
+  // TODO: this is upsert. it should be an option
+  // also, currently one doesn't know if they created or updated
   update(collection, entities) {
     return this._enqueueCrudOperation(collection, () => {
-      const updateEntitiesById = keyBy(ensureArray(entities), '_id');
+      const entitiesArray = ensureArray(entities);
+      const updateEntitiesById = keyBy(entitiesArray, '_id');
+      let unprocessedEntitiesCount = entitiesArray.length;
       return this._readAll(collection)
         .then((allEntities) => {
           allEntities.forEach((entity, index) => {
-            if (updateEntitiesById[entity._id]) {
+            if (unprocessedEntitiesCount > 0 && updateEntitiesById[entity._id]) {
               allEntities[index] = updateEntitiesById[entity._id];
               delete updateEntitiesById[entity._id];
+              unprocessedEntitiesCount -= 1;
             }
           });
 
           // the upsert part
-          Object.keys(updateEntitiesById).forEach((entityId) => {
-            allEntities.push(updateEntitiesById[entityId]);
-          });
+          if (unprocessedEntitiesCount > 0) {
+            Object.keys(updateEntitiesById).forEach((entityId) => {
+              allEntities.push(updateEntitiesById[entityId]);
+            });
+          }
 
           return this._saveAll(collection, allEntities)
             .then(() => entities);

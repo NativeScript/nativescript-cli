@@ -19,7 +19,6 @@ export class KeyValuePersister {
 
     return this._readFromPersistance(key)
       .then((entities) => {
-        entities = entities || [];
         if (this._cacheEnabled) {
           _cache[key] = entities;
         }
