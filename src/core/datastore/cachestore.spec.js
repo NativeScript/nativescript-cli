@@ -783,10 +783,6 @@ describe('CacheStore', () => {
             .query(true)
             .reply(200);
 
-          // nock(store.client.apiHostname)
-          //   .delete(`/appdata/${store.client.appKey}/${collection}/${entity1._id}`)
-          //   .reply(200);
-
           return store.remove(query);
         })
         .then((result) => {
