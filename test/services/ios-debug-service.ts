@@ -48,6 +48,10 @@ const createTestInjector = (): IInjector => {
 		on: (event: string | symbol, listener: Function): any => undefined
 	});
 
+	testInjector.register("net", {
+		getAvailablePortInRange: async (startPort: number, endPort?: number): Promise<number> => 41000
+	});
+
 	return testInjector;
 };
 
