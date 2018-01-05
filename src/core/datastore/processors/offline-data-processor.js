@@ -3,7 +3,7 @@ import { ensureArray, isDefined } from '../../utils';
 import { OperationType } from '../operations';
 import { repositoryProvider } from '../repositories';
 import { DataProcessor } from './data-processor';
-import { generateEntityId } from '../utils';
+import { generateEntityId, isEmpty } from '../utils';
 
 // imported for typings
 // import { SyncManager } from '../sync';
@@ -40,7 +40,7 @@ export class OfflineDataProcessor extends DataProcessor {
         if (!deletedCount) {
           return deletedCount;
         }
-        return this._syncManager.addDeleteByIdEvent(collection, entity)
+        return this._syncManager.addDeleteEvent(collection, entity)
           .then(() => deletedCount);
       });
   }
@@ -71,6 +71,9 @@ export class OfflineDataProcessor extends DataProcessor {
     return this._getRepository()
       .then(repo => repo.read(collection, query, options))
       .then((entities) => {
+        if (isEmpty(entities)) {
+          return Promise.resolve(0);
+        }
         return this._deleteEntitiesAndHandleOfflineState(collection, entities, query, options);
       });
   }

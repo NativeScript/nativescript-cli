@@ -4,7 +4,7 @@ import { KinveyError, NotFoundError } from '../../errors';
 import { OfflineDataProcessor } from './offline-data-processor';
 import { ensureArray } from '../../utils';
 import { wrapInObservable } from '../../observable';
-import { isLocalEntity, isNotEmpty } from '../utils';
+import { isLocalEntity, isNotEmpty, isEmpty } from '../utils';
 
 // imported for type info
 // import { NetworkRepository } from '../repositories';
@@ -35,7 +35,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
             .then(() => this._getRepository())
             .then(repo => repo.deleteById(collection, entity._id, options));
         }
-        return this._syncManager.addDeleteByIdEvent(collection, entity)
+        return this._syncManager.addDeleteEvent(collection, entity)
           .then(() => 0);
       });
   }
@@ -49,6 +49,9 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
       })
       .then(repo => repo.read(collection, query, options))
       .then((offlineEntities) => {
+        if (isEmpty(offlineEntities)) {
+          return 0;
+        }
         if (deleteSucceeded) {
           return this._deleteEntitiesOffline(collection, query, offlineEntities, options);
         }

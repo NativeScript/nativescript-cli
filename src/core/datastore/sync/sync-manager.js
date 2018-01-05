@@ -1,15 +1,14 @@
 import clone from 'lodash/clone';
-
 import { KinveyError, NotFoundError, SyncError } from '../../errors';
 
-import { PromiseQueue } from '../../utils';
+import { PromiseQueue, ensureArray } from '../../utils';
 import { SyncOperation } from './sync-operation';
 import { syncBatchSize } from './utils';
 import { isEmpty } from '../utils';
 import { repositoryProvider } from '../repositories';
 
 // imported for typings
-// import { SyncStateManager } from './sync-state-manager';
+import { SyncStateManager } from './sync-state-manager';
 
 const pushTrackingByCollection = {};
 
@@ -73,6 +72,15 @@ export class SyncManager {
     return this._syncStateManager.getSyncItemCount(collection);
   }
 
+  getSyncItemCountByEntityQuery(collection, query) {
+    return this._getOfflineRepo()
+      .then(repo => repo.read(collection, query))
+      .then((entities) => {
+        const entityIds = entities.map(e => e._id);
+        return this._syncStateManager.getSyncItemCount(collection, entityIds);
+      });
+  }
+
   getSyncEntities(collection, query) {
     // TODO: this only returns nondeleted entities - pending fix for MLIBZ-2177
     return this._getOfflineRepo()
@@ -102,19 +110,15 @@ export class SyncManager {
 
   // for syncstatemanager
   addCreateEvent(collection, createdItems) {
-    return this._syncStateManager.addCreateEvent(collection, createdItems);
+    return this._addEvent(collection, createdItems, SyncOperation.Create);
   }
 
-  addDeleteEvent(collection, entities) {
-    return this._syncStateManager.addDeleteEvent(collection, entities);
+  addDeleteEvent(collection, deletedEntities) {
+    return this._addEvent(collection, deletedEntities, SyncOperation.Delete);
   }
 
-  addDeleteByIdEvent(collection, deletedEntity) {
-    return this._syncStateManager.addDeleteByIdEvent(collection, deletedEntity);
-  }
-
-  addUpdateEvent(collection, updatedItems) {
-    return this._syncStateManager.addUpdateEvent(collection, updatedItems);
+  addUpdateEvent(collection, updatedEntities) {
+    return this._addEvent(collection, updatedEntities, SyncOperation.Update);
   }
 
   removeSyncItemForEntityId(entityId) {
@@ -194,10 +198,10 @@ export class SyncManager {
     return this._getOfflineRepo()
       .then(repo => repo.readById(collection, entityId))
       .catch((err) => {
-        if (!(err instanceof NotFoundError)) {
-          return Promise.reject(err);
+        if (err instanceof NotFoundError) {
+          return null;
         }
-        return null;
+        return Promise.reject(err);
       })
       .then((offlineEntity) => {
         entity = offlineEntity;
@@ -301,5 +305,42 @@ export class SyncManager {
     return this._getOfflineRepo()
       .then(repo => repo.read(collection, query))
       .then(entities => entities.map(e => e._id));
+  }
+
+  _addEvent(collection, entities, syncOp) {
+    const validationError = this._validateCrudEventEntities(ensureArray(entities));
+
+    if (validationError) {
+      return validationError;
+    }
+
+    return this._callStateManager(collection, entities, syncOp)
+      .then(() => entities);
+  }
+
+  _validateCrudEventEntities(entities) {
+    if (!entities || isEmpty(entities)) {
+      return Promise.reject(new SyncError('Invalid or missing entity/entities array.'));
+    }
+
+    const entityWithNoId = ensureArray(entities).find(e => !e._id);
+    if (entityWithNoId) {
+      const errMsg = 'An entity is missing an _id. All entities must have an _id in order to be added to the sync table.';
+      return Promise.reject(new SyncError(errMsg, entityWithNoId));
+    }
+    return null;
+  }
+
+  _callStateManager(collection, entities, syncOp) {
+    switch (syncOp) {
+      case SyncOperation.Create:
+        return this._syncStateManager.addCreateEvent(collection, entities);
+      case SyncOperation.Update:
+        return this._syncStateManager.addUpdateEvent(collection, entities);
+      case SyncOperation.Delete:
+        return this._syncStateManager.addDeleteEvent(collection, entities);
+      default:
+        return Promise.reject(new SyncError('Invalid sync event name'));
+    }
   }
 }

@@ -1,3 +1,5 @@
+import _isEmpty from 'lodash/isEmpty';
+
 import { Client } from '../../client';
 
 export function buildCollectionUrl(collectionName, id, restAction) {
@@ -24,11 +26,11 @@ export function generateEntityId(length = 24) {
 }
 
 export function isNotEmpty(object) {
-  return !!object && (object.length > 0 || Object.keys(object).length > 0);
+  return !_isEmpty(object);
 }
 
 export function isEmpty(object) {
-  return !isNotEmpty(object);
+  return _isEmpty(object);
 }
 
 export function isLocalEntity(entity) {

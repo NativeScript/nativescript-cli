@@ -13,12 +13,6 @@ export function groupBy(array, propOrPredicate) {
   }, {});
 }
 
-export const CrudOps = {
-  Create: 'create',
-  Update: 'update',
-  Delete: 'delete'
-};
-
 // TODO: this exists in... datastore?
 const syncOpToPushOpMap = {
   [RequestMethod.POST]: 'create',

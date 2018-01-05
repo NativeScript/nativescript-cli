@@ -1,12 +1,13 @@
 import clone from 'lodash/clone';
 
 import { Query } from '../../query';
+import { SyncError } from '../../errors';
 
 import { SyncOperation } from '../sync';
 import { repositoryProvider } from '../repositories';
 import { syncCollectionName, buildSyncItem } from './utils';
 import { ensureArray } from '../../utils';
-import { isNotEmpty, isLocalEntity } from '../utils';
+import { isNotEmpty, isEmpty, isLocalEntity } from '../utils';
 
 // imported for typings
 // import { OfflineRepository } from '../repositories';
@@ -28,13 +29,6 @@ export class SyncStateManager {
       .then(repo => repo.delete(syncCollectionName, query));
   }
 
-  _getSyncItemByentityId(entityId) {
-    const query = new Query().equalTo('entityId', entityId);
-    return this._getRepository()
-      .then(repo => repo.read(syncCollectionName, query))
-      .then(items => items[0]); // assuming one per entity
-  }
-
   _getSyncItemsByEntityIds(entityIds) {
     const query = new Query().contains('entityId', entityIds);
     return this._getRepository()
@@ -47,24 +41,12 @@ export class SyncStateManager {
     return copy;
   }
 
-  // TODO: should we keep something else from original sync item, other than the _id?
-  // should we just delete and recreate the item - what types of data loss can occur?
-  _upsertSyncItem(newSyncItem) {
-    // TODO: repo.update() is now an upsert - can we use it?
-    return this._getSyncItemByentityId(newSyncItem.entityId)
-      .then((originalSyncItem) => {
-        const repoPromise = this._getRepository();
-        if (originalSyncItem) {
-          const item = this._getUpdatedSyncItem(newSyncItem, originalSyncItem);
-          return repoPromise.then(repo => repo.update(syncCollectionName, item));
-        }
-        return repoPromise.then(repo => repo.create(syncCollectionName, newSyncItem));
-      });
-  }
-
-  // entityIds are the ids of entities new sync items pertain to - optimization :))
-  // TODO: maybe remove entityIds param, or make it optional
+  // entityIds are the ids of entities new sync items pertain to - optional optimization :))
+  // TODO: should we keep anything from the original sync item?
   _upsertSyncItems(newSyncItems, entityIds) {
+    if (isEmpty(entityIds)) {
+      entityIds = newSyncItems.map(i => i.entityId);
+    }
     const delQuery = new Query().contains('entityId', entityIds);
     return this._getRepository()
       .then(repo => repo.delete(syncCollectionName, delQuery).then(() => repo))
@@ -80,24 +62,16 @@ export class SyncStateManager {
   }
 
   addCreateEvent(collection, entities) {
-    entities = Array.isArray(entities) ? entities : [entities];
-    const syncItems = entities.map(e => buildSyncItem(collection, SyncOperation.Create, e._id));
+    const syncItems = ensureArray(entities)
+      .map(e => buildSyncItem(collection, SyncOperation.Create, e._id));
     return this._getRepository()
       .then(repo => repo.create(syncCollectionName, syncItems));
   }
 
-  addDeleteByIdEvent(collection, deletedEntity) {
-    if (isLocalEntity(deletedEntity)) {
-      return this.removeSyncItemForEntityId(deletedEntity._id);
-    }
-
-    const syncItem = buildSyncItem(collection, SyncOperation.Delete, deletedEntity._id);
-    return this._upsertSyncItem(syncItem);
-  }
-
-  addUpdateEvent(collection, entity) {
-    const syncItem = buildSyncItem(collection, SyncOperation.Update, entity._id);
-    return this._upsertSyncItem(syncItem);
+  addUpdateEvent(collection, entities) {
+    const syncItems = ensureArray(entities)
+      .map(e => buildSyncItem(collection, SyncOperation.Update, e._id));
+    return this._upsertSyncItems(syncItems);
   }
 
   addDeleteEvent(collection, entities) {
@@ -105,7 +79,7 @@ export class SyncStateManager {
     const syncItems = [];
     const syncItemEntityIds = [];
 
-    entities.forEach((entity) => {
+    ensureArray(entities).forEach((entity) => {
       if (isLocalEntity(entity)) {
         localEntityIds.push(entity._id);
       } else {
@@ -116,7 +90,7 @@ export class SyncStateManager {
     });
 
     const query = new Query().contains('entityId', localEntityIds);
-    const delPrm = this._removeSyncItems(query);
+    const delPrm = this._removeSyncItems(query); // TODO: perhaps this logic shouldn't be here - maybe in processor
     const upsertPrm = this._upsertSyncItems(syncItems, syncItemEntityIds);
     return Promise.all([delPrm, upsertPrm]);
   }
@@ -129,10 +103,7 @@ export class SyncStateManager {
   }
 
   getSyncItemCount(collection, onlyTheseIds) {
-    const query = new Query().equalTo('collection', collection);
-    if (isNotEmpty(onlyTheseIds)) {
-      query.contains('entityId', onlyTheseIds);
-    }
+    const query = this._getCollectionFilter(collection, onlyTheseIds);
     return this._getRepository()
       .then(repo => repo.count(syncCollectionName, query));
   }
