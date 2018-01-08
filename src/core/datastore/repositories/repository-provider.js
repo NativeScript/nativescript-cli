@@ -3,7 +3,7 @@ import { InmemoryOfflineRepository } from './offline-repositories';
 import { NetworkRepository } from './network-repository';
 import { storageType } from './storage-type';
 import { persisterProvider } from '../persisters';
-import { ensureArray } from '../../utils';
+import { ensureArray, wrapInPromise } from '../../utils';
 import { InmemoryCrudQueue } from '../utils';
 
 const defaultConstructorName = 'default';
@@ -33,7 +33,7 @@ function getOfflineRepository() {
   const repoPrecendence = ensureArray(getRepoType() || defaultConstructorName);
   const firstSupportedStorage = repoPrecendence.find(storageType => !!supportedStorages[storageType]);
   const repoBuilder = supportedStorages[firstSupportedStorage];
-  return repoBuilder(queue);
+  return wrapInPromise(repoBuilder(queue));
 }
 
 function setSupportedConstructors(repos) {

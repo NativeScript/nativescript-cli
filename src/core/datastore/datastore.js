@@ -79,7 +79,7 @@ export class DataStore {
    * @return {Promise<Object>} The result of clearing the cache.
    */
   static clearCache(options = {}) {
-    const repo = repositoryProvider.getOfflineRepository();
-    return repo.clear();
+    return repositoryProvider.getOfflineRepository()
+      .then(repo => repo.clear());
   }
 }

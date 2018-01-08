@@ -67,7 +67,7 @@ export class NetworkRepository extends Repository {
   }
 
   _makeHttpRequest(requestConfig, deltaFetch) {
-    if (deltaFetch) { // TODO: maybe this needs to be in sync manager
+    if (deltaFetch) {
       const request = new DeltaFetchRequest(requestConfig);
       return request.execute().then(r => r.data);
     }

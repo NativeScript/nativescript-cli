@@ -18,8 +18,7 @@ export class SyncStateManager {
 
   _getRepository() {
     if (!this._repoPromise) {
-      const repo = repositoryProvider.getOfflineRepository();
-      this._repoPromise = Promise.resolve(repo);
+      this._repoPromise = repositoryProvider.getOfflineRepository();
     }
     return this._repoPromise;
   }

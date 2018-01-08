@@ -45,23 +45,8 @@ export class DeltaFetchRequest extends KinveyRequest {
   }
 
   execute() {
-    // TODO: fix
-    const appkeyStr = `appdata/${this._client.appKey}/`;
-    const ind = this.url.indexOf(appkeyStr);
-    let indOfQueryString = this.url.indexOf('?'); // shouldnt have anything past the collection
-
-    if (ind === -1) {
-      return Promise.reject(new KinveyError('An unexpected error occured. Could not find collection'));
-    }
-
-    if (indOfQueryString === -1) {
-      indOfQueryString = Infinity;
-    }
-
-    const collection = this.url.substring(ind + appkeyStr.length, indOfQueryString);
-    const repo = repositoryProvider.getOfflineRepository();
-
-    return repo.read(collection, this.query)
+    return repositoryProvider.getOfflineRepository()
+      .then(repo => repo.read(this._getCollectionFromUrl(), this.query))
       .catch((error) => {
         if (!(error instanceof NotFoundError)) {
           throw error;
@@ -188,5 +173,21 @@ export class DeltaFetchRequest extends KinveyRequest {
         });
         return request.execute();
       });
+  }
+
+  _getCollectionFromUrl() {
+    const appkeyStr = `appdata/${this.client.appKey}/`;
+    const ind = this.url.indexOf(appkeyStr);
+    let indOfQueryString = this.url.indexOf('?'); // shouldn't have anything past the collection, like an ID
+
+    if (ind === -1) {
+      throw new KinveyError('An unexpected error occured. Could not find collection');
+    }
+
+    if (indOfQueryString === -1) {
+      indOfQueryString = Infinity;
+    }
+
+    return this.url.substring(ind + appkeyStr.length, indOfQueryString);
   }
 }

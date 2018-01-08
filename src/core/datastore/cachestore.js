@@ -26,10 +26,6 @@ export class CacheStore extends NetworkStore {
      * @type {number|undefined}
      */
     this.ttl = options.ttl || undefined;
-
-    /**
-     * @type {SyncManager}
-     */
     this.syncManager = syncManagerProvider.getSyncManager();
   }
 
@@ -203,7 +199,10 @@ export class CacheStore extends NetworkStore {
         }
         return Promise.resolve();
       })
-      .then(() => this.syncManager.pull(this.collection, query, options));
+      .then((/* pushResult */) => {
+        // TODO: do something with pushResult?
+        return this.syncManager.pull(this.collection, query, options);
+      });
   }
 
   /**

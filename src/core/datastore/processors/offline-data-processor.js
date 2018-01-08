@@ -28,8 +28,7 @@ export class OfflineDataProcessor extends DataProcessor {
 
   _getRepository() {
     if (!this._repoPromise) {
-      const repo = repositoryProvider.getOfflineRepository();
-      this._repoPromise = Promise.resolve(repo);
+      this._repoPromise = repositoryProvider.getOfflineRepository();
     }
     return this._repoPromise;
   }

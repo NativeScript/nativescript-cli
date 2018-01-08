@@ -273,8 +273,7 @@ export class SyncManager {
 
   _getOfflineRepo() {
     if (!this._offlineRepoPromise) {
-      const repo = repositoryProvider.getOfflineRepository();
-      this._offlineRepoPromise = Promise.resolve(repo);
+      this._offlineRepoPromise = repositoryProvider.getOfflineRepository();
     }
     return this._offlineRepoPromise;
   }
