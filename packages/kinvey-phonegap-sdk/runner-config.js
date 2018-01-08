@@ -12,6 +12,9 @@ const {
         runCommand,
         remove,
         processTemplateFile
+    },
+    conditionals: {
+        when
     }
 } = require('kinvey-universal-runner');
 
@@ -64,14 +67,14 @@ function runPipeline(osName) {
                 path.join(appPath, 'index.html')
             ),
             copyTestRunner(appPath),
-            runCommand({
+            when(() => osName === 'android', runCommand({
                 command: 'adb',
                 args: [
                     'reverse',
                     () => `tcp:${logServerPort}`,
                     () => `tcp:${logServerPort}`
                 ]
-            }),
+            })),
             runCommand({
                 command: 'cordova',
                 args: ['platform', 'add', osName],
