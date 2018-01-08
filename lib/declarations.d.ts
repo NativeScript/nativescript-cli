@@ -38,7 +38,7 @@ interface INpmInstallationManager {
 	install(packageName: string, packageDir: string, options?: INpmInstallOptions): Promise<any>;
 	getLatestVersion(packageName: string): Promise<string>;
 	getNextVersion(packageName: string): Promise<string>;
-	getLatestCompatibleVersion(packageName: string): Promise<string>;
+	getLatestCompatibleVersion(packageName: string, referenceVersion?: string): Promise<string>;
 	getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string): Promise<string>;
 }
 
