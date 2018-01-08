@@ -64,7 +64,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			const projectRoot = path.join(projectData.platformsDir, this.$devicePlatformsConstants.iOS.toLowerCase());
 
 			this._platformData = {
-				frameworkPackageName: "tns-ios",
+				frameworkPackageName: constants.TNS_IOS_RUNTIME_NAME,
 				normalizedPlatformName: "iOS",
 				appDestinationDirectoryPath: path.join(projectRoot, projectData.projectName),
 				platformProjectService: this,
