@@ -12,6 +12,9 @@ const {
         runCommand,
         remove,
         processTemplateFile
+    },
+    conditionals: {
+        when
     }
 } = require('kinvey-universal-runner');
 
@@ -77,14 +80,14 @@ const runner = new Runner({
             cwd: appRootPath
         }),
         copyTestRunner(appPath),
-        runCommand({
+        when(() => osName === 'android', runCommand({
             command: 'adb',
             args: [
                 'reverse',
                 () => `tcp:${logServerPort}`,
                 () => `tcp:${logServerPort}`
             ]
-        }),
+        })),
         runCommand({
             command: 'tns',
             args: ['run', osName, '--justlaunch'],
