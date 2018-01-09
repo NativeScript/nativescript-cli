@@ -4,5 +4,3 @@ export function applyQueryToDataset(dataset, query) {
   }
   return query.process(dataset);
 }
-
-export const collectionsMaster = 'master';

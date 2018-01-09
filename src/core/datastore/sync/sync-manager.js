@@ -8,7 +8,7 @@ import { isEmpty } from '../utils';
 import { repositoryProvider } from '../repositories';
 
 // imported for typings
-import { SyncStateManager } from './sync-state-manager';
+// import { SyncStateManager } from './sync-state-manager';
 
 const pushTrackingByCollection = {};
 

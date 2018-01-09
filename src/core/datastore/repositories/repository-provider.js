@@ -2,23 +2,23 @@ import { Client } from '../../client';
 import { InmemoryOfflineRepository } from './offline-repositories';
 import { NetworkRepository } from './network-repository';
 import { storageType } from './storage-type';
-import { persisterProvider } from '../persisters';
 import { ensureArray, wrapInPromise } from '../../utils';
 import { InmemoryCrudQueue } from '../utils';
+import { MemoryKeyValuePersister } from '../persisters';
 
-const defaultConstructorName = 'default';
 const inmemoryRepoBuilder = (queue) => {
-  const persister = persisterProvider.getPersister();
+  const persister = new MemoryKeyValuePersister();
   return new InmemoryOfflineRepository(persister, queue);
 };
 
 // TODO: all inmemory instances should share the queue. are there better ways to share it?
 // queue needs to be by collection
 const queue = new InmemoryCrudQueue();
+
 // TODO: not great to do this here, but tests fail otherwise
 let supportedStorages = {
   [storageType.inmemory]: inmemoryRepoBuilder,
-  [defaultConstructorName]: inmemoryRepoBuilder
+  [storageType.default]: inmemoryRepoBuilder
 };
 
 function getRepoType() {
@@ -30,7 +30,7 @@ function getNetworkRepository() {
 }
 
 function getOfflineRepository() {
-  const repoPrecendence = ensureArray(getRepoType() || defaultConstructorName);
+  const repoPrecendence = ensureArray(getRepoType() || storageType.default);
   const firstSupportedStorage = repoPrecendence.find(storageType => !!supportedStorages[storageType]);
   const repoBuilder = supportedStorages[firstSupportedStorage];
   return wrapInPromise(repoBuilder(queue));

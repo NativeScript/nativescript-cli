@@ -1,3 +1,5 @@
 export const storageType = {
-  inmemory: 'inmemory'
+  default: 'default',
+  inmemory: 'inmemory',
+  webSql: 'webSql'
 };

@@ -2,10 +2,7 @@ import keyBy from 'lodash/keyBy';
 import { NotFoundError } from '../../../errors';
 
 import { OfflineRepository } from '../offline-repository';
-import {
-  applyQueryToDataset,
-  collectionsMaster as masterCollectionName
-} from '../utils';
+import { applyQueryToDataset } from '../utils';
 import { ensureArray } from '../../../utils';
 
 // Imported for typings
@@ -25,27 +22,21 @@ export class InmemoryOfflineRepository extends OfflineRepository {
 
   // ----- private methods
 
-  // TODO: integrate with db/collection concept in parent(s)?
-  _formCollectionKey(collection) {
-    const appKey = this._getAppKey();
-    return `${appKey}${collection}`;
-  }
-
   _readAll(collection) {
     const key = this._formCollectionKey(collection);
-    return this._persister.readEntities(key)
+    return this._persister.read(key)
       .then(entities => entities || []);
   }
 
   // TODO: Keep them by id
   _saveAll(collection, entities) {
     const key = this._formCollectionKey(collection);
-    return this._persister.persistEntities(key, entities);
+    return this._persister.write(key, entities);
   }
 
   _deleteAll(collection) {
     const key = this._formCollectionKey(collection);
-    return this._persister.deleteEntities(key);
+    return this._persister.delete(key);
   }
 
   _enqueueCrudOperation(collection, operation) {
@@ -53,8 +44,28 @@ export class InmemoryOfflineRepository extends OfflineRepository {
     return this._queue.enqueue(key, operation);
   }
 
+  _keyBelongsToApp(key) {
+    const appKey = this._getAppKey();
+    return key.indexOf(appKey) === 0;
+  }
+
+  _getCollectionFromKey(key) {
+    const appKey = this._getAppKey();
+    return key.substring(`${appKey}.`.length);
+  }
+
   _getAllCollections() {
-    return this._readAll(masterCollectionName);
+    return this._persister.getKeys()
+      .then((keys) => {
+        const collections = [];
+        keys = keys || [];
+        keys.forEach((key) => {
+          if (this._keyBelongsToApp(key)) {
+            collections.push(this._getCollectionFromKey(key));
+          }
+        });
+        return collections;
+      });
   }
 
   _countAndDelete(collection) {
@@ -70,21 +81,15 @@ export class InmemoryOfflineRepository extends OfflineRepository {
       .then((collections) => {
         const promises = collections.map(c => this._deleteAll(c));
         return Promise.all(promises);
-      })
-      .then(() => this._deleteAll(masterCollectionName));
+      });
   }
 
   // ----- protected methods
-  _ensureCollectionExists(collection) {
-    return this._readAll(masterCollectionName)
-      .then((collectionsForAppKey) => {
-        const exists = collectionsForAppKey.indexOf(collection) > -1;
-        if (!exists) {
-          collectionsForAppKey.push(collection);
-          return this._saveAll(masterCollectionName, collectionsForAppKey);
-        }
-        return Promise.resolve();
-      });
+
+  // TODO: integrate with db/collection concept in parent(s)?
+  _formCollectionKey(collection) {
+    const appKey = this._getAppKey();
+    return `${appKey}.${collection}`;
   }
 
   // ----- public methods
@@ -93,8 +98,7 @@ export class InmemoryOfflineRepository extends OfflineRepository {
 
   create(collection, entitiesToSave) {
     return this._enqueueCrudOperation(collection, () => {
-      return this._ensureCollectionExists(collection)
-        .then(() => this._readAll(collection))
+      return this._readAll(collection)
         .then((existingEntities) => {
           existingEntities = existingEntities.concat(entitiesToSave);
           return this._saveAll(collection, existingEntities);
@@ -191,11 +195,8 @@ export class InmemoryOfflineRepository extends OfflineRepository {
   }
 
   // TODO: do better once we decide on querying on sync items
-  clear(collection, query) {
-    if (collection && query) {
-      return this.delete(collection, query);
-    }
-
+  // check the behaviour of clear, especially regarding sync queue
+  clear(collection) {
     if (collection) {
       return this._enqueueCrudOperation(collection, () => {
         return this._countAndDelete(collection);

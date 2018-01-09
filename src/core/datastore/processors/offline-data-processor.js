@@ -63,7 +63,12 @@ export class OfflineDataProcessor extends DataProcessor {
   _processClear(collection, query, options) {
     return this._syncManager.clearSync(collection, query)
       .then(() => this._getRepository())
-      .then(repo => repo.clear(collection, query, options));
+      .then((repo) => {
+        if (query) {
+          return repo.delete(collection, query, options);
+        }
+        return repo.clear(collection, query, options);
+      });
   }
 
   _processDelete(collection, query, options) {

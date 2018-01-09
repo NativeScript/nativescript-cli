@@ -7,12 +7,12 @@ export class KeyValuePersister {
   _ttl;
 
   // TODO: implement TTL, make _cache a constructor argument?
-  constructor(cacheEnabled = true, ttl = Infinity) {
+  constructor(cacheEnabled = false, ttl = Infinity) {
     this._cacheEnabled = cacheEnabled;
     this._ttl = ttl;
   }
 
-  readEntities(key) {
+  read(key) {
     if (this._cacheEnabled && _cache[key]) {
       return Promise.resolve(_cache[key]);
     }
@@ -26,11 +26,11 @@ export class KeyValuePersister {
       });
   }
 
-  persistEntities(key, entities) {
+  write(key, value) {
     if (this._cacheEnabled) {
       delete _cache[key];
     }
-    return this._writeToPersistance(key, entities)
+    return this._writeToPersistance(key, value)
       .then((result) => {
         if (this._cacheEnabled && this._ttl < Infinity) {
           setTimeout(() => {
@@ -41,11 +41,15 @@ export class KeyValuePersister {
       });
   }
 
-  deleteEntities(key) {
+  delete(key) {
     if (this._cacheEnabled) {
       delete _cache[key];
     }
     return this._deletePersistance(key);
+  }
+
+  getKeys() {
+    this._throwNotImplementedError();
   }
 
   _throwNotImplementedError() {
