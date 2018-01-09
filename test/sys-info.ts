@@ -25,7 +25,6 @@ interface IChildProcessResults {
 	uname: IChildProcessResultDescription;
 	npmV: IChildProcessResultDescription;
 	nodeV: IChildProcessResultDescription;
-	javaVersion: IChildProcessResultDescription;
 	javacVersion: IChildProcessResultDescription;
 	nodeGypVersion: IChildProcessResultDescription;
 	xCodeVersion: IChildProcessResultDescription;
@@ -76,7 +75,6 @@ function createChildProcessResults(childProcessResult: IChildProcessResults): ID
 		"uname -a": childProcessResult.uname,
 		"npm -v": childProcessResult.npmV,
 		"node -v": childProcessResult.nodeV,
-		"java": childProcessResult.javaVersion,
 		'"javac" -version': childProcessResult.javacVersion,
 		"node-gyp -v": childProcessResult.nodeGypVersion,
 		"xcodebuild -version": childProcessResult.xCodeVersion,
@@ -188,11 +186,6 @@ describe("SysInfo unit tests", () => {
 			sysInfo = new SysInfo(childProcess, null, helpers, null, null, androidToolsInfo);
 		});
 
-		it("java version.", async () => {
-			await sysInfo.getJavaVersion();
-			assert.deepEqual(spawnFromEventCommand, "java -version");
-		});
-
 		it("java compiler version when there is JAVA_HOME.", async () => {
 			const originalJavaHome = process.env[JavaHomeName];
 			process.env[JavaHomeName] = "mock";
@@ -226,7 +219,6 @@ describe("SysInfo unit tests", () => {
 				uname: { result: setStdOut("name") },
 				npmV: { result: setStdOut("2.14.1") },
 				nodeV: { result: setStdOut("v6.0.0") },
-				javaVersion: { result: setStdErr('java version "1.8.0_60"') },
 				javacVersion: { result: setStdErr("javac 1.8.0_60") },
 				nodeGypVersion: { result: setStdOut("2.0.0") },
 				xCodeVersion: { result: setStdOut("Xcode 6.4.0") },
@@ -254,7 +246,6 @@ describe("SysInfo unit tests", () => {
 			let assertCommonValues = (result: NativeScriptDoctor.ISysInfoData) => {
 				assert.deepEqual(result.npmVer, childProcessResult.npmV.result.stdout);
 				assert.deepEqual(result.nodeVer, "6.0.0");
-				assert.deepEqual(result.javaVer, "1.8.0");
 				assert.deepEqual(result.javacVersion, "1.8.0_60");
 				assert.deepEqual(result.nodeGypVer, childProcessResult.nodeGypVersion.result.stdout);
 				assert.deepEqual(result.adbVer, "1.0.32");
@@ -400,7 +391,6 @@ ${expectedCliVersion}`;
 					uname: { shouldThrowError: true },
 					npmV: { shouldThrowError: true },
 					nodeV: { shouldThrowError: true },
-					javaVersion: { shouldThrowError: true },
 					javacVersion: { shouldThrowError: true },
 					nodeGypVersion: { shouldThrowError: true },
 					xCodeVersion: { shouldThrowError: true },
@@ -421,7 +411,6 @@ ${expectedCliVersion}`;
 				let assertAllValuesAreNull = async () => {
 					const result = await sysInfo.getSysInfo();
 					assert.deepEqual(result.npmVer, null);
-					assert.deepEqual(result.javaVer, null);
 					assert.deepEqual(result.javacVersion, null);
 					assert.deepEqual(result.nodeGypVer, null);
 					assert.deepEqual(result.xcodeVer, null);

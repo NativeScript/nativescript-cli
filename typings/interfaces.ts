@@ -4,12 +4,6 @@ declare module NativeScriptDoctor {
 	 */
 	interface ISysInfo {
 		/**
-		 * Returns the currently installed Java version.
-		 * @return {Promise<string>} The currently installed Java version.
-		 */
-		getJavaVersion(): Promise<string>;
-
-		/**
 		 * Returns the currently installed Java compiler version.
 		 * @return {Promise<string>} The currently installed Java compiler version.
 		 */
@@ -207,12 +201,6 @@ declare module NativeScriptDoctor {
 		nodeGypVer: string;
 
 		// dependencies
-		/**
-		 * Version of java, as returned by `java -version`.
-		 * @type {string}
-		 */
-		javaVer: string;
-
 		/**
 		 * Xcode version string as returned by `xcodebuild -version`. Valid only on Mac.
 		 * @type {string}

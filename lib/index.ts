@@ -15,7 +15,7 @@ const winReg = new WinReg();
 const hostInfo = new HostInfo(winReg);
 const fileSystem = new FileSystem();
 const helpers = new Helpers(hostInfo);
-const androidToolsInfo = new AndroidToolsInfo(childProcess, fileSystem, hostInfo);
+const androidToolsInfo = new AndroidToolsInfo(childProcess, fileSystem, hostInfo, helpers);
 
 const sysInfo: NativeScriptDoctor.ISysInfo = new SysInfo(childProcess, fileSystem, helpers, hostInfo, winReg, androidToolsInfo);
 

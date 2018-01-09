@@ -6,7 +6,6 @@ export class AndroidLocalBuildRequirements {
 		const androidToolsInfo = await this.androidToolsInfo.validateInfo();
 		if (androidToolsInfo.length ||
 			!await this.sysInfo.getJavaCompilerVersion() ||
-			!await this.sysInfo.getJavaVersion() ||
 			!await this.sysInfo.getAdbVersion()) {
 			return false;
 		}

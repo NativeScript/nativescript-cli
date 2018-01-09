@@ -2,6 +2,7 @@ import { ChildProcess } from "./wrappers/child-process";
 import { FileSystem } from "./wrappers/file-system";
 import { HostInfo } from "./host-info";
 import { Constants } from "./constants";
+import { Helpers } from './helpers';
 import { EOL } from "os";
 import * as semver from "semver";
 import * as path from "path";
@@ -13,6 +14,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	private static REQUIRED_BUILD_TOOLS_RANGE_PREFIX = ">=23";
 	private static VERSION_REGEX = /((\d+\.){2}\d+)/;
 	private static MIN_JAVA_VERSION = "1.8.0";
+	private static MAX_JAVA_VERSION = "1.9.0";
 
 	private toolsInfo: NativeScriptDoctor.IAndroidToolsInfoData;
 	private androidHome = process.env["ANDROID_HOME"];
@@ -20,7 +22,8 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 
 	constructor(private childProcess: ChildProcess,
 		private fs: FileSystem,
-		private hostInfo: HostInfo) { }
+		private hostInfo: HostInfo,
+		private helpers: Helpers) { }
 
 	public getToolsInfo(): NativeScriptDoctor.IAndroidToolsInfoData {
 		if (!this.toolsInfo) {
@@ -86,17 +89,27 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return errors;
 	}
 
-	public validateJavacVersion(installedJavaVersion: string): NativeScriptDoctor.IWarning[] {
+	public validateJavacVersion(installedJavaCompilerVersion: string): NativeScriptDoctor.IWarning[] {
 		const errors: NativeScriptDoctor.IWarning[] = [];
 
 		let additionalMessage = "You will not be able to build your projects for Android." + EOL
 			+ "To be able to build for Android, verify that you have installed The Java Development Kit (JDK) and configured it according to system requirements as" + EOL +
 			" described in " + this.getSystemRequirementsLink();
-		let matchingVersion = (installedJavaVersion || "").match(AndroidToolsInfo.VERSION_REGEX);
-		if (matchingVersion && matchingVersion[1]) {
-			if (semver.lt(matchingVersion[1], AndroidToolsInfo.MIN_JAVA_VERSION)) {
+
+		const matchingVersion = this.helpers.appendZeroesToVersion(installedJavaCompilerVersion || "", 3).match(AndroidToolsInfo.VERSION_REGEX);
+		const installedJavaCompilerSemverVersion = matchingVersion && matchingVersion[1];
+		if (installedJavaCompilerSemverVersion) {
+			let warning: string = null;
+
+			if (semver.lt(installedJavaCompilerSemverVersion, AndroidToolsInfo.MIN_JAVA_VERSION)) {
+				warning = `Javac version ${installedJavaCompilerVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION}.`;
+			} else if (semver.gte(installedJavaCompilerSemverVersion, AndroidToolsInfo.MAX_JAVA_VERSION)) {
+				warning = `Javac version ${installedJavaCompilerVersion} is not supported. You have to install version ${AndroidToolsInfo.MIN_JAVA_VERSION}.`;
+			}
+
+			if (warning) {
 				errors.push({
-					warning: `Javac version ${installedJavaVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION}.`,
+					warning,
 					additionalInformation: additionalMessage,
 					platforms: [Constants.ANDROID_PLATFORM_NAME]
 				});
@@ -140,7 +153,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			errors.push({
 				warning: "The ANDROID_HOME environment variable points to incorrect directory. You will not be able to perform any build-related operations for Android.",
 				additionalInformation: "To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory, " +
-				"where you will find `tools` and `platform-tools` directories.",
+					"where you will find `tools` and `platform-tools` directories.",
 				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			});
 		}
@@ -299,22 +312,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	}
 
 	private getSystemRequirementsLink(): string {
-		let linkToSystemRequirements: string;
-		switch (process.platform) {
-			case "linux":
-				linkToSystemRequirements = "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-linux.html#system-requirements";
-				break;
-			case "win32":
-				linkToSystemRequirements = "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-win.html#system-requirements";
-				break;
-			case "darwin":
-				linkToSystemRequirements = "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-os-x.html#system-requirements";
-				break;
-			default:
-				linkToSystemRequirements = "";
-		}
-
-		return linkToSystemRequirements;
+		return Constants.SYSTEM_REQUIREMENTS_LINKS[process.platform] || "";
 	}
 
 	private isAndroidHomeValid(): boolean {

@@ -4,16 +4,13 @@ import { HostInfo } from "./host-info";
 import { ExecOptions } from "child_process";
 import { WinReg } from "./winreg";
 import { Helpers } from "./helpers";
-import { platform } from "os";
+import { platform, EOL } from "os";
 import * as path from "path";
 import * as osenv from "osenv";
 import * as temp from "temp";
 import * as semver from "semver";
 
 export class SysInfo implements NativeScriptDoctor.ISysInfo {
-	// Different java has different format for `java -version` command.
-	private static JAVA_VERSION_REGEXP = /(?:openjdk|java) version \"((?:\d+\.)+(?:\d+))/i;
-
 	private static JAVA_COMPILER_VERSION_REGEXP = /^javac (.*)/im;
 	private static XCODE_VERSION_REGEXP = /Xcode (.*)/;
 	private static VERSION_REGEXP = /(\d{1,})\.(\d{1,})\.*([\w-]{0,})/m;
@@ -23,7 +20,6 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	private monoVerRegExp = /version (\d+[.]\d+[.]\d+) /gm;
 
-	private javaVerCache: string;
 	private javaCompilerVerCache: string;
 	private xCodeVerCache: string;
 	private npmVerCache: string;
@@ -53,18 +49,6 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		private winReg: WinReg,
 		private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo) { }
 
-	public getJavaVersion(): Promise<string> {
-		return this.getValueForProperty(() => this.javaVerCache, async (): Promise<string> => {
-			try {
-				const spawnResult = await this.childProcess.spawnFromEvent("java", ["-version"], "exit");
-				const matches = spawnResult && SysInfo.JAVA_VERSION_REGEXP.exec(spawnResult.stderr);
-				return matches && matches[1];
-			} catch (err) {
-				return null;
-			}
-		});
-	}
-
 	public getJavaCompilerVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.javaCompilerVerCache, async (): Promise<string> => {
 			const javaCompileExecutableName = "javac";
@@ -72,7 +56,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			const pathToJavaCompilerExecutable = javaHome ? path.join(javaHome, "bin", javaCompileExecutableName) : javaCompileExecutableName;
 			try {
 				const output = await this.childProcess.exec(`"${pathToJavaCompilerExecutable}" -version`);
-				return SysInfo.JAVA_COMPILER_VERSION_REGEXP.exec(output.stderr)[1];
+				return SysInfo.JAVA_COMPILER_VERSION_REGEXP.exec(`${output.stderr}${EOL}${output.stdout}`)[1];
 			} catch (err) {
 				return null;
 			}
@@ -245,7 +229,6 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			result.nodeGypVer = await this.getNodeGypVersion();
 
 			result.dotNetVer = await this.hostInfo.dotNetVersion();
-			result.javaVer = await this.getJavaVersion();
 			result.javacVersion = await this.getJavaCompilerVersion();
 			result.xcodeVer = await this.getXcodeVersion();
 			result.xcodeprojGemLocation = await this.getXcodeprojGemLocation();

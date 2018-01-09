@@ -79,8 +79,6 @@ Library that helps identifying if the environment can be used for development of
 		// The default value is true. If set to false the result of each check for each element
 		// of the sys info will not be cached.
 		setShouldCacheSysInfo(false);
-		const javaVersion = await sysInfo.getJavaVersion();
-		console.log("java: ", javaVersion);
 
 		const javacVersion = await sysInfo.getJavaCompilerVersion();
 		console.log("javac: ", javacVersion);
@@ -150,12 +148,6 @@ Library that helps identifying if the environment can be used for development of
 	 * Describes methods which helps collecting system information.
 	 */
 	interface ISysInfo {
-		/**
-		 * Returns the currently installed Java version.
-		 * @return {Promise<string>} The currently installed Java version.
-		 */
-		getJavaVersion(): Promise<string>;
-
 		/**
 		 * Returns the currently installed Java compiler version.
 		 * @return {Promise<string>} The currently installed Java compiler version.
@@ -336,12 +328,6 @@ Library that helps identifying if the environment can be used for development of
 		nodeGypVer: string;
 
 		// dependencies
-		/**
-		 * Version of java, as returned by `java -version`.
-		 * @type {string}
-		 */
-		javaVer: string;
-
 		/**
 		 * Xcode version string as returned by `xcodebuild -version`. Valid only on Mac.
 		 * @type {string}
