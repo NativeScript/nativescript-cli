@@ -1,6 +1,6 @@
 {
   "name": "nativescript",
-  "version": "3.4.0",
+  "version": "3.4.1",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -40,7 +40,7 @@
     "@types/lockfile": {
       "version": "1.0.0",
       "resolved": "https://registry.npmjs.org/@types/lockfile/-/lockfile-1.0.0.tgz",
-      "integrity": "sha512-pD6JuijPmrfi84qF3/TzGQ7zi0QIX+d7ZdetD6jUA6cp+IsCzAquXZfi5viesew+pfpOTIdAVKuh1SHA7KeKzg==",
+      "integrity": "sha1-dqfBnFD+juKxZm1lP/XVV8MP4P8=",
       "dev": true
     },
     "@types/node": {
@@ -77,7 +77,7 @@
     "@types/sinon": {
       "version": "4.0.0",
       "resolved": "https://registry.npmjs.org/@types/sinon/-/sinon-4.0.0.tgz",
-      "integrity": "sha512-cuK4xM8Lg2wd8cxshcQa8RG4IK/xfyB6TNE6tNVvkrShR4xdrYgsV04q6Dp6v1Lp6biEFdzD8k8zg/ujQeiw+A==",
+      "integrity": "sha1-mpP/pO4TKehRZieKXtmfgdxMg2I=",
       "dev": true
     },
     "@types/source-map": {
@@ -3377,7 +3377,7 @@
     "just-extend": {
       "version": "1.1.27",
       "resolved": "https://registry.npmjs.org/just-extend/-/just-extend-1.1.27.tgz",
-      "integrity": "sha512-mJVp13Ix6gFo3SBAy9U/kL+oeZqzlYYYLQBwXVBlVzIsZwBqGREnOro24oC/8s8aox+rJhtZ2DiQof++IrkA+g==",
+      "integrity": "sha1-7G55QQ/5FORyZSq/oOYDwD1g6QU=",
       "dev": true
     },
     "kind-of": {
@@ -3543,7 +3543,7 @@
     "lolex": {
       "version": "2.3.1",
       "resolved": "https://registry.npmjs.org/lolex/-/lolex-2.3.1.tgz",
-      "integrity": "sha512-mQuW55GhduF3ppo+ZRUTz1PRjEh1hS5BbqU7d8D0ez2OKxHDod7StPPeAVKisZR5aLkHZjdGWSL42LSONUJsZw==",
+      "integrity": "sha1-PSMZiURx6glQ72RpLq0qUxjP82I=",
       "dev": true
     },
     "longest": {
@@ -3802,7 +3802,7 @@
     "nise": {
       "version": "1.2.0",
       "resolved": "https://registry.npmjs.org/nise/-/nise-1.2.0.tgz",
-      "integrity": "sha512-q9jXh3UNsMV28KeqI43ILz5+c3l+RiNW8mhurEwCKckuHQbL+hTJIKKTiUlCPKlgQ/OukFvSnKB/Jk3+sFbkGA==",
+      "integrity": "sha1-B51srbvLErow448cmZ82rU1rqlM=",
       "dev": true,
       "requires": {
         "formatio": "1.2.0",
@@ -4244,9 +4244,9 @@
       "integrity": "sha1-91kSVfcHq7/yJ8e1a2N9uwNzoQ8="
     },
     "proxy-lib": {
-      "version": "0.2.0",
-      "resolved": "https://registry.npmjs.org/proxy-lib/-/proxy-lib-0.2.0.tgz",
-      "integrity": "sha1-xgmTDtxmvz8qoGgKnA1QI6EfjfM=",
+      "version": "0.4.0",
+      "resolved": "https://registry.npmjs.org/proxy-lib/-/proxy-lib-0.4.0.tgz",
+      "integrity": "sha512-oUDDpf0NTtKPyXjBNUcKzwZhA9GjEdu8Z47GsxGv5rZvKyCqsSrHurJtlL1yp7uVzA2NOmxd4aX7qmB1ZOdCwQ==",
       "requires": {
         "osenv": "0.1.4"
       },
@@ -4587,7 +4587,7 @@
     "samsam": {
       "version": "1.3.0",
       "resolved": "https://registry.npmjs.org/samsam/-/samsam-1.3.0.tgz",
-      "integrity": "sha512-1HwIYD/8UlOtFS3QO3w7ey+SdSDFE4HRNLZoZRYVQefrOY3l17epswImeB1ijgJFQJodIaHcwkp3r/myBjFVbg==",
+      "integrity": "sha1-jR2TUOJWItow3j5EumkrUiGrfFA=",
       "dev": true
     },
     "sax": {
@@ -4705,7 +4705,7 @@
     "sinon": {
       "version": "4.1.2",
       "resolved": "https://registry.npmjs.org/sinon/-/sinon-4.1.2.tgz",
-      "integrity": "sha512-5uLBZPdCWl59Lpbf45ygKj7Z0LVol+ftBe7RDIXOQV/sF58pcFmbK8raA7bt6eljNuGnvBP+/ZxlicVn0emDjA==",
+      "integrity": "sha1-ZWEFIdkm+1N0LdhM1ZnwuJqC9EA=",
       "dev": true,
       "requires": {
         "diff": "3.4.0",
@@ -4720,7 +4720,7 @@
         "diff": {
           "version": "3.4.0",
           "resolved": "https://registry.npmjs.org/diff/-/diff-3.4.0.tgz",
-          "integrity": "sha512-QpVuMTEoJMF7cKzi6bvWhRulU1fZqZnvyVQgNhPaxxuTYwyjn/j1v9falseQ/uXWwPnO56RBfwtg4h/EQXmucA==",
+          "integrity": "sha1-sdhVB9rzlkgo3lSzfQ1zumfdpWw=",
           "dev": true
         },
         "has-flag": {
