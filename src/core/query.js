@@ -665,7 +665,7 @@ export class Query {
    */
   addFilter(field, condition, values) {
     if (isDefined(condition)
-        && (isDefined(values) || condition === '$ne')) {
+      && (isDefined(values) || arguments.length === 3)) {
       if (!isPlainObject(this.filter[field])) {
         this.filter[field] = {};
       }
