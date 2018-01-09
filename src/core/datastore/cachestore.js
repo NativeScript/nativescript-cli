@@ -130,7 +130,7 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   clear(query, options = {}) {
-    const errPromise = this._ensureValidQuery(query);
+    const errPromise = this._validateQuery(query);
     if (errPromise) {
       return errPromise;
     }

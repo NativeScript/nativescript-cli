@@ -1,5 +1,6 @@
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
+import assign from 'lodash/assign';
 import url from 'url';
 
 import { KinveyRequest, AuthType, RequestMethod } from '../request';
@@ -97,12 +98,12 @@ export class NetworkStore {
    * @return  {Observable}                                                Observable.
    */
   find(query, options = {}) {
-    const errPromise = this._ensureValidQuery(query);
+    const errPromise = this._validateQuery(query);
     if (errPromise) {
       return wrapInObservable(errPromise);
     }
 
-    options.useDeltaFetch = options.useDeltaFetch || this.useDeltaFetch;
+    options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
     const operation = this._buildOperationObject(OperationType.Read, query);
     const opPromise = this._executeOperation(operation, options);
     return this._ensureObservable(opPromise);
@@ -188,7 +189,7 @@ export class NetworkStore {
    * @return  {Observable}                                             Observable.
    */
   count(query, options = {}) {
-    const errPromise = this._ensureValidQuery(query);
+    const errPromise = this._validateQuery(query);
     if (errPromise) {
       return wrapInObservable(errPromise);
     }
@@ -287,7 +288,7 @@ export class NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   remove(query, options = {}) {
-    const errPromise = this._ensureValidQuery(query);
+    const errPromise = this._validateQuery(query);
     if (errPromise) {
       return errPromise;
     }
@@ -341,7 +342,7 @@ export class NetworkStore {
 
   // protected
 
-  _ensureValidQuery(query) {
+  _validateQuery(query) {
     if (query && !(query instanceof Query)) {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Query class.'));
     }
