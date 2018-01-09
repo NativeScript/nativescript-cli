@@ -5,7 +5,9 @@ Get it using: `npm install nativescript@next -g`
 
 * Create, build, and run native apps for iOS and Android using JavaScript or TypeScript *
 
-The NativeScript CLI lets you create, build, and deploy NativeScript-based projects on iOS and Android devices.
+The NativeScript CLI lets you create, build, and deploy [NativeScript][7]-based projects on iOS and Android devices.
+
+![NativeScript CLI diagram](ns-cli.png)
 
 * [What is NativeScript](#what-is-nativescript "Quick overview of NativeScript, the JavaScript framework for cross-platform development of native iOS and Android apps")
 * [Supported Platforms](#supported-platforms "The mobile platforms you can target with NativeScript")
@@ -40,8 +42,7 @@ To learn more about NativeScript, you can check the following resources:
 * [NativeScript - a Technical Overview][9]
 * [Development with NativeScript][3]
 * [Announcing NativeScript - cross-platform framework for building native mobile applications][11]
-* [The NativeScript Documentation Wiki][6]
-* [The NativeScript API Reference][7]
+* The NativeScript [Documentation repo][6] and [Documentation portal][7]
 * [The NativeScript FAQ][8]
 * [On NativeScript for Android][10]
 
@@ -436,8 +437,8 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [2]: https://travis-ci.org/NativeScript/nativescript-cli
 [3]: http://docs.telerik.com/platform/appbuilder/nativescript/index
 [4]: http://www.telerik.com/nativescript
-[6]: https://github.com/nativescript/docs/wiki
-[7]: https://github.com/nativescript/docs
+[6]: https://github.com/nativescript/docs
+[7]: https://docs.nativescript.org/
 [8]: http://www.telerik.com/nativescript/faq
 [9]: http://developer.telerik.com/featured/nativescript-a-technical-overview/
 [10]: http://developer.telerik.com/featured/nativescript-android/
