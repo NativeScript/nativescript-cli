@@ -155,7 +155,7 @@ describe("subscriptionService", () => {
 
 			await subscriptionService.subscribeForNewsletter();
 
-			assert.equal(loggerOutput, "Leave your e-mail address here to subscribe for NativeScript newsletter and product updates, tips and tricks:");
+			assert.equal(loggerOutput, "Enter your e-mail address to subscribe to the NativeScript Newsletter and hear about product updates, tips & tricks, and community happenings:");
 		});
 
 		const expectedMessageInPrompter = "(press Enter for blank)";

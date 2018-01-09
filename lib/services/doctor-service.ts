@@ -104,9 +104,9 @@ class DoctorService implements IDoctorService {
 		}
 
 		const androidToolsIssues = this.$androidToolsInfo.validateInfo();
-		const javaVersionIssue = await this.$androidToolsInfo.validateJavacVersion(sysInfo.javacVersion);
+		const javaCompilerVersionIssue = this.$androidToolsInfo.validateJavacVersion(sysInfo.javacVersion);
 		const pythonIssues = await this.validatePythonPackages();
-		const doctorResult = result || androidToolsIssues || javaVersionIssue || pythonIssues;
+		const doctorResult = result || androidToolsIssues || javaCompilerVersionIssue || pythonIssues;
 
 		if (!configOptions || configOptions.trackResult) {
 			await this.$analyticsService.track("DoctorEnvironmentSetup", doctorResult ? "incorrect" : "correct");

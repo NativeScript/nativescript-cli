@@ -138,7 +138,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		const javaCompilerVersion = await this.$sysInfo.getJavaCompilerVersion();
 
-		await this.$androidToolsInfo.validateJavacVersion(javaCompilerVersion, { showWarningsAsErrors: true });
+		this.$androidToolsInfo.validateJavacVersion(javaCompilerVersion, { showWarningsAsErrors: true });
 
 		await this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
 	}
