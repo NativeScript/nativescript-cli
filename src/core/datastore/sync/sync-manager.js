@@ -41,9 +41,7 @@ export class SyncManager {
     }
 
     return prm
-      .then((entityIds) => {
-        return this._syncStateManager.getSyncItems(collection, entityIds);
-      })
+      .then((entityIds) => this._syncStateManager.getSyncItems(collection, entityIds))
       .then((syncItems = []) => this._processSyncItems(syncItems))
       .then((pushResult) => {
         this._markPushEnd(collection);
@@ -313,7 +311,7 @@ export class SyncManager {
       return validationError;
     }
 
-    return this._callStateManager(collection, entities, syncOp)
+    return this._setState(collection, entities, syncOp)
       .then(() => entities);
   }
 
@@ -330,7 +328,7 @@ export class SyncManager {
     return null;
   }
 
-  _callStateManager(collection, entities, syncOp) {
+  _setState(collection, entities, syncOp) {
     switch (syncOp) {
       case SyncOperation.Create:
         return this._syncStateManager.addCreateEvent(collection, entities);

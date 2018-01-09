@@ -154,6 +154,9 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   pendingSyncCount(query, options) {
+    if (query) {
+      return this.syncManager.getSyncItemCountByEntityQuery(this.collection, query);
+    }
     return this.syncManager.getSyncItemCount(this.collection);
   }
 
@@ -189,7 +192,8 @@ export class CacheStore extends NetworkStore {
    */
   pull(query, options = {}) {
     options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
-    return this.syncManager.getSyncItemCount(this.collection)
+    // TODO: the query issue must be resolved - entity or sync entity
+    return this.syncManager.getSyncItemCountByEntityQuery(this.collection, query)
       .then((count) => {
         if (count > 0) {
           // TODO: I think this should happen, but keeping current behaviour
@@ -234,7 +238,6 @@ export class CacheStore extends NetworkStore {
   }
 
   clearSync(query, options) {
-    // return this.syncManager.clearSync(query, options);
-    return this.syncManager.clearSync(this.collection);
+    return this.syncManager.clearSync(this.collection, query);
   }
 }
