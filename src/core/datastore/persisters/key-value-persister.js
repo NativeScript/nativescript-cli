@@ -27,14 +27,12 @@ export class KeyValuePersister {
   }
 
   write(key, value) {
-    if (this._cacheEnabled) {
-      delete _cache[key];
-    }
+    this._invalidateCache(key);
     return this._writeToPersistance(key, value)
       .then((result) => {
         if (this._cacheEnabled && this._ttl < Infinity) {
           setTimeout(() => {
-            delete _cache[key];
+            this._invalidateCache(key);
           }, this._ttl);
         }
         return result;
@@ -42,10 +40,11 @@ export class KeyValuePersister {
   }
 
   delete(key) {
-    if (this._cacheEnabled) {
-      delete _cache[key];
-    }
-    return this._deletePersistance(key);
+    return this._deleteFromPersistance(key)
+      .then((result) => {
+        this._invalidateCache(key);
+        return result;
+      });
   }
 
   getKeys() {
@@ -64,7 +63,13 @@ export class KeyValuePersister {
     this._throwNotImplementedError(key, array);
   }
 
-  _deletePersistance(key) {
+  _deleteFromPersistance(key) {
     this._throwNotImplementedError(key);
+  }
+
+  _invalidateCache(key) {
+    if (this._cacheEnabled) {
+      delete _cache[key];
+    }
   }
 }
