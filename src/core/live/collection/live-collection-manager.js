@@ -23,7 +23,10 @@ export class LiveCollectionManager {
     return this._makeSubscriptionRequest(name, '_subscribe')
       .then(() => {
         const channelName = this._buildChannelName(name);
-        getLiveService().subscribeToChannel(channelName, receiver);
+        const personalChannelName = this._buildPersonalChannelName(name);
+        const liveService = getLiveService();
+        liveService.subscribeToChannel(channelName, receiver);
+        liveService.subscribeToChannel(personalChannelName, receiver);
       });
   }
 
@@ -35,7 +38,10 @@ export class LiveCollectionManager {
     return this._makeSubscriptionRequest(name, '_unsubscribe')
       .then(() => {
         const channelName = this._buildChannelName(name);
-        getLiveService().unsubscribeFromChannel(channelName);
+        const personalChannelName = this._buildPersonalChannelName(name);
+        const liveService = getLiveService();
+        liveService.unsubscribeFromChannel(channelName);
+        liveService.unsubscribeFromChannel(personalChannelName);
       });
   }
 
@@ -46,6 +52,12 @@ export class LiveCollectionManager {
    */
   _buildChannelName(collectionName) {
     return `${this._client.appKey}.c-${collectionName}`;
+  }
+
+  _buildPersonalChannelName(collectionName) {
+    const channelName = this._buildChannelName(collectionName);
+    const userId = this._client.getActiveUser()._id;
+    return `${channelName}.u-${userId}`;
   }
 
   /**
