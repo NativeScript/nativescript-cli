@@ -355,6 +355,15 @@ describe('Query', () => {
       const query = new Query().notEqualTo(randomString(), randomString());
       expect(query).to.be.an.instanceof(Query);
     });
+
+    it('should filter out fields not equal to null', () => {
+      const entity1 = { customProperty: null };
+      const entity2 = { customProperty: randomString() };
+      const query = new Query().notEqualTo('customProperty', null);
+      const result = query.process([entity1, entity2]);
+      expect(result.length).to.equal(1);
+      expect(result[0]).to.deep.equal(entity2);
+    });
   });
 
   describe('notContainedIn()', () => {

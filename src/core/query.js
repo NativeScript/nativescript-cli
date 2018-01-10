@@ -664,7 +664,8 @@ export class Query {
    * @returns {Query} The query.
    */
   addFilter(field, condition, values) {
-    if (isDefined(condition) && isDefined(values)) {
+    if (isDefined(condition)
+      && (isDefined(values) || arguments.length === 3)) {
       if (!isPlainObject(this.filter[field])) {
         this.filter[field] = {};
       }
