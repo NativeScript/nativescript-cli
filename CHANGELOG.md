@@ -1,6 +1,17 @@
 NativeScript CLI Changelog
 ================
 
+3.4.1 (2018, January 11)
+==
+
+### Fixed
+* [Fixed #3280](https://github.com/NativeScript/nativescript-cli/issues/3280): App_Resources are duplicated on consecutive builds with --bundle
+* [Fixed #3183](https://github.com/NativeScript/nativescript-cli/issues/3183): `tns debug ios --chrome keeps changing port on every livesync update
+* [Fixed #3148](https://github.com/NativeScript/nativescript-cli/issues/3148): Fix detection of Javac version
+* [Fixed #3302](https://github.com/NativeScript/nativescript-cli/pull/3302): fix(ios-inspector): Update cached inspector package to latest compatible version
+* [Fixed #3311](https://github.com/NativeScript/nativescript-cli/pull/3311): Allow setting authenthicated proxy on Windows when Visual C++ redistributable is not installed
+
+
 3.4.0 (2017, December 20)
 ==
 
