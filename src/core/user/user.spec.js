@@ -688,75 +688,75 @@ describe('User', () => {
     });
   });
 
-  // describe('live service registration management', () => {
-  //   let activeUser;
-  //   let liveService;
+  describe.skip('live service registration management', () => {
+    let activeUser;
+    let liveService;
 
-  //   beforeEach(() => {
-  //     activeUser = User.getActiveUser();
-  //     liveService = getLiveService(Client.sharedInstance());
-  //   });
+    beforeEach(() => {
+      activeUser = User.getActiveUser();
+      liveService = getLiveService(Client.sharedInstance());
+    });
 
-  //   afterEach(() => expect.restoreSpies());
+    afterEach(() => expect.restoreSpies());
 
-  //   describe('registerForLiveService', () => {
-  //     it('should do nothing, if already registered', () => {
-  //       const spy = expect.spyOn(liveService, 'fullInitialization');
-  //       expect.spyOn(liveService, 'isInitialized')
-  //         .andReturn(true);
+    describe('registerForLiveService', () => {
+      it('should do nothing, if already registered', () => {
+        const spy = expect.spyOn(liveService, 'fullInitialization');
+        expect.spyOn(liveService, 'isInitialized')
+          .andReturn(true);
 
-  //       return activeUser.registerForLiveService()
-  //         .then(() => {
-  //           expect(spy).toNotHaveBeenCalled();
-  //         });
-  //     });
+        return activeUser.registerForLiveService()
+          .then(() => {
+            expect(spy).toNotHaveBeenCalled();
+          });
+      });
 
-  //     it('should call LiveService\'s fullInitialization() method, if not registered', () => {
-  //       const spy = expect.spyOn(liveService, 'fullInitialization')
-  //         .andReturn(Promise.resolve());
-  //       expect.spyOn(liveService, 'isInitialized')
-  //         .andReturn(false);
+      it('should call LiveService\'s fullInitialization() method, if not registered', () => {
+        const spy = expect.spyOn(liveService, 'fullInitialization')
+          .andReturn(Promise.resolve());
+        expect.spyOn(liveService, 'isInitialized')
+          .andReturn(false);
 
-  //       return activeUser.registerForLiveService()
-  //         .then(() => {
-  //           expect(spy).toHaveBeenCalledWith(activeUser);
-  //         });
-  //     });
-  //   });
+        return activeUser.registerForLiveService()
+          .then(() => {
+            expect(spy).toHaveBeenCalledWith(activeUser);
+          });
+      });
+    });
 
-  //   describe('unregisterFromLiveService', () => {
-  //     let activeUser;
-  //     let liveService;
+    describe('unregisterFromLiveService', () => {
+      let activeUser;
+      let liveService;
 
-  //     beforeEach(() => {
-  //       activeUser = User.getActiveUser();
-  //       liveService = getLiveService(Client.sharedInstance());
-  //     });
+      beforeEach(() => {
+        activeUser = User.getActiveUser();
+        liveService = getLiveService(Client.sharedInstance());
+      });
 
-  //     it('should do nothing, if not registered', () => {
-  //       const spy = expect.spyOn(liveService, 'fullUninitialization');
-  //       expect.spyOn(liveService, 'isInitialized')
-  //         .andReturn(false);
+      it('should do nothing, if not registered', () => {
+        const spy = expect.spyOn(liveService, 'fullUninitialization');
+        expect.spyOn(liveService, 'isInitialized')
+          .andReturn(false);
 
-  //       return activeUser.unregisterFromLiveService()
-  //         .then(() => {
-  //           expect(spy).toNotHaveBeenCalled();
-  //         });
-  //     });
+        return activeUser.unregisterFromLiveService()
+          .then(() => {
+            expect(spy).toNotHaveBeenCalled();
+          });
+      });
 
-  //     it('should call LiveService\'s fullUninitialization() method, if registered', () => {
-  //       const spy = expect.spyOn(liveService, 'fullUninitialization')
-  //         .andReturn(Promise.resolve());
-  //       expect.spyOn(liveService, 'isInitialized')
-  //         .andReturn(true);
+      it('should call LiveService\'s fullUninitialization() method, if registered', () => {
+        const spy = expect.spyOn(liveService, 'fullUninitialization')
+          .andReturn(Promise.resolve());
+        expect.spyOn(liveService, 'isInitialized')
+          .andReturn(true);
 
-  //       return activeUser.unregisterFromLiveService()
-  //         .then(() => {
-  //           expect(spy).toHaveBeenCalled();
-  //         });
-  //     });
-  //   });
-  // });
+        return activeUser.unregisterFromLiveService()
+          .then(() => {
+            expect(spy).toHaveBeenCalled();
+          });
+      });
+    });
+  });
 
   describe('signup', () => {
     beforeEach(() => {

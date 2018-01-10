@@ -68,22 +68,6 @@ export class InmemoryOfflineRepository extends OfflineRepository {
       });
   }
 
-  _countAndDelete(collection) {
-    return this._readAll(collection)
-      .then((entities) => {
-        return this._deleteAll(collection)
-          .then(() => entities.length);
-      });
-  }
-
-  _clearAllCollections() {
-    return this._getAllCollections()
-      .then((collections) => {
-        const promises = collections.map(c => this._deleteAll(c));
-        return Promise.all(promises);
-      });
-  }
-
   // ----- protected methods
 
   // TODO: integrate with db/collection concept in parent(s)?
@@ -92,18 +76,74 @@ export class InmemoryOfflineRepository extends OfflineRepository {
     return `${appKey}.${collection}`;
   }
 
-  // ----- public methods
+  // protected methods
 
-  // TODO: add checks for existing collection, try/catch, etc - here or in processor
+  _create(collection, entitiesToSave) {
+    return this._readAll(collection)
+      .then((existingEntities) => {
+        existingEntities = existingEntities.concat(entitiesToSave);
+        return this._saveAll(collection, existingEntities);
+      })
+      .then(() => entitiesToSave);
+  }
+
+  _update(collection, entities) {
+    const entitiesArray = ensureArray(entities);
+    const updateEntitiesById = keyBy(entitiesArray, '_id');
+    let unprocessedEntitiesCount = entitiesArray.length;
+    return this._readAll(collection)
+      .then((allEntities) => {
+        allEntities.forEach((entity, index) => {
+          if (unprocessedEntitiesCount > 0 && updateEntitiesById[entity._id]) {
+            allEntities[index] = updateEntitiesById[entity._id];
+            delete updateEntitiesById[entity._id];
+            unprocessedEntitiesCount -= 1;
+          }
+        });
+
+        // the upsert part
+        if (unprocessedEntitiesCount > 0) {
+          Object.keys(updateEntitiesById).forEach((entityId) => {
+            allEntities.push(updateEntitiesById[entityId]);
+          });
+        }
+
+        return this._saveAll(collection, allEntities)
+          .then(() => entities);
+      });
+  }
+
+  _delete(collection, query) {
+    let deletedCount = 0;
+    return this._readAll(collection)
+      .then((allEntities) => {
+        const matchingEntities = applyQueryToDataset(allEntities, query);
+        const shouldDeleteById = keyBy(matchingEntities, '_id');
+        const remainingEntities = allEntities.filter(e => !shouldDeleteById[e._id]);
+        deletedCount = allEntities.length - remainingEntities.length;
+        return this._saveAll(collection, remainingEntities);
+      })
+      .then(() => deletedCount);
+  }
+
+  _deleteById(collection, id) {
+    return this._readAll(collection)
+      .then((allEntities) => {
+        const index = allEntities.findIndex(e => e._id === id);
+        if (index > -1) {
+          allEntities.splice(index, 1);
+          return this._saveAll(collection, allEntities)
+            .then(() => 1);
+        }
+        return Promise.resolve(0);
+      });
+  }
+
+  // ----- public methods
 
   create(collection, entitiesToSave) {
     return this._enqueueCrudOperation(collection, () => {
-      return this._readAll(collection)
-        .then((existingEntities) => {
-          existingEntities = existingEntities.concat(entitiesToSave);
-          return this._saveAll(collection, existingEntities);
-        })
-        .then(() => entitiesToSave);
+      return this._create(collection, entitiesToSave);
     });
   }
 
@@ -138,59 +178,19 @@ export class InmemoryOfflineRepository extends OfflineRepository {
   // also, currently one doesn't know if they created or updated
   update(collection, entities) {
     return this._enqueueCrudOperation(collection, () => {
-      const entitiesArray = ensureArray(entities);
-      const updateEntitiesById = keyBy(entitiesArray, '_id');
-      let unprocessedEntitiesCount = entitiesArray.length;
-      return this._readAll(collection)
-        .then((allEntities) => {
-          allEntities.forEach((entity, index) => {
-            if (unprocessedEntitiesCount > 0 && updateEntitiesById[entity._id]) {
-              allEntities[index] = updateEntitiesById[entity._id];
-              delete updateEntitiesById[entity._id];
-              unprocessedEntitiesCount -= 1;
-            }
-          });
-
-          // the upsert part
-          if (unprocessedEntitiesCount > 0) {
-            Object.keys(updateEntitiesById).forEach((entityId) => {
-              allEntities.push(updateEntitiesById[entityId]);
-            });
-          }
-
-          return this._saveAll(collection, allEntities)
-            .then(() => entities);
-        });
+      return this._update(collection, entities);
     });
   }
 
   delete(collection, query) {
     return this._enqueueCrudOperation(collection, () => {
-      let deletedCount = 0;
-      return this._readAll(collection)
-        .then((allEntities) => {
-          const matchingEntities = applyQueryToDataset(allEntities, query);
-          const shouldDeleteById = keyBy(matchingEntities, '_id');
-          const remainingEntities = allEntities.filter(e => !shouldDeleteById[e._id]);
-          deletedCount = allEntities.length - remainingEntities.length;
-          return this._saveAll(collection, remainingEntities);
-        })
-        .then(() => deletedCount);
+      return this._delete(collection, query);
     });
   }
 
   deleteById(collection, id) {
     return this._enqueueCrudOperation(collection, () => {
-      return this._readAll(collection)
-        .then((allEntities) => {
-          const index = allEntities.findIndex(e => e._id === id);
-          if (index > -1) {
-            allEntities.splice(index, 1);
-            return this._saveAll(collection, allEntities)
-              .then(() => 1);
-          }
-          return Promise.resolve(0);
-        });
+      return this._deleteById(collection, id);
     });
   }
 
@@ -199,12 +199,16 @@ export class InmemoryOfflineRepository extends OfflineRepository {
   clear(collection) {
     if (collection) {
       return this._enqueueCrudOperation(collection, () => {
-        return this._countAndDelete(collection);
+        return this._deleteAll(collection);
       });
     }
 
     // TODO: this does not enqueue, so it might cause problems
     // currently it's only called from Kinvey.DataStore.clear()
-    return this._clearAllCollections(); // this does not return count. problem?
+    return this._getAllCollections()
+      .then((collections) => {
+        const promises = collections.map(c => this._deleteAll(c));
+        return Promise.all(promises);
+      });
   }
 }

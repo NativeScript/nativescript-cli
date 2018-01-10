@@ -16,7 +16,7 @@ export class MemoryKeyValuePersister extends KeyValuePersister {
     return Promise.resolve();
   }
 
-  _deletePersistance(key) {
+  _deleteFromPersistance(key) {
     delete _storage[key];
     return Promise.resolve();
   }

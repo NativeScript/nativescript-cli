@@ -6,10 +6,9 @@ import { webSqlCollectionsMaster, webSqlDatabaseSize } from '../utils';
 const dbCache = {};
 
 export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
-  // TODO: add caching, as in parent
   readEntity(collection, entityId) {
     const sql = 'SELECT value FROM #{collection} WHERE key = ?';
-    return this.openTransaction(collection, sql, [entityId])
+    return this._openTransaction(collection, sql, [entityId])
       .then(response => response.result)
       .then((entities) => {
         if (entities.length === 0) {
@@ -21,13 +20,9 @@ export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
       });
   }
 
-  writeEntity(collection, entity) {
-    return this._writeToPersistance(collection, [entity]);
-  }
-
-  deleteEntity(collection, entityId) {
-    return this.openTransaction(collection, 'DELETE FROM #{collection} WHERE key = ?', [entityId], true)
-      .then((response) => ({ count: response.rowCount }));
+  getKeys() {
+    // TODO: read db tables
+    super.getKeys();
   }
 
   // protected methods
@@ -67,6 +62,15 @@ export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
   _deleteFromPersistance(key) {
     // TODO: this should drop the table, instead of deleting all rows
     return this._openTransaction(key, 'DELETE FROM #{collection}', null, true)
+      .then((response) => ({ count: response.rowCount }));
+  }
+
+  _writeEntityToPersistance(collection, entity) {
+    return this._writeToPersistance(collection, [entity]);
+  }
+
+  _deleteEntityFromPersistance(collection, entityId) {
+    return this._openTransaction(collection, 'DELETE FROM #{collection} WHERE key = ?', [entityId], true)
       .then((response) => ({ count: response.rowCount }));
   }
 
