@@ -2,6 +2,7 @@ import { KinveyError } from '../../../errors';
 
 import { InmemoryOfflineRepository } from './inmemory-offline-repository';
 import { KeyValueStorePersister } from '../../persisters';
+import { ensureArray } from '../../../utils';
 
 export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
   /** @type {KeyValueStorePersister} */
@@ -31,15 +32,24 @@ export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
     return collection;
   }
 
-  _create(collection, entitiesToSave) {
-    return this._persister.write(collection, entitiesToSave);
+  _create(collection, entities) {
+    return this._batchUpsert(collection, entities);
   }
 
   _update(collection, entities) {
-    return this._persister.write(collection, entities);
+    return this._batchUpsert(collection, entities);
   }
 
   _deleteById(collection, entityId) {
     return this._persister.deleteEntity(collection, entityId);
+  }
+
+  // private
+
+  _batchUpsert(collection, entities) {
+    const promises = ensureArray(entities).map((entity) => {
+      return this._persister.writeEntity(collection, entity);
+    });
+    return Promise.all(promises);
   }
 }

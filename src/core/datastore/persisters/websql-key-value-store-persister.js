@@ -5,6 +5,7 @@ import { webSqlCollectionsMaster, webSqlDatabaseSize } from '../utils';
 
 const dbCache = {};
 
+// TODO: things can be done in a single transaction
 export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
   readEntity(collection, entityId) {
     const sql = 'SELECT value FROM #{collection} WHERE key = ?';
@@ -27,46 +28,29 @@ export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
 
   // protected methods
 
-  _readFromPersistance(key) {
+  _readFromPersistance(collection) {
     const sql = 'SELECT value FROM #{collection}';
-    return this._openTransaction(key, sql, [])
+    return this._openTransaction(collection, sql, [])
       .then(response => response.result);
   }
 
-  _writeToPersistance(key, array) {
-    const queries = [];
-    let singular = false;
-
-    if (!Array.isArray(array)) {
-      singular = true;
-      array = [array];
+  _writeToPersistance(collection, allEntities) {
+    if (!allEntities) {
+      return Promise.reject(new KinveyError('Invalid or missing entities array'));
     }
 
-    if (array.length === 0) {
-      return Promise.resolve(null);
-    }
-
-    array = array.map((entity) => {
-      queries.push([
-        'REPLACE INTO #{collection} (key, value) VALUES (?, ?)',
-        [entity._id, JSON.stringify(entity)]
-      ]);
-
-      return entity;
-    });
-
-    return this._openTransaction(key, queries, null, true)
-      .then(() => (singular ? array[0] : array));
+    return this._openTransaction(collection, 'DELETE FROM #{collection}', [], true)
+      .then(() => this._upsertEntities(collection, allEntities));
   }
 
-  _deleteFromPersistance(key) {
+  _deleteFromPersistance(collection) {
     // TODO: this should drop the table, instead of deleting all rows
-    return this._openTransaction(key, 'DELETE FROM #{collection}', null, true)
+    return this._openTransaction(collection, 'DELETE FROM #{collection}', null, true)
       .then((response) => ({ count: response.rowCount }));
   }
 
   _writeEntityToPersistance(collection, entity) {
-    return this._writeToPersistance(collection, [entity]);
+    return this._upsertEntities(collection, [entity]);
   }
 
   _deleteEntityFromPersistance(collection, entityId) {
@@ -156,5 +140,31 @@ export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
         reject(error);
       }
     });
+  }
+
+  _upsertEntities(collection, allEntities) {
+    const queries = [];
+    let singular = false;
+
+    if (!Array.isArray(allEntities)) {
+      singular = true;
+      allEntities = [allEntities];
+    }
+
+    if (allEntities.length === 0) {
+      return Promise.resolve(null);
+    }
+
+    allEntities = allEntities.map((entity) => {
+      queries.push([
+        'REPLACE INTO #{collection} (key, value) VALUES (?, ?)',
+        [entity._id, JSON.stringify(entity)]
+      ]);
+
+      return entity;
+    });
+
+    return this._openTransaction(collection, queries, null, true)
+      .then(() => (singular ? allEntities[0] : allEntities));
   }
 }
