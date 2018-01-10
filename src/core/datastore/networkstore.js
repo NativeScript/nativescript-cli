@@ -22,7 +22,7 @@ export class NetworkStore {
   /** @type {CacheOperator} */
   _processor;
 
-  constructor(collection, options = {}, processor) {
+  constructor(collection, processor, options = {}) {
     this._processor = processor || processorFactory.getNetworkProcessor();
 
     if (collection && !isString(collection)) {

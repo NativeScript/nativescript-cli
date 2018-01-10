@@ -13,9 +13,9 @@ import { processorFactory } from './processors';
  * in a cache and synced with the backend.
  */
 export class SyncStore extends CacheStore {
-  constructor(collection, options = {}, processor) {
+  constructor(collection, processor, options = {}) {
     const proc = processor || processorFactory.getOfflineProcessor();
-    super(collection, options, proc);
+    super(collection, proc, options);
   }
 
   /**

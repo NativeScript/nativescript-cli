@@ -47,18 +47,18 @@ export class DataStore {
     switch (type) {
       case DataStoreType.Network: {
         const processor = processorFactory.getNetworkProcessor();
-        store = new NetworkStore(collection, options, processor);
+        store = new NetworkStore(collection, processor, options);
         break;
       }
       case DataStoreType.Sync: {
         const processor = processorFactory.getOfflineProcessor();
-        store = new SyncStore(collection, options, processor);
+        store = new SyncStore(collection, processor, options);
         break;
       }
       case DataStoreType.Cache:
       default: {
-        const operator = processorFactory.getCacheOfflineDataProcessor();
-        store = new CacheStore(collection, options, operator);
+        const processor = processorFactory.getCacheOfflineDataProcessor();
+        store = new CacheStore(collection, processor, options);
       }
     }
 

@@ -18,9 +18,9 @@ import { syncManagerProvider } from './sync';
  * in a cache and synced with the backend.
  */
 export class CacheStore extends NetworkStore {
-  constructor(collection, options = {}, processor) {
+  constructor(collection, processor, options = {}) {
     const proc = processor || processorFactory.getCacheOfflineDataProcessor();
-    super(collection, options, proc);
+    super(collection, proc, options);
 
     /**
      * @type {number|undefined}
