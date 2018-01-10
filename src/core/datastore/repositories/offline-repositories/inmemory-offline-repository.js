@@ -20,125 +20,6 @@ export class InmemoryOfflineRepository extends OfflineRepository {
     this._queue = promiseQueue;
   }
 
-  // ----- private methods
-
-  _readAll(collection) {
-    const key = this._formCollectionKey(collection);
-    return this._persister.read(key)
-      .then(entities => entities || []);
-  }
-
-  // TODO: Keep them by id
-  _saveAll(collection, entities) {
-    const key = this._formCollectionKey(collection);
-    return this._persister.write(key, entities);
-  }
-
-  _deleteAll(collection) {
-    const key = this._formCollectionKey(collection);
-    return this._persister.delete(key);
-  }
-
-  _enqueueCrudOperation(collection, operation) {
-    const key = this._formCollectionKey(collection);
-    return this._queue.enqueue(key, operation);
-  }
-
-  _keyBelongsToApp(key) {
-    const appKey = this._getAppKey();
-    return key.indexOf(appKey) === 0;
-  }
-
-  _getCollectionFromKey(key) {
-    const appKey = this._getAppKey();
-    return key.substring(`${appKey}.`.length);
-  }
-
-  _getAllCollections() {
-    return this._persister.getKeys()
-      .then((keys) => {
-        const collections = [];
-        keys = keys || [];
-        keys.forEach((key) => {
-          if (this._keyBelongsToApp(key)) {
-            collections.push(this._getCollectionFromKey(key));
-          }
-        });
-        return collections;
-      });
-  }
-
-  // ----- protected methods
-
-  // TODO: integrate with db/collection concept in parent(s)?
-  _formCollectionKey(collection) {
-    const appKey = this._getAppKey();
-    return `${appKey}.${collection}`;
-  }
-
-  // protected methods
-
-  _create(collection, entitiesToSave) {
-    return this._readAll(collection)
-      .then((existingEntities) => {
-        existingEntities = existingEntities.concat(entitiesToSave);
-        return this._saveAll(collection, existingEntities);
-      })
-      .then(() => entitiesToSave);
-  }
-
-  _update(collection, entities) {
-    const entitiesArray = ensureArray(entities);
-    const updateEntitiesById = keyBy(entitiesArray, '_id');
-    let unprocessedEntitiesCount = entitiesArray.length;
-    return this._readAll(collection)
-      .then((allEntities) => {
-        allEntities.forEach((entity, index) => {
-          if (unprocessedEntitiesCount > 0 && updateEntitiesById[entity._id]) {
-            allEntities[index] = updateEntitiesById[entity._id];
-            delete updateEntitiesById[entity._id];
-            unprocessedEntitiesCount -= 1;
-          }
-        });
-
-        // the upsert part
-        if (unprocessedEntitiesCount > 0) {
-          Object.keys(updateEntitiesById).forEach((entityId) => {
-            allEntities.push(updateEntitiesById[entityId]);
-          });
-        }
-
-        return this._saveAll(collection, allEntities)
-          .then(() => entities);
-      });
-  }
-
-  _delete(collection, query) {
-    let deletedCount = 0;
-    return this._readAll(collection)
-      .then((allEntities) => {
-        const matchingEntities = applyQueryToDataset(allEntities, query);
-        const shouldDeleteById = keyBy(matchingEntities, '_id');
-        const remainingEntities = allEntities.filter(e => !shouldDeleteById[e._id]);
-        deletedCount = allEntities.length - remainingEntities.length;
-        return this._saveAll(collection, remainingEntities);
-      })
-      .then(() => deletedCount);
-  }
-
-  _deleteById(collection, id) {
-    return this._readAll(collection)
-      .then((allEntities) => {
-        const index = allEntities.findIndex(e => e._id === id);
-        if (index > -1) {
-          allEntities.splice(index, 1);
-          return this._saveAll(collection, allEntities)
-            .then(() => 1);
-        }
-        return Promise.resolve(0);
-      });
-  }
-
   // ----- public methods
 
   create(collection, entitiesToSave) {
@@ -209,6 +90,123 @@ export class InmemoryOfflineRepository extends OfflineRepository {
       .then((collections) => {
         const promises = collections.map(c => this._deleteAll(c));
         return Promise.all(promises);
+      });
+  }
+
+  // protected methods
+
+  // TODO: integrate with db/collection concept in parent(s)?
+  _formCollectionKey(collection) {
+    const appKey = this._getAppKey();
+    return `${appKey}.${collection}`;
+  }
+
+  _create(collection, entitiesToSave) {
+    return this._readAll(collection)
+      .then((existingEntities) => {
+        existingEntities = existingEntities.concat(entitiesToSave);
+        return this._saveAll(collection, existingEntities);
+      })
+      .then(() => entitiesToSave);
+  }
+
+  _update(collection, entities) {
+    const entitiesArray = ensureArray(entities);
+    const updateEntitiesById = keyBy(entitiesArray, '_id');
+    let unprocessedEntitiesCount = entitiesArray.length;
+    return this._readAll(collection)
+      .then((allEntities) => {
+        allEntities.forEach((entity, index) => {
+          if (unprocessedEntitiesCount > 0 && updateEntitiesById[entity._id]) {
+            allEntities[index] = updateEntitiesById[entity._id];
+            delete updateEntitiesById[entity._id];
+            unprocessedEntitiesCount -= 1;
+          }
+        });
+
+        // the upsert part
+        if (unprocessedEntitiesCount > 0) {
+          Object.keys(updateEntitiesById).forEach((entityId) => {
+            allEntities.push(updateEntitiesById[entityId]);
+          });
+        }
+
+        return this._saveAll(collection, allEntities)
+          .then(() => entities);
+      });
+  }
+
+  _delete(collection, query) {
+    let deletedCount = 0;
+    return this._readAll(collection)
+      .then((allEntities) => {
+        const matchingEntities = applyQueryToDataset(allEntities, query);
+        const shouldDeleteById = keyBy(matchingEntities, '_id');
+        const remainingEntities = allEntities.filter(e => !shouldDeleteById[e._id]);
+        deletedCount = allEntities.length - remainingEntities.length;
+        return this._saveAll(collection, remainingEntities);
+      })
+      .then(() => deletedCount);
+  }
+
+  _deleteById(collection, id) {
+    return this._readAll(collection)
+      .then((allEntities) => {
+        const index = allEntities.findIndex(e => e._id === id);
+        if (index > -1) {
+          allEntities.splice(index, 1);
+          return this._saveAll(collection, allEntities)
+            .then(() => 1);
+        }
+        return Promise.resolve(0);
+      });
+  }
+
+  // ----- private methods
+
+  _readAll(collection) {
+    const key = this._formCollectionKey(collection);
+    return this._persister.read(key)
+      .then(entities => entities || []);
+  }
+
+  // TODO: Keep them by id
+  _saveAll(collection, entities) {
+    const key = this._formCollectionKey(collection);
+    return this._persister.write(key, entities);
+  }
+
+  _deleteAll(collection) {
+    const key = this._formCollectionKey(collection);
+    return this._persister.delete(key);
+  }
+
+  _enqueueCrudOperation(collection, operation) {
+    const key = this._formCollectionKey(collection);
+    return this._queue.enqueue(key, operation);
+  }
+
+  _keyBelongsToApp(key) {
+    const appKey = this._getAppKey();
+    return key.indexOf(appKey) === 0;
+  }
+
+  _getCollectionFromKey(key) {
+    const appKey = this._getAppKey();
+    return key.substring(`${appKey}.`.length);
+  }
+
+  _getAllCollections() {
+    return this._persister.getKeys()
+      .then((keys) => {
+        const collections = [];
+        keys = keys || [];
+        keys.forEach((key) => {
+          if (this._keyBelongsToApp(key)) {
+            collections.push(this._getCollectionFromKey(key));
+          }
+        });
+        return collections;
       });
   }
 }

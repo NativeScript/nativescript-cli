@@ -1,8 +1,6 @@
 import { KinveyError } from '../../../errors';
 
 import { InmemoryOfflineRepository } from './inmemory-offline-repository';
-
-// imported for typings
 import { KeyValueStorePersister } from '../../persisters';
 
 export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
@@ -16,12 +14,22 @@ export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
     super(persister, promiseQueue);
   }
 
+  // ---- unsupported by parent's persister API
+
+  readById(collection, entityId) {
+    return this._persister.readEntity(collection, entityId);
+  }
+
+  deleteById(collection, entityId) {
+    return this._persister.deleteEntity(collection, entityId);
+  }
+
+  // protected
+
   _formCollectionKey(collection) {
     // no need to namespace collections - they are in a db per app key
     return collection;
   }
-
-  // protected
 
   _create(collection, entitiesToSave) {
     return this._persister.write(collection, entitiesToSave);
@@ -32,16 +40,6 @@ export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
   }
 
   _deleteById(collection, entityId) {
-    return this._persister.deleteEntity(collection, entityId);
-  }
-
-  // ---- unsupported by parent's persister API
-
-  readById(collection, entityId) {
-    return this._persister.readEntity(collection, entityId);
-  }
-
-  deleteById(collection, entityId) {
     return this._persister.deleteEntity(collection, entityId);
   }
 }
