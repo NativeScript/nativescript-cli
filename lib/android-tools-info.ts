@@ -306,6 +306,10 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		if (this.androidHome && requiredAppCompatRange) {
 			const pathToAppCompat = path.join(this.androidHome, "extras", "android", "m2repository", "com", "android", "support", "appcompat-v7");
 			selectedAppCompatVersion = this.getMatchingDir(pathToAppCompat, requiredAppCompatRange);
+			if (!selectedAppCompatVersion) {
+				// get latest matching version, as there's no available appcompat versions for latest SDK versions.
+				selectedAppCompatVersion = this.getMatchingDir(pathToAppCompat, "*");
+			}
 		}
 
 		this.$logger.trace(`Selected AppCompat version is: ${selectedAppCompatVersion}`);
