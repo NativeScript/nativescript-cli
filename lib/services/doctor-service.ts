@@ -2,7 +2,6 @@ import { EOL } from "os";
 import * as semver from "semver";
 import * as path from "path";
 import * as helpers from "../common/helpers";
-const clui = require("clui");
 
 class DoctorService implements IDoctorService {
 	private static PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
@@ -166,7 +165,7 @@ class DoctorService implements IDoctorService {
 		};
 		this.$fs.writeJson(path.join(projDir, "package.json"), packageJsonData);
 
-		const spinner = new clui.Spinner("Installing iOS runtime.");
+		const spinner = this.$progressIndicator.getSpinner("Installing iOS runtime.");
 		try {
 			spinner.start();
 			await this.$npm.install("tns-ios", projDir, {
