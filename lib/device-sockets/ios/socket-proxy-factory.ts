@@ -74,7 +74,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 
 	public async createWebSocketProxy(factory: () => Promise<net.Socket>): Promise<ws.Server> {
 		// NOTE: We will try to provide command line options to select ports, at least on the localhost.
-		const localPort = await this.$net.getFreePort();
+		const localPort = await this.$net.getAvailablePortInRange(41000);
 
 		this.$logger.info("\nSetting up debugger proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
 
@@ -85,6 +85,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 
 		const server = new ws.Server(<any>{
 			port: localPort,
+			host: "localhost",
 			verifyClient: async (info: any, callback: Function) => {
 				this.$logger.info("Frontend client connected.");
 				let _socket;
@@ -131,12 +132,13 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 			deviceSocket.on("close", () => {
 				this.$logger.info("Backend socket closed!");
 				if (!this.$options.watch) {
-					process.exit(0);
+					webSocket.close();
 				}
 			});
 
 			webSocket.on("close", () => {
 				this.$logger.info('Frontend socket closed!');
+				deviceSocket.destroy();
 				if (!this.$options.watch) {
 					process.exit(0);
 				}
