@@ -1,9 +1,13 @@
+import { Promise } from 'es6-promise';
+
 import { Client } from '../../client';
+import { NotFoundError, KinveyError } from '../../errors';
 
 import { KeyValuePersister } from './key-value-persister';
 
 export class KeyValueStorePersister extends KeyValuePersister {
-  get _databaseName() {
+  // protected property
+  get _storeName() {
     return Client.sharedInstance().appKey;
   }
 
@@ -13,17 +17,24 @@ export class KeyValueStorePersister extends KeyValuePersister {
 
   writeEntities(collection, entities) {
     return this._writeEntitiesToPersistance(collection, entities)
-      .then((result) => {
+      .then(() => {
         this._invalidateCache(collection);
-        return result;
+        return true;
       });
   }
 
-  deleteEntities(collection, entityIds) {
-    return this._deleteEntitiesFromPersistance(collection, entityIds)
-      .then((result) => {
+  deleteEntity(collection, entityId) {
+    return this._deleteEntityFromPersistance(collection, entityId)
+      .then((deletedCount) => {
         this._invalidateCache(collection);
-        return result;
+
+        if (deletedCount === 0) {
+          return Promise.reject(new NotFoundError(`Entity with id ${entityId} was not found`));
+        }
+        if (deletedCount > 1) {
+          return Promise.reject(new KinveyError('Delete by id matched more than one entity'));
+        }
+        return true;
       });
   }
 
@@ -32,7 +43,7 @@ export class KeyValueStorePersister extends KeyValuePersister {
     this._throwNotImplementedError(entities);
   }
 
-  _deleteEntitiesFromPersistance(collection, entityIds) {
+  _deleteEntityFromPersistance(collection, entityIds) {
     this._throwNotImplementedError(entityIds);
   }
 }

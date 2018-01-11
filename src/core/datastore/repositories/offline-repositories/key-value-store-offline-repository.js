@@ -21,7 +21,8 @@ export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
   }
 
   deleteById(collection, entityId) {
-    return this._persister.deleteEntities(collection, entityId);
+    return this._persister.deleteEntity(collection, entityId)
+      .then(didDelete => (didDelete ? 1 : 0));
   }
 
   // protected
@@ -42,10 +43,6 @@ export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
 
   _update(collection, entities) {
     return this._batchUpsert(collection, entities);
-  }
-
-  _deleteById(collection, entityId) {
-    return this._persister.deleteEntities(collection, entityId);
   }
 
   // private

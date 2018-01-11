@@ -24,7 +24,8 @@ export class InmemoryOfflineRepository extends OfflineRepository {
 
   create(collection, entitiesToSave) {
     return this._enqueueCrudOperation(collection, () => {
-      return this._create(collection, entitiesToSave);
+      return this._create(collection, entitiesToSave)
+        .then(() => entitiesToSave);
     });
   }
 
@@ -59,7 +60,8 @@ export class InmemoryOfflineRepository extends OfflineRepository {
   // also, currently one doesn't know if they created or updated
   update(collection, entities) {
     return this._enqueueCrudOperation(collection, () => {
-      return this._update(collection, entities);
+      return this._update(collection, entities)
+        .then(() => entities);
     });
   }
 
@@ -110,8 +112,7 @@ export class InmemoryOfflineRepository extends OfflineRepository {
       .then((existingEntities) => {
         existingEntities = existingEntities.concat(entitiesToSave);
         return this._saveAll(collection, existingEntities);
-      })
-      .then(() => entitiesToSave);
+      });
   }
 
   _update(collection, entities) {
@@ -135,8 +136,7 @@ export class InmemoryOfflineRepository extends OfflineRepository {
           });
         }
 
-        return this._saveAll(collection, allEntities)
-          .then(() => entities);
+        return this._saveAll(collection, allEntities);
       });
   }
 

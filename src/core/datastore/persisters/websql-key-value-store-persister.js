@@ -1,7 +1,7 @@
 import { KinveyError, NotFoundError } from '../../errors';
 
 import { KeyValueStorePersister } from './key-value-store-persister';
-import { webSqlCollectionsMaster, webSqlDatabaseSize, isEmpty } from '../utils';
+import { webSqlCollectionsMaster, webSqlDatabaseSize } from '../utils';
 import { ensureArray } from '../../utils';
 
 const dbCache = {};
@@ -15,7 +15,7 @@ export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
       .then((entities) => {
         if (entities.length === 0) {
           throw new NotFoundError(`An entity with _id = ${entityId} was not found in the ${collection}` +
-            ` collection on the ${this._databaseName} WebSQL database.`);
+            ` collection on the ${this._storeName} WebSQL database.`);
         }
 
         return entities[0];
@@ -58,14 +58,10 @@ export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
     return this._upsertEntities(collection, ensureArray(entities));
   }
 
-  _deleteEntitiesFromPersistance(collection, entityIds) {
-    if (isEmpty(entityIds)) {
-      return Promise.resolve({ count: 0 });
-    }
-    const idsFilter = ensureArray(entityIds).join(', ');
-    const query = `DELETE FROM #{collection} WHERE key = (${idsFilter})`;
-    return this._openTransaction(collection, query, null, true)
-      .then((response) => ({ count: response.rowCount }));
+  _deleteEntityFromPersistance(collection, entityId) {
+    const query = 'DELETE FROM #{collection} WHERE key = ?';
+    return this._openTransaction(collection, query, [entityId], true)
+      .then(response => response.rowCount);
   }
 
   // private methods
@@ -75,13 +71,13 @@ export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
     const isMaster = collection === webSqlCollectionsMaster;
     const isMulti = Array.isArray(query);
     query = isMulti ? query : [[query, parameters]];
-    let db = dbCache[this.name];
+    let db = dbCache[this._storeName];
 
     return new Promise((resolve, reject) => {
       try {
         if (!db) {
-          db = global.openDatabase(this.name, 1, 'Kinvey Cache', webSqlDatabaseSize);
-          dbCache[this.name] = db;
+          db = global.openDatabase(this._storeName, 1, 'Kinvey Cache', webSqlDatabaseSize);
+          dbCache[this._storeName] = db;
         }
         const writeTxn = write || typeof db.readTransaction !== 'function';
 
@@ -143,7 +139,7 @@ export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
             }
 
             return reject(new KinveyError(`Unable to open a transaction for the ${collection}`
-              + ` collection on the ${this._databaseName} WebSQL database.`));
+              + ` collection on the ${this._storeName} WebSQL database.`));
           }).catch(reject);
         });
       } catch (error) {
@@ -153,25 +149,18 @@ export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
   }
 
   _upsertEntities(collection, allEntities) {
-    const queries = [];
-    let singular = false;
-
-    if (!Array.isArray(allEntities)) {
-      singular = true;
-      allEntities = [allEntities];
-    }
+    const singular = !Array.isArray(allEntities);
+    allEntities = ensureArray(allEntities);
 
     if (allEntities.length === 0) {
       return Promise.resolve(null);
     }
 
-    allEntities = allEntities.map((entity) => {
-      queries.push([
+    const queries = allEntities.map((entity) => {
+      return [
         'REPLACE INTO #{collection} (key, value) VALUES (?, ?)',
         [entity._id, JSON.stringify(entity)]
-      ]);
-
-      return entity;
+      ];
     });
 
     return this._openTransaction(collection, queries, null, true)
