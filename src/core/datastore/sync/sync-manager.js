@@ -242,20 +242,21 @@ export class SyncManager {
   // TODO: error handling needs consideration
   _processSyncItems(syncItems) {
     if (isEmpty(syncItems)) {
-      return Promise.resolve();
+      return Promise.resolve([]);
     }
 
     const queue = new PromiseQueue(syncBatchSize);
     const pushResults = [];
 
     return new Promise((resolve) => { // TODO: too nested, refactor?
-      syncItems.forEach((syncItem, index) => {
+      let completedCount = 0;
+      syncItems.forEach((syncItem) => {
         queue.enqueue(() => {
           return this._processSyncItem(syncItem)
             .then((pushResult) => {
               pushResults.push(pushResult);
-              const lastPushCompleted = syncItems.length === index + 1;
-              if (lastPushCompleted) {
+              completedCount += 1;
+              if (syncItems.length === completedCount) {
                 resolve(pushResults);
               }
             });
