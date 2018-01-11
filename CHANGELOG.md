@@ -4,6 +4,9 @@ NativeScript CLI Changelog
 3.4.1 (2018, January 11)
 ==
 
+### New
+* [Implemented #3313](https://github.com/NativeScript/nativescript-cli/pull/3313): Allow using Android SDK 27
+
 ### Fixed
 * [Fixed #3280](https://github.com/NativeScript/nativescript-cli/issues/3280): App_Resources are duplicated on consecutive builds with --bundle
 * [Fixed #3183](https://github.com/NativeScript/nativescript-cli/issues/3183): `tns debug ios --chrome keeps changing port on every livesync update
