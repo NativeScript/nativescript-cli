@@ -131,14 +131,13 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 			});
 		}
 
-		if (!sysInfoData.javaVer) {
+		if (!sysInfoData.javacVersion) {
 			result.push({
 				warning: "WARNING: The Java Development Kit (JDK) is not installed or is not configured properly.",
 				additionalInformation: "You will not be able to work with the Android SDK and you might not be able" + EOL
 				+ "to perform some Android-related operations. To ensure that you can develop and" + EOL
 				+ "test your apps for Android, verify that you have installed the JDK as" + EOL
-				+ "described in http://docs.oracle.com/javase/8/docs/technotes/guides/install/install_overview.html (for JDK 8)" + EOL
-				+ "or http://docs.oracle.com/javase/7/docs/webnotes/install/ (for JDK 7)." + EOL,
+				+ "described in http://docs.oracle.com/javase/8/docs/technotes/guides/install/install_overview.html (for JDK 8)." + EOL,
 				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			});
 		}

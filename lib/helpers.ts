@@ -22,10 +22,18 @@ export class Helpers {
 		return this.hostInfo.isWindows ? this.cmdQuote(value) : this.bashQuote(value);
 	}
 
+	/**
+	 * Appends zeroes to a version string until it reaches a specified length.
+	 * @param {string} version The version on which to append zeroes.
+	 * @param {number} requiredVersionLength The required length of the version string.
+	 * @returns {string} Appended version string. In case input is null, undefined or empty string, it is returned immediately without appending anything.
+	 */
 	public appendZeroesToVersion(version: string, requiredVersionLength: number): string {
-		const zeroesToAppend = requiredVersionLength - version.split(".").length;
-		for (let index = 0; index < zeroesToAppend; index++) {
-			version += ".0";
+		if (version) {
+			const zeroesToAppend = requiredVersionLength - version.split(".").length;
+			for (let index = 0; index < zeroesToAppend; index++) {
+				version += ".0";
+			}
 		}
 
 		return version;
