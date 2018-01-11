@@ -2,7 +2,6 @@ import { KinveyError } from '../../../errors';
 
 import { InmemoryOfflineRepository } from './inmemory-offline-repository';
 import { KeyValueStorePersister } from '../../persisters';
-import { ensureArray } from '../../../utils';
 
 export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
   /** @type {KeyValueStorePersister} */
@@ -22,14 +21,19 @@ export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
   }
 
   deleteById(collection, entityId) {
-    return this._persister.deleteEntity(collection, entityId);
+    return this._persister.deleteEntities(collection, entityId);
   }
 
   // protected
 
+  // TODO: is this ok from OOD perspective
   _formCollectionKey(collection) {
     // no need to namespace collections - they are in a db per app key
     return collection;
+  }
+
+  _getAllCollections() {
+    return this._persister.getKeys();
   }
 
   _create(collection, entities) {
@@ -41,15 +45,12 @@ export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
   }
 
   _deleteById(collection, entityId) {
-    return this._persister.deleteEntity(collection, entityId);
+    return this._persister.deleteEntities(collection, entityId);
   }
 
   // private
 
   _batchUpsert(collection, entities) {
-    const promises = ensureArray(entities).map((entity) => {
-      return this._persister.writeEntity(collection, entity);
-    });
-    return Promise.all(promises);
+    return this._persister.writeEntities(collection, entities);
   }
 }

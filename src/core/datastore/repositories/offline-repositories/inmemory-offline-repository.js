@@ -89,7 +89,11 @@ export class InmemoryOfflineRepository extends OfflineRepository {
     return this._getAllCollections()
       .then((collections) => {
         const promises = collections.map(c => this._deleteAll(c));
-        return Promise.all(promises);
+        return Promise.all(promises)
+          .then((results) => {
+            const totalCount = results.reduce((total, result) => total + result.count, 0);
+            return { count: totalCount };
+          });
       });
   }
 
@@ -162,6 +166,20 @@ export class InmemoryOfflineRepository extends OfflineRepository {
       });
   }
 
+  _getAllCollections() {
+    return this._persister.getKeys()
+      .then((keys) => {
+        const collections = [];
+        keys = keys || [];
+        keys.forEach((key) => {
+          if (this._keyBelongsToApp(key)) {
+            collections.push(this._getCollectionFromKey(key));
+          }
+        });
+        return collections;
+      });
+  }
+
   // ----- private methods
 
   _readAll(collection) {
@@ -194,19 +212,5 @@ export class InmemoryOfflineRepository extends OfflineRepository {
   _getCollectionFromKey(key) {
     const appKey = this._getAppKey();
     return key.substring(`${appKey}.`.length);
-  }
-
-  _getAllCollections() {
-    return this._persister.getKeys()
-      .then((keys) => {
-        const collections = [];
-        keys = keys || [];
-        keys.forEach((key) => {
-          if (this._keyBelongsToApp(key)) {
-            collections.push(this._getCollectionFromKey(key));
-          }
-        });
-        return collections;
-      });
   }
 }

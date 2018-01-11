@@ -11,16 +11,16 @@ export class KeyValueStorePersister extends KeyValuePersister {
     this._throwNotImplementedError(entityId);
   }
 
-  writeEntity(collection, entity) {
-    return this._writeEntityToPersistance(collection, entity)
+  writeEntities(collection, entities) {
+    return this._writeEntitiesToPersistance(collection, entities)
       .then((result) => {
         this._invalidateCache(collection);
         return result;
       });
   }
 
-  deleteEntity(collection, entityId) {
-    return this._deleteEntityFromPersistance(collection, entityId)
+  deleteEntities(collection, entityIds) {
+    return this._deleteEntitiesFromPersistance(collection, entityIds)
       .then((result) => {
         this._invalidateCache(collection);
         return result;
@@ -28,11 +28,11 @@ export class KeyValueStorePersister extends KeyValuePersister {
   }
 
   // protected
-  _writeEntityToPersistance(collection, entity) {
-    this._throwNotImplementedError(entity);
+  _writeEntitiesToPersistance(collection, entities) {
+    this._throwNotImplementedError(entities);
   }
 
-  _deleteEntityFromPersistance(collection, entityId) {
-    this._throwNotImplementedError(entityId);
+  _deleteEntitiesFromPersistance(collection, entityIds) {
+    this._throwNotImplementedError(entityIds);
   }
 }
