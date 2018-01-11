@@ -693,15 +693,19 @@ describe('CacheStore', () => {
     it('should call create() for an entity that does not contain an _id', () => {
       const store = new CacheStore(collection);
       const spy = expect.spyOn(store, 'create');
-      store.save({});
-      expect(spy).toHaveBeenCalled();
+      const entity = {};
+      const options = {};
+      store.save(entity, options);
+      expect(spy).toHaveBeenCalledWith(entity, options);
     });
 
     it('should call update() for an entity that contains an _id', () => {
       const store = new CacheStore(collection);
       const spy = expect.spyOn(store, 'update');
-      store.save({ _id: randomString() });
-      expect(spy).toHaveBeenCalled();
+      const entity = { _id: randomString() };
+      const options = {};
+      store.save(entity, options);
+      expect(spy).toHaveBeenCalledWith(entity, options);
     });
 
     it('should call create() when an array of entities is provided', () => {

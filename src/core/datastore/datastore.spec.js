@@ -5,9 +5,18 @@ import { NetworkStore } from './networkstore';
 import { CacheStore } from './cachestore';
 import { SyncStore } from './syncstore';
 import { KinveyError } from '../errors';
+import { Client } from '../client';
+import { randomString } from '../utils';
 const collection = 'Books';
 
 describe('DataStore', () => {
+  before(() => {
+    Client.init({
+      appKey: randomString(),
+      appSecret: randomString()
+    });
+  });
+
   describe('constructor', () => {
     it('should throw an error if the DataStore class is tried to be instantiated', () => {
       expect(() => {
