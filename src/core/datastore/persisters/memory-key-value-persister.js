@@ -13,11 +13,11 @@ export class MemoryKeyValuePersister extends KeyValuePersister {
 
   _writeToPersistance(key, array) {
     _storage[key] = array;
-    return Promise.resolve();
+    return Promise.resolve(true);
   }
 
   _deleteFromPersistance(key) {
     delete _storage[key];
-    return Promise.resolve();
+    return Promise.resolve(true);
   }
 }

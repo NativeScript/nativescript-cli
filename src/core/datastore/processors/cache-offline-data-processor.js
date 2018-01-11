@@ -1,3 +1,5 @@
+import clone from 'lodash/clone';
+
 import { Query } from '../../query';
 import { KinveyError, NotFoundError } from '../../errors';
 
@@ -8,7 +10,6 @@ import { isLocalEntity, isNotEmpty, isEmpty } from '../utils';
 
 // imported for type info
 // import { NetworkRepository } from '../repositories';
-// import { SyncStateManager } from '../sync';
 
 // TODO: refactor similar methods. read and readById, for instance
 export class CacheOfflineDataProcessor extends OfflineDataProcessor {
@@ -62,6 +63,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
 
   _processCreate(collection, data, options) {
     let offlineEntity;
+    data = clone(data);
 
     return super._processCreate(collection, data, options)
       .then((createdEntity) => {
@@ -111,16 +113,12 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
   }
 
   _processUpdate(collection, data, options) {
-    let offlineEntity;
     return super._processUpdate(collection, data, options)
-      .then((result) => {
-        offlineEntity = result;
-        return this._networkRepository.update(collection, data, options);
-      })
+      .then(() => this._networkRepository.update(collection, data, options))
       .then((networkEntity) => {
-        const offlineEntityId = offlineEntity && offlineEntity._id;
-        // TODO: When offline update becomes an upsert, this can be an update
-        return this._upsertNetworkEntityOffline(collection, offlineEntityId, networkEntity)
+        return this._getRepository()
+          .then(repo => repo.update(collection, networkEntity, options))
+          .then(() => this._syncManager.removeSyncItemForEntityId(networkEntity._id))
           .then(() => networkEntity);
       });
   }

@@ -37,17 +37,18 @@ export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
     return this._persister.getKeys();
   }
 
-  _create(collection, entities) {
+  create(collection, entities) {
     return this._batchUpsert(collection, entities);
   }
 
-  _update(collection, entities) {
+  update(collection, entities) {
     return this._batchUpsert(collection, entities);
   }
 
   // private
 
   _batchUpsert(collection, entities) {
-    return this._persister.writeEntities(collection, entities);
+    return this._persister.writeEntities(collection, entities)
+      .then(() => entities);
   }
 }

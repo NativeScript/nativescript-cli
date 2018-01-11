@@ -1,3 +1,4 @@
+import clone from 'lodash/clone';
 import { ensureArray, isDefined } from '../../utils';
 
 import { OperationType } from '../operations';
@@ -80,7 +81,7 @@ export class OfflineDataProcessor extends DataProcessor {
   }
 
   _processCreate(collection, data, options) {
-    this._addMetadataToEntities(data);
+    data = this._addMetadataToEntities(data);
     return super._processCreate(collection, data, options)
       .then((createdItems) => {
         return this._syncManager.addCreateEvent(collection, createdItems)
@@ -107,10 +108,14 @@ export class OfflineDataProcessor extends DataProcessor {
   }
 
   _addMetadataToEntities(data) {
-    ensureArray(data).forEach((entity) => {
+    const siSingle = !Array.isArray(data);
+    const arr = ensureArray(data).map((entity) => {
       if (!isDefined(entity._id)) {
+        entity = clone(entity);
         this._addOfflineMetadataToEntity(entity);
       }
+      return entity;
     });
+    return siSingle ? arr[0] : arr;
   }
 }

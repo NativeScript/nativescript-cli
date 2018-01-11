@@ -82,21 +82,14 @@ export class InmemoryOfflineRepository extends OfflineRepository {
   clear(collection) {
     if (collection) {
       return this._enqueueCrudOperation(collection, () => {
-        return this._deleteAll(collection);
+        return this._clearCollections(collection);
       });
     }
 
     // TODO: this does not enqueue, so it might cause problems
     // currently it's only called from Kinvey.DataStore.clear()
     return this._getAllCollections()
-      .then((collections) => {
-        const promises = collections.map(c => this._deleteAll(c));
-        return Promise.all(promises)
-          .then((results) => {
-            const totalCount = results.reduce((total, result) => total + result.count, 0);
-            return { count: totalCount };
-          });
-      });
+      .then(collections => this._clearCollections(collections));
   }
 
   // protected methods
@@ -105,39 +98,6 @@ export class InmemoryOfflineRepository extends OfflineRepository {
   _formCollectionKey(collection) {
     const appKey = this._getAppKey();
     return `${appKey}.${collection}`;
-  }
-
-  _create(collection, entitiesToSave) {
-    return this._readAll(collection)
-      .then((existingEntities) => {
-        existingEntities = existingEntities.concat(entitiesToSave);
-        return this._saveAll(collection, existingEntities);
-      });
-  }
-
-  _update(collection, entities) {
-    const entitiesArray = ensureArray(entities);
-    const updateEntitiesById = keyBy(entitiesArray, '_id');
-    let unprocessedEntitiesCount = entitiesArray.length;
-    return this._readAll(collection)
-      .then((allEntities) => {
-        allEntities.forEach((entity, index) => {
-          if (unprocessedEntitiesCount > 0 && updateEntitiesById[entity._id]) {
-            allEntities[index] = updateEntitiesById[entity._id];
-            delete updateEntitiesById[entity._id];
-            unprocessedEntitiesCount -= 1;
-          }
-        });
-
-        // the upsert part
-        if (unprocessedEntitiesCount > 0) {
-          Object.keys(updateEntitiesById).forEach((entityId) => {
-            allEntities.push(updateEntitiesById[entityId]);
-          });
-        }
-
-        return this._saveAll(collection, allEntities);
-      });
   }
 
   _delete(collection, query) {
@@ -212,5 +172,44 @@ export class InmemoryOfflineRepository extends OfflineRepository {
   _getCollectionFromKey(key) {
     const appKey = this._getAppKey();
     return key.substring(`${appKey}.`.length);
+  }
+
+  _clearCollections(collections) {
+    const promises = ensureArray(collections).map(c => this._deleteAll(c));
+    return Promise.all(promises)
+      .then(() => true);
+  }
+
+  _create(collection, entitiesToSave) {
+    return this._readAll(collection)
+      .then((existingEntities) => {
+        existingEntities = existingEntities.concat(entitiesToSave);
+        return this._saveAll(collection, existingEntities);
+      });
+  }
+
+  _update(collection, entities) {
+    const entitiesArray = ensureArray(entities);
+    const updateEntitiesById = keyBy(entitiesArray, '_id');
+    let unprocessedEntitiesCount = entitiesArray.length;
+    return this._readAll(collection)
+      .then((allEntities) => {
+        allEntities.forEach((entity, index) => {
+          if (unprocessedEntitiesCount > 0 && updateEntitiesById[entity._id]) {
+            allEntities[index] = updateEntitiesById[entity._id];
+            delete updateEntitiesById[entity._id];
+            unprocessedEntitiesCount -= 1;
+          }
+        });
+
+        // the upsert part
+        if (unprocessedEntitiesCount > 0) {
+          Object.keys(updateEntitiesById).forEach((entityId) => {
+            allEntities.push(updateEntitiesById[entityId]);
+          });
+        }
+
+        return this._saveAll(collection, allEntities);
+      });
   }
 }
