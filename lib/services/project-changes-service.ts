@@ -64,11 +64,14 @@ export class ProjectChangesService implements IProjectChangesService {
 			this._changesInfo.packageChanged = this.isProjectFileChanged(projectData, platform);
 			this._changesInfo.appResourcesChanged = this.containsNewerFiles(projectData.appResourcesDirectoryPath, null, projectData);
 			/*done because currently all node_modules are traversed, a possible improvement could be traversing only the production dependencies*/
+			const visitedPaths = new Set<string>();
+			visitedPaths.add(projectData.projectDir);
 			this._changesInfo.nativeChanged = this.containsNewerFiles(
 				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME),
 				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME, "tns-ios-inspector"),
 				projectData,
-				this.fileChangeRequiresBuild);
+				this.fileChangeRequiresBuild,
+				visitedPaths);
 
 			if (this._newFiles > 0 || this._changesInfo.nativeChanged) {
 				this._changesInfo.modulesChanged = true;
@@ -247,6 +250,11 @@ export class ProjectChangesService implements IProjectChangesService {
 				continue;
 			}
 
+			const fileRPath = this.$fs.realpath(filePath);
+			if (visitedRealPaths.has(fileRPath)) {
+				continue;
+			}
+
 			const fileStats = this.$fs.getFsStats(filePath);
 			const changed = this.isFileModified(fileStats, filePath);
 
@@ -300,7 +308,7 @@ export class ProjectChangesService implements IProjectChangesService {
 				const fullFilePath = path.join(projectDir, path.join(filePath, "package.json"));
 				if (this.$fs.exists(fullFilePath)) {
 					const json = this.$fs.readJson(fullFilePath);
-					if (json["nativescript"] && _.startsWith(file, path.join(filePath, "platforms"))) {
+					if (json.nativescript && json.nativescript.platforms && _.startsWith(file, path.join(filePath, "platforms"))) {
 						return true;
 					}
 				}
