@@ -52,11 +52,11 @@ The NativeScript CLI is the command-line interface for interacting with NativeSc
 
 ![NativeScript CLI diagram](https://github.com/NativeScript/nativescript-cli/blob/master/ns-cli.png)
 
-* Commands - pretty much what every CLI do - support of different command options, input validation and help  
-* Devices Service - it is the one that provides the communication between NativeScript and devices/emulators/simulators used to run/debug the app. Uses iTunes to talk to iOS and adb for Android
-* LiveSync Service - initiates application redeploy on application code changes while development
-* Hooks Service - executes custom-written hooks in developed application, thus modifying build process
-* Platforms Service - provides app build functionalities, uses Gradle to build Android packages and Xcode for iOS. 
+* **Commands** - pretty much what every CLI do - support of different command options, input validation and help  
+* **Devices Service** - it is the one that provides the communication between NativeScript and devices/emulators/simulators used to run/debug the app. Uses iTunes to talk to iOS and adb for Android
+* **LiveSync Service** - initiates application redeploy on application code changes while development
+* **Hooks Service** - executes custom-written hooks in developed application, thus modifying build process
+* **Platforms Service** - provides app build functionalities, uses Gradle to build Android packages and Xcode for iOS. 
 
 [Back to Top][1]
 
