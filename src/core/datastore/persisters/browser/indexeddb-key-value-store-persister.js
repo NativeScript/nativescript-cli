@@ -1,9 +1,9 @@
 // import { Promise } from 'es6-promise';
-import { KinveyError, NotFoundError } from '../../errors';
+import { KinveyError, NotFoundError } from '../../../errors';
 
-import { KeyValueStorePersister } from './key-value-store-persister';
-import { isDefined, ensureArray } from '../../utils';
-import { domStringListToStringArray, inedxedDbTransctionMode } from './utils';
+import { KeyValueStorePersister } from '../key-value-store-persister';
+import { isDefined, ensureArray } from '../../../utils';
+import { domStringListToStringArray, inedxedDbTransctionMode } from '../utils';
 
 const dbCache = {}; // TODO: see what can be done about this
 
