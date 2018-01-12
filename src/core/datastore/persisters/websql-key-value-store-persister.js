@@ -1,4 +1,4 @@
-import { KinveyError, NotFoundError } from '../../errors';
+import { KinveyError } from '../../errors';
 
 import { KeyValueStorePersister } from './key-value-store-persister';
 import { webSqlCollectionsMaster, webSqlDatabaseSize } from '../utils';
@@ -8,20 +8,6 @@ const dbCache = {};
 
 // TODO: things can be done in a single transaction
 export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
-  readEntity(collection, entityId) {
-    const sql = 'SELECT value FROM #{collection} WHERE key = ?';
-    return this._openTransaction(collection, sql, [entityId])
-      .then(response => response.result)
-      .then((entities) => {
-        if (entities.length === 0) {
-          throw new NotFoundError(`An entity with _id = ${entityId} was not found in the ${collection}` +
-            ` collection on the ${this._storeName} WebSQL database.`);
-        }
-
-        return entities[0];
-      });
-  }
-
   getKeys() {
     const query = 'SELECT name AS value FROM #{collection} WHERE type = ?';
     return this._openTransaction(webSqlCollectionsMaster, query, ['table'], false)
@@ -44,7 +30,7 @@ export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
       return Promise.reject(new KinveyError('Invalid or missing entities array'));
     }
 
-    return this._openTransaction(collection, 'DELETE FROM #{collection}', [], true)
+    return this._deleteFromPersistance(collection)
       .then(() => this._upsertEntities(collection, allEntities));
   }
 
@@ -52,6 +38,12 @@ export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
     // TODO: this should drop the table, instead of deleting all rows
     return this._openTransaction(collection, 'DELETE FROM #{collection}', null, true)
       .then((response) => ({ count: response.rowCount }));
+  }
+
+  _readEntityFromPersistance(collection, entityId) {
+    const sql = 'SELECT value FROM #{collection} WHERE key = ?';
+    return this._openTransaction(collection, sql, [entityId])
+      .then(response => response.result[0]);
   }
 
   _writeEntitiesToPersistance(collection, entities) {
@@ -148,15 +140,15 @@ export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
     });
   }
 
-  _upsertEntities(collection, allEntities) {
-    const singular = !Array.isArray(allEntities);
-    allEntities = ensureArray(allEntities);
+  _upsertEntities(collection, entities) {
+    const singular = !Array.isArray(entities);
+    entities = ensureArray(entities);
 
-    if (allEntities.length === 0) {
+    if (entities.length === 0) {
       return Promise.resolve(null);
     }
 
-    const queries = allEntities.map((entity) => {
+    const queries = entities.map((entity) => {
       return [
         'REPLACE INTO #{collection} (key, value) VALUES (?, ?)',
         [entity._id, JSON.stringify(entity)]
@@ -164,6 +156,6 @@ export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
     });
 
     return this._openTransaction(collection, queries, null, true)
-      .then(() => (singular ? allEntities[0] : allEntities));
+      .then(() => (singular ? entities[0] : entities));
   }
 }

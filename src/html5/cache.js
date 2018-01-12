@@ -1,4 +1,7 @@
-import { WebSqlKeyValueStorePersister } from '../core/datastore/persisters';
+import {
+  WebSqlKeyValueStorePersister,
+  IndexedDbKeyValueStorePersister
+} from '../core/datastore/persisters';
 import { repositoryProvider, storageType, KeyValueStoreOfflineRepository } from '../core/datastore/repositories';
 
 <<<<<<< HEAD
@@ -13,10 +16,16 @@ const webSqlBuilder = (queue) => {
   return new KeyValueStoreOfflineRepository(persister, queue);
 };
 
+const indexedDbBuilder = (queue) => {
+  const persister = new IndexedDbKeyValueStorePersister();
+  return new KeyValueStoreOfflineRepository(persister, queue);
+};
+
 // TODO: this will grow, refactor
 const repoConstructors = {
-  [storageType.default]: webSqlBuilder, // TODO: get the default support chain
-  [storageType.webSql]: webSqlBuilder
+  [storageType.default]: indexedDbBuilder, // TODO: get the default support chain
+  [storageType.webSql]: webSqlBuilder,
+  [storageType.indexedDb]: indexedDbBuilder
 };
 
 repositoryProvider.setSupportedConstructors(repoConstructors);

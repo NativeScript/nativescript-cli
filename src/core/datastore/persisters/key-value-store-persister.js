@@ -12,7 +12,13 @@ export class KeyValueStorePersister extends KeyValuePersister {
   }
 
   readEntity(collection, entityId) {
-    this._throwNotImplementedError(entityId);
+    return this._readEntityFromPersistance(collection, entityId)
+      .then((entity) => {
+        if (!entity) {
+          return Promise.reject(this._getEntityNotFoundError(collection, entityId));
+        }
+        return entity;
+      });
   }
 
   writeEntities(collection, entities) {
@@ -29,7 +35,7 @@ export class KeyValueStorePersister extends KeyValuePersister {
         this._invalidateCache(collection);
 
         if (deletedCount === 0) {
-          return Promise.reject(new NotFoundError(`Entity with id ${entityId} was not found`));
+          return Promise.reject(this._getEntityNotFoundError(collection, entityId));
         }
         if (deletedCount > 1) {
           return Promise.reject(new KinveyError('Delete by id matched more than one entity'));
@@ -39,11 +45,21 @@ export class KeyValueStorePersister extends KeyValuePersister {
   }
 
   // protected
+
+  _readEntityFromPersistance(collection, entityIds) {
+    this._throwNotImplementedError(entityId);
+  }
+
   _writeEntitiesToPersistance(collection, entities) {
     this._throwNotImplementedError(entities);
   }
 
   _deleteEntityFromPersistance(collection, entityIds) {
     this._throwNotImplementedError(entityIds);
+  }
+
+  _getEntityNotFoundError(collection, id) {
+    return new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
+      + ` collection on the ${this._storeName} IndexedDB database.`);
   }
 }
