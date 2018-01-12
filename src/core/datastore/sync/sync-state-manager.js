@@ -1,7 +1,7 @@
+import { Promise } from 'es6-promise';
 import clone from 'lodash/clone';
 
 import { Query } from '../../query';
-import { SyncError } from '../../errors';
 
 import { SyncOperation } from '../sync';
 import { repositoryProvider } from '../repositories';
