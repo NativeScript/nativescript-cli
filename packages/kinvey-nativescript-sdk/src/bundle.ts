@@ -6,7 +6,6 @@ import pkg from '../package.json';
 import '../../../src/nativescript/offline-data-storage';
 
 // Setup racks
-CacheRack.useCacheMiddleware(new CacheMiddleware());
 NetworkRack.useHttpMiddleware(new HttpMiddleware(pkg));
 
 // Setup popup

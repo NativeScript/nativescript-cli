@@ -1,18 +1,18 @@
-import * as NativeScriptSQLite from 'nativescript-sqlite';
+// import * as NativeScriptSQLite from 'nativescript-sqlite';
 
 import { KinveyError } from '../../errors';
 
 import { KeyValueStorePersister } from './key-value-store-persister';
 import { sqliteCollectionsMaster } from './utils';
 import { ensureArray } from '../../utils';
+const NativeScriptSQLite = require('nativescript-sqlite');
 
 export class SqliteKeyValueStorePersister extends KeyValueStorePersister {
   getKeys() {
     const query = 'SELECT name AS value FROM #{collection} WHERE type = ?';
     return this._openTransaction(sqliteCollectionsMaster, query, ['table'], false)
       .then((response) => {
-        return response.result
-          .filter(table => (/^[a-zA-Z0-9-]{1,128}/).test(table));
+        return response.filter(table => (/^[a-zA-Z0-9-]{1,128}/).test(table));
       });
   }
 
@@ -21,7 +21,7 @@ export class SqliteKeyValueStorePersister extends KeyValueStorePersister {
   _readFromPersistance(collection) {
     const sql = 'SELECT value FROM #{collection}';
     return this._openTransaction(collection, sql, [])
-      .then(response => response.result);
+      .catch(() => []);
   }
 
   _writeToPersistance(collection, allEntities) {
@@ -35,14 +35,14 @@ export class SqliteKeyValueStorePersister extends KeyValueStorePersister {
 
   _deleteFromPersistance(collection) {
     // TODO: this should drop the table, instead of deleting all rows
-    return this._openTransaction(collection, 'DELETE FROM #{collection}', null, true)
-      .then((response) => ({ count: response.rowCount }));
+    return this._openTransaction(collection, 'DELETE FROM #{collection}', undefined, true)
+      .then((response) => ({ count: response }));
   }
 
   _readEntityFromPersistance(collection, entityId) {
     const sql = 'SELECT value FROM #{collection} WHERE key = ?';
     return this._openTransaction(collection, sql, [entityId])
-      .then(response => response.result[0]);
+      .then(response => response[0]);
   }
 
   _writeEntitiesToPersistance(collection, entities) {
@@ -51,8 +51,7 @@ export class SqliteKeyValueStorePersister extends KeyValueStorePersister {
 
   _deleteEntityFromPersistance(collection, entityId) {
     const query = 'DELETE FROM #{collection} WHERE key = ?';
-    return this._openTransaction(collection, query, [entityId], true)
-      .then(response => response.rowCount);
+    return this._openTransaction(collection, query, [entityId], true);
   }
 
   // private methods
@@ -63,7 +62,7 @@ export class SqliteKeyValueStorePersister extends KeyValueStorePersister {
     const isMulti = Array.isArray(query);
     query = isMulti ? query : [[query, parameters]];
 
-    return new NativeScriptSQLite(this.name)
+    return new NativeScriptSQLite(this._storeName)
       .then((db) => {
         // This will set the database to return the results as an array of objects
         db.resultType(NativeScriptSQLite.RESULTSASOBJECT);
