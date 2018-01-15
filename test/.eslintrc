@@ -1,0 +1,21 @@
+{
+  "env": {
+    "mocha": true
+  },
+  "rules": {
+    "no-unused-expressions": "off",
+    "prefer-destructuring": "off",
+    "wrap-iife": "off"
+  },
+  "globals": {
+    "Kinvey": true,
+    "expect": true,
+    "utilities": true,
+    "runner": true,
+    "externalConfig": true,
+    "sinon": true,
+    "_": true,
+    "window": true,
+    "Constants": true
+  }
+}
