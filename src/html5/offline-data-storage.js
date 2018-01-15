@@ -1,15 +1,12 @@
 import {
-  WebSqlKeyValueStorePersister,
-  IndexedDbKeyValueStorePersister,
-  BrowserKeyValuePersister
-} from '../core/datastore/persisters';
-
-import {
   repositoryProvider,
   storageType,
   KeyValueStoreOfflineRepository,
-  InmemoryOfflineRepository
-} from '../core/datastore/repositories';
+  InmemoryOfflineRepository,
+  WebSqlKeyValueStorePersister,
+  IndexedDbKeyValueStorePersister,
+  BrowserKeyValuePersister
+} from '../core/datastore';
 
 <<<<<<< HEAD
 export class Html5CacheMiddleware extends CacheMiddleware {

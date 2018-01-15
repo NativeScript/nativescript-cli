@@ -12,3 +12,8 @@ export const inedxedDbTransctionMode = {
   readWrite: 'readwrite',
   readOnly: 'readonly',
 };
+
+export const browserStorageCollectionsMaster = '__master__';
+export const sqliteCollectionsMaster = 'sqlite_master';
+export const webSqlCollectionsMaster = 'sqlite_master'; // wat? check it
+export const webSqlDatabaseSize = 2 * 1024 * 1024;

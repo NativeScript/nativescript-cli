@@ -4,5 +4,6 @@ export const storageType = {
   webSql: 'webSql',
   indexedDb: 'indexedDb',
   localStorage: 'localStorage',
-  sessionStorage: 'sessionStorage'
+  sessionStorage: 'sessionStorage',
+  sqlite: 'sqlite'
 };

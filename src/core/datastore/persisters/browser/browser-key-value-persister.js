@@ -1,7 +1,7 @@
 import { Client } from '../../../client';
 
 import { KeyValuePersister } from '../key-value-persister';
-import { browserStorageCollectionsMaster } from '../../utils';
+import { browserStorageCollectionsMaster } from '../utils';
 
 /**
  * @typedef BrowserStore

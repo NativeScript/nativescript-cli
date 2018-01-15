@@ -37,7 +37,3 @@ export function isLocalEntity(entity) {
   // not using Metadata class because it mutates the entity
   return !!entity && !!entity._kmd && entity._kmd.local === true;
 }
-
-export const browserStorageCollectionsMaster = '__master__';
-export const webSqlCollectionsMaster = 'sqlite_master'; // wat? check it
-export const webSqlDatabaseSize = 2 * 1024 * 1024;

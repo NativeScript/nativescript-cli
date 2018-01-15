@@ -1,7 +1,7 @@
 import { KinveyError } from '../../../errors';
 
 import { KeyValueStorePersister } from './../key-value-store-persister';
-import { webSqlCollectionsMaster, webSqlDatabaseSize } from '../../utils';
+import { webSqlCollectionsMaster, webSqlDatabaseSize } from '../utils';
 import { ensureArray } from '../../../utils';
 
 const dbCache = {};
