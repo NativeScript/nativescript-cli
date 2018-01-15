@@ -40,7 +40,7 @@ const sessionStorageBuilder = (queue) => {
 
 // TODO: this will grow, refactor
 const repoConstructors = {
-  [storageType.default]: localStorageBuilder, // TODO: get the default support chain
+  [storageType.default]: indexedDbBuilder, // TODO: get the default support chain
   [storageType.webSql]: webSqlBuilder,
   [storageType.indexedDb]: indexedDbBuilder,
   [storageType.localStorage]: localStorageBuilder,
