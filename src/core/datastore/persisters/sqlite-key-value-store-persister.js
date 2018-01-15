@@ -1,16 +1,21 @@
-// import * as NativeScriptSQLite from 'nativescript-sqlite';
-
 import { KinveyError } from '../../errors';
 
 import { KeyValueStorePersister } from './key-value-store-persister';
 import { sqliteCollectionsMaster } from './utils';
 import { ensureArray } from '../../utils';
-const NativeScriptSQLite = require('nativescript-sqlite');
 
+// TODO: refactor this and WebSQL persister
 export class SqliteKeyValueStorePersister extends KeyValueStorePersister {
+  _sqlModule;
+
+  constructor(sqlModule, cacheEnabled, ttl) {
+    super(cacheEnabled, ttl);
+    this._sqlModule = sqlModule;
+  }
+
   getKeys() {
     const query = 'SELECT name AS value FROM #{collection} WHERE type = ?';
-    return this._openTransaction(sqliteCollectionsMaster, query, ['table'], false)
+    return this._sqlModule.openTransaction(sqliteCollectionsMaster, query, ['table'], false)
       .then((response) => {
         return response.filter(table => (/^[a-zA-Z0-9-]{1,128}/).test(table));
       });
@@ -20,7 +25,7 @@ export class SqliteKeyValueStorePersister extends KeyValueStorePersister {
 
   _readFromPersistance(collection) {
     const sql = 'SELECT value FROM #{collection}';
-    return this._openTransaction(collection, sql, [])
+    return this._sqlModule.openTransaction(collection, sql, [])
       .catch(() => []);
   }
 
@@ -35,13 +40,13 @@ export class SqliteKeyValueStorePersister extends KeyValueStorePersister {
 
   _deleteFromPersistance(collection) {
     // TODO: this should drop the table, instead of deleting all rows
-    return this._openTransaction(collection, 'DELETE FROM #{collection}', undefined, true)
+    return this._sqlModule.openTransaction(collection, 'DELETE FROM #{collection}', undefined, true)
       .then((response) => ({ count: response }));
   }
 
   _readEntityFromPersistance(collection, entityId) {
     const sql = 'SELECT value FROM #{collection} WHERE key = ?';
-    return this._openTransaction(collection, sql, [entityId])
+    return this._sqlModule.openTransaction(collection, sql, [entityId])
       .then(response => response[0]);
   }
 
@@ -51,81 +56,10 @@ export class SqliteKeyValueStorePersister extends KeyValueStorePersister {
 
   _deleteEntityFromPersistance(collection, entityId) {
     const query = 'DELETE FROM #{collection} WHERE key = ?';
-    return this._openTransaction(collection, query, [entityId], true);
+    return this._sqlModule.openTransaction(collection, query, [entityId], true);
   }
 
   // private methods
-
-  _openTransaction(collection, query, parameters, write = false) {
-    const escapedCollection = `"${collection}"`;
-    const isMaster = collection === sqliteCollectionsMaster;
-    const isMulti = Array.isArray(query);
-    query = isMulti ? query : [[query, parameters]];
-
-    return new NativeScriptSQLite(this._storeName)
-      .then((db) => {
-        // This will set the database to return the results as an array of objects
-        db.resultType(NativeScriptSQLite.RESULTSASOBJECT);
-
-        if (write && isMaster === false) {
-          return db.execSQL(`CREATE TABLE IF NOT EXISTS ${escapedCollection}`
-            + ' (key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)')
-            .then(() => db);
-        }
-
-        return db;
-      })
-      .then((db) => {
-        const responses = [];
-
-        if (query.length === 0) {
-          return db.close()
-            .then(() => {
-              return isMulti ? responses : responses.shift();
-            });
-        }
-
-        return query.reduce((prev, parts) => {
-          const sql = parts[0].replace('#{collection}', escapedCollection);
-
-          return prev
-            .then(() => {
-              if (write === false) {
-                return db.all(sql, parts[1]);
-              }
-
-              return db.execSQL(sql, parts[1]);
-            })
-            .then((resultSet = []) => {
-              if (write === false && Array.isArray(resultSet) && resultSet.length > 0) {
-                for (let i = 0, len = resultSet.length; i < len; i += 1) {
-                  try {
-                    const row = resultSet[i];
-                    const entity = isMaster ? row.value : JSON.parse(row.value);
-                    responses.push(entity);
-                  } catch (error) {
-                    // Catch the error
-                  }
-                }
-              } else if (write === true) {
-                responses.push(resultSet);
-              }
-
-              return responses;
-            });
-        }, Promise.resolve())
-          .then((response) => {
-            return db.close()
-              .then(() => response);
-          })
-          .catch((error) => {
-            return db.close()
-              .then(() => {
-                throw error;
-              });
-          });
-      });
-  }
 
   _upsertEntities(collection, entities) {
     const singular = !Array.isArray(entities);
@@ -142,7 +76,7 @@ export class SqliteKeyValueStorePersister extends KeyValueStorePersister {
       ];
     });
 
-    return this._openTransaction(collection, queries, null, true)
+    return this._sqlModule.openTransaction(collection, queries, null, true)
       .then(() => (singular ? entities[0] : entities));
   }
 }
