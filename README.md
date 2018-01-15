@@ -3,13 +3,10 @@ NativeScript Command-Line Interface
 Master Branch [![Build Status](https://travis-ci.org/NativeScript/nativescript-cli.svg?branch=build)][2].
 Get it using: `npm install nativescript@next -g`
 
-* Create, build, and run native apps for iOS and Android using JavaScript or TypeScript *
-
 The NativeScript CLI lets you create, build, and deploy [NativeScript][7]-based projects on iOS and Android devices.
 
-![NativeScript CLI diagram](https://github.com/NativeScript/nativescript-cli/blob/master/ns-cli.png)
-
 * [What is NativeScript](#what-is-nativescript "Quick overview of NativeScript, the JavaScript framework for cross-platform development of native iOS and Android apps")
+* [How the NativeScript CLI works](#how-the-nativescript-cli-works "How the CLI works in more detail")
 * [Supported Platforms](#supported-platforms "The mobile platforms you can target with NativeScript")
 * [System Requirements](#system-requirements "The hardware and software requirements for setting up and working with the NativeScript CLI")
 * [Installation](#installation "How to configure and install the NativeScript CLI")
@@ -45,6 +42,21 @@ To learn more about NativeScript, you can check the following resources:
 * The NativeScript [Documentation repo][6] and [Documentation portal][7]
 * [The NativeScript FAQ][8]
 * [On NativeScript for Android][10]
+
+[Back to Top][1]
+
+How the NativeScript CLI works
+===
+
+The NativeScript CLI is the command-line interface for interacting with NativeScript. It incorporates several important services. Consider the following diagram:
+
+![NativeScript CLI diagram](https://github.com/NativeScript/nativescript-cli/blob/master/ns-cli.png)
+
+* **Commands** - pretty much what every CLI does - support of different command options, input validation and help  
+* **Devices Service** - provides the communication between NativeScript and devices/emulators/simulators used to run/debug the app. Uses iTunes to talk to iOS and adb for Android
+* **LiveSync Service** - redeploys applications when code changes during development
+* **Hooks Service** - executes custom-written hooks in developed application, thus modifying the build process
+* **Platforms Service** - provides app build functionalities, uses Gradle to build Android packages and Xcode for iOS. 
 
 [Back to Top][1]
 
