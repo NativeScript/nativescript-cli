@@ -16,8 +16,4 @@ export class OfflineRepository extends Repository {
   _getAppKey() {
     return Client.sharedInstance().appKey;
   }
-
-  _ensureCollectionExists(collectionName) {
-    this._throwNotImplementedError(collectionName);
-  }
 }

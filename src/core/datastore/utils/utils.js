@@ -38,6 +38,6 @@ export function isLocalEntity(entity) {
   return !!entity && !!entity._kmd && entity._kmd.local === true;
 }
 
-export const collectionsMaster = '__master__';
+export const browserStorageCollectionsMaster = '__master__';
 export const webSqlCollectionsMaster = 'sqlite_master'; // wat? check it
 export const webSqlDatabaseSize = 2 * 1024 * 1024;
