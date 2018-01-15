@@ -1,7 +1,7 @@
 NativeScript Command-Line Interface
 ================
 Master Branch [![Build Status](https://travis-ci.org/NativeScript/nativescript-cli.svg?branch=build)][2].
-[![Waffle.io - NativeScript Runtimes and CLI](https://badge.waffle.io/NativeScript/android-runtime.svg?columns=In%20Progress)](https://waffle.io/NativeScript/android-runtime)
+[![Waffle.io - NativeScript CLI](https://badge.waffle.io/NativeScript/nativescript-cli.svg?columns=In%20Progress)](https://waffle.io/NativeScript/nativescript-cli)
 
 Get it using: `npm install nativescript@next -g`
 
