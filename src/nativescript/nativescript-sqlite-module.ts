@@ -1,3 +1,5 @@
+import { Promise } from 'es6-promise';
+
 import { KeyValueStorePersister } from '../core/datastore';
 import { sqliteCollectionsMaster } from '../core/datastore/persisters';
 

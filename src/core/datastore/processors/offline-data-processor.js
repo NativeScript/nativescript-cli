@@ -1,10 +1,11 @@
+import { Promise } from 'es6-promise';
 import clone from 'lodash/clone';
-import { ensureArray, isDefined } from '../../utils';
 
 import { OperationType } from '../operations';
 import { repositoryProvider } from '../repositories';
 import { DataProcessor } from './data-processor';
 import { generateEntityId, isEmpty } from '../utils';
+import { ensureArray, isDefined } from '../../utils';
 
 // imported for typings
 // import { SyncManager } from '../sync';

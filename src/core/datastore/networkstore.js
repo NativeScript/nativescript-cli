@@ -1,3 +1,4 @@
+import { Promise } from 'es6-promise';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 import assign from 'lodash/assign';

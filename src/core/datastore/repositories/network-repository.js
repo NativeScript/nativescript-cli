@@ -1,3 +1,5 @@
+import { Promise } from 'es6-promise';
+
 import { KinveyRequest, RequestMethod, DeltaFetchRequest } from '../../request';
 
 import { Repository } from './repository';

@@ -1,3 +1,5 @@
+import { Promise } from 'es6-promise';
+
 import { KeyValuePersister } from './key-value-persister';
 
 const _storage = {};

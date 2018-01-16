@@ -1,3 +1,5 @@
+import { Promise } from 'es6-promise';
+
 import { DataProcessor } from './data-processor';
 import { repositoryProvider } from '../repositories';
 

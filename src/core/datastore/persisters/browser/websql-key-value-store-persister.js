@@ -1,3 +1,5 @@
+import { Promise } from 'es6-promise';
+
 import { KinveyError } from '../../../errors';
 
 import { KeyValueStorePersister } from './../key-value-store-persister';

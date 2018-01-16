@@ -1,4 +1,6 @@
+import { Promise } from 'es6-promise';
 import clone from 'lodash/clone';
+
 import { KinveyError, NotFoundError, SyncError } from '../../errors';
 
 import { PromiseQueue, ensureArray } from '../../utils';

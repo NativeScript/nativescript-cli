@@ -1,3 +1,5 @@
+import { Promise } from 'es6-promise';
+
 import { Client } from '../../../client';
 
 import { KeyValuePersister } from '../key-value-persister';

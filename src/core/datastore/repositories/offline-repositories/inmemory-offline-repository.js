@@ -1,4 +1,6 @@
+import { Promise } from 'es6-promise';
 import keyBy from 'lodash/keyBy';
+
 import { NotFoundError } from '../../../errors';
 
 import { OfflineRepository } from '../offline-repository';

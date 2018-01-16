@@ -1,4 +1,4 @@
-// import { Promise } from 'es6-promise';
+import { Promise } from 'es6-promise';
 import { KinveyError, NotFoundError } from '../../../errors';
 
 import { KeyValueStorePersister } from '../key-value-store-persister';
