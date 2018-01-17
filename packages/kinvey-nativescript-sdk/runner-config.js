@@ -1,6 +1,5 @@
 const path = require('path');
 const walk = require('klaw-sync');
-const fs = require('fs-extra');
 const testedSdkVersion = require('./package.json').version;
 
 const {
@@ -9,7 +8,6 @@ const {
     logServer,
     copy,
     copyTestRunner,
-    copyTestLibs,
     runCommand,
     remove,
     processTemplateFile
@@ -33,72 +31,71 @@ const jsFilesFilter = item => path.extname(item.path) === '.js';
 let logServerPort;
 
 function runPipeline(osName) {
-
-const runner = new Runner({
-  pipeline: [
-    logServer(),
-    remove(distPath),
-    remove(appRootPath),
-    runCommand({
-      command: 'npm',
-      args: ['run', 'build'],
-      cwd: rootMonoRepoPath
-    }),
-    runCommand({
-      command: 'tns',
-      args: ['create', appName],
-      cwd: __dirname
-    }),
-    copy(path.join(__dirname, 'test', 'template'), appPath),
-    copy(
-      shimSpecificTestsPath,
-      appTestsPath
-    ),
-    copy(
-      commonTestsPath,
-      appTestsPath
-    ),
-    processTemplateFile(
-      path.join(appPath, 'testConfig.template.hbs'),
-      () => ({
-        tests: walk(path.join(appTestsPath), {
-          filter: jsFilesFilter,
-          nodir: true
-        }).map(f => String.raw`./${path.relative(appPath, f.path)}`.replace(/\\/g, '/')),
-        logServerPort
+  const runner = new Runner({
+    pipeline: [
+      logServer(),
+      remove(distPath),
+      remove(appRootPath),
+      runCommand({
+        command: 'npm',
+        args: ['run', 'build'],
+        cwd: rootMonoRepoPath
       }),
-      path.join(appPath, 'testConfig.js')
-    ),
-    runCommand({
-      command: 'npm',
-      args: ['pack'],
-      cwd: distPath
-    }),
-    runCommand({
-      command: 'npm',
-      args: ['install', '--save', `../dist/${currentVersionArchiveFileName}`],
-      cwd: appRootPath
-    }),
-    copyTestRunner(appPath),
-    when(() => osName === 'android', runCommand({
-      command: 'adb',
-      args: [
-        'reverse',
-        () => `tcp:${logServerPort}`,
-        () => `tcp:${logServerPort}`
-      ]
-    })),
-    runCommand({
-      command: 'tns',
-      args: ['run', osName, '--justlaunch'],
-      cwd: appRootPath
-    })
-  ]
-});
+      runCommand({
+        command: 'tns',
+        args: ['create', appName],
+        cwd: __dirname
+      }),
+      copy(path.join(__dirname, 'test', 'template'), appPath),
+      copy(
+        shimSpecificTestsPath,
+        appTestsPath
+      ),
+      copy(
+        commonTestsPath,
+        appTestsPath
+      ),
+      processTemplateFile(
+        path.join(appPath, 'testConfig.template.hbs'),
+        () => ({
+          tests: walk(path.join(appTestsPath), {
+            filter: jsFilesFilter,
+            nodir: true
+          }).map(f => String.raw`./${path.relative(appPath, f.path)}`.replace(/\\/g, '/')),
+          logServerPort
+        }),
+        path.join(appPath, 'testConfig.js')
+      ),
+      runCommand({
+        command: 'npm',
+        args: ['pack'],
+        cwd: distPath
+      }),
+      runCommand({
+        command: 'npm',
+        args: ['install', '--save', `../dist/${currentVersionArchiveFileName}`],
+        cwd: appRootPath
+      }),
+      copyTestRunner(appPath),
+      when(() => osName === 'android', runCommand({
+        command: 'adb',
+        args: [
+          'reverse',
+          () => `tcp:${logServerPort}`,
+          () => `tcp:${logServerPort}`
+        ]
+      })),
+      runCommand({
+        command: 'tns',
+        args: ['run', osName, '--justlaunch'],
+        cwd: appRootPath
+      })
+    ]
+  });
 
-runner.on('log.start', port => (logServerPort = port));
+  runner.on('log.start', port => (logServerPort = port));
 
-runner.run().then(() => console.log('done')).catch(err => console.log(err));
+  runner.run().then(() => console.log('done')).catch(err => console.log(err));
 }
 
 module.exports = runPipeline;
