@@ -1,5 +1,5 @@
 runner.run(testFunc);
 
 function testFunc() {
-    describe('test', () => it('test'));
+  describe('test', () => it('test'));
 }
