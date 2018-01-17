@@ -355,6 +355,15 @@ describe('Query', () => {
       const query = new Query().notEqualTo(randomString(), randomString());
       expect(query).to.be.an.instanceof(Query);
     });
+
+    it('should filter out fields not equal to null', () => {
+      const entity1 = { customProperty: null };
+      const entity2 = { customProperty: randomString() };
+      const query = new Query().notEqualTo('customProperty', null);
+      const result = query.process([entity1, entity2]);
+      expect(result.length).to.equal(1);
+      expect(result[0]).to.deep.equal(entity2);
+    });
   });
 
   describe('notContainedIn()', () => {
@@ -915,6 +924,16 @@ describe('Query', () => {
       expect(query.toPlainObject().sort[field1]).to.equal(1);
       expect(query.toPlainObject().sort[field2]).to.equal(-1);
     });
+
+    it('should sort the data in ascending order', () => {
+      const entity1 = { _id: 1, customProperty: randomString() };
+      const entity2 = { _id: 2, customProperty: randomString() };
+      const query = new Query().ascending('_id');
+      query.fields = ['customProperty'];
+      const result = query.process([entity2, entity1]);
+      expect(result[0].customProperty).to.equal(entity1.customProperty);
+      expect(result[1].customProperty).to.equal(entity2.customProperty);
+    });
   });
 
   describe('descending()', () => {
@@ -943,6 +962,16 @@ describe('Query', () => {
       query.ascending(field2);
       expect(query.toPlainObject().sort[field1]).to.equal(-1);
       expect(query.toPlainObject().sort[field2]).to.equal(1);
+    });
+
+    it('should sort the data in descending order', () => {
+      const entity1 = { _id: 1, customProperty: randomString() };
+      const entity2 = { _id: 2, customProperty: randomString() };
+      const query = new Query().descending('_id');
+      query.fields = ['customProperty'];
+      const result = query.process([entity1, entity2]);
+      expect(result[0].customProperty).to.equal(entity2.customProperty);
+      expect(result[1].customProperty).to.equal(entity1.customProperty);
     });
   });
 

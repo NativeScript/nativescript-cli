@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "3.9.4",
+  "version": "3.9.6",
   "name": "kinvey-angular2-sdk",
   "description": "Kinvey JavaScript SDK for Angular 2+/Ionic 2+ applications.",
   "author": "Kinvey, Inc.",

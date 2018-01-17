@@ -1,12 +1,12 @@
 {
   "private": true,
-  "version": "3.9.4",
+  "version": "3.9.7",
   "name": "kinvey-nativescript-sdk",
   "description": "Kinvey NativeScript SDK for developing NativeScript applications.",
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "kinvey-nativescript-sdk.min.js",
+  "main": "kinvey-nativescript-sdk.js",
   "typings": "kinvey.d.ts",
   "dependencies": {
     "nativescript-sqlite": "~1.1.11",
@@ -24,10 +24,10 @@
     "postrelease": "rm -rf tmp"
   },
   "files": [
-    "kinvey-nativescript-sdk.ios.min.js",
-    "kinvey-nativescript-sdk.ios.min.js.map",
-    "kinvey-nativescript-sdk.android.min.js",
-    "kinvey-nativescript-sdk.android.min.js.map",
+    "kinvey-nativescript-sdk.ios.js",
+    "kinvey-nativescript-sdk.ios.js.map",
+    "kinvey-nativescript-sdk.android.js",
+    "kinvey-nativescript-sdk.android.js.map",
     "kinvey.d.ts",
     "platforms/android/include.gradle",
     "platforms/ios/Podfile"

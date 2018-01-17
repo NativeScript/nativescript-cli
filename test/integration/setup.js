@@ -3,4 +3,4 @@ before(() => {
     appKey: externalConfig.appKey,
     appSecret: externalConfig.appSecret
   });
-})
+});

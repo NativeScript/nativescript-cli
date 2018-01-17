@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.9.6](https://github.com/Kinvey/js-sdk/tree/v3.9.6) (2018-01-12)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.9.3...v3.9.6)<br/>
+
+### Merge Pull Requests
+- MLIBZ-2213: Subscribe for messages sent to user's personal collections channel [#172](https://github.com/Kinvey/js-sdk/pull/172)
+- MLIBZ-2157: Add filter for a `$ne` query properly [#201](https://github.com/Kinvey/js-sdk/pull/201)
+- MLIBZ-2154: Remove fileds when processing query after sorting data [#202](https://github.com/Kinvey/js-sdk/pull/202)
+
 ## [3.9.3](https://github.com/Kinvey/js-sdk/tree/v3.9.3) (2017-12-14)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.9.2...v3.9.3)<br/>
 
