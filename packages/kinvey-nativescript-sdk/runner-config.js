@@ -22,7 +22,8 @@ const currentVersionArchiveFileName = `kinvey-nativescript-sdk-${testedSdkVersio
 const appRootPath = path.join(__dirname, appName);
 const appPath = path.join(appRootPath, 'app');
 const appTestsPath = path.join(appPath, 'tests');
-const shimSpecificTestsPath = path.join(__dirname, 'test', 'tests');
+//the next row and the copy command should be uncommented when there are shim specific tests to run
+//const shimSpecificTestsPath = path.join(__dirname, 'test', 'tests');
 const rootMonoRepoPath = path.join(__dirname, '../../');
 const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration');
 const distPath = path.join(__dirname, 'dist');
@@ -47,10 +48,10 @@ function runPipeline(osName) {
         cwd: __dirname
       }),
       copy(path.join(__dirname, 'test', 'template'), appPath),
-      copy(
-        shimSpecificTestsPath,
-        appTestsPath
-      ),
+    //   copy(
+    //     shimSpecificTestsPath,
+    //     appTestsPath
+    //   ),
       copy(
         commonTestsPath,
         appTestsPath
