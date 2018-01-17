@@ -8,9 +8,5 @@ program
 
 const runnerConfigFilePath = `../packages/kinvey-${program.platform}-sdk/runner-config`;
 const runPipeline = require(runnerConfigFilePath);
-if (program.platform === 'nativescript' || program.platform === 'phonegap') {
-  runPipeline(program.os);
-} else {
-  runPipeline();
-}
+runPipeline(program.os);
 
