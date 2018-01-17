@@ -22,7 +22,7 @@ const currentVersionArchiveFileName = `kinvey-nativescript-sdk-${testedSdkVersio
 const appRootPath = path.join(__dirname, appName);
 const appPath = path.join(appRootPath, 'app');
 const appTestsPath = path.join(appPath, 'tests');
-//the next row and the copy command should be uncommented when there are shim specific tests to run
+//the next row and the copy command should be uncommented when we add shim specific tests
 //const shimSpecificTestsPath = path.join(__dirname, 'test', 'tests');
 const rootMonoRepoPath = path.join(__dirname, '../../');
 const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration');
