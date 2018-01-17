@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Kinvey sdk tests</title>
+
+    <script src="cordova.js"></script>
+</head>
+
+<body>
+    <script src="./testRunner.bundle.js"></script>
+
+    {{#each tests}}
+    <script src="{{.}}"></script>
+    {{/each}}
+
+    <script src="./kinvey-phonegap-sdk.js"></script>
+
+    <script>
+        runner.initialize(null, {
+            logServerPort: '{{logServerPort}}'
+        });
+    </script>
+</body>
+
+</html>
