@@ -1,6 +1,7 @@
 const path = require('path');
 const walk = require('klaw-sync');
 const fs = require('fs-extra');
+const testedSdkVersion = require('./package.json').version;
 
 const {
     Runner,
@@ -18,7 +19,6 @@ const {
     }
 } = require('kinvey-universal-runner');
 
-const testedSdkVersion = '3.9.4'
 const appName = 'TestApp';
 const currentVersionArchiveFileName = `kinvey-nativescript-sdk-${testedSdkVersion}.tgz`;
 const appRootPath = path.join(__dirname, appName);
@@ -39,11 +39,11 @@ const runner = new Runner({
         logServer(),
         remove(distPath),
         remove(appRootPath),
-        // runCommand({
-            // command: 'npm',
-            // args: ['run', 'build'],
-            // cwd: rootMonoRepoPath
-        // }),
+        runCommand({
+            command: 'npm',
+            args: ['run', 'build'],
+            cwd: rootMonoRepoPath
+        }),
         runCommand({
             command: 'tns',
             args: ['create', appName],
@@ -69,14 +69,14 @@ const runner = new Runner({
             }),
             path.join(appPath, 'testConfig.js')
         ),
-        // runCommand({
-            // command: 'npm',
-            // args: ['pack'],
-            // cwd: distPath
-        // }),
         runCommand({
             command: 'npm',
-            args: ['install', '--save', 'kinvey-nativescript-sdk'],
+            args: ['pack'],
+            cwd: distPath
+        }),
+        runCommand({
+            command: 'npm',
+            args: ['install', '--save', `../dist/${currentVersionArchiveFileName}`],
             cwd: appRootPath
         }),
         copyTestRunner(appPath),
