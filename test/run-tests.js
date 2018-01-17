@@ -7,15 +7,10 @@ program
 
 
 const runnerConfigFilePath = `../packages/kinvey-${program.platform}-sdk/runner-config`;
-switch (program.platform) {
-  case 'html5':
-    require(runnerConfigFilePath);
-    break;
-  case 'phonegap':
-  case 'nativescript':
-    const runPipeline = require(runnerConfigFilePath);
-    runPipeline(program.os);
-    break;
-  default:
-    throw new Error('Please submit a valid platform - html5/phonegap/nativescript');
+const runPipeline = require(runnerConfigFilePath);
+if (program.platform === 'nativescript' || program.platform === 'phonegap') {
+  runPipeline(program.os);
+} else {
+  runPipeline();
 }
+
