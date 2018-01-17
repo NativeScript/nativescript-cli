@@ -664,7 +664,8 @@ export class Query {
    * @returns {Query} The query.
    */
   addFilter(field, condition, values) {
-    if (isDefined(condition) && isDefined(values)) {
+    if (isDefined(condition)
+      && (isDefined(values) || arguments.length === 3)) {
       if (!isPlainObject(this.filter[field])) {
         this.filter[field] = {};
       }
@@ -765,21 +766,6 @@ export class Query {
 
     Log.debug('Data length after applying query filter', json.filter, data.length);
 
-    // Remove fields
-    if (Array.isArray(json.fields) && json.fields.length > 0) {
-      Log.debug('Removing fields from data', json.fields);
-      data = data.map((item) => {
-        const keys = Object.keys(item);
-        keys.forEach((key) => {
-          if (json.fields.indexOf(key) === -1) {
-            delete item[key];
-          }
-        });
-
-        return item;
-      });
-    }
-
     /* eslint-disable no-restricted-syntax, no-prototype-builtins  */
     // Sorting.
     if (isDefined(json.sort)) {
@@ -806,6 +792,21 @@ export class Query {
       });
     }
     /* eslint-enable no-restricted-syntax, no-prototype-builtins */
+
+    // Remove fields
+    if (Array.isArray(json.fields) && json.fields.length > 0) {
+      Log.debug('Removing fields from data', json.fields);
+      data = data.map((item) => {
+        const keys = Object.keys(item);
+        keys.forEach((key) => {
+          if (json.fields.indexOf(key) === -1) {
+            delete item[key];
+          }
+        });
+
+        return item;
+      });
+    }
 
     // Limit and skip.
     if (isNumber(json.skip)) {

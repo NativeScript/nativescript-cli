@@ -61,10 +61,6 @@ module.exports = (env = {}) => {
 
   bundleName = `${bundleName}.${platform}`;
 
-  if (env.uglify) {
-    bundleName = `${bundleName}.min`;
-  }
-
   config.entry[bundleName] = './src/index.ts';
   return config;
 };
