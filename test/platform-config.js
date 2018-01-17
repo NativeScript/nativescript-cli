@@ -16,4 +16,6 @@ switch (program.platform) {
     const runPipeline = require(runnerConfigFilePath);
     runPipeline(program.os);
     break;
+  default:
+    throw new Error('Please submit a valid platform - html5/phonegap/nativescript');
 }
