@@ -12,10 +12,10 @@ jobs:
       api_key:
         secure: uDIMM0A/PwJ+8hkiL89/MRwLonfc41YNRkMiK+TRp0XlNcQBkkMiaUHSazFL14tvojqUvRRgfrMdxl9WghnQiuUqk0MqVGfKVWbiOpmWvzCu5B1U59YvVyljF23cG4ALgBlq1gPWlX2wECXGSO3XfaypoGKM4UOatpr/je0rwM+NuvDLlRRLapq0SmTW3tfCzJWuQ7kz4OZcUccpCQbSxkeJ6bPZa76cdZOLfgU8kb6z9H7Vu/0ZyqOw5eeIgWkuVshlM+TcUARiSf5bnJtG+gc2bjx9G6v4+660YhqU35jUL6WKNa4knsSBfR49cPWMMsq0w3VlGNnLsi6Xlm7se7ndpXH4ym1At4Oq06ZO+jiZU+zB3eYGdyU4PqpdXUyMO+3adOxwrLUKBwWdL+LKshYpCs0RwoLpppdrUP+lfx0+rcursxkcXOkQuakiEzHXl02caJ3yHJ/GHdLw7QxiD+RxH/Wr+ptTROAI2GdAu9D7CkHHq3iALJrom1lZvCIcwNZVBQajYNZZL5CjxluJY1hQjMDir74ZLBjcJag1T2O3tuWLJBz6tqIAp/2hZ7Bh7TDnXjlmSEQAFYI4YtdmsF+hxQM/kKvSc4nRxYJJt6WahCppSybqO3LSuntpmFNP3HnmP5WokNWeYeJ2t9rXgDtZIady4JnEh6ZFXNYhByg=
       on:
-        all_branches: true
+        branch: master
         tags: true
   - name: deploy beta
-    if: tag =~ tag =~ ^v?([0-9])*\.[0-9]*\.[0-9]*-\w+$
+    if: tag =~ ^v?([0-9])*\.[0-9]*\.[0-9]*-\w+$
     deploy:
       provider: npm
       tag: beta
@@ -23,5 +23,5 @@ jobs:
       api_key:
         secure: uDIMM0A/PwJ+8hkiL89/MRwLonfc41YNRkMiK+TRp0XlNcQBkkMiaUHSazFL14tvojqUvRRgfrMdxl9WghnQiuUqk0MqVGfKVWbiOpmWvzCu5B1U59YvVyljF23cG4ALgBlq1gPWlX2wECXGSO3XfaypoGKM4UOatpr/je0rwM+NuvDLlRRLapq0SmTW3tfCzJWuQ7kz4OZcUccpCQbSxkeJ6bPZa76cdZOLfgU8kb6z9H7Vu/0ZyqOw5eeIgWkuVshlM+TcUARiSf5bnJtG+gc2bjx9G6v4+660YhqU35jUL6WKNa4knsSBfR49cPWMMsq0w3VlGNnLsi6Xlm7se7ndpXH4ym1At4Oq06ZO+jiZU+zB3eYGdyU4PqpdXUyMO+3adOxwrLUKBwWdL+LKshYpCs0RwoLpppdrUP+lfx0+rcursxkcXOkQuakiEzHXl02caJ3yHJ/GHdLw7QxiD+RxH/Wr+ptTROAI2GdAu9D7CkHHq3iALJrom1lZvCIcwNZVBQajYNZZL5CjxluJY1hQjMDir74ZLBjcJag1T2O3tuWLJBz6tqIAp/2hZ7Bh7TDnXjlmSEQAFYI4YtdmsF+hxQM/kKvSc4nRxYJJt6WahCppSybqO3LSuntpmFNP3HnmP5WokNWeYeJ2t9rXgDtZIady4JnEh6ZFXNYhByg=
       on:
-        all_branches: true
+        branch: master
         tags: true

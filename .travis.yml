@@ -9,15 +9,16 @@ script: npm run test
 
 jobs:
   include:
-    - stage: deploy
-      node_js: '9'
-      deploy:
-        provider: script
-        script: ./node_modules/.bin/lerna run release --parallel
-        skip_cleanup: true
-        on:
-          all_branches: true
-          tags: true
+  - name: deploy
+    node_js: '9'
+    if: tag =~ ^v?([0-9])*\.[0-9]*\.[0-9]*(-\w+)?$
+    deploy:
+      provider: script
+      script: ./node_modules/.bin/lerna run release --parallel
+      skip_cleanup: true
+      on:
+        branch: master
+        tags: true
 
 notifications:
   email:
