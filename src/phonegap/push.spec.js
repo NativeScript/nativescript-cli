@@ -1,18 +1,17 @@
 import { EventEmitter } from 'events';
 import isFunction from 'lodash/isFunction';
 import os from 'os';
-import url from 'url';
 import nock from 'nock';
 import expect from 'expect';
-import { CacheRequest, RequestMethod, NetworkRack } from '../core/request';
+import { NetworkRack } from '../core/request';
 import { NotFoundError } from '../core/errors';
 import { randomString } from '../core/utils';
 import { User } from '../core/user';
 import { init } from '../core/kinvey';
 import { NodeHttpMiddleware } from '../node/http';
 import { PushNotification } from './push';
+import { repositoryProvider } from '../core/datastore';
 
-const APP_DATA_NAMESPACE = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const PUSH_NAMESPACE = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 
 class PushNotificationMock extends PushNotification {
@@ -40,7 +39,7 @@ class PushNotificationPlugin extends EventEmitter {
   }
 }
 
-describe('Push', function() {
+describe('Push', function () {
   const deviceId = randomString();
   let client;
 
@@ -78,13 +77,13 @@ describe('Push', function() {
     return User.login(username, password);
   });
 
-  beforeEach(function() {
+  beforeEach(function () {
     global.device = new DevicePlugin();
     global.PushNotification = PushNotificationPlugin;
   });
 
-  describe('register()', function() {
-    it('should fail if the platform does not support push notifications', function() {
+  describe('register()', function () {
+    it('should fail if the platform does not support push notifications', function () {
       class CustomPush extends PushNotificationMock {
         isSupported() {
           return false;
@@ -98,7 +97,7 @@ describe('Push', function() {
         });
     });
 
-    it('should fail if the Cordova Device plugin is not installed', function() {
+    it('should fail if the Cordova Device plugin is not installed', function () {
       delete global.device;
 
       return Push
@@ -110,7 +109,7 @@ describe('Push', function() {
         });
     });
 
-    it('should fail if the PhoneGap Push Notification Plugin is not installed', function() {
+    it('should fail if the PhoneGap Push Notification Plugin is not installed', function () {
       delete global.PushNotification;
 
       return Push
@@ -122,7 +121,7 @@ describe('Push', function() {
         });
     });
 
-    it('should fail if an error event is received while retrieving the device id', function() {
+    it('should fail if an error event is received while retrieving the device id', function () {
       const deviceIdError = new Error('Unable to retrieve device id.');
       class CustomPushNotificationPlugin extends PushNotificationPlugin {
         static init() {
@@ -146,7 +145,7 @@ describe('Push', function() {
         });
     });
 
-    it('should register the device', function() {
+    it('should register the device', function () {
       class CustomPushNotificationPlugin extends PushNotificationPlugin {
         static init() {
           const plugin = super.init();
@@ -183,8 +182,8 @@ describe('Push', function() {
         });
     });
 
-    describe('notification', function() {
-      it('should emit notification to listeners', function() {
+    describe('notification', function () {
+      it('should emit notification to listeners', function () {
         const notification = {
           title: randomString(),
           message: randomString()
@@ -229,7 +228,7 @@ describe('Push', function() {
           .register()
           .then(() => {
             return new Promise((resolve) => {
-              setTimeout(function() {
+              setTimeout(function () {
                 resolve(expect(onNotificationSpy).toHaveBeenCalledWith(notification));
               }, 1000);
             });
@@ -238,7 +237,7 @@ describe('Push', function() {
     });
   });
 
-  describe('unregister()', function() {
+  describe('unregister()', function () {
     before(() => {
       nock(client.apiHostname)
         .post(`/${PUSH_NAMESPACE}/${client.appKey}/unregister-device`, {
@@ -251,7 +250,7 @@ describe('Push', function() {
       return Push.unregister();
     });
 
-    it('should not fail if the device has not been registered', function() {
+    it('should not fail if the device has not been registered', function () {
       return Push
         .unregister()
         .then((response) => {
@@ -263,7 +262,7 @@ describe('Push', function() {
         });
     });
 
-    it('should unregister the device that has been registered', function() {
+    it('should unregister the device that has been registered', function () {
       class CustomPushNotificationPlugin extends PushNotificationPlugin {
         static init() {
           const plugin = super.init();
@@ -305,16 +304,8 @@ describe('Push', function() {
           expect(response).toEqual(null);
 
           const user = User.getActiveUser(client);
-          const request = new CacheRequest({
-            method: RequestMethod.GET,
-            url: url.format({
-              protocol: client.protocol,
-              host: client.host,
-              pathname: `/${APP_DATA_NAMESPACE}/${client.appKey}/__device/${user._id}`
-            }),
-            client: client
-          });
-          return request.execute()
+          return repositoryProvider.getOfflineRepository()
+            .then(repo => repo.readById('__device', user._id))
             .catch((error) => {
               expect(error).toBeA(NotFoundError);
               return {};

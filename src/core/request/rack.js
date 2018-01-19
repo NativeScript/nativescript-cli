@@ -4,7 +4,7 @@ import isFunction from 'lodash/isFunction';
 import values from 'lodash/values';
 import { isDefined } from '../utils';
 import { Log } from '../log';
-import { Middleware, CacheMiddleware, HttpMiddleware, ParseMiddleware, SerializeMiddleware } from './middleware';
+import { Middleware, HttpMiddleware, ParseMiddleware, SerializeMiddleware } from './middleware';
 
 export class Rack extends Middleware {
   constructor(name = 'Rack') {
@@ -84,32 +84,6 @@ export class Rack extends Middleware {
   }
 }
 
-class CacheRack extends Rack {
-  constructor(name = 'Cache Rack') {
-    super(name);
-    this.use(new CacheMiddleware());
-  }
-
-  useCacheMiddleware(cacheMiddleware) {
-    this.reset();
-    this.use(cacheMiddleware);
-  }
-
-  execute(request) {
-    Log.debug('Executing cache request', request);
-    return super.execute(request)
-      .then((response) => {
-        Log.debug(`Received response for cache request id: ${request.id}`, response);
-        return response;
-      })
-      .catch((error) => {
-        Log.error(`Received error for cache request id: ${request.id}`, error);
-        throw error;
-      });
-  }
-}
-const cacheRack = new CacheRack();
-
 class NetworkRack extends Rack {
   constructor(name = 'Network Rack') {
     super(name);
@@ -142,6 +116,5 @@ const networkRack = new NetworkRack();
 
 
 export {
-  cacheRack as CacheRack,
   networkRack as NetworkRack
 };

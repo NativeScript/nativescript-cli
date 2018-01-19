@@ -1,15 +1,20 @@
 import { Promise } from 'es6-promise';
 import { EventEmitter } from 'events';
+
 import { device as Device } from 'tns-core-modules/platform';
 import { Client } from '../../core/client';
 import { KinveyError, NotFoundError } from '../../core/errors';
 import { isDefined } from '../../core/utils';
 import { User } from '../../core/user';
-import { AuthType, CacheRequest, KinveyRequest, RequestMethod } from '../../core/request';
+import { AuthType, KinveyRequest, RequestMethod } from '../../core/request';
 import { PushConfig } from './';
+import { repositoryProvider } from '../../core/datastore';
+
+const deviceCollectionName = '__device';
 
 export class PushCommon extends EventEmitter {
   private _client: Client;
+  private _offlineRepoPromise: Promise<any>;
 
   get client() {
     if (isDefined(this._client) === false) {
@@ -120,7 +125,7 @@ export class PushCommon extends EventEmitter {
     return request.execute().then(response => response.data);
   }
 
-  private _getTokenFromCache(options = <PushConfig>{}): Promise<string|null> {
+  private _getTokenFromCache(options = <PushConfig>{}): Promise<string | null> {
     const activeUser = User.getActiveUser(this.client);
 
     if (isDefined(activeUser) === false) {
@@ -128,20 +133,15 @@ export class PushCommon extends EventEmitter {
         'You must login a user.');
     }
 
-    const request = new CacheRequest({
-      method: RequestMethod.GET,
-      url: `${this.client.apiHostname}/appdata/${this.client.appKey}/__device/${activeUser._id}`,
-      client: this.client
-    });
-    return request.execute()
+    return this._getOfflineRepo()
+      .then(repo => repo.readById(deviceCollectionName, activeUser._id))
       .catch((error) => {
         if (error instanceof NotFoundError) {
-          return {};
+          return {} as any;
         }
 
         throw error;
       })
-      .then(response => response.data)
       .then((device) => {
         if (isDefined(device)) {
           return device.token;
@@ -159,16 +159,14 @@ export class PushCommon extends EventEmitter {
         'You must login a user.');
     }
 
-    const request = new CacheRequest({
-      method: RequestMethod.PUT,
-      url: `${this.client.apiHostname}/appdata/${this.client.appKey}/__device`,
-      data: {
-        userId: activeUser._id,
-        token: token
-      },
-      client: this.client
-    });
-    return request.execute().then(() => token);
+    const device = {
+      userId: activeUser._id,
+      token: token
+    };
+
+    return this._getOfflineRepo()
+      .then(repo => repo.update(deviceCollectionName, device))
+      .then(() => token);
   }
 
   private _deleteTokenFromCache(options = <PushConfig>{}): Promise<null> {
@@ -179,19 +177,15 @@ export class PushCommon extends EventEmitter {
         'You must login a user.');
     }
 
-    const request = new CacheRequest({
-      method: RequestMethod.DELETE,
-      url: `${this.client.apiHostname}/appdata/${this.client.appKey}/__device/${activeUser._id}`,
-      client: this.client
-    });
-    return request.execute()
-      .catch((error) => {
-        if (error instanceof NotFoundError) {
-          return {};
-        }
-
-        throw error;
-      })
+    return this._getOfflineRepo()
+      .then((repo) => repo.deleteById(deviceCollectionName, activeUser._id))
       .then(() => null);
+  }
+
+  private _getOfflineRepo() {
+    if (!this._offlineRepoPromise) {
+      this._offlineRepoPromise = repositoryProvider.getOfflineRepository();
+    }
+    return this._offlineRepoPromise;
   }
 }

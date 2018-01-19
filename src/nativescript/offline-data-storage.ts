@@ -15,8 +15,7 @@ const sqliteStorageBuilder = (queue) => {
 
 // TODO: this will grow, refactor
 const repoConstructors = {
-  [storageType.default]: sqliteStorageBuilder,
   [storageType.sqlite]: sqliteStorageBuilder
 };
 
-repositoryProvider.setSupportedConstructors(repoConstructors);
+repositoryProvider.setSupportedRepoBuilders(repoConstructors);

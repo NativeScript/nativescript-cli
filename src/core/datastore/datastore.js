@@ -80,6 +80,7 @@ export class DataStore {
    */
   static clearCache(options = {}) {
     return repositoryProvider.getOfflineRepository()
-      .then(repo => repo.clear());
+      .then(repo => repo.clear())
+      .then(() => null); // backwards compatibility
   }
 }

@@ -1,4 +1,3 @@
-export * from './cache';
 export * from './deltafetch';
 export * from './headers';
 export * from './network';

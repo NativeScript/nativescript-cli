@@ -1,19 +1,22 @@
 import Promise from 'es6-promise';
 import { EventEmitter } from 'events';
 import url from 'url';
-import { AuthType, RequestMethod, KinveyRequest, CacheRequest } from '../core/request';
+
+import { AuthType, RequestMethod, KinveyRequest } from '../core/request';
 import { KinveyError, NotFoundError } from '../core/errors';
 import { User } from '../core/user';
 import { Client } from '../core/client';
 import { Device } from './device';
+import { repositoryProvider } from '../core/datastore';
 
-const APP_DATA_NAMESPACE = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const PUSH_NAMESPACE = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 const NOTIFICATION_EVENT = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
 const DEVICE_COLLECTION = '__device';
 let phonegapPush;
 
 export class PushNotification extends EventEmitter {
+  _offlineRepoPromise;
+
   get pathname() {
     return `/${PUSH_NAMESPACE}/${this.client.appKey}`;
   }
@@ -135,20 +138,13 @@ export class PushNotification extends EventEmitter {
         const user = User.getActiveUser(this.client);
         const _id = user ? user._id : options.userId;
 
-        const request = new CacheRequest({
-          method: RequestMethod.PUT,
-          url: url.format({
-            protocol: this.client.apiProtocol,
-            host: this.client.apiHost,
-            pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/${DEVICE_COLLECTION}`
-          }),
-          data: {
-            _id: _id,
-            deviceId: deviceId
-          },
-          client: this.client
-        });
-        return request.execute()
+        const device = {
+          _id: _id,
+          deviceId: deviceId
+        };
+
+        return this._getOfflineRepository()
+          .then(repo => repo.update(DEVICE_COLLECTION, device))
           .then(() => deviceId);
       });
   }
@@ -183,16 +179,8 @@ export class PushNotification extends EventEmitter {
           );
         }
 
-        const request = new CacheRequest({
-          method: RequestMethod.GET,
-          url: url.format({
-            protocol: this.client.apiProtocol,
-            host: this.client.apiHost,
-            pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/${DEVICE_COLLECTION}/${_id}`
-          }),
-          client: this.client
-        });
-        return request.execute()
+        return this._getOfflineRepository()
+          .then(repo => repo.readById(DEVICE_COLLECTION, _id))
           .catch((error) => {
             if (error instanceof NotFoundError) {
               return {};
@@ -241,17 +229,8 @@ export class PushNotification extends EventEmitter {
         const user = User.getActiveUser(this.client);
         const _id = user ? user._id : options.userId;
 
-        const request = new CacheRequest({
-          method: RequestMethod.DELETE,
-          url: url.format({
-            protocol: this.client.apiProtocol,
-            host: this.client.apiHost,
-            pathname: `/${APP_DATA_NAMESPACE}/${this.client.appKey}/${DEVICE_COLLECTION}/${_id}`
-          }),
-          client: this.client
-        });
-
-        return request.execute()
+        return this._getOfflineRepository()
+          .then(repo => repo.deleteById(DEVICE_COLLECTION, _id))
           .catch((error) => {
             if (error instanceof NotFoundError) {
               return {};
@@ -261,6 +240,13 @@ export class PushNotification extends EventEmitter {
           })
           .then(() => null);
       });
+  }
+
+  _getOfflineRepository() {
+    if (!this._offlineRepoPromise) {
+      this._offlineRepoPromise = repositoryProvider.getOfflineRepository();
+    }
+    return this._offlineRepoPromise;
   }
 }
 

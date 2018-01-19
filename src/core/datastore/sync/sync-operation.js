@@ -1,7 +1,6 @@
-import { RequestMethod } from '../../request';
-
+// these must not be changed, for backwards compatibility
 export const SyncOperation = {
-  Create: RequestMethod.POST,
-  Update: RequestMethod.PUT,
-  Delete: RequestMethod.DELETE
+  Create: 'POST',
+  Update: 'PUT',
+  Delete: 'DELETE'
 };

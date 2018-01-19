@@ -8,13 +8,6 @@ import {
   BrowserKeyValuePersister
 } from '../core/datastore';
 
-<<<<<<< HEAD
-export class Html5CacheMiddleware extends CacheMiddleware {
-  loadStorage(name, storageProviders) {
-    return new Html5Storage(name, storageProviders);
-  }
-}
-=======
 const webSqlBuilder = (queue) => {
   const persister = new WebSqlKeyValueStorePersister();
   return new KeyValueStoreOfflineRepository(persister, queue);
@@ -37,12 +30,10 @@ const sessionStorageBuilder = (queue) => {
 
 // TODO: this will grow, refactor
 const repoConstructors = {
-  [storageType.default]: indexedDbBuilder, // TODO: get the default support chain
   [storageType.webSql]: webSqlBuilder,
   [storageType.indexedDb]: indexedDbBuilder,
   [storageType.localStorage]: localStorageBuilder,
   [storageType.sessionStorage]: sessionStorageBuilder
 };
 
-repositoryProvider.setSupportedConstructors(repoConstructors);
->>>>>>> MLIBZ-2263 Add WebSql persistance. Made it pluggable from html5 shim.
+repositoryProvider.setSupportedRepoBuilders(repoConstructors);

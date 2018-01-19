@@ -1,4 +1,5 @@
-import { RequestMethod } from '../../request';
+// import { RequestMethod } from '../../request';
+import { SyncOperation } from './sync-operation';
 import { generateEntityId } from '../utils';
 
 export function groupBy(array, propOrPredicate) {
@@ -15,9 +16,9 @@ export function groupBy(array, propOrPredicate) {
 
 // TODO: this exists in... datastore?
 const syncOpToPushOpMap = {
-  [RequestMethod.POST]: 'create',
-  [RequestMethod.PUT]: 'update',
-  [RequestMethod.DELETE]: 'delete'
+  [SyncOperation.Create]: 'create',
+  [SyncOperation.Update]: 'update',
+  [SyncOperation.Delete]: 'delete'
 };
 
 export function syncOpToCrudOp(syncOp) {

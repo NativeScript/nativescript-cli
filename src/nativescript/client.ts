@@ -1,8 +1,12 @@
+import * as cloneDeep from 'lodash/cloneDeep';
+
 import { Client as CoreClient } from '../core/client';
 import { KinveyError } from '../core/errors';
 import { isDefined } from '../core/utils';
 import { Log } from '../core/log';
 import { SecureStorage } from './secure';
+import { storageType } from '../core/datastore';
+
 const storage = new SecureStorage();
 
 class ActiveUserStorage {
@@ -19,7 +23,7 @@ class ActiveUserStorage {
     }
   }
 
-  set(key: string, value: string|Object) {
+  set(key: string, value: string | Object) {
     if (typeof key !== 'string') {
       throw new KinveyError('The key argument must be a string.');
     }
@@ -45,6 +49,8 @@ class ActiveUserStorage {
 
 export class Client extends CoreClient {
   static init(config) {
+    config = cloneDeep(config);
+    config.storageType = config.storageType || storageType.sqlite;
     const client = CoreClient.init(config);
     client.activeUserStorage = new ActiveUserStorage();
     return client;
