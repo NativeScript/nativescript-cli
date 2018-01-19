@@ -31,4 +31,8 @@ export class Repository {
   deleteById(collection, id) {
     this._throwNotImplementedError(id);
   }
+
+  group(collection, aggregationQuery) {
+    this._throwNotImplementedError(aggregationQuery);
+  }
 }

@@ -6,5 +6,6 @@ export const OperationType = {
   Delete: 'delete',
   DeleteById: 'deleteById',
   Count: 'count',
-  Clear: 'clear'
+  Clear: 'clear',
+  Group: 'group'
 };

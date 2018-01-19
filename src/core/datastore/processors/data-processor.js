@@ -34,6 +34,8 @@ export class DataProcessor {
         return this._processDeleteById(collection, entityId, options);
       case OperationType.Count:
         return this._processCount(collection, query, options);
+      case OperationType.Group:
+        return this._processGroup(collection, query, options);
       default: {
         const err = new KinveyError(`Unexpected operation type: ${operation.type}`);
         return Promise.reject(err);
@@ -83,5 +85,10 @@ export class DataProcessor {
   _processCount(collection, query, options) {
     return this._getRepository()
       .then(repo => repo.count(collection, query, options));
+  }
+
+  _processGroup(collection, aggregationQuery, options) {
+    return this._getRepository()
+      .then(repo => repo.group(collection, aggregationQuery, options));
   }
 }

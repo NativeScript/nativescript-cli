@@ -1,6 +1,7 @@
 import { Promise } from 'es6-promise';
 
 import { KinveyRequest, RequestMethod, DeltaFetchRequest } from '../../request';
+import { Aggregation } from '../../aggregation';
 
 import { Repository } from './repository';
 import { ensureArray } from '../../utils';
@@ -56,6 +57,11 @@ export class NetworkRepository extends Repository {
       .then(response => response.count);
   }
 
+  group(collection, aggregationQuery, options) {
+    const requestConfig = this._buildRequestConfig(collection, RequestMethod.POST, null, aggregationQuery, null, '_group', null, options);
+    return this._makeHttpRequest(requestConfig);
+  }
+
   _processBatch(collection, method, entities, options) {
     const isSingle = !Array.isArray(entities);
     const requestPromises = ensureArray(entities).map((entity) => {
@@ -89,7 +95,6 @@ export class NetworkRepository extends Repository {
     const config = {
       method,
       pathname: buildCollectionUrl(collection, id, restAction),
-      query: query,
       timeout: options.timeout,
       properties: options.properties,
       trace: options.trace,
@@ -98,6 +103,12 @@ export class NetworkRepository extends Repository {
 
     if (data) {
       config.body = data;
+    }
+
+    if (query instanceof Aggregation) {
+      config.aggregation = query;
+    } else {
+      config.query = query;
     }
 
     return config;

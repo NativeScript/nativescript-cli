@@ -137,43 +137,22 @@ export class NetworkStore {
   /**
    * Group entities.
    *
-   * @param   {Aggregation}           aggregation                         Aggregation used to group entities.
+   * @param   {Aggregation}           aggregationQuery                         Aggregation used to group entities.
    * @param   {Object}                [options]                           Options
    * @param   {Properties}            [options.properties]                Custom properties to send with
    *                                                                      the request.
    * @param   {Number}                [options.timeout]                   Timeout for the request.
    * @return  {Observable}                                                Observable.
    */
-  group(aggregation, options = {}) {
-    const stream = KinveyObservable.create((observer) => {
-      // Check that the query is valid
-      if (!(aggregation instanceof Aggregation)) {
-        return observer.error(new KinveyError('Invalid aggregation. It must be an instance of the Aggregation class.'));
-      }
+  group(aggregationQuery, options = {}) {
+    const validationError = this._validateAggregationQuery(aggregationQuery);
+    if (validationError) {
+      return this._ensureObservable(validationError);
+    }
 
-      // Create the request
-      const request = new KinveyRequest({
-        method: RequestMethod.POST,
-        authType: AuthType.Default,
-        url: url.format({
-          protocol: this.client.apiProtocol,
-          host: this.client.apiHost,
-          pathname: `${this.pathname}/_group`
-        }),
-        properties: options.properties,
-        aggregation: aggregation,
-        timeout: options.timeout,
-        client: this.client
-      });
-
-      // Execute the request
-      return request.execute()
-        .then(response => response.data)
-        .then(data => observer.next(data))
-        .then(() => observer.complete())
-        .catch(error => observer.error(error));
-    });
-    return stream;
+    const operation = this._buildOperationObject(OperationType.Group, aggregationQuery);
+    const resultPromise = this._executeOperation(operation, options);
+    return this._ensureObservable(resultPromise);
   }
 
   /**
@@ -345,6 +324,13 @@ export class NetworkStore {
 
   _validateQuery(query) {
     if (query && !(query instanceof Query)) {
+      return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Query class.'));
+    }
+    return null;
+  }
+
+  _validateAggregationQuery(aggregationQuery) {
+    if (!(aggregationQuery instanceof Aggregation)) {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Query class.'));
     }
     return null;
