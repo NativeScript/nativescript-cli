@@ -26,6 +26,7 @@ The NativeScript CLI lets you create, build, and deploy [NativeScript][7]-based 
 * [Known Issues](#known-issues)
 * [How to Contribute](#how-to-contribute)
 * [How to Build](#how-to-build)
+* [Get Help](#get-help)
 * [License](#license)
 
 What is NativeScript
@@ -435,6 +436,13 @@ grunt
 
 To use the locally built CLI instead `tns` you can call `PATH_TO_CLI_FOLDER/bin/tns`. For example:
 `PATH_TO_CLI_FOLDER/bin/tns run ios|android`
+
+[Back to Top][1]
+
+Get Help
+===
+
+Please, use [github issues](https://github.com/NativeScript/nativescript-cli/issues) strictly for [reporting bugs](CONTRIBUTING.md#report-an-issue) or [requesting features](CONTRIBUTING.md#request-a-feature). For general NativeScript questions and support, check out the [NativeScript community forum](https://discourse.nativescript.org/) or ask our experts in [NativeScript community Slack channel](http://developer.telerik.com/wp-login.php?action=slack-invitation).
 
 [Back to Top][1]
 
