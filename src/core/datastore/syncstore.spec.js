@@ -243,7 +243,7 @@ describe('SyncStore', () => {
     });
   });
 
-  describe.skip('group()', () => {
+  describe('group()', () => {
     it('should throw an error if the query argument is not an instance of the Query class', (done) => {
       const store = new SyncStore(collection);
       store.group({})

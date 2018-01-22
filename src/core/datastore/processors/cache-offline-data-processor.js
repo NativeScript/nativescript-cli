@@ -81,7 +81,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
   _processRead(collection, query, options) {
     let offlineEntities;
     return wrapInObservable((observer) => {
-      return this._ensureCountBeforeRead(collection, 'fetch the entities')
+      return this._ensureCountBeforeRead(collection, 'fetch the entities', query)
         .then(() => super._processRead(collection, query, options))
         .then((entities) => {
           offlineEntities = entities || []; // really?
@@ -98,7 +98,8 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
   _processReadById(collection, entityId, options) {
     let offlineEntity;
     return wrapInObservable((observer) => {
-      return this._ensureCountBeforeRead(collection, 'find the entity')
+      const query = new Query().equalTo('_id', entityId);
+      return this._ensureCountBeforeRead(collection, 'find the entity', query)
         .then(() => super._processReadById(collection, entityId, options))
         .catch(err => this._catchNotFoundError(err))
         .then((entity) => {
@@ -126,7 +127,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
 
   _processCount(collection, query, options) {
     return wrapInObservable((observer) => {
-      return this._ensureCountBeforeRead(collection, 'count entities')
+      return this._ensureCountBeforeRead(collection, 'count entities', query)
         .then(() => super._processCount(collection, query, options))
         .then((offlineCount) => {
           observer.next(offlineCount);
@@ -144,8 +145,9 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
         .catch(() => []) // backwards compatibility
         .then((offlineResult) => {
           observer.next(offlineResult);
-          return this._syncManager.push(collection);
+          return this._syncManager.push(collection); // backwards compatibility
         })
+        .then(() => this._ensureCountBeforeRead(collection, 'group entities'))
         .then(() => this._networkRepository.group(collection, aggregationQuery, options))
         .then(networkResult => observer.next(networkResult));
     });
@@ -215,8 +217,8 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
   }
 
   // TODO: passing the error message as an argument?
-  _ensureCountBeforeRead(collection, prefix) {
-    return this._syncManager.getSyncItemCount(collection)
+  _ensureCountBeforeRead(collection, prefix, query) {
+    return this._syncManager.getSyncItemCountByEntityQuery(collection, query)
       .then((count) => {
         if (count === 0) {
           return count;

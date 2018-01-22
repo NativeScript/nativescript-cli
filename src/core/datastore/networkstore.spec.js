@@ -143,7 +143,7 @@ describe('NetworkStore', () => {
     });
   });
 
-  describe.skip('group()', () => {
+  describe('group()', () => {
     it('should throw an error for an invlad aggregation', () => {
       const store = new NetworkStore(collection);
       return store.group({}).toPromise()
