@@ -22,8 +22,8 @@ const currentVersionArchiveFileName = `kinvey-nativescript-sdk-${testedSdkVersio
 const appRootPath = path.join(__dirname, appName);
 const appPath = path.join(appRootPath, 'app');
 const appTestsPath = path.join(appPath, 'tests');
-//the next row and the copy command should be uncommented when we add shim specific tests
-//const shimSpecificTestsPath = path.join(__dirname, 'test', 'tests');
+// the next row and the copy command should be uncommented when we add shim specific tests
+// const shimSpecificTestsPath = path.join(__dirname, 'test', 'tests');
 const rootMonoRepoPath = path.join(__dirname, '../../');
 const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration');
 const distPath = path.join(__dirname, 'dist');
@@ -32,7 +32,7 @@ const jsFilesFilter = item => path.extname(item.path) === '.js';
 let logServerPort;
 
 function runPipeline(osName) {
-  const configFileName = osName === 'android' ? 'config-android.js': 'config-ios.js';
+  const configFileName = osName === 'android' ? 'config-android.js' : 'config-ios.js';
   const runner = new Runner({
     pipeline: [
       logServer(),
@@ -50,10 +50,10 @@ function runPipeline(osName) {
       }),
       copy(path.join(__dirname, 'test', 'configs', configFileName), path.join(appPath, 'config.js')),
       copy(path.join(__dirname, 'test', 'template'), appPath),
-    //   copy(
-    //     shimSpecificTestsPath,
-    //     appTestsPath
-    //   ),
+      //   copy(
+      //     shimSpecificTestsPath,
+      //     appTestsPath
+      //   ),
       copy(
         commonTestsPath,
         appTestsPath
