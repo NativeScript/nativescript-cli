@@ -13,8 +13,7 @@ const {
     processTemplateFile
   },
   conditionals: {
-    when,
-    ifThenElse
+    when
   }
 } = require('kinvey-universal-runner');
 
