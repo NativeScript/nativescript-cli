@@ -1,6 +1,6 @@
 externalConfig = {
-  appKey: 'kid_H1fs4gFsZ',
-  appSecret: 'aa42a6d47d0049129c985bfb37821877',
+  appKey: 'kid_ryEW0UQrM',
+  appSecret: '5a006e23a102442884dc9de5d2d2abc9',
   collectionName: 'Books'
 };
 
