@@ -12,7 +12,8 @@ const {
     processTemplateFile
   },
   conditionals: {
-    when
+    when,
+    ifThenElse
   }
 } = require('kinvey-universal-runner');
 
@@ -20,7 +21,8 @@ const appName = 'KinveyCordovaTestApp';
 const appRootPath = path.join(__dirname, appName);
 const appPath = path.join(appRootPath, 'www');
 const appTestsPath = path.join(appPath, 'tests');
-const shimTestsPath = path.join(__dirname, 'test', 'tests');
+//the next row and the copy command should be uncommented when we add shim specific tests
+//const shimTestsPath = path.join(__dirname, 'test', 'tests');
 const rootMonoRepoPath = path.join(__dirname, '../../');
 const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration');
 const distPath = path.join(__dirname, 'dist');
@@ -28,6 +30,7 @@ let logServerPort;
 
 
 function runPipeline(osName) {
+  const configFileName = osName === 'android' ? 'config-android.js': 'config-ios.js';
   const runner = new Runner({
     pipeline: [
       logServer(),
@@ -43,12 +46,13 @@ function runPipeline(osName) {
         args: ['create', appName],
         cwd: __dirname
       }),
+      copy(path.join(__dirname, 'test', 'configs', configFileName), path.join(appTestsPath, 'config.js')),
       copy(path.join(__dirname, 'test', 'template'), appPath),
       copy(distPath, appPath),
-      copy(
-          shimTestsPath,
-          appTestsPath
-      ),
+      // copy(
+      //     shimTestsPath,
+      //     appTestsPath
+      // ),
       copy(
         commonTestsPath,
         appTestsPath
