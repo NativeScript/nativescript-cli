@@ -53,10 +53,11 @@ function runPipeline(osName) {
       //     shimTestsPath,
       //     appTestsPath
       // ),
-      copy(
-        commonTestsPath,
-        appTestsPath
-      ),
+      runCommand({
+        command: './node_modules/.bin/babel',
+        args: [commonTestsPath, '--out-dir', appTestsPath],
+        cwd: rootMonoRepoPath
+      }),
       copy(path.join(__dirname, 'test', 'libs'), appPath),
       processTemplateFile(
         path.join(appPath, 'index.template.hbs'),
