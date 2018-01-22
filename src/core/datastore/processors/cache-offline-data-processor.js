@@ -138,6 +138,19 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
     });
   }
 
+  _processGroup(collection, aggregationQuery, options) {
+    return wrapInObservable((observer) => {
+      return super._processGroup(collection, aggregationQuery, options)
+        .catch(() => []) // backwards compatibility
+        .then((offlineResult) => {
+          observer.next(offlineResult);
+          return this._syncManager.push(collection);
+        })
+        .then(() => this._networkRepository.group(collection, aggregationQuery, options))
+        .then(networkResult => observer.next(networkResult));
+    });
+  }
+
   // private methods
 
   _upsertNetworkEntityOffline(collection, offlineEntityId, networkEntity) {

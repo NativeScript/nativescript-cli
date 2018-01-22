@@ -331,7 +331,7 @@ export class NetworkStore {
 
   _validateAggregationQuery(aggregationQuery) {
     if (!(aggregationQuery instanceof Aggregation)) {
-      return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Query class.'));
+      return Promise.reject(new KinveyError('Invalid aggregation. It must be an instance of the Aggregation class.'));
     }
     return null;
   }

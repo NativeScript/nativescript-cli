@@ -4,3 +4,7 @@ export function applyQueryToDataset(dataset, query) {
   }
   return query.process(dataset);
 }
+
+export function applyAggregationToDataset(dataset, aggregationQuery) {
+  return aggregationQuery.process(dataset);
+}
