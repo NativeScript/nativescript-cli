@@ -53,6 +53,7 @@ function runPipeline(osName) {
         commonTestsPath,
         appTestsPath
       ),
+      copy(path.join(__dirname, 'test', 'libs'), appPath),
       processTemplateFile(
         path.join(appPath, 'index.template.hbs'),
         () => ({
