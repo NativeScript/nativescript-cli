@@ -94,7 +94,7 @@ describe("liveSyncService", () => {
 				watcher: <any>{
 					close: (): any => undefined
 				},
-				pattern: "pattern"
+				pattern: ["pattern"]
 			},
 			deviceDescriptors: []
 		});

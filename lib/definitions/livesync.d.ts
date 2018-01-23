@@ -60,7 +60,7 @@ interface ILiveSyncProcessInfo {
 	timer: NodeJS.Timer;
 	watcherInfo: {
 		watcher: IFSWatcher,
-		pattern: string | string[]
+		pattern: string[]
 	};
 	actionsChain: Promise<any>;
 	isStopped: boolean;
