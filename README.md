@@ -1,6 +1,8 @@
 NativeScript Command-Line Interface
 ================
 Master Branch [![Build Status](https://travis-ci.org/NativeScript/nativescript-cli.svg?branch=build)][2].
+[![Waffle.io - NativeScript CLI](https://badge.waffle.io/NativeScript/nativescript-cli.svg?columns=In%20Progress)](https://waffle.io/NativeScript/nativescript-cli)
+
 Get it using: `npm install nativescript@next -g`
 
 The NativeScript CLI lets you create, build, and deploy [NativeScript][7]-based projects on iOS and Android devices.
