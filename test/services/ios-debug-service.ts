@@ -8,7 +8,7 @@ const expectedDevToolsCommitSha = "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
 class IOSDebugServiceInheritor extends IOSDebugService {
 	constructor(protected $devicesService: Mobile.IDevicesService,
 		$platformService: IPlatformService,
-		$iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
+		$iOSEmulatorServices: Mobile.IiOSSimulatorService,
 		$childProcess: IChildProcess,
 		$hostInfo: IHostInfo,
 		$logger: ILogger,

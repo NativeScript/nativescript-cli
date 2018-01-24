@@ -23,7 +23,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	constructor(protected device: Mobile.IDevice,
 		protected $devicesService: Mobile.IDevicesService,
 		private $platformService: IPlatformService,
-		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
+		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
 		private $childProcess: IChildProcess,
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
@@ -125,24 +125,27 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		const lineStream = byline(child_process.stdout);
 		this._childProcess = child_process;
 
-		lineStream.on('data', (line: NodeBuffer) => {
-			const lineText = line.toString();
-			if (lineText && _.startsWith(lineText, debugData.applicationIdentifier)) {
-				const pid = getPidFromiOSSimulatorLogs(debugData.applicationIdentifier, lineText);
-				if (!pid) {
-					this.$logger.trace(`Line ${lineText} does not contain PID of the application ${debugData.applicationIdentifier}.`);
-					return;
-				}
+		await new Promise((resolve: () => void, reject) => {
+			lineStream.on('data', (line: NodeBuffer) => {
+				const lineText = line.toString();
+				if (lineText && _.startsWith(lineText, debugData.applicationIdentifier)) {
+					const pid = getPidFromiOSSimulatorLogs(debugData.applicationIdentifier, lineText);
+					if (!pid) {
+						this.$logger.trace(`Line ${lineText} does not contain PID of the application ${debugData.applicationIdentifier}.`);
+						return;
+					}
 
-				this._lldbProcess = this.$childProcess.spawn("lldb", ["-p", pid]);
-				if (log4js.levels.TRACE.isGreaterThanOrEqualTo(this.$logger.getLevel())) {
-					this._lldbProcess.stdout.pipe(process.stdout);
+					this._lldbProcess = this.$childProcess.spawn("lldb", ["-p", pid]);
+					if (log4js.levels.TRACE.isGreaterThanOrEqualTo(this.$logger.getLevel())) {
+						this._lldbProcess.stdout.pipe(process.stdout);
+					}
+					this._lldbProcess.stderr.pipe(process.stderr);
+					this._lldbProcess.stdin.write("process continue\n");
+					this.connectToApplicationOnEmulator(debugData.deviceIdentifier).then(resolve, reject);
+				} else {
+					process.stdout.write(line + "\n");
 				}
-				this._lldbProcess.stderr.pipe(process.stderr);
-				this._lldbProcess.stdin.write("process continue\n");
-			} else {
-				process.stdout.write(line + "\n");
-			}
+			});
 		});
 
 		return this.wireDebuggerClient(debugData, debugOptions);
@@ -153,9 +156,19 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 		const attachRequestMessage = this.$iOSNotification.getAttachRequest(debugData.applicationIdentifier);
 
-		const iOSEmulator = <Mobile.IiOSSimulatorService>this.$iOSEmulatorServices;
-		await iOSEmulator.postDarwinNotification(attachRequestMessage);
+		const iOSEmulatorService = <Mobile.IiOSSimulatorService>this.$iOSEmulatorServices;
+		await iOSEmulatorService.postDarwinNotification(attachRequestMessage);
+		await this.connectToApplicationOnEmulator(debugData.deviceIdentifier);
 		return result;
+	}
+
+	private async connectToApplicationOnEmulator(deviceIdentifier: string): Promise<void> {
+		const socket = await this.$iOSEmulatorServices.connectToPort({ port: inspectorBackendPort });
+		if (!socket) {
+			const error = <Mobile.IDeviceError>new Error("Unable to connect to application. Ensure application is running on simulator.");
+			error.deviceIdentifier = deviceIdentifier;
+			throw error;
+		}
 	}
 
 	private async deviceDebugBrk(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
@@ -212,7 +225,8 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 				this.$logger.info("'--chrome' is the default behavior. Use --inspector to debug iOS applications using the Safari Web Inspector.");
 			}
 
-			this._socketProxy = await this.$socketProxyFactory.createWebSocketProxy(this.getSocketFactory(device));
+			const deviceIdentifier = device ? device.deviceInfo.identifier : debugData.deviceIdentifier;
+			this._socketProxy = await this.$socketProxyFactory.createWebSocketProxy(this.getSocketFactory(device), deviceIdentifier);
 			return this.getChromeDebugUrl(debugOptions, this._socketProxy.options.port);
 		}
 	}

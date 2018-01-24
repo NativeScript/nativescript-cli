@@ -424,7 +424,7 @@ Provides methods for debugging applications on devices. The service is also even
 * Usage:
 ```JavaScript
 tns.debugService.on("connectionError", errorData => {
-	console.log(`Unable to start debug operation on device ${errorData.deviceId}. Error is: ${errorData.message}.`);
+	console.log(`Unable to start debug operation on device ${errorData.deviceIdentifier}. Error is: ${errorData.message}.`);
 });
 ```
 
@@ -522,7 +522,7 @@ interface IDebugOptions {
 * Usage:
 ```JavaScript
 tns.debugService.on("connectionError", errorData => {
-	console.log(`Unable to start debug operation on device ${errorData.deviceId}. Error is: ${errorData.message}.`);
+	console.log(`Unable to start debug operation on device ${errorData.deviceIdentifier}. Error is: ${errorData.message}.`);
 });
 
 const debugData = {

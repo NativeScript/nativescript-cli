@@ -203,7 +203,7 @@ describe("debugService", () => {
 					const debugData = getDebugData();
 					await assert.isFulfilled(debugService.debug(debugData, null));
 
-					const expectedErrorData = { deviceId: "deviceId", message: "my message", code: 2048 };
+					const expectedErrorData = { deviceIdentifier: "deviceId", message: "my message", code: 2048 };
 					const platformDebugService = testInjector.resolve<IPlatformDebugService>(`${platform}DebugService`);
 					platformDebugService.emit(CONNECTION_ERROR_EVENT_NAME, expectedErrorData);
 					assert.deepEqual(dataRaisedForConnectionError, expectedErrorData);
