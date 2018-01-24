@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
 "use strict";
+
+require("source-map-support/register");
+
 var path = require("path"),
 	node = require("../package.json").engines.node,
 	pathToLib = path.join(__dirname, "..", "lib"),
