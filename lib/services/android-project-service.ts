@@ -269,7 +269,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		shell.sed('-i', /__PROJECT_NAME__/, this.getProjectNameFromId(projectData), gradleSettingsFilePath);
 
 		// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
-		const userAppGradleFilePath = path.join(projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, "app.gradle");
+		const userAppGradleFilePath = path.join(projectData.getAppResourcesDirectoryPath(), this.$devicePlatformsConstants.Android, "app.gradle");
 
 		try {
 			shell.sed('-i', /__PACKAGE__/, projectData.projectId, userAppGradleFilePath);
@@ -391,7 +391,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public ensureConfigurationFileInAppResources(projectData: IProjectData): void {
-		const originalAndroidManifestFilePath = path.join(projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, this.getPlatformData(projectData).configurationFileName);
+		const originalAndroidManifestFilePath = path.join(projectData.getAppResourcesDirectoryPath(), this.$devicePlatformsConstants.Android, this.getPlatformData(projectData).configurationFileName);
 
 		const manifestExists = this.$fs.exists(originalAndroidManifestFilePath);
 

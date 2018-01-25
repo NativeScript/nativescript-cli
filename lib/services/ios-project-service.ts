@@ -765,9 +765,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	private getInfoPlistPath(projectData: IProjectData): string {
 		return path.join(
-			projectData.projectDir,
-			constants.APP_FOLDER_NAME,
-			constants.APP_RESOURCES_FOLDER_NAME,
+			projectData.getAppResourcesDirectoryPath(),
 			this.getPlatformData(projectData).normalizedPlatformName,
 			this.getPlatformData(projectData).configurationFileName
 		);
@@ -787,7 +785,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	private async mergeInfoPlists(buildOptions: IRelease, projectData: IProjectData): Promise<void> {
 		const projectDir = projectData.projectDir;
-		const infoPlistPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, this.getPlatformData(projectData).configurationFileName);
+		const infoPlistPath = path.join(projectData.getAppResourcesDirectoryPath(), this.getPlatformData(projectData).normalizedPlatformName, this.getPlatformData(projectData).configurationFileName);
 		this.ensureConfigurationFileInAppResources();
 
 		if (!this.$fs.exists(infoPlistPath)) {
@@ -1217,7 +1215,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			}
 		}
 
-		const appResourcesXcconfigPath = path.join(projectData.projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, "build.xcconfig");
+		const appResourcesXcconfigPath = path.join(projectData.getAppResourcesDirectoryPath(), this.getPlatformData(projectData).normalizedPlatformName, "build.xcconfig");
 		if (this.$fs.exists(appResourcesXcconfigPath)) {
 			await this.mergeXcconfigFiles(appResourcesXcconfigPath, pluginsXcconfigFilePath);
 		}
@@ -1272,7 +1270,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private getBuildXCConfigFilePath(projectData: IProjectData): string {
-		const buildXCConfig = path.join(projectData.appResourcesDirectoryPath,
+		const buildXCConfig = path.join(projectData.getAppResourcesDirectoryPath(),
 			this.getPlatformData(projectData).normalizedPlatformName, "build.xcconfig");
 		return buildXCConfig;
 	}
@@ -1334,7 +1332,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				const choicePersist = await this.$prompter.promptForChoice("Do you want to make teamId: " + teamId + " a persistent choice for your app?", choicesPersist);
 				switch (choicesPersist.indexOf(choicePersist)) {
 					case 0:
-						const xcconfigFile = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "build.xcconfig");
+						const xcconfigFile = path.join(projectData.getAppResourcesDirectoryPath(), this.getPlatformData(projectData).normalizedPlatformName, "build.xcconfig");
 						this.$fs.appendFile(xcconfigFile, "\nDEVELOPMENT_TEAM = " + teamId + "\n");
 						break;
 					case 1:
@@ -1352,8 +1350,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private validateApplicationIdentifier(projectData: IProjectData): void {
-		const projectDir = projectData.projectDir;
-		const infoPlistPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, this.getPlatformData(projectData).configurationFileName);
+		const infoPlistPath = path.join(projectData.getAppResourcesDirectoryPath(), this.getPlatformData(projectData).normalizedPlatformName, this.getPlatformData(projectData).configurationFileName);
 		const mergedPlistPath =  this.getPlatformData(projectData).configurationFilePath;
 
 		if (!this.$fs.exists(infoPlistPath) || !this.$fs.exists(mergedPlistPath)) {

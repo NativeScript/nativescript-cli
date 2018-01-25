@@ -1,5 +1,6 @@
 import { Yok } from "../lib/common/yok";
 import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
+import * as stubs from "./stubs";
 import { assert } from "chai";
 import * as path from "path";
 
@@ -14,6 +15,8 @@ function createTestInjector(): IInjector {
 		platformNames: ["Android", "iOS"]
 	});
 
+	testInjector.register('projectData', stubs.ProjectDataStub);
+
 	testInjector.register("platformsData", {
 		getPlatformData: (platform: string) => {
 			return {
@@ -26,10 +29,6 @@ function createTestInjector(): IInjector {
 		},
 	});
 
-	testInjector.register("projectData", {
-		projectDir: projectDir
-	});
-
 	testInjector.register("options", { release: false });
 
 	return testInjector;
@@ -38,9 +37,12 @@ function createTestInjector(): IInjector {
 describe("project-files-provider", () => {
 	let testInjector: IInjector;
 	let projectFilesProvider: IProjectFilesProvider;
+	let projectData: IProjectData;
 
 	beforeEach(() => {
 		testInjector = createTestInjector();
+		projectData = testInjector.resolve("projectData");
+		projectData.projectDir = projectDir;
 		projectFilesProvider = testInjector.resolve(ProjectFilesProvider);
 	});
 
@@ -56,37 +58,31 @@ describe("project-files-provider", () => {
 
 	describe("mapFilePath", () => {
 		it("returns file path from prepared project when path from app dir is passed", () => {
-			const projectData: IProjectData = testInjector.resolve("projectData");
 			const mappedFilePath = projectFilesProvider.mapFilePath(path.join(appSourceDir, "test.js"), "android", projectData, {});
 			assert.deepEqual(mappedFilePath, path.join(appDestinationDirectoryPath, "app", "test.js"));
 		});
 
 		it("returns file path from prepared project when path from app/App_Resources/platform dir is passed", () => {
-			const projectData: IProjectData = testInjector.resolve("projectData");
 			const mappedFilePath = projectFilesProvider.mapFilePath(path.join(appSourceDir, "App_Resources", "android", "test.js"), "android", projectData, {});
 			assert.deepEqual(mappedFilePath, path.join(appResourcesDestinationDirectoryPath, "test.js"));
 		});
 
 		it("returns null when path from app/App_Resources/android dir is passed and iOS platform is specified", () => {
-			const projectData: IProjectData = testInjector.resolve("projectData");
 			const mappedFilePath = projectFilesProvider.mapFilePath(path.join(appSourceDir, "App_Resources", "android", "test.js"), "iOS", projectData, {});
 			assert.deepEqual(mappedFilePath, null);
 		});
 
 		it("returns null when path from app/App_Resources/ dir (not platform specific) is passed", () => {
-			const projectData: IProjectData = testInjector.resolve("projectData");
 			const mappedFilePath = projectFilesProvider.mapFilePath(path.join(appSourceDir, "App_Resources", "test.js"), "android", projectData, {});
 			assert.deepEqual(mappedFilePath, null);
 		});
 
 		it("returns file path from prepared project when path from app dir is passed and it contains platform in its name", () => {
-			const projectData: IProjectData = testInjector.resolve("projectData");
 			const mappedFilePath = projectFilesProvider.mapFilePath(path.join(appSourceDir, "test.android.js"), "android", projectData, {});
 			assert.deepEqual(mappedFilePath, path.join(appDestinationDirectoryPath, "app", "test.js"));
 		});
 
 		it("returns file path from prepared project when path from app dir is passed and it contains configuration in its name", () => {
-			const projectData: IProjectData = testInjector.resolve("projectData");
 			const mappedFilePath = projectFilesProvider.mapFilePath(path.join(appSourceDir, "test.debug.js"), "android", projectData, {});
 			assert.deepEqual(mappedFilePath, path.join(appDestinationDirectoryPath, "app", "test.js"));
 		});

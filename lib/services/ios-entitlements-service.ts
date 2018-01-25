@@ -1,5 +1,4 @@
 import * as path from "path";
-import * as constants from "../constants";
 import { PlistSession } from "plist-merge-patch";
 
 export class IOSEntitlementsService {
@@ -14,8 +13,7 @@ export class IOSEntitlementsService {
 
 	private getDefaultAppEntitlementsPath(projectData: IProjectData) : string {
 		const entitlementsName = IOSEntitlementsService.DefaultEntitlementsName;
-		const entitlementsPath = path.join(projectData.projectDir,
-			constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME,
+		const entitlementsPath = path.join(projectData.getAppResourcesDirectoryPath(),
 			this.$mobileHelper.normalizePlatformName(this.$devicePlatformsConstants.iOS),
 			entitlementsName);
 		return entitlementsPath;

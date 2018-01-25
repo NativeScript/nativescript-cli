@@ -61,7 +61,6 @@ interface IProjectData extends IProjectDir {
 	dependencies: any;
 	devDependencies: IStringDictionary;
 	appDirectoryPath: string;
-	appResourcesDirectoryPath: string;
 	projectType: string;
 	/**
 	 * Initializes project data with the given project directory. If none supplied defaults to --path option or cwd.
@@ -69,6 +68,7 @@ interface IProjectData extends IProjectDir {
 	 * @returns {void}
 	 */
 	initializeProjectData(projectDir?: string): void;
+	getAppResourcesDirectoryPath(projectDir?: string): string;
 }
 
 interface IProjectDataService {
