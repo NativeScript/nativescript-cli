@@ -23,7 +23,7 @@ const appTestsPath = path.join(appPath, 'tests');
 // the next row and the copy command should be uncommented when we add shim specific tests
 // const shimTestsPath = path.join(__dirname, 'test', 'tests');
 const rootMonoRepoPath = path.join(__dirname, '../../');
-const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration');
+const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration', 'tests');
 const distPath = path.join(__dirname, 'dist');
 const configFileName = 'config.js';
 let logServerPort;
