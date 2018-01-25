@@ -28,6 +28,8 @@ export const BUILD_DIR = "build";
 export const OUTPUTS_DIR = "outputs";
 export const APK_DIR = "apk";
 export const RESOURCES_DIR = "res";
+export const CONFIG_NS_FILE_NAME = "nsconfig.json";
+export const CONFIG_NS_APP_RESOURCES_ENTRY = "app_resources";
 
 export class PackageVersion {
 	static NEXT = "next";

@@ -4,6 +4,10 @@ import * as util from "util";
 import * as chai from "chai";
 import { EventEmitter } from "events";
 
+import * as fs from "fs";
+import * as path from "path";
+import * as constants from "./../lib/constants";
+
 export class LoggerStub implements ILogger {
 	setLevel(level: string): void { }
 	getLevel(): string { return undefined; }
@@ -244,15 +248,36 @@ export class ProjectDataStub implements IProjectData {
 	get platformsDir(): string {
 		return "";
 	}
+	set platformsDir(value) {
+	}
 	projectFilePath: string;
 	projectId: string;
 	dependencies: any;
 	appDirectoryPath: string;
-	appResourcesDirectoryPath: string;
 	devDependencies: IStringDictionary;
 	projectType: string;
-	initializeProjectData(projectDir?: string): void {
+	public initializeProjectData(projectDir?: string): void {
 		this.projectDir = this.projectDir || projectDir;
+	}
+	public getAppResourcesDirectoryPath(projectDir?: string): string {
+		if (!projectDir) {
+			projectDir = this.projectDir;
+		}
+
+		const configNSFilePath = path.join(projectDir, constants.CONFIG_NS_FILE_NAME);
+		let absoluteAppResourcesDirPath: string;
+
+		if (fs.existsSync(configNSFilePath)) {
+			const configNS = JSON.parse(fs.readFileSync(configNSFilePath).toString());
+
+			if (configNS && configNS[constants.CONFIG_NS_APP_RESOURCES_ENTRY]) {
+				const appResourcesDirPath = configNS[constants.CONFIG_NS_APP_RESOURCES_ENTRY];
+
+				absoluteAppResourcesDirPath = path.resolve(projectDir, appResourcesDirPath);
+			}
+		}
+
+		return absoluteAppResourcesDirPath || path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
 	}
 }
 

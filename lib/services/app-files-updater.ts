@@ -43,11 +43,12 @@ export class AppFilesUpdater {
 
 	protected readSourceDir(): string[] {
 		const tnsDir = path.join(this.appSourceDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
-		return this.fs.enumerateFilesInDirectorySync(this.appSourceDirectoryPath, null, { includeEmptyDirectories: true }).filter(dirName => dirName !== tnsDir);
+		const defaultAppResourcesDir = path.join(this.appSourceDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
+		return this.fs.enumerateFilesInDirectorySync(this.appSourceDirectoryPath, null, { includeEmptyDirectories: true }).filter(dirName => dirName !== tnsDir).filter(dirName => !dirName.startsWith(defaultAppResourcesDir));
 	}
 
 	protected resolveAppSourceFiles(): string[] {
-		// Copy all files from app dir, but make sure to exclude tns_modules
+		// Copy all files from app dir, but make sure to exclude tns_modules and App_Resources
 		let sourceFiles = this.readSourceDir();
 
 		if (this.options.release) {

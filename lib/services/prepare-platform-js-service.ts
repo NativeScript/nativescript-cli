@@ -36,6 +36,7 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 	public async preparePlatform(config: IPreparePlatformJSInfo): Promise<void> {
 		if (!config.changesInfo || config.changesInfo.appFilesChanged || config.changesInfo.changesRequirePrepare) {
 			await this.copyAppFiles(config);
+			this.copyAppResourcesFiles(config);
 		}
 
 		if (config.changesInfo && !config.changesInfo.changesRequirePrepare) {
@@ -100,6 +101,13 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 			shell.rm("-rf", appDestinationDirectoryPath);
 			this.$errors.failWithoutHelp(`Processing node_modules failed. ${error}`);
 		}
+	}
+
+	private copyAppResourcesFiles(config: IPreparePlatformJSInfo) {
+		const appDestinationDirectoryPath = path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+		const appResourcesSourcePath = config.projectData.getAppResourcesDirectoryPath();
+
+		shell.cp("-Rf", appResourcesSourcePath, appDestinationDirectoryPath);
 	}
 }
 

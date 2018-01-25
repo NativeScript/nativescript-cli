@@ -112,7 +112,7 @@ export class ProjectService implements IProjectService {
 
 	private async ensureAppResourcesExist(projectDir: string): Promise<void> {
 		const appPath = path.join(projectDir, constants.APP_FOLDER_NAME),
-			appResourcesDestinationPath = path.join(appPath, constants.APP_RESOURCES_FOLDER_NAME);
+			appResourcesDestinationPath = this.$projectData.getAppResourcesDirectoryPath(projectDir);
 
 		if (!this.$fs.exists(appResourcesDestinationPath)) {
 			this.$fs.createDirectory(appResourcesDestinationPath);

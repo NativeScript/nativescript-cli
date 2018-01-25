@@ -6,11 +6,11 @@ import { ProjectFilesProviderBase } from "../common/services/project-files-provi
 export class ProjectFilesProvider extends ProjectFilesProviderBase {
 	constructor(private $platformsData: IPlatformsData,
 		$mobileHelper: Mobile.IMobileHelper,
-		$options:IOptions) {
-			super($mobileHelper, $options);
+		$options: IOptions) {
+		super($mobileHelper, $options);
 	}
 
-	private static INTERNAL_NONPROJECT_FILES = [ "**/*.ts" ];
+	private static INTERNAL_NONPROJECT_FILES = ["**/*.ts"];
 
 	public mapFilePath(filePath: string, platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): string {
 		const platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
@@ -23,14 +23,14 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 			mappedFilePath = path.join(platformData.appDestinationDirectoryPath, path.relative(projectData.projectDir, parsedFilePath));
 		}
 
-		const appResourcesDirectoryPath = path.join(constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
+		const appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 		const platformSpecificAppResourcesDirectoryPath = path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName);
 		if (parsedFilePath.indexOf(appResourcesDirectoryPath) > -1 && parsedFilePath.indexOf(platformSpecificAppResourcesDirectoryPath) === -1) {
 			return null;
 		}
 
 		if (parsedFilePath.indexOf(platformSpecificAppResourcesDirectoryPath) > -1) {
-			const appResourcesRelativePath = path.relative(path.join(projectData.projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME,
+			const appResourcesRelativePath = path.relative(path.join(projectData.getAppResourcesDirectoryPath(),
 				platformData.normalizedPlatformName), parsedFilePath);
 			mappedFilePath = path.join(platformData.platformProjectService.getAppResourcesDestinationDirectoryPath(projectData), appResourcesRelativePath);
 		}

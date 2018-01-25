@@ -19,6 +19,7 @@ describe("IOSEntitlements Service Tests", () => {
 		const testInjector = new yok.Yok();
 
 		testInjector.register('platformsData', stubs.PlatformsDataStub);
+		testInjector.register('projectData', stubs.ProjectDataStub);
 		testInjector.register("logger", stubs.LoggerStub);
 		testInjector.register('iOSEntitlementsService', IOSEntitlementsService);
 
@@ -46,7 +47,7 @@ describe("IOSEntitlements Service Tests", () => {
 		injector = createTestInjector();
 
 		platformsData = injector.resolve("platformsData");
-		projectData = <IProjectData>platformsData.getPlatformData();
+		projectData = injector.resolve("projectData");
 		projectData.projectName = 'testApp';
 
 		projectData.platformsDir = temp.mkdirSync("platformsDir");

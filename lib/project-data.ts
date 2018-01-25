@@ -69,7 +69,6 @@ export class ProjectData implements IProjectData {
 					this.platformsDir = path.join(projectDir, constants.PLATFORMS_DIR_NAME);
 					this.projectFilePath = projectFilePath;
 					this.appDirectoryPath = path.join(projectDir, constants.APP_FOLDER_NAME);
-					this.appResourcesDirectoryPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
 					this.projectId = data.id;
 					this.dependencies = fileContent.dependencies;
 					this.devDependencies = fileContent.devDependencies;
@@ -85,6 +84,27 @@ export class ProjectData implements IProjectData {
 
 		// This is the case when no project file found
 		this.$errors.fail("No project found at or above '%s' and neither was a --path specified.", projectDir || this.$options.path || currentDir);
+	}
+
+	public getAppResourcesDirectoryPath(projectDir?: string): string {
+		if (!projectDir) {
+			projectDir = this.projectDir;
+		}
+
+		const configNSFilePath = path.join(projectDir, constants.CONFIG_NS_FILE_NAME);
+		let absoluteAppResourcesDirPath: string;
+
+		if (this.$fs.exists(configNSFilePath)) {
+			const configNS = this.$fs.readJson(configNSFilePath);
+
+			if (configNS && configNS[constants.CONFIG_NS_APP_RESOURCES_ENTRY]) {
+				const appResourcesDirPath = configNS[constants.CONFIG_NS_APP_RESOURCES_ENTRY];
+
+				absoluteAppResourcesDirPath = path.resolve(projectDir, appResourcesDirPath);
+			}
+		}
+
+		return absoluteAppResourcesDirPath || path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
 	}
 
 	private getProjectType(): string {
