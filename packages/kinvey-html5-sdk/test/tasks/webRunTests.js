@@ -16,8 +16,7 @@ const webRunTests = (staticPort, runner) =>
         } else {
             const chrome = spawnHeadlessChromium(args);
             chrome.stderr.on('data', d => reject(d.toString()));
-            chrome.on('close', () => resolve());
-            runner.on('log.end', resolve);
+            resolve();
         }
     });
 
