@@ -17,6 +17,11 @@ import  { Response, StatusCode } from './response';
 const maxIdsPerRequest = 200;
 
 export class DeltaFetchRequest extends KinveyRequest {
+  constructor(options = {}) {
+    super(options);
+    this.tag = options.tag;
+  }
+
   get method() {
     return super.method;
   }
@@ -51,7 +56,8 @@ export class DeltaFetchRequest extends KinveyRequest {
       headers: this.headers,
       query: this.query,
       timeout: this.timeout,
-      client: this.client
+      client: this.client,
+      tag: this.tag
     });
     return request.execute()
       .then(response => response.data)

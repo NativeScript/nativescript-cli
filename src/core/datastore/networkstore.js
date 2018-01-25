@@ -24,6 +24,20 @@ export class NetworkStore {
      */
     this.collection = collection;
 
+    if (options.tag) {
+      let tag = options.tag;
+
+      if (!isString(tag)) {
+        throw new KinveyError('A tag must be a string.');
+      }
+
+      if (!/^[a-zA-Z0-9-]+$/.test(tag)) {
+        throw new KinveyError('A tag can only contain letters, numbers, and "-".');
+      }
+
+      this.tag = tag;
+    }
+
     /**
      * @type {Client}
      */
@@ -107,7 +121,8 @@ export class NetworkStore {
         properties: options.properties,
         query: query,
         timeout: options.timeout,
-        client: this.client
+        client: this.client,
+        tag: this.tag
       };
       let request = new KinveyRequest(config);
 
@@ -156,7 +171,8 @@ export class NetworkStore {
         }),
         properties: options.properties,
         timeout: options.timeout,
-        client: this.client
+        client: this.client,
+        tag: this.tag
       };
       let request = new KinveyRequest(config);
 

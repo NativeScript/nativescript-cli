@@ -56,6 +56,30 @@ describe('Sync', () => {
     return sync.clear();
   });
 
+  describe('find()', () => {
+    const entity1 = { _id: randomString() };
+    const entity2 = { _id: randomString() };
+
+    beforeEach(() => {
+      const store = new SyncStore(collection, { tag: 'entity1' });
+      return store.save(entity1);
+    });
+
+    beforeEach(() => {
+      const store = new SyncStore(collection, { tag: 'entity2' });
+      return store.save(entity2);
+    });
+
+    it('should return the entities by tag', () => {
+      const sync = new SyncManager(collection, { tag: 'entity1' });
+      return sync.find()
+        .then((entities) => {
+          expect(entities.length).toEqual(1);
+          expect(entities[0].entityId).toEqual(entity1._id);
+        });
+    });
+  });
+
   describe('count()', () => {
     const entity1 = { _id: randomString() };
     const entity2 = { _id: randomString() };

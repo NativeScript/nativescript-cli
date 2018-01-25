@@ -14,6 +14,7 @@ export class CacheRequest extends Request {
     this.aggregation = options.aggregation;
     this.query = options.query;
     this.rack = CacheRack;
+    this.tag = options.tag;
   }
 
   get body() {
@@ -46,6 +47,18 @@ export class CacheRequest extends Request {
     }
 
     this._aggregation = aggregation;
+  }
+
+  get collection() {
+    if (isDefined(this.tag)) {
+      return  `${this._collection}.${this.tag}`;
+    }
+
+    return this._collection;
+  }
+
+  set collection(collection) {
+    this._collection = collection;
   }
 
   get url() {
