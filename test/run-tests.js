@@ -11,8 +11,8 @@ program
 
 const rootPath = path.join(__dirname, '../');
 const integrationTestsFilePath = path.join(rootPath, 'test', 'integration');
-const configTemplateFilePath = path.join(integrationTestsFilePath, 'config.template');
-const testsConfigFilePath = path.join(integrationTestsFilePath, 'tests-config');
+const configTemplateFilePath = path.join(integrationTestsFilePath, 'configs',  'config.template');
+const testsConfigFilePath = path.join(integrationTestsFilePath, 'configs', 'tests-config');
 
 const runnerShimFilePath = path.join(rootPath, 'packages', `kinvey-${program.platform}-sdk`);
 const runnerConfigFilePath = path.join(runnerShimFilePath, 'runner-config');
