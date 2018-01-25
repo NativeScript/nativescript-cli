@@ -20,10 +20,6 @@ let logServerPort;
 let staticPort;
 
 const jsFilesFilter = item => path.extname(item.path) === '.js';
-const shimSpecificTests = walk(path.join(__dirname, 'test', 'tests'), {
-  filter: jsFilesFilter,
-  nodir: true
-});
 const commonTests = walk(path.join(rootMonoRepoPath, 'test', 'integration'), {
   filter: jsFilesFilter,
   nodir: true
@@ -42,7 +38,7 @@ function runPipeline() {
       processTemplateFile(
         path.join(__dirname, 'test', 'index.template.hbs'),
         () => ({
-          tests: shimSpecificTests.concat(commonTests).map(f =>
+          tests: commonTests.map(f =>
             `./${path.relative(
               path.join(__dirname, 'test'),
               f.path

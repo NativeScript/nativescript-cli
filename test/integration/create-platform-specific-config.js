@@ -4,7 +4,6 @@ const path = require('path');
 const lodash = require('lodash');
 
 const createPlatformSpecificConfig = (platform, os) => {
-
   const rootPath = path.join(__dirname, '../../');
   const integrationTestsFilePath = path.join(rootPath, 'test', 'integration');
   const configTemplateFilePath = path.join(integrationTestsFilePath, 'configs', 'config.template');
