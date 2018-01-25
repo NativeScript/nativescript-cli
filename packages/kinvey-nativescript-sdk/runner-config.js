@@ -98,7 +98,16 @@ function runPipeline(osName) {
 
   runner.on('log.start', port => (logServerPort = port));
 
-  runner.run().then(() => console.log('done')).catch(err => console.log(err));
+  runner.run()
+    .then(() => {
+      console.log('The tests passed successfully!');
+      process.exit(0);
+    })
+    .catch(err => {
+      const error = err || '';
+      console.log(`The pipeline finished with an error!!! ${error}`);
+      process.exit(1);
+    });
 }
 
 module.exports = runPipeline;
