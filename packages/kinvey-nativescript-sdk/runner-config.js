@@ -28,11 +28,11 @@ const rootMonoRepoPath = path.join(__dirname, '../../');
 const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration');
 const distPath = path.join(__dirname, 'dist');
 const jsFilesFilter = item => path.extname(item.path) === '.js';
+const configFileName = 'config.js';
 
 let logServerPort;
 
 function runPipeline(osName) {
-  const configFileName = osName === 'android' ? 'config-android.js' : 'config-ios.js';
   const runner = new Runner({
     pipeline: [
       logServer(),
@@ -48,7 +48,7 @@ function runPipeline(osName) {
         args: ['create', appName],
         cwd: __dirname
       }),
-      copy(path.join(__dirname, 'test', 'configs', configFileName), path.join(appPath, 'config.js')),
+      copy(path.join(__dirname, 'test', configFileName), path.join(appPath, configFileName)),
       copy(path.join(__dirname, 'test', 'template'), appPath),
       //   copy(
       //     shimSpecificTestsPath,
