@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Enhancements
 - MLIBZ-2162: Allow multiple independent datastores on a single collection [#220](https://github.com/Kinvey/js-sdk/pull/220)
+- MLIBZ-2120: Add support for specifying a storage adapter [#213](https://github.com/Kinvey/js-sdk/pull/220)
 
 ### Bug Fixes
 - MLIBZ-2313 and MLIBZ-2315: Export the `Client` class. Don't export the `Properties` class twice. [#221](https://github.com/Kinvey/js-sdk/pull/221)
