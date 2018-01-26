@@ -1,3 +1,4 @@
+import './polyfills';
 export { client, getAppVersion, setAppVersion, init, initialize, ping } from './kinvey';
 export { Acl } from './acl';
 export { Aggregation } from './aggregation';
