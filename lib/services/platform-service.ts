@@ -560,6 +560,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return null;
 	}
 
+	@helpers.hook('cleanApp')
 	public async cleanDestinationApp(platformInfo: IPreparePlatformInfo): Promise<void> {
 		await this.ensurePlatformInstalled(platformInfo.platform, platformInfo.platformTemplate, platformInfo.projectData, platformInfo.config);
 
