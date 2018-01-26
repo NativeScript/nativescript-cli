@@ -7,7 +7,7 @@ const mangleExcludes = require('./mangle-excludes');
 const pkg = require('./package.json');
 
 module.exports = (env = {}) => {
-  const platform = getPlatform(env);
+  const platform = 'android';
   const extensions = getExtensions(platform);
   const rules = getRules();
   const plugins = getPlugins(env, platform);
@@ -65,15 +65,6 @@ module.exports = (env = {}) => {
   return config;
 };
 
-function getPlatform(env) {
-  if (env) {
-    if (env.android) return 'android';
-    if (env.ios) return 'ios';
-  }
-
-  throw new Error('You need to provide a target platform!');
-}
-
 function getExtensions(platform) {
   return Object.freeze([
     `.${platform}.ts`,
@@ -129,7 +120,7 @@ function getPlugins(env, platform) {
       },
       { from: '.travis.yml' },
       { from: path.join(__dirname, '../../src/kinvey.d.ts') },
-      { from: 'platforms/**/*' },
+      { from: 'platforms/android/**/*' },
       { from: 'LICENSE' },
       { from: 'README.md' },
     ]),
@@ -140,14 +131,12 @@ function getPlugins(env, platform) {
   ];
 
   if (env.uglify) {
-    // Work around an Android issue by setting compress = false
-    const compress = platform !== 'android';
     plugins.push(
       new UglifyJSPlugin({
         sourceMap: true,
         uglifyOptions: {
           mangle: { reserved: mangleExcludes },
-          compress,
+          compress: false,
           output: {
             comments: false
           }
