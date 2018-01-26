@@ -108,7 +108,6 @@ function runPipeline(osName) {
   runner.run()
     .then(() => {
       console.log('The tests passed successfully!');
-      process.exit(0);
     })
     .catch(err => {
       const error = err || '';
