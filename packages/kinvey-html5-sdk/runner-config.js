@@ -20,7 +20,7 @@ let logServerPort;
 let staticPort;
 
 const jsFilesFilter = item => path.extname(item.path) === '.js';
-const commonTests = walk(path.join(rootMonoRepoPath, 'test', 'integration'), {
+const commonTests = walk(path.join(rootMonoRepoPath, 'test', 'integration', 'tests'), {
   filter: jsFilesFilter,
   nodir: true
 });
