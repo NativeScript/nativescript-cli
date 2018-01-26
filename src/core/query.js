@@ -776,13 +776,17 @@ export class Query {
             // Find field in objects.
             const aField = nested(a, field);
             const bField = nested(b, field);
+            const modifier = json.sort[field]; // 1 (ascending) or -1 (descending).
 
             if (isDefined(aField) && isDefined(bField) === false) {
-              return -1;
-            } else if (isDefined(bField) && isDefined(aField) === false) {
-              return 1;
+              return 1 * modifier;
+            } else if (isDefined(aField) === false && isDefined(bField)) {
+              return -1 * modifier;
+            } else if (typeof aField === 'undefined' && bField === null) {
+              return 0;
+            } else if (aField === null && typeof bField === 'undefined') {
+              return 0;
             } else if (aField !== bField) {
-              const modifier = json.sort[field]; // 1 or -1.
               return (aField < bField ? -1 : 1) * modifier;
             }
           }
