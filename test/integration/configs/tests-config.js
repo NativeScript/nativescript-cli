@@ -1,6 +1,9 @@
 
 const testsConfig = {
-  collectionName: 'Books'
+  collectionName: 'Books',
+  collectionWithPreSaveHook: 'WithPreSaveHook',
+  propertyFromBLName: 'propertyFromBL',
+  propertyFromBLValue: true
 };
 
 const appCredentials = {
@@ -28,7 +31,7 @@ const appCredentials = {
       appSecret: 'c00090630ace4eb3956367a44319afcf',
     }
   }
-}
+};
 
 module.exports = {
   testsConfig: testsConfig,

@@ -21,16 +21,15 @@ const createPlatformSpecificConfig = (platform, os) => {
       appKey: app.appKey,
       appSecret: app.appSecret
     };
-  }
+  };
 
   const credentialsToUse = getCredentialsByEnvironment(appCredentials, platform, os);
   Object.assign(testsConfig, credentialsToUse);
 
   const crossPlatformExport = fs.readFileSync(configTemplateFilePath, 'utf8');
-  const compiled = lodash.template(crossPlatformExport)
-  const configFileContents = compiled({ 'appConfig': JSON.stringify(testsConfig, null, 2) })
+  const compiled = lodash.template(crossPlatformExport);
+  const configFileContents = compiled({ appConfig: JSON.stringify(testsConfig, null, 2) });
   fs.writeFileSync(resultConfigFilePath, configFileContents, 'utf8');
-}
+};
 
 module.exports = createPlatformSpecificConfig;
-
