@@ -1,12 +1,12 @@
-import  url from  'url';
-import  cloneDeep from  'lodash/cloneDeep';
-import  { KinveyError } from  '../errors';
-import  { Query } from  '../query';
-import  { Aggregation } from  '../aggregation';
-import  { isDefined } from  '../utils';
-import  { Request } from  './request';
-import  { KinveyResponse } from  './response';
-import  { CacheRack } from  './rack';
+import url from  'url';
+import cloneDeep from  'lodash/cloneDeep';
+import { KinveyError } from  '../errors';
+import { Query } from  '../query';
+import { Aggregation } from  '../aggregation';
+import { isDefined } from  '../utils';
+import { Request } from  './request';
+import { KinveyResponse } from  './response';
+import { CacheRack } from  './rack';
 
 export class CacheRequest extends Request {
   constructor(options = {}) {
@@ -113,6 +113,7 @@ export class CacheRequest extends Request {
     obj.collection = this.collection;
     obj.entityId = this.entityId;
     obj.encryptionKey = this.client ? this.client.encryptionKey : undefined;
+    obj.storageProviders = this.client ? this.client.storage : undefined;
     return obj;
   }
 }
