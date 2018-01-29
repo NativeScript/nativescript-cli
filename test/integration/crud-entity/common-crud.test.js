@@ -738,16 +738,14 @@ function testFunc() {
         });
 
         describe('Modifiers', () => {
-          let expectedAscendingCache;
-          let expectedAscendingServer;
+          let expectedAscending;
           let expectedDescending;
 
           describe('Sort', () => {
             before((done) => {
-              expectedAscendingCache = _.sortBy(entities, numberFieldName);
-              expectedAscendingServer = _.sortBy(entities, numberFieldName);
-              expectedAscendingServer.splice(0, 0, expectedAscendingServer.pop());
-              expectedDescending = expectedAscendingServer.slice().reverse();
+              expectedAscending = _.sortBy(entities, numberFieldName);
+              expectedAscending.splice(0, 0, expectedAscending.pop());
+              expectedDescending = expectedAscending.slice().reverse();
               done();
             });
 
@@ -756,8 +754,7 @@ function testFunc() {
               storeToTest.find(query)
                 .subscribe(onNextSpy, done, () => {
                   try {
-                    // when MLIBZ-2156 is fixed, expectedAscendingCache should be replaced with expectedAscendingServer
-                    utilities.validateReadResult(dataStoreType, onNextSpy, expectedAscendingCache, expectedAscendingServer);
+                    utilities.validateReadResult(dataStoreType, onNextSpy, expectedAscending, expectedAscending);
                     done();
                   } catch (error) {
                     done(error);
