@@ -497,6 +497,12 @@ interface IInfoService {
 	printComponentsInfo(): Promise<void>;
 }
 
+interface IAndroidResourcesMigrationService {
+	canMigrate(platformString: string): boolean;
+	hasMigrated(appResourcesDir: string): boolean;
+	migrate(appResourcesDir: string): Promise<void>;
+}
+
 /**
  * Describes properties needed for uploading a package to iTunes Connect
  */

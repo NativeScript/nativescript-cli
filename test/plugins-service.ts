@@ -116,6 +116,7 @@ function createTestInjector() {
 	testInjector.register("analyticsSettingsService", {
 		getPlaygroundInfo: () => Promise.resolve(null)
 	});
+	testInjector.register("androidResourcesMigrationService", stubs.AndroidResourcesMigrationServiceStub);
 
 	testInjector.register("platformEnvironmentRequirements", {});
 	return testInjector;

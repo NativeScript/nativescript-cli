@@ -22,3 +22,4 @@ Command | Description
 [platform](platform.html) | Lists all platforms that the project currently targets.
 [prepare](prepare.html) | Copies common and relevant platform-specific content from the app directory to the subdirectory for the selected target platform in the platforms directory.
 [platform update](platform-update.html) | Updates the NativeScript runtime for the specified platform.
+[resources-update android](resources-update.html) | Updates the App_Resources/Android directory to the new v4.0 directory structure

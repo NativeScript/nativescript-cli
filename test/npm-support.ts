@@ -97,6 +97,7 @@ function createTestInjector(): IInjector {
 		})
 	});
 	testInjector.register("httpClient", {});
+	testInjector.register("androidResourcesMigrationService", stubs.AndroidResourcesMigrationServiceStub);
 
 	return testInjector;
 }
