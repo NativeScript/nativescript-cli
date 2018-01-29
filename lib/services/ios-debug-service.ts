@@ -32,7 +32,8 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		private $iOSNotification: IiOSNotification,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $processService: IProcessService,
-		private $socketProxyFactory: ISocketProxyFactory) {
+		private $socketProxyFactory: ISocketProxyFactory,
+		private $net: INet) {
 		super(device, $devicesService);
 		this.$processService.attachToProcessExitSignals(this, this.debugStop);
 		this.$socketProxyFactory.on(CONNECTION_ERROR_EVENT_NAME, (e: Error) => this.emit(CONNECTION_ERROR_EVENT_NAME, e));
@@ -125,28 +126,27 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		const lineStream = byline(child_process.stdout);
 		this._childProcess = child_process;
 
-		await new Promise((resolve: () => void, reject) => {
-			lineStream.on('data', (line: NodeBuffer) => {
-				const lineText = line.toString();
-				if (lineText && _.startsWith(lineText, debugData.applicationIdentifier)) {
-					const pid = getPidFromiOSSimulatorLogs(debugData.applicationIdentifier, lineText);
-					if (!pid) {
-						this.$logger.trace(`Line ${lineText} does not contain PID of the application ${debugData.applicationIdentifier}.`);
-						return;
-					}
-
-					this._lldbProcess = this.$childProcess.spawn("lldb", ["-p", pid]);
-					if (log4js.levels.TRACE.isGreaterThanOrEqualTo(this.$logger.getLevel())) {
-						this._lldbProcess.stdout.pipe(process.stdout);
-					}
-					this._lldbProcess.stderr.pipe(process.stderr);
-					this._lldbProcess.stdin.write("process continue\n");
-					this.connectToApplicationOnEmulator(debugData.deviceIdentifier).then(resolve, reject);
-				} else {
-					process.stdout.write(line + "\n");
+		lineStream.on('data', (line: NodeBuffer) => {
+			const lineText = line.toString();
+			if (lineText && _.startsWith(lineText, debugData.applicationIdentifier)) {
+				const pid = getPidFromiOSSimulatorLogs(debugData.applicationIdentifier, lineText);
+				if (!pid) {
+					this.$logger.trace(`Line ${lineText} does not contain PID of the application ${debugData.applicationIdentifier}.`);
+					return;
 				}
-			});
+
+				this._lldbProcess = this.$childProcess.spawn("lldb", ["-p", pid]);
+				if (log4js.levels.TRACE.isGreaterThanOrEqualTo(this.$logger.getLevel())) {
+					this._lldbProcess.stdout.pipe(process.stdout);
+				}
+				this._lldbProcess.stderr.pipe(process.stderr);
+				this._lldbProcess.stdin.write("process continue\n");
+			} else {
+				process.stdout.write(line + "\n");
+			}
 		});
+
+		await this.waitForBackendPortToBeOpened(debugData.deviceIdentifier);
 
 		return this.wireDebuggerClient(debugData, debugOptions);
 	}
@@ -158,13 +158,13 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 		const iOSEmulatorService = <Mobile.IiOSSimulatorService>this.$iOSEmulatorServices;
 		await iOSEmulatorService.postDarwinNotification(attachRequestMessage);
-		await this.connectToApplicationOnEmulator(debugData.deviceIdentifier);
+		await this.waitForBackendPortToBeOpened(debugData.deviceIdentifier);
 		return result;
 	}
 
-	private async connectToApplicationOnEmulator(deviceIdentifier: string): Promise<void> {
-		const socket = await this.$iOSEmulatorServices.connectToPort({ port: inspectorBackendPort });
-		if (!socket) {
+	private async waitForBackendPortToBeOpened(deviceIdentifier: string): Promise<void> {
+		const portListens = await this.$net.waitForPortToListen({ port: inspectorBackendPort, timeout: 10000, interval: 200 });
+		if (!portListens) {
 			const error = <Mobile.IDeviceError>new Error("Unable to connect to application. Ensure application is running on simulator.");
 			error.deviceIdentifier = deviceIdentifier;
 			throw error;
