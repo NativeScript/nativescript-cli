@@ -1,4 +1,3 @@
-import * as helpers from "../../common/helpers";
 import * as constants from "../../constants";
 import * as minimatch from "minimatch";
 import * as net from "net";
@@ -30,10 +29,8 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 
 		if (this.device.isEmulator) {
 			await this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.getAttachRequest(projectId));
-			try {
-				this.socket = await helpers.connectEventuallyUntilTimeout(() => net.connect(IOSDeviceLiveSyncService.BACKEND_PORT), 5000);
-			} catch (e) {
-				this.$logger.debug(e);
+			this.socket = await this.$iOSEmulatorServices.connectToPort({ port: IOSDeviceLiveSyncService.BACKEND_PORT });
+			if (!this.socket) {
 				return false;
 			}
 		} else {

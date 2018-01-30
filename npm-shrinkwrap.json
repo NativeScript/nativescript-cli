@@ -4244,9 +4244,9 @@
       "integrity": "sha1-91kSVfcHq7/yJ8e1a2N9uwNzoQ8="
     },
     "proxy-lib": {
-      "version": "0.2.0",
-      "resolved": "https://registry.npmjs.org/proxy-lib/-/proxy-lib-0.2.0.tgz",
-      "integrity": "sha1-xgmTDtxmvz8qoGgKnA1QI6EfjfM=",
+      "version": "0.4.0",
+      "resolved": "https://registry.npmjs.org/proxy-lib/-/proxy-lib-0.4.0.tgz",
+      "integrity": "sha512-oUDDpf0NTtKPyXjBNUcKzwZhA9GjEdu8Z47GsxGv5rZvKyCqsSrHurJtlL1yp7uVzA2NOmxd4aX7qmB1ZOdCwQ==",
       "requires": {
         "osenv": "0.1.4"
       },

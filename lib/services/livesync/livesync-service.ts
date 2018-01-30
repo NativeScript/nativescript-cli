@@ -513,21 +513,21 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	private async startWatcher(projectData: IProjectData, liveSyncData: ILiveSyncInfo): Promise<void> {
-		const pattern = [APP_FOLDER_NAME];
+		const patterns = [APP_FOLDER_NAME];
 
 		if (liveSyncData.watchAllFiles) {
 			const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
-			pattern.push(PACKAGE_JSON_FILE_NAME);
+			patterns.push(PACKAGE_JSON_FILE_NAME);
 
 			// watch only production node_module/packages same one prepare uses
 			for (const index in productionDependencies) {
-				pattern.push(productionDependencies[index].directory);
+				patterns.push(productionDependencies[index].directory);
 			}
 		}
 
 		const currentWatcherInfo = this.liveSyncProcessesInfo[liveSyncData.projectDir].watcherInfo;
-
-		if (!currentWatcherInfo || currentWatcherInfo.pattern !== pattern) {
+		const areWatcherPatternsDifferent = () => _.xor(currentWatcherInfo.patterns, patterns).length;
+		if (!currentWatcherInfo || areWatcherPatternsDifferent()) {
 			if (currentWatcherInfo) {
 				currentWatcherInfo.watcher.close();
 			}
@@ -630,7 +630,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				ignored: ["**/.*", ".*"] // hidden files
 			};
 
-			const watcher = choki.watch(pattern, watcherOptions)
+			const watcher = choki.watch(patterns, watcherOptions)
 				.on("all", async (event: string, filePath: string) => {
 					clearTimeout(timeoutTimer);
 
@@ -650,7 +650,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					}
 				});
 
-			this.liveSyncProcessesInfo[liveSyncData.projectDir].watcherInfo = { watcher, pattern };
+			this.liveSyncProcessesInfo[liveSyncData.projectDir].watcherInfo = { watcher, patterns };
 			this.liveSyncProcessesInfo[liveSyncData.projectDir].timer = timeoutTimer;
 
 			this.$processService.attachToProcessExitSignals(this, () => {

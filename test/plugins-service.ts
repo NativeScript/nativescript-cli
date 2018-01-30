@@ -103,6 +103,13 @@ function createTestInjector() {
 		showCommandLineHelp: async (): Promise<void> => (undefined)
 	});
 	testInjector.register("settingsService", SettingsService);
+	testInjector.register("progressIndicator", {
+		getSpinner: (msg: string) => ({
+			start: (): void => undefined,
+			stop: (): void => undefined,
+			message: (): void => undefined
+		})
+	});
 
 	return testInjector;
 }

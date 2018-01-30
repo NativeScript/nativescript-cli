@@ -23,7 +23,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	constructor(protected device: Mobile.IDevice,
 		protected $devicesService: Mobile.IDevicesService,
 		private $platformService: IPlatformService,
-		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
+		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
 		private $childProcess: IChildProcess,
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
@@ -32,7 +32,8 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		private $iOSNotification: IiOSNotification,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $processService: IProcessService,
-		private $socketProxyFactory: ISocketProxyFactory) {
+		private $socketProxyFactory: ISocketProxyFactory,
+		private $net: INet) {
 		super(device, $devicesService);
 		this.$processService.attachToProcessExitSignals(this, this.debugStop);
 		this.$socketProxyFactory.on(CONNECTION_ERROR_EVENT_NAME, (e: Error) => this.emit(CONNECTION_ERROR_EVENT_NAME, e));
@@ -145,6 +146,8 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 			}
 		});
 
+		await this.waitForBackendPortToBeOpened(debugData.deviceIdentifier);
+
 		return this.wireDebuggerClient(debugData, debugOptions);
 	}
 
@@ -153,9 +156,19 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 		const attachRequestMessage = this.$iOSNotification.getAttachRequest(debugData.applicationIdentifier);
 
-		const iOSEmulator = <Mobile.IiOSSimulatorService>this.$iOSEmulatorServices;
-		await iOSEmulator.postDarwinNotification(attachRequestMessage);
+		const iOSEmulatorService = <Mobile.IiOSSimulatorService>this.$iOSEmulatorServices;
+		await iOSEmulatorService.postDarwinNotification(attachRequestMessage);
+		await this.waitForBackendPortToBeOpened(debugData.deviceIdentifier);
 		return result;
+	}
+
+	private async waitForBackendPortToBeOpened(deviceIdentifier: string): Promise<void> {
+		const portListens = await this.$net.waitForPortToListen({ port: inspectorBackendPort, timeout: 10000, interval: 200 });
+		if (!portListens) {
+			const error = <Mobile.IDeviceError>new Error("Unable to connect to application. Ensure application is running on simulator.");
+			error.deviceIdentifier = deviceIdentifier;
+			throw error;
+		}
 	}
 
 	private async deviceDebugBrk(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
@@ -212,7 +225,8 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 				this.$logger.info("'--chrome' is the default behavior. Use --inspector to debug iOS applications using the Safari Web Inspector.");
 			}
 
-			this._socketProxy = await this.$socketProxyFactory.createWebSocketProxy(this.getSocketFactory(device));
+			const deviceIdentifier = device ? device.deviceInfo.identifier : debugData.deviceIdentifier;
+			this._socketProxy = await this.$socketProxyFactory.createWebSocketProxy(this.getSocketFactory(device), deviceIdentifier);
 			return this.getChromeDebugUrl(debugOptions, this._socketProxy.options.port);
 		}
 	}
