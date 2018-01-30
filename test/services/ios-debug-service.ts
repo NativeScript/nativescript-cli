@@ -17,9 +17,10 @@ class IOSDebugServiceInheritor extends IOSDebugService {
 		$iOSNotification: IiOSNotification,
 		$iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		$processService: IProcessService,
-		$socketProxyFactory: ISocketProxyFactory) {
+		$socketProxyFactory: ISocketProxyFactory,
+		$net: INet) {
 		super(<any>{}, $devicesService, $platformService, $iOSEmulatorServices, $childProcess, $hostInfo, $logger, $errors,
-			$npmInstallationManager, $iOSNotification, $iOSSocketRequestExecutor, $processService, $socketProxyFactory);
+			$npmInstallationManager, $iOSNotification, $iOSSocketRequestExecutor, $processService, $socketProxyFactory, $net);
 	}
 
 	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
@@ -49,7 +50,8 @@ const createTestInjector = (): IInjector => {
 	});
 
 	testInjector.register("net", {
-		getAvailablePortInRange: async (startPort: number, endPort?: number): Promise<number> => 41000
+		getAvailablePortInRange: async (startPort: number, endPort?: number): Promise<number> => 41000,
+		waitForPortToListen: async (opts: { port: number, timeout: number, interval?: number }): Promise<boolean> => true
 	});
 
 	return testInjector;
