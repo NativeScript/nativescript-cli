@@ -20,10 +20,12 @@ const appName = 'KinveyCordovaTestApp';
 const appRootPath = path.join(__dirname, appName);
 const appPath = path.join(appRootPath, 'www');
 const appTestsPath = path.join(appPath, 'tests');
-const shimTestsPath = path.join(__dirname, 'test', 'tests');
+// the next row and the copy command should be uncommented when we add shim specific tests
+// const shimTestsPath = path.join(__dirname, 'test', 'tests');
 const rootMonoRepoPath = path.join(__dirname, '../../');
-const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration');
+const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration', 'tests');
 const distPath = path.join(__dirname, 'dist');
+const configFileName = 'config.js';
 let logServerPort;
 
 
@@ -43,16 +45,19 @@ function runPipeline(osName) {
         args: ['create', appName],
         cwd: __dirname
       }),
+      copy(path.join(__dirname, 'test', configFileName), path.join(appTestsPath, configFileName)),
       copy(path.join(__dirname, 'test', 'template'), appPath),
       copy(distPath, appPath),
-      copy(
-          shimTestsPath,
-          appTestsPath
-      ),
-      copy(
-        commonTestsPath,
-        appTestsPath
-      ),
+      // copy(
+      //     shimTestsPath,
+      //     appTestsPath
+      // ),
+      runCommand({
+        command: './node_modules/.bin/babel',
+        args: [commonTestsPath, '--out-dir', appTestsPath],
+        cwd: rootMonoRepoPath
+      }),
+      copy(path.join(__dirname, 'test', 'libs'), appPath),
       processTemplateFile(
         path.join(appPath, 'index.template.hbs'),
         () => ({
@@ -100,10 +105,7 @@ function runPipeline(osName) {
 
   runner.on('log.start', port => (logServerPort = port));
 
-  runner
-    .run()
-    .then(() => console.log('done'))
-    .catch(err => console.log(err));
+  return runner.run();
 }
 
 module.exports = runPipeline;
