@@ -744,7 +744,8 @@ function testFunc() {
           describe('Sort', () => {
             before((done) => {
               expectedAscending = _.sortBy(entities, numberFieldName);
-              expectedAscending.splice(0, 0, expectedAscending.pop());
+              // moving entities with null values at the beginning of the array, as this is the sort order on the server
+              expectedAscending.unshift(expectedAscending.pop());
               expectedDescending = expectedAscending.slice().reverse();
               done();
             });
