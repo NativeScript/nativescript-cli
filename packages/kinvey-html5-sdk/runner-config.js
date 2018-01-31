@@ -55,16 +55,7 @@ function runPipeline() {
   runner.on('log.start', port => (logServerPort = port));
   runner.on('serve.static', port => (staticPort = port));
 
-  runner.run()
-    .then(() => {
-      console.log('The tests passed successfully!');
-      process.exit(0);
-    })
-    .catch(err => {
-      const error = err || '';
-      console.log(`The pipeline finished with an error!!! ${error}`);
-      process.exit(1);
-    });
+  return runner.run();
 }
 
 module.exports = runPipeline;

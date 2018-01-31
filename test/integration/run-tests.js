@@ -12,4 +12,15 @@ const runnerConfigFilePath = path.join(__dirname, '../../', 'packages', `kinvey-
 createPlatformSpecificConfig(program.platform, program.os);
 
 const runPipeline = require(runnerConfigFilePath);
-runPipeline(program.os);
+runPipeline(program.os)
+  .then(() => {
+    console.log('The tests passed successfully!');
+    if (program.platform === 'html5') {
+      process.exit(0);
+    }
+  })
+  .catch(err => {
+    const error = err || '';
+    console.log(`The pipeline finished with an error!!! ${error}`);
+    process.exit(1);
+  });
