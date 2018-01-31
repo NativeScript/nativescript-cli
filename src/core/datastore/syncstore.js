@@ -47,7 +47,8 @@ export class SyncStore extends CacheStore {
         }),
         properties: options.properties,
         query: query,
-        timeout: options.timeout
+        timeout: options.timeout,
+        tag: this.tag
       });
 
       // Execute the request
@@ -89,7 +90,8 @@ export class SyncStore extends CacheStore {
             pathname: `${this.pathname}/${id}`
           }),
           properties: options.properties,
-          timeout: options.timeout
+          timeout: options.timeout,
+          tag: this.tag
         });
 
         return request.execute()
@@ -132,7 +134,8 @@ export class SyncStore extends CacheStore {
         }),
         properties: options.properties,
         aggregation: aggregation,
-        timeout: options.timeout
+        timeout: options.timeout,
+        tag: this.tag
       });
 
       // Execute the request
@@ -175,7 +178,8 @@ export class SyncStore extends CacheStore {
           }),
           properties: options.properties,
           query: query,
-          timeout: options.timeout
+          timeout: options.timeout,
+          tag: this.tag
         });
 
         return request.execute()

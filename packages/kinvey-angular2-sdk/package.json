@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "3.9.6",
+  "version": "3.9.9",
   "name": "kinvey-angular2-sdk",
   "description": "Kinvey JavaScript SDK for Angular 2+/Ionic 2+ applications.",
   "author": "Kinvey, Inc.",
@@ -19,8 +19,8 @@
     "rxjs": "~5.5.5"
   },
   "files": [
-    "kinvey-angular2-sdk.js",
-    "kinvey-angular2-sdk.js.map",
+    "kinvey-angular2-sdk.min.js",
+    "kinvey-angular2-sdk.min.js.map",
     "kinvey.d.ts"
   ]
 }

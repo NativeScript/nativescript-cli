@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "3.9.7",
+  "version": "3.9.9",
   "name": "kinvey-nativescript-sdk",
   "description": "Kinvey NativeScript SDK for developing NativeScript applications.",
   "author": "Kinvey, Inc.",
@@ -15,10 +15,11 @@
   "scripts": {
     "prebuild": "rm -rf dist",
     "build": "npm run build:android && npm run build:ios",
-    "build:android": "webpack --config webpack.config.js --env.android",
-    "build:ios": "webpack --config webpack.config.js --env.ios",
+    "build:android": "webpack --config webpack.config.android.js",
+    "build:ios": "webpack --config webpack.config.ios.js",
     "lint": "tslint **/*.ts --exclude **/node_modules/**/* --exclude **/*.d.ts",
-    "release": "npm run build -- --env.uglify && ./scripts/push.sh",
+    "prerelease": "rm -rf dist",
+    "release": "npm run release:android && npm run release:ios && ./scripts/push.sh",
     "release:android": "npm run build:android -- --env.uglify",
     "release:ios": "npm run build:ios -- --env.uglify",
     "postrelease": "rm -rf tmp"

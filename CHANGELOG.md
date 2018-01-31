@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.9.9](https://github.com/Kinvey/js-sdk/tree/v3.9.9) (2018-01-26)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.9.6...v3.9.9)<br/>
+
+### Enhancements
+- MLIBZ-2162: Allow multiple independent datastores on a single collection [#220](https://github.com/Kinvey/js-sdk/pull/220)
+- MLIBZ-2120: Add support for specifying a storage adapter [#213](https://github.com/Kinvey/js-sdk/pull/220)
+
+### Bug Fixes
+- MLIBZ-2313 and MLIBZ-2315: Export the `Client` class. Don't export the `Properties` class twice. [#221](https://github.com/Kinvey/js-sdk/pull/221)
+- MLIBZ-2156: Correctly sort fields that have a `null` or `undefined` value. [#205](https://github.com/Kinvey/js-sdk/pull/205)
+- MLIBZ-2296: Add polyfill for `Object.prototype.assign()`. [#225](https://github.com/Kinvey/js-sdk/pull/225)
+
+### Maintenance
+- MLIBZ-2232: Validate Deploys [#206](https://github.com/Kinvey/js-sdk/pull/206)
+- Fix `files` to include correct filenames for kinvey-angular2-sdk package. [Commit](https://github.com/Kinvey/js-sdk/commit/faa741c4a972bb8d7227090d2c537f67159639f0)
+- Fix `webpack.config.js` for the kinvey-html5-sdk package. [Commit](https://github.com/Kinvey/js-sdk/commit/9244b655d5a3806fbeb5ccb81cc797c920f21868)
+- Use seperate `webpack.config.js` files for building the iOS and Android vesions for the kinvey-nativescript-sdk package. [Commit](https://github.com/Kinvey/js-sdk/commit/03aa385b909f1dd18c9b48be72f5ee812d8c4d9f)
+
 ## [3.9.6](https://github.com/Kinvey/js-sdk/tree/v3.9.6) (2018-01-12)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.9.3...v3.9.6)<br/>
 

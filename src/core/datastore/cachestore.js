@@ -73,7 +73,8 @@ export class CacheStore extends NetworkStore {
         }),
         properties: options.properties,
         query: query,
-        timeout: options.timeout
+        timeout: options.timeout,
+        tag: this.tag
       });
 
       // Execute the request
@@ -124,7 +125,8 @@ export class CacheStore extends NetworkStore {
                   }),
                   properties: options.properties,
                   body: networkEntities,
-                  timeout: options.timeout
+                  timeout: options.timeout,
+                  tag: this.tag
                 });
                 return request.execute()
                   .then(response => response.data);
@@ -174,7 +176,8 @@ export class CacheStore extends NetworkStore {
           pathname: `${this.pathname}/${id}`
         }),
         properties: options.properties,
-        timeout: options.timeout
+        timeout: options.timeout,
+        tag: this.tag
       });
       return request.execute()
         .then(response => response.data)
@@ -215,7 +218,8 @@ export class CacheStore extends NetworkStore {
                   }),
                   properties: options.properties,
                   body: networkEntity,
-                  timeout: options.timeout
+                  timeout: options.timeout,
+                  tag: this.tag
                 });
                 return request.execute()
                   .then(response => response.data);
@@ -261,7 +265,8 @@ export class CacheStore extends NetworkStore {
         }),
         properties: options.properties,
         aggregation: aggregation,
-        timeout: options.timeout
+        timeout: options.timeout,
+        tag: this.tag
       });
 
       // Execute the request
@@ -335,7 +340,8 @@ export class CacheStore extends NetworkStore {
         }),
         properties: options.properties,
         query: query,
-        timeout: options.timeout
+        timeout: options.timeout,
+        tag: this.tag
       });
 
       // Execute the request
@@ -412,7 +418,8 @@ export class CacheStore extends NetworkStore {
         }),
         properties: options.properties,
         body: entity,
-        timeout: options.timeout
+        timeout: options.timeout,
+        tag: this.tag
       });
 
       // Execute the request
@@ -489,7 +496,8 @@ export class CacheStore extends NetworkStore {
         }),
         properties: options.properties,
         body: entity,
-        timeout: options.timeout
+        timeout: options.timeout,
+        tag: this.tag
       });
 
       // Execute the request
@@ -554,7 +562,8 @@ export class CacheStore extends NetworkStore {
         }),
         properties: options.properties,
         query: query,
-        timeout: options.timeout
+        timeout: options.timeout,
+        tag: this.tag
       });
 
       // Execute the request
@@ -612,7 +621,8 @@ export class CacheStore extends NetworkStore {
                 }),
                 properties: options.properties,
                 authType: AuthType.Default,
-                timeout: options.timeout
+                timeout: options.timeout,
+                tag: this.tag
               });
               return request.execute()
                 .then(response => response.data);
@@ -663,7 +673,8 @@ export class CacheStore extends NetworkStore {
         }),
         properties: options.properties,
         authType: AuthType.Default,
-        timeout: options.timeout
+        timeout: options.timeout,
+        tag: this.tag
       });
 
       // Execute the request
@@ -717,7 +728,8 @@ export class CacheStore extends NetworkStore {
             }),
             properties: options.properties,
             authType: AuthType.Default,
-            timeout: options.timeout
+            timeout: options.timeout,
+            tag: this.tag
           });
           return request.execute()
             .then(response => response.data);
@@ -756,7 +768,8 @@ export class CacheStore extends NetworkStore {
         }),
         properties: options.properties,
         query: query,
-        timeout: options.timeout
+        timeout: options.timeout,
+        tag: this.tag
       });
 
       // Execute the request
@@ -790,7 +803,8 @@ export class CacheStore extends NetworkStore {
                   }),
                   properties: options.properties,
                   authType: AuthType.Default,
-                  timeout: options.timeout
+                  timeout: options.timeout,
+                  tag: this.tag
                 });
                 return request.execute()
                   .then(response => response.data);
@@ -875,7 +889,8 @@ export class CacheStore extends NetworkStore {
               }),
               properties: options.properties,
               body: entities,
-              timeout: options.timeout
+              timeout: options.timeout,
+              tag: this.tag
             });
             return saveRequest.execute();
           })

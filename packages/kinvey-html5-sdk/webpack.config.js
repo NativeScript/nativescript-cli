@@ -24,7 +24,7 @@ module.exports = (env = {}) => {
     module: {
       rules: getRules()
     },
-    plugins: getPlugins()
+    plugins: getPlugins(env)
   };
 
   if (env.s3) {

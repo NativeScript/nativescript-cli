@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "3.9.6",
+  "version": "3.9.9",
   "name": "kinvey-js-sdk",
   "description": "Kinvey JavaScript SDK for developing JavaScript applications.",
   "author": "Kinvey, Inc.",

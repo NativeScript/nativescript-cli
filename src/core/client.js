@@ -138,6 +138,11 @@ export class Client {
     this.defaultTimeout = isNumber(config.defaultTimeout) && config.defaultTimeout >= 0 ? config.defaultTimeout : DEFAULT_TIMEOUT;
 
     /**
+     * @type {?string[]}
+     */
+    this.storageProviders = config.storage;
+
+    /**
      * @private
      */
     this.activeUserStorage = new ActiveUserStorage();
@@ -236,7 +241,8 @@ export class Client {
       appSecret: this.appSecret,
       masterSecret: this.masterSecret,
       encryptionKey: this.encryptionKey,
-      appVersion: this.appVersion
+      appVersion: this.appVersion,
+      storageProviders: this.storageProviders
     };
   }
 
