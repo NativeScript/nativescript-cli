@@ -72,7 +72,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 		return server;
 	}
 
-	public async createWebSocketProxy(factory: () => Promise<net.Socket>): Promise<ws.Server> {
+	public async createWebSocketProxy(factory: () => Promise<net.Socket>, deviceIdentifier: string): Promise<ws.Server> {
 		// NOTE: We will try to provide command line options to select ports, at least on the localhost.
 		const localPort = await this.$net.getAvailablePortInRange(41000);
 
@@ -92,6 +92,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				try {
 					_socket = await factory();
 				} catch (err) {
+					err.deviceIdentifier = deviceIdentifier;
 					this.$logger.trace(err);
 					this.emit(CONNECTION_ERROR_EVENT_NAME, err);
 					this.$errors.failWithoutHelp("Cannot connect to device socket.");

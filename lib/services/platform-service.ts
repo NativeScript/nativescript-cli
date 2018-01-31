@@ -9,7 +9,6 @@ import { AppFilesUpdater } from "./app-files-updater";
 import { attachAwaitDetach } from "../common/helpers";
 import * as temp from "temp";
 temp.track();
-const clui = require("clui");
 
 const buildInfoFileName = ".nsbuildinfo";
 
@@ -25,6 +24,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $preparePlatformNativeService: IPreparePlatformService,
 		private $preparePlatformJSService: IPreparePlatformService,
+		private $progressIndicator: IProgressIndicator,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
@@ -115,7 +115,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			npmOptions["version"] = version;
 		}
 
-		const spinner = new clui.Spinner("Installing " + packageToInstall);
+		const spinner = this.$progressIndicator.getSpinner("Installing " + packageToInstall);
 		const projectDir = projectData.projectDir;
 		const platformPath = path.join(projectData.platformsDir, platform);
 
@@ -560,6 +560,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return null;
 	}
 
+	@helpers.hook('cleanApp')
 	public async cleanDestinationApp(platformInfo: IPreparePlatformInfo): Promise<void> {
 		await this.ensurePlatformInstalled(platformInfo.platform, platformInfo.platformTemplate, platformInfo.projectData, platformInfo.config);
 

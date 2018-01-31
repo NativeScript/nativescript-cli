@@ -544,7 +544,7 @@ interface IAndroidToolsInfoData {
 
 interface ISocketProxyFactory extends NodeJS.EventEmitter {
 	createTCPSocketProxy(factory: () => Promise<any>): Promise<any>;
-	createWebSocketProxy(factory: () => Promise<any>): Promise<any>;
+	createWebSocketProxy(factory: () => Promise<any>, deviceIdentifier: string): Promise<any>;
 }
 
 interface IiOSNotification {
