@@ -49,10 +49,6 @@ export class RunCommandBase extends BundleBase implements ICommand {
 	}
 
 	public async executeCore(args: string[]): Promise<void> {
-		if (this.$options.bundle) {
-			this.$options.watch = false;
-		}
-
 		await this.$devicesService.initialize({
 			deviceId: this.$options.device,
 			platform: this.platform,
