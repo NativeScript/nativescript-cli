@@ -1,6 +1,17 @@
 NativeScript CLI Changelog
 ================
 
+3.4.2 (2018, February 01)
+==
+
+### New
+* [Implemented #2127](https://github.com/NativeScript/nativescript-cli/issues/2127): Feature Request: Ability to disable spinner during install process
+
+### Fixed
+* [Fixed #3337](https://github.com/NativeScript/nativescript-cli/issues/3337): Empty Chrome DevTools when using tns debug ios for iOS Simulator
+* [Fixed #3338](https://github.com/NativeScript/nativescript-cli/issues/3338): `tns debug ios --chrome` can not stop on first line
+
+
 3.4.1 (2018, January 11)
 ==
 
