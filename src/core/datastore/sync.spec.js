@@ -1,6 +1,7 @@
 import nock from 'nock';
 import expect from 'expect';
 import chai from 'chai';
+import cloneDeep from 'lodash/cloneDeep';
 import { SyncOperation, syncManagerProvider } from './sync';
 import { SyncStore } from './syncstore';
 import { SyncError } from '../errors';
@@ -277,6 +278,12 @@ describe('Sync', () => {
   });
 
   describe('push()', () => {
+    beforeEach(() => {
+      const store = new SyncStore(collection);
+      return store.clear()
+        .then(() => store.clearSync());
+    });
+
     it('should execute pending sync operations', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
@@ -284,6 +291,12 @@ describe('Sync', () => {
       const entity3Id = randomString();
       const manager = syncManagerProvider.getSyncManager();
       const store = new SyncStore(collection);
+
+      const simulatePreSaveBLHook = (entity) => {
+        const clone = cloneDeep(entity);
+        clone.someNewProperty = true;
+        return clone;
+      };
 
       return store.save(entity1)
         .then(() => store.save(entity2))
@@ -295,31 +308,34 @@ describe('Sync', () => {
         .then(() => {
           nock(client.apiHostname)
             .put(`${backendPathname}/${entity1._id}`, () => true)
-            .query(true)
-            .reply(200, entity1);
+            .reply(200, () => simulatePreSaveBLHook(entity1));
 
           nock(client.apiHostname)
             .delete(`${backendPathname}/${entity2._id}`, () => true)
-            .query(true)
             .reply(200, { count: 1 });
 
           nock(client.apiHostname)
             .post(backendPathname, () => true)
-            .query(true)
-            .reply(200, { _id: entity3Id });
+            .reply(200, simulatePreSaveBLHook({ _id: entity3Id }));
 
           return manager.push(collection);
         })
         .then((result) => {
           expect(result).toEqual([
             { _id: entity2._id, operation: SyncOperation.Delete },
-            { _id: entity1._id, operation: SyncOperation.Update, entity: entity1 },
-            { _id: entity3._id, operation: SyncOperation.Create, entity: { _id: entity3Id } }
+            { _id: entity1._id, operation: SyncOperation.Update, entity: simulatePreSaveBLHook(entity1) },
+            { _id: entity3._id, operation: SyncOperation.Create, entity: simulatePreSaveBLHook({ _id: entity3Id }) }
           ]);
           return manager.getSyncItemCount(collection);
         })
         .then((count) => {
           expect(count).toEqual(0);
+          return store.find().toPromise();
+        })
+        .then((offlineEntities) => {
+          offlineEntities.forEach((entity) => {
+            expect(entity.someNewProperty).toBe(true);
+          });
         });
     });
 
