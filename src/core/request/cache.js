@@ -113,7 +113,7 @@ export class CacheRequest extends Request {
     obj.collection = this.collection;
     obj.entityId = this.entityId;
     obj.encryptionKey = this.client ? this.client.encryptionKey : undefined;
-    obj.storageProviders = this.client ? this.client.storage : undefined;
+    obj.storageProviders = this.client ? this.client.storageProviders : undefined;
     return obj;
   }
 }
