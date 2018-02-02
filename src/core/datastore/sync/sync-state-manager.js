@@ -7,46 +7,39 @@ import { SyncOperation } from '../sync';
 import { repositoryProvider } from '../repositories';
 import { syncCollectionName } from './utils';
 import { ensureArray } from '../../utils';
-import { isNotEmpty, isEmpty, isLocalEntity, generateEntityId } from '../utils';
+import { isNotEmpty, isLocalEntity, generateEntityId } from '../utils';
 
 // imported for typings
 // import { OfflineRepository } from '../repositories';
 
-// TODO: there's probably room for performance improvements :)
 export class SyncStateManager {
   _repoPromise;
 
   addCreateEvent(collection, entities) {
-    const syncItems = ensureArray(entities)
-      .map(e => this._buildSyncItem(collection, SyncOperation.Create, e._id));
+    const syncItems = this._buildSyncItemsForEntities(collection, entities, SyncOperation.Create);
     return this._getRepository()
       .then(repo => repo.create(syncCollectionName, syncItems));
   }
 
   addUpdateEvent(collection, entities) {
-    const syncItems = ensureArray(entities)
-      .map(e => this._buildSyncItem(collection, SyncOperation.Update, e._id));
+    const syncItems = this._buildSyncItemsForEntities(collection, entities, SyncOperation.Update);
     return this._upsertSyncItems(syncItems);
   }
 
   addDeleteEvent(collection, entities) {
-    const localEntityIds = [];
-    const syncItemsToUpsert = [];
-    const syncItemsToUpsertIds = [];
+    const syncItemData = this._groupSyncItemDataForDeleteEvent(collection, entities);
 
-    ensureArray(entities).forEach((entity) => {
-      if (isLocalEntity(entity)) {
-        localEntityIds.push(entity._id);
-      } else {
-        const item = this._buildSyncItem(collection, SyncOperation.Delete, entity._id);
-        syncItemsToUpsert.push(item);
-        syncItemsToUpsertIds.push(entity._id);
-      }
-    });
+    let delPrm = Promise.resolve();
+    if (isNotEmpty(syncItemData.localEntityIds)) {
+      const query = this._getCollectionFilter(collection, syncItemData.localEntityIds);
+      delPrm = this._removeSyncItems(query);
+    }
 
-    const query = new Query().contains('entityId', localEntityIds);
-    const delPrm = this._removeSyncItems(query);
-    const upsertPrm = this._upsertSyncItems(syncItemsToUpsert, syncItemsToUpsertIds);
+    let upsertPrm = Promise.resolve();
+    if (isNotEmpty(syncItemData.syncItemsToUpsert)) {
+      upsertPrm = this._upsertSyncItems(syncItemData.syncItemsToUpsert, syncItemData.syncItemsToUpsertIds);
+    }
+
     return Promise.all([delPrm, upsertPrm]);
   }
 
@@ -67,17 +60,19 @@ export class SyncStateManager {
     return this._removeSyncItems(query);
   }
 
-  removeSyncEntitiesForIds(entityIds) {
+  removeSyncItemsForIds(entityIds) {
     const query = new Query().contains('entityId', entityIds);
     return this._removeSyncItems(query);
   }
 
   removeAllSyncItems(collection) {
-    const query = new Query();
     if (collection) {
-      query.equalTo('collection', collection);
+      const query = new Query()
+        .equalTo('collection', collection);
+      return this._removeSyncItems(query);
     }
-    return this._removeSyncItems(query);
+    return this._getRepository()
+      .then(repo => repo.clear(syncCollectionName));
   }
 
   _getRepository() {
@@ -106,7 +101,7 @@ export class SyncStateManager {
 
   // entityIds are the ids of entities new sync items pertain to - optional optimization :))
   _upsertSyncItems(newSyncItems, entityIds) {
-    if (isEmpty(entityIds)) {
+    if (!entityIds) {
       entityIds = newSyncItems.map(i => i.entityId);
     }
     const delQuery = new Query().contains('entityId', entityIds);
@@ -117,20 +112,47 @@ export class SyncStateManager {
 
   _getCollectionFilter(collection, onlyTheseIds) {
     const query = new Query().equalTo('collection', collection);
-    if (isNotEmpty(onlyTheseIds)) {
+    if (onlyTheseIds) {
       query.contains('entityId', ensureArray(onlyTheseIds));
     }
     return query;
   }
 
-  _buildSyncItem(collection, type, entityId) {
+  _buildSyncItem(collection, syncOp, entityId) {
     return {
       _id: generateEntityId(),
       collection,
       entityId,
       state: {
-        operation: type
+        operation: syncOp
       }
+    };
+  }
+
+  _buildSyncItemsForEntities(collection, entities, syncOp) {
+    return ensureArray(entities)
+      .map(e => this._buildSyncItem(collection, syncOp, e._id));
+  }
+
+  _groupSyncItemDataForDeleteEvent(collection, entities) {
+    const localEntityIds = [];
+    const syncItemsToUpsert = [];
+    const syncItemsToUpsertIds = [];
+
+    ensureArray(entities).forEach((entity) => {
+      if (isLocalEntity(entity)) {
+        localEntityIds.push(entity._id);
+      } else {
+        const item = this._buildSyncItem(collection, SyncOperation.Delete, entity._id);
+        syncItemsToUpsert.push(item);
+        syncItemsToUpsertIds.push(entity._id);
+      }
+    });
+
+    return {
+      localEntityIds,
+      syncItemsToUpsert,
+      syncItemsToUpsertIds
     };
   }
 }

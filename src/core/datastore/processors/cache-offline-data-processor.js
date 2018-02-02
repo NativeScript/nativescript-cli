@@ -207,7 +207,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
     return this._getRepository()
       .then(repo => repo.delete(collection, deleteQuery, options))
       .then((deletedCount) => {
-        return this._syncManager.removeSyncEntitiesForIds(offlineEntities.map(e => e._id))
+        return this._syncManager.removeSyncItemsForIds(offlineEntities.map(e => e._id))
           .then(() => deletedCount);
       });
   }

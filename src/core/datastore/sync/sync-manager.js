@@ -104,7 +104,7 @@ export class SyncManager {
   clearSync(collection, query) {
     if (query) {
       return this._getEntityIdsForQuery(collection, query)
-        .then(entityIds => this._syncStateManager.removeSyncEntitiesForIds(entityIds));
+        .then(entityIds => this._syncStateManager.removeSyncItemsForIds(entityIds));
     }
     return this._syncStateManager.removeAllSyncItems(collection);
   }
@@ -126,8 +126,8 @@ export class SyncManager {
     return this._syncStateManager.removeSyncItemForEntityId(entityId);
   }
 
-  removeSyncEntitiesForIds(entityIds) {
-    return this._syncStateManager.removeSyncEntitiesForIds(entityIds);
+  removeSyncItemsForIds(entityIds) {
+    return this._syncStateManager.removeSyncItemsForIds(entityIds);
   }
 
   _getPushOpResult(entityId, operation) {
