@@ -60,9 +60,9 @@ export class ProjectChangesService implements IProjectChangesService {
 		this._changesInfo = new ProjectChangesInfo();
 		if (!this.ensurePrepareInfo(platform, projectData, projectChangesOptions)) {
 			this._newFiles = 0;
-			this._changesInfo.appFilesChanged = this.containsNewerFiles(projectData.appDirectoryPath, projectData.getAppResourcesDirectoryPath(), projectData);
+			this._changesInfo.appFilesChanged = this.containsNewerFiles(projectData.appDirectoryPath, projectData.appResourcesDirectoryPath, projectData);
 			this._changesInfo.packageChanged = this.isProjectFileChanged(projectData, platform);
-			this._changesInfo.appResourcesChanged = this.containsNewerFiles(projectData.getAppResourcesDirectoryPath(), null, projectData);
+			this._changesInfo.appResourcesChanged = this.containsNewerFiles(projectData.appResourcesDirectoryPath, null, projectData);
 			/*done because currently all node_modules are traversed, a possible improvement could be traversing only the production dependencies*/
 			this._changesInfo.nativeChanged = projectChangesOptions.skipModulesNativeCheck ? false : this.containsNewerFiles(
 				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME),
@@ -73,7 +73,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			if (this._newFiles > 0 || this._changesInfo.nativeChanged) {
 				this._changesInfo.modulesChanged = true;
 			}
-			const platformResourcesDir = path.join(projectData.getAppResourcesDirectoryPath(), platformData.normalizedPlatformName);
+			const platformResourcesDir = path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
 			if (platform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
 				this._changesInfo.configChanged = this.filesChanged([path.join(platformResourcesDir, platformData.configurationFileName),
 				path.join(platformResourcesDir, "LaunchScreen.storyboard"),
@@ -282,7 +282,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			return true;
 		}
 		const projectDir = projectData.projectDir;
-		if (_.startsWith(path.join(projectDir, file), projectData.getAppResourcesDirectoryPath())) {
+		if (_.startsWith(path.join(projectDir, file), projectData.appResourcesDirectoryPath)) {
 			return true;
 		}
 		if (_.startsWith(file, NODE_MODULES_FOLDER_NAME)) {

@@ -13,7 +13,7 @@ export class IOSEntitlementsService {
 
 	private getDefaultAppEntitlementsPath(projectData: IProjectData) : string {
 		const entitlementsName = IOSEntitlementsService.DefaultEntitlementsName;
-		const entitlementsPath = path.join(projectData.getAppResourcesDirectoryPath(),
+		const entitlementsPath = path.join(projectData.appResourcesDirectoryPath,
 			this.$mobileHelper.normalizePlatformName(this.$devicePlatformsConstants.iOS),
 			entitlementsName);
 		return entitlementsPath;
