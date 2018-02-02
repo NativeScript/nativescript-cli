@@ -23,14 +23,14 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 			mappedFilePath = path.join(platformData.appDestinationDirectoryPath, path.relative(projectData.projectDir, parsedFilePath));
 		}
 
-		const appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
+		const appResourcesDirectoryPath = projectData.appResourcesDirectoryPath;
 		const platformSpecificAppResourcesDirectoryPath = path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName);
 		if (parsedFilePath.indexOf(appResourcesDirectoryPath) > -1 && parsedFilePath.indexOf(platformSpecificAppResourcesDirectoryPath) === -1) {
 			return null;
 		}
 
 		if (parsedFilePath.indexOf(platformSpecificAppResourcesDirectoryPath) > -1) {
-			const appResourcesRelativePath = path.relative(path.join(projectData.getAppResourcesDirectoryPath(),
+			const appResourcesRelativePath = path.relative(path.join(projectData.appResourcesDirectoryPath,
 				platformData.normalizedPlatformName), parsedFilePath);
 			mappedFilePath = path.join(platformData.platformProjectService.getAppResourcesDestinationDirectoryPath(projectData), appResourcesRelativePath);
 		}

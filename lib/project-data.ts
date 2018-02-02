@@ -33,7 +33,9 @@ export class ProjectData implements IProjectData {
 	public projectId: string;
 	public projectName: string;
 	public appDirectoryPath: string;
-	public appResourcesDirectoryPath: string;
+	get appResourcesDirectoryPath(): string {
+		return this.getAppResourcesDirectoryPath();
+	}
 	public dependencies: any;
 	public devDependencies: IStringDictionary;
 	public projectType: string;
