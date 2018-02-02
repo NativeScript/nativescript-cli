@@ -75,7 +75,7 @@ export class WebSqlSqlModule {
           const parameters = ['table', collection];
 
           return this.openTransaction(webSqlCollectionsMaster, query, parameters).then((response) => {
-            if (response.result.length === 0) {
+            if (response === 0) {
               return resolve([]);
             }
 

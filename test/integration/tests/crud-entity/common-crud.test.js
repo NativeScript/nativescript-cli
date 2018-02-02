@@ -147,7 +147,7 @@ function testFunc() {
         });
 
         describe('findById()', () => {
-          it('should throw a NotFoundError if the id argument does not exist', (done) => {
+          it('should throw a NotFoundError if an entity with the given id does not exist', (done) => {
             const entityId = utilities.randomString();
             const nextHandlerSpy = sinon.spy();
 

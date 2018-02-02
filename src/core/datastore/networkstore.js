@@ -123,7 +123,6 @@ export class NetworkStore {
     if (!id) {
       return wrapInObservable((observer) => {
         observer.next(undefined); // TODO: decide on this behaviour
-        observer.complete();
       });
     }
 
