@@ -182,16 +182,20 @@
   }
 
   function cleanUpAppData(collectionName, createdUserIds) {
+    let currentUserId;
     return Kinvey.User.logout()
       .then(() => {
         return Kinvey.User.signup();
       })
       .then((user) => {
-        createdUserIds.push(user.data._id);
+        currentUserId = user.data._id;
         return cleanUpCollectionData(collectionName);
       })
       .then(() => {
         return deleteUsers(createdUserIds);
+      })
+      .then(() => {
+        return deleteUsers([currentUserId]);
       })
       .then(() => {
         createdUserIds.length = 0;
