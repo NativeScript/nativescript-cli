@@ -984,6 +984,7 @@ describe('CacheStore', () => {
 
     it('should remove only the entities from the cache that match the query', () => {
       const store = new CacheStore(collection);
+      const syncStore = new SyncStore(collection);
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
@@ -993,17 +994,33 @@ describe('CacheStore', () => {
 
       return store.pull()
         .then(() => {
+          entity1.someProp = 'updated';
+          return syncStore.update(entity1);
+        })
+        .then(() => {
+          entity2.someProp = 'also updated';
+          return syncStore.update(entity2);
+        })
+        .then(() => store.pendingSyncEntities())
+        .then((syncEntities) => {
+          expect(syncEntities.length).toEqual(2);
+        })
+        .then(() => {
           const query = new Query().equalTo('_id', entity1._id);
           return store.clear(query);
         })
         .then((result) => {
           expect(result).toEqual({ count: 1 });
-          const syncStore = new SyncStore(collection);
           const query = new Query().equalTo('_id', entity1._id);
           return syncStore.find(query).toPromise();
         })
         .then((entities) => {
           expect(entities).toEqual([]);
+          return store.pendingSyncEntities();
+        })
+        .then((syncEntities) => {
+          expect(syncEntities.length).toBe(1);
+          expect(syncEntities[0].entityId).toEqual(entity2._id);
         });
     });
   });

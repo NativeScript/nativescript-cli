@@ -635,7 +635,19 @@ describe('SyncStore', () => {
         .get(`/appdata/${store.client.appKey}/${collection}`)
         .reply(200, [entity1, entity2]);
 
-      store.pull()
+      return store.pull()
+        .then(() => {
+          entity1.someProp = 'updated';
+          return store.update(entity1);
+        })
+        .then(() => {
+          entity2.someProp = 'also updated';
+          return store.update(entity2);
+        })
+        .then(() => store.pendingSyncEntities())
+        .then((syncEntities) => {
+          expect(syncEntities.length).toEqual(2);
+        })
         .then(() => {
           const query = new Query().equalTo('_id', entity1._id);
           return store.clear(query);
@@ -647,6 +659,11 @@ describe('SyncStore', () => {
         })
         .then((entities) => {
           expect(entities).toEqual([]);
+          return store.pendingSyncEntities();
+        })
+        .then((syncEntities) => {
+          expect(syncEntities.length).toBe(1);
+          expect(syncEntities[0].entityId).toEqual(entity2._id);
         });
     });
 
