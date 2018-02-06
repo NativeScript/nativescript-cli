@@ -8,7 +8,7 @@ questions regarding the behavior/reproduction for more than 20 days "dead". All
 
 ## Please, provide the details below:
 
-### Did you verify this is a real problem by searching [Stack Overflow](http://stackoverflow.com/questions/tagged/nativescript) and the [other open issues in this repo](https://github.com/NativeScript/nativescript/issues)?
+### Did you verify this is a real problem by searching the [NativeScript Forum](http://forum.nativescript.org) and the [other open issues in this repo](https://github.com/NativeScript/nativescript/issues)?
 
 ### Tell us about the problem
 Please, ensure your title is less than 63 characters long and starts with a capital
@@ -29,4 +29,5 @@ project)
 ### Please tell us how to recreate the issue in as much detail as possible.
 
 ### Is there code involved? If so, please share the minimal amount of code needed to recreate the problem.
+Consider using the [playground](https://play.nativescript.org) to provide the code you have issues with.
 
