@@ -81,7 +81,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
       return this._ensureCountBeforeRead(collection, 'fetch the entities', query)
         .then(() => super._processRead(collection, query, options))
         .then((entities) => {
-          offlineEntities = entities || []; // really?
+          offlineEntities = entities || []; // backwards compatibility
           observer.next(offlineEntities);
           return this._networkRepository.read(collection, query, options);
         })
@@ -98,7 +98,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
       const query = new Query().equalTo('_id', entityId);
       return this._ensureCountBeforeRead(collection, 'find the entity', query)
         .then(() => super._processReadById(collection, entityId, options))
-        .catch(err => this._catchNotFoundError(err))
+        .catch(err => this._catchNotFoundError(err)) // backwards compatibility
         .then((entity) => {
           observer.next(entity);
           offlineEntity = entity;
@@ -106,7 +106,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
         })
         .then((entity) => {
           observer.next(entity);
-          return this._replaceOfflineEntities(collection, ensureArray(offlineEntity), ensureArray(entity));
+          return this._replaceOfflineEntities(collection, offlineEntity, ensureArray(entity));
         });
     });
   }
