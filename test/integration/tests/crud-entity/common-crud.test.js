@@ -950,12 +950,9 @@ function testFunc() {
         describe('removeById()', () => {
           it('should throw an error if the id argument does not exist', (done) => {
             storeToTest.removeById(utilities.randomString())
+              .then(() => done(new Error('Should not be called')))
               .catch((error) => {
-                if (dataStoreType === Kinvey.DataStoreType.Network) {
-                  expect(error.name).to.contain(notFoundErrorName);
-                } else {
-                  expect(error).to.exist;
-                }
+                expect(error.name).to.contain(notFoundErrorName);
                 done();
               })
               .catch(done);

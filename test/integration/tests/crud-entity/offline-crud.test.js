@@ -127,18 +127,26 @@ function testFunc() {
       describe('clear()', () => {
         it('should remove the entities from the cache, which match the query', (done) => {
           const randomId = utilities.randomString();
+          const randomId2 = utilities.randomString();
+          const clearQuery = new Kinvey.Query();
+          clearQuery.equalTo('_id', randomId);
+
           cacheStore.save({ _id: randomId })
+            .then(() => syncStore.save({ _id: randomId2 }))
             .then(() => {
-              const query = new Kinvey.Query();
-              query.equalTo('_id', randomId);
-              return storeToTest.clear(query);
+              return storeToTest.clear(clearQuery);
             })
             .then((result) => {
               expect(result.count).to.equal(1);
               return syncStore.count().toPromise();
             })
             .then((count) => {
-              expect(count).to.equal(1);
+              expect(count).to.equal(2); // the item from beforeEach and randomId2
+              return storeToTest.pendingSyncEntities();
+            })
+            .then((syncItems) => {
+              expect(syncItems.length).to.equal(1);
+              expect(syncItems[0].entityId).to.equal(randomId2);
               return networkStore.count().toPromise();
             })
             .then((count) => {
