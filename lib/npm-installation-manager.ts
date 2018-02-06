@@ -79,7 +79,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		}
 
 		if (shouldInstall) {
-			await this.$childProcess.exec(`npm install ${inspectorNpmPackageName}@${version} --prefix ${cachePath}`);
+			await this.$childProcess.exec(`npm install ${inspectorNpmPackageName}@${version} --prefix ${cachePath}`, { maxBuffer: 250 * 1024 });
 		}
 
 		this.$logger.out("Using inspector from cache.");
