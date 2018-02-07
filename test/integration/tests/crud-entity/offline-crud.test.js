@@ -127,30 +127,55 @@ function testFunc() {
       describe('clear()', () => {
         it('should remove the entities from the cache, which match the query', (done) => {
           const randomId = utilities.randomString();
-          const randomId2 = utilities.randomString();
-          const clearQuery = new Kinvey.Query();
-          clearQuery.equalTo('_id', randomId);
-
           cacheStore.save({ _id: randomId })
-            .then(() => syncStore.save({ _id: randomId2 }))
             .then(() => {
-              return storeToTest.clear(clearQuery);
+              const query = new Kinvey.Query();
+              query.equalTo('_id', randomId);
+              return storeToTest.clear(query);
             })
             .then((result) => {
               expect(result.count).to.equal(1);
               return syncStore.count().toPromise();
             })
             .then((count) => {
-              expect(count).to.equal(2); // the item from beforeEach and randomId2
-              return storeToTest.pendingSyncEntities();
-            })
-            .then((syncItems) => {
-              expect(syncItems.length).to.equal(1);
-              expect(syncItems[0].entityId).to.equal(randomId2);
+              expect(count).to.equal(1);
               return networkStore.count().toPromise();
             })
             .then((count) => {
               expect(count).to.equal(2);
+              done();
+            })
+            .catch(done);
+        });
+
+        it('should remove sync entities only for entities, which match the query', (done) => {
+          const randomId = utilities.randomString();
+          const updatedEntity1 = {
+            _id: entity1._id,
+            someNewProperty: 'any value'
+          };
+
+          syncStore.update({ _id: randomId })
+            .then((result) => {
+              expect(result).to.deep.equal({ _id: randomId });
+              return syncStore.update(updatedEntity1);
+            })
+            .then((result) => {
+              expect(result).to.deep.equal(updatedEntity1);
+              return storeToTest.pendingSyncEntities();
+            })
+            .then((syncEntities) => {
+              expect(syncEntities.map(e => e.entityId).sort()).to.deep.equal([entity1._id, randomId].sort());
+              const query = new Kinvey.Query().equalTo('_id', entity1._id);
+              return storeToTest.clear(query);
+            })
+            .then((result) => {
+              expect(result).to.deep.equal({ count: 1 });
+              return storeToTest.pendingSyncEntities();
+            })
+            .then((result) => {
+              expect(result.length).to.equal(1);
+              expect(result[0].entityId).to.equal(randomId);
               done();
             })
             .catch(done);
