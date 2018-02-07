@@ -1,6 +1,6 @@
 import {
   repositoryProvider,
-  storageProvider,
+  StorageProvider,
   KeyValueStoreOfflineRepository,
   SqlKeyValueStorePersister
 } from '../core/datastore';
@@ -14,7 +14,7 @@ const sqliteStorageBuilder = (queue) => {
 };
 
 const repoConstructors = {
-  [storageProvider.sqlite]: sqliteStorageBuilder
+  [StorageProvider.SQLite]: sqliteStorageBuilder
 };
 
 repositoryProvider.setSupportedRepoBuilders(repoConstructors);

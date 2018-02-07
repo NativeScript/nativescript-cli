@@ -1,4 +1,4 @@
-import pick from 'lodash/pick';
+import * as pick from 'lodash/pick';
 import { StorageProvider as StorageProviderEnum, repositoryProvider } from '../core/datastore';
 import './offline-data-storage';
 

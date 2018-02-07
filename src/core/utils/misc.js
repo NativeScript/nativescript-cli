@@ -28,8 +28,8 @@ export function ensureArray(obj) {
 
 export function isValidStorageProviderValue(value) {
   const supportedPersistances = repositoryProvider.getSupportedStorages();
-  value = ensureArray(value);
-  return value.length && value.every(type => supportedPersistances.some(v => type === v));
+  const valueAsArray = ensureArray(value);
+  return !!value && valueAsArray.length && valueAsArray.every(type => supportedPersistances.some(v => type === v));
 }
 
 export function forEachAsync(array, func) {
@@ -53,4 +53,11 @@ export function forEachAsync(array, func) {
         .catch(onAsyncOpDone);
     });
   });
+}
+
+export function useIfDefined(value, defaultValue) {
+  if (value !== undefined) {
+    return value;
+  }
+  return defaultValue;
 }

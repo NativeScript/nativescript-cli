@@ -2,10 +2,10 @@ import * as cloneDeep from 'lodash/cloneDeep';
 
 import { Client as CoreClient } from '../core/client';
 import { KinveyError } from '../core/errors';
-import { isDefined } from '../core/utils';
+import { isDefined, useIfDefined } from '../core/utils';
 import { Log } from '../core/log';
 import { SecureStorage } from './secure';
-import { storageProvider } from '../core/datastore';
+import { StorageProvider } from '../core/datastore';
 
 const storage = new SecureStorage();
 
@@ -50,7 +50,7 @@ class ActiveUserStorage {
 export class Client extends CoreClient {
   static init(config) {
     config = cloneDeep(config);
-    config.storage = config.storage || storageProvider.sqlite;
+    config.storage = useIfDefined(config.storage, StorageProvider.SQLite);
     const client = CoreClient.init(config);
     client.activeUserStorage = new ActiveUserStorage();
     return client;

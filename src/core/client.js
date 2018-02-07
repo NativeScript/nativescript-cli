@@ -140,11 +140,6 @@ export class Client {
     this.defaultTimeout = isNumber(config.defaultTimeout) && config.defaultTimeout >= 0 ? config.defaultTimeout : DEFAULT_TIMEOUT;
 
     /**
-     * @type {?string[]}
-     */
-    this.storageProviders = config.storage;
-
-    /**
      * @private
      */
     this.activeUserStorage = new ActiveUserStorage();
@@ -233,7 +228,7 @@ export class Client {
 
   set storage(value) {
     if (!isValidStorageProviderValue(value)) {
-      throw new KinveyError('Please provide a valid list of supported storage providers for this platform');
+      throw new KinveyError('Please provide a valid set of supported storage providers for this platform');
     }
 
     this._storage = value;
@@ -258,7 +253,7 @@ export class Client {
       masterSecret: this.masterSecret,
       encryptionKey: this.encryptionKey,
       appVersion: this.appVersion,
-      storageProviders: this.storageProviders
+      storage: this.storage
     };
   }
 
