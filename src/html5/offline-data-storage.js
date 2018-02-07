@@ -2,7 +2,7 @@ import { Html5Client } from './client';
 
 import {
   repositoryProvider,
-  storageProvider,
+  StorageProvider,
   KeyValueStoreOfflineRepository,
   SqlKeyValueStorePersister,
   InmemoryOfflineRepository,
@@ -33,10 +33,10 @@ const sessionStorageBuilder = (queue) => {
 };
 
 const repoConstructors = {
-  [storageProvider.webSql]: webSqlBuilder,
-  [storageProvider.indexedDb]: indexedDbBuilder,
-  [storageProvider.localStorage]: localStorageBuilder,
-  [storageProvider.sessionStorage]: sessionStorageBuilder
+  [StorageProvider.WebSQL]: webSqlBuilder,
+  [StorageProvider.IndexedDB]: indexedDbBuilder,
+  [StorageProvider.LocalStorage]: localStorageBuilder,
+  [StorageProvider.SessionStorage]: sessionStorageBuilder
 };
 
 repositoryProvider.setSupportedRepoBuilders(repoConstructors);

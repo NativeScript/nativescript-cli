@@ -5,13 +5,13 @@ import { Client } from '../core/client';
 import { KinveyError } from '../core/errors';
 import { Log } from '../core/log';
 import { isDefined } from '../core/utils';
-import { storageProvider } from '../core/datastore';
+import { StorageProvider } from '../core/datastore';
 
 const defaultHtml5StorageProviderPrecedence = [
-  storageProvider.webSql,
-  storageProvider.indexedDb,
-  storageProvider.localStorage,
-  storageProvider.sessionStorage
+  StorageProvider.WebSQL,
+  StorageProvider.IndexedDB,
+  StorageProvider.LocalStorage,
+  StorageProvider.SessionStorage
 ];
 
 class ActiveUserStorage {

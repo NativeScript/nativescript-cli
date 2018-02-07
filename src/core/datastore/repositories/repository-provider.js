@@ -4,7 +4,7 @@ import { Client } from '../../client';
 import { KinveyError } from '../../errors';
 import { InmemoryOfflineRepository } from './offline-repositories';
 import { NetworkRepository } from './network-repository';
-import { storageProvider } from './storage-provider';
+import { StorageProvider } from './storage-provider';
 import { ensureArray } from '../../utils';
 import { InmemoryCrudQueue } from '../utils';
 import { MemoryKeyValuePersister } from '../persisters';
@@ -20,8 +20,8 @@ const inmemoryRepoBuilder = (queue) => {
 const queue = new InmemoryCrudQueue();
 let _chosenRepoPromise;
 
-let availableStorages = {
-  [storageProvider.inmemory]: inmemoryRepoBuilder
+let _availableStorages = {
+  [StorageProvider.Memory]: inmemoryRepoBuilder
 };
 
 function _getRepoType() {
@@ -33,7 +33,7 @@ function _testRepoSupport(repo) {
 }
 
 function _getRepoForStorageProvider(storageProvider) {
-  const repoBuilder = availableStorages[storageProvider];
+  const repoBuilder = _availableStorages[storageProvider];
   if (!repoBuilder) {
     const errMsg = `The requested storage provider "${storageProvider}" is not available in this environment`;
     throw new KinveyError(errMsg);
@@ -81,11 +81,11 @@ function getNetworkRepository() {
 }
 
 function setSupportedRepoBuilders(repos) {
-  availableStorages = repos;
+  _availableStorages = repos;
 }
 
 function getSupportedStorages() {
-  return keys(availableStorages);
+  return keys(_availableStorages);
 }
 
 export const repositoryProvider = {

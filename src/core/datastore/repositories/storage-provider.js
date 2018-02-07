@@ -1,8 +1,8 @@
-export const storageProvider = {
-  inmemory: 'inmemory',
-  webSql: 'webSql',
-  indexedDb: 'indexedDb',
-  localStorage: 'localStorage',
-  sessionStorage: 'sessionStorage',
-  sqlite: 'sqlite'
+export const StorageProvider = {
+  Memory: 'Memory',
+  WebSQL: 'WebSQL',
+  IndexedDB: 'IndexedDB',
+  LocalStorage: 'LocalStorage',
+  SessionStorage: 'SessionStorage',
+  SQLite: 'SQLite'
 };

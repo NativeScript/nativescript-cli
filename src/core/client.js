@@ -6,7 +6,7 @@ import isNaN from 'lodash/isNaN';
 import { KinveyError } from './errors';
 import { Log } from './log';
 import { isDefined, uuidv4, isValidStorageProviderValue } from './utils';
-import { storageProvider } from './datastore';
+import { StorageProvider } from './datastore';
 
 const DEFAULT_TIMEOUT = 60000;
 const ACTIVE_USER_KEY = 'active_user';
@@ -149,7 +149,7 @@ export class Client {
      */
     this.activeUserStorage = new ActiveUserStorage();
 
-    this.storage = config.storage || storageProvider.inmemory;
+    this.storage = config.storage || StorageProvider.Memory;
   }
 
   /**
