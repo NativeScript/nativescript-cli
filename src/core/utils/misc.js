@@ -26,7 +26,7 @@ export function ensureArray(obj) {
   return Array.isArray(obj) ? obj : [obj];
 }
 
-export function isValidStorageTypeValue(value) {
+export function isValidStorageProviderValue(value) {
   const supportedPersistances = repositoryProvider.getSupportedStorages();
   value = ensureArray(value);
   return value.length && value.every(type => supportedPersistances.some(v => type === v));

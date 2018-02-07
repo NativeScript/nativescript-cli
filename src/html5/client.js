@@ -5,13 +5,13 @@ import { Client } from '../core/client';
 import { KinveyError } from '../core/errors';
 import { Log } from '../core/log';
 import { isDefined } from '../core/utils';
-import { storageType } from '../core/datastore';
+import { storageProvider } from '../core/datastore';
 
-const defaultHtml5StorageTypePrecedence = [
-  storageType.webSql,
-  storageType.indexedDb,
-  storageType.localStorage,
-  storageType.sessionStorage
+const defaultHtml5StorageProviderPrecedence = [
+  storageProvider.webSql,
+  storageProvider.indexedDb,
+  storageProvider.localStorage,
+  storageProvider.sessionStorage
 ];
 
 class ActiveUserStorage {
@@ -46,7 +46,7 @@ class ActiveUserStorage {
 export class Html5Client extends Client {
   static init(config) {
     config = cloneDeep(config);
-    config.storageType = config.storageType || defaultHtml5StorageTypePrecedence;
+    config.storage = config.storage || defaultHtml5StorageProviderPrecedence;
     const client = Client.init(config);
     client.activeUserStorage = new ActiveUserStorage();
     return client;

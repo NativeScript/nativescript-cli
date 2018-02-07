@@ -5,7 +5,7 @@ import { KinveyError } from '../core/errors';
 import { isDefined } from '../core/utils';
 import { Log } from '../core/log';
 import { SecureStorage } from './secure';
-import { storageType } from '../core/datastore';
+import { storageProvider } from '../core/datastore';
 
 const storage = new SecureStorage();
 
@@ -50,7 +50,7 @@ class ActiveUserStorage {
 export class Client extends CoreClient {
   static init(config) {
     config = cloneDeep(config);
-    config.storageType = config.storageType || storageType.sqlite;
+    config.storage = config.storage || storageProvider.sqlite;
     const client = CoreClient.init(config);
     client.activeUserStorage = new ActiveUserStorage();
     return client;

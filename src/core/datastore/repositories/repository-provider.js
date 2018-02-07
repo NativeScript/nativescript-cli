@@ -4,7 +4,7 @@ import { Client } from '../../client';
 import { KinveyError } from '../../errors';
 import { InmemoryOfflineRepository } from './offline-repositories';
 import { NetworkRepository } from './network-repository';
-import { storageType } from './storage-type';
+import { storageProvider } from './storage-provider';
 import { ensureArray } from '../../utils';
 import { InmemoryCrudQueue } from '../utils';
 import { MemoryKeyValuePersister } from '../persisters';
@@ -21,21 +21,21 @@ const queue = new InmemoryCrudQueue();
 let _chosenRepoPromise;
 
 let availableStorages = {
-  [storageType.inmemory]: inmemoryRepoBuilder
+  [storageProvider.inmemory]: inmemoryRepoBuilder
 };
 
 function _getRepoType() {
-  return Client.sharedInstance().storageType;
+  return Client.sharedInstance().storage;
 }
 
 function _testRepoSupport(repo) {
   return repo.create(testSupportCollection, { _id: '1' });
 }
 
-function _getRepoForStorageType(storageType) {
-  const repoBuilder = availableStorages[storageType];
+function _getRepoForStorageProvider(storageProvider) {
+  const repoBuilder = availableStorages[storageProvider];
   if (!repoBuilder) {
-    const errMsg = `The requested storage type "${storageType}" is not available in this environment`;
+    const errMsg = `The requested storage provider "${storageProvider}" is not available in this environment`;
     throw new KinveyError(errMsg);
   }
   return repoBuilder(queue);
@@ -47,9 +47,9 @@ function _getRepoForStorageType(storageType) {
  * @param {string[]} storagePrecedence An array of enum values, sorted by priority
  */
 function _getFirstSupportedRepo(storagePrecedence) {
-  return storagePrecedence.reduce((result, storageType) => {
+  return storagePrecedence.reduce((result, storageProvider) => {
     return result.catch(() => {
-      const repo = _getRepoForStorageType(storageType);
+      const repo = _getRepoForStorageProvider(storageProvider);
       return _testRepoSupport(repo)
         .then(() => repo);
     });

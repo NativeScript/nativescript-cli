@@ -1,4 +1,4 @@
-export const storageType = {
+export const storageProvider = {
   inmemory: 'inmemory',
   webSql: 'webSql',
   indexedDb: 'indexedDb',
