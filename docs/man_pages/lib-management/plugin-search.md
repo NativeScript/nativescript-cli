@@ -1,4 +1,8 @@
-plugin search
+<% if (isJekyll) { %>---
+title: tns plugin search
+position: 5
+---<% } %>
+# tns plugin search
 ==========
 
 Usage | Synopsis

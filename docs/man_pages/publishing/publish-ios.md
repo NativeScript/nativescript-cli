@@ -1,4 +1,8 @@
-publish ios
+<% if (isJekyll) { %>---
+title: tns publish ios
+position: 3
+---<% } %>
+# tns publish ios
 ==========
 
 Usage | Synopsis

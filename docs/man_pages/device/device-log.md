@@ -1,4 +1,8 @@
-device log
+<% if (isJekyll) { %>---
+title: tns device log
+position: 4
+---<% } %>
+# tns device log
 ==========
 
 Usage | Synopsis

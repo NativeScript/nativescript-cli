@@ -1,4 +1,8 @@
-device run
+<% if (isJekyll) { %>---
+title: tns device run
+position: 5
+---<% } %>
+# tns device run
 ==========
 
 Usage | Synopsis

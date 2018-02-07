@@ -1,4 +1,8 @@
-prepare
+<% if (isJekyll) { %>---
+title: tns prepare
+position: 7
+---<% } %>
+# tns prepare
 ==========
 
 Usage | Synopsis

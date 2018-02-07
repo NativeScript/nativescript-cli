@@ -1,4 +1,8 @@
-deploy
+<% if (isJekyll) { %>---
+title: tns deploy
+position: 7
+---<% } %>
+# tns deploy
 ==========
 
 Usage | Synopsis

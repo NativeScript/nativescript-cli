@@ -1,4 +1,8 @@
-init
+<% if (isJekyll) { %>---
+title: tns init
+position: 2
+---<% } %>
+# tns init
 ==========
 
 Usage | Synopsis

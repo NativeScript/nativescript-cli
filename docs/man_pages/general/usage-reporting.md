@@ -1,4 +1,8 @@
-usage-reporting
+<% if (isJekyll) { %>---
+title: tns usage-reporting
+position: 15
+---<% } %>
+# tns usage-reporting
 ==========
 
 Usage | Synopsis

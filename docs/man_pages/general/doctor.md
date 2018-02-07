@@ -1,4 +1,8 @@
-doctor
+<% if (isJekyll) { %>---
+title: tns doctor
+position: 5
+---<% } %>
+# tns doctor
 ==========
 
 Usage | Synopsis

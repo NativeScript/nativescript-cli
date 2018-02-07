@@ -1,4 +1,8 @@
-debug android
+<% if (isJekyll) { %>---
+title: tns debug android
+position: 4
+---<% } %>
+# tns debug android
 ==========
 
 Usage | Synopsis

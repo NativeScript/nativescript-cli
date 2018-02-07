@@ -1,4 +1,8 @@
-autocomplete status
+<% if (isJekyll) { %>---
+title: tns autocomplete status
+position: 3
+---<% } %>
+# tns autocomplete status
 ==========
 
 Usage | Synopsis
