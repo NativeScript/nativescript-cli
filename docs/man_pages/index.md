@@ -1,4 +1,4 @@
-#NativeScript
+# NativeScript
 
 Usage | Synopsis
 ------|-------
