@@ -65,11 +65,11 @@ export class NetworkRepository extends Repository {
   _processBatch(collection, method, entities, options) {
     const isSingle = !Array.isArray(entities);
     const requestPromises = ensureArray(entities).map((entity) => {
-      const id = method === RequestMethod.PUT ? entity._id : null; // TODO: this isn't great :)
+      const id = method === RequestMethod.PUT ? entity._id : null;
       const requestConfig = this._buildRequestConfig(collection, method, entity, null, id, null, options);
       return this._makeHttpRequest(requestConfig);
     });
-    // TODO: different error handling?
+
     return Promise.all(requestPromises)
       .then(res => (isSingle ? res && res[0] : res));
   }

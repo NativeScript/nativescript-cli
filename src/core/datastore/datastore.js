@@ -78,7 +78,7 @@ export class DataStore {
    * @param  {Object} [options={}] Options
    * @return {Promise<Object>} The result of clearing the cache.
    */
-  static clearCache(options = {}) {
+  static clearCache() {
     return repositoryProvider.getOfflineRepository()
       .then(repo => repo.clear())
       .then(() => null); // backwards compatibility

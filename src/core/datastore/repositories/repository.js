@@ -1,4 +1,3 @@
-// TODO: name DataRepository?
 export class Repository {
   _throwNotImplementedError() {
     throw new Error('Repository class abstract method not implemented');

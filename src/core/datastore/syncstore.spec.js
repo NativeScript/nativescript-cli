@@ -52,10 +52,7 @@ describe('SyncStore', () => {
 
   afterEach(() => {
     const store = new SyncStore(collection);
-    return store.clear()
-      .then(() => {
-        return store.clearSync();
-      });
+    return store.clear();
   });
 
   describe('pathname', () => {

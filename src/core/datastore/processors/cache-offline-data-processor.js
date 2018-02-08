@@ -12,7 +12,6 @@ import { isLocalEntity, isNotEmpty, isEmpty } from '../utils';
 // imported for type info
 // import { NetworkRepository } from '../repositories';
 
-// TODO: refactor similar methods. read and readById, for instance
 export class CacheOfflineDataProcessor extends OfflineDataProcessor {
   /** @type {NetworkRepository} */
   _networkRepository;
@@ -22,7 +21,6 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
     this._networkRepository = networkRepository;
   }
 
-  // TODO: think of a better way to do this, or at least remove duplication
   _deleteEntityAndHandleOfflineState(collection, entity, options) {
     if (isLocalEntity(entity)) { // no need for request, just a regular offline delete
       return super._deleteEntityAndHandleOfflineState(collection, entity, options);
@@ -77,7 +75,6 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
       });
   }
 
-  // TODO: how close is this to pull?
   _processRead(collection, query, options) {
     let offlineEntities;
     return wrapInObservable((observer) => {
@@ -145,9 +142,8 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
         .catch(() => []) // backwards compatibility
         .then((offlineResult) => {
           observer.next(offlineResult);
-          return this._syncManager.push(collection); // backwards compatibility
+          return this._ensureCountBeforeRead(collection, 'group entities');
         })
-        .then(() => this._ensureCountBeforeRead(collection, 'group entities'))
         .then(() => this._networkRepository.group(collection, aggregationQuery, options))
         .then(networkResult => observer.next(networkResult));
     });
@@ -216,16 +212,21 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
       });
   }
 
-  // TODO: passing the error message as an argument?
   _ensureCountBeforeRead(collection, prefix, query) {
     return this._syncManager.getSyncItemCountByEntityQuery(collection, query)
+      .then((count) => {
+        if (count > 0) { // backwards compatibility
+          return this._syncManager.push(collection, query)
+            .then(() => this._syncManager.getSyncItemCountByEntityQuery(collection, query));
+        }
+        return count;
+      })
       .then((count) => {
         if (count === 0) {
           return count;
         }
         const countMsg = `There are ${count} entities that need to be synced.`;
-        const msg = `Unable to ${prefix} on the backend. ${countMsg}`;
-        const err = new KinveyError(msg);
+        const err = new KinveyError(`Unable to ${prefix} on the backend. ${countMsg}`);
         return Promise.reject(err);
       });
   }

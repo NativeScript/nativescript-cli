@@ -43,7 +43,6 @@ export class DataProcessor {
     }
   }
 
-  // TODO: decide on options
   _processCreate(collection, data, options) {
     const isSingle = !Array.isArray(data);
     data = ensureArray(data);

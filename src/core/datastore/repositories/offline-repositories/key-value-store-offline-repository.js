@@ -27,7 +27,6 @@ export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
 
   // protected
 
-  // TODO: is this ok from OOD perspective
   _formCollectionKey(collection) {
     // no need to namespace collections - they are in a db per app key
     return collection;

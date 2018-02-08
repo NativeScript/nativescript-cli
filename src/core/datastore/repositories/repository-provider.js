@@ -16,11 +16,10 @@ const inmemoryRepoBuilder = (queue) => {
   return new InmemoryOfflineRepository(persister, queue);
 };
 
-// TODO: all inmemory instances should share the queue. are there better ways to share it?
-// queue needs to be by collection
+// all inmemory instances should share the queue
 const queue = new InmemoryCrudQueue();
+let _chosenRepoPromise;
 
-// TODO: not great to do this here, but tests fail otherwise
 let availableStorages = {
   [storageType.inmemory]: inmemoryRepoBuilder
 };
@@ -42,7 +41,11 @@ function _getRepoForStorageType(storageType) {
   return repoBuilder(queue);
 }
 
-// TODO: maybe cache the selected repo?
+/**
+ * Selects the first repo from the priority list,
+ * which returns a resolved promise for the support test
+ * @param {string[]} storagePrecedence An array of enum values, sorted by priority
+ */
 function _getFirstSupportedRepo(storagePrecedence) {
   return storagePrecedence.reduce((result, storageType) => {
     return result.catch(() => {
@@ -53,7 +56,7 @@ function _getFirstSupportedRepo(storagePrecedence) {
   }, Promise.reject());
 }
 
-function getOfflineRepository() {
+function _chooseOfflineRepo() {
   const storagePrecedence = ensureArray(_getRepoType());
 
   return _getFirstSupportedRepo(storagePrecedence)
@@ -64,6 +67,13 @@ function getOfflineRepository() {
       }
       return repo;
     });
+}
+
+function getOfflineRepository() {
+  if (!_chosenRepoPromise) {
+    _chosenRepoPromise = _chooseOfflineRepo();
+  }
+  return _chosenRepoPromise;
 }
 
 function getNetworkRepository() {

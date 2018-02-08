@@ -96,7 +96,7 @@ describe('NetworkStore', () => {
     });
 
     it('should find the entities that match the query', () => {
-      const store = new NetworkStore('comecollection'); // TODO: how was this missing?
+      const store = new NetworkStore('comecollection');
       const entity1 = { _id: randomString() };
       const query = new Query();
       query.equalTo('_id', entity1._id);

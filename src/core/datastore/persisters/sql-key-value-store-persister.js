@@ -6,8 +6,7 @@ import { KeyValueStorePersister } from './key-value-store-persister';
 import { sqliteCollectionsMaster } from './utils';
 import { ensureArray } from '../../utils';
 
-// TODO: refactor this and WebSQL persister
-export class SqliteKeyValueStorePersister extends KeyValueStorePersister {
+export class SqlKeyValueStorePersister extends KeyValueStorePersister {
   _sqlModule;
 
   constructor(sqlModule, cacheEnabled, ttl) {

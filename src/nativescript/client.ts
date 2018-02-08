@@ -55,8 +55,4 @@ export class Client extends CoreClient {
     client.activeUserStorage = new ActiveUserStorage();
     return client;
   }
-
-  static sharedInstance() {
-    return super.sharedInstance();
-  }
 }

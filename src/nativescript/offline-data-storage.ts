@@ -2,18 +2,17 @@ import {
   repositoryProvider,
   storageType,
   KeyValueStoreOfflineRepository,
-  SqliteKeyValueStorePersister
+  SqlKeyValueStorePersister
 } from '../core/datastore';
-import { Client } from './client';
-import { NativescriptSqliteModule } from './nativescript-sqlite-module';
+import { Client as CoreClient } from '../core/client';
+import { NativescriptSqlModule } from './nativescript-sql-module';
 
 const sqliteStorageBuilder = (queue) => {
-  const sqlModule = new NativescriptSqliteModule(Client.sharedInstance().appKey);
-  const persister = new SqliteKeyValueStorePersister(sqlModule);
+  const sqlModule = new NativescriptSqlModule(CoreClient.sharedInstance().appKey);
+  const persister = new SqlKeyValueStorePersister(sqlModule);
   return new KeyValueStoreOfflineRepository(persister, queue);
 };
 
-// TODO: this will grow, refactor
 const repoConstructors = {
   [storageType.sqlite]: sqliteStorageBuilder
 };
