@@ -111,18 +111,6 @@ describe('SyncStore', () => {
         });
     });
 
-    it.skip('should throw an error if the tag is not a string', () => {
-      expect(() => {
-        new SyncStore(collection, { tag: {} });
-      }).toThrow();
-    });
-
-    it.skip('should throw an error if the tag is an emptry string', () => {
-      expect(() => {
-        new SyncStore(collection, { tag: ' ' });
-      }).toThrow();
-    });
-
     it.skip('should return the entities by tag', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
