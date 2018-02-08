@@ -1,24 +1,110 @@
-language: node_js
-node_js:
-- '9'
-
 env:
-  secure: aqcGPDGxdYhbW6Cq6JFKHmyjYBqkDgDlONgM43o5ES1yIiqdFG0LySL75XE2QBocyyG/a1tNMj6aX4nrLrsukmNlEgXieWjuQs3EaTjVHiw+JWhU6yDcI4PqF4ZoD3ANdghxkBWQ8YjL+tfHfwCSnewI0UnRBsrb76Yv81o/Frkr+1zAkw4kG/6ubS5eRGcA9xOOvo0VDkz8HtsWnbxfAfLMBhsPICmdj7KlZJZY2hjfD+okf3DcKQqZZPi7bqfDb7AGmTKufX2QUVFRbT1p6yp+xH5hOB5QK2/2YeSXNntkzO2NhXsiyVybBTAhnulTsQMbCv6RELmXIm0/BHS0bhPzrK8NbQJPrYHPVYV93Z3S4Lpg1rzPAPIDf124V7CAcTYZEXgjS6YRUMMPwA0GJJDbNuJnwGiVGL4J95dkllf9h2BSym0zsPhtU94OPQvWs3VyfaK3uz6z9X/CmeeCuhOcPYV9NWX5J+6swI/tttYdnNdOa5j5PCoVtRD6hIB0YsBpxLSOIOjugXyQXNn+rWQbvoTZjQMPInAk/Bhav5IGXC+Xa2MesXJh6Nu7WXdwXxXEwVNJ4/jJULNsP7NTer0G43akzkI4m4Fairw3mo8HXdhQ+nmMyUU9xqmPWvgSNsI9JiBxTMu8xmN36cdmNiBqW+GWa0iBzlXTq2zK9lQ=
+  global:
+    - INTEGRATION_TESTS_NODEJS_VERSION='8.1.0'
+    - INTEGRATION_TESTS_NATIVESCRIPT_VERSION='3.4.2'
+    - INTEGRATION_TESTS_CORDOVA_VERSION='8.0.0'
+    - UNIT_TESTS_NODEJS_VERSION='9'
+    - RUN_INTEGRATION_TESTS_FILE_LOCATION='./test/integration/run-tests'
+  matrix:
+    secure: aqcGPDGxdYhbW6Cq6JFKHmyjYBqkDgDlONgM43o5ES1yIiqdFG0LySL75XE2QBocyyG/a1tNMj6aX4nrLrsukmNlEgXieWjuQs3EaTjVHiw+JWhU6yDcI4PqF4ZoD3ANdghxkBWQ8YjL+tfHfwCSnewI0UnRBsrb76Yv81o/Frkr+1zAkw4kG/6ubS5eRGcA9xOOvo0VDkz8HtsWnbxfAfLMBhsPICmdj7KlZJZY2hjfD+okf3DcKQqZZPi7bqfDb7AGmTKufX2QUVFRbT1p6yp+xH5hOB5QK2/2YeSXNntkzO2NhXsiyVybBTAhnulTsQMbCv6RELmXIm0/BHS0bhPzrK8NbQJPrYHPVYV93Z3S4Lpg1rzPAPIDf124V7CAcTYZEXgjS6YRUMMPwA0GJJDbNuJnwGiVGL4J95dkllf9h2BSym0zsPhtU94OPQvWs3VyfaK3uz6z9X/CmeeCuhOcPYV9NWX5J+6swI/tttYdnNdOa5j5PCoVtRD6hIB0YsBpxLSOIOjugXyQXNn+rWQbvoTZjQMPInAk/Bhav5IGXC+Xa2MesXJh6Nu7WXdwXxXEwVNJ4/jJULNsP7NTer0G43akzkI4m4Fairw3mo8HXdhQ+nmMyUU9xqmPWvgSNsI9JiBxTMu8xmN36cdmNiBqW+GWa0iBzlXTq2zK9lQ=
 
-script: npm run test
 
-jobs:
+matrix:
   include:
-  - name: deploy
-    node_js: '9'
-    if: tag =~ ^v?([0-9])*\.[0-9]*\.[0-9]*(-\w+)?$
-    deploy:
-      provider: script
-      script: ./node_modules/.bin/lerna run release --parallel
-      skip_cleanup: true
-      on:
-        branch: master
-        tags: true
+    - os: linux
+      env: PLATFORM='Unit Tests'
+      language: node_js
+      node_js: ${UNIT_TESTS_NODEJS_VERSION}
+      script: 
+        - npm run test
+
+
+    - os: linux
+      if: type IN (pull_request)
+      env: PLATFORM='HTML5'
+      language: node_js
+      node_js: ${INTEGRATION_TESTS_NODEJS_VERSION}
+      sudo: enabled
+      script: 
+        - node ${RUN_INTEGRATION_TESTS_FILE_LOCATION} --platform html5
+
+
+    - os: linux
+      if: type IN (pull_request)
+      env: PLATFORM='NativeScript Android'
+      language: android
+      jdk: oraclejdk8
+      before_install: nvm install ${INTEGRATION_TESTS_NODEJS_VERSION}
+      install:
+        - echo no | npm i -g nativescript@${INTEGRATION_TESTS_NATIVESCRIPT_VERSION}
+        - npm i
+      before_script:
+        - echo no | android create avd --force -n test -t android-24 -b armeabi-v7a
+        - emulator -avd test -no-window &
+        - android-wait-for-emulator
+      script:
+        - node ${RUN_INTEGRATION_TESTS_FILE_LOCATION} --platform nativescript --os android
+
+
+    - os: osx
+      if: type IN (pull_request)
+      env: PLATFORM='NativeScript iOS'
+      osx_image: xcode8.3
+      language: node_js 
+      node_js: ${INTEGRATION_TESTS_NODEJS_VERSION}
+      jdk: oraclejdk8
+      install:
+        - echo no | npm i -g nativescript@${INTEGRATION_TESTS_NATIVESCRIPT_VERSION}
+        - tns usage-reporting disable
+        - tns error-reporting disable
+        - npm i
+      before_script:
+        - open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
+      script:
+        - echo no | tns device ios
+        - node ${RUN_INTEGRATION_TESTS_FILE_LOCATION} --platform nativescript --os ios
+
+
+    - os: osx
+      if: type IN (pull_request)
+      env: PLATFORM='PhoneGap iOS'
+      osx_image: xcode9.2
+      language: node_js
+      node_js: ${INTEGRATION_TESTS_NODEJS_VERSION}
+      jdk: oraclejdk8
+      install:
+        - npm i -g cordova@${INTEGRATION_TESTS_CORDOVA_VERSION}
+        - npm i
+      script:
+        - node ${RUN_INTEGRATION_TESTS_FILE_LOCATION} --platform phonegap --os ios
+
+
+    - stage: deploy
+      script: skip
+      language: node_js
+      node_js: ${UNIT_TESTS_NODEJS_VERSION}
+      if: tag =~ ^v?([0-9])*\.[0-9]*\.[0-9]*(-\w+)?$
+      deploy:
+        provider: script
+        script: ./node_modules/.bin/lerna run release --parallel
+        skip_cleanup: true
+        on:
+          branch: master
+          tags: true  
+   
+
+android:
+  components:
+    - tools
+    - tools
+    - platform-tools
+    - build-tools-26.0.2
+    - android-26
+    - android-24
+    - extra-android-m2repository
+    - extra-google-google_play_services
+    - sys-img-armeabi-v7a-android-24
+
 
 notifications:
   email:
