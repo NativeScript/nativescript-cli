@@ -63,6 +63,23 @@ function testFunc() {
               .catch(done);
           });
 
+          it('findById() should create in the cache, an entity found on the backend, but missing in the cache', (done) => {
+            const entity = utilities.getEntity(utilities.randomString());
+            networkStore.create(entity)
+              .then(() => storeToTest.findById(entity._id).toPromise())
+              .then((foundEntity) => {
+                expect(foundEntity).to.exist;
+                return syncStore.findById(entity._id).toPromise();
+              })
+              .then(() => utilities.validateEntity(dataStoreType, collectionName, entity))
+              .then(() => cacheStore.removeById(entity._id)) // remove the new entity, as it is not used elsewhere
+              .then((result) => {
+                expect(result).to.deep.equal({ count: 1 });
+                done();
+              })
+              .catch(done);
+          });
+
           it.skip('findById() should remove entities that no longer exist on the backend from the cache', (done) => {
             const entity = utilities.getEntity(utilities.randomString());
             storeToTest.save(entity)
