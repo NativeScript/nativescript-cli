@@ -7,7 +7,14 @@ import { SyncOperation } from '../sync';
 import { repositoryProvider } from '../repositories';
 import { syncCollectionName } from './utils';
 import { ensureArray } from '../../utils';
-import { isNotEmpty, isLocalEntity, generateEntityId } from '../utils';
+import {
+  isNotEmpty,
+  isLocalEntity,
+  generateEntityId,
+  getTagFromCollectionName,
+  formTaggedCollectionName,
+  stripTagFromCollectionName
+} from '../utils';
 
 // imported for typings
 // import { OfflineRepository } from '../repositories';
@@ -17,13 +24,12 @@ export class SyncStateManager {
 
   addCreateEvent(collection, entities) {
     const syncItems = this._buildSyncItemsForEntities(collection, entities, SyncOperation.Create);
-    return this._getRepository()
-      .then(repo => repo.create(syncCollectionName, syncItems));
+    return this._createSyncItems(collection, syncItems);
   }
 
   addUpdateEvent(collection, entities) {
     const syncItems = this._buildSyncItemsForEntities(collection, entities, SyncOperation.Update);
-    return this._upsertSyncItems(syncItems);
+    return this._upsertSyncItems(collection, syncItems);
   }
 
   addDeleteEvent(collection, entities) {
@@ -31,48 +37,47 @@ export class SyncStateManager {
 
     let delPrm = Promise.resolve();
     if (isNotEmpty(syncItemData.localEntityIds)) {
-      const query = this._getCollectionFilter(collection, syncItemData.localEntityIds);
-      delPrm = this._removeSyncItems(query);
+      const query = this._getEntitiesFilter(collection, syncItemData.localEntityIds);
+      delPrm = this._deleteSyncItems(collection, query);
     }
 
     let upsertPrm = Promise.resolve();
     if (isNotEmpty(syncItemData.syncItemsToUpsert)) {
-      upsertPrm = this._upsertSyncItems(syncItemData.syncItemsToUpsert, syncItemData.syncItemsToUpsertIds);
+      upsertPrm = this._upsertSyncItems(collection, syncItemData.syncItemsToUpsert, syncItemData.syncItemsToUpsertIds);
     }
 
     return Promise.all([delPrm, upsertPrm]);
   }
 
   getSyncItems(collection, onlyTheseIds) {
-    const query = this._getCollectionFilter(collection, onlyTheseIds);
+    const query = this._getEntitiesFilter(collection, onlyTheseIds);
     return this._getRepository()
-      .then(repo => repo.read(syncCollectionName, query));
+      .then(repo => repo.read(this._getSyncCollectionName(collection), query));
   }
 
   getSyncItemCount(collection, onlyTheseIds) {
-    const query = this._getCollectionFilter(collection, onlyTheseIds);
+    const query = this._getEntitiesFilter(collection, onlyTheseIds);
     return this._getRepository()
-      .then(repo => repo.count(syncCollectionName, query));
+      .then(repo => repo.count(this._getSyncCollectionName(collection), query));
   }
 
-  removeSyncItemForEntityId(entityId) {
+  removeSyncItemForEntityId(collection, entityId) {
     const query = new Query().equalTo('entityId', entityId);
-    return this._removeSyncItems(query);
+    return this._deleteSyncItems(collection, query);
   }
 
-  removeSyncItemsForIds(entityIds) {
-    const query = new Query().contains('entityId', entityIds);
-    return this._removeSyncItems(query);
+  removeSyncItemsForIds(collection, entityIds = []) {
+    const query = this._getEntitiesFilter(collection, entityIds);
+    return this._deleteSyncItems(collection, query);
   }
 
   removeAllSyncItems(collection) {
     if (collection) {
-      const query = new Query()
-        .equalTo('collection', collection);
-      return this._removeSyncItems(query);
+      const query = this._getCollectionFilter(collection);
+      return this._deleteSyncItems(collection, query);
     }
     return this._getRepository()
-      .then(repo => repo.clear(syncCollectionName));
+      .then(repo => repo.clear(this._getSyncCollectionName(collection)));
   }
 
   _getRepository() {
@@ -82,9 +87,9 @@ export class SyncStateManager {
     return this._repoPromise;
   }
 
-  _removeSyncItems(query) {
+  _deleteSyncItems(collection, query) {
     return this._getRepository()
-      .then(repo => repo.delete(syncCollectionName, query));
+      .then(repo => repo.delete(this._getSyncCollectionName(collection), query));
   }
 
   _getSyncItemsByEntityIds(entityIds) {
@@ -100,22 +105,30 @@ export class SyncStateManager {
   }
 
   // entityIds are the ids of entities new sync items pertain to - optional optimization :))
-  _upsertSyncItems(newSyncItems, entityIds) {
+  _upsertSyncItems(collection, newSyncItems, entityIds) {
     if (!entityIds) {
       entityIds = newSyncItems.map(i => i.entityId);
     }
     const delQuery = new Query().contains('entityId', entityIds);
     return this._getRepository()
-      .then(repo => repo.delete(syncCollectionName, delQuery).then(() => repo))
-      .then(repo => repo.create(syncCollectionName, newSyncItems));
+      .then(repo => repo.delete(this._getSyncCollectionName(collection), delQuery).then(() => repo))
+      .then(repo => repo.create(this._getSyncCollectionName(collection), newSyncItems));
   }
 
-  _getCollectionFilter(collection, onlyTheseIds) {
-    const query = new Query().equalTo('collection', collection);
+  _getEntitiesFilter(collection, onlyTheseIds) {
+    const query = this._getCollectionFilter(collection);
     if (onlyTheseIds) {
-      query.contains('entityId', ensureArray(onlyTheseIds));
+      query.and().contains('entityId', ensureArray(onlyTheseIds));
     }
     return query;
+  }
+
+  _getCollectionFilter(collection) {
+    const result = new Query();
+    result.equalTo('collection', collection)
+      .or()
+      .equalTo('collection', stripTagFromCollectionName(collection));
+    return result;
   }
 
   _buildSyncItem(collection, syncOp, entityId) {
@@ -154,5 +167,15 @@ export class SyncStateManager {
       syncItemsToUpsert,
       syncItemsToUpsertIds
     };
+  }
+
+  _createSyncItems(collection, syncItems) {
+    return this._getRepository()
+      .then(repo => repo.create(this._getSyncCollectionName(collection), syncItems));
+  }
+
+  _getSyncCollectionName(taggedCollectionName) {
+    const tag = getTagFromCollectionName(taggedCollectionName);
+    return formTaggedCollectionName(syncCollectionName, tag);
   }
 }

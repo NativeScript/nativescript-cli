@@ -31,7 +31,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
       .then((didDelete) => {
         deleteSucceeded = didDelete;
         if (deleteSucceeded) {
-          return this._syncManager.removeSyncItemForEntityId(entity._id)
+          return this._syncManager.removeSyncItemForEntityId(collection, entity._id)
             .then(() => this._getRepository())
             .then(repo => repo.deleteById(collection, entity._id, options));
         }
@@ -117,7 +117,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
       .then((networkEntity) => {
         return this._getRepository()
           .then(repo => repo.update(collection, networkEntity, options))
-          .then(() => this._syncManager.removeSyncItemForEntityId(networkEntity._id))
+          .then(() => this._syncManager.removeSyncItemForEntityId(collection, networkEntity._id))
           .then(() => networkEntity);
       });
   }
@@ -163,7 +163,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
           return Promise.resolve();
         }
         return repository.deleteById(collection, offlineEntityId)
-          .then(() => this._syncManager.removeSyncItemForEntityId(offlineEntityId));
+          .then(() => this._syncManager.removeSyncItemForEntityId(collection, offlineEntityId));
       });
   }
 
@@ -207,7 +207,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
     return this._getRepository()
       .then(repo => repo.delete(collection, deleteQuery, options))
       .then((deletedCount) => {
-        return this._syncManager.removeSyncItemsForIds(offlineEntities.map(e => e._id))
+        return this._syncManager.removeSyncItemsForIds(collection, offlineEntities.map(e => e._id))
           .then(() => deletedCount);
       });
   }

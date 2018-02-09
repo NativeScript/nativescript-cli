@@ -45,7 +45,7 @@ export class SyncManager {
 
     return prm
       .then((entityIds) => this._syncStateManager.getSyncItems(collection, entityIds))
-      .then((syncItems = []) => this._processSyncItems(syncItems))
+      .then((syncItems = []) => this._processSyncItems(collection, syncItems))
       .then((pushResult) => {
         this._markPushEnd(collection);
         return pushResult;
@@ -104,7 +104,7 @@ export class SyncManager {
   clearSync(collection, query) {
     if (query) {
       return this._getEntityIdsForQuery(collection, query)
-        .then(entityIds => this._syncStateManager.removeSyncItemsForIds(entityIds));
+        .then(entityIds => this._syncStateManager.removeSyncItemsForIds(collection, entityIds));
     }
     return this._syncStateManager.removeAllSyncItems(collection);
   }
@@ -122,12 +122,12 @@ export class SyncManager {
     return this._addEvent(collection, updatedEntities, SyncOperation.Update);
   }
 
-  removeSyncItemForEntityId(entityId) {
-    return this._syncStateManager.removeSyncItemForEntityId(entityId);
+  removeSyncItemForEntityId(collection, entityId) {
+    return this._syncStateManager.removeSyncItemForEntityId(collection, entityId);
   }
 
-  removeSyncItemsForIds(entityIds) {
-    return this._syncStateManager.removeSyncItemsForIds(entityIds);
+  removeSyncItemsForIds(collection, entityIds) {
+    return this._syncStateManager.removeSyncItemsForIds(collection, entityIds);
   }
 
   _getPushOpResult(entityId, operation) {
@@ -203,8 +203,8 @@ export class SyncManager {
       });
   }
 
-  _handlePushOp(syncItem, offlineEntity) {
-    const { collection, state, entityId } = syncItem;
+  _handlePushOp(collection, syncItem, offlineEntity) {
+    const { state, entityId } = syncItem;
     const syncOp = state.operation;
 
     switch (syncOp) {
@@ -222,8 +222,8 @@ export class SyncManager {
     }
   }
 
-  _pushItem(syncItem) {
-    const { collection, entityId, state } = syncItem;
+  _pushItem(collection, syncItem) {
+    const { entityId, state } = syncItem;
     return this._getOfflineRepo()
       .then(repo => repo.readById(collection, entityId))
       .catch((err) => {
@@ -231,21 +231,21 @@ export class SyncManager {
           return Promise.reject(err);
         }
         if (state.operation !== SyncOperation.Delete) {
-          return this._syncStateManager.removeSyncItemForEntityId(entityId)
+          return this._syncStateManager.removeSyncItemForEntityId(collection, entityId)
             .then(() => Promise.reject(err));
         }
         return null; // we have to make a delete request to the backend
       })
-      .then(offlineEntity => this._handlePushOp(syncItem, offlineEntity));
+      .then(offlineEntity => this._handlePushOp(collection, syncItem, offlineEntity));
   }
 
-  _processSyncItem(syncItem) {
-    return this._pushItem(syncItem)
+  _processSyncItem(collection, syncItem) {
+    return this._pushItem(collection, syncItem)
       .then((result) => {
         if (result.error) {
           return result;
         }
-        return this._syncStateManager.removeSyncItemForEntityId(syncItem.entityId)
+        return this._syncStateManager.removeSyncItemForEntityId(syncItem.collection, syncItem.entityId)
           .then(() => result);
       })
       .catch((err) => {
@@ -255,13 +255,13 @@ export class SyncManager {
       });
   }
 
-  _processSyncItems(syncItems) {
+  _processSyncItems(collection, syncItems) {
     const queue = new PromiseQueue(syncBatchSize);
     const pushResults = [];
 
     return forEachAsync(syncItems, (syncItem) => {
       return queue.enqueue(() => {
-        return this._processSyncItem(syncItem) // never rejects
+        return this._processSyncItem(collection, syncItem) // never rejects
           .then(pushResult => pushResults.push(pushResult));
       });
     })
