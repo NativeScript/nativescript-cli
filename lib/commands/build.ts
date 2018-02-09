@@ -18,6 +18,7 @@ export class BuildCommandBase extends BundleBase {
 		const platformInfo: IPreparePlatformInfo = {
 			platform,
 			appFilesUpdaterOptions,
+			skipModulesNativeCheck: !this.$options.syncAllFiles,
 			platformTemplate: this.$options.platformTemplate,
 			projectData: this.$projectData,
 			config: this.$options,

@@ -296,7 +296,7 @@ interface IPlatformDataComposition {
 	platformData: IPlatformData;
 }
 
-interface ICopyAppFilesData extends IProjectDataComposition, IAppFilesUpdaterOptionsComposition, IPlatformDataComposition { }
+interface ICopyAppFilesData extends IProjectDataComposition, IAppFilesUpdaterOptionsComposition, IPlatformDataComposition, IOptionalFilesToSync { }
 
 interface IPreparePlatformService {
 	addPlatform(info: IAddPlatformInfo): Promise<void>;
@@ -319,14 +319,17 @@ interface IPreparePlatformCoreInfo extends IPreparePlatformInfoBase {
 	changesInfo?: IProjectChangesInfo;
 }
 
-interface IPreparePlatformInfo extends IPreparePlatformInfoBase, IPlatformConfig, IPlatformTemplate { }
+interface IPreparePlatformInfo extends IPreparePlatformInfoBase, IPlatformConfig, IPlatformTemplate, ISkipNativeCheckOptional { }
 
 interface IPlatformConfig {
 	config: IPlatformOptions;
 }
 
-interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions {
+interface IOptionalFilesToSync {
 	filesToSync?: string[];
+}
+
+interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions, IOptionalFilesToSync {
 	nativePrepare?: INativePrepare;
 }
 

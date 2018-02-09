@@ -370,6 +370,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				nativePrepare: nativePrepare,
 				filesToSync: options.modifiedFiles,
 				platformTemplate: null,
+				skipModulesNativeCheck: options.skipModulesNativeCheck,
 				config: platformSpecificOptions
 			};
 
@@ -459,6 +460,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					deviceBuildInfoDescriptor,
 					liveSyncData,
 					settings,
+					skipModulesNativeCheck: !liveSyncData.watchAllFiles,
 					bundle: liveSyncData.bundle,
 					release: liveSyncData.release,
 					env: liveSyncData.env
@@ -568,7 +570,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 										modifiedFiles: allModifiedFiles,
 										bundle: liveSyncData.bundle,
 										release: liveSyncData.release,
-										env: liveSyncData.env
+										env: liveSyncData.env,
+										skipModulesNativeCheck: !liveSyncData.watchAllFiles
 									}, { skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare });
 
 									const service = this.getLiveSyncService(device.deviceInfo.platform);
