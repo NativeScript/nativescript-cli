@@ -401,6 +401,9 @@ describe('Platform Service Tests', () => {
 
 			const appDestFolderPath = path.join(tempFolder, "appDest");
 			const appResourcesFolderPath = path.join(appDestFolderPath, "App_Resources");
+			const appResourcesPath = path.join(appFolderPath, "App_Resources/Android");
+			fs.createDirectory(appResourcesPath);
+			fs.writeFile(path.join(appResourcesPath, "test.txt"), "test");
 			fs.writeJson(path.join(tempFolder, "package.json"), {
 				name: "testname",
 				nativescript: {
@@ -866,11 +869,12 @@ describe('Platform Service Tests', () => {
 					projectRoot: testDirData.tempFolder,
 					platformProjectService: {
 						prepareProject: (): any => null,
+						prepareAppResources: (): any => null,
 						validate: () => Promise.resolve(),
 						createProject: (projectRoot: string, frameworkDir: string) => Promise.resolve(),
 						interpolateData: (projectRoot: string) => Promise.resolve(),
 						afterCreateProject: (projectRoot: string): any => null,
-						getAppResourcesDestinationDirectoryPath: () => "",
+						getAppResourcesDestinationDirectoryPath: () => testDirData.appResourcesFolderPath,
 						processConfigurationFilesFromAppResources: () => Promise.resolve(),
 						ensureConfigurationFileInAppResources: (): any => null,
 						interpolateConfigurationFile: (): void => undefined,
