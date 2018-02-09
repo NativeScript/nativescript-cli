@@ -25,6 +25,7 @@ export namespace Kinvey {
     properties ? : Properties;
     timeout ? : number;
     useDeltaFetch ? : boolean;
+    version ? : string;
   }
 
   // ClientConfig interface
