@@ -458,6 +458,21 @@ describe('NetworkStore', () => {
         });
     });
 
+    it('should return a NotFoundError if an entity with that id does not exist', () => {
+      const store = new NetworkStore(collection);
+      const id = randomString();
+
+      nock(client.apiHostname)
+        .delete(`/appdata/${client.appKey}/${collection}/${id}`)
+        .reply(404);
+
+      return store.removeById(id)
+        .then(() => Promise.reject(new Error('Should not happen')))
+        .catch((err) => {
+          expect(err).toBeA(NotFoundError);
+        });
+    });
+
     it('should remove the entity that matches the id argument', () => {
       const store = new NetworkStore(collection);
       const _id = randomString();

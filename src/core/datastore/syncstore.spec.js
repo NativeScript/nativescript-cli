@@ -548,7 +548,17 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should remove the entity from cache if the entity is not found on the backend', () => {
+    it('should return a NotFoundError if an entity with that id does not exist', () => {
+      const store = new SyncStore(collection);
+      return store.clear()
+        .then(() => store.removeById(randomString()))
+        .then(() => Promise.reject(new Error('Should not happen')))
+        .catch((err) => {
+          expect(err).toBeA(NotFoundError);
+        });
+    });
+
+    it('should remove the entity from cache', () => {
       const store = new SyncStore(collection);
       const entity = { _id: randomString() };
 
