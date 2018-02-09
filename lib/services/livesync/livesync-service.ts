@@ -3,7 +3,7 @@ import * as choki from "chokidar";
 import { EOL } from "os";
 import { EventEmitter } from "events";
 import { hook } from "../../common/helpers";
-import { APP_FOLDER_NAME, PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME, TrackActionNames } from "../../constants";
+import { APP_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME, PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME, TrackActionNames } from "../../constants";
 import { DeviceTypes, DeviceDiscoveryEventNames } from "../../common/constants";
 import { cache } from "../../common/decorators";
 
@@ -292,7 +292,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	@hook('watchPatterns')
 	public async getWatcherPatterns(liveSyncData: ILiveSyncInfo): Promise<string[]> {
 		// liveSyncData is used by plugins that make use of the watchPatterns hook
-		return [APP_FOLDER_NAME];
+		return [APP_FOLDER_NAME, path.join(APP_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME)];
 	}
 
 	public async disableDebuggingCore(deviceOption: IDisableDebuggingDeviceOptions, debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<void> {
