@@ -4,6 +4,7 @@ import { QueryError } from './errors';
 import { nested, isDefined, isNumber } from './utils';
 import { Log } from './log';
 
+const PROTECTED_FIELDS = ['_id', '_acl'];
 const UNSUPPORTED_CONDITIONS = ['$nearSphere'];
 
 /**
@@ -799,11 +800,12 @@ export class Query {
 
     // Remove fields
     if (Array.isArray(json.fields) && json.fields.length > 0) {
+      const fields = Array.concat([], json.fields, PROTECTED_FIELDS);
       Log.debug('Removing fields from data', json.fields);
       data = data.map((item) => {
         const keys = Object.keys(item);
         keys.forEach((key) => {
-          if (json.fields.indexOf(key) === -1) {
+          if (fields.indexOf(key) === -1) {
             delete item[key];
           }
         });

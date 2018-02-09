@@ -1314,6 +1314,19 @@ describe('Query', () => {
       query.fields = ['desc'];
       expect(query.process(entities)).to.deep.equal([{ desc: 'Desc1' }, { desc: 'Desc2' }]);
     });
+
+    it('should not remove protected fields when fields are specified', () => {
+      const entities = [
+        { _id: '0', _acl: 'acl1', _kmd: 'kmd1', name: 'Name1', desc: 'Desc1' },
+        { _id: '1', _acl: 'acl2', _kmd: 'kmd2', name: 'Name2', desc: 'Desc2' }
+      ];
+      const query = new Query();
+      query.fields = ['desc'];
+      expect(query.process(entities)).to.deep.equal([
+        { _id: '0', _acl: 'acl1', desc: 'Desc1' },
+        { _id: '1', _acl: 'acl2', desc: 'Desc2' }
+      ]);
+    });
   });
 
   describe('toQueryString()', () => {
