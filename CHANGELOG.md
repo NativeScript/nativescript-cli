@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.10.9](https://github.com/Kinvey/js-sdk/tree/v3.10.9) (2018-02-09)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.9.9...v3.10.9)<br/>
+
+### Bug Fixes
+- Use correct config property for setting storage providers [#228](https://github.com/Kinvey/js-sdk/pull/228)
+- MLIBZ-2159: Add missing `version` property to `RequestOptions` in the TypeScript definition file [#235](https://github.com/Kinvey/js-sdk/pull/235)
+- MLIBZ-2159: `_id` field not returned when specifying fields for a query [#233](https://github.com/Kinvey/js-sdk/pull/233)
+- MLIBZ-2351: Use `WebView` events to capture redirect on NativeScript [#237](https://github.com/Kinvey/js-sdk/pull/237)
+
+### Maintenance
+- Added integration tests in travis.yml [#230](https://github.com/Kinvey/js-sdk/pull/230)
+
 ## [3.9.9](https://github.com/Kinvey/js-sdk/tree/v3.9.9) (2018-01-26)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.9.6...v3.9.9)<br/>
 
