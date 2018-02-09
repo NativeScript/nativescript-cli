@@ -7,6 +7,7 @@ import { CacheStore } from './cachestore';
 import { SyncStore } from './syncstore';
 import { processorFactory } from './processors';
 import { repositoryProvider } from './repositories';
+import { isValidDataStoreTag } from './utils';
 
 /**
  * @typedef   {Object}    DataStoreType
@@ -27,7 +28,7 @@ Object.freeze(DataStoreType);
 export class DataStore {
   constructor() {
     throw new KinveyError('Not allowed to construct a DataStore instance.'
-      + ' Please use the collection() function to get an instance of a DataStore instance.');
+      + ' Please use the collection() function to get a DataStore instance.');
   }
 
   /**
@@ -39,13 +40,21 @@ export class DataStore {
    */
   static collection(collection, type = DataStoreType.Cache, options) {
     let store;
+    const tagWasPassed = options && ('tag' in options);
 
     if (isDefined(collection) === false || isString(collection) === false) {
       throw new KinveyError('A collection is required and must be a string.');
     }
 
+    if (tagWasPassed && !isValidDataStoreTag(options.tag)) {
+      throw new KinveyError('Please provide a valid data store tag.');
+    }
+
     switch (type) {
       case DataStoreType.Network: {
+        if (tagWasPassed) {
+          throw new KinveyError('The tagged option is not valid for data stores of type "Network"');
+        }
         const processor = processorFactory.getNetworkProcessor();
         store = new NetworkStore(collection, processor, options);
         break;
@@ -75,7 +84,6 @@ export class DataStore {
   /**
    * Clear the cache. This will delete all data in the cache.
    *
-   * @param  {Object} [options={}] Options
    * @return {Promise<Object>} The result of clearing the cache.
    */
   static clearCache() {

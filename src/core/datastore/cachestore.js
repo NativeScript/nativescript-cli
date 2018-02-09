@@ -7,6 +7,7 @@ import { NetworkStore } from './networkstore';
 import { OperationType } from './operations';
 import { processorFactory } from './processors';
 import { syncManagerProvider } from './sync';
+import { formTaggedCollectionName } from './utils';
 
 /**
  * The CacheStore class is used to find, create, update, remove, count and group entities. Entities are stored
@@ -14,6 +15,7 @@ import { syncManagerProvider } from './sync';
  */
 export class CacheStore extends NetworkStore {
   constructor(collection, processor, options = {}) {
+    collection = formTaggedCollectionName(collection, options.tag);
     const proc = processor || processorFactory.getCacheOfflineDataProcessor();
     super(collection, proc, options);
 
@@ -68,12 +70,6 @@ export class CacheStore extends NetworkStore {
    * returned with the count of entities or rejected with an error.
    *
    * @param   {Query}                 [query]                                   Query to count a subset of entities.
-   * @param   {Object}                options                                   Options
-   * @param   {Properties}            [options.properties]                      Custom properties to send with
-   *                                                                            the request.
-   * @param   {Number}                [options.timeout]                         Timeout for the request.
-   * @param   {Number}                [options.ttl]                             Time to live for data retrieved
-   *                                                                            from the local cache.
    * @return  {Promise}                                                         Promise
    */
   pendingSyncCount(query) {

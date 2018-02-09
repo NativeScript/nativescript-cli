@@ -5,7 +5,7 @@ import { Aggregation } from '../../aggregation';
 
 import { Repository } from './repository';
 import { ensureArray } from '../../utils';
-import { buildCollectionUrl } from '../utils';
+import { buildCollectionUrl } from './utils';
 
 /**
  * @typedef RequestOptions

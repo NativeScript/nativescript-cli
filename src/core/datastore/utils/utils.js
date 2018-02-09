@@ -1,17 +1,8 @@
 import _isEmpty from 'lodash/isEmpty';
 
-import { Client } from '../../client';
+import { isNonemptyString } from '../../utils';
 
-export function buildCollectionUrl(collectionName, id, restAction) {
-  let result = `appdata/${Client.sharedInstance().appKey}/${collectionName}`;
-  if (id) {
-    result += `/${id}`;
-  }
-  if (restAction) {
-    result += `/${restAction}`;
-  }
-  return result;
-}
+export const dataStoreTagSeparator = '.';
 
 export function generateEntityId(length = 24) {
   const chars = 'abcdef0123456789';
@@ -36,4 +27,24 @@ export function isEmpty(object) {
 export function isLocalEntity(entity) {
   // not using Metadata class because it mutates the entity
   return !!entity && !!entity._kmd && entity._kmd.local === true;
+}
+
+export function isValidDataStoreTag(value) {
+  const regexp = /^[a-z0-9-]+$/i;
+  return isNonemptyString(value) && regexp.test(value);
+}
+
+export function formTaggedCollectionName(collection, tag) {
+  if (tag) {
+    return `${collection}${dataStoreTagSeparator}${tag}`;
+  }
+  return collection;
+}
+
+export function stripTagFromCollectionName(collectionName) {
+  return collectionName.split(dataStoreTagSeparator)[0];
+}
+
+export function getTagFromCollectionName(collectionName) {
+  return collectionName.split(dataStoreTagSeparator)[1];
 }
