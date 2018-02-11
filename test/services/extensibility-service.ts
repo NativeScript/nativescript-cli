@@ -18,7 +18,9 @@ describe("extensibilityService", () => {
 
 	const getTestInjector = (): IInjector => {
 		const testInjector = new Yok();
-		testInjector.register("fs", {});
+		testInjector.register("fs", {
+			readJson: (pathToFile: string): any => ({})
+		});
 		testInjector.register("logger", stubs.LoggerStub);
 		testInjector.register("npm", {});
 		testInjector.register("settingsService", SettingsService);
@@ -26,6 +28,33 @@ describe("extensibilityService", () => {
 			require: (pathToRequire: string): any => undefined
 		});
 		return testInjector;
+	};
+
+	const getExpectedInstallationPathForExtension = (testInjector: IInjector, extensionName: string): string => {
+		const settingsService = testInjector.resolve<ISettingsService>("settingsService");
+		const profileDir = settingsService.getProfileDir();
+
+		return path.join(profileDir, "extensions", "node_modules", extensionName);
+	};
+
+	const mockFsReadJson = (testInjector: IInjector, extensionNames: string[]): void => {
+		const fs = testInjector.resolve<IFileSystem>("fs");
+		fs.readJson = (filename: string, encoding?: string): any => {
+			const extensionName = _.find(extensionNames, extName => filename.indexOf(extName) !== -1);
+			if (extensionName) {
+				return {
+					name: extensionName,
+					version: "1.0.0"
+				};
+			}
+
+			const dependencies: any = {};
+			_.each(extensionNames, name => {
+				dependencies[name] = "1.0.0";
+			});
+
+			return { dependencies };
+		};
 	};
 
 	describe("installExtension", () => {
@@ -133,17 +162,20 @@ describe("extensibilityService", () => {
 		it("returns the name of the installed extension", async () => {
 			const extensionName = "extension1";
 			const testInjector = getTestInjector();
+
 			const fs: IFileSystem = testInjector.resolve("fs");
 			fs.exists = (pathToCheck: string): boolean => path.basename(pathToCheck) !== extensionName;
 
 			fs.readDirectory = (dir: string): string[] => [extensionName];
 
+			fs.readJson = () => ({ name: extensionName, version: "1.0.0" });
+
 			const npm: INodePackageManager = testInjector.resolve("npm");
-			npm.install = async (packageName: string, pathToSave: string, config?: any): Promise<any> => ({ name: extensionName });
+			npm.install = async (packageName: string, pathToSave: string, config?: any): Promise<any> => ({ name: extensionName, version: "1.0.0" });
 
 			const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 			const actualResult = await extensibilityService.installExtension(extensionName);
-			assert.deepEqual(actualResult, { extensionName });
+			assert.deepEqual(actualResult, { extensionName, version: "1.0.0", docs: undefined, pathToExtension: getExpectedInstallationPathForExtension(testInjector, extensionName) });
 		});
 	});
 
@@ -160,16 +192,16 @@ describe("extensibilityService", () => {
 					return extensionNames;
 				};
 
-				fs.readJson = (filename: string, encoding?: string): any => {
-					const dependencies: any = {};
-					_.each(extensionNames, name => {
-						dependencies[name] = "1.0.0";
-					});
+				mockFsReadJson(testInjector, extensionNames);
 
-					return { dependencies };
-				};
-
-				const expectedResults: IExtensionData[] = _.map(extensionNames, extensionName => ({ extensionName }));
+				const expectedResults: IExtensionData[] = _.map(extensionNames, extensionName => (
+					{
+						extensionName,
+						version: "1.0.0",
+						pathToExtension: getExpectedInstallationPathForExtension(testInjector, extensionName),
+						docs: undefined
+					}
+				));
 
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 				const actualResult = await Promise.all(extensibilityService.loadExtensions());
@@ -194,14 +226,7 @@ describe("extensibilityService", () => {
 					}
 				};
 
-				fs.readJson = (filename: string, encoding?: string): any => {
-					const dependencies: any = {};
-					_.each(extensionNames, name => {
-						dependencies[name] = "1.0.0";
-					});
-
-					return { dependencies };
-				};
+				mockFsReadJson(testInjector, extensionNames);
 
 				let isNpmInstallCalled = false;
 				const npm: INodePackageManager = testInjector.resolve("npm");
@@ -211,7 +236,7 @@ describe("extensibilityService", () => {
 					return { name: packageName };
 				};
 
-				const expectedResults: IExtensionData[] = _.map(extensionNames, extensionName => ({ extensionName }));
+				const expectedResults: IExtensionData[] = _.map(extensionNames, extensionName => ({ extensionName, version: "1.0.0", pathToExtension: getExpectedInstallationPathForExtension(testInjector, extensionName), docs: undefined }));
 
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 				const actualResult = await Promise.all(extensibilityService.loadExtensions());
@@ -230,14 +255,7 @@ describe("extensibilityService", () => {
 					return extensionNames;
 				};
 
-				fs.readJson = (filename: string, encoding?: string): any => {
-					const dependencies: any = {};
-					_.each(extensionNames, name => {
-						dependencies[name] = "1.0.0";
-					});
-
-					return { dependencies };
-				};
+				mockFsReadJson(testInjector, extensionNames);
 
 				const requireService: IRequireService = testInjector.resolve("requireService");
 				requireService.require = (module: string) => {
@@ -246,7 +264,7 @@ describe("extensibilityService", () => {
 					}
 				};
 
-				const expectedResults: any[] = _.map(extensionNames, extensionName => ({ extensionName }));
+				const expectedResults: any[] = _.map(extensionNames, extensionName => ({ extensionName, version: "1.0.0", pathToExtension: getExpectedInstallationPathForExtension(testInjector, extensionName), docs: undefined }));
 				expectedResults[0] = new Error("Unable to load extension extension1. You will not be able to use the functionality that it adds. Error: Unable to load module.");
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 				const promises = extensibilityService.loadExtensions();
@@ -269,14 +287,7 @@ describe("extensibilityService", () => {
 				const fs: IFileSystem = testInjector.resolve("fs");
 				const expectedErrorMessage = `Unable to read ${constants.NODE_MODULES_FOLDER_NAME} dir.`;
 				fs.exists = (pathToCheck: string): boolean => path.basename(pathToCheck) === "extensions" || path.basename(pathToCheck) === constants.PACKAGE_JSON_FILE_NAME;
-				fs.readJson = (filename: string, encoding?: string): any => {
-					const dependencies: any = {};
-					_.each(extensionNames, name => {
-						dependencies[name] = "1.0.0";
-					});
-
-					return { dependencies };
-				};
+				mockFsReadJson(testInjector, extensionNames);
 
 				let isReadDirCalled = false;
 				fs.readDirectory = (dir: string): string[] => {
@@ -310,14 +321,7 @@ describe("extensibilityService", () => {
 					"expected 'extension3' to deeply equal 'extension1'"];
 				const fs: IFileSystem = testInjector.resolve("fs");
 				fs.exists = (pathToCheck: string): boolean => path.basename(pathToCheck) === "extensions" || path.basename(pathToCheck) === constants.PACKAGE_JSON_FILE_NAME;
-				fs.readJson = (filename: string, encoding?: string): any => {
-					const dependencies: any = {};
-					_.each(extensionNames, name => {
-						dependencies[name] = "1.0.0";
-					});
-
-					return { dependencies };
-				};
+				mockFsReadJson(testInjector, extensionNames);
 
 				let isReadDirCalled = false;
 				fs.readDirectory = (dir: string): string[] => {

@@ -35,7 +35,16 @@ export class ExtensibilityService implements IExtensibilityService {
 		const installResultInfo = await this.$npm.install(packageName, this.pathToExtensions, npmOpts);
 		this.$logger.trace(`Finished installation of extension '${extensionName}'. Trying to load it now.`);
 
-		return { extensionName: installResultInfo.name };
+		const packageJsonData = this.getExtensionPackageJsonData(installResultInfo.name);
+
+		const pathToExtension = this.getPathToExtension(extensionName);
+		const docs = packageJsonData && packageJsonData.nativescript && packageJsonData.nativescript.docs && path.join(pathToExtension, packageJsonData.nativescript.docs);
+		return {
+			extensionName: installResultInfo.name,
+			version: installResultInfo.version,
+			docs,
+			pathToExtension
+		};
 	}
 
 	@exported("extensibilityService")
@@ -49,8 +58,15 @@ export class ExtensibilityService implements IExtensibilityService {
 		this.$logger.trace(`Finished uninstallation of extension '${extensionName}'.`);
 	}
 
+	public getInstalledExtensionsData(): IExtensionData[] {
+		const installedExtensions = this.getInstalledExtensions();
+		return _.keys(installedExtensions).map(installedExtension => {
+			return this.getInstalledExtensionData(installedExtension);
+		});
+	}
+
 	@exported("extensibilityService")
-	public loadExtensions(): Promise<any>[] {
+	public loadExtensions(): Promise<IExtensionData>[] {
 		this.$logger.trace("Loading extensions.");
 
 		let dependencies: IStringDictionary = null;
@@ -74,20 +90,43 @@ export class ExtensibilityService implements IExtensibilityService {
 		return null;
 	}
 
+	private getInstalledExtensionData(extensionName: string): IExtensionData {
+		const packageJsonData = this.getExtensionPackageJsonData(extensionName);
+		const pathToExtension = this.getPathToExtension(extensionName);
+		const docs = packageJsonData && packageJsonData.nativescript && packageJsonData.nativescript.docs && path.join(pathToExtension, packageJsonData.nativescript.docs);
+		return {
+			extensionName: packageJsonData.name,
+			version: packageJsonData.version,
+			docs,
+			pathToExtension
+		};
+	}
+
 	@exported("extensibilityService")
 	public async loadExtension(extensionName: string): Promise<IExtensionData> {
 		try {
 			await this.assertExtensionIsInstalled(extensionName);
 
-			const pathToExtension = path.join(this.pathToExtensions, constants.NODE_MODULES_FOLDER_NAME, extensionName);
+			const pathToExtension = this.getPathToExtension(extensionName);
 			this.$requireService.require(pathToExtension);
-			return { extensionName };
+			return this.getInstalledExtensionData(extensionName);
 		} catch (error) {
 			this.$logger.warn(`Error while loading ${extensionName} is: ${error.message}`);
 			const err = <IExtensionLoadingError>new Error(`Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${error.message}`);
 			err.extensionName = extensionName;
 			throw err;
 		}
+	}
+
+	private getPathToExtension(extensionName: string): string {
+		return path.join(this.pathToExtensions, constants.NODE_MODULES_FOLDER_NAME, extensionName);
+	}
+
+	private getExtensionPackageJsonData(extensionName: string): any {
+		const pathToExtension = this.getPathToExtension(extensionName);
+		const pathToPackageJson = path.join(pathToExtension, constants.PACKAGE_JSON_FILE_NAME);
+		const jsonData = this.$fs.readJson(pathToPackageJson);
+		return jsonData;
 	}
 
 	private async assertExtensionIsInstalled(extensionName: string): Promise<void> {
