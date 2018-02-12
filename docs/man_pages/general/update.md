@@ -1,11 +1,16 @@
-info
+Update
 ==========
 
 Usage | Synopsis
 ------|-------
-General | `$ tns info`
+General | `$ tns update`
 
-Displays version information about the NativeScript CLI, core modules, and runtimes.
+Updates the project with the latest versions of iOS/Android runtimes and cross-platform modules.
+In order to get the latest development release instead, pass next as argument:
+`tns update next`
+
+Also you can also switch to specific version by passing it to the command:
+`tns update 3.0.0`
 
 <% if(isHtml) { %>
 ### Related Commands

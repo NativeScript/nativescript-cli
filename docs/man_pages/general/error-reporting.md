@@ -29,4 +29,5 @@ Command | Description
 [proxy](proxy.html) | Displays proxy settings.
 [proxy clear](proxy-clear.html) | Clears proxy settings.
 [proxy set](proxy-set.html) | Sets proxy settings.
+[update](update.html) | Updates the project with the latest versions of iOS/Android runtimes and cross-platform modules.
 <% } %>
