@@ -69,8 +69,9 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
         offlineEntity = createdEntity;
         return this._networkRepository.create(collection, data, options);
       })
-      .then((networkEntity) => { // cause of temp id, this is a create and delete
-        return this._upsertNetworkEntityOffline(collection, offlineEntity._id, networkEntity)
+      .then((networkEntity) => { // cause of temp id, this is a delete and create
+        return this._replaceNetworkEntityOffline(collection, offlineEntity._id, networkEntity)
+          .then(() => this._syncManager.removeSyncItemForEntityId(collection, offlineEntity._id))
           .then(() => networkEntity);
       });
   }
@@ -151,19 +152,16 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
 
   // private methods
 
-  _upsertNetworkEntityOffline(collection, offlineEntityId, networkEntity) {
-    let repository;
+  // much of our filtering is done inmemory, so this is worth doing, instead of using _replaceOfflineEntities()
+  _replaceNetworkEntityOffline(collection, offlineEntityId, networkEntity) {
     return this._getRepository()
       .then((repo) => {
-        repository = repo;
-        return repository.create(collection, networkEntity);
-      })
-      .then(() => {
-        if (!offlineEntityId) {
-          return Promise.resolve();
+        let deletePromise = Promise.resolve();
+        if (offlineEntityId) {
+          deletePromise = repo.deleteById(collection, offlineEntityId);
         }
-        return repository.deleteById(collection, offlineEntityId)
-          .then(() => this._syncManager.removeSyncItemForEntityId(collection, offlineEntityId));
+        return deletePromise
+          .then(() => repo.create(collection, networkEntity));
       });
   }
 
