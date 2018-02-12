@@ -56,7 +56,7 @@ export function forEachAsync(array, func) {
 }
 
 export function useIfDefined(value, defaultValue) {
-  if (value !== undefined) {
+  if (typeof value !== 'undefined') {
     return value;
   }
   return defaultValue;
