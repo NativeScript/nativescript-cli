@@ -29,6 +29,4 @@ Command | Description
 [plugin](plugin.html) | Lets you manage the plugins for your project.
 [plugin install](plugin-install.html) | Installs the specified plugin and its dependencies.
 [plugin remove](plugin-remove.html) | Uninstalls the specified plugin and its dependencies.
-[plugin find](plugin-find.html) | Finds NativeScript plugins in npm.
-[plugin search](plugin-search.html) | Finds NativeScript plugins in npm.
 <% } %>
