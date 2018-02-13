@@ -1,4 +1,8 @@
-help
+<% if (isJekyll) { %>---
+title: tns help
+position: 10
+---<% } %>
+# tns help
 ==========
 
 Usage | Synopsis

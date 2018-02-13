@@ -1,4 +1,8 @@
-plugin remove
+<% if (isJekyll) { %>---
+title: tns plugin remove
+position: 4
+---<% } %>
+# tns plugin remove
 ==========
 
 Usage | Synopsis

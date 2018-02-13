@@ -1,4 +1,8 @@
-appstore
+<% if (isJekyll) { %>---
+title: tns appstore
+position: 2
+---<% } %>
+# tns appstore
 ==========
 
 Usage | Synopsis

@@ -35,6 +35,8 @@ test-reports.xml
 
 npm-debug.log
 node_modules
+
 docs/html
+docs-cli
 
 !test-scripts/*.js

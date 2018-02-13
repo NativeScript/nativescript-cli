@@ -1,4 +1,8 @@
-platform update
+<% if (isJekyll) { %>---
+title: tns platform update
+position: 8
+---<% } %>
+# tns platform update
 ==========
 
 Usage | Synopsis

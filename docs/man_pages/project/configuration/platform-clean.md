@@ -1,4 +1,8 @@
-platform clean
+<% if (isJekyll) { %>---
+title: tns platform clean
+position: 3
+---<% } %>
+# tns platform clean
 ==========
 
 Usage | Synopsis

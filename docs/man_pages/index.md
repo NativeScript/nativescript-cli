@@ -1,4 +1,10 @@
-#NativeScript
+<% if (isJekyll) { %>---
+title: NativeScript CLI
+description:  
+position: 1
+---<% } %>
+
+# NativeScript
 
 Usage | Synopsis
 ------|-------
@@ -16,6 +22,7 @@ Command | Description
 [doctor](general/doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
 [info](general/info.html) | Displays version information about the NativeScript CLI, core modules, and runtimes.
 [proxy](general/proxy.html) | Displays proxy settings.
+[update](general/update.html) | Updates the project with the latest versions of iOS/Android runtimes and cross-platform modules.
 
 ## Project Development Commands
 Command | Description

@@ -1,4 +1,8 @@
-plugin install
+<% if (isJekyll) { %>---
+title: tns plugin install
+position: 3
+---<% } %>
+# tns plugin install
 ==========
 
 Usage | Synopsis
