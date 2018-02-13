@@ -1,4 +1,8 @@
-proxy set
+<% if (isJekyll) { %>---
+title: tns proxy set
+position: 13
+---<% } %>
+# tns proxy set
 ==========
 
 Usage | Synopsis

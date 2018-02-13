@@ -125,6 +125,29 @@ module.exports = function (grunt) {
 				"!lib/common/test-scripts/**/*",
 				"!lib/common/scripts/**/*",
 				"*.tgz"]
+		},
+		template: {
+			'process-markdowns': {
+				options: {
+					data: {
+						"isJekyll": true,
+						"isHtml": true,
+						"isConsole": true,
+						"isWindows": true,
+						"isMacOS": true,
+						"isLinux": true,
+						"formatListOfNames": () => {},
+						"constants": ""
+					}
+				},
+				files: [{
+					expand: true,
+					cwd: "docs/man_pages/",
+					src: "**/*.md",
+					dest: "docs-cli/",
+					ext: ".md"
+				}]
+			}
 		}
 	});
 
@@ -133,6 +156,7 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks("grunt-contrib-watch");
 	grunt.loadNpmTasks("grunt-shell");
 	grunt.loadNpmTasks("grunt-ts");
+	grunt.loadNpmTasks("grunt-template");
 
 	grunt.registerTask("set_package_version", function (version) {
 		var buildVersion = version !== undefined ? version : buildNumber;
@@ -183,4 +207,5 @@ module.exports = function (grunt) {
 	grunt.registerTask("all", ["clean", "test", "lint"]);
 	grunt.registerTask("rebuild", ["clean", "ts:devlib"]);
 	grunt.registerTask("default", "ts:devlib");
+	grunt.registerTask("docs-jekyll", ['template']);
 };

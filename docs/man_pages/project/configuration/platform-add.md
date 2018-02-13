@@ -1,4 +1,8 @@
-platform add
+<% if (isJekyll) { %>---
+title: tns platform add
+position: 2
+---<% } %>
+# tns platform add
 ==========
 
 Usage | Synopsis

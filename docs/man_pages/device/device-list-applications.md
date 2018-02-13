@@ -1,4 +1,8 @@
-device list-applications
+<% if (isJekyll) { %>---
+title: tns device list-applications
+position: 3
+---<% } %>
+# tns device list-applications
 ==========
 
 Usage | Synopsis

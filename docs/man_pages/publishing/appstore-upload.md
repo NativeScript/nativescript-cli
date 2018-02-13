@@ -1,4 +1,8 @@
-appstore upload
+<% if (isJekyll) { %>---
+title: tns appstore upload
+position: 1
+---<% } %>
+# tns appstore upload
 ==========
 
 Usage | Synopsis

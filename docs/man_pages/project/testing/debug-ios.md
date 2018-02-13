@@ -1,4 +1,8 @@
-debug ios
+<% if (isJekyll) { %>---
+title: tns debug ios
+position: 5
+---<% } %>
+# tns debug ios
 ==========
 
 Usage | Synopsis

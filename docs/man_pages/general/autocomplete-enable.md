@@ -1,4 +1,8 @@
-autocomplete enable
+<% if (isJekyll) { %>---
+title: tns autocomplete enable
+position: 2
+---<% } %>
+# tns autocomplete enable
 ==========
 
 Usage | Synopsis

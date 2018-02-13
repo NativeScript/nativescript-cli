@@ -1,4 +1,8 @@
-build android
+<% if (isJekyll) { %>---
+title: tns build android
+position: 1
+---<% } %>
+# tns build android
 ==========
 
 Usage | Synopsis
