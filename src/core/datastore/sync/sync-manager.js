@@ -61,7 +61,7 @@ export class SyncManager {
       return Promise.reject(new KinveyError('Invalid or missing collection name'));
     }
     return this._fetchItemsFromServer(collection, query, options)
-      .then(entities => this.replaceOfflineEntities(collection, query, entities));
+      .then(entities => this._replaceOfflineEntities(collection, query, entities));
   }
 
   getSyncItemCount(collection) {
@@ -89,15 +89,6 @@ export class SyncManager {
       .then((entities = []) => {
         return this._syncStateManager.getSyncItems(collection, entities.map(e => e._id));
       });
-  }
-
-  replaceOfflineEntities(collection, deleteOfflineQuery, networkEntities = []) {
-    return this._getOfflineRepo()
-      .then((repo) => {
-        return repo.delete(collection, deleteOfflineQuery)
-          .then(() => repo);
-      })
-      .then(offlineRepo => offlineRepo.create(collection, networkEntities));
   }
 
   // TODO: pending fix for MLIBZ-2177
@@ -128,6 +119,16 @@ export class SyncManager {
 
   removeSyncItemsForIds(collection, entityIds) {
     return this._syncStateManager.removeSyncItemsForIds(collection, entityIds);
+  }
+
+  _replaceOfflineEntities(collection, deleteOfflineQuery, networkEntities = []) {
+    return this._getOfflineRepo()
+      .then((repo) => {
+        // TODO: this can potentially be deleteOfflineQuery.and().notIn(networkEntitiesIds)
+        // but inmemory filtering with this filter seems to take too long
+        return repo.delete(collection, deleteOfflineQuery)
+          .then(() => repo.update(collection, networkEntities));
+      });
   }
 
   _getPushOpResult(entityId, operation) {

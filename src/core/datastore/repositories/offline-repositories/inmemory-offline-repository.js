@@ -99,17 +99,23 @@ export class InmemoryOfflineRepository extends OfflineRepository {
     return `${appKey}.${collection}`;
   }
 
+  _deleteMatchingEntitiesFromPersistance(collection, allEntities, entitiesMatchedByQuery) {
+    const shouldDeleteById = keyBy(entitiesMatchedByQuery, '_id');
+    const remainingEntities = allEntities.filter(e => !shouldDeleteById[e._id]);
+    const deletedCount = allEntities.length - remainingEntities.length;
+    if (deletedCount > 0) {
+      return this._saveAll(collection, remainingEntities);
+    }
+    return Promise.resolve();
+  }
+
   _delete(collection, query) {
-    let deletedCount = 0;
     return this._readAll(collection)
       .then((allEntities) => {
         const matchingEntities = applyQueryToDataset(allEntities, query);
-        const shouldDeleteById = keyBy(matchingEntities, '_id');
-        const remainingEntities = allEntities.filter(e => !shouldDeleteById[e._id]);
-        deletedCount = allEntities.length - remainingEntities.length;
-        return this._saveAll(collection, remainingEntities);
-      })
-      .then(() => deletedCount);
+        return this._deleteMatchingEntitiesFromPersistance(collection, allEntities, matchingEntities)
+          .then(() => matchingEntities.length);
+      });
   }
 
   _deleteById(collection, id) {

@@ -14,7 +14,16 @@ export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
     super(persister, promiseQueue);
   }
 
-  // ---- unsupported by parent's persister API
+  // public
+  // unsupported by parent's persister API
+
+  create(collection, entities) {
+    return this._batchUpsert(collection, entities);
+  }
+
+  update(collection, entities) {
+    return this._batchUpsert(collection, entities);
+  }
 
   readById(collection, entityId) {
     return this._persister.readEntity(collection, entityId);
@@ -34,14 +43,6 @@ export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
 
   _getAllCollections() {
     return this._persister.getKeys();
-  }
-
-  create(collection, entities) {
-    return this._batchUpsert(collection, entities);
-  }
-
-  update(collection, entities) {
-    return this._batchUpsert(collection, entities);
   }
 
   // private
