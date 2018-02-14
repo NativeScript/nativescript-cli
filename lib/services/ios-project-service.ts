@@ -1046,8 +1046,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	private async executePodInstall(projectData: IProjectData): Promise<any> {
 		// Check availability
 		try {
-			await this.$childProcess.exec("gem which cocoapods");
-			await this.$childProcess.exec("gem which xcodeproj");
+			await this.$childProcess.exec("which pod");
+			await this.$childProcess.exec("which xcodeproj");
 		} catch (e) {
 			this.$errors.failWithoutHelp("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
 		}
