@@ -82,14 +82,15 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				platformProjectService: this,
 				emulatorServices: this.$androidEmulatorServices,
 				projectRoot: projectRoot,
-				deviceBuildOutputPath: path.join(...deviceBuildOutputArr),
+				deviceBuildOutputPath: this.getDeviceBuildOutputPath(path.join(...deviceBuildOutputArr), projectData),
 				getValidPackageNames: (buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[] => {
 					const buildMode = buildOptions.isReleaseBuild ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
 
 					return [
 						`${packageName}-${buildMode}.apk`,
 						`${projectData.projectName}-${buildMode}.apk`,
-						`${projectData.projectName}.apk`
+						`${projectData.projectName}.apk`,
+						`app-${buildMode}.apk`
 					];
 				},
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
@@ -102,6 +103,25 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		return this._platformData;
+	}
+
+	private getDeviceBuildOutputPath(currentPath: string, projectData: IProjectData): string {
+		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, constants.TNS_ANDROID_RUNTIME_NAME);
+		const platformVersion = currentPlatformData && currentPlatformData[constants.VERSION_STRING];
+
+		if (!platformVersion ||
+			platformVersion === constants.PackageVersion.NEXT ||
+			platformVersion === constants.PackageVersion.LATEST) {
+			return currentPath;
+		}
+
+		const gradleAndroidPluginVersion3xx = "4.0.0";
+		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
+
+		if (semver.gte(normalizedPlatformVersion, gradleAndroidPluginVersion3xx)) {
+			return path.join(currentPath, "debug");
+		}
+		return currentPath;
 	}
 
 	// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
