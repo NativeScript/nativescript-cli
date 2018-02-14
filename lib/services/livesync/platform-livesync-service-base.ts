@@ -109,7 +109,7 @@ export abstract class PlatformLiveSyncServiceBase {
 		if (isFullSync) {
 			transferredFiles = await deviceAppData.device.fileSystem.transferDirectory(deviceAppData, localToDevicePaths, projectFilesPath);
 		} else {
-			await deviceAppData.device.fileSystem.transferFiles(deviceAppData, localToDevicePaths);
+			transferredFiles = await deviceAppData.device.fileSystem.transferFiles(deviceAppData, localToDevicePaths);
 		}
 
 		this.logFilesSyncInformation(transferredFiles, "Successfully transferred %s.", this.$logger.info);
