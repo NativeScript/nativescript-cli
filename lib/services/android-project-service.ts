@@ -106,22 +106,21 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	private getDeviceBuildOutputPath(currentPath: string, projectData: IProjectData): string {
-		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, constants.TNS_ANDROID_RUNTIME_NAME);
-		const platformVersion = currentPlatformData && currentPlatformData[constants.VERSION_STRING];
+		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, constants.TNS_ANDROID_RUNTIME_NAME),
+			platformVersion = currentPlatformData && currentPlatformData[constants.VERSION_STRING],
+			normalizedPath = path.join(currentPath, "debug");
 
-		if (!platformVersion ||
-			platformVersion === constants.PackageVersion.NEXT ||
-			platformVersion === constants.PackageVersion.LATEST) {
-			return currentPath;
+		if (semver.valid(platformVersion)) {
+			const gradleAndroidPluginVersion3xx = "4.0.0";
+			const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
+			if (semver.gte(normalizedPlatformVersion, gradleAndroidPluginVersion3xx)) {
+				return normalizedPath;
+			} else {
+				return currentPath;
+			}
 		}
 
-		const gradleAndroidPluginVersion3xx = "4.0.0";
-		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
-
-		if (semver.gte(normalizedPlatformVersion, gradleAndroidPluginVersion3xx)) {
-			return path.join(currentPath, "debug");
-		}
-		return currentPath;
+		return normalizedPath;
 	}
 
 	// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
