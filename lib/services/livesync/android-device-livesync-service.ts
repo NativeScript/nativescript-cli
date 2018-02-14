@@ -10,6 +10,8 @@ import * as net from "net";
 export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
 	private static BACKEND_PORT = 18182;
 	private device: Mobile.IAndroidDevice;
+	private newLiveSyncConnected: boolean = false;
+	private liveSyncTool: any;
 
 	constructor(_device: Mobile.IDevice,
 		private $mobileHelper: Mobile.IMobileHelper,
@@ -36,13 +38,19 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 				`${deviceProjectRootDirname}/sync`]
 		);
 
-		const reloadedSuccessfully = await this.reloadApplicationFiles(deviceAppData, localToDevicePaths);
+		const reloadedSuccessfully = this.newLiveSyncConnected ? true : await this.reloadApplicationFiles(deviceAppData, localToDevicePaths);
 
 		const canExecuteFastSync = reloadedSuccessfully && !liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
 			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
 
 		if (!canExecuteFastSync) {
 			return this.restartApplication(deviceAppData);
+		}
+	}
+
+	public async sendFilesOverSocket(filesToSend: Mobile.ILocalToDevicePathData[]): Promise<void> {
+		if (this.newLiveSyncConnected) {
+			this.liveSyncTool.sendFiles(filesToSend);
 		}
 	}
 
@@ -66,6 +74,10 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 	}
 
 	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
+
+		// initialize tool (try to open socket and wait 100ms for responce)
+		// if ok set this.newLiveSyncConnected = true
+
 		const deviceRootPath = await this.$devicePathProvider.getDeviceProjectRootPath(deviceAppData.device, {
 			appIdentifier: deviceAppData.appIdentifier,
 			getDirname: true
