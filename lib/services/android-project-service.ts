@@ -106,16 +106,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	private getDeviceBuildOutputPath(currentPath: string, projectData: IProjectData): string {
-		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, constants.TNS_ANDROID_RUNTIME_NAME),
-			platformVersion = currentPlatformData && currentPlatformData[constants.VERSION_STRING],
-			normalizedPath = path.join(currentPath, "debug");
+		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, constants.TNS_ANDROID_RUNTIME_NAME);
+		const platformVersion = currentPlatformData && currentPlatformData[constants.VERSION_STRING];
+		const normalizedPath = path.join(currentPath, "debug");
 
 		if (semver.valid(platformVersion)) {
 			const gradleAndroidPluginVersion3xx = "4.0.0";
 			const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
-			if (semver.gte(normalizedPlatformVersion, gradleAndroidPluginVersion3xx)) {
-				return normalizedPath;
-			} else {
+			if (semver.lt(normalizedPlatformVersion, gradleAndroidPluginVersion3xx)) {
 				return currentPath;
 			}
 		}
