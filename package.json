@@ -47,6 +47,7 @@
     "ios-device-lib": "0.4.10",
     "ios-mobileprovision-finder": "1.0.10",
     "ios-sim-portable": "3.2.0",
+    "livesync-tool": "file:../livesync-tool",
     "lockfile": "1.0.3",
     "lodash": "4.13.1",
     "log4js": "1.0.1",
