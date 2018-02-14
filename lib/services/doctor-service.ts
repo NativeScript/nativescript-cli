@@ -64,7 +64,7 @@ class DoctorService implements IDoctorService {
 				result = true;
 			}
 
-			if (!sysInfo.xcodeprojGemLocation) {
+			if (!sysInfo.xcodeprojLocation) {
 				this.$logger.warn("WARNING: xcodeproj gem is not installed or is not configured properly.");
 				this.$logger.out("You will not be able to build your projects for iOS." + EOL
 					+ "To be able to build for iOS and run apps in the native emulator, verify that you have installed xcodeproj." + EOL);
