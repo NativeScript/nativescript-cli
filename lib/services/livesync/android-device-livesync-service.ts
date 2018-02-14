@@ -113,6 +113,7 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 			getDirname: true
 		});
 
+		// remove files if  this.newLiveSyncConnected...
 		for (const localToDevicePathData of localToDevicePaths) {
 			const relativeUnixPath = _.trimStart(helpers.fromWindowsRelativePathToUnix(localToDevicePathData.getRelativeToProjectBasePath()), "/");
 			const deviceFilePath = this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.REMOVEDSYNC_DIR_NAME, relativeUnixPath);

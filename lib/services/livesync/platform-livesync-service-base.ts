@@ -59,6 +59,8 @@ export abstract class PlatformLiveSyncServiceBase {
 		const deviceAppData = await this.getAppData(syncInfo);
 
 		const modifiedLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
+		const deviceLiveSyncService = this.getDeviceLiveSyncService(device, projectData.projectId);
+
 		if (liveSyncInfo.filesToSync.length) {
 			const filesToSync = liveSyncInfo.filesToSync;
 			const mappedFiles = _.map(filesToSync, filePath => this.$projectFilesProvider.mapFilePath(filePath, device.deviceInfo.platform, projectData));
@@ -77,7 +79,8 @@ export abstract class PlatformLiveSyncServiceBase {
 				const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData,
 					projectFilesPath, existingFiles, []);
 				modifiedLocalToDevicePaths.push(...localToDevicePaths);
-				await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, false);
+				let fileToSend = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, false);
+				await deviceLiveSyncService.sendFilesOverSocket(fileToSend);
 			}
 		}
 
@@ -93,7 +96,6 @@ export abstract class PlatformLiveSyncServiceBase {
 			const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, mappedFiles, []);
 			modifiedLocalToDevicePaths.push(...localToDevicePaths);
 
-			const deviceLiveSyncService = this.getDeviceLiveSyncService(device, projectData.projectId);
 			await deviceLiveSyncService.removeFiles(deviceAppData, localToDevicePaths);
 		}
 
