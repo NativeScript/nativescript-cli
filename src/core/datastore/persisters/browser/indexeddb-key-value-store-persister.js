@@ -41,7 +41,7 @@ export class IndexedDbKeyValueStorePersister extends KeyValueStorePersister {
         };
 
         request.onerror = (e) => {
-          reject(e);
+          reject(e.target.error);
         };
       }, (error) => {
         if (error instanceof NotFoundError) {
