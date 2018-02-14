@@ -35,16 +35,7 @@ export class ExtensibilityService implements IExtensibilityService {
 		const installResultInfo = await this.$npm.install(packageName, this.pathToExtensions, npmOpts);
 		this.$logger.trace(`Finished installation of extension '${extensionName}'. Trying to load it now.`);
 
-		const packageJsonData = this.getExtensionPackageJsonData(installResultInfo.name);
-
-		const pathToExtension = this.getPathToExtension(extensionName);
-		const docs = packageJsonData && packageJsonData.nativescript && packageJsonData.nativescript.docs && path.join(pathToExtension, packageJsonData.nativescript.docs);
-		return {
-			extensionName: installResultInfo.name,
-			version: installResultInfo.version,
-			docs,
-			pathToExtension
-		};
+		return this.getInstalledExtensionData(installResultInfo.name);
 	}
 
 	@exported("extensibilityService")
@@ -60,9 +51,7 @@ export class ExtensibilityService implements IExtensibilityService {
 
 	public getInstalledExtensionsData(): IExtensionData[] {
 		const installedExtensions = this.getInstalledExtensions();
-		return _.keys(installedExtensions).map(installedExtension => {
-			return this.getInstalledExtensionData(installedExtension);
-		});
+		return _.keys(installedExtensions).map(installedExtension => this.getInstalledExtensionData(installedExtension));
 	}
 
 	@exported("extensibilityService")
