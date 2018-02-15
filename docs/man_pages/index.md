@@ -36,7 +36,7 @@ Command | Description
 [prepare `<Platform>`](project/configuration/prepare.html) | Copies relevant content from the app directory to the subdirectory for the selected target platform to let you build the project.
 [build `<Platform>`](project/testing/build.html) | Builds the project for the selected target platform and produces an application package or an emulator package.
 [deploy `<Platform>`](project/testing/deploy.html) | Deploys the project to a connected physical or virtual device.
-[run `<Platform>`](project/testing/run.html) | Runs your project on a connected device or in the native emulator, if configured.
+[run](project/testing/run.html) | Runs your project on a connected device or in the native emulator, if configured.
 [debug `<Platform>`](project/testing/debug.html) | Debugs your project on a connected physical or virtual device.
 [test init](project/testing/test-init.html) | Configures your project for unit testing with a selected framework.
 [test `<Platform>`](project/testing/test.html) | Runs the unit tests in your project on a connected physical or virtual device.
