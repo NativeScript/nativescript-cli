@@ -11,7 +11,7 @@ let liveSyncTool = require("livesync-tool");
 export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
 	private static BACKEND_PORT = 18182;
 	private device: Mobile.IAndroidDevice;
-	private static newLiveSyncConnected: boolean = false;
+	private static newLiveSyncConnected: boolean = true;
 	private liveSyncTool: any;
 	private static appDestinationDirectoryPath: string;
 	private static appIdentifier: string;
