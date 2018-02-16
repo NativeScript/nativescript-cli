@@ -82,14 +82,7 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 
 	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData, platformData: IPlatformData): Promise<void> {
 
-		while (true) {
-			let res = await this.device.adb.executeShellCommand(["ps", "|", "grep", deviceAppData.appIdentifier]);
-			if (!!res) {
-				break;
-			} else {
-				await this.restartApplication(deviceAppData);
-			}
-		}
+		await this.device.applicationManager.startApplication(deviceAppData.appIdentifier);
 
 		AndroidDeviceLiveSyncService.appIdentifier = deviceAppData.appIdentifier;
 		AndroidDeviceLiveSyncService.appDestinationDirectoryPath = platformData.appDestinationDirectoryPath;
