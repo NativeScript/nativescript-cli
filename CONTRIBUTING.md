@@ -42,6 +42,10 @@ Before you submit a Pull Request, consider the following guidelines.
 ```bash
     git clone git@github.com:NativeScript/nativescript-cli.git
 ```
+* Install the node dependencies.
+```bash
+    npm install --ignore-scripts
+```
 * Initialize the submodule.
 ```bash
     git submodule init
@@ -57,15 +61,15 @@ Before you submit a Pull Request, consider the following guidelines.
 * Create your patch and include appropriate test cases.
 * Build your changes locally.
 ```bash
-    grunt
+    ./node_modules/.bin/grunt
 ```
 * Ensure all the tests pass.
 ```bash
-    grunt test
+    ./node_modules/.bin/grunt test
 ```
 * Ensure that your code passes the linter.
 ```bash
-    grunt lint
+    ./node_modules/.bin/grunt lint
 ```
 * Commit your changes and create a descriptive commit message (the commit message is used to generate release notes).
 ```bash
