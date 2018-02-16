@@ -3,6 +3,7 @@ import { Promise } from 'es6-promise';
 import { KinveyError } from '../../../errors';
 
 import { webSqlCollectionsMaster, webSqlDatabaseSize } from '../utils';
+const dbCache = {};
 
 export class WebSqlSqlModule {
   _databaseName;
@@ -13,6 +14,7 @@ export class WebSqlSqlModule {
 
   // TODO: refactor this at some point after redesign
   openTransaction(collection, query, parameters, write = false) {
+    let db = dbCache[this._databaseName];
     const escapedCollection = `"${collection}"`;
     const isMaster = collection === webSqlCollectionsMaster;
     const isMulti = Array.isArray(query);
@@ -20,7 +22,10 @@ export class WebSqlSqlModule {
 
     return new Promise((resolve, reject) => {
       try {
-        const db = global.openDatabase(this._databaseName, 1, 'Kinvey Cache', webSqlDatabaseSize);
+        if (!db) {
+          db = global.openDatabase(this._databaseName, 1, 'Kinvey Cache', webSqlDatabaseSize);
+          dbCache[this._databaseName] = db;
+        }
         const writeTxn = write || typeof db.readTransaction !== 'function';
 
         db[writeTxn ? 'transaction' : 'readTransaction']((tx) => {
@@ -81,7 +86,8 @@ export class WebSqlSqlModule {
 
             return reject(new KinveyError(`Unable to open a transaction for the ${collection}`
               + ` collection on the ${this._databaseName} WebSQL database.`));
-          }).catch(reject);
+          })
+            .catch(reject);
         });
       } catch (error) {
         reject(error);
