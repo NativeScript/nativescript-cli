@@ -91,9 +91,7 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 			}
 		}
 
-		await
-
-			AndroidDeviceLiveSyncService.appIdentifier = deviceAppData.appIdentifier;
+		AndroidDeviceLiveSyncService.appIdentifier = deviceAppData.appIdentifier;
 		AndroidDeviceLiveSyncService.appDestinationDirectoryPath = platformData.appDestinationDirectoryPath;
 		await this.initTool();
 
