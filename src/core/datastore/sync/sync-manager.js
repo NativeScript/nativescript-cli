@@ -4,7 +4,7 @@ import clone from 'lodash/clone';
 import { Log } from '../../log';
 import { KinveyError, NotFoundError, SyncError } from '../../errors';
 
-import { PromiseQueue, ensureArray, forEachAsync } from '../../utils';
+import { PromiseQueue, ensureArray, forEachAsync, isNonemptyString } from '../../utils';
 import { SyncOperation } from './sync-operation';
 import { syncBatchSize } from './utils';
 import { isEmpty } from '../utils';
@@ -27,7 +27,7 @@ export class SyncManager {
   }
 
   push(collection, query) {
-    if (isEmpty(collection)) {
+    if (isEmpty(collection) || !isNonemptyString(collection)) {
       return Promise.reject(new KinveyError('Invalid or missing collection name'));
     }
 
@@ -57,7 +57,7 @@ export class SyncManager {
   }
 
   pull(collection, query, options) {
-    if (isEmpty(collection)) {
+    if (!isNonemptyString(collection)) {
       return Promise.reject(new KinveyError('Invalid or missing collection name'));
     }
     return this._fetchItemsFromServer(collection, query, options)
@@ -65,7 +65,7 @@ export class SyncManager {
   }
 
   getSyncItemCount(collection) {
-    if (isEmpty(collection)) {
+    if (!isNonemptyString(collection)) {
       return Promise.reject(new KinveyError('Invalid or missing collection name'));
     }
 
@@ -226,7 +226,7 @@ export class SyncManager {
   _pushItem(collection, syncItem) {
     const { entityId, state } = syncItem;
     return this._getOfflineRepo()
-      .then(repo => repo.readById(collection, entityId))
+      .then(repo => repo.readById(collection, entityId)) // TODO: we've already read the entities once, if a query was provided
       .catch((err) => {
         if (!(err instanceof NotFoundError)) {
           return Promise.reject(err);
@@ -308,7 +308,7 @@ export class SyncManager {
   }
 
   _addEvent(collection, entities, syncOp) {
-    const validationError = this._validateCrudEventEntities(ensureArray(entities));
+    const validationError = this._validateCrudEventEntities(entities);
 
     if (validationError) {
       return validationError;

@@ -52,7 +52,7 @@ describe('Data stores delegate correctly to data processor', () => {
 
       // methods, common for all stores
 
-      it('find()', () => {
+      it('find', () => {
         const query = new Query();
         return store.find(query, testOptions).toPromise()
           .then(() => {

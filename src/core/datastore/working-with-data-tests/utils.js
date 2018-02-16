@@ -1,4 +1,5 @@
 import expect from 'expect';
+import times from 'lodash/times';
 
 import { Operation } from '../operations';
 import { DataStoreType } from '../datastore';
@@ -13,6 +14,15 @@ const typeToFilePathMap = {
   [DataStoreType.Cache]: '../cachestore',
   [DataStoreType.Network]: '../networkstore'
 };
+
+/** @typedef RepoMock
+ * @property {expect.Spy} read
+ * @property {expect.Spy} readById
+ * @property {expect.Spy} update
+ * @property {expect.Spy} deleteById
+ * @property {expect.Spy} update
+ * @property {expect.Spy} delete
+ */
 
 const buildDataStoreInstance = (storeType, collection, dataProcessor, options) => {
   switch (storeType) {
@@ -53,7 +63,37 @@ export function validateOperationObj(op, type, collection, query, data, entityId
 }
 
 export function createPromiseSpy(value, reject = false) {
-  const shouldReject = reject === true;
-  const promise = shouldReject ? Promise.reject(value) : Promise.resolve(value);
+  const promise = reject === true ? Promise.reject(value) : Promise.resolve(value);
   return expect.createSpy().andReturn(promise);
+}
+
+/**
+ * @returns {RepoMock}
+ */
+export function getRepoMock(results = {}) {
+  return {
+    read: createPromiseSpy(results.read || []),
+    readById: createPromiseSpy(results.readById || {}),
+    create: createPromiseSpy(results.create || {}),
+    deleteById: createPromiseSpy(results.deleteById || 1),
+    update: createPromiseSpy(results.update || {}),
+    delete: createPromiseSpy(results.delete || 1e6),
+  };
+}
+
+export function validateError(err, expectedType, expectedMessage) {
+  expect(err).toExist();
+  expect(err).toBeA(expectedType);
+  expect(err.message).toInclude(expectedMessage);
+}
+
+export function validateSpyCalls(spy, callCount, ...callArgumentSets) {
+  expect(spy.calls.length).toBe(callCount);
+  times(callCount, (index) => {
+    const expectedArguments = callArgumentSets[index];
+    expect(spy.calls[index].arguments.length).toBe(expectedArguments.length);
+    expectedArguments.forEach((arg, ind) => {
+      expect(spy.calls[index].arguments[ind]).toEqual(arg);
+    });
+  });
 }
