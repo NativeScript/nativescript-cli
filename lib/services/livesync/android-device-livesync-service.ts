@@ -106,17 +106,14 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 		await this.cleanLivesyncDirectories(deviceAppData);
 	}
 
+	// initialization expects a device to be running, because it verifies connection through socket
 	private async initTool(): Promise<void> {
 		try {
-			function myErrorHandler() {
-				//TODO: plamen5kov: implement later if needed
-			}
 			let configurations = {
-				fullApplicationName: AndroidDeviceLiveSyncService.appIdentifier,//deviceAppData.appIdentifier,
+				fullApplicationName: AndroidDeviceLiveSyncService.appIdentifier,
 				port: AndroidDeviceLiveSyncService.BACKEND_PORT,
-				errorHandler: myErrorHandler,
-				// deviceIdentifier: "emulator-5556",
-				baseDir: path.join(AndroidDeviceLiveSyncService.appDestinationDirectoryPath, APP_FOLDER_NAME) //path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME)
+				deviceIdentifier: this.device.deviceInfo.identifier,
+				baseDir: path.join(AndroidDeviceLiveSyncService.appDestinationDirectoryPath, APP_FOLDER_NAME)
 			}
 			AndroidDeviceLiveSyncService.newLiveSyncConnected = await liveSyncTool.init(configurations);
 		} catch (e) {
