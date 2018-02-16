@@ -68,7 +68,7 @@ describe('Data stores delegate correctly to sync manager', () => {
           });
       });
 
-      it('pendingSyncEntities', () => {
+      it('pendingSyncEntities()', () => {
         const query = new Query();
         return store.pendingSyncEntities(query)
           .then(() => {
@@ -77,7 +77,7 @@ describe('Data stores delegate correctly to sync manager', () => {
           });
       });
 
-      it('push', () => {
+      it('push()', () => {
         const query = new Query();
         const options = { [optionKeyName]: true };
         return store.push(query, options)
@@ -87,7 +87,7 @@ describe('Data stores delegate correctly to sync manager', () => {
           });
       });
 
-      it('pull when there are pending sync items', () => {
+      it('pull() when there are pending sync items', () => {
         const query = new Query();
         const options = { [optionKeyName]: true };
         syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(123);
@@ -102,7 +102,7 @@ describe('Data stores delegate correctly to sync manager', () => {
           });
       });
 
-      it('pull when there are NO pending sync items', () => {
+      it('pull() when there are NO pending sync items', () => {
         const query = new Query();
         const options = { [optionKeyName]: true };
         return store.pull(query, options)
@@ -113,7 +113,7 @@ describe('Data stores delegate correctly to sync manager', () => {
           });
       });
 
-      it('sync when push succeeds', () => {
+      it('sync() when push succeeds', () => {
         const query = new Query();
         const options = { [optionKeyName]: 123 };
         const pushSpy = syncManagerMock.push;
@@ -127,7 +127,7 @@ describe('Data stores delegate correctly to sync manager', () => {
           });
       });
 
-      it('sync when push fails', () => {
+      it('sync() when push fails', () => {
         const query = new Query();
         const options = { [optionKeyName]: 123 };
         syncManagerMock.push = createPromiseSpy(new Error('some error'), true);
@@ -144,7 +144,7 @@ describe('Data stores delegate correctly to sync manager', () => {
           });
       });
 
-      it('clearSync', () => {
+      it('clearSync()', () => {
         const query = new Query();
         return store.clearSync(query)
           .then(() => {

@@ -52,7 +52,7 @@ describe('Data stores delegate correctly to data processor', () => {
 
       // methods, common for all stores
 
-      it('find', () => {
+      it('find()', () => {
         const query = new Query();
         return store.find(query, testOptions).toPromise()
           .then(() => {
@@ -60,7 +60,7 @@ describe('Data stores delegate correctly to data processor', () => {
           });
       });
 
-      it('findById', () => {
+      it('findById()', () => {
         const id = randomString();
         return store.findById(id, testOptions).toPromise()
           .then(() => {
@@ -68,7 +68,7 @@ describe('Data stores delegate correctly to data processor', () => {
           });
       });
 
-      it('group', () => {
+      it('group()', () => {
         const aggregation = new Aggregation();
         return store.group(aggregation, testOptions).toPromise()
           .then(() => {
@@ -76,7 +76,7 @@ describe('Data stores delegate correctly to data processor', () => {
           });
       });
 
-      it('count', () => {
+      it('count()', () => {
         const query = new Query();
         return store.count(query, testOptions).toPromise()
           .then(() => {
@@ -84,7 +84,7 @@ describe('Data stores delegate correctly to data processor', () => {
           });
       });
 
-      it('create', () => {
+      it('create()', () => {
         const entity = { test: true };
         return store.create(entity, testOptions)
           .then(() => {
@@ -92,7 +92,7 @@ describe('Data stores delegate correctly to data processor', () => {
           });
       });
 
-      it('update', () => {
+      it('update()', () => {
         const entity = { _id: randomString(), test: true };
         return store.update(entity, testOptions)
           .then(() => {
@@ -100,7 +100,7 @@ describe('Data stores delegate correctly to data processor', () => {
           });
       });
 
-      it('save with _id', () => {
+      it('save() with _id', () => {
         const entity = { _id: randomString(), test: true };
         return store.save(entity, testOptions)
           .then(() => {
@@ -108,7 +108,7 @@ describe('Data stores delegate correctly to data processor', () => {
           });
       });
 
-      it('save without _id', () => {
+      it('save() without _id', () => {
         const entity = { test: true };
         return store.save(entity, testOptions)
           .then(() => {
@@ -116,7 +116,7 @@ describe('Data stores delegate correctly to data processor', () => {
           });
       });
 
-      it('remove', () => {
+      it('remove()', () => {
         const query = new Query();
         return store.remove(query, testOptions)
           .then(() => {
@@ -124,7 +124,7 @@ describe('Data stores delegate correctly to data processor', () => {
           });
       });
 
-      it('removeById', () => {
+      it('removeById()', () => {
         const id = randomString();
         return store.removeById(id, testOptions)
           .then(() => {
@@ -133,7 +133,7 @@ describe('Data stores delegate correctly to data processor', () => {
       });
 
       if (type !== DataStoreType.Network) {
-        it('clear', () => {
+        it('clear()', () => {
           const query = new Query();
           return store.clear(query, testOptions)
             .then(() => {

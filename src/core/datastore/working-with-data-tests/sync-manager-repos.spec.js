@@ -67,7 +67,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
     syncManager = new ProxiedSyncManager(networkRepoMock, syncStateManagerMock);
   });
 
-  describe('push', () => {
+  describe('push()', () => {
     it('should return an error when no collection is passed', () => {
       return syncManager.push()
         .then(() => Promise.reject(new Error('Should not happen')))
@@ -188,7 +188,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
           offlineRepoMock.readById = createPromiseSpy(entityToBeSyncedMock);
         });
 
-        describe('create', () => {
+        describe('create()', () => {
           before(() => {
             operationType = SyncOperation.Create;
           });
@@ -221,7 +221,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
           });
         });
 
-        describe('update', () => {
+        describe('update()', () => {
           before(() => {
             operationType = SyncOperation.Update;
           });
@@ -253,7 +253,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
           });
         });
 
-        describe('delete', () => {
+        describe('delete()', () => {
           before(() => {
             operationType = SyncOperation.Delete;
           });
@@ -281,7 +281,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
     });
   });
 
-  describe('pull', () => {
+  describe('pull()', () => {
     const query = new Query();
     const optionName = 'test';
     const options = { [optionName]: true };
@@ -334,7 +334,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
     });
   });
 
-  describe('getSyncItemCount', () => {
+  describe('getSyncItemCount()', () => {
     it('should return an error if no collection name is passed', () => {
       return syncManager.getSyncItemCount()
         .then(() => Promise.reject(new Error('Should not happen')))
@@ -367,7 +367,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
     });
   });
 
-  describe('getSyncItemCountByEntityQuery', () => {
+  describe('getSyncItemCountByEntityQuery()', () => {
     const query = new Query();
     let entitiesMock;
 
@@ -393,7 +393,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
     });
   });
 
-  describe('getSyncEntities', () => {
+  describe('getSyncEntities()', () => {
     const query = new Query();
     let entitiesMock;
 
@@ -417,7 +417,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
     });
   });
 
-  describe('clearSync', () => {
+  describe('clearSync()', () => {
     it('should call SyncStateManager.removeSyncItemsForIds() with matching entity ids, when a query is passed', () => {
       const query = new Query();
       const entitiesMock = [{ _id: randomString() }, { _id: randomString() }];
@@ -443,7 +443,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
     eventName = `${eventName[0]}${eventName.substring(1).toLowerCase()}`;
     const methodName = `add${eventName}Event`;
 
-    describe(methodName, () => {
+    describe(`${methodName}()`, () => {
       it('should return an error if no entities are passed', () => {
         return syncManager[methodName]()
           .then(() => Promise.reject(new Error('Should not happen')))
@@ -460,7 +460,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
           });
       });
 
-      it(`should call SyncStateManager.${methodName}`, () => {
+      it(`should call SyncStateManager.${methodName}()`, () => {
         const entitiesMock = [{ _id: randomString() }];
         return syncManager[methodName](collection, entitiesMock)
           .then(() => {

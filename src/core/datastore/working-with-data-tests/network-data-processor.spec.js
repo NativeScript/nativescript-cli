@@ -9,7 +9,7 @@ import { Query } from '../../query';
 
 const collection = 'books';
 
-describe.only('NetworkDataProcessor', () => {
+describe('NetworkDataProcessor', () => {
   let repoMock = getRepoMock(); // set only for typings, otherwise set in beforeEach
   let dataProcessor;
 
@@ -29,8 +29,6 @@ describe.only('NetworkDataProcessor', () => {
   });
 
   describe('process()', () => {
-
-
     it('should return an error if an invalid operation type is passed', () => {
       return dataProcessor.process({})
         .then(() => Promise.reject(new Error('Should not happen')))
