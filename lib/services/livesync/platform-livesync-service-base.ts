@@ -39,7 +39,7 @@ export abstract class PlatformLiveSyncServiceBase {
 		const deviceAppData = await this.getAppData(syncInfo);
 
 		if (deviceLiveSyncService.beforeLiveSyncAction) {
-			await deviceLiveSyncService.beforeLiveSyncAction(deviceAppData);
+			await deviceLiveSyncService.beforeLiveSyncAction(deviceAppData, platformData);
 		}
 
 		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
@@ -80,7 +80,7 @@ export abstract class PlatformLiveSyncServiceBase {
 					projectFilesPath, existingFiles, []);
 				modifiedLocalToDevicePaths.push(...localToDevicePaths);
 				let fileToSend = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, false);
-				await deviceLiveSyncService.sendFilesOverSocket(fileToSend);
+				await deviceLiveSyncService.sendFiles(_.map(fileToSend, (element:any) => {return element.filePath}));
 			}
 		}
 

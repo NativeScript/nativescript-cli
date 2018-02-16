@@ -17,7 +17,7 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 	public async fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo> {
 		const liveSyncResultInfo: ILiveSyncResultInfo = await super.fullSync(syncInfo);
 
-		this._getDeviceLiveSyncService(syncInfo.device).sendFilesOverSocket(liveSyncResultInfo.modifiedFilesData);
+		this._getDeviceLiveSyncService(syncInfo.device).sendFiles(_.map(liveSyncResultInfo.modifiedFilesData, (element: any) => { return element.filePath }));
 
 		return liveSyncResultInfo;
 	}

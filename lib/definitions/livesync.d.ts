@@ -329,7 +329,7 @@ interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase 
 	 * @param  {Mobile.ILocalToDevicePathData[]} localToDevicePaths Object containing a mapping of file paths from the system to the device.
 	 * @return {Promise<void>}
 	 */
-	sendFilesOverSocket(filesToSend: Mobile.ILocalToDevicePathData[]): Promise<void>;
+	sendFiles(filesToSend: Mobile.ILocalToDevicePathData[]): Promise<void>;
 }
 
 interface IAndroidNativeScriptDeviceLiveSyncService {

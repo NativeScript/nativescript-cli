@@ -2,16 +2,19 @@ import { DeviceAndroidDebugBridge } from "../../common/mobile/android/device-and
 import { AndroidDeviceHashService } from "../../common/mobile/android/android-device-hash-service";
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 import * as helpers from "../../common/helpers";
-import { LiveSyncPaths } from "../../constants";
+import { LiveSyncPaths, APP_FOLDER_NAME } from "../../constants";
 import { cache } from "../../common/decorators";
 import * as path from "path";
 import * as net from "net";
+let liveSyncTool = require("livesync-tool");
 
 export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
 	private static BACKEND_PORT = 18182;
 	private device: Mobile.IAndroidDevice;
-	private newLiveSyncConnected: boolean = false;
+	private static newLiveSyncConnected: boolean = false;
 	private liveSyncTool: any;
+	private static appDestinationDirectoryPath: string;
+	private static appIdentifier: string;
 
 	constructor(_device: Mobile.IDevice,
 		private $mobileHelper: Mobile.IMobileHelper,
@@ -19,6 +22,7 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 		private $injector: IInjector,
 		protected $platformsData: IPlatformsData) {
 		super($platformsData);
+		this.liveSyncTool = liveSyncTool;
 		this.device = <Mobile.IAndroidDevice>(_device);
 	}
 
@@ -38,7 +42,7 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 				`${deviceProjectRootDirname}/sync`]
 		);
 
-		const reloadedSuccessfully = this.newLiveSyncConnected ? true : await this.reloadApplicationFiles(deviceAppData, localToDevicePaths);
+		const reloadedSuccessfully = AndroidDeviceLiveSyncService.newLiveSyncConnected ? true : await this.reloadApplicationFiles(deviceAppData, localToDevicePaths);
 
 		const canExecuteFastSync = reloadedSuccessfully && !liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
 			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
@@ -48,9 +52,12 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 		}
 	}
 
-	public async sendFilesOverSocket(filesToSend: Mobile.ILocalToDevicePathData[]): Promise<void> {
-		if (this.newLiveSyncConnected) {
-			this.liveSyncTool.sendFiles(filesToSend);
+	public async sendFiles(filesToSend: Mobile.ILocalToDevicePathData[]): Promise<void> {
+		await this.initTool();
+
+		if (AndroidDeviceLiveSyncService.newLiveSyncConnected) {
+			await this.liveSyncTool.sendFilesArray(filesToSend);
+			await this.liveSyncTool.sendDoSyncOperation();
 		}
 	}
 
@@ -66,17 +73,29 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 	}
 
 	private async restartApplication(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
-		const devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;
-		const devicePath = this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb");
+		const devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files"`;
+		const devicePath = this.$mobileHelper.buildDevicePath(path.resolve(devicePathRoot, "..", "code_cache", "secondary-dexes", "proxyThumb"));
 		await this.device.adb.executeShellCommand(["rm", "-rf", devicePath]);
 
 		await this.device.applicationManager.restartApplication(deviceAppData.appIdentifier);
 	}
 
-	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
+	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData, platformData: IPlatformData): Promise<void> {
 
-		// initialize tool (try to open socket and wait 100ms for responce)
-		// if ok set this.newLiveSyncConnected = true
+		while (true) {
+			let res = await this.device.adb.executeShellCommand(["ps", "|", "grep", deviceAppData.appIdentifier]);
+			if (!!res) {
+				break;
+			} else {
+				await this.restartApplication(deviceAppData);
+			}
+		}
+
+		await
+
+			AndroidDeviceLiveSyncService.appIdentifier = deviceAppData.appIdentifier;
+		AndroidDeviceLiveSyncService.appDestinationDirectoryPath = platformData.appDestinationDirectoryPath;
+		await this.initTool();
 
 		const deviceRootPath = await this.$devicePathProvider.getDeviceProjectRootPath(deviceAppData.device, {
 			appIdentifier: deviceAppData.appIdentifier,
@@ -94,6 +113,24 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 		}
 
 		await this.cleanLivesyncDirectories(deviceAppData);
+	}
+
+	private async initTool(): Promise<void> {
+		try {
+			function myErrorHandler() {
+				//TODO: plamen5kov: implement later if needed
+			}
+			let configurations = {
+				fullApplicationName: AndroidDeviceLiveSyncService.appIdentifier,//deviceAppData.appIdentifier,
+				port: AndroidDeviceLiveSyncService.BACKEND_PORT,
+				errorHandler: myErrorHandler,
+				// deviceIdentifier: "emulator-5556",
+				baseDir: path.join(AndroidDeviceLiveSyncService.appDestinationDirectoryPath, APP_FOLDER_NAME) //path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME)
+			}
+			AndroidDeviceLiveSyncService.newLiveSyncConnected = await liveSyncTool.init(configurations);
+		} catch (e) {
+			AndroidDeviceLiveSyncService.newLiveSyncConnected = false;
+		}
 	}
 
 	private async reloadApplicationFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<boolean> {

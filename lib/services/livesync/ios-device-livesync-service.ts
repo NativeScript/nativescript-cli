@@ -47,6 +47,10 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		await Promise.all(_.map(localToDevicePaths, localToDevicePathData => this.device.fileSystem.deleteFile(localToDevicePathData.getDevicePath(), deviceAppData.appIdentifier)));
 	}
 
+	sendFiles(filesToSend: Mobile.ILocalToDevicePathData[]): Promise<void> {
+		return Promise.resolve();
+	}
+
 	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
 		const deviceAppData = liveSyncInfo.deviceAppData;
 		const localToDevicePaths = liveSyncInfo.modifiedFilesData;
