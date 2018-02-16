@@ -141,7 +141,12 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 			getDirname: true
 		});
 
-		// remove files if  this.newLiveSyncConnected...
+		await this.initTool();
+		if (AndroidDeviceLiveSyncService.newLiveSyncConnected) {
+			await this.liveSyncTool.removeFilesArray(_.map(localToDevicePaths, (element: any) => { return element.filePath }));
+			await this.liveSyncTool.sendDoSyncOperation();
+		}
+
 		for (const localToDevicePathData of localToDevicePaths) {
 			const relativeUnixPath = _.trimStart(helpers.fromWindowsRelativePathToUnix(localToDevicePathData.getRelativeToProjectBasePath()), "/");
 			const deviceFilePath = this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.REMOVEDSYNC_DIR_NAME, relativeUnixPath);
