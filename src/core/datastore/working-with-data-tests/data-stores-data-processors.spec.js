@@ -35,7 +35,7 @@ describe('Data stores delegate correctly to data processor', () => {
 
   dataStoreTypes.forEach((type) => {
     describe(`${type}Store`, () => {
-      /** @type {CacheStore} */ // just for auto completion
+      /** @type {CacheStore} */
       let store;
       /** @type {expect.Spy} */
       let spy;

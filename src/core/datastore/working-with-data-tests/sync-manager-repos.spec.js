@@ -34,10 +34,10 @@ function getSyncItemMock(operation, entityId, collectionName) {
 describe('SyncManager delegating to repos and SyncStateManager', () => {
   /** @type {SyncManager} */
   let syncManager;
-  let networkRepoMock = getRepoMock(); // for typings
+  let networkRepoMock = getRepoMock(); // set only for typings, otherwise set in beforeEach
   /** @type {SyncStateManagerMock} */
   let syncStateManagerMock;
-  let offlineRepoMock = getRepoMock(); // for typings
+  let offlineRepoMock = getRepoMock(); // set only for typings, otherwise set in beforeEach
 
   beforeEach(() => {
     offlineRepoMock = getRepoMock();
@@ -99,10 +99,6 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
       return syncManager.push(collection, query)
         .then(() => {
           validateSpyCalls(offlineRepoMock.read, 1, [collection, query]);
-          // expect(offlineRepoReadSpy.calls.length).toBe(1);
-          // expect(offlineRepoReadSpy.calls[0].arguments.length).toBe(2);
-          // expect(offlineRepoReadSpy.calls[0].arguments[0]).toBe(collection);
-          // expect(offlineRepoReadSpy.calls[0].arguments[1]).toBe(query);
         });
     });
 

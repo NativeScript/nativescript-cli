@@ -88,6 +88,15 @@ export function getRepoMock(results = {}) {
   };
 }
 
+export function getSyncManagerMock() {
+  return {
+    addCreateEvent: createPromiseSpy(),
+    addUpdateEvent: createPromiseSpy(),
+    addDeleteEvent: createPromiseSpy(),
+    clearSync: createPromiseSpy()
+  };
+}
+
 export function validateError(err, expectedType, expectedMessage) {
   expect(err).toExist();
   expect(err).toBeA(expectedType);
@@ -103,4 +112,8 @@ export function validateSpyCalls(spy, callCount, ...callArgumentSets) {
       expect(spy.calls[index].arguments[ind]).toEqual(arg);
     });
   });
+}
+
+export function addExpectedCreateEntityMeta(entity) {
+  return Object.assign({}, entity, { _kmd: { local: true } });
 }
