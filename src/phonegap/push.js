@@ -190,7 +190,7 @@ export class PushNotification extends EventEmitter {
           })
           .then((response) => {
             if (response) {
-              return response.data;
+              return response;
             }
 
             return null;
