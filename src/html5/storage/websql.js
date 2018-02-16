@@ -5,6 +5,7 @@ import { isDefined } from '../../core/utils';
 const masterCollectionName = 'sqlite_master';
 const size = 2 * 1024 * 1024; // Database size in bytes
 let isSupported;
+const dbCache = {};
 
 export class WebSQL {
   constructor(name = 'kinvey') {
@@ -20,6 +21,7 @@ export class WebSQL {
   }
 
   openTransaction(collection, query, parameters, write = false) {
+    let db = dbCache[this.name];
     const escapedCollection = `"${collection}"`;
     const isMaster = collection === masterCollectionName;
     const isMulti = Array.isArray(query);
@@ -27,7 +29,11 @@ export class WebSQL {
 
     return new Promise((resolve, reject) => {
       try {
-        const db = global.openDatabase(this.name, 1, 'Kinvey Cache', size);
+        if (!isDefined(db)) {
+          db = global.openDatabase(this.name, 1, 'Kinvey Cache', size);
+          dbCache[this.name] = db;
+        }
+        
         const writeTxn = write || typeof db.readTransaction !== 'function';
 
         db[writeTxn ? 'transaction' : 'readTransaction']((tx) => {
@@ -89,7 +95,8 @@ export class WebSQL {
 
             return reject(new KinveyError(`Unable to open a transaction for the ${collection}`
               + ` collection on the ${this.name} WebSQL database.`));
-          }).catch(reject);
+          })
+          .catch(reject);
         });
       } catch (error) {
         reject(error);
