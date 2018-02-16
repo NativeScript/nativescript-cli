@@ -16,12 +16,16 @@ const typeToFilePathMap = {
 };
 
 /** @typedef RepoMock
+ * @property {expect.Spy} create
  * @property {expect.Spy} read
  * @property {expect.Spy} readById
  * @property {expect.Spy} update
  * @property {expect.Spy} deleteById
  * @property {expect.Spy} update
  * @property {expect.Spy} delete
+ * @property {expect.Spy} group
+ * @property {expect.Spy} clear
+ * @property {expect.Spy} count
  */
 
 const buildDataStoreInstance = (storeType, collection, dataProcessor, options) => {
@@ -78,6 +82,9 @@ export function getRepoMock(results = {}) {
     deleteById: createPromiseSpy(results.deleteById || 1),
     update: createPromiseSpy(results.update || {}),
     delete: createPromiseSpy(results.delete || 1e6),
+    group: createPromiseSpy(results.group || null),
+    clear: createPromiseSpy(results.clear || null),
+    count: createPromiseSpy(results.count || 1e6),
   };
 }
 
