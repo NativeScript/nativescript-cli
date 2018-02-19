@@ -198,12 +198,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	 * Archive the Xcode project to .xcarchive.
 	 * Returns the path to the .xcarchive.
 	 */
-	public async archive(projectData: IProjectData, buildConfig?: IBuildConfig, options?: { archivePath?: string }): Promise<string> {
+	public async archive(projectData: IProjectData, buildConfig?: IBuildConfig, options?: { archivePath?: string, additionalArgs?: string[] }): Promise<string> {
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
 		const archivePath = options && options.archivePath ? path.resolve(options.archivePath) : path.join(projectRoot, "/build/archive/", projectData.projectName + ".xcarchive");
-		const args = ["archive", "-archivePath", archivePath, "-configuration",
+		let args = ["archive", "-archivePath", archivePath, "-configuration",
 			(!buildConfig || buildConfig.release) ? "Release" : "Debug"]
 			.concat(this.xcbuildProjectArgs(projectRoot, projectData, "scheme"));
+
+		if (options && options.additionalArgs) {
+			args = args.concat(options.additionalArgs);
+		}
+
 		await this.xcodebuild(args, projectRoot, buildConfig && buildConfig.buildOutputStdio);
 		return archivePath;
 	}
@@ -320,12 +325,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
-		let basicArgs = [
-			"-configuration", buildConfig.release ? "Release" : "Debug",
-			"build",
+		const basicArgs = [
 			'SHARED_PRECOMPS_DIR=' + path.join(projectRoot, 'build', 'sharedpch')
 		];
-		basicArgs = basicArgs.concat(this.xcbuildProjectArgs(projectRoot, projectData));
 
 		// Starting from tns-ios 1.4 the xcconfig file is referenced in the project template
 		const frameworkVersion = this.getFrameworkVersion(this.getPlatformData(projectData).frameworkPackageName, projectData.projectDir);
@@ -353,7 +355,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
 				this.$childProcess,
 				handler,
-				this.buildForSimulator(projectRoot, basicArgs, projectData, buildConfig.buildOutputStdio));
+				this.buildForSimulator(projectRoot, basicArgs, projectData, buildConfig));
 		}
 
 		this.validateApplicationIdentifier(projectData);
@@ -413,8 +415,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			await this.setupSigningForDevice(projectRoot, buildConfig, projectData);
 		}
 
-		await this.xcodebuild(args, projectRoot, buildConfig.buildOutputStdio);
-		await this.createIpa(projectRoot, projectData, buildConfig);
+		await this.createIpa(projectRoot, projectData, buildConfig, args);
 	}
 
 	private async xcodebuild(args: string[], cwd: string, stdio: any = "inherit"): Promise<ISpawnResult> {
@@ -535,20 +536,25 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 	}
 
-	private async buildForSimulator(projectRoot: string, args: string[], projectData: IProjectData, buildOutputStdio?: string): Promise<void> {
-		args = args.concat([
-			"-sdk", "iphonesimulator",
-			"ARCHS=i386 x86_64",
-			"VALID_ARCHS=i386 x86_64",
-			"ONLY_ACTIVE_ARCH=NO",
-			"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
-			"CODE_SIGN_IDENTITY="
-		]);
-		await this.xcodebuild(args, projectRoot, buildOutputStdio);
+	private async buildForSimulator(projectRoot: string, args: string[], projectData: IProjectData, buildConfig?: IBuildConfig): Promise<void> {
+		args = args
+			.concat([
+				"build",
+				"-configuration", buildConfig.release ? "Release" : "Debug",
+				"-sdk", "iphonesimulator",
+				"ARCHS=i386 x86_64",
+				"VALID_ARCHS=i386 x86_64",
+				"ONLY_ACTIVE_ARCH=NO",
+				"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
+				"CODE_SIGN_IDENTITY=",
+			])
+			.concat(this.xcbuildProjectArgs(projectRoot, projectData));
+
+		await this.xcodebuild(args, projectRoot, buildConfig.buildOutputStdio);
 	}
 
-	private async createIpa(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string> {
-		const archivePath = await this.archive(projectData, buildConfig);
+	private async createIpa(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig, args: string[]): Promise<string> {
+		const archivePath = await this.archive(projectData, buildConfig, { additionalArgs: args });
 		const exportFileIpa = await this.exportDevelopmentArchive(projectData, buildConfig, { archivePath, provision: buildConfig.provision || buildConfig.mobileProvisionIdentifier });
 		return exportFileIpa;
 	}
@@ -1363,7 +1369,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private getExportOptionsMethod(projectData: IProjectData): string {
-		const embeddedMobileProvisionPath = path.join(this.getPlatformData(projectData).deviceBuildOutputPath, `${projectData.projectName}.app`, "embedded.mobileprovision");
+		const embeddedMobileProvisionPath = path.join(this.getPlatformData(projectData).projectRoot, "build", "archive", `${projectData.projectName}.xcarchive`, 'Products', 'Applications', `${projectData.projectName}.app`, "embedded.mobileprovision");
 		const provision = mobileprovision.provision.readFromFile(embeddedMobileProvisionPath);
 
 		return {
