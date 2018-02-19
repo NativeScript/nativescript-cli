@@ -82,7 +82,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
       return this._ensureCountBeforeRead(collection, 'fetch the entities', query)
         .then(() => super._processRead(collection, query, options))
         .then((entities) => {
-          offlineEntities = entities || []; // backwards compatibility
+          offlineEntities = entities;
           observer.next(offlineEntities);
           return this._networkRepository.read(collection, query, options);
         })
