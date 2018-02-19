@@ -60,6 +60,7 @@ class TestExecutionService implements ITestExecutionService {
 					const preparePlatformInfo: IPreparePlatformInfo = {
 						platform,
 						appFilesUpdaterOptions,
+						skipModulesNativeCheck: !this.$options.syncAllFiles,
 						platformTemplate: this.$options.platformTemplate,
 						projectData,
 						config: this.$options,
@@ -187,6 +188,7 @@ class TestExecutionService implements ITestExecutionService {
 				const preparePlatformInfo: IPreparePlatformInfo = {
 					platform,
 					appFilesUpdaterOptions,
+					skipModulesNativeCheck: !this.$options.syncAllFiles,
 					platformTemplate: this.$options.platformTemplate,
 					projectData,
 					config: this.$options,

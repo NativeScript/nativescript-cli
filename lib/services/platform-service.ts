@@ -190,7 +190,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	public async preparePlatform(platformInfo: IPreparePlatformInfo): Promise<boolean> {
 		const platformData = this.$platformsData.getPlatformData(platformInfo.platform, platformInfo.projectData);
 
-		const changesInfo = await this.initialPrepare(platformInfo.platform, platformData, platformInfo.appFilesUpdaterOptions, platformInfo.platformTemplate, platformInfo.projectData, platformInfo.config, platformInfo.nativePrepare);
+		const changesInfo = await this.initialPrepare(platformInfo.platform, platformData, platformInfo.appFilesUpdaterOptions, platformInfo.platformTemplate, platformInfo.projectData, platformInfo.config, platformInfo.nativePrepare, platformInfo);
 		const requiresNativePrepare = (!platformInfo.nativePrepare || !platformInfo.nativePrepare.skipNativePrepare) && changesInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPrepare;
 
 		if (changesInfo.hasChanges || platformInfo.appFilesUpdaterOptions.bundle || requiresNativePrepare) {
@@ -237,7 +237,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	private async initialPrepare(platform: string, platformData: IPlatformData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, nativePrepare?: INativePrepare): Promise<IProjectChangesInfo> {
+	private async initialPrepare(platform: string, platformData: IPlatformData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, nativePrepare?: INativePrepare, skipNativeCheckOptions?: ISkipNativeCheckOptional): Promise<IProjectChangesInfo> {
 		this.validatePlatform(platform, projectData);
 
 		await this.trackProjectType(projectData);
@@ -254,7 +254,14 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		const bundle = appFilesUpdaterOptions.bundle;
 		const nativePlatformStatus = (nativePrepare && nativePrepare.skipNativePrepare) ? constants.NativePlatformStatus.requiresPlatformAdd : constants.NativePlatformStatus.requiresPrepare;
-		const changesInfo = await this.$projectChangesService.checkForChanges(platform, projectData, { bundle, release: appFilesUpdaterOptions.release, provision: config.provision, teamId: config.teamId, nativePlatformStatus });
+		const changesInfo = await this.$projectChangesService.checkForChanges(platform, projectData, {
+			bundle,
+			release: appFilesUpdaterOptions.release,
+			provision: config.provision,
+			teamId: config.teamId,
+			nativePlatformStatus,
+			skipModulesNativeCheck: skipNativeCheckOptions.skipModulesNativeCheck
+		});
 
 		this.$logger.trace("Changes info in prepare platform:", changesInfo);
 		return changesInfo;

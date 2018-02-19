@@ -4,17 +4,15 @@ import * as constants from "../constants";
 import * as fs from "fs";
 
 export class AppFilesUpdater {
-	constructor(
-		private appSourceDirectoryPath: string,
+	constructor(private appSourceDirectoryPath: string,
 		private appDestinationDirectoryPath: string,
 		public options: IAppFilesUpdaterOptions,
 		public fs: IFileSystem
 	) {
 	}
 
-	public updateApp(beforeCopyAction: (sourceFiles: string[]) => void): void {
-		this.cleanDestinationApp();
-		const sourceFiles = this.resolveAppSourceFiles();
+	public updateApp(beforeCopyAction: (sourceFiles: string[]) => void, filesToSync?: string[]): void {
+		const sourceFiles = filesToSync || this.resolveAppSourceFiles();
 
 		beforeCopyAction(sourceFiles);
 		this.copyAppSourceFiles(sourceFiles);
