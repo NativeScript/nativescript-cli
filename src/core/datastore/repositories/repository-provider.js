@@ -45,6 +45,7 @@ function _getRepoForStorageProvider(storageProvider) {
  * Selects the first repo from the priority list,
  * which returns a resolved promise for the support test
  * @param {string[]} storagePrecedence An array of enum values, sorted by priority
+ * @returns {Promise<OfflineRepository>}
  */
 function _getFirstSupportedRepo(storagePrecedence) {
   return storagePrecedence.reduce((result, storageProvider) => {
@@ -60,12 +61,9 @@ function _chooseOfflineRepo() {
   const storagePrecedence = ensureArray(_getRepoType());
 
   return _getFirstSupportedRepo(storagePrecedence)
-    .then((repo) => {
-      if (!repo) {
-        const errMsg = 'None of the selected storage providers are supported in this environment.';
-        return Promise.reject(new KinveyError(errMsg));
-      }
-      return repo;
+    .catch(() => {
+      const errMsg = 'None of the selected storage providers are supported in this environment.';
+      return Promise.reject(new KinveyError(errMsg));
     });
 }
 
