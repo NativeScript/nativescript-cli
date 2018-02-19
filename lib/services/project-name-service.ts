@@ -6,7 +6,7 @@ export class ProjectNameService implements IProjectNameService {
 		private $logger: ILogger,
 		private $prompter: IPrompter) { }
 
-	public async ensureValidName(projectName: string, validateOptions?: { force: boolean }): Promise<string> {
+	public async ensureValidName(projectName: string, validateOptions?: IForceOption): Promise<string> {
 		if (validateOptions && validateOptions.force) {
 			return projectName;
 		}
@@ -41,7 +41,7 @@ export class ProjectNameService implements IProjectNameService {
 		return startsWithLetterExpression.test(projectName);
 	}
 
-	private async promptForNewName(warningMessage: string, projectName: string, validateOptions?: { force: boolean }): Promise<string> {
+	private async promptForNewName(warningMessage: string, projectName: string, validateOptions?: IForceOption): Promise<string> {
 		if (await this.promptForForceNameConfirm(warningMessage)) {
 			return projectName;
 		}
