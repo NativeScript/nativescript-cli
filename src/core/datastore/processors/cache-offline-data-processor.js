@@ -167,9 +167,10 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
 
   _replaceOfflineEntities(collection, offlineEntities, networkEntities) {
     let promise = Promise.resolve();
-    if (isNotEmpty(offlineEntities)) {
-      offlineEntities = ensureArray(offlineEntities);
-      const query = new Query().contains('_id', offlineEntities.map(e => e._id));
+    const offlineEntitiesArray = ensureArray(offlineEntities);
+
+    if (offlineEntities && isNotEmpty(offlineEntitiesArray)) {
+      const query = new Query().contains('_id', offlineEntitiesArray.map(e => e._id));
       promise = this._getRepository() // this is cheap, so doing it twice
         .then(repo => repo.delete(collection, query));
     }

@@ -1,3 +1,4 @@
+import { Promise } from 'es6-promise';
 import keys from 'lodash/keys';
 
 import { Client } from '../../client';

@@ -1,5 +1,6 @@
 import expect from 'expect';
 import times from 'lodash/times';
+import { Promise } from 'es6-promise';
 
 import { Operation } from '../operations';
 import { DataStoreType } from '../datastore';
@@ -90,10 +91,14 @@ export function getRepoMock(results = {}) {
 
 export function getSyncManagerMock() {
   return {
+    getSyncItemCountByEntityQuery: createPromiseSpy(0),
+    removeSyncItemForEntityId: createPromiseSpy(),
+    removeSyncItemsForIds: createPromiseSpy(),
     addCreateEvent: createPromiseSpy(),
     addUpdateEvent: createPromiseSpy(),
     addDeleteEvent: createPromiseSpy(),
-    clearSync: createPromiseSpy()
+    clearSync: createPromiseSpy(),
+    push: createPromiseSpy()
   };
 }
 

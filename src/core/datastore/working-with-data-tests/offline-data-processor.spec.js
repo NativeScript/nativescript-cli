@@ -17,7 +17,7 @@ import { randomString } from '../../utils';
 
 const collection = 'books';
 
-describe('NetworkDataProcessor', () => {
+describe('OfflineDataProcessor', () => {
   let repoMock = getRepoMock(); // set only for typings, otherwise set in beforeEach
   let syncManagerMock = getSyncManagerMock();
   let dataProcessor;
@@ -34,8 +34,8 @@ describe('NetworkDataProcessor', () => {
     };
     syncManagerMock = getSyncManagerMock();
     const path = '../processors/offline-data-processor';
-    const ProxiedNetworkProcessor = mockRequiresIn(__dirname, path, requireMocks, 'OfflineDataProcessor');
-    dataProcessor = new ProxiedNetworkProcessor(syncManagerMock);
+    const ProxiedOfflineProcessor = mockRequiresIn(__dirname, path, requireMocks, 'OfflineDataProcessor');
+    dataProcessor = new ProxiedOfflineProcessor(syncManagerMock);
   });
 
   describe('process()', () => {
