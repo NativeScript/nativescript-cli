@@ -534,7 +534,7 @@ describe('CacheOfflineDataProcessor', () => {
           });
       });
 
-      describe('if deleting local entity', () => {
+      describe('deleting local entity', () => {
         beforeEach(() => {
           const localEntity = addExpectedCreateEntityMeta({ _id: entityId });
           offlineRepoMock.readById.andReturn(Promise.resolve(localEntity));
@@ -563,7 +563,7 @@ describe('CacheOfflineDataProcessor', () => {
         });
       });
 
-      describe('if deleting a non-local entity', () => {
+      describe('deleting a non-local entity', () => {
         beforeEach(() => {
           offlineRepoMock.readById.andReturn(Promise.resolve(entity));
         });

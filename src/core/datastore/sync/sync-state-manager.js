@@ -62,6 +62,7 @@ export class SyncStateManager {
   }
 
   removeSyncItemForEntityId(collection, entityId) {
+    // this isn't using collection, because inmemory filtering is very slow
     const query = new Query().equalTo('entityId', entityId);
     return this._deleteSyncItems(collection, query);
   }
@@ -72,12 +73,8 @@ export class SyncStateManager {
   }
 
   removeAllSyncItems(collection) {
-    if (collection) {
-      const query = this._getCollectionFilter(collection);
-      return this._deleteSyncItems(collection, query);
-    }
-    return this._getRepository()
-      .then(repo => repo.clear(this._getSyncCollectionName(collection)));
+    const query = this._getCollectionFilter(collection);
+    return this._deleteSyncItems(collection, query);
   }
 
   _getRepository() {
