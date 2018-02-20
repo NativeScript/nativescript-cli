@@ -23,6 +23,12 @@ export class CacheStore extends NetworkStore {
      * @type {number|undefined}
      */
     this.ttl = options.ttl || undefined;
+
+    /**
+     * @type {boolean}
+     */
+    this.useDeltaFetch = options.useDeltaFetch === true;
+
     this.syncManager = syncManagerProvider.getSyncManager();
   }
 
