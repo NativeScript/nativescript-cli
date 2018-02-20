@@ -46,9 +46,9 @@ export class IOSLogFilter extends iOSLogFilterBase.IOSLogFilter implements Mobil
 						line = line.replace(pidRegex, "").trim();
 						this.getOriginalFileLocation(line);
 						result += this.getOriginalFileLocation(line) + "\n";
+					} else if (!line.match(this.infoFilterRegex)) {
+						continue;
 					}
-
-					continue;
 				}
 				if (skipLastLine && i === lines.length - 1 && lines.length > 1) {
 					this.partialLine = line;
