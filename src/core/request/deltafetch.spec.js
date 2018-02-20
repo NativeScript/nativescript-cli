@@ -5,9 +5,7 @@ import { DeltaFetchRequest } from './deltafetch';
 import { RequestMethod } from './request';
 import { NetworkRack } from './rack';
 import { KinveyError } from '../errors';
-import { SyncStore } from '../datastore';
 import { randomString } from '../utils';
-import { Query } from '../query';
 import { init } from '../kinvey';
 import { User } from '../user';
 import { NodeHttpMiddleware } from '../../node/http';
@@ -88,57 +86,7 @@ describe('DeltaFetchRequest', () => {
   });
 
   describe('execute()', () => {
-    const entity1 = {
-      _id: randomString(),
-      _acl: {
-        creator: randomString()
-      },
-      _kmd: {
-        lmt: new Date().toISOString(),
-        ect: new Date().toISOString()
-      },
-      title: 'entity1'
-    };
-    const entity2 = {
-      _id: randomString(),
-      _acl: {
-        creator: randomString()
-      },
-      _kmd: {
-        lmt: new Date().toISOString(),
-        ect: new Date().toISOString()
-      },
-      title: 'entity2'
-    };
-
-    beforeEach(() => {
-      // API response
-      nock(client.apiHostname, { encodedQueryParams: true })
-        .get(`/appdata/${client.appKey}/${collection}`)
-        .reply(200, [entity1, entity2], {
-          'Content-Type': 'application/json'
-        });
-
-      // Pull data into cache
-      const store = new SyncStore(collection);
-      return store.pull()
-        .then((entities) => {
-          expect(entities).toEqual([entity1, entity2]);
-        });
-    });
-
-    afterEach(() => {
-      const store = new SyncStore(collection);
-      return store.clear()
-        .then(() => {
-          return store.find().toPromise();
-        })
-        .then((entities) => {
-          expect(entities).toEqual([]);
-        });
-    });
-
-    it('should not fetch any entities from the network when delta set is empty', () => {
+    it('should send a regular GET request when a Delta Set request has never been performed', () => {
       const request = new DeltaFetchRequest({
         method: RequestMethod.GET,
         authType: AuthType.Default,
@@ -147,25 +95,45 @@ describe('DeltaFetchRequest', () => {
       });
 
       // API response
-      nock(client.apiHostname, { encodedQueryParams: true })
+      nock(client.apiHostname)
         .get(`/appdata/${client.appKey}/${collection}`)
-        .query({
-          fields: '_id,_kmd.lmt'
-        })
         .reply(200, [], {
-          'Content-Type': 'application/json'
+          'X-Kinvey-Request-Start': new Date().toISOString()
         });
 
       return request.execute()
         .then((response) => {
-          const data = response.data;
+          const { data } = response;
           expect(data).toBeA(Array);
           expect(data).toEqual([]);
         });
     });
 
-    it('should not fetch any entities from the network when delta set is equal to the cache', () => {
-      const request = new DeltaFetchRequest({
+    it('should create/update the entities in changed', () => {
+      const entity1 = {
+        _id: randomString(),
+        _acl: {
+          creator: randomString()
+        },
+        _kmd: {
+          lmt: new Date().toISOString(),
+          ect: new Date().toISOString()
+        },
+        title: 'entity1'
+      };
+      const entity2 = {
+        _id: randomString(),
+        _acl: {
+          creator: randomString()
+        },
+        _kmd: {
+          lmt: new Date().toISOString(),
+          ect: new Date().toISOString()
+        },
+        title: 'entity2'
+      };
+
+      const firstRequest = new DeltaFetchRequest({
         method: RequestMethod.GET,
         authType: AuthType.Default,
         url: `${client.apiHostname}/appdata/${client.appKey}/${collection}`,
@@ -173,31 +141,63 @@ describe('DeltaFetchRequest', () => {
       });
 
       // API response
-      nock(client.apiHostname, { encodedQueryParams: true })
+      nock(client.apiHostname)
         .get(`/appdata/${client.appKey}/${collection}`)
-        .query({
-          fields: '_id,_kmd.lmt'
-        })
-        .reply(200, [{
-          _id: entity1._id,
-          _kmd: entity1._kmd
-        }, {
-          _id: entity2._id,
-          _kmd: entity2._kmd
-        }], {
-          'Content-Type': 'application/json'
+        .reply(200, [entity1], {
+          'X-Kinvey-Request-Start': new Date().toISOString()
         });
 
-      return request.execute()
+      return firstRequest.execute()
         .then((response) => {
-          const data = response.data;
+          const secondRequest = new DeltaFetchRequest({
+            method: RequestMethod.GET,
+            authType: AuthType.Default,
+            url: `${client.apiHostname}/appdata/${client.appKey}/${collection}`,
+            client: client
+          });
+
+          // API response
+          nock(client.apiHostname)
+            .get(`/appdata/${client.appKey}/${collection}/_deltaset`)
+            .query({ since: response.headers.get('X-Kinvey-Request-Start') })
+            .reply(200, { changed: [entity2] }, {
+              'X-Kinvey-Request-Start': new Date().toISOString()
+            });
+
+          return secondRequest.execute();
+        })
+        .then((response) => {
+          const { data } = response;
           expect(data).toBeA(Array);
           expect(data).toEqual([entity1, entity2]);
         });
     });
 
-    it('should fetch only the updated entities from the network', () => {
-      const request = new DeltaFetchRequest({
+    it('should remove the entities in deleted', () => {
+      const entity1 = {
+        _id: randomString(),
+        _acl: {
+          creator: randomString()
+        },
+        _kmd: {
+          lmt: new Date().toISOString(),
+          ect: new Date().toISOString()
+        },
+        title: 'entity1'
+      };
+      const entity2 = {
+        _id: randomString(),
+        _acl: {
+          creator: randomString()
+        },
+        _kmd: {
+          lmt: new Date().toISOString(),
+          ect: new Date().toISOString()
+        },
+        title: 'entity2'
+      };
+
+      const firstRequest = new DeltaFetchRequest({
         method: RequestMethod.GET,
         authType: AuthType.Default,
         url: `${client.apiHostname}/appdata/${client.appKey}/${collection}`,
@@ -205,111 +205,35 @@ describe('DeltaFetchRequest', () => {
       });
 
       // API response
-      nock(client.apiHostname, { encodedQueryParams: true })
+      nock(client.apiHostname)
         .get(`/appdata/${client.appKey}/${collection}`)
-        .query({
-          fields: '_id,_kmd.lmt'
-        })
-        .reply(200, [{
-          _id: entity1._id,
-          _kmd: entity1._kmd
-        }, {
-          _id: entity2._id,
-          _kmd: {
-            lmt: new Date().toISOString(),
-            ect: entity2._kmd.ect
-          }
-        }], {
-          'Content-Type': 'application/json'
-        });
-
-      nock(client.apiHostname, { encodedQueryParams: true })
-        .get(`/appdata/${client.appKey}/${collection}`)
-        .query({
-          query: `{"_id":{"$in":["${entity2._id}"]}}`
-        })
-        .reply(200, [entity2], {
-          'Content-Type': 'application/json'
-        });
-
-      return request.execute()
-        .then((response) => {
-          const data = response.data;
-          expect(data).toBeA(Array);
-          expect(data).toEqual([entity2, entity1]);
-        });
-    });
-
-    it('should fetch only the updated entities from the network matching the query', () => {
-      const query = new Query();
-      query.equalTo('_id', entity1._id);
-      const request = new DeltaFetchRequest({
-        method: RequestMethod.GET,
-        authType: AuthType.Default,
-        url: `${client.apiHostname}/appdata/${client.appKey}/${collection}`,
-        query: query,
-        client: client
-      });
-
-      // API response
-      nock(client.apiHostname, { encodedQueryParams: true })
-        .get(`/appdata/${client.appKey}/${collection}`)
-        .query({
-          fields: '_id,_kmd.lmt',
-          query: `{"_id":"${entity1._id}"}`
-        })
-        .reply(200, [{
-          _id: entity1._id,
-          _kmd: {
-            lmt: new Date().toISOString(),
-            ect: entity1._kmd.ect
-          }
-        }], {
-          'Content-Type': 'application/json'
-        });
-
-      nock(client.apiHostname, { encodedQueryParams: true })
-        .get(`/appdata/${client.appKey}/${collection}`)
-        .query({
-          query: `{"_id":{"$in":["${entity1._id}"]}}`
-        })
         .reply(200, [entity1], {
-          'Content-Type': 'application/json'
+          'X-Kinvey-Request-Start': new Date().toISOString()
         });
 
-      return request.execute()
+      return firstRequest.execute()
         .then((response) => {
-          const data = response.data;
-          expect(data).toBeA(Array);
-          expect(data).toEqual([entity1]);
-        });
-    });
+          const secondRequest = new DeltaFetchRequest({
+            method: RequestMethod.GET,
+            authType: AuthType.Default,
+            url: `${client.apiHostname}/appdata/${client.appKey}/${collection}`,
+            client: client
+          });
 
-    it('should fetch the data from the network if there is not any data in the cache', () => {
-      const store = new SyncStore(collection);
-      const request = new DeltaFetchRequest({
-        method: RequestMethod.GET,
-        authType: AuthType.Default,
-        url: `${client.apiHostname}/appdata/${client.appKey}/${collection}`,
-        client: client
-      });
+          // API response
+          nock(client.apiHostname)
+            .get(`/appdata/${client.appKey}/${collection}/_deltaset`)
+            .query({ since: response.headers.get('X-Kinvey-Request-Start') })
+            .reply(200, { changed: [entity2], deleted: [{ _id: entity1._id }] }, {
+              'X-Kinvey-Request-Start': new Date().toISOString()
+            });
 
-      // API response
-      nock(client.apiHostname, { encodedQueryParams: true })
-        .get(`/appdata/${client.appKey}/${collection}`)
-        .reply(200, [], {
-          'Content-Type': 'application/json'
-        });
-
-
-      return store.clear()
-        .then(() => {
-          return request.execute();
+          return secondRequest.execute();
         })
         .then((response) => {
-          const data = response.data;
+          const { data } = response;
           expect(data).toBeA(Array);
-          expect(data).toEqual([]);
+          expect(data).toEqual([entity2]);
         });
     });
   });
