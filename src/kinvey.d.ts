@@ -960,6 +960,7 @@ export class User {
   static unregisterFromLiveService(): Promise<void>;
   registerForLiveService(): Promise<void>;
   unregisterFromLiveService(): Promise<void>;
+  static handleMICRedirectURL(redirectUri: string, micRedirectURL: string): boolean;
 }
 
 // PushOptions interface
