@@ -8,6 +8,7 @@ import { OperationType } from './operations';
 import { processorFactory } from './processors';
 import { syncManagerProvider } from './sync';
 import { formTaggedCollectionName } from './utils';
+import { wrapInObservable } from '../observable';
 
 /**
  * The CacheStore class is used to find, create, update, remove, count and group entities. Entities are stored
@@ -30,6 +31,11 @@ export class CacheStore extends NetworkStore {
     this.useDeltaFetch = options.useDeltaFetch === true;
 
     this.syncManager = syncManagerProvider.getSyncManager();
+  }
+
+  find(query, options = {}) {
+    options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
+    return super.find(query, options);
   }
 
   /**
