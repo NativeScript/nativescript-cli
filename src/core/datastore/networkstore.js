@@ -37,11 +37,6 @@ export class NetworkStore {
      * @type {Client}
      */
     this.client = options.client;
-
-    /**
-     * @type {boolean}
-     */
-    this.useDeltaFetch = options.useDeltaFetch === true;
   }
 
   /**
@@ -102,7 +97,6 @@ export class NetworkStore {
       return wrapInObservable(errPromise);
     }
 
-    options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
     const operation = this._buildOperationObject(OperationType.Read, query);
     const opPromise = this._executeOperation(operation, options);
     return this._ensureObservable(opPromise);
