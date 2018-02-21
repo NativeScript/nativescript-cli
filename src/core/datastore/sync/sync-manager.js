@@ -62,8 +62,21 @@ export class SyncManager {
     if (!isNonemptyString(collection)) {
       return Promise.reject(new KinveyError('Invalid or missing collection name'));
     }
-    return this._fetchItemsFromServer(collection, query, options)
-      .then(entities => this._replaceOfflineEntities(collection, query, entities));
+
+    return this.getSyncItemCountByEntityQuery(collection, query)
+      .then((count) => {
+        if (count > 0) {
+          // TODO: I think this should happen, but keeping current behaviour
+          // const msg = `There are ${count} entities awaiting push. Please push before you attempt to pull`;
+          // return Promise.reject(new KinveyError(msg));
+          return this.push(collection, query);
+        }
+        return Promise.resolve();
+      })
+      .then(() => {
+        return this._fetchItemsFromServer(collection, query, options)
+          .then(entities => this._replaceOfflineEntities(collection, query, entities));
+      });
   }
 
   getSyncItemCount(collection) {
