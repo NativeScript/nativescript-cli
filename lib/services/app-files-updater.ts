@@ -11,9 +11,9 @@ export class AppFilesUpdater {
 	) {
 	}
 
-	public updateApp(updateAppOptions: IUpdateAppOptions): void {
+	public updateApp(updateAppOptions: IUpdateAppOptions, projectData: IProjectData): void {
 		this.cleanDestinationApp(updateAppOptions);
-		const sourceFiles = updateAppOptions.filesToSync || this.resolveAppSourceFiles();
+		const sourceFiles = updateAppOptions.filesToSync || this.resolveAppSourceFiles(projectData);
 
 		updateAppOptions.beforeCopyAction(sourceFiles);
 		this.copyAppSourceFiles(sourceFiles);
@@ -52,15 +52,19 @@ export class AppFilesUpdater {
 		this.fs.deleteDirectory(path.join(this.appDestinationDirectoryPath, directoryItem));
 	}
 
-	protected readSourceDir(): string[] {
+	protected readSourceDir(projectData: IProjectData): string[] {
 		const tnsDir = path.join(this.appSourceDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
-		const defaultAppResourcesDir = path.join(this.appSourceDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
-		return this.fs.enumerateFilesInDirectorySync(this.appSourceDirectoryPath, null, { includeEmptyDirectories: true }).filter(dirName => dirName !== tnsDir).filter(dirName => !dirName.startsWith(defaultAppResourcesDir));
+
+		return this.fs.enumerateFilesInDirectorySync(this.appSourceDirectoryPath, null, { includeEmptyDirectories: true }).filter(dirName => dirName !== tnsDir);
 	}
 
-	protected resolveAppSourceFiles(): string[] {
-		// Copy all files from app dir, but make sure to exclude tns_modules and App_Resources
-		let sourceFiles = this.readSourceDir();
+	protected resolveAppSourceFiles(projectData: IProjectData): string[] {
+		if (this.options.bundle) {
+			return [];
+		}
+
+		// Copy all files from app dir, but make sure to exclude tns_modules and application resources
+		let sourceFiles = this.readSourceDir(projectData);
 
 		if (this.options.release) {
 			const testsFolderPath = path.join(this.appSourceDirectoryPath, 'tests');
@@ -72,9 +76,11 @@ export class AppFilesUpdater {
 			constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => sourceFiles = sourceFiles.filter(file => !minimatch(file, pattern, { nocase: true })));
 		}
 
-		if (this.options.bundle) {
-			sourceFiles = sourceFiles.filter(file => minimatch(file, "**/App_Resources/**", { nocase: true }));
-		}
+		// exclude the app_resources directory from being enumerated
+		// for copying if it is present in the application sources dir
+		const appResourcesPath = projectData.appResourcesDirectoryPath;
+		sourceFiles = sourceFiles.filter(dirName => !path.normalize(dirName).startsWith(path.normalize(appResourcesPath)));
+
 		return sourceFiles;
 	}
 

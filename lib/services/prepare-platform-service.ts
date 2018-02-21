@@ -30,6 +30,6 @@ export class PreparePlatformService {
 			filesToSync: copyAppFilesData.filesToSync,
 			filesToRemove: copyAppFilesData.filesToRemove
 		};
-		appUpdater.updateApp(appUpdaterOptions);
+		appUpdater.updateApp(appUpdaterOptions, copyAppFilesData.projectData);
 	}
 }

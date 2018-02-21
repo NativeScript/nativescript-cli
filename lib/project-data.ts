@@ -93,6 +93,10 @@ export class ProjectData implements IProjectData {
 			projectDir = this.projectDir;
 		}
 
+		if (!projectDir) {
+			return null;
+		}
+
 		const configNSFilePath = path.join(projectDir, constants.CONFIG_NS_FILE_NAME);
 		let absoluteAppResourcesDirPath: string;
 
@@ -103,10 +107,13 @@ export class ProjectData implements IProjectData {
 				const appResourcesDirPath = configNS[constants.CONFIG_NS_APP_RESOURCES_ENTRY];
 
 				absoluteAppResourcesDirPath = path.resolve(projectDir, appResourcesDirPath);
+
+				return absoluteAppResourcesDirPath;
 			}
 		}
 
-		return absoluteAppResourcesDirPath || path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
+		// if no nsconfig is present default to app/App_Resources
+		return path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
 	}
 
 	private getProjectType(): string {
