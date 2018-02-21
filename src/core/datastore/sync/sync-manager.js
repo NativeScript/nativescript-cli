@@ -69,11 +69,21 @@ export class SyncManager {
           // TODO: I think this should happen, but keeping current behaviour
           // const msg = `There are ${count} entities awaiting push. Please push before you attempt to pull`;
           // return Promise.reject(new KinveyError(msg));
-          return this.push(collection, query);
+          return this.push(collection, query)
+            .then(() => this.getSyncItemCountByEntityQuery(collection, query));
         }
-        return Promise.resolve();
+
+        return count;
       })
-      .then(() => {
+      .then((count) => {
+        // Throw an error if there are still items that need to be synced
+        if (count > 0) {
+          return Promise.reject(
+            new SyncError('Unable to fetch the entities on the backend.'
+              + ` There are ${count} entities that need to be synced.`)
+          );
+        }
+
         return this._fetchItemsFromServer(collection, query, options)
           .then(entities => this._replaceOfflineEntities(collection, query, entities));
       });
@@ -284,15 +294,15 @@ export class SyncManager {
       .then(() => pushResults);
   }
 
-  _fetchItemsFromServer(collection, query, options) {
+  _fetchItemsFromServer(collection, query, options = {}) {
     return this._networkRepo.read(collection, query, options)
-      .then((response) => {
-        const useDeltaSet = options.useDeltaSet || false;
+      .then((data) => {
+        const useDeltaSet = options.useDeltaFetch || false;
 
         if (useDeltaSet) {
           return this._getOfflineRepo()
             .then((repo) => {
-              const { deleted } = response.data;
+              const { deleted } = data;
 
               if (isArray(deleted) && deleted.length > 0) {
                 const deletedIds = deleted.map((item) => item._id);
@@ -302,10 +312,10 @@ export class SyncManager {
 
               return repo;
             })
-            .then(() => response.data.changed);
+            .then(() => data.changed);
         }
 
-        return response.data;
+        return data;
       });
   }
 

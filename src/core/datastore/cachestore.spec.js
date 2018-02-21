@@ -6,7 +6,7 @@ import { SyncOperation } from './sync';
 import { init } from '../kinvey';
 import { Query } from '../query';
 import { Aggregation } from '../aggregation';
-import { KinveyError, NotFoundError, ServerError } from '../errors';
+import { KinveyError, NotFoundError, ServerError, SyncError } from '../errors';
 import { randomString } from '../utils';
 import { NetworkRack } from '../request';
 import { NodeHttpMiddleware } from '../../node/http';
@@ -96,7 +96,7 @@ describe('CacheStore', () => {
           store.find()
             .subscribe(null, (error) => {
               try {
-                expect(error).toBeA(KinveyError);
+                expect(error).toBeA(SyncError);
                 expect(error.message).toEqual(
                   'Unable to fetch the entities on the backend.'
                   + ' There are 1 entities that need to be synced.'
@@ -190,51 +190,87 @@ describe('CacheStore', () => {
         });
     });
 
-    it('should remove entities that no longer exist on the backend from the cache', (done) => {
+    it('should perform a delta set request', (done) => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
-      const store = new CacheStore(collection);
+      const store = new CacheStore(collection, null, { useDeltaFetch: true });
       const onNextSpy = expect.createSpy();
+      const lastRequestDate = new Date();
 
       nock(store.client.apiHostname)
         .get(`/appdata/${store.client.appKey}/${collection}`)
-        .reply(200, [entity1, entity2]);
+        .reply(200, [entity1, entity2], {
+          'X-Kinvey-Request-Start': lastRequestDate.toISOString()
+        });
 
       store.pull()
         .then(() => {
-          const entity3 = {
-            _id: randomString()
-          };
-
-          nock(store.client.apiHostname)
-            .get(`/appdata/${store.client.appKey}/${collection}`)
-            .reply(200, [entity1, entity3]);
+          nock(client.apiHostname)
+            .get(`/appdata/${store.client.appKey}/${collection}/_deltaset`)
+            .query({ since: lastRequestDate.toISOString() })
+            .reply(200, { changed: [entity2], deleted: [{ _id: entity1._id }] }, {
+              'X-Kinvey-Request-Start': new Date().toISOString()
+            });
 
           store.find()
             .subscribe(onNextSpy, done, () => {
               try {
                 expect(onNextSpy.calls.length).toEqual(2);
                 expect(onNextSpy.calls[0].arguments).toEqual([[entity1, entity2]]);
-                expect(onNextSpy.calls[1].arguments).toEqual([[entity1, entity3]]);
-
-                onNextSpy.reset();
-                const syncStore = new SyncStore(collection);
-                syncStore.find()
-                  .subscribe(onNextSpy, done, () => {
-                    try {
-                      expect(onNextSpy.calls.length).toEqual(1);
-                      expect(onNextSpy.calls[0].arguments).toEqual([[entity1, entity3]]);
-                      done();
-                    } catch (error) {
-                      done(error);
-                    }
-                  });
+                expect(onNextSpy.calls[1].arguments).toEqual([[entity2]]);
+                done();
               } catch (error) {
                 done(error);
               }
             });
         });
     });
+
+    // it('should remove entities that no longer exist on the backend from the cache', (done) => {
+    //   const entity1 = { _id: randomString() };
+    //   const entity2 = { _id: randomString() };
+    //   const store = new CacheStore(collection);
+    //   const onNextSpy = expect.createSpy();
+
+    //   nock(store.client.apiHostname)
+    //     .get(`/appdata/${store.client.appKey}/${collection}`)
+    //     .reply(200, [entity1, entity2]);
+
+    //   store.pull()
+    //     .then(() => {
+    //       const entity3 = {
+    //         _id: randomString()
+    //       };
+
+    //       nock(store.client.apiHostname)
+    //         .get(`/appdata/${store.client.appKey}/${collection}`)
+    //         .reply(200, [entity1, entity3]);
+
+    //       store.find()
+    //         .subscribe(onNextSpy, done, () => {
+    //           try {
+    //             expect(onNextSpy.calls.length).toEqual(2);
+    //             expect(onNextSpy.calls[0].arguments).toEqual([[entity1, entity2]]);
+    //             expect(onNextSpy.calls[1].arguments).toEqual([[entity1, entity3]]);
+
+    //             onNextSpy.reset();
+    //             const syncStore = new SyncStore(collection);
+    //             syncStore.find()
+    //               .subscribe(onNextSpy, done, () => {
+    //                 try {
+    //                   expect(onNextSpy.calls.length).toEqual(1);
+    //                   expect(onNextSpy.calls[0].arguments).toEqual([[entity1, entity3]]);
+    //                   done();
+    //                 } catch (error) {
+    //                   done(error);
+    //                 }
+    //               });
+    //           } catch (error) {
+    //             done(error);
+    //           }
+    //         });
+    //     });
+    // });
   });
 
   describe('findById()', () => {

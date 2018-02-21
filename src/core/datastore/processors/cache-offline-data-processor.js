@@ -80,15 +80,23 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
   _processRead(collection, query, options) {
     let offlineEntities;
     return wrapInObservable((observer) => {
-      return this._ensureCountBeforeRead(collection, 'fetch the entities', query)
-        .then(() => super._processRead(collection, query, options))
+      return super._processRead(collection, query, options)
         .then((entities) => {
           offlineEntities = entities;
           observer.next(offlineEntities);
-          return this._syncManager.pull(collection, query, options)
-            .then((networkEntities) => {
-              return mergeByKey('_id', offlineEntities, networkEntities);
-            });
+          return this._syncManager.pull(collection, query, options);
+        })
+        .then(() => {
+          return super._processRead(collection, query, options);
+        })
+        .then((entities) => {
+          observer.next(entities);
+          observer.complete();
+          return entities;
+        })
+        .catch((error) => {
+          observer.error(error);
+          throw error;
         });
     });
   }
