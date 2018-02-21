@@ -6,7 +6,9 @@ export class LocalBuildService extends EventEmitter implements ILocalBuildServic
 	constructor(private $projectData: IProjectData,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $errors: IErrors,
-		private $platformService: IPlatformService) {
+		private $platformsData: IPlatformsData,
+		private $platformService: IPlatformService,
+		private $projectDataService: IProjectDataService) {
 		super();
 	}
 
@@ -40,6 +42,12 @@ export class LocalBuildService extends EventEmitter implements ILocalBuildServic
 
 		await attachAwaitDetach(BUILD_OUTPUT_EVENT_NAME, this.$platformService, handler, this.$platformService.buildPlatform(platform, platformBuildOptions, this.$projectData));
 		return this.$platformService.lastOutputPath(platform, platformBuildOptions, this.$projectData);
+	}
+
+	public async cleanNativeApp(data: ICleanNativeAppData): Promise<void> {
+		const projectData = this.$projectDataService.getProjectData(data.projectDir);
+		const platformData = this.$platformsData.getPlatformData(data.platform, projectData);
+		await platformData.platformProjectService.cleanProject(platformData.projectRoot, projectData);
 	}
 }
 

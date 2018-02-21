@@ -388,6 +388,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		});
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		if (buildConfig.clean) {
+			await platformData.platformProjectService.cleanProject(platformData.projectRoot, projectData);
+		}
+
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
 			this.$logger.printInfoMessageOnSameLine(data.data.toString());
