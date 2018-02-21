@@ -79,16 +79,22 @@ export class DeltaFetchRequest extends KinveyRequest {
               return request.execute();
             }
 
-            return request.execute()
-              .then((response) => {
-                const deltaSetResponse = new Response(response);
-                deltaSetResponse.headers = response.headers;
-                deltaSetResponse.data = {
-                  deleted: [],
-                  changed: response.data
-                };
-                return deltaSetResponse;
-              });
+            return request.execute();
+          })
+          .then((response) => {
+            // Makse sure the response from DeltaSet is normalized
+            const { data } = response;
+
+            if (!Object.prototype.hasOwnProperty.call(data, 'changed')) {
+              data.changed = data;
+            }
+
+            if (!Object.prototype.hasOwnProperty.call(data, 'deleted')) {
+              data.deleted = [];
+            }
+
+            response.data = data;
+            return response;
           })
           .then((response) => {
             return repo.create(QUERY_CACHE_COLLECTION_NAME, {
