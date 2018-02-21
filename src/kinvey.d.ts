@@ -26,6 +26,7 @@ export namespace Kinvey {
     timeout ? : number;
     useDeltaFetch ? : boolean;
     version ? : string;
+    micId? : string;
   }
 
   // ClientConfig interface
@@ -436,8 +437,8 @@ export namespace Kinvey {
     static loginWithMIC(redirectUri: string, authorizationGrant ? : AuthorizationGrant, options ? : RequestOptions): Promise < User > ;
     logout(options ? : RequestOptions): Promise < void > ;
     static logout(options ? : RequestOptions): Promise < void > ;
-    signup(data: {}, options ? : RequestOptions): Promise < this > ;
-    static signup(data: {}, options ? : RequestOptions): Promise < User > ;
+    signup(data ? : {}, options ? : RequestOptions): Promise < this > ;
+    static signup(data ? : {}, options ? : RequestOptions): Promise < User > ;
     update(data: {}, options ? : RequestOptions): Promise < this > ;
     static update(data: {}, options ? : RequestOptions): Promise < User > ;
     me(options ? : RequestOptions): Promise < this > ;
@@ -544,6 +545,8 @@ interface RequestOptions {
   properties?: Properties;
   timeout?: number;
   useDeltaFetch?: boolean;
+  version?: string;
+  micId?: string;
 }
 
 // ClientConfig interface
@@ -944,8 +947,8 @@ export class User {
   static loginWithMIC(redirectUri: string, authorizationGrant?: AuthorizationGrant, options?: RequestOptions): Promise<User>;
   logout(options?: RequestOptions): Promise<void>;
   static logout(options?: RequestOptions): Promise<void>;
-  signup(data: {}, options?: RequestOptions): Promise<this>;
-  static signup(data: {}, options?: RequestOptions): Promise<User>;
+  signup(data ? : {}, options?: RequestOptions): Promise<this>;
+  static signup(data ?: {}, options?: RequestOptions): Promise<User>;
   update(data: {}, options?: RequestOptions): Promise<this>;
   static update(data: {}, options?: RequestOptions): Promise<User>;
   me(options?: RequestOptions): Promise<this>;
