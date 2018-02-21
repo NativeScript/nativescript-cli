@@ -632,7 +632,7 @@ interface IProjectNameService {
 	 * @param {IOptions} current command options.
 	 * @return {Promise<strng>} returns the selected name of the project.
 	 */
-	ensureValidName(projectName: string, validateOptions?: { force: boolean }): Promise<string>;
+	ensureValidName(projectName: string, validateOptions?: IForceOption): Promise<string>;
 }
 
 /**

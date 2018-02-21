@@ -104,8 +104,8 @@ export class AnalyticsService extends AnalyticsServiceBase {
 		await this.trackInGoogleAnalytics(googleAnalyticsEventData);
 	}
 
-	public dispose(): void {
-		if (this.brokerProcess && this.shouldDisposeInstance) {
+	public dispose(disposeOptions?: IForceOption): void {
+		if (this.brokerProcess && (disposeOptions && disposeOptions.force || this.shouldDisposeInstance)) {
 			this.brokerProcess.disconnect();
 		}
 	}

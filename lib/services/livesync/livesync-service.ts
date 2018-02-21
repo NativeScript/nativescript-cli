@@ -91,6 +91,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				// In case we are stopping the LiveSync we must set usbLiveSyncService.isInitialized to false,
 				// as in case we execute nativescript-dev-typescript's before-prepare hook again in the same process, it MUST transpile the files.
 				this.$usbLiveSyncService.isInitialized = false;
+				// After stopping LiveSync we need to dispose of everything in order for the process to end and release all resources
+				this.$injector.dispose({ force: true });
 			} else if (liveSyncProcessInfo.currentSyncAction && shouldAwaitPendingOperation) {
 				await liveSyncProcessInfo.currentSyncAction;
 			}
