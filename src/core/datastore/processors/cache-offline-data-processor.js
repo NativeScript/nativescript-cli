@@ -1,6 +1,5 @@
 import { Promise } from 'es6-promise';
 import clone from 'lodash/clone';
-import mergeByKey from 'array-merge-by-key';
 
 import { Query } from '../../query';
 import { KinveyError, NotFoundError } from '../../errors';
