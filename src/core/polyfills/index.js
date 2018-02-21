@@ -1,1 +1,2 @@
+import './number';
 import './object';
