@@ -42,17 +42,9 @@ Before you submit a Pull Request, consider the following guidelines.
 ```bash
     git clone git@github.com:NativeScript/nativescript-cli.git
 ```
-* Install the node dependencies.
+* Run the setup script. This will initialize the git submodule, install the node dependencies and build with grunt.
 ```bash
-    npm install --ignore-scripts
-```
-* Initialize the submodule.
-```bash
-    git submodule init
-```
-* Fetch data from the submodule.
-```bash
-    git submodule update
+    npm run setup
 ```
 * Make your changes in a new `git` branch. We use the <a href="http://nvie.com/posts/a-successful-git-branching-model/">Gitflow branching model</a> so you will have to branch from our master branch.
 ```bash
