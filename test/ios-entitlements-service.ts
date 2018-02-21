@@ -47,7 +47,7 @@ describe("IOSEntitlements Service Tests", () => {
 		injector = createTestInjector();
 
 		platformsData = injector.resolve("platformsData");
-		projectData = injector.resolve("projectData");
+		projectData = $injector.resolve<IProjectData>("projectData");
 		projectData.projectName = 'testApp';
 
 		projectData.platformsDir = temp.mkdirSync("platformsDir");

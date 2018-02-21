@@ -4,7 +4,6 @@ import * as util from "util";
 import * as chai from "chai";
 import { EventEmitter } from "events";
 
-import * as fs from "fs";
 import * as path from "path";
 import * as constants from "./../lib/constants";
 
@@ -267,20 +266,8 @@ export class ProjectDataStub implements IProjectData {
 			projectDir = this.projectDir;
 		}
 
-		const configNSFilePath = path.join(projectDir, constants.CONFIG_NS_FILE_NAME);
-		let absoluteAppResourcesDirPath: string;
-
-		if (fs.existsSync(configNSFilePath)) {
-			const configNS = JSON.parse(fs.readFileSync(configNSFilePath).toString());
-
-			if (configNS && configNS[constants.CONFIG_NS_APP_RESOURCES_ENTRY]) {
-				const appResourcesDirPath = configNS[constants.CONFIG_NS_APP_RESOURCES_ENTRY];
-
-				absoluteAppResourcesDirPath = path.resolve(projectDir, appResourcesDirPath);
-			}
-		}
-
-		return absoluteAppResourcesDirPath || path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
+		// always return app/App_Resources
+		return path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
 	}
 }
 

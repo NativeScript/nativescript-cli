@@ -25,6 +25,6 @@ export class PreparePlatformService {
 		const appUpdater = new AppFilesUpdater(appSourceDirectoryPath, appDestinationDirectoryPath, copyAppFilesData.appFilesUpdaterOptions, this.$fs);
 		appUpdater.updateApp(sourceFiles => {
 			this.$xmlValidator.validateXmlFiles(sourceFiles);
-		}, copyAppFilesData.filesToSync);
+		}, copyAppFilesData.projectData, copyAppFilesData.filesToSync);
 	}
 }
