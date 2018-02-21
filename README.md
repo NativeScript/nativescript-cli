@@ -431,9 +431,7 @@ How to Build
 ```
 git clone https://github.com/NativeScript/nativescript-cli
 cd nativescript-cli
-git submodule update --init
-npm install
-grunt
+npm run setup
 ```
 
 To use the locally built CLI instead `tns` you can call `PATH_TO_CLI_FOLDER/bin/tns`. For example:

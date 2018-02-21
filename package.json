@@ -10,6 +10,7 @@
   },
   "main": "./lib/nativescript-cli-lib.js",
   "scripts": {
+    "setup": "git submodule update --init && npm i --ignore-scripts && ./node_modules/.bin/grunt",
     "test": "node test-scripts/istanbul.js",
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
