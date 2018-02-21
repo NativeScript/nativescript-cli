@@ -95,23 +95,7 @@ export class DeltaFetchRequest extends KinveyRequest {
               collectionName: this._getCollectionFromUrl(),
               query: this.query ? this.query.toString() : null,
               lastRequest: response.headers.get('X-Kinvey-Request-Start')
-            })
-              .then(() => {
-                const { deleted } = response.data;
-                if (isArray(deleted) && deleted.length > 0) {
-                  const deletedIds = deleted.map((item) => item._id);
-                  const deleteQuery = new Query().containsAll('_id', deletedIds);
-                  return repo.delete(collectionName, deleteQuery);
-                }
-
-                return null;
-              })
-              .then(() => {
-                const resultResponse = new Response(response);
-                resultResponse.headers = response.headers;
-                resultResponse.data = response.data.changed;
-                return resultResponse;
-              });
+            }).then(() => response);
           });
       });
   }

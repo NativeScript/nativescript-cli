@@ -1,5 +1,6 @@
 import { Promise } from 'es6-promise';
 import clone from 'lodash/clone';
+import mergeByKey from 'array-merge-by-key';
 
 import { Query } from '../../query';
 import { KinveyError, NotFoundError } from '../../errors';
@@ -84,11 +85,10 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
         .then((entities) => {
           offlineEntities = entities;
           observer.next(offlineEntities);
-          return this._networkRepository.read(collection, query, options);
-        })
-        .then((networkEntities) => {
-          observer.next(networkEntities);
-          return this._replaceOfflineEntities(collection, offlineEntities, networkEntities);
+          return this._syncManager.pull(collection, query, options)
+            .then((networkEntities) => {
+              return mergeByKey('_id', offlineEntities, networkEntities);
+            });
         });
     });
   }

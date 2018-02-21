@@ -8,6 +8,7 @@
     "test": "mocha --require babel-polyfill --require babel-register \"src/**/*.spec.js\""
   },
   "dependencies": {
+    "array-merge-by-key": "^1.0.1",
     "es6-promise": "~4.1.1",
     "fast-memory-cache": "~2.0.4",
     "local-storage-fallback": "~4.0.0",

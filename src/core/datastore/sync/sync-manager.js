@@ -1,5 +1,6 @@
 import { Promise } from 'es6-promise';
 import clone from 'lodash/clone';
+import isArray from 'lodash/isArray';
 
 import { Log } from '../../log';
 import { KinveyError, NotFoundError, SyncError } from '../../errors';
@@ -9,6 +10,7 @@ import { SyncOperation } from './sync-operation';
 import { syncBatchSize } from './utils';
 import { isEmpty } from '../utils';
 import { repositoryProvider } from '../repositories';
+import { Query } from '../../query';
 
 // imported for typings
 // import { SyncStateManager } from './sync-state-manager';
@@ -270,8 +272,28 @@ export class SyncManager {
   }
 
   _fetchItemsFromServer(collection, query, options) {
-    // TODO: deltaset logic goes here
-    return this._networkRepo.read(collection, query, options);
+    return this._networkRepo.read(collection, query, options)
+      .then((response) => {
+        const useDeltaSet = options.useDeltaSet || false;
+
+        if (useDeltaSet) {
+          return this._getOfflineRepo()
+            .then((repo) => {
+              const { deleted } = response.data;
+
+              if (isArray(deleted) && deleted.length > 0) {
+                const deletedIds = deleted.map((item) => item._id);
+                const deleteQuery = new Query().containsAll('_id', deletedIds);
+                return repo.delete(collection, deleteQuery).then(() => repo);
+              }
+
+              return repo;
+            })
+            .then(() => response.data.changed);
+        }
+
+        return response.data;
+      });
   }
 
   _getOfflineRepo() {
