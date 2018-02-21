@@ -1,9 +1,6 @@
 
 const testsConfig = {
-  collectionName: 'Books',
-  collectionWithPreSaveHook: 'WithPreSaveHook',
-  propertyFromBLName: 'propertyFromBL',
-  propertyFromBLValue: true
+  collectionName: 'Books'
 };
 
 const appCredentials = {
