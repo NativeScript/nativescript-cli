@@ -23,8 +23,13 @@ export class PreparePlatformService {
 		const appSourceDirectoryPath = path.join(copyAppFilesData.projectData.projectDir, constants.APP_FOLDER_NAME);
 
 		const appUpdater = new AppFilesUpdater(appSourceDirectoryPath, appDestinationDirectoryPath, copyAppFilesData.appFilesUpdaterOptions, this.$fs);
-		appUpdater.updateApp(sourceFiles => {
-			this.$xmlValidator.validateXmlFiles(sourceFiles);
-		}, copyAppFilesData.filesToSync);
+		const appUpdaterOptions: IUpdateAppOptions = {
+			beforeCopyAction: sourceFiles => {
+				this.$xmlValidator.validateXmlFiles(sourceFiles);
+			},
+			filesToSync: copyAppFilesData.filesToSync,
+			filesToRemove: copyAppFilesData.filesToRemove
+		};
+		appUpdater.updateApp(appUpdaterOptions);
 	}
 }
