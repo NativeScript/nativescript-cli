@@ -1,27 +1,22 @@
-import  Promise from 'es6-promise';
-import  keyBy from 'lodash/keyBy';
-import  reduce from 'lodash/reduce';
-import  result from 'lodash/result';
-import  values from 'lodash/values';
-import  forEach from 'lodash/forEach';
-import  isArray from 'lodash/isArray';
-import  isString from 'lodash/isString';
-import  { KinveyError, NotFoundError } from '../errors';
-import  { isDefined } from '../utils';
-import  { Query } from '../query';
-import  { RequestMethod } from './request';
-import  { KinveyRequest } from './network';
-import  { CacheRequest } from './cache';
-import  { Response, StatusCode } from './response';
+import Promise from 'es6-promise';
+import keyBy from 'lodash/keyBy';
+import reduce from 'lodash/reduce';
+import result from 'lodash/result';
+import values from 'lodash/values';
+import forEach from 'lodash/forEach';
+import isArray from 'lodash/isArray';
+import isString from 'lodash/isString';
+import { KinveyError, NotFoundError } from '../errors';
+import { isDefined } from '../utils';
+import { Query } from '../query';
+import { RequestMethod } from './request';
+import { KinveyRequest } from './network';
+import { Response, StatusCode } from './response';
+import { repositoryProvider } from '../datastore/repositories';
 
 const maxIdsPerRequest = 200;
 
 export class DeltaFetchRequest extends KinveyRequest {
-  constructor(options = {}) {
-    super(options);
-    this.tag = options.tag;
-  }
-
   get method() {
     return super.method;
   }
@@ -50,17 +45,8 @@ export class DeltaFetchRequest extends KinveyRequest {
   }
 
   execute() {
-    const request = new CacheRequest({
-      method: RequestMethod.GET,
-      url: this.url,
-      headers: this.headers,
-      query: this.query,
-      timeout: this.timeout,
-      client: this.client,
-      tag: this.tag
-    });
-    return request.execute()
-      .then(response => response.data)
+    return repositoryProvider.getOfflineRepository()
+      .then(repo => repo.read(this._getCollectionFromUrl(), this.query))
       .catch((error) => {
         if (!(error instanceof NotFoundError)) {
           throw error;
@@ -101,7 +87,7 @@ export class DeltaFetchRequest extends KinveyRequest {
 
                 if (networkDocument) {
                   if (isDefined(networkDocument._kmd) && isDefined(cacheDocument._kmd)
-                      && networkDocument._kmd.lmt === cacheDocument._kmd.lmt) {
+                    && networkDocument._kmd.lmt === cacheDocument._kmd.lmt) {
                     delete deltaSet[id];
                   } else {
                     delete cacheDocuments[id];
@@ -118,7 +104,7 @@ export class DeltaFetchRequest extends KinveyRequest {
               while (i < deltaSetIds.length) {
                 const query = new Query(result(this.query, 'toJSON', this.query));
                 const ids = deltaSetIds.slice(i, deltaSetIds.length > maxIdsPerRequest + i ?
-                                                 maxIdsPerRequest : deltaSetIds.length);
+                  maxIdsPerRequest : deltaSetIds.length);
                 query.contains('_id', ids);
 
                 const request = new KinveyRequest({
@@ -187,5 +173,21 @@ export class DeltaFetchRequest extends KinveyRequest {
         });
         return request.execute();
       });
+  }
+
+  _getCollectionFromUrl() {
+    const appkeyStr = `appdata/${this.client.appKey}/`;
+    const ind = this.url.indexOf(appkeyStr);
+    let indOfQueryString = this.url.indexOf('?'); // shouldn't have anything past the collection, like an ID
+
+    if (ind === -1) {
+      throw new KinveyError('An unexpected error occured. Could not find collection');
+    }
+
+    if (indOfQueryString === -1) {
+      indOfQueryString = Infinity;
+    }
+
+    return this.url.substring(ind + appkeyStr.length, indOfQueryString);
   }
 }

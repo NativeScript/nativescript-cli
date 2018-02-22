@@ -2,7 +2,7 @@ import { Promise } from 'es6-promise';
 import * as url from 'url';
 import { isDefined } from '../core/utils';
 import { KinveyError } from '../core/errors';
-import { CacheRequest, RequestMethod } from '../core/request';
+import { RequestMethod } from '../core/request';
 import { Client } from './client';
 
 const USERS_NAMESPACE = 'user';

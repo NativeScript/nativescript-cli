@@ -5,6 +5,7 @@
   "rules": {
     "no-unused-expressions": "off",
     "prefer-destructuring": "off",
+    "import/no-dynamic-require": "off",
     "wrap-iife": "off"
   },
   "globals": {

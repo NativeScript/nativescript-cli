@@ -5,9 +5,18 @@ import { NetworkStore } from './networkstore';
 import { CacheStore } from './cachestore';
 import { SyncStore } from './syncstore';
 import { KinveyError } from '../errors';
+import { Client } from '../client';
+import { randomString } from '../utils';
 const collection = 'Books';
 
 describe('DataStore', () => {
+  before(() => {
+    Client.init({
+      appKey: randomString(),
+      appSecret: randomString()
+    });
+  });
+
   describe('constructor', () => {
     it('should throw an error if the DataStore class is tried to be instantiated', () => {
       expect(() => {
@@ -30,6 +39,49 @@ describe('DataStore', () => {
         const store = DataStore.collection({});
         return store;
       }).toThrow(KinveyError);
+    });
+
+    describe('tagging', () => {
+      describe('a NetworkStore', () => {
+        it('should throw an error', () => {
+          expect(() => {
+            DataStore.collection(collection, DataStoreType.Network, { tag: 'any-tag' });
+          }).toThrow();
+        });
+      });
+
+      const offlineCapableStoreTypes = [DataStoreType.Cache, DataStoreType.Sync];
+      offlineCapableStoreTypes.forEach((storeType) => {
+        describe(`a ${storeType}Store`, () => {
+          it('should throw an error if the tag is not a string', () => {
+            expect(() => {
+              DataStore.collection(collection, storeType, { tag: {} });
+            }).toThrow();
+          });
+
+          it('should throw an error if the tag is an emptry string', () => {
+            expect(() => {
+              DataStore.collection(collection, storeType, { tag: '' });
+            }).toThrow();
+          });
+
+          it('should throw an error if the tag is a whitespace string', () => {
+            expect(() => {
+              DataStore.collection(collection, storeType, { tag: '    \n  ' });
+            }).toThrow();
+          });
+
+          it('should throw an error if the tag contains invalid characters', () => {
+            expect(() => {
+              DataStore.collection(collection, storeType, { tag: '  %  sometag  !' });
+            }).toThrow();
+          });
+
+          it('should work if the provided tag is valid', () => {
+            DataStore.collection(collection, storeType, { tag: 'some-valid-tag' });
+          });
+        });
+      });
     });
 
     it('should return a NetworkStore', () => {

@@ -49,17 +49,18 @@ matrix:
     - os: osx
       if: type IN (pull_request)
       env: PLATFORM='NativeScript iOS'
-      osx_image: xcode8.3
-      language: node_js 
+      osx_image: xcode9.2
+      language: node_js
       node_js: ${INTEGRATION_TESTS_NODEJS_VERSION}
       jdk: oraclejdk8
+      before_install:
+        - deviceId=$(xcrun simctl create 'iPhone7-11.2' com.apple.CoreSimulator.SimDeviceType.iPhone-7-Plus com.apple.CoreSimulator.SimRuntime.iOS-11-2)
+        - xcrun simctl boot $deviceId
       install:
         - echo no | npm i -g nativescript@${INTEGRATION_TESTS_NATIVESCRIPT_VERSION}
         - tns usage-reporting disable
         - tns error-reporting disable
         - npm i
-      before_script:
-        - open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
       script:
         - echo no | tns device ios
         - node ${RUN_INTEGRATION_TESTS_FILE_LOCATION} --platform nativescript --os ios

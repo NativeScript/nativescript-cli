@@ -10,7 +10,7 @@ import { KinveyObservable } from './observable';
 import { Log } from './log';
 import { isDefined } from './utils';
 import { Query } from './query';
-import { NetworkStore } from './datastore';
+import { Client } from './client';
 
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
@@ -25,7 +25,19 @@ function getStartIndex(rangeHeader, max) {
 /**
  * The FileStore class is used to find, save, update, remove, count and group files.
  */
-export class FileStore extends NetworkStore {
+export class FileStore {
+  _clientInstance;
+
+  // this has to be done at runtime,
+  // because it doesn't exist when FileStore is being instantiated below
+  get client() {
+    if (!isDefined(this._clientInstance)) {
+      this._clientInstance = Client.sharedInstance();
+    }
+
+    return this._clientInstance;
+  }
+
   /**
    * @private
    * The pathname for the store.
@@ -444,6 +456,38 @@ export class FileStore extends NetworkStore {
    */
   update(file, metadata, options) {
     return this.upload(file, metadata, options);
+  }
+
+  removeById(id, options = {}) {
+    const stream = KinveyObservable.create((observer) => {
+      try {
+        if (isDefined(id) === false) {
+          observer.next(undefined);
+          return observer.complete();
+        }
+
+        const request = new KinveyRequest({
+          method: RequestMethod.DELETE,
+          authType: AuthType.Default,
+          url: url.format({
+            protocol: this.client.apiProtocol,
+            host: this.client.apiHost,
+            pathname: `${this.pathname}/${id}`
+          }),
+          properties: options.properties,
+          timeout: options.timeout
+        });
+        return request.execute()
+          .then(response => response.data)
+          .then(data => observer.next(data))
+          .then(() => observer.complete())
+          .catch(error => observer.error(error));
+      } catch (error) {
+        return observer.error(error);
+      }
+    });
+
+    return stream.toPromise();
   }
 
   /**

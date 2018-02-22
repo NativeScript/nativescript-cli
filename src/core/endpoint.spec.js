@@ -1,7 +1,6 @@
 import nock from 'nock';
 import expect from 'expect';
 import { CustomEndpoint } from './endpoint';
-import { Client } from './client';
 import { KinveyError, NotFoundError } from './errors';
 import { NetworkRack } from './request';
 import { NodeHttpMiddleware } from '../node/http';

@@ -1,12 +1,10 @@
 import { MobileIdentityConnect} from '../../../src/core/identity';
-import { NetworkRack, CacheRack } from '../../../src/core/request';
-import { CacheMiddleware } from '../../../src/nativescript/cache';
+import { NetworkRack } from '../../../src/core/request';
 import { HttpMiddleware } from '../../../src/nativescript/http';
 import { Popup } from '../../../src/nativescript/popup';
 import pkg from '../package.json';
 
 // Setup racks
-CacheRack.useCacheMiddleware(new CacheMiddleware());
 NetworkRack.useHttpMiddleware(new HttpMiddleware(pkg));
 
 // Setup popup
