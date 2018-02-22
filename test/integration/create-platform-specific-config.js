@@ -25,7 +25,7 @@ const createPlatformSpecificConfig = (platform, os) => {
   const credentialsToUse = getCredentialsByEnvironment(appCredentials, platform, os);
   Object.assign(testsConfig, credentialsToUse);
   const configFileContents = compiled({ appConfig: JSON.stringify(testsConfig, null, 2) });
-  
+
   fs.writeFileSync(resultConfigFilePath, configFileContents, 'utf8');
 };
 

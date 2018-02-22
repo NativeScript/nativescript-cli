@@ -121,6 +121,49 @@ function testFunc() {
               })
               .catch(done);
           });
+
+          it('remove should remove the entity from the backend even if the entity is not found in the cache', (done) => {
+            const entity = utilities.getEntity(utilities.randomString());
+            const query = new Kinvey.Query();
+            query.equalTo('_id', entity._id);
+            storeToTest.save(entity)
+              .then((entity) => syncStore.removeById(entity._id))
+              .then(() => storeToTest.remove(query))
+              .then(() => networkStore.findById(entity._id).toPromise())
+              .then(() => {
+                return done(new Error(shouldNotBeCalledErrorMessage));
+              })
+              .catch((error) => {
+                expect(error.name).to.equal(notFoundErrorName);
+                done();
+              })
+              .catch(done);
+          });
+
+          it('create/update should update the item in the cache with the metadata from the backend', (done) => {
+            let createdEntityId;
+            let initialLmtDate;
+            storeToTest.save(utilities.getEntity())
+              .then((result) => {
+                createdEntityId = result._id;
+                return syncStore.findById(createdEntityId).toPromise();
+              })
+              .then((cachedEntity) => {
+                expect(cachedEntity._id).to.equal(createdEntityId);
+                utilities.assertEntityMetadata(cachedEntity);
+                initialLmtDate = new Date(cachedEntity._kmd.lmt);
+                return storeToTest.save(cachedEntity);
+              })
+              .then((result) => {
+                expect(new Date(result._kmd.lmt)).to.be.greaterThan(initialLmtDate);
+                return syncStore.findById(createdEntityId).toPromise();
+              })
+              .then((updatedCachedEntity) => {
+                expect(new Date(updatedCachedEntity._kmd.lmt)).to.be.greaterThan(initialLmtDate);
+                done();
+              })
+              .catch(done);
+          });
         });
       }
 
@@ -166,7 +209,7 @@ function testFunc() {
             })
             .then((syncEntities) => {
               expect(syncEntities.map(e => e.entityId).sort()).to.deep.equal([entity1._id, randomId].sort());
-              const query = new Kinvey.Query().equalTo('_id', entity1._id);
+              const query = new Kinvey.Query().equalTo('_id', randomId);
               return storeToTest.clear(query);
             })
             .then((result) => {
@@ -175,7 +218,7 @@ function testFunc() {
             })
             .then((result) => {
               expect(result.length).to.equal(1);
-              expect(result[0].entityId).to.equal(randomId);
+              expect(result[0].entityId).to.equal(entity1._id);
               done();
             })
             .catch(done);
