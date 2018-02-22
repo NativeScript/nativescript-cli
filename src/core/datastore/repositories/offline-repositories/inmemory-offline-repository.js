@@ -58,8 +58,6 @@ export class InmemoryOfflineRepository extends OfflineRepository {
       .then(allEntities => applyQueryToDataset(allEntities, query).length);
   }
 
-  // TODO: this is upsert. it should be an option
-  // also, currently one doesn't know if they created or updated
   update(collection, entities) {
     return this._enqueueCrudOperation(collection, () => {
       return this._update(collection, entities)
@@ -79,18 +77,13 @@ export class InmemoryOfflineRepository extends OfflineRepository {
     });
   }
 
-  // TODO: do better once we decide on querying on sync items
-  // check the behaviour of clear, especially regarding sync queue
   clear(collection) {
-    if (collection) {
-      return this._enqueueCrudOperation(collection, () => {
-        return this._clearCollections(collection);
-      });
+    let collectionsPromise = Promise.resolve(collection);
+    if (!collection) {
+      collectionsPromise = this._getAllCollections();
     }
 
-    // TODO: this does not enqueue, so it might cause problems
-    // currently it's only called from Kinvey.DataStore.clear()
-    return this._getAllCollections()
+    return collectionsPromise
       .then(collections => this._clearCollections(collections));
   }
 
@@ -101,23 +94,28 @@ export class InmemoryOfflineRepository extends OfflineRepository {
 
   // protected methods
 
-  // TODO: integrate with db/collection concept in parent(s)?
   _formCollectionKey(collection) {
     const appKey = this._getAppKey();
     return `${appKey}.${collection}`;
   }
 
+  _deleteMatchingEntitiesFromPersistance(collection, allEntities, entitiesMatchedByQuery) {
+    const shouldDeleteById = keyBy(entitiesMatchedByQuery, '_id');
+    const remainingEntities = allEntities.filter(e => !shouldDeleteById[e._id]);
+    const deletedCount = allEntities.length - remainingEntities.length;
+    if (deletedCount > 0) {
+      return this._saveAll(collection, remainingEntities);
+    }
+    return Promise.resolve();
+  }
+
   _delete(collection, query) {
-    let deletedCount = 0;
     return this._readAll(collection)
       .then((allEntities) => {
         const matchingEntities = applyQueryToDataset(allEntities, query);
-        const shouldDeleteById = keyBy(matchingEntities, '_id');
-        const remainingEntities = allEntities.filter(e => !shouldDeleteById[e._id]);
-        deletedCount = allEntities.length - remainingEntities.length;
-        return this._saveAll(collection, remainingEntities);
-      })
-      .then(() => deletedCount);
+        return this._deleteMatchingEntitiesFromPersistance(collection, allEntities, matchingEntities)
+          .then(() => matchingEntities.length);
+      });
   }
 
   _deleteById(collection, id) {
@@ -155,7 +153,7 @@ export class InmemoryOfflineRepository extends OfflineRepository {
       .then(entities => entities || []);
   }
 
-  // TODO: Keep them by id
+  // TODO: Keep them by id - maybe after the redesign
   _saveAll(collection, entities) {
     const key = this._formCollectionKey(collection);
     return this._persister.write(key, entities);
@@ -182,7 +180,8 @@ export class InmemoryOfflineRepository extends OfflineRepository {
   }
 
   _clearCollections(collections) {
-    const promises = ensureArray(collections).map(c => this._deleteAll(c));
+    const promises = ensureArray(collections)
+      .map(c => this._enqueueCrudOperation(c, () => this._deleteAll(c)));
     return Promise.all(promises)
       .then(() => true);
   }

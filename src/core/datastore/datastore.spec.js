@@ -41,6 +41,49 @@ describe('DataStore', () => {
       }).toThrow(KinveyError);
     });
 
+    describe('tagging', () => {
+      describe('a NetworkStore', () => {
+        it('should throw an error', () => {
+          expect(() => {
+            DataStore.collection(collection, DataStoreType.Network, { tag: 'any-tag' });
+          }).toThrow();
+        });
+      });
+
+      const offlineCapableStoreTypes = [DataStoreType.Cache, DataStoreType.Sync];
+      offlineCapableStoreTypes.forEach((storeType) => {
+        describe(`a ${storeType}Store`, () => {
+          it('should throw an error if the tag is not a string', () => {
+            expect(() => {
+              DataStore.collection(collection, storeType, { tag: {} });
+            }).toThrow();
+          });
+
+          it('should throw an error if the tag is an emptry string', () => {
+            expect(() => {
+              DataStore.collection(collection, storeType, { tag: '' });
+            }).toThrow();
+          });
+
+          it('should throw an error if the tag is a whitespace string', () => {
+            expect(() => {
+              DataStore.collection(collection, storeType, { tag: '    \n  ' });
+            }).toThrow();
+          });
+
+          it('should throw an error if the tag contains invalid characters', () => {
+            expect(() => {
+              DataStore.collection(collection, storeType, { tag: '  %  sometag  !' });
+            }).toThrow();
+          });
+
+          it('should work if the provided tag is valid', () => {
+            DataStore.collection(collection, storeType, { tag: 'some-valid-tag' });
+          });
+        });
+      });
+    });
+
     it('should return a NetworkStore', () => {
       const store = DataStore.collection(collection, DataStoreType.Network);
       expect(store).toBeA(NetworkStore);

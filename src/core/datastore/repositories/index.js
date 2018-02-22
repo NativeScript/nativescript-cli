@@ -1,5 +1,5 @@
 export * from './repository';
-export * from './storage-type';
+export * from './storage-provider';
 export * from './offline-repositories';
 export * from './network-repository';
 export * from './repository-provider';

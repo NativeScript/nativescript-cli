@@ -47,7 +47,7 @@ export class KeyValueStorePersister extends KeyValuePersister {
   // protected
 
   _readEntityFromPersistance(collection, entityIds) {
-    this._throwNotImplementedError(entityId);
+    this._throwNotImplementedError(entityIds);
   }
 
   _writeEntitiesToPersistance(collection, entities) {

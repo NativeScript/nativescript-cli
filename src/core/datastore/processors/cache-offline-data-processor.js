@@ -12,7 +12,6 @@ import { isLocalEntity, isNotEmpty, isEmpty } from '../utils';
 // imported for type info
 // import { NetworkRepository } from '../repositories';
 
-// TODO: refactor similar methods. read and readById, for instance
 export class CacheOfflineDataProcessor extends OfflineDataProcessor {
   /** @type {NetworkRepository} */
   _networkRepository;
@@ -22,7 +21,6 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
     this._networkRepository = networkRepository;
   }
 
-  // TODO: think of a better way to do this, or at least remove duplication
   _deleteEntityAndHandleOfflineState(collection, entity, options) {
     if (isLocalEntity(entity)) { // no need for request, just a regular offline delete
       return super._deleteEntityAndHandleOfflineState(collection, entity, options);
@@ -33,7 +31,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
       .then((didDelete) => {
         deleteSucceeded = didDelete;
         if (deleteSucceeded) {
-          return this._syncManager.removeSyncItemForEntityId(entity._id)
+          return this._syncManager.removeSyncItemForEntityId(collection, entity._id)
             .then(() => this._getRepository())
             .then(repo => repo.deleteById(collection, entity._id, options));
         }
@@ -71,20 +69,20 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
         offlineEntity = createdEntity;
         return this._networkRepository.create(collection, data, options);
       })
-      .then((networkEntity) => { // cause of temp id, this is a create and delete
-        return this._upsertNetworkEntityOffline(collection, offlineEntity._id, networkEntity)
+      .then((networkEntity) => { // cause of temp id, this is a delete and create
+        return this._replaceNetworkEntityOffline(collection, offlineEntity._id, networkEntity)
+          .then(() => this._syncManager.removeSyncItemForEntityId(collection, offlineEntity._id))
           .then(() => networkEntity);
       });
   }
 
-  // TODO: how close is this to pull?
   _processRead(collection, query, options) {
     let offlineEntities;
     return wrapInObservable((observer) => {
       return this._ensureCountBeforeRead(collection, 'fetch the entities', query)
         .then(() => super._processRead(collection, query, options))
         .then((entities) => {
-          offlineEntities = entities || []; // really?
+          offlineEntities = entities;
           observer.next(offlineEntities);
           return this._networkRepository.read(collection, query, options);
         })
@@ -101,7 +99,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
       const query = new Query().equalTo('_id', entityId);
       return this._ensureCountBeforeRead(collection, 'find the entity', query)
         .then(() => super._processReadById(collection, entityId, options))
-        .catch(err => this._catchNotFoundError(err))
+        .catch(err => this._catchNotFoundError(err)) // backwards compatibility
         .then((entity) => {
           observer.next(entity);
           offlineEntity = entity;
@@ -109,7 +107,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
         })
         .then((entity) => {
           observer.next(entity);
-          return this._replaceOfflineEntities(collection, ensureArray(offlineEntity), ensureArray(entity));
+          return this._replaceOfflineEntities(collection, offlineEntity, ensureArray(entity));
         });
     });
   }
@@ -120,7 +118,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
       .then((networkEntity) => {
         return this._getRepository()
           .then(repo => repo.update(collection, networkEntity, options))
-          .then(() => this._syncManager.removeSyncItemForEntityId(networkEntity._id))
+          .then(() => this._syncManager.removeSyncItemForEntityId(collection, networkEntity._id))
           .then(() => networkEntity);
       });
   }
@@ -145,9 +143,8 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
         .catch(() => []) // backwards compatibility
         .then((offlineResult) => {
           observer.next(offlineResult);
-          return this._syncManager.push(collection); // backwards compatibility
+          return this._ensureCountBeforeRead(collection, 'group entities');
         })
-        .then(() => this._ensureCountBeforeRead(collection, 'group entities'))
         .then(() => this._networkRepository.group(collection, aggregationQuery, options))
         .then(networkResult => observer.next(networkResult));
     });
@@ -155,27 +152,25 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
 
   // private methods
 
-  _upsertNetworkEntityOffline(collection, offlineEntityId, networkEntity) {
-    let repository;
+  // much of our filtering is done inmemory, so this is worth doing, instead of using _replaceOfflineEntities()
+  _replaceNetworkEntityOffline(collection, offlineEntityId, networkEntity) {
     return this._getRepository()
       .then((repo) => {
-        repository = repo;
-        return repository.create(collection, networkEntity);
-      })
-      .then(() => {
-        if (!offlineEntityId) {
-          return Promise.resolve();
+        let deletePromise = Promise.resolve();
+        if (offlineEntityId) {
+          deletePromise = repo.deleteById(collection, offlineEntityId);
         }
-        return repository.deleteById(collection, offlineEntityId)
-          .then(() => this._syncManager.removeSyncItemForEntityId(offlineEntityId));
+        return deletePromise
+          .then(() => repo.create(collection, networkEntity));
       });
   }
 
   _replaceOfflineEntities(collection, offlineEntities, networkEntities) {
     let promise = Promise.resolve();
-    if (isNotEmpty(offlineEntities)) {
-      offlineEntities = ensureArray(offlineEntities);
-      const query = new Query().contains('_id', offlineEntities.map(e => e._id));
+    const offlineEntitiesArray = ensureArray(offlineEntities);
+
+    if (offlineEntities && isNotEmpty(offlineEntitiesArray)) {
+      const query = new Query().contains('_id', offlineEntitiesArray.map(e => e._id));
       promise = this._getRepository() // this is cheap, so doing it twice
         .then(repo => repo.delete(collection, query));
     }
@@ -211,21 +206,26 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
     return this._getRepository()
       .then(repo => repo.delete(collection, deleteQuery, options))
       .then((deletedCount) => {
-        return this._syncManager.removeSyncEntitiesForIds(offlineEntities.map(e => e._id))
+        return this._syncManager.removeSyncItemsForIds(collection, offlineEntities.map(e => e._id))
           .then(() => deletedCount);
       });
   }
 
-  // TODO: passing the error message as an argument?
   _ensureCountBeforeRead(collection, prefix, query) {
     return this._syncManager.getSyncItemCountByEntityQuery(collection, query)
+      .then((count) => {
+        if (count > 0) { // backwards compatibility
+          return this._syncManager.push(collection, query)
+            .then(() => this._syncManager.getSyncItemCountByEntityQuery(collection, query));
+        }
+        return count;
+      })
       .then((count) => {
         if (count === 0) {
           return count;
         }
         const countMsg = `There are ${count} entities that need to be synced.`;
-        const msg = `Unable to ${prefix} on the backend. ${countMsg}`;
-        const err = new KinveyError(msg);
+        const err = new KinveyError(`Unable to ${prefix} on the backend. ${countMsg}`);
         return Promise.reject(err);
       });
   }

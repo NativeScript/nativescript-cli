@@ -1,15 +1,19 @@
+import { Html5Client } from './client';
+
 import {
   repositoryProvider,
-  storageType,
+  StorageProvider,
   KeyValueStoreOfflineRepository,
+  SqlKeyValueStorePersister,
   InmemoryOfflineRepository,
-  WebSqlKeyValueStorePersister,
+  WebSqlSqlModule,
   IndexedDbKeyValueStorePersister,
   BrowserKeyValuePersister
 } from '../core/datastore';
 
 const webSqlBuilder = (queue) => {
-  const persister = new WebSqlKeyValueStorePersister();
+  const sqlModule = new WebSqlSqlModule(Html5Client.sharedInstance().appKey);
+  const persister = new SqlKeyValueStorePersister(sqlModule);
   return new KeyValueStoreOfflineRepository(persister, queue);
 };
 
@@ -28,12 +32,11 @@ const sessionStorageBuilder = (queue) => {
   return new InmemoryOfflineRepository(persister, queue);
 };
 
-// TODO: this will grow, refactor
 const repoConstructors = {
-  [storageType.webSql]: webSqlBuilder,
-  [storageType.indexedDb]: indexedDbBuilder,
-  [storageType.localStorage]: localStorageBuilder,
-  [storageType.sessionStorage]: sessionStorageBuilder
+  [StorageProvider.WebSQL]: webSqlBuilder,
+  [StorageProvider.IndexedDB]: indexedDbBuilder,
+  [StorageProvider.LocalStorage]: localStorageBuilder,
+  [StorageProvider.SessionStorage]: sessionStorageBuilder
 };
 
 repositoryProvider.setSupportedRepoBuilders(repoConstructors);

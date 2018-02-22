@@ -43,18 +43,9 @@ export class DataProcessor {
     }
   }
 
-  // TODO: decide on options
   _processCreate(collection, data, options) {
-    const isSingle = !Array.isArray(data);
-    data = ensureArray(data);
     return this._getRepository()
-      .then(repo => repo.create(collection, data, options))
-      .then((createdItems) => {
-        if (isSingle) {
-          return createdItems[0];
-        }
-        return createdItems;
-      });
+      .then(repo => repo.create(collection, data, options));
   }
 
   _processRead(collection, query, options) {

@@ -4,14 +4,14 @@ import { storage } from 'local-storage-fallback';
 import { Client } from '../core/client';
 import { KinveyError } from '../core/errors';
 import { Log } from '../core/log';
-import { isDefined } from '../core/utils';
-import { storageType } from '../core/datastore';
+import { isDefined, useIfDefined } from '../core/utils';
+import { StorageProvider } from '../core/datastore';
 
-const defaultHtml5StorageTypePrecedence = [
-  storageType.webSql,
-  storageType.indexedDb,
-  storageType.localStorage,
-  storageType.sessionStorage
+const defaultHtml5StorageProviderPrecedence = [
+  StorageProvider.WebSQL,
+  StorageProvider.IndexedDB,
+  StorageProvider.LocalStorage,
+  StorageProvider.SessionStorage
 ];
 
 class ActiveUserStorage {
@@ -46,7 +46,7 @@ class ActiveUserStorage {
 export class Html5Client extends Client {
   static init(config) {
     config = cloneDeep(config);
-    config.storageType = config.storageType || defaultHtml5StorageTypePrecedence;
+    config.storage = useIfDefined(config.storage, defaultHtml5StorageProviderPrecedence);
     const client = Client.init(config);
     client.activeUserStorage = new ActiveUserStorage();
     return client;

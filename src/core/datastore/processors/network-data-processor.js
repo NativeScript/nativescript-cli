@@ -11,6 +11,4 @@ export class NetworkDataProcessor extends DataProcessor {
     }
     return this._repoPromise;
   }
-
-  // TODO: implement autopagination? or maybe in repo - if it's going to be used internally
 }

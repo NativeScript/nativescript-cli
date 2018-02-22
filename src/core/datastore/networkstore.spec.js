@@ -96,7 +96,7 @@ describe('NetworkStore', () => {
     });
 
     it('should find the entities that match the query', () => {
-      const store = new NetworkStore('comecollection'); // TODO: how was this missing?
+      const store = new NetworkStore('comecollection');
       const entity1 = { _id: randomString() };
       const query = new Query();
       query.equalTo('_id', entity1._id);
@@ -455,6 +455,21 @@ describe('NetworkStore', () => {
         .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(NotFoundError);
+        });
+    });
+
+    it('should return a NotFoundError if an entity with that id does not exist', () => {
+      const store = new NetworkStore(collection);
+      const id = randomString();
+
+      nock(client.apiHostname)
+        .delete(`/appdata/${client.appKey}/${collection}/${id}`)
+        .reply(404);
+
+      return store.removeById(id)
+        .then(() => Promise.reject(new Error('Should not happen')))
+        .catch((err) => {
+          expect(err).toBeA(NotFoundError);
         });
     });
 

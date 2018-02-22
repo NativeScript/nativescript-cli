@@ -5,11 +5,11 @@ import { sqliteCollectionsMaster } from '../core/datastore/persisters';
 
 const NativeScriptSQLite = require('nativescript-sqlite');
 
-export class NativescriptSqliteModule {
+export class NativescriptSqlModule {
   private _databaseName: string;
 
-  constructor(storeName) {
-    this._databaseName = storeName;
+  constructor(databaseName) {
+    this._databaseName = databaseName;
   }
 
   openTransaction(collection: string, query: any[], parameters: any[], write = false) {

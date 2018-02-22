@@ -160,6 +160,7 @@ export class PushCommon extends EventEmitter {
     }
 
     const device = {
+      _id: activeUser._id,
       userId: activeUser._id,
       token: token
     };

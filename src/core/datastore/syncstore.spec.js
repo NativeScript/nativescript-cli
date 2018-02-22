@@ -2,6 +2,7 @@ import nock from 'nock';
 import expect from 'expect';
 import { SyncOperation } from './sync';
 import { SyncStore } from './syncstore';
+import { DataStore, DataStoreType } from './datastore';
 import { Aggregation } from '../aggregation';
 import { Query } from '../query';
 import { KinveyError, NotFoundError } from '../errors';
@@ -52,10 +53,7 @@ describe('SyncStore', () => {
 
   afterEach(() => {
     const store = new SyncStore(collection);
-    return store.clear()
-      .then(() => {
-        return store.clearSync();
-      });
+    return store.clear();
   });
 
   describe('pathname', () => {
@@ -114,23 +112,11 @@ describe('SyncStore', () => {
         });
     });
 
-    it.skip('should throw an error if the tag is not a string', () => {
-      expect(() => {
-        new SyncStore(collection, { tag: {} });
-      }).toThrow();
-    });
-
-    it.skip('should throw an error if the tag is an emptry string', () => {
-      expect(() => {
-        new SyncStore(collection, { tag: ' ' });
-      }).toThrow();
-    });
-
-    it.skip('should return the entities by tag', () => {
+    it('should return the entities by tag', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
-      const store1 = new SyncStore(collection, { tag: randomString() });
-      const store2 = new SyncStore(collection, { tag: randomString() });
+      const store1 = DataStore.collection(collection, DataStoreType.Sync, { tag: randomString() });
+      const store2 = DataStore.collection(collection, DataStoreType.Sync, { tag: randomString() });
       const query1 = new Query().equalTo('_id', entity1._id);
       const query2 = new Query().equalTo('_id', entity2._id);
 
@@ -146,12 +132,13 @@ describe('SyncStore', () => {
 
       return store1.pull(query1)
         .then(() => {
-          return store2.pull(query2)
-        }).then(() => {
-          return store2.find().toPromise()
-            .then((result) => {
-              expect(result).toEqual([entity2]);
-            });
+          return store2.pull(query2);
+        })
+        .then(() => {
+          return store2.find().toPromise();
+        })
+        .then((result) => {
+          expect(result).toEqual([entity2]);
         });
     });
 
@@ -561,7 +548,17 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should remove the entity from cache if the entity is not found on the backend', () => {
+    it('should return a NotFoundError if an entity with that id does not exist', () => {
+      const store = new SyncStore(collection);
+      return store.clear()
+        .then(() => store.removeById(randomString()))
+        .then(() => Promise.reject(new Error('Should not happen')))
+        .catch((err) => {
+          expect(err).toBeA(NotFoundError);
+        });
+    });
+
+    it('should remove the entity from cache', () => {
       const store = new SyncStore(collection);
       const entity = { _id: randomString() };
 
@@ -638,7 +635,19 @@ describe('SyncStore', () => {
         .get(`/appdata/${store.client.appKey}/${collection}`)
         .reply(200, [entity1, entity2]);
 
-      store.pull()
+      return store.pull()
+        .then(() => {
+          entity1.someProp = 'updated';
+          return store.update(entity1);
+        })
+        .then(() => {
+          entity2.someProp = 'also updated';
+          return store.update(entity2);
+        })
+        .then(() => store.pendingSyncEntities())
+        .then((syncEntities) => {
+          expect(syncEntities.length).toEqual(2);
+        })
         .then(() => {
           const query = new Query().equalTo('_id', entity1._id);
           return store.clear(query);
@@ -650,6 +659,11 @@ describe('SyncStore', () => {
         })
         .then((entities) => {
           expect(entities).toEqual([]);
+          return store.pendingSyncEntities();
+        })
+        .then((syncEntities) => {
+          expect(syncEntities.length).toBe(1);
+          expect(syncEntities[0].entityId).toEqual(entity2._id);
         });
     });
 
@@ -684,11 +698,11 @@ describe('SyncStore', () => {
         });
     });
 
-    it.skip('should clear entities by tag', () => {
+    it('should clear entities by tag', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
-      const store1 = new SyncStore(collection, { tag: randomString() });
-      const store2 = new SyncStore(collection, { tag: randomString() });
+      const store1 = DataStore.collection(collection, DataStoreType.Sync, { tag: randomString() });
+      const store2 = DataStore.collection(collection, DataStoreType.Sync, { tag: randomString() });
 
       return store1.save(entity1)
         .then(() => store2.save(entity2))
@@ -788,11 +802,11 @@ describe('SyncStore', () => {
         });
     });
 
-    it.skip('should push the entities by tag', () => {
+    it('should push the entities by tag', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
-      const store1 = new SyncStore(collection, { tag: randomString() });
-      const store2 = new SyncStore(collection, { tag: randomString() });
+      const store1 = DataStore.collection(collection, DataStoreType.Sync, { tag: randomString() });
+      const store2 = DataStore.collection(collection, DataStoreType.Sync, { tag: randomString() });
 
       return store1.save(entity1)
         .then(() => store2.save(entity2))

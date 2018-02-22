@@ -53,10 +53,7 @@ describe('CacheStore', () => {
 
   afterEach(() => {
     const store = new CacheStore(collection);
-    return store.clear()
-      .then(() => {
-        return store.clearSync();
-      });
+    return store.clear();
   });
 
   describe('pathname', () => {
@@ -881,6 +878,16 @@ describe('CacheStore', () => {
         });
     });
 
+    it('should return a NotFoundError if an entity with that id does not exist', () => {
+      const store = new CacheStore(collection);
+      return store.clear()
+        .then(() => store.removeById(randomString()))
+        .then(() => Promise.reject(new Error('Should not happen')))
+        .catch((err) => {
+          expect(err).toBeA(NotFoundError);
+        });
+    });
+
     it('should remove the entity from cache if the entity is not found on the backend', () => {
       const store = new CacheStore(collection);
       const entity = { _id: randomString() };
@@ -987,6 +994,7 @@ describe('CacheStore', () => {
 
     it('should remove only the entities from the cache that match the query', () => {
       const store = new CacheStore(collection);
+      const syncStore = new SyncStore(collection);
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
@@ -996,17 +1004,33 @@ describe('CacheStore', () => {
 
       return store.pull()
         .then(() => {
+          entity1.someProp = 'updated';
+          return syncStore.update(entity1);
+        })
+        .then(() => {
+          entity2.someProp = 'also updated';
+          return syncStore.update(entity2);
+        })
+        .then(() => store.pendingSyncEntities())
+        .then((syncEntities) => {
+          expect(syncEntities.length).toEqual(2);
+        })
+        .then(() => {
           const query = new Query().equalTo('_id', entity1._id);
           return store.clear(query);
         })
         .then((result) => {
           expect(result).toEqual({ count: 1 });
-          const syncStore = new SyncStore(collection);
           const query = new Query().equalTo('_id', entity1._id);
           return syncStore.find(query).toPromise();
         })
         .then((entities) => {
           expect(entities).toEqual([]);
+          return store.pendingSyncEntities();
+        })
+        .then((syncEntities) => {
+          expect(syncEntities.length).toBe(1);
+          expect(syncEntities[0].entityId).toEqual(entity2._id);
         });
     });
   });

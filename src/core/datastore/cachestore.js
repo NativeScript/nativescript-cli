@@ -1,17 +1,13 @@
 import { Promise } from 'es6-promise';
 import assign from 'lodash/assign';
-import url from 'url';
 
-import { CacheRequest, RequestMethod } from '../request';
-import { KinveyError } from '../errors';
-import { Aggregation } from '../aggregation';
 import { isDefined } from '../utils';
-import { KinveyObservable } from '../observable';
 import { NetworkStore } from './networkstore';
 
 import { OperationType } from './operations';
 import { processorFactory } from './processors';
 import { syncManagerProvider } from './sync';
+import { formTaggedCollectionName } from './utils';
 
 /**
  * The CacheStore class is used to find, create, update, remove, count and group entities. Entities are stored
@@ -19,6 +15,7 @@ import { syncManagerProvider } from './sync';
  */
 export class CacheStore extends NetworkStore {
   constructor(collection, processor, options = {}) {
+    collection = formTaggedCollectionName(collection, options.tag);
     const proc = processor || processorFactory.getCacheOfflineDataProcessor();
     super(collection, proc, options);
 
@@ -37,7 +34,7 @@ export class CacheStore extends NetworkStore {
    * @param   {Properties}            [options.properties]             Custom properties to send with
    *                                                                   the request.
    * @param   {Number}                [options.timeout]                Timeout for the request.
-   * @return  {Observable}                                             Observable.
+   * @return  {Promise}                                                Promise.
    */
   removeById(id, options = {}) {
     if (!isDefined(id)) {
@@ -73,22 +70,16 @@ export class CacheStore extends NetworkStore {
    * returned with the count of entities or rejected with an error.
    *
    * @param   {Query}                 [query]                                   Query to count a subset of entities.
-   * @param   {Object}                options                                   Options
-   * @param   {Properties}            [options.properties]                      Custom properties to send with
-   *                                                                            the request.
-   * @param   {Number}                [options.timeout]                         Timeout for the request.
-   * @param   {Number}                [options.ttl]                             Time to live for data retrieved
-   *                                                                            from the local cache.
    * @return  {Promise}                                                         Promise
    */
-  pendingSyncCount(query, options) {
+  pendingSyncCount(query) {
     if (query) {
       return this.syncManager.getSyncItemCountByEntityQuery(this.collection, query);
     }
     return this.syncManager.getSyncItemCount(this.collection);
   }
 
-  pendingSyncEntities(query, options) {
+  pendingSyncEntities(query) {
     return this.syncManager.getSyncEntities(this.collection, query);
   }
 
@@ -131,10 +122,7 @@ export class CacheStore extends NetworkStore {
         }
         return Promise.resolve();
       })
-      .then((/* pushResult */) => {
-        // TODO: do something with pushResult?
-        return this.syncManager.pull(this.collection, query, options);
-      });
+      .then(() => this.syncManager.pull(this.collection, query, options));
   }
 
   /**
@@ -165,7 +153,7 @@ export class CacheStore extends NetworkStore {
       });
   }
 
-  clearSync(query, options) {
+  clearSync(query) {
     return this.syncManager.clearSync(this.collection, query);
   }
 }

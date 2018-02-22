@@ -3,7 +3,6 @@ import { Html5HttpMiddleware } from '../../../src/html5/http';
 import { MobileIdentityConnect } from '../../../src/core/identity';
 import { Popup } from '../../../src/html5/popup';
 import pkg from '../package.json';
-import '../../../src/html5/offline-data-storage';
 
 // Setup racks
 NetworkRack.useHttpMiddleware(new Html5HttpMiddleware(pkg));

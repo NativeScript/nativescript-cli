@@ -5,7 +5,7 @@ export { Aggregation } from './aggregation';
 export { AuthorizationGrant } from './identity';
 export { Client } from './client';
 export { CustomEndpoint } from './endpoint';
-export { DataStore, DataStoreType } from './datastore';
+export { DataStore, DataStoreType, SyncOperation } from './datastore';
 export { LiveService } from './live';
 export { Files } from './files';
 export { Log } from './log';

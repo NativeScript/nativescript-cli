@@ -65,8 +65,6 @@ export class OfflineDataProcessor extends DataProcessor {
   _processClear(collection, query, options) {
     return this._syncManager.clearSync(collection, query)
       .then(() => this._getRepository())
-      // TODO: from the public API, it seems that clear is just a delete with no filter
-      // since it has to return the count, and accepts a query
       .then(repo => repo.delete(collection, query, options));
   }
 
@@ -93,10 +91,7 @@ export class OfflineDataProcessor extends DataProcessor {
   _processDeleteById(collection, entityId, options) {
     return this._getRepository()
       .then(repo => repo.readById(collection, entityId))
-      .then((entity) => {
-        // TODO: if !entity
-        return this._deleteEntityAndHandleOfflineState(collection, entity, options);
-      });
+      .then(entity => this._deleteEntityAndHandleOfflineState(collection, entity, options));
   }
 
   // private methods

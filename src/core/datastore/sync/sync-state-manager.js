@@ -5,16 +5,77 @@ import { Query } from '../../query';
 
 import { SyncOperation } from '../sync';
 import { repositoryProvider } from '../repositories';
-import { syncCollectionName, buildSyncItem } from './utils';
+import { syncCollectionName } from './utils';
 import { ensureArray } from '../../utils';
-import { isNotEmpty, isEmpty, isLocalEntity } from '../utils';
+import {
+  isNotEmpty,
+  isLocalEntity,
+  generateEntityId,
+  getTagFromCollectionName,
+  formTaggedCollectionName,
+  stripTagFromCollectionName
+} from '../utils';
 
 // imported for typings
 // import { OfflineRepository } from '../repositories';
 
-// TODO: there's probably room for performance improvements :)
 export class SyncStateManager {
   _repoPromise;
+
+  addCreateEvent(collection, entities) {
+    const syncItems = this._buildSyncItemsForEntities(collection, entities, SyncOperation.Create);
+    return this._createSyncItems(collection, syncItems);
+  }
+
+  addUpdateEvent(collection, entities) {
+    const syncItems = this._buildSyncItemsForEntities(collection, entities, SyncOperation.Update);
+    return this._upsertSyncItems(collection, syncItems);
+  }
+
+  addDeleteEvent(collection, entities) {
+    const syncItemData = this._groupSyncItemDataForDeleteEvent(collection, entities);
+
+    let delPrm = Promise.resolve();
+    if (isNotEmpty(syncItemData.localEntityIds)) {
+      const query = this._getEntitiesFilter(collection, syncItemData.localEntityIds);
+      delPrm = this._deleteSyncItems(collection, query);
+    }
+
+    let upsertPrm = Promise.resolve();
+    if (isNotEmpty(syncItemData.syncItemsToUpsert)) {
+      upsertPrm = this._upsertSyncItems(collection, syncItemData.syncItemsToUpsert, syncItemData.syncItemsToUpsertIds);
+    }
+
+    return Promise.all([delPrm, upsertPrm]);
+  }
+
+  getSyncItems(collection, onlyTheseIds) {
+    const query = this._getEntitiesFilter(collection, onlyTheseIds);
+    return this._getRepository()
+      .then(repo => repo.read(this._getSyncCollectionName(collection), query));
+  }
+
+  getSyncItemCount(collection, onlyTheseIds) {
+    const query = this._getEntitiesFilter(collection, onlyTheseIds);
+    return this._getRepository()
+      .then(repo => repo.count(this._getSyncCollectionName(collection), query));
+  }
+
+  removeSyncItemForEntityId(collection, entityId) {
+    // this isn't using collection, because inmemory filtering is very slow
+    const query = new Query().equalTo('entityId', entityId);
+    return this._deleteSyncItems(collection, query);
+  }
+
+  removeSyncItemsForIds(collection, entityIds = []) {
+    const query = this._getEntitiesFilter(collection, entityIds);
+    return this._deleteSyncItems(collection, query);
+  }
+
+  removeAllSyncItems(collection) {
+    const query = this._getCollectionFilter(collection);
+    return this._deleteSyncItems(collection, query);
+  }
 
   _getRepository() {
     if (!this._repoPromise) {
@@ -23,9 +84,9 @@ export class SyncStateManager {
     return this._repoPromise;
   }
 
-  _removeSyncItems(query) {
+  _deleteSyncItems(collection, query) {
     return this._getRepository()
-      .then(repo => repo.delete(syncCollectionName, query));
+      .then(repo => repo.delete(this._getSyncCollectionName(collection), query));
   }
 
   _getSyncItemsByEntityIds(entityIds) {
@@ -41,87 +102,77 @@ export class SyncStateManager {
   }
 
   // entityIds are the ids of entities new sync items pertain to - optional optimization :))
-  // TODO: should we keep anything from the original sync item?
-  _upsertSyncItems(newSyncItems, entityIds) {
-    if (isEmpty(entityIds)) {
+  _upsertSyncItems(collection, newSyncItems, entityIds) {
+    if (!entityIds) {
       entityIds = newSyncItems.map(i => i.entityId);
     }
     const delQuery = new Query().contains('entityId', entityIds);
     return this._getRepository()
-      .then(repo => repo.delete(syncCollectionName, delQuery).then(() => repo))
-      .then(repo => repo.create(syncCollectionName, newSyncItems));
+      .then(repo => repo.delete(this._getSyncCollectionName(collection), delQuery).then(() => repo))
+      .then(repo => repo.create(this._getSyncCollectionName(collection), newSyncItems));
   }
 
-  _getCollectionFilter(collection, onlyTheseIds) {
-    const query = new Query().equalTo('collection', collection);
-    if (isNotEmpty(onlyTheseIds)) {
-      query.contains('entityId', ensureArray(onlyTheseIds));
+  _getEntitiesFilter(collection, onlyTheseIds) {
+    const query = this._getCollectionFilter(collection);
+    if (onlyTheseIds) {
+      query.and().contains('entityId', ensureArray(onlyTheseIds));
     }
     return query;
   }
 
-  addCreateEvent(collection, entities) {
-    const syncItems = ensureArray(entities)
-      .map(e => buildSyncItem(collection, SyncOperation.Create, e._id));
-    return this._getRepository()
-      .then(repo => repo.create(syncCollectionName, syncItems));
+  _getCollectionFilter(collection) {
+    const result = new Query();
+    result.equalTo('collection', collection)
+      .or()
+      .equalTo('collection', stripTagFromCollectionName(collection));
+    return result;
   }
 
-  addUpdateEvent(collection, entities) {
-    const syncItems = ensureArray(entities)
-      .map(e => buildSyncItem(collection, SyncOperation.Update, e._id));
-    return this._upsertSyncItems(syncItems);
+  _buildSyncItem(collection, syncOp, entityId) {
+    return {
+      _id: generateEntityId(),
+      collection,
+      entityId,
+      state: {
+        operation: syncOp
+      }
+    };
   }
 
-  addDeleteEvent(collection, entities) {
+  _buildSyncItemsForEntities(collection, entities, syncOp) {
+    return ensureArray(entities)
+      .map(e => this._buildSyncItem(collection, syncOp, e._id));
+  }
+
+  _groupSyncItemDataForDeleteEvent(collection, entities) {
     const localEntityIds = [];
-    const syncItems = [];
-    const syncItemEntityIds = [];
+    const syncItemsToUpsert = [];
+    const syncItemsToUpsertIds = [];
 
     ensureArray(entities).forEach((entity) => {
       if (isLocalEntity(entity)) {
         localEntityIds.push(entity._id);
       } else {
-        const item = buildSyncItem(collection, SyncOperation.Delete, entity._id);
-        syncItems.push(item);
-        syncItemEntityIds.push(entity._id);
+        const item = this._buildSyncItem(collection, SyncOperation.Delete, entity._id);
+        syncItemsToUpsert.push(item);
+        syncItemsToUpsertIds.push(entity._id);
       }
     });
 
-    const query = new Query().contains('entityId', localEntityIds);
-    const delPrm = this._removeSyncItems(query); // TODO: perhaps this logic shouldn't be here - maybe in processor
-    const upsertPrm = this._upsertSyncItems(syncItems, syncItemEntityIds);
-    return Promise.all([delPrm, upsertPrm]);
+    return {
+      localEntityIds,
+      syncItemsToUpsert,
+      syncItemsToUpsertIds
+    };
   }
 
-  // TODO: does this need to support querying, or can it just take entities/ids
-  getSyncItems(collection, onlyTheseIds) {
-    const query = this._getCollectionFilter(collection, onlyTheseIds);
+  _createSyncItems(collection, syncItems) {
     return this._getRepository()
-      .then(repo => repo.read(syncCollectionName, query));
+      .then(repo => repo.create(this._getSyncCollectionName(collection), syncItems));
   }
 
-  getSyncItemCount(collection, onlyTheseIds) {
-    const query = this._getCollectionFilter(collection, onlyTheseIds);
-    return this._getRepository()
-      .then(repo => repo.count(syncCollectionName, query));
-  }
-
-  removeSyncItemForEntityId(entityId) {
-    const query = new Query().equalTo('entityId', entityId);
-    return this._removeSyncItems(query);
-  }
-
-  removeSyncEntitiesForIds(entityIds) {
-    const query = new Query().contains('entityId', entityIds);
-    return this._removeSyncItems(query);
-  }
-
-  removeAllSyncItems(collection) {
-    const query = new Query();
-    if (collection) {
-      query.equalTo('collection', collection);
-    }
-    return this._removeSyncItems(query);
+  _getSyncCollectionName(taggedCollectionName) {
+    const tag = getTagFromCollectionName(taggedCollectionName);
+    return formTaggedCollectionName(syncCollectionName, tag);
   }
 }

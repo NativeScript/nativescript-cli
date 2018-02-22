@@ -63,30 +63,6 @@ describe('Sync', () => {
     return manager.clearSync(collection);
   });
 
-  describe.skip('find()', () => {
-    const entity1 = { _id: randomString() };
-    const entity2 = { _id: randomString() };
-
-    beforeEach(() => {
-      const store = new SyncStore(collection, { tag: 'entity1' });
-      return store.save(entity1);
-    });
-
-    beforeEach(() => {
-      const store = new SyncStore(collection, { tag: 'entity2' });
-      return store.save(entity2);
-    });
-
-    it('should return the entities by tag', () => {
-      const sync = new SyncManager(collection, { tag: 'entity1' });
-      return sync.find()
-        .then((entities) => {
-          expect(entities.length).toEqual(1);
-          expect(entities[0].entityId).toEqual(entity1._id);
-        });
-    });
-  });
-
   describe('counting sync items', () => {
     const entity1 = { _id: randomString() };
     const entity2 = { _id: randomString() };
@@ -278,10 +254,11 @@ describe('Sync', () => {
   });
 
   describe('push()', () => {
+    before(() => nock.cleanAll());
+
     beforeEach(() => {
       const store = new SyncStore(collection);
-      return store.clear()
-        .then(() => store.clearSync());
+      return store.clear();
     });
 
     it('should execute pending sync operations', () => {
@@ -336,6 +313,7 @@ describe('Sync', () => {
           offlineEntities.forEach((entity) => {
             expect(entity.someNewProperty).toBe(true);
           });
+          expect(nock.pendingMocks().length).toEqual(0);
         });
     });
 
@@ -361,9 +339,12 @@ describe('Sync', () => {
           return manager.push(collection);
         })
         .then((results) => {
-          expect(results[0]).toIncludeKey('error');
-          expect(results[0]).toInclude({ _id: entity1._id, operation: SyncOperation.Update, entity: entity1 });
-          expect(results[1]).toEqual({ _id: entity2._id, operation: SyncOperation.Delete });
+          expect(results.length).toBe(2);
+          const updateResult = results.find(r => r.operation === SyncOperation.Update);
+          const deleteResult = results.find(r => r.operation === SyncOperation.Delete);
+          expect(updateResult).toIncludeKey('error');
+          expect(updateResult).toInclude({ _id: entity1._id, operation: SyncOperation.Update, entity: entity1 });
+          expect(deleteResult).toEqual({ _id: entity2._id, operation: SyncOperation.Delete });
           return manager.getSyncItemCount(collection);
         })
         .then((count) => {

@@ -1,4 +1,4 @@
-﻿const Constants = {};
+const Constants = {};
 
 Constants.TextFieldName = 'textField';
 Constants.NumberFieldName = 'numberField';

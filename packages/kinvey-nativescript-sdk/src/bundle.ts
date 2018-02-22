@@ -1,9 +1,8 @@
 import { MobileIdentityConnect} from '../../../src/core/identity';
-import { NetworkRack, CacheRack } from '../../../src/core/request';
+import { NetworkRack } from '../../../src/core/request';
 import { HttpMiddleware } from '../../../src/nativescript/http';
 import { Popup } from '../../../src/nativescript/popup';
 import pkg from '../package.json';
-import '../../../src/nativescript/offline-data-storage';
 
 // Setup racks
 NetworkRack.useHttpMiddleware(new HttpMiddleware(pkg));

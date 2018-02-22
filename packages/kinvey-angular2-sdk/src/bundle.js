@@ -1,4 +1,4 @@
-import { NetworkRack, CacheRack } from '../../../src/core/request';
+import { NetworkRack } from '../../../src/core/request';
 import { Html5HttpMiddleware } from '../../../src/html5/http';
 import { MobileIdentityConnect } from '../../../src/core/identity';
 import { Popup } from '../../../src/phonegap/popup';

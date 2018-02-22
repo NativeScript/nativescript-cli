@@ -1,10 +1,11 @@
+import { Promise } from 'es6-promise';
 import keys from 'lodash/keys';
 
 import { Client } from '../../client';
 import { KinveyError } from '../../errors';
 import { InmemoryOfflineRepository } from './offline-repositories';
 import { NetworkRepository } from './network-repository';
-import { storageType } from './storage-type';
+import { StorageProvider } from './storage-provider';
 import { ensureArray } from '../../utils';
 import { InmemoryCrudQueue } from '../utils';
 import { MemoryKeyValuePersister } from '../persisters';
@@ -16,54 +17,62 @@ const inmemoryRepoBuilder = (queue) => {
   return new InmemoryOfflineRepository(persister, queue);
 };
 
-// TODO: all inmemory instances should share the queue. are there better ways to share it?
-// queue needs to be by collection
+// all inmemory instances should share the queue
 const queue = new InmemoryCrudQueue();
+let _chosenRepoPromise;
 
-// TODO: not great to do this here, but tests fail otherwise
-let availableStorages = {
-  [storageType.inmemory]: inmemoryRepoBuilder
+let _availableStorages = {
+  [StorageProvider.Memory]: inmemoryRepoBuilder
 };
 
 function _getRepoType() {
-  return Client.sharedInstance().storageType;
+  return Client.sharedInstance().storage;
 }
 
 function _testRepoSupport(repo) {
   return repo.create(testSupportCollection, { _id: '1' });
 }
 
-function _getRepoForStorageType(storageType) {
-  const repoBuilder = availableStorages[storageType];
+function _getRepoForStorageProvider(storageProvider) {
+  const repoBuilder = _availableStorages[storageProvider];
   if (!repoBuilder) {
-    const errMsg = `The requested storage type "${storageType}" is not available in this environment`;
+    const errMsg = `The requested storage provider "${storageProvider}" is not available in this environment`;
     throw new KinveyError(errMsg);
   }
   return repoBuilder(queue);
 }
 
-// TODO: maybe cache the selected repo?
+/**
+ * Selects the first repo from the priority list,
+ * which returns a resolved promise for the support test
+ * @param {string[]} storagePrecedence An array of enum values, sorted by priority
+ * @returns {Promise<OfflineRepository>}
+ */
 function _getFirstSupportedRepo(storagePrecedence) {
-  return storagePrecedence.reduce((result, storageType) => {
+  return storagePrecedence.reduce((result, storageProvider) => {
     return result.catch(() => {
-      const repo = _getRepoForStorageType(storageType);
+      const repo = _getRepoForStorageProvider(storageProvider);
       return _testRepoSupport(repo)
         .then(() => repo);
     });
   }, Promise.reject());
 }
 
-function getOfflineRepository() {
+function _chooseOfflineRepo() {
   const storagePrecedence = ensureArray(_getRepoType());
 
   return _getFirstSupportedRepo(storagePrecedence)
-    .then((repo) => {
-      if (!repo) {
-        const errMsg = 'None of the selected storage providers are supported in this environment.';
-        return Promise.reject(new KinveyError(errMsg));
-      }
-      return repo;
+    .catch(() => {
+      const errMsg = 'None of the selected storage providers are supported in this environment.';
+      return Promise.reject(new KinveyError(errMsg));
     });
+}
+
+function getOfflineRepository() {
+  if (!_chosenRepoPromise) {
+    _chosenRepoPromise = _chooseOfflineRepo();
+  }
+  return _chosenRepoPromise;
 }
 
 function getNetworkRepository() {
@@ -71,11 +80,11 @@ function getNetworkRepository() {
 }
 
 function setSupportedRepoBuilders(repos) {
-  availableStorages = repos;
+  _availableStorages = repos;
 }
 
 function getSupportedStorages() {
-  return keys(availableStorages);
+  return keys(_availableStorages);
 }
 
 export const repositoryProvider = {
