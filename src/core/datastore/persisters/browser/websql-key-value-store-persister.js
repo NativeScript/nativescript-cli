@@ -4,7 +4,6 @@ import { KeyValueStorePersister } from './key-value-store-persister';
 import { webSqlCollectionsMaster, webSqlDatabaseSize } from '../utils';
 
 export class WebSqlKeyValueStorePersister extends KeyValueStorePersister {
-  // TODO: add caching, as in parent
   readEntity(collection, entityId) {
     const sql = 'SELECT value FROM #{collection} WHERE key = ?';
     return this.openTransaction(collection, sql, [entityId])

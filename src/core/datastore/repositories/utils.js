@@ -3,7 +3,7 @@ import { Client } from '../../client';
 import { stripTagFromCollectionName } from '../utils';
 
 export function buildCollectionUrl(collectionName, id, restAction) {
-  collectionName = stripTagFromCollectionName(collectionName); // collectionName.replace(_separatorAndTagRegexp, ''); // strip tag
+  collectionName = stripTagFromCollectionName(collectionName);
   let result = `appdata/${Client.sharedInstance().appKey}/${collectionName}`;
   if (id) {
     result += `/${id}`;
