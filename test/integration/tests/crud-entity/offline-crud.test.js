@@ -44,7 +44,7 @@ function testFunc() {
       });
 
       if (dataStoreType === Kinvey.DataStoreType.Cache) {
-        describe('local cache removal', () => {
+        describe('Cache specific tests', () => {
           it('find() should remove entities that no longer exist in the backend from the cache', (done) => {
             const entity = utilities.getEntity(utilities.randomString());
             storeToTest.save(entity)
