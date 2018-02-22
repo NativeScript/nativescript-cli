@@ -4,6 +4,9 @@ import * as util from "util";
 import * as chai from "chai";
 import { EventEmitter } from "events";
 
+import * as path from "path";
+import * as constants from "./../lib/constants";
+
 export class LoggerStub implements ILogger {
 	setLevel(level: string): void { }
 	getLevel(): string { return undefined; }
@@ -244,15 +247,27 @@ export class ProjectDataStub implements IProjectData {
 	get platformsDir(): string {
 		return "";
 	}
+	set platformsDir(value) {
+	}
 	projectFilePath: string;
 	projectId: string;
 	dependencies: any;
 	appDirectoryPath: string;
-	appResourcesDirectoryPath: string;
 	devDependencies: IStringDictionary;
 	projectType: string;
-	initializeProjectData(projectDir?: string): void {
+	get appResourcesDirectoryPath(): string {
+		return this.getAppResourcesDirectoryPath();
+	}
+	public initializeProjectData(projectDir?: string): void {
 		this.projectDir = this.projectDir || projectDir;
+	}
+	public getAppResourcesDirectoryPath(projectDir?: string): string {
+		if (!projectDir) {
+			projectDir = this.projectDir;
+		}
+
+		// always return app/App_Resources
+		return path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
 	}
 }
 

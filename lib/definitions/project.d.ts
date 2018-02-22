@@ -69,6 +69,7 @@ interface IProjectData extends IProjectDir {
 	 * @returns {void}
 	 */
 	initializeProjectData(projectDir?: string): void;
+	getAppResourcesDirectoryPath(projectDir?: string): string;
 }
 
 interface IProjectDataService {

@@ -11,8 +11,8 @@ export class AppFilesUpdater {
 	) {
 	}
 
-	public updateApp(beforeCopyAction: (sourceFiles: string[]) => void, filesToSync?: string[]): void {
-		const sourceFiles = filesToSync || this.resolveAppSourceFiles();
+	public updateApp(beforeCopyAction: (sourceFiles: string[]) => void, projectData: IProjectData, filesToSync?: string[]): void {
+		const sourceFiles = filesToSync || this.resolveAppSourceFiles(projectData);
 
 		beforeCopyAction(sourceFiles);
 		this.copyAppSourceFiles(sourceFiles);
@@ -41,14 +41,19 @@ export class AppFilesUpdater {
 		this.fs.deleteDirectory(path.join(this.appDestinationDirectoryPath, directoryItem));
 	}
 
-	protected readSourceDir(): string[] {
+	protected readSourceDir(projectData: IProjectData): string[] {
 		const tnsDir = path.join(this.appSourceDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
+
 		return this.fs.enumerateFilesInDirectorySync(this.appSourceDirectoryPath, null, { includeEmptyDirectories: true }).filter(dirName => dirName !== tnsDir);
 	}
 
-	protected resolveAppSourceFiles(): string[] {
-		// Copy all files from app dir, but make sure to exclude tns_modules
-		let sourceFiles = this.readSourceDir();
+	protected resolveAppSourceFiles(projectData: IProjectData): string[] {
+		if (this.options.bundle) {
+			return [];
+		}
+
+		// Copy all files from app dir, but make sure to exclude tns_modules and application resources
+		let sourceFiles = this.readSourceDir(projectData);
 
 		if (this.options.release) {
 			const testsFolderPath = path.join(this.appSourceDirectoryPath, 'tests');
@@ -60,9 +65,11 @@ export class AppFilesUpdater {
 			constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => sourceFiles = sourceFiles.filter(file => !minimatch(file, pattern, { nocase: true })));
 		}
 
-		if (this.options.bundle) {
-			sourceFiles = sourceFiles.filter(file => minimatch(file, "**/App_Resources/**", { nocase: true }));
-		}
+		// exclude the app_resources directory from being enumerated
+		// for copying if it is present in the application sources dir
+		const appResourcesPath = projectData.appResourcesDirectoryPath;
+		sourceFiles = sourceFiles.filter(dirName => !path.normalize(dirName).startsWith(path.normalize(appResourcesPath)));
+
 		return sourceFiles;
 	}
 
