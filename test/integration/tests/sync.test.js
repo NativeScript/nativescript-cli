@@ -284,6 +284,14 @@ function testFunc() {
               })
               .catch(done);
           });
+
+          it('should recreate a modified locally, but already deleted item on the server', (done) => {
+            networkStore.removeById(updatedEntity2._id)
+              .then(() => storeToTest.push())
+              .then((result) => validatePushOperation(result, entity1, updatedEntity2, entity3, 3))
+              .then(done)
+              .catch(done);
+          });
         });
 
         describe('pull()', () => {
@@ -308,6 +316,31 @@ function testFunc() {
             storeToTest.pull(query)
               .then((result) => validatePullOperation(result, [entity1]))
               .then(() => done())
+              .catch(done);
+          });
+
+          it('should make a silent push before the pull operation', (done) => {
+            syncStore.save(entity3)
+              .then(() => storeToTest.pull())
+              .then(() => networkStore.findById(entity3._id).toPromise())
+              .then((result) => {
+                expect(result._id).to.equal(entity3._id);
+                done();
+              })
+              .catch(done);
+          });
+
+          it('should overwrite locally changed items', (done) => {
+            const updatedEntity3 = Object.assign({ newProperty: utilities.randomString() }, entity3);
+            cacheStore.save(entity3)
+              .then(() => syncStore.save(updatedEntity3))
+              .then(() => syncStore.clearSync())
+              .then(() => storeToTest.pull())
+              .then(() => syncStore.findById(updatedEntity3._id).toPromise())
+              .then((result) => {
+                expect(result.newProperty).to.not.exist;
+                done();
+              })
               .catch(done);
           });
         });
