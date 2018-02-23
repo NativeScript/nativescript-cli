@@ -63,13 +63,18 @@ interface IProjectData extends IProjectDir {
 	appDirectoryPath: string;
 	appResourcesDirectoryPath: string;
 	projectType: string;
+	nsConfig: any;
 	/**
 	 * Initializes project data with the given project directory. If none supplied defaults to --path option or cwd.
 	 * @param {string} projectDir Project root directory.
 	 * @returns {void}
 	 */
 	initializeProjectData(projectDir?: string): void;
+	initializeProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, projectDir?: string): void;
+	getAppDirectoryPath(projectDir?: string): string;
+	getAppDirectoryRelativePath(): string;
 	getAppResourcesDirectoryPath(projectDir?: string): string;
+	getAppResourcesRelativeDirectoryPath(): string;
 }
 
 interface IProjectDataService {

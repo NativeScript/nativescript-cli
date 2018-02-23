@@ -16,11 +16,13 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 		const platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
 		const parsedFilePath = this.getPreparedFilePath(filePath, projectFilesConfig);
 		let mappedFilePath = "";
+		let relativePath;
 		if (parsedFilePath.indexOf(constants.NODE_MODULES_FOLDER_NAME) > -1) {
-			const relativePath = path.relative(path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME), parsedFilePath);
+			relativePath = path.relative(path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME), parsedFilePath);
 			mappedFilePath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.TNS_MODULES_FOLDER_NAME, relativePath);
 		} else {
-			mappedFilePath = path.join(platformData.appDestinationDirectoryPath, path.relative(projectData.projectDir, parsedFilePath));
+			relativePath = path.relative(projectData.appDirectoryPath, parsedFilePath);
+			mappedFilePath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, relativePath);
 		}
 
 		const appResourcesDirectoryPath = projectData.appResourcesDirectoryPath;

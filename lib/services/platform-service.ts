@@ -577,10 +577,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	public async cleanDestinationApp(platformInfo: IPreparePlatformInfo): Promise<void> {
 		await this.ensurePlatformInstalled(platformInfo.platform, platformInfo.platformTemplate, platformInfo.projectData, platformInfo.config);
 
-		const appSourceDirectoryPath = path.join(platformInfo.projectData.projectDir, constants.APP_FOLDER_NAME);
 		const platformData = this.$platformsData.getPlatformData(platformInfo.platform, platformInfo.projectData);
 		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-		const appUpdater = new AppFilesUpdater(appSourceDirectoryPath, appDestinationDirectoryPath, platformInfo.appFilesUpdaterOptions, this.$fs);
+		const appUpdater = new AppFilesUpdater(platformInfo.projectData.appDirectoryPath, appDestinationDirectoryPath, platformInfo.appFilesUpdaterOptions, this.$fs);
 		appUpdater.cleanDestinationApp();
 	}
 

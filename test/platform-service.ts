@@ -454,8 +454,9 @@ describe('Platform Service Tests', () => {
 
 			const projectData = testInjector.resolve("projectData");
 			projectData.projectDir = testDirData.tempFolder;
-			projectData.appDirectoryPath = testDirData.appFolderPath;
 			projectData.projectName = "app";
+			projectData.appDirectoryPath = testDirData.appFolderPath;
+			projectData.appResourcesDirectoryPath = path.join(testDirData.appFolderPath, "App_Resources");
 
 			platformService = testInjector.resolve("platformService");
 			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: release };
@@ -887,6 +888,8 @@ describe('Platform Service Tests', () => {
 
 			const projectData = testInjector.resolve("projectData");
 			projectData.projectDir = testDirData.tempFolder;
+			projectData.appDirectoryPath = projectData.getAppDirectoryPath();
+			projectData.appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 
 			platformService = testInjector.resolve("platformService");
 			const oldLoggerWarner = testInjector.resolve("$logger").warn;

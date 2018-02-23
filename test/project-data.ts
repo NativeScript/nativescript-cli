@@ -15,7 +15,8 @@ describe("projectData", () => {
 
 		testInjector.register("fs", {
 			exists: () => true,
-			readJson: (): any => null
+			readJson: (): any => null,
+			readText: (): any => null
 		});
 
 		testInjector.register("staticConfig", {
@@ -41,11 +42,11 @@ describe("projectData", () => {
 			const fs = testInjector.resolve("fs");
 			fs.exists = (filePath: string) => filePath && path.basename(filePath) === "package.json";
 
-			fs.readJson = () => ({
+			fs.readText = () => (JSON.stringify({
 				nativescript: {},
 				dependencies: dependencies,
 				devDependencies: devDependencies
-			});
+			}));
 
 			const projectHelper: IProjectHelper = testInjector.resolve("projectHelper");
 			projectHelper.projectDir = "projectDir";

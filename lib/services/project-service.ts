@@ -101,7 +101,7 @@ export class ProjectService implements IProjectService {
 	private async extractTemplate(projectDir: string, realTemplatePath: string): Promise<void> {
 		this.$fs.ensureDirectoryExists(projectDir);
 
-		const appDestinationPath = path.join(projectDir, constants.APP_FOLDER_NAME);
+		const appDestinationPath = this.$projectData.getAppDirectoryPath(projectDir);
 		this.$fs.createDirectory(appDestinationPath);
 
 		this.$logger.trace(`Copying application from '${realTemplatePath}' into '${appDestinationPath}'.`);
@@ -111,7 +111,7 @@ export class ProjectService implements IProjectService {
 	}
 
 	private async ensureAppResourcesExist(projectDir: string): Promise<void> {
-		const appPath = path.join(projectDir, constants.APP_FOLDER_NAME),
+		const appPath = this.$projectData.getAppDirectoryPath(projectDir),
 			appResourcesDestinationPath = this.$projectData.getAppResourcesDirectoryPath(projectDir);
 
 		if (!this.$fs.exists(appResourcesDestinationPath)) {
@@ -138,7 +138,7 @@ export class ProjectService implements IProjectService {
 	}
 
 	private removeMergedDependencies(projectDir: string, templatePackageJsonData: any): void {
-		const extractedTemplatePackageJsonPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.PACKAGE_JSON_FILE_NAME);
+		const extractedTemplatePackageJsonPath = path.join(this.$projectData.getAppDirectoryPath(projectDir), constants.PACKAGE_JSON_FILE_NAME);
 		for (const key in templatePackageJsonData) {
 			if (constants.PackageJsonKeysToKeep.indexOf(key) === -1) {
 				delete templatePackageJsonData[key];

@@ -1,5 +1,6 @@
 import * as path from "path";
 import { ProjectData } from "../project-data";
+import { exported } from "../common/decorators";
 
 interface IProjectFileData {
 	projectData: any;
@@ -38,6 +39,13 @@ export class ProjectDataService implements IProjectDataService {
 	public getProjectData(projectDir: string): IProjectData {
 		const projectDataInstance = this.$injector.resolve<IProjectData>(ProjectData);
 		projectDataInstance.initializeProjectData(projectDir);
+		return projectDataInstance;
+	}
+
+	@exported("projectDataService")
+	public getProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, projectDir?: string): IProjectData {
+		const projectDataInstance = this.$injector.resolve<IProjectData>(ProjectData);
+		projectDataInstance.initializeProjectDataFromContent(packageJsonContent, nsconfigContent, projectDir);
 		return projectDataInstance;
 	}
 

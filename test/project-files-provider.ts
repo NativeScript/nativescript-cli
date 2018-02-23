@@ -43,6 +43,8 @@ describe("project-files-provider", () => {
 		testInjector = createTestInjector();
 		projectData = testInjector.resolve("projectData");
 		projectData.projectDir = projectDir;
+		projectData.appDirectoryPath = projectData.getAppDirectoryPath();
+		projectData.appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 		projectFilesProvider = testInjector.resolve(ProjectFilesProvider);
 	});
 
