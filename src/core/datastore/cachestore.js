@@ -73,10 +73,7 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   pendingSyncCount(query) {
-    if (query) {
-      return this.syncManager.getSyncItemCountByEntityQuery(this.collection, query);
-    }
-    return this.syncManager.getSyncItemCount(this.collection);
+    return this.syncManager.getSyncItemCountByEntityQuery(this.collection, query);
   }
 
   pendingSyncEntities(query) {
@@ -111,7 +108,7 @@ export class CacheStore extends NetworkStore {
    */
   pull(query, options = {}) {
     options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
-    return this.pendingSyncCount(query)
+    return this.syncManager.getSyncItemCountByEntityQuery(this.collection, query)
       .then((count) => {
         if (count > 0) {
           return this.syncManager.push(this.collection, query);
