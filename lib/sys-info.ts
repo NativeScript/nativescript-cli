@@ -1,23 +1,18 @@
-import { SysInfoBase } from "./common/sys-info-base";
 import * as path from "path";
+import { sysInfo } from "nativescript-doctor";
 
-export class SysInfo extends SysInfoBase {
-	constructor(protected $childProcess: IChildProcess,
-		protected $hostInfo: IHostInfo,
-		protected $iTunesValidator: Mobile.IiTunesValidator,
-		protected $logger: ILogger,
-		protected $winreg: IWinReg,
-		protected $androidEmulatorServices: Mobile.IAndroidEmulatorServices,
-		private $androidToolsInfo: IAndroidToolsInfo) {
-		super($childProcess, $hostInfo, $iTunesValidator, $logger, $winreg, $androidEmulatorServices);
-	}
+export class SysInfo implements ISysInfo {
+	private sysInfo: ISysInfoData = null;
 
-	public async getSysInfo(pathToPackageJson: string, androidToolsInfo?: { pathToAdb: string }): Promise<ISysInfoData> {
-		const defaultAndroidToolsInfo = {
-			pathToAdb: await this.$androidToolsInfo.getPathToAdbFromAndroidHome()
-		};
+	public async getSysInfo(config?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.ISysInfoData> {
+		if (!this.sysInfo) {
+			const pathToNativeScriptCliPackageJson = (config && config.pathToNativeScriptCliPackageJson) || path.join(__dirname, "..", "package.json");
+			const androidToolsInfo = config && config.androidToolsInfo;
 
-		return super.getSysInfo(pathToPackageJson || await path.join(__dirname, "..", "package.json"), androidToolsInfo || defaultAndroidToolsInfo);
+			this.sysInfo = await sysInfo.getSysInfo({pathToNativeScriptCliPackageJson, androidToolsInfo});
+		}
+
+		return this.sysInfo;
 	}
 }
 $injector.register("sysInfo", SysInfo);
