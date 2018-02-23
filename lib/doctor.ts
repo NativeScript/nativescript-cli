@@ -28,9 +28,9 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		return false;
 	}
 
-	public async getWarnings(): Promise<NativeScriptDoctor.IWarning[]> {
+	public async getWarnings(config?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.IWarning[]> {
 		let result: NativeScriptDoctor.IWarning[] = [];
-		const sysInfoData = await this.sysInfo.getSysInfo();
+		const sysInfoData = await this.sysInfo.getSysInfo(config);
 
 		const androidHomeValidationErrors = this.androidToolsInfo.validateAndroidHomeEnvVariable();
 		if (androidHomeValidationErrors.length > 0) {
@@ -78,7 +78,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 				});
 			}
 
-			if (!sysInfoData.xcodeprojGemLocation) {
+			if (!sysInfoData.xcodeprojLocation) {
 				result.push({
 					warning: "WARNING: xcodeproj gem is not installed or is not configured properly.",
 					additionalInformation: "You will not be able to build your projects for iOS." + EOL
@@ -120,6 +120,23 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 					warning: `WARNING: Your current CocoaPods version is earlier than ${Doctor.MIN_SUPPORTED_POD_VERSION}.`,
 					additionalInformation: "You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
 					+ `To be able to build such projects, verify that you have at least ${Doctor.MIN_SUPPORTED_POD_VERSION} version installed.`,
+					platforms: [Constants.IOS_PLATFORM_NAME]
+				});
+			}
+
+			if (!sysInfoData.pythonInfo.isInstalled) {
+				result.push({
+					warning: `WARNING: Couldn't retrieve installed python packages.`,
+					additionalInformation: "We cannot verify your python installation is setup correctly. Please, make sure you have both 'python' and 'pip' installed." + EOL
+						+ `Error while validating Python packages. Error is: ${sysInfoData.pythonInfo.installationErrorMessage}`,
+					platforms: [Constants.IOS_PLATFORM_NAME]
+				});
+			}
+
+			if (!sysInfoData.pythonInfo.isSixPackageInstalled) {
+				result.push({
+					warning: `WARNING: The Python 'six' package not found.`,
+					additionalInformation: "This package is required by the Debugger library (LLDB) for iOS. You can install it by first making sure you have pip installed and then running 'pip install six' from the terminal.",
 					platforms: [Constants.IOS_PLATFORM_NAME]
 				});
 			}

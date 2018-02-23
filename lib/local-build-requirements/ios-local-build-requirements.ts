@@ -7,7 +7,7 @@ export class IosLocalBuildRequirements {
 	public async checkRequirements(): Promise<boolean> {
 		if (!this.hostInfo.isDarwin ||
 			!await this.sysInfo.getXcodeVersion() ||
-			!await this.sysInfo.getXcodeprojGemLocation()) {
+			!await this.sysInfo.getXcodeprojLocation()) {
 			return false;
 		}
 

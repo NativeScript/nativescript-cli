@@ -13,6 +13,7 @@ const PROGRAM_FILES_ENV_PATH = "C:\\Program Files";
 interface IChildProcessResultDescription {
 	result?: any;
 	shouldThrowError?: boolean;
+	errorCode?: number;
 }
 
 interface ICLIOutputVersionTestCase {
@@ -37,6 +38,7 @@ interface IChildProcessResults {
 	pod: IChildProcessResultDescription;
 	nativeScriptCliVersion: IChildProcessResultDescription;
 	git: IChildProcessResultDescription;
+	pythonInfo?: IChildProcessResultDescription;
 }
 
 interface IHostInfoMockOptions {
@@ -92,7 +94,8 @@ function createChildProcessResults(childProcessResult: IChildProcessResults): ID
 		"gradle -v": childProcessResult.gradleVersion,
 		"tns --version": childProcessResult.nativeScriptCliVersion,
 		"emulator": { shouldThrowError: false },
-		"which git": childProcessResult.git
+		"which git": childProcessResult.git,
+		'python -c "import six"': childProcessResult.pythonInfo
 	};
 }
 
@@ -101,7 +104,12 @@ function getResultFromChildProcess(childProcessResultDescription: IChildProcessR
 		if (options && options.ignoreError) {
 			return null;
 		} else {
-			throw new Error(`This one throws error. (${command})`);
+			const error = new Error(`This one throws error. (${command})`);
+			if (childProcessResultDescription.errorCode) {
+				(<any>error).code = childProcessResultDescription.errorCode;
+			}
+
+			throw error;
 		}
 	}
 
@@ -328,6 +336,50 @@ describe("SysInfo unit tests", () => {
 				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
 				const result = await sysInfo.getXcprojInfo();
 				assert.deepEqual(result, { shouldUseXcproj: true, xcprojAvailable: false });
+			});
+		});
+
+		describe("when android info is incorrect", () => {
+			it("pathToAdb is null", async () => {
+				childProcessResult.adbVersion = {
+					result: null
+				};
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: false, dotNetVersion: "4.5.1"}, null);
+				const adbVersion = await sysInfo.getAdbVersion();
+				const isAndroidSdkConfiguredCorrectly = await sysInfo.isAndroidSdkConfiguredCorrectly();
+				assert.deepEqual(adbVersion, null);
+				assert.deepEqual(isAndroidSdkConfiguredCorrectly, undefined);
+			});
+		});
+
+		describe("pythonInfo", () => {
+			it("should return null when platform is windows", async () => {
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion: "4.5.1"}, null);
+				const pythonInfo = await sysInfo.getPythonInfo();
+				assert.deepEqual(pythonInfo, null);
+			});
+			it("should return null when platform is linux", async () => {
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: false, dotNetVersion: "4.5.1"}, null);
+				const pythonInfo = await sysInfo.getPythonInfo();
+				assert.deepEqual(pythonInfo, null);
+			});
+			it("should return {isInstalled: true, isSixPackageInstalled: true} when python is correctly installed on Mac", async () => {
+				childProcessResult.pythonInfo = { result: "" };
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" }, null);
+				const pythonInfo = await sysInfo.getPythonInfo();
+				assert.deepEqual(pythonInfo, { isInstalled: true, isSixPackageInstalled: true });
+			});
+			it("should return {isInstalled: false, isSixPackageInstalled: false} when python check throws an error", async () => {
+				childProcessResult.pythonInfo = { shouldThrowError: true };
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" }, null);
+				const pythonInfo = await sysInfo.getPythonInfo();
+				assert.deepEqual(pythonInfo, { isInstalled: false, isSixPackageInstalled: false, installationErrorMessage: "This one throws error. (python -c \"import six\")" });
+			});
+			it("should return {isInstalled: true, isSixPackageInstalled: false} when python is installed but six package is not", async () => {
+				childProcessResult.pythonInfo = { shouldThrowError: true, errorCode: 1 };
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1"}, null);
+				const pythonInfo = await sysInfo.getPythonInfo();
+				assert.deepEqual(pythonInfo, { isInstalled: true, isSixPackageInstalled: false });
 			});
 		});
 
