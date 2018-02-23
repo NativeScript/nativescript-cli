@@ -341,7 +341,9 @@ function testFunc() {
                 return networkStore.find().toPromise()
                   .then((result) => {
                     expect(result.length).to.equal(3); // the nameless entity from setup
-                    expect(_.find(result, e => e._id === entity2._id)).to.exist;
+                    const expectedEntity2 = _.find(result, e => e._id === entity2._id);
+                    expect(expectedEntity2).to.exist;
+                    expect(expectedEntity2.newProperty).to.equal(updatedEntity2.newProperty);
                     expect(_.find(result, e => e._id === entity3._id)).to.exist;
                     done();
                   });
@@ -361,7 +363,9 @@ function testFunc() {
                   .then((result) => {
                     expect(result.length).to.equal(2); // the nameless entity from setup
                     expect(_.find(result, e => e._id === entity1._id)).to.exist;
-                    expect(_.find(result, e => e._id === entity2._id)).to.exist;
+                    const expectedEntity2 = _.find(result, e => e._id === entity2._id);
+                    expect(expectedEntity2).to.exist;
+                    expect(expectedEntity2.newProperty).to.equal(undefined);
                     expect(_.find(result, e => e._id === entity3._id)).to.not.exist;
                     done();
                   });
