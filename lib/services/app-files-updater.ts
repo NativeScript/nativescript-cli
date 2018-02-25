@@ -11,20 +11,31 @@ export class AppFilesUpdater {
 	) {
 	}
 
-	public updateApp(beforeCopyAction: (sourceFiles: string[]) => void, filesToSync?: string[]): void {
-		const sourceFiles = filesToSync || this.resolveAppSourceFiles();
+	public updateApp(updateAppOptions: IUpdateAppOptions): void {
+		this.cleanDestinationApp(updateAppOptions);
+		const sourceFiles = updateAppOptions.filesToSync || this.resolveAppSourceFiles();
 
-		beforeCopyAction(sourceFiles);
+		updateAppOptions.beforeCopyAction(sourceFiles);
 		this.copyAppSourceFiles(sourceFiles);
 	}
 
-	public cleanDestinationApp(): void {
-		// Delete the destination app in order to prevent EEXIST errors when symlinks are used.
-		let destinationAppContents = this.readDestinationDir();
-		destinationAppContents = destinationAppContents.filter(
-			(directoryName: string) => directoryName !== constants.TNS_MODULES_FOLDER_NAME);
+	public cleanDestinationApp(updateAppOptions?: IUpdateAppOptions): void {
+		let itemsToRemove: string[];
 
-		_(destinationAppContents).each((directoryItem: string) => {
+		if (updateAppOptions && updateAppOptions.filesToRemove) {
+			// We get here during LiveSync - we only want to get rid of files, that the file system watcher detected were deleted
+			itemsToRemove = updateAppOptions.filesToRemove.map(fileToRemove => path.relative(this.appSourceDirectoryPath, fileToRemove));
+		} else {
+			// We get here during the initial sync before the file system watcher is even started
+			// delete everything and prepare everything anew just to be sure
+			// Delete the destination app in order to prevent EEXIST errors when symlinks are used.
+			itemsToRemove = this.readDestinationDir();
+			itemsToRemove = itemsToRemove.filter(
+				(directoryName: string) => directoryName !== constants.TNS_MODULES_FOLDER_NAME);
+
+		}
+
+		_(itemsToRemove).each((directoryItem: string) => {
 			this.deleteDestinationItem(directoryItem);
 		});
 	}

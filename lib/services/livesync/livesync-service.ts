@@ -368,7 +368,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				projectData: options.projectData,
 				env: options.env,
 				nativePrepare: nativePrepare,
-				filesToSync: options.modifiedFiles,
+				filesToSync: options.filesToSync,
+				filesToRemove: options.filesToRemove,
 				platformTemplate: null,
 				skipModulesNativeCheck: options.skipModulesNativeCheck,
 				config: platformSpecificOptions
@@ -568,6 +569,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 										deviceBuildInfoDescriptor,
 										settings: latestAppPackageInstalledSettings,
 										modifiedFiles: allModifiedFiles,
+										filesToRemove: currentFilesToRemove,
+										filesToSync: currentFilesToSync,
 										bundle: liveSyncData.bundle,
 										release: liveSyncData.release,
 										env: liveSyncData.env,

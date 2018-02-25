@@ -152,7 +152,7 @@ interface IProjectDataComposition {
 /**
  * Desribes object that can be passed to ensureLatestAppPackageIsInstalledOnDevice method.
  */
-interface IEnsureLatestAppPackageIsInstalledOnDeviceOptions extends IProjectDataComposition, IEnvOptions, IBundle, IRelease, ISkipNativeCheckOptional {
+interface IEnsureLatestAppPackageIsInstalledOnDeviceOptions extends IProjectDataComposition, IEnvOptions, IBundle, IRelease, ISkipNativeCheckOptional, IOptionalFilesToRemove, IOptionalFilesToSync {
 	device: Mobile.IDevice;
 	preparedPlatforms: string[];
 	rebuiltInformation: ILiveSyncBuildInfo[];
