@@ -334,7 +334,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
         });
     });
 
-    describe.only('when using auto pagination', () => {
+    describe.skip('when using auto pagination', () => {
       let query = new Query();
       const options = { autoPagination: true };
 
