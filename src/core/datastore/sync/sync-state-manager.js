@@ -13,7 +13,8 @@ import {
   generateEntityId,
   getTagFromCollectionName,
   formTaggedCollectionName,
-  stripTagFromCollectionName
+  stripTagFromCollectionName,
+  collectionHasTag
 } from '../utils';
 
 // imported for typings
@@ -123,8 +124,10 @@ export class SyncStateManager {
   _getCollectionFilter(collection) {
     const result = new Query();
     result.equalTo('collection', collection)
-      .or()
-      .equalTo('collection', stripTagFromCollectionName(collection));
+    if (collectionHasTag(collection)) {
+      result.or()
+        .equalTo('collection', stripTagFromCollectionName(collection));
+    }
     return result;
   }
 

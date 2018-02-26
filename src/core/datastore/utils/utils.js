@@ -34,6 +34,10 @@ export function isValidDataStoreTag(value) {
   return isNonemptyString(value) && regexp.test(value);
 }
 
+export function collectionHasTag(collection) {
+  return collection.indexOf(dataStoreTagSeparator) >= 0;
+}
+
 export function formTaggedCollectionName(collection, tag) {
   if (tag) {
     return `${collection}${dataStoreTagSeparator}${tag}`;

@@ -73,10 +73,7 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   pendingSyncCount(query) {
-    if (query) {
-      return this.syncManager.getSyncItemCountByEntityQuery(this.collection, query);
-    }
-    return this.syncManager.getSyncItemCount(this.collection);
+    return this.syncManager.getSyncItemCountByEntityQuery(this.collection, query);
   }
 
   pendingSyncEntities(query) {
@@ -111,13 +108,9 @@ export class CacheStore extends NetworkStore {
    */
   pull(query, options = {}) {
     options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
-    // TODO: the query issue must be resolved - entity or sync entity
     return this.syncManager.getSyncItemCountByEntityQuery(this.collection, query)
       .then((count) => {
         if (count > 0) {
-          // TODO: I think this should happen, but keeping current behaviour
-          // const msg = `There are ${count} entities awaiting push. Please push before you attempt to pull`;
-          // return Promise.reject(new KinveyError(msg));
           return this.syncManager.push(this.collection, query);
         }
         return Promise.resolve();
