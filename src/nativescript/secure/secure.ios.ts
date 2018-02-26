@@ -1,9 +1,9 @@
 declare const SAMKeychainQuery: any;
 declare const SAMKeychain: any;
-declare const kSecAttrAccessibleAlwaysThisDeviceOnly: any;
+declare const kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly: any;
 
 export class SecureStorage {
-  private defaultService = 'kinvey_nativescript_sdk';
+  private defaultService = 'com.kinvey.Kinvey';
 
   get(key): any {
     if (typeof key !== 'string') {
@@ -11,8 +11,8 @@ export class SecureStorage {
     }
 
     const query = SAMKeychainQuery.new();
-    query.service = this.defaultService;
-    query.account = key;
+    query.service = `${this.defaultService}.${key}`;
+    query.account = 'user';
 
     try {
       query.fetch();
@@ -35,13 +35,14 @@ export class SecureStorage {
       value = String(value);
     }
 
-    const accessibility = kSecAttrAccessibleAlwaysThisDeviceOnly;
+    const accessibility = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly;
     SAMKeychain.setAccessibilityType(accessibility);
 
     const query = SAMKeychainQuery.new();
-    query.service = this.defaultService;
-    query.account = key;
+    query.service = `${this.defaultService}.${key}`;
+    query.account = 'user';
     query.password = value;
+	query.synchronizationMode = SAMKeychainQuerySynchronizationMode.No;
     return query.save();
   }
 
@@ -51,8 +52,8 @@ export class SecureStorage {
     }
 
     const query = SAMKeychainQuery.new();
-    query.service = this.defaultService;
-    query.account = key;
+    query.service = `${this.defaultService}.${key}`;
+    query.account = 'user';
 
     try {
       return query.deleteItem();
