@@ -10,7 +10,8 @@ export class NodePackageManager implements INodePackageManager {
 		private $hostInfo: IHostInfo,
 		private $errors: IErrors,
 		private $childProcess: IChildProcess,
-		private $logger: ILogger) { }
+		private $logger: ILogger,
+		private $httpClient: Server.IHttpClient) { }
 
 	@exported("npm")
 	public async install(packageName: string, pathToSave: string, config: INodePackageManagerInstallOptions): Promise<INpmInstallResultInfo> {
@@ -108,6 +109,23 @@ export class NodePackageManager implements INodePackageManager {
 			this.$errors.failWithoutHelp(e.message);
 		}
 		return JSON.parse(viewResult);
+	}
+
+	public async searchNpms(keyword: string): Promise<INpmsResult> {
+		// TODO: Fix the generation of url - in case it contains @ or / , the call may fail.
+		const httpRequestResult = await this.$httpClient.httpRequest(`https://api.npms.io/v2/search?q=keywords:${keyword}`);
+		const result: INpmsResult = JSON.parse(httpRequestResult.body);
+		return result;
+	}
+
+	public async getRegistryPackageData(packageName: string): Promise<any> {
+		const url = `https://registry.npmjs.org/${packageName}`;
+		this.$logger.trace(`Trying to get data from npm registry for package ${packageName}, url is: ${url}`);
+		const responseData = (await this.$httpClient.httpRequest(url)).body;
+		this.$logger.trace(`Successfully received data from npm registry for package ${packageName}. Response data is: ${responseData}`);
+		const jsonData = JSON.parse(responseData);
+		this.$logger.trace(`Successfully parsed data from npm registry for package ${packageName}.`);
+		return jsonData;
 	}
 
 	private getNpmExecutableName(): string {

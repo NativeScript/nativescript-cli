@@ -110,7 +110,8 @@ function createTestInjector() {
 			message: (): void => undefined
 		})
 	});
-
+	testInjector.register("httpClient", {});
+	testInjector.register("extensibilityService", {});
 	return testInjector;
 }
 

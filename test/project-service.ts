@@ -9,7 +9,6 @@ import * as ProjectHelperLib from "../lib/common/project-helper";
 import { StaticConfig } from "../lib/config";
 import * as NpmLib from "../lib/node-package-manager";
 import { NpmInstallationManager } from "../lib/npm-installation-manager";
-import * as HttpClientLib from "../lib/common/http-client";
 import { FileSystem } from "../lib/common/file-system";
 import * as path from "path";
 import temp = require("temp");
@@ -145,7 +144,7 @@ class ProjectIntegrationTest {
 
 		this.testInjector.register("npmInstallationManager", NpmInstallationManager);
 		this.testInjector.register("npm", NpmLib.NodePackageManager);
-		this.testInjector.register("httpClient", HttpClientLib.HttpClient);
+		this.testInjector.register("httpClient", {});
 
 		this.testInjector.register("options", Options);
 		this.testInjector.register("hostInfo", HostInfo);
