@@ -1,6 +1,10 @@
 import expect from 'expect';
 
-import { mockRequiresIn } from '../mocks';
+import { Client } from '../client';
+import { randomString } from '../utils';
+
+// TODO: move require-helper elsewhere
+import { mockRequiresIn } from '../datastore/require-helper';
 
 const liveServiceMock = {
   registerUser: () => { },
@@ -12,11 +16,18 @@ const liveServiceMock = {
   isInitialized: () => { }
 };
 
-const pathToFacade = '../../../src/live/live-service-facade';
+const pathToFacade = './live-service-facade';
 const requireMocks = { './live-service': { getLiveService: () => liveServiceMock } };
 
 describe('LiveServiceFacade', () => {
   let LiveServiceFacade;
+
+  before(() => {
+    Client.init({
+      appKey: randomString(),
+      appSecret: randomString()
+    });
+  });
 
   beforeEach(() => {
     // avoid LiveService singleton state
