@@ -108,21 +108,6 @@ interface IProjectDataService {
 	getProjectData(projectDir: string): IProjectData;
 }
 
-/**
- * Describes working with templates.
- */
-interface IProjectTemplatesService {
-	/**
-	 * Prepares template for project creation.
-	 * In case templateName is not provided, use defaultTemplatePath.
-	 * In case templateName is a special word, validated from us (for ex. typescript), resolve the real template name and add it to npm cache.
-	 * In any other cases try to `npm install` the specified templateName to temp directory.
-	 * @param {string} templateName The name of the template.
-	 * @return {string} Path to the directory where extracted template can be found.
-	 */
-	prepareTemplate(templateName: string, projectDir: string): Promise<string>;
-}
-
 interface IPlatformProjectServiceBase {
 	getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string;
 }
