@@ -1,8 +1,9 @@
 import { PromiseQueue } from '../../utils';
 
-export class InmemoryCrudQueue {
+export class PromiseQueueByKey {
   _simultaneousOpsCount;
   _maxQueueLength;
+  /** @type {{[key: string]: PromiseQueue}} */
   _queuesByKey = {};
 
   constructor(simultaneousOpsCount = 1, maxQueueLength = Infinity) {
