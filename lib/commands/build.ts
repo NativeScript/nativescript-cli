@@ -26,7 +26,6 @@ export class BuildCommandBase extends BundleBase {
 		};
 
 		await this.$platformService.preparePlatform(platformInfo);
-		this.$options.clean = true;
 		const buildConfig: IBuildConfig = {
 			buildForDevice: this.$options.forDevice,
 			projectDir: this.$options.path,

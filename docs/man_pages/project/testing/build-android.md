@@ -13,6 +13,7 @@ Builds the project for Android and produces an APK that you can manually deploy 
 
 ### Options
 * `--compileSdk` - Sets the Android SDK that will be used to build the project.
+* `--clean` - If set, forces rebuilding the native application.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build. When set, you must also specify the `--key-store-*` options.
 * `--key-store-path` - Specifies the file path to the keystore file (P12) which you want to use to code sign your APK. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-password` - Provides the password for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
