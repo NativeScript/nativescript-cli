@@ -55,9 +55,8 @@ export class ProjectData implements IProjectData {
 			const projectFilePath = this.getProjectFilePath(projectDir);
 
 			if (this.$fs.exists(projectFilePath)) {
-				let packageJsonContent: any = null;
-				packageJsonContent = this.$fs.readText(projectFilePath);
-				const nsConfigContent: any = this.getNsConfigContent(projectDir);
+				const packageJsonContent = this.$fs.readText(projectFilePath);
+				const nsConfigContent = this.getNsConfigContent(projectDir);
 
 				this.initializeProjectDataFromContent(packageJsonContent, nsConfigContent, projectDir);
 			}
@@ -72,9 +71,9 @@ export class ProjectData implements IProjectData {
 		projectDir = projectDir || this.$projectHelper.projectDir || "";
 		const projectFilePath = this.getProjectFilePath(projectDir);
 		// If no project found, projectDir should be null
-		let nsData: any = null;
-		let nsConfig: any = null;
-		let packageJsonData: any = null;
+		let nsData = null;
+		let nsConfig: INsConfig = null;
+		let packageJsonData = null;
 
 		try {
 			packageJsonData = parseJson(packageJsonContent);
@@ -86,7 +85,7 @@ export class ProjectData implements IProjectData {
 		}
 
 		try {
-			nsConfig = nsconfigContent ? parseJson(nsconfigContent) : null;
+			nsConfig = nsconfigContent ? <INsConfig>parseJson(nsconfigContent) : null;
 		} catch (err) {
 			this.$errors.failWithoutHelp(`The NativeScript configuration file ${constants.CONFIG_NS_FILE_NAME} is corrupted. ${EOL}` +
 				`Consider restoring an earlier version from your source control or backup.${EOL}` +
@@ -125,15 +124,9 @@ export class ProjectData implements IProjectData {
 	}
 
 	public getAppResourcesDirectoryPath(projectDir?: string): string {
-		if (!projectDir) {
-			projectDir = this.projectDir;
-		}
+		const appResourcesRelativePath = this.getAppResourcesRelativeDirectoryPath();
 
-		if (!projectDir) {
-			return null;
-		}
-
-		return path.resolve(projectDir, this.getAppResourcesRelativeDirectoryPath());
+		return this.resolveToProjectDir(appResourcesRelativePath, projectDir);
 	}
 
 	public getAppResourcesRelativeDirectoryPath(): string {
@@ -145,15 +138,9 @@ export class ProjectData implements IProjectData {
 	}
 
 	public getAppDirectoryPath(projectDir?: string): string {
-		if (!projectDir) {
-			projectDir = this.projectDir;
-		}
+		const appRelativePath = this.getAppDirectoryRelativePath();
 
-		if (!projectDir) {
-			return null;
-		}
-
-		return path.resolve(projectDir, this.getAppDirectoryRelativePath());
+		return this.resolveToProjectDir(appRelativePath, projectDir);
 	}
 
 	public getAppDirectoryRelativePath(): string {
@@ -172,6 +159,18 @@ export class ProjectData implements IProjectData {
 		}
 
 		return this.$fs.readText(configNSFilePath);
+	}
+
+	private resolveToProjectDir(pathToResolve: string, projectDir?: string): string {
+		if (!projectDir) {
+			projectDir = this.projectDir;
+		}
+
+		if (!projectDir) {
+			return null;
+		}
+
+		return path.resolve(projectDir, pathToResolve);
 	}
 
 	private getProjectType(): string {

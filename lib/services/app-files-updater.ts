@@ -78,8 +78,8 @@ export class AppFilesUpdater {
 
 		// exclude the app_resources directory from being enumerated
 		// for copying if it is present in the application sources dir
-		const appResourcesPath = projectData.appResourcesDirectoryPath;
-		sourceFiles = sourceFiles.filter(dirName => !path.normalize(dirName).startsWith(path.normalize(appResourcesPath)));
+		const appResourcesPathNormalized = path.normalize(projectData.appResourcesDirectoryPath);
+		sourceFiles = sourceFiles.filter(dirName => !path.normalize(dirName).startsWith(appResourcesPathNormalized));
 
 		return sourceFiles;
 	}

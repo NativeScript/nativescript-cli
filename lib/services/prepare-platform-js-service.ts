@@ -103,7 +103,7 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 		}
 	}
 
-	private copyAppResourcesFiles(config: IPreparePlatformJSInfo) {
+	private copyAppResourcesFiles(config: IPreparePlatformJSInfo): void {
 		const appDestinationDirectoryPath = path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 		const appResourcesSourcePath = config.projectData.appResourcesDirectoryPath;
 

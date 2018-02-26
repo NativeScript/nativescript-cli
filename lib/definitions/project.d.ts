@@ -53,6 +53,11 @@ interface IProjectService {
 	isValidNativeScriptProject(pathToProject?: string): boolean;
 }
 
+interface INsConfig {
+	appPath?: string;
+	appResourcesPath?:string;
+}
+
 interface IProjectData extends IProjectDir {
 	projectName: string;
 	platformsDir: string;
@@ -63,7 +68,7 @@ interface IProjectData extends IProjectDir {
 	appDirectoryPath: string;
 	appResourcesDirectoryPath: string;
 	projectType: string;
-	nsConfig: any;
+	nsConfig: INsConfig;
 	/**
 	 * Initializes project data with the given project directory. If none supplied defaults to --path option or cwd.
 	 * @param {string} projectDir Project root directory.

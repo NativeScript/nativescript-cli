@@ -36,6 +36,7 @@ export class ProjectDataService implements IProjectDataService {
 
 	// TODO: Add tests
 	// TODO: Remove $projectData and replace it with $projectDataService.getProjectData
+	@exported("projectDataService")
 	public getProjectData(projectDir: string): IProjectData {
 		const projectDataInstance = this.$injector.resolve<IProjectData>(ProjectData);
 		projectDataInstance.initializeProjectData(projectDir);
