@@ -38,6 +38,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
   /** @type {SyncStateManagerMock} */
   let syncStateManagerMock;
   let offlineRepoMock = getRepoMock(); // set only for typings, otherwise set in beforeEach
+  let queueSpy;
 
   beforeEach(() => {
     offlineRepoMock = getRepoMock();
@@ -55,6 +56,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
   });
 
   beforeEach(() => {
+    queueSpy = createPromiseSpy();
     const repoProviderMock = {
       getOfflineRepository: () => Promise.resolve(offlineRepoMock)
     };
@@ -63,8 +65,11 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
         repositoryProvider: repoProviderMock
       }
     };
+    const queue = {
+      enqueue: queueSpy
+    };
     const ProxiedSyncManager = mockRequiresIn(__dirname, '../sync/sync-manager', requireMocks, 'SyncManager');
-    syncManager = new ProxiedSyncManager(networkRepoMock, syncStateManagerMock);
+    syncManager = new ProxiedSyncManager(networkRepoMock, syncStateManagerMock, queue);
   });
 
   describe('push()', () => {
@@ -327,6 +332,39 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
         .then(() => {
           validateSpyCalls(offlineRepoMock.update, 1, [collection, serverItemsMock]);
         });
+    });
+
+    describe.only('when using auto pagination', () => {
+      let query = new Query();
+      const options = { autoPagination: true };
+
+      beforeEach(() => {
+        query = new Query().equalTo(randomString(), randomString());
+        const entityCount = 21000;
+        networkRepoMock.count.andReturn(Promise.resolve(entityCount));
+      });
+
+      it('should call NetworkRepo.count()');
+
+      it('should PromiseQueueByKey.enqueue()');
+
+      describe('when pulling with only filter', () => {
+        it('should call NetworkRepo.read() 3 times, with correct skip/limit modifiers');
+
+        it('should call OfflineRepo.delete() 3 times with correct skip/limit modifiers');
+
+        it('should call OfflineRepo.update() 3 times respective entities');
+      });
+
+      describe('when pulling with autoPagination settings', () => {
+        const options = {
+          autoPagination: { pageSize: 3, pullLimit: 10 }
+        };
+
+        it('should respect the supplied pageSize');
+
+        it('should respect the supplied pullLimit');
+      });
     });
   });
 

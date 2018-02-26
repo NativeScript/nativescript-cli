@@ -1,5 +1,6 @@
 import { Promise } from 'es6-promise';
 import clone from 'lodash/clone';
+import times from 'lodash/times';
 
 import { Log } from '../../log';
 import { KinveyError, NotFoundError, SyncError } from '../../errors';
@@ -9,6 +10,7 @@ import { SyncOperation } from './sync-operation';
 import { syncBatchSize } from './utils';
 import { isEmpty } from '../utils';
 import { repositoryProvider } from '../repositories';
+import { Query } from '../../query';
 
 // imported for typings
 // import { SyncStateManager } from './sync-state-manager';
@@ -60,6 +62,9 @@ export class SyncManager {
     if (!isNonemptyString(collection)) {
       return Promise.reject(new KinveyError('Invalid or missing collection name'));
     }
+    if (options.autoPagination) {
+      return this._paginate(collection, query, options.autoPagination);
+    }
     return this._fetchItemsFromServer(collection, query, options)
       .then(entities => this._replaceOfflineEntities(collection, query, entities));
   }
@@ -104,7 +109,7 @@ export class SyncManager {
     return this._syncStateManager.removeAllSyncItems(collection);
   }
 
-  // for syncstatemanager
+  // for SyncStateManager
   addCreateEvent(collection, createdItems) {
     return this._addEvent(collection, createdItems, SyncOperation.Create);
   }
@@ -346,5 +351,46 @@ export class SyncManager {
       default:
         return Promise.reject(new SyncError('Invalid sync event name'));
     }
+  }
+
+  _getPaginationQueries(filter, pageSize, totalCount) {
+    const queryCount = Math.ceil(totalCount / pageSize);
+    const queries = times(queryCount, (i) => {
+      const query = new Query({ filter });
+      query.skip = i * pageSize;
+      query.limit = Math.min(totalCount - query.skip, pageSize);
+      return query;
+    });
+    return queries;
+  }
+
+  _enqueuePagination(collection, query) {
+    return this._networkRepo.read(collection, query)
+      .then((entities) => {
+        if (isEmpty(entities)) {
+          return Promise.resolve();
+        }
+        return this._getOfflineRepo()
+          .then(repo => repo.update(collection, entities));
+      });
+  }
+
+  _queuePaginationQueries(collection, originalQuery, queries) {
+    return this._getOfflineRepo()
+      .then(repo => repo.delete(collection, originalQuery))
+      .then(() => {
+        return forEachAsync(queries, (query) => {
+          return this._enqueuePagination(collection, query);
+        });
+      });
+  }
+
+  _paginate(collection, query, options) {
+    const countQuery = new Query({ filter: query.filter });
+    return this._networkRepo.count(collection, countQuery)
+      .then((totalCount) => {
+        const paginationQueries = this._getPaginationQueries(query.filter, options.pageSize, totalCount);
+        return this._queuePaginationQueries(collection, query, paginationQueries);
+      });
   }
 }
