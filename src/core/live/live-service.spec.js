@@ -1,10 +1,14 @@
 import expect from 'expect';
 import PubNub from 'pubnub';
 
+import { NetworkRack } from '../request';
+import { NodeHttpMiddleware } from '../../node/http';
 import { User } from '../user';
+import { UserMock } from '../user/user-mock';
 import { randomString } from '../utils';
 import { Client } from '../client';
-import { PubNubListener, getLiveService } from './live-service';
+import { getLiveService } from './live-service';
+import { PubNubListener } from './pubnub-listener';
 
 import * as nockHelper from './nock-helper';
 import { PubNubClientMock } from './pubnub-client-mock';
@@ -21,12 +25,13 @@ describe('LiveService', () => {
   let liveService;
   let registerUserResponse;
 
-  before(function () {
+  before(() => {
     const client = Client.init({
       appKey: randomString(),
       appSecret: randomString()
     });
     nockHelper.setClient(client);
+    NetworkRack.useHttpMiddleware(new NodeHttpMiddleware({}));
   });
 
   beforeEach(() => {
@@ -39,10 +44,12 @@ describe('LiveService', () => {
     // we want to clear the state of the singleton
     delete require.cache[require.resolve(pathToLiveService)];
     liveService = require(pathToLiveService).getLiveService();
+    return UserMock.login(randomString(), randomString());
   });
 
   afterEach(() => {
     expect.restoreSpies();
+    return UserMock.logout();
   });
 
   it('should be a singleton', () => {
