@@ -800,7 +800,7 @@ export class Query {
 
     // Remove fields
     if (Array.isArray(json.fields) && json.fields.length > 0) {
-      const fields = Array.concat([], json.fields, PROTECTED_FIELDS);
+      const fields = [].concat(json.fields, PROTECTED_FIELDS);
       Log.debug('Removing fields from data', json.fields);
       data = data.map((item) => {
         const keys = Object.keys(item);
