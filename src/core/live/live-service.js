@@ -355,7 +355,7 @@ export class LiveService {
    * @returns {Promise}
    */
   _makeUserManagementRequest(userId, path) {
-    return KinveyRequest.executeShort({
+    return KinveyRequest.execute({
       method: RequestMethod.POST,
       pathname: `/user/${this._client.appKey}/${userId}/${path}`,
       body: { deviceId: this._client.deviceId }
