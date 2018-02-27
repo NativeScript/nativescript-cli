@@ -110,6 +110,9 @@ function createTestInjector() {
 			message: (): void => undefined
 		})
 	});
+	testInjector.register("analyticsSettingsService", {
+		getPlaygroundInfo: () => Promise.resolve(null)
+	});
 
 	return testInjector;
 }
