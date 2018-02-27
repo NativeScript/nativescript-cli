@@ -170,7 +170,7 @@ export class Client {
    * Set the active user
    */
   setActiveUser(activeUser) {
-    if (activeUser != null) {
+    if (activeUser) {
       return this.activeUserStorage.set(`${this.appKey}.${ACTIVE_USER_KEY}`, activeUser);
     } else {
       return this.activeUserStorage.remove(`${this.appKey}.${ACTIVE_USER_KEY}`);
