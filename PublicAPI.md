@@ -976,6 +976,29 @@ getUserAgentString(identifier: string): string;
 const userAgentString = tns.analyticsSettingsService.getUserAgentString("tns/3.3.0");
 ```
 
+### getPlaygroundInfo
+The `getPlaygroundInfo` method allows retrieving information for projects that are exported from playground
+
+* Definition:
+```TypeScript
+/**
+ * Gets information for projects that are exported from playground.
+ * Returns null in case when project does not have playground key in package.json file (e.g is not exported from playground) and no playground info is saved in userSettings file
+ * @param {string} projectDir The project directory.
+ * @returns {Promise<IPlaygroundInfo>} Playground info. { id: string, usedTutorial: boolean }
+ */
+getPlaygroundInfo(projectDir: string): Promise<IPlaygroundInfo>;
+```
+
+* Usage:
+```JavaScript
+tns.analyticsSettingsService.getPlaygroundInfo("/my/project/path")
+	.then(playgroundInfo => {
+		console.log(playgroundInfo.id);
+		console.log(playgroundInfo.usedTutorial);
+	});
+```
+
 ## How to add a new method to Public API
 CLI is designed as command line tool and when it is used as a library, it does not give you access to all of the methods. This is mainly implementation detail. Most of the CLI's code is created to work in command line, not as a library, so before adding method to public API, most probably it will require some modification.
 For example the `$options` injected module contains information about all `--` options passed on the terminal. When the CLI is used as a library, the options are not populated. Before adding method to public API, make sure its implementation does not rely on `$options`.

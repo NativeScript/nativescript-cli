@@ -8,7 +8,8 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 		private $staticConfig: IStaticConfig,
 		private $hostInfo: IHostInfo,
 		private $osInfo: IOsInfo,
-		private $logger: ILogger) { }
+		private $logger: ILogger,
+		private $playgroundService: IPlaygroundService) { }
 
 	public async canDoRequest(): Promise<boolean> {
 		return true;
@@ -21,6 +22,11 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	@exported("analyticsSettingsService")
 	public getClientId(): Promise<string> {
 		return this.getSettingValueOrDefault(this.$staticConfig.ANALYTICS_INSTALLATION_ID_SETTING_NAME);
+	}
+
+	@exported("analyticsSettingsService")
+	public async getPlaygroundInfo(projectDir: string): Promise<IPlaygroundInfo> {
+		return this.$playgroundService.getPlaygroundInfo(projectDir);
 	}
 
 	public getClientName(): string {
