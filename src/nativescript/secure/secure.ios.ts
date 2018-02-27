@@ -41,7 +41,7 @@ export class SecureStorage {
     query.service = this.defaultService;
     query.account = key;
     query.password = value;
-	query.synchronizationMode = SAMKeychainQuerySynchronizationMode.No;
+    query.synchronizationMode = SAMKeychainQuerySynchronizationMode.No;
     return query.save();
   }
 
@@ -52,6 +52,7 @@ export class SecureStorage {
 
     const query = SAMKeychainQuery.new();
     query.service = this.defaultService;
+    query.account = key;
 
     try {
       return query.deleteItem();
