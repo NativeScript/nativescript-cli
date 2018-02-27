@@ -12,6 +12,7 @@ export class SecureStorage {
 
     const query = SAMKeychainQuery.new();
     query.service = this.defaultService;
+    query.account = key;
 
     try {
       query.fetch();
