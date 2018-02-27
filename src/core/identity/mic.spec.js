@@ -74,7 +74,7 @@ describe('MobileIdentityConnect', () => {
         // API Response
         nock(client.micHostname, { encodedQueryParams: true })
           .post(
-            '/oauth/auth',
+            '/v3/oauth/auth',
             `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
           )
           .reply(200, {
@@ -114,7 +114,7 @@ describe('MobileIdentityConnect', () => {
         // API Response
         nock(client.micHostname, { encodedQueryParams: true })
           .post(
-            '/oauth/auth',
+            '/v3/oauth/auth',
             `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
           )
           .reply(200, {
@@ -159,7 +159,7 @@ describe('MobileIdentityConnect', () => {
         // API Response
         nock(client.micHostname, { encodedQueryParams: true })
           .post(
-            '/oauth/auth',
+            '/v3/oauth/auth',
             `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
           )
           .reply(200, {
@@ -219,7 +219,7 @@ describe('MobileIdentityConnect', () => {
         // API Response
         nock(client.micHostname, { encodedQueryParams: true })
           .post(
-            '/oauth/auth',
+            '/v3/oauth/auth',
             `client_id=${encodeURIComponent(client.appKey)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
           )
           .reply(200, {
@@ -280,7 +280,7 @@ describe('MobileIdentityConnect', () => {
         // API Response
         nock(client.micHostname, { encodedQueryParams: true })
           .post(
-            '/oauth/auth',
+            '/v3/oauth/auth',
             `client_id=${encodeURIComponent(client.appKey+'.'+micId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
           )
           .reply(200, {
