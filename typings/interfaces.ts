@@ -22,16 +22,22 @@ declare module NativeScriptDoctor {
 		getNodeVersion(): Promise<string>;
 
 		/**
+		 * Returns the currently installed Npm version.
+		 * @return {Promise<string>} Returns the currently installed npm version.
+		 */
+		getNpmVersion(): Promise<string>;
+
+		/**
 		 * Returns the currently installed node-gyp version.
 		 * @return {Promise<string>} Returns the currently installed node-gyp version. If node-gyp is not installed it will return null.
 		 */
 		getNodeGypVersion(): Promise<string>;
 
 		/**
-		 * Returns the xcodeproj gem location.
-		 * @return {Promise<string>} Returns the xcodeproj gem location. If the the xcodeproj gem is not installed it will return null.
+		 * Returns the xcodeproj location.
+		 * @return {Promise<string>} Returns the xcodeproj location. If the the xcodeproj is not installed it will return null.
 		 */
-		getXcodeprojGemLocation(): Promise<string>;
+		getXcodeprojLocation(): Promise<string>;
 
 		/**
 		 * Checks if iTunes is installed.
@@ -53,9 +59,10 @@ declare module NativeScriptDoctor {
 
 		/**
 		 * Returns the currently installed ADB version.
+		 * @param {string} pathToAdb Defines path to adb
 		 * @return {Promise<string>} Returns the currently installed ADB version. It will return null if ADB is not installed.
 		 */
-		getAdbVersion(): Promise<string>;
+		getAdbVersion(pathToAdb?: string): Promise<string>;
 
 		/**
 		 * Checks if Android is installed.
@@ -119,9 +126,10 @@ declare module NativeScriptDoctor {
 
 		/**
 		 * Returns the whole system information.
+		 * @param {ISysInfoConfig} config
 		 * @return {Promise<ISysInfoData>} The system information.
 		 */
-		getSysInfo(): Promise<ISysInfoData>;
+		getSysInfo(config?: ISysInfoConfig): Promise<ISysInfoData>;
 
 		/**
 		 * If set to true each method will cache it's result. The default value is true.
@@ -129,6 +137,25 @@ declare module NativeScriptDoctor {
 		 * @return {void}
 		 */
 		setShouldCacheSysInfo(shouldCache: boolean): void;
+	}
+
+	interface ISysInfoConfig {
+		/**
+		 * Path to package.json file of NativeScript CLI
+		 * @type {string}
+		 */
+		pathToNativeScriptCliPackageJson: string;
+		/**
+		 * Android tools data
+		 * @type {{pathToAdb: string}}
+		 */
+		androidToolsInfo?: {
+			/**
+			 * Path to adb
+			 * @type {string}
+			 */
+			pathToAdb: string;
+		};
 	}
 
 	/**
@@ -256,10 +283,10 @@ declare module NativeScriptDoctor {
 		cocoaPodsVer: string;
 
 		/**
-		 * xcodeproj gem location, as returned by `which gem xcodeproj`.
+		 * xcodeproj location, as returned by `which xcodeproj`.
 		 * @type {string}
 		 */
-		xcodeprojGemLocation: string;
+		xcodeprojLocation: string;
 
 		/**
 		 * true id CocoaPods can successfully execute pod install.
@@ -290,6 +317,11 @@ declare module NativeScriptDoctor {
 		 * @type {boolean}
 		 */
 		isAndroidSdkConfiguredCorrectly: boolean;
+
+		/**
+		 * Information about python installation
+		 */
+		pythonInfo: IPythonInfo;
 	}
 
 	/**
@@ -328,6 +360,26 @@ declare module NativeScriptDoctor {
 		 * Determines whether xcproj can be called from the command line.
 		 */
 		xcprojAvailable: boolean;
+	}
+
+	/**
+	 * Describes information about python
+	 */
+	interface IPythonInfo {
+		/**
+		 * Determines whether python is installed on the host machine
+		 */
+		isInstalled: boolean;
+
+		/**
+		 * Determines whether python six package is installed
+		 */
+		isSixPackageInstalled: boolean;
+
+		/**
+		 * Error message from installation check
+		 */
+		installationErrorMessage?: string;
 	}
 
 	/**

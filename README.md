@@ -99,7 +99,10 @@ Library that helps identifying if the environment can be used for development of
 		console.log("mono: ", monoVersion);
 
 		const nodeVersion = await sysInfo.getNodeVersion();
-		console.log("node: ", nodeVer);
+		console.log("node: ", nodeVersion);
+
+		const npmVersion = await sysInfo.getNpmVersion();
+		console.log("npm: ", npmVersion);
 
 		const nodeGypVersion = await sysInfo.getNodeGypVersion();
 		console.log("node-gyp: ", nodeGypVersion);
@@ -107,8 +110,8 @@ Library that helps identifying if the environment can be used for development of
 		const osName = await sysInfo.getOs();
 		console.log("os: ", osName);
 
-		const xcodeprojGemLocation = await sysInfo.getXCodeProjGemLocation();
-		console.log("xcodeproj gem location: ", xcodeprojGemLocation);
+		const xcodeprojLocation = await sysInfo.getXCodeProjLocation();
+		console.log("xcodeproj location: ", xcodeprojLocation);
 
 		const xcodeVersion = await sysInfo.getXCodeVersion();
 		console.log("xcode: ", xcodeVersion);
@@ -130,6 +133,9 @@ Library that helps identifying if the environment can be used for development of
 
 		const isCocoaPodsUpdateRequired = await sysInfo.isCocoaPodsUpdateRequired();
 		console.log("is CocoaPods update required: ", isCocoaPodsUpdateRequired);
+
+		const pythonInfo = await sysInfo.getPythonInfo();
+		console.log("python info: ", pythonInfo );
 
 		const sysInfoData = await sysInfo.getSysInfo();
 		console.log("sysInfo: ", sysInfoData);
@@ -167,16 +173,22 @@ Library that helps identifying if the environment can be used for development of
 		getNodeVersion(): Promise<string>;
 
 		/**
+		 * Returns the currently installed npm version.
+		 * @return {Promise<string>} Returns the currently installed npm version.
+		 */
+		getNpmVersion(): Promise<string>;
+
+		/**
 		 * Returns the currently installed node-gyp version.
 		 * @return {Promise<string>} Returns the currently installed node-gyp version. If node-gyp is not installed it will return null.
 		 */
 		getNodeGypVersion(): Promise<string>;
 
 		/**
-		 * Returns the xcodeproj gem location.
-		 * @return {Promise<string>} Returns the xcodeproj gem location. If the the xcodeproj gem is not installed it will return null.
+		 * Returns the xcodeproj location.
+		 * @return {Promise<string>} Returns the xcodeproj location. If the the xcodeproj is not installed it will return null.
 		 */
-		getXcodeprojGemLocation(): Promise<string>;
+		getXcodeprojLocation(): Promise<string>;
 
 		/**
 		 * Checks if iTunes is installed.
@@ -198,9 +210,10 @@ Library that helps identifying if the environment can be used for development of
 
 		/**
 		 * Returns the currently installed ADB version.
+		 * @param {string} pathToAdb Defines path to adb
 		 * @return {Promise<string>} Returns the currently installed ADB version. It will return null if ADB is not installed.
 		 */
-		getAdbVersion(): Promise<string>;
+		getAdbVersion(pathToAdb?: string): Promise<string>;
 
 		/**
 		 * Checks if Android is installed.
@@ -258,9 +271,10 @@ Library that helps identifying if the environment can be used for development of
 
 		/**
 		 * Returns the whole system information.
+		 * @param {ISysInfoConfig} config
 		 * @return {Promise<ISysInfoData>} The system information.
 		 */
-		getSysInfo(): Promise<ISysInfoData>;
+		getSysInfo(config?: ISysInfoConfig): Promise<ISysInfoData>;
 
 		/**
 		 * If set to true each method will cache it's result. The default value is true.
@@ -386,7 +400,7 @@ Library that helps identifying if the environment can be used for development of
 		 * xcodeproj gem location, as returned by `which gem xcodeproj`.
 		 * @type {string}
 		 */
-		xcodeprojGemLocation: string;
+		xcodeprojLocation: string;
 
 		/**
 		 * true id CocoaPods can successfully execute pod install.

@@ -25,7 +25,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private npmVerCache: string;
 	private nodeVerCache: string;
 	private nodeGypVerCache: string;
-	private xCodeprojGemLocationCache: string;
+	private xCodeprojLocationCache: string;
 	private iTunesInstalledCache: boolean;
 	private cocoaPodsVerCache: string;
 	private osCache: string;
@@ -38,6 +38,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private isCocoaPodsWorkingCorrectlyCache: boolean;
 	private nativeScriptCliVersionCache: string;
 	private xcprojInfoCache: NativeScriptDoctor.IXcprojInfo;
+	private pythonInfoCache: NativeScriptDoctor.IPythonInfo;
 	private isCocoaPodsUpdateRequiredCache: boolean;
 	private shouldCache: boolean = true;
 	private isAndroidSdkConfiguredCorrectlyCache: boolean;
@@ -102,9 +103,9 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		});
 	}
 
-	public getXcodeprojGemLocation(): Promise<string> {
-		return this.getValueForProperty(() => this.xCodeprojGemLocationCache, async (): Promise<string> => {
-			const output = await this.execCommand("gem which xcodeproj");
+	public getXcodeprojLocation(): Promise<string> {
+		return this.getValueForProperty(() => this.xCodeprojLocationCache, async (): Promise<string> => {
+			const output = await this.execCommand("which xcodeproj");
 			return output ? output.trim() : null;
 		});
 	}
@@ -152,12 +153,13 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		});
 	}
 
-	public getAdbVersion(): Promise<string> {
+	public getAdbVersion(pathToAdb?: string): Promise<string> {
 		return this.getValueForProperty(() => this.adbVerCache, async (): Promise<string> => {
 			let output: IProcessInfo = null;
-			const pathToAdbFromAndroidHome = await this.androidToolsInfo.getPathToAdbFromAndroidHome();
-			if (pathToAdbFromAndroidHome) {
-				output = await this.childProcess.spawnFromEvent(pathToAdbFromAndroidHome, ["version"], "close", { ignoreError: true });
+
+			pathToAdb = pathToAdb || await this.androidToolsInfo.getPathToAdbFromAndroidHome();
+			if (pathToAdb) {
+				output = await this.childProcess.spawnFromEvent(pathToAdb, ["version"], "close", { ignoreError: true });
 			}
 
 			return output && output.stdout ? this.getVersionFromString(output.stdout) : null;
@@ -213,7 +215,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		});
 	}
 
-	public getSysInfo(): Promise<NativeScriptDoctor.ISysInfoData> {
+	public getSysInfo(config?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.ISysInfoData> {
 		return this.getValueForProperty(() => this.sysInfoCache, async (): Promise<NativeScriptDoctor.ISysInfoData> => {
 			const result: NativeScriptDoctor.ISysInfoData = Object.create(null);
 
@@ -231,10 +233,10 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			result.dotNetVer = await this.hostInfo.dotNetVersion();
 			result.javacVersion = await this.getJavaCompilerVersion();
 			result.xcodeVer = await this.getXcodeVersion();
-			result.xcodeprojGemLocation = await this.getXcodeprojGemLocation();
+			result.xcodeprojLocation = await this.getXcodeprojLocation();
 			result.itunesInstalled = await this.isITunesInstalled();
 			result.cocoaPodsVer = await this.getCocoaPodsVersion();
-			result.adbVer = await this.getAdbVersion();
+			result.adbVer = await this.getAdbVersion(config && config.androidToolsInfo && config.androidToolsInfo.pathToAdb);
 			result.androidInstalled = await this.isAndroidInstalled();
 			result.monoVer = await this.getMonoVersion();
 			result.gitVer = await this.getGitVersion();
@@ -245,6 +247,8 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 			result.isCocoaPodsUpdateRequired = await this.isCocoaPodsUpdateRequired();
 			result.isAndroidSdkConfiguredCorrectly = await this.isAndroidSdkConfiguredCorrectly();
+
+			result.pythonInfo = await this.getPythonInfo();
 
 			return result;
 		});
@@ -304,6 +308,27 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			}
 
 			return { shouldUseXcproj, xcprojAvailable };
+		});
+	}
+
+	public getPythonInfo(): Promise<NativeScriptDoctor.IPythonInfo> {
+		return this.getValueForProperty(() => this.pythonInfoCache, async (): Promise<NativeScriptDoctor.IPythonInfo> => {
+			if (this.hostInfo.isDarwin) {
+				try {
+					await this.childProcess.exec(`python -c "import six"`);
+				} catch (error) {
+					// error.code = 1 so the Python is present, but we don't have six.
+					if (error.code === 1) {
+						return { isInstalled: true, isSixPackageInstalled: false };
+					}
+
+					return { isInstalled: false, isSixPackageInstalled: false, installationErrorMessage: error.message };
+				}
+
+				return { isInstalled: true, isSixPackageInstalled: true };
+			}
+
+			return null;
 		});
 	}
 
