@@ -5,12 +5,17 @@ import times from 'lodash/times';
 import { Log } from '../../log';
 import { KinveyError, NotFoundError, SyncError } from '../../errors';
 
-import { PromiseQueue, ensureArray, forEachAsync, isNonemptyString } from '../../utils';
 import { SyncOperation } from './sync-operation';
 import { syncBatchSize, maxEntityLimit } from './utils';
 import { isEmpty } from '../utils';
 import { repositoryProvider } from '../repositories';
 import { Query } from '../../query';
+import {
+  PromiseQueue,
+  ensureArray,
+  isNonemptyString,
+  forEachAsyncThrottled
+} from '../../utils';
 
 // imported for typings
 // import { SyncStateManager } from './sync-state-manager';
@@ -266,15 +271,11 @@ export class SyncManager {
   }
 
   _processSyncItems(collection, syncItems) {
-    const queue = new PromiseQueue(syncBatchSize);
     const pushResults = [];
-
-    return forEachAsync(syncItems, (syncItem) => {
-      return queue.enqueue(() => {
-        return this._processSyncItem(collection, syncItem) // never rejects
-          .then(pushResult => pushResults.push(pushResult));
-      });
-    })
+    return forEachAsyncThrottled(syncItems, (syncItem) => {
+      return this._processSyncItem(collection, syncItem) // never rejects
+        .then(pushResult => pushResults.push(pushResult));
+    }, syncBatchSize)
       .then(() => pushResults);
   }
 
@@ -360,8 +361,6 @@ export class SyncManager {
 
   _getInternalPullQuery({ filter, sort, fields }, pullLimit) {
     const query = new Query({ filter, sort, fields });
-    query.skip = 0;
-    query.limit = null; // the current default value
 
     if (pullLimit && pullLimit < Infinity) {
       query.limit = pullLimit;
@@ -393,14 +392,18 @@ export class SyncManager {
   }
 
   _executePaginationQueries(collection, deleteQuery, queries) {
+    let pulledEntityCount = 0;
     return this._getOfflineRepo()
       .then(repo => repo.delete(collection, deleteQuery))
       .then(() => {
-        // TODO: throttle max request count - reuse from push?
-        return forEachAsync(queries, (query) => {
-          return this._fetchAndUpdateEntities(collection, query);
-        });
-      });
+        return forEachAsyncThrottled(queries, (query) => {
+          return this._fetchAndUpdateEntities(collection, query)
+            .then((updatedEntities) => {
+              pulledEntityCount += updatedEntities.length;
+            });
+        }, syncBatchSize);
+      })
+      .then(() => pulledEntityCount);
   }
 
   _paginate(collection, userQuery, options) {

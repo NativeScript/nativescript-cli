@@ -3,6 +3,7 @@ import { Observable } from 'rxjs/Observable';
 import isEmpty from 'lodash/isEmpty';
 
 import { repositoryProvider } from '../datastore';
+import { PromiseQueue } from './promise-queue';
 
 export function noop() { }
 
@@ -52,6 +53,13 @@ export function forEachAsync(array, func) {
         .then(onAsyncOpDone)
         .catch(onAsyncOpDone);
     });
+  });
+}
+
+export function forEachAsyncThrottled(array, func, threshold = 1) {
+  const queue = new PromiseQueue(threshold);
+  return forEachAsync(array, (item) => {
+    return queue.enqueue(() => func(item));
   });
 }
 
