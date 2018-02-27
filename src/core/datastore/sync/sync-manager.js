@@ -11,7 +11,6 @@ import { isEmpty } from '../utils';
 import { repositoryProvider } from '../repositories';
 import { Query } from '../../query';
 import {
-  PromiseQueue,
   ensureArray,
   isNonemptyString,
   forEachAsyncThrottled
@@ -68,7 +67,7 @@ export class SyncManager {
       return Promise.reject(new KinveyError('Invalid or missing collection name'));
     }
     if (options && options.autoPagination) {
-      return this._paginate(collection, query, options && options.autoPagination);
+      return this._paginate(collection, query, options);
     }
     return this._fetchItemsFromServer(collection, query, options)
       .then(entities => this._replaceOfflineEntities(collection, query, entities));
@@ -380,8 +379,8 @@ export class SyncManager {
     return queries;
   }
 
-  _fetchAndUpdateEntities(collection, query) {
-    return this._networkRepo.read(collection, query)
+  _fetchAndUpdateEntities(collection, query, options) {
+    return this._networkRepo.read(collection, query, options)
       .then((entities) => {
         if (isEmpty(entities)) {
           return Promise.resolve();
@@ -391,13 +390,13 @@ export class SyncManager {
       });
   }
 
-  _executePaginationQueries(collection, deleteQuery, queries) {
+  _executePaginationQueries(collection, deleteQuery, queries, options) {
     let pulledEntityCount = 0;
     return this._getOfflineRepo()
       .then(repo => repo.delete(collection, deleteQuery))
       .then(() => {
         return forEachAsyncThrottled(queries, (query) => {
-          return this._fetchAndUpdateEntities(collection, query)
+          return this._fetchAndUpdateEntities(collection, query, options)
             .then((updatedEntities) => {
               pulledEntityCount += updatedEntities.length;
             });
@@ -406,15 +405,16 @@ export class SyncManager {
       .then(() => pulledEntityCount);
   }
 
-  _paginate(collection, userQuery, options) {
+  _paginate(collection, userQuery, options = {}) {
+    const pullOptions = options.autoPagination;
     const query = new Query({ filter: userQuery.filter }); // ignore sort, it's irrelevant
     return this._networkRepo.count(collection, query)
       .then((totalCount) => {
-        const pullLimit = this._getPullLimit(options);
+        const pullLimit = this._getPullLimit(pullOptions);
         const pullCount = Math.min(totalCount, pullLimit);
         const pullQuery = this._getInternalPullQuery(userQuery, pullLimit);
-        const paginationQueries = this._getPaginationQueries(pullQuery, options.pageSize, pullCount);
-        return this._executePaginationQueries(collection, pullQuery, paginationQueries);
+        const paginationQueries = this._getPaginationQueries(pullQuery, pullOptions.pageSize, pullCount);
+        return this._executePaginationQueries(collection, pullQuery, paginationQueries, options);
       });
   }
 }
