@@ -125,24 +125,22 @@ export class CacheStore extends NetworkStore {
    *
    * @param   {Query}                 [query]                                   Query to pull a subset of items.
    * @param   {Object}                options                                   Options
-   * @param   {Properties}            [options.properties]                      Custom properties to send with
-   *                                                                            the request.
+   * @param   {Properties}            [options.properties]                      Custom properties to send with the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
-   * @return  {Promise}                                                         Promise
+   * @return  {Promise.<{push: [], pull: []}>}                                  Promise
    */
   sync(query, options) {
+    // TODO: decide on options - passing autoPagination: true would work for this too
     options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
+    const result = {};
     return this.push(query, options)
-      .then((push) => {
-        const promise = this.pull(query, options)
-          .then((pull) => {
-            const result = {
-              push: push,
-              pull: pull
-            };
-            return result;
-          });
-        return promise;
+      .then((pushResult) => {
+        result.push = pushResult;
+        return this.pull(query, options);
+      })
+      .then((pullResult) => {
+        result.pull = pullResult;
+        return result;
       });
   }
 
