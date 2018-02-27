@@ -9,6 +9,7 @@ import { isDefined, uuidv4, isValidStorageProviderValue } from './utils';
 import { StorageProvider } from './datastore';
 
 const DEFAULT_TIMEOUT = 60000;
+const ACTIVE_USER_KEY = 'active_user';
 let sharedInstance = null;
 
 class ActiveUserStorage {
@@ -162,7 +163,7 @@ export class Client {
    * Get the active user.
    */
   getActiveUser() {
-    return this.activeUserStorage.get(this.appKey);
+    return this.activeUserStorage.get(`${this.appKey}.${ACTIVE_USER_KEY}`);
   }
 
   /**
@@ -170,9 +171,9 @@ export class Client {
    */
   setActiveUser(activeUser) {
     if (activeUser != null) {
-      return this.activeUserStorage.set(this.appKey, activeUser);
+      return this.activeUserStorage.set(`${this.appKey}.${ACTIVE_USER_KEY}`, activeUser);
     } else {
-      return this.activeUserStorage.remove(this.appKey);
+      return this.activeUserStorage.remove(`${this.appKey}.${ACTIVE_USER_KEY}`);
     }
   }
 
