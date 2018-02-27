@@ -193,11 +193,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		const changesInfo = await this.initialPrepare(platformInfo.platform, platformData, platformInfo.appFilesUpdaterOptions, platformInfo.platformTemplate, platformInfo.projectData, platformInfo.config, platformInfo.nativePrepare, platformInfo);
 		const requiresNativePrepare = (!platformInfo.nativePrepare || !platformInfo.nativePrepare.skipNativePrepare) && changesInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPrepare;
 
-		if (changesInfo.hasChanges || platformInfo.appFilesUpdaterOptions.bundle || requiresNativePrepare) {
+		if (changesInfo.hasChanges || requiresNativePrepare) {
 			// Always clear up the app directory in platforms if `--bundle` value has changed in between builds or is passed in general
 			// this is done as user has full control over what goes in platforms when `--bundle` is passed
 			// and we may end up with duplicate symbols which would fail the build
-			if (changesInfo.bundleChanged || platformInfo.appFilesUpdaterOptions.bundle) {
+			if (changesInfo.bundleChanged) {
 				await this.cleanDestinationApp(platformInfo);
 			}
 

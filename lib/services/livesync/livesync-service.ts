@@ -3,8 +3,8 @@ import * as choki from "chokidar";
 import { EOL } from "os";
 import { EventEmitter } from "events";
 import { hook } from "../../common/helpers";
-import { APP_FOLDER_NAME, PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME, TrackActionNames } from "../../constants";
-import { FileExtensions, DeviceTypes, DeviceDiscoveryEventNames } from "../../common/constants";
+import { APP_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME, PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME, TrackActionNames } from "../../constants";
+import { DeviceTypes, DeviceDiscoveryEventNames } from "../../common/constants";
 import { cache } from "../../common/decorators";
 
 const deviceDescriptorPrimaryKey = "identifier";
@@ -289,6 +289,12 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		return _.map(deviceOptions, d => this.disableDebuggingCore(d, debuggingAdditionalOptions));
 	}
 
+	@hook('watchPatterns')
+	public async getWatcherPatterns(liveSyncData: ILiveSyncInfo): Promise<string[]> {
+		// liveSyncData is used by plugins that make use of the watchPatterns hook
+		return [APP_FOLDER_NAME, path.join(APP_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME)];
+	}
+
 	public async disableDebuggingCore(deviceOption: IDisableDebuggingDeviceOptions, debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<void> {
 		const liveSyncProcessInfo = this.liveSyncProcessesInfo[debuggingAdditionalOptions.projectDir];
 		if (liveSyncProcessInfo.currentSyncAction) {
@@ -328,7 +334,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			// Should be set after prepare
 			this.$usbLiveSyncService.isInitialized = true;
 
-			await this.startWatcher(projectData, liveSyncData);
+			const devicesIds = deviceDescriptors.map(dd => dd.identifier);
+			const devices = _.filter(this.$devicesService.getDeviceInstances(), device => _.includes(devicesIds, device.deviceInfo.identifier));
+			const platforms = _(devices).map(device => device.deviceInfo.platform).uniq().value();
+			await this.startWatcher(projectData, liveSyncData, platforms);
 		}
 	}
 
@@ -515,8 +524,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		};
 	}
 
-	private async startWatcher(projectData: IProjectData, liveSyncData: ILiveSyncInfo): Promise<void> {
-		const patterns = [APP_FOLDER_NAME];
+	private async startWatcher(projectData: IProjectData, liveSyncData: ILiveSyncInfo, platforms: string[]): Promise<void> {
+		const patterns = await this.getWatcherPatterns(liveSyncData);
 
 		if (liveSyncData.watchAllFiles) {
 			const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
@@ -535,18 +544,18 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				currentWatcherInfo.watcher.close();
 			}
 
-			let filesToSync: string[] = [];
+			const filesToSync: string[] = [];
 			let filesToRemove: string[] = [];
 			let timeoutTimer: NodeJS.Timer;
 
-			const startTimeout = () => {
+			const startSyncFilesTimeout = () => {
 				timeoutTimer = setTimeout(async () => {
 					// Push actions to the queue, do not start them simultaneously
 					await this.addActionToChain(projectData.projectDir, async () => {
 						if (filesToSync.length || filesToRemove.length) {
 							try {
 								const currentFilesToSync = _.cloneDeep(filesToSync);
-								filesToSync = [];
+								filesToSync.splice(0, filesToSync.length);
 
 								const currentFilesToRemove = _.cloneDeep(filesToRemove);
 								filesToRemove = [];
@@ -622,7 +631,18 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 			await this.$hooksService.executeBeforeHooks('watch', {
 				hookArgs: {
-					projectData
+					projectData,
+					config: {
+						env: liveSyncData.env,
+						appFilesUpdaterOptions: {
+							bundle: liveSyncData.bundle,
+							release: liveSyncData.release
+						},
+						platforms
+					},
+					filesToSync,
+					filesToRemove,
+					startSyncFilesTimeout: startSyncFilesTimeout.bind(this)
 				}
 			});
 
@@ -650,10 +670,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 						filesToRemove.push(filePath);
 					}
 
-					// Do not sync typescript files directly - wait for javascript changes to occur in order to restart the app only once
-					if (path.extname(filePath) !== FileExtensions.TYPESCRIPT_FILE) {
-						startTimeout();
-					}
+					startSyncFilesTimeout();
 				});
 
 			this.liveSyncProcessesInfo[liveSyncData.projectDir].watcherInfo = { watcher, patterns };
