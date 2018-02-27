@@ -613,6 +613,9 @@ export class CommandsService implements ICommandsService {
 }
 
 export class PlatformServiceStub extends EventEmitter implements IPlatformService {
+	public shouldPrepare(): Promise<boolean> {
+		return Promise.resolve(true);
+	}
 
 	public validateOptions(): Promise<boolean> {
 		return Promise.resolve(true);
