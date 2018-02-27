@@ -308,8 +308,8 @@ export namespace Kinvey {
     } > ;
     pendingSyncEntities(query ? : Query, options ? : RequestOptions): Promise < SyncEntity[] > ;
     push(query ? : Query, options ? : RequestOptions): Promise < PushResult < T > [] > ;
-    pull(query ? : Query, options ? : RequestOptions): Promise < T[] > ;
-    sync(query ? : Query, options ? : RequestOptions): Promise < {
+    pull(query ? : Query, options ? : PullRequestOptions): Promise < T[]|number > ;
+    sync(query ? : Query, options ? : PullRequestOptions): Promise < {
       push: PushResult < T > [],
       pull: T[]
     } > ;
@@ -779,6 +779,12 @@ interface SyncEntity extends Entity {
   entityId: string;
 }
 
+interface PullRequestOptions {
+  timeout?: number,
+  useDeltaFetch?: boolean,
+  autoPagination?: boolean | { pageSize?: number }
+}
+
 // DataStore class
 export abstract class DataStore {
   static collection<T extends Entity>(collection: string, type?: DataStoreType, options?: {
@@ -820,8 +826,8 @@ declare class CacheStore<T extends Entity = Entity> extends NetworkStore<T> {
   }>;
   pendingSyncEntities(query?: Query, options?: RequestOptions): Promise<SyncEntity[]>;
   push(query?: Query, options?: RequestOptions): Promise<PushResult<T>[]>;
-  pull(query?: Query, options?: RequestOptions): Promise<T[]>;
-  sync(query?: Query, options?: RequestOptions): Promise<{
+  pull(query?: Query, options?: PullRequestOptions): Promise<T[]|number>;
+  sync(query?: Query, options?: PullRequestOptions): Promise<{
     push: PushResult<T>[],
     pull: T[]
   }>;
