@@ -3,7 +3,7 @@ import expect from 'expect';
 import nock from 'nock';
 import url from 'url';
 import { MobileIdentityConnect, AuthorizationGrant } from './mic';
-import { InsufficientCredentialsError, MobileIdentityConnectError } from '../errors';
+import { InsufficientCredentialsError, MobileIdentityConnectError, KinveyError } from '../errors';
 import { Client } from '../client';
 import { randomString } from '../utils';
 import { NetworkRack } from '../request';
@@ -141,6 +141,27 @@ describe('MobileIdentityConnect', () => {
             expect(error).toBeA(MobileIdentityConnectError);
             expect(error.message).toEqual(`Unable to authorize user with username ${username}.`,
               'A location header was not provided with a code to exchange for an auth token.');
+          });
+      });
+
+      it('should hit the correct endpoint version', () => {
+        const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
+
+        nock(client.micHostname, { encodedQueryParams: true })
+          .post(
+            '/v1/oauth/auth',
+            `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
+          )
+          .reply(200, {
+            temp_login_uri: tempLoginUriParts.href
+          }, {
+            'Content-Type': 'application/json; charset=utf-8'
+          });
+        
+        const mic = new MobileIdentityConnect();
+        return mic.requestTempLoginUrl(client.appKey, redirectUri, {version: 1})
+          .then((response)=> {
+            expect(response).toBe(tempLoginUriParts.href);
           });
       });
 
