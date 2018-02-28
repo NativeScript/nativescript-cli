@@ -291,8 +291,8 @@ export class AndroidPluginBuildServiceStub implements IAndroidPluginBuildService
 	buildAar(options: IBuildOptions): Promise<boolean> {
 		return Promise.resolve(true);
 	}
-	migrateIncludeGradle(options: IBuildOptions): void {
-
+	migrateIncludeGradle(options: IBuildOptions): boolean {
+		return true;
 	}
 }
 

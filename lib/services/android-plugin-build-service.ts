@@ -291,7 +291,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	 * @param {Object} options
 	 * @param {string} options.platformsAndroidDirPath - The path to the 'plugin/src/platforms/android' directory.
 	 */
-	public migrateIncludeGradle(options: IBuildOptions): void {
+	public migrateIncludeGradle(options: IBuildOptions): boolean {
 		this.validatePlatformsAndroidDirPathOption(options);
 
 		const includeGradleFilePath = path.join(options.platformsAndroidDirPath, INCLUDE_GRADLE_NAME);
@@ -310,10 +310,13 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				const newIncludeGradleFileContent = includeGradleFileContent.replace(productFlavorsScope, "");
 				this.$fs.writeFile(includeGradleFilePath, newIncludeGradleFileContent);
 
+				return true;
 			} catch (e) {
 				throw new Error(`Failed to write the updated include.gradle in - ${includeGradleFilePath}`);
 			}
 		}
+
+		return false;
 	}
 
 	private validateOptions(options: IBuildOptions): void {
