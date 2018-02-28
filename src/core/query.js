@@ -1,5 +1,6 @@
 import sift from 'sift';
 import isPlainObject from 'lodash/isPlainObject';
+import defaults from 'lodash/defaults';
 import { QueryError } from './errors';
 import { nested, isDefined, isNumber } from './utils';
 import { Log } from './log';
@@ -28,13 +29,13 @@ export class Query {
    * @return {Query} The query.
    */
   constructor(options) {
-    options = Object.assign({
+    options = defaults(options, {
       fields: [],
       filter: {},
       sort: null,
       limit: null,
       skip: 0
-    }, options);
+    });
 
     /**
      * Fields to select.

@@ -1,6 +1,7 @@
 import { Promise } from 'es6-promise';
 import clone from 'lodash/clone';
 import times from 'lodash/times';
+import omit from 'lodash/omit';
 
 import { Log } from '../../log';
 import { KinveyError, NotFoundError, SyncError } from '../../errors';
@@ -134,14 +135,17 @@ export class SyncManager {
     return this._syncStateManager.removeSyncItemsForIds(collection, entityIds);
   }
 
-  _replaceOfflineEntities(collection, deleteOfflineQuery, networkEntities = []) {
+  _deleteOfflineEntities(collection, query) {
     return this._getOfflineRepo()
-      .then((repo) => {
-        // TODO: this can potentially be deleteOfflineQuery.and().notIn(networkEntitiesIds)
-        // but inmemory filtering with this filter seems to take too long
-        return repo.delete(collection, deleteOfflineQuery)
-          .then(() => repo.update(collection, networkEntities));
-      });
+      .then(repo => repo.delete(collection, query));
+  }
+
+  _replaceOfflineEntities(collection, deleteOfflineQuery, networkEntities = []) {
+    // TODO: this can potentially be deleteOfflineQuery.and().notIn(networkEntitiesIds)
+    // but inmemory filtering with this filter seems to take too long
+    return this._deleteOfflineEntities(collection, deleteOfflineQuery)
+      .then(() => this._getOfflineRepo())
+      .then(repo => repo.update(collection, networkEntities));
   }
 
   _getPushOpResult(entityId, operation) {
@@ -353,12 +357,11 @@ export class SyncManager {
     }
   }
 
-  _getPullLimit(pullOptions) {
-    const limitOption = pullOptions && pullOptions.pullLimit;
-    return limitOption || Infinity;
+  _getPullLimit(totalCount, userSuppliedLimit) {
+    return Math.min(totalCount, userSuppliedLimit || Infinity); // ignore 0, backend does
   }
 
-  _getInternalPullQuery({ filter, sort, fields }, pullLimit) {
+  _getInternalPullQuery({ filter, sort, fields } = {}, pullLimit) {
     const query = new Query({ filter, sort, fields });
 
     if (pullLimit && pullLimit < Infinity) {
@@ -368,13 +371,14 @@ export class SyncManager {
     return query;
   }
 
-  _getPaginationQueries({ filter, sort, fields }, pageSize = maxEntityLimit, totalCount) {
+  _splitQueryIntoPages(query, pageSize = maxEntityLimit) {
+    const totalCount = query.limit;
     const queryCount = Math.ceil(totalCount / pageSize);
     const queries = times(queryCount, (i) => {
-      const query = new Query({ filter, sort, fields });
-      query.skip = i * pageSize;
-      query.limit = Math.min(totalCount - query.skip, pageSize);
-      return query;
+      const pageQuery = new Query(query);
+      pageQuery.skip = i * pageSize;
+      pageQuery.limit = Math.min(totalCount - pageQuery.skip, pageSize);
+      return pageQuery;
     });
     return queries;
   }
@@ -390,31 +394,30 @@ export class SyncManager {
       });
   }
 
-  _executePaginationQueries(collection, deleteQuery, queries, options) {
+  _executePaginationQueries(collection, queries, options) {
     let pulledEntityCount = 0;
-    return this._getOfflineRepo()
-      .then(repo => repo.delete(collection, deleteQuery))
-      .then(() => {
-        return forEachAsyncThrottled(queries, (query) => {
-          return this._fetchAndUpdateEntities(collection, query, options)
-            .then((updatedEntities) => {
-              pulledEntityCount += updatedEntities.length;
-            });
-        }, syncBatchSize);
-      })
+    return forEachAsyncThrottled(queries, (query) => {
+      return this._fetchAndUpdateEntities(collection, query, options)
+        .then((updatedEntities) => {
+          pulledEntityCount += updatedEntities.length;
+        });
+    }, syncBatchSize)
       .then(() => pulledEntityCount);
   }
 
   _paginate(collection, userQuery, options = {}) {
+    let pullQuery;
     const pullOptions = options.autoPagination;
-    const query = new Query({ filter: userQuery.filter }); // ignore sort, it's irrelevant
-    return this._networkRepo.count(collection, query)
+    const countQuery = new Query({ filter: userQuery && userQuery.filter }); // ignore sort, it's irrelevant
+    return this._networkRepo.count(collection, countQuery)
       .then((totalCount) => {
-        const pullLimit = this._getPullLimit(pullOptions);
-        const pullCount = Math.min(totalCount, pullLimit);
-        const pullQuery = this._getInternalPullQuery(userQuery, pullLimit);
-        const paginationQueries = this._getPaginationQueries(pullQuery, pullOptions.pageSize, pullCount);
-        return this._executePaginationQueries(collection, pullQuery, paginationQueries, options);
+        const pullLimit = this._getPullLimit(totalCount, pullOptions.pullLimit);
+        pullQuery = this._getInternalPullQuery(userQuery, pullLimit);
+        return this._deleteOfflineEntities(collection, pullQuery);
+      })
+      .then(() => {
+        const paginatedQueries = this._splitQueryIntoPages(pullQuery, pullOptions.pageSize);
+        return this._executePaginationQueries(collection, paginatedQueries, options);
       });
   }
 }
