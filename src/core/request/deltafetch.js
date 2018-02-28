@@ -94,11 +94,11 @@ export class DeltaFetchRequest extends KinveyRequest {
             // Makse sure the response from DeltaSet is normalized
             const { data } = response;
 
-            if (!Object.prototype.hasOwnProperty.call(data, 'changed')) {
+            if (!data.changed) {
               data.changed = data;
             }
 
-            if (!Object.prototype.hasOwnProperty.call(data, 'deleted')) {
+            if (!data.deleted) {
               data.deleted = [];
             }
 
