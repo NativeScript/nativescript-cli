@@ -21,7 +21,15 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 	private getAndroidSourceDirectories(source: string): Array<string> {
 		const directories = ["res", "java", "assets", "jniLibs"];
-		return this.$fs.enumerateFilesInDirectorySync(source, (file, stat) => stat.isDirectory() && _.includes(directories, file));
+		const resultArr: Array<string> = [];
+		this.$fs.enumerateFilesInDirectorySync(source, (file, stat) => {
+			if (stat.isDirectory() && _.some(directories, (element) => file.endsWith(element))) {
+				resultArr.push(file);
+				return true;
+			}
+		});
+
+		return resultArr;
 	}
 
 	private getManifest(platformsDir: string) {
@@ -90,27 +98,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		);
 
 		return promise;
-	}
-
-	private createDirIfDoesntExist(dirPath: string, { isRelativeToScript = false } = {}) {
-		const sep = path.sep;
-		const initDir = path.isAbsolute(dirPath) ? sep : '';
-		const baseDir = isRelativeToScript ? __dirname : '.';
-
-		dirPath.split(sep).reduce((parentDir: string, childDir: string) => {
-			const curDir = path.resolve(baseDir, parentDir, childDir);
-			try {
-				if (!this.$fs.exists(curDir)) {
-					this.$fs.createDirectory(curDir);
-				}
-			} catch (err) {
-				if (err.code !== 'EEXIST') {
-					throw err;
-				}
-			}
-
-			return curDir;
-		}, initDir);
 	}
 
 	private copyRecursive(source: string, destination: string) {
@@ -246,7 +233,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				const dirName = dirNameParts[dirNameParts.length - 1];
 
 				const destination = path.join(newPluginMainSrcDir, dirName);
-				this.createDirIfDoesntExist(destination);
+				this.$fs.ensureDirectoryExists(destination);
 
 				this.copyRecursive(path.join(dir, "*"), destination);
 			}
@@ -336,6 +323,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			try {
 				const newIncludeGradleFileContent = includeGradleFileContent.replace(productFlavorsScope, "");
 				this.$fs.writeFile(includeGradleFilePath, newIncludeGradleFileContent);
+
 			} catch (e) {
 				throw Error(`Failed to write the updated include.gradle in - ${includeGradleFilePath}`);
 			}
