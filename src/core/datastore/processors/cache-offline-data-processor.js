@@ -90,12 +90,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
         })
         .then((entities) => {
           observer.next(entities);
-          observer.complete();
           return entities;
-        })
-        .catch((error) => {
-          observer.error(error);
-          throw error;
         });
     });
   }
