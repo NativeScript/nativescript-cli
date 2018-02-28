@@ -373,6 +373,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				appFilesUpdaterOptions: {
 					bundle: options.bundle,
 					release: options.release,
+					watchAllFiles: options.liveSyncData.watchAllFiles
 				},
 				projectData: options.projectData,
 				env: options.env,
@@ -577,6 +578,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 										rebuiltInformation,
 										projectData,
 										deviceBuildInfoDescriptor,
+										liveSyncData,
 										settings: latestAppPackageInstalledSettings,
 										modifiedFiles: allModifiedFiles,
 										filesToRemove: currentFilesToRemove,
@@ -637,7 +639,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 						env: liveSyncData.env,
 						appFilesUpdaterOptions: {
 							bundle: liveSyncData.bundle,
-							release: liveSyncData.release
+							release: liveSyncData.release,
+							watchAllFiles: liveSyncData.watchAllFiles
 						},
 						platforms
 					},

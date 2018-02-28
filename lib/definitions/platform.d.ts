@@ -358,6 +358,10 @@ interface IOptionalNativePrepareComposition {
 	nativePrepare?: INativePrepare;
 }
 
+interface IOptionalWatchAllFiles {
+	watchAllFiles?: boolean;
+}
+
 interface IDeployPlatformInfo extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IPlatformConfig, IEnvOptions, IOptionalNativePrepareComposition, IOptionalOutputPath, IBuildPlatformAction {
 	deployOptions: IDeployPlatformOptions
 }

@@ -282,7 +282,16 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	/* Hooks are expected to use "filesToSync" parameter, as to give plugin authors additional information about the sync process.*/
 	@helpers.hook('prepare')
-	private async preparePlatformCore(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectData: IProjectData, platformSpecificData: IPlatformSpecificData, env: Object, changesInfo?: IProjectChangesInfo, filesToSync?: string[], filesToRemove?: string[], nativePrepare?: INativePrepare): Promise<void> {
+	private async preparePlatformCore(platform: string,
+		appFilesUpdaterOptions: IAppFilesUpdaterOptions,
+		projectData: IProjectData,
+		platformSpecificData: IPlatformSpecificData,
+		env: Object,
+		changesInfo?: IProjectChangesInfo,
+		filesToSync?: string[],
+		filesToRemove?: string[],
+		nativePrepare?: INativePrepare): Promise<void> {
+
 		this.$logger.out("Preparing project...");
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
