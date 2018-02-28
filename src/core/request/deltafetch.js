@@ -81,7 +81,6 @@ export class DeltaFetchRequest extends KinveyRequest {
                 pathname: '_deltaset',
                 query: { since: deltaSetQuery.lastRequest }
               }));
-              return request.execute();
             }
 
             return request.execute()
