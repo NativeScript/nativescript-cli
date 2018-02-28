@@ -42,7 +42,7 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 		if (config.changesInfo && !config.changesInfo.changesRequirePrepare) {
 			// remove the App_Resources folder from the app/assets as here we're applying other files changes.
 			const appDestinationDirectoryPath = path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-			const appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
+			const appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, path.basename(config.projectData.appResourcesDirectoryPath));
 			if (this.$fs.exists(appResourcesDirectoryPath)) {
 				this.$fs.deleteDirectory(appResourcesDirectoryPath);
 			}
@@ -107,7 +107,7 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 		const appDestinationDirectoryPath = path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 		const appResourcesSourcePath = config.projectData.appResourcesDirectoryPath;
 
-		shell.cp("-Rf", appResourcesSourcePath, appDestinationDirectoryPath);
+		shell.cp("-Rf", appResourcesSourcePath, path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME));
 	}
 }
 
