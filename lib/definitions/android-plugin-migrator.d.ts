@@ -3,8 +3,7 @@ interface IBuildOptions {
     platformsAndroidDirPath: string,
     pluginName: string,
     aarOutputDir: string,
-    tempPluginDirPath: string,
-    platformData: IPlatformData //don't make optional! (makes sure the plugins are built with the same parameters as the project),
+    tempPluginDirPath: string
 }
 
 interface IAndroidPluginBuildService {
