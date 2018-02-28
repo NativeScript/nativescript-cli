@@ -112,6 +112,8 @@ function createTestInjector() {
 	});
 	testInjector.register("httpClient", {});
 	testInjector.register("extensibilityService", {});
+	testInjector.register("androidPluginBuildService", stubs.AndroidPluginBuildServiceStub);
+
 	return testInjector;
 }
 

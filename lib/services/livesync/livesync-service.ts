@@ -2,9 +2,9 @@ import * as path from "path";
 import * as choki from "chokidar";
 import { EOL } from "os";
 import { EventEmitter } from "events";
-import { hook } from "../../common/helpers";
+import { hook, executeActionByChunks, isBuildFromCLI } from "../../common/helpers";
 import { PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME, TrackActionNames } from "../../constants";
-import { DeviceTypes, DeviceDiscoveryEventNames } from "../../common/constants";
+import { DEFAULT_CHUNK_SIZE, DeviceTypes, DeviceDiscoveryEventNames } from "../../common/constants";
 import { cache } from "../../common/decorators";
 
 const deviceDescriptorPrimaryKey = "identifier";
@@ -37,7 +37,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		private $debugDataService: IDebugDataService,
 		private $analyticsService: IAnalyticsService,
 		private $usbLiveSyncService: DeprecatedUsbLiveSyncService,
-		private $injector: IInjector) {
+		private $injector: IInjector,
+		private $platformsData: IPlatformsData) {
 		super();
 	}
 
@@ -462,6 +463,27 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				const platform = device.deviceInfo.platform;
 				const deviceBuildInfoDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 
+				if (liveSyncData.watchAllFiles) {
+					const platformData: IPlatformData = this.$platformsData.getPlatformData("android", projectData);
+					const pluginsNeedingRebuild: Array<any> = await platformData.platformProjectService.checkIfPluginsNeedBuild(projectData);
+					const action = async (buildAarOptions: IBuildOptions) => {
+						this.$logger.warn(`Building ${buildAarOptions.pluginName}...`);
+						await platformData.platformProjectService.prebuildNativePlugin(buildAarOptions);
+					};
+					const pluginInfo: any = [];
+					pluginsNeedingRebuild.forEach((item) => {
+						const options: IBuildOptions = {
+							pluginName: item.pluginName,
+							platformsAndroidDirPath: item.platformsAndroidDirPath,
+							aarOutputDir: item.platformsAndroidDirPath,
+							tempPluginDirPath: path.join(projectData.platformsDir, 'tempPlugin'),
+							platformData: platformData
+						};
+						pluginInfo.push(options);
+					});
+					await executeActionByChunks<IBuildOptions>(pluginInfo, DEFAULT_CHUNK_SIZE, action);
+				}
+
 				await this.ensureLatestAppPackageIsInstalledOnDevice({
 					device,
 					preparedPlatforms,
@@ -561,6 +583,38 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 								filesToRemove = [];
 
 								const allModifiedFiles = [].concat(currentFilesToSync).concat(currentFilesToRemove);
+								if (liveSyncData.watchAllFiles) {
+
+									const platformData: IPlatformData = this.$platformsData.getPlatformData("android", projectData);
+									const pluginInfo: any = [];
+									allModifiedFiles.forEach(async (item) => {
+										const matchedItem = item.match(/(.*\/node_modules\/[\w-]+)\/platforms\/android\//);
+										if (matchedItem) {
+											const matchLength = matchedItem[0].length;
+											const matchIndex = item.indexOf(matchedItem[0]);
+											const pluginInputOutputPath = item.substr(0, matchIndex + matchLength);
+											const pluginPackageJason = require(path.resolve(matchedItem[1], PACKAGE_JSON_FILE_NAME));
+
+											if (pluginPackageJason && pluginPackageJason.name) {
+												const options: IBuildOptions = {
+													pluginName: pluginPackageJason.name,
+													platformsAndroidDirPath: pluginInputOutputPath,
+													aarOutputDir: pluginInputOutputPath,
+													tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
+													platformData: platformData
+												};
+												pluginInfo.push(options);
+											}
+										}
+									});
+
+									const action = async (buildAarOptions: IBuildOptions) => {
+										this.$logger.warn(`Building ${buildAarOptions.pluginName}...`);
+										await platformData.platformProjectService.prebuildNativePlugin(buildAarOptions);
+									};
+
+									await executeActionByChunks<IBuildOptions>(pluginInfo, DEFAULT_CHUNK_SIZE, action);
+								}
 								const preparedPlatforms: string[] = [];
 								const rebuiltInformation: ILiveSyncBuildInfo[] = [];
 
@@ -658,16 +712,19 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 			const watcher = choki.watch(patterns, watcherOptions)
 				.on("all", async (event: string, filePath: string) => {
+
 					clearTimeout(timeoutTimer);
 
 					filePath = path.join(liveSyncData.projectDir, filePath);
 
 					this.$logger.trace(`Chokidar raised event ${event} for ${filePath}.`);
 
-					if (event === "add" || event === "addDir" || event === "change" /* <--- what to do when change event is raised ? */) {
-						filesToSync.push(filePath);
-					} else if (event === "unlink" || event === "unlinkDir") {
-						filesToRemove.push(filePath);
+					if (!isBuildFromCLI(filePath)) {
+						if (event === "add" || event === "addDir" || event === "change" /* <--- what to do when change event is raised ? */) {
+							filesToSync.push(filePath);
+						} else if (event === "unlink" || event === "unlinkDir") {
+							filesToRemove.push(filePath);
+						}
 					}
 
 					startSyncFilesTimeout();

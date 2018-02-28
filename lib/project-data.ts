@@ -152,6 +152,10 @@ export class ProjectData implements IProjectData {
 	}
 
 	private getNsConfigContent(projectDir: string): string {
+		if (!projectDir) {
+			return null;
+		}
+
 		const configNSFilePath = path.join(projectDir, constants.CONFIG_NS_FILE_NAME);
 
 		if (!this.$fs.exists(configNSFilePath)) {

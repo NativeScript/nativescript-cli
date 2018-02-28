@@ -30,6 +30,12 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("usbLiveSyncService", {
 		isInitialized: false
 	});
+	testInjector.register("platformsData", {
+		availablePlatforms: {
+			Android: "Android",
+			iOS: "iOS"
+		}
+	});
 
 	return testInjector;
 };
@@ -50,7 +56,8 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 		$debugDataService: IDebugDataService,
 		$analyticsService: IAnalyticsService,
 		$usbLiveSyncService: DeprecatedUsbLiveSyncService,
-		$injector: IInjector) {
+		$injector: IInjector,
+		$platformsData: IPlatformsData) {
 
 		super(
 			$platformService,
@@ -69,7 +76,7 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 			$analyticsService,
 			$usbLiveSyncService,
 			$injector,
-
+			$platformsData
 		);
 	}
 

@@ -3,6 +3,7 @@
 import * as util from "util";
 import * as chai from "chai";
 import { EventEmitter } from "events";
+import { SpawnOptions } from "child_process";
 
 import * as path from "path";
 import * as constants from "./../lib/constants";
@@ -286,6 +287,15 @@ export class ProjectDataStub implements IProjectData {
 	}
 }
 
+export class AndroidPluginBuildServiceStub implements IAndroidPluginBuildService {
+	buildAar(options: IBuildOptions): Promise<boolean> {
+		return Promise.resolve(true);
+	}
+	migrateIncludeGradle(options: IBuildOptions): void {
+
+	}
+}
+
 export class PlatformProjectServiceStub extends EventEmitter implements IPlatformProjectService {
 	getPlatformData(projectData: IProjectData): IPlatformData {
 		return {
@@ -301,6 +311,13 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 			relativeToFrameworkConfigurationFilePath: "",
 			fastLivesyncFileExtensions: []
 		};
+	}
+	prebuildNativePlugin(options: IBuildOptions): Promise<void> {
+		return Promise.resolve();
+	}
+
+	checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>> {
+		return Promise.resolve([]);
 	}
 	getAppResourcesDestinationDirectoryPath(): string {
 		return "";
@@ -330,6 +347,10 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 		return Promise.resolve();
 	}
 
+	public async executeCommand(projectRoot: string, gradleArgs: string[], childProcessOpts?: SpawnOptions, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult> {
+		return { stderr: "", stdout: "", exitCode: 0 };
+	}
+
 	async buildProject(projectRoot: string): Promise<void> {
 		return Promise.resolve();
 	}
@@ -349,6 +370,10 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 
 	async preparePluginNativeCode(pluginData: IPluginData): Promise<void> {
 		return Promise.resolve();
+	}
+
+	getBuildOptions(configurationFilePath?: string): Array<string> {
+		return [];
 	}
 
 	async removePluginNativeCode(pluginData: IPluginData): Promise<void> { }
