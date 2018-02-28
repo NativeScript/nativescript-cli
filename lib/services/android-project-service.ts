@@ -4,8 +4,8 @@ import * as constants from "../constants";
 import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
-import { attachAwaitDetach } from "../common/helpers";
 import { EOL } from "os";
+import { attachAwaitDetach, isRecommendedAarFile } from "../common/helpers";
 import { Configurations } from "../common/constants";
 import { SpawnOptions } from "child_process";
 
@@ -36,7 +36,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $injector: IInjector,
 		private $pluginVariablesService: IPluginVariablesService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $npm: INodePackageManager) {
+		private $npm: INodePackageManager,
+		private $androidPluginBuildService: IAndroidPluginBuildService) {
 		super($fs, $projectDataService);
 		this._androidProjectPropertiesManagers = Object.create(null);
 		this.isAndroidStudioTemplate = false;
@@ -318,7 +319,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
 		if (this.canUseGradle(projectData)) {
-			const buildOptions = this.getBuildOptions(buildConfig, projectData);
+			const buildOptions = this.getGradleBuildOptions(buildConfig, projectData);
 			if (this.$logger.getLevel() === "TRACE") {
 				buildOptions.unshift("--stacktrace");
 				buildOptions.unshift("--debug");
@@ -336,7 +337,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
 				this.$childProcess,
 				handler,
-				this.executeGradleCommand(this.getPlatformData(projectData).projectRoot,
+				this.executeCommand(this.getPlatformData(projectData).projectRoot,
 					buildOptions,
 					{ stdio: buildConfig.buildOutputStdio || "inherit" },
 					{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true }));
@@ -346,12 +347,28 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	private getBuildOptions(settings: IAndroidBuildOptionsSettings, projectData: IProjectData): Array<string> {
+	private getGradleBuildOptions(settings: IAndroidBuildOptionsSettings, projectData: IProjectData): Array<string> {
+		const configurationFilePath = this.getPlatformData(projectData).configurationFilePath;
+
+		const buildOptions: Array<string> = this.getBuildOptions(configurationFilePath);
+
+		if (settings.release) {
+			buildOptions.push("-Prelease");
+			buildOptions.push(`-PksPath=${path.resolve(settings.keyStorePath)}`);
+			buildOptions.push(`-Palias=${settings.keyStoreAlias}`);
+			buildOptions.push(`-Ppassword=${settings.keyStoreAliasPassword}`);
+			buildOptions.push(`-PksPassword=${settings.keyStorePassword}`);
+		}
+
+		return buildOptions;
+	}
+
+	public getBuildOptions(configurationFilePath?: string): Array<string> {
 		this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
 
 		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
 		const compileSdk = androidToolsInfo.compileSdkVersion;
-		const targetSdk = this.getTargetFromAndroidManifest(projectData) || compileSdk;
+		const targetSdk = this.getTargetFromAndroidManifest(configurationFilePath) || compileSdk;
 		const buildToolsVersion = androidToolsInfo.buildToolsVersion;
 		const appCompatVersion = androidToolsInfo.supportRepositoryVersion;
 		const generateTypings = androidToolsInfo.generateTypings;
@@ -362,14 +379,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			`-PsupportVersion=${appCompatVersion}`,
 			`-PgenerateTypings=${generateTypings}`
 		];
-
-		if (settings.release) {
-			buildOptions.push("-Prelease");
-			buildOptions.push(`-PksPath=${path.resolve(settings.keyStorePath)}`);
-			buildOptions.push(`-Palias=${settings.keyStoreAlias}`);
-			buildOptions.push(`-Ppassword=${settings.keyStoreAliasPassword}`);
-			buildOptions.push(`-PksPassword=${settings.keyStorePassword}`);
-		}
 
 		return buildOptions;
 	}
@@ -413,12 +422,90 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
-		if (!this.shouldUseNewRuntimeGradleRoutine(projectData)) {
+		if (!this.runtimeVersionIsGreaterThanOrEquals(projectData, "3.3.0")) {
 			const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
 			await this.processResourcesFromPlugin(pluginData, pluginPlatformsFolderPath, projectData);
+		} else if (this.runtimeVersionIsGreaterThanOrEquals(projectData, "4.0.0")) {
+			// build Android plugins which contain AndroidManifest.xml and/or resources
+			const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
+			if (this.$fs.exists(pluginPlatformsFolderPath)) {
+				const platformData = this.getPlatformData(projectData);
+				const options: IBuildOptions = {
+					pluginName: pluginData.name,
+					platformsAndroidDirPath: pluginPlatformsFolderPath,
+					aarOutputDir: pluginPlatformsFolderPath,
+					tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
+					platformData: platformData
+				};
+
+				this.prebuildNativePlugin(options);
+			}
 		}
 
 		// Do nothing, the Android Gradle script will configure itself based on the input dependencies.json
+	}
+
+	public async checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>> {
+		const detectedPlugins: Array<any> = [];
+
+		const platformsAndroid = path.join(constants.PLATFORMS_DIR_NAME, "android");
+		const pathToPlatformsAndroid = path.join(projectData.projectDir, platformsAndroid);
+		const dependenciesJson = await this.$fs.readJson(path.join(pathToPlatformsAndroid, constants.DEPENDENCIES_JSON_NAME));
+		const productionDependencies = dependenciesJson.map((item: any) => {
+			return path.resolve(pathToPlatformsAndroid, item.directory);
+		});
+
+		for (const dependencyKey in productionDependencies) {
+			const dependency = productionDependencies[dependencyKey];
+			const jsonContent = this.$fs.readJson(path.join(dependency, constants.PACKAGE_JSON_FILE_NAME));
+			const isPlugin = !!jsonContent.nativescript;
+			const pluginName = jsonContent.name;
+			if (isPlugin) {
+				const platformsAndroidDirPath = path.join(dependency, platformsAndroid);
+				if (this.$fs.exists(platformsAndroidDirPath)) {
+					let hasGeneratedAar = false;
+					let generatedAarPath = "";
+					const nativeFiles = this.$fs.enumerateFilesInDirectorySync(platformsAndroidDirPath).filter((item) => {
+						if (isRecommendedAarFile(item, pluginName)) {
+							generatedAarPath = item;
+							hasGeneratedAar = true;
+						}
+						return this.isAllowedFile(item);
+					});
+
+					if (hasGeneratedAar) {
+						const aarStat = this.$fs.getFsStats(generatedAarPath);
+						nativeFiles.forEach((item) => {
+							const currentItemStat = this.$fs.getFsStats(item);
+							if (currentItemStat.mtime > aarStat.mtime) {
+								detectedPlugins.push({
+									platformsAndroidDirPath: platformsAndroidDirPath,
+									pluginName: pluginName
+								});
+							}
+						});
+					} else if (nativeFiles.length > 0) {
+						detectedPlugins.push({
+							platformsAndroidDirPath: platformsAndroidDirPath,
+							pluginName: pluginName
+						});
+					}
+				}
+			}
+		}
+		return detectedPlugins;
+	}
+
+	private isAllowedFile(item: string) {
+		return item.endsWith(constants.MANIFEST_FILE_NAME) || item.endsWith(constants.RESOURCES_DIR);
+	}
+
+	public async prebuildNativePlugin(options: IBuildOptions): Promise<void> {
+		if (await this.$androidPluginBuildService.buildAar(options)) {
+			this.$logger.info(`Built aar for ${options.pluginName}`);
+		}
+
+		this.$androidPluginBuildService.migrateIncludeGradle(options);
 	}
 
 	public async processConfigurationFilesFromAppResources(): Promise<void> {
@@ -458,9 +545,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
 		try {
 			// check whether the dependency that's being removed has native code
-			// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
+			// TODO: Remove prior to the 4.1 CLI release @Pip3r4o @PanayotCankov
 			// the updated gradle script will take care of cleaning the prepared android plugins
-			if (!this.shouldUseNewRuntimeGradleRoutine(projectData)) {
+			if (!this.runtimeVersionIsGreaterThanOrEquals(projectData, "3.3.0")) {
 				const pluginConfigDir = path.join(this.getPlatformData(projectData).projectRoot, "configurations", pluginData.name);
 				if (this.$fs.exists(pluginConfigDir)) {
 					await this.cleanProject(this.getPlatformData(projectData).projectRoot, projectData);
@@ -480,14 +567,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void> {
-		const shouldUseNewRoutine = this.shouldUseNewRuntimeGradleRoutine(projectData);
+		const shouldUseNewRoutine = this.runtimeVersionIsGreaterThanOrEquals(projectData, "3.3.0");
 
 		if (dependencies) {
 			dependencies = this.filterUniqueDependencies(dependencies);
 			if (shouldUseNewRoutine) {
 				this.provideDependenciesJson(projectData, dependencies);
 			} else {
-				// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
+				// TODO: Remove prior to the 4.1 CLI release @Pip3r4o @PanayotCankov
 
 				const platformDir = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
 				const buildDir = path.join(platformDir, "build-tools");
@@ -524,7 +611,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	private provideDependenciesJson(projectData: IProjectData, dependencies: IDependencyData[]): void {
 		const platformDir = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
-		const dependenciesJsonPath = path.join(platformDir, "dependencies.json");
+		const dependenciesJsonPath = path.join(platformDir, constants.DEPENDENCIES_JSON_NAME);
 		const nativeDependencies = dependencies
 			.filter(AndroidProjectService.isNativeAndroidDependency)
 			.map(({ name, directory }) => ({ name, directory: path.relative(platformDir, directory) }));
@@ -538,14 +625,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public stopServices(projectRoot: string): Promise<ISpawnResult> {
-		return this.executeGradleCommand(projectRoot, ["--stop", "--quiet"]);
+		return this.executeCommand(projectRoot, ["--stop", "--quiet"]);
 	}
 
 	public async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
 		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
-			const buildOptions = this.getBuildOptions({ release: false }, projectData);
+			const buildOptions = this.getGradleBuildOptions({ release: false }, projectData);
 			buildOptions.unshift("clean");
-			await this.executeGradleCommand(projectRoot, buildOptions);
+			await this.executeCommand(projectRoot, buildOptions);
 		}
 	}
 
@@ -606,10 +693,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	private getTargetFromAndroidManifest(projectData: IProjectData): string {
+	private getTargetFromAndroidManifest(configurationFilePath: string): string {
 		let versionInManifest: string;
-		if (this.$fs.exists(this.getPlatformData(projectData).configurationFilePath)) {
-			const targetFromAndroidManifest: string = this.$fs.readText(this.getPlatformData(projectData).configurationFilePath);
+		if (this.$fs.exists(configurationFilePath)) {
+			const targetFromAndroidManifest: string = this.$fs.readText(configurationFilePath);
 			if (targetFromAndroidManifest) {
 				const match = targetFromAndroidManifest.match(/.*?android:targetSdkVersion=\"(.*?)\"/);
 				if (match && match[1]) {
@@ -621,13 +708,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return versionInManifest;
 	}
 
-	private async executeGradleCommand(projectRoot: string, gradleArgs: string[], childProcessOpts?: SpawnOptions, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult> {
+	public async executeCommand(projectRoot: string, gradleArgs: any, childProcessOpts?: SpawnOptions, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult> {
 		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
 			const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
 
-			const localArgs = [...gradleArgs];
 			if (this.$logger.getLevel() === "INFO") {
-				localArgs.push("--quiet");
+				gradleArgs.push("--quiet");
 				this.$logger.info("Gradle build...");
 			}
 
@@ -636,19 +722,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			childProcessOpts.stdio = childProcessOpts.stdio || "inherit";
 
 			return await this.spawn(gradlew,
-				localArgs,
+				gradleArgs,
 				childProcessOpts,
 				spawnFromEventOptions);
 		}
-	}
-
-	// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
-	private shouldUseNewRuntimeGradleRoutine(projectData: IProjectData): boolean {
-		const platformVersion = this.getCurrentPlatformVersion(this.getPlatformData(projectData), projectData);
-		const newRuntimeGradleRoutineVersion = "3.3.0";
-
-		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
-		return semver.gte(normalizedPlatformVersion, newRuntimeGradleRoutineVersion);
 	}
 
 	private isAndroidStudioCompatibleTemplate(projectData: IProjectData): boolean {
@@ -675,6 +752,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
 
 		return semver.gte(normalizedPlatformVersion, androidStudioCompatibleTemplate);
+	}
+
+	private runtimeVersionIsGreaterThanOrEquals(projectData: IProjectData, versionString: string): boolean {
+		const platformVersion = this.getCurrentPlatformVersion(this.getPlatformData(projectData), projectData);
+
+		if (platformVersion === constants.PackageVersion.NEXT) {
+			return true;
+		}
+
+		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
+		return semver.gte(normalizedPlatformVersion, versionString);
 	}
 }
 

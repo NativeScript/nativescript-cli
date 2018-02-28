@@ -297,6 +297,26 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	 * If there are parts in the project that are inconsistent with the desired options, marks them in the changeset flags.
 	 */
 	checkForChanges(changeset: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): Promise<void>;
+
+	/**
+	 * Build native part of a nativescript plugins if necessary
+	 */
+	prebuildNativePlugin(buildOptions: IBuildOptions): Promise<void>;
+
+	/**
+	 * Traverse through the production dependencies and find plugins that need build/rebuild
+	 */
+	checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>>;
+
+	/**
+	 * Get gradle options the CLI generates when building project
+	 */
+	getBuildOptions(configurationFilePath?: string): Array<string>;
+
+	/**
+	 * Get gradle options the CLI generates when building project
+	 */
+	executeCommand(projectRoot: string, args: any, childProcessOpts?: any, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult>;
 }
 
 interface IAndroidProjectPropertiesManager {

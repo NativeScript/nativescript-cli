@@ -9,6 +9,7 @@ $injector.require("projectData", "./project-data");
 $injector.requirePublic("projectDataService", "./services/project-data-service");
 $injector.requirePublic("projectService", "./services/project-service");
 $injector.require("androidProjectService", "./services/android-project-service");
+$injector.require("androidPluginBuildService", "./services/android-plugin-build-service");
 $injector.require("iOSEntitlementsService", "./services/ios-entitlements-service");
 $injector.require("iOSProjectService", "./services/ios-project-service");
 $injector.require("iOSProvisionService", "./services/ios-provision-service");

@@ -15,6 +15,7 @@ import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { XCConfigService } from "./xcconfig-service";
 import * as simplePlist from "simple-plist";
 import * as mobileprovision from "ios-mobileprovision-finder";
+import { SpawnOptions } from "child_process";
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
@@ -111,6 +112,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 
 		return true;
+	}
+
+	public async executeCommand(projectRoot: string, args: any, childProcessOpts?: SpawnOptions, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult> {
+		return { stderr: "", stdout: "", exitCode: 0 };
 	}
 
 	public getAppResourcesDestinationDirectoryPath(projectData: IProjectData): string {
@@ -281,14 +286,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 <dict>
     <key>method</key>
 	<string>${exportOptionsMethod}</string>`;
-	if (options && options.provision) {
-		plistTemplate += `    <key>provisioningProfiles</key>
+		if (options && options.provision) {
+			plistTemplate += `    <key>provisioningProfiles</key>
 <dict>
 	<key>${projectData.projectId}</key>
 	<string>${options.provision}</string>
 </dict>`;
-	}
-	plistTemplate += `
+		}
+		plistTemplate += `
     <key>uploadBitcode</key>
     <false/>
 </dict>
@@ -960,7 +965,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return Promise.resolve();
 	}
 
-	public async checkForChanges(changesInfo: IProjectChangesInfo, {provision, teamId}: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
+	public async checkForChanges(changesInfo: IProjectChangesInfo, { provision, teamId }: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
 		const hasProvision = provision !== undefined;
 		const hasTeamId = teamId !== undefined;
 		if (hasProvision || hasTeamId) {
@@ -1005,6 +1010,18 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				changesInfo.signingChanged = true;
 			}
 		}
+	}
+
+	public async prebuildNativePlugin(options: IBuildOptions): Promise<void> {
+		Promise.resolve();
+	}
+
+	public async checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>> {
+		return [];
+	}
+
+	public getBuildOptions(configurationFilePath: string): Array<string> {
+		return [];
 	}
 
 	private getAllLibsForPluginWithFileExtension(pluginData: IPluginData, fileExtension: string): string[] {
@@ -1351,7 +1368,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	private validateApplicationIdentifier(projectData: IProjectData): void {
 		const infoPlistPath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, this.getPlatformData(projectData).configurationFileName);
-		const mergedPlistPath =  this.getPlatformData(projectData).configurationFilePath;
+		const mergedPlistPath = this.getPlatformData(projectData).configurationFilePath;
 
 		if (!this.$fs.exists(infoPlistPath) || !this.$fs.exists(mergedPlistPath)) {
 			return;

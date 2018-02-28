@@ -76,6 +76,7 @@ function createTestInjector(): IInjector {
 		}
 	});
 	testInjector.register("settingsService", SettingsService);
+	testInjector.register("androidPluginBuildService", stubs.AndroidPluginBuildServiceStub);
 
 	return testInjector;
 }
