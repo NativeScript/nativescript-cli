@@ -270,12 +270,15 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 			// finally build the plugin
 			const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
-			const localArgs = [
+			let localArgs = [
 				gradlew,
 				"-p",
 				newPluginDir,
 				"assembleRelease"
 			];
+
+			const projectBuildOptions = options.platformData.platformProjectService.getBuildOptions();
+			localArgs = localArgs.concat(projectBuildOptions);
 
 			try {
 				await this.$childProcess.exec(localArgs.join(" "), { cwd: newPluginDir });
