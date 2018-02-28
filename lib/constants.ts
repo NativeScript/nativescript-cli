@@ -7,4 +7,6 @@ export class Constants {
 		"linux": "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-linux.html#system-requirements",
 		"darwin": "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-os-x.html#system-requirements",
 	};
+	public static INFO_TYPE_NAME = "info";
+	public static WARNING_TYPE_NAME = "warning";
 }
