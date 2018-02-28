@@ -56,6 +56,10 @@ export class DeltaFetchRequest extends KinveyRequest {
 
         return repo.read(QUERY_CACHE_COLLECTION_NAME, queryCacheQuery)
           .then((queries) => {
+            let deltaSetQuery = {
+              collectionName: this._getCollectionFromUrl(),
+              query: this.query ? JSON.stringify(this.query.toQueryString().filter) : null
+            };
             const request = new KinveyRequest({
               method: RequestMethod.GET,
               url: this.url,
@@ -72,15 +76,19 @@ export class DeltaFetchRequest extends KinveyRequest {
             });
 
             if (isArray(queries) && queries.length > 0) {
-              const since = queries[0].lastRequest;
+              [deltaSetQuery] = queries;
               request.url = urljoin(this.url, url.format({
                 pathname: '_deltaset',
-                query: { since }
+                query: { since: deltaSetQuery.lastRequest }
               }));
               return request.execute();
             }
 
-            return request.execute();
+            return request.execute()
+              .then((response) => {
+                deltaSetQuery.lastRequest = response.headers.get('X-Kinvey-Request-Start');
+                return repo.update(QUERY_CACHE_COLLECTION_NAME, deltaSetQuery).then(() => response);
+              });
           })
           .then((response) => {
             // Makse sure the response from DeltaSet is normalized
@@ -96,13 +104,6 @@ export class DeltaFetchRequest extends KinveyRequest {
 
             response.data = data;
             return response;
-          })
-          .then((response) => {
-            return repo.create(QUERY_CACHE_COLLECTION_NAME, {
-              collectionName: this._getCollectionFromUrl(),
-              query: this.query ? JSON.stringify(this.query.toQueryString().filter) : null,
-              lastRequest: response.headers.get('X-Kinvey-Request-Start')
-            }).then(() => response);
           });
       });
   }
