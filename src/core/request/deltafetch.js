@@ -51,7 +51,7 @@ export class DeltaFetchRequest extends KinveyRequest {
         if (this.query) {
           queryCacheQuery = queryCacheQuery
             .and()
-            .equalTo('query', this.query.toString());
+            .equalTo('query', JSON.stringify(this.query.toQueryString().filter));
         }
 
         return repo.read(QUERY_CACHE_COLLECTION_NAME, queryCacheQuery)
@@ -100,7 +100,7 @@ export class DeltaFetchRequest extends KinveyRequest {
           .then((response) => {
             return repo.create(QUERY_CACHE_COLLECTION_NAME, {
               collectionName: this._getCollectionFromUrl(),
-              query: this.query ? this.query.toString() : null,
+              query: this.query ? JSON.stringify(this.query.toQueryString().filter) : null,
               lastRequest: response.headers.get('X-Kinvey-Request-Start')
             }).then(() => response);
           });
