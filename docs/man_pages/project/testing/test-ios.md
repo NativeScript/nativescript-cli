@@ -1,4 +1,8 @@
-test ios
+<% if (isJekyll) { %>---
+title: tns test ios
+position: 22
+---<% } %>
+# tns test ios
 ==========
 
 Usage | Synopsis
