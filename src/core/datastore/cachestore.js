@@ -99,12 +99,15 @@ export class CacheStore extends NetworkStore {
    * Pull items for the data store from the network to your local cache. A promise will be
    * returned that will be resolved with the result of the pull or rejected with an error.
    *
+   * IMPORTANT: This method is not intended to be used to make concurrent requests.
+   * If you wish to pull multiple pages concurrently, please use the autoPagination option
+   *
    * @param   {Query}                 [query]                                   Query to pull a subset of items.
    * @param   {Object}                options                                   Options
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
-   * @return  {Promise}                                                         Promise
+   * @return  {Promise.<object[]|number>}                                       Promise
    */
   pull(query, options = {}) {
     options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
