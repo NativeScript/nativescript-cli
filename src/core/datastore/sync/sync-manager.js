@@ -310,7 +310,7 @@ export class SyncManager {
 
               if (isArray(deleted) && deleted.length > 0) {
                 const deletedIds = deleted.map((item) => item._id);
-                const deleteQuery = new Query().containsAll('_id', deletedIds);
+                const deleteQuery = new Query().contains('_id', deletedIds);
                 return repo.delete(collection, deleteQuery).then(() => repo);
               }
 
