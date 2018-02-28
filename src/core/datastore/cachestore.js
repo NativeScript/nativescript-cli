@@ -84,10 +84,7 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   pendingSyncCount(query) {
-    if (query) {
-      return this.syncManager.getSyncItemCountByEntityQuery(this.collection, query);
-    }
-    return this.syncManager.getSyncItemCount(this.collection);
+    return this.syncManager.getSyncItemCountByEntityQuery(this.collection, query);
   }
 
   pendingSyncEntities(query) {

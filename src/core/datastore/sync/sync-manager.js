@@ -99,6 +99,10 @@ export class SyncManager {
 
   // TODO: this method is temporray, pending fix for MLIBZ-2177
   getSyncItemCountByEntityQuery(collection, query) {
+    if (!query) {
+      return this._syncStateManager.getSyncItemCount(collection);
+    }
+
     return this._getOfflineRepo()
       .then(repo => repo.read(collection, query))
       .then((entities) => {
@@ -107,8 +111,8 @@ export class SyncManager {
       });
   }
 
+  // TODO: this only returns nondeleted entities - pending fix for MLIBZ-2177
   getSyncEntities(collection, query) {
-    // TODO: this only returns nondeleted entities - pending fix for MLIBZ-2177
     return this._getOfflineRepo()
       .then(repo => repo.read(collection, query))
       .then((entities = []) => {

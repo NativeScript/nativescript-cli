@@ -4,8 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [3.10.9](https://github.com/Kinvey/js-sdk/tree/v3.10.9) (2018-02-09)
-[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.9.9...v3.10.9)<br/>
+## [3.10.0](https://github.com/Kinvey/js-sdk/tree/v3.10.0) (2018-02-26)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.9.10...v3.10.0)<br/>
+
+### Enhancements
+- DataStore Redesign [#251](https://github.com/Kinvey/js-sdk/pull/251)
+
+### Bug Fixes
+- MLIBZ-2350: Revert removal of caching db connections in WebSQL. [#241](https://github.com/Kinvey/js-sdk/pull/241)
+- Added polyfill for `Number.isNaN()`. [#243](https://github.com/Kinvey/js-sdk/pull/243)
+- MLIBZ-2314: Update typescript definitions to allow anonymouse user signup. [#242](https://github.com/Kinvey/js-sdk/pull/242)
+- Export `LiveServiceFacade` instead of `LiveService`. [#254](https://github.com/Kinvey/js-sdk/pull/254)
+
+### Tests
+- Fix live service unit tests [#255](https://github.com/Kinvey/js-sdk/pull/255)
+- Added PhoneGap Android execution in Travis [#253](https://github.com/Kinvey/js-sdk/pull/253)
+
+### Maintenance
+- Update the package-lock.json to use the new test runner. [#240](https://github.com/Kinvey/js-sdk/pull/240)
+
+## [3.9.10](https://github.com/Kinvey/js-sdk/tree/v3.9.10) (2018-02-09)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.9.9...v3.9.10)<br/>
 
 ### Bug Fixes
 - Use correct config property for setting storage providers [#228](https://github.com/Kinvey/js-sdk/pull/228)

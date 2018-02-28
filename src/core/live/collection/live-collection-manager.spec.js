@@ -1,10 +1,14 @@
 import expect from 'expect';
 
-import { getLiveCollectionManager } from 'kinvey-live';
-
-import * as nockHelper from '../';
-import { mockRequiresIn } from '../../mocks';
+import * as nockHelper from '../nock-helper';
 import { invalidOrMissingCheckRegexp } from '../utilities';
+import { mockRequiresIn } from '../../datastore/require-helper';
+import { init } from '../../kinvey';
+import { randomString } from '../../utils';
+import { UserMock } from '../../user/user-mock';
+import { NetworkRack } from '../../request';
+import { NodeHttpMiddleware } from '../../../node/http';
+import { getLiveCollectionManager } from './live-collection-manager';
 
 describe('LiveCollectionManager', () => {
   /** @type {LiveCollectionManager} */
@@ -18,18 +22,22 @@ describe('LiveCollectionManager', () => {
   };
   const collectionName = 'someCollection';
 
-  before(function () {
+  before(() => {
     client = init({
       appKey: randomString(),
       appSecret: randomString()
     });
     nockHelper.setClient(client);
     expectedCollectionChannel = `${client.appKey}.c-${collectionName}`;
-    expectedPersonalCollectionChannel = `${expectedCollectionChannel}.u-${client.getActiveUser()._id}`;
+    NetworkRack.useHttpMiddleware(new NodeHttpMiddleware({}));
+    return UserMock.login(randomString(), randomString())
+      .then(() => {
+        expectedPersonalCollectionChannel = `${expectedCollectionChannel}.u-${client.getActiveUser()._id}`;
+      });
   });
 
   beforeEach(() => {
-    const pathToLiveManager = '../../../../src/live/collection/live-collection-manager';
+    const pathToLiveManager = './live-collection-manager';
     const mocks = {
       '../live-service': { getLiveService: () => liveServiceMock }
     };

@@ -5,6 +5,9 @@ import * as nockHelper from '../nock-helper';
 import { invalidOrMissingCheckRegexp } from '../utilities';
 import { randomString } from '../../utils';
 import { Client } from '../../client';
+import { UserMock } from '../../user/user-mock';
+import { NetworkRack } from '../../request';
+import { NodeHttpMiddleware } from '../../../node/http';
 
 // TODO: add more tests
 
@@ -14,16 +17,22 @@ describe('Stream', () => {
   /** @type {Stream} */
   let stream;
 
-  before(function () {
+  before(() => {
     const client = Client.init({
       appKey: randomString(),
       appSecret: randomString()
     });
     nockHelper.setClient(client);
+    NetworkRack.useHttpMiddleware(new NodeHttpMiddleware({}));
   });
 
   beforeEach(() => {
     stream = new Stream(streamName);
+    return UserMock.login(randomString(), randomString());
+  });
+
+  afterEach(() => {
+    return UserMock.logout();
   });
 
   describe('getSubstreams', () => {

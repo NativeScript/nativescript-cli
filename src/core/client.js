@@ -289,7 +289,7 @@ export class Client {
    * @param {string}    [options.masterSecret]                             App Master Secret
    * @param {string}    [options.encryptionKey]                            App Encryption Key
    * @param {string}    [options.appVersion]                               App Version
-   * @return {Promise}                                                     A promise.
+   * @return {Client}                                                     A promise.
    */
   static init(config) {
     sharedInstance = new Client(config);

@@ -2,7 +2,7 @@ import expect from 'expect';
 
 import { DataStoreType } from '../datastore';
 import { Query } from '../../query';
-import { datastoreFactory, createPromiseSpy } from './utils';
+import { datastoreFactory, createPromiseSpy, validateSpyCalls } from './utils';
 
 const collection = 'books';
 const optionKeyName = 'test';
@@ -47,7 +47,7 @@ describe('Data stores delegate correctly to sync manager', () => {
         const buildStore = datastoreFactory[storeType];
         store = buildStore(collection);
         // avoid proxyquire, since it can't reliably stub syncManagerProvider
-        // in CacheStore when requiring SyncManager
+        // in CacheStore when requiring SyncStore
         store.syncManager = syncManagerMock;
       });
 
@@ -63,8 +63,8 @@ describe('Data stores delegate correctly to sync manager', () => {
       it('pendingSyncCount() with NO query', () => {
         return store.pendingSyncCount()
           .then(() => {
-            const spy = syncManagerMock.getSyncItemCount;
-            validateSyncManagerCall(spy);
+            const spy = syncManagerMock.getSyncItemCountByEntityQuery;
+            validateSpyCalls(spy, 1, [collection, undefined])
           });
       });
 

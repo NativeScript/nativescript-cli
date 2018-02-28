@@ -66,7 +66,7 @@ export class LiveCollectionManager {
    * @param {string} path
    */
   _makeSubscriptionRequest(collectionName, path) {
-    return KinveyRequest.executeShort({
+    return KinveyRequest.execute({
       method: RequestMethod.POST,
       pathname: `/appdata/${this._client.appKey}/${collectionName}/${path}`,
       body: { deviceId: this._client.deviceId }

@@ -489,21 +489,21 @@ describe('NetworkStore', () => {
     });
   });
 
-  describe.skip('when working with live service', () => {
-    const path = '../src/datastore/networkstore';
+  describe('when working with live service', () => {
+    const path = './networkstore';
     const managerMock = {
       subscribeCollection: () => { },
       unsubscribeCollection: () => { }
     };
     const requireMocks = {
-      '../../live': { getLiveCollectionManager: () => managerMock }
+      '../live': { getLiveCollectionManager: () => managerMock }
     };
 
     /** @type {NetworkStore} */
     let proxiedStore;
 
     beforeEach(() => {
-      const ProxiedNetworkStore = mockRequiresIn(__dirname, path, requireMocks, 'default');
+      const ProxiedNetworkStore = mockRequiresIn(__dirname, path, requireMocks, 'NetworkStore');
       proxiedStore = new ProxiedNetworkStore(collection);
     });
 
