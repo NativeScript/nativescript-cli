@@ -20,7 +20,6 @@ allprojects {
 apply plugin: 'com.android.library'
 
 def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 24 }
-def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk : 24 }
 def computeBuildToolsVersion = { ->
     project.hasProperty("buildToolsVersion") ? buildToolsVersion : "27.0.1"
 }
@@ -30,8 +29,7 @@ android {
     buildToolsVersion computeBuildToolsVersion()
 
     defaultConfig {
-        minSdkVersion 17
-        targetSdkVersion computeTargetSdkVersion()
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
     }

@@ -476,8 +476,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 							pluginName: item.pluginName,
 							platformsAndroidDirPath: item.platformsAndroidDirPath,
 							aarOutputDir: item.platformsAndroidDirPath,
-							tempPluginDirPath: path.join(projectData.platformsDir, 'tempPlugin'),
-							platformData: platformData
+							tempPluginDirPath: path.join(projectData.platformsDir, 'tempPlugin')
 						};
 						pluginInfo.push(options);
 					});
@@ -600,8 +599,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 													pluginName: pluginPackageJason.name,
 													platformsAndroidDirPath: pluginInputOutputPath,
 													aarOutputDir: pluginInputOutputPath,
-													tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
-													platformData: platformData
+													tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin")
 												};
 												pluginInfo.push(options);
 											}

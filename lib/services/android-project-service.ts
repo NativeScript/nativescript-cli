@@ -429,13 +429,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			// build Android plugins which contain AndroidManifest.xml and/or resources
 			const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
 			if (this.$fs.exists(pluginPlatformsFolderPath)) {
-				const platformData = this.getPlatformData(projectData);
 				const options: IBuildOptions = {
 					pluginName: pluginData.name,
 					platformsAndroidDirPath: pluginPlatformsFolderPath,
 					aarOutputDir: pluginPlatformsFolderPath,
-					tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
-					platformData: platformData
+					tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin")
 				};
 
 				this.prebuildNativePlugin(options);

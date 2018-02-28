@@ -7,7 +7,8 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 	constructor(private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
-		private $hostInfo: IHostInfo) { }
+		private $hostInfo: IHostInfo,
+		private $androidToolsInfo: IAndroidToolsInfo) { }
 
 	private static ANDROID_MANIFEST_XML = "AndroidManifest.xml";
 	private static INCLUDE_GRADLE = "include.gradle";
@@ -270,15 +271,21 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 			// finally build the plugin
 			const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
-			let localArgs = [
+			const localArgs = [
 				gradlew,
 				"-p",
 				newPluginDir,
 				"assembleRelease"
 			];
 
-			const projectBuildOptions = options.platformData.platformProjectService.getBuildOptions();
-			localArgs = localArgs.concat(projectBuildOptions);
+			this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
+
+			const androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
+			const compileSdk = androidToolsInfo.compileSdkVersion;
+			const buildToolsVersion = androidToolsInfo.buildToolsVersion;
+
+			localArgs.push(`-PcompileSdk=android-${compileSdk}`);
+			localArgs.push(`-PbuildToolsVersion=${buildToolsVersion}`);
 
 			try {
 				await this.$childProcess.exec(localArgs.join(" "), { cwd: newPluginDir });
