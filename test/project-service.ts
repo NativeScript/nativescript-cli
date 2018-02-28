@@ -133,7 +133,7 @@ class ProjectIntegrationTest {
 		this.testInjector.register("projectHelper", ProjectHelperLib.ProjectHelper);
 		this.testInjector.register("projectTemplatesService", ProjectTemplatesService);
 		this.testInjector.register("projectNameValidator", mockProjectNameValidator);
-		this.testInjector.register("projectData", {});
+		this.testInjector.register("projectData", stubs.ProjectDataStub);
 
 		this.testInjector.register("fs", FileSystem);
 		this.testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);

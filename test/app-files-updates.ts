@@ -1,7 +1,16 @@
 import { assert } from "chai";
 import { AppFilesUpdater } from "../lib/services/app-files-updater";
+import * as yok from "../lib/common/yok";
 
 require("should");
+
+function createTestInjector(): IInjector {
+	const testInjector = new yok.Yok();
+
+	testInjector.register("projectData", { appResourcesDirectoryPath: "App_Resources"});
+
+	return testInjector;
+}
 
 describe("App files cleanup", () => {
 	class CleanUpAppFilesUpdater extends AppFilesUpdater {
@@ -54,23 +63,25 @@ describe("App files copy", () => {
 		}
 
 		public copy(): void {
-			this.copiedDestinationItems = this.resolveAppSourceFiles();
+			const injector = createTestInjector();
+			const projectData = <IProjectData>injector.resolve("projectData");
+			this.copiedDestinationItems = this.resolveAppSourceFiles(projectData);
 		}
 	}
 
-	it("copies all app files when not bundling", () => {
+	it("copies all app files but app_resources when not bundling", () => {
 		const updater = new CopyAppFilesUpdater([
 			"file1", "dir1/file2", "App_Resources/Android/blah.png"
 		], { bundle: false });
 		updater.copy();
-		assert.deepEqual(["file1", "dir1/file2", "App_Resources/Android/blah.png"], updater.copiedDestinationItems);
+		assert.deepEqual(["file1", "dir1/file2"], updater.copiedDestinationItems);
 	});
 
-	it("skips copying non-App_Resource files when bundling", () => {
+	it("skips copying files when bundling", () => {
 		const updater = new CopyAppFilesUpdater([
 			"file1", "dir1/file2", "App_Resources/Android/blah.png"
 		], { bundle: true });
 		updater.copy();
-		assert.deepEqual(["App_Resources/Android/blah.png"], updater.copiedDestinationItems);
+		assert.deepEqual([], updater.copiedDestinationItems);
 	});
 });

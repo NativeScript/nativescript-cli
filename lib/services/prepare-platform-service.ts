@@ -20,9 +20,8 @@ export class PreparePlatformService {
 
 		// Copy app folder to native project
 		this.$fs.ensureDirectoryExists(appDestinationDirectoryPath);
-		const appSourceDirectoryPath = path.join(copyAppFilesData.projectData.projectDir, constants.APP_FOLDER_NAME);
 
-		const appUpdater = new AppFilesUpdater(appSourceDirectoryPath, appDestinationDirectoryPath, copyAppFilesData.appFilesUpdaterOptions, this.$fs);
+		const appUpdater = new AppFilesUpdater(copyAppFilesData.projectData.appDirectoryPath, appDestinationDirectoryPath, copyAppFilesData.appFilesUpdaterOptions, this.$fs);
 		const appUpdaterOptions: IUpdateAppOptions = {
 			beforeCopyAction: sourceFiles => {
 				this.$xmlValidator.validateXmlFiles(sourceFiles);
@@ -30,6 +29,6 @@ export class PreparePlatformService {
 			filesToSync: copyAppFilesData.filesToSync,
 			filesToRemove: copyAppFilesData.filesToRemove
 		};
-		appUpdater.updateApp(appUpdaterOptions);
+		appUpdater.updateApp(appUpdaterOptions, copyAppFilesData.projectData);
 	}
 }

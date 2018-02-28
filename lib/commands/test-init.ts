@@ -68,7 +68,7 @@ class TestInitCommand implements ICommand {
 
 		await this.$pluginsService.add('nativescript-unit-test-runner', this.$projectData);
 
-		const testsDir = path.join(projectDir, 'app/tests');
+		const testsDir = path.join(this.$projectData.appDirectoryPath, 'tests');
 		let shouldCreateSampleTests = true;
 		if (this.$fs.exists(testsDir)) {
 			this.$logger.info('app/tests/ directory already exists, will not create an example test project.');

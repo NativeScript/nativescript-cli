@@ -6,7 +6,7 @@ $injector.require("options", "./options");
 $injector.require("nativescript-cli", "./nativescript-cli");
 
 $injector.require("projectData", "./project-data");
-$injector.require("projectDataService", "./services/project-data-service");
+$injector.requirePublic("projectDataService", "./services/project-data-service");
 $injector.requirePublic("projectService", "./services/project-service");
 $injector.require("androidProjectService", "./services/android-project-service");
 $injector.require("iOSEntitlementsService", "./services/ios-entitlements-service");

@@ -6,31 +6,33 @@ import { ProjectFilesProviderBase } from "../common/services/project-files-provi
 export class ProjectFilesProvider extends ProjectFilesProviderBase {
 	constructor(private $platformsData: IPlatformsData,
 		$mobileHelper: Mobile.IMobileHelper,
-		$options:IOptions) {
-			super($mobileHelper, $options);
+		$options: IOptions) {
+		super($mobileHelper, $options);
 	}
 
-	private static INTERNAL_NONPROJECT_FILES = [ "**/*.ts" ];
+	private static INTERNAL_NONPROJECT_FILES = ["**/*.ts"];
 
 	public mapFilePath(filePath: string, platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): string {
 		const platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
 		const parsedFilePath = this.getPreparedFilePath(filePath, projectFilesConfig);
 		let mappedFilePath = "";
+		let relativePath;
 		if (parsedFilePath.indexOf(constants.NODE_MODULES_FOLDER_NAME) > -1) {
-			const relativePath = path.relative(path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME), parsedFilePath);
+			relativePath = path.relative(path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME), parsedFilePath);
 			mappedFilePath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.TNS_MODULES_FOLDER_NAME, relativePath);
 		} else {
-			mappedFilePath = path.join(platformData.appDestinationDirectoryPath, path.relative(projectData.projectDir, parsedFilePath));
+			relativePath = path.relative(projectData.appDirectoryPath, parsedFilePath);
+			mappedFilePath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, relativePath);
 		}
 
-		const appResourcesDirectoryPath = path.join(constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
+		const appResourcesDirectoryPath = projectData.appResourcesDirectoryPath;
 		const platformSpecificAppResourcesDirectoryPath = path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName);
 		if (parsedFilePath.indexOf(appResourcesDirectoryPath) > -1 && parsedFilePath.indexOf(platformSpecificAppResourcesDirectoryPath) === -1) {
 			return null;
 		}
 
 		if (parsedFilePath.indexOf(platformSpecificAppResourcesDirectoryPath) > -1) {
-			const appResourcesRelativePath = path.relative(path.join(projectData.projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME,
+			const appResourcesRelativePath = path.relative(path.join(projectData.appResourcesDirectoryPath,
 				platformData.normalizedPlatformName), parsedFilePath);
 			mappedFilePath = path.join(platformData.platformProjectService.getAppResourcesDestinationDirectoryPath(projectData), appResourcesRelativePath);
 		}

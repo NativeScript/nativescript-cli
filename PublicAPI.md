@@ -11,6 +11,9 @@ const tns = require("nativescript");
 * [projectService](#projectservice)
 	* [createProject](#createproject)
 	* [isValidNativeScriptProject](#isvalidnativescriptproject)
+* [projectDataService](#projectdataservice)
+	* [getProjectData](#getprojectdata)
+	* [getProjectDataFromContent](#getprojectdatafromcontent)
 * [extensibilityService](#extensibilityservice)
 	* [installExtension](#installextension)
 	* [uninstallExtension](#uninstallextension)
@@ -107,6 +110,81 @@ tns.projectService.createProject(projectSettings)
 ```JavaScript
 const isValidProject = tns.projectService.isValidNativeScriptProject("/tmp/myProject");
 console.log(isValidProject); // true or false
+```
+
+## projectDataService
+`projectDataService` provides a way to get information about a NativeScript project.
+
+A common interface describing the results of a method is `IProjectData`:
+
+```TypeScript
+interface IProjectData extends IProjectDir {
+	projectName: string;
+	platformsDir: string;
+	projectFilePath: string;
+	projectId?: string;
+	dependencies: any;
+	devDependencies: IStringDictionary;
+	appDirectoryPath: string;
+	appResourcesDirectoryPath: string;
+	projectType: string;
+	nsConfig: INsConfig;
+	/**
+	 * Initializes project data with the given project directory. If none supplied defaults to cwd.
+	 * @param {string} projectDir Project root directory.
+	 * @returns {void}
+	 */
+	initializeProjectData(projectDir?: string): void;
+	/**
+	 * Initializes project data with the given package.json, nsconfig.json content and project directory. If none supplied defaults to cwd.
+	 * @param {string} packageJsonContent: string
+	 * @param {string} nsconfigContent: string
+	 * @param {string} projectDir Project root directory.
+	 * @returns {void}
+	 */
+	initializeProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, projectDir?: string): void;
+	getAppDirectoryPath(projectDir?: string): string;
+	getAppDirectoryRelativePath(): string;
+	getAppResourcesDirectoryPath(projectDir?: string): string;
+	getAppResourcesRelativeDirectoryPath(): string;
+}
+
+interface IProjectDir {
+	projectDir: string;
+}
+
+interface INsConfig {
+	appPath?: string;
+	appResourcesPath?:string;
+}
+```
+
+### getProjectData
+Returns an initialized IProjectData object containing data about the NativeScript project in the provided `projectDir`.
+
+* Definition:
+```TypeScript
+/**
+ * Returns an initialized IProjectData object containing data about the NativeScript project in the provided projectDir
+ * @param {string} projectDir The path to the project
+ * @returns {IProjectData} Information about the NativeScript project
+ */
+getProjectData(projectDir: string): IProjectData
+```
+
+### getProjectDataFromContent
+Returns an IProjectData object that is initialized with the provided package.json content, nsconfig.json content and `projectDir`.
+
+* Definition:
+```TypeScript
+/**
+ * Returns an initialized IProjectData object containing data about the NativeScript project in the provided projectDir
+ * @param {string} packageJsonContent The content of the project.json file in the root of the project
+ * @param {string} nsconfigContent The content of the nsconfig.json file in the root of the project
+ * @param {string} projectDir The path to the project
+ * @returns {IProjectData} Information about the NativeScript project
+ */
+getProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, projectDir?: string): IProjectData
 ```
 
 ## extensibilityService

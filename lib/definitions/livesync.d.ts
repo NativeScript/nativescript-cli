@@ -214,7 +214,7 @@ interface IDebugLiveSyncService extends ILiveSyncService {
 	 * @param {ILiveSyncInfo} liveSyncData Information needed for livesync - for example if bundle is passed or if a release build should be performed.
 	 * @returns {Promise<string[]>} The glob patterns.
 	 */
-	getWatcherPatterns(liveSyncData: ILiveSyncInfo): Promise<string[]>;
+	getWatcherPatterns(liveSyncData: ILiveSyncInfo, projectData: IProjectData): Promise<string[]>;
 
 	/**
 	 * Prints debug information.
