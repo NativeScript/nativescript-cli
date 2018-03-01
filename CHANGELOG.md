@@ -1,6 +1,14 @@
 NativeScript CLI Changelog
 ================
 
+3.4.3 (2018, March 02)
+==
+
+### New
+* [Implemented #3407](https://github.com/NativeScript/nativescript-cli/issues/3407) Allow templates to predefine plugin configurations in `package.json`
+* [Implemented #3408](https://github.com/NativeScript/nativescript-cli/issues/3408) Add additional tracking for users who have exported projects from Playground
+
+
 3.4.2 (2018, February 01)
 ==
 
