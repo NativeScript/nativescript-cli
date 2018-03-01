@@ -133,7 +133,6 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise.<{push: [], pull: []}>}                                  Promise
    */
   sync(query, options) {
-    // TODO: decide on options - passing autoPagination: true would work for this too
     options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
     const result = {};
     return this.push(query, options)

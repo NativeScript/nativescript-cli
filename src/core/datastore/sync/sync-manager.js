@@ -66,6 +66,7 @@ export class SyncManager {
     if (!isNonemptyString(collection)) {
       return Promise.reject(new KinveyError('Invalid or missing collection name'));
     }
+
     // TODO: decide on default value of pagination setting
     if (options && (options.autoPagination && !options.useDeltaFetch)) {
       return this._paginatedPull(collection, query, options);
@@ -390,7 +391,7 @@ export class SyncManager {
   }
 
   _getExpectedEntityCount(collection, userQuery) {
-    const countQuery = new Query({ filter: userQuery.filter }); // ignore sort, it's irrelevant
+    const countQuery = new Query({ filter: userQuery.filter });
     return this._networkRepo.count(collection, countQuery)
       .then(totalCount => {
         return Math.min(totalCount - userQuery.skip, userQuery.limit || Infinity);
