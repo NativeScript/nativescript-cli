@@ -26,9 +26,13 @@ export class PreparePlatformService {
 			beforeCopyAction: sourceFiles => {
 				this.$xmlValidator.validateXmlFiles(sourceFiles);
 			},
-			filesToSync: copyAppFilesData.filesToSync,
 			filesToRemove: copyAppFilesData.filesToRemove
 		};
+		// TODO: consider passing filesToSync in appUpdaterOptions
+		// this would currently lead to the following problem: imagine changing two files rapidly one after the other (transpilation for example)
+		// the first file would trigger the whole LiveSync process and the second will be queued
+		// after the first LiveSync is done the .nsprepare file is written and the second file is later on wrongly assumed as having been prepared
+		// because .nsprepare was written after both file changes
 		appUpdater.updateApp(appUpdaterOptions, copyAppFilesData.projectData);
 	}
 }
