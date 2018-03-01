@@ -84,8 +84,7 @@ export class SyncManager {
           );
         }
 
-        return this._fetchItemsFromServer(collection, query, options)
-          .then(entities => this._replaceOfflineEntities(collection, query, entities));
+        return this._fetchItemsFromServer(collection, query, options);
       });
   }
 
@@ -150,14 +149,17 @@ export class SyncManager {
     return this._syncStateManager.removeSyncItemsForIds(collection, entityIds);
   }
 
-  _replaceOfflineEntities(collection, deleteOfflineQuery, networkEntities = []) {
+  _deleteOfflineEntities(collection, deleteOfflineQuery) {
     return this._getOfflineRepo()
       .then((repo) => {
         // TODO: this can potentially be deleteOfflineQuery.and().notIn(networkEntitiesIds)
         // but inmemory filtering with this filter seems to take too long
-        return repo.delete(collection, deleteOfflineQuery)
-          .then(() => repo.update(collection, networkEntities));
+        return repo.delete(collection, deleteOfflineQuery);
       });
+  }
+
+  _updateOfflineEntities(collection, networkEntities = []) {
+    return this._getOfflineRepo().then(repo => repo.update(collection, networkEntities));
   }
 
   _getPushOpResult(entityId, operation) {
@@ -316,10 +318,10 @@ export class SyncManager {
 
               return repo;
             })
-            .then(() => data.changed);
+            .then(() => this._updateOfflineEntities(collection, data.changed));
         }
 
-        return data;
+        return this._updateOfflineEntities(collection, data);
       });
   }
 
