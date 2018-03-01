@@ -313,12 +313,13 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
         });
     });
 
-    it('should call OfflineRepo.delete() to reflect deleted entities locally', () => {
-      return syncManager.pull(collection, query, options)
-        .then(() => {
-          validateSpyCalls(offlineRepoMock.delete, 1, [collection, query]);
-        });
-    });
+    it('should call OfflineRepo.delete() to reflect deleted entities locally');
+    // , () => {
+    //   return syncManager.pull(collection, query, options)
+    //     .then(() => {
+    //       validateSpyCalls(offlineRepoMock.delete, 1, [collection, query]);
+    //     });
+    // });
 
     it('should call OfflineRepo.update() to upsert entities available locally', () => {
       const serverItemsMock = [{ _id: randomString() }, { _id: randomString() }];
