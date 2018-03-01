@@ -36,6 +36,12 @@
       "error",
       "methods"
     ],
+    "object-curly-newline": [ "error", {
+      "ObjectPattern": {
+        "minProperties": 5,
+        "consistent": true
+      }
+    }],
     "space-before-function-paren": "off"
   }
 }

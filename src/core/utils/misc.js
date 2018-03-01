@@ -1,9 +1,11 @@
 import { Promise } from 'es6-promise';
 import { Observable } from 'rxjs/Observable';
 import isEmpty from 'lodash/isEmpty';
+import times from 'lodash/times';
 
 import { repositoryProvider } from '../datastore';
 import { PromiseQueue } from './promise-queue';
+import { Query } from '../query';
 
 export function noop() { }
 
@@ -23,7 +25,15 @@ export function wrapInPromise(value) {
   return Promise.resolve(value);
 }
 
+export function useIfDefined(value, defaultValue) {
+  if (typeof value !== 'undefined') {
+    return value;
+  }
+  return defaultValue;
+}
+
 export function ensureArray(obj) {
+  obj = useIfDefined(obj, []);
   return Array.isArray(obj) ? obj : [obj];
 }
 
@@ -33,7 +43,7 @@ export function isValidStorageProviderValue(value) {
   return !!value && valueAsArray.length && valueAsArray.every(type => supportedPersistances.some(v => type === v));
 }
 
-export function forEachAsync(array, func) {
+function _forEachAsync(array, func) {
   let completed = 0;
   const totalCount = array.length;
   if (isEmpty(array)) {
@@ -56,16 +66,19 @@ export function forEachAsync(array, func) {
   });
 }
 
-export function forEachAsyncThrottled(array, func, threshold = 1) {
-  const queue = new PromiseQueue(threshold);
-  return forEachAsync(array, (item) => {
+export function forEachAsync(array, func, maxConcurrentCount = Infinity) {
+  const queue = new PromiseQueue(maxConcurrentCount);
+  return _forEachAsync(array, (item) => {
     return queue.enqueue(() => func(item));
   });
 }
 
-export function useIfDefined(value, defaultValue) {
-  if (typeof value !== 'undefined') {
-    return value;
-  }
-  return defaultValue;
+export function splitQueryIntoPages(query, pageSize, totalCount) {
+  const queryCount = Math.ceil(totalCount / pageSize);
+  return times(queryCount, (i) => {
+    const pageQuery = new Query(query);
+    pageQuery.skip = query.skip + (i * pageSize);
+    pageQuery.limit = Math.min(totalCount - (i * pageSize), pageSize);
+    return pageQuery;
+  });
 }

@@ -1,20 +1,19 @@
 import { Promise } from 'es6-promise';
 import clone from 'lodash/clone';
-import times from 'lodash/times';
-import omit from 'lodash/omit';
 
 import { Log } from '../../log';
 import { KinveyError, NotFoundError, SyncError } from '../../errors';
 
 import { SyncOperation } from './sync-operation';
-import { syncBatchSize, maxEntityLimit } from './utils';
+import { syncBatchSize, maxEntityLimit, defaultPullSortField } from './utils';
 import { isEmpty } from '../utils';
 import { repositoryProvider } from '../repositories';
 import { Query } from '../../query';
 import {
   ensureArray,
   isNonemptyString,
-  forEachAsyncThrottled
+  forEachAsync,
+  splitQueryIntoPages
 } from '../../utils';
 
 // imported for typings
@@ -67,9 +66,11 @@ export class SyncManager {
     if (!isNonemptyString(collection)) {
       return Promise.reject(new KinveyError('Invalid or missing collection name'));
     }
-    if (options && options.autoPagination) {
-      return this._paginate(collection, query, options);
+    // TODO: decide on default value of pagination setting
+    if (options && (options.autoPagination && !options.useDeltaFetch)) {
+      return this._paginatedPull(collection, query, options);
     }
+
     return this._fetchItemsFromServer(collection, query, options)
       .then(entities => this._replaceOfflineEntities(collection, query, entities));
   }
@@ -275,7 +276,7 @@ export class SyncManager {
 
   _processSyncItems(collection, syncItems) {
     const pushResults = [];
-    return forEachAsyncThrottled(syncItems, (syncItem) => {
+    return forEachAsync(syncItems, (syncItem) => {
       return this._processSyncItem(collection, syncItem) // never rejects
         .then(pushResult => pushResults.push(pushResult));
     }, syncBatchSize)
@@ -310,7 +311,7 @@ export class SyncManager {
     if (this._pushIsInProgress(collection)) {
       delete pushTrackingByCollection[collection];
     } else {
-      Log.debug('Marking push en, when push is NOT started');
+      Log.debug('Marking push end, when push is NOT started');
     }
   }
 
@@ -357,38 +358,21 @@ export class SyncManager {
     }
   }
 
-  _getPullLimit(totalCount, userSuppliedLimit) {
-    return Math.min(totalCount, userSuppliedLimit || Infinity); // ignore 0, backend does
-  }
-
-  _getInternalPullQuery({ filter, sort, fields } = {}, pullLimit) {
-    const query = new Query({ filter, sort, fields });
-
-    if (pullLimit && pullLimit < Infinity) {
-      query.limit = pullLimit;
+  _getInternalPullQuery(userQuery = {}, totalCount) {
+    const { filter, sort, fields, skip } = userQuery;
+    const query = new Query({ filter, sort, fields, skip });
+    query.limit = totalCount;
+    const noSortProvided = !sort || isEmpty(sort);
+    const noSkipLimitProvided = !userQuery.skip && !userQuery.limit;
+    if (noSortProvided || noSkipLimitProvided) {
+      query.sort = { [defaultPullSortField]: 1 };
     }
-
     return query;
-  }
-
-  _splitQueryIntoPages(query, pageSize = maxEntityLimit) {
-    const totalCount = query.limit;
-    const queryCount = Math.ceil(totalCount / pageSize);
-    const queries = times(queryCount, (i) => {
-      const pageQuery = new Query(query);
-      pageQuery.skip = i * pageSize;
-      pageQuery.limit = Math.min(totalCount - pageQuery.skip, pageSize);
-      return pageQuery;
-    });
-    return queries;
   }
 
   _fetchAndUpdateEntities(collection, query, options) {
     return this._networkRepo.read(collection, query, options)
       .then((entities) => {
-        if (isEmpty(entities)) {
-          return Promise.resolve();
-        }
         return this._getOfflineRepo()
           .then(repo => repo.update(collection, entities));
       });
@@ -396,7 +380,7 @@ export class SyncManager {
 
   _executePaginationQueries(collection, queries, options) {
     let pulledEntityCount = 0;
-    return forEachAsyncThrottled(queries, (query) => {
+    return forEachAsync(queries, (query) => {
       return this._fetchAndUpdateEntities(collection, query, options)
         .then((updatedEntities) => {
           pulledEntityCount += updatedEntities.length;
@@ -405,18 +389,27 @@ export class SyncManager {
       .then(() => pulledEntityCount);
   }
 
-  _paginate(collection, userQuery, options = {}) {
-    let pullQuery;
-    const pullOptions = options.autoPagination;
-    const countQuery = new Query({ filter: userQuery && userQuery.filter }); // ignore sort, it's irrelevant
+  _getExpectedEntityCount(collection, userQuery) {
+    const countQuery = new Query({ filter: userQuery.filter }); // ignore sort, it's irrelevant
     return this._networkRepo.count(collection, countQuery)
-      .then((totalCount) => {
-        const pullLimit = this._getPullLimit(totalCount, pullOptions.pullLimit);
-        pullQuery = this._getInternalPullQuery(userQuery, pullLimit);
+      .then(totalCount => {
+        return Math.min(totalCount - userQuery.skip, userQuery.limit || Infinity);
+      });
+  }
+
+  _paginatedPull(collection, userQuery = new Query(), options = {}) {
+    let pullQuery;
+    let expectedCount;
+    return this._getExpectedEntityCount(collection, userQuery)
+      .then((count) => {
+        expectedCount = count;
+        pullQuery = this._getInternalPullQuery(userQuery, expectedCount);
         return this._deleteOfflineEntities(collection, pullQuery);
       })
       .then(() => {
-        const paginatedQueries = this._splitQueryIntoPages(pullQuery, pullOptions.pageSize);
+        const pageSizeSetting = options.autoPagination && options.autoPagination.pageSize;
+        const pageSize = pageSizeSetting || maxEntityLimit;
+        const paginatedQueries = splitQueryIntoPages(pullQuery, pageSize, expectedCount);
         return this._executePaginationQueries(collection, paginatedQueries, options);
       });
   }
