@@ -105,7 +105,7 @@ interface IProjectDataService {
 	 */
 	removeDependency(projectDir: string, dependencyName: string): void;
 
-	getProjectData(projectDir: string): IProjectData;
+	getProjectData(projectDir?: string): IProjectData;
 }
 
 /**

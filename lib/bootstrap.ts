@@ -144,3 +144,5 @@ $injector.requirePublic("extensibilityService", "./services/extensibility-servic
 
 $injector.require("nodeModulesDependenciesBuilder", "./tools/node-modules/node-modules-dependencies-builder");
 $injector.require("subscriptionService", "./services/subscription-service");
+
+$injector.require('playgroundService', './services/playground-service');
