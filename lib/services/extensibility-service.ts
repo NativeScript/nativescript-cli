@@ -1,6 +1,7 @@
 import * as path from "path";
 import { cache, exported } from "../common/decorators";
 import * as constants from "../constants";
+import { createRegExp, regExpEscape } from "../common/helpers";
 
 export class ExtensibilityService implements IExtensibilityService {
 	private get pathToExtensions(): string {
@@ -105,6 +106,63 @@ export class ExtensibilityService implements IExtensibilityService {
 			err.extensionName = extensionName;
 			throw err;
 		}
+	}
+
+	public async getExtensionNameWhereCommandIsRegistered(inputOpts: IGetExtensionCommandInfoParams): Promise<IExtensionCommandInfo> {
+		let allExtensions: INpmsSingleResultData[] = [];
+
+		try {
+			const npmsResult = await this.$npm.searchNpms("nativescript:extension");
+			allExtensions = npmsResult.results || [];
+		} catch (err) {
+			this.$logger.trace(`Unable to find extensions via npms. Error is: ${err}`);
+			return null;
+		}
+
+		const defaultCommandRegExp = new RegExp(`${regExpEscape(inputOpts.defaultCommandDelimiter)}.*`);
+		const commandDelimiterRegExp = createRegExp(inputOpts.commandDelimiter, "g");
+
+		for (const extensionData of allExtensions) {
+			const extensionName = extensionData.package.name;
+
+			try {
+				// now get full package.json for the latest version of the package
+				const registryData = await this.$npm.getRegistryPackageData(extensionName);
+				const latestPackageData = registryData.versions[registryData["dist-tags"].latest];
+				const commands: string[] = latestPackageData && latestPackageData.nativescript && latestPackageData.nativescript.commands;
+				if (commands && commands.length) {
+					// For each default command we need to add its short syntax in the array of commands.
+					// For example in case there's a default command called devices list, the commands array will contain devices|*list.
+					// However, in case the user executes just tns devices, CLI will still execute the tns devices list command.
+					// So we need to add the devices command as well.
+					_.filter(commands, command => command.indexOf(inputOpts.defaultCommandDelimiter) !== -1)
+						.forEach(defaultCommand => {
+							commands.push(defaultCommand.replace(defaultCommandRegExp, ""));
+						});
+
+					const copyOfFullArgs = _.clone(inputOpts.inputStrings);
+					while (copyOfFullArgs.length) {
+						const currentCommand = copyOfFullArgs.join(inputOpts.commandDelimiter).toLowerCase();
+
+						if (_.some(commands, c => c.toLowerCase() === currentCommand)) {
+							const beautifiedCommandName = currentCommand.replace(commandDelimiterRegExp, " ");
+							return {
+								extensionName,
+								registeredCommandName: currentCommand,
+								installationMessage: `The command ${beautifiedCommandName} is registered in extension ${extensionName}. You can install it by executing 'tns extension install ${extensionName}'`
+							};
+						}
+
+						copyOfFullArgs.splice(-1, 1);
+					}
+				}
+			} catch (err) {
+				// We do not want to stop the whole process in case we are unable to find data for one of the extensions.
+				this.$logger.trace(`Unable to get data for ${extensionName}. Error is: ${err}`);
+			}
+		}
+
+		return null;
 	}
 
 	private getPathToExtension(extensionName: string): string {

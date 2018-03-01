@@ -1,11 +1,25 @@
-import { ExtensibilityService } from "../../lib/services/extensibility-service";
+import { ExtensibilityService } from '../../lib/services/extensibility-service';
 import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
 import * as constants from "../../lib/constants";
+import { CommandsDelimiters } from "../../lib/common/constants";
 import { SettingsService } from "../../lib/common/test/unit-tests/stubs";
 const path = require("path");
 const originalResolve = path.resolve;
+
+interface ITestData {
+	name: string;
+	extensionsDefinitions: ITestExtensionDefinition[];
+	inputStrings: string[];
+	expectedResult: IExtensionCommandInfo;
+}
+
+interface ITestExtensionDefinition {
+	extensionName: string;
+	commands?: string[];
+	failRequestToRegistryNpm?: boolean;
+}
 
 describe("extensibilityService", () => {
 	before(() => {
@@ -629,6 +643,246 @@ describe("extensibilityService", () => {
 			}
 
 			assert.isTrue(isErrorRaised);
+		});
+	});
+
+	describe("getExtensionNameWhereCommandIsRegistered", () => {
+		const getInstallationMessage = (extensionName: string, commandName: string): string => {
+			return `The command ${commandName.replace(/\|\*/g, " ").replace(/\|/g, " ")} is registered in extension ${extensionName}. You can install it by executing 'tns extension install ${extensionName}'`;
+		};
+
+		const testData: ITestData[] = [
+			{
+				name: "returns correct data when user enters exact command name",
+				inputStrings: ["command1"],
+				extensionsDefinitions: [
+					{
+						extensionName: "extension1",
+						commands: ["command1", "hierarchical|command", "deep|hierarchical|command|for|tests"]
+					},
+					{
+						extensionName: "extension2"
+					}
+				],
+				expectedResult: {
+					extensionName: "extension1",
+					registeredCommandName: "command1",
+					installationMessage: getInstallationMessage("extension1", "command1")
+				}
+			},
+			{
+				name: "returns correct data when user enters exact hierarchical command name",
+				inputStrings: ["hierarchical", "command"],
+				extensionsDefinitions: [
+					{
+						extensionName: "extension1",
+						commands: ["command1", "hierarchical|command", "deep|hierarchical|command|for|tests"]
+					},
+					{
+						extensionName: "extension2"
+					}
+				],
+				expectedResult: {
+					extensionName: "extension1",
+					registeredCommandName: "hierarchical|command",
+					installationMessage: getInstallationMessage("extension1", "hierarchical|command")
+				}
+			},
+			{
+				name: "returns null when user enters invalid command name",
+				inputStrings: ["invalid", "command"],
+				extensionsDefinitions: [
+					{
+						extensionName: "extension1",
+						commands: ["command1", "hierarchical|command", "deep|hierarchical|command|for|tests"]
+					},
+					{
+						extensionName: "extension2"
+					}
+				],
+				expectedResult: null
+			},
+			{
+				name: "returns correct data when user enters hierarchical command and args for this command",
+				inputStrings: ["valid", "command", "with", "lots", "of", "params"],
+				extensionsDefinitions: [
+					{
+						extensionName: "extension1",
+						commands: ["command1", "hierarchical|command", "deep|hierarchical|command|for|tests"]
+					},
+					{
+						extensionName: "extension2"
+					},
+					{
+						extensionName: "extension3",
+						commands: ["valid", "valid|command", "valid|command|with"]
+					},
+				],
+				expectedResult: {
+					extensionName: "extension3",
+					registeredCommandName: "valid|command|with",
+					installationMessage: getInstallationMessage("extension3", "valid|command|with")
+				}
+			},
+			{
+				name: "returns correct data when user enters the default value of hierarchical command",
+				inputStrings: ["valid", "and", "lots", "of", "params"],
+				extensionsDefinitions: [
+					{
+						extensionName: "extension3",
+						commands: ["valid|*command", "valid|command|with"]
+					},
+				],
+				expectedResult: {
+					extensionName: "extension3",
+					registeredCommandName: "valid",
+					installationMessage: getInstallationMessage("extension3", "valid")
+				}
+			},
+			{
+				name: "returns correct data when user enters the full default value of hierarchical command",
+				inputStrings: ["valid", "command", "and", "lots", "of", "params"],
+				extensionsDefinitions: [
+					{
+						extensionName: "extension3",
+						commands: ["valid|*command", "valid|command|with"]
+					},
+				],
+				expectedResult: {
+					extensionName: "extension3",
+					registeredCommandName: "valid",
+					installationMessage: getInstallationMessage("extension3", "valid")
+				}
+			},
+			{
+				name: "returns correct data when user enters the default value of multilevel hierarchical command",
+				inputStrings: ["valid", "multilevel", "command", "and", "lots", "of", "params"],
+				extensionsDefinitions: [
+					{
+						extensionName: "extension3",
+						commands: ["valid|multilevel|command|*default", "valid|command|with"]
+					},
+				],
+				expectedResult: {
+					extensionName: "extension3",
+					registeredCommandName: "valid|multilevel|command",
+					installationMessage: getInstallationMessage("extension3", "valid|multilevel|command")
+				}
+			},
+			{
+				name: "returns correct data when user enters the full default value of multilevel hierarchical command",
+				inputStrings: ["valid", "multilevel", "command", "and", "lots", "of", "params"],
+				extensionsDefinitions: [
+					{
+						extensionName: "extension3",
+						commands: ["valid|multilevel|command|*default", "valid|command|with"]
+					},
+				],
+				expectedResult: {
+					extensionName: "extension3",
+					registeredCommandName: "valid|multilevel|command",
+					installationMessage: getInstallationMessage("extension3", "valid|multilevel|command")
+				}
+			},
+			{
+				name: "does not fail when request to one of the extension fails",
+				inputStrings: ["command1"],
+				extensionsDefinitions: [
+					{
+						extensionName: "extension2",
+						failRequestToRegistryNpm: true
+					},
+					{
+						extensionName: "extension1",
+						commands: ["command1", "hierarchical|command", "deep|hierarchical|command|for|tests"]
+					}
+
+				],
+				expectedResult: {
+					extensionName: "extension1",
+					registeredCommandName: "command1",
+					installationMessage: getInstallationMessage("extension1", "command1")
+				}
+			}
+		];
+
+		_.each(testData, testCase => {
+			it(testCase.name, async () => {
+				const testInjector = getTestInjector();
+				const expectedKeyword = "nativescript:extension";
+				const npm = testInjector.resolve<INodePackageManager>("npm");
+				npm.searchNpms = async (keyword: string): Promise<INpmsResult> => {
+					assert.equal(keyword, expectedKeyword);
+					const result = <any>{
+						total: testCase.extensionsDefinitions.length,
+						results: []
+					};
+
+					_.each(testCase.extensionsDefinitions, extensionData => {
+						result.results.push({
+							package: {
+								name: extensionData.extensionName
+							}
+						});
+					});
+
+					return result;
+				};
+
+				const version = "1.0.0";
+				npm.getRegistryPackageData = async (packageName: string): Promise<any> => {
+					const extensionData = _.find(testCase.extensionsDefinitions, extData => extData.extensionName === packageName);
+					if (extensionData && extensionData.failRequestToRegistryNpm) {
+						throw new Error(`Request to registry.npmjs.org for package ${packageName} failed.`);
+					}
+					const result = {
+						["dist-tags"]: {
+							latest: version
+						},
+						versions: {
+							[version]: <any>{}
+						}
+					};
+
+					if (extensionData && extensionData.commands) {
+						result.versions[version].nativescript = {
+							commands: extensionData.commands
+						};
+					}
+
+					return result;
+				};
+
+				const extensibilityService = testInjector.resolve<IExtensibilityService>(ExtensibilityService);
+				const inputData = {
+					inputStrings: testCase.inputStrings,
+					commandDelimiter: CommandsDelimiters.HierarchicalCommand,
+					defaultCommandDelimiter: CommandsDelimiters.DefaultHierarchicalCommand
+				};
+
+				const actualExtensionName = await extensibilityService.getExtensionNameWhereCommandIsRegistered(inputData);
+				assert.deepEqual(actualExtensionName, testCase.expectedResult);
+			});
+		});
+
+		it("does not fail when request to npms fails", async () => {
+			const testInjector = getTestInjector();
+			const expectedKeyword = "nativescript:extension";
+			const npm = testInjector.resolve<INodePackageManager>("npm");
+			npm.searchNpms = async (keyword: string): Promise<INpmsResult> => {
+				assert.equal(keyword, expectedKeyword);
+				throw new Error("Error");
+			};
+
+			let isGetRegistryPackageDataCalled = false;
+			npm.getRegistryPackageData = async (packageName: string): Promise<any> => {
+				isGetRegistryPackageDataCalled = true;
+			};
+
+			const extensibilityService = testInjector.resolve<IExtensibilityService>(ExtensibilityService);
+			const actualExtensionName = await extensibilityService.getExtensionNameWhereCommandIsRegistered(null);
+			assert.deepEqual(actualExtensionName, null);
+			assert.isFalse(isGetRegistryPackageDataCalled, "The method npm.getRegistryPackageData should not be called when npm.searchNpms fails.");
 		});
 	});
 });

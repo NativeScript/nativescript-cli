@@ -96,6 +96,7 @@ function createTestInjector(): IInjector {
 			message: (): void => undefined
 		})
 	});
+	testInjector.register("httpClient", {});
 
 	return testInjector;
 }

@@ -160,6 +160,7 @@ function createTestInjector() {
 			message: (): void => undefined
 		})
 	});
+	testInjector.register("extensibilityService", {});
 
 	return testInjector;
 }

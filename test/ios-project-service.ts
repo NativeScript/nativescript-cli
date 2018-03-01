@@ -117,6 +117,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("xCConfigService", XCConfigService);
 	testInjector.register("settingsService", SettingsService);
+	testInjector.register("httpClient", {});
 
 	return testInjector;
 }
