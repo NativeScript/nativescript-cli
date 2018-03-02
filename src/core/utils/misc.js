@@ -2,10 +2,12 @@ import { Promise } from 'es6-promise';
 import { Observable } from 'rxjs/Observable';
 import isEmpty from 'lodash/isEmpty';
 import times from 'lodash/times';
+import isNumber from 'lodash/isNumber';
 
 import { repositoryProvider } from '../datastore';
 import { PromiseQueue } from './promise-queue';
 import { Query } from '../query';
+import { KinveyError } from '../errors';
 
 export function noop() { }
 
@@ -74,6 +76,10 @@ export function forEachAsync(array, func, maxConcurrentCount = Infinity) {
 }
 
 export function splitQueryIntoPages(query, pageSize, totalCount) {
+  if (!isNumber(pageSize) || !isNumber(totalCount)) {
+    throw new KinveyError('Invalid page size or expected entity count parameter');
+  }
+
   const queryCount = Math.ceil(totalCount / pageSize);
   return times(queryCount, (i) => {
     const pageQuery = new Query(query);
