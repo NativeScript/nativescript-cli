@@ -66,43 +66,40 @@ describe('CacheOfflineDataProcessor', () => {
       }
 
       function addSyncQueueTests() {
-        it('should call SyncManager.getSyncItemCountByEntityQuery()');
-        // , () => {
-        //   syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(0);
-        //   return dataProcessor.process(operation).toPromise()
-        //     .then(() => {
-        //       const syncCountSpy = syncManagerMock.getSyncItemCountByEntityQuery;
-        //       validateSpyCalls(syncCountSpy, 1, [collection, getExpectedQuery()]);
-        //     });
-        // });
+        it.skip('should call SyncManager.getSyncItemCountByEntityQuery()', () => {
+          syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(0);
+          return dataProcessor.process(operation).toPromise()
+            .then(() => {
+              const syncCountSpy = syncManagerMock.getSyncItemCountByEntityQuery;
+              validateSpyCalls(syncCountSpy, 1, [collection, getExpectedQuery()]);
+            });
+        });
 
-        it('should call SyncManager.push() if there are entities to sync');
-        // , () => {
-        //   syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(123);
-        //   syncManagerMock.push = createPromiseSpy().andCall(() => {
-        //     syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(0);
-        //     return Promise.resolve();
-        //   });
-        //   return dataProcessor.process(operation).toPromise()
-        //     .then(() => {
-        //       validateSpyCalls(syncManagerMock.push, 1, [collection, getExpectedQuery()]);
-        //     });
-        // });
+        it.skip('should call SyncManager.push() if there are entities to sync', () => {
+          syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(123);
+          syncManagerMock.push = createPromiseSpy().andCall(() => {
+            syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(0);
+            return Promise.resolve();
+          });
+          return dataProcessor.process(operation).toPromise()
+            .then(() => {
+              validateSpyCalls(syncManagerMock.push, 1, [collection, getExpectedQuery()]);
+            });
+        });
 
-        it('should call SyncManager.getSyncItemCountByEntityQuery() again, after push()');
-        // , () => {
-        //   syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(123);
-        //   syncManagerMock.push = createPromiseSpy().andCall(() => {
-        //     syncManagerMock.getSyncItemCountByEntityQuery.andReturn(Promise.resolve(0));
-        //     return Promise.resolve();
-        //   });
-        //   return dataProcessor.process(operation).toPromise()
-        //     .then(() => {
-        //       validateSpyCalls(syncManagerMock.push, 1, [collection, getExpectedQuery()]);
-        //       const secondCountSpy = syncManagerMock.getSyncItemCountByEntityQuery;
-        //       validateSpyCalls(secondCountSpy, 2, [collection, getExpectedQuery()], [collection, getExpectedQuery()]);
-        //     });
-        // });
+        it.skip('should call SyncManager.getSyncItemCountByEntityQuery() again, after push()', () => {
+          syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(123);
+          syncManagerMock.push = createPromiseSpy().andCall(() => {
+            syncManagerMock.getSyncItemCountByEntityQuery.andReturn(Promise.resolve(0));
+            return Promise.resolve();
+          });
+          return dataProcessor.process(operation).toPromise()
+            .then(() => {
+              validateSpyCalls(syncManagerMock.push, 1, [collection, getExpectedQuery()]);
+              const secondCountSpy = syncManagerMock.getSyncItemCountByEntityQuery;
+              validateSpyCalls(secondCountSpy, 2, [collection, getExpectedQuery()], [collection, getExpectedQuery()]);
+            });
+        });
 
         it('should return an error if there are still entities to sync, after push()', () => {
           syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(123);
@@ -136,31 +133,28 @@ describe('CacheOfflineDataProcessor', () => {
 
         addSyncQueueTests();
 
-        it('should call OfflineRepo.read()');
-        // , () => {
-        //   return dataProcessor.process(operation, options).toPromise()
-        //     .then(() => {
-        //       validateSpyCalls(offlineRepoMock.read, 1, [collection, operation.query, options]);
-        //     });
-        // });
+        it.skip('should call OfflineRepo.read()', () => {
+          return dataProcessor.process(operation, options).toPromise()
+            .then(() => {
+              validateSpyCalls(offlineRepoMock.read, 1, [collection, operation.query, options]);
+            });
+        });
 
-        it('should call NetworkRepo.read()');
-        // , () => {
-        //   return dataProcessor.process(operation, options).toPromise()
-        //     .then(() => {
-        //       validateSpyCalls(networkRepoMock.read, 1, [collection, operation.query, options]);
-        //     });
-        // });
+        it.skip('should call NetworkRepo.read()', () => {
+          return dataProcessor.process(operation, options).toPromise()
+            .then(() => {
+              validateSpyCalls(networkRepoMock.read, 1, [collection, operation.query, options]);
+            });
+        });
 
-        it('should call OfflineRepo.delete() if any entities were found offline');
-        // , () => {
-        //   offlineRepoMock.read.andReturn(Promise.resolve([cloneDeep(entity)]));
-        //   return dataProcessor.process(operation, options).toPromise()
-        //     .then(() => {
-        //       const expectedQuery = new Query().contains('_id', entity._id);
-        //       validateSpyCalls(offlineRepoMock.delete, 1, [collection, expectedQuery]);
-        //     });
-        // });
+        it.skip('should call OfflineRepo.delete() if any entities were found offline', () => {
+          offlineRepoMock.read.andReturn(Promise.resolve([cloneDeep(entity)]));
+          return dataProcessor.process(operation, options).toPromise()
+            .then(() => {
+              const expectedQuery = new Query().contains('_id', entity._id);
+              validateSpyCalls(offlineRepoMock.delete, 1, [collection, expectedQuery]);
+            });
+        });
 
         it('should NOT call OfflineRepo.delete() if NO entities were found offline', () => {
           offlineRepoMock.read.andReturn(Promise.resolve([]));
@@ -170,15 +164,14 @@ describe('CacheOfflineDataProcessor', () => {
             });
         });
 
-        it('should call OfflineRepo.create() with the network entities');
-        // , () => {
-        //   const backendResponseMock = [cloneDeep(entity)];
-        //   networkRepoMock.read.andReturn(Promise.resolve(backendResponseMock));
-        //   return dataProcessor.process(operation, options).toPromise()
-        //     .then(() => {
-        //       validateSpyCalls(offlineRepoMock.create, 1, [collection, [entity]]);
-        //     });
-        // });
+        it.skip('should call OfflineRepo.create() with the network entities', () => {
+          const backendResponseMock = [cloneDeep(entity)];
+          networkRepoMock.read.andReturn(Promise.resolve(backendResponseMock));
+          return dataProcessor.process(operation, options).toPromise()
+            .then(() => {
+              validateSpyCalls(offlineRepoMock.create, 1, [collection, [entity]]);
+            });
+        });
       });
 
       describe('operation type ReadById', () => {
@@ -633,13 +626,12 @@ describe('CacheOfflineDataProcessor', () => {
           });
       });
 
-      it('should call OfflineRepo.delete()');
-      // , () => {
-      //   return dataProcessor.process(operation, options)
-      //     .then(() => {
-      //       validateSpyCalls(offlineRepoMock.delete, 1, [collection, operation.query, options]);
-      //     });
-      // });
+      it.skip('should call OfflineRepo.delete()', () => {
+        return dataProcessor.process(operation, options)
+          .then(() => {
+            validateSpyCalls(offlineRepoMock.delete, 1, [collection, operation.query, options]);
+          });
+      });
     });
   });
 });
