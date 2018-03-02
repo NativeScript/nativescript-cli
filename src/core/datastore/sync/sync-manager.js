@@ -365,7 +365,8 @@ export class SyncManager {
     }
   }
 
-  _getInternalPullQuery(userQuery = {}, totalCount) {
+  _getInternalPullQuery(userQuery, totalCount) {
+    userQuery = userQuery || {};
     const { filter, sort, fields, skip } = userQuery;
     const query = new Query({ filter, sort, fields, skip });
     query.limit = totalCount;
@@ -404,9 +405,10 @@ export class SyncManager {
       });
   }
 
-  _paginatedPull(collection, userQuery = new Query(), options = {}) {
+  _paginatedPull(collection, userQuery, options = {}) {
     let pullQuery;
     let expectedCount;
+    userQuery = userQuery || new Query();
     return this._getExpectedEntityCount(collection, userQuery)
       .then((count) => {
         expectedCount = count;
