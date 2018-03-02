@@ -13,7 +13,7 @@ The NativeScript CLI lets you create, build, and deploy [NativeScript][7]-based 
 * [System Requirements](#system-requirements "The hardware and software requirements for setting up and working with the NativeScript CLI")
 * [Installation](#installation "How to configure and install the NativeScript CLI")
     * [Install the NativeScript CLI](#install-the-nativescript-cli)
-    * [Configure Proxy Usage](#configure-proxy-usage)
+    * [Configure Proxy Usage](#configure-proxy-settings)
 * [Quick Start](#quick-start "Get started with the NativeScript CLI")
     * [The Commands](#the-commands)
     * [Create Project](#create-project)
@@ -103,17 +103,47 @@ To check if your system is configured properly, run the following command.
 tns doctor
 ```
 
-## Configure Proxy Usage
+## Configure Proxy Settings
 
-If you are working with the NativeScript CLI behind a web proxy, you might need to configure your proxy settings.
+If you are working with the NativeScript CLI behind a web proxy, you need to configure your proxy settings.
 
-1. On your file system, locate the directory where the **nativescript** npm package is installed.
-1. In a text editor, open `config` &#8594; `config.json`.
-1. Set `USE_PROXY` to `true`.
-1. Set `PROXY_PORT`.
-1. Set `PROXY_HOSTNAME`.
+### Set Proxy Settings
 
-> Make sure to preserve the quotation marks and commas as in the initial `config.json` file.
+```Shell
+tns proxy set <Url> <Username> <Password>
+```
+
+#### Attributes
+
+<details><summary><code>&lt;Url&gt;</code></summary>
+<strong>(Required)</strong> The full URL of the proxy. The <code>&lt;Url&gt;</code> attribute is required and if you do not provide it when running the command, the NativeScript CLI will prompt you to provide it. An example of a valid proxy URL is <code>http://127.0.0.1:8888</code>.</details>
+ 
+<details><summary><code>&lt;Username&gt;</code> and <code>&lt;Password&gt;</code></summary>
+<strong>(Optional)</strong> The credentials for the proxy. The <code>&lt;Username&gt;</code> and <code>&lt;Password&gt;</code> attributes are optional, however, if you choose to provide them, you must provide both.</details> 
+
+#### Options
+
+<details><summary><code>--insecure</code></summary>
+The <code>--insecure</code> flag allows you to perform insecure SSL connections and transfers. This option is useful when your proxy does not have a CA certificate or the certificate is no longer valid.</details>
+
+#### Limitations
+
+* You can provide the `<Username>` and `<Password>` attributes only on Windows systems.
+* Proxy settings for the npm and the Android Gradle need to be configured separately. For more information, see the following articles:
+	* [Configure the npm proxy](https://docs.npmjs.com/misc/config#https-proxy)
+	* [Configure the Android Gradle proxy](https://docs.gradle.org/3.3/userguide/build_environment.html#sec:accessing_the_web_via_a_proxy)
+
+### Display Current Proxy Settings
+
+```Shell
+tns proxy
+```
+
+### Clear Proxy Settings
+
+```Shell
+tns proxy clear
+```
 
 [Back to Top][1]
 
