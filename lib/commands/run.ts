@@ -1,27 +1,19 @@
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "../common/constants";
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
 import { cache } from "../common/decorators";
-import { BundleBase } from "./base-bundler";
 
-export class RunCommandBase extends BundleBase implements ICommand {
+export class RunCommandBase implements ICommand {
 
 	public platform: string;
-	constructor(protected $platformService: IPlatformService,
-		protected $projectData: IProjectData,
-		protected $options: IOptions,
-		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		protected $errors: IErrors,
-		protected $devicesService: Mobile.IDevicesService,
-		protected $platformsData: IPlatformsData,
+	constructor(private $projectData: IProjectData,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $errors: IErrors,
 		private $hostInfo: IHostInfo,
-		private $liveSyncCommandHelper: ILiveSyncCommandHelper
-	) {
-		super($projectData, $errors, $options);
-	}
+		private $liveSyncCommandHelper: ILiveSyncCommandHelper) { }
 
 	public allowedParameters: ICommandParameter[] = [];
 	public async execute(args: string[]): Promise<void> {
-		return this.executeCore(args);
+		return this.$liveSyncCommandHelper.executeCommandLiveSync(this.platform);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -36,31 +28,9 @@ export class RunCommandBase extends BundleBase implements ICommand {
 			this.platform = this.$devicePlatformsConstants.Android;
 		}
 
-		const availablePlatforms = this.$liveSyncCommandHelper.getPlatformsForOperation(this.platform);
-		for (const platform of availablePlatforms) {
-			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
-			const platformProjectService = platformData.platformProjectService;
-			await platformProjectService.validate(this.$projectData);
-		}
-
-		super.validateBundling();
+		this.$liveSyncCommandHelper.validatePlatform(this.platform);
 
 		return true;
-	}
-
-	public async executeCore(args: string[]): Promise<void> {
-		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
-			platform: this.platform,
-			emulator: this.$options.emulator,
-			skipDeviceDetectionInterval: true,
-			skipInferPlatform: !this.platform
-		});
-
-		await this.$devicesService.detectCurrentlyAttachedDevices({ shouldReturnImmediateResult: false, platform: this.platform });
-		let devices = this.$devicesService.getDeviceInstances();
-		devices = devices.filter(d => !this.platform || d.deviceInfo.platform.toLowerCase() === this.platform.toLowerCase());
-		await this.$liveSyncCommandHelper.executeLiveSyncOperation(devices, this.platform);
 	}
 }
 
@@ -80,9 +50,9 @@ export class RunIosCommand implements ICommand {
 		return this.$devicePlatformsConstants.iOS;
 	}
 
-	constructor(protected $platformsData: IPlatformsData,
-		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		protected $errors: IErrors,
+	constructor(private $platformsData: IPlatformsData,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $errors: IErrors,
 		private $injector: IInjector,
 		private $platformService: IPlatformService,
 		private $projectData: IProjectData,
@@ -94,7 +64,7 @@ export class RunIosCommand implements ICommand {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
-		return this.runCommand.executeCore(args);
+		return this.runCommand.execute(args);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -118,9 +88,9 @@ export class RunAndroidCommand implements ICommand {
 		return this.$devicePlatformsConstants.Android;
 	}
 
-	constructor(protected $platformsData: IPlatformsData,
-		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		protected $errors: IErrors,
+	constructor(private $platformsData: IPlatformsData,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $errors: IErrors,
 		private $injector: IInjector,
 		private $platformService: IPlatformService,
 		private $projectData: IProjectData,
@@ -128,7 +98,7 @@ export class RunAndroidCommand implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		return this.runCommand.executeCore(args);
+		return this.runCommand.execute(args);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

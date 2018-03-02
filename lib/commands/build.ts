@@ -1,14 +1,13 @@
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
-import { BundleBase } from "./base-bundler";
 
-export class BuildCommandBase extends BundleBase {
+export class BuildCommandBase {
 	constructor(protected $options: IOptions,
 		protected $errors: IErrors,
 		protected $projectData: IProjectData,
 		protected $platformsData: IPlatformsData,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		protected $platformService: IPlatformService) {
-		super($projectData, $errors, $options);
+		protected $platformService: IPlatformService,
+		private $bundleValidatorHelper: IBundleValidatorHelper) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -50,7 +49,7 @@ export class BuildCommandBase extends BundleBase {
 			this.$errors.fail(`Applications for platform ${platform} can not be built on this OS`);
 		}
 
-		super.validateBundling();
+		this.$bundleValidatorHelper.validate();
 	}
 }
 
@@ -62,8 +61,9 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$platformService: IPlatformService) {
-		super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService);
+		$platformService: IPlatformService,
+		$bundleValidatorHelper: IBundleValidatorHelper) {
+		super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -86,8 +86,9 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$platformService: IPlatformService) {
-		super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService);
+		$platformService: IPlatformService,
+		$bundleValidatorHelper: IBundleValidatorHelper) {
+		super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper);
 	}
 
 	public async execute(args: string[]): Promise<void> {

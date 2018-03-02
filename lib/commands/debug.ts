@@ -38,7 +38,9 @@ export class DebugPlatformCommand implements ICommand {
 		await this.$devicesService.detectCurrentlyAttachedDevices({ shouldReturnImmediateResult: false, platform: this.platform });
 
 		await this.$liveSyncCommandHelper.executeLiveSyncOperation([selectedDeviceForDebug], this.platform, {
-			[selectedDeviceForDebug.deviceInfo.identifier]: true
+			[selectedDeviceForDebug.deviceInfo.identifier]: true,
+			// This will default in the liveSyncCommandHelper
+			buildPlatform: undefined
 		});
 	}
 

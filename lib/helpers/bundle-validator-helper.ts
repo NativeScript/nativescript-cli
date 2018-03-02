@@ -1,4 +1,4 @@
-export abstract class BundleBase {
+export class BundleValidatorHelper implements IBundleValidatorHelper {
 	private bundlersMap: IStringDictionary = {
 		webpack: "nativescript-dev-webpack"
 	};
@@ -9,7 +9,7 @@ export abstract class BundleBase {
 		this.$projectData.initializeProjectData();
 	}
 
-	protected validateBundling(): void {
+	public validate(): void {
 		if (this.$options.bundle) {
 			const bundlePluginName = this.bundlersMap[this.$options.bundle];
 			const hasBundlerPluginAsDependency = this.$projectData.dependencies && this.$projectData.dependencies[bundlePluginName];
@@ -20,3 +20,5 @@ export abstract class BundleBase {
 		}
 	}
 }
+
+$injector.register("bundleValidatorHelper", BundleValidatorHelper);

@@ -7,43 +7,22 @@ export class DeployOnDeviceCommand implements ICommand {
 		private $platformCommandParameter: ICommandParameter,
 		private $options: IOptions,
 		private $projectData: IProjectData,
+		private $deployCommandHelper: IDeployCommandHelper,
 		private $errors: IErrors,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $platformsData: IPlatformsData) {
+		private $platformsData: IPlatformsData,
+		private $bundleValidatorHelper: IBundleValidatorHelper) {
 		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: !!this.$options.bundle, release: this.$options.release };
-		const deployOptions: IDeployPlatformOptions = {
-			clean: this.$options.clean,
-			device: this.$options.device,
-			projectDir: this.$options.path,
-			emulator: this.$options.emulator,
-			platformTemplate: this.$options.platformTemplate,
-			release: this.$options.release,
-			forceInstall: true,
-			provision: this.$options.provision,
-			teamId: this.$options.teamId,
-			keyStoreAlias: this.$options.keyStoreAlias,
-			keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-			keyStorePassword: this.$options.keyStorePassword,
-			keyStorePath: this.$options.keyStorePath
-		};
-
-		const deployPlatformInfo: IDeployPlatformInfo = {
-			platform: args[0],
-			appFilesUpdaterOptions,
-			deployOptions,
-			projectData: this.$projectData,
-			config: this.$options,
-			env: this.$options.env
-		};
+		const deployPlatformInfo = this.$deployCommandHelper.getDeployPlatformInfo(args[0]);
 
 		return this.$platformService.deployPlatform(deployPlatformInfo);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		this.$bundleValidatorHelper.validate();
 		if (!args || !args.length || args.length > 1) {
 			return false;
 		}

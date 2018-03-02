@@ -691,8 +691,8 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 		return Promise.resolve(true);
 	}
 
-	public buildPlatform(platform: string, buildConfig?: IBuildConfig): Promise<void> {
-		return Promise.resolve();
+	public buildPlatform(platform: string, buildConfig?: IBuildConfig): Promise<string> {
+		return Promise.resolve("");
 	}
 
 	public async shouldInstall(device: Mobile.IDevice): Promise<boolean> {

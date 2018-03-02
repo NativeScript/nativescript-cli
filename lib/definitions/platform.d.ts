@@ -1,4 +1,20 @@
-interface IPlatformService extends NodeJS.EventEmitter {
+/**
+ * Describes information about how to build the native project.
+ */
+interface IBuildPlatformAction {
+	/**
+	 * Builds the native project for the specified platform for device or emulator.
+	 * When finishes, build saves the .nsbuildinfo file in platform product folder.
+	 * This file points to the prepare that was used to build the project and allows skipping unnecessary builds and deploys.
+	 * @param {string} platform The platform to build.
+	 * @param {IBuildConfig} buildConfig Indicates whether the build is for device or emulator.
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @returns {Promise<string>} The path to the built file.
+	 */
+	buildPlatform(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): Promise<string>;
+}
+
+interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	cleanPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, framework?: string): Promise<void>;
 
 	addPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, frameworkPath?: string): Promise<void>;
@@ -55,17 +71,6 @@ interface IPlatformService extends NodeJS.EventEmitter {
 	 * @returns {boolean} true indicates that the platform should be build.
 	 */
 	shouldBuild(platform: string, projectData: IProjectData, buildConfig?: IBuildConfig, outputPath?: string): Promise<boolean>;
-
-	/**
-	 * Builds the native project for the specified platform for device or emulator.
-	 * When finishes, build saves the .nsbuildinfo file in platform product folder.
-	 * This file points to the prepare that was used to build the project and allows skipping unnecessary builds and deploys.
-	 * @param {string} platform The platform to build.
-	 * @param {IBuildConfig} buildConfig Indicates whether the build is for device or emulator.
-	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @returns {void}
-	 */
-	buildPlatform(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): Promise<void>;
 
 	/**
 	 * Determines whether installation is necessary. It is necessary when one of the following is true:
@@ -347,11 +352,13 @@ interface IOptionalFilesToRemove {
 	filesToRemove?: string[];
 }
 
-interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions, IOptionalFilesToSync, IOptionalFilesToRemove {
+interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions, IOptionalFilesToSync, IOptionalFilesToRemove, IOptionalNativePrepareComposition { }
+
+interface IOptionalNativePrepareComposition {
 	nativePrepare?: INativePrepare;
 }
 
-interface IDeployPlatformInfo extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IPlatformConfig, IEnvOptions {
+interface IDeployPlatformInfo extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IPlatformConfig, IEnvOptions, IOptionalNativePrepareComposition, IOptionalOutputPath, IBuildPlatformAction {
 	deployOptions: IDeployPlatformOptions
 }
 
