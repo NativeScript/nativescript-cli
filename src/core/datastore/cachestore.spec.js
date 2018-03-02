@@ -224,7 +224,45 @@ describe('CacheStore', () => {
                 done(error);
               }
             });
+        })
+        .catch(done);
+    });
+
+    it('should perform a delta set request with a tagged datastore', (done) => {
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
+      const store = new CacheStore(collection, null, { useDeltaFetch: true, tag: randomString() });
+      const onNextSpy = expect.createSpy();
+      const lastRequestDate = new Date();
+
+      nock(store.client.apiHostname)
+        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200, [entity1, entity2], {
+          'X-Kinvey-Request-Start': lastRequestDate.toISOString()
         });
+
+      store.pull()
+        .then(() => {
+          nock(client.apiHostname)
+            .get(`/appdata/${store.client.appKey}/${collection}/_deltaset`)
+            .query({ since: lastRequestDate.toISOString() })
+            .reply(200, { changed: [entity2], deleted: [{ _id: entity1._id }] }, {
+              'X-Kinvey-Request-Start': new Date().toISOString()
+            });
+
+          store.find()
+            .subscribe(onNextSpy, done, () => {
+              try {
+                expect(onNextSpy.calls.length).toEqual(2);
+                expect(onNextSpy.calls[0].arguments).toEqual([[entity1, entity2]]);
+                expect(onNextSpy.calls[1].arguments).toEqual([[entity2]]);
+                done();
+              } catch (error) {
+                done(error);
+              }
+            });
+        })
+        .catch(done);
     });
 
     it('should remove entities that no longer exist on the backend from the cache');
