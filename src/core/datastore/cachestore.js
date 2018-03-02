@@ -100,7 +100,7 @@ export class CacheStore extends NetworkStore {
    * returned that will be resolved with the result of the pull or rejected with an error.
    *
    * IMPORTANT: This method is not intended to be used to make concurrent requests.
-   * If you wish to pull multiple pages concurrently, please use the autoPagination option
+   * If you wish to pull multiple pages, please use the autoPagination option
    *
    * @param   {Query}                 [query]                                   Query to pull a subset of items.
    * @param   {Object}                options                                   Options
