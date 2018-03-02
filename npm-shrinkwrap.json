@@ -4,6 +4,49 @@
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
+    "@angular-devkit/core": {
+      "version": "0.4.2",
+      "resolved": "https://registry.npmjs.org/@angular-devkit/core/-/core-0.4.2.tgz",
+      "integrity": "sha512-16XmdttynxwC5f5orOE/QeZ0uKcU1H6N9DpH6M06fXen9bEeAxpVWrk4oYTvabFbeG5bt9I5MJSleOoKB5fkFA==",
+      "requires": {
+        "ajv": "5.5.2",
+        "chokidar": "1.7.0",
+        "rxjs": "5.5.6",
+        "source-map": "0.5.6"
+      },
+      "dependencies": {
+        "ajv": {
+          "version": "5.5.2",
+          "resolved": "https://registry.npmjs.org/ajv/-/ajv-5.5.2.tgz",
+          "integrity": "sha1-c7Xuyj+rZT49P5Qis0GtQiBdyWU=",
+          "requires": {
+            "co": "4.6.0",
+            "fast-deep-equal": "1.1.0",
+            "fast-json-stable-stringify": "2.0.0",
+            "json-schema-traverse": "0.3.1"
+          }
+        }
+      }
+    },
+    "@angular-devkit/schematics": {
+      "version": "0.4.2",
+      "resolved": "https://registry.npmjs.org/@angular-devkit/schematics/-/schematics-0.4.2.tgz",
+      "integrity": "sha512-3eTZBoQ+BKcCr/I4b9T7kbbKrFHJV+meL/GRda65GGBYmq2RN3wJl8DKZalzZDNTZxM6+fRUSU2QsQuLqC30fg==",
+      "requires": {
+        "@ngtools/json-schema": "1.1.0",
+        "rxjs": "5.5.6"
+      }
+    },
+    "@ngtools/json-schema": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/@ngtools/json-schema/-/json-schema-1.1.0.tgz",
+      "integrity": "sha1-w6DFRNYjkqzCgTpCyKDcb1j4aSI="
+    },
+    "@schematics/schematics": {
+      "version": "0.4.2",
+      "resolved": "https://registry.npmjs.org/@schematics/schematics/-/schematics-0.4.2.tgz",
+      "integrity": "sha512-7qLIUUPftSXYul4bEFvYfC5BVVdv9Tbx66qehAoGn9aRsPIq8Oax3IKg/w5deQdW6gZQYGgseD7mFmGnA1vxww=="
+    },
     "@types/chai": {
       "version": "4.0.1",
       "resolved": "https://registry.npmjs.org/@types/chai/-/chai-4.0.1.tgz",
@@ -1360,6 +1403,16 @@
       "version": "1.0.2",
       "resolved": "https://registry.npmjs.org/extsprintf/-/extsprintf-1.0.2.tgz",
       "integrity": "sha1-4QgOBljjALBilJkMxw4VAiNf1VA="
+    },
+    "fast-deep-equal": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/fast-deep-equal/-/fast-deep-equal-1.1.0.tgz",
+      "integrity": "sha1-wFNHeBfIa1HaqFPIHgWbcz0CNhQ="
+    },
+    "fast-json-stable-stringify": {
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/fast-json-stable-stringify/-/fast-json-stable-stringify-2.0.0.tgz",
+      "integrity": "sha1-1RQsDK7msRifh9OnYREGT4bIu/I="
     },
     "fast-levenshtein": {
       "version": "2.0.6",
@@ -3375,6 +3428,11 @@
       "resolved": "https://registry.npmjs.org/json-schema/-/json-schema-0.2.3.tgz",
       "integrity": "sha1-tIDIkuWaLwWVTOcnvT8qTogvnhM="
     },
+    "json-schema-traverse": {
+      "version": "0.3.1",
+      "resolved": "https://registry.npmjs.org/json-schema-traverse/-/json-schema-traverse-0.3.1.tgz",
+      "integrity": "sha1-NJptRMU6Ud6JtAgFxdXlm0F9M0A="
+    },
     "json-stable-stringify": {
       "version": "1.0.1",
       "resolved": "https://registry.npmjs.org/json-stable-stringify/-/json-stable-stringify-1.0.1.tgz",
@@ -4723,6 +4781,14 @@
       "resolved": "https://registry.npmjs.org/rx-lite/-/rx-lite-2.5.2.tgz",
       "integrity": "sha1-X+9C1Nbna6tRmdIXEyfbcJ5Y5jQ="
     },
+    "rxjs": {
+      "version": "5.5.6",
+      "resolved": "https://registry.npmjs.org/rxjs/-/rxjs-5.5.6.tgz",
+      "integrity": "sha512-v4Q5HDC0FHAQ7zcBX7T2IL6O5ltl1a2GX4ENjPXg6SjDY69Cmx9v4113C99a4wGF16ClPv5Z8mghuYorVkg/kg==",
+      "requires": {
+        "symbol-observable": "1.0.1"
+      }
+    },
     "safe-buffer": {
       "version": "5.1.1",
       "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.1.tgz",
@@ -5124,6 +5190,11 @@
       "version": "0.2.3",
       "resolved": "https://registry.npmjs.org/symbol/-/symbol-0.2.3.tgz",
       "integrity": "sha1-O5hzuKkB5Hxu/iFSajrDcu8ou8c="
+    },
+    "symbol-observable": {
+      "version": "1.0.1",
+      "resolved": "https://registry.npmjs.org/symbol-observable/-/symbol-observable-1.0.1.tgz",
+      "integrity": "sha1-g0D8RwLDEi310iKI+IKD9RPT/dQ="
     },
     "table": {
       "version": "3.8.3",

@@ -39,6 +39,7 @@ $injector.require("googleAnalyticsProvider", "./services/analytics/google-analyt
 $injector.require("emulatorSettingsService", "./services/emulator-settings-service");
 
 $injector.require("platformCommandParameter", "./platform-command-param");
+$injector.requireCommand("generate", "./commands/generate");
 $injector.requireCommand("create", "./commands/create-project");
 $injector.requireCommand("platform|*list", "./commands/list-platforms");
 $injector.requireCommand("platform|add", "./commands/add-platform");
