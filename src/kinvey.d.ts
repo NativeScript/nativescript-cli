@@ -308,10 +308,10 @@ export namespace Kinvey {
     }>;
     pendingSyncEntities(query?: Query, options?: RequestOptions): Promise<SyncEntity[]>;
     push(query?: Query, options?: RequestOptions): Promise<PushResult<T>[]>;
-    pull(query?: Query, options?: PullRequestOptions): Promise<T[] | number>;
+    pull(query?: Query, options?: PullRequestOptions): Promise<number>;
     sync(query?: Query, options?: PullRequestOptions): Promise<{
       push: PushResult<T>[],
-      pull: T[]
+      pull: number
     }>;
     clearSync(query?: Query, options?: RequestOptions): Promise<{
       count: number
@@ -826,10 +826,10 @@ declare class CacheStore<T extends Entity = Entity> extends NetworkStore<T> {
   }>;
   pendingSyncEntities(query?: Query, options?: RequestOptions): Promise<SyncEntity[]>;
   push(query?: Query, options?: RequestOptions): Promise<PushResult<T>[]>;
-  pull(query?: Query, options?: PullRequestOptions): Promise<T[] | number>;
+  pull(query?: Query, options?: PullRequestOptions): Promise<number>;
   sync(query?: Query, options?: PullRequestOptions): Promise<{
     push: PushResult<T>[],
-    pull: T[]
+    pull: number
   }>;
   clearSync(query?: Query, options?: RequestOptions): Promise<{
     count: number

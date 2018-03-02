@@ -107,7 +107,7 @@ export class CacheStore extends NetworkStore {
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
-   * @return  {Promise.<object[]|number>}                                       Promise
+   * @return  {Promise.<number>}                                                Promise
    */
   pull(query, options = {}) {
     options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
@@ -130,7 +130,7 @@ export class CacheStore extends NetworkStore {
    * @param   {Object}                options                                   Options
    * @param   {Properties}            [options.properties]                      Custom properties to send with the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
-   * @return  {Promise.<{push: [], pull: []}>}                                  Promise
+   * @return  {Promise.<{push: [], pull: number}>}                              Promise
    */
   sync(query, options) {
     options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
