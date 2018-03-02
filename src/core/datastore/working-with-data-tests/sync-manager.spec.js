@@ -13,6 +13,7 @@ import {
 } from './utils';
 
 const collection = 'books';
+const defaultSortField = '_kmd.ect';
 
 function getSyncItemMock(operation, entityId, collectionName) {
   return {
@@ -38,7 +39,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
   /** @type {SyncStateManagerMock} */
   let syncStateManagerMock;
   let offlineRepoMock = getRepoMock(); // set only for typings, otherwise set in beforeEach
-  let queueSpy;
+  let utilsMock = { splitQueryIntoPages: null }; // set only for typings, otherwise set in beforeEach
 
   beforeEach(() => {
     offlineRepoMock = getRepoMock();
@@ -56,20 +57,20 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
   });
 
   beforeEach(() => {
-    queueSpy = createPromiseSpy();
+    utilsMock = {
+      splitQueryIntoPages: expect.createSpy().andReturn([])
+    };
     const repoProviderMock = {
       getOfflineRepository: () => Promise.resolve(offlineRepoMock)
     };
     const requireMocks = {
       '../repositories': {
         repositoryProvider: repoProviderMock
-      }
-    };
-    const queue = {
-      enqueue: queueSpy
+      },
+      '../../utils': utilsMock
     };
     const ProxiedSyncManager = mockRequiresIn(__dirname, '../sync/sync-manager', requireMocks, 'SyncManager');
-    syncManager = new ProxiedSyncManager(networkRepoMock, syncStateManagerMock, queue);
+    syncManager = new ProxiedSyncManager(networkRepoMock, syncStateManagerMock);
   });
 
   describe('push()', () => {
@@ -334,36 +335,227 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
         });
     });
 
-    describe.skip('when using auto pagination', () => {
-      let query = new Query();
-      const options = { autoPagination: true };
+    it('should return the number of entities pulled', () => {
+      const serverItemsMock = [{ _id: randomString() }, { _id: randomString() }];
+      networkRepoMock.read = createPromiseSpy(serverItemsMock);
+      offlineRepoMock.update = createPromiseSpy(serverItemsMock);
+      return syncManager.pull(collection, query, options)
+        .then((result) => {
+          expect(result).toBe(2);
+        });
+    });
+
+    describe('when using auto pagination', () => {
+      let options = { autoPagination: true };
+      const backendEntityCount = 31500;
 
       beforeEach(() => {
-        query = new Query().equalTo(randomString(), randomString());
-        const entityCount = 21000;
-        networkRepoMock.count.andReturn(Promise.resolve(entityCount));
+        options = { autoPagination: true };
+        networkRepoMock.count = createPromiseSpy(backendEntityCount);
       });
 
-      it('should call NetworkRepo.count()');
-
-      it('should PromiseQueueByKey.enqueue()');
-
-      describe('when pulling with only filter', () => {
-        it('should call NetworkRepo.read() 3 times, with correct skip/limit modifiers');
-
-        it('should call OfflineRepo.delete() 3 times with correct skip/limit modifiers');
-
-        it('should call OfflineRepo.update() 3 times respective entities');
+      it('should do a regular deltaset request if useDeltaFetch is true', () => {
+        options.useDeltaFetch = true;
+        return syncManager.pull(collection, null, options)
+          .then(() => {
+            validateSpyCalls(utilsMock.splitQueryIntoPages, 0);
+            validateSpyCalls(networkRepoMock.count, 0);
+            validateSpyCalls(networkRepoMock.read, 1, [collection, null, options]);
+            validateSpyCalls(offlineRepoMock.delete, 1, [collection, null]);
+            validateSpyCalls(offlineRepoMock.update, 1, [collection, []]);
+          });
       });
 
-      describe('when pulling with autoPagination settings', () => {
-        const options = {
-          autoPagination: { pageSize: 3, pullLimit: 10 }
-        };
+      it('should do a paginated request, when autoPagination is true', () => {
+        return syncManager.pull(collection, null, options)
+          .then(() => {
+            validateSpyCalls(networkRepoMock.count, 1, [collection, new Query()]);
+          });
+      });
 
-        it('should respect the supplied pageSize');
+      it('should do a paginated request, when autoPagination is an object', () => {
+        return syncManager.pull(collection, null, { autoPagination: { pageSize: 14 } })
+          .then(() => {
+            validateSpyCalls(networkRepoMock.count, 1, [collection, new Query()]);
+          });
+      });
 
-        it('should respect the supplied pullLimit');
+      it('should call NetworkRepo.count()', () => {
+        utilsMock.splitQueryIntoPages = expect.createSpy().andReturn([]);
+        const query = new Query();
+        query.ascending(randomString()); // check that sort is ignored
+        return syncManager.pull(collection, query, options)
+          .then(() => {
+            validateSpyCalls(networkRepoMock.count, 1, [collection, new Query()]);
+          });
+      });
+
+      it('should call OfflineRepo.delete() with the internal pull query', () => {
+        utilsMock.splitQueryIntoPages = expect.createSpy().andReturn([]);
+        return syncManager.pull(collection, null, options)
+          .then(() => {
+            const internalQueryMock = new Query();
+            internalQueryMock.limit = backendEntityCount;
+            internalQueryMock.sort = { [defaultSortField]: 1 };
+            validateSpyCalls(offlineRepoMock.delete, 1, [collection, internalQueryMock]);
+          });
+      });
+
+      it('should call NetworkRepo.read()', () => {
+        const paginatedQueriesMock = [new Query()];
+        utilsMock.splitQueryIntoPages.andReturn(paginatedQueriesMock);
+        return syncManager.pull(collection, null, options)
+          .then(() => {
+            validateSpyCalls(networkRepoMock.read, 1, [collection, paginatedQueriesMock[0], options]);
+          });
+      });
+
+      it('should call OfflineRepo.update()', () => {
+        const serverResponse = [{ _id: randomString() }, { _id: randomString() }];
+        utilsMock.splitQueryIntoPages.andReturn([new Query()]);
+        networkRepoMock.read = createPromiseSpy(serverResponse);
+        return syncManager.pull(collection, null, options)
+          .then(() => {
+            validateSpyCalls(offlineRepoMock.update, 1, [collection, serverResponse]);
+          });
+      });
+
+      it('should respect the pageSize setting', () => {
+        const pageSize = 13;
+        const options = { autoPagination: { pageSize } };
+        return syncManager.pull(collection, null, options)
+          .then(() => {
+            const expectedQuery = new Query();
+            expectedQuery.ascending(defaultSortField);
+            expectedQuery.limit = backendEntityCount;
+            validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, backendEntityCount]);
+          });
+      });
+
+      it('should return the number of pulled entities', () => {
+        const serverResponse = [{ _id: randomString() }, { _id: randomString() }];
+        utilsMock.splitQueryIntoPages.andReturn([new Query()]);
+        networkRepoMock.read = createPromiseSpy(serverResponse);
+        offlineRepoMock.update = createPromiseSpy(serverResponse);
+        return syncManager.pull(collection, null, options)
+          .then((result) => {
+            expect(result).toBe(serverResponse.length);
+          });
+      });
+
+      describe('the pagination query', () => {
+        const pageSize = 123;
+
+        beforeEach(() => {
+          options = { autoPagination: { pageSize } };
+          utilsMock.splitQueryIntoPages.andReturn([]);
+        });
+
+        it('should reflect user query skip', () => {
+          const query = new Query();
+          query.skip = 123;
+          return syncManager.pull(collection, query, options)
+            .then(() => {
+              const expectedQuery = new Query();
+              expectedQuery.skip = query.skip;
+              expectedQuery.limit = backendEntityCount - query.skip;
+              expectedQuery.ascending(defaultSortField);
+              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, backendEntityCount - query.skip]);
+            });
+        });
+
+        it('should reflect user query limit', () => {
+          const query = new Query();
+          query.limit = 4321;
+          return syncManager.pull(collection, query, options)
+            .then(() => {
+              const expectedQuery = new Query();
+              expectedQuery.skip = 0;
+              expectedQuery.limit = query.limit;
+              expectedQuery.ascending(defaultSortField);
+              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, query.limit]);
+            });
+        });
+
+        it('should have a limit value equal to the total entity count, if total count is less than userQuery.limit', () => {
+          const query = new Query();
+          query.limit = 1e10;
+          return syncManager.pull(collection, query, options)
+            .then(() => {
+              const expectedQuery = new Query();
+              expectedQuery.skip = 0;
+              expectedQuery.limit = backendEntityCount;
+              expectedQuery.ascending(defaultSortField);
+              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, backendEntityCount - query.skip]);
+            });
+        });
+
+        it('should have a limit value equal to the userQuery.limit, if total count is greater than userQuery.limit', () => {
+          const query = new Query();
+          query.limit = 3;
+          return syncManager.pull(collection, query, options)
+            .then(() => {
+              const expectedQuery = new Query();
+              expectedQuery.skip = 0;
+              expectedQuery.limit = query.limit;
+              expectedQuery.ascending(defaultSortField);
+              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, query.limit]);
+            });
+        });
+
+        it('should calculate the total entity count to pull, considering the userQuery.skip value', () => {
+          const query = new Query();
+          query.skip = 12;
+          return syncManager.pull(collection, query, options)
+            .then(() => {
+              const expectedQuery = new Query();
+              expectedQuery.skip = query.skip;
+              expectedQuery.limit = backendEntityCount - query.skip;
+              expectedQuery.ascending(defaultSortField);
+              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, expectedQuery.limit]);
+            });
+        });
+
+        it('should reflect user query sort, when a skip is present', () => {
+          const query = new Query();
+          query.skip = 12;
+          const sortFieldName = randomString();
+          query.ascending(sortFieldName);
+          return syncManager.pull(collection, query, options)
+            .then(() => {
+              const expectedQuery = new Query();
+              expectedQuery.skip = query.skip;
+              expectedQuery.limit = backendEntityCount - query.skip;
+              expectedQuery.ascending(sortFieldName);
+              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, expectedQuery.limit]);
+            });
+        });
+
+        it('should reflect user query sort, when a limit is present', () => {
+          const query = new Query();
+          query.limit = 12;
+          const sortFieldName = randomString();
+          query.ascending(sortFieldName);
+          return syncManager.pull(collection, query, options)
+            .then(() => {
+              const expectedQuery = new Query();
+              expectedQuery.limit = query.limit;
+              expectedQuery.ascending(sortFieldName);
+              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, expectedQuery.limit]);
+            });
+        });
+
+        it('should not reflect user query sort, when no skip or limit is present', () => {
+          const query = new Query();
+          query.ascending(randomString());
+          return syncManager.pull(collection, query, options)
+            .then(() => {
+              const expectedQuery = new Query();
+              expectedQuery.limit = backendEntityCount;
+              expectedQuery.ascending(defaultSortField);
+              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, backendEntityCount]);
+            });
+        });
       });
     });
   });
