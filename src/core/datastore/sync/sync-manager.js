@@ -4,8 +4,9 @@ import clone from 'lodash/clone';
 import { Log } from '../../log';
 import { KinveyError, NotFoundError, SyncError } from '../../errors';
 
+import { getPlatformConfig } from '../../platform-configs';
 import { SyncOperation } from './sync-operation';
-import { syncBatchSize, maxEntityLimit, defaultPullSortField } from './utils';
+import { maxEntityLimit, defaultPullSortField } from './utils';
 import { isEmpty } from '../utils';
 import { repositoryProvider } from '../repositories';
 import { Query } from '../../query';
@@ -19,6 +20,10 @@ import {
 // imported for typings
 // import { SyncStateManager } from './sync-state-manager';
 
+const {
+  maxConcurrentPullRequests: maxConcurrentPulls,
+  maxConcurrentPushRequests: maxConcurrentPushes,
+} = getPlatformConfig();
 const pushTrackingByCollection = {};
 
 export class SyncManager {
@@ -280,7 +285,7 @@ export class SyncManager {
     return forEachAsync(syncItems, (syncItem) => {
       return this._processSyncItem(collection, syncItem) // never rejects
         .then(pushResult => pushResults.push(pushResult));
-    }, syncBatchSize)
+    }, maxConcurrentPushes)
       .then(() => pushResults);
   }
 
@@ -386,7 +391,7 @@ export class SyncManager {
         .then((updatedEntities) => {
           pulledEntityCount += updatedEntities.length;
         });
-    }, syncBatchSize)
+    }, maxConcurrentPulls)
       .then(() => pulledEntityCount);
   }
 

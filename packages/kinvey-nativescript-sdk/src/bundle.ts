@@ -3,6 +3,9 @@ import { NetworkRack } from '../../../src/core/request';
 import { HttpMiddleware } from '../../../src/nativescript/http';
 import { Popup } from '../../../src/nativescript/popup';
 import pkg from '../package.json';
+import { setPlatformConfig, platformName } from '../../../src/core/platform-configs';
+
+setPlatformConfig(platformName.nativeScript);
 
 // Setup racks
 NetworkRack.useHttpMiddleware(new HttpMiddleware(pkg));
