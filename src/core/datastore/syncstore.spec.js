@@ -868,7 +868,7 @@ describe('SyncStore', () => {
         })
         .then((result) => {
           expect(result.push).toEqual([{ _id: entity1._id, operation: SyncOperation.Update, entity: entity1 }]);
-          expect(result.pull).toEqual([entity1, entity2]);
+          expect(result.pull).toEqual(2);
           return store.pendingSyncCount();
         })
         .then((count) => {

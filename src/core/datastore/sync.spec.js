@@ -246,9 +246,7 @@ describe('Sync', () => {
 
       return manager.pull(collection)
         .then((entities) => {
-          expect(entities).toBeA(Array);
-          expect(entities.length).toEqual(1);
-          expect(entities).toEqual([entity]);
+          expect(entities).toBe(1);
         });
     });
   });

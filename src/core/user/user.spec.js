@@ -479,7 +479,7 @@ describe('User', () => {
       const store = new CacheStore('foo');
       return store.pull()
         .then((entities) => {
-          expect(entities).toEqual([entity1, entity2]);
+          expect(entities).toEqual(2);
         });
     });
 

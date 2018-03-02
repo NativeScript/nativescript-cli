@@ -78,7 +78,8 @@ export class SyncManager {
     }
 
     return this._fetchItemsFromServer(collection, query, options)
-      .then(entities => this._replaceOfflineEntities(collection, query, entities));
+      .then(entities => this._replaceOfflineEntities(collection, query, entities))
+      .then(replacedEntities => replacedEntities.length);
   }
 
   getSyncItemCount(collection) {
