@@ -3,7 +3,7 @@ import { Yok } from "../../lib/common/yok";
 import { LoggingLevels } from "../../lib/common/mobile/logging-levels";
 import * as assert from "assert";
 
-function createTestInjector(): IInjector {
+function createTestInjector(projectName: string): IInjector {
 	const testInjector = new Yok();
 	testInjector.register("loggingLevels", LoggingLevels);
 	testInjector.register("fs", {
@@ -11,7 +11,8 @@ function createTestInjector(): IInjector {
 	});
 	testInjector.register("projectData", {
 		initializeProjectData: () => { /* empty */ },
-		projectDir: "test"
+		projectDir: "test",
+		projectName: projectName
 	});
 
 	return testInjector;
@@ -24,6 +25,7 @@ describe("iOSLogFilter", () => {
 	const testData = [
 		{
 			version: 9,
+			projectName: "NativeScript250",
 			originalDataArr: [
 				"May 24 15:54:38 Dragons-iPhone backboardd(BaseBoard)[62] <Error>: Unable to bootstrap_look_up port with name .gsEvents: unknown error code (1102)",
 				"May 24 15:54:51 Dragons-iPhone locationd[67] <Notice>: Client com.apple.springboard disconnected",
@@ -45,9 +47,10 @@ describe("iOSLogFilter", () => {
 				null,
 				null,
 				"CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3472:32: EXCEPTION: Uncaught (in promise): Error: CUSTOM EXCEPTION",
-				"CONSOLE LOG file:///app/home/home-view-model.js:6:20: CUSTOM CONSOLE LOG",
+				null,
 				""
 			],
+			simProjectName: "TestApp",
 			simulator: [
 				"Aug 22 10:59:20 MCSOFAPPBLD TestApp[52946]: CONSOLE LOG file:///app/home/home-view-model.js:6:20: CUSTOM CONSOLE LOG",
 				"Aug 22 10:59:20 MCSOFAPPBLD TestApp[52946]: CONSOLE DEBUG file:///app/home/home-view-model.js:6:20: CUSTOM CONSOLE LOG",
@@ -60,6 +63,7 @@ describe("iOSLogFilter", () => {
 			]
 		}, {
 			version: 10,
+			projectName: "NativeScript250",
 			originalDataArr: [
 				"May 24 15:54:52 Dragons-iPhone apsd(PersistentConnection)[90] <Notice>: 2017-05-24 15:54:52 +0300 apsd[90]: <PCDispatchTimer: 0x156ad240> performing call back",
 				"May 24 15:54:52 Dragons-iPhone NativeScript250(NativeScript)[356] <Notice>: CONSOLE LOG file:///app/modules/homeView/homeView.component.js:13:24: CUSTOM CONSOLE LOG",
@@ -86,20 +90,21 @@ describe("iOSLogFilter", () => {
 				"CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3472:32: EXCEPTION: Uncaught (in promise): Error: CUSTOM EXCEPTION",
 				"CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3477:36: ORIGINAL STACKTRACE:",
 				"CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3478:36: resolvePromise@file:///app/tns_modules/nativescript-angular/zone-js/dist/zone-nativescript.js:416:40",
+				"resolvePromise@file:///app/tns_modules/nativescript-angular/zone-js/dist/zone-nativescript.js:401:31",
+				"file:///app/tns_modules/nativescript-angular/zone-js/dist/zone-nativescript.js:449:31",
+				"invokeTask@file:///app/tns_modules/nativescript-angular/zone-js/dist/zone-nativescript.js:223:42",
+				"onInvokeTask@file:///app/tns_modules/@angular/core/bundles/core.umd.js:4382:51",
+				"invokeTask@file:///app/tns_modules/nativescript-angular/zone-js/dist/zone-nativescript.js:222:54",
+				"runTask@file:///app/tns_modules/nativescript-angular/zone-js/dist/zone-nativescript.js:123:57",
+				"drainMicroTaskQueue@file:///app/tns_modules/nativescript-angular/zone-js/dist/zone-nativescript.js:355:42",
+				"promiseReactionJob@[native code]",
+				"UIApplicationMain@[native code]",
+				"start@file:///app/tns_modules/tns-core-modules/application/application.js:251:26",
+				"bootstrapApp@file:///app/tns_module",
 				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				"CONSOLE LOG file:///app/home/home-view-model.js:6:20: CUSTOM CONSOLE LOG",
 				""
 			],
+			simProjectName: "TestApp",
 			simulator: [
 				"Aug 22 10:59:20 MCSOFAPPBLD TestApp[52946]: CONSOLE LOG file:///app/home/home-view-model.js:6:20: CUSTOM CONSOLE LOG",
 				"Aug 22 10:59:20 MCSOFAPPBLD TestApp[52946]: CONSOLE DEBUG file:///app/home/home-view-model.js:6:20: CUSTOM CONSOLE LOG",
@@ -113,6 +118,7 @@ describe("iOSLogFilter", () => {
 		},
 		{
 			version: 11,
+			projectName: "NativeScript250",
 			originalDataArr: [
 				"May 24 15:54:52 Dragons-iPhone apsd(PersistentConnection)[90] <Notice>: 2017-05-24 15:54:52 +0300 apsd[90]: <PCDispatchTimer: 0x156ad240> performing call back",
 				"May 24 15:54:52 Dragons-iPhone NativeScript250(NativeScript)[356] <Notice>: CONSOLE LOG file:///app/modules/homeView/homeView.component.js:13:24: CUSTOM CONSOLE LOG",
@@ -139,20 +145,21 @@ describe("iOSLogFilter", () => {
 				"CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3472:32: EXCEPTION: Uncaught (in promise): Error: CUSTOM EXCEPTION",
 				"CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3477:36: ORIGINAL STACKTRACE:",
 				"CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3478:36: resolvePromise@file:///app/tns_modules/nativescript-angular/zone-js/dist/zone-nativescript.js:416:40",
+				"resolvePromise@file:///app/tns_modules/nativescript-angular/zone-js/dist/zone-nativescript.js:401:31",
+				"file:///app/tns_modules/nativescript-angular/zone-js/dist/zone-nativescript.js:449:31",
+				"invokeTask@file:///app/tns_modules/nativescript-angular/zone-js/dist/zone-nativescript.js:223:42",
+				"onInvokeTask@file:///app/tns_modules/@angular/core/bundles/core.umd.js:4382:51",
+				"invokeTask@file:///app/tns_modules/nativescript-angular/zone-js/dist/zone-nativescript.js:222:54",
+				"runTask@file:///app/tns_modules/nativescript-angular/zone-js/dist/zone-nativescript.js:123:57",
+				"drainMicroTaskQueue@file:///app/tns_modules/nativescript-angular/zone-js/dist/zone-nativescript.js:355:42",
+				"promiseReactionJob@[native code]",
+				"UIApplicationMain@[native code]",
+				"start@file:///app/tns_modules/tns-core-modules/application/application.js:251:26",
+				"bootstrapApp@file:///app/tns_module",
 				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				"CONSOLE LOG file:///app/home/home-view-model.js:6:20: CUSTOM CONSOLE LOG",
 				""
 			],
+			simProjectName: "cliapp",
 			simulator: [
 				"2017-10-09 13:34:38.527844+0300  localhost cliapp[52946]: (NativeScript) CONSOLE LOG file:///app/main-view-model.js:18:20: Test Console",
 				"2017-10-09 13:34:38.527844+0300  localhost cliapp[52946]: (NativeScript) CONSOLE DEBUG file:///app/main-view-model.js:18:20: Test Console",
@@ -168,45 +175,79 @@ describe("iOSLogFilter", () => {
 	const infoLogLevel = "INFO";
 	const fullLogLevel = "FULL";
 
-	beforeEach(() => {
-		testInjector = createTestInjector();
-		logFilter = testInjector.resolve(IOSLogFilter);
-	});
-
 	describe("filterData", () => {
 		testData.forEach(data => {
+
+			it(`returns correct data on iOS ${data.version} when data comes in chunks`, () => {
+				testInjector = createTestInjector(data.projectName);
+				logFilter = testInjector.resolve(IOSLogFilter);
+				
+				let currentStart = 0;
+				let maxRange = 50;
+				let output = ""
+				let input = data.originalDataArr.join("\n");
+				while (true) {
+					let currentRange = Math.floor(Math.random() * maxRange);
+					let currentFilterInput = input.substr(currentStart, currentRange);
+					let tempOutput = logFilter.filterData(currentFilterInput, infoLogLevel, null);
+					if (tempOutput !== null) {
+						output += tempOutput;
+					}
+					currentStart += currentRange;
+					if (currentStart == input.length) {
+						break;
+					}
+					currentStart = Math.min(currentStart, input.length);
+				}
+
+				assert.deepEqual(output, data.infoExpectedArr.filter(item => item !== null).join("\n"));
+			});
+
 			it(`returns correct data when logLevel is ${fullLogLevel} on iOS ${data.version} and all data is passed at once`, () => {
+				testInjector = createTestInjector(data.projectName);
+				logFilter = testInjector.resolve(IOSLogFilter);
 				const actualData = logFilter.filterData(data.originalDataArr.join("\n"), fullLogLevel, null);
 				const actualArr = actualData.split("\n").map(line => line.trim());
-				const expectedArr = data.originalDataArr.map(line => line.trim());
+				const expectedArr = data.originalDataArr.map(line => line.trim()).filter(item => item !== null);
 				assert.deepEqual(actualArr, expectedArr);
 			});
 
 			it(`returns correct data when logLevel is ${fullLogLevel} on iOS ${data.version} and data is passed one line at a time`, () => {
 				data.originalDataArr.forEach(line => {
+					testInjector = createTestInjector(data.projectName);
+					logFilter = testInjector.resolve(IOSLogFilter);
 					const actualData = logFilter.filterData(line, fullLogLevel, null);
 					assert.deepEqual(actualData.trim(), line.trim());
 				});
 			});
 
 			it(`parses data incorrectly when logLevel is ${infoLogLevel} on iOS ${data.version} and all data is passed at once with pid(simulator)`, () => {
+				testInjector = createTestInjector(data.simProjectName);
+				logFilter = testInjector.resolve(IOSLogFilter);
 				const actualData = logFilter.filterData(data.simulator.join("\n"), infoLogLevel, pid);
 				const actualArr = actualData.split("\n").map(line => line.trim());
-				assert.deepEqual(actualArr, data.simulatorExpectedArr);
+				assert.deepEqual(actualArr, data.simulatorExpectedArr.filter(item => item !== null));
 			});
 
 			it(`parses data incorrectly when logLevel is ${infoLogLevel} on iOS ${data.version} and all data is passed at once and pid is available`, () => {
+				testInjector = createTestInjector(data.projectName);
+				logFilter = testInjector.resolve(IOSLogFilter);
 				const actualData = logFilter.filterData(data.originalDataArr.join("\n"), infoLogLevel, null);
 				const actualArr = actualData.split("\n").map(line => line.trim());
-				const expectedArr = ["CONSOLE LOG file:///app/modules/homeView/homeView.component.js:13:24: CUSTOM CONSOLE LOG", ""];
+				const expectedArr = data.infoExpectedArr.filter(item => item !== null);
 				assert.deepEqual(actualArr, expectedArr);
 			});
 
 			it(`returns correct data when logLevel is ${infoLogLevel} on iOS ${data.version} and data is passed one line at a time`, () => {
+				testInjector = createTestInjector(data.projectName);
+				logFilter = testInjector.resolve(IOSLogFilter);
 				data.originalDataArr.forEach((line, index) => {
+					if (line.length > 0) {
+						line += "\n"
+					}
 					const actualData = logFilter.filterData(line, infoLogLevel, null);
 					const expectedData = data.infoExpectedArr[index];
-					assert.deepEqual(actualData && actualData.trim(), expectedData && expectedData);
+					assert.equal(actualData && actualData.trim(), expectedData);
 				});
 			});
 		});
