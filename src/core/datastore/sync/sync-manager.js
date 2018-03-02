@@ -370,9 +370,8 @@ export class SyncManager {
     const { filter, sort, fields, skip } = userQuery;
     const query = new Query({ filter, sort, fields, skip });
     query.limit = totalCount;
-    const noSortProvided = !sort || isEmpty(sort);
-    const noSkipLimitProvided = !userQuery.skip && !userQuery.limit;
-    if (noSortProvided || noSkipLimitProvided) {
+
+    if (!sort || isEmpty(sort)) {
       query.sort = { [defaultPullSortField]: 1 };
     }
     return query;

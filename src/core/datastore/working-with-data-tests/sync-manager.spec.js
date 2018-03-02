@@ -451,6 +451,19 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
           utilsMock.splitQueryIntoPages.andReturn([]);
         });
 
+        it('should reflect user query sort', () => {
+          const query = new Query();
+          const sortFieldName = randomString();
+          query.ascending(sortFieldName);
+          return syncManager.pull(collection, query, options)
+            .then(() => {
+              const expectedQuery = new Query();
+              expectedQuery.limit = backendEntityCount - query.skip;
+              expectedQuery.ascending(sortFieldName);
+              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, expectedQuery.limit]);
+            });
+        });
+
         it('should reflect user query skip', () => {
           const query = new Query();
           query.skip = 123;
@@ -513,47 +526,6 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
               expectedQuery.limit = backendEntityCount - query.skip;
               expectedQuery.ascending(defaultSortField);
               validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, expectedQuery.limit]);
-            });
-        });
-
-        it('should reflect user query sort, when a skip is present', () => {
-          const query = new Query();
-          query.skip = 12;
-          const sortFieldName = randomString();
-          query.ascending(sortFieldName);
-          return syncManager.pull(collection, query, options)
-            .then(() => {
-              const expectedQuery = new Query();
-              expectedQuery.skip = query.skip;
-              expectedQuery.limit = backendEntityCount - query.skip;
-              expectedQuery.ascending(sortFieldName);
-              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, expectedQuery.limit]);
-            });
-        });
-
-        it('should reflect user query sort, when a limit is present', () => {
-          const query = new Query();
-          query.limit = 12;
-          const sortFieldName = randomString();
-          query.ascending(sortFieldName);
-          return syncManager.pull(collection, query, options)
-            .then(() => {
-              const expectedQuery = new Query();
-              expectedQuery.limit = query.limit;
-              expectedQuery.ascending(sortFieldName);
-              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, expectedQuery.limit]);
-            });
-        });
-
-        it('should not reflect user query sort, when no skip or limit is present', () => {
-          const query = new Query();
-          query.ascending(randomString());
-          return syncManager.pull(collection, query, options)
-            .then(() => {
-              const expectedQuery = new Query();
-              expectedQuery.limit = backendEntityCount;
-              expectedQuery.ascending(defaultSortField);
-              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, backendEntityCount]);
             });
         });
       });
