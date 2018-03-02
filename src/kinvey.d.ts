@@ -8,8 +8,8 @@ import {
 export namespace Kinvey {
   export let appVersion: string;
 
-  export function initialize(config: ClientConfig): Promise < User > ;
-  export function init(config: ClientConfig): Client;
+  export function initialize(config?: ClientConfig): Promise < User > ;
+  export function init(config?: ClientConfig): Client;
 
   interface PingResponse {
     version: string;
