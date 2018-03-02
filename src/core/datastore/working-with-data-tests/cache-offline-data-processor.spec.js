@@ -633,12 +633,13 @@ describe('CacheOfflineDataProcessor', () => {
           });
       });
 
-      it('should call OfflineRepo.delete()', () => {
-        return dataProcessor.process(operation, options)
-          .then(() => {
-            validateSpyCalls(offlineRepoMock.delete, 1, [collection, operation.query, options]);
-          });
-      });
+      it('should call OfflineRepo.delete()');
+      // , () => {
+      //   return dataProcessor.process(operation, options)
+      //     .then(() => {
+      //       validateSpyCalls(offlineRepoMock.delete, 1, [collection, operation.query, options]);
+      //     });
+      // });
     });
   });
 });
