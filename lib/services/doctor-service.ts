@@ -21,7 +21,16 @@ class DoctorService implements IDoctorService {
 
 	public async printWarnings(configOptions?: { trackResult: boolean }): Promise<boolean> {
 		const warnings = await doctor.getWarnings();
-		const hasWarnings = warnings.length > 0;
+		let hasWarnings = warnings.length > 0;
+
+		// Fixes the case when doctor is run on windows or linux and everything is setup correctly, {N} CLI prints "There seem to be issues with your configuration."
+		// https://github.com/NativeScript/nativescript-cli/issues/3413
+		// Temporary fix - should be removed after getInfo method is merged in nativescript-doctor package
+		if (!this.$hostInfo.isDarwin && warnings.length === 1 && this.isNoteTypeWarning(warnings[0])) {
+			this.$logger.out(warnings[0].warning);
+			this.$logger.out(warnings[0].additionalInformation);
+			hasWarnings = false;
+		}
 
 		const hasAndroidWarnings = warnings.filter(warning => _.includes(warning.platforms, constants.ANDROID_PLATFORM_NAME)).length > 0;
 		if (hasAndroidWarnings) {
@@ -34,7 +43,12 @@ class DoctorService implements IDoctorService {
 
 		if (hasWarnings) {
 			warnings.map(warning => {
-				this.$logger.warn(warning.warning);
+				if (this.isNoteTypeWarning(warning)) {
+					// Do not warn warning that starts with NOTE:
+					this.$logger.out(warning.warning);
+				} else {
+					this.$logger.warn(warning.warning);
+				}
 				this.$logger.out(warning.additionalInformation);
 			});
 
@@ -77,6 +91,10 @@ class DoctorService implements IDoctorService {
 		} else if (this.$hostInfo.isDarwin) {
 			this.$logger.out("TIP: To avoid setting up the necessary environment variables, you can use the Homebrew package manager to install the Android SDK and its dependencies." + EOL);
 		}
+	}
+
+	private isNoteTypeWarning(warning: NativeScriptDoctor.IWarning): boolean {
+		return warning.warning.startsWith("NOTE:");
 	}
 }
 $injector.register("doctorService", DoctorService);
