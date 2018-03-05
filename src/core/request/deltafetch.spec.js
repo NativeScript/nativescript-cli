@@ -123,7 +123,7 @@ describe('DeltaFetchRequest', () => {
       const store = new SyncStore(collection);
       return store.pull()
         .then((entities) => {
-          expect(entities).toEqual([entity1, entity2]);
+          expect(entities).toEqual(2);
         });
     });
 

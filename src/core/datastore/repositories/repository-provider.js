@@ -7,7 +7,7 @@ import { InmemoryOfflineRepository } from './offline-repositories';
 import { NetworkRepository } from './network-repository';
 import { StorageProvider } from './storage-provider';
 import { ensureArray } from '../../utils';
-import { InmemoryCrudQueue } from '../utils';
+import { PromiseQueueByKey } from '../utils';
 import { MemoryKeyValuePersister } from '../persisters';
 
 const testSupportCollection = '__testSupport__';
@@ -18,7 +18,7 @@ const inmemoryRepoBuilder = (queue) => {
 };
 
 // all inmemory instances should share the queue
-const queue = new InmemoryCrudQueue();
+const queue = new PromiseQueueByKey();
 let _chosenRepoPromise;
 
 let _availableStorages = {

@@ -59,6 +59,7 @@
       return networkStore.save(entity);
     }))
       .then(() => syncStore.pull())
+      .then(() => syncStore.find().toPromise())
       .then(result => _.sortBy(deleteEntityMetadata(result), '_id'));
   }
 
@@ -181,6 +182,11 @@
       .then(() => syncStore.clear());
   }
 
+  function cleanAndPopulateCollection(collectionName, entities) {
+    return cleanUpCollectionData(collectionName)
+      .then(() => saveEntities(collectionName, entities));
+  }
+
   function cleanUpAppData(collectionName, createdUserIds) {
     let currentUserId;
     return Kinvey.User.logout()
@@ -218,7 +224,8 @@
     validatePendingSyncCount,
     validateEntity,
     cleanUpCollectionData,
-    cleanUpAppData
+    cleanUpAppData,
+    cleanAndPopulateCollection
   };
 
   if (typeof module === 'object') {

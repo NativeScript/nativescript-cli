@@ -3,6 +3,9 @@ import { Html5HttpMiddleware } from '../../../src/html5/http';
 import { MobileIdentityConnect } from '../../../src/core/identity';
 import { Popup } from '../../../src/html5/popup';
 import pkg from '../package.json';
+import { setPlatformConfig, platformName } from '../../../src/core/platform-configs';
+
+setPlatformConfig(platformName.html5);
 
 // Setup racks
 NetworkRack.useHttpMiddleware(new Html5HttpMiddleware(pkg));
