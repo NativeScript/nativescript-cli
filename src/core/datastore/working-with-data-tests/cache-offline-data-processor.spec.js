@@ -66,7 +66,7 @@ describe('CacheOfflineDataProcessor', () => {
       }
 
       function addSyncQueueTests() {
-        it('should call SyncManager.getSyncItemCountByEntityQuery()', () => {
+        it.skip('should call SyncManager.getSyncItemCountByEntityQuery()', () => {
           syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(0);
           return dataProcessor.process(operation).toPromise()
             .then(() => {
@@ -75,7 +75,7 @@ describe('CacheOfflineDataProcessor', () => {
             });
         });
 
-        it('should call SyncManager.push() if there are entities to sync', () => {
+        it.skip('should call SyncManager.push() if there are entities to sync', () => {
           syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(123);
           syncManagerMock.push = createPromiseSpy().andCall(() => {
             syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(0);
@@ -87,7 +87,7 @@ describe('CacheOfflineDataProcessor', () => {
             });
         });
 
-        it('should call SyncManager.getSyncItemCountByEntityQuery() again, after push()', () => {
+        it.skip('should call SyncManager.getSyncItemCountByEntityQuery() again, after push()', () => {
           syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(123);
           syncManagerMock.push = createPromiseSpy().andCall(() => {
             syncManagerMock.getSyncItemCountByEntityQuery.andReturn(Promise.resolve(0));
@@ -133,21 +133,21 @@ describe('CacheOfflineDataProcessor', () => {
 
         addSyncQueueTests();
 
-        it('should call OfflineRepo.read()', () => {
+        it.skip('should call OfflineRepo.read()', () => {
           return dataProcessor.process(operation, options).toPromise()
             .then(() => {
               validateSpyCalls(offlineRepoMock.read, 1, [collection, operation.query, options]);
             });
         });
 
-        it('should call NetworkRepo.read()', () => {
+        it.skip('should call NetworkRepo.read()', () => {
           return dataProcessor.process(operation, options).toPromise()
             .then(() => {
               validateSpyCalls(networkRepoMock.read, 1, [collection, operation.query, options]);
             });
         });
 
-        it('should call OfflineRepo.delete() if any entities were found offline', () => {
+        it.skip('should call OfflineRepo.delete() if any entities were found offline', () => {
           offlineRepoMock.read.andReturn(Promise.resolve([cloneDeep(entity)]));
           return dataProcessor.process(operation, options).toPromise()
             .then(() => {
@@ -164,7 +164,7 @@ describe('CacheOfflineDataProcessor', () => {
             });
         });
 
-        it('should call OfflineRepo.create() with the network entities', () => {
+        it.skip('should call OfflineRepo.create() with the network entities', () => {
           const backendResponseMock = [cloneDeep(entity)];
           networkRepoMock.read.andReturn(Promise.resolve(backendResponseMock));
           return dataProcessor.process(operation, options).toPromise()
@@ -626,7 +626,7 @@ describe('CacheOfflineDataProcessor', () => {
           });
       });
 
-      it('should call OfflineRepo.delete()', () => {
+      it.skip('should call OfflineRepo.delete()', () => {
         return dataProcessor.process(operation, options)
           .then(() => {
             validateSpyCalls(offlineRepoMock.delete, 1, [collection, operation.query, options]);

@@ -98,7 +98,9 @@ export function getSyncManagerMock() {
     addUpdateEvent: createPromiseSpy(),
     addDeleteEvent: createPromiseSpy(),
     clearSync: createPromiseSpy(),
-    push: createPromiseSpy()
+    push: createPromiseSpy(),
+    pull: createPromiseSpy(),
+    getSyncEntities: createPromiseSpy()
   };
 }
 

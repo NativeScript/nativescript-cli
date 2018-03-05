@@ -1,7 +1,6 @@
 import { Promise } from 'es6-promise';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
-import assign from 'lodash/assign';
 
 import { KinveyError } from '../errors';
 import { Query } from '../query';
@@ -37,11 +36,6 @@ export class NetworkStore {
      * @type {Client}
      */
     this.client = options.client;
-
-    /**
-     * @type {boolean}
-     */
-    this.useDeltaFetch = options.useDeltaFetch === true;
   }
 
   /**
@@ -102,7 +96,6 @@ export class NetworkStore {
       return wrapInObservable(errPromise);
     }
 
-    options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
     const operation = this._buildOperationObject(OperationType.Read, query);
     const opPromise = this._executeOperation(operation, options);
     return this._ensureObservable(opPromise);

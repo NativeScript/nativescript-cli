@@ -23,7 +23,18 @@ export class CacheStore extends NetworkStore {
      * @type {number|undefined}
      */
     this.ttl = options.ttl || undefined;
+
+    /**
+     * @type {boolean}
+     */
+    this.useDeltaFetch = options.useDeltaFetch === true;
+
     this.syncManager = syncManagerProvider.getSyncManager();
+  }
+
+  find(query, options = {}) {
+    options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
+    return super.find(query, options);
   }
 
   /**
@@ -111,14 +122,7 @@ export class CacheStore extends NetworkStore {
    */
   pull(query, options = {}) {
     options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
-    return this.syncManager.getSyncItemCountByEntityQuery(this.collection, query)
-      .then((count) => {
-        if (count > 0) {
-          return this.syncManager.push(this.collection, query);
-        }
-        return Promise.resolve();
-      })
-      .then(() => this.syncManager.pull(this.collection, query, options));
+    return this.syncManager.pull(this.collection, query, options);
   }
 
   /**

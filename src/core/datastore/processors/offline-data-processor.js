@@ -6,9 +6,12 @@ import { repositoryProvider } from '../repositories';
 import { DataProcessor } from './data-processor';
 import { generateEntityId, isEmpty } from '../utils';
 import { ensureArray, isDefined } from '../../utils';
+import { Query } from '../../query';
 
 // imported for typings
 // import { SyncManager } from '../sync';
+
+const QUERY_CACHE_COLLECTION_NAME = '_QueryCache';
 
 export class OfflineDataProcessor extends DataProcessor {
   /** @type {SyncManager} */
@@ -65,6 +68,11 @@ export class OfflineDataProcessor extends DataProcessor {
   _processClear(collection, query, options) {
     return this._syncManager.clearSync(collection, query)
       .then(() => this._getRepository())
+      .then((repo) => {
+        const queryCacheQuery = new Query().equalTo('collectionName', collection);
+        return repo.delete(QUERY_CACHE_COLLECTION_NAME, queryCacheQuery, options)
+          .then(() => repo);
+      })
       .then(repo => repo.delete(collection, query, options));
   }
 
