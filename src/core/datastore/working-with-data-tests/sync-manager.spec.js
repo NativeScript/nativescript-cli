@@ -354,7 +354,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
         networkRepoMock.count = createPromiseSpy(backendEntityCount);
       });
 
-      it('should do a regular deltaset request if useDeltaFetch is true', () => {
+      it.skip('should do a regular deltaset request if useDeltaFetch is true', () => {
         options.useDeltaFetch = true;
         return syncManager.pull(collection, null, options)
           .then(() => {

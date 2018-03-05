@@ -8,6 +8,7 @@ import { KinveyError } from '../errors';
 import { randomString } from '../utils';
 import { init } from '../kinvey';
 import { User } from '../user';
+import { Query } from '../query';
 import { NodeHttpMiddleware } from '../../node/http';
 import { repositoryProvider } from '../datastore/repositories/repository-provider';
 
@@ -258,6 +259,100 @@ describe('DeltaFetchRequest', () => {
           nock(client.apiHostname)
             .get(`/appdata/${client.appKey}/${collection}/_deltaset`)
             .query({ since: requestStartDate2.toISOString() })
+            .reply(200, { changed: [entity2] }, {
+              'X-Kinvey-Request-Start': requestStartDate3.toISOString()
+            });
+
+          return thirdRequest.execute();
+        })
+        .then((response) => {
+          const { changed, deleted } = response.data;
+          expect(changed).toBeA(Array);
+          expect(changed).toEqual([entity2]);
+          expect(deleted).toBeA(Array);
+          expect(deleted).toEqual([]);
+        });
+    });
+
+    it('should send a delta set request with the correct since query parameter value when a query is provided', () => {
+      const entity1 = {
+        _id: randomString(),
+        _acl: {
+          creator: randomString()
+        },
+        _kmd: {
+          lmt: new Date().toISOString(),
+          ect: new Date().toISOString()
+        },
+        title: 'entity1'
+      };
+      const entity2 = {
+        _id: randomString(),
+        _acl: {
+          creator: randomString()
+        },
+        _kmd: {
+          lmt: new Date().toISOString(),
+          ect: new Date().toISOString()
+        },
+        title: 'entity2'
+      };
+      const requestStartDate1 = new Date();
+      const requestStartDate2 = new Date();
+      requestStartDate2.setSeconds(requestStartDate1.getSeconds() + 10);
+      const requestStartDate3 = new Date();
+      requestStartDate3.setSeconds(requestStartDate2.getSeconds() + 10);
+      const query = new Query().equalTo(randomString(), randomString());
+
+      const firstRequest = new DeltaFetchRequest({
+        method: RequestMethod.GET,
+        authType: AuthType.Default,
+        url: `${client.apiHostname}/appdata/${client.appKey}/${collection}`,
+        query: query,
+        client: client
+      });
+
+      // API response
+      nock(client.apiHostname)
+        .get(`/appdata/${client.appKey}/${collection}`)
+        .query(query.toQueryString())
+        .reply(200, [entity1], {
+          'X-Kinvey-Request-Start': requestStartDate1.toISOString()
+        });
+
+      return firstRequest.execute()
+        .then(() => {
+          const secondRequest = new DeltaFetchRequest({
+            method: RequestMethod.GET,
+            authType: AuthType.Default,
+            url: `${client.apiHostname}/appdata/${client.appKey}/${collection}`,
+            query: query,
+            client: client
+          });
+
+          // API response
+          nock(client.apiHostname)
+            .get(`/appdata/${client.appKey}/${collection}/_deltaset`)
+            .query(Object.assign({}, query.toQueryString(), { since: requestStartDate1.toISOString() }))
+            .reply(200, { changed: [entity2] }, {
+              'X-Kinvey-Request-Start': requestStartDate2.toISOString()
+            });
+
+          return secondRequest.execute();
+        })
+        .then(() => {
+          const thirdRequest = new DeltaFetchRequest({
+            method: RequestMethod.GET,
+            authType: AuthType.Default,
+            url: `${client.apiHostname}/appdata/${client.appKey}/${collection}`,
+            query: query,
+            client: client
+          });
+
+          // API response
+          nock(client.apiHostname)
+            .get(`/appdata/${client.appKey}/${collection}/_deltaset`)
+            .query(Object.assign({}, query.toQueryString(), { since: requestStartDate2.toISOString() }))
             .reply(200, { changed: [entity2] }, {
               'X-Kinvey-Request-Start': requestStartDate3.toISOString()
             });

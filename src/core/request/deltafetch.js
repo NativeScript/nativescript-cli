@@ -44,21 +44,15 @@ export class DeltaFetchRequest extends KinveyRequest {
     return repositoryProvider.getOfflineRepository()
       .then((repo) => {
         const collectionName = this._getCollectionFromUrl();
-        let queryCacheQuery = new Query()
+        const queryCacheQuery = new Query()
           .equalTo('collectionName', collectionName)
+          .equalTo('query', this.query ? this.query.toQueryString().query : undefined)
           .descending('lastRequest');
-
-        if (this.query) {
-          queryCacheQuery = queryCacheQuery
-            .and()
-            .equalTo('query', JSON.stringify(this.query.toQueryString().filter));
-        }
-
         return repo.read(QUERY_CACHE_COLLECTION_NAME, queryCacheQuery)
           .then((queries) => {
             let deltaSetQuery = {
               collectionName: this._getCollectionFromUrl(),
-              query: this.query ? JSON.stringify(this.query.toQueryString().filter) : null
+              query: this.query ? this.query.toQueryString().query : undefined
             };
             const request = new KinveyRequest({
               method: RequestMethod.GET,
@@ -77,10 +71,10 @@ export class DeltaFetchRequest extends KinveyRequest {
 
             if (isArray(queries) && queries.length > 0) {
               [deltaSetQuery] = queries;
-              request.url = urljoin(this.url, url.format({
+              request.url = urljoin(this.url.split('?')[0], url.format({
                 pathname: '_deltaset',
                 query: { since: deltaSetQuery.lastRequest }
-              }));
+              }), `?${this.url.split('?')[1] || ''}`);
             }
 
             return request.execute()

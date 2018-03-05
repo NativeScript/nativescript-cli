@@ -93,18 +93,15 @@ export class SyncManager {
               + ` There are ${count} entities that need to be synced.`)
           );
         }
-      
+
         // TODO: decide on default value of pagination setting
         if (options && (options.autoPagination && !options.useDeltaFetch)) {
           return this._paginatedPull(collection, query, options);
         }
 
-        return this._fetchItemsFromServer(collection, query, options);
+        return this._fetchItemsFromServer(collection, query, options)
+          .then(replacedEntities => replacedEntities.length);
       });
-
-//     return this._fetchItemsFromServer(collection, query, options)
-//       .then(entities => this._replaceOfflineEntities(collection, query, entities))
-//       .then(replacedEntities => replacedEntities.length);
   }
 
   getSyncItemCount(collection) {
@@ -167,7 +164,7 @@ export class SyncManager {
   removeSyncItemsForIds(collection, entityIds) {
     return this._syncStateManager.removeSyncItemsForIds(collection, entityIds);
   }
-  
+
   _deleteOfflineEntities(collection, query) {
     return this._getOfflineRepo()
       .then(repo => repo.delete(collection, query));
