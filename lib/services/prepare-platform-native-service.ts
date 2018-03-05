@@ -63,6 +63,7 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 	private copyAppResources(platformData: IPlatformData, projectData: IProjectData): void {
 		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 		const appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
+
 		if (this.$fs.exists(appResourcesDirectoryPath)) {
 			platformData.platformProjectService.prepareAppResources(appResourcesDirectoryPath, projectData);
 			const appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath(projectData);

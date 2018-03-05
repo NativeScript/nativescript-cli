@@ -13,7 +13,12 @@ export class AppFilesUpdater {
 
 	public updateApp(updateAppOptions: IUpdateAppOptions, projectData: IProjectData): void {
 		this.cleanDestinationApp(updateAppOptions);
-		const sourceFiles = updateAppOptions.filesToSync || this.resolveAppSourceFiles(projectData);
+		let sourceFiles = updateAppOptions.filesToSync || this.resolveAppSourceFiles(projectData);
+
+		// exclude the app_resources directory from being enumerated
+		// for copying if it is present in the application sources dir
+		const appResourcesPathNormalized = path.normalize(projectData.appResourcesDirectoryPath + "\\");
+		sourceFiles = sourceFiles.filter(dirName => !path.normalize(dirName).startsWith(appResourcesPathNormalized));
 
 		updateAppOptions.beforeCopyAction(sourceFiles);
 		this.copyAppSourceFiles(sourceFiles);
@@ -75,11 +80,6 @@ export class AppFilesUpdater {
 		if (this.options.release) {
 			constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => sourceFiles = sourceFiles.filter(file => !minimatch(file, pattern, { nocase: true })));
 		}
-
-		// exclude the app_resources directory from being enumerated
-		// for copying if it is present in the application sources dir
-		const appResourcesPathNormalized = path.normalize(projectData.appResourcesDirectoryPath);
-		sourceFiles = sourceFiles.filter(dirName => !path.normalize(dirName).startsWith(appResourcesPathNormalized));
 
 		return sourceFiles;
 	}

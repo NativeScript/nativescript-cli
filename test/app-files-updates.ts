@@ -7,7 +7,7 @@ require("should");
 function createTestInjector(): IInjector {
 	const testInjector = new yok.Yok();
 
-	testInjector.register("projectData", { appResourcesDirectoryPath: "App_Resources"});
+	testInjector.register("projectData", { appResourcesDirectoryPath: "App_Resources" });
 
 	return testInjector;
 }
@@ -71,7 +71,7 @@ describe("App files copy", () => {
 
 	it("copies all app files but app_resources when not bundling", () => {
 		const updater = new CopyAppFilesUpdater([
-			"file1", "dir1/file2", "App_Resources/Android/blah.png"
+			"file1", "dir1/file2"
 		], { bundle: false });
 		updater.copy();
 		assert.deepEqual(["file1", "dir1/file2"], updater.copiedDestinationItems);
