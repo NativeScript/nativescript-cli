@@ -32,20 +32,6 @@ describe("Plugin preparation", () => {
 		assert.deepEqual({}, pluginPrepare.preparedDependencies);
 	});
 
-	it("skips prepare if every plugin prepared", async () => {
-		const pluginPrepare = new TestNpmPluginPrepare({ "tns-core-modules-widgets": true });
-		const testDependencies: IDependencyData[] = [
-			{
-				name: "tns-core-modules-widgets",
-				depth: 0,
-				directory: "some dir",
-				nativescript: null,
-			}
-		];
-		await pluginPrepare.preparePlugins(testDependencies, "android", null, {});
-		assert.deepEqual({}, pluginPrepare.preparedDependencies);
-	});
-
 	it("saves prepared plugins after preparation", async () => {
 		const pluginPrepare = new TestNpmPluginPrepare({ "tns-core-modules-widgets": true });
 		const testDependencies: IDependencyData[] = [

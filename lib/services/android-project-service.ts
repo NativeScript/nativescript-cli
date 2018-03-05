@@ -436,15 +436,15 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin")
 				};
 
-				this.prebuildNativePlugin(options);
+				await this.prebuildNativePlugin(options);
 			}
 		}
 
 		// Do nothing, the Android Gradle script will configure itself based on the input dependencies.json
 	}
 
-	public async checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>> {
-		const detectedPlugins: Array<any> = [];
+	public async checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<{ platformsAndroidDirPath: string, pluginName: string }>> {
+		const detectedPlugins: Array<{ platformsAndroidDirPath: string, pluginName: string }> = [];
 
 		const platformsAndroid = path.join(constants.PLATFORMS_DIR_NAME, "android");
 		const pathToPlatformsAndroid = path.join(projectData.projectDir, platformsAndroid);
@@ -477,15 +477,15 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 							const currentItemStat = this.$fs.getFsStats(item);
 							if (currentItemStat.mtime > aarStat.mtime) {
 								detectedPlugins.push({
-									platformsAndroidDirPath: platformsAndroidDirPath,
-									pluginName: pluginName
+									platformsAndroidDirPath,
+									pluginName
 								});
 							}
 						});
 					} else if (nativeFiles.length > 0) {
 						detectedPlugins.push({
-							platformsAndroidDirPath: platformsAndroidDirPath,
-							pluginName: pluginName
+							platformsAndroidDirPath,
+							pluginName
 						});
 					}
 				}
@@ -494,7 +494,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return detectedPlugins;
 	}
 
-	private isAllowedFile(item: string) {
+	private isAllowedFile(item: string): boolean {
 		return item.endsWith(constants.MANIFEST_FILE_NAME) || item.endsWith(constants.RESOURCES_DIR);
 	}
 
