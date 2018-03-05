@@ -1,7 +1,6 @@
 import * as path from "path";
 import * as shell from "shelljs";
-
-const xml2js = require("xml2js");
+import { Builder, parseString } from "xml2js";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
@@ -17,11 +16,12 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			"xmlns:android": "http://schemas.android.com/apk/res/android"
 		}
 	};
-	private static ANDROID_PLUGIN_GRADLE_TEMPLATE = "gradle-plugin";
+	private static ANDROID_PLUGIN_GRADLE_TEMPLATE = "../../vendor/gradle-plugin";
 
 	private getAndroidSourceDirectories(source: string): Array<string> {
 		const directories = ["res", "java", "assets", "jniLibs"];
 		const resultArr: Array<string> = [];
+
 		this.$fs.enumerateFilesInDirectorySync(source, (file, stat) => {
 			if (stat.isDirectory() && _.some(directories, (element) => file.endsWith(element))) {
 				resultArr.push(file);
@@ -32,11 +32,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return resultArr;
 	}
 
-	private getManifest(platformsDir: string) {
-		const manifests = this.$fs
-			.readDirectory(platformsDir)
-			.filter(fileName => fileName === AndroidPluginBuildService.ANDROID_MANIFEST_XML);
-		return manifests.length > 0 ? path.join(platformsDir, manifests[0]) : null;
+	private getManifest(platformsDir: string): string {
+		const manifest = path.join(platformsDir, AndroidPluginBuildService.ANDROID_MANIFEST_XML);
+		return this.$fs.exists(manifest) ? manifest : null;
 	}
 
 	private getShortPluginName(pluginName: string): string {
@@ -68,26 +66,24 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 		newManifest.manifest["$"]["package"] = packageName;
 
-		const xmlBuilder = new xml2js.Builder();
+		const xmlBuilder = new Builder();
 		newManifestContent = xmlBuilder.buildObject(newManifest);
 
 		return newManifestContent;
 	}
 
-	private createManifestContent(packageName: string) {
+	private createManifestContent(packageName: string): string {
 		let newManifestContent;
 		const newManifest: any = { manifest: AndroidPluginBuildService.MANIFEST_ROOT };
 		newManifest.manifest["$"]["package"] = packageName;
-		const xmlBuilder: any = new xml2js.Builder();
+		const xmlBuilder: any = new Builder();
 		newManifestContent = xmlBuilder.buildObject(newManifest);
 
 		return newManifestContent;
 	}
 
-	private async getXml(stringContent: string) {
-		const parseString = xml2js.parseString;
-
-		const promise = new Promise((resolve, reject) =>
+	private async getXml(stringContent: string): Promise<any> {
+		const promise = new Promise<any>((resolve, reject) =>
 			parseString(stringContent, (err: any, result: any) => {
 				if (err) {
 					reject(err);
@@ -100,11 +96,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return promise;
 	}
 
-	private copyRecursive(source: string, destination: string) {
+	private copyRecursive(source: string, destination: string): void {
 		shell.cp("-R", source, destination);
 	}
 
-	private getIncludeGradleCompileDependenciesScope(includeGradleFileContent: string) {
+	private getIncludeGradleCompileDependenciesScope(includeGradleFileContent: string): Array<string> {
 		const indexOfDependenciesScope = includeGradleFileContent.indexOf("dependencies");
 		const result: Array<string> = [];
 
@@ -126,7 +122,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return result;
 	}
 
-	private getScope(scopeName: string, content: string) {
+	private getScope(scopeName: string, content: string): string {
 		const indexOfScopeName = content.indexOf(scopeName);
 		let result = "";
 		const OPENING_BRACKET = "{";
@@ -206,9 +202,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			if (manifestFilePath) {
 				let androidManifestContent;
 				try {
-					androidManifestContent = this.$fs.readFile(manifestFilePath).toString();
+					androidManifestContent = this.$fs.readText(manifestFilePath);
 				} catch (err) {
-					throw Error(
+					throw new Error(
 						`Failed to fs.readFileSync the manifest file located at ${manifestFilePath}`
 					);
 				}
@@ -223,7 +219,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			try {
 				this.$fs.writeFile(pathToNewAndroidManifest, updatedManifestContent);
 			} catch (e) {
-				throw Error(`Failed to write the updated AndroidManifest in the new location - ${pathToNewAndroidManifest}`);
+				throw new Error(`Failed to write the updated AndroidManifest in the new location - ${pathToNewAndroidManifest}`);
 			}
 
 			// copy all android sourceset directories to the new temporary plugin dir
@@ -241,18 +237,16 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			// copy the preconfigured gradle android library project template to the temporary android library
 			this.copyRecursive(path.join(path.resolve(path.join(__dirname, AndroidPluginBuildService.ANDROID_PLUGIN_GRADLE_TEMPLATE), "*")), newPluginDir);
 
-			// sometimes the AndroidManifest.xml or certain resources in /res may have a compile dependency to a lbirary referenced in include.gradle. Make sure to compile the plugin with a compile dependency to those libraries
+			// sometimes the AndroidManifest.xml or certain resources in /res may have a compile dependency to a library referenced in include.gradle. Make sure to compile the plugin with a compile dependency to those libraries
 			const includeGradlePath = path.join(options.platformsAndroidDirPath, "include.gradle");
 			if (this.$fs.exists(includeGradlePath)) {
-				const includeGradleContent = this.$fs.readFile(includeGradlePath)
-					.toString();
+				const includeGradleContent = this.$fs.readText(includeGradlePath);
 				const repositoriesAndDependenciesScopes = this.getIncludeGradleCompileDependenciesScope(includeGradleContent);
 
 				// dependencies { } object was found - append dependencies scope
 				if (repositoriesAndDependenciesScopes.length > 0) {
 					const buildGradlePath = path.join(newPluginDir, "build.gradle");
-					this.$fs.appendFile(buildGradlePath, "\n" + repositoriesAndDependenciesScopes.join("\n")
-					);
+					this.$fs.appendFile(buildGradlePath, "\n" + repositoriesAndDependenciesScopes.join("\n"));
 				}
 			}
 
@@ -277,7 +271,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			try {
 				await this.$childProcess.exec(localArgs.join(" "), { cwd: newPluginDir });
 			} catch (err) {
-				throw Error(`Failed to build plugin ${options.pluginName} : \n${err}`);
+				throw new Error(`Failed to build plugin ${options.pluginName} : \n${err}`);
 			}
 
 			const finalAarName = `${shortPluginName}-release.aar`;
@@ -289,12 +283,12 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 						this.copyRecursive(pathToBuiltAar, path.join(options.aarOutputDir, `${shortPluginName}.aar`));
 					}
 				} catch (e) {
-					throw Error(`Failed to copy built aar to destination. ${e.message}`);
+					throw new Error(`Failed to copy built aar to destination. ${e.message}`);
 				}
 
 				return true;
 			} else {
-				throw Error(`No built aar found at ${pathToBuiltAar}`);
+				throw new Error(`No built aar found at ${pathToBuiltAar}`);
 			}
 		}
 
@@ -315,7 +309,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			try {
 				includeGradleFileContent = this.$fs.readFile(includeGradleFilePath).toString();
 			} catch (err) {
-				throw Error(`Failed to fs.readFileSync the include.gradle file located at ${includeGradleFilePath}`);
+				throw new Error(`Failed to fs.readFileSync the include.gradle file located at ${includeGradleFilePath}`);
 			}
 
 			const productFlavorsScope = this.getScope("productFlavors", includeGradleFileContent);
@@ -325,14 +319,14 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				this.$fs.writeFile(includeGradleFilePath, newIncludeGradleFileContent);
 
 			} catch (e) {
-				throw Error(`Failed to write the updated include.gradle in - ${includeGradleFilePath}`);
+				throw new Error(`Failed to write the updated include.gradle in - ${includeGradleFilePath}`);
 			}
 		}
 	}
 
-	private validateOptions(options: IBuildOptions) {
+	private validateOptions(options: IBuildOptions): void {
 		if (!options) {
-			throw Error("Android plugin cannot be built without passing an 'options' object.");
+			throw new Error("Android plugin cannot be built without passing an 'options' object.");
 		}
 
 		if (!options.pluginName) {
@@ -344,19 +338,19 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 
 		if (!options.tempPluginDirPath) {
-			throw Error("Android plugin cannot be built without passing the path to a directory where the temporary project should be built.");
+			throw new Error("Android plugin cannot be built without passing the path to a directory where the temporary project should be built.");
 		}
 
 		this.validatePlatformsAndroidDirPathOption(options);
 	}
 
-	private validatePlatformsAndroidDirPathOption(options: IBuildOptions) {
+	private validatePlatformsAndroidDirPathOption(options: IBuildOptions): void {
 		if (!options) {
-			throw Error("Android plugin cannot be built without passing an 'options' object.");
+			throw new Error("Android plugin cannot be built without passing an 'options' object.");
 		}
 
 		if (!options.platformsAndroidDirPath) {
-			throw Error("Android plugin cannot be built without passing the path to the platforms/android dir.");
+			throw new Error("Android plugin cannot be built without passing the path to the platforms/android dir.");
 		}
 	}
 

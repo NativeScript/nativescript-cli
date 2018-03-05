@@ -75,8 +75,7 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 			$debugDataService,
 			$analyticsService,
 			$usbLiveSyncService,
-			$injector,
-			$platformsData
+			$injector
 		);
 	}
 
