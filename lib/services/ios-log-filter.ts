@@ -11,10 +11,9 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// Example:
 	// This: "May 24 15:54:52 Dragons-iPhone NativeScript250(NativeScript)[356] <Notice>: CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3477:36: ORIGINAL STACKTRACE:"
 	// Becomes: CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3477:36: ORIGINAL STACKTRACE:
-	protected infoFilterRegex =  new RegExp(`^.*(?:<Notice>:|<Error>:|<Warning>:|\\(NativeScript\\)|${this.appOutputRegex.source}:){1}`);
+	protected infoFilterRegex = new RegExp(`^.*(?:<Notice>:|<Error>:|<Warning>:|\\(NativeScript\\)|${this.appOutputRegex.source}:){1}`);
 
 	private filterActive: boolean = true;
-	private projectName: string;
 
 	private partialLine: string = null;
 
@@ -22,7 +21,6 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 		private $loggingLevels: Mobile.ILoggingLevels,
 		private $fs: IFileSystem,
 		private $projectData: IProjectData) {
-		this.projectName = this.$projectData.projectName;
 	}
 
 	public filterData(data: string, logLevel: string, pid?: string): string {
@@ -57,7 +55,10 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 
 			if (matchResult && matchResult.length > 1) {
 				// Check if the name of the app equals the name of the CLI project and turn on the filter if not.
-				this.filterActive = matchResult[1] !== this.projectName;
+				// We call initializeProjectData in order to obtain the current project name as the instance
+				// of this filter may be used accross multiple projects.
+				this.$projectData.initializeProjectData();
+				this.filterActive = matchResult[1] !== this.$projectData.projectName;
 			}
 
 			if (this.filterActive) {
@@ -76,11 +77,11 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 		return output.length === 0 ? null : output;
 	}
 
-	private preFilter(data:string, currentLine: string): boolean {
+	private preFilter(data: string, currentLine: string): boolean {
 		return currentLine.length < 1 ||
-				currentLine.indexOf("SecTaskCopyDebugDescription") !== -1 ||
-				currentLine.indexOf("NativeScript loaded bundle") !== -1 ||
-				(currentLine.indexOf("assertion failed:") !== -1 && data.indexOf("libxpc.dylib") !== -1);
+			currentLine.indexOf("SecTaskCopyDebugDescription") !== -1 ||
+			currentLine.indexOf("NativeScript loaded bundle") !== -1 ||
+			(currentLine.indexOf("assertion failed:") !== -1 && data.indexOf("libxpc.dylib") !== -1);
 	}
 
 	private getOriginalFileLocation(data: string): string {

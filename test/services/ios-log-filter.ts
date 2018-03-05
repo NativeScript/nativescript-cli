@@ -181,20 +181,20 @@ describe("iOSLogFilter", () => {
 			it(`returns correct data on iOS ${data.version} when data comes in chunks`, () => {
 				testInjector = createTestInjector(data.projectName);
 				logFilter = testInjector.resolve(IOSLogFilter);
-				
+
 				let currentStart = 0;
-				let maxRange = 50;
-				let output = ""
-				let input = data.originalDataArr.join("\n");
+				const maxRange = 50;
+				let output = "";
+				const input = data.originalDataArr.join("\n");
 				while (true) {
-					let currentRange = Math.floor(Math.random() * maxRange);
-					let currentFilterInput = input.substr(currentStart, currentRange);
-					let tempOutput = logFilter.filterData(currentFilterInput, infoLogLevel, null);
+					const currentRange = Math.floor(Math.random() * maxRange);
+					const currentFilterInput = input.substr(currentStart, currentRange);
+					const tempOutput = logFilter.filterData(currentFilterInput, infoLogLevel, null);
 					if (tempOutput !== null) {
 						output += tempOutput;
 					}
 					currentStart += currentRange;
-					if (currentStart == input.length) {
+					if (currentStart === input.length) {
 						break;
 					}
 					currentStart = Math.min(currentStart, input.length);
@@ -243,7 +243,7 @@ describe("iOSLogFilter", () => {
 				logFilter = testInjector.resolve(IOSLogFilter);
 				data.originalDataArr.forEach((line, index) => {
 					if (line.length > 0) {
-						line += "\n"
+						line += "\n";
 					}
 					const actualData = logFilter.filterData(line, infoLogLevel, null);
 					const expectedData = data.infoExpectedArr[index];
