@@ -1,2 +1,2 @@
 export * from './utils';
-export * from './inmemory-crud-queue';
+export * from './promise-queue-by-key';

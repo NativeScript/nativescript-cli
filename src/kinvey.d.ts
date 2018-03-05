@@ -7,9 +7,8 @@ import {
 
 export namespace Kinvey {
   export let appVersion: string;
-
-  export function initialize(config: ClientConfig): Promise < User > ;
-  export function init(config: ClientConfig): Client;
+  export function initialize(config?: ClientConfig): Promise<User> ;
+  export function init(config?: ClientConfig): Client;
 
   interface PingResponse {
     version: string;
@@ -18,26 +17,26 @@ export namespace Kinvey {
     environmentName: string;
   }
 
-  export function ping(): Promise < PingResponse > ;
+  export function ping(): Promise<PingResponse>;
 
   // Request Options interface
   interface RequestOptions {
-    properties ? : Properties;
-    timeout ? : number;
-    useDeltaFetch ? : boolean;
-    version ? : string;
-    micId? : string;
+    properties?: Properties;
+    timeout?: number;
+    useDeltaFetch?: boolean;
+    version?: string;
+    micId?: string;
   }
 
   // ClientConfig interface
   interface ClientConfig {
-    apiHostname ? : string;
-    micHostname ? : string;
+    apiHostname?: string;
+    micHostname?: string;
     appKey: string;
-    appSecret ? : string;
-    masterSecret ? : string;
-    encryptionKey ? : string;
-    defaultTimeout ? : number;
+    appSecret?: string;
+    masterSecret?: string;
+    encryptionKey?: string;
+    defaultTimeout?: number;
   }
 
   export namespace LiveService {
@@ -56,19 +55,19 @@ export namespace Kinvey {
     }
 
     interface PlainStreamACLObject {
-      _id ? : string;
-      publish ? : string[];
-      subscribe ? : string[];
-      groups ? : {
-        publish ? : string,
-        subscribe ? : string[]
+      _id?: string;
+      publish?: string[];
+      subscribe?: string[];
+      groups?: {
+        publish?: string,
+        subscribe?: string[]
       }
     }
 
     interface MessageReceiver {
-      onMessage ? : MessageHandler;
-      onStatus ? : StatusHandler;
-      onError ? : ErrorHandler;
+      onMessage?: MessageHandler;
+      onStatus?: StatusHandler;
+      onError?: ErrorHandler;
     }
 
     namespace Stream {
@@ -104,28 +103,28 @@ export namespace Kinvey {
 
       constructor(name: string);
 
-      getSubstreams(): Promise < {
+      getSubstreams(): Promise<{
         _id: string
-      } > ;
-      getACL(userId: string): Promise < PlainStreamACLObject > ;
-      setACL(userId: string, acl: PlainStreamACLObject | Stream.StreamACL): Promise < PlainStreamACLObject > ;
+      }>;
+      getACL(userId: string): Promise<PlainStreamACLObject>;
+      setACL(userId: string, acl: PlainStreamACLObject | Stream.StreamACL): Promise<PlainStreamACLObject>;
 
-      follow(userId: string, receiver: MessageReceiver): Promise < void > ;
-      unfollow(userId: string): Promise < void > ;
-      post(message: any): Promise < {
+      follow(userId: string, receiver: MessageReceiver): Promise<void>;
+      unfollow(userId: string): Promise<void>;
+      post(message: any): Promise<{
         timetoken: string
-      } > ;
+      }>;
 
-      listen(receiver: MessageReceiver): Promise < void > ;
-      stopListening(): Promise < void > ;
-      send(userId: string, message: any): Promise < {
+      listen(receiver: MessageReceiver): Promise<void>;
+      stopListening(): Promise<void>;
+      send(userId: string, message: any): Promise<{
         timetoken: string
-      } > ;
+      }>;
     }
 
     function onConnectionStatusUpdates(handler: StatusHandler): void;
 
-    function offConnectionStatusUpdates(handler ? : StatusHandler): void;
+    function offConnectionStatusUpdates(handler?: StatusHandler): void;
 
     function isInitialized(): boolean;
   }
@@ -179,11 +178,11 @@ export namespace Kinvey {
 
   // Aggregation class
   export class Aggregation {
-    constructor(options ? : {
-      query ? : Query
-      initial ? : {}
-      key ? : {}
-      reduceFn ? : () => any
+    constructor(options?: {
+      query?: Query
+      initial?: {}
+      key?: {}
+      reduceFn?: () => any
     })
     by(field: string): this;
     toJSON(): {
@@ -202,16 +201,16 @@ export namespace Kinvey {
   }
 
   // Group class
-  export class Group extends Aggregation {}
+  export class Group extends Aggregation { }
 
   // Custom Endpoint class
   export class CustomEndpoint {
-    static execute(endpoint: string, args ? : {}, options ? : RequestOptions): Promise < {} > ;
+    static execute(endpoint: string, args?: {}, options?: RequestOptions): Promise<{}>;
   }
 
   // Properties class
   export class Properties {
-    constructor(properties ? : {});
+    constructor(properties?: {});
     get(name: string): string | undefined;
     set(name: string, value: any): this;
     has(name: string): boolean;
@@ -238,18 +237,18 @@ export namespace Kinvey {
   }
 
   // Push Result interface
-  interface PushResult < T > {
+  interface PushResult<T> {
     _id: string;
     operation: SyncOperation;
-    entity ? : T;
-    error ? : BaseError;
+    entity?: T;
+    error?: BaseError;
   }
 
   // Entity interface
   export interface Entity {
     _id: string;
-    _acl ? : Acl;
-    _kmd ? : any;
+    _acl?: Acl;
+    _kmd?: any;
   }
 
   // SyncEntity interface
@@ -263,71 +262,71 @@ export namespace Kinvey {
 
   // DataStore class
   export abstract class DataStore {
-    static collection < T extends Entity > (collection: string, type ? : DataStoreType, options ? : {
-      client ? : Client;
-      ttl ? : number;
-      useDeltaFetch ? : boolean;
-    }): CacheStore < T > ;
-    static clearCache(options ? : RequestOptions): Promise < {} > ;
+    static collection<T extends Entity>(collection: string, type?: DataStoreType, options?: {
+      client?: Client;
+      ttl?: number;
+      useDeltaFetch?: boolean;
+    }): CacheStore<T>;
+    static clearCache(options?: RequestOptions): Promise<{}>;
   }
 
   // NetworkStore class
-  class NetworkStore < T extends Entity = Entity > {
+  class NetworkStore<T extends Entity = Entity> {
     protected constructor();
     client: Client;
     pathname: string;
     useDeltaFetch: boolean;
 
-    find(query ? : Query, options ? : RequestOptions): Observable < T[] > ;
-    findById(id: string, options ? : RequestOptions): Observable < T > ;
-    group(aggregation: Aggregation, options ? : RequestOptions): Observable < {} > ;
-    count(query ? : Query, options ? : RequestOptions): Observable < {
+    find(query?: Query, options?: RequestOptions): Observable<T[]>;
+    findById(id: string, options?: RequestOptions): Observable<T>;
+    group(aggregation: Aggregation, options?: RequestOptions): Observable<{}>;
+    count(query?: Query, options?: RequestOptions): Observable<{
       count: number
-    } > ;
-    create(entities: {}, options ? : RequestOptions): Promise < T > ;
-    update(entities: {}, options ? : RequestOptions): Promise < T > ;
-    save(entity: {}, options ? : RequestOptions): Promise < T > ;
-    remove(query ? : Query, options ? : RequestOptions): Promise < {
+    }>;
+    create(entities: {}, options?: RequestOptions): Promise<T>;
+    update(entities: {}, options?: RequestOptions): Promise<T>;
+    save(entity: {}, options?: RequestOptions): Promise<T>;
+    remove(query?: Query, options?: RequestOptions): Promise<{
       count: number
-    } > ;
-    removeById(id: string, options ? : RequestOptions): Promise < {
+    }>;
+    removeById(id: string, options?: RequestOptions): Promise<{
       count: number
-    } > ;
+    }>;
 
-    subscribe(receiver: LiveService.MessageReceiver): Promise < void > ;
-    unsubscribe(): Promise < void > ;
+    subscribe(receiver: LiveService.MessageReceiver): Promise<void>;
+    unsubscribe(): Promise<void>;
   }
 
   // CacheStore class
-  class CacheStore < T extends Entity = Entity > extends NetworkStore < T > {
-    clear(query ? : Query, options ? : RequestOptions): Promise < {
+  class CacheStore<T extends Entity = Entity> extends NetworkStore<T> {
+    clear(query?: Query, options?: RequestOptions): Promise<{
       count: number
-    } > ;
-    pendingSyncCount(query ? : Query, options ? : RequestOptions): Promise < {
+    }>;
+    pendingSyncCount(query?: Query, options?: RequestOptions): Promise<{
       count: number
-    } > ;
-    pendingSyncEntities(query ? : Query, options ? : RequestOptions): Promise < SyncEntity[] > ;
-    push(query ? : Query, options ? : RequestOptions): Promise < PushResult < T > [] > ;
-    pull(query ? : Query, options ? : RequestOptions): Promise < T[] > ;
-    sync(query ? : Query, options ? : RequestOptions): Promise < {
-      push: PushResult < T > [],
-      pull: T[]
-    } > ;
-    clearSync(query ? : Query, options ? : RequestOptions): Promise < {
+    }>;
+    pendingSyncEntities(query?: Query, options?: RequestOptions): Promise<SyncEntity[]>;
+    push(query?: Query, options?: RequestOptions): Promise<PushResult<T>[]>;
+    pull(query?: Query, options?: PullRequestOptions): Promise<number>;
+    sync(query?: Query, options?: PullRequestOptions): Promise<{
+      push: PushResult<T>[],
+      pull: number
+    }>;
+    clearSync(query?: Query, options?: RequestOptions): Promise<{
       count: number
-    } > ;
+    }>;
   }
 
   // SyncStore class
-  class SyncStore < T extends Entity = Entity > extends CacheStore < T > {}
+  class SyncStore<T extends Entity = Entity> extends CacheStore<T> { }
 
   // File Metadata interface
   interface FileMetadata {
-    _id ? : string;
-    filename ? : string;
-    mimeType ? : string;
-    public ? : boolean;
-    size ? : number;
+    _id?: string;
+    filename?: string;
+    mimeType?: string;
+    public?: boolean;
+    size?: number;
   }
 
   // File interface
@@ -343,22 +342,22 @@ export namespace Kinvey {
   // Files class
   export class Files {
     static useDeltaFetch: boolean;
-    static find < T extends File = File > (query ? : Query, options ? : RequestOptions): Promise < T[] > ;
-    static findById < T extends File = File > (id: string, options ? : RequestOptions): Promise < T > ;
-    static download < T extends File = File > (name: string, options ? : RequestOptions): Promise < T > ;
-    static downloadByUrl(url: string, options ? : RequestOptions): Promise < {} > ;
-    static stream < T extends File = File > (name: string, options ? : RequestOptions): Promise < T > ;
-    static group(aggregation: Aggregation, options ? : RequestOptions): Promise < {} > ;
-    static count(query ? : Query, options ? : RequestOptions): Promise < {
+    static find<T extends File = File>(query?: Query, options?: RequestOptions): Promise<T[]>;
+    static findById<T extends File = File>(id: string, options?: RequestOptions): Promise<T>;
+    static download<T extends File = File>(name: string, options?: RequestOptions): Promise<T>;
+    static downloadByUrl(url: string, options?: RequestOptions): Promise<{}>;
+    static stream<T extends File = File>(name: string, options?: RequestOptions): Promise<T>;
+    static group(aggregation: Aggregation, options?: RequestOptions): Promise<{}>;
+    static count(query?: Query, options?: RequestOptions): Promise<{
       count: number
-    } > ;
-    static upload < T extends File = File > (file: {}, metadata ? : FileMetadata, options ? : RequestOptions): Promise < T > ;
-    static remove(query ? : Query, options ? : RequestOptions): Promise < {
+    }>;
+    static upload<T extends File = File>(file: {}, metadata?: FileMetadata, options?: RequestOptions): Promise<T>;
+    static remove(query?: Query, options?: RequestOptions): Promise<{
       count: number
-    } > ;
-    static removeById(id: string, options ? : RequestOptions): Promise < {
+    }>;
+    static removeById(id: string, options?: RequestOptions): Promise<{
       count: number
-    } > ;
+    }>;
   }
 
   // Query class
@@ -368,12 +367,12 @@ export namespace Kinvey {
     sort: string;
     limit: number;
     skip: number;
-    constructor(options ? : {
-      fields ? : any[]
-      filter ? : {}
-      sort ? : string
-      limit ? : number
-      skip ? : number
+    constructor(options?: {
+      fields?: any[]
+      filter?: {}
+      sort?: string
+      limit?: number
+      skip?: number
     });
     isSupportedOffline(): boolean;
     equalTo(field: string, value: any): this;
@@ -385,13 +384,13 @@ export namespace Kinvey {
     lessThanOrEqualTo(field: string, value: number | string): this;
     notEqualTo(field: string, value: any): this;
     notContainedIn(field: string, values: any[]): this;
-    and(queries ? : {} | Query | {}[] | Query[]): this;
-    nor(queries ? : {} | Query | {}[] | Query[]): this;
-    or(queries ? : {} | Query | {}[] | Query[]): this;
+    and(queries?: {} | Query | {}[] | Query[]): this;
+    nor(queries?: {} | Query | {}[] | Query[]): this;
+    or(queries?: {} | Query | {}[] | Query[]): this;
     exists(field: string, flag: boolean): this;
     mod(field: string, divisor: number, remainder: number): this;
-    matches(field: string, regExp: string | RegExp, options ? : {}): this;
-    near(field: string, coord: number[], maxDistance ? : number): this;
+    matches(field: string, regExp: string | RegExp, options?: {}): this;
+    near(field: string, coord: number[], maxDistance?: number): this;
     withinBox(field: string, bottomLeftCoord: number, upperRightCoord: number): this;
     withinPolygon(field: string, coords: number[]): this;
     size(field: string, size: number): this;
@@ -399,10 +398,10 @@ export namespace Kinvey {
     descending(field: string): this;
     toPlainObject(): {
       fields: any[]
-      filter ? : {}
-      sort ? : string
-      limit ? : number
-      skip ? : number
+      filter?: {}
+      sort?: string
+      limit?: number
+      skip?: number
     };
     toQueryString(): {};
     toString(): string;
@@ -416,8 +415,8 @@ export namespace Kinvey {
 
   // User class
   export class User {
-    constructor(data ? : {}, options ? : {
-      client ? : Client
+    constructor(data?: {}, options?: {
+      client?: Client
     })
     data: {};
     _id: string | undefined;
@@ -431,39 +430,39 @@ export namespace Kinvey {
     pathname: string;
     isActive(): boolean;
     isEmailVerified(): boolean;
-    login(username: string, password: string): Promise < this > ;
-    static login(username: string, password: string): Promise < User > ;
-    loginWithMIC(redirectUri: string, authorizationGrant ? : AuthorizationGrant, options ? : RequestOptions): Promise < this > ;
-    static loginWithMIC(redirectUri: string, authorizationGrant ? : AuthorizationGrant, options ? : RequestOptions): Promise < User > ;
-    logout(options ? : RequestOptions): Promise < void > ;
-    static logout(options ? : RequestOptions): Promise < void > ;
-    signup(data ? : {}, options ? : RequestOptions): Promise < this > ;
-    static signup(data ? : {}, options ? : RequestOptions): Promise < User > ;
-    update(data: {}, options ? : RequestOptions): Promise < this > ;
-    static update(data: {}, options ? : RequestOptions): Promise < User > ;
-    me(options ? : RequestOptions): Promise < this > ;
-    static me(options ? : RequestOptions): Promise < User > ;
-    static verifyEmail(username: string, options ? : RequestOptions): Promise < {} > ;
-    static forgotUsername(email: string, options ? : RequestOptions): Promise < {} > ;
-    static resetPassword(username: string, options ? : RequestOptions): Promise < {} > ;
-    static lookup(query ? : Query, options ? : RequestOptions): Promise < {} > ;
-    static exists(username: string, options ? : RequestOptions): Promise < {} > ;
-    static getActiveUser(client ? : Client): User | null;
-    static registerForLiveService(): Promise < void > ;
-    static unregisterFromLiveService(): Promise < void > ;
-    registerForLiveService(): Promise < void > ;
-    unregisterFromLiveService(): Promise < void > ;
+    login(username: string, password: string): Promise<this>;
+    static login(username: string, password: string): Promise<User>;
+    loginWithMIC(redirectUri: string, authorizationGrant?: AuthorizationGrant, options?: RequestOptions): Promise<this>;
+    static loginWithMIC(redirectUri: string, authorizationGrant?: AuthorizationGrant, options?: RequestOptions): Promise<User>;
+    logout(options?: RequestOptions): Promise<void>;
+    static logout(options?: RequestOptions): Promise<void>;
+    signup(data?: {}, options?: RequestOptions): Promise<this>;
+    static signup(data?: {}, options?: RequestOptions): Promise<User>;
+    update(data: {}, options?: RequestOptions): Promise<this>;
+    static update(data: {}, options?: RequestOptions): Promise<User>;
+    me(options?: RequestOptions): Promise<this>;
+    static me(options?: RequestOptions): Promise<User>;
+    static verifyEmail(username: string, options?: RequestOptions): Promise<{}>;
+    static forgotUsername(email: string, options?: RequestOptions): Promise<{}>;
+    static resetPassword(username: string, options?: RequestOptions): Promise<{}>;
+    static lookup(query?: Query, options?: RequestOptions): Promise<{}>;
+    static exists(username: string, options?: RequestOptions): Promise<{}>;
+    static getActiveUser(client?: Client): User | null;
+    static registerForLiveService(): Promise<void>;
+    static unregisterFromLiveService(): Promise<void>;
+    registerForLiveService(): Promise<void>;
+    unregisterFromLiveService(): Promise<void>;
   }
 
   // PushOptions interface
   interface PushOptions {
-    android ? : {
+    android?: {
       senderID: string
     };
-    ios ? : {
-      alert ? : boolean,
-      badge ? : boolean,
-      sound ? : boolean
+    ios?: {
+      alert?: boolean,
+      badge?: boolean,
+      sound?: boolean
     };
   }
 
@@ -475,8 +474,8 @@ export namespace Kinvey {
     static isSupported(): boolean;
     static onNotification(listener: (notifaction: any) => void);
     static onceNotification(listener: (notifaction: any) => void);
-    static register(options: PushOptions): Promise < string > ;
-    static unregister(): Promise < null > ;
+    static register(options: PushOptions): Promise<string>;
+    static unregister(): Promise<null>;
   }
 
   // Error classes
@@ -489,41 +488,41 @@ export namespace Kinvey {
     stack: string;
     constructor(message: string, debug: string, code: number, kinveyRequestId: string);
   }
-  export class ActiveUserError extends BaseError {}
-  export class ApiVersionNotAvailableError extends BaseError {}
-  export class ApiVersionNotImplemented extends BaseError {}
-  export class AppPromblemError extends BaseError {}
-  export class BadRequestError extends BaseError {}
-  export class BusinessLogicError extends BaseError {}
-  export class CORSDisabledError extends BaseError {}
-  export class DuplicateEndUsersError extends BaseError {}
-  export class FeatureUnavailableError extends BaseError {}
-  export class IncompleteRequestBodyError extends BaseError {}
-  export class IndirectCollectionAccessDisallowedError extends BaseError {}
-  export class InsufficientCredentialsError extends BaseError {}
-  export class InvalidCredentialsError extends BaseError {}
-  export class InvalidIdentifierError extends BaseError {}
-  export class InvalidQuerySyntaxError extends BaseError {}
-  export class JSONParseError extends BaseError {}
-  export class KinveyError extends BaseError {}
-  export class KinveyInternalErrorRetry extends BaseError {}
-  export class KinveyInternalErrorStop extends BaseError {}
-  export class MissingQueryError extends BaseError {}
-  export class MissingRequestHeaderError extends BaseError {}
-  export class MobileIdentityConnectError extends BaseError {}
-  export class NetworkConnectionError extends BaseError {}
-  export class NoActiveUserError extends BaseError {}
-  export class NoResponseError extends BaseError {}
-  export class NotFoundError extends BaseError {}
-  export class ParameterValueOutOfRangeError extends BaseError {}
-  export class PopupError extends BaseError {}
-  export class QueryError extends BaseError {}
-  export class ServerError extends BaseError {}
-  export class StaleRequestError extends BaseError {}
-  export class SyncError extends BaseError {}
-  export class TimeoutError extends BaseError {}
-  export class UserAlreadyExistsError extends BaseError {}
-  export class WritesToCollectionDisallowedError extends BaseError {}
+  export class ActiveUserError extends BaseError { }
+  export class ApiVersionNotAvailableError extends BaseError { }
+  export class ApiVersionNotImplemented extends BaseError { }
+  export class AppPromblemError extends BaseError { }
+  export class BadRequestError extends BaseError { }
+  export class BusinessLogicError extends BaseError { }
+  export class CORSDisabledError extends BaseError { }
+  export class DuplicateEndUsersError extends BaseError { }
+  export class FeatureUnavailableError extends BaseError { }
+  export class IncompleteRequestBodyError extends BaseError { }
+  export class IndirectCollectionAccessDisallowedError extends BaseError { }
+  export class InsufficientCredentialsError extends BaseError { }
+  export class InvalidCredentialsError extends BaseError { }
+  export class InvalidIdentifierError extends BaseError { }
+  export class InvalidQuerySyntaxError extends BaseError { }
+  export class JSONParseError extends BaseError { }
+  export class KinveyError extends BaseError { }
+  export class KinveyInternalErrorRetry extends BaseError { }
+  export class KinveyInternalErrorStop extends BaseError { }
+  export class MissingQueryError extends BaseError { }
+  export class MissingRequestHeaderError extends BaseError { }
+  export class MobileIdentityConnectError extends BaseError { }
+  export class NetworkConnectionError extends BaseError { }
+  export class NoActiveUserError extends BaseError { }
+  export class NoResponseError extends BaseError { }
+  export class NotFoundError extends BaseError { }
+  export class ParameterValueOutOfRangeError extends BaseError { }
+  export class PopupError extends BaseError { }
+  export class QueryError extends BaseError { }
+  export class ServerError extends BaseError { }
+  export class StaleRequestError extends BaseError { }
+  export class SyncError extends BaseError { }
+  export class TimeoutError extends BaseError { }
+  export class UserAlreadyExistsError extends BaseError { }
+  export class WritesToCollectionDisallowedError extends BaseError { }
 }
 
 export let appVersion: string;
@@ -779,6 +778,12 @@ interface SyncEntity extends Entity {
   entityId: string;
 }
 
+interface PullRequestOptions {
+  timeout?: number,
+  useDeltaFetch?: boolean,
+  autoPagination?: boolean | { pageSize?: number }
+}
+
 // DataStore class
 export abstract class DataStore {
   static collection<T extends Entity>(collection: string, type?: DataStoreType, options?: {
@@ -820,10 +825,10 @@ declare class CacheStore<T extends Entity = Entity> extends NetworkStore<T> {
   }>;
   pendingSyncEntities(query?: Query, options?: RequestOptions): Promise<SyncEntity[]>;
   push(query?: Query, options?: RequestOptions): Promise<PushResult<T>[]>;
-  pull(query?: Query, options?: RequestOptions): Promise<T[]>;
-  sync(query?: Query, options?: RequestOptions): Promise<{
+  pull(query?: Query, options?: PullRequestOptions): Promise<number>;
+  sync(query?: Query, options?: PullRequestOptions): Promise<{
     push: PushResult<T>[],
-    pull: T[]
+    pull: number
   }>;
   clearSync(query?: Query, options?: RequestOptions): Promise<{
     count: number
@@ -947,8 +952,8 @@ export class User {
   static loginWithMIC(redirectUri: string, authorizationGrant?: AuthorizationGrant, options?: RequestOptions): Promise<User>;
   logout(options?: RequestOptions): Promise<void>;
   static logout(options?: RequestOptions): Promise<void>;
-  signup(data ? : {}, options?: RequestOptions): Promise<this>;
-  static signup(data ?: {}, options?: RequestOptions): Promise<User>;
+  signup(data?: {}, options?: RequestOptions): Promise<this>;
+  static signup(data?: {}, options?: RequestOptions): Promise<User>;
   update(data: {}, options?: RequestOptions): Promise<this>;
   static update(data: {}, options?: RequestOptions): Promise<User>;
   me(options?: RequestOptions): Promise<this>;

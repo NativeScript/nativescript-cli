@@ -5,16 +5,26 @@ import isArray from 'lodash/isArray';
 import { Log } from '../../log';
 import { KinveyError, NotFoundError, SyncError } from '../../errors';
 
-import { PromiseQueue, ensureArray, forEachAsync, isNonemptyString } from '../../utils';
+import { getPlatformConfig } from '../../platform-configs';
 import { SyncOperation } from './sync-operation';
-import { syncBatchSize } from './utils';
+import { maxEntityLimit, defaultPullSortField } from './utils';
 import { isEmpty } from '../utils';
 import { repositoryProvider } from '../repositories';
 import { Query } from '../../query';
+import {
+  ensureArray,
+  isNonemptyString,
+  forEachAsync,
+  splitQueryIntoPages
+} from '../../utils';
 
 // imported for typings
 // import { SyncStateManager } from './sync-state-manager';
 
+const {
+  maxConcurrentPullRequests: maxConcurrentPulls,
+  maxConcurrentPushRequests: maxConcurrentPushes,
+} = getPlatformConfig();
 const pushTrackingByCollection = {};
 
 export class SyncManager {
@@ -83,9 +93,18 @@ export class SyncManager {
               + ` There are ${count} entities that need to be synced.`)
           );
         }
+      
+        // TODO: decide on default value of pagination setting
+        if (options && (options.autoPagination && !options.useDeltaFetch)) {
+          return this._paginatedPull(collection, query, options);
+        }
 
         return this._fetchItemsFromServer(collection, query, options);
       });
+
+//     return this._fetchItemsFromServer(collection, query, options)
+//       .then(entities => this._replaceOfflineEntities(collection, query, entities))
+//       .then(replacedEntities => replacedEntities.length);
   }
 
   getSyncItemCount(collection) {
@@ -128,7 +147,7 @@ export class SyncManager {
     return this._syncStateManager.removeAllSyncItems(collection);
   }
 
-  // for syncstatemanager
+  // for SyncStateManager
   addCreateEvent(collection, createdItems) {
     return this._addEvent(collection, createdItems, SyncOperation.Create);
   }
@@ -148,14 +167,18 @@ export class SyncManager {
   removeSyncItemsForIds(collection, entityIds) {
     return this._syncStateManager.removeSyncItemsForIds(collection, entityIds);
   }
-
-  _deleteOfflineEntities(collection, deleteOfflineQuery) {
+  
+  _deleteOfflineEntities(collection, query) {
     return this._getOfflineRepo()
-      .then((repo) => {
-        // TODO: this can potentially be deleteOfflineQuery.and().notIn(networkEntitiesIds)
-        // but inmemory filtering with this filter seems to take too long
-        return repo.delete(collection, deleteOfflineQuery);
-      });
+      .then(repo => repo.delete(collection, query));
+  }
+
+  _replaceOfflineEntities(collection, deleteOfflineQuery, networkEntities = []) {
+    // TODO: this can potentially be deleteOfflineQuery.and().notIn(networkEntitiesIds)
+    // but inmemory filtering with this filter seems to take too long
+    return this._deleteOfflineEntities(collection, deleteOfflineQuery)
+      .then(() => this._getOfflineRepo())
+      .then(repo => repo.update(collection, networkEntities));
   }
 
   _updateOfflineEntities(collection, networkEntities = []) {
@@ -288,15 +311,11 @@ export class SyncManager {
   }
 
   _processSyncItems(collection, syncItems) {
-    const queue = new PromiseQueue(syncBatchSize);
     const pushResults = [];
-
     return forEachAsync(syncItems, (syncItem) => {
-      return queue.enqueue(() => {
-        return this._processSyncItem(collection, syncItem) // never rejects
-          .then(pushResult => pushResults.push(pushResult));
-      });
-    })
+      return this._processSyncItem(collection, syncItem) // never rejects
+        .then(pushResult => pushResults.push(pushResult));
+    }, maxConcurrentPushes)
       .then(() => pushResults);
   }
 
@@ -348,7 +367,7 @@ export class SyncManager {
     if (this._pushIsInProgress(collection)) {
       delete pushTrackingByCollection[collection];
     } else {
-      Log.debug('Marking push en, when push is NOT started');
+      Log.debug('Marking push end, when push is NOT started');
     }
   }
 
@@ -393,5 +412,62 @@ export class SyncManager {
       default:
         return Promise.reject(new SyncError('Invalid sync event name'));
     }
+  }
+
+  _getInternalPullQuery(userQuery, totalCount) {
+    userQuery = userQuery || {};
+    const { filter, sort, fields, skip } = userQuery;
+    const query = new Query({ filter, sort, fields, skip });
+    query.limit = totalCount;
+
+    if (!sort || isEmpty(sort)) {
+      query.sort = { [defaultPullSortField]: 1 };
+    }
+    return query;
+  }
+
+  _fetchAndUpdateEntities(collection, query, options) {
+    return this._networkRepo.read(collection, query, options)
+      .then((entities) => {
+        return this._getOfflineRepo()
+          .then(repo => repo.update(collection, entities));
+      });
+  }
+
+  _executePaginationQueries(collection, queries, options) {
+    let pulledEntityCount = 0;
+    return forEachAsync(queries, (query) => {
+      return this._fetchAndUpdateEntities(collection, query, options)
+        .then((updatedEntities) => {
+          pulledEntityCount += updatedEntities.length;
+        });
+    }, maxConcurrentPulls)
+      .then(() => pulledEntityCount);
+  }
+
+  _getExpectedEntityCount(collection, userQuery) {
+    const countQuery = new Query({ filter: userQuery.filter });
+    return this._networkRepo.count(collection, countQuery)
+      .then(totalCount => {
+        return Math.min(totalCount - userQuery.skip, userQuery.limit || Infinity);
+      });
+  }
+
+  _paginatedPull(collection, userQuery, options = {}) {
+    let pullQuery;
+    let expectedCount;
+    userQuery = userQuery || new Query();
+    return this._getExpectedEntityCount(collection, userQuery)
+      .then((count) => {
+        expectedCount = count;
+        pullQuery = this._getInternalPullQuery(userQuery, expectedCount);
+        return this._deleteOfflineEntities(collection, pullQuery);
+      })
+      .then(() => {
+        const pageSizeSetting = options.autoPagination && options.autoPagination.pageSize;
+        const pageSize = pageSizeSetting || maxEntityLimit;
+        const paginatedQueries = splitQueryIntoPages(pullQuery, pageSize, expectedCount);
+        return this._executePaginationQueries(collection, paginatedQueries, options);
+      });
   }
 }

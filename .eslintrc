@@ -36,6 +36,16 @@
       "error",
       "methods"
     ],
+    "object-curly-newline": [ "error", {
+      "ObjectExpression": {
+        "minProperties": 5,
+        "consistent": true
+      },
+      "ObjectPattern": {
+        "minProperties": 5,
+        "consistent": true
+      }
+    }],
     "space-before-function-paren": "off"
   }
 }

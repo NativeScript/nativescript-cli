@@ -48,11 +48,7 @@ function testFunc() {
 
   // validates Pull operation result
   const validatePullOperation = (result, expectedItems, expectedPulledItemsCount) => {
-    expect(result.length).to.equal(expectedPulledItemsCount || expectedItems.length);
-    expectedItems.forEach((entity) => {
-      const resultEntity = _.find(result, e => e._id === entity._id);
-      expect(utilities.deleteEntityMetadata(resultEntity)).to.deep.equal(entity);
-    });
+    expect(result).to.equal(expectedPulledItemsCount || expectedItems.length);
 
     return syncStore.find().toPromise()
       .then((result) => {

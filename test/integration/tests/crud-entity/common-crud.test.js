@@ -204,8 +204,7 @@ function testFunc() {
             entities.push(utilities.getEntity());
           }
 
-          utilities.cleanUpCollectionData(collectionName)
-            .then(() => utilities.saveEntities(collectionName, entities))
+          utilities.cleanAndPopulateCollection(collectionName, entities)
             .then((result) => {
               entities = result;
               done();
@@ -307,8 +306,7 @@ function testFunc() {
           entities[dataCount - 1][arrayFieldName] = [];
           entities[dataCount - 2][arrayFieldName] = [{}, {}];
 
-          utilities.cleanUpCollectionData(collectionName)
-            .then(() => utilities.saveEntities(collectionName, entities))
+          utilities.cleanAndPopulateCollection(collectionName, entities)
             .then((result) => {
               entities = _.sortBy(result, numberFieldName);
               done();
@@ -949,8 +947,7 @@ function testFunc() {
 
       describe('save/create/update operations', () => {
         before((done) => {
-          utilities.cleanUpCollectionData(collectionName)
-            .then(() => utilities.saveEntities(collectionName, [entity1, entity2]))
+          utilities.cleanAndPopulateCollection(collectionName, [entity1, entity2])
             .then(() => done())
             .catch(done);
         });
@@ -1154,10 +1151,7 @@ function testFunc() {
 
       describe('destroy operations', () => {
         before((done) => {
-          utilities.cleanUpCollectionData(collectionName)
-            .then(() => {
-              return utilities.saveEntities(collectionName, [entity1, entity2]);
-            })
+          utilities.cleanAndPopulateCollection(collectionName, [entity1, entity2])
             .then(() => done())
             .catch(done);
         });

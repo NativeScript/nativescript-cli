@@ -94,7 +94,6 @@ describe('DeltaFetchRequest', () => {
   describe('execute()', () => {
     it('should send a regular GET request when a delta set request has never been performed', () => {
       const entity1 = { _id: randomString() };
-
       const request = new DeltaFetchRequest({
         method: RequestMethod.GET,
         authType: AuthType.Default,
