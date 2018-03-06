@@ -290,8 +290,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	@hook('watchPatterns')
-	public async getWatcherPatterns(liveSyncData: ILiveSyncInfo, projectData: IProjectData): Promise<string[]> {
-		// liveSyncData is used by plugins that make use of the watchPatterns hook
+	public async getWatcherPatterns(liveSyncData: ILiveSyncInfo, projectData: IProjectData, platforms: string[]): Promise<string[]> {
+		// liveSyncData and platforms are used by plugins that make use of the watchPatterns hook
 		return [projectData.getAppDirectoryRelativePath(), projectData.getAppResourcesRelativeDirectoryPath()];
 	}
 
@@ -525,7 +525,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	private async startWatcher(projectData: IProjectData, liveSyncData: ILiveSyncInfo, platforms: string[]): Promise<void> {
-		const patterns = await this.getWatcherPatterns(liveSyncData, projectData);
+		const patterns = await this.getWatcherPatterns(liveSyncData, projectData, platforms);
 
 		if (liveSyncData.watchAllFiles) {
 			const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
