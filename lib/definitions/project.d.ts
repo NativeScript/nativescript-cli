@@ -140,7 +140,10 @@ interface IPlatformProjectServiceBase {
 
 interface IBuildForDevice {
 	buildForDevice: boolean;
-	release: boolean;
+}
+
+interface IShouldInstall extends IBuildForDevice, IRelease {
+	
 }
 
 interface INativePrepare {

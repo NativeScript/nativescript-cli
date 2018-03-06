@@ -71,7 +71,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				platformProjectService: this,
 				emulatorServices: this.$iOSEmulatorServices,
 				projectRoot: projectRoot,
-				deviceBuildOutputPath: (options: IRelease): string => {
+				getDeviceBuildOutputPath: (options: IRelease): string => {
 					return path.join(projectRoot, "build", "device");
 				},
 				emulatorBuildOutputPath: path.join(projectRoot, "build", "emulator"),

@@ -83,7 +83,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				platformProjectService: this,
 				emulatorServices: this.$androidEmulatorServices,
 				projectRoot: projectRoot,
-				deviceBuildOutputPath: (options: IRelease): string => {
+				getDeviceBuildOutputPath: (options: IRelease): string => {
 					return this.getDeviceBuildOutputPath(path.join(...deviceBuildOutputArr), projectData, options);
 				},
 				getValidPackageNames: (buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[] => {
