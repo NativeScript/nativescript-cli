@@ -1,16 +1,16 @@
 import * as path from "path";
-import * as shell from "shelljs";
+import { MANIFEST_FILE_NAME, INCLUDE_GRADLE_NAME, ASSETS_DIR, RESOURCES_DIR } from "../constants";
 import { Builder, parseString } from "xml2js";
+import { ILogger } from "log4js";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 	constructor(private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
 		private $hostInfo: IHostInfo,
-		private $androidToolsInfo: IAndroidToolsInfo) { }
+		private $androidToolsInfo: IAndroidToolsInfo,
+		private $logger: ILogger) { }
 
-	private static ANDROID_MANIFEST_XML = "AndroidManifest.xml";
-	private static INCLUDE_GRADLE = "include.gradle";
 	private static MANIFEST_ROOT = {
 		$: {
 			"xmlns:android": "http://schemas.android.com/apk/res/android"
@@ -19,7 +19,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private static ANDROID_PLUGIN_GRADLE_TEMPLATE = "../../vendor/gradle-plugin";
 
 	private getAndroidSourceDirectories(source: string): Array<string> {
-		const directories = ["res", "java", "assets", "jniLibs"];
+		const directories = [RESOURCES_DIR, "java", ASSETS_DIR, "jniLibs"];
 		const resultArr: Array<string> = [];
 
 		this.$fs.enumerateFilesInDirectorySync(source, (file, stat) => {
@@ -33,7 +33,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	}
 
 	private getManifest(platformsDir: string): string {
-		const manifest = path.join(platformsDir, AndroidPluginBuildService.ANDROID_MANIFEST_XML);
+		const manifest = path.join(platformsDir, MANIFEST_FILE_NAME);
 		return this.$fs.exists(manifest) ? manifest : null;
 	}
 
@@ -42,10 +42,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	}
 
 	private async updateManifestContent(oldManifestContent: string, defaultPackageName: string): Promise<string> {
-		const content = oldManifestContent;
-		let newManifestContent;
-
-		let xml: any = await this.getXml(content);
+		let xml: any = await this.getXml(oldManifestContent);
 
 		let packageName = defaultPackageName;
 		// if the manifest file is full-featured and declares settings inside the manifest scope
@@ -67,17 +64,16 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		newManifest.manifest["$"]["package"] = packageName;
 
 		const xmlBuilder = new Builder();
-		newManifestContent = xmlBuilder.buildObject(newManifest);
+		const newManifestContent = xmlBuilder.buildObject(newManifest);
 
 		return newManifestContent;
 	}
 
 	private createManifestContent(packageName: string): string {
-		let newManifestContent;
 		const newManifest: any = { manifest: AndroidPluginBuildService.MANIFEST_ROOT };
 		newManifest.manifest["$"]["package"] = packageName;
 		const xmlBuilder: any = new Builder();
-		newManifestContent = xmlBuilder.buildObject(newManifest);
+		const newManifestContent = xmlBuilder.buildObject(newManifest);
 
 		return newManifestContent;
 	}
@@ -94,10 +90,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		);
 
 		return promise;
-	}
-
-	private copyRecursive(source: string, destination: string): void {
-		shell.cp("-R", source, destination);
 	}
 
 	private getIncludeGradleCompileDependenciesScope(includeGradleFileContent: string): Array<string> {
@@ -125,15 +117,15 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private getScope(scopeName: string, content: string): string {
 		const indexOfScopeName = content.indexOf(scopeName);
 		let result = "";
-		const OPENING_BRACKET = "{";
-		const CLOSING_BRACKET = "}";
+		const openingBracket = "{";
+		const closingBracket = "}";
 		let openBrackets = 0;
 		let foundFirstBracket = false;
 
 		let i = indexOfScopeName;
 		while (i < content.length) {
 			const currCharacter = content[i];
-			if (currCharacter === OPENING_BRACKET) {
+			if (currCharacter === openingBracket) {
 				if (openBrackets === 0) {
 					foundFirstBracket = true;
 				}
@@ -141,7 +133,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				openBrackets++;
 			}
 
-			if (currCharacter === CLOSING_BRACKET) {
+			if (currCharacter === closingBracket) {
 				openBrackets--;
 			}
 
@@ -180,7 +172,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		// find manifest file
 		//// prepare manifest file content
 		const manifestFilePath = this.getManifest(options.platformsAndroidDirPath);
-		let updatedManifestContent;
 		let shouldBuildAar = false;
 
 		// look for AndroidManifest.xml
@@ -197,6 +188,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 		// if a manifest OR/AND resource files are present - write files, build plugin
 		if (shouldBuildAar) {
+			let updatedManifestContent;
 			this.$fs.ensureDirectoryExists(newPluginMainSrcDir);
 
 			if (manifestFilePath) {
@@ -215,7 +207,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			}
 
 			// write the AndroidManifest in the temp-dir/plugin-name/src/main
-			const pathToNewAndroidManifest = path.join(newPluginMainSrcDir, AndroidPluginBuildService.ANDROID_MANIFEST_XML);
+			const pathToNewAndroidManifest = path.join(newPluginMainSrcDir, MANIFEST_FILE_NAME);
 			try {
 				this.$fs.writeFile(pathToNewAndroidManifest, updatedManifestContent);
 			} catch (e) {
@@ -231,14 +223,14 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				const destination = path.join(newPluginMainSrcDir, dirName);
 				this.$fs.ensureDirectoryExists(destination);
 
-				this.copyRecursive(path.join(dir, "*"), destination);
+				this.$fs.copyFile(path.join(dir, "*"), destination);
 			}
 
 			// copy the preconfigured gradle android library project template to the temporary android library
-			this.copyRecursive(path.join(path.resolve(path.join(__dirname, AndroidPluginBuildService.ANDROID_PLUGIN_GRADLE_TEMPLATE), "*")), newPluginDir);
+			this.$fs.copyFile(path.join(path.resolve(path.join(__dirname, AndroidPluginBuildService.ANDROID_PLUGIN_GRADLE_TEMPLATE), "*")), newPluginDir);
 
 			// sometimes the AndroidManifest.xml or certain resources in /res may have a compile dependency to a library referenced in include.gradle. Make sure to compile the plugin with a compile dependency to those libraries
-			const includeGradlePath = path.join(options.platformsAndroidDirPath, "include.gradle");
+			const includeGradlePath = path.join(options.platformsAndroidDirPath, INCLUDE_GRADLE_NAME);
 			if (this.$fs.exists(includeGradlePath)) {
 				const includeGradleContent = this.$fs.readText(includeGradlePath);
 				const repositoriesAndDependenciesScopes = this.getIncludeGradleCompileDependenciesScope(includeGradleContent);
@@ -280,7 +272,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			if (this.$fs.exists(pathToBuiltAar)) {
 				try {
 					if (options.aarOutputDir) {
-						this.copyRecursive(pathToBuiltAar, path.join(options.aarOutputDir, `${shortPluginName}.aar`));
+						this.$fs.copyFile(pathToBuiltAar, path.join(options.aarOutputDir, `${shortPluginName}.aar`));
 					}
 				} catch (e) {
 					throw new Error(`Failed to copy built aar to destination. ${e.message}`);
@@ -302,7 +294,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	public migrateIncludeGradle(options: IBuildOptions): void {
 		this.validatePlatformsAndroidDirPathOption(options);
 
-		const includeGradleFilePath = path.join(options.platformsAndroidDirPath, AndroidPluginBuildService.INCLUDE_GRADLE);
+		const includeGradleFilePath = path.join(options.platformsAndroidDirPath, INCLUDE_GRADLE_NAME);
 
 		if (this.$fs.exists(includeGradleFilePath)) {
 			let includeGradleFileContent: string;
@@ -330,11 +322,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 
 		if (!options.pluginName) {
-			console.log("No plugin name provided, defaulting to 'myPlugin'.");
+			this.$logger.info("No plugin name provided, defaulting to 'myPlugin'.");
 		}
 
 		if (!options.aarOutputDir) {
-			console.log("No aarOutputDir provided, defaulting to the build outputs directory of the plugin");
+			this.$logger.info("No aarOutputDir provided, defaulting to the build outputs directory of the plugin");
 		}
 
 		if (!options.tempPluginDirPath) {

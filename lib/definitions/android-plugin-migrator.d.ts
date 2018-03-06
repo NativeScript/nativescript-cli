@@ -1,5 +1,8 @@
 
-interface IBuildOptions {
+interface IBuildOptions extends IAndroidBuildOptions{
+}
+
+interface IAndroidBuildOptions {
     platformsAndroidDirPath: string,
     pluginName: string,
     aarOutputDir: string,

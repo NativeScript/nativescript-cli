@@ -24,6 +24,7 @@ export const SRC_DIR = "src";
 export const MAIN_DIR = "main";
 export const ASSETS_DIR = "assets";
 export const MANIFEST_FILE_NAME = "AndroidManifest.xml";
+export const INCLUDE_GRADLE_NAME = "include.gradle";
 export const BUILD_DIR = "build";
 export const OUTPUTS_DIR = "outputs";
 export const APK_DIR = "apk";
