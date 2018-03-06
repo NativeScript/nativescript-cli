@@ -212,9 +212,11 @@ interface IDebugLiveSyncService extends ILiveSyncService {
 	/**
 	 * Method used to retrieve the glob patterns which CLI will watch for file changes. Defaults to the whole app directory.
 	 * @param {ILiveSyncInfo} liveSyncData Information needed for livesync - for example if bundle is passed or if a release build should be performed.
+	 * @param  {IProjectData} projectData Project data.
+	 * @param  {string[]} platforms Platforms to start the watcher for.
 	 * @returns {Promise<string[]>} The glob patterns.
 	 */
-	getWatcherPatterns(liveSyncData: ILiveSyncInfo, projectData: IProjectData): Promise<string[]>;
+	getWatcherPatterns(liveSyncData: ILiveSyncInfo, projectData: IProjectData, platforms: string[]): Promise<string[]>;
 
 	/**
 	 * Prints debug information.
