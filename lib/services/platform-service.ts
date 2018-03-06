@@ -24,7 +24,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $preparePlatformNativeService: IPreparePlatformService,
 		private $preparePlatformJSService: IPreparePlatformService,
-		private $progressIndicator: IProgressIndicator,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
@@ -40,7 +39,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $npm: INodePackageManager,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $projectChangesService: IProjectChangesService,
-		private $analyticsService: IAnalyticsService) {
+		private $analyticsService: IAnalyticsService,
+		private $terminalSpinnerService: ITerminalSpinnerService) {
 		super();
 	}
 
@@ -115,7 +115,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			npmOptions["version"] = version;
 		}
 
-		const spinner = this.$progressIndicator.getSpinner("Installing " + packageToInstall);
+		const spinner = this.$terminalSpinnerService.createSpinner();
 		const projectDir = projectData.projectDir;
 		const platformPath = path.join(projectData.platformsDir, platform);
 
