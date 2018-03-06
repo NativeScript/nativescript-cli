@@ -89,8 +89,8 @@ function createTestInjector(): IInjector {
 	testInjector.register("nodeModulesDependenciesBuilder", NodeModulesDependenciesBuilder);
 	testInjector.register("settingsService", SettingsService);
 	testInjector.register("devicePathProvider", {});
-	testInjector.register("progressIndicator", {
-		getSpinner: (msg: string) => ({
+	testInjector.register("terminalSpinnerService", {
+		createSpinner: (msg: string) => ({
 			start: (): void => undefined,
 			stop: (): void => undefined,
 			message: (): void => undefined
