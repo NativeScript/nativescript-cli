@@ -203,7 +203,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	public async preparePlatform(platformInfo: IPreparePlatformInfo): Promise<boolean> {
 		const changesInfo = await this.getChangesInfo(platformInfo);
-		const shouldPrepare = changesInfo.nativeChanged || await this.shouldPrepare({ platformInfo, changesInfo });
+		const shouldPrepare = await this.shouldPrepare({ platformInfo, changesInfo });
 
 		if (shouldPrepare) {
 			// Always clear up the app directory in platforms if `--bundle` value has changed in between builds or is passed in general

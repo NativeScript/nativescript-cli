@@ -80,7 +80,7 @@
     "winreg": "0.0.17",
     "ws": "2.2.0",
     "xcode": "https://github.com/NativeScript/node-xcode/archive/1.4.0.tar.gz",
-    "xml2js": "^0.4.19",
+    "xml2js": "0.4.19",
     "xmldom": "0.1.21",
     "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
     "yargs": "6.0.0",

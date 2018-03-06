@@ -110,7 +110,7 @@ dependencies {
 			await androidBuildPluginService.buildAar(config);
 			const hasGeneratedAar = fs.exists(path.join(tempFolder, expectedAarName));
 
-			assert.equal(hasGeneratedAar, true);
+			assert.isTrue(hasGeneratedAar);
 		});
 
 		it('if android manifest is missing', async () => {
@@ -126,7 +126,7 @@ dependencies {
 			await androidBuildPluginService.buildAar(config);
 			const hasGeneratedAar = fs.exists(path.join(tempFolder, expectedAarName));
 
-			assert.equal(hasGeneratedAar, true);
+			assert.isTrue(hasGeneratedAar);
 		});
 
 		it('if there is only an android manifest file', async () => {
@@ -142,7 +142,7 @@ dependencies {
 			await androidBuildPluginService.buildAar(config);
 			const hasGeneratedAar = fs.exists(path.join(tempFolder, expectedAarName));
 
-			assert.equal(hasGeneratedAar, true);
+			assert.isTrue(hasGeneratedAar);
 		});
 	});
 

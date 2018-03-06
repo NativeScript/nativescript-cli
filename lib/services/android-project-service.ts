@@ -453,8 +453,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			return path.resolve(pathToPlatformsAndroid, item.directory);
 		});
 
-		for (const dependencyKey in productionDependencies) {
-			const dependency = productionDependencies[dependencyKey];
+		for (const dependency of productionDependencies) {
 			const jsonContent = this.$fs.readJson(path.join(dependency, constants.PACKAGE_JSON_FILE_NAME));
 			const isPlugin = !!jsonContent.nativescript;
 			const pluginName = jsonContent.name;
