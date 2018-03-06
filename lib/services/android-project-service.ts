@@ -83,7 +83,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				platformProjectService: this,
 				emulatorServices: this.$androidEmulatorServices,
 				projectRoot: projectRoot,
-				deviceBuildOutputPath: this.getDeviceBuildOutputPath(path.join(...deviceBuildOutputArr), projectData),
+				deviceBuildOutputPath: (options: IRelease): string => {
+					return this.getDeviceBuildOutputPath(path.join(...deviceBuildOutputArr), projectData, options);
+				},
 				getValidPackageNames: (buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[] => {
 					const buildMode = buildOptions.isReleaseBuild ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
 
@@ -106,10 +108,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this._platformData;
 	}
 
-	private getDeviceBuildOutputPath(currentPath: string, projectData: IProjectData): string {
+	private getDeviceBuildOutputPath(currentPath: string, projectData: IProjectData, options: IRelease): string {
 		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, constants.TNS_ANDROID_RUNTIME_NAME);
 		const platformVersion = currentPlatformData && currentPlatformData[constants.VERSION_STRING];
-		const buildType = this.$options.release === true ? "release" : "debug";
+		const buildType = options.release === true ? "release" : "debug";
 		const normalizedPath = path.join(currentPath, buildType);
 
 		if (semver.valid(platformVersion)) {

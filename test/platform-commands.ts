@@ -35,7 +35,9 @@ class PlatformData implements IPlatformData {
 	};
 	emulatorServices: Mobile.IEmulatorPlatformServices = null;
 	projectRoot = "";
-	deviceBuildOutputPath = "";
+	deviceBuildOutputPath = (buildTypeOption: IRelease) => {
+		return "";
+	}
 	getValidPackageNames = (buildOptions: { isForDevice?: boolean, isReleaseBuild?: boolean }) => [""];
 	validPackageNamesForDevice: string[] = [];
 	frameworkFilesExtensions = [".jar", ".dat"];
