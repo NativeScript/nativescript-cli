@@ -174,6 +174,12 @@ declare module NativeScriptDoctor {
 		 * @return {Promise<IWarning[]>} Array of all the warnings from all checks. If there are no warnings will return empty array.
 		 */
 		getWarnings(): Promise<IWarning[]>;
+
+		/**
+		 * Executes all checks for the current environment and returns the info from each check
+		 * @return {Promise<IInfo[]>} Array of all the infos from all checks.
+		 */
+		getInfos(): Promise<IInfo[]>;
 	}
 
 	interface ISysInfoData {
@@ -347,6 +353,32 @@ declare module NativeScriptDoctor {
 		platforms: string[];
 	}
 
+	interface IInfo {
+		/**
+		 * The message.
+		 * @type {string}
+		 */
+		message: string;
+
+		/**
+		 * Additional information for the warning.
+		 * @type {string}
+		 */
+		additionalInformation?: string;
+
+		/**
+		 * The platforms which are affected by this warning.
+		 * @type {string[]}
+		 */
+		platforms: string[];
+
+		/**
+		 * The warning.
+		 * @type {string} // can be warning, note or info
+		 */
+		type: string;
+	}
+
 	/**
 	 * Describes information about xcproj brew formula.
 	 */
@@ -389,6 +421,8 @@ declare module NativeScriptDoctor {
 		ANDROID_PLATFORM_NAME: string;
 		IOS_PLATFORM_NAME: string;
 		SUPPORTED_PLATFORMS: string[];
+		INFO_TYPE_NAME: string;
+		WARNING_TYPE_NAME: string;
 	}
 
 	/**
