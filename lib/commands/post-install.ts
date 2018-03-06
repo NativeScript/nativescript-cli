@@ -10,7 +10,7 @@ export class PostInstallCliCommand extends PostInstallCommand {
 		$doctorService: IDoctorService,
 		$analyticsService: IAnalyticsService,
 		$logger: ILogger) {
-		super($fs, $staticConfig, $commandsService, $helpService, $settingsService, $doctorService, $analyticsService, $logger);
+		super($fs, $staticConfig, $commandsService, $helpService, $settingsService, $analyticsService, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
