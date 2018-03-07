@@ -3,9 +3,7 @@ import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import * as FsLib from "../../lib/common/file-system";
 import * as path from "path";
-import { ChildProcess } from "../../lib/common/child-process";
 import { HostInfo } from "../../lib/common/host-info";
-import { AndroidToolsInfo } from "../../lib/android-tools-info";
 import { Logger } from "../../lib/common/logger";
 import * as ErrorsLib from "../../lib/common/errors";
 import temp = require("temp");
@@ -13,15 +11,27 @@ temp.track();
 
 describe('androiPluginBuildService', () => {
 
+	let execCalled = false;
 	const createTestInjector = (): IInjector => {
 		const testInjector = new Yok();
 
 		testInjector.register("fs", FsLib.FileSystem);
-		testInjector.register("childProcess", ChildProcess);
+		testInjector.register("childProcess", {
+			exec: () => {
+				execCalled = true;
+			}
+		});
 		testInjector.register("hostInfo", HostInfo);
-		testInjector.register("androidToolsInfo", AndroidToolsInfo);
+		testInjector.register("androidToolsInfo", {
+			getToolsInfo: () => {
+				return {};
+			},
+			validateInfo: () => {
+				return true;
+			}
+		});
 		testInjector.register("logger", Logger);
-		testInjector.register("errors", ErrorsLib);
+		testInjector.register("errors", ErrorsLib.Errors);
 		testInjector.register("options", {});
 		testInjector.register("config", {});
 		testInjector.register("staticConfig", {});
@@ -95,6 +105,10 @@ dependencies {
 		androidBuildPluginService = testInjector.resolve<AndroidPluginBuildService>(AndroidPluginBuildService);
 	});
 
+	beforeEach(() => {
+		execCalled = false;
+	});
+
 	describe('builds aar', () => {
 
 		it('if supported files are in plugin', async () => {
@@ -106,11 +120,13 @@ dependencies {
 				tempPluginDirPath: pluginFolder
 			};
 
-			const expectedAarName = "my_plugin.aar";
-			await androidBuildPluginService.buildAar(config);
-			const hasGeneratedAar = fs.exists(path.join(tempFolder, expectedAarName));
+			try {
+				await androidBuildPluginService.buildAar(config);
+			} catch (e) {
+				/* intentionally left blank */
+			}
 
-			assert.isTrue(hasGeneratedAar);
+			assert.isTrue(execCalled);
 		});
 
 		it('if android manifest is missing', async () => {
@@ -122,11 +138,13 @@ dependencies {
 				tempPluginDirPath: pluginFolder
 			};
 
-			const expectedAarName = "my_plugin.aar";
-			await androidBuildPluginService.buildAar(config);
-			const hasGeneratedAar = fs.exists(path.join(tempFolder, expectedAarName));
+			try {
+				await androidBuildPluginService.buildAar(config);
+			} catch (e) {
+				/* intentionally left blank */
+			}
 
-			assert.isTrue(hasGeneratedAar);
+			assert.isTrue(execCalled);
 		});
 
 		it('if there is only an android manifest file', async () => {
@@ -138,16 +156,18 @@ dependencies {
 				tempPluginDirPath: pluginFolder
 			};
 
-			const expectedAarName = "my_plugin.aar";
-			await androidBuildPluginService.buildAar(config);
-			const hasGeneratedAar = fs.exists(path.join(tempFolder, expectedAarName));
+			try {
+				await androidBuildPluginService.buildAar(config);
+			} catch (e) {
+				/* intentionally left blank */
+			}
 
-			assert.isTrue(hasGeneratedAar);
+			assert.isTrue(execCalled);
 		});
 	});
 
 	describe(`doesn't build aar `, () => {
-		it('if there is only an android manifest file', async () => {
+		it('if there are no files', async () => {
 			setUpPluginNativeFolder(false, false, false);
 			const config: IBuildOptions = {
 				platformsAndroidDirPath: tempFolder,
@@ -156,11 +176,13 @@ dependencies {
 				tempPluginDirPath: pluginFolder
 			};
 
-			const expectedAarName = "my_plugin.aar";
-			await androidBuildPluginService.buildAar(config);
-			const hasGeneratedAar = fs.exists(path.join(tempFolder, expectedAarName));
+			try {
+				await androidBuildPluginService.buildAar(config);
+			} catch (e) {
+				/* intentionally left blank */
+			}
 
-			assert.equal(hasGeneratedAar, false);
+			assert.isFalse(execCalled);
 		});
 	});
 
@@ -178,7 +200,7 @@ dependencies {
 			await androidBuildPluginService.migrateIncludeGradle(config);
 			const includeGradleContent = fs.readText(path.join(pluginFolder, includeGradleName).toString());
 			const productFlavorsAreRemoved = includeGradleContent.indexOf("productFlavors") === -1;
-			assert.equal(productFlavorsAreRemoved, true);
+			assert.isTrue(productFlavorsAreRemoved);
 		});
 	});
 });
