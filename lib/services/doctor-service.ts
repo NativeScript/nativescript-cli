@@ -17,10 +17,15 @@ class DoctorService implements IDoctorService {
 		private $childProcess: IChildProcess,
 		private $opener: IOpener,
 		private $prompter: IPrompter,
+		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $versionsService: IVersionsService) { }
 
 	public async printWarnings(configOptions?: { trackResult: boolean }): Promise<boolean> {
-		const warnings = await doctor.getWarnings();
+		const infos = await this.$terminalSpinnerService.execute<NativeScriptDoctor.IInfo[]>({
+			text: `Getting environment information ${EOL}`
+		}, () => doctor.getInfos());
+
+		const warnings = infos.filter(info => info.type === constants.WARNING_TYPE_NAME);
 		const hasWarnings = warnings.length > 0;
 
 		const hasAndroidWarnings = warnings.filter(warning => _.includes(warning.platforms, constants.ANDROID_PLATFORM_NAME)).length > 0;
@@ -32,20 +37,11 @@ class DoctorService implements IDoctorService {
 			await this.$analyticsService.track("DoctorEnvironmentSetup", hasWarnings ? "incorrect" : "correct");
 		}
 
-		if (hasWarnings) {
-			warnings.map(warning => {
-				this.$logger.warn(warning.warning);
-				this.$logger.out(warning.additionalInformation);
-			});
+		this.printInfosCore(infos);
 
+		if (hasWarnings) {
 			this.$logger.info("There seem to be issues with your configuration.");
-			if (this.$hostInfo.isDarwin) {
-				await this.promptForHelp(DoctorService.DarwinSetupDocsLink, DoctorService.DarwinSetupScriptLocation, []);
-			} else if (this.$hostInfo.isWindows) {
-				await this.promptForHelp(DoctorService.WindowsSetupDocsLink, DoctorService.WindowsSetupScriptExecutable, DoctorService.WindowsSetupScriptArguments);
-			} else {
-				await this.promptForDocs(DoctorService.LinuxSetupDocsLink);
-			}
+			await this.promptForHelp();
 		}
 
 		try {
@@ -63,11 +59,21 @@ class DoctorService implements IDoctorService {
 		}
 	}
 
-	private async promptForHelp(link: string, commandName: string, commandArguments: string[]): Promise<void> {
+	private async promptForHelpCore(link: string, commandName: string, commandArguments: string[]): Promise<void> {
 		await this.promptForDocs(link);
 
 		if (await this.$prompter.confirm("Do you want to run the setup script?", () => helpers.isInteractive())) {
 			await this.$childProcess.spawnFromEvent(commandName, commandArguments, "close", { stdio: "inherit" });
+		}
+	}
+
+	private async promptForHelp(): Promise<void> {
+		if (this.$hostInfo.isDarwin) {
+			await this.promptForHelpCore(DoctorService.DarwinSetupDocsLink, DoctorService.DarwinSetupScriptLocation, []);
+		} else if (this.$hostInfo.isWindows) {
+			await this.promptForHelpCore(DoctorService.WindowsSetupDocsLink, DoctorService.WindowsSetupScriptExecutable, DoctorService.WindowsSetupScriptArguments);
+		} else {
+			await this.promptForDocs(DoctorService.LinuxSetupDocsLink);
 		}
 	}
 
@@ -77,6 +83,22 @@ class DoctorService implements IDoctorService {
 		} else if (this.$hostInfo.isDarwin) {
 			this.$logger.out("TIP: To avoid setting up the necessary environment variables, you can use the Homebrew package manager to install the Android SDK and its dependencies." + EOL);
 		}
+	}
+
+	private printInfosCore(infos: NativeScriptDoctor.IInfo[]): void {
+		infos.filter(info => info.type === constants.INFO_TYPE_NAME)
+			.map(info => {
+				const spinner = this.$terminalSpinnerService.createSpinner();
+				spinner.text = info.message;
+				spinner.succeed();
+			});
+
+		infos.filter(info => info.type === constants.WARNING_TYPE_NAME)
+			.map(info => {
+				const spinner = this.$terminalSpinnerService.createSpinner();
+				spinner.text = `${info.message.yellow} ${EOL} ${info.additionalInformation} ${EOL}`;
+				spinner.fail();
+		});
 	}
 }
 $injector.register("doctorService", DoctorService);

@@ -96,8 +96,8 @@ function createTestInjector() {
 		showCommandLineHelp: async (): Promise<void> => (undefined)
 	});
 	testInjector.register("settingsService", SettingsService);
-	testInjector.register("progressIndicator", {
-		getSpinner: (msg: string) => ({
+	testInjector.register("terminalSpinnerService", {
+		createSpinner: (msg: string) => ({
 			start: (): void => undefined,
 			stop: (): void => undefined,
 			message: (): void => undefined
