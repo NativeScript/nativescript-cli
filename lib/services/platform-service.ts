@@ -433,7 +433,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.$fs.writeJson(buildInfoFile, buildInfo);
 	}
 
-	public async shouldInstall(device: Mobile.IDevice, projectData: IProjectData, isRelease: IRelease, outputPath?: string): Promise<boolean> {
+	public async shouldInstall(device: Mobile.IDevice, projectData: IProjectData, release: IBuildConfig, outputPath?: string): Promise<boolean> {
 		const platform = device.deviceInfo.platform;
 		if (!(await device.applicationManager.isApplicationInstalled(projectData.projectId))) {
 			return true;
@@ -441,7 +441,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const deviceBuildInfo: IBuildInfo = await this.getDeviceBuildInfo(device, projectData);
-		const localBuildInfo = this.getBuildInfo(platform, platformData, { buildForDevice: !device.isEmulator, release: isRelease.release }, outputPath);
+		const localBuildInfo = this.getBuildInfo(platform, platformData, { buildForDevice: !device.isEmulator, release: release.release }, outputPath);
 		return !localBuildInfo || !deviceBuildInfo || deviceBuildInfo.buildTime !== localBuildInfo.buildTime;
 	}
 
