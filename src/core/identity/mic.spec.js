@@ -204,6 +204,10 @@ describe('MobileIdentityConnect', () => {
             '/oauth/token',
             `grant_type=authorization_code&client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
           )
+          .basicAuth({
+            user: client.appKey,
+            pass: client.appSecret
+          })
           .reply(200, token, {
             'Content-Type': 'application/json; charset=utf-8'
           });
