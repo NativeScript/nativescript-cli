@@ -11,11 +11,7 @@ export class BuildPluginCommand implements ICommand {
 		private $fs: IFileSystem,
 		private $options: IOptions) {
 
-		if (this.$options.path) {
-			this.pluginProjectPath = path.resolve(this.$options.path);
-		} else {
-			this.pluginProjectPath = path.resolve(".");
-		}
+		this.pluginProjectPath = path.resolve(this.$options.path || ".");
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -55,7 +51,7 @@ export class BuildPluginCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		if (!this.$fs.exists(path.join(this.pluginProjectPath, "platforms", "android"))) {
+		if (!this.$fs.exists(path.join(this.pluginProjectPath, constants.PLATFORMS_DIR_NAME, "android"))) {
 			this.$errors.failWithoutHelp("No plugin found at the current directory, or the plugin does not need to have its platforms/android components built into an `.aar`.");
 		}
 
