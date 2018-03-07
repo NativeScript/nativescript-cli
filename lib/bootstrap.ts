@@ -152,3 +152,4 @@ $injector.require("subscriptionService", "./services/subscription-service");
 $injector.require("terminalSpinnerService", "./services/terminal-spinner-service");
 
 $injector.require('playgroundService', './services/playground-service');
+$injector.require("platformEnvironmentRequirements", "./services/platform-environment-requirements");

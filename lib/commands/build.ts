@@ -7,7 +7,9 @@ export class BuildCommandBase {
 		protected $platformsData: IPlatformsData,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		protected $platformService: IPlatformService,
-		private $bundleValidatorHelper: IBundleValidatorHelper) {
+		private $bundleValidatorHelper: IBundleValidatorHelper,
+		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements) {
+			super($projectData, $errors, $options);
 		this.$projectData.initializeProjectData();
 	}
 
@@ -44,7 +46,13 @@ export class BuildCommandBase {
 		}
 	}
 
-	protected validatePlatform(platform: string): void {
+	protected async canExecuteCore(platform: string): Promise<boolean> {
+		const result = await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({ platform: platform, cloudCommandName: "build" });
+		this.validatePlatform(platform);
+		return result;
+	}
+
+	private validatePlatform(platform: string): void {
 		if (!this.$platformService.isPlatformSupportedForOS(platform, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${platform} can not be built on this OS`);
 		}
@@ -62,17 +70,17 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$platformsData: IPlatformsData,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService,
-		$bundleValidatorHelper: IBundleValidatorHelper) {
-		super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper);
+		$bundleValidatorHelper: IBundleValidatorHelper,
+		$platformEnvironmentRequirements: IPlatformEnvironmentRequirements) {
+			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $platformEnvironmentRequirements);
 	}
 
 	public async execute(args: string[]): Promise<void> {
 		return this.executeCore([this.$platformsData.availablePlatforms.iOS]);
 	}
 
-	public canExecute(args: string[]): Promise<boolean> {
-		super.validatePlatform(this.$devicePlatformsConstants.iOS);
-		return args.length === 0 && this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.iOS);
+	public async canExecute(args: string[]): Promise<boolean> {
+		return await super.canExecuteCore(this.$devicePlatformsConstants.iOS) && args.length === 0 && this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.iOS);
 	}
 }
 
@@ -87,8 +95,9 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		$platformsData: IPlatformsData,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService,
-		$bundleValidatorHelper: IBundleValidatorHelper) {
-		super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper);
+		$bundleValidatorHelper: IBundleValidatorHelper,
+		$platformEnvironmentRequirements: IPlatformEnvironmentRequirements) {
+			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $platformEnvironmentRequirements);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -96,7 +105,8 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		super.validatePlatform(this.$devicePlatformsConstants.Android);
+		await super.canExecuteCore(this.$devicePlatformsConstants.Android);
+
 		if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 			this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 		}
