@@ -385,7 +385,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	public async buildPlatform(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {
+	public async buildPlatform(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): Promise<string> {
 		this.$logger.out("Building project...");
 
 		const action = constants.TrackActionNames.Build;
@@ -417,6 +417,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.saveBuildInfoFile(platform, projectData.projectDir, buildInfoFilePath);
 
 		this.$logger.out("Project successfully built.");
+		return this.lastOutputPath(platform, buildConfig, projectData);
 	}
 
 	public saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void {
@@ -483,6 +484,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			platformTemplate: deployInfo.deployOptions.platformTemplate,
 			projectData: deployInfo.projectData,
 			config: deployInfo.config,
+			nativePrepare: deployInfo.nativePrepare,
 			env: deployInfo.env
 		});
 		const options: Mobile.IDevicesServicesInitializationOptions = {
@@ -503,15 +505,17 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				keyStorePath: deployInfo.deployOptions.keyStorePath,
 				clean: deployInfo.deployOptions.clean
 			};
-			const shouldBuild = await this.shouldBuild(deployInfo.platform, deployInfo.projectData, buildConfig);
+
+			let installPackageFile: string;
+			const shouldBuild = await this.shouldBuild(deployInfo.platform, deployInfo.projectData, buildConfig, deployInfo.outputPath);
 			if (shouldBuild) {
-				await this.buildPlatform(deployInfo.platform, buildConfig, deployInfo.projectData);
+				installPackageFile = await deployInfo.buildPlatform(deployInfo.platform, buildConfig, deployInfo.projectData);
 			} else {
 				this.$logger.out("Skipping package build. No changes detected on the native side. This will be fast!");
 			}
 
 			if (deployInfo.deployOptions.forceInstall || shouldBuild || (await this.shouldInstall(device, deployInfo.projectData))) {
-				await this.installApplication(device, buildConfig, deployInfo.projectData);
+				await this.installApplication(device, buildConfig, deployInfo.projectData, installPackageFile, deployInfo.outputPath);
 			} else {
 				this.$logger.out("Skipping install.");
 			}

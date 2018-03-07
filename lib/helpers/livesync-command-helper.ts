@@ -6,8 +6,10 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $liveSyncService: ILiveSyncService,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper,
+		private $devicesService: Mobile.IDevicesService,
 		private $platformsData: IPlatformsData,
 		private $analyticsService: IAnalyticsService,
+		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors) {
 		this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
 	}
@@ -17,7 +19,22 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		return availablePlatforms;
 	}
 
-	public async executeLiveSyncOperation(devices: Mobile.IDevice[], platform: string, deviceDebugMap?: IDictionary<boolean>): Promise<void> {
+	public async executeCommandLiveSync(platform?: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions) {
+		await this.$devicesService.initialize({
+			deviceId: this.$options.device,
+			platform: platform,
+			emulator: this.$options.emulator,
+			skipDeviceDetectionInterval: true,
+			skipInferPlatform: !platform
+		});
+
+		await this.$devicesService.detectCurrentlyAttachedDevices({ shouldReturnImmediateResult: false, platform: platform });
+		const devices = this.$devicesService.getDeviceInstances()
+			.filter(d => !platform || d.deviceInfo.platform.toLowerCase() === platform.toLowerCase());
+		await this.executeLiveSyncOperation(devices, platform, additionalOptions);
+	}
+
+	public async executeLiveSyncOperation(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void> {
 		if (!devices || !devices.length) {
 			if (platform) {
 				this.$errors.failWithoutHelp("Unable to find applicable devices to execute operation. Ensure connected devices are trusted and try again.");
@@ -33,38 +50,44 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		}
 
 		if (this.$options.release) {
-			await this.runInReleaseMode(platform);
+			await this.runInReleaseMode(platform, additionalOptions);
 			return;
 		}
 
 		// Now let's take data for each device:
 		const deviceDescriptors: ILiveSyncDeviceInfo[] = devices
 			.map(d => {
+				let buildAction: IBuildAction;
+
+				const buildConfig: IBuildConfig = {
+					buildForDevice: !d.isEmulator,
+					projectDir: this.$options.path,
+					clean: this.$options.clean,
+					teamId: this.$options.teamId,
+					device: this.$options.device,
+					provision: this.$options.provision,
+					release: this.$options.release,
+					keyStoreAlias: this.$options.keyStoreAlias,
+					keyStorePath: this.$options.keyStorePath,
+					keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
+					keyStorePassword: this.$options.keyStorePassword
+				};
+
+				buildAction = additionalOptions && additionalOptions.buildPlatform ?
+					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildConfig, this.$projectData) :
+					this.$platformService.buildPlatform.bind(this.$platformService, d.deviceInfo.platform, buildConfig, this.$projectData);
+
 				const info: ILiveSyncDeviceInfo = {
 					identifier: d.deviceInfo.identifier,
 					platformSpecificOptions: this.$options,
-
-					buildAction: async (): Promise<string> => {
-						const buildConfig: IBuildConfig = {
-							buildForDevice: !d.isEmulator,
-							projectDir: this.$options.path,
-							clean: this.$options.clean,
-							teamId: this.$options.teamId,
-							device: this.$options.device,
-							provision: this.$options.provision,
-							release: this.$options.release,
-							keyStoreAlias: this.$options.keyStoreAlias,
-							keyStorePath: this.$options.keyStorePath,
-							keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-							keyStorePassword: this.$options.keyStorePassword
-						};
-
-						await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, this.$projectData);
-						const result = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, this.$projectData);
-						return result;
-					},
-					debugggingEnabled: deviceDebugMap && deviceDebugMap[d.deviceInfo.identifier],
-					debugOptions: this.$options
+					buildAction,
+					debugggingEnabled: additionalOptions && additionalOptions.deviceDebugMap && additionalOptions.deviceDebugMap[d.deviceInfo.identifier],
+					debugOptions: this.$options,
+					outputPath: additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
+						platform,
+						emulator: d.isEmulator,
+						projectDir: this.$projectData.projectDir
+					})
 				};
 
 				return info;
@@ -83,7 +106,18 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 	}
 
-	private async runInReleaseMode(platform: string): Promise<void> {
+	public async validatePlatform(platform: string) {
+		const availablePlatforms = this.getPlatformsForOperation(platform);
+		for (const availablePlatform of availablePlatforms) {
+			const platformData = this.$platformsData.getPlatformData(availablePlatform, this.$projectData);
+			const platformProjectService = platformData.platformProjectService;
+			await platformProjectService.validate(this.$projectData);
+		}
+
+		this.$bundleValidatorHelper.validate();
+	}
+
+	private async runInReleaseMode(platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void> {
 		const runPlatformOptions: IRunPlatformOptions = {
 			device: this.$options.device,
 			emulator: this.$options.emulator,
@@ -104,6 +138,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					release: this.$options.release
 				},
 				deployOptions,
+				buildPlatform: this.$platformService.buildPlatform.bind(this.$platformService),
 				projectData: this.$projectData,
 				config: this.$options,
 				env: this.$options.env

@@ -78,6 +78,31 @@ interface IOptionalOutputPath {
 }
 
 /**
+ * Describes action used whenever building a project.
+ */
+interface IBuildAction {
+	/**
+	 * @returns {Promise<string>} Path to build artifact (.ipa, .apk or .zip).
+	 */
+	(): Promise<string>;
+}
+
+/**
+ * Describes options that can be passed in order to specify the exact location of the built package.
+ */
+interface IOutputDirectoryOptions extends IPlatform {
+	/**
+	 * Directory where the project is located.
+	 */
+	projectDir: string;
+
+	/**
+	 * Whether the build is for emulator or not.
+	 */
+	emulator?: boolean;
+}
+
+/**
  * Describes information for LiveSync on a device.
  */
 interface ILiveSyncDeviceInfo extends IOptionalOutputPath, IOptionalDebuggingOptions {
@@ -88,9 +113,8 @@ interface ILiveSyncDeviceInfo extends IOptionalOutputPath, IOptionalDebuggingOpt
 
 	/**
 	 * Action that will rebuild the application. The action must return a Promise, which is resolved with at path to build artifact.
-	 * @returns {Promise<string>} Path to build artifact (.ipa, .apk or .zip).
 	 */
-	buildAction: () => Promise<string>;
+	buildAction: IBuildAction;
 
 	/**
 	 * Whether to skip preparing the native platform.
@@ -357,14 +381,46 @@ interface IDevicePathProvider {
 	getDeviceSyncZipPath(device: Mobile.IDevice): string;
 }
 
+/**
+ * Describes additional options, that can be passed to LiveSyncCommandHelper.
+ */
+interface ILiveSyncCommandHelperAdditionalOptions extends IBuildPlatformAction {
+	/**
+	 * A map representing devices which have debugging enabled initially.
+	 */
+	deviceDebugMap?: IDictionary<boolean>;
+
+	/**
+	 * Returns the path to the directory where the build output may be found.
+	 * @param {IOutputDirectoryOptions} options Options that are used to determine the build output directory.
+	 * @returns {string} The build output directory.
+	 */
+	getOutputDirectory?(options: IOutputDirectoryOptions): string;
+}
+
 interface ILiveSyncCommandHelper {
 	/**
 	 * Method sets up configuration, before calling livesync and expects that devices are already discovered.
 	 * @param {Mobile.IDevice[]} devices List of discovered devices
 	 * @param {string} platform The platform for which the livesync will be ran
-	 * @param {IDictionary<boolean>} deviceDebugMap @optional A map representing devices which have debugging enabled initially.
+	 * @param {ILiveSyncCommandHelperAdditionalOptions} additionalOptions @optional Additional options to control LiveSync.
 	 * @returns {Promise<void>}
 	 */
-	executeLiveSyncOperation(devices: Mobile.IDevice[], platform: string, deviceDebugMap?: IDictionary<boolean>): Promise<void>;
+	executeLiveSyncOperation(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void>;
 	getPlatformsForOperation(platform: string): string[];
+
+	/**
+	 * Validates the given platform's data - bundle identifier, etc.
+	 * @param {string} platform The platform to be validated.
+	 * @return {Promise<void>}
+	 */
+	validatePlatform(platform: string): Promise<void>;
+
+	/**
+	 * Executes livesync operation. Meant to be called from within a command.
+	 * @param {string} platform @optional platform for whith to run the livesync operation
+	 * @param {ILiveSyncCommandHelperAdditionalOptions} additionalOptions @optional Additional options to control LiveSync.
+	 * @returns {Promise<void>}
+	 */
+	executeCommandLiveSync(platform?: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void>;
 }
