@@ -26,7 +26,7 @@ function createTestInjector() {
 	return testInjector;
 }
 
-describe.only("platformEnvironmentRequirements ", () => {
+describe("platformEnvironmentRequirements ", () => {
 	describe("checkRequirements", () => {
 		let testInjector: IInjector = null;
 		let platformEnvironmentRequirements: IPlatformEnvironmentRequirements = null;

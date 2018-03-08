@@ -9,8 +9,7 @@ export class BuildCommandBase {
 		protected $platformService: IPlatformService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements) {
-			super($projectData, $errors, $options);
-		this.$projectData.initializeProjectData();
+			this.$projectData.initializeProjectData();
 	}
 
 	public async executeCore(args: string[]): Promise<void> {
