@@ -606,6 +606,10 @@ export class AndroidToolsInfoStub implements IAndroidToolsInfo {
 	public validateAndroidHomeEnvVariable(options?: { showWarningsAsErrors: boolean }): boolean {
 		return false;
 	}
+
+	public validateTargetSdk(options?: { showWarningsAsErrors: boolean }): boolean {
+		return true;
+	}
 }
 
 export class ChildProcessStub {
@@ -655,6 +659,8 @@ export class ProjectChangesService implements IProjectChangesService {
 }
 
 export class CommandsService implements ICommandsService {
+	public currentCommandData = { commandName: "test", commandArguments: [""]};
+
 	public allCommands(opts: { includeDevCommands: boolean }): string[] {
 		return [];
 	}

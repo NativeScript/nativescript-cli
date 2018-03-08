@@ -40,34 +40,43 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		return this.toolsInfo;
 	}
 
-	public validateInfo(options?: { showWarningsAsErrors: boolean, validateTargetSdk: boolean }): boolean {
+	public validateInfo(options?: IAndroidToolsInfoValidateInput): boolean {
 		let detectedErrors = false;
 		this.showWarningsAsErrors = options && options.showWarningsAsErrors;
-		const toolsInfoData = this.getToolsInfo();
 		const isAndroidHomeValid = this.validateAndroidHomeEnvVariable();
 
 		detectedErrors = androidToolsInfo.validateInfo().map(warning => this.printMessage(warning.warning)).length > 0;
 
 		if (options && options.validateTargetSdk) {
-			const targetSdk = toolsInfoData.targetSdkVersion;
-			const newTarget = `${AndroidToolsInfo.ANDROID_TARGET_PREFIX}-${targetSdk}`;
-			if (!_.includes(AndroidToolsInfo.SUPPORTED_TARGETS, newTarget)) {
-				const supportedVersions = AndroidToolsInfo.SUPPORTED_TARGETS.sort();
-				const minSupportedVersion = this.parseAndroidSdkString(_.first(supportedVersions));
-
-				if (targetSdk && (targetSdk < minSupportedVersion)) {
-					this.printMessage(`The selected Android target SDK ${newTarget} is not supported. You must target ${minSupportedVersion} or later.`);
-					detectedErrors = true;
-				} else if (!targetSdk || targetSdk > this.getMaxSupportedVersion()) {
-					this.$logger.warn(`Support for the selected Android target SDK ${newTarget} is not verified. Your Android app might not work as expected.`);
-				}
-			}
+			detectedErrors = this.validateTargetSdk();
 		}
 
 		return detectedErrors || !isAndroidHomeValid;
 	}
 
-	public validateJavacVersion(installedJavacVersion: string, options?: { showWarningsAsErrors: boolean }): boolean {
+	public validateTargetSdk(options?: IAndroidToolsInfoOptions): boolean {
+		this.showWarningsAsErrors = options && options.showWarningsAsErrors;
+
+		const toolsInfoData = this.getToolsInfo();
+		const targetSdk = toolsInfoData.targetSdkVersion;
+		const newTarget = `${AndroidToolsInfo.ANDROID_TARGET_PREFIX}-${targetSdk}`;
+
+		if (!_.includes(AndroidToolsInfo.SUPPORTED_TARGETS, newTarget)) {
+			const supportedVersions = AndroidToolsInfo.SUPPORTED_TARGETS.sort();
+			const minSupportedVersion = this.parseAndroidSdkString(_.first(supportedVersions));
+
+			if (targetSdk && (targetSdk < minSupportedVersion)) {
+				this.printMessage(`The selected Android target SDK ${newTarget} is not supported. You must target ${minSupportedVersion} or later.`);
+				return true;
+			} else if (!targetSdk || targetSdk > this.getMaxSupportedVersion()) {
+				this.$logger.warn(`Support for the selected Android target SDK ${newTarget} is not verified. Your Android app might not work as expected.`);
+			}
+		}
+
+		return false;
+	}
+
+	public validateJavacVersion(installedJavacVersion: string, options?: IAndroidToolsInfoOptions): boolean {
 		if (options) {
 			this.showWarningsAsErrors = options.showWarningsAsErrors;
 		}
@@ -88,7 +97,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	}
 
 	@cache()
-	public validateAndroidHomeEnvVariable(options?: { showWarningsAsErrors: boolean }): boolean {
+	public validateAndroidHomeEnvVariable(options?: IAndroidToolsInfoOptions): boolean {
 		if (options) {
 			this.showWarningsAsErrors = options.showWarningsAsErrors;
 		}

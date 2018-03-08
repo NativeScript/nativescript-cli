@@ -32,12 +32,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		$projectDataService: IProjectDataService,
-		private $sysInfo: ISysInfo,
 		private $injector: IInjector,
 		private $pluginVariablesService: IPluginVariablesService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $npm: INodePackageManager,
-		private $androidPluginBuildService: IAndroidPluginBuildService) {
+		private $androidPluginBuildService: IAndroidPluginBuildService,
+		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements) {
 		super($fs, $projectDataService);
 		this._androidProjectPropertiesManagers = Object.create(null);
 		this.isAndroidStudioTemplate = false;
@@ -155,13 +155,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		this.validatePackageName(projectData.projectId);
 		this.validateProjectName(projectData.projectName);
 
-		this.$androidToolsInfo.validateAndroidHomeEnvVariable({ showWarningsAsErrors: true });
-
-		const javaCompilerVersion = await this.$sysInfo.getJavaCompilerVersion();
-
-		this.$androidToolsInfo.validateJavacVersion(javaCompilerVersion, { showWarningsAsErrors: true });
-
-		await this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
+		await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(this.getPlatformData(projectData).normalizedPlatformName);
+		this.$androidToolsInfo.validateTargetSdk({ showWarningsAsErrors: true });
 	}
 
 	public async validatePlugins(): Promise<void> {

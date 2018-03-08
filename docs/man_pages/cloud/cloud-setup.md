@@ -7,9 +7,9 @@ position: 5
 
 Usage | Synopsis
 ------|-------
-Install the nativescript-cloud extension | `$ tns cloud setup`
+Install the `nativescript-cloud extension` | `$ tns cloud setup`
 
-Install the nativescript-cloud extension to configure your environment for cloud builds.
+Install the `nativescript-cloud extension` to configure your environment for cloud builds.
 
 ### Related Commands
 

@@ -3,14 +3,15 @@ import { PlatformEnvironmentRequirements } from '../../lib/services/platform-env
 import * as stubs from "../stubs";
 import { assert } from "chai";
 
-const data = {platform: "android", cloudCommandName: "build"};
-const cloudBuildsErrorMessage = `Use the $ tns login command to log in with your account and then $ tns cloud ${data.cloudCommandName.toLowerCase()} ${data.platform.toLowerCase()} command to build your app in the cloud.`;
-const manuallySetupErrorMessage = `To be able to build for ${data.platform}, verify that your environment is configured according to the system requirements described at `;
-const nonInteractiveConsoleErrorMessage = `Your environment is not configured properly and you will not be able to execute local builds. You are missing the nativescript-cloud extension and you will not be able to execute cloud builds. To continue, choose one of the following options: \nRun $ tns setup command to run the setup script to try to automatically configure your environment for local builds.\nRun $ tns cloud setup command to install the nativescript-cloud extension to configure your environment for cloud builds.\nVerify that your environment is configured according to the system requirements described at `;
+const platform = "android";
+const cloudBuildsErrorMessage = `In order to test your application use the $ tns login command to log in with your account and then $ tns cloud build command to build your app in the cloud.`;
+const manuallySetupErrorMessage = `To be able to build for ${platform}, verify that your environment is configured according to the system requirements described at `;
+const nonInteractiveConsoleErrorMessage = `You are missing the nativescript-cloud extension and you will not be able to execute cloud builds. Your environment is not configured properly and you will not be able to execute local builds. To continue, choose one of the following options: \nRun $ tns setup command to run the setup script to try to automatically configure your environment for local builds.\nRun $ tns cloud setup command to install the nativescript-cloud extension to configure your environment for cloud builds.\nVerify that your environment is configured according to the system requirements described at `;
 
 function createTestInjector() {
 	const testInjector = new Yok();
 
+	testInjector.register("commandsService", {currentCommandData: {commandName: "test", commandArguments: [""]}});
 	testInjector.register("doctorService", {});
 	testInjector.register("errors", {
 		fail: (err: any) => {
@@ -52,8 +53,9 @@ describe("platformEnvironmentRequirements ", () => {
 			let isInstallExtensionCalled = false;
 			const extensibilityService = testInjector.resolve("extensibilityService");
 			extensibilityService.installExtension = () => {isInstallExtensionCalled = true; };
+			extensibilityService.getInstalledExtensions = () => { return {}; };
 
-			await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(data));
+			await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform));
 			assert.isTrue(isPromptForChoiceCalled);
 			assert.isTrue(isInstallExtensionCalled);
 		});
@@ -62,7 +64,7 @@ describe("platformEnvironmentRequirements ", () => {
 			const doctorService = testInjector.resolve("doctorService");
 			doctorService.canExecuteLocalBuild = () => true;
 
-			const result = await platformEnvironmentRequirements.checkEnvironmentRequirements(data);
+			const result = await platformEnvironmentRequirements.checkEnvironmentRequirements(platform);
 			assert.isTrue(result);
 		});
 
@@ -83,7 +85,7 @@ describe("platformEnvironmentRequirements ", () => {
 				const prompter = testInjector.resolve("prompter");
 				prompter.promptForChoice = () => Promise.resolve(PlatformEnvironmentRequirements.SETUP_SCRIPT_OPTION_NAME);
 
-				const result = await platformEnvironmentRequirements.checkEnvironmentRequirements(data);
+				const result = await platformEnvironmentRequirements.checkEnvironmentRequirements(platform);
 				assert.isTrue(result);
 			});
 			it("should prompt for choice when env is not configured after executing setup script", async () => {
@@ -107,8 +109,9 @@ describe("platformEnvironmentRequirements ", () => {
 				let isInstallExtensionCalled = false;
 				const extensibilityService = testInjector.resolve("extensibilityService");
 				extensibilityService.installExtension = () => {isInstallExtensionCalled = true; };
+				extensibilityService.getInstalledExtensions = () => { return {}; };
 
-				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(data));
+				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform));
 				assert.isTrue(isInstallExtensionCalled);
 				assert.isTrue(isPromptForChoiceCalled);
 			});
@@ -136,8 +139,9 @@ describe("platformEnvironmentRequirements ", () => {
 					let isInstallExtensionCalled = false;
 					const extensibilityService = testInjector.resolve("extensibilityService");
 					extensibilityService.installExtension = () => isInstallExtensionCalled = true;
+					extensibilityService.getInstalledExtensions = () => { return {}; };
 
-					await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(data), cloudBuildsErrorMessage);
+					await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), cloudBuildsErrorMessage);
 					assert.isTrue(isInstallExtensionCalled);
 					assert.isTrue(isPromptForChoiceCalled);
 				});
@@ -155,7 +159,7 @@ describe("platformEnvironmentRequirements ", () => {
 						return PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME;
 					};
 
-					await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(data), manuallySetupErrorMessage);
+					await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), manuallySetupErrorMessage);
 					assert.isTrue(isPromptForChoiceCalled);
 				});
 			});
@@ -172,8 +176,9 @@ describe("platformEnvironmentRequirements ", () => {
 				let isInstallExtensionCalled = false;
 				const extensibilityService = testInjector.resolve("extensibilityService");
 				extensibilityService.installExtension = () => isInstallExtensionCalled = true;
+				extensibilityService.getInstalledExtensions = () => { return {}; };
 
-				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(data), cloudBuildsErrorMessage);
+				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), cloudBuildsErrorMessage);
 				assert.isTrue(isInstallExtensionCalled);
 			});
 		});
@@ -186,7 +191,7 @@ describe("platformEnvironmentRequirements ", () => {
 				const prompter = testInjector.resolve("prompter");
 				prompter.promptForChoice = () => PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME;
 
-				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(data), manuallySetupErrorMessage);
+				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), manuallySetupErrorMessage);
 			});
 		});
 
@@ -198,7 +203,7 @@ describe("platformEnvironmentRequirements ", () => {
 				const doctorService = testInjector.resolve("doctorService");
 				doctorService.canExecuteLocalBuild = () => false;
 
-				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(data), nonInteractiveConsoleErrorMessage);
+				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), nonInteractiveConsoleErrorMessage);
 			});
 		});
 	});

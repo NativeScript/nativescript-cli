@@ -117,6 +117,7 @@ function createTestInjector() {
 		getPlaygroundInfo: () => Promise.resolve(null)
 	});
 
+	testInjector.register("platformEnvironmentRequirements", {});
 	return testInjector;
 }
 

@@ -547,7 +547,7 @@ interface IAndroidToolsInfo {
 	 * @param {any} options Defines if the warning messages should treated as error and if the targetSdk value should be validated as well.
 	 * @return {boolean} True if there are detected issues, false otherwise.
 	 */
-	validateInfo(options?: { showWarningsAsErrors: boolean, validateTargetSdk: boolean }): boolean;
+	validateInfo(options?: IAndroidToolsInfoValidateInput): boolean;
 
 	/**
 	 * Validates the information about required JAVA version.
@@ -555,14 +555,20 @@ interface IAndroidToolsInfo {
 	 * @param {any} options Defines if the warning messages should treated as error.
 	 * @return {boolean} True if there are detected issues, false otherwise.
 	 */
-	validateJavacVersion(installedJavaVersion: string, options?: { showWarningsAsErrors: boolean }): boolean;
+	validateJavacVersion(installedJavaVersion: string, options?: IAndroidToolsInfoOptions): boolean;
 
 	/**
 	 * Validates if ANDROID_HOME environment variable is set correctly.
 	 * @param {any} options Defines if the warning messages should treated as error.
 	 * @returns {boolean} true in case ANDROID_HOME is correctly set, false otherwise.
 	 */
-	validateAndroidHomeEnvVariable(options?: { showWarningsAsErrors: boolean }): boolean;
+	validateAndroidHomeEnvVariable(options?: IAndroidToolsInfoOptions): boolean;
+
+	/** 
+	 * Validates target sdk
+	 * @returns {boolean} True if there are detected issues, false otherwise
+	*/
+	validateTargetSdk(options?: IAndroidToolsInfoOptions): boolean;
 
 	/**
 	 * Gets the path to `adb` executable from ANDROID_HOME. It should be `$ANDROID_HOME/platform-tools/adb` in case it exists.
@@ -605,6 +611,23 @@ interface IAndroidToolsInfoData {
 	 * Whether or not `.d.ts` typings should be generated for compileSdk. Experimental feature
 	 */
 	generateTypings: boolean;
+}
+
+/**
+ * Describes options that can be passed to methods from IAndroidToolsInfo interface
+ */
+interface IAndroidToolsInfoOptions {
+	/**
+	 * Defines if the warning messages should treated as error.
+	 */
+	showWarningsAsErrors: boolean;
+}
+
+interface IAndroidToolsInfoValidateInput extends IAndroidToolsInfoOptions {
+	/**
+	 * Defines if the targetSdk value should be validated.
+	 */
+	validateTargetSdk: boolean;
 }
 
 interface ISocketProxyFactory extends NodeJS.EventEmitter {

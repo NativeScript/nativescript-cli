@@ -19,7 +19,10 @@ export class CloudSetupCommand implements ICommand {
 	constructor(private $extensibilityService: IExtensibilityService) { }
 
 	public async execute(args: string[]): Promise<any> {
-		return this.$extensibilityService.installExtension("nativescript-cloud");
+		const installedExtensions = this.$extensibilityService.getInstalledExtensions();
+		if (!installedExtensions["nativescript-cloud"]) {
+			return this.$extensibilityService.installExtension("nativescript-cloud");
+		}
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

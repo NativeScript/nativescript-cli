@@ -367,10 +367,5 @@ interface IUpdateAppOptions extends IOptionalFilesToSync, IOptionalFilesToRemove
 }
 
 interface IPlatformEnvironmentRequirements {
-	checkEnvironmentRequirements(input: ICheckEnvironmentRequirementsInput): Promise<boolean>;
-}
-
-interface ICheckEnvironmentRequirementsInput {
-	platform: string;
-	cloudCommandName: string;
+	checkEnvironmentRequirements(platform: string): Promise<boolean>;
 }

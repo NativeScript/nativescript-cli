@@ -49,9 +49,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $pbxprojDomXcode: IPbxprojDomXcode,
 		private $xcode: IXcode,
 		private $iOSEntitlementsService: IOSEntitlementsService,
+		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $sysInfo: ISysInfo,
 		private $xCConfigService: XCConfigService) {
-		super($fs, $projectDataService);
+			super($fs, $projectDataService);
 	}
 
 	private _platformsDirCache: string = null;
@@ -130,16 +131,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return path.join(this.getPlatformData(projectData).projectRoot, projectData.projectName, "Resources");
 	}
 
-	public async validate(): Promise<void> {
+	public async validate(projectData: IProjectData): Promise<void> {
 		if (!this.$hostInfo.isDarwin) {
 			return;
 		}
 
-		try {
-			await this.$childProcess.exec("which xcodebuild");
-		} catch (error) {
-			this.$errors.fail("Xcode is not installed. Make sure you have Xcode installed and added to your PATH");
-		}
+		await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(this.getPlatformData(projectData).normalizedPlatformName);
 
 		const xcodeBuildVersion = await this.getXcodeVersion();
 		if (helpers.versionCompare(xcodeBuildVersion, IOSProjectService.XCODEBUILD_MIN_VERSION) < 0) {

@@ -9,8 +9,7 @@ export class RunCommandBase implements ICommand {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
 		private $hostInfo: IHostInfo,
-		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
-		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements) { }
+		private $liveSyncCommandHelper: ILiveSyncCommandHelper) { }
 
 	public allowedParameters: ICommandParameter[] = [];
 	public async execute(args: string[]): Promise<void> {
@@ -18,8 +17,6 @@ export class RunCommandBase implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({platform: this.platform, cloudCommandName: "run"});
-
 		if (args.length) {
 			this.$errors.fail(ERROR_NO_VALID_SUBCOMMAND_FORMAT, "run");
 		}
