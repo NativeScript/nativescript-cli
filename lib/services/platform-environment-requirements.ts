@@ -1,3 +1,6 @@
+import { isInteractive } from "../common/helpers";
+import { EOL } from "os";
+
 export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequirements {
 	constructor(private $doctorService: IDoctorService,
 		private $errors: IErrors,
@@ -16,6 +19,13 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	public async checkEnvironmentRequirements(data: ICheckEnvironmentRequirementsInput): Promise<boolean> {
 		const canExecute = await this.$doctorService.canExecuteLocalBuild(data.platform);
 		if (!canExecute) {
+			if (!isInteractive()) {
+				this.fail("Your environment is not configured properly and you will not be able to execute local builds. You are missing the nativescript-cloud extension and you will not be able to execute cloud builds. To continue, choose one of the following options: " + EOL
+					+ "Run $ tns setup command to run the setup script to try to automatically configure your environment for local builds." + EOL
+					+ "Run $ tns cloud setup command to install the nativescript-cloud extension to configure your environment for cloud builds." + EOL
+					+ `Verify that your environment is configured according to the system requirements described at ${this.$staticConfig.SYS_REQUIREMENTS_LINK}`);
+			}
+
 			const selectedOption = await this.$prompter.promptForChoice(PlatformEnvironmentRequirements.NOT_CONFIGURED_ENV_MESSAGE, [
 				PlatformEnvironmentRequirements.CLOUD_BUILDS_OPTION_NAME,
 				PlatformEnvironmentRequirements.SETUP_SCRIPT_OPTION_NAME,
@@ -67,7 +77,8 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 
 	private async processCloudBuilds(data: ICheckEnvironmentRequirementsInput): Promise<void> {
 		await this.processCloudBuildsCore(data);
-		this.fail(`Use the $ tns login command to log in with your account and then $ tns cloud ${data.cloudCommandName.toLowerCase()} ${data.platform.toLowerCase()} command to build your app in the cloud.`);
+		const cloudCommandName = data.platform ? `$ tns cloud ${data.cloudCommandName.toLowerCase()} ${data.platform.toLowerCase()}` : `$ tns cloud ${data.cloudCommandName.toLowerCase()}`;
+		this.fail(`Use the $ tns login command to log in with your account and then ${cloudCommandName} command to build your app in the cloud.`);
 	}
 
 	private async processCloudBuildsCore(data: ICheckEnvironmentRequirementsInput): Promise<IExtensionData> {

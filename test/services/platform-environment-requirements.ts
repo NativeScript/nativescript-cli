@@ -5,16 +5,18 @@ import { assert } from "chai";
 
 const data = {platform: "android", cloudCommandName: "build"};
 const cloudBuildsErrorMessage = `Use the $ tns login command to log in with your account and then $ tns cloud ${data.cloudCommandName.toLowerCase()} ${data.platform.toLowerCase()} command to build your app in the cloud.`;
-function getManuallySetupErrorMessage(testInjector: IInjector) {
-	const staticConfig = testInjector.resolve("staticConfig");
-	return `To be able to build for ${data.platform}, verify that your environment is configured according to the system requirements described at ${staticConfig.SYS_REQUIREMENTS_LINK}`;
-}
+const manuallySetupErrorMessage = `To be able to build for ${data.platform}, verify that your environment is configured according to the system requirements described at `;
+const nonInteractiveConsoleErrorMessage = `Your environment is not configured properly and you will not be able to execute local builds. You are missing the nativescript-cloud extension and you will not be able to execute cloud builds. To continue, choose one of the following options: \nRun $ tns setup command to run the setup script to try to automatically configure your environment for local builds.\nRun $ tns cloud setup command to install the nativescript-cloud extension to configure your environment for cloud builds.\nVerify that your environment is configured according to the system requirements described at `;
 
 function createTestInjector() {
 	const testInjector = new Yok();
 
 	testInjector.register("doctorService", {});
-	testInjector.register("errors", stubs.ErrorsStub);
+	testInjector.register("errors", {
+		fail: (err: any) => {
+			throw new Error(err.formatStr || err.message || err);
+		}
+	});
 	testInjector.register("extensibilityService", {});
 	testInjector.register("logger", stubs.LoggerStub);
 	testInjector.register("prompter", {});
@@ -24,7 +26,7 @@ function createTestInjector() {
 	return testInjector;
 }
 
-describe("platformEnvironmentRequirements ", () => {
+describe.only("platformEnvironmentRequirements ", () => {
 	describe("checkRequirements", () => {
 		let testInjector: IInjector = null;
 		let platformEnvironmentRequirements: IPlatformEnvironmentRequirements = null;
@@ -32,6 +34,8 @@ describe("platformEnvironmentRequirements ", () => {
 		beforeEach(() => {
 			testInjector = createTestInjector();
 			platformEnvironmentRequirements = testInjector.resolve("platformEnvironmentRequirements");
+			process.stdout.isTTY = true;
+			process.stdin.isTTY = true;
 		});
 
 		it("should show prompt when environment is not configured", async () => {
@@ -151,7 +155,7 @@ describe("platformEnvironmentRequirements ", () => {
 						return PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME;
 					};
 
-					await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(data), getManuallySetupErrorMessage(testInjector));
+					await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(data), manuallySetupErrorMessage);
 					assert.isTrue(isPromptForChoiceCalled);
 				});
 			});
@@ -182,7 +186,19 @@ describe("platformEnvironmentRequirements ", () => {
 				const prompter = testInjector.resolve("prompter");
 				prompter.promptForChoice = () => PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME;
 
-				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(data), getManuallySetupErrorMessage(testInjector));
+				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(data), manuallySetupErrorMessage);
+			});
+		});
+
+		describe("when console is not interactive", () => {
+			it("should fail when console is not interactive", async () => {
+				process.stdout.isTTY = false;
+				process.stdin.isTTY = false;
+
+				const doctorService = testInjector.resolve("doctorService");
+				doctorService.canExecuteLocalBuild = () => false;
+
+				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(data), nonInteractiveConsoleErrorMessage);
 			});
 		});
 	});
