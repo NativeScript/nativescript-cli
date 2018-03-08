@@ -30,12 +30,13 @@ Command | Description
 [init](project/creation/init.html) | Initializes an existing project for native development with NativeScript.
 [platform add `<Platform>`](project/configuration/platform-add.html) | Configures the current project to target the selected platform.
 [platform list](project/configuration/platform.html) | Lists all platforms that the project currently targets.
-[platform&nbsp;remove&nbsp;`<Platform>`](project/configuration/platform-remove.html) | Removes the selected platform from the platforms that the project currently targets. This operation deletes all platform-specific files and subdirectories from your project.
+[platform remove `<Platform>`](project/configuration/platform-remove.html) | Removes the selected platform from the platforms that the project currently targets. This operation deletes all platform-specific files and subdirectories from your project.
 [platform update `<Platform>`](project/configuration/platform-update.html) | Updates the NativeScript runtime for the specified platform.
 [prepare `<Platform>`](project/configuration/prepare.html) | Copies relevant content from the app directory to the subdirectory for the selected target platform to let you build the project.
 [build `<Platform>`](project/testing/build.html) | Builds the project for the selected target platform and produces an application package or an emulator package.
 [deploy `<Platform>`](project/testing/deploy.html) | Deploys the project to a connected physical or virtual device.
 [run](project/testing/run.html) | Runs your project on a connected device or in the native emulator, if configured.
+[run `<Platform>`](project/testing/run.html) | Runs your project on a connected device or in the native emulator for the specified platform, if configured.
 [debug `<Platform>`](project/testing/debug.html) | Debugs your project on a connected physical or virtual device.
 [test init](project/testing/test-init.html) | Configures your project for unit testing with a selected framework.
 [test `<Platform>`](project/testing/test.html) | Runs the unit tests in your project on a connected physical or virtual device.

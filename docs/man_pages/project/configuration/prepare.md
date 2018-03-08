@@ -18,7 +18,7 @@ in the `platforms` directory. This lets you build the project with the SDK for t
 * `android` - Prepares your project for an Android build.
 * `ios` - Prepares your project for an iOS build.<% } %>
 
-<% if(isHtml) { %> 
+<% if(isHtml) { %>
 ### Command Limitations
 
 * You can run `$ tns prepare ios` only on OS X systems.
