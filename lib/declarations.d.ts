@@ -463,6 +463,7 @@ interface IOptions extends ICommonOptions, IBundleString, IPlatformTemplate, IEm
 	liveEdit: boolean;
 	chrome: boolean;
 	inspector: boolean; // the counterpart to --chrome
+	background: string
 }
 
 interface IEnvOptions {
@@ -793,4 +794,27 @@ interface INativescriptCloudExtensionService {
 	 * @return {Promise<IExtensionData>} returns the extension data 
 	 */
 	install(): Promise<IExtensionData>;
+}
+
+
+/**
+ * Describes service used for assets generation
+ */
+interface IAssetsGenerationService {
+	/**
+	 * Generate icons for iOS and Android
+	 * @param {string} imagePath Path to the image that will be used for generation
+	 * @param {string} resourcesPath Path to the app resources
+	 * @returns {Promise<void>}
+	 */
+	generateIcons(imagePath: string, resourcesPath: string): Promise<void>;
+
+	/**
+	 * Generate splash screens for iOS and Android
+	 * @param {string} imagePath Path to the image that will be used for generation
+	 * @param {string} resourcesPath Path to the app resources
+	 * @param {string} background Background color that will be used for background. Defaults to #FFFFFF
+	 * @returns {Promise<void>}
+	 */
+	generateSplashScreens(imagePath: string, resourcesPath: string, background?: string): Promise<void>;
 }

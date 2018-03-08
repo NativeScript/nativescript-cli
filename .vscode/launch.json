@@ -22,7 +22,9 @@
 			// "args": [ "run", "android", "--path", "cliapp"]
 			// "args": [ "debug", "android", "--path", "cliapp"]
 			// "args": [ "livesync", "android", "--path", "cliapp"]
-			// "args": [ "livesync", "android", "--watch", "--path", "cliapp"]
+			// "args": [ "livesync", "android", "--watch", "--path", "cliapp"],
+			// "args": [ "generate-icons", "./test/image-generation-test.png", "--path", "cliapp" ],
+			// "args": [ "generate-splashscreens", "./test/image-generation-test.png", "--path", "cliapp", "--background", "black" ],
 		},
 		{
 			// in case you want to debug a single test, modify it's code to be `it.only(...` instead of `it(...`
