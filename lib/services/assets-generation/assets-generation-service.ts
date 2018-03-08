@@ -2,17 +2,20 @@ import * as path from "path";
 import * as Jimp from "jimp";
 import * as Color from "color";
 import { Icons, SplashScreens, Operations } from "./image-definitions"
+import { exported } from "../../common/decorators";
 
 export class AssetsGenerationService implements IAssetsGenerationService {
 	constructor(private $logger: ILogger) {	
 	}
 	
+	@exported("assetsGenerationService")
 	public async generateIcons(imagePath: string, resourcesPath: string): Promise<void> {
 		this.$logger.info("Generating icons ...");
 		await this.generateImagesForDefinitions(imagePath, resourcesPath, Icons)
 		this.$logger.info("Icons generation completed.");
 	}
 
+	@exported("assetsGenerationService")
 	public async generateSplashScreens(imagePath: string, resourcesPath: string, background?: string): Promise<void> {
 		this.$logger.info("Generating splash screens ...");
 		await this.generateImagesForDefinitions(imagePath, resourcesPath, SplashScreens, background)
