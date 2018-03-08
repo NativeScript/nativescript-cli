@@ -309,6 +309,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				platformSpecificData,
 				changesInfo,
 				filesToSync,
+				filesToRemove,
 				projectFilesConfig,
 				env
 			});

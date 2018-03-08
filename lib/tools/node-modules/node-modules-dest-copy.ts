@@ -140,7 +140,7 @@ export class NpmPluginPrepare {
 	}
 
 	public async preparePlugins(dependencies: IDependencyData[], platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
-		if (_.isEmpty(dependencies) || this.allPrepared(dependencies, platform, projectData)) {
+		if (_.isEmpty(dependencies)) {
 			return;
 		}
 

@@ -2,7 +2,7 @@ import * as path from "path";
 import * as choki from "chokidar";
 import { EOL } from "os";
 import { EventEmitter } from "events";
-import { hook } from "../../common/helpers";
+import { hook, isAllowedFinalFile } from "../../common/helpers";
 import { PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME, TrackActionNames } from "../../constants";
 import { DeviceTypes, DeviceDiscoveryEventNames } from "../../common/constants";
 import { cache } from "../../common/decorators";
@@ -561,6 +561,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 								filesToRemove = [];
 
 								const allModifiedFiles = [].concat(currentFilesToSync).concat(currentFilesToRemove);
+
 								const preparedPlatforms: string[] = [];
 								const rebuiltInformation: ILiveSyncBuildInfo[] = [];
 
@@ -658,16 +659,19 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 			const watcher = choki.watch(patterns, watcherOptions)
 				.on("all", async (event: string, filePath: string) => {
+
 					clearTimeout(timeoutTimer);
 
 					filePath = path.join(liveSyncData.projectDir, filePath);
 
 					this.$logger.trace(`Chokidar raised event ${event} for ${filePath}.`);
 
-					if (event === "add" || event === "addDir" || event === "change" /* <--- what to do when change event is raised ? */) {
-						filesToSync.push(filePath);
-					} else if (event === "unlink" || event === "unlinkDir") {
-						filesToRemove.push(filePath);
+					if (!isAllowedFinalFile(filePath)) {
+						if (event === "add" || event === "addDir" || event === "change" /* <--- what to do when change event is raised ? */) {
+							filesToSync.push(filePath);
+						} else if (event === "unlink" || event === "unlinkDir") {
+							filesToRemove.push(filePath);
+						}
 					}
 
 					startSyncFilesTimeout();

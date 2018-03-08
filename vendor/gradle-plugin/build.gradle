@@ -1,0 +1,36 @@
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.3.2'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 24 }
+def computeBuildToolsVersion = { ->
+    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "27.0.1"
+}
+
+android {
+    compileSdkVersion computeCompileSdkVersion()
+    buildToolsVersion computeBuildToolsVersion()
+
+    defaultConfig {
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+    }
+}

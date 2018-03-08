@@ -9,6 +9,7 @@ $injector.require("projectData", "./project-data");
 $injector.requirePublic("projectDataService", "./services/project-data-service");
 $injector.requirePublic("projectService", "./services/project-service");
 $injector.require("androidProjectService", "./services/android-project-service");
+$injector.require("androidPluginBuildService", "./services/android-plugin-build-service");
 $injector.require("iOSEntitlementsService", "./services/ios-entitlements-service");
 $injector.require("iOSProjectService", "./services/ios-project-service");
 $injector.require("iOSProvisionService", "./services/ios-provision-service");
@@ -90,6 +91,7 @@ $injector.requireCommand("plugin|add", "./commands/plugin/add-plugin");
 $injector.requireCommand("plugin|install", "./commands/plugin/add-plugin");
 $injector.requireCommand("plugin|remove", "./commands/plugin/remove-plugin");
 $injector.requireCommand("plugin|update", "./commands/plugin/update-plugin");
+$injector.requireCommand("plugin|build", "./commands/plugin/build-plugin");
 
 $injector.require("doctorService", "./services/doctor-service");
 $injector.require("xcprojService", "./services/xcproj-service");
