@@ -1,6 +1,7 @@
 import { EOL } from "os";
 import * as path from "path";
 import * as constants from "../../constants";
+import * as temp from "temp";
 export class BuildPluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 	public pluginProjectPath: string;
@@ -28,7 +29,8 @@ export class BuildPluginCommand implements ICommand {
 			}
 		}
 
-		const tempAndroidProject = path.join(platformsAndroidPath, "android-project");
+		temp.track();
+		const tempAndroidProject = temp.mkdirSync("android-project");
 
 		const options: IBuildOptions = {
 			aarOutputDir: platformsAndroidPath,
