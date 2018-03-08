@@ -81,7 +81,7 @@ interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	 * @param {string} @optional outputPath Directory containing build information and artifacts.
 	 * @returns {Promise<boolean>} true indicates that the application should be installed.
 	 */
-	shouldInstall(device: Mobile.IDevice, projectData: IProjectData, outputPath?: string): Promise<boolean>;
+	shouldInstall(device: Mobile.IDevice, projectData: IProjectData, release: IRelease, outputPath?: string): Promise<boolean>;
 
 	/**
 	 * Determines whether the project should undergo the prepare process.
@@ -260,7 +260,7 @@ interface IPlatformData {
 	projectRoot: string;
 	normalizedPlatformName: string;
 	appDestinationDirectoryPath: string;
-	deviceBuildOutputPath: string;
+	getDeviceBuildOutputPath(options: IRelease): string;
 	emulatorBuildOutputPath?: string;
 	getValidPackageNames(buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[];
 	frameworkFilesExtensions: string[];
