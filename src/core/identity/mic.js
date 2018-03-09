@@ -39,6 +39,21 @@ export class MobileIdentityConnect extends Identity {
     return true;
   }
 
+  _getMicPath(options){
+    let pathname = '/oauth/auth';
+    let version = 3;
+
+    if (options.version) {
+      version = options.version;
+    }
+    
+    if (isString(version) === false) {
+      version = String(version);
+    }
+
+    return urljoin(version.indexOf('v') === 0 ? version : `v${version}`, pathname);
+  }
+
   login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
     let clientId = this.client.appKey;
 
@@ -87,18 +102,6 @@ export class MobileIdentityConnect extends Identity {
   }
 
   requestTempLoginUrl(clientId, redirectUri, options = {}) {
-    let pathname = '/oauth/auth';
-
-    if (options.version) {
-      let version = options.version;
-
-      if (isString(version) === false) {
-        version = String(version);
-      }
-
-      pathname = urljoin(version.indexOf('v') === 0 ? version : `v${version}`, pathname);
-    }
-
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       headers: {
@@ -107,7 +110,7 @@ export class MobileIdentityConnect extends Identity {
       url: url.format({
         protocol: this.client.micProtocol,
         host: this.client.micHost,
-        pathname: pathname
+        pathname: this._getMicPath(options)
       }),
       properties: options.properties,
       body: {
@@ -122,23 +125,10 @@ export class MobileIdentityConnect extends Identity {
 
   requestCodeWithPopup(clientId, redirectUri, options = {}) {
     const promise = Promise.resolve().then(() => {
-      let pathname = '/oauth/auth';
-      const popup = new Popup();
-
-      if (options.version) {
-        let version = options.version;
-
-        if (!isString(version)) {
-          version = String(version);
-        }
-
-        pathname = urljoin(version.indexOf('v') === 0 ? version : `v${version}`, pathname);
-      }
-
       return popup.open(url.format({
         protocol: this.client.micProtocol,
         host: this.client.micHost,
-        pathname: pathname,
+        pathname: this._getMicPath(options),
         query: {
           client_id: clientId,
           redirect_uri: redirectUri,

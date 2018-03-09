@@ -3,7 +3,7 @@ import expect from 'expect';
 import nock from 'nock';
 import url from 'url';
 import { MobileIdentityConnect, AuthorizationGrant } from './mic';
-import { InsufficientCredentialsError, MobileIdentityConnectError } from '../errors';
+import { InsufficientCredentialsError, MobileIdentityConnectError, KinveyError } from '../errors';
 import { Client } from '../client';
 import { randomString } from '../utils';
 import { NetworkRack } from '../request';
@@ -74,7 +74,7 @@ describe('MobileIdentityConnect', () => {
         // API Response
         nock(client.micHostname, { encodedQueryParams: true })
           .post(
-            '/oauth/auth',
+            '/v3/oauth/auth',
             `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
           )
           .reply(200, {
@@ -114,7 +114,7 @@ describe('MobileIdentityConnect', () => {
         // API Response
         nock(client.micHostname, { encodedQueryParams: true })
           .post(
-            '/oauth/auth',
+            '/v3/oauth/auth',
             `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
           )
           .reply(200, {
@@ -144,6 +144,27 @@ describe('MobileIdentityConnect', () => {
           });
       });
 
+      it('should hit the correct endpoint version', () => {
+        const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
+
+        nock(client.micHostname, { encodedQueryParams: true })
+          .post(
+            '/v1/oauth/auth',
+            `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
+          )
+          .reply(200, {
+            temp_login_uri: tempLoginUriParts.href
+          }, {
+            'Content-Type': 'application/json; charset=utf-8'
+          });
+        
+        const mic = new MobileIdentityConnect();
+        return mic.requestTempLoginUrl(client.appKey, redirectUri, {version: 1})
+          .then((response)=> {
+            expect(response).toBe(tempLoginUriParts.href);
+          });
+      });
+
       it('should succeed with valid credentials', () => {
         const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
         const username = 'custom';
@@ -159,7 +180,7 @@ describe('MobileIdentityConnect', () => {
         // API Response
         nock(client.micHostname, { encodedQueryParams: true })
           .post(
-            '/oauth/auth',
+            '/v3/oauth/auth',
             `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
           )
           .reply(200, {
@@ -219,7 +240,7 @@ describe('MobileIdentityConnect', () => {
         // API Response
         nock(client.micHostname, { encodedQueryParams: true })
           .post(
-            '/oauth/auth',
+            '/v3/oauth/auth',
             `client_id=${encodeURIComponent(client.appKey)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
           )
           .reply(200, {
@@ -280,7 +301,7 @@ describe('MobileIdentityConnect', () => {
         // API Response
         nock(client.micHostname, { encodedQueryParams: true })
           .post(
-            '/oauth/auth',
+            '/v3/oauth/auth',
             `client_id=${encodeURIComponent(client.appKey+'.'+micId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
           )
           .reply(200, {
