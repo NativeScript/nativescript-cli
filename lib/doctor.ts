@@ -142,13 +142,6 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 					platforms: [Constants.IOS_PLATFORM_NAME]
 				})
 			);
-		} else {
-			result.push({
-				message: "NOTE: You can develop for iOS only on Mac OS X systems.",
-				additionalInformation: "To be able to work with iOS devices and projects, you need Mac OS X Mavericks or later.",
-				platforms: [Constants.IOS_PLATFORM_NAME],
-				type: Constants.INFO_TYPE_NAME
-			});
 		}
 
 		result = result.concat(
@@ -172,6 +165,15 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 				platforms: Constants.SUPPORTED_PLATFORMS
 			})
 		);
+
+		if (!this.hostInfo.isDarwin) {
+			result.push({
+				message: "Local builds for iOS can be executed only on a macOS system. To build for iOS on a different operating system, you can use the NativeScript cloud infrastructure.",
+				additionalInformation: "",
+				platforms: [Constants.IOS_PLATFORM_NAME],
+				type: Constants.INFO_TYPE_NAME
+			});
+		}
 
 		return result;
 	}
