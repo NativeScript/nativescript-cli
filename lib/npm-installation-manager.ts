@@ -136,7 +136,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	}
 
 	private async npmInstall(packageName: string, pathToSave: string, version: string, dependencyType: string): Promise<INpmInstallResultInfo> {
-		this.$logger.out("Installing ", packageName);
+		this.$logger.out(`Installing ${packageName}`);
 
 		packageName = packageName + (version ? `@${version}` : "");
 
