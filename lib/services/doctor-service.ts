@@ -53,7 +53,11 @@ class DoctorService implements IDoctorService {
 		return hasWarnings;
 	}
 
-	public async runSetupScript(): Promise<ISpawnResult> {
+	public runSetupScript(): Promise<ISpawnResult> {
+		if (this.$hostInfo.isLinux) {
+			return;
+		}
+
 		this.$logger.out("Running the setup script to try and automatically configure your environment.");
 
 		if (this.$hostInfo.isDarwin) {

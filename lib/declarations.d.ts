@@ -566,6 +566,7 @@ interface IAndroidToolsInfo {
 
 	/** 
 	 * Validates target sdk
+	 * @param {IAndroidToolsInfoOptions} options @optional Defines if the warning messages should treated as error.
 	 * @returns {boolean} True if there are detected issues, false otherwise
 	*/
 	validateTargetSdk(options?: IAndroidToolsInfoOptions): boolean;
@@ -784,4 +785,12 @@ interface IBundleValidatorHelper {
 	 * @return {void}
 	 */
 	validate(): void;
+}
+
+interface INativescriptCloudExtensionService {
+	/**
+	 * Installs nativescript-cloud extension
+	 * @return {Promise<IExtensionData>} returns the extension data 
+	 */
+	install(): Promise<IExtensionData>;
 }

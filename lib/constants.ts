@@ -137,3 +137,5 @@ export const enum BuildStates {
 	Clean = "Clean",
 	Incremental = "Incremental"
 }
+
+export const NATIVESCRIPT_CLOUD_EXTENSION_NAME = "nativescript-cloud";

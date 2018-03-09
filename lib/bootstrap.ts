@@ -156,3 +156,4 @@ $injector.require("terminalSpinnerService", "./services/terminal-spinner-service
 
 $injector.require('playgroundService', './services/playground-service');
 $injector.require("platformEnvironmentRequirements", "./services/platform-environment-requirements");
+$injector.require("nativescriptCloudExtensionService", "./services/nativescript-cloud-extension-service");

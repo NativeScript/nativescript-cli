@@ -18,11 +18,11 @@ function createTestInjector() {
 			throw new Error(err.formatStr || err.message || err);
 		}
 	});
-	testInjector.register("extensibilityService", {});
 	testInjector.register("logger", stubs.LoggerStub);
 	testInjector.register("prompter", {});
 	testInjector.register("platformEnvironmentRequirements", PlatformEnvironmentRequirements);
 	testInjector.register("staticConfig", { SYS_REQUIREMENTS_LINK: "" });
+	testInjector.register("nativescriptCloudExtensionService", {});
 
 	return testInjector;
 }
@@ -51,9 +51,8 @@ describe("platformEnvironmentRequirements ", () => {
 			};
 
 			let isInstallExtensionCalled = false;
-			const extensibilityService = testInjector.resolve("extensibilityService");
-			extensibilityService.installExtension = () => {isInstallExtensionCalled = true; };
-			extensibilityService.getInstalledExtensions = () => { return {}; };
+			const nativescriptCloudExtensionService = testInjector.resolve("nativescriptCloudExtensionService");
+			nativescriptCloudExtensionService.install = () => {isInstallExtensionCalled = true; };
 
 			await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform));
 			assert.isTrue(isPromptForChoiceCalled);
@@ -70,17 +69,9 @@ describe("platformEnvironmentRequirements ", () => {
 
 		describe("when setup script option is selected ", () => {
 			it("should return true when env is configured after executing setup script", async () => {
-				let index = 0;
 				const doctorService = testInjector.resolve("doctorService");
-				doctorService.canExecuteLocalBuild = () => {
-					if (index === 0) {
-						index++;
-						return false;
-					}
-
-					return true;
-				};
-				doctorService.runSetupScript = () => Promise.resolve();
+				doctorService.canExecuteLocalBuild = () => false;
+				doctorService.runSetupScript = async () => { doctorService.canExecuteLocalBuild = () => true; };
 
 				const prompter = testInjector.resolve("prompter");
 				prompter.promptForChoice = () => Promise.resolve(PlatformEnvironmentRequirements.SETUP_SCRIPT_OPTION_NAME);
@@ -93,12 +84,11 @@ describe("platformEnvironmentRequirements ", () => {
 				doctorService.canExecuteLocalBuild = () => false;
 				doctorService.runSetupScript = () => Promise.resolve();
 
-				let index = 0;
-				let isPromptForChoiceCalled = false;
+				let isPromptForChoiceCalled = true;
 				const prompter = testInjector.resolve("prompter");
 				prompter.promptForChoice = () => {
-					if (index === 0) {
-						index++;
+					if (isPromptForChoiceCalled) {
+						isPromptForChoiceCalled = false;
 						return PlatformEnvironmentRequirements.SETUP_SCRIPT_OPTION_NAME;
 					}
 
@@ -107,9 +97,8 @@ describe("platformEnvironmentRequirements ", () => {
 				};
 
 				let isInstallExtensionCalled = false;
-				const extensibilityService = testInjector.resolve("extensibilityService");
-				extensibilityService.installExtension = () => {isInstallExtensionCalled = true; };
-				extensibilityService.getInstalledExtensions = () => { return {}; };
+				const nativescriptCloudExtensionService = testInjector.resolve("nativescriptCloudExtensionService");
+				nativescriptCloudExtensionService.install = () => {isInstallExtensionCalled = true; };
 
 				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform));
 				assert.isTrue(isInstallExtensionCalled);
@@ -123,12 +112,11 @@ describe("platformEnvironmentRequirements ", () => {
 					doctorService.runSetupScript = () => Promise.resolve();
 				});
 				it("should install nativescript-cloud extension when cloud builds option is selected", async () => {
-					let index = 0;
-					let isPromptForChoiceCalled = false;
+					let isPromptForChoiceCalled = true;
 					const prompter = testInjector.resolve("prompter");
 					prompter.promptForChoice = () => {
-						if (index === 0) {
-							index++;
+						if (isPromptForChoiceCalled) {
+							isPromptForChoiceCalled = false;
 							return PlatformEnvironmentRequirements.SETUP_SCRIPT_OPTION_NAME;
 						}
 
@@ -137,21 +125,19 @@ describe("platformEnvironmentRequirements ", () => {
 					};
 
 					let isInstallExtensionCalled = false;
-					const extensibilityService = testInjector.resolve("extensibilityService");
-					extensibilityService.installExtension = () => isInstallExtensionCalled = true;
-					extensibilityService.getInstalledExtensions = () => { return {}; };
+					const nativescriptCloudExtensionService = testInjector.resolve("nativescriptCloudExtensionService");
+					nativescriptCloudExtensionService.install = () => {isInstallExtensionCalled = true; };
 
 					await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), cloudBuildsErrorMessage);
 					assert.isTrue(isInstallExtensionCalled);
 					assert.isTrue(isPromptForChoiceCalled);
 				});
 				it("should fail when manually setup option is selected", async () => {
-					let index = 0;
-					let isPromptForChoiceCalled = false;
+					let isPromptForChoiceCalled = true;
 					const prompter = testInjector.resolve("prompter");
 					prompter.promptForChoice = () => {
-						if (index === 0) {
-							index++;
+						if (isPromptForChoiceCalled) {
+							isPromptForChoiceCalled = false;
 							return PlatformEnvironmentRequirements.SETUP_SCRIPT_OPTION_NAME;
 						}
 
@@ -174,9 +160,8 @@ describe("platformEnvironmentRequirements ", () => {
 				prompter.promptForChoice = () => Promise.resolve(PlatformEnvironmentRequirements.CLOUD_BUILDS_OPTION_NAME);
 
 				let isInstallExtensionCalled = false;
-				const extensibilityService = testInjector.resolve("extensibilityService");
-				extensibilityService.installExtension = () => isInstallExtensionCalled = true;
-				extensibilityService.getInstalledExtensions = () => { return {}; };
+				const nativescriptCloudExtensionService = testInjector.resolve("nativescriptCloudExtensionService");
+				nativescriptCloudExtensionService.install = () => {isInstallExtensionCalled = true; };
 
 				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), cloudBuildsErrorMessage);
 				assert.isTrue(isInstallExtensionCalled);
