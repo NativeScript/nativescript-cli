@@ -116,6 +116,16 @@ class DoctorService implements IDoctorService {
 	}
 
 	private printInfosCore(infos: NativeScriptDoctor.IInfo[]): void {
+		if (!helpers.isInteractive()) {
+			infos.map(info => {
+				let message = info.message;
+				if (info.type === constants.WARNING_TYPE_NAME) {
+					message = `WARNING: ${info.message.yellow} ${EOL} ${info.additionalInformation} ${EOL}`;
+				}
+				this.$logger.out(message);
+			});
+		}
+
 		infos.filter(info => info.type === constants.INFO_TYPE_NAME)
 			.map(info => {
 				const spinner = this.$terminalSpinnerService.createSpinner();
