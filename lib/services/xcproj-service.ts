@@ -30,7 +30,7 @@ class XcprojService implements IXcprojService {
 
 	public async getXcprojInfo(): Promise<IXcprojInfo> {
 		if (!this.xcprojInfoCache) {
-			let cocoapodVer = (await this.$sysInfo.getSysInfo()).cocoaPodsVer;
+			let cocoapodVer = await this.$sysInfo.getCocoaPodsVersion();
 			const xcodeVersion = await this.$xcodeSelectService.getXcodeVersion();
 
 			if (cocoapodVer && !semver.valid(cocoapodVer)) {
