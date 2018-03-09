@@ -1,12 +1,11 @@
-import url from 'url';
 import Promise from 'es6-promise';
+
 import { isDefined } from '../core/utils';
 import { KinveyError } from '../core/errors';
-import { CacheRequest, RequestMethod } from '../core/request';
 import { User } from '../core/user';
 import { Html5Client } from './client';
+import { repositoryProvider } from '../core/datastore';
 
-const USERS_NAMESPACE = 'user';
 const ACTIVE_USER_COLLECTION_NAME = 'kinvey_active_user';
 
 export function init(config) {
@@ -32,16 +31,8 @@ export function initialize(config) {
       return Promise.resolve(activeUser);
     }
 
-    const request = new CacheRequest({
-      method: RequestMethod.GET,
-      url: url.format({
-        protocol: client.apiProtocol,
-        host: client.apiHost,
-        pathname: `/${USERS_NAMESPACE}/${client.appKey}/${ACTIVE_USER_COLLECTION_NAME}`
-      })
-    });
-    return request.execute()
-      .then(response => response.data)
+    return repositoryProvider.getOfflineRepository()
+      .then(repo => repo.read(ACTIVE_USER_COLLECTION_NAME))
       .then((activeUsers) => {
         if (activeUsers.length > 0) {
           return activeUsers[0];

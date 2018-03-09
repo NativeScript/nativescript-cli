@@ -1,4 +1,5 @@
 import { Client } from '../client';
+import { Stream } from './user-to-user';
 import { getLiveService } from './live-service';
 
 function _getLiveService() {
@@ -10,7 +11,7 @@ function _getLiveService() {
  * Attaches a handler for connection status updates
  * @param {function} func
  */
-export function onConnectionStatusUpdates(func) {
+function onConnectionStatusUpdates(func) {
   _getLiveService().onConnectionStatusUpdates(func);
 }
 
@@ -19,13 +20,20 @@ export function onConnectionStatusUpdates(func) {
  * If no handler is specified, removes all handlers
  * @param {function} [func]
  */
-export function offConnectionStatusUpdates(func) {
+function offConnectionStatusUpdates(func) {
   _getLiveService().offConnectionStatusUpdates(func);
 }
 
 /**
  * Checks whether live service is ready to subscribe or publish messages
  */
-export function isInitialized() {
+function isInitialized() {
   return _getLiveService().isInitialized();
 }
+
+export const LiveServiceFacade = {
+  Stream,
+  onConnectionStatusUpdates,
+  offConnectionStatusUpdates,
+  isInitialized
+};

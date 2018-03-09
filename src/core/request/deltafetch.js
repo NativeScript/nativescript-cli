@@ -1,27 +1,18 @@
-import  Promise from 'es6-promise';
-import  keyBy from 'lodash/keyBy';
-import  reduce from 'lodash/reduce';
-import  result from 'lodash/result';
-import  values from 'lodash/values';
-import  forEach from 'lodash/forEach';
-import  isArray from 'lodash/isArray';
-import  isString from 'lodash/isString';
-import  { KinveyError, NotFoundError } from '../errors';
-import  { isDefined } from '../utils';
-import  { Query } from '../query';
-import  { RequestMethod } from './request';
-import  { KinveyRequest } from './network';
-import  { CacheRequest } from './cache';
-import  { Response, StatusCode } from './response';
+import assign from 'lodash/assign';
+import isArray from 'lodash/isArray';
+import isString from 'lodash/isString';
+import url from 'url';
+import urljoin from 'url-join';
+import { KinveyError } from '../errors';
+import { Query } from '../query';
+import { RequestMethod } from './request';
+import { KinveyRequest, AuthType } from './network';
+import { repositoryProvider } from '../datastore/repositories';
+import { Client } from '../client';
 
-const maxIdsPerRequest = 200;
+const QUERY_CACHE_COLLECTION_NAME = '_QueryCache';
 
 export class DeltaFetchRequest extends KinveyRequest {
-  constructor(options = {}) {
-    super(options);
-    this.tag = options.tag;
-  }
-
   get method() {
     return super.method;
   }
@@ -50,142 +41,101 @@ export class DeltaFetchRequest extends KinveyRequest {
   }
 
   execute() {
-    const request = new CacheRequest({
-      method: RequestMethod.GET,
-      url: this.url,
-      headers: this.headers,
-      query: this.query,
-      timeout: this.timeout,
-      client: this.client,
-      tag: this.tag
-    });
-    return request.execute()
-      .then(response => response.data)
-      .catch((error) => {
-        if (!(error instanceof NotFoundError)) {
-          throw error;
-        }
-
-        return [];
-      })
-      .then((cacheData) => {
-        if (isArray(cacheData) && cacheData.length > 0) {
-          const cacheDocuments = keyBy(cacheData, '_id');
-          const query = new Query(result(this.query, 'toJSON', this.query));
-          query.fields = ['_id', '_kmd.lmt'];
-          const request = new KinveyRequest({
-            method: RequestMethod.GET,
-            url: this.url,
-            headers: this.headers,
-            authType: this.authType,
-            query: query,
-            timeout: this.timeout,
-            client: this.client,
-            properties: this.properties,
-            skipBL: this.skipBL,
-            trace: this.trace,
-            followRedirect: this.followRedirect,
-            cache: this.cache
-          });
-
-          return request.execute()
-            .then(response => response.data)
-            .then((networkData) => {
-              const networkDocuments = keyBy(networkData, '_id');
-              const deltaSet = networkDocuments;
-              const cacheDocumentIds = Object.keys(cacheDocuments);
-
-              forEach(cacheDocumentIds, (id) => {
-                const cacheDocument = cacheDocuments[id];
-                const networkDocument = networkDocuments[id];
-
-                if (networkDocument) {
-                  if (isDefined(networkDocument._kmd) && isDefined(cacheDocument._kmd)
-                      && networkDocument._kmd.lmt === cacheDocument._kmd.lmt) {
-                    delete deltaSet[id];
-                  } else {
-                    delete cacheDocuments[id];
-                  }
-                } else {
-                  delete cacheDocuments[id];
-                }
-              });
-
-              const deltaSetIds = Object.keys(deltaSet);
-              const promises = [];
-              let i = 0;
-
-              while (i < deltaSetIds.length) {
-                const query = new Query(result(this.query, 'toJSON', this.query));
-                const ids = deltaSetIds.slice(i, deltaSetIds.length > maxIdsPerRequest + i ?
-                                                 maxIdsPerRequest : deltaSetIds.length);
-                query.contains('_id', ids);
-
-                const request = new KinveyRequest({
-                  method: RequestMethod.GET,
-                  url: this.url,
-                  headers: this.headers,
-                  authType: this.authType,
-                  query: query,
-                  timeout: this.timeout,
-                  client: this.client,
-                  properties: this.properties,
-                  skipBL: this.skipBL,
-                  trace: this.trace,
-                  followRedirect: this.followRedirect,
-                  cache: this.cache
-                });
-
-                const promise = request.execute();
-                promises.push(promise);
-                i += maxIdsPerRequest;
-              }
-
-              return Promise.all(promises);
-            })
-            .then((responses) => {
-              const response = reduce(responses, (result, response) => {
-                if (response.isSuccess()) {
-                  const headers = result.headers;
-                  headers.addAll(response.headers);
-                  result.headers = headers;
-                  result.data = result.data.concat(response.data);
-                }
-
-                return result;
-              }, new Response({
-                statusCode: StatusCode.Ok,
-                data: []
-              }));
-
-              response.data = response.data.concat(values(cacheDocuments));
-
-              if (this.query) {
-                const query = new Query(result(this.query, 'toJSON', this.query));
-                query.skip = 0;
-                query.limit = 0;
-                response.data = query.process(response.data);
-              }
-
-              return response;
+    return repositoryProvider.getOfflineRepository()
+      .then((repo) => {
+        const collectionName = this._getCollectionFromUrl();
+        const queryCacheQuery = new Query()
+          .equalTo('collectionName', collectionName)
+          .equalTo('query', this.query ? this.query.toQueryString().query : undefined)
+          .descending('lastRequest');
+        return repo.read(QUERY_CACHE_COLLECTION_NAME, queryCacheQuery)
+          .then((queries) => {
+            let deltaSetQuery = {
+              collectionName: this._getCollectionFromUrl(),
+              query: this.query ? this.query.toQueryString().query : undefined
+            };
+            const request = new KinveyRequest({
+              method: RequestMethod.GET,
+              url: this.url,
+              headers: this.headers,
+              authType: this.authType,
+              query: this.query,
+              timeout: this.timeout,
+              client: this.client,
+              properties: this.properties,
+              skipBL: this.skipBL,
+              trace: this.trace,
+              followRedirect: this.followRedirect,
+              cache: this.cache
             });
-        }
 
-        const request = new KinveyRequest({
-          method: RequestMethod.GET,
-          url: this.url,
-          headers: this.headers,
-          authType: this.authType,
-          query: this.query,
-          timeout: this.timeout,
-          client: this.client,
-          properties: this.properties,
-          skipBL: this.skipBL,
-          trace: this.trace,
-          followRedirect: this.followRedirect,
-          cache: this.cache
-        });
-        return request.execute();
+            if (isArray(queries) && queries.length > 0) {
+              [deltaSetQuery] = queries;
+              request.url = urljoin(this.url.split('?')[0], url.format({
+                pathname: '_deltaset',
+                query: { since: deltaSetQuery.lastRequest }
+              }), `?${this.url.split('?')[1] || ''}`);
+            }
+
+            return request.execute()
+              .then((response) => {
+                deltaSetQuery.lastRequest = response.headers.get('X-Kinvey-Request-Start');
+                return repo.update(QUERY_CACHE_COLLECTION_NAME, deltaSetQuery).then(() => response);
+              });
+          })
+          .then((response) => {
+            // Makse sure the response from DeltaSet is normalized
+            const { data } = response;
+
+            if (!data.changed) {
+              data.changed = data;
+            }
+
+            if (!data.deleted) {
+              data.deleted = [];
+            }
+
+            response.data = data;
+            return response;
+          });
       });
+  }
+
+  _getCollectionFromUrl() {
+    const appkeyStr = `appdata/${this.client.appKey}/`;
+    const ind = this.url.indexOf(appkeyStr);
+    let indOfQueryString = this.url.indexOf('?'); // shouldn't have anything past the collection, like an ID
+
+    if (ind === -1) {
+      throw new KinveyError('An unexpected error occured. Could not find collection');
+    }
+
+    if (indOfQueryString === -1) {
+      indOfQueryString = Infinity;
+    }
+
+    return this.url.substring(ind + appkeyStr.length, indOfQueryString);
+  }
+
+  static execute(options, client, dataOnly = true) {
+    const o = assign({
+      method: RequestMethod.GET,
+      authType: AuthType.Session
+    }, options);
+    client = client || Client.sharedInstance();
+
+    if (!o.url && isString(o.pathname) && client) {
+      o.url = url.format({
+        protocol: client.apiProtocol,
+        host: client.apiHost,
+        pathname: o.pathname
+      });
+    }
+
+    let prm = new DeltaFetchRequest(o).execute();
+    if (dataOnly) {
+      prm = prm.then(r => r.data);
+    }
+    return prm;
   }
 }

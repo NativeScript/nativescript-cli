@@ -2,11 +2,11 @@ import httpRequest from 'request';
 import Promise from 'es6-promise';
 import { Middleware } from '../core/request';
 import { isDefined } from '../core/utils';
-import { NetworkConnectionError, TimeoutError } from '../core/errors';
+import { NoNetworkConnectionError, TimeoutError } from '../core/errors';
 
 function deviceInformation(pkg) {
   const platform = process.title;
-  const version = process.version;
+  const { version } = process;
   const manufacturer = process.platform;
 
   // Return the device information string.
@@ -29,7 +29,14 @@ export class NodeHttpMiddleware extends Middleware {
 
   handle(request) {
     const promise = new Promise((resolve, reject) => {
-      const { url, method, headers, body, timeout, followRedirect } = request;
+      const {
+        url,
+        method,
+        headers,
+        body,
+        timeout,
+        followRedirect
+      } = request;
 
       // Add the X-Kinvey-Device-Information header
       headers['X-Kinvey-Device-Information'] = deviceInformation(this.pkg);

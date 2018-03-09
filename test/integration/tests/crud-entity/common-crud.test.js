@@ -147,7 +147,7 @@ function testFunc() {
         });
 
         describe('findById()', () => {
-          it('should throw a NotFoundError if the id argument does not exist', (done) => {
+          it('should throw a NotFoundError if an entity with the given id does not exist', (done) => {
             const entityId = utilities.randomString();
             const nextHandlerSpy = sinon.spy();
 
@@ -204,8 +204,7 @@ function testFunc() {
             entities.push(utilities.getEntity());
           }
 
-          utilities.cleanUpCollectionData(collectionName)
-            .then(() => utilities.saveEntities(collectionName, entities))
+          utilities.cleanAndPopulateCollection(collectionName, entities)
             .then((result) => {
               entities = result;
               done();
@@ -307,8 +306,7 @@ function testFunc() {
           entities[dataCount - 1][arrayFieldName] = [];
           entities[dataCount - 2][arrayFieldName] = [{}, {}];
 
-          utilities.cleanUpCollectionData(collectionName)
-            .then(() => utilities.saveEntities(collectionName, entities))
+          utilities.cleanAndPopulateCollection(collectionName, entities)
             .then((result) => {
               entities = _.sortBy(result, numberFieldName);
               done();
@@ -752,15 +750,15 @@ function testFunc() {
           let expectedAscending;
           let expectedDescending;
 
-          describe('Sort', () => {
-            before((done) => {
-              expectedAscending = _.sortBy(entities, numberFieldName);
-              // moving entities with null values at the beginning of the array, as this is the sort order on the server
-              expectedAscending.unshift(expectedAscending.pop());
-              expectedDescending = expectedAscending.slice().reverse();
-              done();
-            });
+          before((done) => {
+            expectedAscending = _.sortBy(entities, numberFieldName);
+            // moving entities with null values at the beginning of the array, as this is the sort order on the server
+            expectedAscending.unshift(expectedAscending.pop());
+            expectedDescending = expectedAscending.slice().reverse();
+            done();
+          });
 
+          describe('Sort, Skip, Limit', () => {
             it('should sort ascending', (done) => {
               query.ascending(numberFieldName);
               storeToTest.find(query)
@@ -850,13 +848,106 @@ function testFunc() {
                 });
             });
           });
+
+          describe('Compound queries', () => {
+            it('combine a filter with a modifier', (done) => {
+              const numberfieldValue = entities[dataCount - 3][numberFieldName];
+              query.limit = 1;
+              query.ascending(numberFieldName);
+              query.greaterThanOrEqualTo(numberFieldName, numberfieldValue);
+              const expectedEntities = [entities[dataCount - 3]];
+              storeToTest.find(query)
+                .subscribe(onNextSpy, done, () => {
+                  try {
+                    utilities.validateReadResult(dataStoreType, onNextSpy, expectedEntities, expectedEntities);
+                    done();
+                  } catch (error) {
+                    done(error);
+                  }
+                });
+            });
+
+            it('two queries with a logical AND', (done) => {
+              const numberfieldValue = entities[dataCount - 3][numberFieldName];
+              query.greaterThanOrEqualTo(numberFieldName, numberfieldValue);
+              const secondQuery = new Kinvey.Query();
+              secondQuery.lessThanOrEqualTo(numberFieldName, numberfieldValue);
+              query.and(secondQuery);
+              const expectedEntities = [entities[dataCount - 3]];
+              storeToTest.find(query)
+                .subscribe(onNextSpy, done, () => {
+                  try {
+                    utilities.validateReadResult(dataStoreType, onNextSpy, expectedEntities, expectedEntities);
+                    done();
+                  } catch (error) {
+                    done(error);
+                  }
+                });
+            });
+
+            it('two queries with a logical OR', (done) => {
+              query.ascending(numberFieldName);
+              query.equalTo(numberFieldName, entities[dataCount - 3][numberFieldName]);
+              const secondQuery = new Kinvey.Query();
+              secondQuery.equalTo(numberFieldName, entities[dataCount - 2][numberFieldName]);
+              query.or(secondQuery);
+
+              const expectedEntities = [entities[dataCount - 3], entities[dataCount - 2]];
+              storeToTest.find(query)
+                .subscribe(onNextSpy, done, () => {
+                  try {
+                    utilities.validateReadResult(dataStoreType, onNextSpy, expectedEntities, expectedEntities);
+                    done();
+                  } catch (error) {
+                    done(error);
+                  }
+                });
+            });
+
+            it('two queries with a logical NOR', (done) => {
+              const numberfieldValue = entities[dataCount - 3][numberFieldName];
+              query.ascending(numberFieldName);
+              query.greaterThan(numberFieldName, numberfieldValue);
+              const secondQuery = new Kinvey.Query();
+              secondQuery.lessThan(numberFieldName, numberfieldValue);
+              // expect entities with numberFieldName not equal to entities[dataCount - 3]
+              query.nor(secondQuery);
+
+              const expectedEntities = [entities[dataCount - 1], entities[dataCount - 3]];
+              storeToTest.find(query)
+                .subscribe(onNextSpy, done, () => {
+                  try {
+                    utilities.validateReadResult(dataStoreType, onNextSpy, expectedEntities, expectedEntities);
+                    done();
+                  } catch (error) {
+                    done(error);
+                  }
+                });
+            });
+
+            it('two queries with an inline join operator', (done) => {
+              const numberfieldValue = entities[dataCount - 3][numberFieldName];
+              query.greaterThanOrEqualTo(numberFieldName, numberfieldValue)
+                .and()
+                .lessThanOrEqualTo(numberFieldName, numberfieldValue);
+              const expectedEntities = [entities[dataCount - 3]];
+              storeToTest.find(query)
+                .subscribe(onNextSpy, done, () => {
+                  try {
+                    utilities.validateReadResult(dataStoreType, onNextSpy, expectedEntities, expectedEntities);
+                    done();
+                  } catch (error) {
+                    done(error);
+                  }
+                });
+            });
+          });
         });
       });
 
-      describe('save()', () => {
+      describe('save/create/update operations', () => {
         before((done) => {
-          utilities.cleanUpCollectionData(collectionName)
-            .then(() => utilities.saveEntities(collectionName, [entity1, entity2]))
+          utilities.cleanAndPopulateCollection(collectionName, [entity1, entity2])
             .then(() => done())
             .catch(done);
         });
@@ -870,79 +961,197 @@ function testFunc() {
           return Promise.resolve();
         });
 
-        it('should throw an error when trying to save an array of entities', (done) => {
-          storeToTest.save([entity1, entity2])
-            .catch((error) => {
-              expect(error.message).to.equal('Unable to create an array of entities.');
-              done();
-            })
-            .catch(done);
+        describe('save()', () => {
+          it('should throw an error when trying to save an array of entities', (done) => {
+            storeToTest.save([entity1, entity2])
+              .catch((error) => {
+                expect(error.message).to.equal('Unable to create an array of entities.');
+                done();
+              })
+              .catch(done);
+          });
+
+          it('should create a new entity without _id', (done) => {
+            const newEntity = {
+              [textFieldName]: utilities.randomString()
+            };
+
+            storeToTest.save(newEntity)
+              .then((createdEntity) => {
+                expect(createdEntity._id).to.exist;
+                expect(createdEntity[textFieldName]).to.equal(newEntity[textFieldName]);
+                if (dataStoreType === Kinvey.DataStoreType.Sync) {
+                  expect(createdEntity._kmd.local).to.be.true;
+                } else {
+                  utilities.assertEntityMetadata(createdEntity);
+                }
+                newEntity._id = createdEntity._id;
+                return utilities.validateEntity(dataStoreType, collectionName, newEntity);
+              })
+              .then(() => {
+                return utilities.validatePendingSyncCount(dataStoreType, collectionName, 1);
+              })
+              .then(() => done())
+              .catch(done);
+          });
+
+          it('should create a new entity using its _id', (done) => {
+            const id = utilities.randomString();
+            const textFieldValue = utilities.randomString();
+            const newEntity = utilities.getEntity(id, textFieldValue);
+
+            storeToTest.save(newEntity)
+              .then((createdEntity) => {
+                expect(createdEntity._id).to.equal(id);
+                expect(createdEntity[textFieldName]).to.equal(textFieldValue);
+                return utilities.validateEntity(dataStoreType, collectionName, newEntity);
+              })
+              .then(() => done())
+              .catch(done);
+          });
+
+          it('should update an existing entity', (done) => {
+            const entityToUpdate = {
+              _id: entity1._id,
+              [textFieldName]: entity1[textFieldName],
+              newProperty: utilities.randomString()
+            };
+
+            storeToTest.save(entityToUpdate)
+              .then((updatedEntity) => {
+                expect(updatedEntity._id).to.equal(entity1._id);
+                expect(updatedEntity.newProperty).to.equal(entityToUpdate.newProperty);
+                return utilities.validateEntity(dataStoreType, collectionName, entityToUpdate, 'newProperty');
+              })
+              .then(() => utilities.validatePendingSyncCount(dataStoreType, collectionName, 1))
+              .then(() => done())
+              .catch(done);
+          });
         });
 
-        it('should create a new entity without _id', (done) => {
-          const newEntity = {
-            [textFieldName]: utilities.randomString()
-          };
+        describe('create()', () => {
+          it('should throw an error when trying to create an array of entities', (done) => {
+            storeToTest.create([entity1, entity2])
+              .catch((error) => {
+                expect(error.message).to.equal('Unable to create an array of entities.');
+                done();
+              })
+              .catch(done);
+          });
 
-          storeToTest.save(newEntity)
-            .then((createdEntity) => {
-              expect(createdEntity._id).to.exist;
-              expect(createdEntity[textFieldName]).to.equal(newEntity[textFieldName]);
-              if (dataStoreType === Kinvey.DataStoreType.Sync) {
-                expect(createdEntity._kmd.local).to.be.true;
-              } else {
-                utilities.assertEntityMetadata(createdEntity);
-              }
-              newEntity._id = createdEntity._id;
-              return utilities.validateEntity(dataStoreType, collectionName, newEntity);
-            })
-            .then(() => {
-              return utilities.validatePendingSyncCount(dataStoreType, collectionName, 1);
-            })
-            .then(() => done())
-            .catch(done);
+          it('should create a new entity without _id', (done) => {
+            const newEntity = {
+              [textFieldName]: utilities.randomString()
+            };
+
+            storeToTest.create(newEntity)
+              .then((createdEntity) => {
+                expect(createdEntity._id).to.exist;
+                expect(createdEntity[textFieldName]).to.equal(newEntity[textFieldName]);
+                if (dataStoreType === Kinvey.DataStoreType.Sync) {
+                  expect(createdEntity._kmd.local).to.be.true;
+                } else {
+                  utilities.assertEntityMetadata(createdEntity);
+                }
+                newEntity._id = createdEntity._id;
+                return utilities.validateEntity(dataStoreType, collectionName, newEntity);
+              })
+              .then(() => {
+                return utilities.validatePendingSyncCount(dataStoreType, collectionName, 1);
+              })
+              .then(() => done())
+              .catch(done);
+          });
+
+          it('should create a new entity using its _id', (done) => {
+            const id = utilities.randomString();
+            const textFieldValue = utilities.randomString();
+            const newEntity = utilities.getEntity(id, textFieldValue);
+
+            storeToTest.create(newEntity)
+              .then((createdEntity) => {
+                expect(createdEntity._id).to.equal(id);
+                expect(createdEntity[textFieldName]).to.equal(textFieldValue);
+                return utilities.validateEntity(dataStoreType, collectionName, newEntity);
+              })
+              .then(() => done())
+              .catch(done);
+          });
+
+          it('should create 10 concurrent items', (done) => {
+            const itemCount = 10;
+            const promises = _.times(itemCount, () => {
+              const entity = utilities.getEntity(utilities.randomString());
+              return storeToTest.create(entity);
+            });
+
+            Promise.all(promises)
+              .then((createdEntities) => {
+                expect(createdEntities.length).to.equal(itemCount);
+                done();
+              })
+              .catch(done);
+          });
         });
 
-        it('should create a new entity using its _id', (done) => {
-          const id = utilities.randomString();
-          const textFieldValue = utilities.randomString();
-          const newEntity = utilities.getEntity(id, textFieldValue);
+        describe('update()', () => {
+          it('should throw an error when trying to update an array of entities', (done) => {
+            storeToTest.update([entity1, entity2])
+              .catch((error) => {
+                expect(error.message).to.equal('Unable to update an array of entities.');
+                done();
+              })
+              .catch(done);
+          });
 
-          storeToTest.save(newEntity)
-            .then((createdEntity) => {
-              expect(createdEntity._id).to.equal(id);
-              expect(createdEntity[textFieldName]).to.equal(textFieldValue);
-              return utilities.validateEntity(dataStoreType, collectionName, newEntity);
-            })
-            .then(() => done())
-            .catch(done);
-        });
+          it('should throw an error when trying to update without supplying an _id', (done) => {
+            const expectedErrorMessage = 'The entity provided does not contain an _id';
+            storeToTest.update({ test: 'test' })
+              .catch((error) => {
+                expect(error.message).to.contain(expectedErrorMessage);
+                done();
+              })
+              .catch(done);
+          });
 
-        it('should update an existing entity', (done) => {
-          const entityToUpdate = {
-            _id: entity1._id,
-            [textFieldName]: entity1[textFieldName],
-            newProperty: utilities.randomString()
-          };
+          it('with a not existing _id should create a new entity using the supplied _id', (done) => {
+            const id = utilities.randomString();
+            const textFieldValue = utilities.randomString();
+            const newEntity = utilities.getEntity(id, textFieldValue);
 
-          storeToTest.save(entityToUpdate)
-            .then((updatedEntity) => {
-              expect(updatedEntity._id).to.equal(entity1._id);
-              expect(updatedEntity.newProperty).to.equal(entityToUpdate.newProperty);
-              return utilities.validateEntity(dataStoreType, collectionName, entityToUpdate, 'newProperty');
-            })
-            .then(() => utilities.validatePendingSyncCount(dataStoreType, collectionName, 1))
-            .then(() => done())
-            .catch(done);
+            storeToTest.update(newEntity)
+              .then((createdEntity) => {
+                expect(createdEntity._id).to.equal(id);
+                expect(createdEntity[textFieldName]).to.equal(textFieldValue);
+                return utilities.validateEntity(dataStoreType, collectionName, newEntity);
+              })
+              .then(() => done())
+              .catch(done);
+          });
+
+          it('should update an existing entity', (done) => {
+            const entityToUpdate = {
+              _id: entity1._id,
+              [textFieldName]: entity1[textFieldName],
+              newProperty: utilities.randomString()
+            };
+
+            storeToTest.update(entityToUpdate)
+              .then((updatedEntity) => {
+                expect(updatedEntity._id).to.equal(entity1._id);
+                expect(updatedEntity.newProperty).to.equal(entityToUpdate.newProperty);
+                return utilities.validateEntity(dataStoreType, collectionName, entityToUpdate, 'newProperty');
+              })
+              .then(() => utilities.validatePendingSyncCount(dataStoreType, collectionName, 1))
+              .then(() => done())
+              .catch(done);
+          });
         });
       });
 
       describe('destroy operations', () => {
         before((done) => {
-          utilities.cleanUpCollectionData(collectionName)
-            .then(() => {
-              return utilities.saveEntities(collectionName, [entity1, entity2]);
-            })
+          utilities.cleanAndPopulateCollection(collectionName, [entity1, entity2])
             .then(() => done())
             .catch(done);
         });
@@ -950,12 +1159,9 @@ function testFunc() {
         describe('removeById()', () => {
           it('should throw an error if the id argument does not exist', (done) => {
             storeToTest.removeById(utilities.randomString())
+              .then(() => done(new Error('Should not be called')))
               .catch((error) => {
-                if (dataStoreType === Kinvey.DataStoreType.Network) {
-                  expect(error.name).to.contain(notFoundErrorName);
-                } else {
-                  expect(error).to.exist;
-                }
+                expect(error.name).to.contain(notFoundErrorName);
                 done();
               })
               .catch(done);
@@ -987,7 +1193,8 @@ function testFunc() {
                     }
                     return null;
                   });
-              });
+              })
+              .catch(done);
           });
         });
 

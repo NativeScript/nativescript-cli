@@ -6,12 +6,12 @@ export { AuthorizationGrant } from './identity';
 export { Client } from './client';
 export { CustomEndpoint } from './endpoint';
 export { DataStore, DataStoreType, SyncOperation } from './datastore';
-export { LiveService } from './live';
+export { LiveServiceFacade as LiveService } from './live';
 export { Files } from './files';
 export { Log } from './log';
 export { Metadata } from './metadata';
 export { Query } from './query';
-export { Properties, StorageProvider } from './request';
+export { Properties } from './request';
 export { User } from './user';
 export {
   ActiveUserError,

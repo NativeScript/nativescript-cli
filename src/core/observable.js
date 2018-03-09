@@ -3,7 +3,7 @@ import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import { rxSubscriber } from 'rxjs/symbol/rxSubscriber';
 import isFunction from 'lodash/isFunction';
-import { isDefined } from './utils';
+import { isDefined, isPromiseLike, wrapInPromise } from './utils';
 
 /**
  * @private
@@ -266,4 +266,31 @@ export class KinveyObservable extends Observable {
   static create(subscriber) {
     return new KinveyObservable(subscriber);
   }
+}
+
+export function wrapInObservable(promiseOrFunc, completeAfter = true) {
+  const argIsPromise = isPromiseLike(promiseOrFunc);
+
+  const stream = KinveyObservable.create((observer) => {
+    let promise;
+    if (argIsPromise) {
+      promise = promiseOrFunc;
+    } else {
+      const funcResult = promiseOrFunc(observer);
+      promise = wrapInPromise(funcResult); // func can be sync or async
+    }
+
+    promise
+      .then((result) => {
+        if (argIsPromise) {
+          observer.next(result);
+        }
+        if (completeAfter) {
+          observer.complete();
+        }
+      })
+      .catch(err => observer.error(err));
+  });
+
+  return stream;
 }

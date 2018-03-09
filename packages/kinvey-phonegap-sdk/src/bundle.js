@@ -1,12 +1,14 @@
-import { NetworkRack, CacheRack } from '../../../src/core/request';
+import { NetworkRack } from '../../../src/core/request';
 import { Html5HttpMiddleware } from '../../../src/html5/http';
-import { Html5CacheMiddleware } from '../../../src/html5/cache';
 import { MobileIdentityConnect } from '../../../src/core/identity';
 import { Popup } from '../../../src/phonegap/popup';
 import pkg from '../package.json';
+import '../../../src/html5/offline-data-storage';
+import { setPlatformConfig, platform } from '../../../src/core/platform-configs';
+
+setPlatformConfig(platform.phoneGap);
 
 // Setup racks
-CacheRack.useCacheMiddleware(new Html5CacheMiddleware());
 NetworkRack.useHttpMiddleware(new Html5HttpMiddleware(pkg));
 
 // Setup popup

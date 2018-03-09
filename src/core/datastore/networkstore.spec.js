@@ -96,7 +96,7 @@ describe('NetworkStore', () => {
     });
 
     it('should find the entities that match the query', () => {
-      const store = new NetworkStore();
+      const store = new NetworkStore('comecollection');
       const entity1 = { _id: randomString() };
       const query = new Query();
       query.equalTo('_id', entity1._id);
@@ -234,6 +234,7 @@ describe('NetworkStore', () => {
       };
 
       return store.create([entity1, entity2])
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Unable to create an array of entities.');
@@ -321,6 +322,7 @@ describe('NetworkStore', () => {
       };
 
       return store.update([entity1, entity2])
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Unable to update an array of entities.');
@@ -336,9 +338,11 @@ describe('NetworkStore', () => {
       };
 
       return store.update(entity)
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
-          expect(error.message).toEqual('Unable to update entity.');
+          const errMsg = 'The entity provided does not contain an _id. An _id is required to update the entity.';
+          expect(error.message).toEqual(errMsg);
         });
     });
 
@@ -402,6 +406,7 @@ describe('NetworkStore', () => {
     it('should throw an error for an invalid query', () => {
       const store = new NetworkStore(collection);
       return store.remove({})
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('Invalid query. It must be an instance of the Query class.');
@@ -415,6 +420,7 @@ describe('NetworkStore', () => {
 
       const store = new NetworkStore(collection);
       return store.remove()
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(ServerError);
           expect(error.message).toEqual('An error occurred on the server.');
@@ -446,8 +452,24 @@ describe('NetworkStore', () => {
         .reply(404);
 
       return store.removeById(_id)
+        .then(() => Promise.reject(new Error('This should not happen')))
         .catch((error) => {
           expect(error).toBeA(NotFoundError);
+        });
+    });
+
+    it('should return a NotFoundError if an entity with that id does not exist', () => {
+      const store = new NetworkStore(collection);
+      const id = randomString();
+
+      nock(client.apiHostname)
+        .delete(`/appdata/${client.appKey}/${collection}/${id}`)
+        .reply(404);
+
+      return store.removeById(id)
+        .then(() => Promise.reject(new Error('Should not happen')))
+        .catch((err) => {
+          expect(err).toBeA(NotFoundError);
         });
     });
 
@@ -467,41 +489,41 @@ describe('NetworkStore', () => {
     });
   });
 
-  // describe('when working with live service', () => {
-  //   const path = '../src/datastore/networkstore';
-  //   const managerMock = {
-  //     subscribeCollection: () => { },
-  //     unsubscribeCollection: () => { }
-  //   };
-  //   const requireMocks = {
-  //     '../../live': { getLiveCollectionManager: () => managerMock }
-  //   };
+  describe('when working with live service', () => {
+    const path = './networkstore';
+    const managerMock = {
+      subscribeCollection: () => { },
+      unsubscribeCollection: () => { }
+    };
+    const requireMocks = {
+      '../live': { getLiveCollectionManager: () => managerMock }
+    };
 
-  //   /** @type {NetworkStore} */
-  //   let proxiedStore;
+    /** @type {NetworkStore} */
+    let proxiedStore;
 
-  //   beforeEach(() => {
-  //     const ProxiedNetworkStore = mockRequiresIn(__dirname, path, requireMocks, 'default');
-  //     proxiedStore = new ProxiedNetworkStore(collection);
-  //   });
+    beforeEach(() => {
+      const ProxiedNetworkStore = mockRequiresIn(__dirname, path, requireMocks, 'NetworkStore');
+      proxiedStore = new ProxiedNetworkStore(collection);
+    });
 
-  //   afterEach(() => expect.restoreSpies());
+    afterEach(() => expect.restoreSpies());
 
-  //   describe('subscribe()', () => {
-  //     it('should call subscribeCollection() method of LiveCollectionManager class', () => {
-  //       const spy = expect.spyOn(managerMock, 'subscribeCollection');
-  //       const handler = { onMessage: () => { } };
-  //       proxiedStore.subscribe(handler);
-  //       expect(spy).toHaveBeenCalledWith(collection, handler);
-  //     });
-  //   });
+    describe('subscribe()', () => {
+      it('should call subscribeCollection() method of LiveCollectionManager class', () => {
+        const spy = expect.spyOn(managerMock, 'subscribeCollection');
+        const handler = { onMessage: () => { } };
+        proxiedStore.subscribe(handler);
+        expect(spy).toHaveBeenCalledWith(collection, handler);
+      });
+    });
 
-  //   describe('unsubscribe()', () => {
-  //     it('should call unsubscribeCollection() method of LiveCollectionManager class', () => {
-  //       const spy = expect.spyOn(managerMock, 'unsubscribeCollection');
-  //       proxiedStore.unsubscribe();
-  //       expect(spy).toHaveBeenCalledWith(collection);
-  //     });
-  //   });
-  // });
+    describe('unsubscribe()', () => {
+      it('should call unsubscribeCollection() method of LiveCollectionManager class', () => {
+        const spy = expect.spyOn(managerMock, 'unsubscribeCollection');
+        proxiedStore.unsubscribe();
+        expect(spy).toHaveBeenCalledWith(collection);
+      });
+    });
+  });
 });

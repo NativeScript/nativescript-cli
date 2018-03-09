@@ -2,9 +2,11 @@ import MemoryCache from 'fast-memory-cache';
 import url from 'url';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
+import isNaN from 'lodash/isNaN';
 import { KinveyError } from './errors';
 import { Log } from './log';
-import { isDefined, uuidv4 } from './utils';
+import { isDefined, uuidv4, isValidStorageProviderValue } from './utils';
+import { StorageProvider } from './datastore';
 
 const DEFAULT_TIMEOUT = 60000;
 const ACTIVE_USER_KEY = 'active_user';
@@ -138,14 +140,11 @@ export class Client {
     this.defaultTimeout = isNumber(config.defaultTimeout) && config.defaultTimeout >= 0 ? config.defaultTimeout : DEFAULT_TIMEOUT;
 
     /**
-     * @type {?string[]}
-     */
-    this.storageProviders = config.storage;
-
-    /**
      * @private
      */
     this.activeUserStorage = new ActiveUserStorage();
+
+    this.storage = config.storage || StorageProvider.Memory;
   }
 
   /**
@@ -216,11 +215,23 @@ export class Client {
     }
 
     if (timeout < 0) {
-      Log.info(`Default timeout is less than 0. Setting default timeout to ${defaultTimeout}ms.`);
-      timeout = defaultTimeout;
+      Log.info(`Default timeout is less than 0. Setting default timeout to ${this.defaultTimeout}ms.`);
+      timeout = this.defaultTimeout;
     }
 
     this._defaultTimeout = timeout;
+  }
+
+  get storage() {
+    return this._storage;
+  }
+
+  set storage(value) {
+    if (!isValidStorageProviderValue(value)) {
+      throw new KinveyError('Please provide a valid set of supported storage providers for this platform');
+    }
+
+    this._storage = value;
   }
 
   /**
@@ -242,7 +253,7 @@ export class Client {
       masterSecret: this.masterSecret,
       encryptionKey: this.encryptionKey,
       appVersion: this.appVersion,
-      storageProviders: this.storageProviders
+      storage: this.storage
     };
   }
 
@@ -278,7 +289,7 @@ export class Client {
    * @param {string}    [options.masterSecret]                             App Master Secret
    * @param {string}    [options.encryptionKey]                            App Encryption Key
    * @param {string}    [options.appVersion]                               App Version
-   * @return {Promise}                                                     A promise.
+   * @return {Client}                                                     A promise.
    */
   static init(config) {
     sharedInstance = new Client(config);
