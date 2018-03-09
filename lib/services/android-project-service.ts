@@ -157,7 +157,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		this.$androidToolsInfo.validateAndroidHomeEnvVariable({ showWarningsAsErrors: true });
 
-		const javaCompilerVersion = (await this.$sysInfo.getSysInfo()).javacVersion;
+		const javaCompilerVersion = await this.$sysInfo.getJavaCompilerVersion();
 
 		this.$androidToolsInfo.validateJavacVersion(javaCompilerVersion, { showWarningsAsErrors: true });
 

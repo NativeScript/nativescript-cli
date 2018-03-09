@@ -14,5 +14,17 @@ export class SysInfo implements ISysInfo {
 
 		return this.sysInfo;
 	}
+
+	public getXcodeVersion(): Promise<string> {
+		return sysInfo.getXcodeVersion();
+	}
+
+	public getCocoaPodsVersion(): Promise<string> {
+		return sysInfo.getCocoaPodsVersion();
+	}
+
+	public getJavaCompilerVersion(): Promise<string> {
+		return sysInfo.getJavaCompilerVersion();
+	}
 }
 $injector.register("sysInfo", SysInfo);
