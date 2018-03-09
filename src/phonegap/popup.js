@@ -1,7 +1,7 @@
-import { Popup } from '../html5/popup';
+import { Popup as HTML5Popup } from '../html5/popup';
 import { Device } from './device';
 
-export class PhoneGapPopup extends Popup {
+export class Popup extends HTML5Popup {
   open(url = '/') {
     const that = this;
 
