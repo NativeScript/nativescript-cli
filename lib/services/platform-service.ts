@@ -543,11 +543,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		await this.$devicesService.execute(action, this.getCanExecuteAction(deployInfo.platform, deployInfo.deployOptions));
 	}
 
-	public async startApplication(platform: string, runOptions: IRunPlatformOptions, projectId: string): Promise<void> {
+	public async startApplication(platform: string, runOptions: IRunPlatformOptions, projectId: string, projectName: string): Promise<void> {
 		this.$logger.out("Starting...");
 
 		const action = async (device: Mobile.IDevice) => {
-			await device.applicationManager.startApplication(projectId);
+			await device.applicationManager.startApplication(projectId, projectName);
 			this.$logger.out(`Successfully started on device with identifier '${device.deviceInfo.identifier}'.`);
 		};
 

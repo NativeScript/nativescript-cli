@@ -1,6 +1,7 @@
 import { IOSLogFilter } from "../../lib/services/ios-log-filter";
 import { Yok } from "../../lib/common/yok";
 import { LoggingLevels } from "../../lib/common/mobile/logging-levels";
+import { LoggerStub } from "../stubs";
 import * as assert from "assert";
 
 function createTestInjector(projectName: string): IInjector {
@@ -14,6 +15,8 @@ function createTestInjector(projectName: string): IInjector {
 		projectDir: "test",
 		projectName: projectName
 	});
+
+	testInjector.register("logger", LoggerStub);
 
 	return testInjector;
 }
@@ -189,7 +192,7 @@ describe("iOSLogFilter", () => {
 				while (true) {
 					const currentRange = Math.floor(Math.random() * maxRange);
 					const currentFilterInput = input.substr(currentStart, currentRange);
-					const tempOutput = logFilter.filterData(currentFilterInput, infoLogLevel, null);
+					const tempOutput = logFilter.filterData(currentFilterInput, { logLevel: infoLogLevel, projectName: data.projectName });
 					if (tempOutput !== null) {
 						output += tempOutput;
 					}
@@ -206,7 +209,7 @@ describe("iOSLogFilter", () => {
 			it(`returns correct data when logLevel is ${fullLogLevel} on iOS ${data.version} and all data is passed at once`, () => {
 				testInjector = createTestInjector(data.projectName);
 				logFilter = testInjector.resolve(IOSLogFilter);
-				const actualData = logFilter.filterData(data.originalDataArr.join("\n"), fullLogLevel, null);
+				const actualData = logFilter.filterData(data.originalDataArr.join("\n"), { logLevel: fullLogLevel, projectName: data.projectName });
 				const actualArr = actualData.split("\n").map(line => line.trim());
 				const expectedArr = data.originalDataArr.map(line => line.trim()).filter(item => item !== null);
 				assert.deepEqual(actualArr, expectedArr);
@@ -216,7 +219,7 @@ describe("iOSLogFilter", () => {
 				data.originalDataArr.forEach(line => {
 					testInjector = createTestInjector(data.projectName);
 					logFilter = testInjector.resolve(IOSLogFilter);
-					const actualData = logFilter.filterData(line, fullLogLevel, null);
+					const actualData = logFilter.filterData(line, { logLevel: fullLogLevel, projectName: data.projectName });
 					assert.deepEqual(actualData.trim(), line.trim());
 				});
 			});
@@ -224,7 +227,7 @@ describe("iOSLogFilter", () => {
 			it(`parses data incorrectly when logLevel is ${infoLogLevel} on iOS ${data.version} and all data is passed at once with pid(simulator)`, () => {
 				testInjector = createTestInjector(data.simProjectName);
 				logFilter = testInjector.resolve(IOSLogFilter);
-				const actualData = logFilter.filterData(data.simulator.join("\n"), infoLogLevel, pid);
+				const actualData = logFilter.filterData(data.simulator.join("\n"), { logLevel: infoLogLevel, projectName: data.simProjectName, applicationPid: pid });
 				const actualArr = actualData.split("\n").map(line => line.trim());
 				assert.deepEqual(actualArr, data.simulatorExpectedArr.filter(item => item !== null));
 			});
@@ -232,7 +235,7 @@ describe("iOSLogFilter", () => {
 			it(`parses data incorrectly when logLevel is ${infoLogLevel} on iOS ${data.version} and all data is passed at once and pid is available`, () => {
 				testInjector = createTestInjector(data.projectName);
 				logFilter = testInjector.resolve(IOSLogFilter);
-				const actualData = logFilter.filterData(data.originalDataArr.join("\n"), infoLogLevel, null);
+				const actualData = logFilter.filterData(data.originalDataArr.join("\n"), { logLevel: infoLogLevel, projectName: data.projectName });
 				const actualArr = actualData.split("\n").map(line => line.trim());
 				const expectedArr = data.infoExpectedArr.filter(item => item !== null);
 				assert.deepEqual(actualArr, expectedArr);
@@ -245,7 +248,7 @@ describe("iOSLogFilter", () => {
 					if (line.length > 0) {
 						line += "\n";
 					}
-					const actualData = logFilter.filterData(line, infoLogLevel, null);
+					const actualData = logFilter.filterData(line, { logLevel: infoLogLevel, projectName: data.projectName });
 					const expectedData = data.infoExpectedArr[index];
 					assert.equal(actualData && actualData.trim(), expectedData);
 				});

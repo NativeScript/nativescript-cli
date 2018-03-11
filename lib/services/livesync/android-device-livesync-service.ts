@@ -42,7 +42,7 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
 
 		if (!canExecuteFastSync) {
-			return this.restartApplication(deviceAppData);
+			return this.restartApplication(deviceAppData, projectData.projectName);
 		}
 	}
 
@@ -57,12 +57,12 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 			await this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.REMOVEDSYNC_DIR_NAME)]);
 	}
 
-	private async restartApplication(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
+	private async restartApplication(deviceAppData: Mobile.IDeviceAppData, projectName: string): Promise<void> {
 		const devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;
 		const devicePath = this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb");
 		await this.device.adb.executeShellCommand(["rm", "-rf", devicePath]);
 
-		await this.device.applicationManager.restartApplication(deviceAppData.appIdentifier);
+		await this.device.applicationManager.restartApplication(deviceAppData.appIdentifier, projectName);
 	}
 
 	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): Promise<void> {

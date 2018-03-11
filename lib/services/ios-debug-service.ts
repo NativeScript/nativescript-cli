@@ -33,7 +33,8 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $processService: IProcessService,
 		private $socketProxyFactory: ISocketProxyFactory,
-		private $net: INet) {
+		private $net: INet,
+		private $projectDataService: IProjectDataService) {
 		super(device, $devicesService);
 		this.$processService.attachToProcessExitSignals(this, this.debugStop);
 		this.$socketProxyFactory.on(CONNECTION_ERROR_EVENT_NAME, (e: Error) => this.emit(CONNECTION_ERROR_EVENT_NAME, e));
@@ -173,6 +174,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 	private async deviceDebugBrk(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		await this.$devicesService.initialize({ platform: this.platform, deviceId: debugData.deviceIdentifier });
+		const projectData = this.$projectDataService.getProjectData(debugData.projectDir);
 		const action = async (device: iOSDevice.IOSDevice): Promise<string> => {
 			if (device.isEmulator) {
 				return await this.emulatorDebugBrk(debugData, debugOptions);
@@ -185,7 +187,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 			};
 
 			const promisesResults = await Promise.all<any>([
-				this.$platformService.startApplication(this.platform, runOptions, debugData.applicationIdentifier),
+				this.$platformService.startApplication(this.platform, runOptions, debugData.applicationIdentifier, projectData.projectName),
 				this.debugBrkCore(device, debugData, debugOptions)
 			]);
 

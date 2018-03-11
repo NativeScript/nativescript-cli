@@ -17,14 +17,15 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 
 	private partialLine: string = null;
 
-	constructor(
+	constructor(private $logger: ILogger,
 		private $loggingLevels: Mobile.ILoggingLevels,
 		private $fs: IFileSystem,
 		private $projectData: IProjectData) {
 	}
 
-	public filterData(data: string, logLevel: string, pid?: string): string {
-		const specifiedLogLevel = (logLevel || '').toUpperCase();
+	public filterData(data: string, loggingOptions: Mobile.IDeviceLogOptions = <any>{}): string {
+		const specifiedLogLevel = (loggingOptions.logLevel || '').toUpperCase();
+		this.$logger.trace("Logging options", loggingOptions);
 
 		if (specifiedLogLevel !== this.$loggingLevels.info || !data) {
 			return data;
@@ -57,8 +58,8 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 				// Check if the name of the app equals the name of the CLI project and turn on the filter if not.
 				// We call initializeProjectData in order to obtain the current project name as the instance
 				// of this filter may be used accross multiple projects.
-				this.$projectData.initializeProjectData();
-				this.filterActive = matchResult[1] !== this.$projectData.projectName;
+				const projectName = loggingOptions && loggingOptions.projectName;
+				this.filterActive = matchResult[1] !== projectName;
 			}
 
 			if (this.filterActive) {
