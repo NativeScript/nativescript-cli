@@ -10,11 +10,12 @@ export class MemoryKeyValuePersister extends KeyValuePersister {
   }
 
   _readFromPersistance(key) {
-    return Promise.resolve(_storage[key]);
+    const result = _storage[key] || [];
+    return Promise.resolve(result.slice(0));
   }
 
   _writeToPersistance(key, array) {
-    _storage[key] = array;
+    _storage[key] = array.slice(0);
     return Promise.resolve(true);
   }
 

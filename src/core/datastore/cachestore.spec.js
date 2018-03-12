@@ -111,7 +111,7 @@ describe('CacheStore', () => {
         });
     });
 
-    it.skip('should return the entities', (done) => {
+    it('should return the entities', (done) => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
       const store = new CacheStore(collection);
