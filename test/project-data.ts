@@ -64,6 +64,14 @@ describe("projectData", () => {
 			assertProjectType({ "nativescript-angular": "*" }, null, "Angular");
 		});
 
+		it("detects project as Vue.js when nativescript-vue exists as dependency", () => {
+			assertProjectType({ "nativescript-vue": "*" }, null, "Vue.js");
+		});
+
+		it("detects project as Vue.js when nativescript-vue exists as dependency and typescript is devDependency", () => {
+			assertProjectType({ "nativescript-vue": "*" }, { "typescript": "*" }, "Vue.js");
+		});
+
 		it("detects project as TypeScript when nativescript-dev-typescript exists as dependency", () => {
 			assertProjectType(null, { "nativescript-dev-typescript": "*" }, "Pure TypeScript");
 		});

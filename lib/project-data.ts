@@ -23,6 +23,10 @@ export class ProjectData implements IProjectData {
 			requiredDependencies: ["@angular/core", "nativescript-angular"]
 		},
 		{
+			type: "Vue.js",
+			requiredDependencies: ["nativescript-vue"]
+		},
+		{
 			type: "Pure TypeScript",
 			requiredDependencies: ["typescript", "nativescript-dev-typescript"]
 		}
