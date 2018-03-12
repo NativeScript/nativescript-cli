@@ -439,7 +439,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	private async installedCachedAppPackage(platform: string, options: IEnsureLatestAppPackageIsInstalledOnDeviceOptions): Promise<any> {
-		const rebuildInfo = _.find(options.rebuiltInformation, info => info.isEmulator === options.device.isEmulator && info.platform === platform);
+		const rebuildInfo = _.find(options.rebuiltInformation, info => info.platform === platform && (this.$mobileHelper.isAndroidPlatform(platform) || info.isEmulator === options.device.isEmulator));
 
 		if (rebuildInfo) {
 			// Case where we have three devices attached, a change that requires build is found,
