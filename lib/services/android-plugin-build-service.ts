@@ -38,7 +38,12 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	}
 
 	private getShortPluginName(pluginName: string): string {
-		return pluginName.replace(/[\-]/g, "_");
+		return this.sanitizePluginName(pluginName).replace(/[\-]/g, "_");
+	}
+
+	private sanitizePluginName(pluginName: string): string {
+		// avoid long plugin names, exclude the npm module scope (@scope/nativescript-plugin) from the android plugin name
+		return pluginName.split("/").pop();
 	}
 
 	private async updateManifestContent(oldManifestContent: string, defaultPackageName: string): Promise<string> {
