@@ -46,7 +46,7 @@ export class LiveSyncTrackActionNames {
 	static DEVICE_INFO = `Device Info for ${liveSyncOperation}`;
 }
 
-export const PackageJsonKeysToKeep: Array<String> = ["name", "main", "android", "version"];
+export const PackageJsonKeysToKeep: Array<String> = ["name", "main", "android", "version", "pluginsData"];
 
 export class SaveOptions {
 	static PRODUCTION = "save";

@@ -163,6 +163,9 @@ function createTestInjector() {
 		})
 	});
 	testInjector.register("extensibilityService", {});
+	testInjector.register("analyticsSettingsService", {
+		getPlaygroundInfo: () => Promise.resolve(null)
+	});
 
 	return testInjector;
 }

@@ -113,6 +113,9 @@ function createTestInjector() {
 	testInjector.register("httpClient", {});
 	testInjector.register("extensibilityService", {});
 	testInjector.register("androidPluginBuildService", stubs.AndroidPluginBuildServiceStub);
+	testInjector.register("analyticsSettingsService", {
+		getPlaygroundInfo: () => Promise.resolve(null)
+	});
 
 	return testInjector;
 }
