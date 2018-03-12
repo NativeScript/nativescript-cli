@@ -46,7 +46,7 @@ export class MobileIdentityConnect extends Identity {
     if (options.version) {
       version = options.version;
     }
-    
+
     if (isString(version) === false) {
       version = String(version);
     }
@@ -125,6 +125,7 @@ export class MobileIdentityConnect extends Identity {
 
   requestCodeWithPopup(clientId, redirectUri, options = {}) {
     const promise = Promise.resolve().then(() => {
+      const popup = new Popup();
       return popup.open(url.format({
         protocol: this.client.micProtocol,
         host: this.client.micHost,
