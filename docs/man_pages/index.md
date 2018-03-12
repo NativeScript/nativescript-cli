@@ -32,7 +32,7 @@ Command | Description
 [platform list](project/configuration/platform.html) | Lists all platforms that the project currently targets.
 [platform remove `<Platform>`](project/configuration/platform-remove.html) | Removes the selected platform from the platforms that the project currently targets. This operation deletes all platform-specific files and subdirectories from your project.
 [platform update `<Platform>`](project/configuration/platform-update.html) | Updates the NativeScript runtime for the specified platform.
-[resources-update](project/configuration/resources-update.html) | Updates the App_Resources/<platform>'s internal folder structure to conform to that of an Android project.
+[resources update](project/configuration/resources-update.html) | Updates the App_Resources/<platform>'s internal folder structure to conform to that of an Android Studio project.
 [prepare `<Platform>`](project/configuration/prepare.html) | Copies relevant content from the app directory to the subdirectory for the selected target platform to let you build the project.
 [build `<Platform>`](project/testing/build.html) | Builds the project for the selected target platform and produces an application package or an emulator package.
 [deploy `<Platform>`](project/testing/deploy.html) | Deploys the project to a connected physical or virtual device.
