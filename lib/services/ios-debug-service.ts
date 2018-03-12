@@ -187,7 +187,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 			};
 
 			const promisesResults = await Promise.all<any>([
-				this.$platformService.startApplication(this.platform, runOptions, debugData.applicationIdentifier, projectData.projectName),
+				this.$platformService.startApplication(this.platform, runOptions, { appId: debugData.applicationIdentifier, projectName: projectData.projectName }),
 				this.debugBrkCore(device, debugData, debugOptions)
 			]);
 

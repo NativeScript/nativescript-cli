@@ -62,7 +62,7 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 		const devicePath = this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb");
 		await this.device.adb.executeShellCommand(["rm", "-rf", devicePath]);
 
-		await this.device.applicationManager.restartApplication(deviceAppData.appIdentifier, projectName);
+		await this.device.applicationManager.restartApplication({ appId: deviceAppData.appIdentifier, projectName });
 	}
 
 	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): Promise<void> {

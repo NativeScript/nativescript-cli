@@ -165,7 +165,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		};
 
 		try {
-			await deviceAppData.device.applicationManager.stopApplication(applicationId, projectData.projectName);
+			await deviceAppData.device.applicationManager.stopApplication({ appId: applicationId, projectName: projectData.projectName });
 			// Now that we've stopped the application we know it isn't started, so set debugOptions.start to false
 			// so that it doesn't default to true in attachDebugger method
 			debugOptions = debugOptions || {};

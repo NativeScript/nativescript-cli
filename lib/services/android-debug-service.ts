@@ -26,9 +26,14 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 	}
 
 	public async debugStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
-		const projectData = this.$projectDataService.getProjectData(debugData.projectDir);
 		await this.$devicesService.initialize({ platform: this.platform, deviceId: debugData.deviceIdentifier });
-		const action = (device: Mobile.IAndroidDevice): Promise<void> => this.debugStartCore(debugData.applicationIdentifier, debugOptions, projectData.projectName);
+		const projectData = this.$projectDataService.getProjectData(debugData.projectDir);
+		const appData: Mobile.IApplicationData = {
+			appId: debugData.applicationIdentifier,
+			projectName: projectData.projectName
+		};
+
+		const action = (device: Mobile.IAndroidDevice): Promise<void> => this.debugStartCore(appData, debugOptions);
 
 		await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
 	}
@@ -93,24 +98,29 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 
 		await this.$devicesService.initialize({ platform: this.platform, deviceId: debugData.deviceIdentifier });
 
-		const packageName = this.$projectDataService.getProjectData(debugData.projectDir).projectName;
-		const action = (device: Mobile.IAndroidDevice): Promise<string> => this.debugCore(device, packageFile, debugData.applicationIdentifier, packageName, debugOptions);
+		const projectName = this.$projectDataService.getProjectData(debugData.projectDir).projectName;
+		const appData: Mobile.IApplicationData = {
+			appId: debugData.applicationIdentifier,
+			projectName
+		};
+
+		const action = (device: Mobile.IAndroidDevice): Promise<string> => this.debugCore(device, packageFile, appData, debugOptions);
 
 		const deviceActionResult = await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
 		return deviceActionResult[0].result;
 	}
 
-	private async debugCore(device: Mobile.IAndroidDevice, packageFile: string, appId: string, packageName: string, debugOptions: IDebugOptions): Promise<string> {
-		await this.printDebugPort(device.deviceInfo.identifier, appId);
+	private async debugCore(device: Mobile.IAndroidDevice, packageFile: string, appData: Mobile.IApplicationData, debugOptions: IDebugOptions): Promise<string> {
+		await this.printDebugPort(device.deviceInfo.identifier, appData.appId);
 
 		if (debugOptions.start) {
-			return await this.attachDebugger(device.deviceInfo.identifier, appId, debugOptions);
+			return await this.attachDebugger(device.deviceInfo.identifier, appData.appId, debugOptions);
 		} else if (debugOptions.stop) {
 			await this.removePortForwarding();
 			return null;
 		} else {
-			await this.debugStartCore(appId, debugOptions, packageName);
-			return await this.attachDebugger(device.deviceInfo.identifier, appId, debugOptions);
+			await this.debugStartCore(appData, debugOptions);
+			return await this.attachDebugger(device.deviceInfo.identifier, appData.appId, debugOptions);
 		}
 	}
 
@@ -129,22 +139,21 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 		return this.getChromeDebugUrl(debugOptions, port);
 	}
 
-	private async debugStartCore(appId: string, debugOptions: IDebugOptions, projectName: string): Promise<void> {
+	private async debugStartCore(appData: Mobile.IApplicationData, debugOptions: IDebugOptions): Promise<void> {
 		// Arguments passed to executeShellCommand must be in array ([]), but it turned out adb shell "arg with intervals" still works correctly.
 		// As we need to redirect output of a command on the device, keep using only one argument.
 		// We could rewrite this with two calls - touch and rm -f , but -f flag is not available on old Android, so rm call will fail when file does not exist.
-
-		await this.device.applicationManager.stopApplication(appId);
+		await this.device.applicationManager.stopApplication(appData);
 
 		if (debugOptions.debugBrk) {
-			await this.device.adb.executeShellCommand([`cat /dev/null > /data/local/tmp/${appId}-debugbreak`]);
+			await this.device.adb.executeShellCommand([`cat /dev/null > /data/local/tmp/${appData.appId}-debugbreak`]);
 		}
 
-		await this.device.adb.executeShellCommand([`cat /dev/null > /data/local/tmp/${appId}-debugger-started`]);
+		await this.device.adb.executeShellCommand([`cat /dev/null > /data/local/tmp/${appData.appId}-debugger-started`]);
 
-		await this.device.applicationManager.startApplication(appId, projectName);
+		await this.device.applicationManager.startApplication(appData);
 
-		await this.waitForDebugger(appId);
+		await this.waitForDebugger(appData.appId);
 	}
 
 	private async waitForDebugger(packageName: String): Promise<void> {
