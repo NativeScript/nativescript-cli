@@ -53,17 +53,42 @@ class DoctorService implements IDoctorService {
 		return hasWarnings;
 	}
 
+	public runSetupScript(): Promise<ISpawnResult> {
+		if (this.$hostInfo.isLinux) {
+			return;
+		}
+
+		this.$logger.out("Running the setup script to try and automatically configure your environment.");
+
+		if (this.$hostInfo.isDarwin) {
+			return this.runSetupScriptCore(DoctorService.DarwinSetupScriptLocation, []);
+		}
+
+		if (this.$hostInfo.isWindows) {
+			return this.runSetupScriptCore(DoctorService.WindowsSetupScriptExecutable, DoctorService.WindowsSetupScriptArguments);
+		}
+	}
+
+	public async canExecuteLocalBuild(platform?: string): Promise<boolean> {
+		let infos = await doctor.getInfos();
+		if (platform) {
+			infos = this.filterInfosByPlatform(infos, platform);
+		}
+		this.printInfosCore(infos);
+
+		const warnings = this.filterInfosByType(infos, constants.WARNING_TYPE_NAME);
+		return warnings.length === 0;
+	}
+
 	private async promptForDocs(link: string): Promise<void> {
 		if (await this.$prompter.confirm("Do you want to visit the official documentation?", () => helpers.isInteractive())) {
 			this.$opener.open(link);
 		}
 	}
 
-	private async promptForHelpCore(link: string, commandName: string, commandArguments: string[]): Promise<void> {
-		await this.promptForDocs(link);
-
+	private async promptForSetupScript(executablePath: string, setupScriptArgs: string[]): Promise<void> {
 		if (await this.$prompter.confirm("Do you want to run the setup script?", () => helpers.isInteractive())) {
-			await this.$childProcess.spawnFromEvent(commandName, commandArguments, "close", { stdio: "inherit" });
+			await this.runSetupScriptCore(executablePath, setupScriptArgs);
 		}
 	}
 
@@ -77,6 +102,15 @@ class DoctorService implements IDoctorService {
 		}
 	}
 
+	private async promptForHelpCore(link: string, setupScriptExecutablePath: string, setupScriptArgs: string[]): Promise<void> {
+		await this.promptForDocs(link);
+		await this.promptForSetupScript(setupScriptExecutablePath, setupScriptArgs);
+	}
+
+	private async runSetupScriptCore(executablePath: string, setupScriptArgs: string[]): Promise<ISpawnResult> {
+		return this.$childProcess.spawnFromEvent(executablePath, setupScriptArgs, "close", { stdio: "inherit" });
+	}
+
 	private printPackageManagerTip() {
 		if (this.$hostInfo.isWindows) {
 			this.$logger.out("TIP: To avoid setting up the necessary environment variables, you can use the chocolatey package manager to install the Android SDK and its dependencies." + EOL);
@@ -86,6 +120,16 @@ class DoctorService implements IDoctorService {
 	}
 
 	private printInfosCore(infos: NativeScriptDoctor.IInfo[]): void {
+		if (!helpers.isInteractive()) {
+			infos.map(info => {
+				let message = info.message;
+				if (info.type === constants.WARNING_TYPE_NAME) {
+					message = `WARNING: ${info.message.yellow} ${EOL} ${info.additionalInformation} ${EOL}`;
+				}
+				this.$logger.out(message);
+			});
+		}
+
 		infos.filter(info => info.type === constants.INFO_TYPE_NAME)
 			.map(info => {
 				const spinner = this.$terminalSpinnerService.createSpinner();
@@ -98,7 +142,15 @@ class DoctorService implements IDoctorService {
 				const spinner = this.$terminalSpinnerService.createSpinner();
 				spinner.text = `${info.message.yellow} ${EOL} ${info.additionalInformation} ${EOL}`;
 				spinner.fail();
-		});
+			});
+	}
+
+	private filterInfosByPlatform(infos: NativeScriptDoctor.IInfo[], platform: string): NativeScriptDoctor.IInfo[] {
+		return infos.filter(info => _.includes(info.platforms, platform));
+	}
+
+	private filterInfosByType(infos: NativeScriptDoctor.IInfo[], type: string): NativeScriptDoctor.IInfo[] {
+		return infos.filter(info => info.type === type);
 	}
 }
 $injector.register("doctorService", DoctorService);

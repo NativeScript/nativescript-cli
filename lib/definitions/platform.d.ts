@@ -365,3 +365,7 @@ interface IDeployPlatformInfo extends IPlatform, IAppFilesUpdaterOptionsComposit
 interface IUpdateAppOptions extends IOptionalFilesToSync, IOptionalFilesToRemove {
 	beforeCopyAction: (sourceFiles: string[]) => void;
 }
+
+interface IPlatformEnvironmentRequirements {
+	checkEnvironmentRequirements(platform: string): Promise<boolean>;
+}

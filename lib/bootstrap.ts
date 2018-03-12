@@ -72,12 +72,15 @@ $injector.requireCommand("appstore|upload", "./commands/appstore-upload");
 $injector.requireCommand("publish|ios", "./commands/appstore-upload");
 $injector.require("itmsTransporterService", "./services/itmstransporter-service");
 
+$injector.requireCommand("setup|*", "./commands/setup");
+$injector.requireCommand(["setup|cloud", "cloud|setup"], "./commands/setup");
+
 $injector.requirePublic("npm", "./node-package-manager");
 $injector.require("npmInstallationManager", "./npm-installation-manager");
 $injector.require("dynamicHelpProvider", "./dynamic-help-provider");
 $injector.require("mobilePlatformsCapabilities", "./mobile-platforms-capabilities");
 $injector.require("commandsServiceProvider", "./providers/commands-service-provider");
-$injector.require("deviceAppDataProvider", "./providers/device-app-data-provider");
+$injector.require("AppDataProvider", "./providers/device-app-data-provider");
 
 $injector.require("deviceLogProvider", "./common/mobile/device-log-provider");
 $injector.require("projectFilesProvider", "./providers/project-files-provider");
@@ -152,3 +155,5 @@ $injector.require("subscriptionService", "./services/subscription-service");
 $injector.require("terminalSpinnerService", "./services/terminal-spinner-service");
 
 $injector.require('playgroundService', './services/playground-service');
+$injector.require("platformEnvironmentRequirements", "./services/platform-environment-requirements");
+$injector.require("nativescriptCloudExtensionService", "./services/nativescript-cloud-extension-service");
