@@ -7,7 +7,7 @@ export class SetupCommand implements ICommand {
 		return this.$doctorService.runSetupScript();
 	}
 }
-$injector.registerCommand("setup", SetupCommand);
+$injector.registerCommand("setup|*", SetupCommand);
 
 export class CloudSetupCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -18,4 +18,4 @@ export class CloudSetupCommand implements ICommand {
 		return this.$nativescriptCloudExtensionService.install();
 	}
 }
-$injector.registerCommand("cloud|setup", CloudSetupCommand);
+$injector.registerCommand(["setup|cloud", "cloud|setup"], CloudSetupCommand);

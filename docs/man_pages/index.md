@@ -57,6 +57,12 @@ Command | Description
 [device run](device/device-run.html) | Runs the selected application on a connected device.
 [device list-applications](device/device-list-applications.html) | Lists the installed applications on all connected devices.
 
+## Environment Configuration Commands
+Command | Description
+---|---
+[setup](env-configuration/setup.html) | Run the setup script to try to automatically configure your environment for local builds.
+[setup cloud](cloud/cloud-setup.html) | Install the `nativescript-cloud extension` to configure your environment for cloud builds.
+
 ## Global Options
 Option | Description
 -------|---------

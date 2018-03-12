@@ -72,15 +72,15 @@ $injector.requireCommand("appstore|upload", "./commands/appstore-upload");
 $injector.requireCommand("publish|ios", "./commands/appstore-upload");
 $injector.require("itmsTransporterService", "./services/itmstransporter-service");
 
-$injector.requireCommand("setup", "./commands/setup");
-$injector.requireCommand("cloud|setup", "./commands/setup");
+$injector.requireCommand("setup|*", "./commands/setup");
+$injector.requireCommand(["setup|cloud", "cloud|setup"], "./commands/setup");
 
 $injector.requirePublic("npm", "./node-package-manager");
 $injector.require("npmInstallationManager", "./npm-installation-manager");
 $injector.require("dynamicHelpProvider", "./dynamic-help-provider");
 $injector.require("mobilePlatformsCapabilities", "./mobile-platforms-capabilities");
 $injector.require("commandsServiceProvider", "./providers/commands-service-provider");
-$injector.require("deviceAppDataProvider", "./providers/device-app-data-provider");
+$injector.require("AppDataProvider", "./providers/device-app-data-provider");
 
 $injector.require("deviceLogProvider", "./common/mobile/device-log-provider");
 $injector.require("projectFilesProvider", "./providers/project-files-provider");
