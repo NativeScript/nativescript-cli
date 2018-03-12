@@ -4,7 +4,6 @@ import * as constants from "../constants";
 import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
-import { EOL } from "os";
 import { attachAwaitDetach, isRecommendedAarFile } from "../common/helpers";
 import { Configurations } from "../common/constants";
 import { SpawnOptions } from "child_process";
@@ -37,7 +36,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $npm: INodePackageManager,
 		private $androidPluginBuildService: IAndroidPluginBuildService,
-		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements) {
+		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
+		private $androidResourcesMigrationService: IAndroidResourcesMigrationService) {
 		super($fs, $projectDataService);
 		this._androidProjectPropertiesManagers = Object.create(null);
 		this.isAndroidStudioTemplate = false;
@@ -137,18 +137,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return Promise.resolve(true);
 	}
 
-	public getAppResourcesDestinationDirectoryPath(projectData: IProjectData, frameworkVersion?: string): string {
-		if (this.canUseGradle(projectData, frameworkVersion)) {
-			const resourcePath: string[] = [constants.SRC_DIR, constants.MAIN_DIR, constants.RESOURCES_DIR];
-			if (this.isAndroidStudioTemplate) {
-				resourcePath.unshift(constants.APP_FOLDER_NAME);
-			}
+	public getAppResourcesDestinationDirectoryPath(projectData: IProjectData): string {
+		const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(projectData.getAppResourcesDirectoryPath());
 
-			return path.join(this.getPlatformData(projectData).projectRoot, ...resourcePath);
-
+		if (appResourcesDirStructureHasMigrated) {
+			return this.getUpdatedAppResourcesDestinationDirPath(projectData);
+		} else {
+			return this.getLegacyAppResourcesDestinationDirPath(projectData);
 		}
-
-		return path.join(this.getPlatformData(projectData).projectRoot, constants.RESOURCES_DIR);
 	}
 
 	public async validate(projectData: IProjectData): Promise<void> {
@@ -198,7 +194,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
 		}
 
-		this.cleanResValues(targetSdkVersion, projectData, frameworkVersion);
+		this.cleanResValues(targetSdkVersion, projectData);
 
 		const npmConfig: INodePackageManagerInstallOptions = {
 			save: true,
@@ -234,8 +230,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	private cleanResValues(targetSdkVersion: number, projectData: IProjectData, frameworkVersion: string): void {
-		const resDestinationDir = this.getAppResourcesDestinationDirectoryPath(projectData, frameworkVersion);
+	private cleanResValues(targetSdkVersion: number, projectData: IProjectData): void {
+		const resDestinationDir = this.getAppResourcesDestinationDirectoryPath(projectData);
 		const directoriesInResFolder = this.$fs.readDirectory(resDestinationDir);
 		const directoriesToClean = directoriesInResFolder
 			.map(dir => {
@@ -259,8 +255,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public async interpolateData(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
 		// Interpolate the apilevel and package
 		this.interpolateConfigurationFile(projectData, platformSpecificData);
+		const appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 
-		const stringsFilePath = path.join(this.getAppResourcesDestinationDirectoryPath(projectData), 'values', 'strings.xml');
+		let stringsFilePath: string;
+
+		const appResourcesDestinationDirectoryPath = this.getAppResourcesDestinationDirectoryPath(projectData);
+		if (this.$androidResourcesMigrationService.hasMigrated(appResourcesDirectoryPath)) {
+			stringsFilePath = path.join(appResourcesDestinationDirectoryPath, constants.MAIN_DIR, constants.RESOURCES_DIR, 'values', 'strings.xml');
+		} else {
+			stringsFilePath = path.join(appResourcesDestinationDirectoryPath, 'values', 'strings.xml');
+		}
+
 		shell.sed('-i', /__NAME__/, projectData.projectName, stringsFilePath);
 		shell.sed('-i', /__TITLE_ACTIVITY__/, projectData.projectName, stringsFilePath);
 
@@ -316,33 +321,28 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
-		if (this.canUseGradle(projectData)) {
-			const buildOptions = this.getGradleBuildOptions(buildConfig, projectData);
-			if (this.$logger.getLevel() === "TRACE") {
-				buildOptions.unshift("--stacktrace");
-				buildOptions.unshift("--debug");
-			}
-			if (buildConfig.release) {
-				buildOptions.unshift("assembleRelease");
-			} else {
-				buildOptions.unshift("assembleDebug");
-			}
-
-			const handler = (data: any) => {
-				this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
-			};
-
-			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
-				this.$childProcess,
-				handler,
-				this.executeCommand(this.getPlatformData(projectData).projectRoot,
-					buildOptions,
-					{ stdio: buildConfig.buildOutputStdio || "inherit" },
-					{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true }));
-		} else {
-			this.$errors.failWithoutHelp("Cannot complete build because this project is ANT-based." + EOL +
-				"Run `tns platform remove android && tns platform add android` to switch to Gradle and try again.");
+		const buildOptions = this.getGradleBuildOptions(buildConfig, projectData);
+		if (this.$logger.getLevel() === "TRACE") {
+			buildOptions.unshift("--stacktrace");
+			buildOptions.unshift("--debug");
 		}
+		if (buildConfig.release) {
+			buildOptions.unshift("assembleRelease");
+		} else {
+			buildOptions.unshift("assembleDebug");
+		}
+
+		const handler = (data: any) => {
+			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
+		};
+
+		await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
+			this.$childProcess,
+			handler,
+			this.executeCommand(this.getPlatformData(projectData).projectRoot,
+				buildOptions,
+				{ stdio: buildConfig.buildOutputStdio || "inherit" },
+				{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true }));
 	}
 
 	private getGradleBuildOptions(settings: IAndroidBuildOptionsSettings, projectData: IProjectData): Array<string> {
@@ -398,7 +398,15 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public ensureConfigurationFileInAppResources(projectData: IProjectData): void {
-		const originalAndroidManifestFilePath = path.join(projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, this.getPlatformData(projectData).configurationFileName);
+		const appResourcesDirectoryPath = projectData.appResourcesDirectoryPath;
+		const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(appResourcesDirectoryPath);
+		let originalAndroidManifestFilePath;
+
+		if (appResourcesDirStructureHasMigrated) {
+			originalAndroidManifestFilePath = path.join(appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, "src", "main", this.getPlatformData(projectData).configurationFileName);
+		} else {
+			originalAndroidManifestFilePath = path.join(appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, this.getPlatformData(projectData).configurationFileName);
+		}
 
 		const manifestExists = this.$fs.exists(originalAndroidManifestFilePath);
 
@@ -407,16 +415,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			return;
 		}
 		// Overwrite the AndroidManifest from runtime.
-		this.$fs.copyFile(originalAndroidManifestFilePath, this.getPlatformData(projectData).configurationFilePath);
+		if (!appResourcesDirStructureHasMigrated) {
+			this.$fs.copyFile(originalAndroidManifestFilePath, this.getPlatformData(projectData).configurationFilePath);
+		}
 	}
 
 	public prepareAppResources(appResourcesDirectoryPath: string, projectData: IProjectData): void {
-		const resourcesDirPath = path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName);
-		const valuesDirRegExp = /^values/;
-		const resourcesDirs = this.$fs.readDirectory(resourcesDirPath).filter(resDir => !resDir.match(valuesDirRegExp));
-		_.each(resourcesDirs, resourceDir => {
-			this.$fs.deleteDirectory(path.join(this.getAppResourcesDestinationDirectoryPath(projectData), resourceDir));
-		});
+		this.cleanUpPreparedResources(appResourcesDirectoryPath, projectData);
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
@@ -641,20 +646,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		// Nothing android specific to check yet.
 	}
 
-	private _canUseGradle: boolean;
-	private canUseGradle(projectData: IProjectData, frameworkVersion?: string): boolean {
-		if (!this._canUseGradle) {
-			if (!frameworkVersion) {
-				const frameworkInfoInProjectFile = this.$projectDataService.getNSValue(projectData.projectDir, this.getPlatformData(projectData).frameworkPackageName);
-				frameworkVersion = frameworkInfoInProjectFile && frameworkInfoInProjectFile.version;
-			}
-
-			this._canUseGradle = !frameworkVersion || semver.gte(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE);
-		}
-
-		return this._canUseGradle;
-	}
-
 	private copy(projectRoot: string, frameworkDir: string, files: string, cpArg: string): void {
 		const paths = files.split(' ').map(p => path.join(frameworkDir, p));
 		shell.cp(cpArg, paths, projectRoot);
@@ -758,6 +749,40 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
 		return semver.gte(normalizedPlatformVersion, versionString);
+	}
+
+	private getLegacyAppResourcesDestinationDirPath(projectData: IProjectData): string {
+		const resourcePath: string[] = [constants.SRC_DIR, constants.MAIN_DIR, constants.RESOURCES_DIR];
+		if (this.isAndroidStudioTemplate) {
+			resourcePath.unshift(constants.APP_FOLDER_NAME);
+		}
+
+		return path.join(this.getPlatformData(projectData).projectRoot, ...resourcePath);
+	}
+
+	private getUpdatedAppResourcesDestinationDirPath(projectData: IProjectData): string {
+		const resourcePath: string[] = [constants.SRC_DIR];
+		if (this.isAndroidStudioTemplate) {
+			resourcePath.unshift(constants.APP_FOLDER_NAME);
+		}
+
+		return path.join(this.getPlatformData(projectData).projectRoot, ...resourcePath);
+	}
+
+	private cleanUpPreparedResources(appResourcesDirectoryPath: string, projectData: IProjectData): void {
+		let resourcesDirPath = path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName);
+		if (this.$androidResourcesMigrationService.hasMigrated(projectData.appResourcesDirectoryPath)) {
+			resourcesDirPath = path.join(resourcesDirPath, constants.MAIN_DIR, constants.RESOURCES_DIR);
+		}
+
+		const valuesDirRegExp = /^values/;
+		if (this.$fs.exists(resourcesDirPath)) {
+			const resourcesDirs = this.$fs.readDirectory(resourcesDirPath).filter(resDir => !resDir.match(valuesDirRegExp));
+			const appResourcesDestinationDirectoryPath = this.getAppResourcesDestinationDirectoryPath(projectData);
+			_.each(resourcesDirs, resourceDir => {
+				this.$fs.deleteDirectory(path.join(appResourcesDestinationDirectoryPath, resourceDir));
+			});
+		}
 	}
 }
 
