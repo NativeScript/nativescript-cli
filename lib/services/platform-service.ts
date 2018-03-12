@@ -518,7 +518,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			}
 
 			if (deployInfo.deployOptions.forceInstall || shouldBuild || (await this.shouldInstall(device, deployInfo.projectData, buildConfig))) {
-				await this.installApplication(device, buildConfig, deployInfo.projectData);
+				await this.installApplication(device, buildConfig, deployInfo.projectData, installPackageFile, deployInfo.outputPath);
 			} else {
 				this.$logger.out("Skipping install.");
 			}
