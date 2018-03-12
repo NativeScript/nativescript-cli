@@ -93,7 +93,7 @@ export class Popup extends HTML5Popup {
   }
 
   static open(url) {
-    const popup = new PhoneGapPopup();
+    const popup = new Popup();
     return popup.open(url);
   }
 }
