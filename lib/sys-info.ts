@@ -9,6 +9,8 @@ import * as path from "path";
 import * as osenv from "osenv";
 import * as temp from "temp";
 import * as semver from "semver";
+import { constants } from "zlib";
+import { Constants } from "./constants";
 
 export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private static JAVA_COMPILER_VERSION_REGEXP = /^javac (.*)/im;
@@ -34,7 +36,11 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private monoVerCache: string;
 	private gitVerCache: string;
 	private gradleVerCache: string;
-	private sysInfoCache: NativeScriptDoctor.ISysInfoData;
+
+	private commonSysInfoCache: NativeScriptDoctor.ICommonSysInfoData;
+	private androidSysInfoCache: NativeScriptDoctor.IAndroidSysInfoData;
+	private iOSSysInfoCache: NativeScriptDoctor.IiOSSysInfoData;
+
 	private isCocoaPodsWorkingCorrectlyCache: boolean;
 	private nativeScriptCliVersionCache: string;
 	private xcprojInfoCache: NativeScriptDoctor.IXcprojInfo;
@@ -215,43 +221,16 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		});
 	}
 
-	public getSysInfo(config?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.ISysInfoData> {
-		return this.getValueForProperty(() => this.sysInfoCache, async (): Promise<NativeScriptDoctor.ISysInfoData> => {
-			const result: NativeScriptDoctor.ISysInfoData = Object.create(null);
+	public async getSysInfo(config?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.ISysInfoData> {
+		if (config && config.platform === Constants.ANDROID_PLATFORM_NAME) {
+			return <NativeScriptDoctor.ISysInfoData>Object.assign(await this.getCommonSysInfo(), await this.getAndroidSysInfo(config));
+		}
 
-			// os stuff
-			result.platform = platform();
-			result.shell = osenv.shell();
-			result.os = await this.getOs();
+		if (config && config.platform === Constants.IOS_PLATFORM_NAME) {
+			return <NativeScriptDoctor.ISysInfoData>Object.assign(await this.getCommonSysInfo(), await this.getiOSSysInfo());
+		}
 
-			// node stuff
-			result.procArch = process.arch;
-			result.nodeVer = await this.getNodeVersion();
-			result.npmVer = await this.getNpmVersion();
-			result.nodeGypVer = await this.getNodeGypVersion();
-
-			result.dotNetVer = await this.hostInfo.dotNetVersion();
-			result.javacVersion = await this.getJavaCompilerVersion();
-			result.xcodeVer = await this.getXcodeVersion();
-			result.xcodeprojLocation = await this.getXcodeprojLocation();
-			result.itunesInstalled = await this.isITunesInstalled();
-			result.cocoaPodsVer = await this.getCocoaPodsVersion();
-			result.adbVer = await this.getAdbVersion(config && config.androidToolsInfo && config.androidToolsInfo.pathToAdb);
-			result.androidInstalled = await this.isAndroidInstalled();
-			result.monoVer = await this.getMonoVersion();
-			result.gitVer = await this.getGitVersion();
-			result.gradleVer = await this.getGradleVersion();
-			result.isCocoaPodsWorkingCorrectly = await this.isCocoaPodsWorkingCorrectly();
-
-			result.nativeScriptCliVersion = await this.getNativeScriptCliVersion();
-
-			result.isCocoaPodsUpdateRequired = await this.isCocoaPodsUpdateRequired();
-			result.isAndroidSdkConfiguredCorrectly = await this.isAndroidSdkConfiguredCorrectly();
-
-			result.pythonInfo = await this.getPythonInfo();
-
-			return result;
-		});
+		return Object.assign(await this.getCommonSysInfo(), await this.getAndroidSysInfo(), await this.getiOSSysInfo());
 	}
 
 	public isCocoaPodsWorkingCorrectly(): Promise<boolean> {
@@ -466,5 +445,56 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	private unixVer(): Promise<string> {
 		return this.execCommand("uname -a");
+	}
+
+	private getCommonSysInfo(): Promise<NativeScriptDoctor.ICommonSysInfoData> {
+		return this.getValueForProperty(() => this.commonSysInfoCache, async (): Promise<NativeScriptDoctor.ICommonSysInfoData> => {
+			const result: NativeScriptDoctor.ICommonSysInfoData = Object.create(null);
+
+			// os stuff
+			result.platform = platform();
+			result.shell = osenv.shell();
+			result.os = await this.getOs();
+			result.procArch = process.arch;
+			result.nodeVer = await this.getNodeVersion();
+			result.npmVer = await this.getNpmVersion();
+			result.nodeGypVer = await this.getNodeGypVersion();
+			result.nativeScriptCliVersion = await this.getNativeScriptCliVersion();
+			result.gitVer = await this.getGitVersion();
+
+			return result;
+		});
+	}
+
+	private async getiOSSysInfo(): Promise<NativeScriptDoctor.IiOSSysInfoData> {
+		return this.getValueForProperty(() => this.iOSSysInfoCache, async (): Promise<NativeScriptDoctor.IiOSSysInfoData> => {
+			const result: NativeScriptDoctor.IiOSSysInfoData = Object.create(null);
+
+			result.xcodeVer = await this.getXcodeVersion();
+			result.xcodeprojLocation = await this.getXcodeprojLocation();
+			result.itunesInstalled = await this.isITunesInstalled();
+			result.cocoaPodsVer = await this.getCocoaPodsVersion();
+			result.isCocoaPodsWorkingCorrectly = await this.isCocoaPodsWorkingCorrectly();
+			result.isCocoaPodsUpdateRequired = await this.isCocoaPodsUpdateRequired();
+			result.pythonInfo = await this.getPythonInfo();
+
+			return result;
+		});
+	}
+
+	private async getAndroidSysInfo(config?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.IAndroidSysInfoData> {
+		return this.getValueForProperty(() => this.androidSysInfoCache, async (): Promise<NativeScriptDoctor.IAndroidSysInfoData> => {
+			const result: NativeScriptDoctor.IAndroidSysInfoData = Object.create(null);
+
+			result.dotNetVer = await this.hostInfo.dotNetVersion();
+			result.javacVersion = await this.getJavaCompilerVersion();
+			result.adbVer = await this.getAdbVersion(config && config.androidToolsInfo && config.androidToolsInfo.pathToAdb);
+			result.androidInstalled = await this.isAndroidInstalled();
+			result.monoVer = await this.getMonoVersion();
+			result.gradleVer = await this.getGradleVersion();
+			result.isAndroidSdkConfiguredCorrectly = await this.isAndroidSdkConfiguredCorrectly();
+
+			return result;
+		});
 	}
 }

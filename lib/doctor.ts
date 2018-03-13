@@ -33,6 +33,51 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		const sysInfoData = await this.sysInfo.getSysInfo(config);
 
 		result = result.concat(
+			this.processSysInfoItem({
+				item: sysInfoData.gitVer,
+				infoMessage: "Git is installed and is configured properly.",
+				warningMessage: "Git is not installed or not configured properly.",
+				additionalInformation: "You will not be able to create and work with Screen Builder projects." + EOL
+					+ "To be able to work with Screen Builder projects, download and install Git as described" + EOL
+					+ "in https://git-scm.com/downloads and add the git executable to your PATH.",
+				platforms: Constants.SUPPORTED_PLATFORMS
+			})
+		);
+
+		if (config && config.platform === Constants.ANDROID_PLATFORM_NAME) {
+			result = result.concat(this.getAndroidInfos(sysInfoData));
+		}
+
+		if (config && config.platform === Constants.IOS_PLATFORM_NAME) {
+			result = result.concat(await this.getiOSInfos(sysInfoData));
+		}
+
+		if (!config || !config.platform) {
+			result = result.concat(this.getAndroidInfos(sysInfoData), await this.getiOSInfos(sysInfoData));
+		}
+
+		if (!this.hostInfo.isDarwin) {
+			result.push({
+				message: "Local builds for iOS can be executed only on a macOS system. To build for iOS on a different operating system, you can use the NativeScript cloud infrastructure.",
+				additionalInformation: "",
+				platforms: [Constants.IOS_PLATFORM_NAME],
+				type: Constants.INFO_TYPE_NAME
+			});
+		}
+
+		return result;
+	}
+
+	public async getWarnings(config?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.IWarning[]> {
+		const info = await this.getInfos(config);
+		return info.filter(item => item.type === Constants.WARNING_TYPE_NAME)
+			.map(item => this.convertInfoToWarning(item));
+	}
+
+	private getAndroidInfos(sysInfoData: NativeScriptDoctor.ISysInfoData): NativeScriptDoctor.IInfo[] {
+		let result: NativeScriptDoctor.IInfo[] = [];
+
+		result = result.concat(
 			this.processValidationErrors({
 				warnings: this.androidToolsInfo.validateAndroidHomeEnvVariable(),
 				infoMessage: "Your ANDROID_HOME environment variable is set and points to correct directory.",
@@ -66,9 +111,24 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 				warnings: this.androidToolsInfo.validateJavacVersion(sysInfoData.javacVersion),
 				infoMessage: "Javac is installed and is configured properly.",
 				platforms: [Constants.ANDROID_PLATFORM_NAME]
+			}),
+			this.processSysInfoItem({
+				item: sysInfoData.javacVersion,
+				infoMessage: "The Java Development Kit (JDK) is installed and is configured properly.",
+				warningMessage: "The Java Development Kit (JDK) is not installed or is not configured properly.",
+				additionalInformation: "You will not be able to work with the Android SDK and you might not be able" + EOL
+					+ "to perform some Android-related operations. To ensure that you can develop and" + EOL
+					+ "test your apps for Android, verify that you have installed the JDK as" + EOL
+					+ "described in http://docs.oracle.com/javase/8/docs/technotes/guides/install/install_overview.html (for JDK 8).",
+				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			})
 		);
 
+		return result;
+	}
+
+	private async getiOSInfos(sysInfoData: NativeScriptDoctor.ISysInfoData): Promise<NativeScriptDoctor.IInfo[]> {
+		let result: NativeScriptDoctor.IInfo[] = [];
 		if (this.hostInfo.isDarwin) {
 			result = result.concat(
 				this.processSysInfoItem({
@@ -103,7 +163,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 					platforms: [Constants.IOS_PLATFORM_NAME]
 				})
 			);
-
+	
 			if (sysInfoData.xcodeVer && sysInfoData.cocoaPodsVer) {
 				let isCocoaPodsWorkingCorrectly = await this.sysInfo.isCocoaPodsWorkingCorrectly();
 				result = result.concat(
@@ -116,7 +176,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 					})
 				);
 			}
-
+	
 			result = result.concat(
 				this.processSysInfoItem({
 					item: !sysInfoData.cocoaPodsVer || !semver.valid(sysInfoData.cocoaPodsVer) || !semver.lt(sysInfoData.cocoaPodsVer, Doctor.MIN_SUPPORTED_POD_VERSION),
@@ -144,44 +204,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 			);
 		}
 
-		result = result.concat(
-			this.processSysInfoItem({
-				item: sysInfoData.javacVersion,
-				infoMessage: "The Java Development Kit (JDK) is installed and is configured properly.",
-				warningMessage: "The Java Development Kit (JDK) is not installed or is not configured properly.",
-				additionalInformation: "You will not be able to work with the Android SDK and you might not be able" + EOL
-					+ "to perform some Android-related operations. To ensure that you can develop and" + EOL
-					+ "test your apps for Android, verify that you have installed the JDK as" + EOL
-					+ "described in http://docs.oracle.com/javase/8/docs/technotes/guides/install/install_overview.html (for JDK 8).",
-				platforms: [Constants.ANDROID_PLATFORM_NAME]
-			}),
-			this.processSysInfoItem({
-				item: sysInfoData.gitVer,
-				infoMessage: "Git is installed and is configured properly.",
-				warningMessage: "Git is not installed or not configured properly.",
-				additionalInformation: "You will not be able to create and work with Screen Builder projects." + EOL
-					+ "To be able to work with Screen Builder projects, download and install Git as described" + EOL
-					+ "in https://git-scm.com/downloads and add the git executable to your PATH.",
-				platforms: Constants.SUPPORTED_PLATFORMS
-			})
-		);
-
-		if (!this.hostInfo.isDarwin) {
-			result.push({
-				message: "Local builds for iOS can be executed only on a macOS system. To build for iOS on a different operating system, you can use the NativeScript cloud infrastructure.",
-				additionalInformation: "",
-				platforms: [Constants.IOS_PLATFORM_NAME],
-				type: Constants.INFO_TYPE_NAME
-			});
-		}
-
 		return result;
-	}
-
-	public async getWarnings(config?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.IWarning[]> {
-		const info = await this.getInfos(config);
-		return info.filter(item => item.type === Constants.WARNING_TYPE_NAME)
-			.map(item => this.convertInfoToWarning(item));
 	}
 
 	private processSysInfoItem(data: { item: string | boolean, infoMessage: string, warningMessage: string, additionalInformation?: string, platforms: string[] }): NativeScriptDoctor.IInfo {

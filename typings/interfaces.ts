@@ -141,10 +141,14 @@ declare module NativeScriptDoctor {
 
 	interface ISysInfoConfig {
 		/**
+		 * The platform for which to check if environment is properly configured.
+		 */
+		platform?: string;
+		/**
 		 * Path to package.json file of NativeScript CLI
 		 * @type {string}
 		 */
-		pathToNativeScriptCliPackageJson: string;
+		pathToNativeScriptCliPackageJson?: string;
 		/**
 		 * Android tools data
 		 * @type {{pathToAdb: string}}
@@ -177,158 +181,141 @@ declare module NativeScriptDoctor {
 
 		/**
 		 * Executes all checks for the current environment and returns the info from each check
+		 * @param {NativeScriptDoctor.ISysInfoConfig}
 		 * @return {Promise<IInfo[]>} Array of all the infos from all checks.
 		 */
-		getInfos(): Promise<IInfo[]>;
+		getInfos(config?: NativeScriptDoctor.ISysInfoConfig): Promise<IInfo[]>;
 	}
 
-	interface ISysInfoData {
-		// os stuff
+	interface ICommonSysInfoData {
 		/**
 		 * Os platform flavour, reported by os.platform.
 		 * @type {string}
 		 */
 		platform: string;
-
 		/**
 		 * Full os name, like `uname -a` on unix, registry query on win.
 		 * @type {string}
 		 */
 		os: string;
-
-		/**
-		 * .net version, applicable to windows only.
-		 * @type {string}
-		 */
-		dotNetVer: string;
-
 		/**
 		 * The command shell in use, usually bash or cmd.
 		 * @type {string}
 		 */
 		shell: string;
-
-		// node stuff
 		/**
 		 * node.js version, returned by node -v.
 		 * @type {string}
 		 */
 		nodeVer: string;
-
 		/**
 		 * npm version, returned by `npm -v`.
 		 * @type {string}
 		 */
 		npmVer: string;
-
 		/**
 		 * Process architecture, returned by `process.arch`.
 		 * @type {string}
 		 */
 		procArch: string;
-
 		/**
 		 * node-gyp version as returned by `node-gyp -v`.
 		 * @type {string}
 		 */
 		nodeGypVer: string;
-
-		// dependencies
-		/**
-		 * Xcode version string as returned by `xcodebuild -version`. Valid only on Mac.
-		 * @type {string}
-		 */
-		xcodeVer: string;
-
-		/**
-		 * Version string of adb, as returned by `adb version`.
-		 * @type {string}
-		 */
-		adbVer: string;
-
-		/**
-		 * Whether iTunes is installed on the machine.
-		 * @type {boolean}
-		 */
-		itunesInstalled: boolean;
-
-		/**
-		 * Whether `android` executable can be run.
-		 * @type {boolean}
-		 */
-		androidInstalled: boolean;
-
-		/**
-		 * mono version, relevant on Mac only.
-		 * @type {string}
-		 */
-		monoVer: string;
-
 		/**
 		 * git version string, as returned by `git --version`.
 		 * @type {string}
 		 */
 		gitVer: string;
-
-		/**
-		 * gradle version string as returned by `gradle -v`.
-		 * @type {string}
-		 */
-		gradleVer: string;
-
-		/**
-		 * javac version string as returned by `javac -version`.
-		 * @type {string}
-		 */
-		javacVersion: string;
-
-		/**
-		 * pod version string, as returned by `pod --version`.
-		 * @type {string}
-		 */
-		cocoaPodsVer: string;
-
-		/**
-		 * xcodeproj location, as returned by `which xcodeproj`.
-		 * @type {string}
-		 */
-		xcodeprojLocation: string;
-
-		/**
-		 * true id CocoaPods can successfully execute pod install.
-		 * @type {boolean}
-		 */
-		isCocoaPodsWorkingCorrectly: boolean;
-
 		/**
 		 * NativeScript CLI version string, as returned by `tns --version`.
 		 * @type {string}
 		 */
 		nativeScriptCliVersion: string;
+	}
 
+	interface IiOSSysInfoData {
+		/**
+		 * Xcode version string as returned by `xcodebuild -version`. Valid only on Mac.
+		 * @type {string}
+		 */
+		xcodeVer: string;
+		/**
+		 * Whether iTunes is installed on the machine.
+		 * @type {boolean}
+		 */
+		itunesInstalled: boolean;
+		/**
+		 * pod version string, as returned by `pod --version`.
+		 * @type {string}
+		 */
+		cocoaPodsVer: string;
+		/**
+		 * xcodeproj location, as returned by `which xcodeproj`.
+		 * @type {string}
+		 */
+		xcodeprojLocation: string;
+		/**
+		 * true id CocoaPods can successfully execute pod install.
+		 * @type {boolean}
+		 */
+		isCocoaPodsWorkingCorrectly: boolean;
 		/**
 		 * Information about xcproj.
 		 * @type {string}
 		 */
 		xcprojInfo: IXcprojInfo;
-
 		/**
 		 * true if the system requires xcproj to build projects successfully and the CocoaPods version is not compatible with the Xcode.
 		 * @type {boolean}
 		 */
 		isCocoaPodsUpdateRequired: boolean;
-
-		/**
-		 * true if the Android SDK Tools are installed and configured correctly.
-		 * @type {boolean}
-		 */
-		isAndroidSdkConfiguredCorrectly: boolean;
-
 		/**
 		 * Information about python installation
 		 */
 		pythonInfo: IPythonInfo;
 	}
+
+	interface IAndroidSysInfoData {
+		/**
+		 * Version string of adb, as returned by `adb version`.
+		 * @type {string}
+		 */
+		adbVer: string;
+		/**
+		 * Whether `android` executable can be run.
+		 * @type {boolean}
+		 */
+		androidInstalled: boolean;
+		/**
+		 * mono version, relevant on Mac only.
+		 * @type {string}
+		 */
+		monoVer: string;
+		/**
+		 * gradle version string as returned by `gradle -v`.
+		 * @type {string}
+		 */
+		gradleVer: string;
+		/**
+		 * javac version string as returned by `javac -version`.
+		 * @type {string}
+		 */
+		javacVersion: string;
+		/**
+		 * true if the Android SDK Tools are installed and configured correctly.
+		 * @type {boolean}
+		 */
+		isAndroidSdkConfiguredCorrectly: boolean;
+		/**
+		 * .net version, applicable to windows only.
+		 * @type {string}
+		 */
+		dotNetVer?: string;
+	}
+
+	interface ISysInfoData extends ICommonSysInfoData, IiOSSysInfoData, IAndroidSysInfoData { }
 
 	/**
 	 * Describes warning returned from nativescript-doctor check.
