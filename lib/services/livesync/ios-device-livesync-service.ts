@@ -75,8 +75,8 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		}
 	}
 
-	private async restartApplication(deviceAppData: Mobile.IDeviceAppData, appName: string): Promise<void> {
-		return this.device.applicationManager.restartApplication(deviceAppData.appIdentifier, appName);
+	private async restartApplication(deviceAppData: Mobile.IDeviceAppData, projectName: string): Promise<void> {
+		return this.device.applicationManager.restartApplication({ appId: deviceAppData.appIdentifier, projectName });
 	}
 
 	private async reloadPage(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
