@@ -5,6 +5,7 @@ $injector.require("options", "./options");
 // note: order above is important!
 $injector.require("nativescript-cli", "./nativescript-cli");
 
+$injector.requirePublicClass("constants", "./constants-provider");
 $injector.require("projectData", "./project-data");
 $injector.requirePublic("projectDataService", "./services/project-data-service");
 $injector.requirePublic("projectService", "./services/project-service");
