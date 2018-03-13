@@ -4,7 +4,6 @@ import { EOL } from "os";
 import { SysInfo } from "../lib/sys-info";
 import { Helpers } from "../lib/helpers";
 import { ChildProcess } from "../lib/wrappers/child-process";
-import { constants } from "zlib";
 
 const JavaHomeName = "JAVA_HOME";
 const AndroidHomeName = "ANDROID_HOME";

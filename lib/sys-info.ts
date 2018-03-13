@@ -9,7 +9,6 @@ import * as path from "path";
 import * as osenv from "osenv";
 import * as temp from "temp";
 import * as semver from "semver";
-import { constants } from "zlib";
 import { Constants } from "./constants";
 
 export class SysInfo implements NativeScriptDoctor.ISysInfo {

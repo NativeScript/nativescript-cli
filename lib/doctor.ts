@@ -32,28 +32,12 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		let result: NativeScriptDoctor.IInfo[] = [];
 		const sysInfoData = await this.sysInfo.getSysInfo(config);
 
-		result = result.concat(
-			this.processSysInfoItem({
-				item: sysInfoData.gitVer,
-				infoMessage: "Git is installed and is configured properly.",
-				warningMessage: "Git is not installed or not configured properly.",
-				additionalInformation: "You will not be able to create and work with Screen Builder projects." + EOL
-					+ "To be able to work with Screen Builder projects, download and install Git as described" + EOL
-					+ "in https://git-scm.com/downloads and add the git executable to your PATH.",
-				platforms: Constants.SUPPORTED_PLATFORMS
-			})
-		);
-
-		if (config && config.platform === Constants.ANDROID_PLATFORM_NAME) {
+		if (!config || !config.platform || config.platform === Constants.ANDROID_PLATFORM_NAME) {
 			result = result.concat(this.getAndroidInfos(sysInfoData));
 		}
 
-		if (config && config.platform === Constants.IOS_PLATFORM_NAME) {
+		if (!config || !config.platform || config.platform === Constants.IOS_PLATFORM_NAME) {
 			result = result.concat(await this.getiOSInfos(sysInfoData));
-		}
-
-		if (!config || !config.platform) {
-			result = result.concat(this.getAndroidInfos(sysInfoData), await this.getiOSInfos(sysInfoData));
 		}
 
 		if (!this.hostInfo.isDarwin) {
@@ -163,7 +147,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 					platforms: [Constants.IOS_PLATFORM_NAME]
 				})
 			);
-	
+
 			if (sysInfoData.xcodeVer && sysInfoData.cocoaPodsVer) {
 				let isCocoaPodsWorkingCorrectly = await this.sysInfo.isCocoaPodsWorkingCorrectly();
 				result = result.concat(
@@ -176,7 +160,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 					})
 				);
 			}
-	
+
 			result = result.concat(
 				this.processSysInfoItem({
 					item: !sysInfoData.cocoaPodsVer || !semver.valid(sysInfoData.cocoaPodsVer) || !semver.lt(sysInfoData.cocoaPodsVer, Doctor.MIN_SUPPORTED_POD_VERSION),
