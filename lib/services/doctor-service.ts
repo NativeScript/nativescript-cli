@@ -74,9 +74,13 @@ class DoctorService implements IDoctorService {
 		if (platform) {
 			infos = this.filterInfosByPlatform(infos, platform);
 		}
-		this.printInfosCore(infos);
 
 		const warnings = this.filterInfosByType(infos, constants.WARNING_TYPE_NAME);
+		if (warnings.length > 0) {
+			this.printInfosCore(infos);
+		} else {
+			infos.map(info => this.$logger.trace(info.message));
+		}
 		return warnings.length === 0;
 	}
 
