@@ -2,7 +2,7 @@ import expect from 'expect';
 
 import { DataStoreType } from '../datastore';
 import { Query } from '../../query';
-import { datastoreFactory, createPromiseSpy, validateSpyCalls, getSyncManagerMock } from './utils';
+import { datastoreFactory, createPromiseSpy, validateSpyCalls } from './utils';
 
 const collection = 'books';
 const optionKeyName = 'test';
@@ -24,10 +24,17 @@ const validateSyncManagerCall = (spy, query, options) => {
 };
 
 describe('Data stores delegate correctly to sync manager', () => {
-  let syncManagerMock = getSyncManagerMock();
+  let syncManagerMock;
 
   beforeEach(() => {
-    syncManagerMock = getSyncManagerMock();
+    syncManagerMock = {
+      getSyncItemCountByEntityQuery: createPromiseSpy(),
+      getSyncItemCount: createPromiseSpy(),
+      getSyncEntities: createPromiseSpy(),
+      push: createPromiseSpy(),
+      pull: createPromiseSpy(),
+      clearSync: createPromiseSpy()
+    };
   });
 
   dataStoreTypes.forEach((storeType) => {
@@ -86,8 +93,8 @@ describe('Data stores delegate correctly to sync manager', () => {
         syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(123);
         return store.pull(query, options)
           .then(() => {
-            // const pushSpy = syncManagerMock.push;
-            // validateSyncManagerCall(pushSpy, query);
+            const pushSpy = syncManagerMock.push;
+            validateSyncManagerCall(pushSpy, query);
 
             const pullSpy = syncManagerMock.pull;
             validateSyncManagerCall(pullSpy, query, options);

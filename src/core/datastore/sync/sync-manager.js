@@ -1,6 +1,5 @@
 import { Promise } from 'es6-promise';
 import clone from 'lodash/clone';
-import isArray from 'lodash/isArray';
 
 import { Log } from '../../log';
 import { KinveyError, NotFoundError, SyncError } from '../../errors';
@@ -73,35 +72,14 @@ export class SyncManager {
       return Promise.reject(new KinveyError('Invalid or missing collection name'));
     }
 
-    return this.getSyncItemCountByEntityQuery(collection, query)
-      .then((count) => {
-        if (count > 0) {
-          // TODO: I think this should happen, but keeping current behaviour
-          // const msg = `There are ${count} entities awaiting push. Please push before you attempt to pull`;
-          // return Promise.reject(new KinveyError(msg));
-          return this.push(collection, query)
-            .then(() => this.getSyncItemCountByEntityQuery(collection, query));
-        }
+    // TODO: decide on default value of pagination setting
+    if (options && (options.autoPagination && !options.useDeltaFetch)) {
+      return this._paginatedPull(collection, query, options);
+    }
 
-        return count;
-      })
-      .then((count) => {
-        // Throw an error if there are still items that need to be synced
-        if (count > 0) {
-          return Promise.reject(
-            new SyncError('Unable to fetch the entities on the backend.'
-              + ` There are ${count} entities that need to be synced.`)
-          );
-        }
-
-        // TODO: decide on default value of pagination setting
-        if (options && (options.autoPagination && !options.useDeltaFetch)) {
-          return this._paginatedPull(collection, query, options);
-        }
-
-        return this._fetchItemsFromServer(collection, query, options)
-          .then(replacedEntities => replacedEntities.length);
-      });
+    return this._fetchItemsFromServer(collection, query, options)
+      .then(entities => this._replaceOfflineEntities(collection, query, entities))
+      .then(replacedEntities => replacedEntities.length);
   }
 
   getSyncItemCount(collection) {
@@ -176,10 +154,6 @@ export class SyncManager {
     return this._deleteOfflineEntities(collection, deleteOfflineQuery)
       .then(() => this._getOfflineRepo())
       .then(repo => repo.update(collection, networkEntities));
-  }
-
-  _updateOfflineEntities(collection, networkEntities = []) {
-    return this._getOfflineRepo().then(repo => repo.update(collection, networkEntities));
   }
 
   _getPushOpResult(entityId, operation) {
@@ -316,29 +290,9 @@ export class SyncManager {
       .then(() => pushResults);
   }
 
-  _fetchItemsFromServer(collection, query, options = {}) {
-    return this._networkRepo.read(collection, query, options)
-      .then((data) => {
-        const useDeltaSet = options.useDeltaFetch || false;
-
-        if (useDeltaSet) {
-          return this._getOfflineRepo()
-            .then((repo) => {
-              const { deleted } = data;
-
-              if (isArray(deleted) && deleted.length > 0) {
-                const deletedIds = deleted.map((item) => item._id);
-                const deleteQuery = new Query().contains('_id', deletedIds);
-                return repo.delete(collection, deleteQuery).then(() => repo);
-              }
-
-              return repo;
-            })
-            .then(() => this._updateOfflineEntities(collection, data.changed));
-        }
-
-        return this._updateOfflineEntities(collection, data);
-      });
+  _fetchItemsFromServer(collection, query, options) {
+    // TODO: deltaset logic goes here
+    return this._networkRepo.read(collection, query, options);
   }
 
   _getOfflineRepo() {
