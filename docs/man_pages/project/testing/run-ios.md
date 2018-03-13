@@ -26,6 +26,7 @@ Runs your project on a connected iOS device or in the iOS Simulator, if configur
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
 * `--bundle` - Specifies that a bundler (e.g. webpack) should be used if one is present. If no value is passed will default to `webpack`.
 * `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. For example: `--env.uglify --env.snapshot`.
+* `--syncAllFiles` - Watches all production dependencies inside node_modules for changes. Triggers project rebuild if necessary!
 
 ### Attributes
 * `<Device ID>` is the index or `Device Identifier` of the target device as listed by `$ tns device ios --available-devices`

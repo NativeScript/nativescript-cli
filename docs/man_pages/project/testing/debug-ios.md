@@ -32,6 +32,7 @@ While debugging, prints the output from the application in the console and watch
 * `--clean` - If set, forces rebuilding the native application.
 * `--chrome` - Deprecated - default behavior uses '--chrome' implicitly. Allows debugging in Chrome Developer Tools. If set, Safari Web Inspector is not started and debugging is attached to Chrome Developer Tools.
 * `--inspector` - If set, the developer tools in the Safari Web Inspector are used for debugging the application.
+* `--syncAllFiles` - Watches all production dependencies inside node_modules for changes. Triggers project rebuild if necessary!
 
 ### Attributes
 * `<Device ID>` is the device identifier of the target device as listed by `$ tns device ios`

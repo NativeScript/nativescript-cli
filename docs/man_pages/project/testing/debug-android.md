@@ -24,6 +24,7 @@ While debugging, prints the output from the application in the console and watch
 * `--timeout` - Sets the number of seconds that the NativeScript CLI will wait for the emulator/device to boot. If not set, the default timeout is 90 seconds.
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--clean` - If set, forces rebuilding the native application.
+* `--syncAllFiles` - Watches all production dependencies inside node_modules for changes. Triggers project rebuild if necessary!
 
 ### Attributes
 * `<Device ID>` is the device identifier or name of the target device as listed by `$ tns device android`
