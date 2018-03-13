@@ -203,10 +203,10 @@ export class MobileIdentityConnect extends Identity {
           redirect_uri: redirectUri,
           response_type: 'code',
           username: options.username,
-          password: options.password
+          password: options.password,
+          scope: 'openid'
         },
-        followRedirect: false,
-        scope: 'openid'
+        followRedirect: false        
       });
       return request.execute();
     }).then((response) => {
