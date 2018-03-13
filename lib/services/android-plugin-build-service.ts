@@ -1,5 +1,6 @@
 import * as path from "path";
 import { MANIFEST_FILE_NAME, INCLUDE_GRADLE_NAME, ASSETS_DIR, RESOURCES_DIR } from "../constants";
+import { getShortPluginName } from "../common/helpers";
 import { Builder, parseString } from "xml2js";
 import { ILogger } from "log4js";
 
@@ -35,10 +36,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private getManifest(platformsDir: string): string {
 		const manifest = path.join(platformsDir, MANIFEST_FILE_NAME);
 		return this.$fs.exists(manifest) ? manifest : null;
-	}
-
-	private getShortPluginName(pluginName: string): string {
-		return pluginName.replace(/[\-]/g, "_");
 	}
 
 	private async updateManifestContent(oldManifestContent: string, defaultPackageName: string): Promise<string> {
@@ -164,7 +161,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		// IDEA: apply app.gradle here in order to get any and all user-defined variables
 		// IDEA: apply the entire include.gradle here instead of copying over the repositories {} and dependencies {} scopes
 
-		const shortPluginName = this.getShortPluginName(options.pluginName);
+		const shortPluginName = getShortPluginName(options.pluginName);
 		const newPluginDir = path.join(options.tempPluginDirPath, shortPluginName);
 		const newPluginMainSrcDir = path.join(newPluginDir, "src", "main");
 		const defaultPackageName = "org.nativescript." + shortPluginName;
