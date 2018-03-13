@@ -1,22 +1,28 @@
-import { EOL } from "os";
 import * as constants from "../constants";
+import * as helpers from "../common/helpers";
 import * as semver from "semver";
 import * as path from "path";
-import { createTable } from "../common/helpers";
+
+export enum VersionInformationType {
+	UpToDate = "UpToDate",
+	UpdateAvailable = "UpdateAvailable",
+	NotInstalled = "NotInstalled"
+}
 
 class VersionsService implements IVersionsService {
-	private static UP_TO_DATE_MESSAGE = "Up to date".green.toString();
-	private static UPDATE_AVAILABLE_MESSAGE = "Update available".yellow.toString();
-	private static NOT_INSTALLED_MESSAGE = "Not installed".grey.toString();
+	private static UP_TO_DATE_MESSAGE = "up to date";
+	private static UPDATE_AVAILABLE_MESSAGE = "Update available";
+	private static NOT_INSTALLED_MESSAGE = "not installed";
 
 	private projectData: IProjectData;
 
 	constructor(private $fs: IFileSystem,
 		private $npmInstallationManager: INpmInstallationManager,
 		private $injector: IInjector,
+		private $logger: ILogger,
 		private $staticConfig: Config.IStaticConfig,
 		private $pluginsService: IPluginsService,
-		private $logger: ILogger) {
+		private $terminalSpinnerService: ITerminalSpinnerService) {
 		this.projectData = this.getProjectData();
 	}
 
@@ -86,30 +92,6 @@ class VersionsService implements IVersionsService {
 		return runtimesVersions;
 	}
 
-	public async checkComponentsForUpdate(): Promise<void> {
-		const allComponents: IVersionInformation[] = await this.getAllComponentsVersions();
-		const componentsForUpdate: IVersionInformation[] = [];
-
-		_.forEach(allComponents, (component: IVersionInformation) => {
-			if (component.currentVersion && this.hasUpdate(component)) {
-				componentsForUpdate.push(component);
-			}
-		});
-
-		this.printVersionsInformation(componentsForUpdate, allComponents);
-	}
-
-	private printVersionsInformation(versionsInformation: IVersionInformation[], allComponents: IVersionInformation[]): void {
-		if (versionsInformation && versionsInformation.length) {
-			const table: any = this.createTableWithVersionsInformation(versionsInformation);
-
-			this.$logger.warn("Updates available");
-			this.$logger.out(table.toString() + EOL);
-		} else {
-			this.$logger.out(`Your components are up-to-date: ${EOL}${allComponents.map(component => component.componentName)}${EOL}`);
-		}
-	}
-
 	public async getAllComponentsVersions(): Promise<IVersionInformation[]> {
 		let allComponents: IVersionInformation[] = [];
 
@@ -127,30 +109,50 @@ class VersionsService implements IVersionsService {
 
 		allComponents = allComponents.concat(runtimesVersions);
 
-		return allComponents;
+		return allComponents
+			.map(componentInformation => {
+				if (componentInformation.currentVersion) {
+					if (this.hasUpdate(componentInformation)) {
+						componentInformation.type = VersionInformationType.UpdateAvailable;
+						componentInformation.message = `${VersionsService.UPDATE_AVAILABLE_MESSAGE} for component ${componentInformation.componentName}. Your current version is ${componentInformation.currentVersion} and the latest available version is ${componentInformation.latestVersion}.`;
+					} else {
+						componentInformation.type = VersionInformationType.UpToDate;
+						componentInformation.message = `Component ${componentInformation.componentName} has ${componentInformation.currentVersion} version and is ${VersionsService.UP_TO_DATE_MESSAGE}.`;
+					}
+				} else {
+					componentInformation.type = VersionInformationType.NotInstalled;
+					componentInformation.message = `Component ${componentInformation.componentName} is ${VersionsService.NOT_INSTALLED_MESSAGE}.`;
+				}
+
+				return componentInformation;
+			});
 	}
 
-	public createTableWithVersionsInformation(versionsInformation: IVersionInformation[]): any {
-		const headers = ["Component", "Current version", "Latest version", "Information"];
-		const data: string[][] = [];
+	public async printVersionsInformation(): Promise<void> {
+		const versionsInformation = await this.$terminalSpinnerService.execute<IVersionInformation[]>({
+			text: `Getting NativeScript components versions information...`
+		}, () => this.getAllComponentsVersions());
 
-		_.forEach(versionsInformation, (componentInformation: IVersionInformation) => {
-			const row: string[] = [
-				componentInformation.componentName,
-				componentInformation.currentVersion,
-				componentInformation.latestVersion
-			];
+		if (!helpers.isInteractive()) {
+			versionsInformation.map(componentInformation => this.$logger.out(componentInformation.message));
+		}
 
-			if (componentInformation.currentVersion) {
-				semver.lt(componentInformation.currentVersion, componentInformation.latestVersion) ? row.push(VersionsService.UPDATE_AVAILABLE_MESSAGE) : row.push(VersionsService.UP_TO_DATE_MESSAGE);
-			} else {
-				row.push(VersionsService.NOT_INSTALLED_MESSAGE);
+		_.forEach(versionsInformation, componentInformation => {
+			const spinner = this.$terminalSpinnerService.createSpinner();
+			spinner.text = componentInformation.message;
+
+			switch (componentInformation.type) {
+				case VersionInformationType.UpToDate:
+					spinner.succeed();
+					break;
+				case VersionInformationType.UpdateAvailable:
+					spinner.warn();
+					break;
+				case VersionInformationType.NotInstalled:
+					spinner.fail();
+					break;
 			}
-
-			data.push(row);
 		});
-
-		return createTable(headers, data);
 	}
 
 	private getProjectData(): IProjectData {
