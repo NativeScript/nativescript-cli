@@ -20,7 +20,7 @@ class DoctorService implements IDoctorService {
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $versionsService: IVersionsService) { }
 
-	public async printWarnings(configOptions?: { trackResult: boolean }): Promise<boolean> {
+	public async printWarnings(configOptions?: { trackResult: boolean }): Promise<void> {
 		const infos = await this.$terminalSpinnerService.execute<NativeScriptDoctor.IInfo[]>({
 			text: `Getting environment information ${EOL}`
 		}, () => doctor.getInfos());
@@ -42,6 +42,8 @@ class DoctorService implements IDoctorService {
 		if (hasWarnings) {
 			this.$logger.info("There seem to be issues with your configuration.");
 			await this.promptForHelp();
+		} else {
+			this.$logger.out("No issues were detected.".bold);
 		}
 
 		try {
@@ -49,8 +51,6 @@ class DoctorService implements IDoctorService {
 		} catch (err) {
 			this.$logger.error("Cannot get the latest versions information from npm. Please try again later.");
 		}
-
-		return hasWarnings;
 	}
 
 	public runSetupScript(): Promise<ISpawnResult> {
@@ -70,10 +70,8 @@ class DoctorService implements IDoctorService {
 	}
 
 	public async canExecuteLocalBuild(platform?: string): Promise<boolean> {
-		let infos = await doctor.getInfos();
-		if (platform) {
-			infos = this.filterInfosByPlatform(infos, platform);
-		}
+		const infos = await doctor.getInfos({ platform });
+		this.printInfosCore(infos);
 
 		const warnings = this.filterInfosByType(infos, constants.WARNING_TYPE_NAME);
 		if (warnings.length > 0) {
@@ -147,10 +145,6 @@ class DoctorService implements IDoctorService {
 				spinner.text = `${info.message.yellow} ${EOL} ${info.additionalInformation} ${EOL}`;
 				spinner.fail();
 			});
-	}
-
-	private filterInfosByPlatform(infos: NativeScriptDoctor.IInfo[], platform: string): NativeScriptDoctor.IInfo[] {
-		return infos.filter(info => _.includes(info.platforms, platform));
 	}
 
 	private filterInfosByType(infos: NativeScriptDoctor.IInfo[], type: string): NativeScriptDoctor.IInfo[] {
