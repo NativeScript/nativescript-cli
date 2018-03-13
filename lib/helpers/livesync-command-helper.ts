@@ -90,7 +90,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					debugggingEnabled: additionalOptions && additionalOptions.deviceDebugMap && additionalOptions.deviceDebugMap[d.deviceInfo.identifier],
 					debugOptions: this.$options,
 					outputPath: additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
-						platform,
+						platform: d.deviceInfo.platform,
 						emulator: d.isEmulator,
 						projectDir: this.$projectData.projectDir
 					}),
