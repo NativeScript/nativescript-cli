@@ -41,7 +41,7 @@ describe('KinveyRequest', () => {
         nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
           .post(
           tempLoginUriParts.pathname,
-          `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${options.username}&password=${options.password}`
+          `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${options.username}&password=${options.password}&scope=openid`
           )
           .reply(302, null, {
             Location: `${redirectUri}/?code=${code}`
