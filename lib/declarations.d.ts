@@ -471,7 +471,7 @@ interface IEnvOptions {
 
 interface IAndroidBuildOptionsSettings extends IAndroidReleaseOptions, IRelease { }
 
-interface IAppFilesUpdaterOptions extends IBundle, IRelease { }
+interface IAppFilesUpdaterOptions extends IBundle, IRelease, IOptionalWatchAllFiles { }
 
 interface IPlatformBuildData extends IAppFilesUpdaterOptions, IBuildConfig, IEnvOptions { }
 
