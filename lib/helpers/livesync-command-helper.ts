@@ -93,7 +93,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 						platform,
 						emulator: d.isEmulator,
 						projectDir: this.$projectData.projectDir
-					})
+					}),
+					skipNativePrepare: additionalOptions && additionalOptions.skipNativePrepare
 				};
 
 				return info;
