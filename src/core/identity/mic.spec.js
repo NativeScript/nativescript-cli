@@ -86,7 +86,7 @@ describe('MobileIdentityConnect', () => {
         nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
           .post(
             tempLoginUriParts.pathname,
-            `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}`
+            `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}&scope=openid`
           )
           .reply(401, {
             error: 'access_denied',
@@ -126,7 +126,7 @@ describe('MobileIdentityConnect', () => {
         nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
           .post(
             tempLoginUriParts.pathname,
-            `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}`
+            `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}&scope=openid`
           )
           .reply(302, null, {
             'Content-Type': 'application/json; charset=utf-8'
@@ -157,7 +157,7 @@ describe('MobileIdentityConnect', () => {
           }, {
             'Content-Type': 'application/json; charset=utf-8'
           });
-        
+
         const mic = new MobileIdentityConnect();
         return mic.requestTempLoginUrl(client.appKey, redirectUri, {version: 1})
           .then((response)=> {
@@ -192,7 +192,7 @@ describe('MobileIdentityConnect', () => {
         nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
           .post(
             tempLoginUriParts.pathname,
-            `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}`
+            `client_id=${client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}&scope=openid`
           )
           .reply(302, null, {
             'Content-Type': 'application/json; charset=utf-8',
@@ -252,7 +252,7 @@ describe('MobileIdentityConnect', () => {
         nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
           .post(
             tempLoginUriParts.pathname,
-            `client_id=${encodeURIComponent(client.appKey)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}`
+            `client_id=${encodeURIComponent(client.appKey)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}&scope=openid`
           )
           .reply(302, null, {
             'Content-Type': 'application/json; charset=utf-8',
@@ -313,7 +313,7 @@ describe('MobileIdentityConnect', () => {
         nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
           .post(
             tempLoginUriParts.pathname,
-            `client_id=${encodeURIComponent(client.appKey+'.'+micId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}`
+            `client_id=${encodeURIComponent(client.appKey+'.'+micId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}&scope=openid`
           )
           .reply(302, null, {
             'Content-Type': 'application/json; charset=utf-8',
