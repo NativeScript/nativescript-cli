@@ -1,35 +1,35 @@
 import * as path from "path";
 import * as Jimp from "jimp";
 import * as Color from "color";
-import { Icons, SplashScreens, Operations } from "./image-definitions"
+import { Icons, SplashScreens, Operations } from "./image-definitions";
 import { exported } from "../../common/decorators";
 
 export class AssetsGenerationService implements IAssetsGenerationService {
 	constructor(private $logger: ILogger,
-		private $androidResourcesMigrationService: IAndroidResourcesMigrationService) {	
+		private $androidResourcesMigrationService: IAndroidResourcesMigrationService) {
 	}
-	
+
 	@exported("assetsGenerationService")
 	public async generateIcons(resourceGenerationData: IResourceGenerationData): Promise<void> {
 		this.$logger.info("Generating icons ...");
-		await this.generateImagesForDefinitions(resourceGenerationData.imagePath, resourceGenerationData.resourcesPath, Icons)
+		await this.generateImagesForDefinitions(resourceGenerationData.imagePath, resourceGenerationData.resourcesPath, Icons);
 		this.$logger.info("Icons generation completed.");
 	}
 
 	@exported("assetsGenerationService")
 	public async generateSplashScreens(splashesGenerationData: ISplashesGenerationData): Promise<void> {
 		this.$logger.info("Generating splash screens ...");
-		await this.generateImagesForDefinitions(splashesGenerationData.imagePath, splashesGenerationData.resourcesPath, SplashScreens, splashesGenerationData.background)
+		await this.generateImagesForDefinitions(splashesGenerationData.imagePath, splashesGenerationData.resourcesPath, SplashScreens, splashesGenerationData.background);
 		this.$logger.info("Splash screens generation completed.");
 	}
 
 	private async generateImagesForDefinitions(imagePath: string, resourcesPath: string, definitions: any[], background: string = "white") : Promise<void> {
 		const hasMigrated = this.$androidResourcesMigrationService.hasMigrated(resourcesPath);
-		
-		for (let definition of definitions) {
+
+		for (const definition of definitions) {
 			const operation = definition.operation || Operations.Resize;
 			const scale = definition.scale || 0.8;
-			const path = hasMigrated ? definition.path : (definition.pathBeforeMigration || definition.path)
+			const path = hasMigrated ? definition.path : (definition.pathBeforeMigration || definition.path);
 			const outputPath = this.convertToAbsolutePath(resourcesPath, path);
 
 			switch (operation) {
@@ -68,7 +68,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 			image = image.composite(overlayImage, centeredWidth, centeredHeight);
 		}
 
-		image.write(outputPath)
+		image.write(outputPath);
 	}
 
 	private convertToAbsolutePath(resourcesPath: string, resourcePath: string) {
