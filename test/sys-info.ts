@@ -493,5 +493,74 @@ ${expectedCliVersion}`;
 				});
 			});
 		});
+
+		describe("returns correct sysInfo when", () => {
+			const assertCommonSysInfo = (result: NativeScriptDoctor.ISysInfoData) => {
+				assert.deepEqual(result.npmVer, childProcessResult.npmV.result.stdout);
+				assert.deepEqual(result.nodeVer, "6.0.0");
+				assert.deepEqual(result.nodeGypVer, childProcessResult.nodeGypVersion.result.stdout);
+				assert.deepEqual(result.gitVer, "1.9.5");
+				assert.deepEqual(result.nativeScriptCliVersion, childProcessResult.nativeScriptCliVersion.result.stdout);
+			};
+
+			const assertAndroidSysInfo = (result: NativeScriptDoctor.IAndroidSysInfoData) => {
+				assert.deepEqual(result.adbVer, "1.0.32");
+				assert.deepEqual(result.androidInstalled, false);
+				assert.deepEqual(result.monoVer, "1.0.6");
+				assert.deepEqual(result.gradleVer, "2.8");
+				assert.deepEqual(result.javacVersion, "1.8.0_60");
+				assert.deepEqual(result.isAndroidSdkConfiguredCorrectly, undefined);
+			};
+
+			const assertiOSSysInfo = (result: NativeScriptDoctor.IiOSSysInfoData) => {
+				assert.deepEqual(result.xcodeVer, "6.4.0");
+				assert.deepEqual(result.itunesInstalled, undefined);
+				assert.deepEqual(result.cocoaPodsVer, "0.38.2");
+				assert.deepEqual(result.xcodeprojLocation, null);
+				assert.deepEqual(result.isCocoaPodsWorkingCorrectly, undefined);
+				assert.deepEqual(result.xcprojInfo, undefined);
+				assert.deepEqual(result.isCocoaPodsUpdateRequired, false);
+				assert.deepEqual(result.pythonInfo, {isInstalled: false, isSixPackageInstalled: false, installationErrorMessage: "Cannot read property 'shouldThrowError' of undefined"});
+			};
+
+			it("iOS platform is specified", async () => {
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+				const result = await sysInfo.getSysInfo({platform: "iOS"});
+
+				assertCommonSysInfo(result);
+				assertiOSSysInfo(result);
+				// Android specific properties should be undefined
+				assert.deepEqual(result.adbVer, undefined);
+				assert.deepEqual(result.androidInstalled, undefined);
+				assert.deepEqual(result.monoVer, undefined);
+				assert.deepEqual(result.gradleVer, undefined);
+				assert.deepEqual(result.javacVersion, undefined);
+				assert.deepEqual(result.isAndroidSdkConfiguredCorrectly, undefined);
+			});
+			it("Android platform is specified", async () => {
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+				const result = await sysInfo.getSysInfo({platform: "Android"});
+
+				assertCommonSysInfo(result);
+				assertAndroidSysInfo(result);
+				// iOS specific properties should be undefined
+				assert.deepEqual(result.xcodeVer, undefined);
+				assert.deepEqual(result.itunesInstalled, undefined);
+				assert.deepEqual(result.cocoaPodsVer, undefined);
+				assert.deepEqual(result.xcodeprojLocation, undefined);
+				assert.deepEqual(result.isCocoaPodsWorkingCorrectly, undefined);
+				assert.deepEqual(result.xcprojInfo, undefined);
+				assert.deepEqual(result.isCocoaPodsUpdateRequired, undefined);
+				assert.deepEqual(result.pythonInfo, undefined);
+				
+			});
+			it("no platform is specified", async() => {
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+				const result = await sysInfo.getSysInfo();
+				assertCommonSysInfo(result);
+				assertAndroidSysInfo(result);
+				assertiOSSysInfo(result);
+			});
+		});
 	});
 });
