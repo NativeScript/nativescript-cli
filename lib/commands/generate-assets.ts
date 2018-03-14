@@ -13,10 +13,10 @@ export abstract class GenerateCommandBase implements ICommand {
 	public async execute(args: string[]): Promise<void> {
 		const [ imagePath ] = args;
 		const resourcesPath = this.$projectData.getAppResourcesDirectoryPath();
-		await this.generate(imagePath, resourcesPath, this.$options.background)
+		await this.generate(imagePath, resourcesPath, this.$options.background);
 	}
 
-	protected abstract generate(imagePath: string, resourcesPath: string, background?: string): Promise<void>
+	protected abstract generate(imagePath: string, resourcesPath: string, background?: string): Promise<void>;
 }
 
 export class GenerateIconsCommand extends GenerateCommandBase implements ICommand {
@@ -28,11 +28,11 @@ export class GenerateIconsCommand extends GenerateCommandBase implements IComman
 	}
 
 	protected async generate(imagePath: string, resourcesPath: string, background?: string): Promise<void> {
-		await this.$assetsGenerationService.generateIcons(imagePath, resourcesPath);
+		await this.$assetsGenerationService.generateIcons({ imagePath, resourcesPath });
 	}
 }
 
-$injector.registerCommand("generate-icons", GenerateIconsCommand);
+$injector.registerCommand("resources|generate|icons", GenerateIconsCommand);
 
 export class GenerateSplashScreensCommand extends GenerateCommandBase implements ICommand {
 	constructor(protected $options: IOptions,
@@ -43,8 +43,8 @@ export class GenerateSplashScreensCommand extends GenerateCommandBase implements
 	}
 
 	protected async generate(imagePath: string, resourcesPath: string, background?: string): Promise<void> {
-		await this.$assetsGenerationService.generateSplashScreens(imagePath, resourcesPath, background);
+		await this.$assetsGenerationService.generateSplashScreens({ imagePath, resourcesPath, background });
 	}
 }
 
-$injector.registerCommand("generate-splashscreens", GenerateSplashScreensCommand);
+$injector.registerCommand("resources|generate|splashes", GenerateSplashScreensCommand);

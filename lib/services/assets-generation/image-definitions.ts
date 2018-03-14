@@ -95,34 +95,45 @@ export const Icons = [
         "path":"iOS/Assets.xcassets/AppIcon.appiconset/icon-57@2x.png"
     },
     {
+        "width":1024,
+        "height":1024,
+        "path":"iOS/Assets.xcassets/AppIcon.appiconset/icon-1024.png"
+    },
+    {
         "width":72,
         "height":72,
-        "path":"Android/drawable-hdpi/icon.png"
+        "path":"Android/src/main/res/drawable-hdpi/icon.png",
+        "pathBeforeMigration":"Android/drawable-hdpi/icon.png"
     },
     {
         "width":36,
         "height":36,
-        "path":"Android/drawable-ldpi/icon.png"
+        "path":"Android/src/main/res/drawable-ldpi/icon.png",
+        "pathBeforeMigration":"Android/drawable-ldpi/icon.png"
     },
     {
         "width":48,
         "height":48,
-        "path":"Android/drawable-mdpi/icon.png"
+        "path":"Android/src/main/res/drawable-mdpi/icon.png",
+        "pathBeforeMigration":"Android/drawable-mdpi/icon.png"
     },
     {
         "width":96,
         "height":96,
-        "path":"Android/drawable-xhdpi/icon.png"
+        "path":"Android/src/main/res/drawable-xhdpi/icon.png",
+        "pathBeforeMigration":"Android/drawable-xhdpi/icon.png"
     },
     {
         "width":144,
         "height":144,
-        "path":"Android/drawable-xxhdpi/icon.png"
+        "path":"Android/src/main/res/drawable-xxhdpi/icon.png",
+        "pathBeforeMigration":"Android/drawable-xxhdpi/icon.png"
     },
     {
         "width":345,
         "height":345,
-        "path":"Android/drawable-xxxhdpi/icon.png"
+        "path":"Android/src/main/res/drawable-xxxhdpi/icon.png",
+        "pathBeforeMigration":"Android/drawable-xxxhdpi/icon.png"
     }
 ]
 
@@ -238,68 +249,80 @@ export const SplashScreens = [
     {
         "width":576,
         "height":768,
-        "path":"Android/drawable-hdpi/background.png",
+        "path":"Android/src/main/res/drawable-hdpi/background.png",
+        "pathBeforeMigration":"Android/drawable-hdpi/background.png",
         "operation": "blank"
     },
     {
         "width":288,
         "height":384,
-        "path":"Android/drawable-ldpi/background.png",
+        "path":"Android/src/main/res/drawable-ldpi/background.png",
+        "pathBeforeMigration":"Android/drawable-ldpi/background.png",
         "operation": "blank"
     },
     {
         "width":384,
         "height":512,
-        "path":"Android/drawable-mdpi/background.png",
+        "path":"Android/src/main/res/drawable-mdpi/background.png",
+        "pathBeforeMigration":"Android/drawable-mdpi/background.png",
         "operation": "blank"
     },
     {
         "width":768,
         "height":1024,
-        "path":"Android/drawable-xhdpi/background.png",
+        "path":"Android/src/main/res/drawable-xhdpi/background.png",
+        "pathBeforeMigration":"Android/drawable-xhdpi/background.png",
         "operation": "blank"
     },
     {
         "width":1154,
         "height":1536,
-        "path":"Android/drawable-xxhdpi/background.png",
+        "path":"Android/src/main/res/drawable-xxhdpi/background.png",
+        "pathBeforeMigration":"Android/drawable-xxhdpi/background.png",
         "operation": "blank"
     },
     {
         "width":1536,
         "height":2048,
-        "path":"Android/drawable-xxxhdpi/background.png",
+        "path":"Android/src/main/res/drawable-xxxhdpi/background.png",
+        "pathBeforeMigration":"Android/drawable-xxxhdpi/background.png",
         "operation": "blank"
     },
     {
         "width":476,
         "height":476,
-        "path":"Android/drawable-hdpi/logo.png"
+        "path":"Android/src/main/res/drawable-hdpi/logo.png",
+        "pathBeforeMigration":"Android/drawable-hdpi/logo.png"
     },
     {
         "width":188,
         "height":188,
-        "path":"Android/drawable-ldpi/logo.png"
+        "path":"Android/src/main/res/drawable-ldpi/logo.png",
+        "pathBeforeMigration":"Android/drawable-ldpi/logo.png"
     },
     {
         "width":284,
         "height":284,
-        "path":"Android/drawable-mdpi/logo.png"
+        "path":"Android/src/main/res/drawable-mdpi/logo.png",
+        "pathBeforeMigration":"Android/drawable-mdpi/logo.png"
     },
     {
         "width":668,
         "height":668,
-        "path":"Android/drawable-xhdpi/logo.png"
+        "path":"Android/src/main/res/drawable-xhdpi/logo.png",
+        "pathBeforeMigration":"Android/drawable-xhdpi/logo.png"
     },
     {
         "width":1024,
         "height":1024,
-        "path":"Android/drawable-xxhdpi/logo.png"
+        "path":"Android/src/main/res/drawable-xxhdpi/logo.png",
+        "pathBeforeMigration":"Android/drawable-xxhdpi/logo.png"
     },
     {
         "width":1024,
         "height":1024,
-        "path":"Android/drawable-xxxhdpi/logo.png"
+        "path":"Android/src/main/res/drawable-xxxhdpi/logo.png",
+        "pathBeforeMigration":"Android/drawable-xxxhdpi/logo.png"
     }
 ]
 

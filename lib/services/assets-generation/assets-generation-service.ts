@@ -5,28 +5,32 @@ import { Icons, SplashScreens, Operations } from "./image-definitions"
 import { exported } from "../../common/decorators";
 
 export class AssetsGenerationService implements IAssetsGenerationService {
-	constructor(private $logger: ILogger) {	
+	constructor(private $logger: ILogger,
+		private $androidResourcesMigrationService: IAndroidResourcesMigrationService) {	
 	}
 	
 	@exported("assetsGenerationService")
-	public async generateIcons(imagePath: string, resourcesPath: string): Promise<void> {
+	public async generateIcons(resourceGenerationData: IResourceGenerationData): Promise<void> {
 		this.$logger.info("Generating icons ...");
-		await this.generateImagesForDefinitions(imagePath, resourcesPath, Icons)
+		await this.generateImagesForDefinitions(resourceGenerationData.imagePath, resourceGenerationData.resourcesPath, Icons)
 		this.$logger.info("Icons generation completed.");
 	}
 
 	@exported("assetsGenerationService")
-	public async generateSplashScreens(imagePath: string, resourcesPath: string, background?: string): Promise<void> {
+	public async generateSplashScreens(splashesGenerationData: ISplashesGenerationData): Promise<void> {
 		this.$logger.info("Generating splash screens ...");
-		await this.generateImagesForDefinitions(imagePath, resourcesPath, SplashScreens, background)
+		await this.generateImagesForDefinitions(splashesGenerationData.imagePath, splashesGenerationData.resourcesPath, SplashScreens, splashesGenerationData.background)
 		this.$logger.info("Splash screens generation completed.");
 	}
 
 	private async generateImagesForDefinitions(imagePath: string, resourcesPath: string, definitions: any[], background: string = "white") : Promise<void> {
+		const hasMigrated = this.$androidResourcesMigrationService.hasMigrated(resourcesPath);
+		
 		for (let definition of definitions) {
 			const operation = definition.operation || Operations.Resize;
 			const scale = definition.scale || 0.8;
-			const outputPath = this.convertToAbsolutePath(resourcesPath, definition.path);
+			const path = hasMigrated ? definition.path : (definition.pathBeforeMigration || definition.path)
+			const outputPath = this.convertToAbsolutePath(resourcesPath, path);
 
 			switch (operation) {
 				case Operations.OverlayWith:
@@ -47,14 +51,14 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 		}
 	}
 
-	private async resize(imagePath: string, width: number, height: number) {
+	private async resize(imagePath: string, width: number, height: number) : Promise<Jimp> {
 		const image = await Jimp.read(imagePath);
 		return image.scaleToFit(width, height);
 	}
 
-	private generateImage(background: string, width: number, height: number, outputPath: string, overlayImage?: Jimp) {
+	private generateImage(background: string, width: number, height: number, outputPath: string, overlayImage?: Jimp): void {
 		//Typescript declarations for Jimp are not updated to define the constructor with backgroundColor so we workaround it by casting it to <any> for this case only.
-		let J = <any>Jimp;
+		const J = <any>Jimp;
 		const backgroundColor = this.getRgbaNumber(background);
 		let image = new J(width, height, backgroundColor);
 

@@ -796,6 +796,30 @@ interface INativescriptCloudExtensionService {
 	install(): Promise<IExtensionData>;
 }
 
+/**
+ * Describes the basic data needed for resource generation
+ */
+interface IResourceGenerationData {
+	/**
+	 * @param {string} imagePath Path to the image that will be used for generation
+	 */
+	imagePath: string, 
+	/**
+	 * @param {string} resourcesPath Path to the app resources
+	 */
+	resourcesPath: string
+}
+
+/**
+ * Describes the data needed for splash screens generation
+ */
+interface ISplashesGenerationData extends IResourceGenerationData {
+	/**
+	 * @param {string} background Background color that will be used for background. Defaults to #FFFFFF
+	 */
+	background?: string
+}
+
 
 /**
  * Describes service used for assets generation
@@ -803,18 +827,15 @@ interface INativescriptCloudExtensionService {
 interface IAssetsGenerationService {
 	/**
 	 * Generate icons for iOS and Android
-	 * @param {string} imagePath Path to the image that will be used for generation
-	 * @param {string} resourcesPath Path to the app resources
+	 * @param {IResourceGenerationData} iconsGenerationData Provides the data needed for icons generation
 	 * @returns {Promise<void>}
 	 */
-	generateIcons(imagePath: string, resourcesPath: string): Promise<void>;
+	generateIcons(iconsGenerationData: IResourceGenerationData): Promise<void>;
 
 	/**
 	 * Generate splash screens for iOS and Android
-	 * @param {string} imagePath Path to the image that will be used for generation
-	 * @param {string} resourcesPath Path to the app resources
-	 * @param {string} background Background color that will be used for background. Defaults to #FFFFFF
+	 * @param {ISplashesGenerationData} splashesGenerationData Provides the data needed for splash screens generation
 	 * @returns {Promise<void>}
 	 */
-	generateSplashScreens(imagePath: string, resourcesPath: string, background?: string): Promise<void>;
+	generateSplashScreens(splashesGenerationData: ISplashesGenerationData): Promise<void>;
 }
