@@ -37,7 +37,7 @@ export class ProjectData implements IProjectData {
 	public projectFilePath: string;
 	public projectId: string;
 	public projectName: string;
-	public nsConfig: any;
+	public nsConfig: INsConfig;
 	public appDirectoryPath: string;
 	public appResourcesDirectoryPath: string;
 	public dependencies: any;
@@ -160,13 +160,17 @@ export class ProjectData implements IProjectData {
 			return null;
 		}
 
-		const configNSFilePath = path.join(projectDir, constants.CONFIG_NS_FILE_NAME);
+		const configNSFilePath = path.join(projectDir, this.getNsConfigRelativePath());
 
 		if (!this.$fs.exists(configNSFilePath)) {
 			return null;
 		}
 
 		return this.$fs.readText(configNSFilePath);
+	}
+
+	public getNsConfigRelativePath(): string {
+		return  constants.CONFIG_NS_FILE_NAME;
 	}
 
 	private resolveToProjectDir(pathToResolve: string, projectDir?: string): string {

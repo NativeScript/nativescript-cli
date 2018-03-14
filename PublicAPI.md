@@ -40,6 +40,7 @@ const tns = require("nativescript");
 	* [events](#events)
 * [analyticsSettingsService](#analyticsSettingsService)
 	* [getClientId](#getClientId)
+* [constants](#constants)
 
 
 ## Module projectService
@@ -185,6 +186,17 @@ Returns an IProjectData object that is initialized with the provided package.jso
  * @returns {IProjectData} Information about the NativeScript project
  */
 getProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, projectDir?: string): IProjectData
+```
+
+### getNsConfigDefaultContent
+Returns the default content of "nsconfig.json" merged with the properties provided by the the `data` argument.
+* Definition:
+```TypeScript
+/**
+ * Returns the default content of "nsconfig.json" merged with the properties provided by the "data" argument.
+ * @param {Object} data Properties that should not be defaulted.
+ */
+ getNsConfigDefaultContent(data?: Object): string
 ```
 
 ## extensibilityService
@@ -998,6 +1010,8 @@ tns.analyticsSettingsService.getPlaygroundInfo("/my/project/path")
 		console.log(playgroundInfo.usedTutorial);
 	});
 ```
+## constants
+Contains various constants related to NativeScript.
 
 ## How to add a new method to Public API
 CLI is designed as command line tool and when it is used as a library, it does not give you access to all of the methods. This is mainly implementation detail. Most of the CLI's code is created to work in command line, not as a library, so before adding method to public API, most probably it will require some modification.
