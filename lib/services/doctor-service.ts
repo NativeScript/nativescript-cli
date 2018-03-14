@@ -71,7 +71,6 @@ class DoctorService implements IDoctorService {
 
 	public async canExecuteLocalBuild(platform?: string): Promise<boolean> {
 		const infos = await doctor.getInfos({ platform });
-		this.printInfosCore(infos);
 
 		const warnings = this.filterInfosByType(infos, constants.WARNING_TYPE_NAME);
 		if (warnings.length > 0) {
