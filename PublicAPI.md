@@ -196,7 +196,7 @@ Returns the default content of "nsconfig.json" merged with the properties provid
  * Returns the default content of "nsconfig.json" merged with the properties provided by the "data" argument.
  * @param {Object} data Properties that should not be defaulted.
  */
- getNsConfigDefaultContent(data: Object): string
+ getNsConfigDefaultContent(data?: Object): string
 ```
 
 ## extensibilityService

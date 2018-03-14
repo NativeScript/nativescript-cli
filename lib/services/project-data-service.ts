@@ -126,7 +126,7 @@ export class ProjectDataService implements IProjectDataService {
 	}
 
 	@exported("projectDataService")
-	public getNsConfigDefaultContent(data: Object): string {
+	public getNsConfigDefaultContent(data?: Object): string {
 		const config: INsConfig = {};
 		Object.assign(config, data);
 
