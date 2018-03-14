@@ -165,7 +165,7 @@ export class KinveyRequest extends NetworkRequest {
   static execute(options, client, dataOnly = true) {
     const o = assign({
       method: RequestMethod.GET,
-      authType: AuthType.Session
+      authType: AuthType.Default
     }, options);
     client = client || Client.sharedInstance();
 

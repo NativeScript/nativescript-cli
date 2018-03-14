@@ -4,9 +4,9 @@ import { MobileIdentityConnect } from '../../../src/core/identity';
 import { Popup } from '../../../src/phonegap/popup';
 import pkg from '../package.json';
 import '../../../src/html5/offline-data-storage';
-import { setPlatformConfig, platform } from '../../../src/core/platform-configs';
+import { setPlatformConfig, platformName } from '../../../src/core/platform-configs';
 
-setPlatformConfig(platform.phoneGap);
+setPlatformConfig(platformName.phoneGap);
 
 // Setup racks
 NetworkRack.useHttpMiddleware(new Html5HttpMiddleware(pkg));

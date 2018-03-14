@@ -76,7 +76,8 @@ export class NetworkRepository extends Repository {
 
   _makeHttpRequest(requestConfig, deltaFetch) {
     if (deltaFetch) {
-      return DeltaFetchRequest.execute(requestConfig);
+      const request = new DeltaFetchRequest(requestConfig);
+      return request.execute().then(r => r.data);
     }
     return KinveyRequest.execute(requestConfig);
   }

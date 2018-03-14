@@ -6,7 +6,7 @@ import { SyncOperation } from './sync';
 import { init } from '../kinvey';
 import { Query } from '../query';
 import { Aggregation } from '../aggregation';
-import { KinveyError, NotFoundError, ServerError, SyncError } from '../errors';
+import { KinveyError, NotFoundError, ServerError } from '../errors';
 import { randomString } from '../utils';
 import { NetworkRack } from '../request';
 import { NodeHttpMiddleware } from '../../node/http';
@@ -96,7 +96,7 @@ describe('CacheStore', () => {
           store.find()
             .subscribe(null, (error) => {
               try {
-                expect(error).toBeA(SyncError);
+                expect(error).toBeA(KinveyError);
                 expect(error.message).toEqual(
                   'Unable to fetch the entities on the backend.'
                   + ' There are 1 entities that need to be synced.'
@@ -111,7 +111,7 @@ describe('CacheStore', () => {
         });
     });
 
-    it.skip('should return the entities', (done) => {
+    it('should return the entities', (done) => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
       const store = new CacheStore(collection);
@@ -190,81 +190,7 @@ describe('CacheStore', () => {
         });
     });
 
-    it('should perform a delta set request', (done) => {
-      const entity1 = { _id: randomString() };
-      const entity2 = { _id: randomString() };
-      const store = new CacheStore(collection, null, { useDeltaFetch: true });
-      const onNextSpy = expect.createSpy();
-      const lastRequestDate = new Date();
-
-      nock(store.client.apiHostname)
-        .get(`/appdata/${store.client.appKey}/${collection}`)
-        .reply(200, [entity1, entity2], {
-          'X-Kinvey-Request-Start': lastRequestDate.toISOString()
-        });
-
-      store.pull()
-        .then(() => {
-          nock(client.apiHostname)
-            .get(`/appdata/${store.client.appKey}/${collection}/_deltaset`)
-            .query({ since: lastRequestDate.toISOString() })
-            .reply(200, { changed: [entity2], deleted: [{ _id: entity1._id }] }, {
-              'X-Kinvey-Request-Start': new Date().toISOString()
-            });
-
-          store.find()
-            .subscribe(onNextSpy, done, () => {
-              try {
-                expect(onNextSpy.calls.length).toEqual(2);
-                expect(onNextSpy.calls[0].arguments).toEqual([[entity1, entity2]]);
-                expect(onNextSpy.calls[1].arguments).toEqual([[entity2]]);
-                done();
-              } catch (error) {
-                done(error);
-              }
-            });
-        })
-        .catch(done);
-    });
-
-    it('should perform a delta set request with a tagged datastore', (done) => {
-      const entity1 = { _id: randomString() };
-      const entity2 = { _id: randomString() };
-      const store = new CacheStore(collection, null, { useDeltaFetch: true, tag: randomString() });
-      const onNextSpy = expect.createSpy();
-      const lastRequestDate = new Date();
-
-      nock(store.client.apiHostname)
-        .get(`/appdata/${store.client.appKey}/${collection}`)
-        .reply(200, [entity1, entity2], {
-          'X-Kinvey-Request-Start': lastRequestDate.toISOString()
-        });
-
-      store.pull()
-        .then(() => {
-          nock(client.apiHostname)
-            .get(`/appdata/${store.client.appKey}/${collection}/_deltaset`)
-            .query({ since: lastRequestDate.toISOString() })
-            .reply(200, { changed: [entity2], deleted: [{ _id: entity1._id }] }, {
-              'X-Kinvey-Request-Start': new Date().toISOString()
-            });
-
-          store.find()
-            .subscribe(onNextSpy, done, () => {
-              try {
-                expect(onNextSpy.calls.length).toEqual(2);
-                expect(onNextSpy.calls[0].arguments).toEqual([[entity1, entity2]]);
-                expect(onNextSpy.calls[1].arguments).toEqual([[entity2]]);
-                done();
-              } catch (error) {
-                done(error);
-              }
-            });
-        })
-        .catch(done);
-    });
-
-    it.skip('should remove entities that no longer exist on the backend from the cache', (done) => {
+    it('should remove entities that no longer exist on the backend from the cache', (done) => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
       const store = new CacheStore(collection);

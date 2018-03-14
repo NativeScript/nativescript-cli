@@ -72,7 +72,7 @@ describe('OfflineDataProcessor', () => {
           });
       });
 
-      it.skip('should call OfflineRepo.delete()', () => {
+      it('should call OfflineRepo.delete()', () => {
         return dataProcessor.process(operation, options)
           .then(() => {
             validateSpyCalls(repoMock.delete, 1, [collection, operation.query, options]);
