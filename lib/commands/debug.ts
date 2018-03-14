@@ -42,7 +42,8 @@ export class DebugPlatformCommand implements ICommand {
 				[selectedDeviceForDebug.deviceInfo.identifier]: true
 			},
 			// This will default in the liveSyncCommandHelper
-			buildPlatform: undefined
+			buildPlatform: undefined,
+			skipNativePrepare: false
 		});
 	}
 

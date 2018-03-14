@@ -384,7 +384,7 @@ interface IDevicePathProvider {
 /**
  * Describes additional options, that can be passed to LiveSyncCommandHelper.
  */
-interface ILiveSyncCommandHelperAdditionalOptions extends IBuildPlatformAction {
+interface ILiveSyncCommandHelperAdditionalOptions extends IBuildPlatformAction, INativePrepare {
 	/**
 	 * A map representing devices which have debugging enabled initially.
 	 */
