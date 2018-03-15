@@ -750,7 +750,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		// Get latest package` that is produced from build
 		const candidates = this.$fs.readDirectory(buildOutputPath);
 		const packages = _.filter(candidates, candidate => {
-			return _.includes(validPackageNames, candidate);
+			return _.includes(validPackageNames, candidate) || /app-.*-(debug|release).apk/.test(candidate);
 		}).map(currentPackage => {
 			currentPackage = path.join(buildOutputPath, currentPackage);
 
@@ -772,6 +772,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		packages = _.sortBy(packages, pkg => pkg.time).reverse(); // We need to reverse because sortBy always sorts in ascending order
 
+		if (packages.length > 1) {
+			this.$logger.warn(`More than one package found:\n${packages.map((entry) => { return entry.packageName; })}.\nReturning the first one.`);
+		}
 		return packages[0];
 	}
 
