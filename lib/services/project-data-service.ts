@@ -1,6 +1,7 @@
 import * as path from "path";
 import { ProjectData } from "../project-data";
 import { exported } from "../common/decorators";
+import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER } from "../constants";
 
 interface IProjectFileData {
 	projectData: any;
@@ -65,11 +66,11 @@ export class ProjectDataService implements IProjectDataService {
 	}
 
 	private getNativeScriptPropertyName(propertyName: string) {
-		return `${this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE}.${propertyName}`;
+		return `${this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE}${NATIVESCRIPT_PROPS_INTERNAL_DELIMITER}${propertyName}`;
 	}
 
 	private getPropertyValueFromJson(jsonData: any, dottedPropertyName: string): any {
-		const props = dottedPropertyName.split(".");
+		const props = dottedPropertyName.split(NATIVESCRIPT_PROPS_INTERNAL_DELIMITER);
 		let result = jsonData[props.shift()];
 
 		for (const prop of props) {
@@ -82,7 +83,7 @@ export class ProjectDataService implements IProjectDataService {
 	private setValue(projectDir: string, key: string, value: any): void {
 		const projectFileInfo = this.getProjectFileData(projectDir);
 
-		const props = key.split(".");
+		const props = key.split(NATIVESCRIPT_PROPS_INTERNAL_DELIMITER);
 		const data: any = projectFileInfo.projectData;
 		let currentData = data;
 
@@ -103,7 +104,7 @@ export class ProjectDataService implements IProjectDataService {
 		const projectFileInfo = this.getProjectFileData(projectDir);
 		const data: any = projectFileInfo.projectData;
 		let currentData = data;
-		const props = propertyName.split(".");
+		const props = propertyName.split(NATIVESCRIPT_PROPS_INTERNAL_DELIMITER);
 		const propertyToDelete = props.splice(props.length - 1, 1)[0];
 
 		_.each(props, (prop) => {
