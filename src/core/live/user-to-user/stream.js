@@ -1,3 +1,5 @@
+import { Promise } from 'es6-promise';
+
 import { KinveyError } from '../../errors';
 import { Client } from '../../client';
 import { isNonemptyString } from '../../utils';

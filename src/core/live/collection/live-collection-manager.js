@@ -1,3 +1,5 @@
+import { Promise } from 'es6-promise';
+
 import { Client } from '../../client';
 import { KinveyError } from '../../errors';
 import { KinveyRequest, RequestMethod } from '../../request';
