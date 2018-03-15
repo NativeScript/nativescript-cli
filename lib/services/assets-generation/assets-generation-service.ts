@@ -12,21 +12,23 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 	@exported("assetsGenerationService")
 	public async generateIcons(resourceGenerationData: IResourceGenerationData): Promise<void> {
 		this.$logger.info("Generating icons ...");
-		await this.generateImagesForDefinitions(resourceGenerationData.imagePath, resourceGenerationData.resourcesPath, Icons);
+		await this.generateImagesForDefinitions(resourceGenerationData.imagePath, resourceGenerationData.resourcesPath, Icons, resourceGenerationData.platform);
 		this.$logger.info("Icons generation completed.");
 	}
 
 	@exported("assetsGenerationService")
 	public async generateSplashScreens(splashesGenerationData: ISplashesGenerationData): Promise<void> {
 		this.$logger.info("Generating splash screens ...");
-		await this.generateImagesForDefinitions(splashesGenerationData.imagePath, splashesGenerationData.resourcesPath, SplashScreens, splashesGenerationData.background);
+		await this.generateImagesForDefinitions(splashesGenerationData.imagePath, splashesGenerationData.resourcesPath, SplashScreens, splashesGenerationData.platform, splashesGenerationData.background);
 		this.$logger.info("Splash screens generation completed.");
 	}
 
-	private async generateImagesForDefinitions(imagePath: string, resourcesPath: string, definitions: any[], background: string = "white") : Promise<void> {
+	private async generateImagesForDefinitions(imagePath: string, resourcesPath: string, definitions: any[], platform?: string, background: string = "white") : Promise<void> {
 		const hasMigrated = this.$androidResourcesMigrationService.hasMigrated(resourcesPath);
 
-		for (const definition of definitions) {
+		const filteredDefinitions = platform ? _.filter(definitions, definition => _.toLower(definition.platform) === _.toLower(platform)) : definitions;
+
+		for (const definition of filteredDefinitions) {
 			const operation = definition.operation || Operations.Resize;
 			const scale = definition.scale || 0.8;
 			const path = hasMigrated ? definition.path : (definition.pathBeforeMigration || definition.path);

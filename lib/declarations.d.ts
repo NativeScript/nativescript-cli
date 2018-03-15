@@ -807,7 +807,11 @@ interface IResourceGenerationData {
 	/**
 	 * @param {string} resourcesPath Path to the app resources
 	 */
-	resourcesPath: string
+	resourcesPath: string,
+	/**
+	 * @param {string} platform Specify for which platform to generate assets. If not defined will generate for all platforms 
+	 */
+	platform?: string
 }
 
 /**
