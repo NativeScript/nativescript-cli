@@ -88,7 +88,8 @@ function createTestInjector() {
 	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
 	testInjector.register("emulatorPlatformService", stubs.EmulatorPlatformService);
 	testInjector.register("analyticsService", {
-		track: async (): Promise<any[]> => undefined
+		track: async (): Promise<any[]> => undefined,
+		trackEventActionInGoogleAnalytics: () => Promise.resolve()
 	});
 	testInjector.register("messages", Messages);
 	testInjector.register("devicePathProvider", {});
@@ -912,6 +913,88 @@ describe('Platform Service Tests', () => {
 
 			// Asserts that prepare has caught invalid xml
 			assert.isFalse(warnings.indexOf("has errors") !== -1);
+		});
+	});
+
+	describe("build", () => {
+		function mockData(buildOutput: string[], projectName: string): void {
+			mockPlatformsData(projectName);
+			mockFileSystem(buildOutput);
+			platformService.saveBuildInfoFile = () => undefined;
+		}
+
+		function mockPlatformsData(projectName: string): void {
+			const platformsData = testInjector.resolve("platformsData");
+			platformsData.getPlatformData = (platform: string) => {
+				return {
+					deviceBuildOutputPath: "",
+					platformProjectService: {
+						buildProject: () => Promise.resolve(),
+						on: () => ({}),
+						removeListener: () => ({})
+					},
+					getValidBuildOutputData: () => ({
+						packageNames: ["app-debug.apk", "app-release.apk", `${projectName}-debug.apk`, `${projectName}-release.apk`],
+						regexes: [/app-.*-(debug|release).apk/, new RegExp(`${projectName}-.*-(debug|release).apk`)]
+					})
+				};
+			};
+		}
+
+		function mockFileSystem(enumeratedFiles: string[]): void {
+			const fs = testInjector.resolve<IFileSystem>("fs");
+			fs.enumerateFilesInDirectorySync = () => enumeratedFiles;
+			fs.readDirectory = () => [];
+			fs.getFsStats = () => (<any>({ mtime: new Date() }));
+		}
+
+		describe("android platform", () => {
+			function getTestCases(configuration: string, apkName: string) {
+				return [{
+					name: "no additional options are specified in .gradle file",
+					buildOutput: [`/my/path/${configuration}/${apkName}-${configuration}.apk`],
+					expectedResult: `/my/path/${configuration}/${apkName}-${configuration}.apk`
+				}, {
+					name: "productFlavors are specified in .gradle file",
+					buildOutput: [`/my/path/arm64Demo/${configuration}/${apkName}-arm64-demo-${configuration}.apk`,
+						`/my/path/arm64Full/${configuration}/${apkName}-arm64-full-${configuration}.apk`,
+						`/my/path/armDemo/${configuration}/${apkName}-arm-demo-${configuration}.apk`,
+						`/my/path/armFull/${configuration}/${apkName}-arm-full-${configuration}.apk`,
+						`/my/path/x86Demo/${configuration}/${apkName}-x86-demo-${configuration}.apk`,
+						`/my/path/x86Full/${configuration}/${apkName}-x86-full-${configuration}.apk`],
+					expectedResult: `/my/path/x86Full/${configuration}/${apkName}-x86-full-${configuration}.apk`
+				}, {
+					name: "split options are specified in .gradle file",
+					buildOutput: [`/my/path/${configuration}/${apkName}-arm64-v8a-${configuration}.apk`,
+						`/my/path/${configuration}/${apkName}-armeabi-v7a-${configuration}.apk`,
+						`/my/path/${configuration}/${apkName}-universal-${configuration}.apk`,
+						`/my/path/${configuration}/${apkName}-x86-${configuration}.apk`],
+					expectedResult: `/my/path/${configuration}/${apkName}-x86-${configuration}.apk`
+				}, {
+					name: "android-runtime has version < 4.0.0",
+					buildOutput: [`/my/path/apk/${apkName}-${configuration}.apk`],
+					expectedResult: `/my/path/apk/${apkName}-${configuration}.apk`
+				}];
+			}
+
+			const platform = "Android";
+			const buildConfigs = [{buildForDevice: false}, {buildForDevice: true}];
+			const apkNames = ["app", "testProj"];
+			const configurations = ["debug", "release"];
+
+			_.each(apkNames, apkName => {
+				_.each(buildConfigs, buildConfig => {
+					_.each(configurations, configuration => {
+						_.each(getTestCases(configuration, apkName), testCase => {
+							it(`should find correct ${configuration} ${apkName}.apk when ${testCase.name} and buildConfig is ${JSON.stringify(buildConfig)}`, async () => {
+								mockData(testCase.buildOutput, apkName);
+								const actualResult = await platformService.buildPlatform(platform, <IBuildConfig>buildConfig, <IProjectData>{projectName: ""});
+								assert.deepEqual(actualResult, testCase.expectedResult);
+							});
+						});
+					});
+				});
+			});
 		});
 	});
 });
