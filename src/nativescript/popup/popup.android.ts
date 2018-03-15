@@ -1,33 +1,7 @@
-/// <reference path="../../../node_modules/tns-platform-declarations/android.d.ts" />
-/// <reference path="../../../node_modules/@types/node/index.d.ts" />
-
-import { EventEmitter } from 'events';
-import { openAdvancedUrl, AdvancedWebViewOptions } from 'nativescript-advanced-webview';
+import { PopupCommon } from './popup.common';
 import * as frameModule from 'tns-core-modules/ui/frame';
 
-export class Popup extends EventEmitter {
-  private _open = false;
-
-  open(url = '/') {
-    // Open popup
-    openAdvancedUrl({
-      url: url,
-      isClosed: (finish) => {
-        if (finish) {
-          this._open = false;
-
-          // Emit the exit event
-          this.emit('exit')
-        }
-      }
-    });
-
-    this._open = true;
-
-    // Return this
-    return this;
-  }
-
+export class Popup extends PopupCommon {
   close() {
     if (this._open) {
       frameModule.topmost().goBack();
