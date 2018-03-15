@@ -27,6 +27,8 @@ module.exports = (env = {}) => {
       'nativescript-advanced-webview': 'nativescript-advanced-webview',
       'nativescript-push-notifications': 'nativescript-push-notifications',
       'nativescript-sqlite': 'nativescript-sqlite',
+      'nativescript-urlhandler': 'nativescript-urlhandler',
+      'application': 'application',
       'tns-core-modules/application': 'application',
       'http': 'http',
       'tns-core-modules/http': 'http',
