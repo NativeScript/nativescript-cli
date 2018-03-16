@@ -25,6 +25,10 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	};
 
 	public async checkEnvironmentRequirements(platform: string): Promise<boolean> {
+		if (process.env.SKIP_ENV_CHECK) {
+			return true;
+		}
+
 		const canExecute = await this.$doctorService.canExecuteLocalBuild(platform);
 		if (!canExecute) {
 			if (!isInteractive()) {
