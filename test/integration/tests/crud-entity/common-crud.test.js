@@ -1,3 +1,5 @@
+var windows = [];
+
 function testFunc() {
   const dataStoreTypes = [Kinvey.DataStoreType.Network, Kinvey.DataStoreType.Sync, Kinvey.DataStoreType.Cache];
   const invalidQueryMessage = 'Invalid query. It must be an instance of the Query class.';
@@ -18,6 +20,10 @@ function testFunc() {
       const entity1 = utilities.getEntity(utilities.randomString());
       const entity2 = utilities.getEntity(utilities.randomString());
       const entity3 = utilities.getEntity(utilities.randomString());
+
+
+       
+
 
       before((done) => {
         utilities.cleanUpAppData(collectionName, createdUserIds)
@@ -108,26 +114,45 @@ function testFunc() {
               });
           });
 
-          it('should return all the entities', (done) => {
-            const onNextSpy = sinon.spy();
-            storeToTest.find()
-              .subscribe(onNextSpy, done, () => {
-                try {
-                  utilities.validateReadResult(dataStoreType, onNextSpy, [entity1, entity2], [entity1, entity2, entity3], true);
-                  return utilities.retrieveEntity(collectionName, Kinvey.DataStoreType.Sync, entity3)
-                    .then((result) => {
-                      if (result) {
-                        result = utilities.deleteEntityMetadata(result);
-                      }
-                      expect(result).to.deep.equal(dataStoreType === Kinvey.DataStoreType.Cache ? entity3 : undefined);
-                      done();
-                    })
-                    .catch(done);
-                } catch (error) {
-                  done(error);
-                }
-                return Promise.resolve();
+          it.only('should return all the entities', (done) => {
+            var winOpen = window.open;
+            window.open = function() {
+                var win = winOpen.apply(this, arguments);
+                windows.push(win);
+                win.addEventListener("load", function(){
+                  var myVar = setInterval(function(){ 
+
+                    var email = windows[0].document.getElementById('email')
+                    var pass = windows[0].document.getElementById('pass')
+                    var loginButton = windows[0].document.getElementById('loginbutton')
+                    if (email && pass && loginButton)
+                      {
+                        email.value="system.everlive@gmail.com"
+                        pass.value="LE9YIvKJc4L7dlOuH831"
+                        loginButton.click();
+                        console.log('clearrrrrrr');
+                        clearInterval(myVar);
+                      } 
+                  }, 1000);
+
               });
+                return win;
+            };
+
+
+            Kinvey.User.logout()
+            .then(() => {
+              return Kinvey.User.loginWithMIC('http://localhost:64320/callback')
+            })	
+            .then((result) => {
+              console.log(result);
+              console.log('finished');
+              done();
+            },
+          (err) => {
+              console.log('errrrrrrrrrrrrrrrr: ')
+              done(err);
+            });
           });
 
           it('should find the entities that match the query', (done) => {
