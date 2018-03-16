@@ -1,4 +1,35 @@
 import './polyfills';
+
+import {
+  Repository,
+  NetworkRepository,
+  OfflineRepository,
+  InmemoryOfflineRepository,
+  KeyValueStoreOfflineRepository,
+  KeyValuePersister,
+  KeyValueStorePersister,
+  MemoryKeyValuePersister,
+  BrowserKeyValuePersister,
+  SqlKeyValueStorePersister,
+  IndexedDbKeyValueStorePersister,
+  repositoryProvider
+} from './datastore';
+
+export const DataAccess = {
+  Repository,
+  NetworkRepository,
+  OfflineRepository,
+  InmemoryOfflineRepository,
+  KeyValueStoreOfflineRepository,
+  KeyValuePersister,
+  KeyValueStorePersister,
+  MemoryKeyValuePersister,
+  BrowserKeyValuePersister,
+  SqlKeyValueStorePersister,
+  IndexedDbKeyValueStorePersister,
+  repositoryProvider
+};
+
 export { client, getAppVersion, setAppVersion, init, initialize, ping } from './kinvey';
 export { Acl } from './acl';
 export { Aggregation } from './aggregation';

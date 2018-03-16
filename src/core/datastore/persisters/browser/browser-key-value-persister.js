@@ -41,11 +41,12 @@ export class BrowserKeyValuePersister extends KeyValuePersister {
     return Promise.resolve();
   }
 
-  // private methods
-
+  // this is now used in the ReactNative shim as a protected method
   _buildMasterCollectionName() {
     return `${Client.sharedInstance().appKey}.${browserStorageCollectionsMaster}`;
   }
+
+  // private methods
 
   _ensureCollectionExists(collection) {
     const masterCollectionName = this._buildMasterCollectionName();
