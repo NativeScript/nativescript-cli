@@ -13,7 +13,7 @@ const webRunTests = (staticPort, runner) =>
         .then(resolve)
         .catch(reject);
     } else {
-      const chrome = spawnHeadlessChromium(args);
+      const chrome = spawnHeadlessChromium([args[0], '--user-data-dir']);
       chrome.stderr.on('data', d => reject(d.toString()));
       resolve();
     }
