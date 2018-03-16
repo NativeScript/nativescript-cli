@@ -13,7 +13,7 @@ const webRunTests = (staticPort, runner) =>
         .then(resolve)
         .catch(reject);
     } else {
-      const chrome = spawnHeadlessChromium([`http://localhost:${staticPort()}/packages/kinvey-html5-sdk/test/index.html`, '--disable-popup-blocking', '--disable-web-security', '--user-data-dir']);
+      const chrome = spawnHeadlessChromium(args);
       chrome.stderr.on('data', d => reject(d.toString()));
       resolve();
     }
