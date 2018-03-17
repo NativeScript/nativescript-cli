@@ -13,7 +13,7 @@ const webRunTests = (staticPort, runner) =>
         .then(resolve)
         .catch(reject);
     } else {
-      const chrome = spawnHeadlessChromium([args[0], '--disable-web-security', '--disable-popup-blocking', '--user-data-dir']);
+      const chrome = spawnHeadlessChromium([args[0], '--disable-web-security', '--disable-popup-blocking']);
       chrome.stderr.on('data', d => reject(d.toString()));
       resolve();
     }
