@@ -11,6 +11,7 @@ matrix:
 
 
     - os: linux
+      dist: precise
       env: PLATFORM='HTML5'
       language: node_js
       node_js: ${INTEGRATION_TESTS_NODEJS_VERSION}
