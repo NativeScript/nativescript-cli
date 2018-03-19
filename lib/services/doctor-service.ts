@@ -47,7 +47,7 @@ class DoctorService implements IDoctorService {
 		}
 
 		try {
-			await this.$versionsService.checkComponentsForUpdate();
+			await this.$versionsService.printVersionsInformation();
 		} catch (err) {
 			this.$logger.error("Cannot get the latest versions information from npm. Please try again later.");
 		}
