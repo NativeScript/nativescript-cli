@@ -24,6 +24,10 @@ const commonTests = walk(path.join(rootMonoRepoPath, 'test', 'integration', 'tes
   filter: jsFilesFilter,
   nodir: true
 });
+const shimSpecificTests = walk(path.join(__dirname, 'test', 'tests'), {
+  filter: jsFilesFilter,
+  nodir: true
+});
 
 function runPipeline() {
   const runner = new Runner({
@@ -38,7 +42,7 @@ function runPipeline() {
       processTemplateFile(
         path.join(__dirname, 'test', 'index.template.hbs'),
         () => ({
-          tests: commonTests.map(f =>
+          tests: shimSpecificTests.concat(commonTests).map(f =>
             `./${path.relative(
               path.join(__dirname, 'test'),
               f.path

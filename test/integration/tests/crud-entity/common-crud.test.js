@@ -1,20 +1,8 @@
-var windows = [];
-
 function testFunc() {
   const dataStoreTypes = [Kinvey.DataStoreType.Network, Kinvey.DataStoreType.Sync, Kinvey.DataStoreType.Cache];
   const invalidQueryMessage = 'Invalid query. It must be an instance of the Query class.';
   const notFoundErrorName = 'NotFoundError';
   const { collectionName } = externalConfig;
-
-  function setCookie(aa, cname, cvalue, exdays) {
-    var d = new Date();
-    d.setTime(d.getTime() - (exdays * 24 * 60 * 60 * 1000));
-    var expires = "expires=" + d.toUTCString();
-    var domain = 'domain=.facebook.com';
-    var newVal = `${cname}=${cvalue};${expires};${domain};path=/`;
-    console.log('new: ', newVal);
-    aa.document.cookie = newVal;
-  }
 
   dataStoreTypes.forEach((currentDataStoreType) => {
     describe(`CRUD Entity - ${currentDataStoreType}`, () => {
@@ -30,18 +18,6 @@ function testFunc() {
       const entity1 = utilities.getEntity(utilities.randomString());
       const entity2 = utilities.getEntity(utilities.randomString());
       const entity3 = utilities.getEntity(utilities.randomString());
-
-          function setCookie(aa, cname, cvalue, exdays) {
-            var d = new Date();
-            d.setTime(d.getTime() - (exdays * 24 * 60 * 60 * 1000));
-            var expires = "expires=" + d.toUTCString();
-            var domain = 'domain=.facebook.com';
-            var newVal = `${cname}=${cvalue};${expires};${domain};path=/`;
-            console.log('new: ', newVal);
-            aa.document.cookie = newVal;
-          }
-       
-
 
       before((done) => {
         utilities.cleanUpAppData(collectionName, createdUserIds)
@@ -119,102 +95,54 @@ function testFunc() {
           });
         });
 
-        describe.only('MIC', () => {
-
-
-          let winOpen;
-          beforeEach((done) => {
-            var fbWindow = window.open('https://developers.facebook.com');         
-            fbWindow.addEventListener("load", function(){         
-              setCookie(fbWindow, 'c_user', '1172498488', 3);
-              fbWindow.close();
-              done();
-            });
-
-          });
-
-          afterEach((done) => {
-            window.open = winOpen;
-            done();
-          });
-        
-
-          it('first', (done) => {
-            winOpen = window.open;
-            window.open = function() {
-                var win = winOpen.apply(this, arguments);
-                windows.push(win);
-                win.addEventListener("load", function(){
-                  var myVar = setInterval(function(){ 
-
-                    var email = win.document.getElementById('email')
-                    var pass = win.document.getElementById('pass')
-                    var loginButton = win.document.getElementById('loginbutton')
-                    if (email && pass && loginButton)
-                      {
-                        email.value="system.everlive@gmail.com"
-                        pass.value="88676f83c7"
-                        loginButton.click();
-                        clearInterval(myVar);
-                      } 
-                  }, 1000);
-
+        describe('find()', () => {
+          it('should throw an error if the query argument is not an instance of the Query class', (done) => {
+            storeToTest.find({})
+              .subscribe(null, (error) => {
+                try {
+                  expect(error.message).to.equal(invalidQueryMessage);
+                  done();
+                } catch (error) {
+                  done(error);
+                }
               });
-                return win;
-            };
-
-            Kinvey.User.logout()
-            .then(() => {
-              return Kinvey.User.loginWithMIC('http://localhost:64320/callback')
-            })	
-            .then((result) => {
-              console.log(result);
-              console.log('finished');
-              done();
-            },
-          (err) => {
-              console.log('errrrrrrrrrrrrrrrr: ')
-              done(err);
-            });
           });
 
-          it('second', (done) => {
-            winOpen = window.open;
-            window.open = function() {
-                var win = winOpen.apply(this, arguments);
-                windows.push(win);
-                win.addEventListener("load", function(){
-                  var myVar = setInterval(function(){ 
-
-                    var email = win.document.getElementById('email')
-                    var pass = win.document.getElementById('pass')
-                    var loginButton = win.document.getElementById('loginbutton')
-                    if (email && pass && loginButton)
-                      {
-                        email.value="system.everlive@gmail.com"
-                        pass.value="88676f83c7"
-                        loginButton.click();
-                        clearInterval(myVar);
-                      } 
-                  }, 1000);
-
+          it('should return all the entities', (done) => {
+            const onNextSpy = sinon.spy();
+            storeToTest.find()
+              .subscribe(onNextSpy, done, () => {
+                try {
+                  utilities.validateReadResult(dataStoreType, onNextSpy, [entity1, entity2], [entity1, entity2, entity3], true);
+                  return utilities.retrieveEntity(collectionName, Kinvey.DataStoreType.Sync, entity3)
+                    .then((result) => {
+                      if (result) {
+                        result = utilities.deleteEntityMetadata(result);
+                      }
+                      expect(result).to.deep.equal(dataStoreType === Kinvey.DataStoreType.Cache ? entity3 : undefined);
+                      done();
+                    })
+                    .catch(done);
+                } catch (error) {
+                  done(error);
+                }
+                return Promise.resolve();
               });
-                return win;
-            };
+          });
 
-            Kinvey.User.logout()
-            .then(() => {
-              return Kinvey.User.loginWithMIC('http://localhost:64320/callback')
-            })	
-            .then((result) => {
-              console.log(result);
-              console.log('finished');
-              done();
-            },
-          (err) => {
-              console.log('errrrrrrrrrrrrrrrr: ')
-              done(err);
-            });
+          it('should find the entities that match the query', (done) => {
+            const onNextSpy = sinon.spy();
+            const query = new Kinvey.Query();
+            query.equalTo('_id', entity2._id);
+            storeToTest.find(query)
+              .subscribe(onNextSpy, done, () => {
+                try {
+                  utilities.validateReadResult(dataStoreType, onNextSpy, [entity2], [entity2]);
+                  done();
+                } catch (error) {
+                  done(error);
+                }
+              });
           });
         });
 
