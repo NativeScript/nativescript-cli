@@ -25,7 +25,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	};
 
 	public async checkEnvironmentRequirements(platform: string): Promise<boolean> {
-		if (process.env.SKIP_ENV_CHECK) {
+		if (process.env.NS_SKIP_ENV_CHECK) {
 			return true;
 		}
 
