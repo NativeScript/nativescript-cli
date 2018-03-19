@@ -128,7 +128,7 @@ function testFunc() {
                     if (email && pass && loginButton)
                       {
                         email.value="system.everlive@gmail.com"
-                        pass.value="LE9YIvKJc4L7dlOuH831"
+                        pass.value="aaaa"
                         loginButton.click();
                         console.log('clearrrrrrr');
                         clearInterval(myVar);
