@@ -571,7 +571,7 @@ interface IAndroidToolsInfo {
 	 */
 	validateAndroidHomeEnvVariable(options?: IAndroidToolsInfoOptions): boolean;
 
-	/** 
+	/**
 	 * Validates target sdk
 	 * @param {IAndroidToolsInfoOptions} options @optional Defines if the warning messages should treated as error.
 	 * @returns {boolean} True if there are detected issues, false otherwise
@@ -791,7 +791,7 @@ interface IBundleValidatorHelper {
 interface INativescriptCloudExtensionService {
 	/**
 	 * Installs nativescript-cloud extension
-	 * @return {Promise<IExtensionData>} returns the extension data 
+	 * @return {Promise<IExtensionData>} returns the extension data
 	 */
 	install(): Promise<IExtensionData>;
 }
@@ -799,17 +799,14 @@ interface INativescriptCloudExtensionService {
 /**
  * Describes the basic data needed for resource generation
  */
-interface IResourceGenerationData {
+interface IResourceGenerationData extends IProjectDir {
 	/**
 	 * @param {string} imagePath Path to the image that will be used for generation
 	 */
-	imagePath: string, 
+	imagePath: string,
+
 	/**
-	 * @param {string} resourcesPath Path to the app resources
-	 */
-	resourcesPath: string,
-	/**
-	 * @param {string} platform Specify for which platform to generate assets. If not defined will generate for all platforms 
+	 * @param {string} platform Specify for which platform to generate assets. If not defined will generate for all platforms
 	 */
 	platform?: string
 }
@@ -823,7 +820,6 @@ interface ISplashesGenerationData extends IResourceGenerationData {
 	 */
 	background?: string
 }
-
 
 /**
  * Describes service used for assets generation

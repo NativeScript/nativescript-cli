@@ -55,7 +55,7 @@ interface IProjectService {
 
 interface INsConfig {
 	appPath?: string;
-	appResourcesPath?:string;
+	appResourcesPath?: string;
 }
 
 interface IProjectData extends IProjectDir {
@@ -123,6 +123,43 @@ interface IProjectDataService {
 	removeDependency(projectDir: string, dependencyName: string): void;
 
 	getProjectData(projectDir?: string): IProjectData;
+
+	getAssetsStructure(opts: IProjectDir): Promise<IAssetsStructure>;
+
+	getIOSAssetsStructure(opts: IProjectDir): Promise<IAssetGroup>;
+
+	getAndroidAssetsStructure(opts: IProjectDir): Promise<IAssetGroup>;
+}
+
+interface IAssetItem {
+	path: string;
+	size: string;
+	width: number;
+	height: number;
+	filename: string;
+	directory: string;
+	scale: number;
+	idiom: string;
+	resizeOperation?: string;
+}
+
+interface IAssetSubGroup {
+	images: IAssetItem[];
+	info?: { version: string, author: string };
+}
+
+interface IAssetGroup {
+	icons: IAssetSubGroup;
+	splashBackgrounds: IAssetSubGroup;
+	splashCenterImages: IAssetSubGroup;
+	splashImages?: IAssetSubGroup;
+	[imageType: string]: IAssetSubGroup;
+}
+
+interface IAssetsStructure {
+	ios: IAssetGroup;
+	android: IAssetGroup;
+	[platform: string]: IAssetGroup;
 }
 
 /**

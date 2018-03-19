@@ -157,6 +157,8 @@ class ProjectIntegrationTest {
 		});
 		this.testInjector.register("npmInstallationManager", NpmInstallationManager);
 		this.testInjector.register("settingsService", SettingsService);
+		this.testInjector.register("devicePlatformsConstants", {});
+		this.testInjector.register("androidResourcesMigrationService", {});
 	}
 }
 

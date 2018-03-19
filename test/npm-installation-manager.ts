@@ -25,6 +25,8 @@ function createTestInjector(): IInjector {
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register("settingsService", SettingsService);
 	testInjector.register("projectDataService", ProjectDataService);
+	testInjector.register("devicePlatformsConstants", {});
+	testInjector.register("androidResourcesMigrationService", {});
 
 	testInjector.register("npmInstallationManager", NpmInstallationManagerLib.NpmInstallationManager);
 

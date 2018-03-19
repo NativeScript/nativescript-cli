@@ -1,7 +1,7 @@
 import * as path from "path";
 import { ProjectData } from "../project-data";
 import { exported } from "../common/decorators";
-import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER } from "../constants";
+import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, AssetConstants, SRC_DIR, RESOURCES_DIR, MAIN_DIR, CLI_RESOURCES_DIR_NAME } from '../constants';
 
 interface IProjectFileData {
 	projectData: any;
@@ -14,6 +14,8 @@ export class ProjectDataService implements IProjectDataService {
 	constructor(private $fs: IFileSystem,
 		private $staticConfig: IStaticConfig,
 		private $logger: ILogger,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
 		private $injector: IInjector) {
 	}
 
@@ -49,6 +51,141 @@ export class ProjectDataService implements IProjectDataService {
 		const projectDataInstance = this.$injector.resolve<IProjectData>(ProjectData);
 		projectDataInstance.initializeProjectDataFromContent(packageJsonContent, nsconfigContent, projectDir);
 		return projectDataInstance;
+	}
+
+	@exported("projectDataService")
+	public async getAssetsStructure(opts: IProjectDir): Promise<IAssetsStructure> {
+		const iOSAssetStructure = await this.getIOSAssetsStructure(opts);
+		const androidAssetStructure = await this.getAndroidAssetsStructure(opts);
+
+		this.$logger.trace("iOS Assets structure:", JSON.stringify(iOSAssetStructure, null, 2));
+		this.$logger.trace("Android Assets structure:", JSON.stringify(androidAssetStructure, null, 2));
+
+		return {
+			ios: iOSAssetStructure,
+			android: androidAssetStructure
+		};
+	}
+
+	@exported("projectDataService")
+	public async getIOSAssetsStructure(opts: IProjectDir): Promise<IAssetGroup> {
+		const projectDir = opts.projectDir;
+		const projectData = this.getProjectData(projectDir);
+
+		const basePath = path.join(projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, AssetConstants.iOSAssetsDirName);
+		const pathToIcons = path.join(basePath, AssetConstants.iOSIconsDirName);
+		const icons = await this.getIOSAssetSubGroup(pathToIcons);
+
+		const pathToSplashBackgrounds = path.join(basePath, AssetConstants.iOSSplashBackgroundsDirName);
+		const splashBackgrounds = await this.getIOSAssetSubGroup(pathToSplashBackgrounds);
+
+		const pathToSplashCenterImages = path.join(basePath, AssetConstants.iOSSplashCenterImagesDirName);
+		const splashCenterImages = await this.getIOSAssetSubGroup(pathToSplashCenterImages);
+
+		const pathToSplashImages = path.join(basePath, AssetConstants.iOSSplashImagesDirName);
+		const splashImages = await this.getIOSAssetSubGroup(pathToSplashImages);
+
+		return {
+			icons,
+			splashBackgrounds,
+			splashCenterImages,
+			splashImages
+		};
+	}
+
+	@exported("projectDataService")
+	public async getAndroidAssetsStructure(opts: IProjectDir): Promise<IAssetGroup> {
+		// TODO: Use image-size package to get the width and height of an image.
+		// TODO: Parse the splash_screen.xml in nodpi directory and get from it the names of the background and center image.
+		// TODO: Parse the AndroidManifest.xml to get the name of the icon.
+		// This way we'll not use the image-definitions.json and the method will return the real android structure.
+		const projectDir = opts.projectDir;
+		const projectData = this.getProjectData(projectDir);
+		const pathToAndroidDir = path.join(projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android);
+		const hasMigrated = this.$androidResourcesMigrationService.hasMigrated(projectData.appResourcesDirectoryPath);
+		const basePath = hasMigrated ? path.join(pathToAndroidDir, SRC_DIR, MAIN_DIR, RESOURCES_DIR) : pathToAndroidDir;
+
+		const currentStructure = this.$fs.enumerateFilesInDirectorySync(basePath);
+		// , (file: string, stat: IFsStats) => {
+		// 	return stat.isDirectory() || file.indexOf("drawable") !== -1;
+		// });
+
+		const content = this.getImageDefinitions().android;
+
+		return {
+			icons: this.getAndroidAssetSubGroup(content.icons, currentStructure),
+			splashBackgrounds: this.getAndroidAssetSubGroup(content.splashBackgrounds, currentStructure),
+			splashCenterImages: this.getAndroidAssetSubGroup(content.splashCenterImages, currentStructure),
+			splashImages: null
+		};
+	}
+
+	private getImageDefinitions(): any {
+		const pathToImageDefinitions = path.join(__dirname, "..", "..", CLI_RESOURCES_DIR_NAME, AssetConstants.assets, AssetConstants.imageDefinitionsFileName);
+		const imageDefinitions = this.$fs.readJson(pathToImageDefinitions);
+
+		return imageDefinitions;
+	}
+
+	private async getIOSAssetSubGroup(dirPath: string): Promise<IAssetSubGroup> {
+		const pathToContentJson = path.join(dirPath, AssetConstants.iOSResourcesFileName);
+		const content = <IAssetSubGroup>this.$fs.readJson(pathToContentJson);
+
+		const imageDefinitions = this.getImageDefinitions().ios;
+
+		if (content && content.images) {
+			_.each(content.images, image => {
+				// In some cases the image may not be available, it will just be described.
+				// When this happens, the filename will be empty.
+				// So we'll keep the path empty as well.
+				if (image.filename) {
+					image.path = path.join(dirPath, image.filename);
+				}
+
+				if (image.size) {
+					// size is basically <width>x<height>
+					const [width, height] = image.size.toString().split(AssetConstants.sizeDelimiter);
+					if (width && height) {
+						image.width = +width;
+						image.height = +height;
+					}
+				} else {
+					// Find the image size based on the hardcoded values in the image-definitions.json
+					_.each(imageDefinitions, (assetSubGroup: IAssetItem[]) => {
+						_.each(assetSubGroup, assetItem => {
+							if (assetItem.filename === image.filename && path.basename(assetItem.directory) === path.basename(dirPath)) {
+								image.width = assetItem.width;
+								image.height = assetItem.height;
+								image.size = `${assetItem.width}${AssetConstants.sizeDelimiter}${assetItem.height}`;
+							}
+						});
+					});
+				}
+			});
+		}
+
+		return content;
+	}
+
+	private getAndroidAssetSubGroup(input: any, realPaths: string[]): IAssetSubGroup {
+		const assetSubGroup: IAssetSubGroup = {
+			images: <any>[]
+		};
+
+		const normalizedPaths = _.map(realPaths, p => path.normalize(p));
+		_.each(input, image => {
+			_.find(normalizedPaths, currentNormalizedPath => {
+				const imagePath = path.join(image.directory, image.filename);
+				if (currentNormalizedPath.indexOf(path.normalize(imagePath)) !== -1) {
+					image.path = currentNormalizedPath;
+					image.size = `${image.width}${AssetConstants.sizeDelimiter}${image.height}`;
+					assetSubGroup.images.push(image);
+					return true;
+				}
+			});
+		});
+
+		return assetSubGroup;
 	}
 
 	private getValue(projectDir: string, propertyName: string): any {
