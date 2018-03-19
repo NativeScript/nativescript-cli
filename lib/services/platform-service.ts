@@ -779,10 +779,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return packages.map(filepath => this.createApplicationPackage(filepath));
 	}
 
-	private createApplicationPackage(filepath: string): IApplicationPackage {
+	private createApplicationPackage(packageName: string): IApplicationPackage {
 		return {
-			packageName: filepath,
-			time: this.$fs.getFsStats(filepath).mtime
+			packageName,
+			time: this.$fs.getFsStats(packageName).mtime
 		};
 	}
 

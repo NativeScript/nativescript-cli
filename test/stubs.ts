@@ -305,7 +305,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 			emulatorServices: undefined,
 			projectRoot: "",
 			deviceBuildOutputPath: "",
-			getValidBuildOutputData: (buildOptions: { isForDevice?: boolean, isReleaseBuild?: boolean }) => ({ packageNames: [] }),
+			getValidBuildOutputData: (buildOptions: IBuildOutputOptions) => ({ packageNames: [] }),
 			frameworkFilesExtensions: [],
 			appDestinationDirectoryPath: "",
 			relativeToFrameworkConfigurationFilePath: "",
@@ -416,7 +416,7 @@ export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
 			normalizedPlatformName: "",
 			appDestinationDirectoryPath: "",
 			deviceBuildOutputPath: "",
-			getValidBuildOutputData: (buildOptions: { isForDevice?: boolean, isReleaseBuild?: boolean }) => ({ packageNames: []}),
+			getValidBuildOutputData: (buildOptions: IBuildOutputOptions) => ({ packageNames: []}),
 			frameworkFilesExtensions: [],
 			relativeToFrameworkConfigurationFilePath: "",
 			fastLivesyncFileExtensions: []
