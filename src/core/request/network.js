@@ -30,7 +30,8 @@ export const AuthType = {
   Default: 'Default',
   Master: 'Master',
   None: 'None',
-  Session: 'Session'
+  Session: 'Session',
+  Client: 'Client'
 };
 Object.freeze(AuthType);
 
@@ -74,6 +75,23 @@ const Auth = {
   basic(client) {
     return Auth.master(client)
       .catch(() => Auth.app(client));
+  },
+
+  client(client, clientId) {    
+    if (!client.appKey || !client.appSecret) {      
+      return Promise.reject(
+        new Error('Missing client appKey and/or appSecret'
+          + ' Use Kinvey.initialize() to set the appKey and appSecret for the client.')
+      );
+    }
+    if (!clientId){
+      clientId = client.appKey;
+    }
+    return Promise.resolve({
+      scheme: 'Basic',
+      username: clientId,
+      password: client.appSecret
+    });
   },
 
   /**
@@ -160,6 +178,7 @@ export class KinveyRequest extends NetworkRequest {
     this.properties = options.properties || new Properties();
     this.skipBL = options.skipBL === true;
     this.trace = options.trace === true;
+    this.clientId = options.clientId;
   }
 
   static execute(options, client, dataOnly = true) {
@@ -320,7 +339,7 @@ export class KinveyRequest extends NetworkRequest {
 
     // Add or remove the Authorization header
     if (this.authType) {
-      // Get the auth info based on the set AuthType
+      // Get the auth info based on the set AuthType      
       switch (this.authType) {
         case AuthType.All:
           promise = Auth.all(this.client);
@@ -330,6 +349,9 @@ export class KinveyRequest extends NetworkRequest {
           break;
         case AuthType.Basic:
           promise = Auth.basic(this.client);
+          break;
+        case AuthType.Client:
+          promise = Auth.client(this.client, this.clientId);
           break;
         case AuthType.Master:
           promise = Auth.master(this.client);
