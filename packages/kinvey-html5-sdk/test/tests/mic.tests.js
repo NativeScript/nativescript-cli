@@ -1,43 +1,39 @@
-
-
 function testFunc() {
-  const { collectionName } = externalConfig;
 
-  function setCookie(aa, cname, cvalue, exdays) {
-    var d = new Date();
-    d.setTime(d.getTime() - (exdays * 24 * 60 * 60 * 1000));
-    var expires = "expires=" + d.toUTCString();
-    var domain = 'domain=.facebook.com';
-    var newVal = `${cname}=${cvalue};${expires};${domain};path=/`;
-    console.log('new: ', newVal);
-    aa.document.cookie = newVal;
+  const { collectionName } = externalConfig;
+  const createdUserIds = [];
+  const fbDevUrl = 'https://developers.facebook.com';
+  fbCookieName = 'c_user';
+  fbCookieValue = '1172498488';
+
+  const expireFBCookie = (fbWindow, cookieName, cookieValue, expiredDays) => {
+    const newDate = new Date();
+    newDate.setTime(newDate.getTime() - (expiredDays * 24 * 60 * 60 * 1000));
+    const expires = 'expires=' + newDate.toUTCString();
+    const domain = 'domain=.facebook.com';
+    const newValue = `${cookieName}=${cookieValue};${expires};${domain};path=/`;
+    fbWindow.document.cookie = newValue;
   }
 
-  const createdUserIds = [];
-
-
-
-  before((done) => {
-    utilities.cleanUpAppData(collectionName, createdUserIds)
-      .then((user) => {
-        createdUserIds.push(user.data._id);
-        done();
-      })
-      .catch(done);
-  });
-
-  after((done) => {
-    utilities.cleanUpAppData(collectionName, createdUserIds)
-      .then(() => done())
-      .catch(done);
-  });
-
-  describe.only('MIC', () => {
+  describe('MIC Integration', () => {
     let winOpen;
+
+    before((done) => {
+      utilities.cleanUpAppData(collectionName, createdUserIds)
+        .then(() => done())
+        .catch(done);
+    });
+  
+    after((done) => {
+      utilities.cleanUpAppData(collectionName, createdUserIds)
+        .then(() => done())
+        .catch(done);
+    });
+
     beforeEach((done) => {
-      var fbWindow = window.open('https://developers.facebook.com');
-      fbWindow.addEventListener("load", function () {
-        setCookie(fbWindow, 'c_user', '1172498488', 3);
+      var fbWindow = window.open(fbDevUrl);
+      fbWindow.addEventListener('load', function () {
+        expireFBCookie(fbWindow, fbCookieName, fbCookieValue, 3);
         fbWindow.close();
         done();
       });
@@ -49,12 +45,11 @@ function testFunc() {
     });
 
 
-    it('first', (done) => {
+    it('should login the user, using the default MIC service', (done) => {
       winOpen = window.open;
       window.open = function () {
         var win = winOpen.apply(this, arguments);
-        windows.push(win);
-        win.addEventListener("load", function () {
+        win.addEventListener('load', function () {
           var myVar = setInterval(function () {
 
             var email = win.document.getElementById('email')
@@ -91,7 +86,6 @@ function testFunc() {
       winOpen = window.open;
       window.open = function () {
         var win = winOpen.apply(this, arguments);
-        windows.push(win);
         win.addEventListener("load", function () {
           var myVar = setInterval(function () {
 
