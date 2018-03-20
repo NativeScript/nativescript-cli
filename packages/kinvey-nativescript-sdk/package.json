@@ -9,7 +9,6 @@
   "main": "kinvey-nativescript-sdk.js",
   "typings": "kinvey.d.ts",
   "dependencies": {
-    "nativescript-advanced-webview": "2.0.2",
     "nativescript-sqlite": "~1.1.11",
     "nativescript-urlhandler": "^1.2.2",
     "rxjs": "~5.5.5"
