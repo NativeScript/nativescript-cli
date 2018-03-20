@@ -235,6 +235,9 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	public isCocoaPodsWorkingCorrectly(): Promise<boolean> {
 		return this.getValueForProperty(() => this.isCocoaPodsWorkingCorrectlyCache, async (): Promise<boolean> => {
 			if (this.hostInfo.isDarwin) {
+				if (!this.fileSystem.exists(path.join(osenv.home(), ".cocoapods"))) {
+					return true;
+				}
 				temp.track();
 				const tempDirectory = temp.mkdirSync("nativescript-check-cocoapods");
 				const pathToXCodeProjectZip = path.join(__dirname, "..", "resources", "cocoapods-verification", "cocoapods.zip");
@@ -248,7 +251,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 					if (spawnResult.exitCode) {
 						return false;
 					} else {
-						return await this.fileSystem.exists(path.join(xcodeProjectDir, "cocoapods.xcworkspace"));
+						return this.fileSystem.exists(path.join(xcodeProjectDir, "cocoapods.xcworkspace"));
 					}
 				} catch (err) {
 					return null;

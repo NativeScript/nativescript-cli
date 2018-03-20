@@ -1,5 +1,5 @@
 import { Constants } from "./constants";
-import { EOL, platform } from "os";
+import { EOL } from "os";
 import { HostInfo } from "./host-info";
 import { AndroidLocalBuildRequirements } from "./local-build-requirements/android-local-build-requirements";
 import { IosLocalBuildRequirements } from "./local-build-requirements/ios-local-build-requirements";
@@ -198,7 +198,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 				additionalInformation: data.additionalInformation,
 				platforms: data.platforms,
 				type: Constants.WARNING_TYPE_NAME
-			}
+			};
 		}
 
 		return {

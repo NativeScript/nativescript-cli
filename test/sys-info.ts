@@ -552,7 +552,6 @@ ${expectedCliVersion}`;
 				assert.deepEqual(result.xcprojInfo, undefined);
 				assert.deepEqual(result.isCocoaPodsUpdateRequired, undefined);
 				assert.deepEqual(result.pythonInfo, undefined);
-				
 			});
 			it("no platform is specified", async() => {
 				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
