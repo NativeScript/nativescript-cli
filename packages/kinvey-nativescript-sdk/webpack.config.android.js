@@ -24,7 +24,6 @@ module.exports = (env = {}) => {
     },
     externals: {
       'globals': 'globals',
-      'nativescript-advanced-webview': 'nativescript-advanced-webview',
       'nativescript-push-notifications': 'nativescript-push-notifications',
       'nativescript-sqlite': 'nativescript-sqlite',
       'nativescript-urlhandler': 'nativescript-urlhandler',
