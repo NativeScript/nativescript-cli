@@ -1,6 +1,5 @@
 import { Promise } from 'es6-promise';
 import * as url from 'url';
-import { init as nativescriptAdvancedWebviewInit } from 'nativescript-advanced-webview';
 import { isDefined } from '../core/utils';
 import { KinveyError } from '../core/errors';
 import { RequestMethod } from '../core/request';
@@ -46,7 +45,6 @@ export function init(config = <any>{}) {
       + ' Unable to create a new Client without an App Secret.');
   }
 
-  nativescriptAdvancedWebviewInit();
   return Client.init(config);
 }
 
