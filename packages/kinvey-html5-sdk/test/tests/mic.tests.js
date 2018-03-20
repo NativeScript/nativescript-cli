@@ -11,6 +11,10 @@ function testFunc() {
   const redirectUrl = 'http://localhost:64320/callback';
   const fbUserName = 'Gaco Baco';
   const authServiceId = 'f16b10fac0e64ed4ac6c33ce26a21b68';
+
+  // Currently the server returns refresh_token = 'null' if the auth service does not allow refresh tokens.
+  // The tests should be changed when this is fixed on the server
+  const notAllowedRefreshTokenValue = 'null'
   let winOpen;
 
   const expireFBCookie = (fbWindow, cookieName, cookieValue, expiredDays) => {
@@ -22,7 +26,7 @@ function testFunc() {
     fbWindow.document.cookie = newValue;
   }
 
-  const validateMICUser = (user, expectedRefreshToken, explicitAuthServiceId) => {
+  const validateMICUser = (user, allowRefreshTokens, explicitAuthServiceId) => {
     expect(user).to.deep.equal(Kinvey.User.getActiveUser());
 
     const userData = user.data;
@@ -37,10 +41,16 @@ function testFunc() {
     expect(metadata.authtoken).to.exist;
 
     expect(kinveyAuth.id).to.exist;
-    expect(kinveyAuth.audience).to.equal(externalConfig.appKey);
     expect(kinveyAuth.name).to.equal(fbUserName);
     expect(kinveyAuth.access_token).to.exist;
-    expect(kinveyAuth.refresh_token).to.equal(expectedRefreshToken);
+
+    if (allowRefreshTokens) {
+      expect(kinveyAuth.refresh_token).to.exist;
+      expect(kinveyAuth.refresh_token).to.not.equal(notAllowedRefreshTokenValue);
+    }
+    else {
+      expect(kinveyAuth.refresh_token).to.equal(notAllowedRefreshTokenValue);
+    }
 
     expect(kinveyAuth.token_type).to.equal('Bearer');
     expect(kinveyAuth.expires_in).to.equal(3599);
@@ -60,7 +70,7 @@ function testFunc() {
   };
 
   const loginFacebook = () => {
-    //monkey patch window.open - the function is reset back in the afterEach hook
+    // monkey patch window.open - the function is reset back in the afterEach hook
     window.open = function () {
       const fbPopup = winOpen.apply(this, arguments);
       fbPopup.addEventListener('load', function () {
@@ -117,7 +127,7 @@ function testFunc() {
       loginFacebook();
       Kinvey.User.loginWithMIC(redirectUrl)
         .then((user) => {
-          validateMICUser(user, 'null');
+          validateMICUser(user, true);
         })
         .then((user) => {
           return networkstore.find().toPromise()
@@ -129,11 +139,12 @@ function testFunc() {
         .catch(done);
     });
 
-    it('should login the user, using the specified Auth service', (done) => {
+    // The test should be skipped until https://kinvey.atlassian.net/browse/MLIBZ-2399 is merged in master
+    it.skip('should login the user, using the specified Auth service', (done) => {
       loginFacebook();
       Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: authServiceId })
         .then((user) => {
-          validateMICUser(user, 'null', true);
+          validateMICUser(user, false, true);
         })
         .then((user) => {
           return networkstore.find().toPromise()
