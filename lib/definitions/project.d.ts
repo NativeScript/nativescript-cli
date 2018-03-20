@@ -142,10 +142,6 @@ interface IBuildForDevice {
 	buildForDevice: boolean;
 }
 
-interface IShouldInstall extends IBuildForDevice, IRelease {
-	
-}
-
 interface INativePrepare {
 	skipNativePrepare: boolean;
 }

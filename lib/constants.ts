@@ -33,6 +33,7 @@ export const CONFIG_NS_FILE_NAME = "nsconfig.json";
 export const CONFIG_NS_APP_RESOURCES_ENTRY = "appResourcesPath";
 export const CONFIG_NS_APP_ENTRY = "appPath";
 export const DEPENDENCIES_JSON_NAME = "dependencies.json";
+export const APK_EXTENSION_NAME = ".apk";
 
 export class PackageVersion {
 	static NEXT = "next";

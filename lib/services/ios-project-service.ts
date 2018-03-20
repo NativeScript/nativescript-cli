@@ -72,16 +72,18 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				platformProjectService: this,
 				emulatorServices: this.$iOSEmulatorServices,
 				projectRoot: projectRoot,
-				getDeviceBuildOutputPath: (options: IRelease): string => {
-					return path.join(projectRoot, "build", "device");
-				},
-				emulatorBuildOutputPath: path.join(projectRoot, "build", "emulator"),
-				getValidPackageNames: (buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[] => {
+				deviceBuildOutputPath: path.join(projectRoot, constants.BUILD_DIR, "device"),
+				emulatorBuildOutputPath: path.join(projectRoot, constants.BUILD_DIR, "emulator"),
+				getValidBuildOutputData: (buildOptions: IBuildOutputOptions): IValidBuildOutputData => {
 					if (buildOptions.isForDevice) {
-						return [`${projectData.projectName}.ipa`];
+						return {
+							packageNames: [`${projectData.projectName}.ipa`]
+						};
 					}
 
-					return [`${projectData.projectName}.app`, `${projectData.projectName}.zip`];
+					return {
+						packageNames: [`${projectData.projectName}.app`, `${projectData.projectName}.zip`]
+					};
 				},
 				frameworkFilesExtensions: [".a", ".framework", ".bin"],
 				frameworkDirectoriesExtensions: [".framework"],
