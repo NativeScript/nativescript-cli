@@ -106,10 +106,6 @@ export class ProjectDataService implements IProjectDataService {
 		const basePath = hasMigrated ? path.join(pathToAndroidDir, SRC_DIR, MAIN_DIR, RESOURCES_DIR) : pathToAndroidDir;
 
 		const currentStructure = this.$fs.enumerateFilesInDirectorySync(basePath);
-		// , (file: string, stat: IFsStats) => {
-		// 	return stat.isDirectory() || file.indexOf("drawable") !== -1;
-		// });
-
 		const content = this.getImageDefinitions().android;
 
 		return {
@@ -167,20 +163,20 @@ export class ProjectDataService implements IProjectDataService {
 		return content;
 	}
 
-	private getAndroidAssetSubGroup(input: any, realPaths: string[]): IAssetSubGroup {
+	private getAndroidAssetSubGroup(assetItems: IAssetItem[], realPaths: string[]): IAssetSubGroup {
 		const assetSubGroup: IAssetSubGroup = {
 			images: <any>[]
 		};
 
 		const normalizedPaths = _.map(realPaths, p => path.normalize(p));
-		_.each(input, image => {
-			_.find(normalizedPaths, currentNormalizedPath => {
-				const imagePath = path.join(image.directory, image.filename);
+		_.each(assetItems, assetItem => {
+			_.each(normalizedPaths, currentNormalizedPath => {
+				const imagePath = path.join(assetItem.directory, assetItem.filename);
 				if (currentNormalizedPath.indexOf(path.normalize(imagePath)) !== -1) {
-					image.path = currentNormalizedPath;
-					image.size = `${image.width}${AssetConstants.sizeDelimiter}${image.height}`;
-					assetSubGroup.images.push(image);
-					return true;
+					assetItem.path = currentNormalizedPath;
+					assetItem.size = `${assetItem.width}${AssetConstants.sizeDelimiter}${assetItem.height}`;
+					assetSubGroup.images.push(assetItem);
+					return false;
 				}
 			});
 		});
