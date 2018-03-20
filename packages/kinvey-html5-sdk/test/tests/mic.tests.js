@@ -133,7 +133,7 @@ function testFunc() {
           return networkstore.find().toPromise()
         })
         .then((result) => {
-          expect(result).to.be.an.empty.array
+          expect(result).to.be.an.empty.array;
           done();
         })
         .catch(done);
@@ -150,12 +150,28 @@ function testFunc() {
           return networkstore.find().toPromise()
         })
         .then((result) => {
-          expect(result).to.be.an.empty.array
+          expect(result).to.be.an.empty.array;
           done();
         })
         .catch(done);
     });
 
+    it('should return a meaningful error if the user cancels the login', (done) => {
+      window.open = function () {
+        const fbPopup = winOpen.apply(this, arguments);
+        fbPopup.addEventListener('load', function () {
+          fbPopup.close();
+        });
+        return fbPopup;
+      };
+
+      Kinvey.User.loginWithMIC(redirectUrl)
+        .then(() => done(new Error('Should not happen')))
+        .catch((err) => {
+          expect(err.message).to.equal('Login has been cancelled.');
+          done();
+        });
+    });
   });
 }
 
