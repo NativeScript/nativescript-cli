@@ -22,6 +22,7 @@ import * as ChildProcessLib from "../lib/common/child-process";
 import ProjectChangesLib = require("../lib/services/project-changes-service");
 import { Messages } from "../lib/common/messages/messages";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
+import { INFO_PLIST_FILE_NAME, MANIFEST_FILE_NAME } from "../lib/constants";
 
 require("should");
 const temp = require("temp");
@@ -425,7 +426,7 @@ describe('Platform Service Tests', () => {
 					appDestinationDirectoryPath: testDirData.appDestFolderPath,
 					appResourcesDestinationDirectoryPath: testDirData.appResourcesFolderPath,
 					normalizedPlatformName: platformToTest,
-					configurationFileName: platformToTest === "ios" ? "Info.plist" : "AndroidManifest.xml",
+					configurationFileName: platformToTest === "ios" ? INFO_PLIST_FILE_NAME : MANIFEST_FILE_NAME,
 					projectRoot: testDirData.tempFolder,
 					platformProjectService: {
 						prepareProject: (): any => null,

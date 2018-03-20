@@ -37,7 +37,7 @@ export class AndroidResourcesMigrationService implements IAndroidResourcesMigrat
 		const getDirectories = (files: string[]) => files.filter(isDirectory);
 		const getFiles = (files: string[]) => files.filter((file: string) => !isDirectory(file));
 
-		this.$fs.copyFile(path.join(originalAppResources, "app.gradle"), path.join(appResourcesDestination, "app.gradle"));
+		this.$fs.copyFile(path.join(originalAppResources, constants.APP_GRADLE_FILE_NAME), path.join(appResourcesDestination, constants.APP_GRADLE_FILE_NAME));
 
 		const appResourcesFiles = getAllFiles(originalAppResources);
 		const resourceDirectories = getDirectories(appResourcesFiles);

@@ -7,6 +7,7 @@ import { HostInfo } from "../../lib/common/host-info";
 import { Logger } from "../../lib/common/logger";
 import * as ErrorsLib from "../../lib/common/errors";
 import temp = require("temp");
+import { INCLUDE_GRADLE_NAME } from "../../lib/constants";
 temp.track();
 
 describe('androiPluginBuildService', () => {
@@ -65,7 +66,7 @@ dependencies {
 	compile "com.android.support:design:$supportVersion"
 }`;
 
-		fs.writeFile(path.join(pluginFolder, "include.gradle"), validIncludeGradleContent);
+		fs.writeFile(path.join(pluginFolder, INCLUDE_GRADLE_NAME), validIncludeGradleContent);
 	}
 
 	function setUpPluginNativeFolder(manifestFile: boolean, resFolder: boolean, assetsFolder: boolean) {
@@ -196,7 +197,7 @@ dependencies {
 				tempPluginDirPath: pluginFolder
 			};
 
-			const includeGradleName = "include.gradle";
+			const includeGradleName = INCLUDE_GRADLE_NAME;
 			await androidBuildPluginService.migrateIncludeGradle(config);
 			const includeGradleContent = fs.readText(path.join(pluginFolder, includeGradleName).toString());
 			const productFlavorsAreRemoved = includeGradleContent.indexOf("productFlavors") === -1;
