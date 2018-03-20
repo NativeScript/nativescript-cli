@@ -10,6 +10,8 @@ function testFunc() {
   const fbCookieValue = '1172498488';
   const redirectUrl = 'http://localhost:64320/callback';
   const fbUserName = 'Gaco Baco';
+  const authServiceId = 'f16b10fac0e64ed4ac6c33ce26a21b68';
+  let winOpen;
 
   const expireFBCookie = (fbWindow, cookieName, cookieValue, expiredDays) => {
     const newDate = new Date();
@@ -20,7 +22,7 @@ function testFunc() {
     fbWindow.document.cookie = newValue;
   }
 
-  const validateMICUser = (user, expectedRefreshToken) => {
+  const validateMICUser = (user, expectedRefreshToken, explicitAuthServiceId) => {
     expect(user).to.deep.equal(Kinvey.User.getActiveUser());
 
     const userData = user.data;
@@ -44,7 +46,12 @@ function testFunc() {
     expect(kinveyAuth.expires_in).to.equal(3599);
     expect(kinveyAuth.id_token).to.exist;
     expect(kinveyAuth.identity).to.equal('kinveyAuth');
-    expect(kinveyAuth.client_id).to.equal(externalConfig.appKey);
+    if (explicitAuthServiceId) {
+      expect(kinveyAuth.client_id).to.equal(`${externalConfig.appKey}.${authServiceId}`);
+    }
+    else {
+      expect(kinveyAuth.client_id).to.equal(externalConfig.appKey);
+    }
     expect(kinveyAuth.redirect_uri).to.equal(redirectUrl);
     expect(kinveyAuth.protocol).to.equal('https:');
     expect(kinveyAuth.host).to.equal('auth.kinvey.com');
@@ -52,8 +59,28 @@ function testFunc() {
     expect(user.client).to.exist;
   };
 
+  const loginFacebook = () => {
+    //monkey patch window.open - the function is reset back in the afterEach hook
+    window.open = function () {
+      const fbPopup = winOpen.apply(this, arguments);
+      fbPopup.addEventListener('load', function () {
+        const setIntervalVar = setInterval(function () {
+          const email = fbPopup.document.getElementById('email')
+          const pass = fbPopup.document.getElementById('pass')
+          const loginButton = fbPopup.document.getElementById('loginbutton')
+          if (email && pass && loginButton) {
+            email.value = fbEmail;
+            pass.value = fbPassword;
+            loginButton.click();
+            clearInterval(setIntervalVar);
+          }
+        }, 1000);
+      });
+      return fbPopup;
+    };
+  }
+
   describe('MIC Integration', () => {
-    let winOpen;
 
     before((done) => {
       utilities.cleanUpAppData(collectionName, createdUserIds)
@@ -86,26 +113,8 @@ function testFunc() {
     });
 
 
-    it('should login the user, using the default MIC service, which does not return a refresh_token', (done) => {
-      window.open = function () {
-        const fbPopup = winOpen.apply(this, arguments);
-        fbPopup.addEventListener('load', function () {
-          const setIntervalVar = setInterval(function () {
-            const email = fbPopup.document.getElementById('email')
-            const pass = fbPopup.document.getElementById('pass')
-            const loginButton = fbPopup.document.getElementById('loginbutton')
-            if (email && pass && loginButton) {
-              email.value = fbEmail;
-              pass.value = fbPassword;
-              loginButton.click();
-              clearInterval(setIntervalVar);
-            }
-          }, 1000);
-
-        });
-        return fbPopup;
-      };
-
+    it('should login the user, using the default Auth service', (done) => {
+      loginFacebook();
       Kinvey.User.loginWithMIC(redirectUrl)
         .then((user) => {
           validateMICUser(user, 'null');
@@ -120,41 +129,22 @@ function testFunc() {
         .catch(done);
     });
 
-    it('second', (done) => {
-      window.open = function () {
-        var win = winOpen.apply(this, arguments);
-        win.addEventListener("load", function () {
-          var myVar = setInterval(function () {
-
-            var email = win.document.getElementById('email')
-            var pass = win.document.getElementById('pass')
-            var loginButton = win.document.getElementById('loginbutton')
-            if (email && pass && loginButton) {
-              email.value = "system.everlive@gmail.com"
-              pass.value = "f9737dc075"
-              loginButton.click();
-              clearInterval(myVar);
-            }
-          }, 1000);
-
-        });
-        return win;
-      };
-
-      Kinvey.User.logout()
-        .then(() => {
-          return Kinvey.User.loginWithMIC('http://localhost:64320/callback')
+    it('should login the user, using the specified Auth service', (done) => {
+      loginFacebook();
+      Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: authServiceId })
+        .then((user) => {
+          validateMICUser(user, 'null', true);
+        })
+        .then((user) => {
+          return networkstore.find().toPromise()
         })
         .then((result) => {
-          console.log(result);
-          console.log('finished');
+          expect(result).to.be.an.empty.array
           done();
-        },
-        (err) => {
-          console.log('errrrrrrrrrrrrrrrr: ')
-          done(err);
-        });
+        })
+        .catch(done);
     });
+
   });
 }
 
