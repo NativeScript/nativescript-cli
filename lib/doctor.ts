@@ -7,7 +7,7 @@ import { Helpers } from "./helpers";
 import * as semver from "semver";
 
 export class Doctor implements NativeScriptDoctor.IDoctor {
-	private static MIN_SUPPORTED_POD_VERSION = "0.38.2";
+	private static MIN_SUPPORTED_POD_VERSION = "1.0.0";
 
 	constructor(private androidLocalBuildRequirements: AndroidLocalBuildRequirements,
 		private helpers: Helpers,
