@@ -119,6 +119,7 @@ function testFunc() {
 
     afterEach((done) => {
       window.open = winOpen;
+
       done();
     });
 
@@ -128,6 +129,7 @@ function testFunc() {
       Kinvey.User.loginWithMIC(redirectUrl)
         .then((user) => {
           validateMICUser(user, true);
+          createdUserIds.push(user.data._id);
         })
         .then((user) => {
           return networkstore.find().toPromise()
@@ -145,6 +147,7 @@ function testFunc() {
       Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: authServiceId })
         .then((user) => {
           validateMICUser(user, false, true);
+          createdUserIds.push(user.data._id);
         })
         .then((user) => {
           return networkstore.find().toPromise()
