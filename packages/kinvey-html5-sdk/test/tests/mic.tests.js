@@ -68,13 +68,16 @@ function testFunc() {
     });
 
     beforeEach((done) => {
-      var fbWindow = window.open(fbDevUrl);
-      fbWindow.addEventListener('load', function () {
-        expireFBCookie(fbWindow, fbCookieName, fbCookieValue, 3);
-        fbWindow.close();
-        winOpen = window.open;
-        done();
-      });
+      Kinvey.User.logout()
+        .then(() => {
+          var fbWindow = window.open(fbDevUrl);
+          fbWindow.addEventListener('load', function () {
+            expireFBCookie(fbWindow, fbCookieName, fbCookieValue, 3);
+            fbWindow.close();
+            winOpen = window.open;
+            done();
+          });
+        });
     });
 
     afterEach((done) => {
@@ -83,12 +86,11 @@ function testFunc() {
     });
 
 
-    it('should login the user, using the default MIC service', (done) => {
+    it('should login the user, using the default MIC service, which does not return a refresh_token', (done) => {
       window.open = function () {
         const fbPopup = winOpen.apply(this, arguments);
         fbPopup.addEventListener('load', function () {
           const setIntervalVar = setInterval(function () {
-
             const email = fbPopup.document.getElementById('email')
             const pass = fbPopup.document.getElementById('pass')
             const loginButton = fbPopup.document.getElementById('loginbutton')
@@ -104,10 +106,7 @@ function testFunc() {
         return fbPopup;
       };
 
-      Kinvey.User.logout()
-        .then(() => {
-          return Kinvey.User.loginWithMIC(redirectUrl);
-        })
+      Kinvey.User.loginWithMIC(redirectUrl)
         .then((user) => {
           validateMICUser(user, 'null');
         })
@@ -115,7 +114,6 @@ function testFunc() {
           return networkstore.find().toPromise()
         })
         .then((result) => {
-          debugger
           expect(result).to.be.an.empty.array
           done();
         })
