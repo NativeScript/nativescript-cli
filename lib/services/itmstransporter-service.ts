@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as temp from "temp";
 import { EOL } from "os";
-import { ITMSConstants } from "../constants";
+import { ITMSConstants, INFO_PLIST_FILE_NAME } from "../constants";
 import { ItunesConnectApplicationTypes } from "../constants";
 import { quoteString, versionCompare } from "../common/helpers";
 
@@ -135,7 +135,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				}
 				const appFile = path.join(payloadDir, allApps[0]);
 
-				const plistObject = await this.$bplistParser.parseFile(path.join(appFile, "Info.plist"));
+				const plistObject = await this.$bplistParser.parseFile(path.join(appFile, INFO_PLIST_FILE_NAME));
 				const bundleId = plistObject && plistObject[0] && plistObject[0].CFBundleIdentifier;
 				if (!bundleId) {
 					this.$errors.failWithoutHelp(`Unable to determine bundle identifier from ${ipaFileFullPath}.`);

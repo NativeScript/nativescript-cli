@@ -258,6 +258,12 @@ export class ProjectDataStub implements IProjectData {
 	devDependencies: IStringDictionary;
 	projectType: string;
 	appResourcesDirectoryPath: string;
+	public androidManifestPath: string;
+	public infoPlistPath: string;
+	public appGradlePath: string;
+	public gradleFilesDirectoryPath: string;
+	public buildXcconfigPath: string;
+
 	public initializeProjectData(projectDir?: string): void {
 		this.projectDir = this.projectDir || projectDir;
 	}

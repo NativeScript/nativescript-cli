@@ -16,6 +16,7 @@ import { XCConfigService } from "./xcconfig-service";
 import * as simplePlist from "simple-plist";
 import * as mobileprovision from "ios-mobileprovision-finder";
 import { SpawnOptions } from "child_process";
+import { BUILD_XCCONFIG_FILE_NAME } from "../constants";
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
@@ -89,8 +90,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				frameworkDirectoriesExtensions: [".framework"],
 				frameworkDirectoriesNames: ["Metadata", "metadataGenerator", "NativeScript", "internal"],
 				targetedOS: ['darwin'],
-				configurationFileName: "Info.plist",
-				configurationFilePath: path.join(projectRoot, projectData.projectName, projectData.projectName + "-Info.plist"),
+				configurationFileName: constants.INFO_PLIST_FILE_NAME,
+				configurationFilePath: path.join(projectRoot, projectData.projectName, projectData.projectName + `-${constants.INFO_PLIST_FILE_NAME}`),
 				relativeToFrameworkConfigurationFilePath: path.join("__PROJECT_NAME__", "__PROJECT_NAME__-Info.plist"),
 				fastLivesyncFileExtensions: [".tiff", ".tif", ".jpg", "jpeg", "gif", ".png", ".bmp", ".BMPf", ".ico", ".cur", ".xbm"] // https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIImage_Class/
 			};
@@ -338,7 +339,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		// Starting from tns-ios 1.4 the xcconfig file is referenced in the project template
 		const frameworkVersion = this.getFrameworkVersion(this.getPlatformData(projectData).frameworkPackageName, projectData.projectDir);
 		if (semver.lt(frameworkVersion, "1.4.0")) {
-			basicArgs.push("-xcconfig", path.join(projectRoot, projectData.projectName, "build.xcconfig"));
+			basicArgs.push("-xcconfig", path.join(projectRoot, projectData.projectName, BUILD_XCCONFIG_FILE_NAME));
 		}
 
 		// if (this.$logger.getLevel() === "INFO") {
@@ -1039,7 +1040,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private validateFramework(libraryPath: string): void {
-		const infoPlistPath = path.join(libraryPath, "Info.plist");
+		const infoPlistPath = path.join(libraryPath, constants.INFO_PLIST_FILE_NAME);
 		if (!this.$fs.exists(infoPlistPath)) {
 			this.$errors.failWithoutHelp("The bundle at %s does not contain an Info.plist file.", libraryPath);
 		}
@@ -1227,13 +1228,13 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		const allPlugins: IPluginData[] = await (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins(projectData);
 		for (const plugin of allPlugins) {
 			const pluginPlatformsFolderPath = plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
-			const pluginXcconfigFilePath = path.join(pluginPlatformsFolderPath, "build.xcconfig");
+			const pluginXcconfigFilePath = path.join(pluginPlatformsFolderPath, BUILD_XCCONFIG_FILE_NAME);
 			if (this.$fs.exists(pluginXcconfigFilePath)) {
 				await this.mergeXcconfigFiles(pluginXcconfigFilePath, pluginsXcconfigFilePath);
 			}
 		}
 
-		const appResourcesXcconfigPath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "build.xcconfig");
+		const appResourcesXcconfigPath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, BUILD_XCCONFIG_FILE_NAME);
 		if (this.$fs.exists(appResourcesXcconfigPath)) {
 			await this.mergeXcconfigFiles(appResourcesXcconfigPath, pluginsXcconfigFilePath);
 		}
@@ -1289,7 +1290,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	private getBuildXCConfigFilePath(projectData: IProjectData): string {
 		const buildXCConfig = path.join(projectData.appResourcesDirectoryPath,
-			this.getPlatformData(projectData).normalizedPlatformName, "build.xcconfig");
+			this.getPlatformData(projectData).normalizedPlatformName, BUILD_XCCONFIG_FILE_NAME);
 		return buildXCConfig;
 	}
 
@@ -1350,7 +1351,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				const choicePersist = await this.$prompter.promptForChoice("Do you want to make teamId: " + teamId + " a persistent choice for your app?", choicesPersist);
 				switch (choicesPersist.indexOf(choicePersist)) {
 					case 0:
-						const xcconfigFile = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "build.xcconfig");
+						const xcconfigFile = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, BUILD_XCCONFIG_FILE_NAME);
 						this.$fs.appendFile(xcconfigFile, "\nDEVELOPMENT_TEAM = " + teamId + "\n");
 						break;
 					case 1:

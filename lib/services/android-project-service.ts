@@ -256,11 +256,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const gradleSettingsFilePath = path.join(this.getPlatformData(projectData).projectRoot, "settings.gradle");
 		shell.sed('-i', /__PROJECT_NAME__/, this.getProjectNameFromId(projectData), gradleSettingsFilePath);
 
-		// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
-		const userAppGradleFilePath = path.join(projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, "app.gradle");
-
 		try {
-			shell.sed('-i', /__PACKAGE__/, projectData.projectId, userAppGradleFilePath);
+			// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
+			shell.sed('-i', /__PACKAGE__/, projectData.projectId, projectData.appGradlePath);
 		} catch (e) {
 			this.$logger.warn(`\n${e}.\nCheck if you're using an outdated template and update it.`);
 		}
@@ -520,7 +518,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		// Copy include.gradle file
-		const includeGradleFilePath = path.join(pluginPlatformsFolderPath, "include.gradle");
+		const includeGradleFilePath = path.join(pluginPlatformsFolderPath, constants.INCLUDE_GRADLE_NAME);
 		if (this.$fs.exists(includeGradleFilePath)) {
 			shell.cp("-f", includeGradleFilePath, pluginConfigurationDirectoryPath);
 		}

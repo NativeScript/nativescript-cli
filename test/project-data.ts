@@ -1,5 +1,6 @@
 import { ProjectData } from "../lib/project-data";
 import { Yok } from "../lib/common/yok";
+import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { assert } from "chai";
 import * as stubs from "./stubs";
 import * as path from "path";
@@ -29,6 +30,12 @@ describe("projectData", () => {
 		testInjector.register("logger", stubs.LoggerStub);
 
 		testInjector.register("options", {});
+
+		testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
+
+		testInjector.register("androidResourcesMigrationService", {
+			hasMigrated: () => true
+		});
 
 		testInjector.register("projectData", ProjectData);
 
