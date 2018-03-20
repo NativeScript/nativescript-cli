@@ -2,9 +2,12 @@ function testFunc() {
 
   const { collectionName } = externalConfig;
   const createdUserIds = [];
+  const fbEmail = 'system.everlive@gmail.com';
+  const fbPassword = 'f9737dc075';
   const fbDevUrl = 'https://developers.facebook.com';
-  fbCookieName = 'c_user';
-  fbCookieValue = '1172498488';
+  const fbCookieName = 'c_user';
+  const fbCookieValue = '1172498488';
+  const redirectUrl = 'http://localhost:64320/callback';
 
   const expireFBCookie = (fbWindow, cookieName, cookieValue, expiredDays) => {
     const newDate = new Date();
@@ -23,7 +26,7 @@ function testFunc() {
         .then(() => done())
         .catch(done);
     });
-  
+
     after((done) => {
       utilities.cleanUpAppData(collectionName, createdUserIds)
         .then(() => done())
@@ -35,6 +38,7 @@ function testFunc() {
       fbWindow.addEventListener('load', function () {
         expireFBCookie(fbWindow, fbCookieName, fbCookieValue, 3);
         fbWindow.close();
+        winOpen = window.open;
         done();
       });
     });
@@ -46,30 +50,29 @@ function testFunc() {
 
 
     it('should login the user, using the default MIC service', (done) => {
-      winOpen = window.open;
       window.open = function () {
-        var win = winOpen.apply(this, arguments);
-        win.addEventListener('load', function () {
-          var myVar = setInterval(function () {
+        const fbPopup = winOpen.apply(this, arguments);
+        fbPopup.addEventListener('load', function () {
+          const setIntervalVar = setInterval(function () {
 
-            var email = win.document.getElementById('email')
-            var pass = win.document.getElementById('pass')
-            var loginButton = win.document.getElementById('loginbutton')
+            const email = fbPopup.document.getElementById('email')
+            const pass = fbPopup.document.getElementById('pass')
+            const loginButton = fbPopup.document.getElementById('loginbutton')
             if (email && pass && loginButton) {
-              email.value = "system.everlive@gmail.com"
-              pass.value = "f9737dc075"
+              email.value = fbEmail;
+              pass.value = fbPassword;
               loginButton.click();
-              clearInterval(myVar);
+              clearInterval(setIntervalVar);
             }
           }, 1000);
 
         });
-        return win;
+        return fbPopup;
       };
 
       Kinvey.User.logout()
         .then(() => {
-          return Kinvey.User.loginWithMIC('http://localhost:64320/callback')
+          return Kinvey.User.loginWithMIC(redirectUrl);
         })
         .then((result) => {
           console.log(result);
@@ -83,7 +86,6 @@ function testFunc() {
     });
 
     it('second', (done) => {
-      winOpen = window.open;
       window.open = function () {
         var win = winOpen.apply(this, arguments);
         win.addEventListener("load", function () {
