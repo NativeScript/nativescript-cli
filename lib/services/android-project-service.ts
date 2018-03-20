@@ -94,7 +94,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 							`${projectData.projectName}${constants.APK_EXTENSION_NAME}`,
 							`${constants.APP_FOLDER_NAME}-${buildMode}${constants.APK_EXTENSION_NAME}`
 						],
-						regexes: [new RegExp(`${constants.APP_FOLDER_NAME}-.*-(${Configurations.Debug}|${Configurations.Release})${constants.APK_EXTENSION_NAME}`), new RegExp(`${packageName}-.*-(${Configurations.Debug}|${Configurations.Release})${constants.APK_EXTENSION_NAME}`)]
+						regexes: [new RegExp(`${constants.APP_FOLDER_NAME}-.*-(${Configurations.Debug}|${Configurations.Release})${constants.APK_EXTENSION_NAME}`, "i"), new RegExp(`${packageName}-.*-(${Configurations.Debug}|${Configurations.Release})${constants.APK_EXTENSION_NAME}`, "i")]
 					};
 				},
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
