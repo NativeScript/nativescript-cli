@@ -32,13 +32,10 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		const canExecute = await this.$doctorService.canExecuteLocalBuild(platform);
 		if (!canExecute) {
 			if (!isInteractive()) {
-				this.fail(`You are missing the ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and you will not be able to execute cloud builds. Your environment is not configured properly and you will not be able to execute local builds. To continue, choose one of the following options: ` + EOL
-					+ "Run $ tns setup command to run the setup script to try to automatically configure your environment for local builds." + EOL
-					+ `Run $ tns cloud setup command to install the ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension to configure your environment for cloud builds.` + EOL
-					+ `Verify that your environment is configured according to the system requirements described at ${this.$staticConfig.SYS_REQUIREMENTS_LINK}`);
+				this.fail(this.getNonInteractiveConsoleMessage(platform));
 			}
 
-			this.$logger.info(`You are missing the ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and you will not be able to execute cloud builds. Your environment is not configured properly and you will not be able to execute local builds. ` + EOL
+			this.$logger.info(`` + EOL
 				+ `Select "Configure for Cloud Builds" to install the ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and automatically configure your environment for cloud builds.` + EOL
 				+ `Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`
 				+ `Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`
@@ -100,7 +97,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		return this.$nativescriptCloudExtensionService.install();
 	}
 
-	private	getCloudBuildsMessage(platform: string): string {
+	private getCloudBuildsMessage(platform: string): string {
 		const cloudCommandName = this.cliCommandToCloudCommandName[this.$commandsService.currentCommandData.commandName];
 		if (!cloudCommandName) {
 			return `In order to test your application use the $ tns login command to log in with your account and then $ tns cloud build command to build your app in the cloud.`;
@@ -135,6 +132,20 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 
 	private fail(message: string): void {
 		this.$errors.fail({ formatStr: message, suppressCommandHelp: true, printOnStdout: true });
+	}
+
+	private getNonInteractiveConsoleMessage(platform: string) {
+		if (!this.$nativescriptCloudExtensionService.isInstalled()) {
+			return `You are missing the ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and you will not be able to execute cloud builds. Your environment is not configured properly and you will not be able to execute local builds. To continue, choose one of the following options: ` + EOL
+				+ "Run $ tns setup command to run the setup script to try to automatically configure your environment for local builds." + EOL
+				+ `Run $ tns cloud setup command to install the ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension to configure your environment for cloud builds.` + EOL
+				+ `Verify that your environment is configured according to the system requirements described at ${this.$staticConfig.SYS_REQUIREMENTS_LINK}.`
+		}
+
+		return `Your environment is not configured properly and you will not be able to execute local builds. To continue, choose one of the following options: ` + EOL
+			+ "Run $ tns setup command to run the setup script to try to automatically configure your environment for local builds." + EOL
+			+ `${this.getCloudBuildsMessage(platform)}` + EOL
+			+ `Verify that your environment is configured according to the system requirements described at ${this.$staticConfig.SYS_REQUIREMENTS_LINK}.`;
 	}
 }
 $injector.register("platformEnvironmentRequirements", PlatformEnvironmentRequirements);

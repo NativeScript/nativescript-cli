@@ -794,6 +794,11 @@ interface INativescriptCloudExtensionService {
 	 * @return {Promise<IExtensionData>} returns the extension data
 	 */
 	install(): Promise<IExtensionData>;
+	/**
+	 * Checks if nativescript-cloud extension is installed
+	 * @return {boolean} returns true in case when nativescript-cloud extension is installed, false otherwise
+	 */
+	isInstalled(): boolean
 }
 
 /**
