@@ -30,6 +30,7 @@ export {
   Log,
   Metadata,
   Query,
+  User,
 
   ActiveUserError,
   APIVersionNotAvailableError,

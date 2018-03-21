@@ -1,6 +1,0 @@
-{
-  "name": "user",
-  "main": "user",
-  "types": "user.d.ts",
-  "nativescript": {}
-}
