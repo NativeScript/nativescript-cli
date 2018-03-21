@@ -1,6 +1,8 @@
+import { Promise } from 'es6-promise';
 import PubNub from 'pubnub';
 import isFunction from 'lodash/isFunction';
 import extend from 'lodash/extend';
+
 import { Client } from '../client';
 import { KinveyRequest, RequestMethod, Response } from '../request';
 import { KinveyError, ActiveUserError } from '../errors';

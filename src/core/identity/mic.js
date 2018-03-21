@@ -229,7 +229,7 @@ export class MobileIdentityConnect extends Identity {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      authType: AuthType.App,
+      authType: AuthType.Client,
       url: url.format({
         protocol: this.client.micProtocol,
         host: this.client.micHost,
@@ -241,7 +241,8 @@ export class MobileIdentityConnect extends Identity {
         client_id: clientId,
         redirect_uri: redirectUri,
         code: code
-      }
+      },
+      clientId: clientId
     });
     return request.execute().then(response => response.data);
   }
@@ -252,7 +253,7 @@ export class MobileIdentityConnect extends Identity {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      authType: AuthType.App,
+      authType: AuthType.Client,            
       url: url.format({
         protocol: this.client.micProtocol,
         host: this.client.micHost,
@@ -264,6 +265,7 @@ export class MobileIdentityConnect extends Identity {
         redirect_uri: redirectUri,
         refresh_token: token
       },
+      clientId: clientId,
       properties: options.properties,
       timeout: options.timeout
     });
@@ -271,23 +273,7 @@ export class MobileIdentityConnect extends Identity {
   }
 
   logout(user, options = {}) {
-    const request = new KinveyRequest({
-      method: RequestMethod.GET,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      authType: AuthType.App,
-      url: url.format({
-        protocol: this.client.micProtocol,
-        host: this.client.micHost,
-        pathname: '/oauth/invalidate',
-        query: {
-          user: user._id
-        }
-      }),
-      properties: options.properties
-    });
-    return request.execute().then(response => response.data);
+    return Promise.resolve();
   }
 
   /**
