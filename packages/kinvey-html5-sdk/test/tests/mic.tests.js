@@ -1,16 +1,21 @@
 function testFunc() {
 
-  const { collectionName } = externalConfig;
-  const networkstore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
-  const createdUserIds = [];
+  //the same redirect url should be configured on the server
+  const redirectUrl = 'http://localhost:64320/callback';
+  const authServiceId = 'f16b10fac0e64ed4ac6c33ce26a21b68';
+
+  //the used OAuth 2 provider is Facebook
   const fbEmail = 'system.everlive@gmail.com';
   const fbPassword = 'f9737dc075';
   const fbDevUrl = 'https://developers.facebook.com';
+  const fbUserName = 'Gaco Baco';
   const fbCookieName = 'c_user';
   const fbCookieValue = '1172498488';
-  const redirectUrl = 'http://localhost:64320/callback';
-  const fbUserName = 'Gaco Baco';
-  const authServiceId = 'f16b10fac0e64ed4ac6c33ce26a21b68';
+
+  const { collectionName } = externalConfig;
+  const networkstore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
+  const createdUserIds = [];
+
 
   // The configured access_token ttl is 3 seconds on the server for the default auth service
   const defaultServiceAccessTokenTTL = 3000;
