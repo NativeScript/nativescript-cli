@@ -45,7 +45,7 @@ function testFunc() {
     expect(kinveyAuth.access_token).to.exist;
 
     if (allowRefreshTokens) {
-      expect(kinveyAuth.refresh_token).to.exist;
+      expect(typeof kinveyAuth.refresh_token).to.equal('string');
       expect(kinveyAuth.refresh_token).to.not.equal(notAllowedRefreshTokenValue);
     }
     else {
@@ -124,7 +124,7 @@ function testFunc() {
     });
 
 
-    it('should login the user, using the default Auth service', (done) => {
+    it('should login the user, using the default Auth service, which allows refresh tokens', (done) => {
       loginFacebook();
       Kinvey.User.loginWithMIC(redirectUrl)
         .then((user) => {
@@ -141,7 +141,7 @@ function testFunc() {
         .catch(done);
     });
 
-    it('should login the user, using the specified Auth service', (done) => {
+    it('should login the user, using the specified Auth service, which does not allow refresh tokens', (done) => {
       loginFacebook();
       Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: authServiceId })
         .then((user) => {
