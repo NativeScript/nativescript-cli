@@ -7,4 +7,5 @@ before_script:
 - npm install grunt-cli
 - npm install
 script:
+- node_modules/.bin/grunt lint
 - node_modules/.bin/grunt pack --no-color
