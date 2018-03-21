@@ -5,8 +5,8 @@ function testFunc() {
   const authServiceId = 'f16b10fac0e64ed4ac6c33ce26a21b68';
 
   //the used OAuth 2 provider is Facebook
-  const fbEmail = 'system.everlive@gmail.com';
-  const fbPassword = 'f9737dc075';
+  const { fbEmail } = externalConfig;
+  const { fbPassword } = externalConfig;
   const fbDevUrl = 'https://developers.facebook.com';
   const fbUserName = 'Gaco Baco';
   const fbCookieName = 'c_user';

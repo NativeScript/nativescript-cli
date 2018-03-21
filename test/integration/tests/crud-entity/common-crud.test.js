@@ -54,8 +54,7 @@ function testFunc() {
         });
 
         describe('count()', () => {
-          it.only('should throw an error for an invalid query', (done) => {
-            done(new Error(JSON.stringify(externalConfig)));
+          it('should throw an error for an invalid query', (done) => {
             storeToTest.count({})
               .subscribe(null, (error) => {
                 try {
