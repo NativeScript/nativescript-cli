@@ -12,6 +12,9 @@ function testFunc() {
   const fbUserName = 'Gaco Baco';
   const authServiceId = 'f16b10fac0e64ed4ac6c33ce26a21b68';
 
+  // The configured access_token ttl is 2 seconds on the server for the default auth service
+  const defaultServiceAccessTokenTTL = 2000;
+
   // Currently the server returns refresh_token = 'null' if the auth service does not allow refresh tokens.
   // The tests should be changed when this is fixed on the server
   const notAllowedRefreshTokenValue = 'null';
@@ -190,7 +193,7 @@ function testFunc() {
                 done();
               })
               .catch(done);
-          }, 3000);
+          }, defaultServiceAccessTokenTTL + 1000);
         }).catch(done);
     });
   });
