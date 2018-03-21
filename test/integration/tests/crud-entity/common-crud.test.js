@@ -3,11 +3,9 @@ function testFunc() {
   const invalidQueryMessage = 'Invalid query. It must be an instance of the Query class.';
   const notFoundErrorName = 'NotFoundError';
   const { collectionName } = externalConfig;
-  debugger
-
 
   dataStoreTypes.forEach((currentDataStoreType) => {
-    describe.only(`CRUD Entity - ${currentDataStoreType}`, () => {
+    describe(`CRUD Entity - ${currentDataStoreType}`, () => {
       const textFieldName = Constants.TextFieldName;
       const numberFieldName = Constants.NumberFieldName;
       const arrayFieldName = Constants.ArrayFieldName;
@@ -25,7 +23,6 @@ function testFunc() {
         utilities.cleanUpAppData(collectionName, createdUserIds)
           .then(() => Kinvey.User.signup())
           .then((user) => {
-            done(new Error(JSON.stringify(externalConfig)));
             createdUserIds.push(user.data._id);
             // store for setup
             networkStore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
