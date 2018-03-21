@@ -137,25 +137,32 @@ export class ProjectDataService implements IProjectDataService {
 				image.path = path.join(dirPath, image.filename);
 			}
 
-			if (image.size) {
-				// size is basically <width>x<height>
-				const [width, height] = image.size.toString().split(AssetConstants.sizeDelimiter);
-				if (width && height) {
-					image.width = +width;
-					image.height = +height;
-				}
-			} else {
-				// Find the image size based on the hardcoded values in the image-definitions.json
-				_.each(imageDefinitions, (assetSubGroup: IAssetItem[]) => {
-					_.each(assetSubGroup, assetItem => {
-						if (assetItem.filename === image.filename && path.basename(assetItem.directory) === path.basename(dirPath)) {
-							image.width = assetItem.width;
-							image.height = assetItem.height;
-							image.size = `${assetItem.width}${AssetConstants.sizeDelimiter}${assetItem.height}`;
+			// Find the image size based on the hardcoded values in the image-definitions.json
+			_.each(imageDefinitions, (assetSubGroup: IAssetItem[]) => {
+				const assetItem = _.find(assetSubGroup, assetElement =>
+					assetElement.filename === image.filename && path.basename(assetElement.directory) === path.basename(dirPath)
+				);
+
+				if (assetItem) {
+					if (image.size) {
+						// size is basically <width>x<height>
+						const [width, height] = image.size.toString().split(AssetConstants.sizeDelimiter);
+						if (width && height) {
+							image.width = +width;
+							image.height = +height;
 						}
-					});
-				});
-			}
+					}
+
+					if (!image.width || !image.height) {
+						image.width = assetItem.width;
+						image.height = assetItem.height;
+						image.size = image.size || `${assetItem.width}${AssetConstants.sizeDelimiter}${assetItem.height}`;
+					}
+
+					// break each
+					return false;
+				}
+			});
 		});
 
 		return content;

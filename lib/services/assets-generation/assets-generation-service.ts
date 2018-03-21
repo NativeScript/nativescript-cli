@@ -1,6 +1,7 @@
 import * as Jimp from "jimp";
 import * as Color from "color";
 import { exported } from "../../common/decorators";
+import { AssetConstants } from "../../constants";
 
 export const enum Operations {
 	OverlayWith = "overlayWith",
@@ -39,12 +40,12 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 		const assetsStructure = await this.$projectDataService.getAssetsStructure(generationData);
 
 		const assetItems = _(assetsStructure)
-			.filter((assetGroup: IAssetGroup, platform: string) => {
-				return !generationData.platform || platform.toLowerCase() === generationData.platform.toLowerCase();
-			})
+			.filter((assetGroup: IAssetGroup, platform: string) =>
+				!generationData.platform || platform.toLowerCase() === generationData.platform.toLowerCase()
+			)
 			.map((assetGroup: IAssetGroup) =>
 				_.filter(assetGroup, (assetSubGroup: IAssetSubGroup, imageTypeKey: string) =>
-					propertiesToEnumerate.indexOf(imageTypeKey) !== -1 && !assetSubGroup[imageTypeKey]
+					assetSubGroup && propertiesToEnumerate.indexOf(imageTypeKey) !== -1 && assetSubGroup[imageTypeKey]
 				)
 			)
 			.flatten<IAssetSubGroup>()
@@ -55,7 +56,14 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 
 		for (const assetItem of assetItems) {
 			const operation = assetItem.resizeOperation || Operations.Resize;
-			const scale = assetItem.scale || 0.8;
+			let tempScale: number = null;
+			if (assetItem.scale && !_.isNumber(assetItem.scale)) {
+				const splittedElements = `${assetItem.scale}`.split(AssetConstants.sizeDelimiter);
+				tempScale = splittedElements && splittedElements.length && splittedElements[0] && +splittedElements[0];
+			}
+
+			const scale = tempScale || 0.8;
+
 			const outputPath = assetItem.path;
 
 			switch (operation) {
