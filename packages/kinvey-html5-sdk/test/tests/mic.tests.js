@@ -77,7 +77,7 @@ function testFunc() {
     expect(user.client).to.exist;
   };
 
-  const loginFacebook = () => {
+  const addLoginFacebookListener = () => {
     // monkey patch window.open - the function is reset back in the afterEach hook
     window.open = function () {
       const fbPopup = winOpen.apply(this, arguments);
@@ -132,7 +132,7 @@ function testFunc() {
 
 
     it('should login the user, using the default Auth service, which allows refresh tokens', (done) => {
-      loginFacebook();
+      addLoginFacebookListener();
       Kinvey.User.loginWithMIC(redirectUrl)
         .then((user) => {
           validateMICUser(user, true);
@@ -147,7 +147,7 @@ function testFunc() {
     });
 
     it('should login the user, using the specified Auth service, which does not allow refresh tokens', (done) => {
-      loginFacebook();
+      addLoginFacebookListener();
       Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: authServiceId })
         .then((user) => {
           validateMICUser(user, false, true);
@@ -162,7 +162,7 @@ function testFunc() {
     });
 
     it('should refresh an expired access_token and not logout the user', (done) => {
-      loginFacebook();
+      addLoginFacebookListener();
       Kinvey.User.loginWithMIC(redirectUrl)
         .then((user) => {
           expect(user).to.exist;
