@@ -342,13 +342,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const forDevice = !buildConfig || buildConfig.buildForDevice;
-		outputPath = outputPath || (forDevice ? platformData.getDeviceBuildOutputPath(buildConfig) : platformData.emulatorBuildOutputPath || platformData.getDeviceBuildOutputPath(buildConfig));
+		outputPath = outputPath || (forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath);
 		if (!this.$fs.exists(outputPath)) {
 			return true;
 		}
 
-		const packageNames = platformData.getValidPackageNames({ isForDevice: forDevice });
-		const packages = this.getApplicationPackages(outputPath, packageNames);
+		const validBuildOutputData = platformData.getValidBuildOutputData({ isForDevice: forDevice });
+		const packages = this.getApplicationPackages(outputPath, validBuildOutputData);
 		if (packages.length === 0) {
 			return true;
 		}
@@ -450,7 +450,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const deviceBuildInfo: IBuildInfo = await this.getDeviceBuildInfo(device, projectData);
-		const localBuildInfo = this.getBuildInfo(platform, platformData, { buildForDevice: !device.isEmulator, release: release.release }, outputPath);
+		const localBuildInfo = this.getBuildInfo(platform, platformData, { buildForDevice: !device.isEmulator }, outputPath);
 		return !localBuildInfo || !deviceBuildInfo || deviceBuildInfo.buildTime !== localBuildInfo.buildTime;
 	}
 
@@ -561,12 +561,12 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		await this.$devicesService.execute(action, this.getCanExecuteAction(platform, runOptions));
 	}
 
-	private getBuildOutputPath(platform: string, platformData: IPlatformData, options: IShouldInstall): string {
+	private getBuildOutputPath(platform: string, platformData: IPlatformData, options: IBuildForDevice): string {
 		if (platform.toLowerCase() === this.$devicePlatformsConstants.iOS.toLowerCase()) {
-			return options.buildForDevice ? platformData.getDeviceBuildOutputPath(options) : platformData.emulatorBuildOutputPath;
+			return options.buildForDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath;
 		}
 
-		return platformData.getDeviceBuildOutputPath(options);
+		return platformData.deviceBuildOutputPath;
 	}
 
 	private async getDeviceBuildInfoFilePath(device: Mobile.IDevice, projectData: IProjectData): Promise<string> {
@@ -586,7 +586,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	private getBuildInfo(platform: string, platformData: IPlatformData, options: IShouldInstall, buildOutputPath?: string): IBuildInfo {
+	private getBuildInfo(platform: string, platformData: IPlatformData, options: IBuildForDevice, buildOutputPath?: string): IBuildInfo {
 		buildOutputPath = buildOutputPath || this.getBuildOutputPath(platform, platformData, options);
 		const buildInfoFile = path.join(buildOutputPath, buildInfoFileName);
 		if (this.$fs.exists(buildInfoFile)) {
@@ -746,27 +746,50 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return platformData.platformProjectService.isPlatformPrepared(platformData.projectRoot, projectData);
 	}
 
-	private getApplicationPackages(buildOutputPath: string, validPackageNames: string[]): IApplicationPackage[] {
+	private getApplicationPackages(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage[] {
 		// Get latest package` that is produced from build
-		const candidates = this.$fs.readDirectory(buildOutputPath);
-		const packages = _.filter(candidates, candidate => {
-			return _.includes(validPackageNames, candidate);
-		}).map(currentPackage => {
-			currentPackage = path.join(buildOutputPath, currentPackage);
+		let result = this.getApplicationPackagesCore(this.$fs.readDirectory(buildOutputPath).map(filename => path.join(buildOutputPath, filename)), validBuildOutputData.packageNames);
+		if (result) {
+			return result;
+		}
 
-			return {
-				packageName: currentPackage,
-				time: this.$fs.getFsStats(currentPackage).mtime
-			};
-		});
+		const candidates = this.$fs.enumerateFilesInDirectorySync(buildOutputPath);
+		result = this.getApplicationPackagesCore(candidates, validBuildOutputData.packageNames);
+		if (result) {
+			return result;
+		}
 
-		return packages;
+		if (validBuildOutputData.regexes && validBuildOutputData.regexes.length) {
+			return this.createApplicationPackages(candidates.filter(filepath => _.some(validBuildOutputData.regexes, regex => regex.test(path.basename(filepath)))));
+		}
+
+		return [];
 	}
 
-	private getLatestApplicationPackage(buildOutputPath: string, validPackageNames: string[]): IApplicationPackage {
-		let packages = this.getApplicationPackages(buildOutputPath, validPackageNames);
+	private getApplicationPackagesCore(candidates: string[], validPackageNames: string[]): IApplicationPackage[] {
+		const packages = candidates.filter(filePath => _.includes(validPackageNames, path.basename(filePath)));
+		if (packages.length > 0) {
+			return this.createApplicationPackages(packages);
+		}
+
+		return null;
+	}
+
+	private createApplicationPackages(packages: string[]): IApplicationPackage[] {
+		return packages.map(filepath => this.createApplicationPackage(filepath));
+	}
+
+	private createApplicationPackage(packageName: string): IApplicationPackage {
+		return {
+			packageName,
+			time: this.$fs.getFsStats(packageName).mtime
+		};
+	}
+
+	private getLatestApplicationPackage(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage {
+		let packages = this.getApplicationPackages(buildOutputPath, validBuildOutputData);
 		if (packages.length === 0) {
-			const packageExtName = path.extname(validPackageNames[0]);
+			const packageExtName = path.extname(validBuildOutputData.packageNames[0]);
 			this.$errors.fail("No %s found in %s directory", packageExtName, buildOutputPath);
 		}
 
@@ -776,11 +799,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public getLatestApplicationPackageForDevice(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage {
-		return this.getLatestApplicationPackage(outputPath || platformData.getDeviceBuildOutputPath(buildConfig), platformData.getValidPackageNames({ isForDevice: true, isReleaseBuild: buildConfig.release }));
+		return this.getLatestApplicationPackage(outputPath || platformData.deviceBuildOutputPath, platformData.getValidBuildOutputData({ isForDevice: true, isReleaseBuild: buildConfig.release }));
 	}
 
 	public getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage {
-		return this.getLatestApplicationPackage(outputPath || platformData.emulatorBuildOutputPath || platformData.getDeviceBuildOutputPath(buildConfig), platformData.getValidPackageNames({ isForDevice: false, isReleaseBuild: buildConfig.release }));
+		return this.getLatestApplicationPackage(outputPath || platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath, platformData.getValidBuildOutputData({ isForDevice: false, isReleaseBuild: buildConfig.release }));
 	}
 
 	private async updatePlatform(platform: string, version: string, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
@@ -813,7 +836,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		} else {
 			this.$errors.failWithoutHelp("Native Platform cannot be updated.");
 		}
-
 	}
 
 	private async updatePlatformCore(platformData: IPlatformData, updateOptions: IUpdatePlatformOptions, projectData: IProjectData, config: IPlatformOptions): Promise<void> {

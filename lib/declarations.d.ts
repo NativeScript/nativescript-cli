@@ -699,22 +699,16 @@ interface IVersionsService {
 	getRuntimesVersions(): Promise<IVersionInformation[]>;
 
 	/**
-	 * Checks version information about the nativescript components and prints available updates if any.
-	 */
-	checkComponentsForUpdate(): Promise<void>;
-
-	/**
 	 * Gets versions information about all nativescript components.
 	 * @return {Promise<IVersionInformation[]>} The version information.
 	 */
 	getAllComponentsVersions(): Promise<IVersionInformation[]>;
 
 	/**
-	 * Creates table with versions information.
-	 * @param {IVersionInformation[]} The versions information to push in the table.
-	 * @return {any} The created table.
+	 * Checks version information about the nativescript components and prints versions information.
+	 * @return {Promise<void>}
 	 */
-	createTableWithVersionsInformation(versionsInformation: IVersionInformation[]): any;
+	printVersionsInformation(): Promise<void>;
 }
 
 /**

@@ -63,7 +63,6 @@
     "pbxproj-dom": "1.0.11",
     "plist": "1.1.0",
     "plist-merge-patch": "0.1.1",
-    "plistlib": "0.2.1",
     "progress-stream": "1.1.1",
     "properties-parser": "0.2.3",
     "proxy-lib": "0.4.0",

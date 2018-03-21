@@ -24,7 +24,10 @@ export const SRC_DIR = "src";
 export const MAIN_DIR = "main";
 export const ASSETS_DIR = "assets";
 export const MANIFEST_FILE_NAME = "AndroidManifest.xml";
+export const APP_GRADLE_FILE_NAME = "app.gradle";
+export const INFO_PLIST_FILE_NAME = "Info.plist";
 export const INCLUDE_GRADLE_NAME = "include.gradle";
+export const BUILD_XCCONFIG_FILE_NAME = "build.xcconfig";
 export const BUILD_DIR = "build";
 export const OUTPUTS_DIR = "outputs";
 export const APK_DIR = "apk";
@@ -33,6 +36,7 @@ export const CONFIG_NS_FILE_NAME = "nsconfig.json";
 export const CONFIG_NS_APP_RESOURCES_ENTRY = "appResourcesPath";
 export const CONFIG_NS_APP_ENTRY = "appPath";
 export const DEPENDENCIES_JSON_NAME = "dependencies.json";
+export const APK_EXTENSION_NAME = ".apk";
 
 export class PackageVersion {
 	static NEXT = "next";
@@ -139,3 +143,8 @@ export const enum BuildStates {
 }
 
 export const NATIVESCRIPT_CLOUD_EXTENSION_NAME = "nativescript-cloud";
+
+/**
+ * Used in ProjectDataService to concatenate the names of the properties inside nativescript key of package.json.
+ */
+export const NATIVESCRIPT_PROPS_INTERNAL_DELIMITER = "**|__**";

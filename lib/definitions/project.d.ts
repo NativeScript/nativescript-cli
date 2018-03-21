@@ -69,6 +69,12 @@ interface IProjectData extends IProjectDir {
 	appResourcesDirectoryPath: string;
 	projectType: string;
 	nsConfig: INsConfig;
+	androidManifestPath: string;
+	appGradlePath: string;
+	gradleFilesDirectoryPath: string;
+	infoPlistPath: string;
+	buildXcconfigPath: string;
+
 	/**
 	 * Initializes project data with the given project directory. If none supplied defaults to --path option or cwd.
 	 * @param {string} projectDir Project root directory.
@@ -140,10 +146,6 @@ interface IPlatformProjectServiceBase {
 
 interface IBuildForDevice {
 	buildForDevice: boolean;
-}
-
-interface IShouldInstall extends IBuildForDevice, IRelease {
-	
 }
 
 interface INativePrepare {

@@ -1,5 +1,5 @@
 import * as path from "path";
-import { NODE_MODULES_FOLDER_NAME, NativePlatformStatus, PACKAGE_JSON_FILE_NAME } from "../constants";
+import { NODE_MODULES_FOLDER_NAME, NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME } from "../constants";
 import { getHash } from "../common/helpers";
 
 const prepareInfoFileName = ".nsprepareinfo";
@@ -77,12 +77,12 @@ export class ProjectChangesService implements IProjectChangesService {
 			if (platform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
 				this._changesInfo.configChanged = this.filesChanged([path.join(platformResourcesDir, platformData.configurationFileName),
 				path.join(platformResourcesDir, "LaunchScreen.storyboard"),
-				path.join(platformResourcesDir, "build.xcconfig")
+				path.join(platformResourcesDir, BUILD_XCCONFIG_FILE_NAME)
 				]);
 			} else {
 				this._changesInfo.configChanged = this.filesChanged([
 					path.join(platformResourcesDir, platformData.configurationFileName),
-					path.join(platformResourcesDir, "app.gradle")
+					path.join(platformResourcesDir, APP_GRADLE_FILE_NAME)
 				]);
 			}
 		}

@@ -12,6 +12,7 @@ import { StaticConfig } from "../lib/config";
 import { MessagesService } from "../lib/common/services/messages-service";
 import { Yok } from '../lib/common/yok';
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
+import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import * as stubs from './stubs';
 import * as path from "path";
 import * as temp from "temp";
@@ -39,6 +40,10 @@ function createTestInjector(): IInjector {
 	});
 	testInjector.register("staticConfig", StaticConfig);
 	testInjector.register("settingsService", SettingsService);
+	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
+	testInjector.register("androidResourcesMigrationService", {
+		hasMigrated: () => true
+	});
 
 	return testInjector;
 }

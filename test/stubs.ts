@@ -258,6 +258,12 @@ export class ProjectDataStub implements IProjectData {
 	devDependencies: IStringDictionary;
 	projectType: string;
 	appResourcesDirectoryPath: string;
+	public androidManifestPath: string;
+	public infoPlistPath: string;
+	public appGradlePath: string;
+	public gradleFilesDirectoryPath: string;
+	public buildXcconfigPath: string;
+
 	public initializeProjectData(projectDir?: string): void {
 		this.projectDir = this.projectDir || projectDir;
 	}
@@ -304,10 +310,8 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 			platformProjectService: this,
 			emulatorServices: undefined,
 			projectRoot: "",
-			getDeviceBuildOutputPath: (buildTypeOption: IRelease) => {
-				return "";
-			},
-			getValidPackageNames: (buildOptions: { isForDevice?: boolean, isReleaseBuild?: boolean }) => [],
+			deviceBuildOutputPath: "",
+			getValidBuildOutputData: (buildOptions: IBuildOutputOptions) => ({ packageNames: [] }),
 			frameworkFilesExtensions: [],
 			appDestinationDirectoryPath: "",
 			relativeToFrameworkConfigurationFilePath: "",
@@ -417,10 +421,8 @@ export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
 			projectRoot: "",
 			normalizedPlatformName: "",
 			appDestinationDirectoryPath: "",
-			getDeviceBuildOutputPath: (buildTypeOption: IRelease) => {
-				return "";
-			},
-			getValidPackageNames: (buildOptions: { isForDevice?: boolean, isReleaseBuild?: boolean }) => [],
+			deviceBuildOutputPath: "",
+			getValidBuildOutputData: (buildOptions: IBuildOutputOptions) => ({ packageNames: []}),
 			frameworkFilesExtensions: [],
 			relativeToFrameworkConfigurationFilePath: "",
 			fastLivesyncFileExtensions: []

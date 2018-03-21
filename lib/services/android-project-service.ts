@@ -83,18 +83,19 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				platformProjectService: this,
 				emulatorServices: this.$androidEmulatorServices,
 				projectRoot: projectRoot,
-				getDeviceBuildOutputPath: (options: IRelease): string => {
-					return this.getDeviceBuildOutputPath(path.join(...deviceBuildOutputArr), projectData, options);
-				},
-				getValidPackageNames: (buildOptions: { isReleaseBuild?: boolean, isForDevice?: boolean }): string[] => {
+				deviceBuildOutputPath: path.join(...deviceBuildOutputArr),
+				getValidBuildOutputData: (buildOptions: IBuildOutputOptions): IValidBuildOutputData => {
 					const buildMode = buildOptions.isReleaseBuild ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
 
-					return [
-						`${packageName}-${buildMode}.apk`,
-						`${projectData.projectName}-${buildMode}.apk`,
-						`${projectData.projectName}.apk`,
-						`app-${buildMode}.apk`
-					];
+					return {
+						packageNames: [
+							`${packageName}-${buildMode}${constants.APK_EXTENSION_NAME}`,
+							`${projectData.projectName}-${buildMode}${constants.APK_EXTENSION_NAME}`,
+							`${projectData.projectName}${constants.APK_EXTENSION_NAME}`,
+							`${constants.APP_FOLDER_NAME}-${buildMode}${constants.APK_EXTENSION_NAME}`
+						],
+						regexes: [new RegExp(`${constants.APP_FOLDER_NAME}-.*-(${Configurations.Debug}|${Configurations.Release})${constants.APK_EXTENSION_NAME}`, "i"), new RegExp(`${packageName}-.*-(${Configurations.Debug}|${Configurations.Release})${constants.APK_EXTENSION_NAME}`, "i")]
+					};
 				},
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
 				configurationFileName: constants.MANIFEST_FILE_NAME,
@@ -106,23 +107,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		return this._platformData;
-	}
-
-	private getDeviceBuildOutputPath(currentPath: string, projectData: IProjectData, options: IRelease): string {
-		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, constants.TNS_ANDROID_RUNTIME_NAME);
-		const platformVersion = currentPlatformData && currentPlatformData[constants.VERSION_STRING];
-		const buildType = options.release === true ? "release" : "debug";
-		const normalizedPath = path.join(currentPath, buildType);
-
-		if (semver.valid(platformVersion)) {
-			const gradleAndroidPluginVersion3xx = "4.0.0";
-			const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
-			if (semver.lt(normalizedPlatformVersion, gradleAndroidPluginVersion3xx)) {
-				return currentPath;
-			}
-		}
-
-		return normalizedPath;
 	}
 
 	// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
@@ -272,11 +256,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const gradleSettingsFilePath = path.join(this.getPlatformData(projectData).projectRoot, "settings.gradle");
 		shell.sed('-i', /__PROJECT_NAME__/, this.getProjectNameFromId(projectData), gradleSettingsFilePath);
 
-		// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
-		const userAppGradleFilePath = path.join(projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, "app.gradle");
-
 		try {
-			shell.sed('-i', /__PACKAGE__/, projectData.projectId, userAppGradleFilePath);
+			// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
+			shell.sed('-i', /__PACKAGE__/, projectData.projectId, projectData.appGradlePath);
 		} catch (e) {
 			this.$logger.warn(`\n${e}.\nCheck if you're using an outdated template and update it.`);
 		}
@@ -536,7 +518,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		// Copy include.gradle file
-		const includeGradleFilePath = path.join(pluginPlatformsFolderPath, "include.gradle");
+		const includeGradleFilePath = path.join(pluginPlatformsFolderPath, constants.INCLUDE_GRADLE_NAME);
 		if (this.$fs.exists(includeGradleFilePath)) {
 			shell.cp("-f", includeGradleFilePath, pluginConfigurationDirectoryPath);
 		}

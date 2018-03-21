@@ -47,7 +47,7 @@ class DoctorService implements IDoctorService {
 		}
 
 		try {
-			await this.$versionsService.checkComponentsForUpdate();
+			await this.$versionsService.printVersionsInformation();
 		} catch (err) {
 			this.$logger.error("Cannot get the latest versions information from npm. Please try again later.");
 		}
@@ -71,7 +71,6 @@ class DoctorService implements IDoctorService {
 
 	public async canExecuteLocalBuild(platform?: string): Promise<boolean> {
 		const infos = await doctor.getInfos({ platform });
-		this.printInfosCore(infos);
 
 		const warnings = this.filterInfosByType(infos, constants.WARNING_TYPE_NAME);
 		if (warnings.length > 0) {

@@ -2,34 +2,40 @@ import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import { ProjectDataService } from "../../lib/services/project-data-service";
 import { LoggerStub } from "../stubs";
+import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER } from '../../lib/constants';
 
 const CLIENT_NAME_KEY_IN_PROJECT_FILE = "nativescript";
 
-const testData: any = [{
-	"propertyValue": 1,
-	"propertyName": "root",
-	"description": "returns correct result when a single propertyName is passed and the value of it is number"
-},
-{
-	"propertyValue": "expectedData",
-	"propertyName": "root",
-	"description": "returns correct result when a single propertyName is passed and the value of it is string"
-},
-{
-	"propertyValue": "expectedData",
-	"propertyName": "root.prop1",
-	"description": "returns correct result when inner propertyName is passed and the value of it is string"
-},
-{
-	"propertyValue": 1234,
-	"propertyName": "root.prop1",
-	"description": "returns correct result when inner propertyName is passed and the value of it is number"
-},
-{
-	"propertyValue": "expectedData",
-	"propertyName": "root.prop1.prop2.prop3.prop4",
-	"description": "returns correct result when really inner propertyName is passed and the value of it is string"
-}
+const getPropertyName = (props: string[]): string => {
+	return props.join(NATIVESCRIPT_PROPS_INTERNAL_DELIMITER);
+};
+
+const testData: any = [
+	{
+		"propertyValue": 1,
+		"propertyName": "root",
+		"description": "returns correct result when a single propertyName is passed and the value of it is number"
+	},
+	{
+		"propertyValue": "expectedData",
+		"propertyName": "root",
+		"description": "returns correct result when a single propertyName is passed and the value of it is string"
+	},
+	{
+		"propertyValue": "expectedData",
+		"propertyName": getPropertyName(["root", "prop1"]),
+		"description": "returns correct result when inner propertyName is passed and the value of it is string"
+	},
+	{
+		"propertyValue": 1234,
+		"propertyName": getPropertyName(["root", "prop1"]),
+		"description": "returns correct result when inner propertyName is passed and the value of it is number"
+	},
+	{
+		"propertyValue": "expectedData",
+		"propertyName": getPropertyName(["root", "prop1", "prop2", "prop3", "prop4"]),
+		"description": "returns correct result when really inner propertyName is passed and the value of it is string"
+	}
 ];
 
 const createTestInjector = (readTextData?: string): IInjector => {
@@ -60,7 +66,7 @@ const createTestInjector = (readTextData?: string): IInjector => {
 
 describe("projectDataService", () => {
 	const generateJsonDataFromTestData = (currentTestData: any, skipNativeScriptKey?: boolean) => {
-		const props = currentTestData.propertyName.split(".");
+		const props = currentTestData.propertyName.split(NATIVESCRIPT_PROPS_INTERNAL_DELIMITER);
 		const data: any = {};
 		let currentData: any = skipNativeScriptKey ? data : (data[CLIENT_NAME_KEY_IN_PROJECT_FILE] = {});
 
@@ -140,7 +146,7 @@ describe("projectDataService", () => {
 			};
 
 			const projectDataService: IProjectDataService = testInjector.resolve("projectDataService");
-			projectDataService.setNSValue("projectDir", "root.id", "2");
+			projectDataService.setNSValue("projectDir", getPropertyName(["root", "id"]), "2");
 			const expectedData = _.cloneDeep(initialData);
 			expectedData[CLIENT_NAME_KEY_IN_PROJECT_FILE].root.id = "2";
 			assert.isTrue(!!dataPassedToWriteJson[CLIENT_NAME_KEY_IN_PROJECT_FILE], "Data passed to write JSON must contain nativescript key.");
@@ -154,7 +160,7 @@ describe("projectDataService", () => {
 	describe("removeNSProperty", () => {
 
 		const generateExpectedDataFromTestData = (currentTestData: any) => {
-			const props = currentTestData.propertyName.split(".");
+			const props = currentTestData.propertyName.split(NATIVESCRIPT_PROPS_INTERNAL_DELIMITER);
 			props.splice(props.length - 1, 1);
 
 			const data: any = {};
@@ -207,7 +213,7 @@ describe("projectDataService", () => {
 			};
 
 			const projectDataService: IProjectDataService = testInjector.resolve("projectDataService");
-			projectDataService.removeNSProperty("projectDir", "root.id");
+			projectDataService.removeNSProperty("projectDir", getPropertyName(["root", "id"]));
 			assert.deepEqual(dataPassedToWriteJson, { nativescript: { root: { constantItem: "myValue" } } });
 		});
 	});
@@ -215,7 +221,7 @@ describe("projectDataService", () => {
 	describe("removeDependency", () => {
 		it("removes specified dependency from project file", () => {
 			const currentTestData = {
-				propertyName: "dependencies.myDeps",
+				propertyName: getPropertyName(["dependencies", "myDeps"]),
 				propertyValue: "1.0.0"
 			};
 

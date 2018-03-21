@@ -43,13 +43,20 @@ export class ProjectData implements IProjectData {
 	public dependencies: any;
 	public devDependencies: IStringDictionary;
 	public projectType: string;
+	public androidManifestPath: string;
+	public infoPlistPath: string;
+	public appGradlePath: string;
+	public gradleFilesDirectoryPath: string;
+	public buildXcconfigPath: string;
 
 	constructor(private $fs: IFileSystem,
 		private $errors: IErrors,
 		private $projectHelper: IProjectHelper,
 		private $staticConfig: IStaticConfig,
 		private $options: IOptions,
-		private $logger: ILogger) { }
+		private $logger: ILogger,
+		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
 
 	public initializeProjectData(projectDir?: string): void {
 		projectDir = projectDir || this.$projectHelper.projectDir;
@@ -108,11 +115,25 @@ export class ProjectData implements IProjectData {
 			this.nsConfig = nsConfig;
 			this.appDirectoryPath = this.getAppDirectoryPath();
 			this.appResourcesDirectoryPath = this.getAppResourcesDirectoryPath();
+			this.androidManifestPath = this.getPathToAndroidManifest(this.appResourcesDirectoryPath);
+			this.gradleFilesDirectoryPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android);
+			this.appGradlePath = path.join(this.gradleFilesDirectoryPath, constants.APP_GRADLE_FILE_NAME);
+			this.infoPlistPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.INFO_PLIST_FILE_NAME);
+			this.buildXcconfigPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.BUILD_XCCONFIG_FILE_NAME);
 
 			return;
 		}
 
 		this.errorInvalidProject(projectDir);
+	}
+
+	private getPathToAndroidManifest(appResourcesDir: string): string {
+		const androidDirPath = path.join(appResourcesDir, this.$devicePlatformsConstants.Android);
+		const androidManifestDir = this.$androidResourcesMigrationService.hasMigrated(appResourcesDir) ?
+			path.join(androidDirPath, constants.SRC_DIR, constants.MAIN_DIR) :
+			androidDirPath;
+
+		return path.join(androidManifestDir, constants.MANIFEST_FILE_NAME);
 	}
 
 	private errorInvalidProject(projectDir: string): void {
