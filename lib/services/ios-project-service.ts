@@ -1241,7 +1241,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 		// Set Entitlements Property to point to default file if not set explicitly by the user.
 		const entitlementsPropertyValue = this.$xCConfigService.readPropertyValue(pluginsXcconfigFilePath, constants.CODE_SIGN_ENTITLEMENTS);
-		if (entitlementsPropertyValue === null) {
+		if (entitlementsPropertyValue === null && this.$fs.exists(this.$iOSEntitlementsService.getPlatformsEntitlementsPath(projectData))) {
 			temp.track();
 			const tempEntitlementsDir = temp.mkdirSync("entitlements");
 			const tempEntitlementsFilePath = path.join(tempEntitlementsDir, "set-entitlements.xcconfig");
