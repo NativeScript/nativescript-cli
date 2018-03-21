@@ -1,8 +1,8 @@
 <% if (isJekyll) { %>---
 title: tns resources update
-position: 9
+position: 10
 ---<% } %>
-#tns resources update
+# tns resources update
 ==========
 
 Usage | Synopsis
@@ -11,7 +11,7 @@ Usage | Synopsis
 `$ tns resources update android` | Updates the App_Resources/Android's folder structure.
 
 Updates the App_Resources/<platform>'s internal folder structure to conform to that of an Android Studio project. Android resource files and directories will be located at the following paths:
-- `drawable-*`, `values`, `raw`, etc. can be found at  `App_Resources/Android/src/main/res` 
+- `drawable-*`, `values`, `raw`, etc. can be found at  `App_Resources/Android/src/main/res`
 - `AndroidManifest.xml` can be found at `App_Resources/Android/src/main/AndroidManifest.xml`
 - Java source files can be dropped in at `App_Resources/Android/src/main/java` after creating the proper package subdirectory structure
 - Additional arbitrary assets can be dropped in at `App_Resources/Android/src/main/assets`
