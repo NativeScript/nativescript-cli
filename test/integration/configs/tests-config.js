@@ -1,6 +1,8 @@
 
 const testsConfig = {
-  collectionName: 'Books'
+  collectionName: 'Books',
+  fbEmail: process.env.FACEBOOK_EMAIL,
+  fbPassword: process.env.FACEBOOK_PASSWORD
 };
 
 const appCredentials = {

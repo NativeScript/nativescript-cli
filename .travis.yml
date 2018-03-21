@@ -5,6 +5,8 @@ env:
     - INTEGRATION_TESTS_CORDOVA_VERSION='8.0.0'
     - UNIT_TESTS_NODEJS_VERSION='9'
     - RUN_INTEGRATION_TESTS_FILE_LOCATION='./test/integration/run-tests'
+    - FACEBOOK_EMAIL='system.everlive@gmail.com'
+    - FACEBOOK_PASSWORD='test_pass'
 
 matrix:
   include:

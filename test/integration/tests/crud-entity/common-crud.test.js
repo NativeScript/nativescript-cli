@@ -3,9 +3,11 @@ function testFunc() {
   const invalidQueryMessage = 'Invalid query. It must be an instance of the Query class.';
   const notFoundErrorName = 'NotFoundError';
   const { collectionName } = externalConfig;
+  debugger
+  console.log(externalConfig);
 
   dataStoreTypes.forEach((currentDataStoreType) => {
-    describe(`CRUD Entity - ${currentDataStoreType}`, () => {
+    describe.only(`CRUD Entity - ${currentDataStoreType}`, () => {
       const textFieldName = Constants.TextFieldName;
       const numberFieldName = Constants.NumberFieldName;
       const arrayFieldName = Constants.ArrayFieldName;
