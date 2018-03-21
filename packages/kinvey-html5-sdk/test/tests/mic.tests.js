@@ -174,6 +174,25 @@ function testFunc() {
           done();
         });
     });
+
+    it('should refresh an expired access_token and not logout the user', (done) => {
+      loginFacebook();
+      Kinvey.User.loginWithMIC(redirectUrl)
+        .then((user) => {
+          expect(user).to.exist;
+          createdUserIds.push(user.data._id);
+
+          // the access_token ttl is set to 2 seconds on the server, so the test waits for 3 seconds
+          setTimeout(() => {
+            return networkstore.find().toPromise()
+              .then((result) => {
+                expect(result).to.be.an.empty.array;
+                done();
+              })
+              .catch(done);
+          }, 3000);
+        }).catch(done);
+    });
   });
 }
 
