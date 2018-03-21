@@ -712,7 +712,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 		}
 
-		if (platformVersion === constants.PackageVersion.NEXT || platformVersion === constants.PackageVersion.LATEST) {
+		if (platformVersion === constants.PackageVersion.NEXT || platformVersion === constants.PackageVersion.LATEST || platformVersion === constants.PackageVersion.RC) {
 			return true;
 		}
 
