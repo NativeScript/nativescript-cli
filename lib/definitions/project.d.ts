@@ -146,6 +146,7 @@ interface IAssetItem {
 interface IAssetSubGroup {
 	images: IAssetItem[];
 	info?: { version: string, author: string };
+	[imageType: string]: any;
 }
 
 interface IAssetGroup {
@@ -159,7 +160,18 @@ interface IAssetGroup {
 interface IAssetsStructure {
 	ios: IAssetGroup;
 	android: IAssetGroup;
-	[platform: string]: IAssetGroup;
+}
+
+interface IImageDefinitionGroup {
+	icons: IAssetItem[];
+	splashBackgrounds: IAssetItem[];
+	splashCenterImages: IAssetItem[];
+	splashImages?: IAssetItem[];
+}
+
+interface IImageDefinitionsStructure {
+	ios: IImageDefinitionGroup;
+	android: IImageDefinitionGroup;
 }
 
 /**

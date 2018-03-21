@@ -42,7 +42,7 @@ export class GenerateSplashScreensCommand extends GenerateCommandBase implements
 			super($options, $injector, $projectData, $stringParameterBuilder, $assetsGenerationService);
 	}
 
-	protected async generate(imagePath: string, resourcesPath: string, background?: string): Promise<void> {
+	protected async generate(imagePath: string, background?: string): Promise<void> {
 		await this.$assetsGenerationService.generateSplashScreens({ imagePath, background, projectDir: this.$projectData.projectDir });
 	}
 }

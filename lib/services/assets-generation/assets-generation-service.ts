@@ -8,12 +8,8 @@ export const enum Operations {
 	Resize = "resize"
 }
 
-interface IGenerateImagesData extends ISplashesGenerationData {
-	propertiesToEnumerate: string[];
-}
-
 export class AssetsGenerationService implements IAssetsGenerationService {
-	private get propertiesToEnumerate(): any {
+	private get propertiesToEnumerate(): IDictionary<string[]> {
 		return {
 			icon: ["icons"],
 			splash: ["splashBackgrounds", "splashCenterImages", "splashImages"]
@@ -27,65 +23,56 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 	@exported("assetsGenerationService")
 	public async generateIcons(resourceGenerationData: IResourceGenerationData): Promise<void> {
 		this.$logger.info("Generating icons ...");
-		const generationData = (<IGenerateImagesData>resourceGenerationData);
-		generationData.propertiesToEnumerate = this.propertiesToEnumerate.icon;
-		await this.generateImagesForDefinitions(generationData);
+		await this.generateImagesForDefinitions(resourceGenerationData, this.propertiesToEnumerate.icon);
 		this.$logger.info("Icons generation completed.");
 	}
 
 	@exported("assetsGenerationService")
 	public async generateSplashScreens(splashesGenerationData: ISplashesGenerationData): Promise<void> {
 		this.$logger.info("Generating splash screens ...");
-		const generationData = (<IGenerateImagesData>splashesGenerationData);
-		generationData.propertiesToEnumerate = this.propertiesToEnumerate.splash;
-		await this.generateImagesForDefinitions(generationData);
+		await this.generateImagesForDefinitions(splashesGenerationData, this.propertiesToEnumerate.splash);
 		this.$logger.info("Splash screens generation completed.");
 	}
 
-	private async generateImagesForDefinitions(data: IGenerateImagesData): Promise<void> {
-		data.background = data.background || "white";
-		const assetsStructure = await this.$projectDataService.getAssetsStructure({ projectDir: data.projectDir });
+	private async generateImagesForDefinitions(generationData: ISplashesGenerationData, propertiesToEnumerate: string[]): Promise<void> {
+		generationData.background = generationData.background || "white";
+		const assetsStructure = await this.$projectDataService.getAssetsStructure(generationData);
 
-		for (const platform in assetsStructure) {
-			if (data.platform && platform.toLowerCase() !== data.platform.toLowerCase()) {
-				continue;
-			}
+		const assetItems = _(assetsStructure)
+			.filter((assetGroup: IAssetGroup, platform: string) => {
+				return !generationData.platform || platform.toLowerCase() === generationData.platform.toLowerCase();
+			})
+			.map((assetGroup: IAssetGroup) =>
+				_.filter(assetGroup, (assetSubGroup: IAssetSubGroup, imageTypeKey: string) =>
+					propertiesToEnumerate.indexOf(imageTypeKey) !== -1 && !assetSubGroup[imageTypeKey]
+				)
+			)
+			.flatten<IAssetSubGroup>()
+			.map(assetSubGroup => assetSubGroup.images)
+			.flatten<IAssetItem>()
+			.filter(assetItem => !!assetItem.filename)
+			.value();
 
-			const platformAssetsStructure = assetsStructure[platform];
+		for (const assetItem of assetItems) {
+			const operation = assetItem.resizeOperation || Operations.Resize;
+			const scale = assetItem.scale || 0.8;
+			const outputPath = assetItem.path;
 
-			for (const imageTypeKey in platformAssetsStructure) {
-				if (data.propertiesToEnumerate.indexOf(imageTypeKey) === -1 || !platformAssetsStructure[imageTypeKey]) {
-					continue;
-				}
-
-				const imageType = platformAssetsStructure[imageTypeKey];
-
-				for (const assetItem of imageType.images) {
-					if (!assetItem.filename) {
-						continue;
-					}
-
-					const operation = assetItem.resizeOperation || Operations.Resize;
-					const scale = assetItem.scale || 0.8;
-					const outputPath = assetItem.path;
-
-					switch (operation) {
-						case Operations.OverlayWith:
-							const imageResize = Math.round(Math.min(assetItem.width, assetItem.height) * scale);
-							const image = await this.resize(data.imagePath, imageResize, imageResize);
-							await this.generateImage(data.background, assetItem.width, assetItem.height, outputPath, image);
-							break;
-						case Operations.Blank:
-							await this.generateImage(data.background, assetItem.width, assetItem.height, outputPath);
-							break;
-						case Operations.Resize:
-							const resizedImage = await this.resize(data.imagePath, assetItem.width, assetItem.height);
-							resizedImage.write(outputPath);
-							break;
-						default:
-							throw new Error(`Invalid image generation operation: ${operation}`);
-					}
-				}
+			switch (operation) {
+				case Operations.OverlayWith:
+					const imageResize = Math.round(Math.min(assetItem.width, assetItem.height) * scale);
+					const image = await this.resize(generationData.imagePath, imageResize, imageResize);
+					await this.generateImage(generationData.background, assetItem.width, assetItem.height, outputPath, image);
+					break;
+				case Operations.Blank:
+					await this.generateImage(generationData.background, assetItem.width, assetItem.height, outputPath);
+					break;
+				case Operations.Resize:
+					const resizedImage = await this.resize(generationData.imagePath, assetItem.width, assetItem.height);
+					resizedImage.write(outputPath);
+					break;
+				default:
+					throw new Error(`Invalid image generation operation: ${operation}`);
 			}
 		}
 	}

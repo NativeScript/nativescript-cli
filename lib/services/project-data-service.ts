@@ -1,7 +1,7 @@
 import * as path from "path";
 import { ProjectData } from "../project-data";
 import { exported } from "../common/decorators";
-import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, AssetConstants, SRC_DIR, RESOURCES_DIR, MAIN_DIR, CLI_RESOURCES_DIR_NAME } from '../constants';
+import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, AssetConstants, SRC_DIR, RESOURCES_DIR, MAIN_DIR, CLI_RESOURCES_DIR_NAME } from "../constants";
 
 interface IProjectFileData {
 	projectData: any;
@@ -116,7 +116,7 @@ export class ProjectDataService implements IProjectDataService {
 		};
 	}
 
-	private getImageDefinitions(): any {
+	private getImageDefinitions(): IImageDefinitionsStructure {
 		const pathToImageDefinitions = path.join(__dirname, "..", "..", CLI_RESOURCES_DIR_NAME, AssetConstants.assets, AssetConstants.imageDefinitionsFileName);
 		const imageDefinitions = this.$fs.readJson(pathToImageDefinitions);
 
@@ -129,36 +129,34 @@ export class ProjectDataService implements IProjectDataService {
 
 		const imageDefinitions = this.getImageDefinitions().ios;
 
-		if (content && content.images) {
-			_.each(content.images, image => {
-				// In some cases the image may not be available, it will just be described.
-				// When this happens, the filename will be empty.
-				// So we'll keep the path empty as well.
-				if (image.filename) {
-					image.path = path.join(dirPath, image.filename);
-				}
+		_.each(content && content.images, image => {
+			// In some cases the image may not be available, it will just be described.
+			// When this happens, the filename will be empty.
+			// So we'll keep the path empty as well.
+			if (image.filename) {
+				image.path = path.join(dirPath, image.filename);
+			}
 
-				if (image.size) {
-					// size is basically <width>x<height>
-					const [width, height] = image.size.toString().split(AssetConstants.sizeDelimiter);
-					if (width && height) {
-						image.width = +width;
-						image.height = +height;
-					}
-				} else {
-					// Find the image size based on the hardcoded values in the image-definitions.json
-					_.each(imageDefinitions, (assetSubGroup: IAssetItem[]) => {
-						_.each(assetSubGroup, assetItem => {
-							if (assetItem.filename === image.filename && path.basename(assetItem.directory) === path.basename(dirPath)) {
-								image.width = assetItem.width;
-								image.height = assetItem.height;
-								image.size = `${assetItem.width}${AssetConstants.sizeDelimiter}${assetItem.height}`;
-							}
-						});
-					});
+			if (image.size) {
+				// size is basically <width>x<height>
+				const [width, height] = image.size.toString().split(AssetConstants.sizeDelimiter);
+				if (width && height) {
+					image.width = +width;
+					image.height = +height;
 				}
-			});
-		}
+			} else {
+				// Find the image size based on the hardcoded values in the image-definitions.json
+				_.each(imageDefinitions, (assetSubGroup: IAssetItem[]) => {
+					_.each(assetSubGroup, assetItem => {
+						if (assetItem.filename === image.filename && path.basename(assetItem.directory) === path.basename(dirPath)) {
+							image.width = assetItem.width;
+							image.height = assetItem.height;
+							image.size = `${assetItem.width}${AssetConstants.sizeDelimiter}${assetItem.height}`;
+						}
+					});
+				});
+			}
+		});
 
 		return content;
 	}

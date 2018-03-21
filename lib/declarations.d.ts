@@ -463,7 +463,7 @@ interface IOptions extends ICommonOptions, IBundleString, IPlatformTemplate, IEm
 	liveEdit: boolean;
 	chrome: boolean;
 	inspector: boolean; // the counterpart to --chrome
-	background: string
+	background: string;
 }
 
 interface IEnvOptions {
