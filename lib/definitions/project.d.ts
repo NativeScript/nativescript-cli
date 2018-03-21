@@ -124,10 +124,29 @@ interface IProjectDataService {
 
 	getProjectData(projectDir?: string): IProjectData;
 
+	/**
+	 * Gives information about the whole assets structure for both iOS and Android.
+	 * For each of the platforms, the returned object will contain icons, splashBackgrounds, splashCenterImages and splashImages (only for iOS).
+	 * @param {IProjectDir} opts Object with a single property - projectDir. This is the root directory where NativeScript project is located.
+	 * @returns {Promise<IAssetsStructure>} An object describing the current asset structure.
+	 */
 	getAssetsStructure(opts: IProjectDir): Promise<IAssetsStructure>;
 
+
+	/**
+	 * Gives information about the whole assets structure for iOS.
+	 * The returned object will contain icons, splashBackgrounds, splashCenterImages and splashImages.
+	 * @param {IProjectDir} opts Object with a single property - projectDir. This is the root directory where NativeScript project is located.
+	 * @returns {Promise<IAssetGroup>} An object describing the current asset structure for iOS.
+	 */
 	getIOSAssetsStructure(opts: IProjectDir): Promise<IAssetGroup>;
 
+	/**
+	 * Gives information about the whole assets structure for Android.
+	 * The returned object will contain icons, splashBackgrounds and splashCenterImages.
+	 * @param {IProjectDir} opts Object with a single property - projectDir. This is the root directory where NativeScript project is located.
+	 * @returns {Promise<IAssetGroup>} An object describing the current asset structure for Android.
+	 */
 	getAndroidAssetsStructure(opts: IProjectDir): Promise<IAssetGroup>;
 }
 
