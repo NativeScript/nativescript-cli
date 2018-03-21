@@ -8,7 +8,11 @@ import { ChildProcess } from "../lib/wrappers/child-process";
 const JavaHomeName = "JAVA_HOME";
 const AndroidHomeName = "ANDROID_HOME";
 const PROGRAM_FILES = "ProgramFiles";
+const PROGRAM_FILES_X86 = "ProgramFiles(x86)";
+const LOCAL_APP_DATA = "LOCALAPPDATA";
 const PROGRAM_FILES_ENV_PATH = "C:\\Program Files";
+const PROGRAM_FILEX_X86_ENV_PATH = "C:\\Program Files(x86)";
+const LOCAL_APP_DATA_ENV_PATH = "C:\\username\\localappdata";
 
 interface IChildProcessResultDescription {
 	result?: any;
@@ -145,7 +149,7 @@ function mockSysInfo(childProcessResult: IChildProcessResults, hostInfoOptions?:
 	};
 
 	const fileSystem: any = {
-		exists: () => Promise.resolve((fileSystemOptions || {}).existsResult),
+		exists: () => (fileSystemOptions || {}).existsResult,
 		extractZip: () => Promise.resolve(),
 		readDirectory: () => Promise.resolve([])
 	};
@@ -271,7 +275,9 @@ describe("SysInfo unit tests", () => {
 			it("on Windows", async () => {
 				const originalProgramFiles = process.env[PROGRAM_FILES];
 				process.env[PROGRAM_FILES] = PROGRAM_FILES_ENV_PATH;
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion });
+				process.env[PROGRAM_FILES_X86] = PROGRAM_FILEX_X86_ENV_PATH;
+				process.env[LOCAL_APP_DATA] = LOCAL_APP_DATA_ENV_PATH;
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion }, { existsResult: true });
 				const result = await sysInfo.getSysInfo();
 				process.env[PROGRAM_FILES] = originalProgramFiles;
 				assertCommonValues(result);
@@ -517,7 +523,7 @@ ${expectedCliVersion}`;
 				assert.deepEqual(result.itunesInstalled, undefined);
 				assert.deepEqual(result.cocoaPodsVer, "0.38.2");
 				assert.deepEqual(result.xcodeprojLocation, null);
-				assert.deepEqual(result.isCocoaPodsWorkingCorrectly, undefined);
+				assert.deepEqual(result.isCocoaPodsWorkingCorrectly, true);
 				assert.deepEqual(result.xcprojInfo, undefined);
 				assert.deepEqual(result.isCocoaPodsUpdateRequired, false);
 				assert.deepEqual(result.pythonInfo, {isInstalled: false, isSixPackageInstalled: false, installationErrorMessage: "Cannot read property 'shouldThrowError' of undefined"});
@@ -538,7 +544,7 @@ ${expectedCliVersion}`;
 				assert.deepEqual(result.isAndroidSdkConfiguredCorrectly, undefined);
 			});
 			it("Android platform is specified", async () => {
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion }, { existsResult: true });
 				const result = await sysInfo.getSysInfo({platform: "Android"});
 
 				assertCommonSysInfo(result);
