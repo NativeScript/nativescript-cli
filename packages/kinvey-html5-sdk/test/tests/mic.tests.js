@@ -151,7 +151,6 @@ function testFunc() {
       Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: authServiceId })
         .then((user) => {
           validateMICUser(user, false, true);
-          createdUserIds.push(user.data._id);
           return networkstore.find().toPromise()
         })
         .then((result) => {
@@ -166,7 +165,6 @@ function testFunc() {
       Kinvey.User.loginWithMIC(redirectUrl)
         .then((user) => {
           expect(user).to.exist;
-          createdUserIds.push(user.data._id);
 
           // the test waits for the expiration of the access_token 
           setTimeout(() => {
