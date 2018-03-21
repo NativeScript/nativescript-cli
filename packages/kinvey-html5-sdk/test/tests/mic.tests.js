@@ -14,7 +14,7 @@ function testFunc() {
 
   // Currently the server returns refresh_token = 'null' if the auth service does not allow refresh tokens.
   // The tests should be changed when this is fixed on the server
-  const notAllowedRefreshTokenValue = 'null'
+  const notAllowedRefreshTokenValue = 'null';
   let winOpen;
 
   const expireFBCookie = (fbWindow, cookieName, cookieValue, expiredDays) => {
@@ -141,8 +141,7 @@ function testFunc() {
         .catch(done);
     });
 
-    // The test should be skipped until https://kinvey.atlassian.net/browse/MLIBZ-2399 is merged in master
-    it.skip('should login the user, using the specified Auth service', (done) => {
+    it('should login the user, using the specified Auth service', (done) => {
       loginFacebook();
       Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: authServiceId })
         .then((user) => {
