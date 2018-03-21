@@ -446,6 +446,18 @@ export class ProjectDataService implements IProjectDataService {
 	removeDependency(dependencyName: string): void { }
 
 	getProjectData(projectDir: string): IProjectData { return null; }
+
+	async getAssetsStructure(opts: IProjectDir): Promise<IAssetsStructure> {
+		return null;
+	}
+
+	async getIOSAssetsStructure(opts: IProjectDir): Promise<IAssetGroup> {
+		return null;
+	}
+
+	async getAndroidAssetsStructure(opts: IProjectDir): Promise<IAssetGroup> {
+		return null;
+	}
 }
 
 export class ProjectHelperStub implements IProjectHelper {
@@ -661,7 +673,7 @@ export class ProjectChangesService implements IProjectChangesService {
 }
 
 export class CommandsService implements ICommandsService {
-	public currentCommandData = { commandName: "test", commandArguments: [""]};
+	public currentCommandData = { commandName: "test", commandArguments: [""] };
 
 	public allCommands(opts: { includeDevCommands: boolean }): string[] {
 		return [];

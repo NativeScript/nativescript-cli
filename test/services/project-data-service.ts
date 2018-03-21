@@ -3,6 +3,7 @@ import { assert } from "chai";
 import { ProjectDataService } from "../../lib/services/project-data-service";
 import { LoggerStub } from "../stubs";
 import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER } from '../../lib/constants';
+import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 
 const CLIENT_NAME_KEY_IN_PROJECT_FILE = "nativescript";
 
@@ -58,6 +59,10 @@ const createTestInjector = (readTextData?: string): IInjector => {
 	testInjector.register("logger", LoggerStub);
 
 	testInjector.register("projectDataService", ProjectDataService);
+
+	testInjector.register("androidResourcesMigrationService", {});
+
+	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 
 	testInjector.register("injector", testInjector);
 
