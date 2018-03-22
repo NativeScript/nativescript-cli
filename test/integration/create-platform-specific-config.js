@@ -16,7 +16,8 @@ const getCredentialsByEnvironment = (appConfig, platform, os) => {
   const app = appConfig[platform][os] || appConfig[platform];
   return {
     appKey: app.appKey,
-    appSecret: app.appSecret
+    appSecret: app.appSecret,
+    masterSecret: app.masterSecret
   };
 };
 
@@ -27,6 +28,7 @@ const createPlatformSpecificConfig = (platform, os) => {
   const configFileContents = compiled({ appConfig: JSON.stringify(testsConfig, null, 2) });
 
   fs.writeFileSync(resultConfigFilePath, configFileContents, 'utf8');
+  return testsConfig;
 };
 
 module.exports = createPlatformSpecificConfig;
