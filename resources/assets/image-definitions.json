@@ -1,0 +1,418 @@
+{
+	"ios": {
+		"icons": [
+			{
+				"width": 60,
+				"height": 60,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-60@3x.png",
+				"scale": "3x"
+			},
+			{
+				"width": 60,
+				"height": 60,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-60@2x.png",
+				"scale": "2x"
+			},
+			{
+				"width": 40,
+				"height": 40,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-40.png",
+				"scale": "1x"
+			},
+			{
+				"width": 40,
+				"height": 40,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-40@2x.png",
+				"scale": "2x"
+			},
+			{
+				"width": 40,
+				"height": 40,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-40@3x.png",
+				"scale": "3x"
+			},
+			{
+				"width": 50,
+				"height": 50,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-50.png",
+				"scale": "1x"
+			},
+			{
+				"width": 50,
+				"height": 50,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-50@2x.png",
+				"scale": "2x"
+			},
+			{
+				"width": 60,
+				"height": 60,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-60.png",
+				"scale": "1x"
+			},
+			{
+				"width": 72,
+				"height": 72,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-72.png",
+				"scale": "1x"
+			},
+			{
+				"width": 72,
+				"height": 72,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-72@2x.png",
+				"scale": "2x"
+			},
+			{
+				"width": 76,
+				"height": 76,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-76.png",
+				"scale": "1x"
+			},
+			{
+				"width": 76,
+				"height": 76,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-76@2x.png",
+				"scale": "2x"
+			},
+			{
+				"width": 83.5,
+				"height": 83.5,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-83.5@2x.png",
+				"scale": "2x"
+			},
+			{
+				"width": 120,
+				"height": 120,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-120.png",
+				"scale": "1x"
+			},
+			{
+				"width": 29,
+				"height": 29,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-29.png",
+				"scale": "1x"
+			},
+			{
+				"width": 29,
+				"height": 29,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-29@2x.png",
+				"scale": "2x"
+			},
+			{
+				"width": 29,
+				"height": 29,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-29@3x.png",
+				"scale": "3x"
+			},
+			{
+				"width": 57,
+				"height": 57,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-57.png",
+				"scale": "1x"
+			},
+			{
+				"width": 57,
+				"height": 57,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-57@2x.png",
+				"scale": "2x"
+			},
+			{
+				"width": 1024,
+				"height": 1024,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-1024.png",
+				"scale": "1x"
+			}
+		],
+		"splashBackgrounds": [
+			{
+				"width": 768,
+				"height": 1024,
+				"directory": "Assets.xcassets/LaunchScreen.AspectFill.imageset",
+				"filename": "LaunchScreen-AspectFill.png",
+				"resizeOperation": "blank",
+				"scale": "1x"
+			},
+			{
+				"width": 768,
+				"height": 1024,
+				"directory": "Assets.xcassets/LaunchScreen.AspectFill.imageset",
+				"filename": "LaunchScreen-AspectFill@2x.png",
+				"resizeOperation": "blank",
+				"scale": "2x"
+			},
+			{
+				"width": 768,
+				"height": 1024,
+				"directory": "Assets.xcassets/LaunchScreen.AspectFill.imageset",
+				"filename": "LaunchScreen-AspectFill@3x.png",
+				"resizeOperation": "blank",
+				"scale": "3x"
+			}
+		],
+		"splashCenterImages": [
+			{
+				"width": 384,
+				"height": 512,
+				"directory": "Assets.xcassets/LaunchScreen.Center.imageset",
+				"filename": "LaunchScreen-Center.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
+			},
+			{
+				"width": 384,
+				"height": 512,
+				"directory": "Assets.xcassets/LaunchScreen.Center.imageset",
+				"filename": "LaunchScreen-Center@2x.png",
+				"resizeOperation": "overlayWith",
+				"scale": "2x"
+			}
+		],
+		"splashImages": [
+			{
+				"width": 320,
+				"height": 568,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "Default-568h@2x.png",
+				"resizeOperation": "overlayWith",
+				"scale": "2x"
+			},
+			{
+				"width": 1024,
+				"height": 768,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "Default-Landscape.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
+			},
+			{
+				"width": 1024,
+				"height": 768,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "Default-Landscape@2x.png",
+				"resizeOperation": "overlayWith",
+				"scale": "2x"
+			},
+			{
+				"width": 736,
+				"height": 414,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "Default-Landscape@3x.png",
+				"resizeOperation": "overlayWith",
+				"scale": "3x"
+			},
+			{
+				"width": 768,
+				"height": 1024,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "Default-Portrait@2x.png",
+				"resizeOperation": "overlayWith",
+				"scale": "2x"
+			},
+			{
+				"width": 768,
+				"height": 1024,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "Default-Portrait.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
+			},
+			{
+				"width": 320,
+				"height": 480,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "Default@2x.png",
+				"resizeOperation": "overlayWith",
+				"scale": "2x"
+			},
+			{
+				"width": 320,
+				"height": 480,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "Default.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
+			},
+			{
+				"width": 375,
+				"height": 667,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "Default-667h@2x.png",
+				"resizeOperation": "overlayWith",
+				"scale": "2x"
+			},
+			{
+				"width": 414,
+				"height": 736,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "Default-736h@3x.png",
+				"resizeOperation": "overlayWith",
+				"scale": "3x"
+			},
+			{
+				"width": 2208,
+				"height": 1242,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "Default-Landscape-736h.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
+			},
+			{
+				"width": 1125,
+				"height": 2436,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "Default-1125h.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
+			},
+			{
+				"width": 2436,
+				"height": 1125,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "Default-Landscape-X.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
+			}
+		]
+	},
+	"android": {
+		"icons": [
+			{
+				"width": 72,
+				"height": 72,
+				"directory": "drawable-hdpi",
+				"filename": "icon.png"
+			},
+			{
+				"width": 36,
+				"height": 36,
+				"directory": "drawable-ldpi",
+				"filename": "icon.png"
+			},
+			{
+				"width": 48,
+				"height": 48,
+				"directory": "drawable-mdpi",
+				"filename": "icon.png"
+			},
+			{
+				"width": 96,
+				"height": 96,
+				"directory": "drawable-xhdpi",
+				"filename": "icon.png"
+			},
+			{
+				"width": 144,
+				"height": 144,
+				"directory": "drawable-xxhdpi",
+				"filename": "icon.png"
+			},
+			{
+				"width": 345,
+				"height": 345,
+				"directory": "drawable-xxxhdpi",
+				"filename": "icon.png"
+			}
+		],
+		"splashBackgrounds": [
+			{
+				"width": 576,
+				"height": 768,
+				"directory": "drawable-hdpi",
+				"filename": "background.png",
+				"resizeOperation": "blank"
+			},
+			{
+				"width": 288,
+				"height": 384,
+				"directory": "drawable-ldpi",
+				"filename": "background.png",
+				"resizeOperation": "blank"
+			},
+			{
+				"width": 384,
+				"height": 512,
+				"directory": "drawable-mdpi",
+				"filename": "background.png",
+				"resizeOperation": "blank"
+			},
+			{
+				"width": 768,
+				"height": 1024,
+				"directory": "drawable-xhdpi",
+				"filename": "background.png",
+				"resizeOperation": "blank"
+			},
+			{
+				"width": 1154,
+				"height": 1536,
+				"directory": "drawable-xxhdpi",
+				"filename": "background.png",
+				"resizeOperation": "blank"
+			},
+			{
+				"width": 1536,
+				"height": 2048,
+				"directory": "drawable-xxxhdpi",
+				"filename": "background.png",
+				"resizeOperation": "blank"
+			}
+		],
+		"splashCenterImages": [
+			{
+				"width": 476,
+				"height": 476,
+				"directory": "drawable-hdpi",
+				"filename": "logo.png"
+			},
+			{
+				"width": 188,
+				"height": 188,
+				"directory": "drawable-ldpi",
+				"filename": "logo.png"
+			},
+			{
+				"width": 284,
+				"height": 284,
+				"directory": "drawable-mdpi",
+				"filename": "logo.png"
+			},
+			{
+				"width": 668,
+				"height": 668,
+				"directory": "drawable-xhdpi",
+				"filename": "logo.png"
+			},
+			{
+				"width": 1024,
+				"height": 1024,
+				"directory": "drawable-xxhdpi",
+				"filename": "logo.png"
+			},
+			{
+				"width": 1024,
+				"height": 1024,
+				"directory": "drawable-xxxhdpi",
+				"filename": "logo.png"
+			}
+		]
+	}
+}

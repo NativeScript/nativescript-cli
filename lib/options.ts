@@ -38,7 +38,8 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			chrome: { type: OptionType.Boolean },
 			inspector: { type: OptionType.Boolean },
 			clean: { type: OptionType.Boolean },
-			watch: { type: OptionType.Boolean, default: true }
+			watch: { type: OptionType.Boolean, default: true },
+			background: { type: OptionType.String }
 		},
 			$errors, $staticConfig, $settingsService);
 

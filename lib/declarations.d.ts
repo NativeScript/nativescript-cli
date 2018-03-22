@@ -463,6 +463,7 @@ interface IOptions extends ICommonOptions, IBundleString, IPlatformTemplate, IEm
 	liveEdit: boolean;
 	chrome: boolean;
 	inspector: boolean; // the counterpart to --chrome
+	background: string;
 }
 
 interface IEnvOptions {
@@ -570,7 +571,7 @@ interface IAndroidToolsInfo {
 	 */
 	validateAndroidHomeEnvVariable(options?: IAndroidToolsInfoOptions): boolean;
 
-	/** 
+	/**
 	 * Validates target sdk
 	 * @param {IAndroidToolsInfoOptions} options @optional Defines if the warning messages should treated as error.
 	 * @returns {boolean} True if there are detected issues, false otherwise
@@ -790,7 +791,51 @@ interface IBundleValidatorHelper {
 interface INativescriptCloudExtensionService {
 	/**
 	 * Installs nativescript-cloud extension
-	 * @return {Promise<IExtensionData>} returns the extension data 
+	 * @return {Promise<IExtensionData>} returns the extension data
 	 */
 	install(): Promise<IExtensionData>;
+}
+
+/**
+ * Describes the basic data needed for resource generation
+ */
+interface IResourceGenerationData extends IProjectDir {
+	/**
+	 * @param {string} imagePath Path to the image that will be used for generation
+	 */
+	imagePath: string,
+
+	/**
+	 * @param {string} platform Specify for which platform to generate assets. If not defined will generate for all platforms
+	 */
+	platform?: string
+}
+
+/**
+ * Describes the data needed for splash screens generation
+ */
+interface ISplashesGenerationData extends IResourceGenerationData {
+	/**
+	 * @param {string} background Background color that will be used for background. Defaults to #FFFFFF
+	 */
+	background?: string
+}
+
+/**
+ * Describes service used for assets generation
+ */
+interface IAssetsGenerationService {
+	/**
+	 * Generate icons for iOS and Android
+	 * @param {IResourceGenerationData} iconsGenerationData Provides the data needed for icons generation
+	 * @returns {Promise<void>}
+	 */
+	generateIcons(iconsGenerationData: IResourceGenerationData): Promise<void>;
+
+	/**
+	 * Generate splash screens for iOS and Android
+	 * @param {ISplashesGenerationData} splashesGenerationData Provides the data needed for splash screens generation
+	 * @returns {Promise<void>}
+	 */
+	generateSplashScreens(splashesGenerationData: ISplashesGenerationData): Promise<void>;
 }

@@ -16,7 +16,14 @@ describe("nativescript-cli-lib", () => {
 		settingsService: ["setSettings"],
 		deviceEmitter: null,
 		projectService: ["createProject", "isValidNativeScriptProject"],
-		projectDataService: ["getProjectData", "getProjectDataFromContent", "getNsConfigDefaultContent"],
+		projectDataService: [
+			"getProjectData",
+			"getProjectDataFromContent",
+			"getNsConfigDefaultContent",
+			"getAssetsStructure",
+			"getIOSAssetsStructure",
+			"getAndroidAssetsStructure"
+		],
 		constants: ["CONFIG_NS_APP_RESOURCES_ENTRY", "CONFIG_NS_APP_ENTRY", "CONFIG_NS_FILE_NAME"],
 		localBuildService: ["build"],
 		deviceLogProvider: null,
@@ -37,6 +44,10 @@ describe("nativescript-cli-lib", () => {
 			"isCompanionAppInstalledOnDevices",
 			"mapAbstractToTcpPort",
 			"setLogLevel"
+		],
+		assetsGenerationService: [
+			"generateIcons",
+			"generateSplashScreens"
 		]
 	};
 
