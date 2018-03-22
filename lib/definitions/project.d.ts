@@ -160,6 +160,7 @@ interface IAssetItem {
 	scale: string;
 	idiom: string;
 	resizeOperation?: string;
+	overlayImageScale?: number;
 }
 
 interface IAssetSubGroup {

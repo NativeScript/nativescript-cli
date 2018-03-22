@@ -45,7 +45,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 			)
 			.map((assetGroup: IAssetGroup) =>
 				_.filter(assetGroup, (assetSubGroup: IAssetSubGroup, imageTypeKey: string) =>
-					assetSubGroup && propertiesToEnumerate.indexOf(imageTypeKey) !== -1 && assetSubGroup[imageTypeKey]
+					assetSubGroup && propertiesToEnumerate.indexOf(imageTypeKey) !== -1
 				)
 			)
 			.flatten<IAssetSubGroup>()
@@ -57,26 +57,33 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 		for (const assetItem of assetItems) {
 			const operation = assetItem.resizeOperation || Operations.Resize;
 			let tempScale: number = null;
-			if (assetItem.scale && !_.isNumber(assetItem.scale)) {
-				const splittedElements = `${assetItem.scale}`.split(AssetConstants.sizeDelimiter);
-				tempScale = splittedElements && splittedElements.length && splittedElements[0] && +splittedElements[0];
+			if (assetItem.scale) {
+				if (_.isNumber(assetItem.scale)) {
+					tempScale = assetItem.scale;
+				} else {
+					const splittedElements = `${assetItem.scale}`.split(AssetConstants.sizeDelimiter);
+					tempScale = splittedElements && splittedElements.length && splittedElements[0] && +splittedElements[0];
+				}
 			}
 
-			const scale = tempScale || 0.8;
+			const scale = tempScale || 1;
 
 			const outputPath = assetItem.path;
+			const width = assetItem.width * scale;
+			const height = assetItem.height * scale;
 
 			switch (operation) {
 				case Operations.OverlayWith:
-					const imageResize = Math.round(Math.min(assetItem.width, assetItem.height) * scale);
+					const overlayImageScale = assetItem.overlayImageScale || 0.8;
+					const imageResize = Math.round(Math.min(width, height) * overlayImageScale);
 					const image = await this.resize(generationData.imagePath, imageResize, imageResize);
-					await this.generateImage(generationData.background, assetItem.width, assetItem.height, outputPath, image);
+					await this.generateImage(generationData.background, width, height, outputPath, image);
 					break;
 				case Operations.Blank:
-					await this.generateImage(generationData.background, assetItem.width, assetItem.height, outputPath);
+					await this.generateImage(generationData.background, width, height, outputPath);
 					break;
 				case Operations.Resize:
-					const resizedImage = await this.resize(generationData.imagePath, assetItem.width, assetItem.height);
+					const resizedImage = await this.resize(generationData.imagePath, width, height);
 					resizedImage.write(outputPath);
 					break;
 				default:
