@@ -1,7 +1,7 @@
 import * as Jimp from "jimp";
 import * as Color from "color";
 import { exported } from "../../common/decorators";
-import { AssetConstants } from "../../constants";
+import { AssetConstants } from '../../constants';
 
 export const enum Operations {
 	OverlayWith = "overlayWith",
@@ -66,7 +66,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 				}
 			}
 
-			const scale = tempScale || 1;
+			const scale = tempScale || AssetConstants.defaultScale;
 
 			const outputPath = assetItem.path;
 			const width = assetItem.width * scale;
@@ -74,7 +74,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 
 			switch (operation) {
 				case Operations.OverlayWith:
-					const overlayImageScale = assetItem.overlayImageScale || 0.8;
+					const overlayImageScale = assetItem.overlayImageScale || AssetConstants.defaultOverlayImageScale;
 					const imageResize = Math.round(Math.min(width, height) * overlayImageScale);
 					const image = await this.resize(generationData.imagePath, imageResize, imageResize);
 					await this.generateImage(generationData.background, width, height, outputPath, image);
