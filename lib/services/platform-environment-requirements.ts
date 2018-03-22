@@ -6,17 +6,19 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	constructor(private $commandsService: ICommandsService,
 		private $doctorService: IDoctorService,
 		private $errors: IErrors,
-		private $nativescriptCloudExtensionService: INativescriptCloudExtensionService,
 		private $logger: ILogger,
+		private $nativescriptCloudExtensionService: INativescriptCloudExtensionService,
 		private $prompter: IPrompter,
 		private $staticConfig: IStaticConfig) { }
 
-	public static CLOUD_BUILDS_OPTION_NAME = "Configure for Cloud Builds";
-	public static SETUP_SCRIPT_OPTION_NAME = "Configure for Local Builds";
+	public static CLOUD_SETUP_OPTION_NAME = "Configure for Cloud Builds";
+	public static LOCAL_SETUP_OPTION_NAME = "Configure for Local Builds";
 	public static MANUALLY_SETUP_OPTION_NAME = "Skip Step and Configure Manually";
-	private static BOTH_CLOUD_BUILDS_AND_SETUP_SCRIPT_OPTION_NAME = "Configure for Both Local and Cloud Builds";
+	private static BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME = "Configure for Both Local and Cloud Builds";
 	private static NOT_CONFIGURED_ENV_MESSAGE = "To continue, choose one of the following options: ";
-	private static NOT_CONFIGURED_ENV_AFTER_SETUP_SCRIPT_MESSAGE = "The setup script was not able to configure your environment for local builds. To execute local builds, you have to set up your environment manually. To continue, choose one of the following options:";
+	private static NOT_CONFIGURED_ENV_AFTER_SETUP_SCRIPT_MESSAGE = "The setup script was not able to configure your environment for local builds. To execute local builds, you have to set up your environment manually. In case you have any issues, you can ask in our forum. To continue, choose one of the following options:";
+	private static MISSING_LOCAL_AND_CLOUD_SETUP_MESSAGE = `You are missing the ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and you will not be able to execute cloud builds. Your environment is not configured properly and you will not be able to execute local builds. To continue, choose one of the following options: `;
+	private static MISSING_LOCAL_SETUP_MESSAGE = 'Your environment is not configured properly and you will not be able to execute local builds.';
 
 	private cliCommandToCloudCommandName: IStringDictionary = {
 		"build": "tns cloud build",
@@ -35,41 +37,35 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				this.fail(this.getNonInteractiveConsoleMessage(platform));
 			}
 
-			this.$logger.info(`` + EOL
-				+ `Select "Configure for Cloud Builds" to install the ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and automatically configure your environment for cloud builds.` + EOL
-				+ `Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`
-				+ `Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`
-				+ `Select "Skip Step and Configure Manually" to disregard these options and install any required components manually.`);
+			this.$logger.info(this.getInteractiveConsoleMessage(platform));
 
-			const selectedOption = await this.$prompter.promptForChoice(PlatformEnvironmentRequirements.NOT_CONFIGURED_ENV_MESSAGE, [
-				PlatformEnvironmentRequirements.CLOUD_BUILDS_OPTION_NAME,
-				PlatformEnvironmentRequirements.SETUP_SCRIPT_OPTION_NAME,
-				PlatformEnvironmentRequirements.BOTH_CLOUD_BUILDS_AND_SETUP_SCRIPT_OPTION_NAME,
-				PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
-			]);
+			const selectedOption = await this.promptForChoice();
 
 			await this.processCloudBuildsIfNeeded(platform, selectedOption);
-
 			this.processManuallySetupIfNeeded(platform, selectedOption);
 
-			if (selectedOption === PlatformEnvironmentRequirements.SETUP_SCRIPT_OPTION_NAME) {
+			if (selectedOption === PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME) {
 				await this.$doctorService.runSetupScript();
 
 				if (await this.$doctorService.canExecuteLocalBuild(platform)) {
 					return true;
 				}
 
-				const option = await this.$prompter.promptForChoice(PlatformEnvironmentRequirements.NOT_CONFIGURED_ENV_AFTER_SETUP_SCRIPT_MESSAGE, [
-					PlatformEnvironmentRequirements.CLOUD_BUILDS_OPTION_NAME,
-					PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME
-				]);
+				if (this.$nativescriptCloudExtensionService.isInstalled()) {
+					this.processManuallySetup(platform);
+				} else {
+					const option = await this.$prompter.promptForChoice(PlatformEnvironmentRequirements.NOT_CONFIGURED_ENV_AFTER_SETUP_SCRIPT_MESSAGE, [
+						PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME,
+						PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME
+					]);
 
-				await this.processCloudBuildsIfNeeded(platform, option);
+					await this.processCloudBuildsIfNeeded(platform, option);
 
-				this.processManuallySetupIfNeeded(platform, option);
+					this.processManuallySetupIfNeeded(platform, option);
+				}
 			}
 
-			if (selectedOption === PlatformEnvironmentRequirements.BOTH_CLOUD_BUILDS_AND_SETUP_SCRIPT_OPTION_NAME) {
+			if (selectedOption === PlatformEnvironmentRequirements.BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME) {
 				await this.processBothCloudBuildsAndSetupScript(platform);
 				if (await this.$doctorService.canExecuteLocalBuild(platform)) {
 					return true;
@@ -83,7 +79,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	}
 
 	private async processCloudBuildsIfNeeded(platform: string, selectedOption: string): Promise<void> {
-		if (selectedOption === PlatformEnvironmentRequirements.CLOUD_BUILDS_OPTION_NAME) {
+		if (selectedOption === PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME) {
 			await this.processCloudBuilds(platform);
 		}
 	}
@@ -135,17 +131,48 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	}
 
 	private getNonInteractiveConsoleMessage(platform: string) {
-		if (!this.$nativescriptCloudExtensionService.isInstalled()) {
-			return `You are missing the ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and you will not be able to execute cloud builds. Your environment is not configured properly and you will not be able to execute local builds. To continue, choose one of the following options: ` + EOL
+		if (this.$nativescriptCloudExtensionService.isInstalled()) {
+			return `${PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE} To continue, choose one of the following options: ` + EOL
 				+ "Run $ tns setup command to run the setup script to try to automatically configure your environment for local builds." + EOL
-				+ `Run $ tns cloud setup command to install the ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension to configure your environment for cloud builds.` + EOL
-				+ `Verify that your environment is configured according to the system requirements described at ${this.$staticConfig.SYS_REQUIREMENTS_LINK}.`
+				+ `${this.getCloudBuildsMessage(platform)}` + EOL
+				+ `Verify that your environment is configured according to the system requirements described at ${this.$staticConfig.SYS_REQUIREMENTS_LINK}.`;
 		}
 
-		return `Your environment is not configured properly and you will not be able to execute local builds. To continue, choose one of the following options: ` + EOL
+		return `${PlatformEnvironmentRequirements.MISSING_LOCAL_AND_CLOUD_SETUP_MESSAGE}` + EOL
 			+ "Run $ tns setup command to run the setup script to try to automatically configure your environment for local builds." + EOL
-			+ `${this.getCloudBuildsMessage(platform)}` + EOL
+			+ `Run $ tns cloud setup command to install the ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension to configure your environment for cloud builds.` + EOL
 			+ `Verify that your environment is configured according to the system requirements described at ${this.$staticConfig.SYS_REQUIREMENTS_LINK}.`;
+	}
+
+	private getInteractiveConsoleMessage(platform: string) {
+		if (this.$nativescriptCloudExtensionService.isInstalled()) {
+			const message = `The ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension is installed and you can ${_.lowerFirst(this.getCloudBuildsMessage(platform))}`;
+
+			return `${message.bold}` + EOL
+				+ `${PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE} To continue, choose one of the following options: ` + EOL
+				+ `Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.` + EOL
+				+ `Select "Skip Step and Configure Manually" to disregard this option and install any required components manually.`;
+		}
+
+		return `${PlatformEnvironmentRequirements.MISSING_LOCAL_AND_CLOUD_SETUP_MESSAGE}` + EOL
+			+ `Select "Configure for Cloud Builds" to install the ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and automatically configure your environment for cloud builds.` + EOL
+			+ `Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`
+			+ `Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`
+			+ `Select "Skip Step and Configure Manually" to disregard these options and install any required components manually.`;
+	}
+
+	private promptForChoice(): Promise<string> {
+		const choices = this.$nativescriptCloudExtensionService.isInstalled() ? [
+			PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
+			PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
+		] : [
+			PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME,
+			PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
+			PlatformEnvironmentRequirements.BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME,
+			PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
+		];
+
+		return this.$prompter.promptForChoice(PlatformEnvironmentRequirements.NOT_CONFIGURED_ENV_MESSAGE, choices);
 	}
 }
 $injector.register("platformEnvironmentRequirements", PlatformEnvironmentRequirements);

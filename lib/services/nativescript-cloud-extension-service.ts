@@ -1,9 +1,10 @@
 import * as constants from "../constants";
+import * as semver from "semver";
 
 export class NativescriptCloudExtensionService implements INativescriptCloudExtensionService {
-
 	constructor(private $extensibilityService: IExtensibilityService,
-		private $logger: ILogger) { }
+		private $logger: ILogger,
+		private $npmInstallationManager: INpmInstallationManager) { }
 
 	public install(): Promise<IExtensionData> {
 		if (!this.isInstalled()) {
@@ -14,11 +15,22 @@ export class NativescriptCloudExtensionService implements INativescriptCloudExte
 	}
 
 	public isInstalled(): boolean {
-		return !!this.getInstalledExtensions()[constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME];
+		return !!this.getExtensionData();
 	}
 
-	private getInstalledExtensions(): IStringDictionary {
-		return this.$extensibilityService.getInstalledExtensions() || {};
+	public async isLatestVersionInstalled(): Promise<boolean> {
+		const extensionData = this.getExtensionData();
+		if (extensionData) {
+			const latestVersion = await this.$npmInstallationManager.getLatestVersion(constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME);
+			return semver.eq(latestVersion, extensionData.version);
+		}
+
+		return false;
+	}
+
+	private getExtensionData(): IExtensionData {
+		return this.$extensibilityService.getInstalledExtensionsData()
+			.find(extensionData => extensionData.extensionName === constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME);
 	}
 }
 $injector.register("nativescriptCloudExtensionService", NativescriptCloudExtensionService);
