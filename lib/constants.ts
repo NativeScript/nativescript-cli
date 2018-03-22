@@ -163,4 +163,7 @@ export class AssetConstants {
 	public static assets = "assets";
 
 	public static sizeDelimiter = "x";
+
+	public static defaultScale = 1;
+	public static defaultOverlayImageScale = 0.8;
 }

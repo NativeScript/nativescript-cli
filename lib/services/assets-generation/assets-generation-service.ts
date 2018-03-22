@@ -1,6 +1,7 @@
 import * as Jimp from "jimp";
 import * as Color from "color";
 import { exported } from "../../common/decorators";
+import { AssetConstants } from '../../constants';
 
 export const enum Operations {
 	OverlayWith = "overlayWith",
@@ -39,12 +40,12 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 		const assetsStructure = await this.$projectDataService.getAssetsStructure(generationData);
 
 		const assetItems = _(assetsStructure)
-			.filter((assetGroup: IAssetGroup, platform: string) => {
-				return !generationData.platform || platform.toLowerCase() === generationData.platform.toLowerCase();
-			})
+			.filter((assetGroup: IAssetGroup, platform: string) =>
+				!generationData.platform || platform.toLowerCase() === generationData.platform.toLowerCase()
+			)
 			.map((assetGroup: IAssetGroup) =>
 				_.filter(assetGroup, (assetSubGroup: IAssetSubGroup, imageTypeKey: string) =>
-					propertiesToEnumerate.indexOf(imageTypeKey) !== -1 && !assetSubGroup[imageTypeKey]
+					assetSubGroup && propertiesToEnumerate.indexOf(imageTypeKey) !== -1
 				)
 			)
 			.flatten<IAssetSubGroup>()
@@ -55,20 +56,34 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 
 		for (const assetItem of assetItems) {
 			const operation = assetItem.resizeOperation || Operations.Resize;
-			const scale = assetItem.scale || 0.8;
+			let tempScale: number = null;
+			if (assetItem.scale) {
+				if (_.isNumber(assetItem.scale)) {
+					tempScale = assetItem.scale;
+				} else {
+					const splittedElements = `${assetItem.scale}`.split(AssetConstants.sizeDelimiter);
+					tempScale = splittedElements && splittedElements.length && splittedElements[0] && +splittedElements[0];
+				}
+			}
+
+			const scale = tempScale || AssetConstants.defaultScale;
+
 			const outputPath = assetItem.path;
+			const width = assetItem.width * scale;
+			const height = assetItem.height * scale;
 
 			switch (operation) {
 				case Operations.OverlayWith:
-					const imageResize = Math.round(Math.min(assetItem.width, assetItem.height) * scale);
+					const overlayImageScale = assetItem.overlayImageScale || AssetConstants.defaultOverlayImageScale;
+					const imageResize = Math.round(Math.min(width, height) * overlayImageScale);
 					const image = await this.resize(generationData.imagePath, imageResize, imageResize);
-					await this.generateImage(generationData.background, assetItem.width, assetItem.height, outputPath, image);
+					await this.generateImage(generationData.background, width, height, outputPath, image);
 					break;
 				case Operations.Blank:
-					await this.generateImage(generationData.background, assetItem.width, assetItem.height, outputPath);
+					await this.generateImage(generationData.background, width, height, outputPath);
 					break;
 				case Operations.Resize:
-					const resizedImage = await this.resize(generationData.imagePath, assetItem.width, assetItem.height);
+					const resizedImage = await this.resize(generationData.imagePath, width, height);
 					resizedImage.write(outputPath);
 					break;
 				default:

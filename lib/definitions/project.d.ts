@@ -157,9 +157,10 @@ interface IAssetItem {
 	height: number;
 	filename: string;
 	directory: string;
-	scale: number;
+	scale: string;
 	idiom: string;
 	resizeOperation?: string;
+	overlayImageScale?: number;
 }
 
 interface IAssetSubGroup {
