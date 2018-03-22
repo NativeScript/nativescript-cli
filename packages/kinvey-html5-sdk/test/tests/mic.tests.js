@@ -192,7 +192,17 @@ function testFunc() {
         .catch((err) => {
           expect(err.message).to.equal('Login has been cancelled.');
           done();
-        });
+        }).catch(done);
+    });
+
+    it('should return a meaningful error if the authorization grant is invalid', (done) => {
+      addLoginFacebookListener();
+      Kinvey.User.loginWithMIC(redirectUrl, 'InvalidAuthorizationGrant', { micId: authServiceId })
+        .then(() => done(new Error('Should not happen')))
+        .catch((err) => {
+          expect(err.message).to.contain('Please use a supported authorization grant.');
+          done();
+        }).catch(done);
     });
   });
 }
