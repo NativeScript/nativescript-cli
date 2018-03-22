@@ -41,6 +41,7 @@ export const APK_EXTENSION_NAME = ".apk";
 export class PackageVersion {
 	static NEXT = "next";
 	static LATEST = "latest";
+	static RC = "rc";
 }
 
 const liveSyncOperation = "LiveSync Operation";
