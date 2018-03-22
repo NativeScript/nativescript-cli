@@ -7,27 +7,32 @@ const testsConfig = {
 
 const appCredentials = {
   html5: {
-    appKey: 'kid_H1yZOGnfb',
-    appSecret: '174b6b64eef645fd8dd77a5ba2366ad0'
+    appKey: process.env.HTML5_APP_KEY,
+    appSecret: process.env.HTML5_APP_SECRET,
+    masterSecret: process.env.HTML5_MASTER_SECRET
   },
   nativescript: {
     android: {
-      appKey: 'kid_H1yZOGnfb',
-      appSecret: '174b6b64eef645fd8dd77a5ba2366ad0',
+      appKey: process.env.NS_ANDROID_APP_KEY,
+      appSecret: process.env.NS_ANDROID_APP_SECRET,
+      masterSecret: process.env.NS_ANDROID_MASTER_SECRET
     },
     ios: {
-      appKey: 'kid_H1yZOGnfb',
-      appSecret: '174b6b64eef645fd8dd77a5ba2366ad0',
+      appKey: process.env.NS_IOS_APP_KEY,
+      appSecret: process.env.NS_IOS_APP_SECRET,
+      masterSecret: process.env.NS_IOS_MASTER_SECRET
     }
   },
   phonegap: {
     android: {
-      appKey: 'kid_H1yZOGnfb',
-      appSecret: '174b6b64eef645fd8dd77a5ba2366ad0',
+      appKey: process.env.PG_ANDROID_APP_KEY,
+      appSecret: process.env.PG_ANDROID_APP_SECRET,
+      masterSecret: process.env.PG_ANDROID_MASTER_SECRET
     },
     ios: {
-      appKey: 'kid_H1yZOGnfb',
-      appSecret: '174b6b64eef645fd8dd77a5ba2366ad0',
+      appKey: process.env.PG_IOS_APP_KEY,
+      appSecret: process.env.PG_IOS_APP_SECRET,
+      masterSecret: process.env.PG_IOS_MASTER_SECRET
     }
   }
 };
