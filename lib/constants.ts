@@ -41,6 +41,7 @@ export const APK_EXTENSION_NAME = ".apk";
 export class PackageVersion {
 	static NEXT = "next";
 	static LATEST = "latest";
+	static RC = "rc";
 }
 
 const liveSyncOperation = "LiveSync Operation";
@@ -148,3 +149,21 @@ export const NATIVESCRIPT_CLOUD_EXTENSION_NAME = "nativescript-cloud";
  * Used in ProjectDataService to concatenate the names of the properties inside nativescript key of package.json.
  */
 export const NATIVESCRIPT_PROPS_INTERNAL_DELIMITER = "**|__**";
+export const CLI_RESOURCES_DIR_NAME = "resources";
+
+export class AssetConstants {
+	public static iOSResourcesFileName = "Contents.json";
+	public static iOSAssetsDirName = "Assets.xcassets";
+	public static iOSIconsDirName = "AppIcon.appiconset";
+	public static iOSSplashBackgroundsDirName = "LaunchScreen.AspectFill.imageset";
+	public static iOSSplashCenterImagesDirName = "LaunchScreen.Center.imageset";
+	public static iOSSplashImagesDirName = "LaunchImage.launchimage";
+
+	public static imageDefinitionsFileName = "image-definitions.json";
+	public static assets = "assets";
+
+	public static sizeDelimiter = "x";
+
+	public static defaultScale = 1;
+	public static defaultOverlayImageScale = 0.8;
+}

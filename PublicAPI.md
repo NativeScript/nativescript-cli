@@ -14,6 +14,10 @@ const tns = require("nativescript");
 * [projectDataService](#projectdataservice)
 	* [getProjectData](#getprojectdata)
 	* [getProjectDataFromContent](#getprojectdatafromcontent)
+	* [getNsConfigDefaultContent](#getnsconfigdefaultcontent)
+	* [getAssetsStructure](#getassetsstructure)
+	* [getIOSAssetsStructure](#getiosassetsstructure)
+	* [getAndroidAssetsStructure](#getandroidassetsstructure)
 * [extensibilityService](#extensibilityservice)
 	* [installExtension](#installextension)
 	* [uninstallExtension](#uninstallextension)
@@ -41,7 +45,9 @@ const tns = require("nativescript");
 * [analyticsSettingsService](#analyticsSettingsService)
 	* [getClientId](#getClientId)
 * [constants](#constants)
-
+* [assetsGenerationService](#assetsgenerationservice)
+	* [generateIcons](#generateicons)
+	* [generateSplashScreens](#generatesplashscreens)
 
 ## Module projectService
 
@@ -197,6 +203,66 @@ Returns the default content of "nsconfig.json" merged with the properties provid
  * @param {Object} data Properties that should not be defaulted.
  */
  getNsConfigDefaultContent(data?: Object): string
+```
+
+### getAssetsStructure
+Gives information about the whole assets structure for both iOS and Android. For each of the platforms, the returned object will contain icons, splashBackgrounds, splashCenterImages and splashImages (only for iOS).
+* Definition:
+```TypeScript
+/**
+ * Gives information about the whole assets structure for both iOS and Android.
+ * For each of the platforms, the returned object will contain icons, splashBackgrounds, splashCenterImages and splashImages (only for iOS).
+ * @param {IProjectDir} opts Object with a single property - projectDir. This is the root directory where NativeScript project is located.
+ * @returns {Promise<IAssetsStructure>} An object describing the current asset structure.
+ */
+getAssetsStructure(opts: IProjectDir): Promise<IAssetsStructure>;
+```
+
+* Usage:
+```JavaScript
+tns.projectDataService.getAssetsStructure({ projectDir: "/Users/username/myNativeScriptProject" })
+	.then(assetsStructure => console.log(`The current assets structure is ${JSON.stringify(assetsStructure, null, 2)}.`))
+	.catch(err => console.log("Failed to get assets structure."));
+```
+
+### getIOSAssetsStructure
+Gives information about the assets structure for iOS .The returned object will contain icons, splashBackgrounds, splashCenterImages and splashImages.
+* Definition:
+```TypeScript
+/**
+ * Gives information about the whole assets structure for iOS.
+ * The returned object will contain icons, splashBackgrounds, splashCenterImages and splashImages.
+ * @param {IProjectDir} opts Object with a single property - projectDir. This is the root directory where NativeScript project is located.
+ * @returns {Promise<IAssetGroup>} An object describing the current asset structure for iOS.
+ */
+getIOSAssetsStructure(opts: IProjectDir): Promise<IAssetGroup>;
+```
+
+* Usage:
+```JavaScript
+tns.projectDataService.getIOSAssetsStructure({ projectDir: "/Users/username/myNativeScriptProject" })
+	.then(assetsStructure => console.log(`The current assets structure for iOS is ${JSON.stringify(assetsStructure, null, 2)}.`))
+	.catch(err => console.log("Failed to get assets structure."));
+```
+
+### getAndroidAssetsStructure
+Gives information about the assets structure for Android .The returned object will contain icons, splashBackgrounds and splashCenterImages.
+* Definition:
+```TypeScript
+/**
+ * Gives information about the whole assets structure for Android.
+ * The returned object will contain icons, splashBackgrounds and splashCenterImages.
+ * @param {IProjectDir} opts Object with a single property - projectDir. This is the root directory where NativeScript project is located.
+ * @returns {Promise<IAssetGroup>} An object describing the current asset structure for Android.
+ */
+getAndroidAssetsStructure(opts: IProjectDir): Promise<IAssetGroup>;
+```
+
+* Usage:
+```JavaScript
+tns.projectDataService.getAndroidAssetsStructure({ projectDir: "/Users/username/myNativeScriptProject" })
+	.then(assetsStructure => console.log(`The current assets structure for Android is ${JSON.stringify(assetsStructure, null, 2)}.`))
+	.catch(err => console.log("Failed to get assets structure."));
 ```
 
 ## extensibilityService
@@ -1012,6 +1078,54 @@ tns.analyticsSettingsService.getPlaygroundInfo("/my/project/path")
 ```
 ## constants
 Contains various constants related to NativeScript.
+
+## assetsGenerationService
+`assetsGenerationService` module allows generation of assets - icons and splashes.
+
+### generateIcons
+The `generateIcons` method generates icons for specified platform (or both iOS and Android in case platform is not specified) and places them on correct location in the specified project.
+
+* Definition:
+```TypeScript
+/**
+ * Generate icons for iOS and Android
+ * @param {IResourceGenerationData} iconsGenerationData Provides the data needed for icons generation
+ * @returns {Promise<void>}
+ */
+generateIcons({ imagePath: string, projectDir: string, platform?: string }): Promise<void>;
+```
+
+* Usage:
+```JavaScript
+tns.assetsGenerationService.generateIcons({ projectDir: "/Users/username/myNativeScriptProject", imagePath: "/Users/username/image.png" })
+	.then(() => {
+		console.log("Successfully generated icons");
+	});
+```
+
+
+### generateSplashScreens
+The `generateSplashScreens` method generates icons for specified platform (or both iOS and Android in case platform is not specified) and places them on correct location in the specified project.
+
+* Definition:
+```TypeScript
+/**
+ * Generate splash screens for iOS and Android
+ * @param {ISplashesGenerationData} splashesGenerationData Provides the data needed for splash screens generation
+ * @returns {Promise<void>}
+ */
+generateSplashScreens({ imagePath: string, projectDir: string, platform?: string, background?: string }): Promise<void>;
+```
+
+* Usage:
+```JavaScript
+tns.assetsGenerationService.generateSplashScreens({ projectDir: "/Users/username/myNativeScriptProject", imagePath: "/Users/username/image.png", background: "blue" })
+	.then(() => {
+		console.log("Successfully generated splash screens");
+	});
+```
+
+
 
 ## How to add a new method to Public API
 CLI is designed as command line tool and when it is used as a library, it does not give you access to all of the methods. This is mainly implementation detail. Most of the CLI's code is created to work in command line, not as a library, so before adding method to public API, most probably it will require some modification.

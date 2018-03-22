@@ -161,3 +161,7 @@ $injector.require("terminalSpinnerService", "./services/terminal-spinner-service
 $injector.require('playgroundService', './services/playground-service');
 $injector.require("platformEnvironmentRequirements", "./services/platform-environment-requirements");
 $injector.require("nativescriptCloudExtensionService", "./services/nativescript-cloud-extension-service");
+
+$injector.requireCommand("resources|generate|icons", "./commands/generate-assets");
+$injector.requireCommand("resources|generate|splashes", "./commands/generate-assets");
+$injector.requirePublic("assetsGenerationService", "./services/assets-generation/assets-generation-service");
