@@ -7,7 +7,7 @@ import { KinveyError, NotFoundError } from '../../errors';
 import { OfflineDataProcessor } from './offline-data-processor';
 import { ensureArray } from '../../utils';
 import { wrapInObservable } from '../../observable';
-import { isLocalEntity, isNotEmpty, isEmpty } from '../utils';
+import { isLocalEntity, isNotEmpty, isEmpty, getEntitiesPendingPushError } from '../utils';
 
 // imported for type info
 // import { NetworkRepository } from '../repositories';
@@ -217,10 +217,7 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
         if (count === 0) {
           return count;
         }
-        const countMsg = `There are ${count} entities, matching this query or id, pending push to the backend.`;
-        const errMsg = `Unable to ${prefix} on the backend, since the result might overwrite your local changes. ${countMsg}`;
-        const err = new KinveyError(errMsg);
-        return Promise.reject(err);
+        return Promise.reject(getEntitiesPendingPushError(count, prefix));
       });
   }
 

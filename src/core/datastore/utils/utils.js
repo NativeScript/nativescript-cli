@@ -1,8 +1,15 @@
 import _isEmpty from 'lodash/isEmpty';
 
+import { KinveyError } from '../../errors';
 import { isNonemptyString } from '../../utils';
 
 export const dataStoreTagSeparator = '.';
+
+export function getEntitiesPendingPushError(entityCount, prefix) {
+  const countMsg = `There are ${entityCount} entities, matching this query or id, pending push to the backend.`;
+  const errMsg = `Unable to ${prefix} on the backend, since the result might overwrite your local changes. ${countMsg}`;
+  return new KinveyError(errMsg);
+}
 
 export function generateEntityId(length = 24) {
   const chars = 'abcdef0123456789';

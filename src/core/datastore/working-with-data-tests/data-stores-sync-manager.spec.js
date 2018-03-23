@@ -2,7 +2,8 @@ import expect from 'expect';
 
 import { DataStoreType } from '../datastore';
 import { Query } from '../../query';
-import { datastoreFactory, createPromiseSpy, validateSpyCalls } from './utils';
+import { datastoreFactory, createPromiseSpy, validateSpyCalls, validateError } from './utils';
+import { KinveyError } from '../../errors';
 
 const collection = 'books';
 const optionKeyName = 'test';
@@ -64,7 +65,7 @@ describe('Data stores delegate correctly to sync manager', () => {
         return store.pendingSyncCount()
           .then(() => {
             const spy = syncManagerMock.getSyncItemCountByEntityQuery;
-            validateSpyCalls(spy, 1, [collection, undefined])
+            validateSpyCalls(spy, 1, [collection, undefined]);
           });
       });
 
@@ -90,15 +91,18 @@ describe('Data stores delegate correctly to sync manager', () => {
       it('pull() when there are pending sync items', () => {
         const query = new Query();
         const options = { [optionKeyName]: true };
-        syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(123);
+        const pendingSyncEntityCount = 123;
+        syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(pendingSyncEntityCount);
         return store.pull(query, options)
-          .then(() => {
-            const pushSpy = syncManagerMock.push;
-            validateSyncManagerCall(pushSpy, query);
+          .then(() => Promise.reject(new Error('should not happen')))
+          .catch((err) => {
+            const countSpy = syncManagerMock.getSyncItemCountByEntityQuery;
+            validateSyncManagerCall(countSpy, query);
+
+            validateError(err, KinveyError, `There are ${pendingSyncEntityCount} entities`);
 
             const pullSpy = syncManagerMock.pull;
-            validateSyncManagerCall(pullSpy, query, options);
-            expect(pullSpy.calls[0].arguments[2].useDeltaFetch).toBe(store.useDeltaFetch);
+            expect(pullSpy.calls.length).toBe(0);
           });
       });
 

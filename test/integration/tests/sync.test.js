@@ -424,12 +424,12 @@ function testFunc() {
               .catch(done);
           });
 
-          it('should make a silent push before the pull operation', (done) => {
+          it('should return an error if there are entities awaiting to be pushed to the backend', (done) => {
             syncStore.save(entity3)
               .then(() => storeToTest.pull())
-              .then(() => networkStore.findById(entity3._id).toPromise())
-              .then((result) => {
-                expect(result._id).to.equal(entity3._id);
+              .then(() => Promise.reject(new Error('should not happen')))
+              .catch((err) => {
+                expect(err.message).to.contain('There are 1 entities');
                 done();
               })
               .catch(done);
