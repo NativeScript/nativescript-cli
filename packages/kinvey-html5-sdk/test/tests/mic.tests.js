@@ -29,7 +29,16 @@ function testFunc() {
 
   const getExpectedInitialUrl = (appKey, micVersion, redirectUrl) => {
     return `https://auth.kinvey.com/${micVersion}/oauth/auth?client_id=${appKey}&redirect_uri=${redirectUrl}&response_type=code&scope=openid`;
-  }
+  };
+
+  const validateSuccessfulDataRead = (done) => {
+    debugger
+    return networkstore.find().toPromise()
+      .then((result) => {
+        expect(result).to.be.an.array;
+        done();
+      });
+  };
 
   const expireFBCookie = (fbWindow, cookieName, cookieValue, expiredDays) => {
     const newDate = new Date();
@@ -38,7 +47,7 @@ function testFunc() {
     const domain = 'domain=.facebook.com';
     const newValue = `${cookieName}=${cookieValue};${expires};${domain};path=/`;
     fbWindow.document.cookie = newValue;
-  }
+  };
 
   const validateMICUser = (user, allowRefreshTokens, explicitAuthServiceId) => {
     expect(user).to.deep.equal(Kinvey.User.getActiveUser());
@@ -102,21 +111,9 @@ function testFunc() {
       });
       return fbPopup;
     };
-  }
+  };
 
   describe('MIC Integration', () => {
-
-    before((done) => {
-      utilities.cleanUpAppData(collectionName, createdUserIds)
-        .then(() => done())
-        .catch(done);
-    });
-
-    after((done) => {
-      utilities.cleanUpAppData(collectionName, createdUserIds)
-        .then(() => done())
-        .catch(done);
-    });
 
     beforeEach((done) => {
       Kinvey.User.logout()
@@ -147,11 +144,7 @@ function testFunc() {
         })
         .then((existsOnServer) => {
           expect(existsOnServer).to.be.true;
-          return networkstore.find().toPromise()
-        })
-        .then((result) => {
-          expect(result).to.be.an.empty.array;
-          done();
+          return validateSuccessfulDataRead(done);
         })
         .catch(done);
     });
@@ -161,11 +154,7 @@ function testFunc() {
       Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: authServiceId })
         .then((user) => {
           validateMICUser(user, false, true);
-          return networkstore.find().toPromise()
-        })
-        .then((result) => {
-          expect(result).to.be.an.empty.array;
-          done();
+          return validateSuccessfulDataRead(done);
         })
         .catch(done);
     });
@@ -178,30 +167,9 @@ function testFunc() {
 
           // the test waits for the expiration of the access_token 
           setTimeout(() => {
-            return networkstore.find().toPromise()
-              .then((result) => {
-                expect(result).to.be.an.empty.array;
-                done();
-              })
+            return validateSuccessfulDataRead(done)
               .catch(done);
           }, defaultServiceAccessTokenTTL + 100);
-        }).catch(done);
-    });
-
-    it('should return a meaningful error if the user cancels the login', (done) => {
-      window.open = function () {
-        const fbPopup = winOpen.apply(this, arguments);
-        fbPopup.addEventListener('load', function () {
-          fbPopup.close();
-        });
-        return fbPopup;
-      };
-
-      Kinvey.User.loginWithMIC(redirectUrl)
-        .then(() => done(new Error('Should not happen')))
-        .catch((err) => {
-          expect(err.message).to.equal('Login has been cancelled.');
-          done();
         }).catch(done);
     });
 
@@ -246,7 +214,24 @@ function testFunc() {
         }).catch(done);
     });
 
-    it('should return a meaningful error if the authorization grant is invalid', (done) => {
+    it('should throw an error if the user cancels the login', (done) => {
+      window.open = function () {
+        const fbPopup = winOpen.apply(this, arguments);
+        fbPopup.addEventListener('load', function () {
+          fbPopup.close();
+        });
+        return fbPopup;
+      };
+
+      Kinvey.User.loginWithMIC(redirectUrl)
+        .then(() => done(new Error('Should not happen')))
+        .catch((err) => {
+          expect(err.message).to.equal('Login has been cancelled.');
+          done();
+        }).catch(done);
+    });
+
+    it('should throw an error if the authorization grant is invalid', (done) => {
       addLoginFacebookListener();
       Kinvey.User.loginWithMIC(redirectUrl, 'InvalidAuthorizationGrant', { micId: authServiceId })
         .then(() => done(new Error('Should not happen')))
