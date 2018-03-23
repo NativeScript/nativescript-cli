@@ -2,6 +2,8 @@ import { Client } from '../../client';
 
 import { stripTagFromCollectionName } from '../utils';
 
+export const testSupportCollection = '__testSupport__';
+
 export function buildCollectionUrl(collectionName, id, restAction) {
   collectionName = stripTagFromCollectionName(collectionName);
   let result = `appdata/${Client.sharedInstance().appKey}/${collectionName}`;
