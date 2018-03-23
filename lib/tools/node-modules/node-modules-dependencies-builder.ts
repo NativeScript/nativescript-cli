@@ -43,6 +43,10 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 					}
 				});
 
+				_.each(this.getProductionDependencies(resolvedDependency.directory), d => {
+					resolvedDependencies.push(d);
+				});
+				
 				resolvedDependencies.push(resolvedDependency);
 			}
 		}
