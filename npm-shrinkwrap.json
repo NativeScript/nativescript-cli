@@ -52,6 +52,11 @@
       "integrity": "sha512-gZ/Rb+MFXF0pXSEQxdRoPMm5jeO3TycjOdvbpbcpHX/B+n9AqaHFe5q6Ga9CsZ7ir/UgIWPfrBzUzn3F19VH/w==",
       "dev": true
     },
+    "@types/events": {
+      "version": "1.2.0",
+      "resolved": "https://registry.npmjs.org/@types/events/-/events-1.2.0.tgz",
+      "integrity": "sha512-KEIlhXnIutzKwRbQkGWb/I4HFqBuUykAdHgDED6xqwXJfONCjF5VoE0cXEiurh3XauygxzeDzgtXUqvLkxFzzA=="
+    },
     "@types/form-data": {
       "version": "0.0.33",
       "resolved": "https://registry.npmjs.org/@types/form-data/-/form-data-0.0.33.tgz",
@@ -124,6 +129,15 @@
       "resolved": "https://registry.npmjs.org/@types/universal-analytics/-/universal-analytics-0.4.1.tgz",
       "integrity": "sha1-7mESGwqJiwvqXuskcgCJjg+o8Jw=",
       "dev": true
+    },
+    "@types/ws": {
+      "version": "4.0.1",
+      "resolved": "https://registry.npmjs.org/@types/ws/-/ws-4.0.1.tgz",
+      "integrity": "sha512-J56Wn8j7ovzmlrkUSPXnVRH+YXUCGoVokiB49QIjz+yq0234guOrBvF/HHrqrJjnY4p5oq+q6xAxT/7An6SeWQ==",
+      "requires": {
+        "@types/events": "1.2.0",
+        "@types/node": "6.0.61"
+      }
     },
     "@types/xml2js": {
       "version": "0.4.2",
@@ -299,6 +313,11 @@
       "version": "1.0.1",
       "resolved": "https://registry.npmjs.org/async-each/-/async-each-1.0.1.tgz",
       "integrity": "sha1-GdOGodntxufByF04iu28xW0zYC0="
+    },
+    "async-limiter": {
+      "version": "1.0.0",
+      "resolved": "https://registry.npmjs.org/async-limiter/-/async-limiter-1.0.0.tgz",
+      "integrity": "sha512-jp/uFnooOiO+L211eZOoSyzpOITMXx1rBITauYykG3BRYPu8h0UcxsPNB04RR5vo4Tyz3+ay17tR6JVf9qzYWg=="
     },
     "asynckit": {
       "version": "0.4.0",
@@ -5753,11 +5772,6 @@
       "dev": true,
       "optional": true
     },
-    "ultron": {
-      "version": "1.1.0",
-      "resolved": "https://registry.npmjs.org/ultron/-/ultron-1.1.0.tgz",
-      "integrity": "sha1-sHoualQagV/Go0zNRTO67DB8qGQ="
-    },
     "underscore": {
       "version": "1.5.2",
       "resolved": "https://registry.npmjs.org/underscore/-/underscore-1.5.2.tgz",
@@ -5952,11 +5966,11 @@
       }
     },
     "ws": {
-      "version": "2.2.0",
-      "resolved": "https://registry.npmjs.org/ws/-/ws-2.2.0.tgz",
-      "integrity": "sha1-MhinsevRWgnFa7EqPpQ6lg63veU=",
+      "version": "5.1.0",
+      "resolved": "https://registry.npmjs.org/ws/-/ws-5.1.0.tgz",
+      "integrity": "sha512-7KU/qkUXtJW9aa5WRKlo0puE1ejEoAgDb0D/Pt+lWpTkKF7Kp+MqFOtwNFwnuiYeeDpFjp0qyMniE84OjKIEqQ==",
       "requires": {
-        "ultron": "1.1.0"
+        "async-limiter": "1.0.0"
       }
     },
     "xcode": {
