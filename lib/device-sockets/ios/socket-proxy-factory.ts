@@ -103,10 +103,10 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				callback(true);
 			}
 		});
-		server.on("connection", (webSocket) => {
+		server.on("connection", (webSocket, req) => {
 			const encoding = "utf16le";
 
-			const deviceSocket: net.Socket = (<any>webSocket.upgradeReq)["__deviceSocket"];
+			const deviceSocket: net.Socket = (<any>req)["__deviceSocket"];
 			const packets = new PacketStream();
 			deviceSocket.pipe(packets);
 
@@ -122,7 +122,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				this.$logger.trace("Error on debugger deviceSocket", err);
 			});
 
-			webSocket.on("message", (message, flags) => {
+			webSocket.on("message", (message: string) => {
 				const length = Buffer.byteLength(message, encoding);
 				const payload = new Buffer(length + 4);
 				payload.writeInt32BE(length, 0);
