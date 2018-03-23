@@ -3,6 +3,7 @@ function testFunc() {
   //the same redirect url should be configured on the server
   const redirectUrl = 'http://localhost:64320/callback';
   const authServiceId = 'f16b10fac0e64ed4ac6c33ce26a21b68';
+  const micDefaultVersion = 'v3';
 
   //the used OAuth 2 provider is Facebook
   const { fbEmail } = externalConfig;
@@ -23,7 +24,12 @@ function testFunc() {
   // Currently the server returns refresh_token = 'null' if the auth service does not allow refresh tokens.
   // The tests should be changed when this is fixed on the server
   const notAllowedRefreshTokenValue = 'null';
+  const invalidUrl = 'invalid_url';
   let winOpen;
+
+  const getExpectedInitialUrl = (appKey, micVersion, redirectUrl) => {
+    return `https://auth.kinvey.com/${micVersion}/oauth/auth?client_id=${appKey}&redirect_uri=${redirectUrl}&response_type=code&scope=openid`;
+  }
 
   const expireFBCookie = (fbWindow, cookieName, cookieValue, expiredDays) => {
     const newDate = new Date();
@@ -191,6 +197,47 @@ function testFunc() {
         .then(() => done(new Error('Should not happen')))
         .catch((err) => {
           expect(err.message).to.equal('Login has been cancelled.');
+          done();
+        }).catch(done);
+    });
+
+    it(`should make a correct request to KAS with the default ${micDefaultVersion} version`, (done) => {
+      let actualHref;
+      window.open = function () {
+        const fbPopup = winOpen.apply(this, arguments);
+        fbPopup.addEventListener('load', function () {
+          actualHref = fbPopup.location.href;
+          fbPopup.close();
+        });
+        return fbPopup;
+      };
+
+      Kinvey.User.loginWithMIC(invalidUrl)
+        .then(() => done(new Error('Should not happen')))
+        .catch((err) => {
+          expect(err.message).to.equal('Login has been cancelled.');
+          expect(actualHref).to.equal(getExpectedInitialUrl(externalConfig.appKey, micDefaultVersion, invalidUrl));
+          done();
+        }).catch(done);
+    });
+
+    it(`should make a correct request to KAS with the supplied options.version`, (done) => {
+      let actualHref;
+      const submittedVersion = 'v2';
+      window.open = function () {
+        const fbPopup = winOpen.apply(this, arguments);
+        fbPopup.addEventListener('load', function () {
+          actualHref = fbPopup.location.href;
+          fbPopup.close();
+        });
+        return fbPopup;
+      };
+
+      Kinvey.User.loginWithMIC(invalidUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { version: submittedVersion })
+        .then(() => done(new Error('Should not happen')))
+        .catch((err) => {
+          expect(err.message).to.equal('Login has been cancelled.');
+          expect(actualHref).to.equal(getExpectedInitialUrl(externalConfig.appKey, submittedVersion, invalidUrl));
           done();
         }).catch(done);
     });
