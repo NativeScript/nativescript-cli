@@ -157,6 +157,10 @@ function testFunc() {
       Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: authServiceId })
         .then((user) => {
           validateMICUser(user, false, true);
+          return Kinvey.User.exists(user.username)
+        })
+        .then((existsOnServer) => {
+          expect(existsOnServer).to.be.true;
           return networkstore.find().toPromise()
         })
         .then((result) => {
