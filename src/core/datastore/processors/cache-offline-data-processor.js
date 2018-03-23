@@ -79,13 +79,13 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
   _processRead(collection, query, options) {
     let offlineEntities;
     return wrapInObservable((observer) => {
-      return this._ensureCountBeforeRead(collection, 'fetch the entities', query)
-        .then(() => super._processRead(collection, query, options))
+      return super._processRead(collection, query, options)
         .then((entities) => {
           offlineEntities = entities;
           observer.next(offlineEntities);
-          return this._networkRepository.read(collection, query, options);
+          return this._ensureCountBeforeRead(collection, 'fetch the entities', query);
         })
+        .then(() => this._networkRepository.read(collection, query, options))
         .then((networkEntities) => {
           observer.next(networkEntities);
           return this._replaceOfflineEntities(collection, offlineEntities, networkEntities);
@@ -97,14 +97,14 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
     let offlineEntity;
     return wrapInObservable((observer) => {
       const query = new Query().equalTo('_id', entityId);
-      return this._ensureCountBeforeRead(collection, 'find the entity', query)
-        .then(() => super._processReadById(collection, entityId, options))
+      return super._processReadById(collection, entityId, options)
         .catch(err => this._catchNotFoundError(err)) // backwards compatibility
         .then((entity) => {
           observer.next(entity);
           offlineEntity = entity;
-          return this._networkRepository.readById(collection, entityId, options);
+          return this._ensureCountBeforeRead(collection, 'find the entity', query);
         })
+        .then(() => this._networkRepository.readById(collection, entityId, options))
         .then((entity) => {
           observer.next(entity);
           return this._replaceOfflineEntities(collection, offlineEntity, ensureArray(entity));
@@ -125,12 +125,12 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
 
   _processCount(collection, query, options) {
     return wrapInObservable((observer) => {
-      return this._ensureCountBeforeRead(collection, 'count entities', query)
-        .then(() => super._processCount(collection, query, options))
+      return super._processCount(collection, query, options)
         .then((offlineCount) => {
           observer.next(offlineCount);
-          return this._networkRepository.count(collection, query, options);
+          return this._ensureCountBeforeRead(collection, 'count entities', query);
         })
+        .then(() => this._networkRepository.count(collection, query, options))
         .then((networkCount) => {
           observer.next(networkCount);
         });
