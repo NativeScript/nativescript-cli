@@ -113,8 +113,7 @@ export class IndexedDbKeyValueStorePersister extends KeyValueStorePersister {
         };
 
         txn.onerror = () => {
-          reject(new NotFoundError(`An entity with id = ${entityId} was not found in the ${collection}`
-            + ` collection on the ${this._storeName} IndexedDB database.`));
+          reject(this._getEntityNotFoundError(collection, entityId));
         };
       }, reject);
     });

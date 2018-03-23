@@ -9,8 +9,7 @@ import { StorageProvider } from './storage-provider';
 import { ensureArray } from '../../utils';
 import { PromiseQueueByKey } from '../utils';
 import { MemoryKeyValuePersister } from '../persisters';
-
-const testSupportCollection = '__testSupport__';
+import { testSupportCollection } from './utils';
 
 const inmemoryRepoBuilder = (queue) => {
   const persister = new MemoryKeyValuePersister();

@@ -33,7 +33,7 @@ export class BrowserKeyValuePersister extends KeyValuePersister {
 
   _writeToPersistance(collection, entities) {
     return this._ensureCollectionExists(collection)
-      .then(() => this._deserializeAndSet(collection, entities));
+      .then(() => this._serializeAndSet(collection, entities));
   }
 
   _deleteFromPersistance(collection) {
@@ -57,11 +57,11 @@ export class BrowserKeyValuePersister extends KeyValuePersister {
           return Promise.resolve();
         }
         allCollections.push(collection);
-        return this._deserializeAndSet(masterCollectionName, allCollections);
+        return this._serializeAndSet(masterCollectionName, allCollections);
       });
   }
 
-  _deserializeAndSet(collection, entities) {
+  _serializeAndSet(collection, entities) {
     return this._serialize(entities)
       .then(serialized => this._store.setItem(collection, serialized));
   }

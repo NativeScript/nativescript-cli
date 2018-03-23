@@ -60,6 +60,6 @@ export class KeyValueStorePersister extends KeyValuePersister {
 
   _getEntityNotFoundError(collection, id) {
     return new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
-      + ` collection on the ${this._storeName} IndexedDB database.`);
+      + ` collection on the ${this._storeName} database.`);
   }
 }
