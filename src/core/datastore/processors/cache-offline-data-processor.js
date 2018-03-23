@@ -214,18 +214,12 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
   _ensureCountBeforeRead(collection, prefix, query) {
     return this._syncManager.getSyncItemCountByEntityQuery(collection, query)
       .then((count) => {
-        if (count > 0) { // backwards compatibility
-          return this._syncManager.push(collection, query)
-            .then(() => this._syncManager.getSyncItemCountByEntityQuery(collection, query));
-        }
-        return count;
-      })
-      .then((count) => {
         if (count === 0) {
           return count;
         }
-        const countMsg = `There are ${count} entities that need to be synced.`;
-        const err = new KinveyError(`Unable to ${prefix} on the backend. ${countMsg}`);
+        const countMsg = `There are ${count} entities, matching this query or id, pending push to the backend.`;
+        const errMsg = `Unable to ${prefix} on the backend, since the result might overwrite your local changes. ${countMsg}`;
+        const err = new KinveyError(errMsg);
         return Promise.reject(err);
       });
   }

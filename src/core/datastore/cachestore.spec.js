@@ -13,6 +13,7 @@ import { NodeHttpMiddleware } from '../../node/http';
 import { User } from '../user';
 
 const collection = 'Books';
+const pendingPushEntitiesErrMsg = 'There are 1 entities, matching this query or id, pending push to the backend.';
 
 describe('CacheStore', () => {
   let client;
@@ -97,10 +98,7 @@ describe('CacheStore', () => {
             .subscribe(null, (error) => {
               try {
                 expect(error).toBeA(KinveyError);
-                expect(error.message).toEqual(
-                  'Unable to fetch the entities on the backend.'
-                  + ' There are 1 entities that need to be synced.'
-                );
+                expect(error.message).toInclude(pendingPushEntitiesErrMsg);
                 done();
               } catch (e) {
                 done(e);
@@ -263,10 +261,7 @@ describe('CacheStore', () => {
             .subscribe(null, (error) => {
               try {
                 expect(error).toBeA(KinveyError);
-                expect(error.message).toEqual(
-                  'Unable to find the entity on the backend.'
-                  + ' There are 1 entities that need to be synced.'
-                );
+                expect(error.message).toInclude(pendingPushEntitiesErrMsg);
                 done();
               } catch (e) {
                 done(e);
@@ -413,10 +408,7 @@ describe('CacheStore', () => {
             .subscribe(null, (error) => {
               try {
                 expect(error).toBeA(KinveyError);
-                expect(error.message).toEqual(
-                  'Unable to group entities on the backend.'
-                  + ' There are 1 entities that need to be synced.'
-                );
+                expect(error.message).toInclude(pendingPushEntitiesErrMsg);
                 done();
               } catch (e) {
                 done(e);
@@ -507,10 +499,7 @@ describe('CacheStore', () => {
             .subscribe(null, (error) => {
               try {
                 expect(error).toBeA(KinveyError);
-                expect(error.message).toEqual(
-                  'Unable to count entities on the backend.'
-                  + ' There are 1 entities that need to be synced.'
-                );
+                expect(error.message).toInclude(pendingPushEntitiesErrMsg);
                 done();
               } catch (e) {
                 done(e);
