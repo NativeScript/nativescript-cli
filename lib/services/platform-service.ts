@@ -788,9 +788,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	private getLatestApplicationPackage(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage {
 		let packages = this.getApplicationPackages(buildOutputPath, validBuildOutputData);
+		const packageExtName = path.extname(validBuildOutputData.packageNames[0]);
 		if (packages.length === 0) {
-			const packageExtName = path.extname(validBuildOutputData.packageNames[0]);
-			this.$errors.fail("No %s found in %s directory", packageExtName, buildOutputPath);
+			this.$errors.fail(`No ${packageExtName} found in ${buildOutputPath} directory.`);
+		}
+
+		if (packages.length > 1) {
+			this.$logger.warn(`More than one ${packageExtName} found in ${buildOutputPath} directory. Using the last one produced from build.`)
 		}
 
 		packages = _.sortBy(packages, pkg => pkg.time).reverse(); // We need to reverse because sortBy always sorts in ascending order
