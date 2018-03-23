@@ -180,7 +180,7 @@ function testFunc() {
                 done();
               })
               .catch(done);
-          }, defaultServiceAccessTokenTTL + 1000);
+          }, defaultServiceAccessTokenTTL + 100);
         }).catch(done);
     });
 
@@ -248,6 +248,19 @@ function testFunc() {
         .then(() => done(new Error('Should not happen')))
         .catch((err) => {
           expect(err.message).to.contain('Please use a supported authorization grant.');
+          done();
+        }).catch(done);
+    });
+
+    it('should throw an error if an active user already exists', (done) => {
+      addLoginFacebookListener();
+      Kinvey.User.signup()
+        .then(() => {
+          return Kinvey.User.loginWithMIC(redirectUrl)
+        })
+        .then(() => done(new Error('Should not happen')))
+        .catch((err) => {
+          expect(err.message).to.contain('An active user already exists.');
           done();
         }).catch(done);
     });
