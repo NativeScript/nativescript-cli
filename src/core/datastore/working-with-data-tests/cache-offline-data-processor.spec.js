@@ -208,8 +208,6 @@ describe('CacheOfflineDataProcessor', () => {
           expect(result).toBeA(KinveyObservable);
         });
 
-        addSyncQueueTests();
-
         it('should call OfflineRepo.count()', () => {
           return dataProcessor.process(operation, options).toPromise()
             .then(() => {
@@ -241,8 +239,6 @@ describe('CacheOfflineDataProcessor', () => {
               validateSpyCalls(offlineRepoMock.group, 1, [collection, operation.query, options]);
             });
         });
-
-        addSyncQueueTests();
 
         it('should call NetworkRepo.group()', () => {
           return dataProcessor.process(operation, options).toPromise()

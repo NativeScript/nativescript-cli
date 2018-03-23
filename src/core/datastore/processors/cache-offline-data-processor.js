@@ -128,12 +128,9 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
       return super._processCount(collection, query, options)
         .then((offlineCount) => {
           observer.next(offlineCount);
-          return this._ensureCountBeforeRead(collection, 'count entities', query);
+          return this._networkRepository.count(collection, query, options);
         })
-        .then(() => this._networkRepository.count(collection, query, options))
-        .then((networkCount) => {
-          observer.next(networkCount);
-        });
+        .then(networkCount => observer.next(networkCount));
     });
   }
 
@@ -143,9 +140,8 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
         .catch(() => []) // backwards compatibility
         .then((offlineResult) => {
           observer.next(offlineResult);
-          return this._ensureCountBeforeRead(collection, 'group entities');
+          return this._networkRepository.group(collection, aggregationQuery, options);
         })
-        .then(() => this._networkRepository.group(collection, aggregationQuery, options))
         .then(networkResult => observer.next(networkResult));
     });
   }

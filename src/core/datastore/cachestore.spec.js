@@ -397,28 +397,6 @@ describe('CacheStore', () => {
         });
     });
 
-    it('should throw an error if there are entities to sync', (done) => {
-      const entity = { _id: randomString() };
-      const syncStore = new SyncStore(collection);
-      syncStore.save(entity)
-        .then(() => {
-          const aggregation = new Aggregation();
-          const store = new CacheStore(collection);
-          store.group(aggregation)
-            .subscribe(null, (error) => {
-              try {
-                expect(error).toBeA(KinveyError);
-                expect(error.message).toInclude(pendingPushEntitiesErrMsg);
-                done();
-              } catch (e) {
-                done(e);
-              }
-            }, () => {
-              done(new Error('This test should fail.'));
-            });
-        });
-    });
-
     it('should return the count of all unique properties on the collection', (done) => {
       const entity1 = { _id: randomString(), title: randomString() };
       const entity2 = { _id: randomString(), title: randomString() };
@@ -486,27 +464,6 @@ describe('CacheStore', () => {
           }
         }, () => {
           done(new Error('This test should fail.'));
-        });
-    });
-
-    it('should throw an error if there are entities to sync', (done) => {
-      const entity = { _id: randomString() };
-      const syncStore = new SyncStore(collection);
-      syncStore.save(entity)
-        .then(() => {
-          const store = new CacheStore(collection);
-          store.count()
-            .subscribe(null, (error) => {
-              try {
-                expect(error).toBeA(KinveyError);
-                expect(error.message).toInclude(pendingPushEntitiesErrMsg);
-                done();
-              } catch (e) {
-                done(e);
-              }
-            }, () => {
-              done(new Error('This test should fail.'));
-            });
         });
     });
 
