@@ -794,7 +794,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		if (packages.length > 1) {
-			this.$logger.warn(`More than one ${packageExtName} found in ${buildOutputPath} directory. Using the last one produced from build.`)
+			this.$logger.warn(`More than one ${packageExtName} found in ${buildOutputPath} directory. Using the last one produced from build.`);
 		}
 
 		packages = _.sortBy(packages, pkg => pkg.time).reverse(); // We need to reverse because sortBy always sorts in ascending order
