@@ -128,6 +128,14 @@ function testFunc() {
     };
   };
 
+  const resolveAfter = (timeInMs) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve();
+      }, timeInMs);
+    });
+  }
+
   describe('MIC Integration', () => {
 
     beforeEach((done) => {
@@ -181,11 +189,12 @@ function testFunc() {
           expect(user).to.exist;
 
           // the test waits for the expiration of the access_token 
-          setTimeout(() => {
-            return validateSuccessfulDataRead(done)
-              .catch(done);
-          }, defaultServiceAccessTokenTTL + 100);
-        }).catch(done);
+          return resolveAfter(defaultServiceAccessTokenTTL + 100)
+        })
+        .then(() => {
+          return validateSuccessfulDataRead(done);
+        })
+        .catch(done);
     });
 
     it(`should make a correct request to KAS with the default ${micDefaultVersion} version`, (done) => {
