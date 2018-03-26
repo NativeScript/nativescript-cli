@@ -95,7 +95,7 @@ function testFunc() {
     expect(user.client).to.exist;
   };
 
-  const addLoginFacebookListener = () => {
+  const addLoginFacebookHandler = () => {
     // monkey patch window.open - the function is reset back in the afterEach hook
     window.open = function () {
       const fbPopup = winOpen.apply(this, arguments);
@@ -129,6 +129,13 @@ function testFunc() {
     };
   };
 
+  const validateClosedPopupUrl = (errorMessage, expectedMicVersion, done) => {
+    expect(errorMessage).to.equal(cancelledLoginMessage);
+    if (expectedMicVersion)
+      expect(actualHref).to.equal(getExpectedInitialUrl(externalConfig.appKey, expectedMicVersion, invalidUrl));
+    done();
+  };
+
   describe('MIC Integration', () => {
 
     beforeEach((done) => {
@@ -152,7 +159,7 @@ function testFunc() {
 
 
     it('should login the user, using the default Auth service, which allows refresh tokens', (done) => {
-      addLoginFacebookListener();
+      addLoginFacebookHandler();
       Kinvey.User.loginWithMIC(redirectUrl)
         .then((user) => {
           validateMICUser(user, true);
@@ -167,7 +174,7 @@ function testFunc() {
     });
 
     it('should login the user, using the specified Auth service, which does not allow refresh tokens', (done) => {
-      addLoginFacebookListener();
+      addLoginFacebookHandler();
       Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: authServiceId })
         .then((user) => {
           validateMICUser(user, false, true);
@@ -177,7 +184,7 @@ function testFunc() {
     });
 
     it('should refresh an expired access_token and not logout the user', (done) => {
-      addLoginFacebookListener();
+      addLoginFacebookHandler();
       Kinvey.User.loginWithMIC(redirectUrl)
         .then((user) => {
           expect(user).to.exist;
@@ -198,9 +205,7 @@ function testFunc() {
       Kinvey.User.loginWithMIC(invalidUrl)
         .then(() => done(new Error(shouldNotBeInvokedMessage)))
         .catch((err) => {
-          expect(err.message).to.equal(cancelledLoginMessage);
-          expect(actualHref).to.equal(getExpectedInitialUrl(externalConfig.appKey, micDefaultVersion, invalidUrl));
-          done();
+          validateClosedPopupUrl(err.message, micDefaultVersion, done);
         }).catch(done);
     });
 
@@ -213,9 +218,7 @@ function testFunc() {
       Kinvey.User.loginWithMIC(invalidUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { version: submittedVersion })
         .then(() => done(new Error(shouldNotBeInvokedMessage)))
         .catch((err) => {
-          expect(err.message).to.equal(cancelledLoginMessage);
-          expect(actualHref).to.equal(getExpectedInitialUrl(externalConfig.appKey, submittedVersion, invalidUrl));
-          done();
+          validateClosedPopupUrl(err.message, submittedVersion, done);
         }).catch(done);
     });
 
@@ -225,13 +228,12 @@ function testFunc() {
       Kinvey.User.loginWithMIC(redirectUrl)
         .then(() => done(new Error(shouldNotBeInvokedMessage)))
         .catch((err) => {
-          expect(err.message).to.equal(cancelledLoginMessage);
-          done();
+          validateClosedPopupUrl(err.message, null, done);
         }).catch(done);
     });
 
     it('should throw an error if the authorization grant is invalid', (done) => {
-      addLoginFacebookListener();
+      addLoginFacebookHandler();
       Kinvey.User.loginWithMIC(redirectUrl, 'InvalidAuthorizationGrant', { micId: authServiceId })
         .then(() => done(new Error(shouldNotBeInvokedMessage)))
         .catch((err) => {
@@ -241,7 +243,7 @@ function testFunc() {
     });
 
     it('should throw an error if an active user already exists', (done) => {
-      addLoginFacebookListener();
+      addLoginFacebookHandler();
       Kinvey.User.signup()
         .then(() => {
           return Kinvey.User.loginWithMIC(redirectUrl)
