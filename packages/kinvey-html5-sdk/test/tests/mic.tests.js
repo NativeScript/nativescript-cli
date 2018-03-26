@@ -35,7 +35,7 @@ function testFunc() {
     debugger
     return networkstore.find().toPromise()
       .then((result) => {
-        expect(result).to.be.an.array;
+        expect(result).to.be.an('array');
         done();
       });
   };

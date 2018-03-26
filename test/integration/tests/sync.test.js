@@ -273,7 +273,7 @@ function testFunc() {
             syncStore.clearSync()
               .then(() => storeToTest.pendingSyncEntities())
               .then((entities) => {
-                expect(entities).to.be.an.empty.array;
+                expect(entities).to.be.an('array').that.is.empty;
                 done();
               })
               .catch(done);
