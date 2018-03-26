@@ -88,7 +88,7 @@ interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	 * @param {IShouldPrepareInfo} shouldPrepareInfo Options needed to decide whether to prepare.
 	 * @returns {Promise<boolean>} true indicates that the project should be prepared.
 	 */
-	shouldPrepare(shouldPrepareInfo: IShouldPrepareInfo): Promise<boolean>
+	shouldPrepare(shouldPrepareInfo: IShouldPrepareInfo): Promise<boolean>;
 
 	/**
 	 * Installs the application on specified device.
@@ -213,7 +213,7 @@ interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	 * @param {string} buildInfoFileDirname The directory where the build file should be written to.
 	 * @returns {void}
 	 */
-	saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void
+	saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void;
 }
 
 interface IPlatformOptions extends IPlatformSpecificData, ICreateProjectOptions { }
