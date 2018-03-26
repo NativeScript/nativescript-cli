@@ -1,6 +1,25 @@
 NativeScript CLI Changelog
 ================
 
+4.0.0rc (2018, March 23)
+==
+
+### New
+* [Implemented #3243](https://github.com/NativeScript/nativescript-cli/issues/3243) 'Scss' file changes trigger app refresh instead reloading the view and apply generated 'css'
+* [Implemented #3248](https://github.com/NativeScript/nativescript-cli/issues/3248) Support JDK_HOME and JAVA_HOME
+* [Implemented #3257](https://github.com/NativeScript/nativescript-cli/issues/3257) Make {N} project structure configurable
+* [Implemented #3317](https://github.com/NativeScript/nativescript-cli/issues/3317) Support livesync with webpack
+* [Implemented #3449](https://github.com/NativeScript/nativescript-cli/pull/3449) Track Vue.js project type
+* [Implemented #3496](https://github.com/NativeScript/nativescript-cli/issues/3496) Generate assets for the mobile application
+* [Implemented #3497](https://github.com/NativeScript/nativescript-cli/issues/3497) Command to migrate Android resources to 4.0.0 structure
+
+### Fixed
+* [Fixed #3151](https://github.com/NativeScript/nativescript-cli/issues/3151): Install fails if user setting file is not valid json
+* [Fixed #3324](https://github.com/NativeScript/nativescript-cli/issues/3324): Error when iOS simulator's window is closed
+* [Fixed #3442](https://github.com/NativeScript/nativescript-cli/issues/3442): Unnecessary second build upon `tns run android`
+* [Fixed #3451](https://github.com/NativeScript/nativescript-cli/issues/3451): `tns plugin remove` fails with : Cannot convert undefined or null to object
+
+
 3.4.3 (2018, March 02)
 ==
 
