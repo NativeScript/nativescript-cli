@@ -17,7 +17,7 @@ function testFunc() {
   const { collectionName } = externalConfig;
   const networkstore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
   const createdUserIds = [];
-  
+
 
   // The configured access_token ttl is 3 seconds on the server for the default auth service
   const defaultServiceAccessTokenTTL = 3000;
@@ -29,13 +29,13 @@ function testFunc() {
   const shouldNotBeInvokedMessage = 'Should not happen';
   const cancelledLoginMessage = 'Login has been cancelled.';
   let winOpen;
+  let actualHref;
 
   const getExpectedInitialUrl = (appKey, micVersion, redirectUrl) => {
     return `https://${serverHost}/${micVersion}/oauth/auth?client_id=${appKey}&redirect_uri=${redirectUrl}&response_type=code&scope=openid`;
   };
 
   const validateSuccessfulDataRead = (done) => {
-    debugger
     return networkstore.find().toPromise()
       .then((result) => {
         expect(result).to.be.an('array');
@@ -116,6 +116,19 @@ function testFunc() {
     };
   };
 
+  const addCloseFacebookPopupHandler = (retrievePopupUrl) => {
+    window.open = function () {
+      const fbPopup = winOpen.apply(this, arguments);
+      fbPopup.addEventListener('load', function () {
+        if (retrievePopupUrl) {
+          actualHref = fbPopup.location.href;
+        }
+        fbPopup.close();
+      });
+      return fbPopup;
+    };
+  };
+
   describe('MIC Integration', () => {
 
     beforeEach((done) => {
@@ -126,6 +139,7 @@ function testFunc() {
             expireFBCookie(fbWindow, fbCookieName, fbCookieValue, 3);
             fbWindow.close();
             winOpen = window.open;
+            actualHref = null;
             done();
           });
         });
@@ -177,15 +191,9 @@ function testFunc() {
     });
 
     it(`should make a correct request to KAS with the default ${micDefaultVersion} version`, (done) => {
-      let actualHref;
-      window.open = function () {
-        const fbPopup = winOpen.apply(this, arguments);
-        fbPopup.addEventListener('load', function () {
-          actualHref = fbPopup.location.href;
-          fbPopup.close();
-        });
-        return fbPopup;
-      };
+      // Currently the error function is not called when the server returns an error - MLIBZ-2423,
+      // so the test is closing the popup in order to resume execution and validate the request url  
+      addCloseFacebookPopupHandler(true);
 
       Kinvey.User.loginWithMIC(invalidUrl)
         .then(() => done(new Error(shouldNotBeInvokedMessage)))
@@ -197,16 +205,10 @@ function testFunc() {
     });
 
     it(`should make a correct request to KAS with the supplied options.version`, (done) => {
-      let actualHref;
+      // Currently the error function is not called when the server returns an error - MLIBZ-2423,
+      // so the test is closing the popup in order to resume execution and validate the request url 
       const submittedVersion = 'v2';
-      window.open = function () {
-        const fbPopup = winOpen.apply(this, arguments);
-        fbPopup.addEventListener('load', function () {
-          actualHref = fbPopup.location.href;
-          fbPopup.close();
-        });
-        return fbPopup;
-      };
+      addCloseFacebookPopupHandler(true);
 
       Kinvey.User.loginWithMIC(invalidUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { version: submittedVersion })
         .then(() => done(new Error(shouldNotBeInvokedMessage)))
@@ -218,13 +220,7 @@ function testFunc() {
     });
 
     it('should throw an error if the user cancels the login', (done) => {
-      window.open = function () {
-        const fbPopup = winOpen.apply(this, arguments);
-        fbPopup.addEventListener('load', function () {
-          fbPopup.close();
-        });
-        return fbPopup;
-      };
+      addCloseFacebookPopupHandler();
 
       Kinvey.User.loginWithMIC(redirectUrl)
         .then(() => done(new Error(shouldNotBeInvokedMessage)))
