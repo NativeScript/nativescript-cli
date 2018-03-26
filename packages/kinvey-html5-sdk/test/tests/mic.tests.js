@@ -128,13 +128,6 @@ function testFunc() {
     };
   };
 
-  const validateClosedPopupUrl = (errorMessage, expectedMicVersion, done) => {
-    expect(errorMessage).to.equal(cancelledLoginMessage);
-    if (expectedMicVersion)
-      expect(actualHref).to.equal(getExpectedInitialUrl(externalConfig.appKey, expectedMicVersion, invalidUrl));
-    done();
-  };
-
   describe('MIC Integration', () => {
 
     beforeEach((done) => {
@@ -202,8 +195,9 @@ function testFunc() {
 
       Kinvey.User.loginWithMIC(invalidUrl)
         .then(() => done(new Error(shouldNotBeInvokedMessage)))
-        .catch((err) => {
-          validateClosedPopupUrl(err.message, micDefaultVersion, done);
+        .catch(() => {
+          expect(actualHref).to.equal(getExpectedInitialUrl(externalConfig.appKey, micDefaultVersion, invalidUrl));
+          done();
         }).catch(done);
     });
 
@@ -215,8 +209,9 @@ function testFunc() {
 
       Kinvey.User.loginWithMIC(invalidUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { version: submittedVersion })
         .then(() => done(new Error(shouldNotBeInvokedMessage)))
-        .catch((err) => {
-          validateClosedPopupUrl(err.message, submittedVersion, done);
+        .catch(() => {
+          expect(actualHref).to.equal(getExpectedInitialUrl(externalConfig.appKey, submittedVersion, invalidUrl));
+          done();
         }).catch(done);
     });
 
@@ -226,7 +221,8 @@ function testFunc() {
       Kinvey.User.loginWithMIC(redirectUrl)
         .then(() => done(new Error(shouldNotBeInvokedMessage)))
         .catch((err) => {
-          validateClosedPopupUrl(err.message, null, done);
+          expect(err.message).to.equal(cancelledLoginMessage);
+          done();
         }).catch(done);
     });
 
