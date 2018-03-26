@@ -16,7 +16,6 @@ function testFunc() {
 
   const { collectionName } = externalConfig;
   const networkstore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
-  const createdUserIds = [];
 
 
   // The configured access_token ttl is 3 seconds on the server for the default auth service
@@ -163,7 +162,6 @@ function testFunc() {
       Kinvey.User.loginWithMIC(redirectUrl)
         .then((user) => {
           validateMICUser(user, true);
-          createdUserIds.push(user.data._id);
           return Kinvey.User.exists(user.username)
         })
         .then((existsOnServer) => {
