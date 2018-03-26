@@ -1,6 +1,7 @@
 function testFunc() {
 
   //the same redirect url should be configured on the server
+  const serverHost = 'auth.kinvey.com';
   const redirectUrl = 'http://localhost:64320/callback';
   const authServiceId = 'f16b10fac0e64ed4ac6c33ce26a21b68';
   const micDefaultVersion = 'v3';
@@ -30,7 +31,7 @@ function testFunc() {
   let winOpen;
 
   const getExpectedInitialUrl = (appKey, micVersion, redirectUrl) => {
-    return `https://auth.kinvey.com/${micVersion}/oauth/auth?client_id=${appKey}&redirect_uri=${redirectUrl}&response_type=code&scope=openid`;
+    return `https://${serverHost}/${micVersion}/oauth/auth?client_id=${appKey}&redirect_uri=${redirectUrl}&response_type=code&scope=openid`;
   };
 
   const validateSuccessfulDataRead = (done) => {
@@ -89,7 +90,7 @@ function testFunc() {
     }
     expect(kinveyAuth.redirect_uri).to.equal(redirectUrl);
     expect(kinveyAuth.protocol).to.equal('https:');
-    expect(kinveyAuth.host).to.equal('auth.kinvey.com');
+    expect(kinveyAuth.host).to.equal(serverHost);
 
     expect(user.client).to.exist;
   };
