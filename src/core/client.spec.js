@@ -12,6 +12,21 @@ describe('Client', () => {
       expect(client.micHostname).toEqual('https://auth.kinvey.com');
     });
 
+    it('should throw an error if instance id is not a string', () => {
+      expect(() => {
+        const instanceId = {};
+        const client = new Client({ instanceId });
+        return client;
+      }).toThrow(/Instance ID must be a string./);
+    });
+
+    it('should be able to provide an instance id', () => {
+      const instanceId = randomString().toLowerCase();
+      const client = new Client({ instanceId });
+      expect(client.apiHostname).toEqual(`https://${instanceId}-baas.kinvey.com`);
+      expect(client.micHostname).toEqual(`https://${instanceId}-auth.kinvey.com`);
+    });
+
     it('should be able to provide custom apiHostname with protocol https:', () => {
       const apiHostname = 'https://mybaas.kinvey.com';
       const client = new Client({ apiHostname: apiHostname });
