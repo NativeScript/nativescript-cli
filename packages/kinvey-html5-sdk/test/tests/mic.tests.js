@@ -16,7 +16,7 @@ function testFunc() {
   const { collectionName } = externalConfig;
   const networkstore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
   const createdUserIds = [];
-
+  
 
   // The configured access_token ttl is 3 seconds on the server for the default auth service
   const defaultServiceAccessTokenTTL = 3000;
@@ -25,6 +25,8 @@ function testFunc() {
   // The tests should be changed when this is fixed on the server
   const notAllowedRefreshTokenValue = 'null';
   const invalidUrl = 'invalid_url';
+  const shouldNotBeInvokedMessage = 'Should not happen';
+  const cancelledLoginMessage = 'Login has been cancelled.';
   let winOpen;
 
   const getExpectedInitialUrl = (appKey, micVersion, redirectUrl) => {
@@ -185,9 +187,9 @@ function testFunc() {
       };
 
       Kinvey.User.loginWithMIC(invalidUrl)
-        .then(() => done(new Error('Should not happen')))
+        .then(() => done(new Error(shouldNotBeInvokedMessage)))
         .catch((err) => {
-          expect(err.message).to.equal('Login has been cancelled.');
+          expect(err.message).to.equal(cancelledLoginMessage);
           expect(actualHref).to.equal(getExpectedInitialUrl(externalConfig.appKey, micDefaultVersion, invalidUrl));
           done();
         }).catch(done);
@@ -206,9 +208,9 @@ function testFunc() {
       };
 
       Kinvey.User.loginWithMIC(invalidUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { version: submittedVersion })
-        .then(() => done(new Error('Should not happen')))
+        .then(() => done(new Error(shouldNotBeInvokedMessage)))
         .catch((err) => {
-          expect(err.message).to.equal('Login has been cancelled.');
+          expect(err.message).to.equal(cancelledLoginMessage);
           expect(actualHref).to.equal(getExpectedInitialUrl(externalConfig.appKey, submittedVersion, invalidUrl));
           done();
         }).catch(done);
@@ -224,9 +226,9 @@ function testFunc() {
       };
 
       Kinvey.User.loginWithMIC(redirectUrl)
-        .then(() => done(new Error('Should not happen')))
+        .then(() => done(new Error(shouldNotBeInvokedMessage)))
         .catch((err) => {
-          expect(err.message).to.equal('Login has been cancelled.');
+          expect(err.message).to.equal(cancelledLoginMessage);
           done();
         }).catch(done);
     });
@@ -234,7 +236,7 @@ function testFunc() {
     it('should throw an error if the authorization grant is invalid', (done) => {
       addLoginFacebookListener();
       Kinvey.User.loginWithMIC(redirectUrl, 'InvalidAuthorizationGrant', { micId: authServiceId })
-        .then(() => done(new Error('Should not happen')))
+        .then(() => done(new Error(shouldNotBeInvokedMessage)))
         .catch((err) => {
           expect(err.message).to.contain('Please use a supported authorization grant.');
           done();
@@ -247,7 +249,7 @@ function testFunc() {
         .then(() => {
           return Kinvey.User.loginWithMIC(redirectUrl)
         })
-        .then(() => done(new Error('Should not happen')))
+        .then(() => done(new Error(shouldNotBeInvokedMessage)))
         .catch((err) => {
           expect(err.message).to.contain('An active user already exists.');
           done();
