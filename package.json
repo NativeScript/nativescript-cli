@@ -30,7 +30,6 @@
     "mobile"
   ],
   "dependencies": {
-    "@types/ora": "1.3.2",
     "bufferpack": "0.0.6",
     "byline": "4.2.1",
     "chalk": "1.1.0",
@@ -94,6 +93,7 @@
     "@types/color": "3.0.0",
     "@types/lockfile": "1.0.0",
     "@types/node": "6.0.61",
+    "@types/ora": "1.3.3",
     "@types/qr-image": "3.2.0",
     "@types/request": "0.0.45",
     "@types/semver": "^5.3.31",
