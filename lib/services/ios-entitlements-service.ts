@@ -56,10 +56,11 @@ export class IOSEntitlementsService {
 			makePatch(appEntitlementsPath);
 		}
 
-		const plistContent = session.build();
-		this.$logger.trace("App.entitlements: Write to: " + this.getPlatformsEntitlementsPath(projectData));
-		this.$fs.writeFile(this.getPlatformsEntitlementsPath(projectData), plistContent);
-		return;
+		if ((<any>session).patches && (<any>session).patches.length > 0) {
+			const plistContent = session.build();
+			this.$logger.trace("App.entitlements: Write to: " + this.getPlatformsEntitlementsPath(projectData));
+			this.$fs.writeFile(this.getPlatformsEntitlementsPath(projectData), plistContent);
+		}
 	}
 
 	private getAllInstalledPlugins(projectData: IProjectData): Promise<IPluginData[]> {
