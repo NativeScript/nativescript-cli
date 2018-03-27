@@ -3,7 +3,7 @@ function testFunc() {
   //the same redirect url should be configured on the server
   const serverHost = 'auth.kinvey.com';
   const redirectUrl = 'http://localhost:64320/callback';
-  const authServiceId = 'f16b10fac0e64ed4ac6c33ce26a21b68';
+  const authServiceId = 'decad9197f0f4680a46d902327c5c131';
   const micDefaultVersion = 'v3';
 
   //the used OAuth 2 provider is Facebook
