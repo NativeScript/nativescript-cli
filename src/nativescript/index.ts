@@ -7,3 +7,7 @@ export { Push } from './push';
 
 const supportedStorageProviders = repositoryProvider.getSupportedStorages();
 export const StorageProvider = pick(StorageProviderEnum, supportedStorageProviders);
+
+import { FileStore } from './filestore';
+const Files = new FileStore();
+export { Files };
