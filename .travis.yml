@@ -37,6 +37,7 @@ matrix:
 
 
     - os: linux
+      if: type IN (pull_request)
       env: PLATFORM='HTML5'
       language: node_js
       node_js: ${INTEGRATION_TESTS_NODEJS_VERSION}
@@ -46,6 +47,7 @@ matrix:
 
 
     - os: linux
+      if: type IN (pull_request)
       env: PLATFORM='NativeScript Android'
       language: android
       jdk: oraclejdk8
@@ -62,6 +64,7 @@ matrix:
 
 
     - os: osx
+      if: type IN (pull_request)
       env: PLATFORM='NativeScript iOS'
       osx_image: xcode9.2
       language: node_js
@@ -81,6 +84,7 @@ matrix:
 
 
     - os: linux
+      if: type IN (pull_request)
       env: PLATFORM='PhoneGap Android'
       dist: precise
       language: android
@@ -98,6 +102,7 @@ matrix:
 
 
     - os: osx
+      if: type IN (pull_request)
       env: PLATFORM='PhoneGap iOS'
       osx_image: xcode9.2
       language: node_js
