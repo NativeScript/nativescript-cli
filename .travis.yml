@@ -22,11 +22,22 @@ env:
     - secure: Hkgc3LS2+ihYneHyG9ib7scO9eTvH3VhxHmlU1FI6rFjkbz6oLvM1SaJdnpo/4enIiPLSjVzd5p50zuEP46tJBBMRboJZb4/vTfb0QFA5VwtAiQoHyiyDO7x/6j5uGB7EJc102u/IUjC5EeM5MlsQYoE47E37K5ojNUNOQin7PLAWiDxwJ6C8DWzhhTT3D4T7v0zpdxyOQTDHhqE/CwwqaCGvBZxGxrjwtAIHXGekX2yknXgy4OHHvZBnInyHT+QP1oOXLsHp8ZtLaT4UZk96VSsjGM6CzavUm3OG8qx+sU/5Vin5Y/1pN/yVgzHayctKIw5q632FeyD/jtaLgsibUbszr0y7K+of/9LMzAYZEHdEmBXYjxdoqVDChxKgiLg1nCoQ2tETTJpmfrsSSgFmeCfBEFmZCpascigYnFqfbyBu9vwppvihdogm66VMqwU2FXPmOczNopYZYpO6yJcuMEbiEJdYYimpIByZukXdQX8q/h1kx6dcBK+kSnFoBWFcQbaPblOIVqHuO5O76b0Xl1AtS/VYIUfa6dlbzKNnyR+krxf4WFUep/X8vZpbegP4nE+VDX1aPMDTWy3ew6uP+lThFBJsmQGabX1PU9s1iVwb2Z+lgukPtdPfj2RLpLq/IzwuG64a4XstxRKnbhtHlfdvmrbRXCoq2uCerd+BBc=
     - secure: vR9kk75nDGKTbBCaPLwH3bSkkUnu9o/Mr1rU7gBTyG9L3s6SzHQkUvxLVpjEuEgzx4mpqBaJIzbNA7txCnZkvQ5vfozcuPmrfXTaifw5MpIAi2a1uSN2ctZh32bhR5m+OfPGvmKyXMRvgQSlG3cO+lekWRvfNAwhU+vMwi9E2HBXVXBifJMWTg3aFU6wISGRea7OhFdfb5ROpFVqR3chAAevnd4UeOjY7VczZx/w8MeyhzYqNgiZJ5q132vpapAsKEBQBM6HJAdRgmlLYEZHtjh9ROD+dnZSmUAEj/NdHqglBMif0yW4W5X+SKWLF1xEUkYXT0/tPzYXHwcHsStnKUJhKmdlOuNYSzX+q75QNbi+yxNnqWcSeMNtN5E7n/MYsRDQVY1uo35q1C2iTOWHrWaGE8RJrSXPxdh7Lq0wFVSm8ofUW9+vBCFZ0vxspngJqIaJpZyPbOxKvWADd+r14j6cQFo+FL+QNUO1uQLz4XPrJW6sU6uT2MTBDDTQdH4tWtswpAuc475d389FRsnyiKd/c886rRULIUq6oRI5fMlFe+8WLw3QAzs22toH2xgXChSkHnBF71/FAW+79v+lOmy8J5kE7ZJcROq8meBWH4ASk089FRWv3wjjOVvTXx0O6XU+7jmS5fLPEtpoanuNdFfPGzN6e1JLbwElP2UwpY8=
     - secure: ea6+BvenROTG7giVAJiMVsGPX2QLbl+NVEN09cxq6gZJIqsdr+UN6S8RGMTNAZibmeagj5gMF4fQ2tOwgCl5mUfFStk3dXeZYJ6bu358KLrDvqTELoQr6pMgsWc04L0dd/7xUBH0krMc4XCkOT8aNdNif+UCjPoIBEKuKBSviVoEfxVwh7cTb5GJ1UmozqTZlxf0/2lBVNC8EYylHWyhQ7Si94CNQbOlvqq97EOjA7qN7y3m6IpLvkOZ0JUqc5gQcdETtocIbgc6crrSv5c1cUAmryL61gA25qPyedydK2uRsgNgO+JfZdN3+JoKWhyKhfNzvnMITk0tneEYYgLSauEt1b/+loYbd5yNIhvKcynKsUTkzafyVV1dMmz/Bm9qS6DGjdixHK/UTzXThjyUVmzMpuAPrRdEHq1r/1R7rmgPrPR2TWCu3zDhvWSbh4jfJ7tQaue9+7pzJ0VOYxfnwLX1c2cP6CkZFgy9tUsmrLARS54f2BK8dWW2uqJFQre4+IlKKznn5eIuyxzH0dbkNU1gM9UX7RYV3IM5fM54H2ANoF2z9PsHmJw0f9bSp+Z4rAGZ8PVInx3gH6t7dp2cU3suK2+sJUhzkBDXzd/DqCdbM75IFTyPGrMOVb+MXQ+MqBwzp7NCb40nO6Ob+0VmmvmhzdZu/sjjyZ2rC+5c+qg=
+  matrix:
+    secure: aqcGPDGxdYhbW6Cq6JFKHmyjYBqkDgDlONgM43o5ES1yIiqdFG0LySL75XE2QBocyyG/a1tNMj6aX4nrLrsukmNlEgXieWjuQs3EaTjVHiw+JWhU6yDcI4PqF4ZoD3ANdghxkBWQ8YjL+tfHfwCSnewI0UnRBsrb76Yv81o/Frkr+1zAkw4kG/6ubS5eRGcA9xOOvo0VDkz8HtsWnbxfAfLMBhsPICmdj7KlZJZY2hjfD+okf3DcKQqZZPi7bqfDb7AGmTKufX2QUVFRbT1p6yp+xH5hOB5QK2/2YeSXNntkzO2NhXsiyVybBTAhnulTsQMbCv6RELmXIm0/BHS0bhPzrK8NbQJPrYHPVYV93Z3S4Lpg1rzPAPIDf124V7CAcTYZEXgjS6YRUMMPwA0GJJDbNuJnwGiVGL4J95dkllf9h2BSym0zsPhtU94OPQvWs3VyfaK3uz6z9X/CmeeCuhOcPYV9NWX5J+6swI/tttYdnNdOa5j5PCoVtRD6hIB0YsBpxLSOIOjugXyQXNn+rWQbvoTZjQMPInAk/Bhav5IGXC+Xa2MesXJh6Nu7WXdwXxXEwVNJ4/jJULNsP7NTer0G43akzkI4m4Fairw3mo8HXdhQ+nmMyUU9xqmPWvgSNsI9JiBxTMu8xmN36cdmNiBqW+GWa0iBzlXTq2zK9lQ=
+
+
 matrix:
   include:
+    - os: linux
+      env: PLATFORM='Unit Tests'
+      language: node_js
+      node_js: ${UNIT_TESTS_NODEJS_VERSION}
+      script: 
+        - npm run test
 
 
     - os: linux
+      if: type IN (pull_request)
       env: PLATFORM='HTML5'
       language: node_js
       node_js: ${INTEGRATION_TESTS_NODEJS_VERSION}
@@ -34,3 +45,108 @@ matrix:
       script: 
         - node ${RUN_INTEGRATION_TESTS_FILE_LOCATION} --platform html5
 
+
+    - os: linux
+      if: type IN (pull_request)
+      env: PLATFORM='NativeScript Android'
+      language: android
+      jdk: oraclejdk8
+      before_install: nvm install ${INTEGRATION_TESTS_NODEJS_VERSION}
+      install:
+        - echo no | npm i -g nativescript@${INTEGRATION_TESTS_NATIVESCRIPT_VERSION}
+        - npm i
+      before_script:
+        - echo no | android create avd --force -n test -t android-24 -b armeabi-v7a
+        - emulator -avd test -no-window &
+        - android-wait-for-emulator
+      script:
+        - node ${RUN_INTEGRATION_TESTS_FILE_LOCATION} --platform nativescript --os android
+
+
+    - os: osx
+      if: type IN (pull_request)
+      env: PLATFORM='NativeScript iOS'
+      osx_image: xcode9.2
+      language: node_js
+      node_js: ${INTEGRATION_TESTS_NODEJS_VERSION}
+      jdk: oraclejdk8
+      before_install:
+        - deviceId=$(xcrun simctl create 'iPhone7-11.2' com.apple.CoreSimulator.SimDeviceType.iPhone-7-Plus com.apple.CoreSimulator.SimRuntime.iOS-11-2)
+        - xcrun simctl boot $deviceId
+      install:
+        - echo no | npm i -g nativescript@${INTEGRATION_TESTS_NATIVESCRIPT_VERSION}
+        - tns usage-reporting disable
+        - tns error-reporting disable
+        - npm i
+      script:
+        - echo no | tns device ios
+        - node ${RUN_INTEGRATION_TESTS_FILE_LOCATION} --platform nativescript --os ios
+
+
+    - os: linux
+      if: type IN (pull_request)
+      env: PLATFORM='PhoneGap Android'
+      dist: precise
+      language: android
+      jdk: oraclejdk8
+      before_install: nvm install ${INTEGRATION_TESTS_NODEJS_VERSION}
+      install:
+        - echo no | npm i -g cordova@${INTEGRATION_TESTS_CORDOVA_VERSION}
+        - npm i
+      before_script:
+        - echo no | android create avd --force -n test -t android-21 -b armeabi-v7a
+        - emulator -avd test -no-window &
+        - android-wait-for-emulator
+      script:
+        - node ${RUN_INTEGRATION_TESTS_FILE_LOCATION} --platform phonegap --os android
+
+
+    - os: osx
+      if: type IN (pull_request)
+      env: PLATFORM='PhoneGap iOS'
+      osx_image: xcode9.2
+      language: node_js
+      node_js: ${INTEGRATION_TESTS_NODEJS_VERSION}
+      jdk: oraclejdk8
+      install:
+        - npm i -g cordova@${INTEGRATION_TESTS_CORDOVA_VERSION}
+        - npm i
+      script:
+        - node ${RUN_INTEGRATION_TESTS_FILE_LOCATION} --platform phonegap --os ios
+
+
+    - stage: deploy
+      script: skip
+      language: node_js
+      node_js: ${UNIT_TESTS_NODEJS_VERSION}
+      if: tag =~ ^v?([0-9])*\.[0-9]*\.[0-9]*(-\w+)?$
+      deploy:
+        provider: script
+        script: ./node_modules/.bin/lerna run release --parallel
+        skip_cleanup: true
+        on:
+          branch: master
+          tags: true  
+   
+
+android:
+  components:
+    - tools
+    - tools
+    - platform-tools
+    - build-tools-26.0.2
+    - android-26
+    - android-24
+    - extra-android-m2repository
+    - extra-google-google_play_services
+    - sys-img-armeabi-v7a-android-24
+
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
+  slack:
+    on_success: change
+    on_failure: always
+    secure: zhQEKSmoMrI5yj180Z8NtAqujmMgRI3TIO/DrnFEDjuXziBanKr2Thnzup0Gmr5vfOA1c3yh/HVs671188UDsE6YSf/r8ephjE+dzlk3iyYE6ViHUHB7ju+DKyGOeNPk8yMFUqDhLhtQ9wA8Bvlzbfn/ZwPk2ArDZgp3ixBEmIzB/gkcq4EC+2ciJbBUh99fOPUYspvAvf4xLlQRPNiuZ/BSCfeASRkvYdUp9kAMZecIt2EfAneTAOyEBKc+8ob24Yu5L8GfSnNa8qeAmzwki6WGaVR7EantJ0SA/dXyISlj08ckW/MEY5hoBhy1x0/gsaPaLNfq/GRz1Zj69Qmqz359tknuRBC4lMmEyutG9SKNBB8OAtNyUUnnNi45P+fyTUP/4l+4tYEN4hj/ncnFKvW5P5ls/LZ84wpjfAiUlkVqSwKXUnzccYDYNBfeVMEpTwoxctBgRp9Akalf3nVYfZHvH+/Sy3VGzDqagF+55+kTgfPmf763lKbOanr2HNzpvIfT21UyZ2EEDAoAkqr65HbA+yYgs/Awni02qzalafmIbP3aF9a3yULftubAvfsKALjrde38iqE5kOvsyiFOjescA7chdpJqudn6sT6SuYHaVoaBzqKX0t2aLWq8a9rMoS1qKW22IQ2CQilAtVG5Nb19mcUSjkisoIYnrCvK700=
