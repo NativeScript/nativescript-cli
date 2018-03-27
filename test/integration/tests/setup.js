@@ -4,4 +4,3 @@ before(() => {
     appSecret: externalConfig.appSecret
   });
 });
-
