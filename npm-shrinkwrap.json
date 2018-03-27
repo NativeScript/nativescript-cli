@@ -55,7 +55,8 @@
     "@types/events": {
       "version": "1.2.0",
       "resolved": "https://registry.npmjs.org/@types/events/-/events-1.2.0.tgz",
-      "integrity": "sha512-KEIlhXnIutzKwRbQkGWb/I4HFqBuUykAdHgDED6xqwXJfONCjF5VoE0cXEiurh3XauygxzeDzgtXUqvLkxFzzA=="
+      "integrity": "sha512-KEIlhXnIutzKwRbQkGWb/I4HFqBuUykAdHgDED6xqwXJfONCjF5VoE0cXEiurh3XauygxzeDzgtXUqvLkxFzzA==",
+      "dev": true
     },
     "@types/form-data": {
       "version": "0.0.33",
@@ -75,12 +76,14 @@
     "@types/node": {
       "version": "6.0.61",
       "resolved": "https://registry.npmjs.org/@types/node/-/node-6.0.61.tgz",
-      "integrity": "sha1-7qF0itmd7K8xm1cQFwGGMZdKxvA="
+      "integrity": "sha1-7qF0itmd7K8xm1cQFwGGMZdKxvA=",
+      "dev": true
     },
     "@types/ora": {
-      "version": "1.3.2",
-      "resolved": "https://registry.npmjs.org/@types/ora/-/ora-1.3.2.tgz",
-      "integrity": "sha512-YZjIN90YKxkQjmDZHr1CQP1Z20qUU3TLC10k+SnDqoRv0CNUxREwaaDc3aCRNcOfjCjktdoP2Z8Cxqf4wHjO2w==",
+      "version": "1.3.3",
+      "resolved": "https://registry.npmjs.org/@types/ora/-/ora-1.3.3.tgz",
+      "integrity": "sha512-XaSVRyCfnGq1xGlb6iuoxnomMXPIlZnvIIkKiGNMTCeVOg7G1Si+FA9N1lPrykPEfiRHwbuZXuTCSoYcHyjcdg==",
+      "dev": true,
       "requires": {
         "@types/node": "6.0.61"
       }
@@ -132,6 +135,7 @@
       "version": "4.0.1",
       "resolved": "https://registry.npmjs.org/@types/ws/-/ws-4.0.1.tgz",
       "integrity": "sha512-J56Wn8j7ovzmlrkUSPXnVRH+YXUCGoVokiB49QIjz+yq0234guOrBvF/HHrqrJjnY4p5oq+q6xAxT/7An6SeWQ==",
+      "dev": true,
       "requires": {
         "@types/events": "1.2.0",
         "@types/node": "6.0.61"
