@@ -72,7 +72,6 @@ export class SyncManager {
       return Promise.reject(new KinveyError('Invalid or missing collection name'));
     }
 
-    // TODO: decide on default value of pagination setting
     if (options && (options.autoPagination && !options.useDeltaFetch)) {
       return this._paginatedPull(collection, query, options);
     }
@@ -291,7 +290,6 @@ export class SyncManager {
   }
 
   _fetchItemsFromServer(collection, query, options) {
-    // TODO: deltaset logic goes here
     return this._networkRepo.read(collection, query, options);
   }
 
