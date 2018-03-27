@@ -36,7 +36,7 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 					const dependency: IDependencyDescription = { parent: currentModule, name: d, parentDir: resolvedDependency.directory, depth: resolvedDependency.depth + 1 };
 
 					const shouldAdd = !_.some(queue, element =>
-						element.parent == dependency.parent &&
+						element.parent === dependency.parent &&
 						element.name === dependency.name &&
 						element.parentDir === dependency.parentDir &&
 						element.depth === dependency.depth);
@@ -63,7 +63,7 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 			let moduleExists = false;
 			let parent = depDescription.parent;
 
-			while(parent && !moduleExists) {
+			while (parent && !moduleExists) {
 				modulePath = path.join(depDescription.parent.parentDir, NODE_MODULES_FOLDER_NAME, depDescription.name);
 				moduleExists = this.moduleExists(modulePath);
 				if (!moduleExists)  {
@@ -77,7 +77,7 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 					return null;
 				}
 			}
-			
+
 			depthInNodeModules = 0;
 		}
 
