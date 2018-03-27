@@ -2,7 +2,8 @@
 const testsConfig = {
   collectionName: 'Books',
   fbEmail: process.env.FACEBOOK_EMAIL,
-  fbPassword: process.env.FACEBOOK_PASSWORD
+  fbPassword: process.env.FACEBOOK_PASSWORD,
+  authServiceId: 'decad9197f0f4680a46d902327c5c131'
 };
 
 const appCredentials = {
