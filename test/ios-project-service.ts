@@ -120,6 +120,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("settingsService", SettingsService);
 	testInjector.register("httpClient", {});
 	testInjector.register("platformEnvironmentRequirements", {});
+	testInjector.register("plistParser", {});
 
 	return testInjector;
 }
