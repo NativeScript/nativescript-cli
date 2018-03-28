@@ -30,7 +30,6 @@
     "mobile"
   ],
   "dependencies": {
-    "bufferpack": "0.0.6",
     "byline": "4.2.1",
     "chalk": "1.1.0",
     "chokidar": "1.7.0",
