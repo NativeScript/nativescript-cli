@@ -31,7 +31,8 @@
     "kinvey-nativescript-sdk.android.js.map",
     "kinvey.d.ts",
     "platforms/android/include.gradle",
-    "platforms/ios/Podfile"
+    "platforms/ios/Podfile",
+    "platforms/ios/app.entitlements"
   ],
   "nativescript": {
     "platforms": {
