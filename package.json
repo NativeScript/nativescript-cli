@@ -62,7 +62,6 @@
     "plist": "1.1.0",
     "plist-merge-patch": "0.1.1",
     "progress-stream": "1.1.1",
-    "properties-parser": "0.2.3",
     "proxy-lib": "0.4.0",
     "qr-image": "3.2.0",
     "request": "2.81.0",
