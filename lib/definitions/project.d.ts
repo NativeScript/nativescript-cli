@@ -37,13 +37,21 @@ interface IProjectSettings {
 	ignoreScripts?: boolean;
 }
 
+interface IProjectName {
+	projectName: string;
+}
+
+interface ICreateProjectData extends IProjectDir, IProjectName {
+
+}
+
 interface IProjectService {
 	/**
 	 * Creates new NativeScript application.
 	 * @param {any} projectSettings Options describing new project - its name, appId, path and template from which to be created.
 	 * @returns {Promise<void>}
 	 */
-	createProject(projectSettings: IProjectSettings): Promise<void>;
+	createProject(projectSettings: IProjectSettings): Promise<ICreateProjectData>;
 
 	/**
 	 * Checks if the specified project is valid NativeScript project.
@@ -58,8 +66,7 @@ interface INsConfig {
 	appResourcesPath?: string;
 }
 
-interface IProjectData extends IProjectDir {
-	projectName: string;
+interface IProjectData extends ICreateProjectData {
 	platformsDir: string;
 	projectFilePath: string;
 	projectId?: string;
