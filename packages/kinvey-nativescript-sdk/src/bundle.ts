@@ -26,7 +26,6 @@ export {
   DataStoreType,
   SyncOperation,
   LiveService,
-  Files,
   Log,
   Metadata,
   Query,
