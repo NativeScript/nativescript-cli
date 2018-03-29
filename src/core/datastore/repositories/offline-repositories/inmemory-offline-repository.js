@@ -145,6 +145,32 @@ export class InmemoryOfflineRepository extends OfflineRepository {
       });
   }
 
+  // this is now used in the ReactNative shim as a protected method
+  _update(collection, entities) {
+    const entitiesArray = ensureArray(entities);
+    const updateEntitiesById = keyBy(entitiesArray, '_id');
+    let unprocessedEntitiesCount = entitiesArray.length;
+    return this._readAll(collection)
+      .then((allEntities) => {
+        allEntities.forEach((entity, index) => {
+          if (unprocessedEntitiesCount > 0 && updateEntitiesById[entity._id]) {
+            allEntities[index] = updateEntitiesById[entity._id];
+            delete updateEntitiesById[entity._id];
+            unprocessedEntitiesCount -= 1;
+          }
+        });
+
+        // the upsert part
+        if (unprocessedEntitiesCount > 0) {
+          Object.keys(updateEntitiesById).forEach((entityId) => {
+            allEntities.push(updateEntitiesById[entityId]);
+          });
+        }
+
+        return this._saveAll(collection, allEntities);
+      });
+  }
+
   // ----- private methods
 
   _readAll(collection) {
@@ -191,31 +217,6 @@ export class InmemoryOfflineRepository extends OfflineRepository {
       .then((existingEntities) => {
         existingEntities = existingEntities.concat(entitiesToSave);
         return this._saveAll(collection, existingEntities);
-      });
-  }
-
-  _update(collection, entities) {
-    const entitiesArray = ensureArray(entities);
-    const updateEntitiesById = keyBy(entitiesArray, '_id');
-    let unprocessedEntitiesCount = entitiesArray.length;
-    return this._readAll(collection)
-      .then((allEntities) => {
-        allEntities.forEach((entity, index) => {
-          if (unprocessedEntitiesCount > 0 && updateEntitiesById[entity._id]) {
-            allEntities[index] = updateEntitiesById[entity._id];
-            delete updateEntitiesById[entity._id];
-            unprocessedEntitiesCount -= 1;
-          }
-        });
-
-        // the upsert part
-        if (unprocessedEntitiesCount > 0) {
-          Object.keys(updateEntitiesById).forEach((entityId) => {
-            allEntities.push(updateEntitiesById[entityId]);
-          });
-        }
-
-        return this._saveAll(collection, allEntities);
       });
   }
 }
