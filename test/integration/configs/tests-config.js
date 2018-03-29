@@ -1,31 +1,39 @@
 
 const testsConfig = {
-  collectionName: 'Books'
+  collectionName: 'Books',
+  fbEmail: process.env.FACEBOOK_EMAIL,
+  fbPassword: process.env.FACEBOOK_PASSWORD,
+  authServiceId: 'decad9197f0f4680a46d902327c5c131'
 };
 
 const appCredentials = {
   html5: {
-    appKey: 'kid_H1fs4gFsZ',
-    appSecret: 'aa42a6d47d0049129c985bfb37821877'
+    appKey: process.env.HTML5_APP_KEY,
+    appSecret: process.env.HTML5_APP_SECRET,
+    masterSecret: process.env.HTML5_MASTER_SECRET
   },
   nativescript: {
     android: {
-      appKey: 'kid_ryEW0UQrM',
-      appSecret: '5a006e23a102442884dc9de5d2d2abc9',
+      appKey: process.env.NS_ANDROID_APP_KEY,
+      appSecret: process.env.NS_ANDROID_APP_SECRET,
+      masterSecret: process.env.NS_ANDROID_MASTER_SECRET
     },
     ios: {
-      appKey: 'kid_By6pBd7BG',
-      appSecret: '7568820462ce40eeb1f56ec01a4cf2ae',
+      appKey: process.env.NS_IOS_APP_KEY,
+      appSecret: process.env.NS_IOS_APP_SECRET,
+      masterSecret: process.env.NS_IOS_MASTER_SECRET
     }
   },
   phonegap: {
     android: {
-      appKey: 'kid_SyP_lFXBz',
-      appSecret: '997be7e8aae142fb89796352dc57b5be',
+      appKey: process.env.PG_ANDROID_APP_KEY,
+      appSecret: process.env.PG_ANDROID_APP_SECRET,
+      masterSecret: process.env.PG_ANDROID_MASTER_SECRET
     },
     ios: {
-      appKey: 'kid_SyqplFXrz',
-      appSecret: 'c00090630ace4eb3956367a44319afcf',
+      appKey: process.env.PG_IOS_APP_KEY,
+      appSecret: process.env.PG_IOS_APP_SECRET,
+      masterSecret: process.env.PG_IOS_MASTER_SECRET
     }
   }
 };

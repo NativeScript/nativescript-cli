@@ -1,6 +1,7 @@
 const path = require('path');
 const program = require('commander');
 const createPlatformSpecificConfig = require('./create-platform-specific-config.js');
+const cleanUpUserCollection = require('./clean-up-user-collection.js');
 
 program
   .option('--platform [type]', 'Add Platform [html5/phonegap/nativescript]')
@@ -9,10 +10,13 @@ program
 
 const runnerConfigFilePath = path.join(__dirname, '../../', 'packages', `kinvey-${program.platform}-sdk`, 'runner-config');
 
-createPlatformSpecificConfig(program.platform, program.os);
+const config = createPlatformSpecificConfig(program.platform, program.os);
 
-const runPipeline = require(runnerConfigFilePath);
-runPipeline(program.os)
+cleanUpUserCollection(config)
+  .then(() => {
+    const runPipeline = require(runnerConfigFilePath);
+    return runPipeline(program.os)
+  })
   .then(() => {
     console.log('The tests passed successfully!');
     if (program.platform === 'html5') {

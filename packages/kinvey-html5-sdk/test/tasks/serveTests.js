@@ -12,7 +12,7 @@ const serveTests = (appRoot, runner) =>
       serve(req, res, done);
     });
 
-    server.listen(0, () => {
+    server.listen(64320, () => {
       const staticPort = server.address().port;
       runner.emit('serve.static', staticPort);
       console.log(`Serving static files on port: ${staticPort}`);
