@@ -75,48 +75,12 @@ describe('CacheOfflineDataProcessor', () => {
             });
         });
 
-        it('should call SyncManager.push() if there are entities to sync', () => {
+        it('should return an error if there are entities to sync', () => {
           syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(123);
-          syncManagerMock.push = createPromiseSpy().andCall(() => {
-            syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(0);
-            return Promise.resolve();
-          });
-          return dataProcessor.process(operation).toPromise()
-            .then(() => {
-              validateSpyCalls(syncManagerMock.push, 1, [collection, getExpectedQuery()]);
-            });
-        });
-
-        it('should call SyncManager.getSyncItemCountByEntityQuery() again, after push()', () => {
-          syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(123);
-          syncManagerMock.push = createPromiseSpy().andCall(() => {
-            syncManagerMock.getSyncItemCountByEntityQuery.andReturn(Promise.resolve(0));
-            return Promise.resolve();
-          });
-          return dataProcessor.process(operation).toPromise()
-            .then(() => {
-              validateSpyCalls(syncManagerMock.push, 1, [collection, getExpectedQuery()]);
-              const secondCountSpy = syncManagerMock.getSyncItemCountByEntityQuery;
-              validateSpyCalls(secondCountSpy, 2, [collection, getExpectedQuery()], [collection, getExpectedQuery()]);
-            });
-        });
-
-        it('should return an error if there are still entities to sync, after push()', () => {
-          syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(123);
-          syncManagerMock.push = createPromiseSpy().andCall(() => {
-            return Promise.resolve();
-          });
+          syncManagerMock.push = createPromiseSpy();
           return dataProcessor.process(operation).toPromise()
             .catch((err) => {
-              validateError(err, KinveyError, 'entities that need to be synced');
-            });
-        });
-
-        it('should NOT call SyncManager.push() if there are NO entities to sync', () => {
-          syncManagerMock.getSyncItemCountByEntityQuery = createPromiseSpy(0);
-          return dataProcessor.process(operation).toPromise()
-            .then(() => {
-              validateSpyCalls(syncManagerMock.push, 0);
+              validateError(err, KinveyError, 'pending push to the backend');
             });
         });
       }
@@ -244,8 +208,6 @@ describe('CacheOfflineDataProcessor', () => {
           expect(result).toBeA(KinveyObservable);
         });
 
-        addSyncQueueTests();
-
         it('should call OfflineRepo.count()', () => {
           return dataProcessor.process(operation, options).toPromise()
             .then(() => {
@@ -277,8 +239,6 @@ describe('CacheOfflineDataProcessor', () => {
               validateSpyCalls(offlineRepoMock.group, 1, [collection, operation.query, options]);
             });
         });
-
-        addSyncQueueTests();
 
         it('should call NetworkRepo.group()', () => {
           return dataProcessor.process(operation, options).toPromise()

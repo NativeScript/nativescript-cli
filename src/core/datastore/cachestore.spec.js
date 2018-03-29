@@ -13,6 +13,7 @@ import { NodeHttpMiddleware } from '../../node/http';
 import { User } from '../user';
 
 const collection = 'Books';
+const pendingPushEntitiesErrMsg = 'There is 1 entity, matching the provided query or id, pending push to the backend.';
 
 describe('CacheStore', () => {
   let client;
@@ -97,10 +98,7 @@ describe('CacheStore', () => {
             .subscribe(null, (error) => {
               try {
                 expect(error).toBeA(KinveyError);
-                expect(error.message).toEqual(
-                  'Unable to fetch the entities on the backend.'
-                  + ' There are 1 entities that need to be synced.'
-                );
+                expect(error.message).toInclude(pendingPushEntitiesErrMsg);
                 done();
               } catch (e) {
                 done(e);
@@ -263,10 +261,7 @@ describe('CacheStore', () => {
             .subscribe(null, (error) => {
               try {
                 expect(error).toBeA(KinveyError);
-                expect(error.message).toEqual(
-                  'Unable to find the entity on the backend.'
-                  + ' There are 1 entities that need to be synced.'
-                );
+                expect(error.message).toInclude(pendingPushEntitiesErrMsg);
                 done();
               } catch (e) {
                 done(e);
@@ -402,31 +397,6 @@ describe('CacheStore', () => {
         });
     });
 
-    it('should throw an error if there are entities to sync', (done) => {
-      const entity = { _id: randomString() };
-      const syncStore = new SyncStore(collection);
-      syncStore.save(entity)
-        .then(() => {
-          const aggregation = new Aggregation();
-          const store = new CacheStore(collection);
-          store.group(aggregation)
-            .subscribe(null, (error) => {
-              try {
-                expect(error).toBeA(KinveyError);
-                expect(error.message).toEqual(
-                  'Unable to group entities on the backend.'
-                  + ' There are 1 entities that need to be synced.'
-                );
-                done();
-              } catch (e) {
-                done(e);
-              }
-            }, () => {
-              done(new Error('This test should fail.'));
-            });
-        });
-    });
-
     it('should return the count of all unique properties on the collection', (done) => {
       const entity1 = { _id: randomString(), title: randomString() };
       const entity2 = { _id: randomString(), title: randomString() };
@@ -494,30 +464,6 @@ describe('CacheStore', () => {
           }
         }, () => {
           done(new Error('This test should fail.'));
-        });
-    });
-
-    it('should throw an error if there are entities to sync', (done) => {
-      const entity = { _id: randomString() };
-      const syncStore = new SyncStore(collection);
-      syncStore.save(entity)
-        .then(() => {
-          const store = new CacheStore(collection);
-          store.count()
-            .subscribe(null, (error) => {
-              try {
-                expect(error).toBeA(KinveyError);
-                expect(error.message).toEqual(
-                  'Unable to count entities on the backend.'
-                  + ' There are 1 entities that need to be synced.'
-                );
-                done();
-              } catch (e) {
-                done(e);
-              }
-            }, () => {
-              done(new Error('This test should fail.'));
-            });
         });
     });
 

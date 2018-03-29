@@ -2,12 +2,12 @@ import { Promise } from 'es6-promise';
 import clone from 'lodash/clone';
 
 import { Query } from '../../query';
-import { KinveyError, NotFoundError } from '../../errors';
+import { NotFoundError } from '../../errors';
 
 import { OfflineDataProcessor } from './offline-data-processor';
 import { ensureArray } from '../../utils';
 import { wrapInObservable } from '../../observable';
-import { isLocalEntity, isNotEmpty, isEmpty } from '../utils';
+import { isLocalEntity, isNotEmpty, isEmpty, getEntitiesPendingPushError } from '../utils';
 
 // imported for type info
 // import { NetworkRepository } from '../repositories';
@@ -79,13 +79,13 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
   _processRead(collection, query, options) {
     let offlineEntities;
     return wrapInObservable((observer) => {
-      return this._ensureCountBeforeRead(collection, 'fetch the entities', query)
-        .then(() => super._processRead(collection, query, options))
+      return super._processRead(collection, query, options)
         .then((entities) => {
           offlineEntities = entities;
           observer.next(offlineEntities);
-          return this._networkRepository.read(collection, query, options);
+          return this._ensureCountBeforeRead(collection, 'fetch the entities', query);
         })
+        .then(() => this._networkRepository.read(collection, query, options))
         .then((networkEntities) => {
           observer.next(networkEntities);
           return this._replaceOfflineEntities(collection, offlineEntities, networkEntities);
@@ -97,14 +97,14 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
     let offlineEntity;
     return wrapInObservable((observer) => {
       const query = new Query().equalTo('_id', entityId);
-      return this._ensureCountBeforeRead(collection, 'find the entity', query)
-        .then(() => super._processReadById(collection, entityId, options))
+      return super._processReadById(collection, entityId, options)
         .catch(err => this._catchNotFoundError(err)) // backwards compatibility
         .then((entity) => {
           observer.next(entity);
           offlineEntity = entity;
-          return this._networkRepository.readById(collection, entityId, options);
+          return this._ensureCountBeforeRead(collection, 'find the entity', query);
         })
+        .then(() => this._networkRepository.readById(collection, entityId, options))
         .then((entity) => {
           observer.next(entity);
           return this._replaceOfflineEntities(collection, offlineEntity, ensureArray(entity));
@@ -125,15 +125,12 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
 
   _processCount(collection, query, options) {
     return wrapInObservable((observer) => {
-      return this._ensureCountBeforeRead(collection, 'count entities', query)
-        .then(() => super._processCount(collection, query, options))
+      return super._processCount(collection, query, options)
         .then((offlineCount) => {
           observer.next(offlineCount);
           return this._networkRepository.count(collection, query, options);
         })
-        .then((networkCount) => {
-          observer.next(networkCount);
-        });
+        .then(networkCount => observer.next(networkCount));
     });
   }
 
@@ -143,9 +140,8 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
         .catch(() => []) // backwards compatibility
         .then((offlineResult) => {
           observer.next(offlineResult);
-          return this._ensureCountBeforeRead(collection, 'group entities');
+          return this._networkRepository.group(collection, aggregationQuery, options);
         })
-        .then(() => this._networkRepository.group(collection, aggregationQuery, options))
         .then(networkResult => observer.next(networkResult));
     });
   }
@@ -214,19 +210,10 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
   _ensureCountBeforeRead(collection, prefix, query) {
     return this._syncManager.getSyncItemCountByEntityQuery(collection, query)
       .then((count) => {
-        if (count > 0) { // backwards compatibility
-          return this._syncManager.push(collection, query)
-            .then(() => this._syncManager.getSyncItemCountByEntityQuery(collection, query));
-        }
-        return count;
-      })
-      .then((count) => {
         if (count === 0) {
           return count;
         }
-        const countMsg = `There are ${count} entities that need to be synced.`;
-        const err = new KinveyError(`Unable to ${prefix} on the backend. ${countMsg}`);
-        return Promise.reject(err);
+        return Promise.reject(getEntitiesPendingPushError(count, prefix));
       });
   }
 

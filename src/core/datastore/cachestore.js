@@ -7,7 +7,7 @@ import { NetworkStore } from './networkstore';
 import { OperationType } from './operations';
 import { processorFactory } from './processors';
 import { syncManagerProvider } from './sync';
-import { formTaggedCollectionName } from './utils';
+import { formTaggedCollectionName, getEntitiesPendingPushError } from './utils';
 
 /**
  * The CacheStore class is used to find, create, update, remove, count and group entities. Entities are stored
@@ -114,7 +114,8 @@ export class CacheStore extends NetworkStore {
     return this.syncManager.getSyncItemCountByEntityQuery(this.collection, query)
       .then((count) => {
         if (count > 0) {
-          return this.syncManager.push(this.collection, query);
+          const err = getEntitiesPendingPushError(count, 'fetch the entities');
+          return Promise.reject(err);
         }
         return Promise.resolve();
       })
