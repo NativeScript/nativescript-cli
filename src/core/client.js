@@ -54,8 +54,8 @@ export class Client {
    *
    * @param {Object}    options                                            Options
    * @param {string}    [options.instanceId='<my-subdomain>']              Custom subdomain for Kinvey API and MIC requests.
-   * @param {string}    [options.apiHostname='https://baas.kinvey.com']    Deprecated: Host name used for Kinvey API requests
-   * @param {string}    [options.micHostname='https://auth.kinvey.com']    Deprecated: Host name used for Kinvey MIC requests
+   * @param {string}    [options.apiHostname='https://baas.kinvey.com']    Deprecated: Use the instanceID property instead. Host name used for Kinvey API requests
+   * @param {string}    [options.micHostname='https://auth.kinvey.com']    Deprecated: Use the instanceID property instead. Host name used for Kinvey MIC requests
    * @param {string}    [options.appKey]                                   App Key
    * @param {string}    [options.appSecret]                                App Secret
    * @param {string}    [options.masterSecret]                             App Master Secret
