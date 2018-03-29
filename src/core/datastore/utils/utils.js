@@ -6,8 +6,13 @@ import { isNonemptyString } from '../../utils';
 export const dataStoreTagSeparator = '.';
 
 export function getEntitiesPendingPushError(entityCount, prefix) {
-  const countMsg = `There are ${entityCount} entities, matching this query or id, pending push to the backend.`;
-  const errMsg = `Unable to ${prefix} on the backend, since the result might overwrite your local changes. ${countMsg}`;
+  let countMsg = `There are ${entityCount} entities, matching the provided query, pending push to the backend.`;
+
+  if (entityCount === 1) {
+    countMsg = `There is ${entityCount} entity, matching the provided query or id, pending push to the backend.`;
+  }
+
+  const errMsg = `Unable to ${prefix} on the backend. The result will overwrite your local changes. ${countMsg}`;
   return new KinveyError(errMsg);
 }
 

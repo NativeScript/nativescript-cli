@@ -2,7 +2,7 @@ import { Promise } from 'es6-promise';
 import clone from 'lodash/clone';
 
 import { Query } from '../../query';
-import { KinveyError, NotFoundError } from '../../errors';
+import { NotFoundError } from '../../errors';
 
 import { OfflineDataProcessor } from './offline-data-processor';
 import { ensureArray } from '../../utils';
