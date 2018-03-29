@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [3.10.2](https://github.com/Kinvey/js-sdk/tree/v3.10.0) (2018-02-26)
+## [3.10.2](https://github.com/Kinvey/js-sdk/tree/v3.10.2) (2018-02-26)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.10.1...v3.10.2)<br/>
 
 ### Enhancements
