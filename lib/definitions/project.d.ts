@@ -401,12 +401,6 @@ interface IPlatformProjectService extends NodeJS.EventEmitter {
 	executeCommand(projectRoot: string, args: any, childProcessOpts?: any, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult>;
 }
 
-interface IAndroidProjectPropertiesManager {
-	getProjectReferences(): Promise<ILibRef[]>;
-	addProjectReference(referencePath: string): Promise<void>;
-	removeProjectReference(referencePath: string): Promise<void>;
-}
-
 interface ITestExecutionService {
 	startTestRunner(platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void>;
 	startKarmaServer(platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void>;

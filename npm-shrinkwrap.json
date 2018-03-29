@@ -1452,11 +1452,6 @@
       "resolved": "https://registry.npmjs.org/filename-regex/-/filename-regex-2.0.1.tgz",
       "integrity": "sha1-wcS5vuPglyXdsQa3XB4wH+LxiyY="
     },
-    "filesize": {
-      "version": "3.1.2",
-      "resolved": "https://registry.npmjs.org/filesize/-/filesize-3.1.2.tgz",
-      "integrity": "sha1-jB0EdXYIY3CZmyPDLyF8TVGr8oo="
-    },
     "fill-range": {
       "version": "2.2.3",
       "resolved": "https://registry.npmjs.org/fill-range/-/fill-range-2.2.3.tgz",
@@ -4152,11 +4147,6 @@
       "resolved": "https://registry.npmjs.org/object-assign/-/object-assign-4.1.1.tgz",
       "integrity": "sha1-IQmtx5ZYh8/AXLvUQsrIv7s2CGM="
     },
-    "object-keys": {
-      "version": "0.4.0",
-      "resolved": "https://registry.npmjs.org/object-keys/-/object-keys-0.4.0.tgz",
-      "integrity": "sha1-KKaq50KN0sOpLz2V8hM13SBOAzY="
-    },
     "object.omit": {
       "version": "2.0.1",
       "resolved": "https://registry.npmjs.org/object.omit/-/object.omit-2.0.1.tgz",
@@ -4604,21 +4594,6 @@
       "resolved": "https://registry.npmjs.org/progress/-/progress-1.1.8.tgz",
       "integrity": "sha1-4mDHj2Fhzdmw5WzD4Khd4Xx6V74=",
       "dev": true
-    },
-    "progress-stream": {
-      "version": "1.1.1",
-      "resolved": "https://registry.npmjs.org/progress-stream/-/progress-stream-1.1.1.tgz",
-      "integrity": "sha1-nsvxh5MsSUHVUCGRkNdN7ArEX1Q=",
-      "requires": {
-        "single-line-log": "0.3.1",
-        "speedometer": "0.1.4",
-        "through2": "0.2.3"
-      }
-    },
-    "properties-parser": {
-      "version": "0.2.3",
-      "resolved": "https://registry.npmjs.org/properties-parser/-/properties-parser-0.2.3.tgz",
-      "integrity": "sha1-91kSVfcHq7/yJ8e1a2N9uwNzoQ8="
     },
     "proxy-lib": {
       "version": "0.4.0",
@@ -5131,11 +5106,6 @@
         }
       }
     },
-    "single-line-log": {
-      "version": "0.3.1",
-      "resolved": "https://registry.npmjs.org/single-line-log/-/single-line-log-0.3.1.tgz",
-      "integrity": "sha1-p61lB/IYzl3+FsS/LWWSRkGeegY="
-    },
     "sinon": {
       "version": "4.1.2",
       "resolved": "https://registry.npmjs.org/sinon/-/sinon-4.1.2.tgz",
@@ -5258,11 +5228,6 @@
       "version": "1.2.2",
       "resolved": "https://registry.npmjs.org/spdx-license-ids/-/spdx-license-ids-1.2.2.tgz",
       "integrity": "sha1-yd96NCRZSt5r0RkA1ZZpbcBrrFc="
-    },
-    "speedometer": {
-      "version": "0.1.4",
-      "resolved": "https://registry.npmjs.org/speedometer/-/speedometer-0.1.4.tgz",
-      "integrity": "sha1-mHbb0qFp0xFUAtSObqYynIgWpQ0="
     },
     "sprintf-js": {
       "version": "1.0.3",
@@ -5514,38 +5479,6 @@
       "version": "2.3.8",
       "resolved": "https://registry.npmjs.org/through/-/through-2.3.8.tgz",
       "integrity": "sha1-DdTJ/6q8NXlgsbckEV1+Doai4fU="
-    },
-    "through2": {
-      "version": "0.2.3",
-      "resolved": "https://registry.npmjs.org/through2/-/through2-0.2.3.tgz",
-      "integrity": "sha1-6zKE2k6jEbbMis42U3SKUqvyWj8=",
-      "requires": {
-        "readable-stream": "1.1.14",
-        "xtend": "2.1.2"
-      },
-      "dependencies": {
-        "isarray": {
-          "version": "0.0.1",
-          "resolved": "https://registry.npmjs.org/isarray/-/isarray-0.0.1.tgz",
-          "integrity": "sha1-ihis/Kmo9Bd+Cav8YDiTmwXR7t8="
-        },
-        "readable-stream": {
-          "version": "1.1.14",
-          "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-1.1.14.tgz",
-          "integrity": "sha1-fPTFTvZI44EwhMY23SB54WbAgdk=",
-          "requires": {
-            "core-util-is": "1.0.2",
-            "inherits": "2.0.3",
-            "isarray": "0.0.1",
-            "string_decoder": "0.10.31"
-          }
-        },
-        "string_decoder": {
-          "version": "0.10.31",
-          "resolved": "https://registry.npmjs.org/string_decoder/-/string_decoder-0.10.31.tgz",
-          "integrity": "sha1-YuIDvEF2bGwoyfyEMB2rHFMQ+pQ="
-        }
-      }
     },
     "tiny-lr": {
       "version": "0.2.1",
@@ -6051,14 +5984,6 @@
     "xmlhttprequest": {
       "version": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
       "integrity": "sha1-gyu8L8J4DhCCCmdOlAQRCpQ0M6c="
-    },
-    "xtend": {
-      "version": "2.1.2",
-      "resolved": "https://registry.npmjs.org/xtend/-/xtend-2.1.2.tgz",
-      "integrity": "sha1-bv7MKk2tjmlixJAbM3znuoe10os=",
-      "requires": {
-        "object-keys": "0.4.0"
-      }
     },
     "y18n": {
       "version": "3.2.1",
