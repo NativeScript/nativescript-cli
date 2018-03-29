@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.10.2](https://github.com/Kinvey/js-sdk/tree/v3.10.0) (2018-02-26)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.10.1...v3.10.2)<br/>
+
+### Enhancements
+- MLIBZ-2399: Use the long form Mobile Identity Connect `clientID` in the auth header for KAS endpoints. [#263](https://github.com/Kinvey/js-sdk/pull/263)
+- MLIBZ-2131: Remove implicit `push()` calls from datastore. [#276](https://github.com/Kinvey/js-sdk/pull/276)
+- MLIBZ-2332: Add support for `instanceId` config option. [#278](https://github.com/Kinvey/js-sdk/pull/278)
+- Add default entitlements plist file to NativeScript SDK. [#281]((https://github.com/Kinvey/js-sdk/pull/281)
+
+### Bug Fixes
+- Check that value is an object before calling `Object.keys` in `Query.isSupportedOffline()`. [#245](https://github.com/Kinvey/js-sdk/pull/245)
+- MLIBZ-2133: Use `es6-promise` for promises in live service related files instead of the native promise. [#272](https://github.com/Kinvey/js-sdk/pull/272)
+- MLIBZ-2393: Fix NativeScript Files [#280](https://github.com/Kinvey/js-sdk/pull/280)
+
+### Maintenance
+- MLIBZ-2410: Expose data access classes from core SDK. [#274](https://github.com/Kinvey/js-sdk/pull/274)
+- Refactor IndexedDB and WebSQL persisters. [#277](https://github.com/Kinvey/js-sdk/pull/277)
+
+### Tests
+- QA-176: Add integration tests for Mobile Identity Connect [#279](https://github.com/Kinvey/js-sdk/pull/279)
+
+
 ## [3.10.0](https://github.com/Kinvey/js-sdk/tree/v3.10.0) (2018-02-26)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.9.10...v3.10.0)<br/>
 
