@@ -429,7 +429,7 @@ function testFunc() {
               .then(() => storeToTest.pull())
               .then(() => Promise.reject(new Error('should not happen')))
               .catch((err) => {
-                expect(err.message).to.contain('There are 1 entities');
+                expect(err.message).to.contain('There is 1 entity');
                 done();
               })
               .catch(done);
