@@ -202,6 +202,10 @@ export class Query {
             return true;
           }
 
+          if (typeof value !== 'object') {
+            return true;
+          }
+
           return !Object.keys(value).some((condition) => {
             return condition === unsupportedConditions;
           });
