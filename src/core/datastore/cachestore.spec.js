@@ -13,7 +13,7 @@ import { NodeHttpMiddleware } from '../../node/http';
 import { User } from '../user';
 
 const collection = 'Books';
-const pendingPushEntitiesErrMsg = 'There are 1 entities, matching this query or id, pending push to the backend.';
+const pendingPushEntitiesErrMsg = 'There is 1 entity, matching the provided query or id, pending push to the backend.';
 
 describe('CacheStore', () => {
   let client;
