@@ -53,8 +53,9 @@ export class Client {
    * Creates a new instance of the Client class.
    *
    * @param {Object}    options                                            Options
-   * @param {string}    [options.apiHostname='https://baas.kinvey.com']    Host name used for Kinvey API requests
-   * @param {string}    [options.micHostname='https://auth.kinvey.com']    Host name used for Kinvey MIC requests
+   * @param {string}    [options.instanceId='<my-subdomain>']              Custom subdomain for Kinvey API and MIC requests.
+   * @param {string}    [options.apiHostname='https://baas.kinvey.com']    Deprecated: Use the instanceID property instead. Host name used for Kinvey API requests
+   * @param {string}    [options.micHostname='https://auth.kinvey.com']    Deprecated: Use the instanceID property instead. Host name used for Kinvey MIC requests
    * @param {string}    [options.appKey]                                   App Key
    * @param {string}    [options.appSecret]                                App Secret
    * @param {string}    [options.masterSecret]                             App Master Secret
@@ -70,12 +71,30 @@ export class Client {
    */
 
   constructor(config = {}) {
-    let apiHostname = isString(config.apiHostname) ? config.apiHostname : 'https://baas.kinvey.com';
-    if (/^https?:\/\//i.test(apiHostname) === false) {
-      apiHostname = `https://${apiHostname}`;
+    let apiHostname = 'https://baas.kinvey.com';
+    let micHostname = 'https://auth.kinvey.com';
+
+    if (config.instanceId) {
+      const { instanceId } = config;
+
+      if (!isString(instanceId)) {
+        throw new KinveyError('Instance ID must be a string.');
+      }
+
+      apiHostname = `https://${instanceId}-baas.kinvey.com`;
+      micHostname = `https://${instanceId}-auth.kinvey.com`;
+    } else {
+      if (isString(config.apiHostname)) {
+        apiHostname = /^https?:\/\//i.test(config.apiHostname) ? config.apiHostname : `https://${config.apiHostname}`;
+      }
+
+      if (isString(config.micHostname)) {
+        micHostname = /^https?:\/\//i.test(config.micHostname) ? config.micHostname : `https://${config.micHostname}`;
+      }
     }
 
     const apiHostnameParsed = url.parse(apiHostname);
+    const micHostnameParsed = url.parse(micHostname);
 
     /**
      * @type {string}
@@ -91,13 +110,6 @@ export class Client {
      * @type {string}
      */
     this.apiHost = apiHostnameParsed.host;
-
-    let micHostname = isString(config.micHostname) ? config.micHostname : 'https://auth.kinvey.com';
-    if (/^https?:\/\//i.test(micHostname) === false) {
-      micHostname = `https://${micHostname}`;
-    }
-
-    const micHostnameParsed = url.parse(micHostname);
 
     /**
      * @type {string}
