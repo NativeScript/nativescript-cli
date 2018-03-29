@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - MLIBZ-2399: Use the long form Mobile Identity Connect `clientID` in the auth header for KAS endpoints. [#263](https://github.com/Kinvey/js-sdk/pull/263)
 - MLIBZ-2131: Remove implicit `push()` calls from datastore. [#276](https://github.com/Kinvey/js-sdk/pull/276)
 - MLIBZ-2332: Add support for `instanceId` config option. [#278](https://github.com/Kinvey/js-sdk/pull/278)
-- Add default entitlements plist file to NativeScript SDK. [#281]((https://github.com/Kinvey/js-sdk/pull/281)
+- Add default entitlements plist file to NativeScript SDK. [#281](https://github.com/Kinvey/js-sdk/pull/281)
 
 ### Bug Fixes
 - Check that value is an object before calling `Object.keys` in `Query.isSupportedOffline()`. [#245](https://github.com/Kinvey/js-sdk/pull/245)
