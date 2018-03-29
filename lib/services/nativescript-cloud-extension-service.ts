@@ -29,8 +29,7 @@ export class NativescriptCloudExtensionService implements INativescriptCloudExte
 	}
 
 	private getExtensionData(): IExtensionData {
-		return this.$extensibilityService.getInstalledExtensionsData()
-			.find(extensionData => extensionData.extensionName === constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME);
+		return _.find(this.$extensibilityService.getInstalledExtensionsData(), extensionData => extensionData.extensionName === constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME);
 	}
 }
 $injector.register("nativescriptCloudExtensionService", NativescriptCloudExtensionService);
