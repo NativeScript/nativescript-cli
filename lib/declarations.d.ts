@@ -788,7 +788,7 @@ interface IBundleValidatorHelper {
 	validate(): void;
 }
 
-interface INativescriptCloudExtensionService {
+interface INativeScriptCloudExtensionService {
 	/**
 	 * Installs nativescript-cloud extension
 	 * @return {Promise<IExtensionData>} returns the extension data

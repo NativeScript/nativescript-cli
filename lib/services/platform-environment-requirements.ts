@@ -7,7 +7,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		private $doctorService: IDoctorService,
 		private $errors: IErrors,
 		private $logger: ILogger,
-		private $nativescriptCloudExtensionService: INativescriptCloudExtensionService,
+		private $nativeScriptCloudExtensionService: INativeScriptCloudExtensionService,
 		private $prompter: IPrompter,
 		private $staticConfig: IStaticConfig) { }
 
@@ -52,7 +52,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 					return true;
 				}
 
-				if (this.$nativescriptCloudExtensionService.isInstalled()) {
+				if (this.$nativeScriptCloudExtensionService.isInstalled()) {
 					this.processManuallySetup(platform);
 				} else {
 					const option = await this.$prompter.promptForChoice(PlatformEnvironmentRequirements.NOT_CONFIGURED_ENV_AFTER_SETUP_SCRIPT_MESSAGE, [
@@ -91,7 +91,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	}
 
 	private processCloudBuildsCore(platform: string): Promise<IExtensionData> {
-		return this.$nativescriptCloudExtensionService.install();
+		return this.$nativeScriptCloudExtensionService.install();
 	}
 
 	private getCloudBuildsMessage(platform: string): string {
@@ -132,7 +132,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	}
 
 	private getNonInteractiveConsoleMessage(platform: string) {
-		return this.$nativescriptCloudExtensionService.isInstalled() ?
+		return this.$nativeScriptCloudExtensionService.isInstalled() ?
 			this.buildMultilineMessage([
 				`${PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE} ${PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE}`,
 				PlatformEnvironmentRequirements.RUN_TNS_SETUP_MESSAGE,
@@ -150,7 +150,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	private getInteractiveConsoleMessage(platform: string) {
 		const message = `The ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension is installed and you can ${_.lowerFirst(this.getCloudBuildsMessage(platform))}`;
 
-		return this.$nativescriptCloudExtensionService.isInstalled() ?
+		return this.$nativeScriptCloudExtensionService.isInstalled() ?
 			this.buildMultilineMessage([
 				`${message.bold}`,
 				`${PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE} ${PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE}`,
@@ -167,7 +167,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	}
 
 	private promptForChoice(): Promise<string> {
-		const choices = this.$nativescriptCloudExtensionService.isInstalled() ? [
+		const choices = this.$nativeScriptCloudExtensionService.isInstalled() ? [
 			PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
 			PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
 		] : [

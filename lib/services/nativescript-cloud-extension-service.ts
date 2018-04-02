@@ -1,7 +1,7 @@
 import * as constants from "../constants";
 import * as semver from "semver";
 
-export class NativescriptCloudExtensionService implements INativescriptCloudExtensionService {
+export class NativeScriptCloudExtensionService implements INativeScriptCloudExtensionService {
 	constructor(private $extensibilityService: IExtensibilityService,
 		private $logger: ILogger,
 		private $npmInstallationManager: INpmInstallationManager) { }
@@ -32,4 +32,4 @@ export class NativescriptCloudExtensionService implements INativescriptCloudExte
 		return _.find(this.$extensibilityService.getInstalledExtensionsData(), extensionData => extensionData.extensionName === constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME);
 	}
 }
-$injector.register("nativescriptCloudExtensionService", NativescriptCloudExtensionService);
+$injector.register("nativeScriptCloudExtensionService", NativeScriptCloudExtensionService);
