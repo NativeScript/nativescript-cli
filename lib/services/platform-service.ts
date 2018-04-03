@@ -603,7 +603,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	@helpers.hook('cleanApp')
 	public async cleanDestinationApp(platformInfo: IPreparePlatformInfo): Promise<void> {
-		await this.ensurePlatformInstalled(platformInfo.platform, platformInfo.platformTemplate, platformInfo.projectData, platformInfo.config);
+		await this.ensurePlatformInstalled(platformInfo.platform, platformInfo.platformTemplate, platformInfo.projectData, platformInfo.config, platformInfo.nativePrepare);
 
 		const platformData = this.$platformsData.getPlatformData(platformInfo.platform, platformInfo.projectData);
 		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
