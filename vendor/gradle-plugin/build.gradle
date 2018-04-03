@@ -40,3 +40,12 @@ android {
         versionName "1.0"
     }
 }
+
+dependencies {
+    def supportVer = "27.0.1"
+    if (project.hasProperty("supportVersion")) {
+        supportVer = supportVersion
+    }
+    compile "com.android.support:support-v4:$supportVer"
+    compile "com.android.support:appcompat-v7:$supportVer"
+}
