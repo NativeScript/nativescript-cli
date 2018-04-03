@@ -53,32 +53,64 @@ class DoctorService implements IDoctorService {
 		}
 	}
 
-	public runSetupScript(): Promise<ISpawnResult> {
+	public async runSetupScript(): Promise<ISpawnResult> {
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: "Run setup script",
+			additionalData: "Start",
+		});
+
 		if (this.$hostInfo.isLinux) {
+			await this.$analyticsService.trackEventActionInGoogleAnalytics({
+				action: "Run setup script",
+				additionalData: "Skipped as OS is Linux",
+			});
 			return;
 		}
 
 		this.$logger.out("Running the setup script to try and automatically configure your environment.");
 
 		if (this.$hostInfo.isDarwin) {
-			return this.runSetupScriptCore(DoctorService.DarwinSetupScriptLocation, []);
+			await this.runSetupScriptCore(DoctorService.DarwinSetupScriptLocation, []);
 		}
 
 		if (this.$hostInfo.isWindows) {
-			return this.runSetupScriptCore(DoctorService.WindowsSetupScriptExecutable, DoctorService.WindowsSetupScriptArguments);
+			await this.runSetupScriptCore(DoctorService.WindowsSetupScriptExecutable, DoctorService.WindowsSetupScriptArguments);
 		}
+
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: "Run setup script",
+			additionalData: "Finished",
+		});
 	}
 
 	public async canExecuteLocalBuild(platform?: string): Promise<boolean> {
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: "Check Local Build Setup",
+			additionalData: "Started",
+		});
 		const infos = await doctor.getInfos({ platform });
 
 		const warnings = this.filterInfosByType(infos, constants.WARNING_TYPE_NAME);
-		if (warnings.length > 0) {
+		const hasWarnings = warnings.length > 0;
+		if (hasWarnings) {
+			// TODO: Separate the track per platform:
+			// Could be in two separate trackings or in the same, but with additional information, for example:
+			// Errors:<platform>__<warnings for platform>.join(--)$$<platform>__<warnings for platform>.join(--)...
+			await this.$analyticsService.trackEventActionInGoogleAnalytics({
+				action: "Check Local Build Setup",
+				additionalData: `Warnings:${warnings.map(w => w.message).join("__")}`,
+			});
 			this.printInfosCore(infos);
 		} else {
 			infos.map(info => this.$logger.trace(info.message));
 		}
-		return warnings.length === 0;
+
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: "Check Local Build Setup",
+			additionalData: `Finished: ${hasWarnings}`,
+		});
+
+		return !hasWarnings;
 	}
 
 	private async promptForDocs(link: string): Promise<void> {

@@ -9,10 +9,12 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		private $logger: ILogger,
 		private $nativeScriptCloudExtensionService: INativeScriptCloudExtensionService,
 		private $prompter: IPrompter,
-		private $staticConfig: IStaticConfig) { }
+		private $staticConfig: IStaticConfig,
+		private $analyticsService: IAnalyticsService) { }
 
 	public static CLOUD_SETUP_OPTION_NAME = "Configure for Cloud Builds";
 	public static LOCAL_SETUP_OPTION_NAME = "Configure for Local Builds";
+	public static TRY_CLOUD_OPERATION_OPTION_NAME = "Try Cloud Operation";
 	public static MANUALLY_SETUP_OPTION_NAME = "Skip Step and Configure Manually";
 	private static BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME = "Configure for Both Local and Cloud Builds";
 	private static CHOOSE_OPTIONS_MESSAGE = "To continue, choose one of the following options: ";
@@ -27,14 +29,24 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		"deploy": "tns cloud deploy"
 	};
 
-	public async checkEnvironmentRequirements(platform: string): Promise<boolean> {
+	public async checkEnvironmentRequirements(platform: string, projectDir: string): Promise<boolean> {
 		if (process.env.NS_SKIP_ENV_CHECK) {
+			await this.$analyticsService.trackEventActionInGoogleAnalytics({
+				action: "Check Environment Requirements",
+				additionalData: "Skipped:NS_SKIP_ENV_CHECK is set",
+				projectDir
+			});
 			return true;
 		}
 
 		const canExecute = await this.$doctorService.canExecuteLocalBuild(platform);
 		if (!canExecute) {
 			if (!isInteractive()) {
+				await this.$analyticsService.trackEventActionInGoogleAnalytics({
+					action: "Check Environment Requirements",
+					additionalData: "Non-interactive terminal, unable to execute local builds.",
+					projectDir
+				});
 				this.fail(this.getNonInteractiveConsoleMessage(platform));
 			}
 
@@ -73,6 +85,11 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				}
 
 				this.processManuallySetup(platform);
+			}
+
+			if (selectedOption === PlatformEnvironmentRequirements.TRY_CLOUD_OPERATION_OPTION_NAME) {
+				const message = `You can use ${_.lowerFirst(this.getCloudBuildsMessage(platform))}`;
+				this.fail(message);
 			}
 		}
 
@@ -166,18 +183,25 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			]);
 	}
 
-	private promptForChoice(): Promise<string> {
+	private async promptForChoice(): Promise<string> {
 		const choices = this.$nativeScriptCloudExtensionService.isInstalled() ? [
+			PlatformEnvironmentRequirements.TRY_CLOUD_OPERATION_OPTION_NAME,
 			PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
 			PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
 		] : [
-			PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME,
-			PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
-			PlatformEnvironmentRequirements.BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME,
-			PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
-		];
+				PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME,
+				PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
+				PlatformEnvironmentRequirements.BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME,
+				PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
+			];
 
-		return this.$prompter.promptForChoice(PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE, choices);
+		const selection = await this.$prompter.promptForChoice(PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE, choices);
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: "Check Environment Requirements",
+			additionalData: `User selected: ${selection}`
+			// consider passing projectDir here
+		});
+		return selection;
 	}
 
 	private getEnvVerificationMessage() {

@@ -381,5 +381,5 @@ interface IUpdateAppOptions extends IOptionalFilesToSync, IOptionalFilesToRemove
 }
 
 interface IPlatformEnvironmentRequirements {
-	checkEnvironmentRequirements(platform: string): Promise<boolean>;
+	checkEnvironmentRequirements(platform: string, projectDir: string): Promise<boolean>;
 }
