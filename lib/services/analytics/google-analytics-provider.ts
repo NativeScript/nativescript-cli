@@ -4,7 +4,6 @@ import { AnalyticsClients } from "../../common/constants";
 
 export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	private static GA_TRACKING_ID = "UA-111455-44";
-	private static GA_CROSS_CLIENT_TRACKING_ID = "UA-111455-51";
 	private currentPage: string;
 
 	constructor(private clientId: string,
@@ -15,15 +14,12 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	}
 
 	public async trackHit(trackInfo: IGoogleAnalyticsData): Promise<void> {
-		const trackingIds = [GoogleAnalyticsProvider.GA_TRACKING_ID, GoogleAnalyticsProvider.GA_CROSS_CLIENT_TRACKING_ID];
 		const sessionId = uuid.v4();
 
-		for (const gaTrackingId of trackingIds) {
-			try {
-				await this.track(gaTrackingId, trackInfo, sessionId);
-			} catch (e) {
-				this.$logger.trace("Analytics exception: ", e);
-			}
+		try {
+			await this.track(GoogleAnalyticsProvider.GA_TRACKING_ID, trackInfo, sessionId);
+		} catch (e) {
+			this.$logger.trace("Analytics exception: ", e);
 		}
 	}
 
@@ -41,14 +37,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 			}
 		});
 
-		switch (gaTrackingId) {
-			case GoogleAnalyticsProvider.GA_CROSS_CLIENT_TRACKING_ID:
-				this.setCrossClientCustomDimensions(visitor, sessionId);
-				break;
-			default:
-				await this.setCustomDimensions(visitor, trackInfo.customDimensions, sessionId);
-				break;
-		}
+		await this.setCustomDimensions(visitor, trackInfo.customDimensions, sessionId);
 
 		switch (trackInfo.googleAnalyticsDataType) {
 			case GoogleAnalyticsDataType.Page:
@@ -77,18 +66,6 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		}
 
 		customDimensions = _.merge(defaultValues, customDimensions);
-
-		_.each(customDimensions, (value, key) => {
-			visitor.set(key, value);
-		});
-	}
-
-	private async setCrossClientCustomDimensions(visitor: ua.Visitor, sessionId: string): Promise<void> {
-		const customDimensions: IStringDictionary = {
-			[GoogleAnalyticsCrossClientCustomDimensions.sessionId]: sessionId,
-			[GoogleAnalyticsCrossClientCustomDimensions.clientId]: this.clientId,
-			[GoogleAnalyticsCrossClientCustomDimensions.crossClientId]: this.clientId,
-		};
 
 		_.each(customDimensions, (value, key) => {
 			visitor.set(key, value);
