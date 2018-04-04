@@ -1,6 +1,7 @@
 import { EOL } from "os";
 import * as path from "path";
 import * as helpers from "../common/helpers";
+import { TrackActionNames } from "../constants";
 import { doctor, constants } from "nativescript-doctor";
 
 class DoctorService implements IDoctorService {
@@ -52,13 +53,13 @@ class DoctorService implements IDoctorService {
 
 	public async runSetupScript(): Promise<ISpawnResult> {
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
-			action: "Run setup script",
-			additionalData: "Start",
+			action: TrackActionNames.RunSetupScript,
+			additionalData: "Starting",
 		});
 
 		if (this.$hostInfo.isLinux) {
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
-				action: "Run setup script",
+				action: TrackActionNames.RunSetupScript,
 				additionalData: "Skipped as OS is Linux",
 			});
 			return;
@@ -75,26 +76,23 @@ class DoctorService implements IDoctorService {
 		}
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
-			action: "Run setup script",
+			action: TrackActionNames.RunSetupScript,
 			additionalData: "Finished",
 		});
 	}
 
 	public async canExecuteLocalBuild(platform?: string): Promise<boolean> {
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
-			action: "Check Local Build Setup",
-			additionalData: "Started",
+			action: TrackActionNames.CheckLocalBuildSetup,
+			additionalData: "Starting",
 		});
 		const infos = await doctor.getInfos({ platform });
 
 		const warnings = this.filterInfosByType(infos, constants.WARNING_TYPE_NAME);
 		const hasWarnings = warnings.length > 0;
 		if (hasWarnings) {
-			// TODO: Separate the track per platform:
-			// Could be in two separate trackings or in the same, but with additional information, for example:
-			// Errors:<platform>__<warnings for platform>.join(--)$$<platform>__<warnings for platform>.join(--)...
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
-				action: "Check Local Build Setup",
+				action: TrackActionNames.CheckLocalBuildSetup,
 				additionalData: `Warnings:${warnings.map(w => w.message).join("__")}`,
 			});
 			this.printInfosCore(infos);
@@ -103,8 +101,8 @@ class DoctorService implements IDoctorService {
 		}
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
-			action: "Check Local Build Setup",
-			additionalData: `Finished: ${hasWarnings}`,
+			action: TrackActionNames.CheckLocalBuildSetup,
+			additionalData: `Finished: Is setup correct: ${!hasWarnings}`,
 		});
 
 		return !hasWarnings;

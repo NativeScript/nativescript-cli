@@ -341,7 +341,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-		const forDevice = !buildConfig || buildConfig.buildForDevice;
+		const forDevice = !buildConfig || !!buildConfig.buildForDevice;
 		outputPath = outputPath || (forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath);
 		if (!this.$fs.exists(outputPath)) {
 			return true;
