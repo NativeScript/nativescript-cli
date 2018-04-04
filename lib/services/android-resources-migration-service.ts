@@ -1,6 +1,6 @@
 import * as path from "path";
-import * as shell from "shelljs";
 import * as constants from "../constants";
+import { EOL } from "os";
 
 export class AndroidResourcesMigrationService implements IAndroidResourcesMigrationService {
 	private static ANDROID_DIR = "Android";
@@ -8,6 +8,7 @@ export class AndroidResourcesMigrationService implements IAndroidResourcesMigrat
 	private static ANDROID_DIR_OLD = "Android-Pre-v4";
 
 	constructor(private $fs: IFileSystem,
+		private $errors: IErrors,
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
 
@@ -22,6 +23,25 @@ export class AndroidResourcesMigrationService implements IAndroidResourcesMigrat
 	public async migrate(appResourcesDir: string): Promise<void> {
 		const originalAppResources = path.join(appResourcesDir, AndroidResourcesMigrationService.ANDROID_DIR);
 		const appResourcesDestination = path.join(appResourcesDir, AndroidResourcesMigrationService.ANDROID_DIR_TEMP);
+		const appResourcesBackup = path.join(appResourcesDir, AndroidResourcesMigrationService.ANDROID_DIR_OLD);
+
+		try {
+			await this.tryMigrate(originalAppResources, appResourcesDestination, appResourcesBackup);
+			this.$logger.out(`Successfully updated your project's application resources '/Android' directory structure.${EOL}The previous version of your Android application resources has been renamed to '/${AndroidResourcesMigrationService.ANDROID_DIR_OLD}'`);
+		} catch (error) {
+			try {
+				this.recover(originalAppResources, appResourcesDestination, appResourcesBackup);
+				this.$logger.out("Failed to update resources. They should be in their initial state.");
+			} catch (err) {
+				this.$logger.trace(err);
+				this.$logger.out(`Failed to update resources.${EOL} Backup of original content is inside "${appResourcesBackup}".${EOL}If "${originalAppResources} is missing copy from backup folder."`);
+			} finally {
+				this.$errors.failWithoutHelp(error.message);
+			}
+		}
+	}
+
+	private async tryMigrate(originalAppResources: string, appResourcesDestination: string, appResourcesBackup: string): Promise<void> {
 		const appMainSourceSet = path.join(appResourcesDestination, constants.SRC_DIR, constants.MAIN_DIR);
 		const appResourcesMainSourceSetResourcesDestination = path.join(appMainSourceSet, constants.RESOURCES_DIR);
 
@@ -64,11 +84,20 @@ export class AndroidResourcesMigrationService implements IAndroidResourcesMigrat
 		this.$fs.copyFile(path.join(originalAppResources, constants.MANIFEST_FILE_NAME), path.join(appMainSourceSet, constants.MANIFEST_FILE_NAME));
 
 		// rename the legacy app_resources to ANDROID_DIR_OLD
-		shell.mv(originalAppResources, path.join(appResourcesDir, AndroidResourcesMigrationService.ANDROID_DIR_OLD));
-		// move the new, updated app_resources to App_Resources/Android, as  the de facto resources
-		shell.mv(appResourcesDestination, originalAppResources);
+		this.$fs.rename(originalAppResources, appResourcesBackup);
 
-		this.$logger.out(`Successfully updated your project's application resources '/Android' directory structure.\nThe previous version of your Android application resources has been renamed to '/${AndroidResourcesMigrationService.ANDROID_DIR_OLD}'`);
+		// move the new, updated app_resources to App_Resources/Android, as  the de facto resources
+		this.$fs.rename(appResourcesDestination, originalAppResources);
+	}
+
+	private recover(originalAppResources: string, appResourcesDestination: string, appResourcesBackup: string): void {
+		if (!this.$fs.exists(originalAppResources)) {
+			this.$fs.rename(appResourcesBackup, originalAppResources);
+		}
+
+		if (this.$fs.exists(appResourcesDestination)) {
+			this.$fs.deleteDirectory(appResourcesDestination);
+		}
 	}
 }
 

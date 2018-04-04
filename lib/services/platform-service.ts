@@ -341,7 +341,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-		const forDevice = !buildConfig || buildConfig.buildForDevice;
+		const forDevice = !buildConfig || !!buildConfig.buildForDevice;
 		outputPath = outputPath || (forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath);
 		if (!this.$fs.exists(outputPath)) {
 			return true;
@@ -603,7 +603,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	@helpers.hook('cleanApp')
 	public async cleanDestinationApp(platformInfo: IPreparePlatformInfo): Promise<void> {
-		await this.ensurePlatformInstalled(platformInfo.platform, platformInfo.platformTemplate, platformInfo.projectData, platformInfo.config);
+		await this.ensurePlatformInstalled(platformInfo.platform, platformInfo.platformTemplate, platformInfo.projectData, platformInfo.config, platformInfo.nativePrepare);
 
 		const platformData = this.$platformsData.getPlatformData(platformInfo.platform, platformInfo.projectData);
 		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
@@ -788,9 +788,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	private getLatestApplicationPackage(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage {
 		let packages = this.getApplicationPackages(buildOutputPath, validBuildOutputData);
+		const packageExtName = path.extname(validBuildOutputData.packageNames[0]);
 		if (packages.length === 0) {
-			const packageExtName = path.extname(validBuildOutputData.packageNames[0]);
-			this.$errors.fail("No %s found in %s directory", packageExtName, buildOutputPath);
+			this.$errors.fail(`No ${packageExtName} found in ${buildOutputPath} directory.`);
+		}
+
+		if (packages.length > 1) {
+			this.$logger.warn(`More than one ${packageExtName} found in ${buildOutputPath} directory. Using the last one produced from build.`);
 		}
 
 		packages = _.sortBy(packages, pkg => pkg.time).reverse(); // We need to reverse because sortBy always sorts in ascending order

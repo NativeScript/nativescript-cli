@@ -2,6 +2,7 @@ import * as path from "path";
 import { NODE_MODULES_FOLDER_NAME, PACKAGE_JSON_FILE_NAME } from "../../constants";
 
 interface IDependencyDescription {
+	parent: IDependencyDescription;
 	parentDir: string;
 	name: string;
 	depth: number;
@@ -20,6 +21,7 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 
 		const queue: IDependencyDescription[] = _.keys(dependencies)
 			.map(dependencyName => ({
+				parent: null,
 				parentDir: projectPath,
 				name: dependencyName,
 				depth: 0
@@ -27,13 +29,14 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 
 		while (queue.length) {
 			const currentModule = queue.shift();
-			const resolvedDependency = this.findModule(rootNodeModulesPath, currentModule.parentDir, currentModule.name, currentModule.depth, resolvedDependencies);
+			const resolvedDependency = this.findModule(rootNodeModulesPath, currentModule, resolvedDependencies);
 
 			if (resolvedDependency && !_.some(resolvedDependencies, r => r.directory === resolvedDependency.directory)) {
 				_.each(resolvedDependency.dependencies, d => {
-					const dependency: IDependencyDescription = { name: d, parentDir: resolvedDependency.directory, depth: resolvedDependency.depth + 1 };
+					const dependency: IDependencyDescription = { parent: currentModule, name: d, parentDir: resolvedDependency.directory, depth: resolvedDependency.depth + 1 };
 
 					const shouldAdd = !_.some(queue, element =>
+						element.parent === dependency.parent &&
 						element.name === dependency.name &&
 						element.parentDir === dependency.parentDir &&
 						element.depth === dependency.depth);
@@ -50,26 +53,40 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 		return resolvedDependencies;
 	}
 
-	private findModule(rootNodeModulesPath: string, parentModulePath: string, name: string, depth: number, resolvedDependencies: IDependencyData[]): IDependencyData {
-		let modulePath = path.join(parentModulePath, NODE_MODULES_FOLDER_NAME, name); // node_modules/parent/node_modules/<package>
-		const rootModulesPath = path.join(rootNodeModulesPath, name);
-		let depthInNodeModules = depth;
+	private findModule(rootNodeModulesPath: string, depDescription: IDependencyDescription, resolvedDependencies: IDependencyData[]): IDependencyData {
+		let modulePath = path.join(depDescription.parentDir, NODE_MODULES_FOLDER_NAME, depDescription.name); // node_modules/parent/node_modules/<package>
+		const rootModulesPath = path.join(rootNodeModulesPath, depDescription.name);
+		let depthInNodeModules = depDescription.depth;
 
 		if (!this.moduleExists(modulePath)) {
-			modulePath = rootModulesPath; // /node_modules/<package>
-			if (!this.moduleExists(modulePath)) {
-				return null;
+
+			let moduleExists = false;
+			let parent = depDescription.parent;
+
+			while (parent && !moduleExists) {
+				modulePath = path.join(depDescription.parent.parentDir, NODE_MODULES_FOLDER_NAME, depDescription.name);
+				moduleExists = this.moduleExists(modulePath);
+				if (!moduleExists)  {
+					parent = parent.parent;
+				}
+			}
+
+			if (!moduleExists) {
+				modulePath = rootModulesPath; // /node_modules/<package>
+				if (!this.moduleExists(modulePath)) {
+					return null;
+				}
 			}
 
 			depthInNodeModules = 0;
 		}
 
-		if (_.some(resolvedDependencies, r => r.name === name && r.directory === modulePath)) {
+		if (_.some(resolvedDependencies, r => r.name === depDescription.name && r.directory === modulePath)) {
 			return null;
 
 		}
 
-		return this.getDependencyData(name, modulePath, depthInNodeModules);
+		return this.getDependencyData(depDescription.name, modulePath, depthInNodeModules);
 	}
 
 	private getDependencyData(name: string, directory: string, depth: number): IDependencyData {

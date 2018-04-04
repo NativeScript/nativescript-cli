@@ -120,6 +120,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("settingsService", SettingsService);
 	testInjector.register("httpClient", {});
 	testInjector.register("platformEnvironmentRequirements", {});
+	testInjector.register("plistParser", {});
 
 	return testInjector;
 }
@@ -839,6 +840,16 @@ describe("Merge Project XCConfig files", () => {
 
 	it("Adds the entitlements property if not set by the user", async () => {
 		for (const release in [true, false]) {
+			const realExistsFunction = testInjector.resolve("fs").exists;
+
+			testInjector.resolve("fs").exists = (filePath: string) => {
+				if (iOSEntitlementsService.getPlatformsEntitlementsPath(projectData) === filePath) {
+					return true;
+				}
+
+				return realExistsFunction(filePath);
+			};
+
 			await (<any>iOSProjectService).mergeProjectXcconfigFiles(release, projectData);
 
 			const destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
