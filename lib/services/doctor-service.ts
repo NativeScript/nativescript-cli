@@ -5,18 +5,14 @@ import { doctor, constants } from "nativescript-doctor";
 
 class DoctorService implements IDoctorService {
 	private static DarwinSetupScriptLocation = path.join(__dirname, "..", "..", "setup", "mac-startup-shell-script.sh");
-	private static DarwinSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-os-x";
 	private static WindowsSetupScriptExecutable = "powershell.exe";
 	private static WindowsSetupScriptArguments = ["start-process", "-FilePath", "PowerShell.exe", "-NoNewWindow", "-Wait", "-ArgumentList", '"-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString(\'https://www.nativescript.org/setup/win\'))"'];
-	private static WindowsSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-win";
-	private static LinuxSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-linux";
 
 	constructor(private $analyticsService: IAnalyticsService,
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $childProcess: IChildProcess,
-		private $opener: IOpener,
-		private $prompter: IPrompter,
+		private $injector: IInjector,
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $versionsService: IVersionsService) { }
 
@@ -41,7 +37,6 @@ class DoctorService implements IDoctorService {
 
 		if (hasWarnings) {
 			this.$logger.info("There seem to be issues with your configuration.");
-			await this.promptForHelp();
 		} else {
 			this.$logger.out("No issues were detected.".bold);
 		}
@@ -51,6 +46,8 @@ class DoctorService implements IDoctorService {
 		} catch (err) {
 			this.$logger.error("Cannot get the latest versions information from npm. Please try again later.");
 		}
+
+		await this.$injector.resolve("platformEnvironmentRequirements").checkEnvironmentRequirements(null);
 	}
 
 	public async runSetupScript(): Promise<ISpawnResult> {
@@ -111,33 +108,6 @@ class DoctorService implements IDoctorService {
 		});
 
 		return !hasWarnings;
-	}
-
-	private async promptForDocs(link: string): Promise<void> {
-		if (await this.$prompter.confirm("Do you want to visit the official documentation?", () => helpers.isInteractive())) {
-			this.$opener.open(link);
-		}
-	}
-
-	private async promptForSetupScript(executablePath: string, setupScriptArgs: string[]): Promise<void> {
-		if (await this.$prompter.confirm("Do you want to run the setup script?", () => helpers.isInteractive())) {
-			await this.runSetupScriptCore(executablePath, setupScriptArgs);
-		}
-	}
-
-	private async promptForHelp(): Promise<void> {
-		if (this.$hostInfo.isDarwin) {
-			await this.promptForHelpCore(DoctorService.DarwinSetupDocsLink, DoctorService.DarwinSetupScriptLocation, []);
-		} else if (this.$hostInfo.isWindows) {
-			await this.promptForHelpCore(DoctorService.WindowsSetupDocsLink, DoctorService.WindowsSetupScriptExecutable, DoctorService.WindowsSetupScriptArguments);
-		} else {
-			await this.promptForDocs(DoctorService.LinuxSetupDocsLink);
-		}
-	}
-
-	private async promptForHelpCore(link: string, setupScriptExecutablePath: string, setupScriptArgs: string[]): Promise<void> {
-		await this.promptForDocs(link);
-		await this.promptForSetupScript(setupScriptExecutablePath, setupScriptArgs);
 	}
 
 	private async runSetupScriptCore(executablePath: string, setupScriptArgs: string[]): Promise<ISpawnResult> {
