@@ -1,22 +1,19 @@
 import { EOL } from "os";
 import * as path from "path";
 import * as helpers from "../common/helpers";
+import { TrackActionNames } from "../constants";
 import { doctor, constants } from "nativescript-doctor";
 
 class DoctorService implements IDoctorService {
 	private static DarwinSetupScriptLocation = path.join(__dirname, "..", "..", "setup", "mac-startup-shell-script.sh");
-	private static DarwinSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-os-x";
 	private static WindowsSetupScriptExecutable = "powershell.exe";
 	private static WindowsSetupScriptArguments = ["start-process", "-FilePath", "PowerShell.exe", "-NoNewWindow", "-Wait", "-ArgumentList", '"-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString(\'https://www.nativescript.org/setup/win\'))"'];
-	private static WindowsSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-win";
-	private static LinuxSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-linux";
 
 	constructor(private $analyticsService: IAnalyticsService,
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $childProcess: IChildProcess,
-		private $opener: IOpener,
-		private $prompter: IPrompter,
+		private $injector: IInjector,
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $versionsService: IVersionsService) { }
 
@@ -41,7 +38,6 @@ class DoctorService implements IDoctorService {
 
 		if (hasWarnings) {
 			this.$logger.info("There seem to be issues with your configuration.");
-			await this.promptForHelp();
 		} else {
 			this.$logger.out("No issues were detected.".bold);
 		}
@@ -51,61 +47,65 @@ class DoctorService implements IDoctorService {
 		} catch (err) {
 			this.$logger.error("Cannot get the latest versions information from npm. Please try again later.");
 		}
+
+		await this.$injector.resolve("platformEnvironmentRequirements").checkEnvironmentRequirements(null);
 	}
 
-	public runSetupScript(): Promise<ISpawnResult> {
+	public async runSetupScript(): Promise<ISpawnResult> {
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: TrackActionNames.RunSetupScript,
+			additionalData: "Starting",
+		});
+
 		if (this.$hostInfo.isLinux) {
+			await this.$analyticsService.trackEventActionInGoogleAnalytics({
+				action: TrackActionNames.RunSetupScript,
+				additionalData: "Skipped as OS is Linux",
+			});
 			return;
 		}
 
 		this.$logger.out("Running the setup script to try and automatically configure your environment.");
 
 		if (this.$hostInfo.isDarwin) {
-			return this.runSetupScriptCore(DoctorService.DarwinSetupScriptLocation, []);
+			await this.runSetupScriptCore(DoctorService.DarwinSetupScriptLocation, []);
 		}
 
 		if (this.$hostInfo.isWindows) {
-			return this.runSetupScriptCore(DoctorService.WindowsSetupScriptExecutable, DoctorService.WindowsSetupScriptArguments);
+			await this.runSetupScriptCore(DoctorService.WindowsSetupScriptExecutable, DoctorService.WindowsSetupScriptArguments);
 		}
+
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: TrackActionNames.RunSetupScript,
+			additionalData: "Finished",
+		});
 	}
 
 	public async canExecuteLocalBuild(platform?: string): Promise<boolean> {
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: TrackActionNames.CheckLocalBuildSetup,
+			additionalData: "Starting",
+		});
 		const infos = await doctor.getInfos({ platform });
 
 		const warnings = this.filterInfosByType(infos, constants.WARNING_TYPE_NAME);
-		if (warnings.length > 0) {
+		const hasWarnings = warnings.length > 0;
+		if (hasWarnings) {
+			await this.$analyticsService.trackEventActionInGoogleAnalytics({
+				action: TrackActionNames.CheckLocalBuildSetup,
+				additionalData: `Warnings:${warnings.map(w => w.message).join("__")}`,
+			});
 			this.printInfosCore(infos);
 		} else {
 			infos.map(info => this.$logger.trace(info.message));
 		}
-		return warnings.length === 0;
-	}
 
-	private async promptForDocs(link: string): Promise<void> {
-		if (await this.$prompter.confirm("Do you want to visit the official documentation?", () => helpers.isInteractive())) {
-			this.$opener.open(link);
-		}
-	}
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: TrackActionNames.CheckLocalBuildSetup,
+			additionalData: `Finished: Is setup correct: ${!hasWarnings}`,
+		});
 
-	private async promptForSetupScript(executablePath: string, setupScriptArgs: string[]): Promise<void> {
-		if (await this.$prompter.confirm("Do you want to run the setup script?", () => helpers.isInteractive())) {
-			await this.runSetupScriptCore(executablePath, setupScriptArgs);
-		}
-	}
-
-	private async promptForHelp(): Promise<void> {
-		if (this.$hostInfo.isDarwin) {
-			await this.promptForHelpCore(DoctorService.DarwinSetupDocsLink, DoctorService.DarwinSetupScriptLocation, []);
-		} else if (this.$hostInfo.isWindows) {
-			await this.promptForHelpCore(DoctorService.WindowsSetupDocsLink, DoctorService.WindowsSetupScriptExecutable, DoctorService.WindowsSetupScriptArguments);
-		} else {
-			await this.promptForDocs(DoctorService.LinuxSetupDocsLink);
-		}
-	}
-
-	private async promptForHelpCore(link: string, setupScriptExecutablePath: string, setupScriptArgs: string[]): Promise<void> {
-		await this.promptForDocs(link);
-		await this.promptForSetupScript(setupScriptExecutablePath, setupScriptArgs);
+		return !hasWarnings;
 	}
 
 	private async runSetupScriptCore(executablePath: string, setupScriptArgs: string[]): Promise<ISpawnResult> {

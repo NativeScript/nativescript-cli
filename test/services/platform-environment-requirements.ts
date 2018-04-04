@@ -13,6 +13,9 @@ const nonInteractiveConsoleMessageWhenExtensionIsInstalled = `Your environment i
 function createTestInjector() {
 	const testInjector = new Yok();
 
+	testInjector.register("analyticsService", {
+		trackEventActionInGoogleAnalytics: () => ({})
+	});
 	testInjector.register("commandsService", {currentCommandData: {commandName: "test", commandArguments: [""]}});
 	testInjector.register("doctorService", {});
 	testInjector.register("errors", {
@@ -103,7 +106,7 @@ describe("platformEnvironmentRequirements ", () => {
 			await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform));
 			assert.isTrue(promptForChoiceData.length === 1);
 			assert.deepEqual("To continue, choose one of the following options: ", promptForChoiceData[0].message);
-			assert.deepEqual(['Configure for Local Builds', 'Skip Step and Configure Manually'], promptForChoiceData[0].choices);
+			assert.deepEqual(['Try Cloud Operation', 'Configure for Local Builds', 'Skip Step and Configure Manually'], promptForChoiceData[0].choices);
 		});
 		it("should skip env chech when NS_SKIP_ENV_CHECK environment variable is passed", async() => {
 			process.env.NS_SKIP_ENV_CHECK = true;

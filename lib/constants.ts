@@ -135,7 +135,10 @@ export const enum TrackActionNames {
 	CreateProject = "Create project",
 	Debug = "Debug",
 	Deploy = "Deploy",
-	LiveSync = "LiveSync"
+	LiveSync = "LiveSync",
+	RunSetupScript = "Run Setup Script",
+	CheckLocalBuildSetup = "Check Local Build Setup",
+	CheckEnvironmentRequirements = "Check Environment Requirements"
 }
 
 export const enum BuildStates {
