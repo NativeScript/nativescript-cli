@@ -253,9 +253,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			const androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
 			const compileSdk = androidToolsInfo.compileSdkVersion;
 			const buildToolsVersion = androidToolsInfo.buildToolsVersion;
+			const supportVersion = androidToolsInfo.supportRepositoryVersion;
 
 			localArgs.push(`-PcompileSdk=android-${compileSdk}`);
 			localArgs.push(`-PbuildToolsVersion=${buildToolsVersion}`);
+			localArgs.push(`-PsupportVersion=${supportVersion}`);
 
 			try {
 				await this.$childProcess.exec(localArgs.join(" "), { cwd: newPluginDir });

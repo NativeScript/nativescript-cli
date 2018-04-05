@@ -1,17 +1,35 @@
 import * as constants from "../constants";
+import * as semver from "semver";
 
-export class NativescriptCloudExtensionService implements INativescriptCloudExtensionService {
-
+export class NativeScriptCloudExtensionService implements INativeScriptCloudExtensionService {
 	constructor(private $extensibilityService: IExtensibilityService,
-		private $logger: ILogger) { }
+		private $logger: ILogger,
+		private $npmInstallationManager: INpmInstallationManager) { }
 
 	public install(): Promise<IExtensionData> {
-		const installedExtensions = this.$extensibilityService.getInstalledExtensions() || {};
-		if (!installedExtensions[constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME]) {
+		if (!this.isInstalled()) {
 			return this.$extensibilityService.installExtension(constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME);
 		}
 
 		this.$logger.out(`Extension ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} is already installed.`);
 	}
+
+	public isInstalled(): boolean {
+		return !!this.getExtensionData();
+	}
+
+	public async isLatestVersionInstalled(): Promise<boolean> {
+		const extensionData = this.getExtensionData();
+		if (extensionData) {
+			const latestVersion = await this.$npmInstallationManager.getLatestVersion(constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME);
+			return semver.eq(latestVersion, extensionData.version);
+		}
+
+		return false;
+	}
+
+	private getExtensionData(): IExtensionData {
+		return _.find(this.$extensibilityService.getInstalledExtensionsData(), extensionData => extensionData.extensionName === constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME);
+	}
 }
-$injector.register("nativescriptCloudExtensionService", NativescriptCloudExtensionService);
+$injector.register("nativeScriptCloudExtensionService", NativeScriptCloudExtensionService);

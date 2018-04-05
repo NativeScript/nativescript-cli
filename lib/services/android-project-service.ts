@@ -20,7 +20,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		{ name: "lazy", version: "^1.0.11" }
 	];
 
-	private _androidProjectPropertiesManagers: IDictionary<IAndroidProjectPropertiesManager>;
 	private isAndroidStudioTemplate: boolean;
 
 	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformServices,
@@ -39,7 +38,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService) {
 		super($fs, $projectDataService);
-		this._androidProjectPropertiesManagers = Object.create(null);
 		this.isAndroidStudioTemplate = false;
 	}
 

@@ -28,7 +28,7 @@ export class RunCommandBase implements ICommand {
 			this.platform = this.$devicePlatformsConstants.Android;
 		}
 
-		this.$liveSyncCommandHelper.validatePlatform(this.platform);
+		await this.$liveSyncCommandHelper.validatePlatform(this.platform);
 
 		return true;
 	}
