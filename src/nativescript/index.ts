@@ -3,7 +3,6 @@ import { StorageProvider as StorageProviderEnum, repositoryProvider } from '../c
 import './offline-data-storage';
 
 export * from './kinvey';
-export { Push } from './push';
 
 const supportedStorageProviders = repositoryProvider.getSupportedStorages();
 export const StorageProvider = pick(StorageProviderEnum, supportedStorageProviders);
