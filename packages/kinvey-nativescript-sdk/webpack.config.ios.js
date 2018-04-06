@@ -12,7 +12,7 @@ module.exports = (env = {}) => {
   const rules = getRules();
   const plugins = getPlugins(env, platform);
   let bundleName = pkg.name;
-  let pushBundleName = `${pkg.name}-push`;
+  let pushBundleName = 'push';
 
   const config = {
     entry: {},
