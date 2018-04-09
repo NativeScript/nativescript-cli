@@ -26,6 +26,8 @@ module.exports = (env = {}) => {
       'globals': 'globals',
       'nativescript-push-notifications': 'nativescript-push-notifications',
       'nativescript-sqlite': 'nativescript-sqlite',
+      'nativescript-urlhandler': 'nativescript-urlhandler',
+      'application': 'application',
       'tns-core-modules/application': 'application',
       'http': 'http',
       'tns-core-modules/http': 'http',
