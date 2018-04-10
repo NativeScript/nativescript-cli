@@ -18,6 +18,17 @@ import * as mobileprovision from "ios-mobileprovision-finder";
 import { SpawnOptions } from "child_process";
 import { BUILD_XCCONFIG_FILE_NAME } from "../constants";
 
+interface INativeSourceCodeDescription {
+	path: string;
+	name: string;
+}
+
+interface INativeSourceCodeGroup {
+	name: string;
+	path: string;
+	files: INativeSourceCodeDescription[];
+}
+
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
 	private static XCODE_SCHEME_EXT_NAME = ".xcscheme";
@@ -924,6 +935,11 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData, opts?: any): Promise<void> {
 		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 
+		const sourcePath = path.join(pluginPlatformsFolderPath, "src");
+		if (this.$fs.exists(pluginPlatformsFolderPath) && this.$fs.exists(sourcePath)) {
+			await this.prepareNativeSourceCode(pluginData.name, sourcePath, projectData);
+		}
+
 		await this.prepareFrameworks(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareStaticLibs(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareCocoapods(pluginPlatformsFolderPath, projectData);
@@ -1101,6 +1117,30 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 
 		return childProcess;
+	}
+
+	private async prepareNativeSourceCode(pluginName: string, pluginPlatformsFolderPath: string, projectData: IProjectData): Promise<void> {
+
+		const project = this.createPbxProj(projectData);
+		const group = this.getRootGroup(pluginName, pluginPlatformsFolderPath);
+		project.addPbxGroup(group.files.map(f => f.path), group.name, group.path, null, {isMain:true});
+		project.addToHeaderSearchPaths(group.path);
+		this.savePbxProj(project, projectData);
+	}
+
+	private getRootGroup(name: string, rootPath: string) {
+		const filesArr: INativeSourceCodeDescription[] = [];
+		const rootGroup: INativeSourceCodeGroup = { name: name, files: filesArr, path: rootPath };
+
+		if (this.$fs.exists(rootPath) && !this.$fs.isEmptyDir(rootPath)) {
+			this.$fs.readDirectory(rootPath).forEach(fileName => {
+				const filePath = path.join(rootGroup.path, fileName);
+				const file: INativeSourceCodeDescription = { name: fileName, path: filePath};
+				filesArr.push(file);
+			});
+		}
+
+		return rootGroup;
 	}
 
 	private async prepareFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): Promise<void> {
