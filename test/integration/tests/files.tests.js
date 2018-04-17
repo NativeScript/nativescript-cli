@@ -53,16 +53,21 @@ function testFunc() {
           .then((result) => {
             expect(result).to.exist;
             expect(result).to.equal(fileContent);
-            done()
+            done();
           })
           .catch(done);
       });
 
-      it.only('should stream the file with stream = true', (done) => {
+      it('should stream the file with stream = true', (done) => {
         Kinvey.Files.download(uploadedFile._id, { stream: true })
           .then((result) => {
             assertFileMetadata(result, uploadedFile._id, 'text/plain', uploadedFile._filename);
-            done()
+            return Kinvey.Files.downloadByUrl(result._downloadURL);
+          })
+          .then((result) => {
+            expect(result).to.exist;
+            expect(result).to.equal(fileContent);
+            done();
           })
           .catch(done);
       });
