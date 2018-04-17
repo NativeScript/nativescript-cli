@@ -28,6 +28,8 @@ function testFunc() {
     expect(file._kmd.lmt).to.exist;
   };
 
+  const plainTextMimeType = 'text/plain';
+
   describe('Files', () => {
 
     before((done) => {
@@ -42,7 +44,7 @@ function testFunc() {
       const fileContent = utilities.randomString();
 
       before((done) => {
-        Kinvey.Files.upload(fileContent, { 'mimeType': 'text/plain' })
+        Kinvey.Files.upload(fileContent, { 'mimeType': plainTextMimeType })
           .then((result) => { uploadedFile = result; })
           .then(() => done())
           .catch(done);
@@ -58,10 +60,11 @@ function testFunc() {
           .catch(done);
       });
 
-      it('should stream the file with stream = true', (done) => {
+      it('should stream the file by https with stream = true', (done) => {
         Kinvey.Files.download(uploadedFile._id, { stream: true })
           .then((result) => {
-            assertFileMetadata(result, uploadedFile._id, 'text/plain', uploadedFile._filename);
+            assertFileMetadata(result, uploadedFile._id, plainTextMimeType, uploadedFile._filename);
+            expect(result._downloadURL).to.contain('https://');
             return Kinvey.Files.downloadByUrl(result._downloadURL);
           })
           .then((result) => {
@@ -72,11 +75,21 @@ function testFunc() {
           .catch(done);
       });
 
+      it('should set tls to false', (done) => {
+        Kinvey.Files.download(uploadedFile._id, { tls: false, stream: true })
+          .then((result) => {
+            assertFileMetadata(result, uploadedFile._id, plainTextMimeType, uploadedFile._filename);
+            expect(result._downloadURL).to.contain('http://');
+            done();
+          })
+          .catch(done);
+      });
+
       it('should set correctly ttl', (done) => {
         // After the fix of MLIBZ-2453, the downloadByUrl assertion should be modified to check the error and moved to the error function
-        Kinvey.Files.download(uploadedFile._id, { stream: true, ttl: 0 })
+        Kinvey.Files.download(uploadedFile._id, { ttl: 0, stream: true })
           .then((result) => {
-            assertFileMetadata(result, uploadedFile._id, 'text/plain', uploadedFile._filename);
+            assertFileMetadata(result, uploadedFile._id, plainTextMimeType, uploadedFile._filename);
             return Kinvey.Files.downloadByUrl(result._downloadURL);
           })
           .then((result) => {
