@@ -71,6 +71,20 @@ function testFunc() {
           })
           .catch(done);
       });
+
+      it('should set correctly ttl', (done) => {
+        // After the fix of MLIBZ-2453, the downloadByUrl assertion should be modified to check the error and moved to the error function
+        Kinvey.Files.download(uploadedFile._id, { stream: true, ttl: 0 })
+          .then((result) => {
+            assertFileMetadata(result, uploadedFile._id, 'text/plain', uploadedFile._filename);
+            return Kinvey.Files.downloadByUrl(result._downloadURL);
+          })
+          .then((result) => {
+            expect(result).to.contain('The provided token has expired.')
+            done();
+          })
+          .catch(done);
+      });
     });
   });
 }
