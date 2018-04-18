@@ -64,7 +64,7 @@ function testFunc() {
           .catch(done);
       });
 
-      it('should return all files', (done) => {
+      it('should return all files by https', (done) => {
         Kinvey.Files.find()
           .then((result) => {
             expect(result).to.be.an('array');
@@ -85,6 +85,33 @@ function testFunc() {
             expect(result.length).to.equal(1);
             assertFileMetadata(result[0], uploadedFile2._id, plainTextMimeType, uploadedFile2._filename);
             done();
+          })
+          .catch(done);
+      });
+
+      it('should return the file by http if tls = false', (done) => {
+        Kinvey.Files.find(query, {tls: false})
+          .then((result) => {
+            assertFileMetadata(result[0], uploadedFile2._id, plainTextMimeType, uploadedFile2._filename, true);
+            done();
+          })
+          .catch(done);
+      });
+
+      it('should set correctly ttl', (done) => {
+        const ttlValue = 1;
+        // After the fix of MLIBZ-2453, the downloadByUrl assertion should be modified to check the error and moved to the error function
+        Kinvey.Files.find(query, { ttl: ttlValue })
+          .then((result) => {
+            assertFileMetadata(result[0], uploadedFile2._id, plainTextMimeType, uploadedFile2._filename);
+            setTimeout(() => {
+              return Kinvey.Files.downloadByUrl(result[0]._downloadURL)
+                .then((result) => {
+                  expect(result).to.contain('The provided token has expired.')
+                  done();
+                })
+                .catch(done);
+            }, ttlValue + 1000);
           })
           .catch(done);
       });
