@@ -89,6 +89,18 @@ function testFunc() {
           .catch(done);
       });
 
+      it('should download all files with download = true', (done) => {
+        Kinvey.Files.find(null, {download: true})
+          .then((result) => {
+            expect(result).to.be.an('array');
+            expect(result.length).to.equal(2);
+            expect(result.find(fileContent => fileContent === fileContent1)).to.exist;
+            expect(result.find(fileContent => fileContent === fileContent2)).to.exist;
+            done();
+          })
+          .catch(done);
+      });
+
       it('should download all files which match the query with download = true', (done) => {
         Kinvey.Files.find(query, { download: true })
           .then((result) => {
