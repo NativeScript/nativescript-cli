@@ -60,17 +60,23 @@ function testFunc() {
           .catch(done);
       });
 
-      it('should return and error if the _id does not exist', (done) => {
-        Kinvey.Files.download(utilities.randomString())
-          .catch((error) => {
-            expect(error.message).to.equal('This blob not found for this app backend');
+      it('should stream the file by https with stream = true and not set tls', (done) => {
+        Kinvey.Files.download(uploadedFile._id, { stream: true })
+          .then((result) => {
+            assertFileMetadata(result, uploadedFile._id, plainTextMimeType, uploadedFile._filename);
+            expect(result._downloadURL).to.contain('https://');
+            return Kinvey.Files.downloadByUrl(result._downloadURL);
+          })
+          .then((result) => {
+            expect(result).to.exist;
+            expect(result).to.equal(fileContent);
             done();
           })
           .catch(done);
       });
 
-      it('should stream the file by https with stream = true', (done) => {
-        Kinvey.Files.download(uploadedFile._id, { stream: true })
+      it('should stream the file by https with stream = true and tls = true', (done) => {
+        Kinvey.Files.download(uploadedFile._id, { stream: true, tls: true })
           .then((result) => {
             assertFileMetadata(result, uploadedFile._id, plainTextMimeType, uploadedFile._filename);
             expect(result._downloadURL).to.contain('https://');
@@ -94,6 +100,16 @@ function testFunc() {
           .catch(done);
       });
 
+      it('should not stream the file with stream = false', (done) => {
+        Kinvey.Files.download(uploadedFile._id, { stream: false })
+          .then((result) => {
+            expect(result).to.exist;
+            expect(result).to.equal(fileContent);
+            done();
+          })
+          .catch(done);
+      });
+
       it('should set correctly ttl', (done) => {
         // After the fix of MLIBZ-2453, the downloadByUrl assertion should be modified to check the error and moved to the error function
         Kinvey.Files.download(uploadedFile._id, { ttl: 0, stream: true })
@@ -103,6 +119,15 @@ function testFunc() {
           })
           .then((result) => {
             expect(result).to.contain('The provided token has expired.')
+            done();
+          })
+          .catch(done);
+      });
+
+      it('should return and error if the _id does not exist', (done) => {
+        Kinvey.Files.download(utilities.randomString())
+          .catch((error) => {
+            expect(error.message).to.equal('This blob not found for this app backend');
             done();
           })
           .catch(done);
