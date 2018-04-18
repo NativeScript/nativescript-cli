@@ -4,7 +4,7 @@ function testFunc() {
   const notFoundErrorMessage = 'This blob not found for this app backend';
   const plainTextMimeType = 'text/plain';
 
-  const assertFileMetadata = (file, expectedId, expectedMimeType, expectedFileName) => {
+  const assertFileMetadata = (file, expectedId, expectedMimeType, expectedFileName, byHttp) => {
     if (expectedId) {
       expect(file._id).to.equal(expectedId);
     } else {
@@ -23,8 +23,9 @@ function testFunc() {
       expect(file._filename).to.exist;
     }
 
+    const expectedProtocol = byHttp ? 'http://' : 'https://';
+    expect(file._downloadURL).to.contain(expectedProtocol);
     expect(file.size).to.exist;
-    expect(file._downloadURL).to.exist;
     expect(file._expiresAt).to.exist;
 
     expect(file._acl.creator).to.exist;
@@ -66,7 +67,6 @@ function testFunc() {
         Kinvey.Files.download(uploadedFile._id, { stream: true })
           .then((result) => {
             assertFileMetadata(result, uploadedFile._id, plainTextMimeType, uploadedFile._filename);
-            expect(result._downloadURL).to.contain('https://');
             return Kinvey.Files.downloadByUrl(result._downloadURL);
           })
           .then((result) => {
@@ -81,7 +81,6 @@ function testFunc() {
         Kinvey.Files.download(uploadedFile._id, { stream: true, tls: true })
           .then((result) => {
             assertFileMetadata(result, uploadedFile._id, plainTextMimeType, uploadedFile._filename);
-            expect(result._downloadURL).to.contain('https://');
             return Kinvey.Files.downloadByUrl(result._downloadURL);
           })
           .then((result) => {
@@ -95,8 +94,7 @@ function testFunc() {
       it('should stream the file by http with stream = true and tls = false', (done) => {
         Kinvey.Files.download(uploadedFile._id, { stream: true, tls: false })
           .then((result) => {
-            assertFileMetadata(result, uploadedFile._id, plainTextMimeType, uploadedFile._filename);
-            expect(result._downloadURL).to.contain('http://');
+            assertFileMetadata(result, uploadedFile._id, plainTextMimeType, uploadedFile._filename, true);
             done();
           })
           .catch(done);
@@ -125,12 +123,12 @@ function testFunc() {
                   done();
                 })
                 .catch(done);
-            }, ttlValue + 500);
+            }, ttlValue + 1000);
           })
           .catch(done);
       });
 
-      it('should return and error if the file with the supplied _id does not exist on the server', (done) => {
+      it('should return and NotFoundError if the file with the supplied _id does not exist on the server', (done) => {
         Kinvey.Files.download(utilities.randomString())
           .catch((error) => {
             utilities.assertError(error, notFoundErrorName, notFoundErrorMessage);
@@ -155,7 +153,6 @@ function testFunc() {
         Kinvey.Files.stream(uploadedFile._id)
           .then((result) => {
             assertFileMetadata(result, uploadedFile._id, plainTextMimeType, uploadedFile._filename);
-            expect(result._downloadURL).to.contain('https://');
             return Kinvey.Files.downloadByUrl(result._downloadURL);
           })
           .then((result) => {
@@ -170,7 +167,6 @@ function testFunc() {
         Kinvey.Files.stream(uploadedFile._id, { tls: true })
           .then((result) => {
             assertFileMetadata(result, uploadedFile._id, plainTextMimeType, uploadedFile._filename);
-            expect(result._downloadURL).to.contain('https://');
             return Kinvey.Files.downloadByUrl(result._downloadURL);
           })
           .then((result) => {
@@ -184,8 +180,7 @@ function testFunc() {
       it('should stream the file by http when tls = false', (done) => {
         Kinvey.Files.stream(uploadedFile._id, { tls: false })
           .then((result) => {
-            assertFileMetadata(result, uploadedFile._id, plainTextMimeType, uploadedFile._filename);
-            expect(result._downloadURL).to.contain('http://');
+            assertFileMetadata(result, uploadedFile._id, plainTextMimeType, uploadedFile._filename, true);
             done();
           })
           .catch(done);
@@ -204,12 +199,12 @@ function testFunc() {
                   done();
                 })
                 .catch(done);
-            }, ttlValue + 500);
+            }, ttlValue + 1000);
           })
           .catch(done);
       });
 
-      it('should return and error if the _id does not exist', (done) => {
+      it('should return a NotFoundError if the file with the supplied _id does not exist on the server', (done) => {
         Kinvey.Files.stream(utilities.randomString())
           .catch((error) => {
             utilities.assertError(error, notFoundErrorName, notFoundErrorMessage);
