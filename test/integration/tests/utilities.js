@@ -209,6 +209,11 @@
       });
   }
 
+  function assertError(error, expectedErrorName, expectedErrorMessage) {
+    expect(error.name).to.equal(expectedErrorName);
+    expect(error.message).to.equal(expectedErrorMessage);
+  }
+
   const utilities = {
     uid,
     randomString,
@@ -225,7 +230,8 @@
     validateEntity,
     cleanUpCollectionData,
     cleanUpAppData,
-    cleanAndPopulateCollection
+    cleanAndPopulateCollection,
+    assertError
   };
 
   if (typeof module === 'object') {

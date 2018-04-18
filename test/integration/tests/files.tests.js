@@ -1,5 +1,9 @@
 function testFunc() {
 
+  const notFoundErrorName = 'NotFoundError';
+  const notFoundErrorMessage = 'This blob not found for this app backend';
+  const plainTextMimeType = 'text/plain';
+
   const assertFileMetadata = (file, expectedId, expectedMimeType, expectedFileName) => {
     if (expectedId) {
       expect(file._id).to.equal(expectedId);
@@ -27,8 +31,6 @@ function testFunc() {
     expect(file._kmd.ect).to.exist;
     expect(file._kmd.lmt).to.exist;
   };
-
-  const plainTextMimeType = 'text/plain';
 
   describe('Files', () => {
 
@@ -131,7 +133,7 @@ function testFunc() {
       it('should return and error if the file with the supplied _id does not exist on the server', (done) => {
         Kinvey.Files.download(utilities.randomString())
           .catch((error) => {
-            expect(error.message).to.equal('This blob not found for this app backend');
+            utilities.assertError(error, notFoundErrorName, notFoundErrorMessage);
             done();
           })
           .catch(done);
@@ -210,7 +212,7 @@ function testFunc() {
       it('should return and error if the _id does not exist', (done) => {
         Kinvey.Files.stream(utilities.randomString())
           .catch((error) => {
-            expect(error.message).to.equal('This blob not found for this app backend');
+            utilities.assertError(error, notFoundErrorName, notFoundErrorMessage);
             done();
           })
           .catch(done);
