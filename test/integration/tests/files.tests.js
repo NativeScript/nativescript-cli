@@ -242,7 +242,7 @@ function testFunc() {
           .catch(done);
       });
 
-      it('should return an error if the url is invalid', (done) => {
+      it.skip('should return an error if the url is invalid', (done) => {
         // The test should be included for execution after the fix of MLIBZ-2453
         Kinvey.Files.downloadByUrl(utilities.randomString())
         .then(() => done(new Error('Should not be called')))
