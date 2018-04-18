@@ -42,6 +42,65 @@ function testFunc() {
         .catch(done);
     });
 
+    describe('find', () => {
+      let uploadedFile1;
+      let uploadedFile2;
+      const fileContent1 = utilities.randomString();
+      const fileContent2 = utilities.randomString();
+      let query;
+
+      before((done) => {
+        Kinvey.Files.upload(fileContent1, { 'mimeType': plainTextMimeType })
+          .then((result) => {
+            uploadedFile1 = result;
+            return Kinvey.Files.upload(fileContent2, { 'mimeType': plainTextMimeType })
+          })
+          .then((result) => {
+            uploadedFile2 = result;
+            query = new Kinvey.Query();
+            query.equalTo('_filename', uploadedFile2._filename);
+            done();
+          })
+          .catch(done);
+      });
+
+      it('should return all files', (done) => {
+        Kinvey.Files.find()
+          .then((result) => {
+            expect(result).to.be.an('array');
+            expect(result.length).to.equal(2);
+            const file1 = result.find(file => file._id === uploadedFile1._id);
+            const file2 = result.find(file => file._id === uploadedFile2._id);
+            assertFileMetadata(file1, uploadedFile1._id, plainTextMimeType, uploadedFile1._filename);
+            assertFileMetadata(file2, uploadedFile2._id, plainTextMimeType, uploadedFile2._filename);
+            done();
+          })
+          .catch(done);
+      });
+
+      it('should return all files that match the query', (done) => {
+        Kinvey.Files.find(query)
+          .then((result) => {
+            expect(result).to.be.an('array');
+            expect(result.length).to.equal(1);
+            assertFileMetadata(result[0], uploadedFile2._id, plainTextMimeType, uploadedFile2._filename);
+            done();
+          })
+          .catch(done);
+      });
+
+      it('should download all files which match the query with download = true', (done) => {
+        Kinvey.Files.find(query, { download: true })
+          .then((result) => {
+            expect(result).to.be.an('array');
+            expect(result.length).to.equal(1);
+            expect(result[0]).to.equal(fileContent2);
+            done();
+          })
+          .catch(done);
+      });
+    });
+
     describe('download', () => {
       let uploadedFile;
       const fileContent = utilities.randomString();
@@ -245,12 +304,12 @@ function testFunc() {
       it.skip('should return an error if the url is invalid', (done) => {
         // The test should be included for execution after the fix of MLIBZ-2453
         Kinvey.Files.downloadByUrl(utilities.randomString())
-        .then(() => done(new Error('Should not be called')))
-        .catch((error) => {
-          expect(error).to.exist;
-          done();
-        })
-        .catch(done);
+          .then(() => done(new Error('Should not be called')))
+          .catch((error) => {
+            expect(error).to.exist;
+            done();
+          })
+          .catch(done);
       });
     });
   });
