@@ -213,6 +213,46 @@ function testFunc() {
           .catch(done);
       });
     });
+
+    describe('downloadByUrl', () => {
+      let uploadedFile;
+      const fileContent = utilities.randomString();
+      let downloadUrl;
+
+      before((done) => {
+        Kinvey.Files.upload(fileContent, { 'mimeType': plainTextMimeType })
+          .then((result) => {
+            uploadedFile = result;
+            return Kinvey.Files.stream(uploadedFile._id)
+          })
+          .then((result) => {
+            downloadUrl = result._downloadURL;
+            done();
+          })
+          .catch(done);
+      });
+
+      it('should download the file by _downloadUrl', (done) => {
+        Kinvey.Files.downloadByUrl(downloadUrl)
+          .then((result) => {
+            expect(result).to.exist;
+            expect(result).to.equal(fileContent);
+            done();
+          })
+          .catch(done);
+      });
+
+      it('should return an error if the url is invalid', (done) => {
+        // The test should be included for execution after the fix of MLIBZ-2453
+        Kinvey.Files.downloadByUrl(utilities.randomString())
+        .then(() => done(new Error('Should not be called')))
+        .catch((error) => {
+          expect(error).to.exist;
+          done();
+        })
+        .catch(done);
+      });
+    });
   });
 }
 
