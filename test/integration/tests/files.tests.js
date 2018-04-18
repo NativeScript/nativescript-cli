@@ -60,6 +60,15 @@ function testFunc() {
           .catch(done);
       });
 
+      it('should return and error if the _id does not exist', (done) => {
+        Kinvey.Files.download(utilities.randomString())
+          .catch((error) => {
+            expect(error.message).to.equal('This blob not found for this app backend');
+            done();
+          })
+          .catch(done);
+      });
+
       it('should stream the file by https with stream = true', (done) => {
         Kinvey.Files.download(uploadedFile._id, { stream: true })
           .then((result) => {
