@@ -42,7 +42,7 @@ export class TnsModulesCopy {
 
 			const isScoped = dependency.name.indexOf("@") === 0;
 			const destinationPath = isScoped ? path.join(this.outputRoot, dependency.name.substring(0, dependency.name.indexOf("/"))) : this.outputRoot;
-			shelljs.cp("-RfL", dependency.directory, destinationPath);
+			shelljs.cp("-RuL", dependency.directory, destinationPath);
 
 			// remove platform-specific files (processed separately by plugin services)
 			shelljs.rm("-rf", path.join(targetPackageDir, "platforms"));
