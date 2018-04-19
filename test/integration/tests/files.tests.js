@@ -441,6 +441,16 @@ function testFunc() {
             })
             .catch(done);
         });
+
+        it('should return a NotFoundError if the file with the supplied _id does not exist on the server', (done) => {
+          Kinvey.Files.removeById(utilities.randomString())
+            .then(() => done(new Error(shouldNotBeCalledMessage)))
+            .catch((error) => {
+              utilities.assertError(error, notFoundErrorName, notFoundErrorMessage);
+              done();
+            })
+            .catch(done);
+        });
       });
     });
   });
