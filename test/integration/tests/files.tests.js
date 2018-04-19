@@ -64,7 +64,7 @@ function testFunc() {
           .catch(done);
       });
 
-      it('should return all files by https', (done) => {
+      it('should return the metadata of all files by https', (done) => {
         Kinvey.Files.find()
           .then((result) => {
             expect(result).to.be.an('array');
@@ -78,7 +78,7 @@ function testFunc() {
           .catch(done);
       });
 
-      it('should return all files that match the query', (done) => {
+      it('should return the metadata for all files that match the query', (done) => {
         Kinvey.Files.find(query)
           .then((result) => {
             expect(result).to.be.an('array');
@@ -90,7 +90,7 @@ function testFunc() {
       });
 
       it('should return the file by http if tls = false', (done) => {
-        Kinvey.Files.find(query, {tls: false})
+        Kinvey.Files.find(query, { tls: false })
           .then((result) => {
             assertFileMetadata(result[0], uploadedFile2._id, plainTextMimeType, uploadedFile2._filename, true);
             done();
@@ -117,7 +117,7 @@ function testFunc() {
       });
 
       it('should download all files with download = true', (done) => {
-        Kinvey.Files.find(null, {download: true})
+        Kinvey.Files.find(null, { download: true })
           .then((result) => {
             expect(result).to.be.an('array');
             expect(result.length).to.equal(2);
