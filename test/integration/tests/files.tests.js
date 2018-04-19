@@ -33,6 +33,12 @@ function testFunc() {
     expect(file._kmd.lmt).to.exist;
   };
 
+  const uploadFiles = (fileContentsArray) => {
+    return Promise.all(fileContentsArray.map(fileContent => {
+      return Kinvey.Files.upload(fileContent, { 'mimeType': plainTextMimeType });
+    }))
+  }
+
   describe('Files', () => {
 
     before((done) => {
@@ -50,13 +56,10 @@ function testFunc() {
       let query;
 
       before((done) => {
-        Kinvey.Files.upload(fileContent1, { 'mimeType': plainTextMimeType })
+        uploadFiles([fileContent1, fileContent2])
           .then((result) => {
-            uploadedFile1 = result;
-            return Kinvey.Files.upload(fileContent2, { 'mimeType': plainTextMimeType })
-          })
-          .then((result) => {
-            uploadedFile2 = result;
+            uploadedFile1 = result.find(result => result._data === fileContent1);
+            uploadedFile2 = result.find(result => result._data === fileContent2);
             query = new Kinvey.Query();
             query.equalTo('_filename', uploadedFile2._filename);
             done();
@@ -143,7 +146,6 @@ function testFunc() {
 
       describe('findById()', () => {
         it('should download the file by id', (done) => {
-          debugger
           Kinvey.Files.findById(uploadedFile2._id)
             .then((result) => {
               expect(result).to.equal(fileContent2);
