@@ -3,6 +3,7 @@ function testFunc() {
   const notFoundErrorName = 'NotFoundError';
   const notFoundErrorMessage = 'This blob not found for this app backend';
   const plainTextMimeType = 'text/plain';
+  const shouldNotBeCalledMessage = 'Should not be called';
 
   const assertFileMetadata = (file, expectedId, expectedMimeType, expectedFileName, byHttp) => {
     if (expectedId) {
@@ -33,9 +34,9 @@ function testFunc() {
     expect(file._kmd.lmt).to.exist;
   };
 
-  const uploadFiles = (fileContentsArray) => {
-    return Promise.all(fileContentsArray.map(fileContent => {
-      return Kinvey.Files.upload(fileContent, { 'mimeType': plainTextMimeType });
+  const uploadFiles = (files) => {
+    return Promise.all(files.map(file => {
+      return Kinvey.Files.upload(file, { 'mimeType': plainTextMimeType });
     }))
   }
 
@@ -156,6 +157,7 @@ function testFunc() {
 
         it('should return a NotFoundError if the file with the supplied _id does not exist on the server', (done) => {
           Kinvey.Files.findById(utilities.randomString())
+            .then(() => done(new Error(shouldNotBeCalledMessage)))
             .catch((error) => {
               utilities.assertError(error, notFoundErrorName, notFoundErrorMessage);
               done();
@@ -303,6 +305,7 @@ function testFunc() {
 
         it('should return and NotFoundError if the file with the supplied _id does not exist on the server', (done) => {
           Kinvey.Files.download(utilities.randomString())
+            .then(() => done(new Error(shouldNotBeCalledMessage)))
             .catch((error) => {
               utilities.assertError(error, notFoundErrorName, notFoundErrorMessage);
               done();
@@ -369,6 +372,7 @@ function testFunc() {
 
         it('should return a NotFoundError if the file with the supplied _id does not exist on the server', (done) => {
           Kinvey.Files.stream(utilities.randomString())
+            .then(() => done(new Error(shouldNotBeCalledMessage)))
             .catch((error) => {
               utilities.assertError(error, notFoundErrorName, notFoundErrorMessage);
               done();
@@ -394,9 +398,45 @@ function testFunc() {
         it.skip('should return an error if the url is invalid', (done) => {
           // The test should be included for execution after the fix of MLIBZ-2453
           Kinvey.Files.downloadByUrl(utilities.randomString())
-            .then(() => done(new Error('Should not be called')))
+            .then(() => done(new Error(shouldNotBeCalledMessage)))
             .catch((error) => {
               expect(error).to.exist;
+              done();
+            })
+            .catch(done);
+        });
+      });
+
+      describe('removeById()', () => {
+        let fileToRemoveId;
+        const fileContent1 = utilities.randomString();
+        const fileContent2 = utilities.randomString();
+
+        before((done) => {
+          uploadFiles([fileContent1, fileContent2])
+            .then((result) => {
+              fileToRemoveId = result.find(result => result._data === fileContent1)._id;
+              file2Id = result.find(result => result._data === fileContent2)._id;
+              done();
+            })
+            .catch(done);
+        });
+
+        it('should remove the file by _id', (done) => {
+          Kinvey.Files.removeById(fileToRemoveId)
+            .then((result) => {
+              expect(result.count).to.equal(1);
+              // check that the file is removed
+              return Kinvey.Files.findById(fileToRemoveId);
+            })
+            .then(() => done(new Error(shouldNotBeCalledMessage)))
+            .catch((error) => {
+              utilities.assertError(error, notFoundErrorName, notFoundErrorMessage);
+              //check that the second file remains
+              return Kinvey.Files.findById(file2Id);
+            })
+            .then((result) => {
+              expect(result).to.equal(fileContent2);
               done();
             })
             .catch(done);
