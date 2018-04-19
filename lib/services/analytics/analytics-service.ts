@@ -58,6 +58,7 @@ export class AnalyticsService extends AnalyticsServiceBase {
 			gaSettings.customDimensions[GoogleAnalyticsCustomDimensions.client] = this.$options.analyticsClient || (isInteractive() ? AnalyticsClients.Cli : AnalyticsClients.Unknown);
 
 			const googleAnalyticsData: IGoogleAnalyticsTrackingInformation = _.merge({ type: TrackingTypes.GoogleAnalyticsData, category: AnalyticsClients.Cli }, gaSettings);
+			this.$logger.trace("Will send the following information to Google Analytics:", googleAnalyticsData);
 			return this.sendMessageToBroker(googleAnalyticsData);
 		}
 	}
@@ -98,8 +99,6 @@ export class AnalyticsService extends AnalyticsServiceBase {
 			label,
 			customDimensions
 		};
-
-		this.$logger.trace("Will send the following information to Google Analytics:", googleAnalyticsEventData);
 
 		await this.trackInGoogleAnalytics(googleAnalyticsEventData);
 	}
