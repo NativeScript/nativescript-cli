@@ -52,8 +52,10 @@ function testFunc() {
     describe('Read Operations', () => {
       let uploadedFile1;
       let uploadedFile2;
-      const fileContent1 = utilities.randomString();
-      const fileContent2 = utilities.randomString();
+      // The file content is a file path in order to be able to run these tests in {N}, where File.upload accepts a file path
+      // Files.upload() itself is tested in another suite
+      const fileContent1 = '/data/data/org.nativescript.TestApp/files/app/test1.txt';
+      const fileContent2 = '/data/data/org.nativescript.TestApp/files/app/test2.txt';
       let query;
 
       before((done) => {
@@ -349,8 +351,10 @@ function testFunc() {
 
     describe('removeById()', () => {
       let fileToRemoveId;
-      const fileContent1 = utilities.randomString();
-      const fileContent2 = utilities.randomString();
+      // The file content is a file path in order to be able to run these tests in {N}, where File.upload accepts a file path
+      // Files.upload() itself is tested in another suite
+      const fileContent1 = '/data/data/org.nativescript.TestApp/files/app/test1.txt';
+      const fileContent2 = '/data/data/org.nativescript.TestApp/files/app/test2.txt';
 
       before((done) => {
         uploadFiles([fileContent1, fileContent2])
