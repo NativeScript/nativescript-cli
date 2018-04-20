@@ -345,51 +345,51 @@ function testFunc() {
             .catch(done);
         });
       });
+    });
 
-      describe('removeById()', () => {
-        let fileToRemoveId;
-        const fileContent1 = utilities.randomString();
-        const fileContent2 = utilities.randomString();
+    describe('removeById()', () => {
+      let fileToRemoveId;
+      const fileContent1 = utilities.randomString();
+      const fileContent2 = utilities.randomString();
 
-        before((done) => {
-          uploadFiles([fileContent1, fileContent2])
-            .then((result) => {
-              fileToRemoveId = result.find(result => result._data === fileContent1)._id;
-              file2Id = result.find(result => result._data === fileContent2)._id;
-              done();
-            })
-            .catch(done);
-        });
+      before((done) => {
+        uploadFiles([fileContent1, fileContent2])
+          .then((result) => {
+            fileToRemoveId = result.find(result => result._data === fileContent1)._id;
+            file2Id = result.find(result => result._data === fileContent2)._id;
+            done();
+          })
+          .catch(done);
+      });
 
-        it('should remove the file by _id', (done) => {
-          Kinvey.Files.removeById(fileToRemoveId)
-            .then((result) => {
-              expect(result.count).to.equal(1);
-              // check that the file is removed
-              return Kinvey.Files.findById(fileToRemoveId);
-            })
-            .then(() => done(new Error(shouldNotBeCalledMessage)))
-            .catch((error) => {
-              utilities.assertError(error, notFoundErrorName, notFoundErrorMessage);
-              //check that the second file remains
-              return Kinvey.Files.findById(file2Id);
-            })
-            .then((result) => {
-              expect(result).to.equal(fileContent2);
-              done();
-            })
-            .catch(done);
-        });
+      it('should remove the file by _id', (done) => {
+        Kinvey.Files.removeById(fileToRemoveId)
+          .then((result) => {
+            expect(result.count).to.equal(1);
+            // check that the file is removed
+            return Kinvey.Files.findById(fileToRemoveId);
+          })
+          .then(() => done(new Error(shouldNotBeCalledMessage)))
+          .catch((error) => {
+            utilities.assertError(error, notFoundErrorName, notFoundErrorMessage);
+            //check that the second file remains
+            return Kinvey.Files.findById(file2Id);
+          })
+          .then((result) => {
+            expect(result).to.equal(fileContent2);
+            done();
+          })
+          .catch(done);
+      });
 
-        it('should return a NotFoundError if the file with the supplied _id does not exist on the server', (done) => {
-          Kinvey.Files.removeById(utilities.randomString())
-            .then(() => done(new Error(shouldNotBeCalledMessage)))
-            .catch((error) => {
-              utilities.assertError(error, notFoundErrorName, notFoundErrorMessage);
-              done();
-            })
-            .catch(done);
-        });
+      it('should return a NotFoundError if the file with the supplied _id does not exist on the server', (done) => {
+        Kinvey.Files.removeById(utilities.randomString())
+          .then(() => done(new Error(shouldNotBeCalledMessage)))
+          .catch((error) => {
+            utilities.assertError(error, notFoundErrorName, notFoundErrorMessage);
+            done();
+          })
+          .catch(done);
       });
     });
   });
