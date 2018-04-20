@@ -6,7 +6,6 @@ import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 let currentPageReloadId = 0;
 
 export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements INativeScriptDeviceLiveSyncService {
-	private static BACKEND_PORT = 18181;
 	private socket: net.Socket;
 	private device: Mobile.IiOSDevice;
 
@@ -14,28 +13,32 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $iOSNotification: IiOSNotification,
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
+		private $iOSDebuggerPortService: IIOSDebuggerPortService,
 		private $logger: ILogger,
 		private $fs: IFileSystem,
 		private $processService: IProcessService,
 		protected $platformsData: IPlatformsData) {
-		super($platformsData);
-		this.device = _device;
+			super($platformsData);
+			this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(_device);
+			this.device = _device;
 	}
 
-	private async setupSocketIfNeeded(projectId: string): Promise<boolean> {
+	private async setupSocketIfNeeded(appId: string): Promise<boolean> {
 		if (this.socket) {
 			return true;
 		}
 
 		if (this.device.isEmulator) {
-			await this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.getAttachRequest(projectId));
-			this.socket = await this.$iOSEmulatorServices.connectToPort({ port: IOSDeviceLiveSyncService.BACKEND_PORT });
+			await this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.getAttachRequest(appId), this.device.deviceInfo.identifier);
+			const port = await this.$iOSDebuggerPortService.getPort({ deviceId: this.device.deviceInfo.identifier, appId });
+			this.socket = await this.$iOSEmulatorServices.connectToPort({ port });
 			if (!this.socket) {
 				return false;
 			}
 		} else {
-			await this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, projectId);
-			this.socket = await this.device.connectToPort(IOSDeviceLiveSyncService.BACKEND_PORT);
+			await this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, appId);
+			const port = await this.$iOSDebuggerPortService.getPort({ deviceId: this.device.deviceInfo.identifier, appId });
+			this.socket = await this.device.connectToPort(port);
 		}
 
 		this.attachEventHandlers();

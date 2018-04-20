@@ -6,10 +6,6 @@ import { ChildProcess } from "child_process";
 import { DebugServiceBase } from "./debug-service-base";
 import { CONNECTION_ERROR_EVENT_NAME, AWAIT_NOTIFICATION_TIMEOUT_SECONDS } from "../constants";
 import { getPidFromiOSSimulatorLogs } from "../common/helpers";
-
-import byline = require("byline");
-
-const inspectorBackendPort = 18181;
 const inspectorAppName = "NativeScript Inspector.app";
 const inspectorNpmPackageName = "tns-ios-inspector";
 const inspectorUiDir = "WebInspectorUI/";
@@ -17,7 +13,6 @@ const inspectorUiDir = "WebInspectorUI/";
 export class IOSDebugService extends DebugServiceBase implements IPlatformDebugService {
 	private _lldbProcess: ChildProcess;
 	private _sockets: net.Socket[] = [];
-	private _childProcess: ChildProcess;
 	private _socketProxy: any;
 
 	constructor(protected device: Mobile.IDevice,
@@ -29,11 +24,11 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		private $logger: ILogger,
 		private $errors: IErrors,
 		private $npmInstallationManager: INpmInstallationManager,
+		private $iOSDebuggerPortService: IIOSDebuggerPortService,
 		private $iOSNotification: IiOSNotification,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $processService: IProcessService,
 		private $socketProxyFactory: ISocketProxyFactory,
-		private $net: INet,
 		private $projectDataService: IProjectDataService) {
 		super(device, $devicesService);
 		this.$processService.attachToProcessExitSignals(this, this.debugStop);
@@ -90,11 +85,6 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 			await this.killProcess(this._lldbProcess);
 			this._lldbProcess = undefined;
 		}
-
-		if (this._childProcess) {
-			await this.killProcess(this._childProcess);
-			this._childProcess = undefined;
-		}
 	}
 
 	protected getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
@@ -116,7 +106,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 	private async emulatorDebugBrk(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		const args = debugOptions.debugBrk ? "--nativescript-debug-brk" : "--nativescript-debug-start";
-		const child_process = await this.$iOSEmulatorServices.runApplicationOnEmulator(debugData.pathToAppPackage, {
+		const launchResult = await this.$iOSEmulatorServices.runApplicationOnEmulator(debugData.pathToAppPackage, {
 			waitForDebugger: true,
 			captureStdin: true,
 			args: args,
@@ -124,30 +114,13 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 			skipInstall: true
 		});
 
-		const lineStream = byline(child_process.stdout);
-		this._childProcess = child_process;
-
-		lineStream.on('data', (line: NodeBuffer) => {
-			const lineText = line.toString();
-			if (lineText && _.startsWith(lineText, debugData.applicationIdentifier)) {
-				const pid = getPidFromiOSSimulatorLogs(debugData.applicationIdentifier, lineText);
-				if (!pid) {
-					this.$logger.trace(`Line ${lineText} does not contain PID of the application ${debugData.applicationIdentifier}.`);
-					return;
-				}
-
-				this._lldbProcess = this.$childProcess.spawn("lldb", ["-p", pid]);
-				if (log4js.levels.TRACE.isGreaterThanOrEqualTo(this.$logger.getLevel())) {
-					this._lldbProcess.stdout.pipe(process.stdout);
-				}
-				this._lldbProcess.stderr.pipe(process.stderr);
-				this._lldbProcess.stdin.write("process continue\n");
-			} else {
-				process.stdout.write(line + "\n");
-			}
-		});
-
-		await this.waitForBackendPortToBeOpened(debugData.deviceIdentifier);
+		const pid = getPidFromiOSSimulatorLogs(debugData.applicationIdentifier, launchResult);
+		this._lldbProcess = this.$childProcess.spawn("lldb", ["-p", pid]);
+		if (log4js.levels.TRACE.isGreaterThanOrEqualTo(this.$logger.getLevel())) {
+			this._lldbProcess.stdout.pipe(process.stdout);
+		}
+		this._lldbProcess.stderr.pipe(process.stderr);
+		this._lldbProcess.stdin.write("process continue\n");
 
 		return this.wireDebuggerClient(debugData, debugOptions);
 	}
@@ -158,18 +131,8 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		const attachRequestMessage = this.$iOSNotification.getAttachRequest(debugData.applicationIdentifier);
 
 		const iOSEmulatorService = <Mobile.IiOSSimulatorService>this.$iOSEmulatorServices;
-		await iOSEmulatorService.postDarwinNotification(attachRequestMessage);
-		await this.waitForBackendPortToBeOpened(debugData.deviceIdentifier);
+		await iOSEmulatorService.postDarwinNotification(attachRequestMessage, debugData.deviceIdentifier);
 		return result;
-	}
-
-	private async waitForBackendPortToBeOpened(deviceIdentifier: string): Promise<void> {
-		const portListens = await this.$net.waitForPortToListen({ port: inspectorBackendPort, timeout: 10000, interval: 200 });
-		if (!portListens) {
-			const error = <Mobile.IDeviceError>new Error("Unable to connect to application. Ensure application is running on simulator.");
-			error.deviceIdentifier = deviceIdentifier;
-			throw error;
-		}
 	}
 
 	private async deviceDebugBrk(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
@@ -219,7 +182,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		// the VSCode Ext starts `tns debug ios --no-client` to start/attach to debug sessions
 		// check if --no-client is passed - default to opening a tcp socket (versus Chrome DevTools (websocket))
 		if ((debugOptions.inspector || !debugOptions.client) && this.$hostInfo.isDarwin) {
-			this._socketProxy = await this.$socketProxyFactory.createTCPSocketProxy(this.getSocketFactory(device));
+			this._socketProxy = await this.$socketProxyFactory.createTCPSocketProxy(this.getSocketFactory(debugData, device));
 			await this.openAppInspector(this._socketProxy.address(), debugData, debugOptions);
 			return null;
 		} else {
@@ -228,7 +191,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 			}
 
 			const deviceIdentifier = device ? device.deviceInfo.identifier : debugData.deviceIdentifier;
-			this._socketProxy = await this.$socketProxyFactory.createWebSocketProxy(this.getSocketFactory(device), deviceIdentifier);
+			this._socketProxy = await this.$socketProxyFactory.createWebSocketProxy(this.getSocketFactory(debugData, device), deviceIdentifier);
 			return this.getChromeDebugUrl(debugOptions, this._socketProxy.options.port);
 		}
 	}
@@ -247,9 +210,13 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		}
 	}
 
-	private getSocketFactory(device?: Mobile.IiOSDevice): () => Promise<net.Socket> {
+	private getSocketFactory(debugData: IDebugData, device?: Mobile.IiOSDevice): () => Promise<net.Socket> {
 		const factory = async () => {
-			const socket = device ? await device.connectToPort(inspectorBackendPort) : net.connect(inspectorBackendPort);
+			const port = await this.$iOSDebuggerPortService.getPort({ deviceId: debugData.deviceIdentifier, appId: debugData.applicationIdentifier });
+			if (!port) {
+				this.$errors.fail("NativeScript debugger was not able to get inspector socket port.");
+			}
+			const socket = device ? await device.connectToPort(port) : net.connect(port);
 			this._sockets.push(socket);
 			return socket;
 		};

@@ -218,6 +218,7 @@ interface IProjectTemplatesService {
 
 interface IPlatformProjectServiceBase {
 	getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string;
+	getFrameworkVersion(projectData: IProjectData): string;
 }
 
 interface IBuildForDevice {
@@ -270,7 +271,7 @@ interface ILocalBuildService {
 
 interface ICleanNativeAppData extends IProjectDir, IPlatform { }
 
-interface IPlatformProjectService extends NodeJS.EventEmitter {
+interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectServiceBase {
 	getPlatformData(projectData: IProjectData): IPlatformData;
 	validate(projectData: IProjectData): Promise<void>;
 	createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, config: ICreateProjectOptions): Promise<void>;
