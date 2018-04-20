@@ -27,7 +27,9 @@ const appTestsPath = path.join(appPath, 'tests');
 const rootMonoRepoPath = path.join(__dirname, '../../');
 const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration', 'tests');
 const distPath = path.join(__dirname, 'dist');
-const jsFilesFilter = item => path.extname(item.path) === '.js';
+// Temporary excluding the files suites by adding `&& item.path.indexOf('files') < 0`
+// Should be added back for execution when MLIBZ-2452 is fixed
+const jsFilesFilter = item => (path.extname(item.path) === '.js' && item.path.indexOf('files') < 0);
 const configFileName = 'config.js';
 
 let logServerPort;
