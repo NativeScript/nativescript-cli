@@ -475,8 +475,8 @@ export class ProjectHelperStub implements IProjectHelper {
 }
 
 export class ProjectTemplatesService implements IProjectTemplatesService {
-	async prepareTemplate(templateName: string): Promise<string> {
-		return Promise.resolve("");
+	async prepareTemplate(templateName: string): Promise<ITemplateData> {
+		return Promise.resolve(<any>{});
 	}
 }
 

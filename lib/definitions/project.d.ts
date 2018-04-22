@@ -201,6 +201,11 @@ interface IImageDefinitionsStructure {
 	android: IImageDefinitionGroup;
 }
 
+interface ITemplateData {
+	templatePath: string;
+	templateVersion: string;
+}
+
 /**
  * Describes working with templates.
  */
@@ -211,9 +216,9 @@ interface IProjectTemplatesService {
 	 * In case templateName is a special word, validated from us (for ex. typescript), resolve the real template name and add it to npm cache.
 	 * In any other cases try to `npm install` the specified templateName to temp directory.
 	 * @param {string} templateName The name of the template.
-	 * @return {string} Path to the directory where extracted template can be found.
+	 * @return {ITemplateData} Data describing the template - location where it is installed and its NativeScript version.
 	 */
-	prepareTemplate(templateName: string, projectDir: string): Promise<string>;
+	prepareTemplate(templateName: string, projectDir: string): Promise<ITemplateData>;
 }
 
 interface IPlatformProjectServiceBase {
