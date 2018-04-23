@@ -221,7 +221,7 @@
     expect(file._expiresAt).to.exist;
   }
 
-  function assertUploadFileResult(file, expectedId, expectedMimeType, expectedFileName, expectedContent) {
+  function assertFileUploadResult(file, expectedId, expectedMimeType, expectedFileName, expectedContent) {
     assertFileMetadata(file, expectedId, expectedMimeType, expectedFileName);
     expect(file._data).to.equal(expectedContent);
   }
@@ -270,7 +270,7 @@
     cleanAndPopulateCollection,
     assertError,
     assertFileMetadata,
-    assertUploadFileResult,
+    assertFileUploadResult,
     assertReadFileResult
   };
 

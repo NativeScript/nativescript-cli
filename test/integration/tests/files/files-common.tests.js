@@ -42,7 +42,7 @@ function testFunc() {
         });
   
         describe('find()', () => {
-          it.only('should return the metadata of all files by https', (done) => {
+          it('should return the metadata of all files by https', (done) => {
             Kinvey.Files.find()
               .then((result) => {
                 debugger
