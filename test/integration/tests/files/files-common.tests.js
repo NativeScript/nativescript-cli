@@ -11,7 +11,7 @@ function testFunc() {
       }))
     }
   
-    describe('Files', () => {
+    describe('Files Common tests', () => {
   
       before((done) => {
         Kinvey.User.logout()
@@ -323,6 +323,7 @@ function testFunc() {
   
       describe('removeById()', () => {
         let fileToRemoveId;
+        let file2Id;
         // The file content is a file path in order to be able to run these tests in {N}, where File.upload accepts a file path
         // Files.upload() itself is tested in another suite
         const fileContent1 = '/data/data/org.nativescript.TestApp/files/app/test1.txt';
