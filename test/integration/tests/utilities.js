@@ -214,6 +214,43 @@
     expect(error.message).to.equal(expectedErrorMessage);
   }
 
+  function assertReadFileResult(file, expectedId, expectedMimeType, expectedFileName, byHttp) {
+    assertFileMetadata(file, expectedId, expectedMimeType, expectedFileName);
+    const expectedProtocol = byHttp ? 'http://' : 'https://';
+    expect(file._downloadURL).to.contain(expectedProtocol);
+    expect(file._expiresAt).to.exist;
+  }
+
+  function assertUploadFileResult(file, expectedId, expectedMimeType, expectedFileName, expectedContent) {
+    assertFileMetadata(file, expectedId, expectedMimeType, expectedFileName);
+    expect(file._data).to.equal(expectedContent);
+  }
+
+  function assertFileMetadata(file, expectedId, expectedMimeType, expectedFileName) {
+    if (expectedId) {
+      expect(file._id).to.equal(expectedId);
+    } else {
+      expect(file._id).to.exist;
+    }
+
+    if (expectedMimeType) {
+      expect(file.mimeType).to.equal(expectedMimeType);
+    } else {
+      expect(file.mimeType).to.exist;
+    }
+
+    if (expectedFileName) {
+      expect(file._filename).to.equal(expectedFileName);
+    } else {
+      expect(file._filename).to.exist;
+    }
+
+    expect(file.size).to.exist;
+    expect(file._acl.creator).to.exist;
+    expect(file._kmd.ect).to.exist;
+    expect(file._kmd.lmt).to.exist;
+  };
+
   const utilities = {
     uid,
     randomString,
@@ -231,7 +268,10 @@
     cleanUpCollectionData,
     cleanUpAppData,
     cleanAndPopulateCollection,
-    assertError
+    assertError,
+    assertFileMetadata,
+    assertUploadFileResult,
+    assertReadFileResult
   };
 
   if (typeof module === 'object') {
