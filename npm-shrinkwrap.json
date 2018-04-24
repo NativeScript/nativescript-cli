@@ -4595,6 +4595,15 @@
       "integrity": "sha1-4mDHj2Fhzdmw5WzD4Khd4Xx6V74=",
       "dev": true
     },
+    "properties-parser": {
+      "version": "0.3.1",
+      "resolved": "https://registry.npmjs.org/properties-parser/-/properties-parser-0.3.1.tgz",
+      "integrity": "sha1-ExbpU5/7/ZOEXjabIRAiq9R4dxo=",
+      "dev": true,
+      "requires": {
+        "string.prototype.codepointat": "0.2.0"
+      }
+    },
     "proxy-lib": {
       "version": "0.4.0",
       "resolved": "https://registry.npmjs.org/proxy-lib/-/proxy-lib-0.4.0.tgz",
