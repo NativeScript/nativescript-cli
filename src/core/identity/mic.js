@@ -127,14 +127,6 @@ export class MobileIdentityConnect extends Identity {
       .then(response => response.data.temp_login_uri);
   }
 
-  parseCode(urlString) {
-    if (typeof urlString === 'string') {
-      return url.parse(urlString, true).query.code;
-    }
-
-    return undefined;
-  }
-
   requestCodeWithPopup(clientId, redirectUri, options = {}) {
     const promise = Promise.resolve().then(() => {
       const popup = new Popup();
@@ -153,26 +145,26 @@ export class MobileIdentityConnect extends Identity {
       const promise = new Promise((resolve, reject) => {
         let redirected = false;
 
-        const loadCallback = (event) => {
+        function loadCallback(event) {
           try {
-            if (event.url && event.url.toLowerCase().indexOf(redirectUri.toLowerCase()) === 0 && redirected === false) {
+            if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
               redirected = true;
               popup.removeAllListeners();
               popup.close();
-              resolve(this.parseCode(event.url));
+              resolve(url.parse(event.url, true).query.code);
             }
           } catch (error) {
             // Just catch the error
           }
-        };
+        }
 
-        const errorCallback = (event) => {
+        function errorCallback(event) {
           try {
-            if (event.url && event.url.toLowerCase().indexOf(redirectUri.toLowerCase()) === 0 && redirected === false) {
+            if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
               redirected = true;
               popup.removeAllListeners();
               popup.close();
-              resolve(this.parseCode(event.url));
+              resolve(url.parse(event.url, true).query.code);
             } else if (redirected === false) {
               popup.removeAllListeners();
               popup.close();
@@ -225,7 +217,7 @@ export class MobileIdentityConnect extends Identity {
       const location = response.headers.get('location');
 
       if (location) {
-        return this.parseCode(location);
+        return url.parse(location, true).query.code;
       }
 
       throw new MobileIdentityConnectError(`Unable to authorize user with username ${options.username}.`,
