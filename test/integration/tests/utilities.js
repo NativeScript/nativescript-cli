@@ -251,6 +251,25 @@
     expect(file._kmd.lmt).to.exist;
   };
 
+  function testFileUpload(representation, metadata, expectedContent, query, done) {
+    Kinvey.Files.upload(representation, metadata)
+      .then((result) => {
+        utilities.assertFileUploadResult(result, metadata._id, metadata.mimeType, metadata.filename, representation)
+        return Kinvey.Files.find(query);
+      })
+      .then((result) => {
+        const fileMetadata = result[0];
+        utilities.assertReadFileResult(fileMetadata, metadata._id, metadata.mimeType, metadata.filename);
+        return Kinvey.Files.downloadByUrl(fileMetadata._downloadURL);
+      })
+      .then((result) => {
+        expect(result).to.exist;
+        expect(result).to.equal(expectedContent);
+        done();
+      })
+      .catch(done);
+  }
+
   const utilities = {
     uid,
     randomString,
@@ -271,7 +290,8 @@
     assertError,
     assertFileMetadata,
     assertFileUploadResult,
-    assertReadFileResult
+    assertReadFileResult,
+    testFileUpload
   };
 
   if (typeof module === 'object') {

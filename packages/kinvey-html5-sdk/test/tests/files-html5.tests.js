@@ -28,7 +28,7 @@ function testFunc() {
 
     describe('upload()', () => {
       let metadata;
-      let query
+      let query;
 
       beforeEach((done) => {
         metadata = {
@@ -43,22 +43,7 @@ function testFunc() {
 
       fileRepresentations.forEach((representation) => {
         it(`should upload a file by ${representation.constructor.name}`, (done) => {
-          Kinvey.Files.upload(representation, metadata)
-            .then((result) => {
-              utilities.assertFileUploadResult(result, metadata._id, metadata.mimeType, metadata.filename, representation)
-              return Kinvey.Files.find(query);
-            })
-            .then((result) => {
-              const fileMetadata = result[0];
-              utilities.assertReadFileResult(fileMetadata, metadata._id, metadata.mimeType, metadata.filename);
-              return Kinvey.Files.downloadByUrl(fileMetadata._downloadURL);
-            })
-            .then((result) => {
-              expect(result).to.exist;
-              expect(result).to.equal(stringContent);
-              done();
-            })
-            .catch(done);
+          utilities.testFileUpload(representation, metadata, stringContent, query, done);
         });
       });
     });
