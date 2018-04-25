@@ -55,6 +55,10 @@ export class MobileIdentityConnect extends Identity {
   }
 
   login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
+    if (!isString(redirectUri)) {
+      return Promise.reject(new KinveyError('A redirectUri is required and must be a string.'));
+    }
+
     let clientId = this.client.appKey;
 
     if (isString(options.micId)) {
@@ -214,7 +218,7 @@ export class MobileIdentityConnect extends Identity {
           password: options.password,
           scope: 'openid'
         },
-        followRedirect: false        
+        followRedirect: false
       });
       return request.execute();
     }).then((response) => {
@@ -261,7 +265,7 @@ export class MobileIdentityConnect extends Identity {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      authType: AuthType.Client,            
+      authType: AuthType.Client,
       url: url.format({
         protocol: this.client.micProtocol,
         host: this.client.micHost,
