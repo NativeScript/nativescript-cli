@@ -4,7 +4,6 @@ import nock from 'nock';
 import url from 'url';
 import { MobileIdentityConnect, AuthorizationGrant } from './mic';
 import { InsufficientCredentialsError, MobileIdentityConnectError, KinveyError } from '../errors';
-import { Client } from '../client';
 import { randomString } from '../utils';
 import { NetworkRack } from '../request';
 import { NodeHttpMiddleware } from '../../node/http';
@@ -66,6 +65,36 @@ describe('MobileIdentityConnect', () => {
 
   describe('login()', () => {
     describe('AuthorizationGrant.AuthorizationCodeAPI', () => {
+      it('should fail if a redirect uri is not provided', () => {
+        const username = 'test';
+        const password = 'test';
+        const mic = new MobileIdentityConnect();
+        return mic.login(null, AuthorizationGrant.AuthorizationCodeAPI, { username, password })
+          .then(() => {
+            throw new Error('This test should fail');
+          })
+          .catch((error) => {
+            expect(error).toBeA(KinveyError);
+            expect(error.message).toEqual('A redirectUri is required and must be a string.');
+          });
+      });
+
+      it('should fail if redirect uri is not a string', () => {
+        it('should fail if a redirect uri is not provided', () => {
+          const username = 'test';
+          const password = 'test';
+          const mic = new MobileIdentityConnect();
+          return mic.login({}, AuthorizationGrant.AuthorizationCodeAPI, { username, password })
+            .then(() => {
+              throw new Error('This test should fail');
+            })
+            .catch((error) => {
+              expect(error).toBeA(KinveyError);
+              expect(error.message).toEqual('A redirectUri is required and must be a string.');
+            });
+        });
+      });
+
       it('should fail with invalid credentials', () => {
         const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
         const username = 'test';
