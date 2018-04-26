@@ -3,15 +3,6 @@ function testFunc() {
   const plainTextMimeType = 'text/plain';
   const sampleTestFilesPath = `${cordova.file.applicationDirectory}www/sample-test-files/`;
 
-  const ArrayBufferFromString = (str) => {
-    const buf = new ArrayBuffer(str.length * 2); // 2 bytes for each char
-    const bufView = new Uint16Array(buf);
-    for (let i = 0, strLen = str.length; i < strLen; i++) {
-      bufView[i] = str.charCodeAt(i);
-    }
-    return buf;
-  }
-
   const getCordovaFileEntries = (path, callback) => {
     window.resolveLocalFileSystemURL(path,
       (fileSystem) => {
@@ -34,7 +25,7 @@ function testFunc() {
     //the content should match the content of test/integration/sample-test-files/test1.txt
     const stringContent = 'some_text';
     const blob = new Blob([stringContent]);
-    const arrayBuffer = ArrayBufferFromString(stringContent);
+    const arrayBuffer = utilities.ArrayBufferFromString(stringContent);
 
     before((done) => {
       Kinvey.User.logout()
