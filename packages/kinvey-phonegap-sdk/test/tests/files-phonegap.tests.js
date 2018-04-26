@@ -31,10 +31,10 @@ function testFunc() {
   }
 
   describe('Files', () => {
-    const stringContent = utilities.randomString();
+    //the content should match the content of test/integration/sample-test-files/test1.txt
+    const stringContent = 'some_text';
     const blob = new Blob([stringContent]);
-    //const arrayBuffer = ArrayBufferFromString(stringContent);
-    // ArrayBuffer does not work currently - it should be discussed if we support it
+    const arrayBuffer = ArrayBufferFromString(stringContent);
 
     before((done) => {
       Kinvey.User.logout()
@@ -66,7 +66,13 @@ function testFunc() {
         utilities.testFileUpload(blob, metadata, stringContent, query, done);
       });
 
-      it('should upload a file by a Cordova File', (done) => {
+      // ArrayBuffer does not work currently - it should be discussed if we support it
+      it.skip('should upload a file by a ArrayBuffer', (done) => {
+        utilities.testFileUpload(arrayBuffer, metadata, stringContent, query, done);
+      });
+
+      //the next test is skipped as currently the Files.upload() does not work with a Cordova File
+      it.skip('should upload a file by a Cordova File', (done) => {
         getCordovaFileEntries(sampleTestFilesPath, (fileEntries) => {
           fileEntries[0].file((cordovaFile) => {
             utilities.testFileUpload(cordovaFile, metadata, stringContent, query, done);
