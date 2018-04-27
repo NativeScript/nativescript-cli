@@ -12,28 +12,44 @@ function testFunc() {
     }
   
     describe('Files Common tests', () => {
+      let fileToUpload1;
+      let fileToUpload2;
+      // The string content should match the content of the used sample files test1.txt and test2.txt in test/integration/sample-test-files
+      const fileContent1 = 'some_text1';
+      const fileContent2 = 'some_text2';
   
       before((done) => {
         Kinvey.User.logout()
           .then(() => Kinvey.User.signup())
-          .then(() => done())
+          .then(() => {
+            // Check if the runtime is {N} and set fileToUpload to file path, as Files.upload() works by file path in {N}
+            // Files.upload() itself is tested per shim in other suites
+            try {
+              const fs = require('tns-core-modules/file-system');
+              const sampleTestFilesPath = fs.path.join(fs.knownFolders.currentApp().path, 'sample-test-files');
+              fileToUpload1 = fs.path.join(sampleTestFilesPath, 'test1.txt');
+              fileToUpload2 = fs.path.join(sampleTestFilesPath, 'test2.txt');
+            }
+            catch (error) {
+              expect(error instanceof ReferenceError).to.be.true;
+              fileToUpload1 = fileContent1;
+              fileToUpload2 = fileContent2
+            }
+            done()
+          })
           .catch(done);
       });
   
       describe('Read Operations', () => {
         let uploadedFile1;
         let uploadedFile2;
-        // The file content is a file path in order to be able to run these tests in {N}, where File.upload accepts a file path
-        // Files.upload() itself is tested in another suite
-        const fileContent1 = '/data/data/org.nativescript.TestApp/files/app/test1.txt';
-        const fileContent2 = '/data/data/org.nativescript.TestApp/files/app/test2.txt';
         let query;
   
         before((done) => {
-          uploadFiles([fileContent1, fileContent2])
+          uploadFiles([fileToUpload1, fileToUpload2])
             .then((result) => {
-              uploadedFile1 = result.find(result => result._data === fileContent1);
-              uploadedFile2 = result.find(result => result._data === fileContent2);
+              uploadedFile1 = result.find(result => result._data === fileToUpload1);
+              uploadedFile2 = result.find(result => result._data === fileToUpload2);
               query = new Kinvey.Query();
               query.equalTo('_filename', uploadedFile2._filename);
               done();
@@ -324,16 +340,12 @@ function testFunc() {
       describe('removeById()', () => {
         let fileToRemoveId;
         let file2Id;
-        // The file content is a file path in order to be able to run these tests in {N}, where File.upload accepts a file path
-        // Files.upload() itself is tested in another suite
-        const fileContent1 = '/data/data/org.nativescript.TestApp/files/app/test1.txt';
-        const fileContent2 = '/data/data/org.nativescript.TestApp/files/app/test2.txt';
   
         before((done) => {
-          uploadFiles([fileContent1, fileContent2])
+          uploadFiles([fileToUpload1, fileToUpload2])
             .then((result) => {
-              fileToRemoveId = result.find(result => result._data === fileContent1)._id;
-              file2Id = result.find(result => result._data === fileContent2)._id;
+              fileToRemoveId = result.find(result => result._data === fileToUpload1)._id;
+              file2Id = result.find(result => result._data === fileToUpload2)._id;
               done();
             })
             .catch(done);
