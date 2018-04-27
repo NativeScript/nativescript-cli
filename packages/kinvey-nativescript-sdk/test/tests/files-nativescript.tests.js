@@ -30,13 +30,11 @@ function testFunc() {
         done();
       });
 
-      //skipped until MLIBZ-2452 is fixed
-      it.skip('should upload a file by file path', (done) => {
+      it('should upload a file by file path', (done) => {
         utilities.testFileUpload(filePath, metadata, stringContent, query, done);
       });
 
-      //skipped until MLIBZ-2452 is fixed
-      it.skip('should upload a file by a NS File', (done) => {
+      it('should upload a file by a NS File', (done) => {
         const file = fs.File.fromPath(filePath);
         utilities.testFileUpload(file, metadata, stringContent, query, done);
       });
