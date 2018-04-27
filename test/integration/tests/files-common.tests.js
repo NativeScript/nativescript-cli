@@ -341,7 +341,19 @@ function testFunc() {
         Kinvey.Files.upload(fileToUpload1)
           .then((file) => {
             utilities.assertFileUploadResult(file, null, octetStreamMimeType, null, fileContent1);
-            done()
+            done();
+          })
+          .catch(done)
+      })
+
+      it('should set custom properties, supplied with the metadata', (done) => {
+        const customPropertyName = 'MyProperty';
+        const metadata = { [customPropertyName]: 'test' };
+        Kinvey.Files.upload(fileToUpload1, metadata)
+          .then((file) => {
+            utilities.assertFileUploadResult(file, null, octetStreamMimeType, null, fileContent1);
+            expect(file[customPropertyName]).to.equal(metadata[customPropertyName]);
+            done();
           })
           .catch(done)
       })
