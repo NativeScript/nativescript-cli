@@ -357,6 +357,15 @@ function testFunc() {
           })
           .catch(done)
       })
+
+      it('should send size to the server', (done) => {
+        Kinvey.Files.upload(fileToUpload1, { size: 0 })
+          .then((file) => {
+            utilities.assertFileUploadResult(file, null, octetStreamMimeType, null, fileContent1);
+            done();
+          })
+          .catch(done)
+      })
     });
 
     describe('removeById()', () => {
