@@ -364,13 +364,14 @@ function testFunc() {
         Kinvey.Files.upload(fileToUpload1, { size: 0 })
           .then((file) => {
             utilities.assertFileUploadResult(file, null, octetStreamMimeType, null, fileContent1);
+            expect(file.size).to.equal(0);
             done();
           })
           .catch(done)
       })
 
       it('should set options.timeout', (done) => {
-        Kinvey.Files.upload(fileToUpload1, {}, { timeout: 1 })
+        Kinvey.Files.upload(fileToUpload1, undefined, { timeout: 1 })
           .then(() => done(new Error(shouldNotBeCalledMessage)))
           .catch((error) => {
             utilities.assertError(error, timeoutErrorName, timeoutErrorMessage);
