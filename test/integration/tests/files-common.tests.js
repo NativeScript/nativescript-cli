@@ -2,6 +2,8 @@ function testFunc() {
 
   const notFoundErrorName = 'NotFoundError';
   const notFoundErrorMessage = 'This blob not found for this app backend';
+  const timeoutErrorName = 'TimeoutError';
+  const timeoutErrorMessage = 'The network request timed out.';
   const plainTextMimeType = 'text/plain';
   const octetStreamMimeType = 'application/octet-stream'
   const shouldNotBeCalledMessage = 'Should not be called';
@@ -337,7 +339,7 @@ function testFunc() {
     });
 
     describe('upload()', () => {
-      it(`without metadata should upload with mimeType = ${octetStreamMimeType}`, (done) => {
+      it(`without mimeType should upload with mimeType = ${octetStreamMimeType}`, (done) => {
         Kinvey.Files.upload(fileToUpload1)
           .then((file) => {
             utilities.assertFileUploadResult(file, null, octetStreamMimeType, null, fileContent1);
@@ -362,6 +364,16 @@ function testFunc() {
         Kinvey.Files.upload(fileToUpload1, { size: 0 })
           .then((file) => {
             utilities.assertFileUploadResult(file, null, octetStreamMimeType, null, fileContent1);
+            done();
+          })
+          .catch(done)
+      })
+
+      it('should set options.timeout', (done) => {
+        Kinvey.Files.upload(fileToUpload1, {}, { timeout: 1 })
+          .then(() => done(new Error(shouldNotBeCalledMessage)))
+          .catch((error) => {
+            utilities.assertError(error, timeoutErrorName, timeoutErrorMessage);
             done();
           })
           .catch(done)
