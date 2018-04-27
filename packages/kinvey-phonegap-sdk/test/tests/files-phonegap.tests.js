@@ -23,7 +23,7 @@ function testFunc() {
 
   describe('Files', () => {
     //the content should match the content of test/integration/sample-test-files/test1.txt
-    const stringContent = 'some_text';
+    const stringContent = 'some_text1';
     const blob = new Blob([stringContent]);
     const arrayBuffer = utilities.ArrayBufferFromString(stringContent);
 
@@ -65,7 +65,8 @@ function testFunc() {
       //the next test is skipped as currently the Files.upload() does not work with a Cordova File
       it.skip('should upload a file by a Cordova File', (done) => {
         getCordovaFileEntries(sampleTestFilesPath, (fileEntries) => {
-          fileEntries[0].file((cordovaFile) => {
+          const fileEntry = fileEntries.find(entry => entry.name === 'test1.txt');
+          fileEntry.file((cordovaFile) => {
             utilities.testFileUpload(cordovaFile, metadata, stringContent, query, done);
           });
         })
