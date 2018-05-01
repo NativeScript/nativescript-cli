@@ -233,6 +233,36 @@ describe('CacheStore', () => {
             });
         });
     });
+
+    it('should add kinveyfile_ttl query parameter', () => {
+      const store = new CacheStore('comecollection');
+      const entity1 = { _id: randomString() };
+
+      nock(client.apiHostname)
+        .get(store.pathname)
+        .query({ kinveyfile_ttl: 3600 })
+        .reply(200, [entity1]);
+
+      return store.find(null, { kinveyFileTTL: 3600 }).toPromise()
+        .then((entities) => {
+          expect(entities).toEqual([entity1]);
+        });
+    });
+
+    it('should add kinveyfile_tls query parameter', () => {
+      const store = new CacheStore('comecollection');
+      const entity1 = { _id: randomString() };
+
+      nock(client.apiHostname)
+        .get(store.pathname)
+        .query({ kinveyfile_tls: true })
+        .reply(200, [entity1]);
+
+      return store.find(null, { kinveyFileTLS: true }).toPromise()
+        .then((entities) => {
+          expect(entities).toEqual([entity1]);
+        });
+    });
   });
 
   describe('findById()', () => {
