@@ -434,7 +434,7 @@ function testFunc() {
           .then(() => done(new Error(shouldNotBeCalledMessage)))
           .catch((error) => {
             utilities.assertError(error, notFoundErrorName, notFoundErrorMessage);
-            //check that the second file remains 
+            //check that the second file remains
             return Kinvey.Files.findById(file2Id);
           })
           .then((result) => {
