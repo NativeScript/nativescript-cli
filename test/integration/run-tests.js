@@ -14,7 +14,7 @@ const config = createPlatformSpecificConfig(program.platform, program.os);
 
 cleanUpCollection(config, 'user')
   .then(() => {
-    cleanUpCollection(config, '_blob')
+    return cleanUpCollection(config, '_blob')
   })
   .then(() => {
     const runPipeline = require(runnerConfigFilePath);
