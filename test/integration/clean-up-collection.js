@@ -28,7 +28,7 @@ const cleanUpCollection = (config, collectionName) => {
         resolve();
       }
       else {
-        reject(`${collectionName} collection cleanup failed! with ${error}`);
+        reject(`${collectionName} collection cleanup failed!`);
       }
     });
   });
