@@ -2,8 +2,9 @@ import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import { ProjectDataService } from "../../lib/services/project-data-service";
 import { LoggerStub } from "../stubs";
-import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER } from '../../lib/constants';
+import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, PACKAGE_JSON_FILE_NAME, AssetConstants } from '../../lib/constants';
 import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
+import { basename } from "path";
 
 const CLIENT_NAME_KEY_IN_PROJECT_FILE = "nativescript";
 
@@ -53,18 +54,37 @@ const createTestInjector = (readTextData?: string): IInjector => {
 
 		readText: (filename: string, encoding?: IReadFileOptions | string): string => {
 			return readTextData;
-		}
+		},
+
+		exists: (filePath: string): boolean => basename(filePath) === PACKAGE_JSON_FILE_NAME,
+
+		readJson: (filePath: string): any => null,
+
+		enumerateFilesInDirectorySync: (directoryPath: string,
+			filterCallback?: (_file: string, _stat: IFsStats) => boolean,
+			opts?: { enumerateDirectories?: boolean, includeEmptyDirectories?: boolean },
+			foundFiles?: string[]): string[] => []
 	});
 
 	testInjector.register("logger", LoggerStub);
 
 	testInjector.register("projectDataService", ProjectDataService);
 
-	testInjector.register("androidResourcesMigrationService", {});
+	testInjector.register("androidResourcesMigrationService", {
+		hasMigrated: (appResourcesDir: string): boolean => true
+	});
 
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 
 	testInjector.register("injector", testInjector);
+
+	testInjector.register("errors", {});
+
+	testInjector.register("projectHelper", {
+		sanitizeName: (appName: string): string => appName
+	});
+
+	testInjector.register("options", {});
 
 	return testInjector;
 };
@@ -242,6 +262,41 @@ describe("projectDataService", () => {
 			projectDataService.removeDependency("projectDir", "myDeps");
 
 			assert.deepEqual(dataPassedToWriteJson, { dependencies: {} });
+		});
+	});
+
+	describe("getAssetsStructure", () => {
+		it("does not fail when App_Resources/Android and App_Resources/iOS do not exist", async () => {
+			const defaultEmptyData: any = {};
+			defaultEmptyData[CLIENT_NAME_KEY_IN_PROJECT_FILE] = {};
+			const testInjector = createTestInjector(JSON.stringify(defaultEmptyData));
+			const fs = testInjector.resolve<IFileSystem>("fs");
+			fs.readJson = (filePath: string): any => {
+				if (basename(filePath) === AssetConstants.imageDefinitionsFileName) {
+					return { android: {}, ios: {} };
+				}
+
+				throw new Error(`Unable to read file ${filePath}`);
+			};
+
+			const projectDataService = testInjector.resolve<IProjectDataService>("projectDataService");
+			const assetStructure = await projectDataService.getAssetsStructure({ projectDir: "." });
+			const emptyAssetStructure: IAssetGroup = {
+				icons: {
+					images: []
+				},
+				splashBackgrounds: {
+					images: []
+				},
+				splashCenterImages: {
+					images: []
+				},
+				splashImages: {
+					images: []
+				}
+			};
+
+			assert.deepEqual(assetStructure, { ios: emptyAssetStructure, android: _.merge(_.cloneDeep(emptyAssetStructure), { splashImages: null }) });
 		});
 	});
 });
