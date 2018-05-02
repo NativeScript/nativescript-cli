@@ -370,6 +370,22 @@ function testFunc() {
           .catch(done)
       })
 
+      it('should upload a publicly-readable file with public = true', (done) => {
+        Kinvey.Files.upload(fileToUpload1, { public: true })
+          .then((file) => {
+            utilities.assertFileUploadResult(file, null, octetStreamMimeType, null, fileContent1);
+            expect(file._public).to.be.true;
+            const query = new Kinvey.Query();
+            query.equalTo('_id', file._id);
+            return Kinvey.Files.find(query)
+          })
+          .then((result) => {
+            expect(result[0]._downloadURL).to.not.contain('GoogleAccessId');
+            done();
+          })
+          .catch(done)
+      })
+
       it('should set options.timeout', (done) => {
         Kinvey.Files.upload(fileToUpload1, undefined, { timeout: 1 })
           .then(() => done(new Error(shouldNotBeCalledMessage)))
