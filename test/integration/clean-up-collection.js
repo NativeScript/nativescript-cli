@@ -1,6 +1,6 @@
 const request = require('request');
 
-const cleanUpUserCollection = (config) => {
+const cleanUpCollection = (config, collectionName) => {
 
   // Set the headers
   const headers = {
@@ -10,7 +10,7 @@ const cleanUpUserCollection = (config) => {
     'X-Kinvey-Retain-collection-Metadata': true
   }
 
-  const body = { collectionName: 'user' };
+  const body = { collectionName: collectionName };
 
   /// Configure the request
   const options = {
@@ -28,11 +28,11 @@ const cleanUpUserCollection = (config) => {
         resolve();
       }
       else {
-        reject('User collection cleanup failed!');
+        reject(`${collectionName} collection cleanup failed!`);
       }
     });
   });
 };
 
 
-module.exports = cleanUpUserCollection;
+module.exports = cleanUpCollection;
