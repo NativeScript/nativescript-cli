@@ -24,7 +24,8 @@ const cleanUpCollection = (config, collectionName) => {
   // Start the request
   return new Promise((resolve, reject) => {
     request(options, (error, response) => {
-      if (!error && response.statusCode == 200) {
+      // for _blob if there are no files, the clean up request returns 404
+      if ((!error && response.statusCode == 200) || response.statusCode === 404) {
         resolve();
       }
       else {
