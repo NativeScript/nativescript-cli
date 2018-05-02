@@ -5,9 +5,9 @@ function testFunc() {
 
   describe('Files', () => {
     //the content should match the content of test/integration/sample-test-files/test1.txt
-    const stringContent = 'some_text';
+    const stringContent = 'some_text1';
     const filePath = fs.path.join(fs.knownFolders.currentApp().path, 'sample-test-files', 'test1.txt');
-    console.log(filePath);
+
     before((done) => {
       Kinvey.User.logout()
         .then(() => Kinvey.User.signup())

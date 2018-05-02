@@ -408,6 +408,21 @@ function testFunc() {
           })
           .catch(done)
       })
+
+      it('should update the content and the metadata of an existing file', (done) => {
+        const query = new Kinvey.Query();
+        const updatedmetadata = {
+          filename: utilities.randomString(),
+          mimeType: plainTextMimeType
+        };
+        Kinvey.Files.upload(fileToUpload1)
+          .then((file) => {
+            updatedmetadata._id = file._id;
+            query.equalTo('_id', updatedmetadata._id);
+            utilities.testFileUpload(fileToUpload2, updatedmetadata, fileContent2, query, done)
+          })
+          .catch(done)
+      })
     });
 
     describe('removeById()', () => {
