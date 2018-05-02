@@ -55,6 +55,10 @@ export class MobileIdentityConnect extends Identity {
   }
 
   login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
+    if (!isString(redirectUri)) {
+      return Promise.reject(new KinveyError('A redirectUri is required and must be a string.'));
+    }
+
     let clientId = this.client.appKey;
 
     if (isString(options.micId)) {
@@ -123,14 +127,6 @@ export class MobileIdentityConnect extends Identity {
       .then(response => response.data.temp_login_uri);
   }
 
-  parseCode(urlString) {
-    if (typeof urlString === 'string') {
-      return url.parse(urlString, true).query.code;
-    }
-
-    return undefined;
-  }
-
   requestCodeWithPopup(clientId, redirectUri, options = {}) {
     const promise = Promise.resolve().then(() => {
       const popup = new Popup();
@@ -149,26 +145,26 @@ export class MobileIdentityConnect extends Identity {
       const promise = new Promise((resolve, reject) => {
         let redirected = false;
 
-        const loadCallback = (event) => {
+        function loadCallback(event) {
           try {
-            if (event.url && event.url.toLowerCase().indexOf(redirectUri.toLowerCase()) === 0 && redirected === false) {
+            if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
               redirected = true;
               popup.removeAllListeners();
               popup.close();
-              resolve(this.parseCode(event.url));
+              resolve(url.parse(event.url, true).query.code);
             }
           } catch (error) {
             // Just catch the error
           }
-        };
+        }
 
-        const errorCallback = (event) => {
+        function errorCallback(event) {
           try {
-            if (event.url && event.url.toLowerCase().indexOf(redirectUri.toLowerCase()) === 0 && redirected === false) {
+            if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
               redirected = true;
               popup.removeAllListeners();
               popup.close();
-              resolve(this.parseCode(event.url));
+              resolve(url.parse(event.url, true).query.code);
             } else if (redirected === false) {
               popup.removeAllListeners();
               popup.close();
@@ -214,14 +210,14 @@ export class MobileIdentityConnect extends Identity {
           password: options.password,
           scope: 'openid'
         },
-        followRedirect: false        
+        followRedirect: false
       });
       return request.execute();
     }).then((response) => {
       const location = response.headers.get('location');
 
       if (location) {
-        return this.parseCode(location);
+        return url.parse(location, true).query.code;
       }
 
       throw new MobileIdentityConnectError(`Unable to authorize user with username ${options.username}.`,
@@ -261,7 +257,7 @@ export class MobileIdentityConnect extends Identity {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      authType: AuthType.Client,            
+      authType: AuthType.Client,
       url: url.format({
         protocol: this.client.micProtocol,
         host: this.client.micHost,
