@@ -370,6 +370,19 @@ function testFunc() {
           .catch(done)
       })
 
+      it('should set _acl', (done) => {
+        const randomId = utilities.randomString();
+        const acl = new Kinvey.Acl({});
+        acl.addReader(randomId);
+        Kinvey.Files.upload(fileToUpload1, { _acl: acl.toPlainObject() })
+          .then((file) => {
+            utilities.assertFileUploadResult(file, null, octetStreamMimeType, null, fileContent1);
+            expect(file._acl.r[0]).to.equal(randomId);
+            done();
+          })
+          .catch(done)
+      })
+
       it('should upload a publicly-readable file with public = true', (done) => {
         Kinvey.Files.upload(fileToUpload1, { public: true })
           .then((file) => {
