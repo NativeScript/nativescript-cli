@@ -136,7 +136,7 @@ function testFunc() {
     });
   }
 
-  describe.skip('MIC Integration', () => {
+  describe('MIC Integration', () => {
 
     beforeEach((done) => {
       Kinvey.User.logout()
