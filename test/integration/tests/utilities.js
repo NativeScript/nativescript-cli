@@ -255,7 +255,11 @@
     Kinvey.Files.upload(representation, metadata)
       .then((result) => {
         utilities.assertFileUploadResult(result, metadata._id, metadata.mimeType, metadata.filename, representation)
-        return Kinvey.Files.find(query);
+        const currentQuery = query || new Kinvey.Query();
+        if (!query) {
+          currentQuery.equalTo('_id', result._id);
+        }
+        return Kinvey.Files.find(currentQuery);
       })
       .then((result) => {
         const fileMetadata = result[0];
