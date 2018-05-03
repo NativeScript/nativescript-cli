@@ -214,45 +214,44 @@
     expect(error.message).to.equal(expectedErrorMessage);
   }
 
-  function assertReadFileResult(file, expectedId, expectedMimeType, expectedFileName, byHttp) {
-    assertFileMetadata(file, expectedId, expectedMimeType, expectedFileName);
+  function assertReadFileResult(file, expectedMetadata, byHttp, publicFile) {
+    assertFileMetadata(file, expectedMetadata);
     const expectedProtocol = byHttp ? 'http://' : 'https://';
     expect(file._downloadURL).to.contain(expectedProtocol);
-    expect(file._expiresAt).to.exist;
+    if (publicFile) {
+      expect(file._expiresAt).to.not.exist;
+    }
+    else {
+      expect(file._expiresAt).to.exist;
+    }
+
   }
 
-  function assertFileUploadResult(file, expectedId, expectedMimeType, expectedFileName, expectedContent) {
-    assertFileMetadata(file, expectedId, expectedMimeType, expectedFileName);
+  function assertFileUploadResult(file, expectedMetadata, expectedContent) {
+    assertFileMetadata(file, expectedMetadata);
     expect(file._data).to.equal(expectedContent);
   }
 
-  function assertFileMetadata(file, expectedId, expectedMimeType, expectedFileName) {
-    if (expectedId) {
-      expect(file._id).to.equal(expectedId);
-    } else {
-      expect(file._id).to.exist;
-    }
-
-    if (expectedFileName) {
-      expect(file._filename).to.equal(expectedFileName);
-    } else {
-      expect(file._filename).to.exist;
-    }
-
-    expect(file.mimeType).to.equal(expectedMimeType);
+  function assertFileMetadata(file, expectedMetadata) {
+    expect(file._id).to.exist;
+    expect(file._filename).to.exist;
+    expect(file.mimeType).to.exist;
     expect(file.size).to.exist;
     expect(file._acl.creator).to.exist;
     expect(file._kmd.ect).to.exist;
     expect(file._kmd.lmt).to.exist;
+
+    delete file._acl.creator;
+    const fieldsNames = Object.keys(expectedMetadata);
+    _.each(fieldsNames, (fieldName) => {
+      expect(file[fieldName]).to.deep.equal(expectedMetadata[fieldName])
+    });
   };
 
-  function testFileUpload(representation, expectedMetadata, expectedContent, query, done) {
-    const defaultMimeType = 'application/octet-stream';
-    let metadata;
-    Kinvey.Files.upload(representation, expectedMetadata)
+  function testFileUpload(representation, metadata, expectedMetadata, expectedContent, query, done) {
+    Kinvey.Files.upload(representation, metadata)
       .then((result) => {
-        metadata = expectedMetadata || {};
-        utilities.assertFileUploadResult(result, metadata._id, metadata.mimeType || defaultMimeType, metadata.filename, representation)
+        utilities.assertFileUploadResult(result, expectedMetadata, representation)
         const currentQuery = query || new Kinvey.Query();
         if (!query) {
           currentQuery.equalTo('_id', result._id);
@@ -261,11 +260,10 @@
       })
       .then((result) => {
         const fileMetadata = result[0];
-        utilities.assertReadFileResult(fileMetadata, metadata._id, metadata.mimeType || defaultMimeType, metadata.filename);
+        utilities.assertReadFileResult(fileMetadata, expectedMetadata, null, expectedMetadata._public);
         return Kinvey.Files.downloadByUrl(fileMetadata._downloadURL);
       })
       .then((result) => {
-        expect(result).to.exist;
         expect(result).to.equal(expectedContent);
         done();
       })

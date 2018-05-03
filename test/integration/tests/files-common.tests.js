@@ -339,59 +339,33 @@ function testFunc() {
     });
 
     describe('upload()', () => {
-      it(`without mimeType should upload with mimeType = ${octetStreamMimeType}`, (done) => {
-        utilities.testFileUpload(fileToUpload1, undefined, fileContent1, undefined, done);
+      it(`without metadata should upload with mimeType = ${octetStreamMimeType}`, (done) => {
+        utilities.testFileUpload(fileToUpload1, undefined, { mimeType: octetStreamMimeType }, fileContent1, undefined, done);
       })
 
       it('should set custom properties, supplied with the metadata', (done) => {
-        const customPropertyName = 'MyProperty';
-        const metadata = { [customPropertyName]: 'test' };
-        Kinvey.Files.upload(fileToUpload1, metadata)
-          .then((file) => {
-            utilities.assertFileUploadResult(file, null, octetStreamMimeType, null, fileContent1);
-            expect(file[customPropertyName]).to.equal(metadata[customPropertyName]);
-            done();
-          })
-          .catch(done)
+        const metadata = { testProperty: 'test' };
+        utilities.testFileUpload(fileToUpload1, metadata, metadata, fileContent1, undefined, done);
       })
 
       it('should send size to the server', (done) => {
-        Kinvey.Files.upload(fileToUpload1, { size: 0 })
-          .then((file) => {
-            utilities.assertFileUploadResult(file, null, octetStreamMimeType, null, fileContent1);
-            expect(file.size).to.equal(0);
-            done();
-          })
-          .catch(done)
+        const metadata = { size: 0 };
+        utilities.testFileUpload(fileToUpload1, metadata, metadata, null, undefined, done);
       })
 
       it('should set _acl', (done) => {
         const randomId = utilities.randomString();
         const acl = new Kinvey.Acl({});
         acl.addReader(randomId);
-        Kinvey.Files.upload(fileToUpload1, { _acl: acl.toPlainObject() })
-          .then((file) => {
-            utilities.assertFileUploadResult(file, null, octetStreamMimeType, null, fileContent1);
-            expect(file._acl.r[0]).to.equal(randomId);
-            done();
-          })
-          .catch(done)
+        const expectedArray = [randomId];
+        const expectedMetadata = {};
+        expectedMetadata['_acl'] = {};
+        expectedMetadata['_acl']['r'] = expectedArray;
+        utilities.testFileUpload(fileToUpload1, { _acl: acl.toPlainObject() }, expectedMetadata, fileContent1, undefined, done);
       })
 
       it('should upload a publicly-readable file with public = true', (done) => {
-        Kinvey.Files.upload(fileToUpload1, { public: true })
-          .then((file) => {
-            utilities.assertFileUploadResult(file, null, octetStreamMimeType, null, fileContent1);
-            expect(file._public).to.be.true;
-            const query = new Kinvey.Query();
-            query.equalTo('_id', file._id);
-            return Kinvey.Files.find(query)
-          })
-          .then((result) => {
-            expect(result[0]._downloadURL).to.not.contain('GoogleAccessId');
-            done();
-          })
-          .catch(done)
+        utilities.testFileUpload(fileToUpload1, { public: true }, { _public: true }, fileContent1, undefined, done);
       })
 
       it('should set options.timeout', (done) => {
@@ -410,11 +384,15 @@ function testFunc() {
           filename: utilities.randomString(),
           mimeType: plainTextMimeType
         };
+        const expectedMetadata = {
+          _filename: updatedmetadata.filename,
+          mimeType: updatedmetadata.mimeType
+        };
         Kinvey.Files.upload(fileToUpload1)
           .then((file) => {
             updatedmetadata._id = file._id;
             query.equalTo('_id', updatedmetadata._id);
-            utilities.testFileUpload(fileToUpload2, updatedmetadata, fileContent2, query, done)
+            utilities.testFileUpload(fileToUpload2, updatedmetadata, expectedMetadata, fileContent2, query, done)
           })
           .catch(done)
       })
