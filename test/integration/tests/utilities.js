@@ -233,28 +233,26 @@
       expect(file._id).to.exist;
     }
 
-    if (expectedMimeType) {
-      expect(file.mimeType).to.equal(expectedMimeType);
-    } else {
-      expect(file.mimeType).to.exist;
-    }
-
     if (expectedFileName) {
       expect(file._filename).to.equal(expectedFileName);
     } else {
       expect(file._filename).to.exist;
     }
 
+    expect(file.mimeType).to.equal(expectedMimeType);
     expect(file.size).to.exist;
     expect(file._acl.creator).to.exist;
     expect(file._kmd.ect).to.exist;
     expect(file._kmd.lmt).to.exist;
   };
 
-  function testFileUpload(representation, metadata, expectedContent, query, done) {
-    Kinvey.Files.upload(representation, metadata)
+  function testFileUpload(representation, expectedMetadata, expectedContent, query, done) {
+    const defaultMimeType = 'application/octet-stream';
+    let metadata;
+    Kinvey.Files.upload(representation, expectedMetadata)
       .then((result) => {
-        utilities.assertFileUploadResult(result, metadata._id, metadata.mimeType, metadata.filename, representation)
+        metadata = expectedMetadata || {};
+        utilities.assertFileUploadResult(result, metadata._id, metadata.mimeType || defaultMimeType, metadata.filename, representation)
         const currentQuery = query || new Kinvey.Query();
         if (!query) {
           currentQuery.equalTo('_id', result._id);
@@ -263,7 +261,7 @@
       })
       .then((result) => {
         const fileMetadata = result[0];
-        utilities.assertReadFileResult(fileMetadata, metadata._id, metadata.mimeType, metadata.filename);
+        utilities.assertReadFileResult(fileMetadata, metadata._id, metadata.mimeType || defaultMimeType, metadata.filename);
         return Kinvey.Files.downloadByUrl(fileMetadata._downloadURL);
       })
       .then((result) => {

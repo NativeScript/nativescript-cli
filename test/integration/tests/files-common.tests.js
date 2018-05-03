@@ -340,12 +340,7 @@ function testFunc() {
 
     describe('upload()', () => {
       it(`without mimeType should upload with mimeType = ${octetStreamMimeType}`, (done) => {
-        Kinvey.Files.upload(fileToUpload1)
-          .then((file) => {
-            utilities.assertFileUploadResult(file, null, octetStreamMimeType, null, fileContent1);
-            done();
-          })
-          .catch(done)
+        utilities.testFileUpload(fileToUpload1, undefined, fileContent1, undefined, done);
       })
 
       it('should set custom properties, supplied with the metadata', (done) => {
