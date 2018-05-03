@@ -17,6 +17,7 @@ function testFunc() {
 
     describe('upload()', () => {
       let metadata;
+      let expectedMetadata;
       let query;
 
       beforeEach((done) => {
@@ -25,18 +26,19 @@ function testFunc() {
           filename: utilities.randomString(),
           mimeType: plainTextMimeType
         };
-        query = new Kinvey.Query();
-        query.equalTo('_filename', metadata.filename);
+        expectedMetadata = _.cloneDeep(metadata);
+        delete expectedMetadata.filename
+        expectedMetadata._filename = metadata.filename
         done();
       });
 
       it('should upload a file by file path', (done) => {
-        utilities.testFileUpload(filePath, metadata, stringContent, query, done);
+        utilities.testFileUpload(filePath, metadata, expectedMetadata, stringContent, null, done);
       });
 
       it('should upload a file by a NS File', (done) => {
         const file = fs.File.fromPath(filePath);
-        utilities.testFileUpload(file, metadata, stringContent, query, done);
+        utilities.testFileUpload(file, metadata, expectedMetadata, stringContent, null, done);
       });
     });
   });

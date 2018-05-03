@@ -36,6 +36,7 @@ function testFunc() {
 
     describe('upload()', () => {
       let metadata;
+      let expectedMetadata;
       let query;
 
       beforeEach((done) => {
@@ -44,22 +45,23 @@ function testFunc() {
           filename: utilities.randomString(),
           mimeType: plainTextMimeType
         };
-        query = new Kinvey.Query();
-        query.equalTo('_filename', metadata.filename);
+        expectedMetadata = _.cloneDeep(metadata);
+        delete expectedMetadata.filename
+        expectedMetadata._filename = metadata.filename
         done();
       });
 
       it('should upload a file by String content', (done) => {
-        utilities.testFileUpload(stringContent, metadata, stringContent, query, done);
+        utilities.testFileUpload(stringContent, metadata, expectedMetadata, stringContent, null, done);
       });
 
       it('should upload a file by a Blob', (done) => {
-        utilities.testFileUpload(blob, metadata, stringContent, query, done);
+        utilities.testFileUpload(blob, metadata, expectedMetadata, stringContent, null, done);
       });
 
       // ArrayBuffer does not work currently - it should be discussed if we support it
       it.skip('should upload a file by a ArrayBuffer', (done) => {
-        utilities.testFileUpload(arrayBuffer, metadata, stringContent, query, done);
+        utilities.testFileUpload(arrayBuffer, metadata, expectedMetadata, stringContent, null, done);
       });
 
       //the next test is skipped as currently the Files.upload() does not work with a Cordova File
@@ -67,7 +69,7 @@ function testFunc() {
         getCordovaFileEntries(sampleTestFilesPath, (fileEntries) => {
           const fileEntry = fileEntries.find(entry => entry.name === 'test1.txt');
           fileEntry.file((cordovaFile) => {
-            utilities.testFileUpload(cordovaFile, metadata, stringContent, query, done);
+            utilities.testFileUpload(cordovaFile, metadata, expectedMetadata, stringContent, null, done);
           });
         })
       });

@@ -19,6 +19,7 @@ function testFunc() {
 
     describe('upload()', () => {
       let metadata;
+      let expectedMetadata;
       let query;
 
       beforeEach((done) => {
@@ -27,14 +28,15 @@ function testFunc() {
           filename: utilities.randomString(),
           mimeType: plainTextMimeType
         };
-        query = new Kinvey.Query();
-        query.equalTo('_filename', metadata.filename);
+        expectedMetadata = _.cloneDeep(metadata);
+        delete expectedMetadata.filename
+        expectedMetadata._filename = metadata.filename
         done();
       });
 
       fileRepresentations.forEach((representation) => {
         it(`should upload a file by ${representation.constructor.name}`, (done) => {
-          utilities.testFileUpload(representation, metadata, stringContent, query, done);
+          utilities.testFileUpload(representation, metadata, expectedMetadata, stringContent, null, done);
         });
       });
     });
