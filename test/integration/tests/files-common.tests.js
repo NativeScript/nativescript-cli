@@ -46,12 +46,17 @@ function testFunc() {
       let uploadedFile1;
       let uploadedFile2;
       let query;
+      let file1Metadata;
+      let file2Metadata;
 
       before((done) => {
         uploadFiles([fileToUpload1, fileToUpload2])
           .then((result) => {
             uploadedFile1 = result.find(result => result._data === fileToUpload1);
             uploadedFile2 = result.find(result => result._data === fileToUpload2);
+            const fileBasicProperties = ['_id', '_filename', 'mimeType'];
+            file1Metadata = _.pick(uploadedFile1, fileBasicProperties);
+            file2Metadata = _.pick(uploadedFile2, fileBasicProperties);
             query = new Kinvey.Query();
             query.equalTo('_filename', uploadedFile2._filename);
             done();
@@ -67,8 +72,8 @@ function testFunc() {
               expect(result.length).to.equal(2);
               const file1 = result.find(file => file._id === uploadedFile1._id);
               const file2 = result.find(file => file._id === uploadedFile2._id);
-              utilities.assertReadFileResult(file1, uploadedFile1._id, plainTextMimeType, uploadedFile1._filename);
-              utilities.assertReadFileResult(file2, uploadedFile2._id, plainTextMimeType, uploadedFile2._filename);
+              utilities.assertReadFileResult(file1, file1Metadata);
+              utilities.assertReadFileResult(file2, file2Metadata);
               done();
             })
             .catch(done);
@@ -79,7 +84,7 @@ function testFunc() {
             .then((result) => {
               expect(result).to.be.an('array');
               expect(result.length).to.equal(1);
-              utilities.assertReadFileResult(result[0], uploadedFile2._id, plainTextMimeType, uploadedFile2._filename);
+              utilities.assertReadFileResult(result[0], file2Metadata);
               done();
             })
             .catch(done);
@@ -88,7 +93,7 @@ function testFunc() {
         it('should return the file by http if tls = false', (done) => {
           Kinvey.Files.find(query, { tls: false })
             .then((result) => {
-              utilities.assertReadFileResult(result[0], uploadedFile2._id, plainTextMimeType, uploadedFile2._filename, true);
+              utilities.assertReadFileResult(result[0], file2Metadata, true);
               done();
             })
             .catch(done);
@@ -99,7 +104,7 @@ function testFunc() {
           // After the fix of MLIBZ-2453, the downloadByUrl assertion should be modified to check the error and moved to the error function
           Kinvey.Files.find(query, { ttl: ttlValue })
             .then((result) => {
-              utilities.assertReadFileResult(result[0], uploadedFile2._id, plainTextMimeType, uploadedFile2._filename);
+              utilities.assertReadFileResult(result[0], file2Metadata);
               setTimeout(() => {
                 return Kinvey.Files.downloadByUrl(result[0]._downloadURL)
                   .then((result) => {
@@ -171,7 +176,7 @@ function testFunc() {
         it('should stream the file by https with stream = true and not set tls', (done) => {
           Kinvey.Files.download(uploadedFile1._id, { stream: true })
             .then((result) => {
-              utilities.assertReadFileResult(result, uploadedFile1._id, plainTextMimeType, uploadedFile1._filename);
+              utilities.assertReadFileResult(result, file1Metadata);
               return Kinvey.Files.downloadByUrl(result._downloadURL);
             })
             .then((result) => {
@@ -185,7 +190,7 @@ function testFunc() {
         it('should stream the file by https with stream = true and tls = true', (done) => {
           Kinvey.Files.download(uploadedFile1._id, { stream: true, tls: true })
             .then((result) => {
-              utilities.assertReadFileResult(result, uploadedFile1._id, plainTextMimeType, uploadedFile1._filename);
+              utilities.assertReadFileResult(result, file1Metadata);
               return Kinvey.Files.downloadByUrl(result._downloadURL);
             })
             .then((result) => {
@@ -199,7 +204,7 @@ function testFunc() {
         it('should stream the file by http with stream = true and tls = false', (done) => {
           Kinvey.Files.download(uploadedFile1._id, { stream: true, tls: false })
             .then((result) => {
-              utilities.assertReadFileResult(result, uploadedFile1._id, plainTextMimeType, uploadedFile1._filename, true);
+              utilities.assertReadFileResult(result, file1Metadata, true);
               done();
             })
             .catch(done);
@@ -220,7 +225,7 @@ function testFunc() {
           // After the fix of MLIBZ-2453, the downloadByUrl assertion should be modified to check the error and moved to the error function
           Kinvey.Files.download(uploadedFile1._id, { ttl: ttlValue, stream: true })
             .then((result) => {
-              utilities.assertReadFileResult(result, uploadedFile1._id, plainTextMimeType, uploadedFile1._filename);
+              utilities.assertReadFileResult(result, file1Metadata);
               setTimeout(() => {
                 return Kinvey.Files.downloadByUrl(result._downloadURL)
                   .then((result) => {
@@ -248,7 +253,7 @@ function testFunc() {
         it('should stream the file by https when tls is not set', (done) => {
           Kinvey.Files.stream(uploadedFile1._id)
             .then((result) => {
-              utilities.assertReadFileResult(result, uploadedFile1._id, plainTextMimeType, uploadedFile1._filename);
+              utilities.assertReadFileResult(result, file1Metadata);
               return Kinvey.Files.downloadByUrl(result._downloadURL);
             })
             .then((result) => {
@@ -262,7 +267,7 @@ function testFunc() {
         it('should stream the file by https when tls = true', (done) => {
           Kinvey.Files.stream(uploadedFile1._id, { tls: true })
             .then((result) => {
-              utilities.assertReadFileResult(result, uploadedFile1._id, plainTextMimeType, uploadedFile1._filename);
+              utilities.assertReadFileResult(result, file1Metadata);
               return Kinvey.Files.downloadByUrl(result._downloadURL);
             })
             .then((result) => {
@@ -276,7 +281,7 @@ function testFunc() {
         it('should stream the file by http when tls = false', (done) => {
           Kinvey.Files.stream(uploadedFile1._id, { tls: false })
             .then((result) => {
-              utilities.assertReadFileResult(result, uploadedFile1._id, plainTextMimeType, uploadedFile1._filename, true);
+              utilities.assertReadFileResult(result, file1Metadata, true);
               done();
             })
             .catch(done);
@@ -287,7 +292,7 @@ function testFunc() {
           // After the fix of MLIBZ-2453, the downloadByUrl assertion should be modified to check the error and moved to the error function
           Kinvey.Files.stream(uploadedFile1._id, { ttl: ttlValue })
             .then((result) => {
-              utilities.assertReadFileResult(result, uploadedFile1._id, plainTextMimeType, uploadedFile1._filename);
+              utilities.assertReadFileResult(result, file1Metadata);
               setTimeout(() => {
                 return Kinvey.Files.downloadByUrl(result._downloadURL)
                   .then((result) => {
