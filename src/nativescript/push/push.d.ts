@@ -1,13 +1,29 @@
 export interface AndroidPushConfig {
   senderID: string;
+  notificationCallbackAndroid?: any;
 }
 
 export interface IOSPushConfig {
-  alert: boolean;
-  badge: boolean;
-  sound: boolean;
-  interactiveSettings?: any;
-  notificationCallbackIOS?: any;
+  alert?: boolean;
+  badge?: boolean;
+  sound?: boolean;
+  clearBadge?: boolean;
+  interactiveSettings?: {
+    actions?: Array<{
+      identifier: string;
+      title: string;
+      activationMode?: string;
+      destructive?: boolean;
+      authenticationRequired?: boolean;
+      behavior?: string;
+    }>;
+    categories?: Array<{
+      identifier: string;
+      actionsForDefaultContext: string[];
+      actionsForMinimalContext: string[];
+    }>;
+  };
+  notificationCallbackIOS?: (message: any) => void;
 }
 
 export interface PushConfig {

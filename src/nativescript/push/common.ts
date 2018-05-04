@@ -50,14 +50,14 @@ export class PushCommon extends EventEmitter {
         return this._registerWithKinvey(token, options);
       })
       .then((token) => {
-        return this._saveTokenToCache(token, options);
+        return this._saveTokenToCache(token);
       });
   }
 
   unregister(options = <PushConfig>{}) {
     return this._unregisterWithPushPlugin(options)
       .then(() => {
-        return this._getTokenFromCache(options);
+        return this._getTokenFromCache();
       })
       .then((token) => {
         if (isDefined(token) === false) {
@@ -67,7 +67,7 @@ export class PushCommon extends EventEmitter {
         return this._unregisterWithKinvey(token, options);
       })
       .then(() => {
-        return this._deleteTokenFromCache(options);
+        return this._deleteTokenFromCache();
       });
   }
 
@@ -125,7 +125,7 @@ export class PushCommon extends EventEmitter {
     return request.execute().then(response => response.data);
   }
 
-  private _getTokenFromCache(options = <PushConfig>{}): Promise<string | null> {
+  private _getTokenFromCache(): Promise<string | null> {
     const activeUser = User.getActiveUser(this.client);
 
     if (isDefined(activeUser) === false) {
@@ -151,7 +151,7 @@ export class PushCommon extends EventEmitter {
       });
   }
 
-  private _saveTokenToCache(token: any, options = <PushConfig>{}): Promise<string> {
+  private _saveTokenToCache(token: any): Promise<string> {
     const activeUser = User.getActiveUser(this.client);
 
     if (isDefined(activeUser) === false) {
@@ -170,7 +170,7 @@ export class PushCommon extends EventEmitter {
       .then(() => token);
   }
 
-  private _deleteTokenFromCache(options = <PushConfig>{}): Promise<null> {
+  private _deleteTokenFromCache(): Promise<null> {
     const activeUser = User.getActiveUser(this.client);
 
     if (isDefined(activeUser) === false) {

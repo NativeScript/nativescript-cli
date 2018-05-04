@@ -249,6 +249,36 @@ describe('Sync', () => {
           expect(entities).toBe(1);
         });
     });
+
+    it('should add kinveyfile_ttl query parameter', () => {
+      const manager = syncManagerProvider.getSyncManager();
+      const entity1 = { _id: randomString() };
+
+      nock(client.apiHostname)
+        .get(backendPathname)
+        .query({ kinveyfile_ttl: 3600 })
+        .reply(200, [entity1]);
+
+      return manager.pull(collection, null, { kinveyFileTTL: 3600 })
+        .then((entities) => {
+          expect(entities).toBe(1);
+        });
+    });
+
+    it('should add kinveyfile_tls query parameter', () => {
+      const manager = syncManagerProvider.getSyncManager();
+      const entity1 = { _id: randomString() };
+
+      nock(client.apiHostname)
+        .get(backendPathname)
+        .query({ kinveyfile_tls: true })
+        .reply(200, [entity1]);
+
+      return manager.pull(collection, null, { kinveyFileTLS: true })
+        .then((entities) => {
+          expect(entities).toBe(1);
+        });
+    });
   });
 
   describe('push()', () => {

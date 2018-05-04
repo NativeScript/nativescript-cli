@@ -111,6 +111,36 @@ describe('NetworkStore', () => {
           expect(entities).toEqual([entity1]);
         });
     });
+
+    it('should add kinveyfile_ttl query parameter', () => {
+      const store = new NetworkStore('comecollection');
+      const entity1 = { _id: randomString() };
+
+      nock(client.apiHostname)
+        .get(store.pathname)
+        .query({ kinveyfile_ttl: 3600 })
+        .reply(200, [entity1]);
+
+      return store.find(null, { kinveyFileTTL: 3600 }).toPromise()
+        .then((entities) => {
+          expect(entities).toEqual([entity1]);
+        });
+    });
+
+    it('should add kinveyfile_tls query parameter', () => {
+      const store = new NetworkStore('comecollection');
+      const entity1 = { _id: randomString() };
+
+      nock(client.apiHostname)
+        .get(store.pathname)
+        .query({ kinveyfile_tls: true })
+        .reply(200, [entity1]);
+
+      return store.find(null, { kinveyFileTLS: true }).toPromise()
+        .then((entities) => {
+          expect(entities).toEqual([entity1]);
+        });
+    });
   });
 
   describe('findById()', () => {
@@ -137,6 +167,38 @@ describe('NetworkStore', () => {
 
       const store = new NetworkStore(collection);
       return store.findById(entityId).toPromise()
+        .then((entity) => {
+          expect(entity).toEqual(entity1);
+        });
+    });
+
+    it('should add kinveyfile_ttl query parameter', () => {
+      const entityId = randomString();
+      const entity1 = { _id: entityId };
+
+      nock(client.apiHostname)
+        .get(`/appdata/${client.appKey}/${collection}/${entityId}`)
+        .query({ kinveyfile_ttl: 3600 })
+        .reply(200, entity1);
+
+      const store = new NetworkStore(collection);
+      return store.findById(entityId, { kinveyFileTTL: 3600 }).toPromise()
+        .then((entity) => {
+          expect(entity).toEqual(entity1);
+        });
+    });
+
+    it('should add kinveyfile_tls query parameter', () => {
+      const entityId = randomString();
+      const entity1 = { _id: entityId };
+
+      nock(client.apiHostname)
+        .get(`/appdata/${client.appKey}/${collection}/${entityId}`)
+        .query({ kinveyfile_tls: true })
+        .reply(200, entity1);
+
+      const store = new NetworkStore(collection);
+      return store.findById(entityId, { kinveyFileTLS: true }).toPromise()
         .then((entity) => {
           expect(entity).toEqual(entity1);
         });
