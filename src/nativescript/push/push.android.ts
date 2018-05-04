@@ -23,10 +23,16 @@ class AndroidPush extends PushCommon {
           + ' setting up your project.'));
       }
 
+      const usersNotificationCallback = config.notificationCallbackAndroid;
+      config.notificationCallbackAndroid = (jsonDataString: string, fcmNotification) => {
+        if (typeof usersNotificationCallback === 'function') {
+          usersNotificationCallback(jsonDataString, fcmNotification);
+        }
+
+        (this as any).emit('notification', JSON.parse(jsonDataString));
+      };
+
       PushPlugin.register(config, resolve, reject);
-      PushPlugin.onMessageReceived((data: any) => {
-        (this as any).emit('notification', data);
-      });
     });
   }
 

@@ -23,8 +23,13 @@ class IOSPush extends PushCommon {
           + ' setting up your project.'));
       }
 
-      config.notificationCallbackIOS = (data: any) => {
-        (this as any).emit('notification', data);
+      const usersNotificationCallback = config.notificationCallbackIOS;
+      config.notificationCallbackIOS = (message: any) => {
+        if (typeof usersNotificationCallback === 'function') {
+          usersNotificationCallback(message);
+        }
+
+        (this as any).emit('notification', message);
       };
 
       PushPlugin.register(config, (token) => {
