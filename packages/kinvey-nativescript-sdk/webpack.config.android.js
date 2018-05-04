@@ -12,22 +12,23 @@ module.exports = (env = {}) => {
   const rules = getRules();
   const plugins = getPlugins(env, platform);
   let bundleName = pkg.name;
+  let pushBundleName = 'push';
 
   const config = {
     entry: {},
     output: {
-      filename: "[name].js",
+      filename: '[name].js',
       pathinfo: true,
       path: path.join(__dirname, 'dist'),
-      libraryTarget: "commonjs2",
+      libraryTarget: 'commonjs2',
       library: 'Kinvey'
     },
     externals: {
-      'globals': 'globals',
+      globals: 'globals',
       'nativescript-push-notifications': 'nativescript-push-notifications',
       'nativescript-sqlite': 'nativescript-sqlite',
       'tns-core-modules/application': 'application',
-      'http': 'http',
+      http: 'http',
       'tns-core-modules/http': 'http',
       'tns-core-modules/file-system': 'file-system',
       'tns-core-modules/ui/frame': 'ui/frame',
@@ -57,11 +58,13 @@ module.exports = (env = {}) => {
 
   if (env.s3) {
     bundleName = `${bundleName}-${pkg.version}`;
+    pushBundleName = `${pushBundleName}-${pkg.version}`;
   }
 
   bundleName = `${bundleName}.${platform}`;
-
+  pushBundleName = `${pushBundleName}.${platform}`;
   config.entry[bundleName] = './src/index.ts';
+  config.entry[pushBundleName] = './src/push.ts';
   return config;
 };
 

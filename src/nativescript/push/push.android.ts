@@ -37,6 +37,8 @@ class AndroidPush extends PushCommon {
   }
 
   protected _unregisterWithPushPlugin(options = <PushConfig>{}): Promise<null> {
+    const config = options.android || <AndroidPushConfig>{};
+
     return new Promise((resolve, reject) => {
       if (isDefined(PushPlugin) === false) {
         return reject(new KinveyError('NativeScript Push Plugin is not installed.',
@@ -44,7 +46,7 @@ class AndroidPush extends PushCommon {
           + ' setting up your project.'));
       }
 
-      PushPlugin.unregister(resolve, reject, options);
+      PushPlugin.unregister(resolve, reject, config);
     });
   }
 }
