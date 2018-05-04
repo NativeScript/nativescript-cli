@@ -23,8 +23,13 @@ class IOSPush extends PushCommon {
           + ' setting up your project.'));
       }
 
-      config.notificationCallbackIOS = (data: any) => {
-        (this as any).emit('notification', data);
+      const usersNotificationCallback = config.notificationCallbackIOS;
+      config.notificationCallbackIOS = (message: any) => {
+        if (typeof usersNotificationCallback === 'function') {
+          usersNotificationCallback(message);
+        }
+
+        (this as any).emit('notification', message);
       };
 
       PushPlugin.register(config, (token) => {
@@ -43,6 +48,8 @@ class IOSPush extends PushCommon {
   }
 
   protected _unregisterWithPushPlugin(options = <PushConfig>{}): Promise<null> {
+    const config = options.ios || <IOSPushConfig>{};
+
     return new Promise((resolve, reject) => {
       if (isDefined(PushPlugin) === false) {
         return reject(new KinveyError('NativeScript Push Plugin is not installed.',
@@ -50,7 +57,7 @@ class IOSPush extends PushCommon {
           + ' setting up your project.'));
       }
 
-      PushPlugin.unregister(resolve, reject, options);
+      PushPlugin.unregister(resolve, reject, config);
     });
   }
 }
