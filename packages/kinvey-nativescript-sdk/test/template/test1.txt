@@ -1,1 +1,0 @@
-/data/data/org.nativescript.TestApp/files/app/test1.txt
