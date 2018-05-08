@@ -8,7 +8,7 @@ const webRunTests = (staticPort, runner) =>
 
     if (os.type() === 'Windows_NT') {
       opn(args[0], {
-        app: ['chrome', '--incognito', '--disable-web-security', '--disable-popup-blocking']
+        app: ['chrome', '--incognito', '--disable-web-security', '--disable-popup-blocking', '--user-data-dir=\'\'']
       })
         .then(resolve)
         .catch(reject);

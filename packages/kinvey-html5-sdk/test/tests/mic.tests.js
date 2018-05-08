@@ -10,7 +10,7 @@ function testFunc() {
   const { fbEmail } = externalConfig;
   const { fbPassword } = externalConfig;
   const fbDevUrl = 'https://developers.facebook.com';
-  const fbUserName = 'Gaco Baco';
+  const fbUserName = 'Test User Facebook';
   const fbCookieName = 'c_user';
   const fbCookieValue = '1172498488';
 
