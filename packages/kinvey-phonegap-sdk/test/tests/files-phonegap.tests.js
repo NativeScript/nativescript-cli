@@ -1,6 +1,5 @@
 function testFunc() {
 
-  const plainTextMimeType = 'text/plain';
   const sampleTestFilesPath = `${cordova.file.applicationDirectory}www/sample-test-files/`;
 
   const getCordovaFileEntries = (path, callback) => {

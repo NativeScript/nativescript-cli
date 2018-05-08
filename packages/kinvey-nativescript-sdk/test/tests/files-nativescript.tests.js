@@ -1,7 +1,6 @@
 function testFunc() {
 
   const fs = require('file-system');
-  const plainTextMimeType = 'text/plain';
 
   describe('Files', () => {
     //the content should match the content of test/integration/sample-test-files/test1.txt

@@ -1,7 +1,5 @@
 function testFunc() {
 
-  const plainTextMimeType = 'text/plain';
-
   describe('Files', () => {
     const stringContent = utilities.randomString();
     const blob = new Blob([stringContent]);
