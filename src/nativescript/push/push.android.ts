@@ -23,14 +23,22 @@ class AndroidPush extends PushCommon {
           + ' setting up your project.'));
       }
 
+      const usersNotificationCallback = config.notificationCallbackAndroid;
+      config.notificationCallbackAndroid = (jsonDataString: string, fcmNotification) => {
+        if (typeof usersNotificationCallback === 'function') {
+          usersNotificationCallback(jsonDataString, fcmNotification);
+        }
+
+        (this as any).emit('notification', JSON.parse(jsonDataString));
+      };
+
       PushPlugin.register(config, resolve, reject);
-      PushPlugin.onMessageReceived((data: any) => {
-        (this as any).emit('notification', data);
-      });
     });
   }
 
   protected _unregisterWithPushPlugin(options = <PushConfig>{}): Promise<null> {
+    const config = options.android || <AndroidPushConfig>{};
+
     return new Promise((resolve, reject) => {
       if (isDefined(PushPlugin) === false) {
         return reject(new KinveyError('NativeScript Push Plugin is not installed.',
@@ -38,7 +46,7 @@ class AndroidPush extends PushCommon {
           + ' setting up your project.'));
       }
 
-      PushPlugin.unregister(resolve, reject, options);
+      PushPlugin.unregister(resolve, reject, config);
     });
   }
 }
