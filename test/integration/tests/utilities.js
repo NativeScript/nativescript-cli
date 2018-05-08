@@ -279,6 +279,39 @@
     return buf;
   }
 
+  function getFileMetadata(id, fileName, mimeType) {
+    const metadata = {
+      filename: fileName || randomString(),
+      mimeType: mimeType || plainTextMimeType
+    };
+
+    if (id) {
+      metadata._id = id;
+    };
+
+    return metadata;
+  }
+
+  function getFileMetadata(id, fileName, mimeType) {
+    const metadata = {
+      filename: fileName || randomString(),
+      mimeType: mimeType || 'text/plain'
+    };
+
+    if (id) {
+      metadata._id = id;
+    };
+
+    return metadata;
+  }
+
+  function getExpectedFileMetadata(metadata) {
+    const expectedMetadata = _.cloneDeep(metadata);
+    delete expectedMetadata.filename
+    expectedMetadata._filename = metadata.filename
+    return expectedMetadata;
+  }
+
   const utilities = {
     uid,
     randomString,
@@ -301,7 +334,9 @@
     assertFileUploadResult,
     assertReadFileResult,
     testFileUpload,
-    ArrayBufferFromString
+    ArrayBufferFromString,
+    getFileMetadata,
+    getExpectedFileMetadata
   };
 
   if (typeof module === 'object') {

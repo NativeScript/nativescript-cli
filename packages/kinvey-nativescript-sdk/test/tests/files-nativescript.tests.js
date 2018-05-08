@@ -18,17 +18,10 @@ function testFunc() {
     describe('upload()', () => {
       let metadata;
       let expectedMetadata;
-      let query;
 
       beforeEach((done) => {
-        metadata = {
-          _id: utilities.randomString(),
-          filename: utilities.randomString(),
-          mimeType: plainTextMimeType
-        };
-        expectedMetadata = _.cloneDeep(metadata);
-        delete expectedMetadata.filename
-        expectedMetadata._filename = metadata.filename
+        metadata = utilities.getFileMetadata(utilities.randomString());
+        expectedMetadata = utilities.getExpectedFileMetadata(metadata);
         done();
       });
 
