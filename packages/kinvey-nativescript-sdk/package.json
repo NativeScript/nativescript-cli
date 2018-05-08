@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "3.10.2",
+  "version": "3.10.3",
   "name": "kinvey-nativescript-sdk",
   "description": "Kinvey NativeScript SDK for developing NativeScript applications.",
   "author": "Kinvey, Inc.",
