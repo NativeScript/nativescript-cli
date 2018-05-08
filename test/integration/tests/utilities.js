@@ -282,19 +282,6 @@
   function getFileMetadata(id, fileName, mimeType) {
     const metadata = {
       filename: fileName || randomString(),
-      mimeType: mimeType || plainTextMimeType
-    };
-
-    if (id) {
-      metadata._id = id;
-    };
-
-    return metadata;
-  }
-
-  function getFileMetadata(id, fileName, mimeType) {
-    const metadata = {
-      filename: fileName || randomString(),
       mimeType: mimeType || 'text/plain'
     };
 
