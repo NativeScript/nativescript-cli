@@ -12,10 +12,10 @@ $injector.registerCommand("setup|*", SetupCommand);
 export class CloudSetupCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(private $nativescriptCloudExtensionService: INativescriptCloudExtensionService) { }
+	constructor(private $nativeScriptCloudExtensionService: INativeScriptCloudExtensionService) { }
 
 	public execute(args: string[]): Promise<any> {
-		return this.$nativescriptCloudExtensionService.install();
+		return this.$nativeScriptCloudExtensionService.install();
 	}
 }
 $injector.registerCommand(["setup|cloud", "cloud|setup"], CloudSetupCommand);

@@ -10,7 +10,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 	private _itunesConnectApplications: IiTunesConnectApplication[] = null;
 	private _bundleIdentifier: string = null;
 
-	constructor(private $bplistParser: IBinaryPlistParser,
+	constructor(private $plistParser: IPlistParser,
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
@@ -135,8 +135,8 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				}
 				const appFile = path.join(payloadDir, allApps[0]);
 
-				const plistObject = await this.$bplistParser.parseFile(path.join(appFile, INFO_PLIST_FILE_NAME));
-				const bundleId = plistObject && plistObject[0] && plistObject[0].CFBundleIdentifier;
+				const plistObject = await this.$plistParser.parseFile(path.join(appFile, INFO_PLIST_FILE_NAME));
+				const bundleId = plistObject && plistObject.CFBundleIdentifier;
 				if (!bundleId) {
 					this.$errors.failWithoutHelp(`Unable to determine bundle identifier from ${ipaFileFullPath}.`);
 				}

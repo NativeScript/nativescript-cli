@@ -1,12 +1,20 @@
 import * as path from "path";
 import { MANIFEST_FILE_NAME, INCLUDE_GRADLE_NAME, ASSETS_DIR, RESOURCES_DIR } from "../constants";
-import { getShortPluginName } from "../common/helpers";
+import { getShortPluginName, hook } from "../common/helpers";
 import { Builder, parseString } from "xml2js";
 import { ILogger } from "log4js";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
-	constructor(private $fs: IFileSystem,
+	/**
+	 * Required for hooks execution to work.
+	 */
+	private get $hooksService(): IHooksService {
+		return this.$injector.resolve("hooksService");
+	}
+
+	constructor(private $injector: IInjector,
+		private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
 		private $hostInfo: IHostInfo,
 		private $androidToolsInfo: IAndroidToolsInfo,
@@ -240,28 +248,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			}
 
 			// finally build the plugin
-			const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
-			const localArgs = [
-				gradlew,
-				"-p",
-				newPluginDir,
-				"assembleRelease"
-			];
-
 			this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
-
 			const androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
-			const compileSdk = androidToolsInfo.compileSdkVersion;
-			const buildToolsVersion = androidToolsInfo.buildToolsVersion;
-
-			localArgs.push(`-PcompileSdk=android-${compileSdk}`);
-			localArgs.push(`-PbuildToolsVersion=${buildToolsVersion}`);
-
-			try {
-				await this.$childProcess.exec(localArgs.join(" "), { cwd: newPluginDir });
-			} catch (err) {
-				throw new Error(`Failed to build plugin ${options.pluginName} : \n${err}`);
-			}
+			await this.buildPlugin( { pluginDir: newPluginDir, pluginName: options.pluginName, androidToolsInfo });
 
 			const finalAarName = `${shortPluginName}-release.aar`;
 			const pathToBuiltAar = path.join(newPluginDir, "build", "outputs", "aar", finalAarName);
@@ -314,6 +303,26 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 
 		return false;
+	}
+
+	@hook("buildAndroidPlugin")
+	private async buildPlugin(pluginBuildSettings: IBuildAndroidPluginData): Promise<void> {
+		const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
+
+		const localArgs = [
+			"-p",
+			pluginBuildSettings.pluginDir,
+			"assembleRelease",
+			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
+			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
+			`-PsupportVersion=${pluginBuildSettings.androidToolsInfo.supportRepositoryVersion}`
+		];
+
+		try {
+			await this.$childProcess.spawnFromEvent(gradlew, localArgs, "close", { cwd: pluginBuildSettings.pluginDir });
+		} catch (err) {
+			throw new Error(`Failed to build plugin ${pluginBuildSettings.pluginName} : \n${err}`);
+		}
 	}
 
 	private validateOptions(options: IBuildOptions): void {

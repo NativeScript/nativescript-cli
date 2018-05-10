@@ -125,7 +125,7 @@ export class ProjectDataService implements IProjectDataService {
 
 	private async getIOSAssetSubGroup(dirPath: string): Promise<IAssetSubGroup> {
 		const pathToContentJson = path.join(dirPath, AssetConstants.iOSResourcesFileName);
-		const content = <IAssetSubGroup>this.$fs.readJson(pathToContentJson);
+		const content = this.$fs.exists(pathToContentJson) && <IAssetSubGroup>this.$fs.readJson(pathToContentJson) || { images: [] };
 
 		const imageDefinitions = this.getImageDefinitions().ios;
 

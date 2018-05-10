@@ -12,14 +12,15 @@ temp.track();
 
 describe('androiPluginBuildService', () => {
 
-	let execCalled = false;
+	let spawnFromEventCalled = false;
 	const createTestInjector = (): IInjector => {
 		const testInjector = new Yok();
 
 		testInjector.register("fs", FsLib.FileSystem);
 		testInjector.register("childProcess", {
-			exec: () => {
-				execCalled = true;
+			spawnFromEvent: async (command: string, args: string[], event: string, options?: any, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult> => {
+				spawnFromEventCalled = command.indexOf("gradlew") !== -1;
+				return null;
 			}
 		});
 		testInjector.register("hostInfo", HostInfo);
@@ -36,6 +37,10 @@ describe('androiPluginBuildService', () => {
 		testInjector.register("options", {});
 		testInjector.register("config", {});
 		testInjector.register("staticConfig", {});
+		testInjector.register("hooksService", {
+			executeBeforeHooks: async (commandName: string, hookArguments?: IDictionary<any>): Promise<void> => undefined,
+			executeAfterHooks: async (commandName: string, hookArguments?: IDictionary<any>): Promise<void> => undefined
+		});
 
 		return testInjector;
 	};
@@ -107,7 +112,7 @@ dependencies {
 	});
 
 	beforeEach(() => {
-		execCalled = false;
+		spawnFromEventCalled = false;
 	});
 
 	describe('builds aar', () => {
@@ -127,7 +132,7 @@ dependencies {
 				/* intentionally left blank */
 			}
 
-			assert.isTrue(execCalled);
+			assert.isTrue(spawnFromEventCalled);
 		});
 
 		it('if android manifest is missing', async () => {
@@ -145,7 +150,7 @@ dependencies {
 				/* intentionally left blank */
 			}
 
-			assert.isTrue(execCalled);
+			assert.isTrue(spawnFromEventCalled);
 		});
 
 		it('if there is only an android manifest file', async () => {
@@ -163,7 +168,7 @@ dependencies {
 				/* intentionally left blank */
 			}
 
-			assert.isTrue(execCalled);
+			assert.isTrue(spawnFromEventCalled);
 		});
 	});
 
@@ -183,7 +188,7 @@ dependencies {
 				/* intentionally left blank */
 			}
 
-			assert.isFalse(execCalled);
+			assert.isFalse(spawnFromEventCalled);
 		});
 	});
 

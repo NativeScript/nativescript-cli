@@ -13,7 +13,6 @@ import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { XCConfigService } from "./xcconfig-service";
-import * as simplePlist from "simple-plist";
 import * as mobileprovision from "ios-mobileprovision-finder";
 import { SpawnOptions } from "child_process";
 import { BUILD_XCCONFIG_FILE_NAME } from "../constants";
@@ -62,6 +61,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $xcode: IXcode,
 		private $iOSEntitlementsService: IOSEntitlementsService,
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
+		private $plistParser: IPlistParser,
 		private $sysInfo: ISysInfo,
 		private $xCConfigService: XCConfigService) {
 			super($fs, $projectDataService);
@@ -1061,7 +1061,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			this.$errors.failWithoutHelp("The bundle at %s does not contain an Info.plist file.", libraryPath);
 		}
 
-		const plistJson = simplePlist.readFileSync(infoPlistPath);
+		const plistJson = this.$plistParser.parseFileSync(infoPlistPath);
 		const packageType = plistJson["CFBundlePackageType"];
 
 		if (packageType !== "FMWK") {
@@ -1281,7 +1281,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 		// Set Entitlements Property to point to default file if not set explicitly by the user.
 		const entitlementsPropertyValue = this.$xCConfigService.readPropertyValue(pluginsXcconfigFilePath, constants.CODE_SIGN_ENTITLEMENTS);
-		if (entitlementsPropertyValue === null) {
+		if (entitlementsPropertyValue === null && this.$fs.exists(this.$iOSEntitlementsService.getPlatformsEntitlementsPath(projectData))) {
 			temp.track();
 			const tempEntitlementsDir = temp.mkdirSync("entitlements");
 			const tempEntitlementsFilePath = path.join(tempEntitlementsDir, "set-entitlements.xcconfig");

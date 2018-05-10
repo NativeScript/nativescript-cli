@@ -47,7 +47,10 @@ describe("nativescript-cli-lib", () => {
 		],
 		assetsGenerationService: [
 			"generateIcons",
-			"generateSplashScreens"
+			"generateSplashScreens",
+		],
+		androidProcessService: [
+			"getAppProcessId"
 		]
 	};
 

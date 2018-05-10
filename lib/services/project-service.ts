@@ -18,7 +18,7 @@ export class ProjectService implements IProjectService {
 		private $npmInstallationManager: INpmInstallationManager) { }
 
 	@exported("projectService")
-	public async createProject(projectOptions: IProjectSettings): Promise<void> {
+	public async createProject(projectOptions: IProjectSettings): Promise<ICreateProjectData> {
 		let projectName = projectOptions.projectName;
 		let selectedTemplate = projectOptions.template;
 
@@ -74,6 +74,7 @@ export class ProjectService implements IProjectService {
 		}
 
 		this.$logger.printMarkdown("Project `%s` was successfully created.", projectName);
+		return { projectName, projectDir };
 	}
 
 	@exported("projectService")

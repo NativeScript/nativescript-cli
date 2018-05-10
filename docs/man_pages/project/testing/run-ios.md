@@ -8,8 +8,10 @@ position: 11
 Usage | Synopsis
 ---|---
 Run on all connected devices | `$ tns run ios [--release] [--justlaunch] [--bundle [<value>] [--env.*]]`
-Run on a selected connected device. Will start simulator with specified `Device Identifier`, if not already running. | `$ tns run ios [--device <Device ID>] [--release] [--justlaunch] [--bundle [<value>] [--env.*]]`
+Run on a selected connected device. Will start simulator with specified `Device Identifier` or `Device Name`, if not already running. | `$ tns run ios [--device <Device ID>] [--release] [--justlaunch] [--bundle [<value>] [--env.*]]`
 Start an emulator and run the app inside it | `$ tns run ios --emulator [--release] [--bundle [<value>] [--env.*]]`
+Start an emulator with specified device name and sdk | `$ tns run ios [--device <Device Name>] [--sdk <sdk>]`
+Start an emulator with specified device identifier and sdk | `$ tns run ios [--device <Device Identifier>] [--sdk <sdk>]`
 
 Runs your project on a connected iOS device or in the iOS Simulator, if configured. This is shorthand for prepare, build and deploy. While your app is running, prints the output from the application in the console and watches for changes in your code. Once a change is detected, it synchronizes the change with all selected devices and restarts/refreshes the application.
 
@@ -20,6 +22,7 @@ Runs your project on a connected iOS device or in the iOS Simulator, if configur
 ### Options
 * `--device` - Specifies a connected device/simulator to start and run the app.
 * `--emulator` - If set, runs the app in all available and configured ios simulators. It will start a simulator if none are already running.
+* `--sdk` - Specifies the target simulator's sdk.
 * `--justlaunch` - If set, does not print the application output in the console.
 * `--clean` - If set, forces rebuilding the native application.
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
@@ -30,6 +33,7 @@ Runs your project on a connected iOS device or in the iOS Simulator, if configur
 
 ### Attributes
 * `<Device ID>` is the index or `Device Identifier` of the target device as listed by `$ tns device ios --available-devices`
+* `<Device Name>` is the name of the target simulator as listed by `$ tns device ios --available-devices`
 <% } %>
 <% if(isHtml) { %>
 ### Prerequisites

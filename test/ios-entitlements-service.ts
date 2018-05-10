@@ -76,11 +76,6 @@ describe("IOSEntitlements Service Tests", () => {
 	});
 
 	describe("Merge", () => {
-		const defaultPlistContent = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-  <dict/>
-</plist>`;
 		const defaultAppResourcesEntitlementsContent = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -123,13 +118,12 @@ describe("IOSEntitlements Service Tests", () => {
 			assert.equal(strip(actual), strip(expected));
 		}
 
-		it("Merge creates a default entitlements file.", async () => {
+		it("Merge does not create a default entitlements file.", async () => {
 			// act
 			await iOSEntitlementsService.merge(projectData);
 
 			// assert
-			const actual = fs.readText(destinationFilePath);
-			assertContent(actual, defaultPlistContent);
+			assert.isFalse(fs.exists(destinationFilePath));
 		});
 
 		it("Merge uses the entitlements from App_Resources folder", async () => {

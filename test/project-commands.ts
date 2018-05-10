@@ -10,9 +10,10 @@ let isProjectCreated: boolean;
 const dummyArgs = ["dummyArgsString"];
 
 class ProjectServiceMock implements IProjectService {
-	async createProject(projectOptions: IProjectSettings): Promise<void> {
+	async createProject(projectOptions: IProjectSettings): Promise<ICreateProjectData> {
 		selectedTemplateName = projectOptions.template;
 		isProjectCreated = true;
+		return null;
 	}
 
 	isValidNativeScriptProject(pathToProject?: string): boolean {

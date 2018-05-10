@@ -1,6 +1,29 @@
 NativeScript CLI Changelog
 ================
 
+4.0.0 (2018, April 10)
+==
+
+### New
+* [Implemented #2632](https://github.com/NativeScript/nativescript-cli/issues/2632) Guidance for new CLI users
+* [Implemented #3243](https://github.com/NativeScript/nativescript-cli/issues/3243) 'Scss' file changes trigger app refresh instead reloading the view and apply generated 'css'
+* [Implemented #3248](https://github.com/NativeScript/nativescript-cli/issues/3248) Support JDK_HOME and JAVA_HOME
+* [Implemented #3257](https://github.com/NativeScript/nativescript-cli/issues/3257) Make {N} project structure configurable
+* [Implemented #3317](https://github.com/NativeScript/nativescript-cli/issues/3317) Support livesync with webpack
+* [Implemented #3449](https://github.com/NativeScript/nativescript-cli/pull/3449) Track Vue.js project type
+* [Implemented #3496](https://github.com/NativeScript/nativescript-cli/issues/3496) Generate assets for the mobile application
+* [Implemented #3497](https://github.com/NativeScript/nativescript-cli/issues/3497) Command to migrate Android resources to 4.0.0 structure
+* [Implemented #3516](https://github.com/NativeScript/nativescript-cli/issues/3516) Improve Getting Started Experience
+
+### Fixed
+* [Fixed #3151](https://github.com/NativeScript/nativescript-cli/issues/3151): Install fails if user setting file is not valid json
+* [Fixed #3324](https://github.com/NativeScript/nativescript-cli/issues/3324): Error when iOS simulator's window is closed
+* [Fixed #3442](https://github.com/NativeScript/nativescript-cli/issues/3442): Unnecessary second build upon `tns run android`
+* [Fixed #3451](https://github.com/NativeScript/nativescript-cli/issues/3451): `tns plugin remove` fails with : Cannot convert undefined or null to object
+* [Fixed #3470](https://github.com/NativeScript/nativescript-cli/issues/3470): Error when we are publishing to AppStore
+* [Fixed #3481](https://github.com/NativeScript/nativescript-cli/issues/3481): Cannot log in users on iOS simulator with kinvey-nativescript-sdk
+* [Fixed #3514](https://github.com/NativeScript/nativescript-cli/pull/3514): Incorrect error is shown when xcrun simctl is not configured
+
 3.4.3 (2018, March 02)
 ==
 

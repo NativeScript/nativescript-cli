@@ -48,6 +48,8 @@ const tns = require("nativescript");
 * [assetsGenerationService](#assetsgenerationservice)
 	* [generateIcons](#generateicons)
 	* [generateSplashScreens](#generatesplashscreens)
+* [androidProcessService](#androidprocessservice)
+	* [getAppProcessId](#getappprocessid)
 
 ## Module projectService
 
@@ -1125,6 +1127,29 @@ tns.assetsGenerationService.generateSplashScreens({ projectDir: "/Users/username
 	});
 ```
 
+## androidProcessService
+The `androidProcessService` exposes methods for getting information about the applications working on Android devices.
+
+### getAppProcessId
+The `getAppProcessId` returns the PID of the specified application. If the app is not running on device, the method will return null.
+
+* Definition
+```TypeScript
+/**
+ * Gets the PID of a running application.
+ * @param deviceIdentifier {string} The identifier of the device.
+ * @param appIdentifier The identifier of the application.
+ * @return {string} Returns the process id matching the application identifier in the device process list.
+ */
+getAppProcessId(deviceIdentifier: string, appIdentifier: string): Promise<string>;
+```
+
+* Usage
+```JavaScript
+tns.androidProcessService.getAppProcessId("4df18f307d8a8f1b", "org.nativescript.demoapp")
+	.then(pid => console.log(`The PID is ${pid}`))
+	.catch(err => console.error(`Error while checking for PID: ${err}`));
+```
 
 
 ## How to add a new method to Public API

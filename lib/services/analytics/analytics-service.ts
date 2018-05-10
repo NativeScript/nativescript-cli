@@ -58,6 +58,7 @@ export class AnalyticsService extends AnalyticsServiceBase {
 			gaSettings.customDimensions[GoogleAnalyticsCustomDimensions.client] = this.$options.analyticsClient || (isInteractive() ? AnalyticsClients.Cli : AnalyticsClients.Unknown);
 
 			const googleAnalyticsData: IGoogleAnalyticsTrackingInformation = _.merge({ type: TrackingTypes.GoogleAnalyticsData, category: AnalyticsClients.Cli }, gaSettings);
+			this.$logger.trace("Will send the following information to Google Analytics:", googleAnalyticsData);
 			return this.sendMessageToBroker(googleAnalyticsData);
 		}
 	}
@@ -73,7 +74,7 @@ export class AnalyticsService extends AnalyticsServiceBase {
 
 		// In some cases (like in case action is Build and platform is Android), we do not know if the deviceType is emulator or device.
 		// Just exclude the device_type in this case.
-		if (isForDevice !== null) {
+		if (isForDevice !== null && isForDevice !== undefined) {
 			const deviceType = isForDevice ? DeviceTypes.Device : (this.$mobileHelper.isAndroidPlatform(platform) ? DeviceTypes.Emulator : DeviceTypes.Simulator);
 			label = this.addDataToLabel(label, deviceType);
 		}
@@ -98,8 +99,6 @@ export class AnalyticsService extends AnalyticsServiceBase {
 			label,
 			customDimensions
 		};
-
-		this.$logger.trace("Will send the following information to Google Analytics:", googleAnalyticsEventData);
 
 		await this.trackInGoogleAnalytics(googleAnalyticsEventData);
 	}
