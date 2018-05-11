@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.10.3](https://github.com/Kinvey/js-sdk/tree/v3.10.3) (2018-05-08)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.10.2...v3.10.3)<br/>
+
+- MLIBZ-2422: Add validation that checks if a `redirectUri` provided to `mic.login()` is a string. If the `redirectUri` is not a string then an `Error` will be thrown. [#283](https://github.com/Kinvey/js-sdk/pull/283)
+- Conforms the use of the iOS keychain to use the same settings as our [Swift SDK](https://github.com/Kinvey/swift-sdk). [#257](https://github.com/Kinvey/js-sdk/pull/257)
+- MLIBZ-2429: Don't include the `Push` module by default in the SDK bundle. [#282](https://github.com/Kinvey/js-sdk/pull/282)
+- Update the `Push` module to use the latest version of the [NativeScript Push Plugin](https://github.com/NativeScript/push-plugin). `onMessageReceived()` callback for Android was deprecated and added some new config options for iOS.  [#285](https://github.com/Kinvey/js-sdk/pull/285)
+- MLIBZ-2307: Use the correct config options to unregister push on iOS and Android. [#284](https://github.com/Kinvey/js-sdk/pull/284)
+- MLIBZ=2446: Add support for `kinveyFileTTL` and `kinveyFileTLS` query parameters for KinveyFile references on a DataStore collection. [#289](https://github.com/Kinvey/js-sdk/pull/289)
+
+```javascript
+var dataStore = Kinvey.DataStore.collection('pets');
+dataStore.findById('3f583e9f-d064-4a25-a953-6cf0a3dc2ff1', { kinveyFileTTL: 3600, kinveyFileTLS: true })
+  .subscribe(function(pet) {
+    /*
+      {
+        "_id": "3f583e9f-d064-4a25-a953-6cf0a3dc2ff1",
+        "_acl": {...},
+        "dogName": "Bob",
+        "furColor": "brown with black spots",
+        "pawPrintPicture": {
+          "_type": "KinveyFile",
+          "_id": "325620e4-93dd-4a26-9f84-8a5e62c0db11",
+          "_filename": "bobsPawPrint.png",
+          "_acl": { ... },
+          "_downloadURL": <Google Cloud Storage download URL>,
+          "_expiresAt": "2018-06-18T23:07:23.394Z"
+        }
+      }
+    */
+  }, function(error) {
+    // ...
+  });
+```
+
 ## [3.10.2](https://github.com/Kinvey/js-sdk/tree/v3.10.2) (2018-03-29)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.10.1...v3.10.2)<br/>
 
