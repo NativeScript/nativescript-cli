@@ -14,7 +14,6 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	private static REQUIRED_BUILD_TOOLS_RANGE_PREFIX = ">=23";
 	private static VERSION_REGEX = /((\d+\.){2}\d+)/;
 	private static MIN_JAVA_VERSION = "1.8.0";
-	private static MAX_JAVA_VERSION = "1.9.0";
 
 	private toolsInfo: NativeScriptDoctor.IAndroidToolsInfoData;
 	private androidHome = process.env["ANDROID_HOME"];
@@ -103,8 +102,6 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 
 			if (semver.lt(installedJavaCompilerSemverVersion, AndroidToolsInfo.MIN_JAVA_VERSION)) {
 				warning = `Javac version ${installedJavaCompilerVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION}.`;
-			} else if (semver.gte(installedJavaCompilerSemverVersion, AndroidToolsInfo.MAX_JAVA_VERSION)) {
-				warning = `Javac version ${installedJavaCompilerVersion} is not supported. You have to install version ${AndroidToolsInfo.MIN_JAVA_VERSION}.`;
 			}
 
 			if (warning) {

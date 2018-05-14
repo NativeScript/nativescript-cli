@@ -34,14 +34,6 @@ describe("androidToolsInfo", () => {
 				javacVersion: "1.8.0_152"
 			},
 			{
-				javacVersion: "9",
-				warnings: ["Javac version 9 is not supported. You have to install version 1.8.0."]
-			},
-			{
-				javacVersion: "9.0.1",
-				warnings: ["Javac version 9.0.1 is not supported. You have to install version 1.8.0."]
-			},
-			{
 				javacVersion: "1.7.0",
 				warnings: ["Javac version 1.7.0 is not supported. You have to install at least 1.8.0."]
 			},
