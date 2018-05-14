@@ -1,6 +1,6 @@
 const request = require('request');
 
-const cleanUpUserCollection = (config) => {
+const cleanUpCollection = (config, collectionName) => {
 
   // Set the headers
   const headers = {
@@ -10,7 +10,7 @@ const cleanUpUserCollection = (config) => {
     'X-Kinvey-Retain-collection-Metadata': true
   }
 
-  const body = { collectionName: 'user' };
+  const body = { collectionName: collectionName };
 
   /// Configure the request
   const options = {
@@ -24,15 +24,16 @@ const cleanUpUserCollection = (config) => {
   // Start the request
   return new Promise((resolve, reject) => {
     request(options, (error, response) => {
-      if (!error && response.statusCode == 200) {
+      // for _blob if there are no files, the clean up request returns 404
+      if ((!error && response.statusCode == 200) || response.statusCode === 404) {
         resolve();
       }
       else {
-        reject('User collection cleanup failed!');
+        reject(`${collectionName} collection cleanup failed!`);
       }
     });
   });
 };
 
 
-module.exports = cleanUpUserCollection;
+module.exports = cleanUpCollection;

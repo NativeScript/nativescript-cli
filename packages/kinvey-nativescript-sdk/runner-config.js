@@ -22,12 +22,15 @@ const currentVersionArchiveFileName = `kinvey-nativescript-sdk-${testedSdkVersio
 const appRootPath = path.join(__dirname, appName);
 const appPath = path.join(appRootPath, 'app');
 const appTestsPath = path.join(appPath, 'tests');
-// the next row and the copy command should be uncommented when we add shim specific tests
-// const shimSpecificTestsPath = path.join(__dirname, 'test', 'tests');
+const shimSpecificTestsPath = path.join(__dirname, 'test', 'tests');
 const rootMonoRepoPath = path.join(__dirname, '../../');
 const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration', 'tests');
 const distPath = path.join(__dirname, 'dist');
-const jsFilesFilter = item => path.extname(item.path) === '.js';
+// Temporary excluding the files suites by adding `&& item.path.indexOf('files') < 0`
+// Should be added back for execution when MLIBZ-2452 is fixed
+const jsFilesFilter = item => (path.extname(item.path) === '.js' && item.path.indexOf('files') < 0);
+const sampleTestFilesPath = path.join(rootMonoRepoPath, 'test', 'integration', 'sample-test-files');
+const appTestFilesPath = path.join(appPath, 'sample-test-files');
 const configFileName = 'config.js';
 
 let logServerPort;
@@ -50,13 +53,17 @@ function runPipeline(osName) {
       }),
       copy(path.join(__dirname, 'test', configFileName), path.join(appPath, configFileName)),
       copy(path.join(__dirname, 'test', 'template'), appPath),
-      //   copy(
-      //     shimSpecificTestsPath,
-      //     appTestsPath
-      //   ),
+        copy(
+          shimSpecificTestsPath,
+          appTestsPath
+        ),
       copy(
         commonTestsPath,
         appTestsPath
+      ),
+      copy(
+        sampleTestFilesPath,
+        appTestFilesPath
       ),
       processTemplateFile(
         path.join(appPath, 'testConfig.template.hbs'),

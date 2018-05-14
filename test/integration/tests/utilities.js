@@ -209,6 +209,96 @@
       });
   }
 
+  function assertError(error, expectedErrorName, expectedErrorMessage) {
+    expect(error.name).to.equal(expectedErrorName);
+    expect(error.message).to.equal(expectedErrorMessage);
+  }
+
+  function assertReadFileResult(file, expectedMetadata, byHttp, publicFile) {
+    assertFileMetadata(file, expectedMetadata);
+    const expectedProtocol = byHttp ? 'http://' : 'https://';
+    expect(file._downloadURL).to.contain(expectedProtocol);
+    if (publicFile) {
+      expect(file._expiresAt).to.not.exist;
+    }
+    else {
+      expect(file._expiresAt).to.exist;
+    }
+
+  }
+
+  function assertFileUploadResult(file, expectedMetadata, expectedContent) {
+    assertFileMetadata(file, expectedMetadata);
+    expect(file._data).to.equal(expectedContent);
+  }
+
+  function assertFileMetadata(file, expectedMetadata) {
+    expect(file._id).to.exist;
+    expect(file._filename).to.exist;
+    expect(file.mimeType).to.exist;
+    expect(file.size).to.exist;
+    expect(file._acl.creator).to.exist;
+    expect(file._kmd.ect).to.exist;
+    expect(file._kmd.lmt).to.exist;
+
+    delete file._acl.creator;
+    const fieldsNames = Object.keys(expectedMetadata);
+    _.each(fieldsNames, (fieldName) => {
+      expect(file[fieldName]).to.deep.equal(expectedMetadata[fieldName])
+    });
+  };
+
+  function testFileUpload(representation, metadata, expectedMetadata, expectedContent, query, done) {
+    Kinvey.Files.upload(representation, metadata)
+      .then((result) => {
+        utilities.assertFileUploadResult(result, expectedMetadata, representation)
+        const currentQuery = query || new Kinvey.Query();
+        if (!query) {
+          currentQuery.equalTo('_id', result._id);
+        }
+        return Kinvey.Files.find(currentQuery);
+      })
+      .then((result) => {
+        const fileMetadata = result[0];
+        utilities.assertReadFileResult(fileMetadata, expectedMetadata, null, expectedMetadata._public);
+        return Kinvey.Files.downloadByUrl(fileMetadata._downloadURL);
+      })
+      .then((result) => {
+        expect(result).to.equal(expectedContent);
+        done();
+      })
+      .catch(done);
+  }
+
+  function ArrayBufferFromString(str) {
+    const buf = new ArrayBuffer(str.length * 2); // 2 bytes for each char
+    const bufView = new Uint16Array(buf);
+    for (let i = 0, strLen = str.length; i < strLen; i++) {
+      bufView[i] = str.charCodeAt(i);
+    }
+    return buf;
+  }
+
+  function getFileMetadata(id, fileName, mimeType) {
+    const metadata = {
+      filename: fileName || randomString(),
+      mimeType: mimeType || 'text/plain'
+    };
+
+    if (id) {
+      metadata._id = id;
+    };
+
+    return metadata;
+  }
+
+  function getExpectedFileMetadata(metadata) {
+    const expectedMetadata = _.cloneDeep(metadata);
+    delete expectedMetadata.filename
+    expectedMetadata._filename = metadata.filename
+    return expectedMetadata;
+  }
+
   const utilities = {
     uid,
     randomString,
@@ -225,7 +315,15 @@
     validateEntity,
     cleanUpCollectionData,
     cleanUpAppData,
-    cleanAndPopulateCollection
+    cleanAndPopulateCollection,
+    assertError,
+    assertFileMetadata,
+    assertFileUploadResult,
+    assertReadFileResult,
+    testFileUpload,
+    ArrayBufferFromString,
+    getFileMetadata,
+    getExpectedFileMetadata
   };
 
   if (typeof module === 'object') {

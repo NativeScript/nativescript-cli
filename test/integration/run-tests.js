@@ -1,7 +1,7 @@
 const path = require('path');
 const program = require('commander');
 const createPlatformSpecificConfig = require('./create-platform-specific-config.js');
-const cleanUpUserCollection = require('./clean-up-user-collection.js');
+const cleanUpCollection = require('./clean-up-collection.js');
 
 program
   .option('--platform [type]', 'Add Platform [html5/phonegap/nativescript]')
@@ -12,7 +12,10 @@ const runnerConfigFilePath = path.join(__dirname, '../../', 'packages', `kinvey-
 
 const config = createPlatformSpecificConfig(program.platform, program.os);
 
-cleanUpUserCollection(config)
+cleanUpCollection(config, 'user')
+  .then(() => {
+    return cleanUpCollection(config, '_blob')
+  })
   .then(() => {
     const runPipeline = require(runnerConfigFilePath);
     return runPipeline(program.os)
