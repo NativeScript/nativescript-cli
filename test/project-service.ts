@@ -420,13 +420,16 @@ describe("Project Service Tests", () => {
 	});
 
 	describe("isValidNativeScriptProject", () => {
-		const getTestInjector = (): IInjector => {
+		const getTestInjector = (projectData?: any): IInjector => {
 			const testInjector = new yok.Yok();
 			testInjector.register("npm", {});
 			testInjector.register("errors", {});
 			testInjector.register("fs", {});
 			testInjector.register("logger", {});
-			testInjector.register("projectDataService", {});
+			testInjector.register("projectDataService", {
+				getProjectData: (projectDir?: string): IProjectData => projectData
+			});
+			testInjector.register("projectData", {});
 			testInjector.register("projectNameService", {});
 			testInjector.register("projectTemplatesService", {});
 			testInjector.register("staticConfig", {});
@@ -437,44 +440,66 @@ describe("Project Service Tests", () => {
 			return testInjector;
 		};
 
-		it("returns true when initialize project data does not throw, projectDir and projectId are valid", () => {
-			const testInjector = getTestInjector();
-			testInjector.register("projectData", {
+		it("returns true when getProjectData does not throw, projectDir and projectId are valid", () => {
+			const testInjector = getTestInjector({
 				projectDir: "projectDir",
-				projectId: "projectId",
-				initializeProjectData: (): void => undefined
+				projectId: "projectId"
 			});
 
 			const projectService: IProjectService = testInjector.resolve(ProjectServiceLib.ProjectService);
 			assert.isTrue(projectService.isValidNativeScriptProject("some-dir"));
 		});
 
-		it("returns false when initialize project data throws", () => {
+		it("returns correct data when multiple calls are executed", () => {
 			const testInjector = getTestInjector();
-			testInjector.register("projectData", {
-				initializeProjectData: (): void => { throw new Error("err"); }
-			});
-
-			const projectService: IProjectService = testInjector.resolve(ProjectServiceLib.ProjectService);
-			assert.isFalse(projectService.isValidNativeScriptProject("some-dir"));
-		});
-
-		it("returns false when initializeProjectData does not throw, but there's no projectDir set", () => {
-			const testInjector = getTestInjector();
-			testInjector.register("projectData", {
-				projectId: "projectId",
-				initializeProjectData: (): void => undefined
-			});
-
-			const projectService: IProjectService = testInjector.resolve(ProjectServiceLib.ProjectService);
-			assert.isFalse(projectService.isValidNativeScriptProject("some-dir"));
-		});
-
-		it("returns false when initializeProjectData does not throw, but there's no projectId set", () => {
-			const testInjector = getTestInjector();
-			testInjector.register("projectData", {
+			const projectDataService = testInjector.resolve<IProjectDataService>("projectDataService");
+			const projectData: any = {
 				projectDir: "projectDir",
-				initializeProjectData: (): void => undefined
+				projectId: "projectId"
+			};
+
+			let returnedProjectData: any = null;
+			projectDataService.getProjectData = (projectDir?: string): IProjectData => {
+				projectData.projectDir = projectDir;
+				returnedProjectData = projectData;
+				return returnedProjectData;
+			};
+
+			const projectService: IProjectService = testInjector.resolve(ProjectServiceLib.ProjectService);
+			assert.isTrue(projectService.isValidNativeScriptProject("some-dir"));
+			assert.equal(returnedProjectData.projectDir, "some-dir");
+			assert.isTrue(projectService.isValidNativeScriptProject("some-dir-2"));
+			assert.equal(returnedProjectData.projectDir, "some-dir-2");
+
+			projectDataService.getProjectData = (projectDir?: string): IProjectData => {
+				throw new Error("Err");
+			};
+
+			assert.isFalse(projectService.isValidNativeScriptProject("some-dir-2"));
+		});
+
+		it("returns false when getProjectData throws", () => {
+			const testInjector = getTestInjector(null);
+			testInjector.register("projectDataService", {
+				getProjectData: (): void => { throw new Error("err"); }
+			});
+
+			const projectService: IProjectService = testInjector.resolve(ProjectServiceLib.ProjectService);
+			assert.isFalse(projectService.isValidNativeScriptProject("some-dir"));
+		});
+
+		it("returns false when getProjectData does not throw, but there's no projectDir set", () => {
+			const testInjector = getTestInjector({
+				projectId: "projectId"
+			});
+
+			const projectService: IProjectService = testInjector.resolve(ProjectServiceLib.ProjectService);
+			assert.isFalse(projectService.isValidNativeScriptProject("some-dir"));
+		});
+
+		it("returns false when getProjectData does not throw, but there's no projectId set", () => {
+			const testInjector = getTestInjector({
+				projectDir: "projectDir"
 			});
 
 			const projectService: IProjectService = testInjector.resolve(ProjectServiceLib.ProjectService);
