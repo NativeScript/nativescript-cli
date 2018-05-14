@@ -80,8 +80,9 @@ export class ProjectService implements IProjectService {
 	@exported("projectService")
 	public isValidNativeScriptProject(pathToProject?: string): boolean {
 		try {
-			this.$projectData.initializeProjectData(pathToProject);
-			return !!this.$projectData.projectDir && !!this.$projectData.projectId;
+			const projectData = this.$projectDataService.getProjectData(pathToProject);
+
+			return !!projectData && !!projectData.projectDir && !!projectData.projectId;
 		} catch (e) {
 			return false;
 		}
