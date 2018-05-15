@@ -170,3 +170,11 @@ export class AssetConstants {
 	public static defaultScale = 1;
 	public static defaultOverlayImageScale = 0.8;
 }
+
+// https://en.wikipedia.org/wiki/Darwin_(operating_system)#Release_history
+export class MacOSVersions {
+	public static Sierra = "10.12";
+	public static HighSierra = "10.13";
+}
+
+export const MacOSDeprecationStringFormat = "Support for macOS %s is deprecated and will be removed in one of the next releases of NativeScript. Please, upgrade to the latest macOS version.";

@@ -1,4 +1,5 @@
 require("./bootstrap");
+import { EOL } from "os";
 import * as shelljs from "shelljs";
 shelljs.config.silent = true;
 shelljs.config.fatal = true;
@@ -19,6 +20,13 @@ import { settlePromises } from "./common/helpers";
 		await settlePromises<IExtensionData>(extensibilityService.loadExtensions());
 	} catch (err) {
 		logger.trace("Unable to load extensions. Error is: ", err);
+	}
+
+	const $sysInfo = $injector.resolve<ISysInfo>("sysInfo");
+	const macOSWarning = await $sysInfo.getMacOSWarningMessage();
+	if (macOSWarning) {
+		const message = EOL + macOSWarning + EOL ;
+		logger.warn(message);
 	}
 
 	const commandDispatcher: ICommandDispatcher = $injector.resolve("commandDispatcher");
