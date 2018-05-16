@@ -18,15 +18,15 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 
 		const templateName = constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()] || name;
 
+		const realTemplatePath = await this.prepareNativeScriptTemplate(templateName, version, projectDir);
+
 		await this.$analyticsService.track("Template used for project creation", templateName);
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: constants.TrackActionNames.CreateProject,
 			isForDevice: null,
-			additionalData: templateName
+			additionalData: this.getTemplateNameToBeTracked(templateName, realTemplatePath)
 		});
-
-		const realTemplatePath = await this.prepareNativeScriptTemplate(templateName, version, projectDir);
 
 		// this removes dependencies from templates so they are not copied to app folder
 		this.$fs.deleteDirectory(path.join(realTemplatePath, constants.NODE_MODULES_FOLDER_NAME));
@@ -45,6 +45,22 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 	private async prepareNativeScriptTemplate(templateName: string, version?: string, projectDir?: string): Promise<string> {
 		this.$logger.trace(`Using NativeScript verified template: ${templateName} with version ${version}.`);
 		return this.$npmInstallationManager.install(templateName, projectDir, { version: version, dependencyType: "save" });
+	}
+
+	private getTemplateNameToBeTracked(templateName: string, realTemplatePath: string): string {
+		if (this.$fs.exists(templateName)) {
+			// local template is used
+			const pathToPackageJson = path.join(realTemplatePath, constants.PACKAGE_JSON_FILE_NAME);
+			let templateNameToTrack = path.basename(templateName);
+			if (this.$fs.exists(pathToPackageJson)) {
+				const templatePackageJsonContent = this.$fs.readJson(pathToPackageJson);
+				templateNameToTrack = templatePackageJsonContent.name;
+			}
+
+			return `${constants.ANALYTICS_LOCAL_TEMPLATE_PREFIX}${templateNameToTrack}`;
+		}
+
+		return templateName;
 	}
 }
 $injector.register("projectTemplatesService", ProjectTemplatesService);

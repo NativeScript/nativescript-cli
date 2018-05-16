@@ -3,6 +3,7 @@ import { assert } from "chai";
 import { SubscriptionService } from "../../lib/services/subscription-service";
 import { LoggerStub } from "../stubs";
 import { stringify } from "querystring";
+import { SubscribeForNewsletterMessages } from "../../lib/constants";
 const helpers = require("../../lib/common/helpers");
 
 interface IValidateTestData {
@@ -153,12 +154,16 @@ describe("subscriptionService", () => {
 				loggerOutput += args.join(" ");
 			};
 
+			logger.printMarkdown = (message: string): void => {
+				loggerOutput += message;
+			};
+
 			await subscriptionService.subscribeForNewsletter();
 
-			assert.equal(loggerOutput, "Enter your e-mail address to subscribe to the NativeScript Newsletter and hear about product updates, tips & tricks, and community happenings:");
+			assert.equal(loggerOutput, `${SubscribeForNewsletterMessages.AgreeToReceiveEmailMsg}${SubscribeForNewsletterMessages.ReviewPrivacyPolicyMsg}`);
 		});
 
-		const expectedMessageInPrompter = "(press Enter for blank)";
+		const expectedMessageInPrompter = SubscribeForNewsletterMessages.PromptMsg;
 		it(`calls prompter with specific message - ${expectedMessageInPrompter}`, async () => {
 			const testInjector = createTestInjector();
 			const subscriptionService = testInjector.resolve<SubscriptionServiceTester>(SubscriptionServiceTester);
