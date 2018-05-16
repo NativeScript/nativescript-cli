@@ -5,7 +5,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath 'com.android.tools.build:gradle:3.1.2'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -28,7 +28,7 @@ apply plugin: 'com.android.library'
 
 def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 24 }
 def computeBuildToolsVersion = { ->
-    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "27.0.1"
+    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "27.0.3"
 }
 
 android {
