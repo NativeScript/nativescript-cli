@@ -1,5 +1,5 @@
 import * as path from "path";
-import { NODE_MODULES_FOLDER_NAME, NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME, APP_RESOURCES_FOLDER_NAME } from "../constants";
+import { NODE_MODULES_FOLDER_NAME, NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME } from "../constants";
 import { getHash } from "../common/helpers";
 
 const prepareInfoFileName = ".nsprepareinfo";
@@ -59,8 +59,8 @@ export class ProjectChangesService implements IProjectChangesService {
 	public async checkForChanges(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): Promise<IProjectChangesInfo> {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		this._changesInfo = new ProjectChangesInfo();
-		const isPrepareInfoEnsured = await this.ensurePrepareInfo(platform, projectData, projectChangesOptions);
-		if (!isPrepareInfoEnsured) {
+		const isNewPrepareInfo = await this.ensurePrepareInfo(platform, projectData, projectChangesOptions);
+		if (!isNewPrepareInfo) {
 			this._newFiles = 0;
 
 			this._changesInfo.appFilesChanged = await this.hasChangedAppFiles(projectData);
@@ -178,7 +178,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			changesRequireBuild: true,
 			projectFileHash: this.getProjectFileStrippedHash(projectData, platform),
 			changesRequireBuildTime: null,
-			appFilesHashes: await this.$filesHashService.generateHashes(this.getAppFiles(projectData.appDirectoryPath))
+			appFilesHashes: await this.$filesHashService.generateHashes(this.getAppFiles(projectData))
 		};
 
 		this._outputProjectMtime = 0;
@@ -306,12 +306,12 @@ export class ProjectChangesService implements IProjectChangesService {
 		return false;
 	}
 
-	private getAppFiles(appDirectoryPath: string): string[] {
-		return this.$fs.enumerateFilesInDirectorySync(appDirectoryPath, (filePath: string, stat: IFsStats) => filePath.indexOf(APP_RESOURCES_FOLDER_NAME) === -1);
+	private getAppFiles(projectData: IProjectData): string[] {
+		return this.$fs.enumerateFilesInDirectorySync(projectData.appDirectoryPath, (filePath: string, stat: IFsStats) => filePath !== projectData.appResourcesDirectoryPath);
 	}
 
 	private async hasChangedAppFiles(projectData: IProjectData): Promise<boolean> {
-		const files = this.getAppFiles(projectData.appDirectoryPath);
+		const files = this.getAppFiles(projectData);
 		const changedFiles = await this.$filesHashService.getChanges(files, this._prepareInfo.appFilesHashes || {});
 		const hasChanges = changedFiles && _.keys(changedFiles).length > 0;
 		if (hasChanges) {
