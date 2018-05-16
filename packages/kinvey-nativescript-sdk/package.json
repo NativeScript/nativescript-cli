@@ -29,6 +29,8 @@
     "kinvey-nativescript-sdk.ios.js.map",
     "kinvey-nativescript-sdk.android.js",
     "kinvey-nativescript-sdk.android.js.map",
+    "push.android.js",
+    "push.ios.js",
     "kinvey.d.ts",
     "platforms/android/include.gradle",
     "platforms/ios/Podfile",
