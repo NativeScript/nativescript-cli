@@ -165,3 +165,5 @@ $injector.require("nativeScriptCloudExtensionService", "./services/nativescript-
 $injector.requireCommand("resources|generate|icons", "./commands/generate-assets");
 $injector.requireCommand("resources|generate|splashes", "./commands/generate-assets");
 $injector.requirePublic("assetsGenerationService", "./services/assets-generation/assets-generation-service");
+
+$injector.require("filesHashService", "./services/files-hash-service");

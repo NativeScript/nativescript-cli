@@ -106,6 +106,10 @@ function createTestInjector() {
 		})
 	});
 	testInjector.register("androidResourcesMigrationService", stubs.AndroidResourcesMigrationServiceStub);
+	testInjector.register("filesHashService", {
+		generateHashes: () => Promise.resolve(),
+		getChanges: () => Promise.resolve({test: "testHash"})
+	});
 
 	return testInjector;
 }

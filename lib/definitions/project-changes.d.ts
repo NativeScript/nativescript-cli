@@ -1,4 +1,8 @@
-interface IPrepareInfo extends IAddedNativePlatform {
+interface IAppFilesHashes {
+	appFilesHashes: IStringDictionary;
+}
+
+interface IPrepareInfo extends IAddedNativePlatform, IAppFilesHashes {
 	time: string;
 	bundle: boolean;
 	release: boolean;
