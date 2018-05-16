@@ -940,6 +940,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			await this.prepareNativeSourceCode(pluginData.name, sourcePath, projectData);
 		}
 
+		await this.prepareResources(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareFrameworks(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareStaticLibs(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareCocoapods(pluginPlatformsFolderPath, projectData);
@@ -1120,7 +1121,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private async prepareNativeSourceCode(pluginName: string, pluginPlatformsFolderPath: string, projectData: IProjectData): Promise<void> {
-
 		const project = this.createPbxProj(projectData);
 		const group = this.getRootGroup(pluginName, pluginPlatformsFolderPath);
 		project.addPbxGroup(group.files.map(f => f.path), group.name, group.path, null, {isMain:true});
@@ -1143,6 +1143,18 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return rootGroup;
 	}
 
+	private async prepareResources(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): Promise<void> {
+		const project = this.createPbxProj(projectData);
+		const resourcesPath = path.join(pluginPlatformsFolderPath, "Resources");
+		if (this.$fs.exists(resourcesPath) && !this.$fs.isEmptyDir(resourcesPath)) {
+			for (const fileName of this.$fs.readDirectory(resourcesPath)) {
+				const filePath = path.join(resourcesPath, fileName);
+
+				project.addResourceFile(filePath);
+			}
+		}
+		this.savePbxProj(project, projectData);
+	}
 	private async prepareFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): Promise<void> {
 		for (const fileName of this.getAllLibsForPluginWithFileExtension(pluginData, ".framework")) {
 			await this.addFramework(path.join(pluginPlatformsFolderPath, fileName), projectData);
