@@ -151,6 +151,20 @@ describe("project-templates-service", () => {
 					additionalData: `${constants.ANALYTICS_LOCAL_TEMPLATE_PREFIX}${templateName}`
 				});
 			});
+
+			it("does not send anything when trying to get template name fails", async () => {
+				const templateName = "localtemplate";
+				const localTemplatePath = `/Users/username/${templateName}`;
+				const fs = testInjector.resolve<IFileSystem>("fs");
+				fs.exists = (localPath: string): boolean => true;
+				fs.readJson = (filename: string, encoding?: string): any => {
+					throw new Error("Unable to read json");
+				};
+
+				await projectTemplatesService.prepareTemplate(localTemplatePath, "tempFolder");
+
+				assert.deepEqual(dataSentToGoogleAnalytics, null);
+			});
 		});
 	});
 });

@@ -22,11 +22,14 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 
 		await this.$analyticsService.track("Template used for project creation", templateName);
 
-		await this.$analyticsService.trackEventActionInGoogleAnalytics({
-			action: constants.TrackActionNames.CreateProject,
-			isForDevice: null,
-			additionalData: this.getTemplateNameToBeTracked(templateName, realTemplatePath)
-		});
+		const templateNameToBeTracked = this.getTemplateNameToBeTracked(templateName, realTemplatePath);
+		if (templateNameToBeTracked) {
+			await this.$analyticsService.trackEventActionInGoogleAnalytics({
+				action: constants.TrackActionNames.CreateProject,
+				isForDevice: null,
+				additionalData: templateNameToBeTracked
+			});
+		}
 
 		// this removes dependencies from templates so they are not copied to app folder
 		this.$fs.deleteDirectory(path.join(realTemplatePath, constants.NODE_MODULES_FOLDER_NAME));
@@ -48,19 +51,23 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 	}
 
 	private getTemplateNameToBeTracked(templateName: string, realTemplatePath: string): string {
-		if (this.$fs.exists(templateName)) {
-			// local template is used
-			const pathToPackageJson = path.join(realTemplatePath, constants.PACKAGE_JSON_FILE_NAME);
-			let templateNameToTrack = path.basename(templateName);
-			if (this.$fs.exists(pathToPackageJson)) {
-				const templatePackageJsonContent = this.$fs.readJson(pathToPackageJson);
-				templateNameToTrack = templatePackageJsonContent.name;
+		try {
+			if (this.$fs.exists(templateName)) {
+				// local template is used
+				const pathToPackageJson = path.join(realTemplatePath, constants.PACKAGE_JSON_FILE_NAME);
+				let templateNameToTrack = path.basename(templateName);
+				if (this.$fs.exists(pathToPackageJson)) {
+					const templatePackageJsonContent = this.$fs.readJson(pathToPackageJson);
+					templateNameToTrack = templatePackageJsonContent.name;
+				}
+
+				return `${constants.ANALYTICS_LOCAL_TEMPLATE_PREFIX}${templateNameToTrack}`;
 			}
 
-			return `${constants.ANALYTICS_LOCAL_TEMPLATE_PREFIX}${templateNameToTrack}`;
+			return templateName;
+		} catch (err) {
+			this.$logger.trace(`Unable to get template name to be tracked, error is: ${err}`);
 		}
-
-		return templateName;
 	}
 }
 $injector.register("projectTemplatesService", ProjectTemplatesService);
