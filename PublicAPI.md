@@ -50,6 +50,9 @@ const tns = require("nativescript");
 	* [generateSplashScreens](#generatesplashscreens)
 * [androidProcessService](#androidprocessservice)
 	* [getAppProcessId](#getappprocessid)
+* [sysInfo](#sysinfo)
+	* [getSupportedNodeVersionRange](#getsupportednodeversionrange)
+	* [getSystemWarnings](#getsystemwarnings)
 
 ## Module projectService
 
@@ -1017,6 +1020,7 @@ tns.liveSyncService.on("debuggerDetached", debugInfo => {
 	console.log(`Detached debugger for device with id ${debugInfo.deviceIdentifier}`);
 });
 ```
+
 ## analyticsSettingsService
 Provides methods for accessing the analytics settings file data.
 
@@ -1078,6 +1082,7 @@ tns.analyticsSettingsService.getPlaygroundInfo("/my/project/path")
 		console.log(playgroundInfo.usedTutorial);
 	});
 ```
+
 ## constants
 Contains various constants related to NativeScript.
 
@@ -1151,6 +1156,47 @@ tns.androidProcessService.getAppProcessId("4df18f307d8a8f1b", "org.nativescript.
 	.catch(err => console.error(`Error while checking for PID: ${err}`));
 ```
 
+## sysInfo
+The `sysInfo` module exposes methods to get the current environment setup and warnings for it.
+
+### getSupportedNodeVersionRange
+The `getSupportedNodeVersionRange` method gives information about the supported Node.js versions for the current CLI. The result is a valid semver range, for example `>=6.0.0`.
+
+* Definition
+```TypeScript
+/**
+ * Returns the value of engines.node key from CLI's package.json file.
+ * @return {string} The range of supported Node.js versions.
+ */
+getSupportedNodeVersionRange(): string;
+```
+
+* Usage
+```JavaScript
+const nodeJsRange = tns.sysInfo.getSupportedNodeVersionRange();
+console.log(nodeJsRange);
+```
+
+### getSystemWarnings
+The `getSystemWarnings` methods returns all deprecation warnings for current environment. For example, in case the support for the current OS is deprecated by CLI, the method will return array with one message describing the deprecation.
+
+* Definition
+```TypeScript
+/**
+ * Gets all global warnings for the current environment, for example Node.js version compatibility, OS compatibility, etc.
+ * @return {Promise<string[]>} All warnings. Empty array is returned in case the system is setup correctly.
+ */
+getSystemWarnings(): Promise<string[]>;
+```
+
+* Usage
+```JavaScript
+tns.sysInfo.getSystemWarnings()
+	.then(warnings => {
+		warnings.forEach(warn => console.log(warn));
+	})
+	.catch(err => console.error(`Error while trying to get system warnings: ${err}`));
+```
 
 ## How to add a new method to Public API
 CLI is designed as command line tool and when it is used as a library, it does not give you access to all of the methods. This is mainly implementation detail. Most of the CLI's code is created to work in command line, not as a library, so before adding method to public API, most probably it will require some modification.
