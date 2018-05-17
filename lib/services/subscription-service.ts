@@ -1,6 +1,7 @@
 import * as emailValidator from "email-validator";
 import * as queryString from "querystring";
 import * as helpers from "../common/helpers";
+import { SubscribeForNewsletterMessages } from "../constants";
 
 export class SubscriptionService implements ISubscriptionService {
 	constructor(private $httpClient: Server.IHttpClient,
@@ -11,8 +12,10 @@ export class SubscriptionService implements ISubscriptionService {
 
 	public async subscribeForNewsletter(): Promise<void> {
 		if (await this.shouldAskForEmail()) {
-			this.$logger.out("Enter your e-mail address to subscribe to the NativeScript Newsletter and hear about product updates, tips & tricks, and community happenings:");
-			const email = await this.getEmail("(press Enter for blank)");
+			this.$logger.printMarkdown(SubscribeForNewsletterMessages.AgreeToReceiveEmailMsg);
+			this.$logger.printMarkdown(SubscribeForNewsletterMessages.ReviewPrivacyPolicyMsg);
+
+			const email = await this.getEmail(SubscribeForNewsletterMessages.PromptMsg);
 			await this.$userSettingsService.saveSetting("EMAIL_REGISTERED", true);
 			await this.sendEmail(email);
 		}
