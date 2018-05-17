@@ -41,7 +41,7 @@
     "gaze": "1.1.0",
     "iconv-lite": "0.4.11",
     "inquirer": "0.9.0",
-    "ios-device-lib": "0.4.10",
+    "ios-device-lib": "0.4.11",
     "ios-mobileprovision-finder": "1.0.10",
     "ios-sim-portable": "3.3.3",
     "jimp": "0.2.28",
