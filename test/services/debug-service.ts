@@ -4,7 +4,7 @@ import * as stubs from "../stubs";
 import { assert } from "chai";
 import { EventEmitter } from "events";
 import * as constants from "../../lib/common/constants";
-import { CONNECTION_ERROR_EVENT_NAME, DebugCommandErrors } from "../../lib/constants";
+import { CONNECTION_ERROR_EVENT_NAME, DebugCommandErrors, TrackActionNames, DebugTools } from "../../lib/constants";
 
 const fakeChromeDebugPort = 123;
 const fakeChromeDebugUrl = `fakeChromeDebugUrl?experiments=true&ws=localhost:${fakeChromeDebugPort}`;
@@ -230,6 +230,54 @@ describe("debugService", () => {
 					});
 				});
 			});
+		});
+
+		describe("tracks to google analytics", () => {
+			_.each([
+				{
+					testName: "Inspector when --inspector is passed",
+					debugOptions: { inspector: true },
+					additionalData: DebugTools.Inspector
+				},
+				{
+					testName: "Chrome when no options are passed",
+					debugOptions: null,
+					additionalData: DebugTools.Chrome
+				},
+				{
+					testName: "Chrome when --chrome is passed",
+					debugOptions: { chrome: true },
+					additionalData: DebugTools.Chrome
+				}], testCase => {
+
+					it(testCase.testName, async () => {
+						const testData = getDefaultTestData();
+						testData.deviceInformation.deviceInfo.platform = "iOS";
+
+						const testInjector = getTestInjectorForTestConfiguration(testData);
+						const analyticsService = testInjector.resolve<IAnalyticsService>("analyticsService");
+						let dataTrackedToGA: IEventActionData = null;
+						analyticsService.trackEventActionInGoogleAnalytics = async (data: IEventActionData): Promise<void> => {
+							dataTrackedToGA = data;
+						};
+
+						const debugService = testInjector.resolve<IDebugServiceBase>(DebugService);
+						const debugData = getDebugData();
+						await debugService.debug(debugData, testCase.debugOptions);
+						const devicesService = testInjector.resolve<Mobile.IDevicesService>("devicesService");
+						const device = devicesService.getDeviceByIdentifier(testData.deviceInformation.deviceInfo.identifier);
+
+						const expectedData = JSON.stringify({
+							action: TrackActionNames.Debug,
+							device,
+							additionalData: testCase.additionalData,
+							projectDir: debugData.projectDir
+						}, null, 2);
+
+						// Use JSON.stringify as the compared objects link to new instances of different classes.
+						assert.deepEqual(JSON.stringify(dataTrackedToGA, null, 2), expectedData);
+					});
+				});
 		});
 	});
 });

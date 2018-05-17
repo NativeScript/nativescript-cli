@@ -31,7 +31,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: TrackActionNames.Debug,
 			device,
-			additionalData: this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform) && (!options || !options.chrome) ? DebugTools.Inspector : DebugTools.Chrome,
+			additionalData: this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform) && options && options.inspector ? DebugTools.Inspector : DebugTools.Chrome,
 			projectDir: debugData.projectDir
 		});
 
