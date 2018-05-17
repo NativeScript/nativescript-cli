@@ -1,6 +1,13 @@
 NativeScript CLI Changelog
 ================
 
+4.0.2 (2018, May 18)
+==
+
+### Fixed
+* [Fixed #3595](https://github.com/NativeScript/nativescript-cli/issues/3595): Do not track local paths in Analytics
+* [Fixed #3597](https://github.com/NativeScript/nativescript-cli/issues/3597): Users who subscribe to Progess Newsletter are not informed for the privacy policy
+
 4.0.1 (2018, May 11)
 ==
 
