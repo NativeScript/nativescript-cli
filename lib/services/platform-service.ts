@@ -263,7 +263,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			this.$errors.failWithoutHelp(`Unable to install dependencies. Make sure your package.json is valid and all dependencies are correct. Error is: ${err.message}`);
 		}
 
-		await this.ensurePlatformInstalled(platform, platformTemplate, projectData, config, nativePrepare);
+		await this.ensurePlatformInstalled(platform, platformTemplate, projectData, config, appFilesUpdaterOptions, nativePrepare);
 
 		const bundle = appFilesUpdaterOptions.bundle;
 		const nativePlatformStatus = (nativePrepare && nativePrepare.skipNativePrepare) ? constants.NativePlatformStatus.requiresPlatformAdd : constants.NativePlatformStatus.requiresPrepare;
@@ -603,7 +603,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	@helpers.hook('cleanApp')
 	public async cleanDestinationApp(platformInfo: IPreparePlatformInfo): Promise<void> {
-		await this.ensurePlatformInstalled(platformInfo.platform, platformInfo.platformTemplate, platformInfo.projectData, platformInfo.config, platformInfo.nativePrepare);
+		await this.ensurePlatformInstalled(platformInfo.platform, platformInfo.platformTemplate, platformInfo.projectData, platformInfo.config, platformInfo.appFilesUpdaterOptions, platformInfo.nativePrepare);
 
 		const platformData = this.$platformsData.getPlatformData(platformInfo.platform, platformInfo.projectData);
 		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
@@ -711,8 +711,21 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	public async ensurePlatformInstalled(platform: string, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, nativePrepare?: INativePrepare): Promise<void> {
+	public async ensurePlatformInstalled(platform: string, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, appFilesUpdaterOptions: IAppFilesUpdaterOptions, nativePrepare?: INativePrepare): Promise<void> {
 		let requiresNativePlatformAdd = false;
+
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		// In case when no platform is added and webpack plugin is started it produces files in platforms folder. In this case {N} CLI needs to add platform and keeps the already produced files from webpack
+		if (!this.$fs.exists(platformData.configurationFilePath) && this.isPlatformInstalled(platform, projectData) && appFilesUpdaterOptions.bundle) {
+			const tmpDirectoryPath = path.join(projectData.projectDir, "platforms", "tmp");
+			this.$fs.deleteDirectory(tmpDirectoryPath);
+			this.$fs.ensureDirectoryExists(tmpDirectoryPath);
+			this.$fs.copyFile(path.join(platformData.appDestinationDirectoryPath, "*"), tmpDirectoryPath);
+			await this.addPlatform(platform, platformTemplate, projectData, config, "", nativePrepare);
+			this.$fs.copyFile(path.join(tmpDirectoryPath, "*"), platformData.appDestinationDirectoryPath);
+			this.$fs.deleteDirectory(tmpDirectoryPath);
+			return;
+		}
 
 		if (!this.isPlatformInstalled(platform, projectData)) {
 			await this.addPlatform(platform, platformTemplate, projectData, config, "", nativePrepare);
