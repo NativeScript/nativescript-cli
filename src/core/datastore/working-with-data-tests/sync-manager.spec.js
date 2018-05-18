@@ -354,29 +354,17 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
         networkRepoMock.count = createPromiseSpy(backendEntityCount);
       });
 
-      it('should do a regular deltaset request if useDeltaFetch is true', () => {
-        options.useDeltaFetch = true;
-        return syncManager.pull(collection, null, options)
-          .then(() => {
-            validateSpyCalls(utilsMock.splitQueryIntoPages, 0);
-            validateSpyCalls(networkRepoMock.count, 0);
-            validateSpyCalls(networkRepoMock.read, 1, [collection, null, options]);
-            validateSpyCalls(offlineRepoMock.delete, 1, [collection, null]);
-            validateSpyCalls(offlineRepoMock.update, 1, [collection, []]);
-          });
-      });
-
       it('should do a paginated request, when autoPagination is true', () => {
         return syncManager.pull(collection, null, options)
           .then(() => {
-            validateSpyCalls(networkRepoMock.count, 1, [collection, new Query()]);
+            validateSpyCalls(networkRepoMock.count, 1, [collection, new Query(), { dataOnly: false }]);
           });
       });
 
       it('should do a paginated request, when autoPagination is an object', () => {
         return syncManager.pull(collection, null, { autoPagination: { pageSize: 14 } })
           .then(() => {
-            validateSpyCalls(networkRepoMock.count, 1, [collection, new Query()]);
+            validateSpyCalls(networkRepoMock.count, 1, [collection, new Query(), { dataOnly: false }]);
           });
       });
 
@@ -386,7 +374,7 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
         query.ascending(randomString()); // check that sort is ignored
         return syncManager.pull(collection, query, options)
           .then(() => {
-            validateSpyCalls(networkRepoMock.count, 1, [collection, new Query()]);
+            validateSpyCalls(networkRepoMock.count, 1, [collection, new Query(), { dataOnly: false }]);
           });
       });
 
@@ -464,68 +452,29 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
             });
         });
 
-        it('should reflect user query skip', () => {
+        it('should ignore user query skip', () => {
           const query = new Query();
           query.skip = 123;
-          return syncManager.pull(collection, query, options)
-            .then(() => {
-              const expectedQuery = new Query();
-              expectedQuery.skip = query.skip;
-              expectedQuery.limit = backendEntityCount - query.skip;
-              expectedQuery.ascending(defaultSortField);
-              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, backendEntityCount - query.skip]);
-            });
-        });
-
-        it('should reflect user query limit', () => {
-          const query = new Query();
-          query.limit = 4321;
-          return syncManager.pull(collection, query, options)
-            .then(() => {
-              const expectedQuery = new Query();
-              expectedQuery.skip = 0;
-              expectedQuery.limit = query.limit;
-              expectedQuery.ascending(defaultSortField);
-              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, query.limit]);
-            });
-        });
-
-        it('should have a limit value equal to the total entity count, if total count is less than userQuery.limit', () => {
-          const query = new Query();
-          query.limit = 1e10;
           return syncManager.pull(collection, query, options)
             .then(() => {
               const expectedQuery = new Query();
               expectedQuery.skip = 0;
               expectedQuery.limit = backendEntityCount;
               expectedQuery.ascending(defaultSortField);
-              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, backendEntityCount - query.skip]);
+              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, backendEntityCount]);
             });
         });
 
-        it('should have a limit value equal to the userQuery.limit, if total count is greater than userQuery.limit', () => {
+        it('should ignore user query limit', () => {
           const query = new Query();
-          query.limit = 3;
+          query.limit = 4321;
           return syncManager.pull(collection, query, options)
             .then(() => {
               const expectedQuery = new Query();
               expectedQuery.skip = 0;
-              expectedQuery.limit = query.limit;
+              expectedQuery.limit = backendEntityCount;
               expectedQuery.ascending(defaultSortField);
-              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, query.limit]);
-            });
-        });
-
-        it('should calculate the total entity count to pull, considering the userQuery.skip value', () => {
-          const query = new Query();
-          query.skip = 12;
-          return syncManager.pull(collection, query, options)
-            .then(() => {
-              const expectedQuery = new Query();
-              expectedQuery.skip = query.skip;
-              expectedQuery.limit = backendEntityCount - query.skip;
-              expectedQuery.ascending(defaultSortField);
-              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, expectedQuery.limit]);
+              validateSpyCalls(utilsMock.splitQueryIntoPages, 1, [expectedQuery, pageSize, backendEntityCount]);
             });
         });
       });

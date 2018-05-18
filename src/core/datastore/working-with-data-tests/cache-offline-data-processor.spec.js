@@ -100,7 +100,7 @@ describe('CacheOfflineDataProcessor', () => {
         it('should call OfflineRepo.read()', () => {
           return dataProcessor.process(operation, options).toPromise()
             .then(() => {
-              validateSpyCalls(offlineRepoMock.read, 1, [collection, operation.query, options]);
+              validateSpyCalls(offlineRepoMock.read, 2, [collection, operation.query, options], [collection, operation.query, options]);
             });
         });
 

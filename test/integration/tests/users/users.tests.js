@@ -446,7 +446,7 @@ function testFunc() {
       it('should return the error from the server if the id does not exist', (done) => {
         Kinvey.User.remove(utilities.randomString())
           .catch((error) => {
-            expect(error.message).to.equal('This user does not exist for this app backend');
+            expect(error.message).to.equal('This user does not exist for this app backend.');
             done();
           })
           .catch(done);

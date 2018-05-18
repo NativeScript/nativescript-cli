@@ -22,8 +22,10 @@ import {
   MissingQueryError,
   MissingRequestHeaderError,
   MissingRequestParameterError,
+  MissingConfigurationError,
   NotFoundError,
   ParameterValueOutOfRangeError,
+  ResultSetSizeExceededError,
   ServerError,
   StaleRequestError,
   UserAlreadyExistsError,
@@ -182,6 +184,8 @@ export class KinveyResponse extends Response {
       error = new MissingRequestHeaderError(message, debug, code, kinveyRequestId);
     } else if (name === 'MissingRequestParameter') {
       error = new MissingRequestParameterError(message, debug, code, kinveyRequestId);
+    } else if (name === 'MissingConfiguration') {
+      error = new MissingConfigurationError(message, debug, code, kinveyRequestId);
     } else if (name === 'EntityNotFound'
         || name === 'CollectionNotFound'
         || name === 'AppNotFound'
@@ -191,6 +195,8 @@ export class KinveyResponse extends Response {
       error = new NotFoundError(message, debug, code, kinveyRequestId);
     } else if (name === 'ParameterValueOutOfRange') {
       error = new ParameterValueOutOfRangeError(message, debug, code, kinveyRequestId);
+    } else if (name === 'ResultSetSizeExceeded') {
+      error = new ResultSetSizeExceededError(message, debug, code, kinveyRequestId);
     } else if (name === 'ServerError') {
       error = new ServerError(message, debug, code, kinveyRequestId);
     } else if (name === 'StaleRequest') {

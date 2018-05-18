@@ -23,7 +23,7 @@ export namespace Kinvey {
   interface RequestOptions {
     properties?: Properties;
     timeout?: number;
-    useDeltaFetch?: boolean;
+    useDeltaSet?: boolean;
     version?: string;
     micId?: string;
   }
@@ -265,7 +265,7 @@ export namespace Kinvey {
     static collection<T extends Entity>(collection: string, type?: DataStoreType, options?: {
       client?: Client;
       ttl?: number;
-      useDeltaFetch?: boolean;
+      useDeltaSet?: boolean;
     }): CacheStore<T>;
     static clearCache(options?: RequestOptions): Promise<{}>;
   }
@@ -275,7 +275,6 @@ export namespace Kinvey {
     protected constructor();
     client: Client;
     pathname: string;
-    useDeltaFetch: boolean;
 
     find(query?: Query, options?: RequestOptions): Observable<T[]>;
     findById(id: string, options?: RequestOptions): Observable<T>;
@@ -299,6 +298,8 @@ export namespace Kinvey {
 
   // CacheStore class
   class CacheStore<T extends Entity = Entity> extends NetworkStore<T> {
+    useDeltaSet: boolean;
+
     clear(query?: Query, options?: RequestOptions): Promise<{
       count: number
     }>;
@@ -341,7 +342,6 @@ export namespace Kinvey {
 
   // Files class
   export class Files {
-    static useDeltaFetch: boolean;
     static find<T extends File = File>(query?: Query, options?: RequestOptions): Promise<T[]>;
     static findById<T extends File = File>(id: string, options?: RequestOptions): Promise<T>;
     static download<T extends File = File>(name: string, options?: RequestOptions): Promise<T>;
@@ -543,7 +543,7 @@ export function ping(): Promise<PingResponse>;
 interface RequestOptions {
   properties?: Properties;
   timeout?: number;
-  useDeltaFetch?: boolean;
+  useDeltaSet?: boolean;
   version?: string;
   micId?: string;
 }
@@ -780,7 +780,7 @@ interface SyncEntity extends Entity {
 
 interface PullRequestOptions {
   timeout?: number,
-  useDeltaFetch?: boolean,
+  useDeltaSet?: boolean,
   autoPagination?: boolean | { pageSize?: number }
 }
 
@@ -789,7 +789,7 @@ export abstract class DataStore {
   static collection<T extends Entity>(collection: string, type?: DataStoreType, options?: {
     client?: Client;
     ttl?: number;
-    useDeltaFetch?: boolean;
+    useDeltaSet?: boolean;
   }): CacheStore<T>;
   static clearCache(options?: RequestOptions): Promise<{}>;
 }
@@ -799,7 +799,6 @@ declare class NetworkStore<T extends Entity = Entity> {
   protected constructor();
   client: Client;
   pathname: string;
-  useDeltaFetch: boolean;
 
   find(query?: Query, options?: RequestOptions): Observable<T[]>;
   findById(id: string, options?: RequestOptions): Observable<T>;
@@ -817,6 +816,8 @@ declare class NetworkStore<T extends Entity = Entity> {
 
 // CacheStore class
 declare class CacheStore<T extends Entity = Entity> extends NetworkStore<T> {
+  useDeltaSet: boolean;
+
   clear(query?: Query, options?: RequestOptions): Promise<{
     count: number
   }>;
@@ -859,7 +860,6 @@ export interface File extends Entity {
 
 // Files class
 export class Files {
-  static useDeltaFetch: boolean;
   static find<T extends File = File>(query?: Query, options?: RequestOptions): Promise<T[]>;
   static findById<T extends File = File>(id: string, options?: RequestOptions): Promise<T>;
   static download<T extends File = File>(name: string, options?: RequestOptions): Promise<T>;

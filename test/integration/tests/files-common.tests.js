@@ -1,7 +1,7 @@
 function testFunc() {
 
   const notFoundErrorName = 'NotFoundError';
-  const notFoundErrorMessage = 'This blob not found for this app backend';
+  const notFoundErrorMessage = 'This blob not found for this app backend.';
   const timeoutErrorName = 'TimeoutError';
   const timeoutErrorMessage = 'The network request timed out.';
   const plainTextMimeType = 'text/plain';

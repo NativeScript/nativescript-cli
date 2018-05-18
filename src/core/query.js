@@ -216,6 +216,14 @@ export class Query {
     }, true);
   }
 
+  hasSkip() {
+    return isNumber(this.skip) && this.skip > 0;
+  }
+
+  hasLimit() {
+    return isNumber(this.limit);
+  }
+
   /**
    * Adds an equal to filter to the query. Requires `field` to equal `value`.
    * Any existing filters on `field` will be discarded.

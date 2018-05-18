@@ -6,7 +6,7 @@ import { SyncOperation } from './sync';
 import { init } from '../kinvey';
 import { Query } from '../query';
 import { Aggregation } from '../aggregation';
-import { KinveyError, NotFoundError, ServerError } from '../errors';
+import { KinveyError, NotFoundError, ServerError, BadRequestError } from '../errors';
 import { randomString } from '../utils';
 import { NetworkRack } from '../request';
 import { NodeHttpMiddleware } from '../../node/http';
@@ -186,6 +186,324 @@ describe('CacheStore', () => {
               }
             });
         });
+    });
+
+    describe('Delta Set', () => {
+      it('should find the entities', (done) => {
+        const entity1 = { _id: randomString() };
+        const entity2 = { _id: randomString() };
+        const store = new CacheStore(collection, null, { useDeltaSet: true });
+        const onNextSpy = expect.createSpy();
+        const lastRequestDate = new Date();
+
+        nock(store.client.apiHostname)
+          .get(`/appdata/${store.client.appKey}/${collection}`)
+          .reply(200, [entity1, entity2], {
+            'X-Kinvey-Request-Start': lastRequestDate.toISOString()
+          });
+
+        store.pull()
+          .then(() => {
+            const changedEntity2 = Object.assign({}, entity2, { title: 'test' });
+            nock(client.apiHostname)
+              .get(`/appdata/${store.client.appKey}/${collection}/_deltaset`)
+              .query({ since: lastRequestDate.toISOString() })
+              .reply(200, { changed: [changedEntity2], deleted: [{ _id: entity1._id }] }, {
+                'X-Kinvey-Request-Start': new Date().toISOString()
+              });
+
+            store.find()
+              .subscribe(onNextSpy, done, () => {
+                try {
+                  expect(onNextSpy.calls.length).toEqual(2);
+                  expect(onNextSpy.calls[0].arguments).toEqual([[entity1, entity2]]);
+                  expect(onNextSpy.calls[1].arguments).toEqual([[changedEntity2]]);
+                  done();
+                } catch (error) {
+                  done(error);
+                }
+              });
+          })
+          .catch(done);
+      });
+
+      it('should find the entities that match the query', (done) => {
+        const entity1 = { _id: randomString(), title: 'Test' };
+        const entity2 = { _id: randomString(), title: 'Test' };
+        const store = new CacheStore(collection, null, { useDeltaSet: true });
+        const onNextSpy = expect.createSpy();
+        const lastRequestDate = new Date();
+        const query = new Query().equalTo('title', 'Test');
+
+        nock(store.client.apiHostname)
+          .get(`/appdata/${store.client.appKey}/${collection}`)
+          .query(query.toQueryString())
+          .reply(200, [entity1, entity2], {
+            'X-Kinvey-Request-Start': lastRequestDate.toISOString()
+          });
+
+        store.pull(query)
+          .then(() => {
+            const changedEntity2 = Object.assign({}, entity2, { author: 'Kinvey' });
+            nock(client.apiHostname)
+              .get(`/appdata/${store.client.appKey}/${collection}/_deltaset`)
+              .query(Object.assign({ since: lastRequestDate.toISOString() }, query.toQueryString()))
+              .reply(200, { changed: [changedEntity2], deleted: [{ _id: entity1._id }] }, {
+                'X-Kinvey-Request-Start': new Date().toISOString()
+              });
+
+            store.find(query)
+              .subscribe(onNextSpy, done, () => {
+                try {
+                  expect(onNextSpy.calls.length).toEqual(2);
+                  expect(onNextSpy.calls[0].arguments).toEqual([[entity1, entity2]]);
+                  expect(onNextSpy.calls[1].arguments).toEqual([[changedEntity2]]);
+                  done();
+                } catch (error) {
+                  done(error);
+                }
+              });
+          })
+          .catch(done);
+      });
+
+      it('should not send a delta set request if skip is used', (done) => {
+        const entity1 = { _id: randomString() };
+        const store = new CacheStore(collection, null, { useDeltaSet: true });
+        const onNextSpy = expect.createSpy();
+        const lastRequestDate = new Date();
+        const query = new Query();
+        query.skip = 1;
+
+        nock(store.client.apiHostname)
+          .get(`/appdata/${store.client.appKey}/${collection}`)
+          .query(query.toQueryString())
+          .reply(200, [entity1], {
+            'X-Kinvey-Request-Start': lastRequestDate.toISOString()
+          });
+
+        store.pull(query)
+          .then(() => {
+            nock(client.apiHostname)
+              .get(`/appdata/${store.client.appKey}/${collection}`)
+              .query(query.toQueryString())
+              .reply(200, [entity1], {
+                'X-Kinvey-Request-Start': new Date().toISOString()
+              });
+
+            store.find(query)
+              .subscribe(onNextSpy, done, () => {
+                try {
+                  expect(onNextSpy.calls.length).toEqual(2);
+                  done();
+                } catch (error) {
+                  done(error);
+                }
+              });
+          })
+          .catch(done);
+      });
+
+      it('should not send a delta set request if limit is used', (done) => {
+        const entity1 = { _id: randomString() };
+        const store = new CacheStore(collection, null, { useDeltaSet: true });
+        const onNextSpy = expect.createSpy();
+        const lastRequestDate = new Date();
+        const query = new Query();
+        query.limit = 1;
+
+        nock(store.client.apiHostname)
+          .get(`/appdata/${store.client.appKey}/${collection}`)
+          .query(query.toQueryString())
+          .reply(200, [entity1], {
+            'X-Kinvey-Request-Start': lastRequestDate.toISOString()
+          });
+
+        store.pull(query)
+          .then(() => {
+            nock(client.apiHostname)
+              .get(`/appdata/${store.client.appKey}/${collection}`)
+              .query(query.toQueryString())
+              .reply(200, [entity1], {
+                'X-Kinvey-Request-Start': new Date().toISOString()
+              });
+
+            store.find(query)
+              .subscribe(onNextSpy, done, () => {
+                try {
+                  expect(onNextSpy.calls.length).toEqual(2);
+                  done();
+                } catch (error) {
+                  done(error);
+                }
+              });
+          })
+          .catch(done);
+      });
+
+      it('should work with a tagged datastore', (done) => {
+        const entity1 = { _id: randomString() };
+        const entity2 = { _id: randomString() };
+        const store = new CacheStore(collection, null, { useDeltaSet: true, tag: randomString() });
+        const onNextSpy = expect.createSpy();
+        const lastRequestDate = new Date();
+
+        nock(store.client.apiHostname)
+          .get(`/appdata/${store.client.appKey}/${collection}`)
+          .reply(200, [entity1, entity2], {
+            'X-Kinvey-Request-Start': lastRequestDate.toISOString()
+          });
+
+        store.pull()
+          .then(() => {
+            const changedEntity2 = Object.assign({}, entity2, { title: 'test' });
+            nock(client.apiHostname)
+              .get(`/appdata/${store.client.appKey}/${collection}/_deltaset`)
+              .query({ since: lastRequestDate.toISOString() })
+              .reply(200, { changed: [changedEntity2], deleted: [{ _id: entity1._id }] }, {
+                'X-Kinvey-Request-Start': new Date().toISOString()
+              });
+
+            store.find()
+              .subscribe(onNextSpy, done, () => {
+                try {
+                  expect(onNextSpy.calls.length).toEqual(2);
+                  expect(onNextSpy.calls[0].arguments).toEqual([[entity1, entity2]]);
+                  expect(onNextSpy.calls[1].arguments).toEqual([[changedEntity2]]);
+                  done();
+                } catch (error) {
+                  done(error);
+                }
+              });
+          })
+          .catch(done);
+      });
+
+      it('should send regular GET request with outdated lastRequest', function (done){
+        const entity1 = { _id: randomString() };
+        const entity2 = { _id: randomString() };
+        const store = new CacheStore(collection, null, { useDeltaSet: true});
+        const onNextSpy = expect.createSpy();
+        const lastRequestDate = new Date();
+        lastRequestDate.setDate(new Date().getDate()-31);
+
+        nock(store.client.apiHostname)
+        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200, [entity1, entity2], {
+          'X-Kinvey-Request-Start': lastRequestDate.toISOString()
+        });
+
+          store.pull()
+            .then(()=>{
+              nock(store.client.apiHostname)
+                .get(`/appdata/${store.client.appKey}/${collection}/_deltaset`)
+                .query({ since: lastRequestDate.toISOString() })
+                .reply(400, {debug: "The 'since' timestamp must be within the past 1 days.",
+                  description: "The value specified for one of the request parameters is out of range",
+                  error: "ParameterValueOutOfRange"});
+
+              nock(store.client.apiHostname)
+              .get(`/appdata/${store.client.appKey}/${collection}`)
+              .reply(200, [entity1, entity2], {
+                'X-Kinvey-Request-Start': lastRequestDate.toISOString()
+              });
+              store.find()
+                .subscribe(onNextSpy, done, ()=>{
+                  try{
+                    expect(onNextSpy.calls.length).toEqual(2);
+                    expect(onNextSpy.calls[0].arguments).toEqual([[entity1, entity2]]);
+                    expect(onNextSpy.calls[1].arguments).toEqual([[entity1, entity2]]);
+                    done();
+                  } catch (error) {
+                    done(error);
+                  }
+                })
+            })
+            .catch(done);
+      });
+
+      it('should send regular GET request when configuration is missing on the backend', function (done){
+        const entity1 = { _id: randomString() };
+        const entity2 = { _id: randomString() };
+        const store = new CacheStore(collection, null, { useDeltaSet: true});
+        const onNextSpy = expect.createSpy();
+        const lastRequestDate = new Date();
+        const firstNock = nock(store.client.apiHostname)
+          .get(`/appdata/${store.client.appKey}/${collection}`)
+          .reply(200, [entity1, entity2], {
+            'X-Kinvey-Request-Start': lastRequestDate.toISOString()
+          });
+
+          store.pull()
+            .then(()=>{
+              firstNock.done();
+              const secondNock = nock(store.client.apiHostname)
+                .get(`/appdata/${store.client.appKey}/${collection}/_deltaset`)
+                .query({ since: lastRequestDate.toISOString() })
+                .reply(403, {
+                  "error": "MissingConfiguration",
+                  "description": "This feature is not properly configured for this app backend. Please configure it through the console first, or contact support for more information.",
+                  "debug": "This collection has not been configured for Delta Set access."
+                });
+
+              const thirdNock = nock(store.client.apiHostname)
+                .get(`/appdata/${store.client.appKey}/${collection}`)
+                .reply(200, [entity1, entity2], {
+                  'X-Kinvey-Request-Start': lastRequestDate.toISOString()
+                });
+              store.find()
+                .subscribe(onNextSpy, done, ()=>{
+                  try{
+                    secondNock.done();
+                    thirdNock.done();
+                    expect(onNextSpy.calls.length).toEqual(2);
+                    expect(onNextSpy.calls[0].arguments).toEqual([[entity1, entity2]]);
+                    expect(onNextSpy.calls[1].arguments).toEqual([[entity1, entity2]]);
+                    done();
+                  } catch (error) {
+                    done(error);
+                  }
+                })
+            })
+            .catch(done);
+      });
+
+      it('should return error if more than 10000 items are changed', function (done){
+        const entity1 = { _id: randomString() };
+        const entity2 = { _id: randomString() };
+        const store = new CacheStore(collection, null, { useDeltaSet: true});
+        const onNextSpy = expect.createSpy();
+        const lastRequestDate = new Date();
+
+        nock(store.client.apiHostname)
+        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200, [entity1, entity2], {
+          'X-Kinvey-Request-Start': lastRequestDate.toISOString()
+        });
+
+          store.pull()
+            .then(()=>{
+              nock(store.client.apiHostname)
+                .get(`/appdata/${store.client.appKey}/${collection}/_deltaset`)
+                .query({ since: lastRequestDate.toISOString() })
+                .reply(400, {
+                  error: "BadRequest",
+                  description: "Unable to understand request",
+                  debug: "ResultSetSizeExceeded"
+              });
+              store.find()
+                .subscribe(null, (error)=>{
+                  try{
+                    expect(error).toBeA(BadRequestError);
+                    expect(error.debug).toEqual('ResultSetSizeExceeded')
+                    done();
+                  } catch (e) {
+                    done(e);
+                  }
+                })
+            })
+            .catch(done);
+      });
     });
 
     it('should remove entities that no longer exist on the backend from the cache', (done) => {
@@ -1114,6 +1432,64 @@ describe('CacheStore', () => {
         })
         .then((entities) => {
           expect(entities).toEqual([entity1, entity2]);
+        });
+    });
+
+    it('should perform a delta set request', () => {
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
+      const store = new CacheStore(collection, null, { useDeltaSet: true });
+      const lastRequestDate = new Date();
+
+      nock(store.client.apiHostname)
+        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200, [entity1, entity2], {
+          'X-Kinvey-Request-Start': lastRequestDate.toISOString()
+        });
+
+      return store.pull()
+        .then(() => {
+          const changedEntity2 = Object.assign({}, entity2, { title: 'test' });
+          nock(client.apiHostname)
+            .get(`/appdata/${store.client.appKey}/${collection}/_deltaset`)
+            .query({ since: lastRequestDate.toISOString() })
+            .reply(200, { changed: [changedEntity2], deleted: [{ _id: entity1._id }] }, {
+              'X-Kinvey-Request-Start': new Date().toISOString()
+            });
+
+          store.pull()
+            .then((count) => {
+              expect(count).toEqual(1);
+            });
+        });
+    });
+
+    it('should perform a delta set request with a tagged datastore', () => {
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
+      const store = new CacheStore(collection, null, { useDeltaSet: true, tag: randomString() });
+      const lastRequestDate = new Date();
+
+      nock(store.client.apiHostname)
+        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200, [entity1, entity2], {
+          'X-Kinvey-Request-Start': lastRequestDate.toISOString()
+        });
+
+      return store.pull()
+        .then(() => {
+          const changedEntity2 = Object.assign({}, entity2, { title: 'test' });
+          nock(client.apiHostname)
+            .get(`/appdata/${store.client.appKey}/${collection}/_deltaset`)
+            .query({ since: lastRequestDate.toISOString() })
+            .reply(200, { changed: [changedEntity2], deleted: [{ _id: entity1._id }] }, {
+              'X-Kinvey-Request-Start': new Date().toISOString()
+            });
+
+          store.pull()
+            .then((count) => {
+              expect(count).toEqual(1);
+            });
         });
     });
   });

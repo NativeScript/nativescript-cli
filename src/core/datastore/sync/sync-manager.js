@@ -2,23 +2,16 @@ import { Promise } from 'es6-promise';
 import clone from 'lodash/clone';
 
 import { Log } from '../../log';
-import { KinveyError, NotFoundError, SyncError } from '../../errors';
-
+import { KinveyError, NotFoundError, SyncError, InvalidCachedQuery } from '../../errors';
 import { getPlatformConfig } from '../../platform-configs';
 import { SyncOperation } from './sync-operation';
 import { maxEntityLimit, defaultPullSortField } from './utils';
 import { isEmpty } from '../utils';
 import { repositoryProvider } from '../repositories';
 import { Query } from '../../query';
-import {
-  ensureArray,
-  isNonemptyString,
-  forEachAsync,
-  splitQueryIntoPages
-} from '../../utils';
-
-// imported for typings
-// import { SyncStateManager } from './sync-state-manager';
+import { ensureArray, isNonemptyString, forEachAsync, splitQueryIntoPages } from '../../utils';
+import { deltaSet } from '../deltaset';
+import { getCachedQuery, updateCachedQuery, deleteCachedQuery } from '../querycache';
 
 const {
   maxConcurrentPullRequests: maxConcurrentPulls,
@@ -67,18 +60,82 @@ export class SyncManager {
       });
   }
 
-  pull(collection, query, options) {
-    if (!isNonemptyString(collection)) {
-      return Promise.reject(new KinveyError('Invalid or missing collection name'));
-    }
+  pull(collection, query, options = {}) {
+    return Promise.resolve()
+      .then(() => {
+        if (!isNonemptyString(collection)) {
+          throw new KinveyError('Invalid or missing collection name');
+        }
+      })
+      .then(() => {
+        if (options.useDeltaSet) {
+          return deltaSet(collection, query, options)
+            .then((response) => {
+              return getCachedQuery(collection, query)
+                .then((cachedQuery) => {
+                  if (cachedQuery) {
+                    cachedQuery.lastRequest = response.headers.requestStart;
+                    return updateCachedQuery(cachedQuery);
+                  }
 
-    if (options && (options.autoPagination && !options.useDeltaFetch)) {
-      return this._paginatedPull(collection, query, options);
-    }
+                  return null;
+                })
+                .then(() => response.data);
+            })
+            .then((data) => {
+              if (data.deleted.length > 0) {
+                const deleteQuery = new Query();
+                deleteQuery.containsAll('_id', data.deleted.map((entity) => entity._id));
+                return this._deleteOfflineEntities(collection, deleteQuery)
+                  .then(() => data);
+              }
 
-    return this._fetchItemsFromServer(collection, query, options)
-      .then(entities => this._replaceOfflineEntities(collection, query, entities))
-      .then(replacedEntities => replacedEntities.length);
+              return data;
+            })
+            .then((data) => {
+              if (data.changed.length > 0) {
+                return this._getOfflineRepo()
+                  .then((offlineRepo) => offlineRepo.update(collection, data.changed))
+                  .then(() => data.changed.length);
+              }
+
+              return 0;
+            });
+        } else if (options.autoPagination) {
+          return this._paginatedPull(collection, query, options);
+        }
+
+        return this._fetchItemsFromServer(collection, query, options)
+          .then((response) => {
+            return getCachedQuery(collection, query)
+              .then((cachedQuery) => {
+                if (cachedQuery && response.headers) {
+                  cachedQuery.lastRequest = response.headers.requestStart;
+                  return updateCachedQuery(cachedQuery);
+                }
+
+                return null;
+              })
+              .then(() => response.data ? response.data : response);
+          })
+          .then((data) => this._replaceOfflineEntities(collection, query, data).then((data) => data.length));
+      })
+      .catch((error) => {
+        if (error instanceof InvalidCachedQuery) {
+          return getCachedQuery(collection, query)
+            .then((cachedQuery) => deleteCachedQuery(cachedQuery))
+            .catch((error) => {
+              if (error instanceof NotFoundError) {
+                return null;
+              }
+
+              throw error;
+            })
+            .then(() => this.pull(collection, query, Object.assign(options, { useDeltaSet: false })));
+        }
+
+        throw error;
+      });
   }
 
   getSyncItemCount(collection) {
@@ -150,6 +207,11 @@ export class SyncManager {
   _replaceOfflineEntities(collection, deleteOfflineQuery, networkEntities = []) {
     // TODO: this can potentially be deleteOfflineQuery.and().notIn(networkEntitiesIds)
     // but inmemory filtering with this filter seems to take too long
+    if (deleteOfflineQuery && (deleteOfflineQuery.hasSkip() || deleteOfflineQuery.hasLimit())) {
+      return this._getOfflineRepo()
+        .then((repo) => repo.update(collection, networkEntities));
+    }
+
     return this._deleteOfflineEntities(collection, deleteOfflineQuery)
       .then(() => this._getOfflineRepo())
       .then(repo => repo.update(collection, networkEntities));
@@ -290,7 +352,7 @@ export class SyncManager {
   }
 
   _fetchItemsFromServer(collection, query, options) {
-    return this._networkRepo.read(collection, query, options);
+    return this._networkRepo.read(collection, query, Object.assign(options, { dataOnly: false }));
   }
 
   _getOfflineRepo() {
@@ -365,8 +427,8 @@ export class SyncManager {
 
   _getInternalPullQuery(userQuery, totalCount) {
     userQuery = userQuery || {};
-    const { filter, sort, fields, skip } = userQuery;
-    const query = new Query({ filter, sort, fields, skip });
+    const { filter, sort, fields } = userQuery;
+    const query = new Query({ filter, sort, fields });
     query.limit = totalCount;
 
     if (!sort || isEmpty(sort)) {
@@ -396,27 +458,40 @@ export class SyncManager {
 
   _getExpectedEntityCount(collection, userQuery) {
     const countQuery = new Query({ filter: userQuery.filter });
-    return this._networkRepo.count(collection, countQuery)
-      .then(totalCount => {
-        return Math.min(totalCount - userQuery.skip, userQuery.limit || Infinity);
+    return this._networkRepo.count(collection, countQuery, { dataOnly: false })
+      .then((response) => {
+        return {
+          lastRequest: response.headers ? response.headers.requestStart : undefined,
+          count: response.data ? response.data.count : response
+        };
       });
   }
 
   _paginatedPull(collection, userQuery, options = {}) {
     let pullQuery;
-    let expectedCount;
     userQuery = userQuery || new Query();
     return this._getExpectedEntityCount(collection, userQuery)
-      .then((count) => {
-        expectedCount = count;
-        pullQuery = this._getInternalPullQuery(userQuery, expectedCount);
-        return this._deleteOfflineEntities(collection, pullQuery);
-      })
-      .then(() => {
-        const pageSizeSetting = options.autoPagination && options.autoPagination.pageSize;
-        const pageSize = pageSizeSetting || maxEntityLimit;
-        const paginatedQueries = splitQueryIntoPages(pullQuery, pageSize, expectedCount);
-        return this._executePaginationQueries(collection, paginatedQueries, options);
+      .then(({ lastRequest, count }) => {
+        pullQuery = this._getInternalPullQuery(userQuery, count);
+        return this._deleteOfflineEntities(collection, pullQuery)
+          .then(() => {
+            const pageSizeSetting = options.autoPagination && options.autoPagination.pageSize;
+            const pageSize = pageSizeSetting || maxEntityLimit;
+            const paginatedQueries = splitQueryIntoPages(pullQuery, pageSize, count);
+            return this._executePaginationQueries(collection, paginatedQueries, options);
+          })
+          .then((result) => {
+            return getCachedQuery(collection, userQuery)
+              .then((cachedQuery) => {
+                if (cachedQuery) {
+                  cachedQuery.lastRequest = lastRequest;
+                  return updateCachedQuery(cachedQuery);
+                }
+
+                return null;
+              })
+              .then(() => result);
+          });
       });
   }
 }

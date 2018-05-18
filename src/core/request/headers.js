@@ -3,10 +3,16 @@ import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
 import { isDefined } from '../utils';
 
+export const kinveyRequestStartHeader = 'X-Kinvey-Request-Start';
+
 export class Headers {
   constructor(headers = {}) {
     this.headers = {};
     this.addAll(headers);
+  }
+
+  get requestStart() {
+    return this.get(kinveyRequestStartHeader);
   }
 
   get(name) {

@@ -5,6 +5,8 @@ import { isNonemptyString } from '../../utils';
 
 export const dataStoreTagSeparator = '.';
 
+export { buildCollectionUrl } from '../repositories/utils';
+
 export function getEntitiesPendingPushError(entityCount, prefix) {
   let countMsg = `are ${entityCount} entities, matching the provided query`;
 
