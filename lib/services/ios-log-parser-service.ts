@@ -13,15 +13,15 @@ export class IOSLogParserService extends EventEmitter implements IIOSLogParserSe
 			super();
 		}
 
-	public startLookingForDebuggerPort(device: Mobile.IDevice): void {
+	public startParsingLog(device: Mobile.IDevice): void {
 		this.$deviceLogProvider.setProjectNameForDevice(device.deviceInfo.identifier, this.$projectData.projectName);
 
-		this.startLookingForDebuggerPortCore(device);
+		this.startParsingLogCore(device);
 		this.startLogProcess(device);
 	}
 
 	@cache()
-	private startLookingForDebuggerPortCore(device: Mobile.IDevice): void {
+	private startParsingLogCore(device: Mobile.IDevice): void {
 		const logProvider = device.isEmulator ? this.$iOSSimulatorLogProvider : this.$iosDeviceOperations;
 		logProvider.on(DEVICE_LOG_EVENT_NAME, (response: IOSDeviceLib.IDeviceLogData) => this.processDeviceLogResponse(response));
 	}

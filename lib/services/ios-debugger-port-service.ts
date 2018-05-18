@@ -1,11 +1,11 @@
-import { DEBUGGER_PORT_FOUND_EVENT_NAME, STARTING_IOS_APPLICATION_EVENT_NAME } from "../common/constants";
+import { DEBUGGER_PORT_FOUND_EVENT_NAME, ATTACH_REQUEST_EVENT_NAME } from "../common/constants";
 import { cache } from "../common/decorators";
 import * as semver from "semver";
 
 export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	private mapDebuggerPortData: IDictionary<IIOSDebuggerPortStoredData> = {};
 	private static DEFAULT_PORT = 18181;
-	private static MIN_REQUIRED_FRAMEWORK_VERSION = "4.0.0";
+	private static MIN_REQUIRED_FRAMEWORK_VERSION = "4.0.1";
 
 	constructor(private $iOSLogParserService: IIOSLogParserService,
 		private $iOSProjectService: IPlatformProjectService,
@@ -40,14 +40,14 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 		}
 
 		this.attachToDebuggerPortFoundEventCore();
-		this.attachToStartingApplicationEvent(device);
+		this.attachToAttachRequestEvent(device);
 
-		this.$iOSLogParserService.startLookingForDebuggerPort(device);
+		this.$iOSLogParserService.startParsingLog(device);
 	}
 
 	private canStartLookingForDebuggerPort(): boolean {
 		const frameworkVersion = this.$iOSProjectService.getFrameworkVersion(this.$projectData);
-		return semver.gte(frameworkVersion, IOSDebuggerPortService.MIN_REQUIRED_FRAMEWORK_VERSION);
+		return semver.gt(frameworkVersion, IOSDebuggerPortService.MIN_REQUIRED_FRAMEWORK_VERSION);
 	}
 
 	@cache()
@@ -60,13 +60,13 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	}
 
 	@cache()
-	private attachToStartingApplicationEvent(device: Mobile.IDevice): void {
-		device.applicationManager.on(STARTING_IOS_APPLICATION_EVENT_NAME, (data: IIOSDebuggerPortData) => {
-			this.$logger.trace(STARTING_IOS_APPLICATION_EVENT_NAME, data);
+	private attachToAttachRequestEvent(device: Mobile.IDevice): void {
+		device.applicationManager.on(ATTACH_REQUEST_EVENT_NAME, (data: IIOSDebuggerPortData) => {
+			this.$logger.trace(ATTACH_REQUEST_EVENT_NAME, data);
 			const timer = setTimeout(() => {
 				this.clearTimeout(data);
 				if (!this.getPortByKey(`${data.deviceId}${data.appId}`)) {
-					this.$logger.warn("NativeScript debugger was not able to get inspector socket port.");
+					this.$logger.warn(`NativeScript debugger was not able to get inspector socket port on device ${data.deviceId} for application ${data.appId}.`);
 				}
 			}, 5000);
 

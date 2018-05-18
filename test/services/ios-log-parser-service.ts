@@ -82,7 +82,7 @@ describe("iOSLogParserService", () => {
 			const emittedMessagesCount = 1;
 			const promise = attachOnDebuggerFoundEvent(emittedMessagesCount);
 
-			iOSLogParserService.startLookingForDebuggerPort(device);
+			iOSLogParserService.startParsingLog(device);
 			emitDeviceLog("test message");
 			emitDeviceLog(getDebuggerPortMessage(18181));
 
@@ -95,7 +95,7 @@ describe("iOSLogParserService", () => {
 			const emittedMessagesCount = 5;
 			const promise = attachOnDebuggerFoundEvent(emittedMessagesCount);
 
-			iOSLogParserService.startLookingForDebuggerPort(device);
+			iOSLogParserService.startParsingLog(device);
 			emitDeviceLog(getDebuggerPortMessage(18181));
 			emitDeviceLog(getDebuggerPortMessage(18181));
 			emitDeviceLog(getDebuggerPortMessage(18181));
@@ -115,7 +115,7 @@ describe("iOSLogParserService", () => {
 			const emittedMessagesCount = 5;
 			const promise = attachOnDebuggerFoundEvent(emittedMessagesCount);
 
-			iOSLogParserService.startLookingForDebuggerPort(device);
+			iOSLogParserService.startParsingLog(device);
 			emitDeviceLog(getDebuggerPortMessage(45898));
 			emitDeviceLog(getDebuggerPortMessage(1809));
 			emitDeviceLog(getDebuggerPortMessage(65072));
@@ -136,7 +136,7 @@ describe("iOSLogParserService", () => {
 
 			iOSLogParserService.on(DEBUGGER_PORT_FOUND_EVENT_NAME, (data: IIOSDebuggerPortData) => isDebuggedPortFound = true);
 
-			iOSLogParserService.startLookingForDebuggerPort(device);
+			iOSLogParserService.startParsingLog(device);
 			emitDeviceLog("some test message");
 			emitDeviceLog("another test message");
 

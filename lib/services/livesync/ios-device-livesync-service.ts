@@ -29,7 +29,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		}
 
 		if (this.device.isEmulator) {
-			await this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.getAttachRequest(appId), this.device.deviceInfo.identifier);
+			await this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.getAttachRequest(appId, this.device.deviceInfo.identifier), this.device.deviceInfo.identifier);
 			const port = await this.$iOSDebuggerPortService.getPort({ deviceId: this.device.deviceInfo.identifier, appId });
 			this.socket = await this.$iOSEmulatorServices.connectToPort({ port });
 			if (!this.socket) {

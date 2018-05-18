@@ -128,7 +128,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	private async emulatorStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		const result = await this.wireDebuggerClient(debugData, debugOptions);
 
-		const attachRequestMessage = this.$iOSNotification.getAttachRequest(debugData.applicationIdentifier);
+		const attachRequestMessage = this.$iOSNotification.getAttachRequest(debugData.applicationIdentifier, debugData.deviceIdentifier);
 
 		const iOSEmulatorService = <Mobile.IiOSSimulatorService>this.$iOSEmulatorServices;
 		await iOSEmulatorService.postDarwinNotification(attachRequestMessage, debugData.deviceIdentifier);
