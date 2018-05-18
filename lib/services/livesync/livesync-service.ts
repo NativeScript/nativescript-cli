@@ -41,8 +41,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		super();
 	}
 
-	public async liveSync(deviceDescriptors: ILiveSyncDeviceInfo[],
-		liveSyncData: ILiveSyncInfo): Promise<void> {
+	public async liveSync(deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(liveSyncData.projectDir);
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 		await this.liveSyncOperation(deviceDescriptors, liveSyncData, projectData);
@@ -318,27 +317,19 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	@hook("liveSync")
-	private async liveSyncOperation(deviceDescriptors: ILiveSyncDeviceInfo[],
-		liveSyncData: ILiveSyncInfo, projectData: IProjectData): Promise<void> {
+	private async liveSyncOperation(deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo, projectData: IProjectData): Promise<void> {
 		// In case liveSync is called for a second time for the same projectDir.
 		const isAlreadyLiveSyncing = this.liveSyncProcessesInfo[projectData.projectDir] && !this.liveSyncProcessesInfo[projectData.projectDir].isStopped;
 
-		// Prevent cases where liveSync is called consecutive times with the same device, for example [ A, B, C ] and then [ A, B, D ] - we want to execute initialSync only for D.
-		const currentlyRunningDeviceDescriptors = this.getLiveSyncDeviceDescriptors(projectData.projectDir);
-		const deviceDescriptorsForInitialSync = isAlreadyLiveSyncing ? _.differenceBy(deviceDescriptors, currentlyRunningDeviceDescriptors, deviceDescriptorPrimaryKey) : deviceDescriptors;
 		this.setLiveSyncProcessInfo(liveSyncData.projectDir, deviceDescriptors);
-
-		await this.initialSync(projectData, deviceDescriptorsForInitialSync, liveSyncData);
 
 		if (!liveSyncData.skipWatcher && this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors.length) {
 			// Should be set after prepare
 			this.$usbLiveSyncService.isInitialized = true;
-
-			const devicesIds = deviceDescriptors.map(dd => dd.identifier);
-			const devices = _.filter(this.$devicesService.getDeviceInstances(), device => _.includes(devicesIds, device.deviceInfo.identifier));
-			const platforms = _(devices).map(device => device.deviceInfo.platform).uniq().value();
-			await this.startWatcher(projectData, liveSyncData, platforms);
+			await this.startWatcher(projectData, liveSyncData, deviceDescriptors, { isAlreadyLiveSyncing });
 		}
+
+		await this.initialSync(projectData, liveSyncData, deviceDescriptors, { isAlreadyLiveSyncing });
 	}
 
 	private setLiveSyncProcessInfo(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[]): void {
@@ -349,6 +340,13 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 		const currentDeviceDescriptors = this.getLiveSyncDeviceDescriptors(projectDir);
 		this.liveSyncProcessesInfo[projectDir].deviceDescriptors = _.uniqBy(currentDeviceDescriptors.concat(deviceDescriptors), deviceDescriptorPrimaryKey);
+	}
+
+	private async initialSync(projectData: IProjectData, liveSyncData: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[], options: { isAlreadyLiveSyncing: boolean }): Promise<void> {
+		// Prevent cases where liveSync is called consecutive times with the same device, for example [ A, B, C ] and then [ A, B, D ] - we want to execute initialSync only for D.
+		const currentlyRunningDeviceDescriptors = this.getLiveSyncDeviceDescriptors(projectData.projectDir);
+		const deviceDescriptorsForInitialSync = options.isAlreadyLiveSyncing ? _.differenceBy(deviceDescriptors, currentlyRunningDeviceDescriptors, deviceDescriptorPrimaryKey) : deviceDescriptors;
+		await this.initialSyncCore(projectData, deviceDescriptorsForInitialSync, liveSyncData);
 	}
 
 	private getLiveSyncService(platform: string): IPlatformLiveSyncService {
@@ -452,7 +450,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		return null;
 	}
 
-	private async initialSync(projectData: IProjectData, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo): Promise<void> {
+	private async initialSyncCore(projectData: IProjectData, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo): Promise<void> {
 		const preparedPlatforms: string[] = [];
 		const rebuiltInformation: ILiveSyncBuildInfo[] = [];
 
@@ -483,6 +481,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					useLiveEdit: liveSyncData.useLiveEdit,
 					watch: !liveSyncData.skipWatcher
 				});
+
 				await this.$platformService.trackActionForPlatform({ action: "LiveSync", platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
 				await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
 
@@ -525,7 +524,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		};
 	}
 
-	private async startWatcher(projectData: IProjectData, liveSyncData: ILiveSyncInfo, platforms: string[]): Promise<void> {
+	private async startWatcher(projectData: IProjectData, liveSyncData: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[], options: { isAlreadyLiveSyncing: boolean }): Promise<void> {
+		const devicesIds = deviceDescriptors.map(dd => dd.identifier);
+		const devices = _.filter(this.$devicesService.getDeviceInstances(), device => _.includes(devicesIds, device.deviceInfo.identifier));
+		const platforms = _(devices).map(device => device.deviceInfo.platform).uniq().value();
 		const patterns = await this.getWatcherPatterns(liveSyncData, projectData, platforms);
 
 		if (liveSyncData.watchAllFiles) {

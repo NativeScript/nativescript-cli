@@ -125,7 +125,7 @@ $injector.requirePublicClass("liveSyncService", "./services/livesync/livesync-se
 $injector.require("androidLiveSyncService", "./services/livesync/android-livesync-service");
 $injector.require("iOSLiveSyncService", "./services/livesync/ios-livesync-service");
 $injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
-$injector.require("sysInfo", "./sys-info");
+$injector.requirePublic("sysInfo", "./sys-info");
 
 $injector.require("iOSNotificationService", "./services/ios-notification-service");
 $injector.require("socketProxyFactory", "./device-sockets/ios/socket-proxy-factory");
@@ -165,3 +165,5 @@ $injector.require("nativeScriptCloudExtensionService", "./services/nativescript-
 $injector.requireCommand("resources|generate|icons", "./commands/generate-assets");
 $injector.requireCommand("resources|generate|splashes", "./commands/generate-assets");
 $injector.requirePublic("assetsGenerationService", "./services/assets-generation/assets-generation-service");
+
+$injector.require("filesHashService", "./services/files-hash-service");

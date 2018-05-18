@@ -6,7 +6,7 @@ var path = require("path"),
 	pathToLib = path.join(__dirname, "..", "lib"),
 	pathToCommon = path.join(pathToLib, "common");
 
-require(path.join(pathToCommon, "verify-node-version")).verifyNodeVersion(node, "NativeScript", [ "^4.0.0" ]);
+require(path.join(pathToCommon, "verify-node-version")).verifyNodeVersion();
 
 var pathToCliExecutable = path.join(pathToLib, "nativescript-cli.js");
 

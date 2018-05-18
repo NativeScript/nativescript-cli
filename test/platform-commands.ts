@@ -164,6 +164,7 @@ function createTestInjector() {
 	testInjector.register("analyticsSettingsService", {
 		getPlaygroundInfo: () => Promise.resolve(null)
 	});
+	testInjector.register("filesHashService", {});
 
 	return testInjector;
 }

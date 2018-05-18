@@ -51,6 +51,10 @@ describe("nativescript-cli-lib", () => {
 		],
 		androidProcessService: [
 			"getAppProcessId"
+		],
+		sysInfo: [
+			"getSupportedNodeVersionRange",
+			"getSystemWarnings"
 		]
 	};
 

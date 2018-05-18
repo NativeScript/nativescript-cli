@@ -48,7 +48,8 @@ export class ProjectChangesService implements IProjectChangesService {
 	constructor(
 		private $platformsData: IPlatformsData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $fs: IFileSystem) {
+		private $fs: IFileSystem,
+		private $filesHashService: IFilesHashService) {
 	}
 
 	public get currentChanges(): IProjectChangesInfo {
@@ -58,9 +59,12 @@ export class ProjectChangesService implements IProjectChangesService {
 	public async checkForChanges(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): Promise<IProjectChangesInfo> {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		this._changesInfo = new ProjectChangesInfo();
-		if (!this.ensurePrepareInfo(platform, projectData, projectChangesOptions)) {
+		const isNewPrepareInfo = await this.ensurePrepareInfo(platform, projectData, projectChangesOptions);
+		if (!isNewPrepareInfo) {
 			this._newFiles = 0;
-			this._changesInfo.appFilesChanged = this.containsNewerFiles(projectData.appDirectoryPath, projectData.appResourcesDirectoryPath, projectData);
+
+			this._changesInfo.appFilesChanged = await this.hasChangedAppFiles(projectData);
+
 			this._changesInfo.packageChanged = this.isProjectFileChanged(projectData, platform);
 			this._changesInfo.appResourcesChanged = this.containsNewerFiles(projectData.appResourcesDirectoryPath, null, projectData);
 			/*done because currently all node_modules are traversed, a possible improvement could be traversing only the production dependencies*/
@@ -152,7 +156,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		}
 	}
 
-	private ensurePrepareInfo(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): boolean {
+	private async ensurePrepareInfo(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): Promise<boolean> {
 		this._prepareInfo = this.getPrepareInfo(platform, projectData);
 		if (this._prepareInfo) {
 			this._prepareInfo.nativePlatformStatus = this._prepareInfo.nativePlatformStatus && this._prepareInfo.nativePlatformStatus < projectChangesOptions.nativePlatformStatus ?
@@ -173,7 +177,8 @@ export class ProjectChangesService implements IProjectChangesService {
 			release: projectChangesOptions.release,
 			changesRequireBuild: true,
 			projectFileHash: this.getProjectFileStrippedHash(projectData, platform),
-			changesRequireBuildTime: null
+			changesRequireBuildTime: null,
+			appFilesHashes: await this.$filesHashService.generateHashes(this.getAppFiles(projectData))
 		};
 
 		this._outputProjectMtime = 0;
@@ -299,6 +304,21 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 		}
 		return false;
+	}
+
+	private getAppFiles(projectData: IProjectData): string[] {
+		return this.$fs.enumerateFilesInDirectorySync(projectData.appDirectoryPath, (filePath: string, stat: IFsStats) => filePath !== projectData.appResourcesDirectoryPath);
+	}
+
+	private async hasChangedAppFiles(projectData: IProjectData): Promise<boolean> {
+		const files = this.getAppFiles(projectData);
+		const changedFiles = await this.$filesHashService.getChanges(files, this._prepareInfo.appFilesHashes || {});
+		const hasChanges = changedFiles && _.keys(changedFiles).length > 0;
+		if (hasChanges) {
+			this._prepareInfo.appFilesHashes = await this.$filesHashService.generateHashes(files);
+		}
+
+		return hasChanges;
 	}
 }
 $injector.register("projectChangesService", ProjectChangesService);

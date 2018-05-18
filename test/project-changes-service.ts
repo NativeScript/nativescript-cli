@@ -30,6 +30,12 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 		this.injector.register("devicePlatformsConstants", {});
 		this.injector.register("devicePlatformsConstants", {});
 		this.injector.register("projectChangesService", ProjectChangesService);
+		this.injector.register("filesHashService", {
+			generateHashes: () => Promise.resolve({})
+		});
+		this.injector.register("logger", {
+			warn: () => ({})
+		});
 
 		const fs = this.injector.resolve<IFileSystem>("fs");
 		fs.writeJson(path.join(this.projectDir, Constants.PACKAGE_JSON_FILE_NAME), {
@@ -127,7 +133,8 @@ describe("Project Changes Service Tests", () => {
 					changesRequireBuildTime: new Date().toString(),
 					iOSProvisioningProfileUUID: "provisioning_profile_test",
 					projectFileHash: "",
-					nativePlatformStatus: Constants.NativePlatformStatus.requiresPlatformAdd
+					nativePlatformStatus: Constants.NativePlatformStatus.requiresPlatformAdd,
+					appFilesHashes: {}
 				};
 				fs.writeJson(prepareInfoPath, expectedPrepareInfo);
 

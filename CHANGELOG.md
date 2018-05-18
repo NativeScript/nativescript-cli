@@ -1,6 +1,31 @@
 NativeScript CLI Changelog
 ================
 
+4.0.2 (2018, May 18)
+==
+
+### Fixed
+* [Fixed #3595](https://github.com/NativeScript/nativescript-cli/issues/3595): Do not track local paths in Analytics
+* [Fixed #3597](https://github.com/NativeScript/nativescript-cli/issues/3597): Users who subscribe to Progess Newsletter are not informed for the privacy policy
+
+4.0.1 (2018, May 11)
+==
+
+### New
+* [Implemented #3535](https://github.com/NativeScript/nativescript-cli/pull/3535) API: Expose androidProcessService - getAppProcessId method
+
+
+### Fixed
+* [Fixed #1548](https://github.com/NativeScript/nativescript-cli/issues/1548): `--sdk` flag not working properly when starting emulators in iOS
+* [Fixed #2131](https://github.com/NativeScript/nativescript-cli/issues/2131): Simulators with `(` in name are not started after `tns run ios --device <device_name>`
+* [Fixed #2727](https://github.com/NativeScript/nativescript-cli/issues/2727): Passing more than one parameter on `tns create` returns unappropriate error message
+* [Fixed #3529](https://github.com/NativeScript/nativescript-cli/issues/3529): iOS logging does not work on multiple simulators
+* [Fixed #3536](https://github.com/NativeScript/nativescript-cli/issues/3536): Message for tracking in Google Analytics is always printed
+* [Fixed #3554](https://github.com/NativeScript/nativescript-cli/issues/3554): NativeScript is not compatible with Node.js 10.x.x
+* [Fixed #3557](https://github.com/NativeScript/nativescript-cli/pull/3557): Asset generation should not fail in case some App_Resources are missing.
+* [Fixed #3560](https://github.com/NativeScript/nativescript-cli/issues/3560): Android build fails when path to app has space and plugin should be build
+
+
 4.0.0 (2018, April 10)
 ==
 
