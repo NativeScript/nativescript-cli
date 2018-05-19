@@ -715,8 +715,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		let requiresNativePlatformAdd = false;
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
 		// In case when no platform is added and webpack plugin is started it produces files in platforms folder. In this case {N} CLI needs to add platform and keeps the already produced files from webpack
-		if (!this.$fs.exists(platformData.configurationFilePath) && this.isPlatformInstalled(platform, projectData) && appFilesUpdaterOptions.bundle) {
+		if (appFilesUpdaterOptions.bundle && this.isPlatformInstalled(platform, projectData) && !this.$fs.exists(platformData.configurationFilePath) && prepareInfo.nativePlatformStatus !== constants.NativePlatformStatus.alreadyPrepared) {
 			const tmpDirectoryPath = path.join(projectData.projectDir, "platforms", "tmp");
 			this.$fs.deleteDirectory(tmpDirectoryPath);
 			this.$fs.ensureDirectoryExists(tmpDirectoryPath);
@@ -731,7 +732,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			await this.addPlatform(platform, platformTemplate, projectData, config, "", nativePrepare);
 		} else {
 			const shouldAddNativePlatform = !nativePrepare || !nativePrepare.skipNativePrepare;
-			const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
 			// In case there's no prepare info, it means only platform add had been executed. So we've come from CLI and we do not need to prepare natively.
 			requiresNativePlatformAdd = prepareInfo && prepareInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPlatformAdd;
 			if (requiresNativePlatformAdd && shouldAddNativePlatform) {
