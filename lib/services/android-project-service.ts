@@ -706,7 +706,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					platformVersion = projectPackageJson.version;
 				}
 			} else {
-				return false;
+				return true;
 			}
 		}
 
