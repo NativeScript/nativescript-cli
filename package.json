@@ -53,7 +53,7 @@
     "minimatch": "3.0.2",
     "mkdirp": "0.5.1",
     "mute-stream": "0.0.5",
-    "nativescript-doctor": "0.13.0-rc.0",
+    "nativescript-doctor": "1.0.0",
     "open": "0.0.5",
     "ora": "2.0.0",
     "osenv": "0.1.3",
