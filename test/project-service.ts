@@ -18,6 +18,7 @@ import { Options } from "../lib/options";
 import { HostInfo } from "../lib/common/host-info";
 import { ProjectTemplatesService } from "../lib/services/project-templates-service";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
+import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 
 const mockProjectNameValidator = {
 	validate: () => true
@@ -157,8 +158,13 @@ class ProjectIntegrationTest {
 		});
 		this.testInjector.register("npmInstallationManager", NpmInstallationManager);
 		this.testInjector.register("settingsService", SettingsService);
-		this.testInjector.register("devicePlatformsConstants", {});
-		this.testInjector.register("androidResourcesMigrationService", {});
+		this.testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
+		this.testInjector.register("androidResourcesMigrationService", {
+			hasMigrated: (appResourcesDir: string): boolean => true
+		});
+		this.testInjector.register("hooksService", {
+			executeAfterHooks: async (commandName: string, hookArguments?: IDictionary<any>): Promise<void> => undefined
+		});
 	}
 }
 
@@ -436,6 +442,9 @@ describe("Project Service Tests", () => {
 			testInjector.register("projectHelper", {});
 			testInjector.register("npmInstallationManager", {});
 			testInjector.register("settingsService", SettingsService);
+			testInjector.register("hooksService", {
+				executeAfterHooks: async (commandName: string, hookArguments?: IDictionary<any>): Promise<void> => undefined
+			});
 
 			return testInjector;
 		};
