@@ -201,3 +201,7 @@ export class TemplateVersions {
 export class ProjectTemplateErrors {
 	public static InvalidTemplateVersionStringFormat = "The template '%s' has a NativeScript version '%s' that is not supported. Unable to create project from it.";
 }
+
+export class Hooks {
+	public static createProject = "createProject";
+}

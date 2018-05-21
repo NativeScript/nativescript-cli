@@ -1,11 +1,18 @@
-/**
- * Describes available settings when creating new NativeScript application.
- */
-interface IProjectSettings {
+interface IProjectName {
+	projectName: string;
+}
+
+interface IProjectSettingsBase extends IProjectName {
 	/**
 	 * Name of the newly created application.
 	 */
 	projectName: string;
+
+	/**
+	 * Defines whether the `npm install` command should be executed with `--ignore-scripts` option.
+	 * When it is passed, all scripts (postinstall for example) will not be executed.
+	 */
+	ignoreScripts?: boolean;
 
 	/**
 	 * Selected template from which to create the project. If not specified, defaults to hello-world template.
@@ -19,7 +26,19 @@ interface IProjectSettings {
 	 * Application identifier for the newly created application. If not specified, defaults to org.nativescript.<projectName>.
 	 */
 	appId?: string;
+}
 
+/**
+ * Describes information passed to project creation hook (createProject).
+ */
+interface IProjectCreationSettings extends IProjectSettingsBase, IProjectDir {
+
+}
+
+/**
+ * Describes available settings when creating new NativeScript application.
+ */
+interface IProjectSettings extends IProjectSettingsBase {
 	/**
 	 * Path where the project will be created. If not specified, defaults to current working dir.
 	 */
@@ -29,17 +48,8 @@ interface IProjectSettings {
 	 * Defines if invalid application name can be used for project creation.
 	 */
 	force?: boolean;
-
-	/**
-	 * Defines whether the `npm install` command should be executed with `--ignore-scripts` option.
-	 * When it is passed, all scripts (postinstall for example) will not be executed.
-	 */
-	ignoreScripts?: boolean;
 }
 
-interface IProjectName {
-	projectName: string;
-}
 
 interface ICreateProjectData extends IProjectDir, IProjectName {
 

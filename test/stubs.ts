@@ -478,6 +478,10 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 	async prepareTemplate(templateName: string): Promise<ITemplateData> {
 		return Promise.resolve(<any>{});
 	}
+
+	getTemplateVersion(templatePath: string): string {
+		return constants.TemplateVersions.v1;
+	}
 }
 
 export class HooksServiceStub implements IHooksService {
