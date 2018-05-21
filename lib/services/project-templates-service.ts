@@ -45,7 +45,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		return { templatePath, templateVersion };
 	}
 
-	private getTemplateVersion(templatePath: string): string {
+	public getTemplateVersion(templatePath: string): string {
 		this.$logger.trace(`Checking the NativeScript version of the template located at ${templatePath}.`);
 		const pathToPackageJson = path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME);
 		if (this.$fs.exists(pathToPackageJson)) {

@@ -219,6 +219,14 @@ interface IProjectTemplatesService {
 	 * @return {ITemplateData} Data describing the template - location where it is installed and its NativeScript version.
 	 */
 	prepareTemplate(templateName: string, projectDir: string): Promise<ITemplateData>;
+
+	/**
+	 * Gives information for the nativescript specific version of the template, for example v1, v2, etc.
+	 * Defaults to v1 in case there's no version specified.
+	 * @param {string} templatePath Full path to the template.
+	 * @returns {string} The version, for example v1 or v2.
+	 */
+	getTemplateVersion(templatePath: string): string;
 }
 
 interface IPlatformProjectServiceBase {

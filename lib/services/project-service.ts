@@ -113,14 +113,14 @@ export class ProjectService implements IProjectService {
 		this.$logger.trace(`Template version is ${templateVersion}`);
 		let destinationDir = "";
 		switch (templateVersion) {
-			case constants.TemplateVersions.v2:
-				destinationDir = projectDir;
-				break;
 			case constants.TemplateVersions.v1:
-			default:
 				const appDestinationPath = this.$projectData.getAppDirectoryPath(projectDir);
 				this.$fs.createDirectory(appDestinationPath);
 				destinationDir = appDestinationPath;
+				break;
+			case constants.TemplateVersions.v2:
+			default:
+				destinationDir = projectDir;
 				break;
 		}
 
@@ -146,20 +146,25 @@ export class ProjectService implements IProjectService {
 				ignoreScripts: false
 			});
 
-			const obsoleteAppResourcesPath = path.join(projectDir,
-				constants.NODE_MODULES_FOLDER_NAME,
-				defaultTemplateName,
-				constants.APP_RESOURCES_FOLDER_NAME);
+			const defaultTemplatePath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME, defaultTemplateName);
+			const defaultTemplateVersion = this.$projectTemplatesService.getTemplateVersion(defaultTemplatePath);
 
-			const defaultTemplateAppResourcesPath = path.join(projectDir,
-				constants.NODE_MODULES_FOLDER_NAME,
-				defaultTemplateName,
-				constants.APP_FOLDER_NAME,
-				constants.APP_RESOURCES_FOLDER_NAME);
+			let defaultTemplateAppResourcesPath: string = null;
+			switch (defaultTemplateVersion) {
+				case constants.TemplateVersions.v1:
+					defaultTemplateAppResourcesPath = path.join(projectDir,
+						constants.NODE_MODULES_FOLDER_NAME,
+						defaultTemplateName,
+						constants.APP_RESOURCES_FOLDER_NAME);
+					break;
+				case constants.TemplateVersions.v2:
+				default:
+					const defaultTemplateProjectData = this.$projectDataService.getProjectData(defaultTemplatePath);
+					defaultTemplateAppResourcesPath = defaultTemplateProjectData.appResourcesDirectoryPath;
+			}
 
-			const pathToAppResources = this.$fs.exists(defaultTemplateAppResourcesPath) ? defaultTemplateAppResourcesPath : obsoleteAppResourcesPath;
-			if (this.$fs.exists(pathToAppResources)) {
-				shelljs.cp('-R', pathToAppResources, appPath);
+			if (defaultTemplateAppResourcesPath && this.$fs.exists(defaultTemplateAppResourcesPath)) {
+				shelljs.cp('-R', defaultTemplateAppResourcesPath, appPath);
 			}
 
 			await this.$npm.uninstall(defaultTemplateName, { save: true }, projectDir);
