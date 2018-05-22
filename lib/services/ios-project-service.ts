@@ -17,15 +17,10 @@ import * as mobileprovision from "ios-mobileprovision-finder";
 import { SpawnOptions } from "child_process";
 import { BUILD_XCCONFIG_FILE_NAME } from "../constants";
 
-interface INativeSourceCodeDescription {
-	path: string;
-	name: string;
-}
-
 interface INativeSourceCodeGroup {
 	name: string;
 	path: string;
-	files: INativeSourceCodeDescription[];
+	files: string[];
 }
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
@@ -949,6 +944,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
 		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 
+		this.removeNativeSourceCode(pluginPlatformsFolderPath, pluginData, projectData);
 		this.removeFrameworks(pluginPlatformsFolderPath, pluginData, projectData);
 		this.removeStaticLibs(pluginPlatformsFolderPath, pluginData, projectData);
 		this.removeCocoapods(pluginPlatformsFolderPath, projectData);
@@ -1123,20 +1119,19 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	private async prepareNativeSourceCode(pluginName: string, pluginPlatformsFolderPath: string, projectData: IProjectData): Promise<void> {
 		const project = this.createPbxProj(projectData);
 		const group = this.getRootGroup(pluginName, pluginPlatformsFolderPath);
-		project.addPbxGroup(group.files.map(f => f.path), group.name, group.path, null, {isMain:true});
+		project.addPbxGroup(group.files, group.name, group.path, null, {isMain:true});
 		project.addToHeaderSearchPaths(group.path);
 		this.savePbxProj(project, projectData);
 	}
 
 	private getRootGroup(name: string, rootPath: string) {
-		const filesArr: INativeSourceCodeDescription[] = [];
-		const rootGroup: INativeSourceCodeGroup = { name: name, files: filesArr, path: rootPath };
+		const filePathsArr: string[] = [];
+		const rootGroup: INativeSourceCodeGroup = { name: name, files: filePathsArr, path: rootPath };
 
 		if (this.$fs.exists(rootPath) && !this.$fs.isEmptyDir(rootPath)) {
 			this.$fs.readDirectory(rootPath).forEach(fileName => {
 				const filePath = path.join(rootGroup.path, fileName);
-				const file: INativeSourceCodeDescription = { name: fileName, path: filePath};
-				filesArr.push(file);
+				filePathsArr.push(filePath);
 			});
 		}
 
@@ -1197,6 +1192,14 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		if (opts && opts.executePodInstall && this.$fs.exists(pluginPodFilePath)) {
 			await this.executePodInstall(projectData);
 		}
+	}
+
+	private removeNativeSourceCode(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): void {
+		const project = this.createPbxProj(projectData);
+		const group = this.getRootGroup(pluginData.name, pluginPlatformsFolderPath);
+		project.removePbxGroup(group.name, group.path);
+		project.removeFromHeaderSearchPaths(group.path);
+		this.savePbxProj(project, projectData);
 	}
 
 	private removeFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): void {
