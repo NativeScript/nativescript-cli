@@ -11,11 +11,11 @@ function testFunc() {
     const tagStore = 'kinveyTest';
 
     const validatePullOperation = (result, expectedItems, expectedPulledItemsCount, tagStore, collectionName) => {
-        const collectioNameForStore = collectionName?collectionName:deltaCollectionName;
-        const taggedDataStore = tagStore?Kinvey.DataStore.collection(deltaCollectionName, Kinvey.DataStoreType.Sync, { tag: tagStore }):null;
+        const collectioNameForStore = collectionName ? collectionName : deltaCollectionName;
+        const taggedDataStore = tagStore ? Kinvey.DataStore.collection(deltaCollectionName, Kinvey.DataStoreType.Sync, { tag: tagStore }) : null;
         const syncStoreToFind = Kinvey.DataStore.collection(collectioNameForStore, Kinvey.DataStoreType.Sync)
         expect(result).to.equal(expectedPulledItemsCount || expectedItems.length);
-        const storeToFind = tagStore ? taggedDataStore:syncStoreToFind;
+        const storeToFind = tagStore ? taggedDataStore : syncStoreToFind;
         return storeToFind.find().toPromise()
             .then((result) => {
                 expectedItems.forEach((entity) => {
@@ -97,11 +97,17 @@ function testFunc() {
                 });
 
                 it('should return correct number of items with created item', (done) => {
+                    const entity4 = utilities.getEntity(utilities.randomString());
+                    const entity5 = utilities.getEntity(utilities.randomString());
                     deltaStoreToTest.pull()
                         .then((result) => validatePullOperation(result, [entity1, entity2]))
                         .then(() => deltaNetworkStore.save(entity3))
                         .then(() => deltaStoreToTest.pull())
                         .then((result) => validateNewPullOperation(result, [entity3], []))
+                        .then(() => deltaNetworkStore.save(entity4))
+                        .then(() => deltaNetworkStore.save(entity5))
+                        .then(() => deltaStoreToTest.pull())
+                        .then((result) => validateNewPullOperation(result, [entity4, entity5], []))
                         .then(() => done())
                         .catch(done);
                 });
@@ -169,36 +175,62 @@ function testFunc() {
                 });
 
                 it('should return correct number of items with deleted item', (done) => {
-                    deltaStoreToTest.pull()
-                        .then((result) => validatePullOperation(result, [entity1, entity2]))
-                        .then(() => deltaNetworkStore.removeById(entity2._id))
+                    deltaNetworkStore.save(entity3)
                         .then(() => deltaStoreToTest.pull())
-                        .then((result) => validateNewPullOperation(result, [], [entity2]))
+                        .then((result) => validatePullOperation(result, [entity1, entity2, entity3]))
+                        .then(() => deltaNetworkStore.removeById(entity1._id))
+                        .then(() => deltaStoreToTest.pull())
+                        .then((result) => validateNewPullOperation(result, [], [entity1]))
+                        .then(() => deltaNetworkStore.removeById(entity2._id))
+                        .then(() => deltaNetworkStore.removeById(entity3._id))
+                        .then(() => deltaStoreToTest.pull())
+                        .then((result) => validateNewPullOperation(result, [], [entity2, entity3]))
                         .then(() => done())
                         .catch(done);
                 });
 
                 it('should return correct number of items with updated item', (done) => {
                     const updatedEntity = _.clone(entity2);
+                    const updatedEntity1 = _.clone(entity1);
+                    const updatedEntity2 = _.clone(entity3);
                     updatedEntity.textField = utilities.randomString();
-                    deltaStoreToTest.pull()
-                        .then((result) => validatePullOperation(result, [entity1, entity2]))
+                    updatedEntity1.textField = utilities.randomString();
+                    updatedEntity2.textField = utilities.randomString();
+                    deltaNetworkStore.save(entity3)
+                        .then(() => deltaStoreToTest.pull())
+                        .then((result) => validatePullOperation(result, [entity1, entity2, entity3]))
                         .then(() => deltaNetworkStore.save(updatedEntity))
                         .then(() => deltaStoreToTest.pull())
                         .then((result) => validateNewPullOperation(result, [updatedEntity], []))
+                        .then(() => deltaNetworkStore.save(updatedEntity1))
+                        .then(() => deltaNetworkStore.save(updatedEntity2))
+                        .then(() => deltaStoreToTest.pull())
+                        .then((result) => validateNewPullOperation(result, [updatedEntity1, updatedEntity2], []))
                         .then(() => done())
                         .catch(done);
                 });
 
                 it('should return correct number of items with updated and deleted item', (done) => {
+                    const entity4 = utilities.getEntity(utilities.randomString())
                     const updatedEntity = _.clone(entity2);
+                    const updatedEntity1 = _.clone(entity1);
+                    const updatedEntity2 = _.clone(entity3);
                     updatedEntity.textField = utilities.randomString();
-                    deltaStoreToTest.pull()
-                        .then((result) => validatePullOperation(result, [entity1, entity2]))
+                    updatedEntity1.textField = utilities.randomString();
+                    updatedEntity2.textField = utilities.randomString();
+                    deltaNetworkStore.save(entity3)
+                        .then(() => deltaNetworkStore.save(entity4))
+                        .then(() => deltaStoreToTest.pull())
+                        .then((result) => validatePullOperation(result, [entity1, entity2, entity3, entity4]))
                         .then(() => deltaNetworkStore.save(updatedEntity))
                         .then(() => deltaNetworkStore.removeById(entity1._id))
                         .then(() => deltaStoreToTest.pull())
                         .then((result) => validateNewPullOperation(result, [updatedEntity], [entity1]))
+                        .then(() => deltaNetworkStore.save(updatedEntity2))
+                        .then(() => deltaNetworkStore.removeById(updatedEntity._id))
+                        .then(() => deltaNetworkStore.removeById(entity4._id))
+                        .then(() => deltaStoreToTest.pull())
+                        .then((result) => validateNewPullOperation(result, [updatedEntity2], [updatedEntity, entity4]))
                         .then(() => done())
                         .catch(done);
                 });
@@ -375,11 +407,17 @@ function testFunc() {
                 });
 
                 it('should return correct number of items with created item', (done) => {
+                    const entity4 = utilities.getEntity(utilities.randomString());
+                    const entity5 = utilities.getEntity(utilities.randomString());
                     deltaStoreToTest.sync()
                         .then((result) => validatePullOperation(result.pull, [entity1, entity2]))
                         .then(() => deltaNetworkStore.save(entity3))
                         .then(() => deltaStoreToTest.sync())
                         .then((result) => validateNewPullOperation(result.pull, [entity3], []))
+                        .then(() => deltaNetworkStore.save(entity4))
+                        .then(() => deltaNetworkStore.save(entity5))
+                        .then(() => deltaStoreToTest.sync())
+                        .then((result) => validateNewPullOperation(result.pull, [entity4, entity5], []))
                         .then(() => done())
                         .catch(done);
                 });
@@ -448,36 +486,62 @@ function testFunc() {
                 });
 
                 it('should return correct number of items with deleted item', (done) => {
-                    deltaStoreToTest.sync()
-                        .then((result) => validatePullOperation(result.pull, [entity1, entity2]))
-                        .then(() => deltaNetworkStore.removeById(entity2._id))
+                    deltaNetworkStore.save(entity3)
                         .then(() => deltaStoreToTest.sync())
-                        .then((result) => validateNewPullOperation(result.pull, [], [entity2]))
+                        .then((result) => validatePullOperation(result.pull, [entity1, entity2, entity3]))
+                        .then(() => deltaNetworkStore.removeById(entity1._id))
+                        .then(() => deltaStoreToTest.sync())
+                        .then((result) => validateNewPullOperation(result.pull, [], [entity1]))
+                        .then(() => deltaNetworkStore.removeById(entity2._id))
+                        .then(() => deltaNetworkStore.removeById(entity3._id))
+                        .then(() => deltaStoreToTest.sync())
+                        .then((result) => validateNewPullOperation(result.pull, [], [entity2, entity3]))
                         .then(() => done())
                         .catch(done);
                 });
 
                 it('should return correct number of items with updated item', (done) => {
                     const updatedEntity = _.clone(entity2);
+                    const updatedEntity1 = _.clone(entity1);
+                    const updatedEntity2 = _.clone(entity3);
                     updatedEntity.textField = utilities.randomString();
-                    deltaStoreToTest.sync()
-                        .then((result) => validatePullOperation(result.pull, [entity1, entity2]))
+                    updatedEntity1.textField = utilities.randomString();
+                    updatedEntity2.textField = utilities.randomString();
+                    deltaNetworkStore.save(entity3)
+                        .then(() => deltaStoreToTest.sync())
+                        .then((result) => validatePullOperation(result.pull, [entity1, entity2, entity3]))
                         .then(() => deltaNetworkStore.save(updatedEntity))
                         .then(() => deltaStoreToTest.sync())
                         .then((result) => validateNewPullOperation(result.pull, [updatedEntity], []))
+                        .then(() => deltaNetworkStore.save(updatedEntity1))
+                        .then(() => deltaNetworkStore.save(updatedEntity2))
+                        .then(() => deltaStoreToTest.sync())
+                        .then((result) => validateNewPullOperation(result.pull, [updatedEntity1, updatedEntity2], []))
                         .then(() => done())
                         .catch(done);
                 });
 
                 it('should return correct number of items with updated and deleted item', (done) => {
+                    const entity4 = utilities.getEntity(utilities.randomString())
                     const updatedEntity = _.clone(entity2);
+                    const updatedEntity1 = _.clone(entity1);
+                    const updatedEntity2 = _.clone(entity3);
                     updatedEntity.textField = utilities.randomString();
-                    deltaStoreToTest.sync()
-                        .then((result) => validatePullOperation(result.pull, [entity1, entity2]))
+                    updatedEntity1.textField = utilities.randomString();
+                    updatedEntity2.textField = utilities.randomString();
+                    deltaNetworkStore.save(entity3)
+                        .then(() => deltaNetworkStore.save(entity4))
+                        .then(() => deltaStoreToTest.sync())
+                        .then((result) => validatePullOperation(result.pull, [entity1, entity2, entity3, entity4]))
                         .then(() => deltaNetworkStore.save(updatedEntity))
                         .then(() => deltaNetworkStore.removeById(entity1._id))
                         .then(() => deltaStoreToTest.sync())
                         .then((result) => validateNewPullOperation(result.pull, [updatedEntity], [entity1]))
+                        .then(() => deltaNetworkStore.save(updatedEntity2))
+                        .then(() => deltaNetworkStore.removeById(updatedEntity._id))
+                        .then(() => deltaNetworkStore.removeById(entity4._id))
+                        .then(() => deltaStoreToTest.sync())
+                        .then((result) => validateNewPullOperation(result.pull, [updatedEntity2], [updatedEntity, entity4]))
                         .then(() => done())
                         .catch(done);
                 });
@@ -720,18 +784,44 @@ function testFunc() {
                 });
 
                 it('should return correct number of items with deleted item', (done) => {
+                    const entity4 = utilities.getEntity(utilities.randomString())
                     const onNextSpy = sinon.spy();
-                    deltaStoreToTest.find()
+                    deltaNetworkStore.save(entity3)
+                        .then(() => deltaNetworkStore.save(entity4))
+                        .then(() => deltaStoreToTest.find()
                         .subscribe(onNextSpy, done, () => {
                             try {
-                                utilities.validateReadResult(currentDataStoreType, onNextSpy, [entity1], [entity1, entity2], true);
-                                const anotherSpy = sinon.spy();
+                                utilities.validateReadResult(currentDataStoreType, onNextSpy, [entity1], [entity1, entity2, entity3, entity4], true);
+                                onNextSpy.reset();
                                 deltaNetworkStore.removeById(entity1._id)
                                     .then(() => deltaStoreToTest.find()
-                                        .subscribe(anotherSpy, done, () => {
+                                        .subscribe(onNextSpy, done, () => {
                                             try {
-                                                utilities.validateReadResult(currentDataStoreType, anotherSpy, [entity1, entity2], [entity2], true);
-                                                done();
+                                                utilities.validateReadResult(currentDataStoreType, onNextSpy, [entity1, entity2, entity3, entity4], [entity2, entity3, entity4], true);
+                                                const secondSpy = sinon.spy();
+                                                deltaNetworkStore.removeById(entity2._id)
+                                                    .then(() => deltaNetworkStore.removeById(entity3._id))
+                                                    .then(() => deltaStoreToTest.find()
+                                                        .subscribe(secondSpy, done, () => {
+                                                            try {
+                                                                utilities.validateReadResult(currentDataStoreType, secondSpy, [entity2, entity3, entity4], [entity4], true);
+                                                                onNextSpy.reset();
+                                                                syncStore.find()
+                                                                    .subscribe(onNextSpy, done, () => {
+                                                                        try {
+                                                                            utilities.validateReadResult(Kinvey.DataStoreType.Sync, onNextSpy, [entity4])
+                                                                            done();
+                                                                        } catch (error) {
+                                                                            done(error)
+                                                                        }
+                                                                    })
+                                                            } catch (error) {
+                                                                done(error);
+                                                            }
+                                                        })
+                                                    )
+                                                    .catch(done);
+
                                             }
                                             catch (error) {
                                                 done(error);
@@ -741,7 +831,9 @@ function testFunc() {
                             catch (error) {
                                 done(error);
                             }
-                        });
+                        })
+                    )
+                    .catch(done);
                 });
 
                 it('should return correct number of items with updated item', (done) => {

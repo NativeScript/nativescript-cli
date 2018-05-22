@@ -85,7 +85,7 @@ export class SyncManager {
             .then((data) => {
               if (data.deleted.length > 0) {
                 const deleteQuery = new Query();
-                deleteQuery.containsAll('_id', data.deleted.map((entity) => entity._id));
+                deleteQuery.contains('_id', data.deleted.map((entity) => entity._id));
                 return this._deleteOfflineEntities(collection, deleteQuery)
                   .then(() => data);
               }
