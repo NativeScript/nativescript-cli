@@ -646,14 +646,27 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		for (const platform of platforms) {
 			this.validatePlatformInstalled(platform, projectData);
 			const platformData = this.$platformsData.getPlatformData(platform, projectData);
+			let gradleErrorMessage;
 
-			await platformData.platformProjectService.stopServices(platformData.projectRoot);
+			try {
+				await platformData.platformProjectService.stopServices(platformData.projectRoot);
+			} catch (err) {
+				gradleErrorMessage = err.message;
+			}
 
-			const platformDir = path.join(projectData.platformsDir, platform);
-			this.$fs.deleteDirectory(platformDir);
-			this.$projectDataService.removeNSProperty(projectData.projectDir, platformData.frameworkPackageName);
+			try {
+				const platformDir = path.join(projectData.platformsDir, platform.toLowerCase());
+				this.$fs.deleteDirectory(platformDir);
+				this.$projectDataService.removeNSProperty(projectData.projectDir, platformData.frameworkPackageName);
 
-			this.$logger.out(`Platform ${platform} successfully removed.`);
+				this.$logger.out(`Platform ${platform} successfully removed.`);
+			} catch (err) {
+				this.$logger.error(`Failed to remove ${platform} platform with errors:`);
+				if (gradleErrorMessage) {
+					this.$logger.error(gradleErrorMessage);
+				}
+				this.$errors.failWithoutHelp(err.message);
+			}
 		}
 	}
 
