@@ -1,13 +1,19 @@
 import { EventEmitter } from "events";
 
-export class PlatformProjectServiceBase extends EventEmitter implements IPlatformProjectServiceBase {
+export abstract class PlatformProjectServiceBase extends EventEmitter implements IPlatformProjectServiceBase {
 	constructor(protected $fs: IFileSystem,
 		protected $projectDataService: IProjectDataService) {
 			super();
 	}
 
+	protected abstract getPlatformData(projectData: IProjectData): IPlatformData;
+
 	public getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string {
 		return pluginData.pluginPlatformsFolderPath(platform);
+	}
+
+	public getFrameworkVersion(projectData: IProjectData): string {
+		return this.$projectDataService.getNSValue(projectData.projectDir, this.getPlatformData(projectData).frameworkPackageName).version;
 	}
 
 	protected getAllNativeLibrariesForPlugin(pluginData: IPluginData, platform: string, filter: (fileName: string, _pluginPlatformsFolderPath: string) => boolean): string[] {
@@ -22,9 +28,5 @@ export class PlatformProjectServiceBase extends EventEmitter implements IPlatfor
 		}
 
 		return nativeLibraries;
-	}
-
-	protected getFrameworkVersion(runtimePackageName: string, projectDir: string): string {
-		return this.$projectDataService.getNSValue(projectDir, runtimePackageName).version;
 	}
 }

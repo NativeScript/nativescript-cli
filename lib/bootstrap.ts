@@ -167,3 +167,5 @@ $injector.requireCommand("resources|generate|splashes", "./commands/generate-ass
 $injector.requirePublic("assetsGenerationService", "./services/assets-generation/assets-generation-service");
 
 $injector.require("filesHashService", "./services/files-hash-service");
+$injector.require("iOSLogParserService", "./services/ios-log-parser-service");
+$injector.require("iOSDebuggerPortService", "./services/ios-debugger-port-service");

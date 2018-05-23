@@ -408,6 +408,12 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	async checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
 		// Nothing yet.
 	}
+	getFrameworkVersion(projectData: IProjectData): string {
+		return "";
+	}
+	getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string {
+		return "";
+	}
 }
 
 export class PlatformsDataStub extends EventEmitter implements IPlatformsData {

@@ -645,7 +645,7 @@ interface ISocketProxyFactory extends NodeJS.EventEmitter {
 
 interface IiOSNotification {
 	getWaitForDebug(projectId: string): string;
-	getAttachRequest(projectId: string): string;
+	getAttachRequest(projectId: string, deviceId: string): string;
 	getAppLaunching(projectId: string): string;
 	getReadyForAttach(projectId: string): string;
 	getAttachAvailabilityQuery(projectId: string): string;
