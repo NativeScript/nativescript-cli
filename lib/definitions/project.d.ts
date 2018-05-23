@@ -1,11 +1,18 @@
-/**
- * Describes available settings when creating new NativeScript application.
- */
-interface IProjectSettings {
+interface IProjectName {
+	projectName: string;
+}
+
+interface IProjectSettingsBase extends IProjectName {
 	/**
 	 * Name of the newly created application.
 	 */
 	projectName: string;
+
+	/**
+	 * Defines whether the `npm install` command should be executed with `--ignore-scripts` option.
+	 * When it is passed, all scripts (postinstall for example) will not be executed.
+	 */
+	ignoreScripts?: boolean;
 
 	/**
 	 * Selected template from which to create the project. If not specified, defaults to hello-world template.
@@ -19,7 +26,19 @@ interface IProjectSettings {
 	 * Application identifier for the newly created application. If not specified, defaults to org.nativescript.<projectName>.
 	 */
 	appId?: string;
+}
 
+/**
+ * Describes information passed to project creation hook (createProject).
+ */
+interface IProjectCreationSettings extends IProjectSettingsBase, IProjectDir {
+
+}
+
+/**
+ * Describes available settings when creating new NativeScript application.
+ */
+interface IProjectSettings extends IProjectSettingsBase {
 	/**
 	 * Path where the project will be created. If not specified, defaults to current working dir.
 	 */
@@ -29,17 +48,8 @@ interface IProjectSettings {
 	 * Defines if invalid application name can be used for project creation.
 	 */
 	force?: boolean;
-
-	/**
-	 * Defines whether the `npm install` command should be executed with `--ignore-scripts` option.
-	 * When it is passed, all scripts (postinstall for example) will not be executed.
-	 */
-	ignoreScripts?: boolean;
 }
 
-interface IProjectName {
-	projectName: string;
-}
 
 interface ICreateProjectData extends IProjectDir, IProjectName {
 
@@ -201,6 +211,11 @@ interface IImageDefinitionsStructure {
 	android: IImageDefinitionGroup;
 }
 
+interface ITemplateData {
+	templatePath: string;
+	templateVersion: string;
+}
+
 /**
  * Describes working with templates.
  */
@@ -211,9 +226,17 @@ interface IProjectTemplatesService {
 	 * In case templateName is a special word, validated from us (for ex. typescript), resolve the real template name and add it to npm cache.
 	 * In any other cases try to `npm install` the specified templateName to temp directory.
 	 * @param {string} templateName The name of the template.
-	 * @return {string} Path to the directory where extracted template can be found.
+	 * @return {ITemplateData} Data describing the template - location where it is installed and its NativeScript version.
 	 */
-	prepareTemplate(templateName: string, projectDir: string): Promise<string>;
+	prepareTemplate(templateName: string, projectDir: string): Promise<ITemplateData>;
+
+	/**
+	 * Gives information for the nativescript specific version of the template, for example v1, v2, etc.
+	 * Defaults to v1 in case there's no version specified.
+	 * @param {string} templatePath Full path to the template.
+	 * @returns {string} The version, for example v1 or v2.
+	 */
+	getTemplateVersion(templatePath: string): string;
 }
 
 interface IPlatformProjectServiceBase {
