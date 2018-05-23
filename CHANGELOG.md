@@ -1,6 +1,27 @@
 NativeScript CLI Changelog
 ================
 
+4.1.0 (2018, May 31)
+==
+
+### New
+* [Implemented #3321](https://github.com/NativeScript/nativescript-cli/issues/3321): Work simultaneously with multiple iOS Simulators
+* [Implemented #3404](https://github.com/NativeScript/nativescript-cli/issues/3404): Start LiveSync watcher earlier during run
+* [Implemented #3570](https://github.com/NativeScript/nativescript-cli/issues/3570): Add deprecation message for macOS versions under High Sierra
+* [Implemented #3581](https://github.com/NativeScript/nativescript-cli/issues/3581): Drop support for Node.js 4.x.x
+* [Implemented #3582](https://github.com/NativeScript/nativescript-cli/issues/3582): Deprecate support for Node.js 6.x.x
+* [Implemented #3605](https://github.com/NativeScript/nativescript-cli/issues/3605): Support Java 10
+* [Implemented #3636](https://github.com/NativeScript/nativescript-cli/issues/3636): Allow templates to be full applications - BETA support
+* [Implemented #3650](https://github.com/NativeScript/nativescript-cli/issues/3650): Enable using source code in iOS part of plugins
+
+### Fixed
+* [Fixed #1398](https://github.com/NativeScript/nativescript-cli/issues/1398): CLI detects iOS devices connected over Wi-fi and fails to work with them
+* [Fixed #2831](https://github.com/NativeScript/nativescript-cli/issues/2831): `tns debug android --start` releases the terminal session
+* [Fixed #3580](https://github.com/NativeScript/nativescript-cli/pull/3580): API: isValidNativeScriptProject returns incorrect result
+* [Fixed #3593](https://github.com/NativeScript/nativescript-cli/issues/3593): Tracking for used Debug tools is not correct
+* [Fixed #3629](https://github.com/NativeScript/nativescript-cli/issues/3629): `tns debug android --start` does not print application console.logs
+
+
 4.0.2 (2018, May 18)
 ==
 
@@ -13,7 +34,6 @@ NativeScript CLI Changelog
 
 ### New
 * [Implemented #3535](https://github.com/NativeScript/nativescript-cli/pull/3535) API: Expose androidProcessService - getAppProcessId method
-
 
 ### Fixed
 * [Fixed #1548](https://github.com/NativeScript/nativescript-cli/issues/1548): `--sdk` flag not working properly when starting emulators in iOS
