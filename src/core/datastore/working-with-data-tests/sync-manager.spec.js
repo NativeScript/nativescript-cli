@@ -378,14 +378,11 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
           });
       });
 
-      it('should call OfflineRepo.delete() with the internal pull query', () => {
+      it('should call OfflineRepo.delete() without a query', () => {
         utilsMock.splitQueryIntoPages = expect.createSpy().andReturn([]);
         return syncManager.pull(collection, null, options)
           .then(() => {
-            const internalQueryMock = new Query();
-            internalQueryMock.limit = backendEntityCount;
-            internalQueryMock.sort = { [defaultSortField]: 1 };
-            validateSpyCalls(offlineRepoMock.delete, 1, [collection, internalQueryMock]);
+            validateSpyCalls(offlineRepoMock.delete, 1, [collection, undefined]);
           });
       });
 

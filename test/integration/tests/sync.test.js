@@ -415,6 +415,31 @@ function testFunc() {
               .catch(done);
           });
 
+          it('should delete entities locally that are deleted in the server with autopagination', (done) => {
+            let query = new Kinvey.Query();
+            storeToTest.pull(query, {autoPagination:{pageSize:1}})
+              .then((result) => validatePullOperation(result, [entity1, entity2]))
+              .then(() => networkStore.save(entity3))
+              .then(() => storeToTest.pull(query, {autoPagination:true}))
+              .then((result) => validatePullOperation(result, [entity1, entity2, entity3]))
+              .then(() => networkStore.removeById(entity1._id))
+              .then(() => networkStore.removeById(entity2._id))
+              .then(() => storeToTest.pull(query, {autoPagination:true}))
+              .then((result) => validatePullOperation(result, [entity3]))
+              .then(() => {
+              let onNextSpy = sinon.spy();
+              syncStore.find()
+                  .subscribe(onNextSpy, done, () => {
+                      try {
+                          utilities.validateReadResult(Kinvey.DataStoreType.Sync, onNextSpy, [entity3])
+                          done();
+                      } catch (error) {
+                          done(error)
+                      }})
+            })
+            .catch(done);
+          });
+
           it('should pull only the entities, matching the query', (done) => {
             const query = new Kinvey.Query();
             query.equalTo('_id', entity1._id);
