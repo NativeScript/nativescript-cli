@@ -417,6 +417,8 @@ describe("Cocoapods support", () => {
 				return {
 					updateBuildProperty: () => { return {}; },
 					pbxXCBuildConfigurationSection: () => { return {}; },
+					removePbxGroup: () => { return {}; },
+					removeFromHeaderSearchPaths: () => { return {}; },
 				};
 			};
 			iOSProjectService.savePbxProj = (): Promise<void> => Promise.resolve();
