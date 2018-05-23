@@ -15,7 +15,8 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	public getPort(data: IIOSDebuggerPortInputData): Promise<number> {
 		return new Promise((resolve, reject) => {
 			if (!this.canStartLookingForDebuggerPort()) {
-				return IOSDebuggerPortService.DEFAULT_PORT;
+				resolve(IOSDebuggerPortService.DEFAULT_PORT);
+				return;
 			}
 
 			const key = `${data.deviceId}${data.appId}`;
