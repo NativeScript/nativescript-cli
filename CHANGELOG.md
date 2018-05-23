@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.11.0](https://github.com/Kinvey/js-sdk/tree/v3.11.0) (2018-05-23)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.10.3...v3.11.0)<br/>
+
+- QA-196: Add integration tests for files. [#293](https://github.com/Kinvey/js-sdk/pull/293)
+- Add push bundle for iOS and Android to files property in `package.json` for the Kinvey NativeScript SDK. [#296](https://github.com/Kinvey/js-sdk/pull/296)
+- MLIBZ-2316: Server Side Delta Set [#270](https://github.com/Kinvey/js-sdk/pull/270)
+- MLIBZ-2517: Delete mutiple entities properply with Server Side Delta Set [#297](https://github.com/Kinvey/js-sdk/pull/297)
+- MLIBZ-2520: Delete entities properly with Auto Pagination [#298](https://github.com/Kinvey/js-sdk/pull/298)
+
 ## [3.10.3](https://github.com/Kinvey/js-sdk/tree/v3.10.3) (2018-05-08)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.10.2...v3.10.3)<br/>
 
