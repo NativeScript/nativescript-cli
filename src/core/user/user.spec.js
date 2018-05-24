@@ -1,4 +1,5 @@
 import expect from 'expect';
+import chai from 'chai';
 import nock from 'nock';
 import assign from 'lodash/assign';
 import localStorage from 'local-storage';
@@ -15,6 +16,8 @@ import { NodeHttpMiddleware } from '../../node/http';
 import { init } from '../kinvey';
 import { getLiveService } from '../live';
 import { UserMock } from './user-mock';
+
+chai.use(require('chai-as-promised'));
 
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
@@ -742,7 +745,7 @@ describe('User', () => {
 
   describe('me()', () => {
     it('should refresh the users data', () => {
-      const user = new User({ _id: randomString() });
+      const user = new User({ _id: randomString(), name: randomString() });
       const reply = {
         _id: user._id,
         username: randomString()
@@ -756,6 +759,7 @@ describe('User', () => {
       return user.me()
         .then((user) => {
           expect(user.username).toEqual(reply.username);
+          expect(user.data.name).toEqual(undefined);
         });
     });
 
@@ -779,44 +783,6 @@ describe('User', () => {
         });
     });
 
-    it('should set authtoken if one was not provided and user is active user', () => {
-      const activeUser = User.getActiveUser();
-      const reply = {
-        _id: activeUser._id,
-        username: randomString()
-      };
-
-      // Kinvey API response
-      nock(activeUser.client.apiHostname, { encodedQueryParams: true })
-        .get(`${activeUser.pathname}/_me`)
-        .reply(200, reply);
-
-      return activeUser.me()
-        .then((user) => {
-          expect(user.username).toEqual(reply.username);
-          expect(user.authtoken).toEqual(activeUser.authtoken);
-        });
-    });
-
-    it('should not set authtoken if one was not provided and user is not active user', () => {
-      const user = new User({ _id: randomString() });
-      const reply = {
-        _id: user._id,
-        username: randomString()
-      };
-
-      // Kinvey API response
-      nock(user.client.apiHostname, { encodedQueryParams: true })
-        .get(`${user.pathname}/_me`)
-        .reply(200, reply);
-
-      return user.me()
-        .then((user) => {
-          expect(user.username).toEqual(reply.username);
-          expect(user.authtoken).toEqual(null);
-        });
-    });
-
     it('should update active user', () => {
       const user = User.getActiveUser();
       const reply = {
@@ -835,22 +801,9 @@ describe('User', () => {
         });
     });
 
-    it('should not update active user if not active user', () => {
-      const user = new User({ _id: randomString() });
-      const reply = {
-        _id: user._id,
-        username: randomString()
-      };
-
-      // Kinvey API response
-      nock(user.client.apiHostname, { encodedQueryParams: true })
-        .get(`${user.pathname}/_me`)
-        .reply(200, reply);
-
-      return user.me()
-        .then((user) => {
-          expect(user.data).toNotEqual(User.getActiveUser().data);
-        });
+    it('should fail for a user that is not active', () => {
+      const user = new User();
+      return chai.expect(user.me()).to.eventually.be.rejected;
     });
   });
 

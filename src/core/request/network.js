@@ -137,6 +137,12 @@ const Auth = {
       );
     }
 
+    if (!isDefined(activeUser._kmd) || !isDefined(activeUser._kmd.authtoken)) {
+      return Promise.reject(
+        new NoActiveUserError('The active user does not have a valid auth token.')
+      );
+    }
+
     return Promise.resolve({
       scheme: 'Kinvey',
       credentials: activeUser._kmd.authtoken

@@ -591,9 +591,6 @@ export class User {
     return request.execute()
       .then(response => response.data)
       .then((data) => {
-        // Merge returned data
-        data = assign(this.data, data);
-
         // Remove sensitive data
         delete data.password;
 
