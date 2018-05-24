@@ -66,3 +66,16 @@ interface IHiveIds {
 interface IDictionary<T> {
 	[key: string]: T
 }
+
+interface IVersion {
+	version: string;
+}
+
+interface INativeScriptNode {
+	["tns-android"]: IVersion;
+	["tns-ios"]: IVersion;
+}
+
+interface INativeScriptProjectPackageJson {
+	nativescript: INativeScriptNode;
+}

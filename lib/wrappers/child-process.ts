@@ -76,6 +76,10 @@ export class ChildProcess {
 		});
 	}
 
+	public execSync(command: string, options?: childProcess.ExecSyncOptions): string {
+		return childProcess.execSync(command, options).toString();
+	}
+
 	public execFile(command: string, args: string[]): Promise<any> {
 		return new Promise<any>((resolve, reject) => {
 			childProcess.execFile(command, args, (error, stdout) => {

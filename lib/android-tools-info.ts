@@ -38,7 +38,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return this.toolsInfo;
 	}
 
-	public validateInfo(): NativeScriptDoctor.IWarning[] {
+	public validateInfo(projectDir?: string): NativeScriptDoctor.IWarning[] {
 		const errors: NativeScriptDoctor.IWarning[] = [];
 		const toolsInfoData = this.getToolsInfo();
 		const isAndroidHomeValid = this.isAndroidHomeValid();
@@ -88,7 +88,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return errors;
 	}
 
-	public validateJavacVersion(installedJavaCompilerVersion: string): NativeScriptDoctor.IWarning[] {
+	public validateJavacVersion(installedJavaCompilerVersion: string, projectDir?: string): NativeScriptDoctor.IWarning[] {
 		const errors: NativeScriptDoctor.IWarning[] = [];
 
 		let additionalMessage = "You will not be able to build your projects for Android." + EOL
@@ -100,8 +100,31 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		if (installedJavaCompilerSemverVersion) {
 			let warning: string = null;
 
+			const supportedVersions: IDictionary<string> = {
+				"^10.0.0": "4.1.0-2018.5.18.1"
+			};
+
 			if (semver.lt(installedJavaCompilerSemverVersion, AndroidToolsInfo.MIN_JAVA_VERSION)) {
 				warning = `Javac version ${installedJavaCompilerVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION}.`;
+			} else {
+				const runtimeVersion = this.getAndroidRuntimeVersionFromProjectDir(projectDir);
+				if (runtimeVersion) {
+					// get the item from the dictionary that corresponds to our current Javac version:
+					let runtimeMinVersion: string = null;
+					Object.keys(supportedVersions)
+						.forEach(javacRange => {
+							if (semver.satisfies(installedJavaCompilerSemverVersion, javacRange)) {
+								runtimeMinVersion = supportedVersions[javacRange];
+							}
+						});
+
+					if (runtimeMinVersion && semver.lt(runtimeVersion, runtimeMinVersion)) {
+						warning = `The Java compiler version ${installedJavaCompilerVersion} is not compatible with the current Android runtime version ${runtimeVersion}. ` +
+							`In order to use this Javac version, you need to update your Android runtime or downgrade your Java compiler version.`;
+						additionalMessage = "You will not be able to build your projects for Android." + EOL +
+							"To be able to build for Android, downgrade your Java compiler version or update your Android runtime.";
+					}
+				}
 			}
 
 			if (warning) {
@@ -319,5 +342,37 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	private isAndroidHomeValid(): boolean {
 		const errors = this.validateAndroidHomeEnvVariable();
 		return !errors && !errors.length;
+	}
+
+	private getAndroidRuntimeVersionFromProjectDir(projectDir: string): string {
+		let runtimeVersion: string = null;
+		if (projectDir && this.fs.exists(projectDir)) {
+			const pathToPackageJson = path.join(projectDir, Constants.PACKAGE_JSON);
+
+			if (this.fs.exists(pathToPackageJson)) {
+				const content = this.fs.readJson<INativeScriptProjectPackageJson>(pathToPackageJson);
+				runtimeVersion = content && content.nativescript && content.nativescript["tns-android"] && content.nativescript["tns-android"].version;
+			}
+		}
+
+		if (runtimeVersion) {
+			// Check if the version is not "next" or "rc", i.e. tag from npm
+			if (!semver.valid(runtimeVersion)) {
+				try {
+					const npmViewOutput = this.childProcess.execSync(`npm view ${Constants.ANDROID_RUNTIME} dist-tags --json`);
+					const jsonNpmViewOutput = JSON.parse(npmViewOutput);
+					runtimeVersion = jsonNpmViewOutput[runtimeVersion] || runtimeVersion;
+				} catch (err) {
+					// Maybe there's no npm here
+				}
+			}
+		}
+
+		if (runtimeVersion && !semver.valid(runtimeVersion)) {
+			// If we got here, something terribly wrong happened.
+			throw new Error(`The determined Android runtime version ${runtimeVersion} based on project directory ${projectDir} is not valid. Unable to verify if the current system is setup for Android development.`);
+		}
+
+		return runtimeVersion;
 	}
 }
