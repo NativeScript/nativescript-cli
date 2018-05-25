@@ -6,6 +6,7 @@ import { IOSLogParserService } from "../../lib/services/ios-log-parser-service";
 import { IOSSimulatorLogProvider } from "../../lib/common/mobile/ios/simulator/ios-simulator-log-provider";
 import { Yok } from "../../lib/common/yok";
 import { EventEmitter } from "events";
+import * as sinon from "sinon";
 
 class DeviceApplicationManagerMock extends EventEmitter { }
 
@@ -50,6 +51,7 @@ function createTestInjector() {
 		projectName: "test",
 		projectId: appId
 	});
+	injector.register("iOSNotification", DeviceApplicationManagerMock);
 
 	return injector;
 }
@@ -82,11 +84,17 @@ function getMultilineDebuggerPortMessage(port: number) {
 
 describe("iOSDebuggerPortService", () => {
 	let injector: IInjector, iOSDebuggerPortService: IIOSDebuggerPortService, iosDeviceOperations: IIOSDeviceOperations;
+	let clock: sinon.SinonFakeTimers = null;
 
 	beforeEach(() => {
 		injector = createTestInjector();
 		iOSDebuggerPortService = injector.resolve("iOSDebuggerPortService");
 		iosDeviceOperations = injector.resolve("iosDeviceOperations");
+		clock = sinon.useFakeTimers();
+	});
+
+	afterEach(() => {
+		clock.restore();
 	});
 
 	function emitDeviceLog(message: string) {
@@ -142,7 +150,9 @@ describe("iOSDebuggerPortService", () => {
 					emitDeviceLog(getDebuggerPortMessage(testCase.emittedPort));
 				}
 
-				const port = await iOSDebuggerPortService.getPort({ deviceId: deviceId, appId: appId });
+				const promise = iOSDebuggerPortService.getPort({ deviceId: deviceId, appId: appId });
+				clock.tick(10000);
+				const port = await promise;
 				assert.deepEqual(port, testCase.emittedPort);
 			});
 			it(`${testCase.name} for multiline debugger port message.`, async () => {
@@ -154,7 +164,9 @@ describe("iOSDebuggerPortService", () => {
 					emitDeviceLog(getMultilineDebuggerPortMessage(testCase.emittedPort));
 				}
 
-				const port = await iOSDebuggerPortService.getPort({ deviceId: deviceId, appId: appId });
+				const promise = iOSDebuggerPortService.getPort({ deviceId: deviceId, appId: appId });
+				clock.tick(10000);
+				const port = await promise;
 				assert.deepEqual(port, testCase.emittedPort);
 			});
 		});
