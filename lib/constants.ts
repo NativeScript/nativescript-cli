@@ -9,4 +9,9 @@ export class Constants {
 	};
 	public static INFO_TYPE_NAME = "info";
 	public static WARNING_TYPE_NAME = "warning";
+
+	public static PACKAGE_JSON = "package.json";
+	public static NATIVESCRIPT_KEY = "nativescript";
+	public static ANDROID_RUNTIME = "tns-android";
+	public static VERSION_PROPERTY_NAME = "version";
 }

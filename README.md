@@ -137,7 +137,7 @@ Library that helps identifying if the environment can be used for development of
 		const pythonInfo = await sysInfo.getPythonInfo();
 		console.log("python info: ", pythonInfo );
 
-		const sysInfoData = await sysInfo.getSysInfo();
+		const sysInfoData = await sysInfo.getSysInfo({ projectDir: "/Users/username/myProject" });
 		console.log("sysInfo: ", sysInfoData);
 
 		const gitPath = await sysInfo.getGitPath();
@@ -454,12 +454,13 @@ Library that helps identifying if the environment can be used for development of
 	import { androidToolsInfo } from "nativescript-doctor"
 
 	function main() {
+		const projectDir = "/Users/username/myProject";
 		console.log("path to adb from android home: ", await androidToolsInfo.getPathToAdbFromAndroidHome());
 		console.log("path to emulator executable: ", androidToolsInfo.getPathToEmulatorExecutable());
 		console.log("android tools info: ", androidToolsInfo.getToolsInfo());
 		console.log("ANROID_HOME validation errors: ", await androidToolsInfo.validateAndroidHomeEnvVariable());
 		console.log("android tools info validation errors: ", await androidToolsInfo.validateInfo());
-		console.log("javac validation errors: ", await androidToolsInfo.validateJavacVersion(await sysInfo.getJavaCompilerVersion()));
+		console.log("javac validation errors: ", await androidToolsInfo.validateJavacVersion(await sysInfo.getJavaCompilerVersion(), projectDir));
 	}
 
 	main();
@@ -478,16 +479,20 @@ Library that helps identifying if the environment can be used for development of
 
 		/**
 		 * Checks if the Android tools are valid.
+		 * @param {string} projectDir @optional The project directory. Used to determine the Android Runtime version and validate the Java compiler version against it.
+		 * If it is not passed or the project does not have Android runtime, this validation is skipped.
 		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
-		validateInfo(): NativeScriptDoctor.IWarning[];
+		validateInfo(projectDir?: string): NativeScriptDoctor.IWarning[];
 
 		/**
 		 * Checks if the current javac version is valid.
 		 * @param {string} installedJavaVersion The version of javac to check.
+		 * @param {string} projectDir @optional The project directory. Used to determine the Android Runtime version and validate the Java compiler version against it.
+		 * If it is not passed or the project does not have Android runtime, this validation is skipped.
 		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
-		validateJavacVersion(installedJavaVersion: string): NativeScriptDoctor.IWarning[];
+		validateJavacVersion(installedJavaVersion: string, projectDir?: string): NativeScriptDoctor.IWarning[];
 
 		/**
 		 * Returns the path to the adb which is located in ANDROID_HOME.

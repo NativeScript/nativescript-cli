@@ -17,4 +17,9 @@ export class FileSystem {
 	public readDirectory(path: string): string[] {
 		return fs.readdirSync(path);
 	}
+
+	public readJson<T>(path: string, options?: { encoding?: null; flag?: string; }): T {
+		const content = fs.readFileSync(path, options);
+		return JSON.parse(content.toString());
+	}
 }

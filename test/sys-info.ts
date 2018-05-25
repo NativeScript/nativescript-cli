@@ -145,7 +145,8 @@ function mockSysInfo(childProcessResult: IChildProcessResults, hostInfoOptions?:
 		},
 		execFile: async (): Promise<any> => {
 			return undefined;
-		}
+		},
+		execSync: (command: string): string => null
 	};
 
 	const fileSystem: any = {
@@ -191,7 +192,8 @@ describe("SysInfo unit tests", () => {
 				},
 				execFile: async () => {
 					return undefined;
-				}
+				},
+				execSync: (command: string): string => null
 			};
 
 			const helpers = new Helpers(null);
