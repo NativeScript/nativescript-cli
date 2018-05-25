@@ -3812,9 +3812,9 @@
       "integrity": "sha512-Q29yeg9aFKwhLVdkTAejM/HvYG0Y1Am1+HUkFQGn5k2j8GS+v60TVmZh6nujpEAj/qql+wGUrlryO8bF+b1jEg=="
     },
     "nativescript-doctor": {
-      "version": "1.1.0-rc.0",
-      "resolved": "https://registry.npmjs.org/nativescript-doctor/-/nativescript-doctor-1.1.0-rc.0.tgz",
-      "integrity": "sha1-2ABOL5lGgTHqE8+U8IhzS9j/XBU=",
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/nativescript-doctor/-/nativescript-doctor-1.1.0.tgz",
+      "integrity": "sha512-XmZO+6tLbiOGr/gLYuhmVhec0UPOSsShK/dG7LlEkiLOE7ew7LB/j/gPFAzS5I54jjudJ/qDK/cMvcZWS0TvBg==",
       "requires": {
         "osenv": "0.1.3",
         "semver": "5.3.0",
