@@ -72,14 +72,14 @@ export class ProjectService implements IProjectService {
 				this.removeMergedDependencies(projectDir, templatePackageJsonData);
 			}
 
-			const templatePackageJson = this.$fs.readJson(path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME));
-
 			// Install devDependencies and execute all scripts:
 			await this.$npm.install(projectDir, projectDir, {
 				disableNpmInstall: false,
 				frameworkPath: null,
 				ignoreScripts
 			});
+
+			const templatePackageJson = this.$fs.readJson(path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME));
 
 			await this.$npm.uninstall(templatePackageJson.name, { save: true }, projectDir);
 			if (templateVersion === constants.TemplateVersions.v2) {
