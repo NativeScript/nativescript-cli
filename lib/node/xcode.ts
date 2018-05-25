@@ -8,4 +8,6 @@ declare global {
 	}
 }
 
+export { xcode };
+
 $injector.register("xcode", xcode);

@@ -35,8 +35,8 @@ import { IOSProvisionService } from "../lib/services/ios-provision-service";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { BUILD_XCCONFIG_FILE_NAME } from "../lib/constants";
 import { ProjectDataStub } from "./stubs";
+import { xcode } from "../lib/node/xcode";
 import temp = require("temp");
-
 temp.track();
 
 class IOSSimulatorDiscoveryMock extends DeviceDiscovery {
@@ -49,7 +49,7 @@ class IOSSimulatorDiscoveryMock extends DeviceDiscovery {
 	}
 }
 
-function createTestInjector(projectPath: string, projectName: string): IInjector {
+function createTestInjector(projectPath: string, projectName: string, xcode?: IXcode): IInjector {
 	const testInjector = new yok.Yok();
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register("config", ConfigLib.Configuration);
@@ -107,7 +107,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("processService", {});
 	testInjector.register("sysInfo", {});
 	testInjector.register("pbxprojDomXcode", {});
-	testInjector.register("xcode", {
+	testInjector.register("xcode", xcode || {
 		project: class {
 			constructor() { /* */ }
 			parseSync() { /* */ }
@@ -417,6 +417,8 @@ describe("Cocoapods support", () => {
 				return {
 					updateBuildProperty: () => { return {}; },
 					pbxXCBuildConfigurationSection: () => { return {}; },
+					removePbxGroup: () => { return {}; },
+					removeFromHeaderSearchPaths: () => { return {}; },
 				};
 			};
 			iOSProjectService.savePbxProj = (): Promise<void> => Promise.resolve();
@@ -452,6 +454,124 @@ describe("Cocoapods support", () => {
 			await iOSProjectService.removePluginNativeCode(pluginData, projectData);
 
 			assert.isFalse(fs.exists(projectPodfilePath));
+		});
+	}
+});
+
+describe("Source code in plugin support", () => {
+	if (require("os").platform() !== "darwin") {
+		console.log("Skipping Source code in plugin tests. They cannot work on windows");
+	} else {
+
+		const preparePluginWithFiles = async (files: string[], prepareMethodToCall: string) => {
+			// Arrange
+			const projectName = "projectDirectory";
+			const projectPath = temp.mkdirSync(projectName);
+			const testInjector = createTestInjector(projectPath, projectName, xcode);
+			const fs: IFileSystem = testInjector.resolve("fs");
+
+			const packageJsonData = {
+				"name": "myProject",
+				"version": "0.1.0",
+				"nativescript": {
+					"id": "org.nativescript.myProject",
+					"tns-ios": {
+						"version": "1.0.0"
+					}
+				}
+			};
+			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData);
+
+			const platformsFolderPath = path.join(projectPath, "platforms", "ios");
+			fs.createDirectory(platformsFolderPath);
+
+			const iOSProjectService = testInjector.resolve("iOSProjectService");
+
+			const mockPrepareMethods = ["prepareFrameworks", "prepareStaticLibs", "prepareResources", "prepareNativeSourceCode"];
+
+			mockPrepareMethods.filter(m => m !== prepareMethodToCall).forEach(methodName => {
+				iOSProjectService[methodName]  = (pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> => {
+					return Promise.resolve();
+				};
+			});
+
+			iOSProjectService.getXcodeprojPath = () => {
+				return path.join(__dirname, "files");
+			};
+			let pbxProj : any;
+			iOSProjectService.savePbxProj = (project: any): Promise<void> => {
+				pbxProj = project;
+				return Promise.resolve();
+			};
+
+			const pluginPath = temp.mkdirSync("pluginDirectory");
+			const pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
+			files.forEach(file => {
+				const fullPath = path.join(pluginPlatformsFolderPath, file);
+				fs.createDirectory(path.dirname(fullPath));
+				fs.writeFile(fullPath, "");
+			});
+
+			const pluginData = {
+				name: "testPlugin",
+				pluginPlatformsFolderPath(platform: string): string {
+					return pluginPlatformsFolderPath;
+				}
+			};
+
+			const projectData: IProjectData = testInjector.resolve("projectData");
+
+			// Act
+			await iOSProjectService.preparePluginNativeCode(pluginData, projectData);
+
+			return pbxProj;
+		};
+
+		it("adds plugin with Source files", async () => {
+			const sourceFileNames = [
+				"src/Header.h",	"src/ObjC.m",
+				"src/nested/Header.hpp", "src/nested/Source.cpp", "src/nested/ObjCpp.mm",
+				"src/nested/level2/Header2.hxx", "src/nested/level2/Source2.cxx", "src/nested/level2/Source3.c",
+				"src/SomeOtherExtension.donotadd",
+			];
+
+			const pbxProj = await preparePluginWithFiles(sourceFileNames, "prepareNativeSourceCode");
+
+			const pbxFileReference = pbxProj.hash.project.objects.PBXFileReference;
+			const pbxFileReferenceValues = Object.keys(pbxFileReference).map(key => pbxFileReference[key]);
+			const buildPhaseFiles = pbxProj.hash.project.objects.PBXSourcesBuildPhase["858B83F218CA22B800AB12DE"].files;
+
+			sourceFileNames.map(file => path.basename(file)).forEach(basename => {
+				const ext = path.extname(basename);
+				const shouldBeAdded = ext !== ".donotadd";
+				if (shouldBeAdded) {
+					assert.notEqual(pbxFileReferenceValues.indexOf(basename), -1, `${basename} not added to PBXFileRefereces`);
+
+					if (shouldBeAdded && !path.extname(basename).startsWith(".h")) {
+						assert.isDefined(buildPhaseFiles.find((fileObject: any) => fileObject.comment.startsWith(basename)), `${basename} not added to PBXSourcesBuildPhase`);
+					}
+				} else {
+					assert.equal(pbxFileReferenceValues.indexOf(basename), -1, `${basename} was added to PBXFileRefereces, but it shouldn't have been`);
+				}
+			});
+		});
+		it("adds plugin with Resource files", async () => {
+			const resFileNames = [
+				"Resources/Image.png", "Resources/Jpeg.jpg", "Resources/screen.xib",
+				"Resources/TestBundle.bundle/bundled.png",
+
+			];
+
+			const pbxProj = await preparePluginWithFiles(resFileNames, "prepareResources");
+
+			const pbxFileReference = pbxProj.hash.project.objects.PBXFileReference;
+			const pbxFileReferenceValues = Object.keys(pbxFileReference).map(key => pbxFileReference[key]);
+
+			resFileNames.forEach(filename => {
+				const dirName = path.dirname(filename);
+				const fileToCheck = dirName.endsWith(".bundle") ? dirName : filename;
+				assert.isTrue(pbxFileReferenceValues.indexOf(path.basename(fileToCheck)) !== -1, `Resource ${filename} not added to PBXFileRefereces`);
+			});
 		});
 	}
 });

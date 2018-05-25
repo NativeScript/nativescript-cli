@@ -20,6 +20,8 @@ declare module "xcode" {
         
         addPbxGroup(filePathsArray: any[], name: string, path: string, sourceTree: string): void;
         
+        removePbxGroup(groupName: string, path: string): void;
+        
         addToHeaderSearchPaths(options?: Options): void;
         removeFromHeaderSearchPaths(options?: Options): void;
         updateBuildProperty(key: string, value: any): void;
