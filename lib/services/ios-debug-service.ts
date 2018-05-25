@@ -127,6 +127,8 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	private async emulatorStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		const device = await this.$devicesService.getDevice(debugData.deviceIdentifier);
+		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device);
 		const result = await this.wireDebuggerClient(debugData, debugOptions);
 
 		const attachRequestMessage = this.$iOSNotification.getAttachRequest(debugData.applicationIdentifier, debugData.deviceIdentifier);
@@ -175,6 +177,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	private async deviceStartCore(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device);
 		await this.$iOSSocketRequestExecutor.executeAttachRequest(device, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, debugData.applicationIdentifier);
 		return this.wireDebuggerClient(debugData, debugOptions, device);
 	}

@@ -1,26 +1,29 @@
 import { DEBUGGER_PORT_FOUND_EVENT_NAME, DEVICE_LOG_EVENT_NAME } from "../common/constants";
-import { cache } from "../common/decorators";
 import { EventEmitter } from "events";
 
 export class IOSLogParserService extends EventEmitter implements IIOSLogParserService {
 	private static MESSAGE_REGEX = /NativeScript debugger has opened inspector socket on port (\d+?) for (.*)[.]/;
+
+	private startedDeviceLogInstances: IDictionary<boolean> = {};
 
 	constructor(private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
 		private $logger: ILogger,
 		private $projectData: IProjectData) {
-			super();
-		}
+		super();
+	}
 
 	public startParsingLog(device: Mobile.IDevice): void {
 		this.$deviceLogProvider.setProjectNameForDevice(device.deviceInfo.identifier, this.$projectData.projectName);
 
-		this.startParsingLogCore(device);
-		this.startLogProcess(device);
+		if (!this.startedDeviceLogInstances[device.deviceInfo.identifier]) {
+			this.startParsingLogCore(device);
+			this.startLogProcess(device);
+			this.startedDeviceLogInstances[device.deviceInfo.identifier] = true;
+		}
 	}
 
-	@cache()
 	private startParsingLogCore(device: Mobile.IDevice): void {
 		const logProvider = device.isEmulator ? this.$iOSSimulatorLogProvider : this.$iosDeviceOperations;
 		logProvider.on(DEVICE_LOG_EVENT_NAME, (response: IOSDeviceLib.IDeviceLogData) => this.processDeviceLogResponse(response));
