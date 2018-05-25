@@ -87,6 +87,10 @@ interface IDebugOptions {
 	 * Defines if the iOS App Inspector should be used instead of providing URL to debug the application with Chrome DevTools
 	 */
 	inspector?: boolean;
+	/**
+	 * Defines if should print all availableDevices
+	 */
+	availableDevices?: boolean;
 }
 
 /**

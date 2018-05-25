@@ -131,7 +131,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	public getAppResourcesDestinationDirectoryPath(projectData: IProjectData): string {
-		const frameworkVersion = this.getFrameworkVersion(this.getPlatformData(projectData).frameworkPackageName, projectData.projectDir);
+		const frameworkVersion = this.getFrameworkVersion(projectData);
 
 		if (semver.lt(frameworkVersion, "1.3.0")) {
 			return path.join(this.getPlatformData(projectData).projectRoot, projectData.projectName, "Resources", "icons");
@@ -145,7 +145,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			return;
 		}
 
-		await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(this.getPlatformData(projectData).normalizedPlatformName);
+		await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(this.getPlatformData(projectData).normalizedPlatformName, projectData.projectDir);
 
 		const xcodeBuildVersion = await this.getXcodeVersion();
 		if (helpers.versionCompare(xcodeBuildVersion, IOSProjectService.XCODEBUILD_MIN_VERSION) < 0) {
@@ -343,7 +343,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		];
 
 		// Starting from tns-ios 1.4 the xcconfig file is referenced in the project template
-		const frameworkVersion = this.getFrameworkVersion(this.getPlatformData(projectData).frameworkPackageName, projectData.projectDir);
+		const frameworkVersion = this.getFrameworkVersion(projectData);
 		if (semver.lt(frameworkVersion, "1.4.0")) {
 			basicArgs.push("-xcconfig", path.join(projectRoot, projectData.projectName, BUILD_XCCONFIG_FILE_NAME));
 		}

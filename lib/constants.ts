@@ -137,6 +137,7 @@ export const enum DebugTools {
 export const enum TrackActionNames {
 	Build = "Build",
 	CreateProject = "Create project",
+	UsingTemplate = "Using Template",
 	Debug = "Debug",
 	Deploy = "Deploy",
 	LiveSync = "LiveSync",
@@ -144,6 +145,8 @@ export const enum TrackActionNames {
 	CheckLocalBuildSetup = "Check Local Build Setup",
 	CheckEnvironmentRequirements = "Check Environment Requirements"
 }
+
+export const AnalyticsEventLabelDelimiter = "__";
 
 export const enum BuildStates {
 	Clean = "Clean",
@@ -188,4 +191,17 @@ export class SubscribeForNewsletterMessages {
 		"containing information about Progress Software's products. Consent may be withdrawn at any time.";
 	public static ReviewPrivacyPolicyMsg = `You can review the Progress Software Privacy Policy at \`${PROGRESS_PRIVACY_POLICY_URL}\``;
 	public static PromptMsg = "Input your e-mail address to agree".green + " or " + "leave empty to decline".red.bold + ":";
+}
+
+export class TemplateVersions {
+	public static v1 = "v1";
+	public static v2 = "v2";
+}
+
+export class ProjectTemplateErrors {
+	public static InvalidTemplateVersionStringFormat = "The template '%s' has a NativeScript version '%s' that is not supported. Unable to create project from it.";
+}
+
+export class Hooks {
+	public static createProject = "createProject";
 }

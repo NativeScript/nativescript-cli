@@ -133,7 +133,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		this.validatePackageName(projectData.projectId);
 		this.validateProjectName(projectData.projectName);
 
-		await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(this.getPlatformData(projectData).normalizedPlatformName);
+		await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(this.getPlatformData(projectData).normalizedPlatformName, projectData.projectDir);
 		this.$androidToolsInfo.validateTargetSdk({ showWarningsAsErrors: true });
 	}
 
@@ -605,7 +605,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public stopServices(projectRoot: string): Promise<ISpawnResult> {
-		return this.executeCommand(projectRoot, ["--stop", "--quiet"]);
+		return this.executeCommand(projectRoot, ["--stop", "--quiet"], {stdio: "pipe"});
 	}
 
 	public async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {

@@ -10,7 +10,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $platformsData: IPlatformsData,
 		private $analyticsService: IAnalyticsService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
-		private $errors: IErrors) {
+		private $errors: IErrors,
+		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider) {
 		this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
 	}
 
@@ -53,6 +54,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		const shouldKeepProcessAlive = this.$options.watch || !this.$options.justlaunch;
 		if (workingWithiOSDevices && shouldKeepProcessAlive) {
 			this.$iosDeviceOperations.setShouldDispose(false);
+			this.$iOSSimulatorLogProvider.setShouldDispose(false);
 		}
 
 		if (this.$options.release) {

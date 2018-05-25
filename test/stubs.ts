@@ -408,6 +408,12 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	async checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
 		// Nothing yet.
 	}
+	getFrameworkVersion(projectData: IProjectData): string {
+		return "";
+	}
+	getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string {
+		return "";
+	}
 }
 
 export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
@@ -475,8 +481,12 @@ export class ProjectHelperStub implements IProjectHelper {
 }
 
 export class ProjectTemplatesService implements IProjectTemplatesService {
-	async prepareTemplate(templateName: string): Promise<string> {
-		return Promise.resolve("");
+	async prepareTemplate(templateName: string): Promise<ITemplateData> {
+		return Promise.resolve(<any>{});
+	}
+
+	getTemplateVersion(templatePath: string): string {
+		return constants.TemplateVersions.v1;
 	}
 }
 

@@ -13,6 +13,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		$devicePathProvider: IDevicePathProvider,
 		$logger: ILogger,
 		$projectFilesProvider: IProjectFilesProvider,
+		private $iOSDebuggerPortService: IIOSDebuggerPortService,
 	) {
 		super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
 	}
@@ -23,6 +24,8 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		if (device.isEmulator) {
 			return super.fullSync(syncInfo);
 		}
+
+		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device);
 
 		const projectData = syncInfo.projectData;
 		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);

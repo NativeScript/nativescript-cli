@@ -8,13 +8,14 @@ import * as path from "path";
 import * as net from "net";
 
 export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
-	private static BACKEND_PORT = 18182;
 	private device: Mobile.IAndroidDevice;
+	private port: number;
 
 	constructor(_device: Mobile.IDevice,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $devicePathProvider: IDevicePathProvider,
 		private $injector: IInjector,
+		private $androidProcessService: Mobile.IAndroidProcessService,
 		protected $platformsData: IPlatformsData) {
 		super($platformsData);
 		this.device = <Mobile.IAndroidDevice>(_device);
@@ -85,7 +86,13 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 	}
 
 	private async reloadApplicationFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<boolean> {
-		await this.device.adb.executeCommand(["forward", `tcp:${AndroidDeviceLiveSyncService.BACKEND_PORT.toString()}`, `localabstract:${deviceAppData.appIdentifier}-livesync`]);
+		if (!this.port) {
+			this.port = await this.$androidProcessService.forwardFreeTcpToAbstractPort({
+				deviceIdentifier: deviceAppData.device.deviceInfo.identifier,
+				appIdentifier: deviceAppData.appIdentifier,
+				abstractPort: `localabstract:${deviceAppData.appIdentifier}-livesync`
+			});
+		}
 
 		if (await this.awaitRuntimeReloadSuccessMessage()) {
 			await this.cleanLivesyncDirectories(deviceAppData);
@@ -121,10 +128,11 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 			let isResolved = false;
 			const socket = new net.Socket();
 
-			socket.connect(AndroidDeviceLiveSyncService.BACKEND_PORT, '127.0.0.1', () => {
+			socket.connect(this.port, '127.0.0.1', () => {
 				socket.write(new Buffer([0, 0, 0, 1, 1]));
 			});
 			socket.on("data", (data: any) => {
+				isResolved = true;
 				socket.destroy();
 				resolve(true);
 			});
