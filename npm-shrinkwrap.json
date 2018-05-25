@@ -5658,8 +5658,8 @@
       }
     },
     "xcode": {
-      "version": "https://github.com/NativeScript/node-xcode/archive/NativeScript-1.5.0.tar.gz",
-      "integrity": "sha512-2q3ALXJ/kyJht3TyQxfYpMLbWkoB0ndcp3gl9Jj03CQxrFeFRc6xiFPnye29QSnlAkzx83JRfOUgyZNcXjsr7g==",
+      "version": "https://github.com/NativeScript/node-xcode/archive/NativeScript-1.5.1.tar.gz",
+      "integrity": "sha512-YIj7RSd4onuBYp2CAxFaO5zm+q59AyqRbng+fKb0Schwj+23xKM2AmtuVzg/XrC5eFUEBnIznVDT+pRMzUy5RQ==",
       "requires": {
         "node-uuid": "1.3.3",
         "pegjs": "0.6.2"

@@ -548,7 +548,9 @@ describe("Source code in plugin support", () => {
 					assert.notEqual(pbxFileReferenceValues.indexOf(basename), -1, `${basename} not added to PBXFileRefereces`);
 
 					if (shouldBeAdded && !path.extname(basename).startsWith(".h")) {
-						assert.isDefined(buildPhaseFiles.find((fileObject: any) => fileObject.comment.startsWith(basename)), `${basename} not added to PBXSourcesBuildPhase`);
+						const buildPhaseFile = buildPhaseFiles.find((fileObject: any) => fileObject.comment.startsWith(basename));
+						assert.isDefined(buildPhaseFile, `${basename} not added to PBXSourcesBuildPhase`);
+						assert.include(buildPhaseFile.comment, "in Sources", `${basename} must be added to Sources group`);
 					}
 				} else {
 					assert.equal(pbxFileReferenceValues.indexOf(basename), -1, `${basename} was added to PBXFileRefereces, but it shouldn't have been`);
@@ -566,11 +568,19 @@ describe("Source code in plugin support", () => {
 
 			const pbxFileReference = pbxProj.hash.project.objects.PBXFileReference;
 			const pbxFileReferenceValues = Object.keys(pbxFileReference).map(key => pbxFileReference[key]);
+			const buildPhaseFiles = pbxProj.hash.project.objects.PBXResourcesBuildPhase["858B842C18CA22B800AB12DE"].files;
 
 			resFileNames.forEach(filename => {
 				const dirName = path.dirname(filename);
 				const fileToCheck = dirName.endsWith(".bundle") ? dirName : filename;
-				assert.isTrue(pbxFileReferenceValues.indexOf(path.basename(fileToCheck)) !== -1, `Resource ${filename} not added to PBXFileRefereces`);
+				const basename = path.basename(fileToCheck);
+
+				assert.isTrue(pbxFileReferenceValues.indexOf(basename) !== -1, `Resource ${filename} not added to PBXFileRefereces`);
+
+				const buildPhaseFile = buildPhaseFiles.find((fileObject: any) => fileObject.comment.startsWith(basename));
+				assert.isDefined(buildPhaseFile, `${fileToCheck} not added to PBXResourcesBuildPhase`);
+				assert.include(buildPhaseFile.comment, "in Resources", `${fileToCheck} must be added to Resources group`);
+
 			});
 		});
 	}
