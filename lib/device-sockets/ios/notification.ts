@@ -15,6 +15,8 @@ export class IOSNotification extends EventEmitter implements IiOSNotification {
 	}
 
 	public getAttachRequest(appId: string, deviceId: string): string {
+		// It could be too early to emit this event, but we rely that if you construct attach request,
+		// you will execute it immediately.
 		this.emit(ATTACH_REQUEST_EVENT_NAME, { deviceId, appId });
 		return this.formatNotification(IOSNotification.ATTACH_REQUEST_NOTIFICATION_NAME, appId);
 	}

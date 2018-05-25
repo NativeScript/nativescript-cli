@@ -643,7 +643,7 @@ interface ISocketProxyFactory extends NodeJS.EventEmitter {
 	createWebSocketProxy(factory: () => Promise<any>, deviceIdentifier: string): Promise<any>;
 }
 
-interface IiOSNotification {
+interface IiOSNotification extends NodeJS.EventEmitter {
 	getWaitForDebug(projectId: string): string;
 	getAttachRequest(projectId: string, deviceId: string): string;
 	getAppLaunching(projectId: string): string;

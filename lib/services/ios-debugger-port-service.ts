@@ -9,6 +9,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 
 	constructor(private $iOSLogParserService: IIOSLogParserService,
 		private $iOSProjectService: IPlatformProjectService,
+		private $iOSNotification: IiOSNotification,
 		private $logger: ILogger,
 		private $projectData: IProjectData) { }
 
@@ -62,7 +63,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 
 	@cache()
 	private attachToAttachRequestEvent(device: Mobile.IDevice): void {
-		device.applicationManager.on(ATTACH_REQUEST_EVENT_NAME, (data: IIOSDebuggerPortData) => {
+		this.$iOSNotification.on(ATTACH_REQUEST_EVENT_NAME, (data: IIOSDebuggerPortData) => {
 			this.$logger.trace(ATTACH_REQUEST_EVENT_NAME, data);
 			const timer = setTimeout(() => {
 				this.clearTimeout(data);

@@ -39,7 +39,9 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		return "ios";
 	}
 
-	public debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		await this.device.openDeviceLogStream();
+
 		if (debugOptions.debugBrk && debugOptions.start) {
 			this.$errors.failWithoutHelp("Expected exactly one of the --debug-brk or --start options.");
 		}
@@ -106,12 +108,13 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 	private async emulatorDebugBrk(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		const args = debugOptions.debugBrk ? "--nativescript-debug-brk" : "--nativescript-debug-start";
-		const launchResult = await this.$iOSEmulatorServices.runApplicationOnEmulator(debugData.pathToAppPackage, {
+			const launchResult = await this.$iOSEmulatorServices.runApplicationOnEmulator(debugData.pathToAppPackage, {
 			waitForDebugger: true,
 			captureStdin: true,
 			args: args,
 			appId: debugData.applicationIdentifier,
-			skipInstall: true
+			skipInstall: true,
+			device: debugData.deviceIdentifier
 		});
 
 		const pid = getPidFromiOSSimulatorLogs(debugData.applicationIdentifier, launchResult);
@@ -126,6 +129,8 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	private async emulatorStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		const device = await this.$devicesService.getDevice(debugData.deviceIdentifier);
+		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device);
 		const result = await this.wireDebuggerClient(debugData, debugOptions);
 
 		const attachRequestMessage = this.$iOSNotification.getAttachRequest(debugData.applicationIdentifier, debugData.deviceIdentifier);
@@ -174,6 +179,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	private async deviceStartCore(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device);
 		await this.$iOSSocketRequestExecutor.executeAttachRequest(device, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, debugData.applicationIdentifier);
 		return this.wireDebuggerClient(debugData, debugOptions, device);
 	}

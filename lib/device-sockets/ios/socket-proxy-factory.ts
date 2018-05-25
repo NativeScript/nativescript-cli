@@ -95,7 +95,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 					err.deviceIdentifier = deviceIdentifier;
 					this.$logger.trace(err);
 					this.emit(CONNECTION_ERROR_EVENT_NAME, err);
-					this.$errors.failWithoutHelp("Cannot connect to device socket.");
+					this.$errors.failWithoutHelp(`Cannot connect to device socket. The error message is ${err.message}`);
 				}
 
 				this.$logger.info("Backend socket created.");
