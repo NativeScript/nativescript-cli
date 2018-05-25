@@ -100,14 +100,15 @@ class VersionsService implements IVersionsService {
 			allComponents.push(nativescriptCliInformation);
 		}
 
-		const nativescriptCoreModulesInformation: IVersionInformation = await this.getTnsCoreModulesVersion();
-		if (nativescriptCoreModulesInformation) {
-			allComponents.push(nativescriptCoreModulesInformation);
+		if (this.projectData) {
+			const nativescriptCoreModulesInformation: IVersionInformation = await this.getTnsCoreModulesVersion();
+			if (nativescriptCoreModulesInformation) {
+				allComponents.push(nativescriptCoreModulesInformation);
+			}
+
+			const runtimesVersions: IVersionInformation[] = await this.getRuntimesVersions();
+			allComponents = allComponents.concat(runtimesVersions);
 		}
-
-		const runtimesVersions: IVersionInformation[] = await this.getRuntimesVersions();
-
-		allComponents = allComponents.concat(runtimesVersions);
 
 		return allComponents
 			.map(componentInformation => {

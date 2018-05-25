@@ -34,12 +34,11 @@ class DoctorService implements IDoctorService {
 			await this.$analyticsService.track("DoctorEnvironmentSetup", hasWarnings ? "incorrect" : "correct");
 		}
 
-		this.printInfosCore(infos);
-
 		if (hasWarnings) {
 			this.$logger.info("There seem to be issues with your configuration.");
 		} else {
 			this.$logger.out("No issues were detected.".bold);
+			this.printInfosCore(infos);
 		}
 
 		try {
