@@ -30,7 +30,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		"deploy": "tns cloud deploy"
 	};
 
-	public async checkEnvironmentRequirements(platform?: string): Promise<boolean> {
+	public async checkEnvironmentRequirements(platform?: string, projectDir?: string): Promise<boolean> {
 		if (process.env.NS_SKIP_ENV_CHECK) {
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
 				action: TrackActionNames.CheckEnvironmentRequirements,
@@ -39,7 +39,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			return true;
 		}
 
-		const canExecute = await this.$doctorService.canExecuteLocalBuild(platform);
+		const canExecute = await this.$doctorService.canExecuteLocalBuild(platform, projectDir);
 		if (!canExecute) {
 			if (!isInteractive()) {
 				await this.$analyticsService.trackEventActionInGoogleAnalytics({
@@ -71,7 +71,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			if (selectedOption === PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME) {
 				await this.$doctorService.runSetupScript();
 
-				if (await this.$doctorService.canExecuteLocalBuild(platform)) {
+				if (await this.$doctorService.canExecuteLocalBuild(platform, projectDir)) {
 					return true;
 				}
 
@@ -102,7 +102,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 
 			if (selectedOption === PlatformEnvironmentRequirements.BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME) {
 				await this.processBothCloudBuildsAndSetupScript();
-				if (await this.$doctorService.canExecuteLocalBuild(platform)) {
+				if (await this.$doctorService.canExecuteLocalBuild(platform, projectDir)) {
 					return true;
 				}
 
