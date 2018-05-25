@@ -2868,9 +2868,9 @@
       }
     },
     "ios-sim-portable": {
-      "version": "3.4.1",
-      "resolved": "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-3.4.1.tgz",
-      "integrity": "sha512-5zouPe8hjN6tLCwoxYXT4S1l2lY0aMZAXOGK9L8pPF8nXtanNKbVxpCrEszKcCbGzNQ/WyY/diJXTNL1ZO6HZg==",
+      "version": "3.4.3",
+      "resolved": "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-3.4.3.tgz",
+      "integrity": "sha512-Ail75Gfk9FkEEeTbgoQwXOFR/+DJFGXWNbekZDpdd4zmyzYEMfp8ZG2J0KefKlDeYJ2H3lA/Y7OtDMcT3oF9ug==",
       "requires": {
         "bplist-parser": "https://github.com/telerik/node-bplist-parser/tarball/master",
         "colors": "0.6.2",

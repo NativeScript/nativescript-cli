@@ -106,12 +106,13 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 	private async emulatorDebugBrk(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		const args = debugOptions.debugBrk ? "--nativescript-debug-brk" : "--nativescript-debug-start";
-		const launchResult = await this.$iOSEmulatorServices.runApplicationOnEmulator(debugData.pathToAppPackage, {
+			const launchResult = await this.$iOSEmulatorServices.runApplicationOnEmulator(debugData.pathToAppPackage, {
 			waitForDebugger: true,
 			captureStdin: true,
 			args: args,
 			appId: debugData.applicationIdentifier,
-			skipInstall: true
+			skipInstall: true,
+			device: debugData.deviceIdentifier
 		});
 
 		const pid = getPidFromiOSSimulatorLogs(debugData.applicationIdentifier, launchResult);
