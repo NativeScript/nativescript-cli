@@ -39,7 +39,9 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		return "ios";
 	}
 
-	public debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		await this.device.openDeviceLogStream();
+
 		if (debugOptions.debugBrk && debugOptions.start) {
 			this.$errors.failWithoutHelp("Expected exactly one of the --debug-brk or --start options.");
 		}
