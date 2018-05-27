@@ -3,8 +3,7 @@ export class RemovePlatformCommand implements ICommand {
 
 	constructor(private $platformService: IPlatformService,
 		private $projectData: IProjectData,
-		private $errors: IErrors,
-		private $platformsData: IPlatformsData) {
+		private $errors: IErrors) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -17,12 +16,9 @@ export class RemovePlatformCommand implements ICommand {
 			this.$errors.fail("No platform specified. Please specify a platform to remove");
 		}
 
-		for (const platform of args) {
-			this.$platformService.validatePlatformInstalled(platform, this.$projectData);
-			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
-			const platformProjectService = platformData.platformProjectService;
-			await platformProjectService.validate(this.$projectData);
-		}
+		_.each(args, platform => {
+			this.$platformService.validatePlatform(platform, this.$projectData);
+		});
 
 		return true;
 	}
