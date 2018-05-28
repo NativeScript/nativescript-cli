@@ -4,8 +4,8 @@ export class UpdatePlatformCommand implements ICommand {
 	constructor(private $options: IOptions,
 		private $projectData: IProjectData,
 		private $platformService: IPlatformService,
-		private $errors: IErrors,
-		private $platformsData: IPlatformsData) {
+		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
+		private $errors: IErrors) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -18,12 +18,24 @@ export class UpdatePlatformCommand implements ICommand {
 			this.$errors.fail("No platform specified. Please specify platforms to update.");
 		}
 
-		for (const arg of args) {
+		_.each(args, arg => {
 			const platform = arg.split("@")[0];
 			this.$platformService.validatePlatform(platform, this.$projectData);
-			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
-			const platformProjectService = platformData.platformProjectService;
-			await platformProjectService.validate(this.$projectData);
+		});
+
+		for (const arg of args) {
+			const [ platform, versionToBeInstalled ] = arg.split("@");
+			this.$platformService.validatePlatformInstalled(platform, this.$projectData);
+			const argsToCheckEnvironmentRequirements: string[] = [ platform ];
+			// If version is not specified, we know the command will install the latest compatible Android runtime.
+			// The latest compatible Android runtime supports Java version, so we do not need to pass it here.
+			// Passing projectDir to the nativescript-doctor validation will cause it to check the runtime from the current package.json
+			// So in this case, where we do not want to validate the runtime, just do not pass both projectDir and runtimeVersion.
+			if (versionToBeInstalled) {
+				argsToCheckEnvironmentRequirements.push(this.$projectData.projectDir, versionToBeInstalled);
+			}
+
+			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(...argsToCheckEnvironmentRequirements);
 		}
 
 		return true;

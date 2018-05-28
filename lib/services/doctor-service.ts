@@ -17,10 +17,10 @@ class DoctorService implements IDoctorService {
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $versionsService: IVersionsService) { }
 
-	public async printWarnings(configOptions?: { trackResult: boolean , projectDir?: string }): Promise<void> {
+	public async printWarnings(configOptions?: { trackResult: boolean , projectDir?: string, runtimeVersion?: string }): Promise<void> {
 		const infos = await this.$terminalSpinnerService.execute<NativeScriptDoctor.IInfo[]>({
 			text: `Getting environment information ${EOL}`
-		}, () => doctor.getInfos({ projectDir: configOptions && configOptions.projectDir }));
+		}, () => doctor.getInfos({ projectDir: configOptions && configOptions.projectDir, androidRuntimeVersion: configOptions && configOptions.runtimeVersion }));
 
 		const warnings = infos.filter(info => info.type === constants.WARNING_TYPE_NAME);
 		const hasWarnings = warnings.length > 0;
@@ -80,12 +80,12 @@ class DoctorService implements IDoctorService {
 		});
 	}
 
-	public async canExecuteLocalBuild(platform?: string, projectDir?: string): Promise<boolean> {
+	public async canExecuteLocalBuild(platform?: string, projectDir?: string, runtimeVersion?: string): Promise<boolean> {
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: TrackActionNames.CheckLocalBuildSetup,
 			additionalData: "Starting",
 		});
-		const infos = await doctor.getInfos({ platform, projectDir });
+		const infos = await doctor.getInfos({ platform, projectDir, androidRuntimeVersion: runtimeVersion });
 
 		const warnings = this.filterInfosByType(infos, constants.WARNING_TYPE_NAME);
 		const hasWarnings = warnings.length > 0;
