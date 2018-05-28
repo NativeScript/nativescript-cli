@@ -38,7 +38,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return this.toolsInfo;
 	}
 
-	public validateInfo(projectDir?: string): NativeScriptDoctor.IWarning[] {
+	public validateInfo(): NativeScriptDoctor.IWarning[] {
 		const errors: NativeScriptDoctor.IWarning[] = [];
 		const toolsInfoData = this.getToolsInfo();
 		const isAndroidHomeValid = this.isAndroidHomeValid();
@@ -88,7 +88,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return errors;
 	}
 
-	public validateJavacVersion(installedJavaCompilerVersion: string, projectDir?: string): NativeScriptDoctor.IWarning[] {
+	public validateJavacVersion(installedJavaCompilerVersion: string, projectDir?: string, runtimeVersion?: string): NativeScriptDoctor.IWarning[] {
 		const errors: NativeScriptDoctor.IWarning[] = [];
 
 		let additionalMessage = "You will not be able to build your projects for Android." + EOL
@@ -107,7 +107,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			if (semver.lt(installedJavaCompilerSemverVersion, AndroidToolsInfo.MIN_JAVA_VERSION)) {
 				warning = `Javac version ${installedJavaCompilerVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION}.`;
 			} else {
-				const runtimeVersion = this.getAndroidRuntimeVersionFromProjectDir(projectDir);
+				runtimeVersion = this.getRealRuntimeVersion(runtimeVersion || this.getAndroidRuntimeVersionFromProjectDir(projectDir));
 				if (runtimeVersion) {
 					// get the item from the dictionary that corresponds to our current Javac version:
 					let runtimeMinVersion: string = null;
@@ -355,6 +355,10 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			}
 		}
 
+		return runtimeVersion;
+	}
+
+	private getRealRuntimeVersion(runtimeVersion: string): string {
 		if (runtimeVersion) {
 			// Check if the version is not "next" or "rc", i.e. tag from npm
 			if (!semver.valid(runtimeVersion)) {
@@ -370,7 +374,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 
 		if (runtimeVersion && !semver.valid(runtimeVersion)) {
 			// If we got here, something terribly wrong happened.
-			throw new Error(`The determined Android runtime version ${runtimeVersion} based on project directory ${projectDir} is not valid. Unable to verify if the current system is setup for Android development.`);
+			throw new Error(`The determined Android runtime version ${runtimeVersion} is not valid. Unable to verify if the current system is setup for Android development.`);
 		}
 
 		return runtimeVersion;

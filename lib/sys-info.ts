@@ -221,11 +221,11 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	}
 
 	public async getSysInfo(config?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.ISysInfoData> {
-		if (config && config.platform === Constants.ANDROID_PLATFORM_NAME) {
+		if (config && config.platform && config.platform.toLowerCase() === Constants.ANDROID_PLATFORM_NAME.toLowerCase()) {
 			return <NativeScriptDoctor.ISysInfoData>Object.assign(await this.getCommonSysInfo(), await this.getAndroidSysInfo(config));
 		}
 
-		if (config && config.platform === Constants.IOS_PLATFORM_NAME) {
+		if (config && config.platform && config.platform.toLowerCase() === Constants.IOS_PLATFORM_NAME.toLowerCase()) {
 			return <NativeScriptDoctor.ISysInfoData>Object.assign(await this.getCommonSysInfo(), await this.getiOSSysInfo());
 		}
 
