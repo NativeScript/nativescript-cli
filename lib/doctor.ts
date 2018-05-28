@@ -16,11 +16,11 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		private sysInfo: NativeScriptDoctor.ISysInfo,
 		private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo) { }
 
-	public async canExecuteLocalBuild(platform: string, projectDir?: string): Promise<boolean> {
+	public async canExecuteLocalBuild(platform: string, projectDir?: string, runtimeVersion?: string): Promise<boolean> {
 		this.validatePlatform(platform);
 
 		if (platform.toLowerCase() === Constants.ANDROID_PLATFORM_NAME.toLowerCase()) {
-			return await this.androidLocalBuildRequirements.checkRequirements(projectDir);
+			return await this.androidLocalBuildRequirements.checkRequirements(projectDir, runtimeVersion);
 		} else if (platform.toLowerCase() === Constants.IOS_PLATFORM_NAME.toLowerCase()) {
 			return await this.iOSLocalBuildRequirements.checkRequirements();
 		}
@@ -32,11 +32,11 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		let result: NativeScriptDoctor.IInfo[] = [];
 		const sysInfoData = await this.sysInfo.getSysInfo(config);
 
-		if (!config || !config.platform || config.platform === Constants.ANDROID_PLATFORM_NAME) {
-			result = result.concat(this.getAndroidInfos(sysInfoData, config && config.projectDir));
+		if (!config || !config.platform || config.platform.toLowerCase() === Constants.ANDROID_PLATFORM_NAME.toLowerCase()) {
+			result = result.concat(this.getAndroidInfos(sysInfoData, config && config.projectDir, config && config.androidRuntimeVersion));
 		}
 
-		if (!config || !config.platform || config.platform === Constants.IOS_PLATFORM_NAME) {
+		if (!config || !config.platform || config.platform.toLowerCase() === Constants.IOS_PLATFORM_NAME.toLowerCase()) {
 			result = result.concat(await this.getiOSInfos(sysInfoData));
 		}
 
@@ -58,7 +58,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 			.map(item => this.convertInfoToWarning(item));
 	}
 
-	private getAndroidInfos(sysInfoData: NativeScriptDoctor.ISysInfoData, projectDir?: string): NativeScriptDoctor.IInfo[] {
+	private getAndroidInfos(sysInfoData: NativeScriptDoctor.ISysInfoData, projectDir?: string, runtimeVersion?: string): NativeScriptDoctor.IInfo[] {
 		let result: NativeScriptDoctor.IInfo[] = [];
 
 		result = result.concat(
@@ -92,7 +92,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			}),
 			this.processValidationErrors({
-				warnings: this.androidToolsInfo.validateJavacVersion(sysInfoData.javacVersion, projectDir),
+				warnings: this.androidToolsInfo.validateJavacVersion(sysInfoData.javacVersion, projectDir, runtimeVersion),
 				infoMessage: "Javac is installed and is configured properly.",
 				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			}),

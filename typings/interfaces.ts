@@ -166,6 +166,11 @@ declare module NativeScriptDoctor {
 		 * If it is not passed or the project does not have Android runtime, this validation is skipped.
 		 */
 		projectDir?: string;
+
+		/**
+		 * The runtime version against which the validation is executed. In case this parameter is passed, it takes precedence over the projectDir argument.
+		 */
+		androidRuntimeVersion?: string;
 	}
 
 	/**
@@ -175,9 +180,12 @@ declare module NativeScriptDoctor {
 		/**
 		 * Checks if a local build can be executed on the current machine.
 		 * @param {string} platform The platform for which to check if local build is possible.
+		 * @param {string} projectDir @optional The project directory. Used to determine the Android Runtime version and validate the Java compiler version against it.
+		 * If it is not passed or the project does not have Android runtime, this validation is skipped.
+		 * @param {string} runtimeVersion @optional The runtime version against which the validation is executed. In case this parameter is passed, it takes precedence over the projectDir argument.
 		 * @return {Promise<boolean>} true if local build can be executed for the provided platform.
 		 */
-		canExecuteLocalBuild(platform: string): Promise<boolean>;
+		canExecuteLocalBuild(platform: string, projectDir?: string, runtimeVersion?: string): Promise<boolean>;
 
 		/**
 		 * Executes all checks for the current environment and returns the warnings from each check.
@@ -430,20 +438,19 @@ declare module NativeScriptDoctor {
 
 		/**
 		 * Checks if the Android tools are valid.
-		 * @param {string} projectDir @optional The project directory. Used to determine the Android Runtime version and validate the Java compiler version against it.
-		 * If it is not passed or the project does not have Android runtime, this validation is skipped.
 		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
-		validateInfo(projectDir?: string): NativeScriptDoctor.IWarning[];
+		validateInfo(): NativeScriptDoctor.IWarning[];
 
 		/**
 		 * Checks if the current javac version is valid.
 		 * @param {string} installedJavaVersion The version of javac to check.
 		 * @param {string} projectDir @optional The project directory. Used to determine the Android Runtime version and validate the Java compiler version against it.
 		 * If it is not passed or the project does not have Android runtime, this validation is skipped.
+		 * @param {string} runtimeVersion @optional The runtime version against which the validation is executed. In case this parameter is passed, it takes precedence over the projectDir argument.
 		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
-		validateJavacVersion(installedJavaVersion: string, projectDir?: string): NativeScriptDoctor.IWarning[];
+		validateJavacVersion(installedJavaVersion: string, projectDir?: string, runtimeVersion?: string): NativeScriptDoctor.IWarning[];
 
 		/**
 		 * Returns the path to the adb which is located in ANDROID_HOME.
