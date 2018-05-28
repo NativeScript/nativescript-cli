@@ -812,6 +812,10 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 	public async trackActionForPlatform(actionData: ITrackPlatformAction): Promise<void> {
 		return null;
 	}
+
+	public getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
+		return null;
+	}
 }
 
 export class EmulatorPlatformService implements IEmulatorPlatformService {

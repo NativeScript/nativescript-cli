@@ -214,6 +214,14 @@ interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	 * @returns {void}
 	 */
 	saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void;
+
+	/**
+	 * Gives information for the current version of the runtime.
+	 * @param {string} platform The platform to be checked.
+	 * @param {IProjectData} projectData The data describing the project
+	 * @returns {string} Runtime version
+	 */
+	getCurrentPlatformVersion(platform: string, projectData: IProjectData): string;
 }
 
 interface IPlatformOptions extends IPlatformSpecificData, ICreateProjectOptions { }
@@ -381,5 +389,5 @@ interface IUpdateAppOptions extends IOptionalFilesToSync, IOptionalFilesToRemove
 }
 
 interface IPlatformEnvironmentRequirements {
-	checkEnvironmentRequirements(platform?: string, projectDir?: string): Promise<boolean>;
+	checkEnvironmentRequirements(platform?: string, projectDir?: string, runtimeVersion?: string): Promise<boolean>;
 }

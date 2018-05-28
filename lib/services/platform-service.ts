@@ -74,7 +74,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	private getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
+	public getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
 		let version: string;

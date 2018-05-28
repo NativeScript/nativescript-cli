@@ -5,7 +5,7 @@ export class CleanCommand implements ICommand {
 		private $projectData: IProjectData,
 		private $platformService: IPlatformService,
 		private $errors: IErrors,
-		private $platformsData: IPlatformsData) {
+		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -18,12 +18,15 @@ export class CleanCommand implements ICommand {
 			this.$errors.fail("No platform specified. Please specify a platform to clean");
 		}
 
+		_.each(args, platform => {
+			this.$platformService.validatePlatform(platform, this.$projectData);
+		});
+
 		for (const platform of args) {
 			this.$platformService.validatePlatformInstalled(platform, this.$projectData);
 
-			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
-			const platformProjectService = platformData.platformProjectService;
-			await platformProjectService.validate(this.$projectData);
+			const currentRuntimeVersion = this.$platformService.getCurrentPlatformVersion(platform, this.$projectData);
+			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(platform, this.$projectData.projectDir, currentRuntimeVersion);
 		}
 
 		return true;
