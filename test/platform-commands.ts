@@ -165,6 +165,9 @@ function createTestInjector() {
 		getPlaygroundInfo: () => Promise.resolve(null)
 	});
 	testInjector.register("filesHashService", {});
+	testInjector.register("platformEnvironmentRequirements", {
+		checkEnvironmentRequirements: async (platform?: string, projectDir?: string, runtimeVersion?: string): Promise<boolean> => true
+	});
 
 	return testInjector;
 }
