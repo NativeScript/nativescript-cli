@@ -25,7 +25,6 @@ export class UpdatePlatformCommand implements ICommand {
 
 		for (const arg of args) {
 			const [ platform, versionToBeInstalled ] = arg.split("@");
-			this.$platformService.validatePlatformInstalled(platform, this.$projectData);
 			const argsToCheckEnvironmentRequirements: string[] = [ platform ];
 			// If version is not specified, we know the command will install the latest compatible Android runtime.
 			// The latest compatible Android runtime supports Java version, so we do not need to pass it here.
