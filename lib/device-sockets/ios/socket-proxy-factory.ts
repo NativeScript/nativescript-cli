@@ -124,7 +124,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 
 			webSocket.on("message", (message: string) => {
 				const length = Buffer.byteLength(message, encoding);
-				const payload = new Buffer(length + 4);
+				const payload = Buffer.allocUnsafe(length + 4);
 				payload.writeInt32BE(length, 0);
 				payload.write(message, 4, length, encoding);
 				deviceSocket.write(payload);
