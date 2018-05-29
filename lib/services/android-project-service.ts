@@ -256,7 +256,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		try {
 			// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
-			shell.sed('-i', /__PACKAGE__/, projectData.projectId, projectData.appGradlePath);
+			const appGradleContent = this.$fs.readText(projectData.appGradlePath);
+			if (appGradleContent.indexOf(constants.PACKAGE_PLACEHOLDER_NAME) !== -1) {
+				shell.sed('-i', new RegExp(constants.PACKAGE_PLACEHOLDER_NAME), projectData.projectId, projectData.appGradlePath);
+			}
 		} catch (e) {
 			this.$logger.warn(`\n${e}.\nCheck if you're using an outdated template and update it.`);
 		}
