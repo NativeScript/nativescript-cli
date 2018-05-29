@@ -12,8 +12,9 @@ class AndroidDebugServiceInheritor extends AndroidDebugService {
 		$androidDeviceDiscovery: Mobile.IDeviceDiscovery,
 		$androidProcessService: Mobile.IAndroidProcessService,
 		$net: INet,
-		$projectDataService: IProjectDataService) {
-		super(<any>{}, $devicesService, $errors, $logger, $androidDeviceDiscovery, $androidProcessService, $net, $projectDataService);
+		$projectDataService: IProjectDataService,
+		$deviceLogProvider: Mobile.IDeviceLogProvider) {
+		super(<any>{}, $devicesService, $errors, $logger, $androidDeviceDiscovery, $androidProcessService, $net, $projectDataService, $deviceLogProvider);
 	}
 
 	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
@@ -30,6 +31,7 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("androidProcessService", {});
 	testInjector.register("net", {});
 	testInjector.register("projectDataService", {});
+	testInjector.register("deviceLogProvider", {});
 
 	return testInjector;
 };

@@ -14,15 +14,27 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 		private $androidDeviceDiscovery: Mobile.IDeviceDiscovery,
 		private $androidProcessService: Mobile.IAndroidProcessService,
 		private $net: INet,
-		private $projectDataService: IProjectDataService) {
+		private $projectDataService: IProjectDataService,
+		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
 		super(device, $devicesService);
 	}
 
 	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		this._packageName = debugData.applicationIdentifier;
-		return debugOptions.emulator
-			? this.debugOnEmulator(debugData, debugOptions)
-			: this.debugOnDevice(debugData, debugOptions);
+		const result = debugOptions.emulator
+			? await this.debugOnEmulator(debugData, debugOptions)
+			: await this.debugOnDevice(debugData, debugOptions);
+
+		if (!debugOptions.justlaunch) {
+			const pid = await this.$androidProcessService.getAppProcessId(debugData.deviceIdentifier, debugData.applicationIdentifier);
+			if (pid) {
+				this.$deviceLogProvider.setApplicationPidForDevice(debugData.deviceIdentifier, pid);
+				const device = await this.$devicesService.getDevice(debugData.deviceIdentifier);
+				await device.openDeviceLogStream();
+			}
+		}
+
+		return result;
 	}
 
 	public async debugStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
