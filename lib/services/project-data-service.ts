@@ -143,16 +143,16 @@ export class ProjectDataService implements IProjectDataService {
 					assetElement.filename === image.filename && path.basename(assetElement.directory) === path.basename(dirPath)
 				);
 
-				if (assetItem) {
-					if (image.size) {
-						// size is basically <width>x<height>
-						const [width, height] = image.size.toString().split(AssetConstants.sizeDelimiter);
-						if (width && height) {
-							image.width = +width;
-							image.height = +height;
-						}
+				if (image.size) {
+					// size is basically <width>x<height>
+					const [width, height] = image.size.toString().split(AssetConstants.sizeDelimiter);
+					if (width && height) {
+						image.width = +width;
+						image.height = +height;
 					}
+				}
 
+				if (assetItem) {
 					if (!image.width || !image.height) {
 						image.width = assetItem.width;
 						image.height = assetItem.height;
