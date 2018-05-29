@@ -205,3 +205,5 @@ export class ProjectTemplateErrors {
 export class Hooks {
 	public static createProject = "createProject";
 }
+
+export const PACKAGE_PLACEHOLDER_NAME = "__PACKAGE__";
