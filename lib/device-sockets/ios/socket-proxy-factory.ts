@@ -132,9 +132,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 
 			deviceSocket.on("close", () => {
 				this.$logger.info("Backend socket closed!");
-				if (!this.$options.watch) {
-					webSocket.close();
-				}
+				webSocket.close();
 			});
 
 			webSocket.on("close", () => {
