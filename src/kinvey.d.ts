@@ -445,7 +445,7 @@ export namespace Kinvey {
     static verifyEmail(username: string, options?: RequestOptions): Promise<{}>;
     static forgotUsername(email: string, options?: RequestOptions): Promise<{}>;
     static resetPassword(username: string, options?: RequestOptions): Promise<{}>;
-    static lookup(query?: Query, options?: RequestOptions): Promise<{}>;
+    static lookup(query?: Query, options?: RequestOptions): Observable<{}>;
     static exists(username: string, options?: RequestOptions): Promise<{}>;
     static getActiveUser(client?: Client): User | null;
     static registerForLiveService(): Promise<void>;
@@ -961,7 +961,7 @@ export class User {
   static verifyEmail(username: string, options?: RequestOptions): Promise<{}>;
   static forgotUsername(email: string, options?: RequestOptions): Promise<{}>;
   static resetPassword(username: string, options?: RequestOptions): Promise<{}>;
-  static lookup(query?: Query, options?: RequestOptions): Promise<{}>;
+  static lookup(query?: Query, options?: RequestOptions): Observable<{}>;
   static exists(username: string, options?: RequestOptions): Promise<{}>;
   static getActiveUser(client?: Client): User | null;
   static registerForLiveService(): Promise<void>;
