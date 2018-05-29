@@ -9,13 +9,12 @@ export class IOSLogParserService extends EventEmitter implements IIOSLogParserSe
 	constructor(private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
-		private $logger: ILogger,
-		private $projectData: IProjectData) {
+		private $logger: ILogger) {
 		super();
 	}
 
-	public startParsingLog(device: Mobile.IDevice): void {
-		this.$deviceLogProvider.setProjectNameForDevice(device.deviceInfo.identifier, this.$projectData.projectName);
+	public startParsingLog(device: Mobile.IDevice, data: IProjectName): void {
+		this.$deviceLogProvider.setProjectNameForDevice(device.deviceInfo.identifier, data.projectName);
 
 		if (!this.startedDeviceLogInstances[device.deviceInfo.identifier]) {
 			this.startParsingLogCore(device);

@@ -47,9 +47,11 @@ function createTestInjector() {
 	injector.register("processService", {
 		attachToProcessExitSignals: () => ({})
 	});
-	injector.register("projectData", {
-		projectName: "test",
-		projectId: appId
+	injector.register("projectDataService", {
+		getProjectData: (projectDir: string) => ({
+			projectName: "test",
+			projectId: appId
+		})
 	});
 	injector.register("iOSNotification", DeviceApplicationManagerMock);
 
@@ -140,9 +142,13 @@ describe("iOSDebuggerPortService", () => {
 			}
 		];
 
+		const mockProjectDirObj = {
+			projectDir: "/Users/username/projectdir"
+		};
+
 		_.each(testCases, testCase => {
 			it(testCase.name, async () => {
-				iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device);
+				iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, mockProjectDirObj);
 				if (testCase.emitStartingIOSApplicationEvent) {
 					emitStartingIOSApplicationEvent();
 				}
@@ -150,13 +156,13 @@ describe("iOSDebuggerPortService", () => {
 					emitDeviceLog(getDebuggerPortMessage(testCase.emittedPort));
 				}
 
-				const promise = iOSDebuggerPortService.getPort({ deviceId: deviceId, appId: appId });
+				const promise = iOSDebuggerPortService.getPort({ deviceId: deviceId, appId: appId, projectDir: mockProjectDirObj.projectDir });
 				clock.tick(10000);
 				const port = await promise;
 				assert.deepEqual(port, testCase.emittedPort);
 			});
 			it(`${testCase.name} for multiline debugger port message.`, async () => {
-				iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device);
+				iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, mockProjectDirObj);
 				if (testCase.emitStartingIOSApplicationEvent) {
 					emitStartingIOSApplicationEvent();
 				}
@@ -164,7 +170,7 @@ describe("iOSDebuggerPortService", () => {
 					emitDeviceLog(getMultilineDebuggerPortMessage(testCase.emittedPort));
 				}
 
-				const promise = iOSDebuggerPortService.getPort({ deviceId: deviceId, appId: appId });
+				const promise = iOSDebuggerPortService.getPort({ deviceId: deviceId, appId: appId, projectDir: mockProjectDirObj.projectDir });
 				clock.tick(10000);
 				const port = await promise;
 				assert.deepEqual(port, testCase.emittedPort);

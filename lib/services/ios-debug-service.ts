@@ -143,7 +143,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 	private async emulatorStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		const device = await this.$devicesService.getDevice(debugData.deviceIdentifier);
-		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device);
+		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, debugData);
 		const result = await this.wireDebuggerClient(debugData, debugOptions);
 
 		const attachRequestMessage = this.$iOSNotification.getAttachRequest(debugData.applicationIdentifier, debugData.deviceIdentifier);
@@ -192,7 +192,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	private async deviceStartCore(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
-		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device);
+		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, debugData);
 		await this.$iOSSocketRequestExecutor.executeAttachRequest(device, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, debugData.applicationIdentifier);
 		return this.wireDebuggerClient(debugData, debugOptions, device);
 	}
@@ -231,7 +231,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 	private getSocketFactory(debugData: IDebugData, device?: Mobile.IiOSDevice): () => Promise<net.Socket> {
 		const factory = async () => {
-			const port = await this.$iOSDebuggerPortService.getPort({ deviceId: debugData.deviceIdentifier, appId: debugData.applicationIdentifier });
+			const port = await this.$iOSDebuggerPortService.getPort({ projectDir: debugData.projectDir, deviceId: debugData.deviceIdentifier, appId: debugData.applicationIdentifier });
 			if (!port) {
 				this.$errors.fail("NativeScript debugger was not able to get inspector socket port.");
 			}
