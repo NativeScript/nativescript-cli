@@ -20,9 +20,11 @@ class IOSDebugServiceInheritor extends IOSDebugService {
 		$processService: IProcessService,
 		$socketProxyFactory: ISocketProxyFactory,
 		$net: INet,
-		$projectDataService: IProjectDataService) {
+		$projectDataService: IProjectDataService,
+		$deviceLogProvider: Mobile.IDeviceLogProvider) {
 		super(<any>{}, $devicesService, $platformService, $iOSEmulatorServices, $childProcess, $hostInfo, $logger, $errors,
-			$npmInstallationManager, $iOSDebuggerPortService, $iOSNotification, $iOSSocketRequestExecutor, $processService, $socketProxyFactory, $projectDataService);
+			$npmInstallationManager, $iOSDebuggerPortService, $iOSNotification, $iOSSocketRequestExecutor, $processService,
+			$socketProxyFactory, $projectDataService, $deviceLogProvider);
 	}
 
 	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
@@ -58,6 +60,7 @@ const createTestInjector = (): IInjector => {
 
 	testInjector.register("projectDataService", {});
 	testInjector.register("iOSDebuggerPortService", {});
+	testInjector.register("deviceLogProvider", {});
 
 	return testInjector;
 };

@@ -29,7 +29,8 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $processService: IProcessService,
 		private $socketProxyFactory: ISocketProxyFactory,
-		private $projectDataService: IProjectDataService) {
+		private $projectDataService: IProjectDataService,
+		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
 		super(device, $devicesService);
 		this.$processService.attachToProcessExitSignals(this, this.debugStop);
 		this.$socketProxyFactory.on(CONNECTION_ERROR_EVENT_NAME, (e: Error) => this.emit(CONNECTION_ERROR_EVENT_NAME, e));
@@ -40,14 +41,26 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
-		await this.device.openDeviceLogStream();
-
 		if (debugOptions.debugBrk && debugOptions.start) {
 			this.$errors.failWithoutHelp("Expected exactly one of the --debug-brk or --start options.");
 		}
 
 		if (this.$devicesService.isOnlyiOSSimultorRunning() || this.$devicesService.deviceCount === 0) {
 			debugOptions.emulator = true;
+		}
+
+		if (!debugOptions.justlaunch) {
+			let projectName = debugData.projectName;
+			if (!projectName && debugData.projectDir) {
+				const projectData = this.$projectDataService.getProjectData(debugData.projectDir);
+				projectName = projectData.projectName;
+			}
+
+			if (projectName) {
+				this.$deviceLogProvider.setProjectNameForDevice(debugData.deviceIdentifier, projectName);
+			}
+
+			await this.device.openDeviceLogStream();
 		}
 
 		if (debugOptions.emulator) {
@@ -108,7 +121,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 	private async emulatorDebugBrk(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		const args = debugOptions.debugBrk ? "--nativescript-debug-brk" : "--nativescript-debug-start";
-			const launchResult = await this.$iOSEmulatorServices.runApplicationOnEmulator(debugData.pathToAppPackage, {
+		const launchResult = await this.$iOSEmulatorServices.runApplicationOnEmulator(debugData.pathToAppPackage, {
 			waitForDebugger: true,
 			captureStdin: true,
 			args: args,
