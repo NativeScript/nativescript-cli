@@ -12,7 +12,6 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 	private port: number;
 
 	constructor(_device: Mobile.IDevice,
-		data: IProjectDir,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $devicePathProvider: IDevicePathProvider,
 		private $injector: IInjector,
