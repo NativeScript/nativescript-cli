@@ -35,9 +35,11 @@ function createTestInjector() {
 	injector.register("processService", {
 		attachToProcessExitSignals: () => ({})
 	});
-	injector.register("projectData", {
-		projectName: "test",
-		projectId: appId
+	injector.register("projectDataService", {
+		getProjectData: (projectDir: string) => ({
+			projectName: "test",
+			projectId: appId
+		})
 	});
 
 	return injector;
@@ -77,12 +79,16 @@ describe("iOSLogParserService", () => {
 		});
 	}
 
+	const mockProjectNameObj: IProjectName = {
+		projectName: "projectName"
+	};
+
 	describe("startLookingForDebuggerPort", () => {
 		it(`should emit ${DEBUGGER_PORT_FOUND_EVENT_NAME} event`, async () => {
 			const emittedMessagesCount = 1;
 			const promise = attachOnDebuggerFoundEvent(emittedMessagesCount);
 
-			iOSLogParserService.startParsingLog(device);
+			iOSLogParserService.startParsingLog(device, mockProjectNameObj);
 			emitDeviceLog("test message");
 			emitDeviceLog(getDebuggerPortMessage(18181));
 
@@ -95,7 +101,7 @@ describe("iOSLogParserService", () => {
 			const emittedMessagesCount = 5;
 			const promise = attachOnDebuggerFoundEvent(emittedMessagesCount);
 
-			iOSLogParserService.startParsingLog(device);
+			iOSLogParserService.startParsingLog(device, mockProjectNameObj);
 			emitDeviceLog(getDebuggerPortMessage(18181));
 			emitDeviceLog(getDebuggerPortMessage(18181));
 			emitDeviceLog(getDebuggerPortMessage(18181));
@@ -115,7 +121,7 @@ describe("iOSLogParserService", () => {
 			const emittedMessagesCount = 5;
 			const promise = attachOnDebuggerFoundEvent(emittedMessagesCount);
 
-			iOSLogParserService.startParsingLog(device);
+			iOSLogParserService.startParsingLog(device, mockProjectNameObj);
 			emitDeviceLog(getDebuggerPortMessage(45898));
 			emitDeviceLog(getDebuggerPortMessage(1809));
 			emitDeviceLog(getDebuggerPortMessage(65072));
@@ -136,7 +142,7 @@ describe("iOSLogParserService", () => {
 
 			iOSLogParserService.on(DEBUGGER_PORT_FOUND_EVENT_NAME, (data: IIOSDebuggerPortData) => isDebuggedPortFound = true);
 
-			iOSLogParserService.startParsingLog(device);
+			iOSLogParserService.startParsingLog(device, mockProjectNameObj);
 			emitDeviceLog("some test message");
 			emitDeviceLog("another test message");
 

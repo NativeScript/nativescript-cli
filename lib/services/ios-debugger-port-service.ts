@@ -10,12 +10,12 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	constructor(private $iOSLogParserService: IIOSLogParserService,
 		private $iOSProjectService: IPlatformProjectService,
 		private $iOSNotification: IiOSNotification,
-		private $logger: ILogger,
-		private $projectData: IProjectData) { }
+		private $projectDataService: IProjectDataService,
+		private $logger: ILogger) { }
 
 	public getPort(data: IIOSDebuggerPortInputData): Promise<number> {
 		return new Promise((resolve, reject) => {
-			if (!this.canStartLookingForDebuggerPort()) {
+			if (!this.canStartLookingForDebuggerPort(data)) {
 				resolve(IOSDebuggerPortService.DEFAULT_PORT);
 				return;
 			}
@@ -36,19 +36,21 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 		});
 	}
 
-	public attachToDebuggerPortFoundEvent(device: Mobile.IDevice): void {
-		if (!this.canStartLookingForDebuggerPort()) {
+	public attachToDebuggerPortFoundEvent(device: Mobile.IDevice, data: IProjectDir): void {
+		const projectData = this.$projectDataService.getProjectData(data && data.projectDir);
+		if (!this.canStartLookingForDebuggerPort(projectData)) {
 			return;
 		}
 
 		this.attachToDebuggerPortFoundEventCore();
 		this.attachToAttachRequestEvent(device);
 
-		this.$iOSLogParserService.startParsingLog(device);
+		this.$iOSLogParserService.startParsingLog(device, projectData);
 	}
 
-	private canStartLookingForDebuggerPort(): boolean {
-		const frameworkVersion = this.$iOSProjectService.getFrameworkVersion(this.$projectData);
+	private canStartLookingForDebuggerPort(data: IProjectDir): boolean {
+		const projectData = this.$projectDataService.getProjectData(data && data.projectDir);
+		const frameworkVersion = this.$iOSProjectService.getFrameworkVersion(projectData);
 		return semver.gt(frameworkVersion, IOSDebuggerPortService.MIN_REQUIRED_FRAMEWORK_VERSION);
 	}
 

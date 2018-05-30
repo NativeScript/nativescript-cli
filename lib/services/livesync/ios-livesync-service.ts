@@ -25,7 +25,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 			return super.fullSync(syncInfo);
 		}
 
-		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device);
+		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, syncInfo.projectData);
 
 		const projectData = syncInfo.projectData;
 		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
@@ -70,8 +70,8 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		}
 	}
 
-	protected _getDeviceLiveSyncService(device: Mobile.IDevice): INativeScriptDeviceLiveSyncService {
-		const service = this.$injector.resolve<INativeScriptDeviceLiveSyncService>(IOSDeviceLiveSyncService, { _device: device });
+	protected _getDeviceLiveSyncService(device: Mobile.IDevice, data: IProjectDir): INativeScriptDeviceLiveSyncService {
+		const service = this.$injector.resolve<INativeScriptDeviceLiveSyncService>(IOSDeviceLiveSyncService, { _device: device, data });
 		return service;
 	}
 }
