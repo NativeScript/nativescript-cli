@@ -1,13 +1,11 @@
 interface IProjectName {
-	projectName: string;
-}
-
-interface IProjectSettingsBase extends IProjectName {
 	/**
 	 * Name of the newly created application.
 	 */
 	projectName: string;
+}
 
+interface IProjectSettingsBase extends IProjectName {
 	/**
 	 * Defines whether the `npm install` command should be executed with `--ignore-scripts` option.
 	 * When it is passed, all scripts (postinstall for example) will not be executed.
