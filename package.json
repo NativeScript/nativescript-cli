@@ -43,7 +43,7 @@
     "inquirer": "0.9.0",
     "ios-device-lib": "0.4.13",
     "ios-mobileprovision-finder": "1.0.10",
-    "ios-sim-portable": "3.4.3",
+    "ios-sim-portable": "3.4.4",
     "jimp": "0.2.28",
     "lockfile": "1.0.3",
     "lodash": "4.13.1",
