@@ -1,7 +1,7 @@
 /**
  * Describes information for starting debug process.
  */
-interface IDebugData extends Mobile.IDeviceIdentifier {
+interface IDebugData extends Mobile.IDeviceIdentifier, IProjectDir {
 	/**
 	 * Application identifier of the app that it will be debugged.
 	 */
@@ -16,11 +16,6 @@ interface IDebugData extends Mobile.IDeviceIdentifier {
 	 * The name of the application, for example `MyProject`.
 	 */
 	projectName?: string;
-
-	/**
-	 * Path to project.
-	 */
-	projectDir?: string;
 }
 
 /**

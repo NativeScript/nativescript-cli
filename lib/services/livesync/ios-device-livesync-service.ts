@@ -10,6 +10,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 	private device: Mobile.IiOSDevice;
 
 	constructor(_device: Mobile.IiOSDevice,
+		data: IProjectDir,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $iOSNotification: IiOSNotification,
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
@@ -19,25 +20,25 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		private $processService: IProcessService,
 		protected $platformsData: IPlatformsData) {
 			super($platformsData);
-			this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(_device);
+			this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(_device, data);
 			this.device = _device;
 	}
 
-	private async setupSocketIfNeeded(appId: string): Promise<boolean> {
+	private async setupSocketIfNeeded(projectData: IProjectData): Promise<boolean> {
 		if (this.socket) {
 			return true;
 		}
 
 		if (this.device.isEmulator) {
-			await this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.getAttachRequest(appId, this.device.deviceInfo.identifier), this.device.deviceInfo.identifier);
-			const port = await this.$iOSDebuggerPortService.getPort({ deviceId: this.device.deviceInfo.identifier, appId });
+			await this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.getAttachRequest(projectData.projectId, this.device.deviceInfo.identifier), this.device.deviceInfo.identifier);
+			const port = await this.$iOSDebuggerPortService.getPort({ projectDir: projectData.projectDir, deviceId: this.device.deviceInfo.identifier, appId: projectData.projectId });
 			this.socket = await this.$iOSEmulatorServices.connectToPort({ port });
 			if (!this.socket) {
 				return false;
 			}
 		} else {
-			await this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, appId);
-			const port = await this.$iOSDebuggerPortService.getPort({ deviceId: this.device.deviceInfo.identifier, appId });
+			await this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, projectData.projectId);
+			const port = await this.$iOSDebuggerPortService.getPort({ projectDir: projectData.projectDir, deviceId: this.device.deviceInfo.identifier, appId: projectData.projectId });
 			this.socket = await this.device.connectToPort(port);
 		}
 
@@ -70,7 +71,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 			return;
 		}
 
-		if (await this.setupSocketIfNeeded(projectData.projectId)) {
+		if (await this.setupSocketIfNeeded(projectData)) {
 			await this.liveEdit(scriptFiles);
 			await this.reloadPage(deviceAppData, otherFiles);
 		} else {
