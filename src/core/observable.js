@@ -128,7 +128,7 @@ class SafeSubscriber extends Subscriber {
     try {
       fn.call(this._context, value);
     } catch (err) {
-      this.unsubscribe();
+      this.error(err);
       throw err;
     }
   }

@@ -109,6 +109,25 @@ describe('CacheStore', () => {
         });
     });
 
+    it('should throw an error if trying to access a property on undefined', (done) => {
+      const store = new CacheStore(collection);
+      const onNextSpy = expect.createSpy();
+
+      store.find()
+        .subscribe((entities) => {
+          return entities[0].name;
+        }, (error) => {
+          try {
+            expect(error).toBeA(TypeError);
+            done();
+          } catch (e) {
+            done(e);
+          }
+        }, () => {
+          done(new Error('This test should fail.'));
+        });
+    });
+
     it('should return the entities', (done) => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
