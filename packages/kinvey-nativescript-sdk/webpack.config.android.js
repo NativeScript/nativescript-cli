@@ -20,6 +20,7 @@ module.exports = (env = {}) => {
       filename: '[name].js',
       pathinfo: true,
       path: path.join(__dirname, 'dist'),
+      publicPath: 'kinvey-nativescript-sdk/',
       libraryTarget: 'commonjs2',
       library: 'Kinvey'
     },
