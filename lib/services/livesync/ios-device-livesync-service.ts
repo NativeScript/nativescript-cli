@@ -135,7 +135,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 			await new Promise<void>((resolve, reject) => {
 				let isResolved = false;
 				const length = Buffer.byteLength(message, "utf16le");
-				const payload = new Buffer(length + 4);
+				const payload = Buffer.allocUnsafe(length + 4);
 				payload.writeInt32BE(length, 0);
 				payload.write(message, 4, length, "utf16le");
 

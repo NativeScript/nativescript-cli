@@ -13,7 +13,7 @@ export class PacketStream extends stream.Transform {
 			if (!this.buffer) {
 				// read length
 				const length = packet.readInt32BE(0);
-				this.buffer = new Buffer(length);
+				this.buffer = Buffer.allocUnsafe(length);
 				this.offset = 0;
 				packet = packet.slice(4);
 			}
