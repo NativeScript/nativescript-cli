@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [3.11.1](https://github.com/Kinvey/js-sdk/tree/v3.11.1) (2018-06-01)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.0...v3.11.1)<br/>
 
+#### Bugs
 - MLIBZ-2303: `User.me()` does not delete empty fields [#299](https://github.com/Kinvey/js-sdk/pull/299)
 - MLIBZ-2455: Fix incorrect TypeScript definition for `User.lookup()` [#301](https://github.com/Kinvey/js-sdk/pull/301)
 - MLIBZ-2452: NativeScript Android File Uploads throw an Error [#300](https://github.com/Kinvey/js-sdk/pull/300)
 - MLIBZ-2323: Don't swallow error when using observable [#302](https://github.com/Kinvey/js-sdk/pull/302)
+
+#### Tests
 - Add back execution of integration file tests for NativeScript [#303](https://github.com/Kinvey/js-sdk/pull/303)
 
 ## [3.11.0](https://github.com/Kinvey/js-sdk/tree/v3.11.0) (2018-05-23)
