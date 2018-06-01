@@ -63,6 +63,8 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 			await this.device.openDeviceLogStream();
 		}
 
+		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(this.device, debugData);
+
 		if (debugOptions.emulator) {
 			if (debugOptions.start) {
 				return this.emulatorStart(debugData, debugOptions);
@@ -142,12 +144,8 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	private async emulatorStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
-		const device = await this.$devicesService.getDevice(debugData.deviceIdentifier);
-		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, debugData);
 		const result = await this.wireDebuggerClient(debugData, debugOptions);
-
 		const attachRequestMessage = this.$iOSNotification.getAttachRequest(debugData.applicationIdentifier, debugData.deviceIdentifier);
-
 		const iOSEmulatorService = <Mobile.IiOSSimulatorService>this.$iOSEmulatorServices;
 		await iOSEmulatorService.postDarwinNotification(attachRequestMessage, debugData.deviceIdentifier);
 		return result;
@@ -192,7 +190,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	private async deviceStartCore(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
-		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, debugData);
+
 		await this.$iOSSocketRequestExecutor.executeAttachRequest(device, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, debugData.applicationIdentifier);
 		return this.wireDebuggerClient(debugData, debugOptions, device);
 	}

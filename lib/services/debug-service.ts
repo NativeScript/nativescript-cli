@@ -51,7 +51,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 			this.$errors.failWithoutHelp(`Unsupported device OS: ${device.deviceInfo.platform}. You can debug your applications only on iOS or Android.`);
 		}
 
-		if (this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform)) {
+		if (this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform)) { // TODO: Consider to move this code to ios-debug-service
 			if (device.isEmulator && !debugData.pathToAppPackage && debugOptions.debugBrk) {
 				this.$errors.failWithoutHelp("To debug on iOS simulator you need to provide path to the app package.");
 			}
@@ -61,11 +61,9 @@ export class DebugService extends EventEmitter implements IDebugService {
 			} else if (!this.$hostInfo.isDarwin) {
 				this.$errors.failWithoutHelp(`Debugging on iOS devices is not supported for ${platform()} yet.`);
 			}
-
-			result = await debugService.debug(debugData, debugOptions);
-		} else if (this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
-			result = await debugService.debug(debugData, debugOptions);
 		}
+
+		result = await debugService.debug(debugData, debugOptions);
 
 		return this.getDebugInformation(result, device.deviceInfo.identifier);
 	}
