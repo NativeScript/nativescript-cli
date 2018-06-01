@@ -26,9 +26,7 @@ const shimSpecificTestsPath = path.join(__dirname, 'test', 'tests');
 const rootMonoRepoPath = path.join(__dirname, '../../');
 const commonTestsPath = path.join(rootMonoRepoPath, 'test', 'integration', 'tests');
 const distPath = path.join(__dirname, 'dist');
-// Temporary excluding the files suites by adding `&& item.path.indexOf('files') < 0`
-// Should be added back for execution when MLIBZ-2452 is fixed
-const jsFilesFilter = item => (path.extname(item.path) === '.js' && item.path.indexOf('files') < 0);
+const jsFilesFilter = item => (path.extname(item.path) === '.js');
 const sampleTestFilesPath = path.join(rootMonoRepoPath, 'test', 'integration', 'sample-test-files');
 const appTestFilesPath = path.join(appPath, 'sample-test-files');
 const configFileName = 'config.js';

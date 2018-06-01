@@ -25,6 +25,7 @@
     "postrelease": "rm -rf tmp"
   },
   "files": [
+    "file-upload-worker-android.js",
     "kinvey-nativescript-sdk.ios.js",
     "kinvey-nativescript-sdk.ios.js.map",
     "kinvey-nativescript-sdk.android.js",
