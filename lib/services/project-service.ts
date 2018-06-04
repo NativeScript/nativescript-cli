@@ -79,7 +79,8 @@ export class ProjectService implements IProjectService {
 				ignoreScripts
 			});
 
-			const templatePackageJson = this.$fs.readJson(path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME));
+			const templatePackageJsonPath = templateVersion === constants.TemplateVersions.v2 ? path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME) : path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME);
+			const templatePackageJson = this.$fs.readJson(templatePackageJsonPath);
 
 			await this.$npm.uninstall(templatePackageJson.name, { save: true }, projectDir);
 			if (templateVersion === constants.TemplateVersions.v2) {
