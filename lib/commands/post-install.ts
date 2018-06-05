@@ -22,7 +22,7 @@ export class PostInstallCliCommand extends PostInstallCommand {
 	public async postCommandAction(args: string[]): Promise<void> {
 		this.$logger.info("You have successfully installed NativeScript CLI.");
 		this.$logger.info("In order to create a new project, you can use:".green);
-		this.$logger.printMarkdown("`tns create <app name>`");
+		this.$logger.printMarkdown("`tns create <app name> (--tsc|--ng|--template <Template>)`");
 		this.$logger.info("To build your project locally you can use:".green);
 		this.$logger.printMarkdown("`tns build <platform>`");
 		this.$logger.printMarkdown("NOTE: Local builds require additional setup of your environment. You can find more information here: `https://docs.nativescript.org/start/quick-setup`");
