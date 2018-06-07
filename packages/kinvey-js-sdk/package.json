@@ -6,13 +6,12 @@
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "kinvey-js-sdk.js",
+  "main": "lib/index.js",
   "scripts": {
-    "prebuild": "rm -rf dist",
-    "build": "webpack --config webpack.config.js"
+    "build": "babel src -d lib"
   },
-  "files": [
-    "kinvey-js-sdk.js",
-    "kinvey-js-sdk.js.map"
-  ]
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0"
+  }
 }

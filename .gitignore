@@ -1,18 +1,30 @@
-# Node
-node_modules
-npm-debug.log
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Yarn
-yarn-error.log
+# Dependency directories
+node_modules/
 
-# Lerna
-lerna-debug.log
+# Typescript v1 declaration files
+typings/
 
-# JetBrains
-.idea/
+# Optional npm cache directory
+.npm
 
-# VS Code
-.vscode/
+# Optional eslint cache
+.eslintcache
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
 
 # Windows
 Thumbs.db
@@ -21,16 +33,8 @@ Desktop.ini
 # Mac
 .DS_Store
 
-# Temporary files
-.env
-coverage
-dist
-docs
-
-# generated html file
+# Generated test files
 packages/kinvey-html5-sdk/test/index.html
-
-#generated test apps
 packages/kinvey-nativescript-sdk/TestApp/
 packages/kinvey-phonegap-sdk/KinveyCordovaTestApp/
 packages/kinvey-phonegap-sdk/test/config.js
