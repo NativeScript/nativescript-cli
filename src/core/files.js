@@ -28,6 +28,9 @@ function getStartIndex(rangeHeader, max) {
 export class FileStore {
   _clientInstance;
 
+  /**
+   * @private
+   */
   // this has to be done at runtime,
   // because it doesn't exist when FileStore is being instantiated below
   get client() {
@@ -58,26 +61,10 @@ export class FileStore {
    *
    * @param   {Query}                 [query]                                   Query used to filter result.
    * @param   {Object}                [options]                                 Options
-   * @param   {Properties}            [options.properties]                      Custom properties to send with
-   *                                                                            the request.
-   * @param   {Number}                [options.timeout]                         Timeout for the request.
-   * @param   {Boolean}               [options.tls]                             Use Transport Layer Security
-   * @param   {Boolean}               [options.download]                        Download the files
-   * @return  {Promise}                                                         Promise
-   *
-   * @example
-   * var filesStore = new Kinvey.FilesStore();
-   * var query = new Kinvey.Query();
-   * query.equalTo('location', 'Boston');
-   * files.find(query, {
-   *   tls: true, // Use transport layer security
-   *   ttl: 60 * 60 * 24, // 1 day in seconds
-   *   download: true // download the files
-   * }).then(function(files) {
-   *   ...
-   * }).catch(function(err) {
-   *   ...
-   * });
+   * @param   {boolean}               [options.tls=true]                        Use transport layer security
+   * @param   {number}                [options.ttl]                             Specify a time to live for the _downloadURL
+   * @param   {boolean}               [options.download=false]                  Download the files
+   * @return  {Promise<Object[]>}                                               An array of Kinvey file objects.
    */
   find(query, options = {}) {
     options = assign({ tls: true }, options);
@@ -131,24 +118,11 @@ export class FileStore {
   /**
    * Download a file.
    *
-   * @param   {string}        name                                          Name
-   * @param   {Object}        [options]                                     Options
-   * @param   {Boolean}       [options.tls]                                 Use Transport Layer Security
-   * @param   {Number}        [options.ttl]                                 Time To Live (in seconds)
-   * @param   {Boolean}       [options.stream=false]                        Stream the file
-   * @return  {Promise<string>}                                             File content
-   *
-   * @example
-   * var files = new Kinvey.Files();
-   * files.download('Kinvey.png', {
-   *   tls: true, // Use transport layer security
-   *   ttl: 60 * 60 * 24, // 1 day in seconds
-   *   stream: true // stream the file
-   * }).then(function(file) {
-   *   ...
-   * }).catch(function(err) {
-   *   ...
-   * });
+   * @param   {string}                [name]                                    Name of file
+   * @param   {Object}                [options]                                 Options
+   * @param   {boolean}               [options.tls=true]                        Use transport layer security
+   * @param   {number}                [options.ttl]                             Specify a time to live for the _downloadURL
+   * @return  {Promise<string>}                                                 A string representing the file.
   */
   download(name, options = {}) {
     options = assign({ tls: true }, options);
