@@ -53,7 +53,7 @@ How the NativeScript CLI works
 
 The NativeScript CLI is the command-line interface for interacting with NativeScript. It incorporates several important services. Consider the following diagram:
 
-![NativeScript CLI diagram](https://github.com/NativeScript/nativescript-cli/blob/master/ns-cli.png)
+![NativeScript CLI diagram](https://github.com/NativeScript/nativescript-cli/raw/release/ns-cli.png)
 
 * **Commands** - pretty much what every CLI does - support of different command options, input validation and help  
 * **Devices Service** - provides the communication between NativeScript and devices/emulators/simulators used to run/debug the app. Uses iTunes to talk to iOS and adb for Android
