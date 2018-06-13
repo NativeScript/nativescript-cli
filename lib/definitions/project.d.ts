@@ -210,8 +210,43 @@ interface IImageDefinitionsStructure {
 }
 
 interface ITemplateData {
+	/**
+	 * The normalized template name
+	 * In case no --template option is provided, use default template name
+	 * In case --template <templateName> option is provided, use <templateName>
+	 * In case --template <templateName>@<version> is provided, use <templateName>
+	 * In case --ng option is provided, use default angular template name
+	 * In case --ts option is provided, use default typescript template name
+	 */
+	templateName: string;
+	/**
+	 * The path to the template.
+	 * In case template is v1, will be {pathToProjectDir}/node_modules/{templateName}.
+	 * In case template is v2, will be null.
+	 */
 	templatePath: string;
+	/**
+	 * The templateVersion property from nativescript section inside package.json file
+	 * "nativescript": {
+			"id": "org.nativescript.app6",
+			"templateVersion": "v2"
+		}
+	 */
 	templateVersion: string;
+	/**
+	 * The whole content of package.json file
+	 */
+	templatePackageJsonContent: ITemplatePackageJsonContent;
+}
+
+interface ITemplatePackageJsonContent {
+	name: string;
+	version: string;
+	dependencies: IStringDictionary;
+	devDependencies: IStringDictionary;
+	nativescript?: {
+		templateVersion?: string;
+	}
 }
 
 /**
@@ -227,14 +262,6 @@ interface IProjectTemplatesService {
 	 * @return {ITemplateData} Data describing the template - location where it is installed and its NativeScript version.
 	 */
 	prepareTemplate(templateName: string, projectDir: string): Promise<ITemplateData>;
-
-	/**
-	 * Gives information for the nativescript specific version of the template, for example v1, v2, etc.
-	 * Defaults to v1 in case there's no version specified.
-	 * @param {string} templatePath Full path to the template.
-	 * @returns {string} The version, for example v1 or v2.
-	 */
-	getTemplateVersion(templatePath: string): string;
 }
 
 interface IPlatformProjectServiceBase {

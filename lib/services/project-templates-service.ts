@@ -5,27 +5,37 @@ import { format } from "util";
 temp.track();
 
 export class ProjectTemplatesService implements IProjectTemplatesService {
+	private templatePackageContents: IDictionary<any> = {};
 
 	public constructor(private $analyticsService: IAnalyticsService,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $npmInstallationManager: INpmInstallationManager,
+		private $pacoteService: IPacoteService,
 		private $errors: IErrors) { }
 
 	public async prepareTemplate(originalTemplateName: string, projectDir: string): Promise<ITemplateData> {
+		if (!originalTemplateName) {
+			originalTemplateName = constants.RESERVED_TEMPLATE_NAMES["default"];
+		}
+
 		// support <reserved_name>@<version> syntax
-		const data = originalTemplateName.split("@"),
-			name = data[0],
-			version = data[1];
-
+		const [name, version] = originalTemplateName.split("@");
 		const templateName = constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()] || name;
+		const fullTemplateName = version ? `${templateName}@${version}` : templateName;
+		const templatePackageJsonContent = await this.getTemplatePackageJsonContent(fullTemplateName);
+		const templateVersion = await this.getTemplateVersion(fullTemplateName);
 
-		const templatePath = await this.prepareNativeScriptTemplate(templateName, version, projectDir);
+		let templatePath = null;
+		if (templateVersion === constants.TemplateVersions.v1) {
+			templatePath = await this.prepareNativeScriptTemplate(templateName, version, projectDir);
+			// this removes dependencies from templates so they are not copied to app folder
+			this.$fs.deleteDirectory(path.join(templatePath, constants.NODE_MODULES_FOLDER_NAME));
+		}
 
 		await this.$analyticsService.track("Template used for project creation", templateName);
 
-		const templateNameToBeTracked = this.getTemplateNameToBeTracked(templateName, templatePath);
-		const templateVersion = this.getTemplateVersion(templatePath);
+		const templateNameToBeTracked = this.getTemplateNameToBeTracked(templateName, templatePackageJsonContent);
 		if (templateNameToBeTracked) {
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
 				action: constants.TrackActionNames.CreateProject,
@@ -39,33 +49,31 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 			});
 		}
 
-		// this removes dependencies from templates so they are not copied to app folder
-		this.$fs.deleteDirectory(path.join(templatePath, constants.NODE_MODULES_FOLDER_NAME));
-
-		return { templatePath, templateVersion };
+		return { templateName, templatePath, templateVersion, templatePackageJsonContent };
 	}
 
-	public getTemplateVersion(templatePath: string): string {
-		this.$logger.trace(`Checking the NativeScript version of the template located at ${templatePath}.`);
-		const pathToPackageJson = path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME);
-		if (this.$fs.exists(pathToPackageJson)) {
-			const packageJsonContent = this.$fs.readJson(pathToPackageJson);
-			const templateVersionFromPackageJson: string = packageJsonContent && packageJsonContent.nativescript && packageJsonContent.nativescript.templateVersion;
+	private async getTemplateVersion(templateName: string): Promise<string> {
+		const packageJsonContent = await this.getTemplatePackageJsonContent(templateName);
+		const templateVersionFromPackageJson: string = packageJsonContent && packageJsonContent.nativescript && packageJsonContent.nativescript.templateVersion;
+		if (templateVersionFromPackageJson) {
+			this.$logger.trace(`The template ${templateName} has version ${templateVersionFromPackageJson}.`);
 
-			if (templateVersionFromPackageJson) {
-				this.$logger.trace(`The template ${templatePath} has version ${templateVersionFromPackageJson}.`);
-
-				if (_.values(constants.TemplateVersions).indexOf(templateVersionFromPackageJson) === -1) {
-					this.$errors.failWithoutHelp(format(constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat, templatePath, templateVersionFromPackageJson));
-				}
-
-				return templateVersionFromPackageJson;
+			if (_.values(constants.TemplateVersions).indexOf(templateVersionFromPackageJson) === -1) {
+				this.$errors.failWithoutHelp(format(constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat, templateName, templateVersionFromPackageJson));
 			}
+
+			return templateVersionFromPackageJson;
 		}
 
-		const defaultVersion = constants.TemplateVersions.v1;
-		this.$logger.trace(`The template ${templatePath} does not specify version or we were unable to find out the version. Using default one ${defaultVersion}`);
-		return defaultVersion;
+		return constants.TemplateVersions.v1;
+	}
+
+	private async getTemplatePackageJsonContent(templateName: string): Promise<ITemplatePackageJsonContent> {
+		if (!this.templatePackageContents[templateName]) {
+			this.templatePackageContents[templateName] = await this.$pacoteService.manifest(templateName, { fullMetadata: true });
+		}
+
+		return this.templatePackageContents[templateName];
 	}
 
 	/**
@@ -81,18 +89,11 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		return this.$npmInstallationManager.install(templateName, projectDir, { version: version, dependencyType: "save" });
 	}
 
-	private getTemplateNameToBeTracked(templateName: string, realTemplatePath: string): string {
+	private getTemplateNameToBeTracked(templateName: string, packageJsonContent: any): string {
 		try {
 			if (this.$fs.exists(templateName)) {
-				// local template is used
-				const pathToPackageJson = path.join(realTemplatePath, constants.PACKAGE_JSON_FILE_NAME);
-				let templateNameToTrack = path.basename(templateName);
-				if (this.$fs.exists(pathToPackageJson)) {
-					const templatePackageJsonContent = this.$fs.readJson(pathToPackageJson);
-					templateNameToTrack = templatePackageJsonContent.name;
-				}
-
-				return `${constants.ANALYTICS_LOCAL_TEMPLATE_PREFIX}${templateNameToTrack}`;
+				const templateNameToBeTracked = this.$fs.exists(path.join(templateName, constants.PACKAGE_JSON_FILE_NAME)) ? packageJsonContent.name : path.basename(templateName);
+				return `${constants.ANALYTICS_LOCAL_TEMPLATE_PREFIX}${templateNameToBeTracked}`;
 			}
 
 			return templateName;

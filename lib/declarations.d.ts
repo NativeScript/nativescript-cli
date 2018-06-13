@@ -46,6 +46,12 @@ interface INodePackageManager {
 	 * @returns {any} The full data from registry.npmjs.org for this package.
 	 */
 	getRegistryPackageData(packageName: string): Promise<any>;
+
+	/**
+	 * Gets the path to npm cache directory.
+	 * @returns {string} The full path to npm cache directory
+	 */
+	getCachePath(): Promise<string>;
 }
 
 interface INpmInstallationManager {

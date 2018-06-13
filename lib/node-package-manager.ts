@@ -1,5 +1,5 @@
 import * as path from "path";
-import { exported } from "./common/decorators";
+import { exported, cache } from "./common/decorators";
 import { isInteractive } from "./common/helpers";
 
 export class NodePackageManager implements INodePackageManager {
@@ -126,6 +126,12 @@ export class NodePackageManager implements INodePackageManager {
 		const jsonData = JSON.parse(responseData);
 		this.$logger.trace(`Successfully parsed data from npm registry for package ${packageName}.`);
 		return jsonData;
+	}
+
+	@cache()
+	public async getCachePath(): Promise<string> {
+		const cachePath = await this.$childProcess.exec(`npm config get cache`);
+		return path.join(cachePath.trim(), "_cacache");
 	}
 
 	private getNpmExecutableName(): string {

@@ -19,6 +19,7 @@ import { HostInfo } from "../lib/common/host-info";
 import { ProjectTemplatesService } from "../lib/services/project-templates-service";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
+import { PacoteService } from "../lib/services/pacote-service";
 
 const mockProjectNameValidator = {
 	validate: () => true
@@ -165,6 +166,7 @@ class ProjectIntegrationTest {
 		this.testInjector.register("hooksService", {
 			executeAfterHooks: async (commandName: string, hookArguments?: IDictionary<any>): Promise<void> => undefined
 		});
+		this.testInjector.register("pacoteService", PacoteService);
 	}
 }
 
@@ -444,6 +446,10 @@ describe("Project Service Tests", () => {
 			testInjector.register("settingsService", SettingsService);
 			testInjector.register("hooksService", {
 				executeAfterHooks: async (commandName: string, hookArguments?: IDictionary<any>): Promise<void> => undefined
+			});
+			testInjector.register("pacoteService", {
+				manifest: () => Promise.resolve(),
+				downloadAndExtract: () => Promise.resolve()
 			});
 
 			return testInjector;
