@@ -2798,9 +2798,9 @@
       "integrity": "sha1-EEqOSqym09jNFXqO+L+rLXo//bY="
     },
     "ios-device-lib": {
-      "version": "0.4.13",
-      "resolved": "https://registry.npmjs.org/ios-device-lib/-/ios-device-lib-0.4.13.tgz",
-      "integrity": "sha512-2vJpXctCy+ZluPBz9wxzIQ3W8LxxYBXlT5QHL3bV5TR+ClhpZbdHDajt0bmfPR92JAUufejHVRk5jCG6uGfUAA==",
+      "version": "0.4.14",
+      "resolved": "https://registry.npmjs.org/ios-device-lib/-/ios-device-lib-0.4.14.tgz",
+      "integrity": "sha512-e0srWzIoMqaHyLOjYQSlLzYF8uVE8oYOvWBaBMons6OcCNg8rTQaGuu5368x8dKKqTUtLkNkU4Husa7qAD1DXQ==",
       "requires": {
         "bufferpack": "0.0.6",
         "node-uuid": "1.4.7"
