@@ -2,8 +2,6 @@ function testFunc() {
 
   const notFoundErrorName = 'NotFoundError';
   const notFoundErrorMessage = 'This blob not found for this app backend.';
-  const timeoutErrorName = 'TimeoutError';
-  const timeoutErrorMessage = 'The network request timed out.';
   const plainTextMimeType = 'text/plain';
   const octetStreamMimeType = 'application/octet-stream'
   const shouldNotBeCalledMessage = 'Should not be called';
@@ -353,9 +351,20 @@ function testFunc() {
         utilities.testFileUpload(fileToUpload1, metadata, metadata, fileContent1, undefined, done);
       })
 
-      it('should send size to the server', (done) => {
-        const metadata = { size: 0 };
-        utilities.testFileUpload(fileToUpload1, metadata, metadata, null, undefined, done);
+      it('should be able to upload if the submitted size is correct', (done) => {
+        const metadata = { size: fileContent1.length };
+        utilities.testFileUpload(fileToUpload1, metadata, metadata, fileContent1, undefined, done);
+      })
+
+      it('should return an error if the submitted size does not match the content length', (done) => {
+        const metadata = { size: fileContent1.length + 100 };
+        Kinvey.Files.upload(fileToUpload1, metadata)
+          .then(() => done(new Error(shouldNotBeCalledMessage)))
+          .catch((error) => {
+            expect(error).to.exist;
+            done();
+          })
+          .catch(done);
       })
 
       it('should set _acl', (done) => {
@@ -371,16 +380,6 @@ function testFunc() {
 
       it('should upload a publicly-readable file with public = true', (done) => {
         utilities.testFileUpload(fileToUpload1, { public: true }, { _public: true }, fileContent1, undefined, done);
-      })
-
-      it('should set options.timeout', (done) => {
-        Kinvey.Files.upload(fileToUpload1, undefined, { timeout: 1 })
-          .then(() => done(new Error(shouldNotBeCalledMessage)))
-          .catch((error) => {
-            utilities.assertError(error, timeoutErrorName, timeoutErrorMessage);
-            done();
-          })
-          .catch(done)
       })
 
       it('should update the content and the metadata of an existing file', (done) => {

@@ -65,6 +65,16 @@ function testFunc() {
           });
         })
       });
+
+      it('should set options.timeout', (done) => {
+        Kinvey.Files.upload(stringContent, undefined, { timeout: 1 })
+          .then(() => done(new Error('Should not be called')))
+          .catch((error) => {
+            expect(error.message).to.contain('request timed out');
+            done();
+          })
+          .catch(done)
+      });
     });
   });
 }
