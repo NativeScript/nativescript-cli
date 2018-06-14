@@ -13,10 +13,9 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		$devicePathProvider: IDevicePathProvider,
 		$logger: ILogger,
 		$projectFilesProvider: IProjectFilesProvider,
-		private $iOSDebuggerPortService: IIOSDebuggerPortService,
-	) {
-		super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
-	}
+		private $iOSDebuggerPortService: IIOSDebuggerPortService) {
+			super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
+		}
 
 	public async fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo> {
 		const device = syncInfo.device;
@@ -24,9 +23,6 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		if (device.isEmulator) {
 			return super.fullSync(syncInfo);
 		}
-
-		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, syncInfo.projectData);
-
 		const projectData = syncInfo.projectData;
 		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 		const deviceAppData = await this.getAppData(syncInfo);
@@ -67,6 +63,12 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 			return this.fullSync({ projectData: liveSyncInfo.projectData, device, syncAllFiles: liveSyncInfo.syncAllFiles, watch: true });
 		} else {
 			return super.liveSyncWatchAction(device, liveSyncInfo);
+		}
+	}
+
+	public prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir, liveSyncInfo: ILiveSyncInfo): void {
+		if (!liveSyncInfo.skipWatcher) {
+			this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, data);
 		}
 	}
 

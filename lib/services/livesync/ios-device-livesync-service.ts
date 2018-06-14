@@ -20,7 +20,6 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		private $processService: IProcessService,
 		protected $platformsData: IPlatformsData) {
 			super($platformsData);
-			this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(_device, data);
 			this.device = _device;
 	}
 

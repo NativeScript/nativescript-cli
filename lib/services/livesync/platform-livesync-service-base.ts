@@ -138,5 +138,4 @@ export abstract class PlatformLiveSyncServiceBase {
 			action.call(this.$logger, util.format(message, "all files"));
 		}
 	}
-
 }
