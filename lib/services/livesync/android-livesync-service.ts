@@ -8,14 +8,15 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 		$devicePathProvider: IDevicePathProvider,
 		$fs: IFileSystem,
 		$logger: ILogger,
-		$projectFilesProvider: IProjectFilesProvider,
-	) {
-		super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
+		$projectFilesProvider: IProjectFilesProvider) {
+			super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
 	}
 
 	protected _getDeviceLiveSyncService(device: Mobile.IDevice, data: IProjectDir): INativeScriptDeviceLiveSyncService {
 		const service = this.$injector.resolve<INativeScriptDeviceLiveSyncService>(AndroidDeviceLiveSyncService, { _device: device, data });
 		return service;
 	}
+
+	public prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir): void { /* */ }
 }
 $injector.register("androidLiveSyncService", AndroidLiveSyncService);

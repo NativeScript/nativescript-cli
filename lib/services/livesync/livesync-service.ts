@@ -456,7 +456,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		const deviceAction = async (device: Mobile.IDevice): Promise<void> => {
 			try {
 				const platform = device.deviceInfo.platform;
+				const platformLiveSyncService = this.getLiveSyncService(platform);
 				const deviceBuildInfoDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
+
+				platformLiveSyncService.prepareForLiveSync(device, projectData, liveSyncData);
 
 				await this.ensureLatestAppPackageIsInstalledOnDevice({
 					device,
@@ -472,7 +475,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					env: liveSyncData.env
 				}, { skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare });
 
-				const liveSyncResultInfo = await this.getLiveSyncService(platform).fullSync({
+				const liveSyncResultInfo = await platformLiveSyncService.fullSync({
 					projectData, device,
 					syncAllFiles: liveSyncData.watchAllFiles,
 					useLiveEdit: liveSyncData.useLiveEdit,
