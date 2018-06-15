@@ -13,7 +13,8 @@ export abstract class PlatformProjectServiceBase extends EventEmitter implements
 	}
 
 	public getFrameworkVersion(projectData: IProjectData): string {
-		return this.$projectDataService.getNSValue(projectData.projectDir, this.getPlatformData(projectData).frameworkPackageName).version;
+		const frameworkData = this.$projectDataService.getNSValue(projectData.projectDir, this.getPlatformData(projectData).frameworkPackageName);
+		return frameworkData && frameworkData.version;
 	}
 
 	protected getAllNativeLibrariesForPlugin(pluginData: IPluginData, platform: string, filter: (fileName: string, _pluginPlatformsFolderPath: string) => boolean): string[] {
