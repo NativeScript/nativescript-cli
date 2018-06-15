@@ -7,14 +7,9 @@ import { getLiveService } from '../live-service';
 import { KinveyRequest, RequestMethod, StatusCode } from '../../request';
 import { StreamACL } from './stream-acl';
 
-/**
- * @typedef MessageReceiver
- * @property {Function} onMessage
- * @property {Function} onStatus
- * @property {Function} onError
- */
 
 /**
+ * @private
  * A Stream, created in the backend
  * @class Stream
  */

@@ -2,6 +2,9 @@ import Promise from 'es6-promise';
 import { KinveyError } from '../../errors';
 import { Middleware } from './middleware';
 
+/**
+ * @private
+ */
 export class HttpMiddleware extends Middleware {
   constructor(name = 'Http Middleware') {
     super(name);

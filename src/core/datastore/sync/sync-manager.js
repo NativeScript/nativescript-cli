@@ -19,6 +19,9 @@ const {
 } = getPlatformConfig();
 const pushTrackingByCollection = {};
 
+/**
+ * @private
+ */
 export class SyncManager {
   _offlineRepoPromise;
   _networkRepo;

@@ -193,6 +193,11 @@ export class Query {
     }
   }
 
+  /**
+   * Returns true or false depending on if the query is able to be processed offline.
+   *
+   * @returns {boolean} True if the query is supported offline otherwise false.
+   */
   isSupportedOffline() {
     return Object.keys(this.filter).reduce((supported, key) => {
       if (supported) {
@@ -216,10 +221,16 @@ export class Query {
     }, true);
   }
 
+  /**
+   * @private
+   */
   hasSkip() {
     return isNumber(this.skip) && this.skip > 0;
   }
 
+  /**
+   * @private
+   */
   hasLimit() {
     return isNumber(this.limit);
   }

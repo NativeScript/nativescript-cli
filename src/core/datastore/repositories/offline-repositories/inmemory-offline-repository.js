@@ -9,7 +9,9 @@ import { ensureArray } from '../../../utils';
 
 // Imported for typings
 // import { KeyValuePersister } from '../../persisters';
-
+/**
+ * @private
+ */
 export class InmemoryOfflineRepository extends OfflineRepository {
   /** @type {KeyValuePersister} */
   _persister;

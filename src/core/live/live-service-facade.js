@@ -31,6 +31,9 @@ function isInitialized() {
   return _getLiveService().isInitialized();
 }
 
+/**
+ * @private
+ */
 export const LiveServiceFacade = {
   Stream,
   onConnectionStatusUpdates,

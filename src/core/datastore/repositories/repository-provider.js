@@ -86,6 +86,9 @@ function getSupportedStorages() {
   return keys(_availableStorages);
 }
 
+/**
+ * @private
+ */
 export const repositoryProvider = {
   getNetworkRepository,
   getOfflineRepository,

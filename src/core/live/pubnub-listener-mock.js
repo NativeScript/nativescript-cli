@@ -1,3 +1,6 @@
+/**
+ * @private
+ */
 export class PubNubListenerMock {
   removeAllListeners() { }
 

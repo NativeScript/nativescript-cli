@@ -1,3 +1,6 @@
+/**
+ * @private
+ */
 export class Operation {
   type;
   collection;

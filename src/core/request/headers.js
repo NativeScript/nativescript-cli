@@ -3,8 +3,14 @@ import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
 import { isDefined } from '../utils';
 
+/**
+ * @private
+ */
 export const kinveyRequestStartHeader = 'X-Kinvey-Request-Start';
 
+/**
+ * @private
+ */
 export class Headers {
   constructor(headers = {}) {
     this.headers = {};

@@ -6,6 +6,9 @@ import { KeyValueStorePersister } from './key-value-store-persister';
 import { sqliteCollectionsMaster } from './utils';
 import { ensureArray } from '../../utils';
 
+/**
+ * @private
+ */
 export class SqlKeyValueStorePersister extends KeyValueStorePersister {
   _sqlModule;
 

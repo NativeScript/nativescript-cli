@@ -32,6 +32,9 @@ import {
   WritesToCollectionDisallowedError
 } from '../errors';
 
+/**
+ * @private
+ */
 export const StatusCode = {
   Ok: 200,
   Created: 201,
@@ -48,6 +51,9 @@ export const StatusCode = {
 };
 Object.freeze(StatusCode);
 
+/**
+ * @private
+ */
 export class Response {
   constructor(options = {}) {
     options = assign({
@@ -124,6 +130,9 @@ export class Response {
   }
 }
 
+/**
+ * @private
+ */
 export class KinveyResponse extends Response {
   get error() {
     if (this.isSuccess()) {

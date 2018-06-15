@@ -472,4 +472,7 @@ export class FileStore {
   }
 }
 
+/**
+ * @private
+ */
 export const Files = new FileStore();

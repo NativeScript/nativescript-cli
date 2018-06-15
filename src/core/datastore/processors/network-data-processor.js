@@ -3,6 +3,9 @@ import { Promise } from 'es6-promise';
 import { DataProcessor } from './data-processor';
 import { repositoryProvider } from '../repositories';
 
+/**
+ * @private
+ */
 export class NetworkDataProcessor extends DataProcessor {
   _getRepository() {
     if (!this._repoPromise) {

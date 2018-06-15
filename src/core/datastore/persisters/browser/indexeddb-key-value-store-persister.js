@@ -8,6 +8,9 @@ import { domStringListToStringArray, inedxedDbTransctionMode } from '../utils';
 const dbCache = {}; // TODO: see what can be done about this
 
 // TODO: all key/value stores are being reused as is, they need to be refactored
+/**
+ * @private
+ */
 export class IndexedDbKeyValueStorePersister extends KeyValueStorePersister {
   constructor() {
     super();

@@ -1,3 +1,6 @@
+/**
+ * @private
+ */
 export const platformName = {
   nativeScript: 'NativeScript',
   html5: 'HTML5',

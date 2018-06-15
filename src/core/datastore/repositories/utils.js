@@ -2,8 +2,14 @@ import { Client } from '../../client';
 
 import { stripTagFromCollectionName } from '../utils';
 
+/**
+ * @private
+ */
 export const testSupportCollection = '__testSupport__';
 
+/**
+ * @private
+ */
 export function buildCollectionUrl(collectionName, id, restAction) {
   collectionName = stripTagFromCollectionName(collectionName);
   let result = `appdata/${Client.sharedInstance().appKey}/${collectionName}`;
@@ -16,6 +22,9 @@ export function buildCollectionUrl(collectionName, id, restAction) {
   return result;
 }
 
+/**
+ * @private
+ */
 export function applyQueryToDataset(dataset, query) {
   if (!query) {
     return dataset;
@@ -23,6 +32,9 @@ export function applyQueryToDataset(dataset, query) {
   return query.process(dataset);
 }
 
+/**
+ * @private
+ */
 export function applyAggregationToDataset(dataset, aggregationQuery) {
   return aggregationQuery.process(dataset);
 }

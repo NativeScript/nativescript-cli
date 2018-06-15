@@ -4,6 +4,9 @@ import { KeyValuePersister } from './key-value-persister';
 
 const _storage = {};
 
+/**
+ * @private
+ */
 export class MemoryKeyValuePersister extends KeyValuePersister {
   getKeys() {
     return Promise.resolve(Object.keys(_storage));

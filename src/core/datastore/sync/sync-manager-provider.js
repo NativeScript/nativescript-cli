@@ -12,6 +12,9 @@ function getSyncManager() {
   return new SyncManager(networkRepo, syncStateManager);
 }
 
+/**
+ * @private
+ */
 export const syncManagerProvider = {
   getSyncManager
 };

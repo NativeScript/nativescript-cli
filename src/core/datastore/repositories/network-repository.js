@@ -7,6 +7,7 @@ import { ensureArray } from '../../utils';
 import { buildCollectionUrl } from './utils';
 
 /**
+ * @private
  * @typedef RequestOptions
  * @property {Operation} operation
  * @property {Object} options
@@ -20,7 +21,6 @@ import { buildCollectionUrl } from './utils';
  * @property {Number} [options.kinveyFileTTL]
  * @property {Boolean} [options.kinveyFileTLS]
  */
-
 export class NetworkRepository extends Repository {
   read(collection, query, options = {}) {
     const requestConfig = this._buildRequestConfig(collection, RequestMethod.GET, null, query, null, null, options);

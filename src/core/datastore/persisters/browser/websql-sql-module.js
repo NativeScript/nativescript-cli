@@ -5,6 +5,9 @@ import { KinveyError } from '../../../errors';
 import { webSqlCollectionsMaster, webSqlDatabaseSize } from '../utils';
 const dbCache = {};
 
+/**
+ * @private
+ */
 export class WebSqlSqlModule {
   _databaseName;
 

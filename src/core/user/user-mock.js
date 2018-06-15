@@ -2,6 +2,9 @@ import nock from 'nock';
 import { randomString } from '../utils';
 import { User } from './user';
 
+/**
+ * @private
+ */
 export class UserMock extends User {
   static getActiveUser(client) {
     const activeUser = super.getActiveUser(client);

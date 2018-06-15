@@ -19,7 +19,9 @@ import {
 
 // imported for typings
 // import { OfflineRepository } from '../repositories';
-
+/**
+ * @private
+ */
 export class SyncStateManager {
   _repoPromise;
 

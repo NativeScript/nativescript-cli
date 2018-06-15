@@ -3,6 +3,9 @@ import { KinveyError } from '../../../errors';
 import { InmemoryOfflineRepository } from './inmemory-offline-repository';
 import { KeyValueStorePersister } from '../../persisters';
 
+/**
+ * @private
+ */
 export class KeyValueStoreOfflineRepository extends InmemoryOfflineRepository {
   /** @type {KeyValueStorePersister} */
   _persister;

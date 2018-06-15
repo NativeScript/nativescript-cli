@@ -5,13 +5,10 @@ import { isNonemptyString } from '../../utils';
 
 const invalidValueMsg = 'Invalid ACL object value';
 
-/**
- * @typedef {object} PlainACLObject
- * @property {string[]} [publish]
- * @property {string[]} [subscribe]
- * @property {{publish?: string[], subscribe?: string[]}} [groups]
- */
 
+/**
+ * @private
+ */
 export class StreamACL {
   constructor(obj) {
     this.publishers = [];
