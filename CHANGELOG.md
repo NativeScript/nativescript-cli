@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.11.2](https://github.com/Kinvey/js-sdk/tree/v3.11.2) (2018-06-15)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.1...v3.11.2)<br/>
+
+#### Enhancements
+- MLIBZ-2528: Handle MIC OAuth errors in redirect uri responses [#307](https://github.com/Kinvey/js-sdk/pull/307)
+
+#### Tests
+- Fixed file tests [#304](https://github.com/Kinvey/js-sdk/pull/304)
+
 ## [3.11.1](https://github.com/Kinvey/js-sdk/tree/v3.11.1) (2018-06-01)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.0...v3.11.1)<br/>
 

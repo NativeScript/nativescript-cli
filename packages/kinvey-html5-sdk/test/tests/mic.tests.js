@@ -4,6 +4,7 @@ function testFunc() {
   const serverHost = 'auth.kinvey.com';
   const redirectUrl = 'http://localhost:64320/callback';
   const { authServiceId } = externalConfig;
+  const { wrongSetupAuthServiceId } = externalConfig;
   const micDefaultVersion = 'v3';
 
   //the used OAuth 2 provider is Facebook
@@ -198,7 +199,7 @@ function testFunc() {
     });
 
     it(`should make a correct request to KAS with the default ${micDefaultVersion} version`, (done) => {
-      // Currently the error function is not called when the server returns an error - MLIBZ-2423,
+      // Currently the error function is not called when the redirect url is invalid,
       // so the test is closing the popup in order to resume execution and validate the request url  
       addCloseFacebookPopupHandler(true);
 
@@ -211,7 +212,7 @@ function testFunc() {
     });
 
     it(`should make a correct request to KAS with the supplied options.version`, (done) => {
-      // Currently the error function is not called when the server returns an error - MLIBZ-2423,
+      // Currently the error function is not called when the redirect url is invalid,
       // so the test is closing the popup in order to resume execution and validate the request url 
       const submittedVersion = 'v2';
       addCloseFacebookPopupHandler(true);
@@ -254,6 +255,18 @@ function testFunc() {
         .then(() => done(new Error(shouldNotBeInvokedMessage)))
         .catch((err) => {
           expect(err.message).to.contain('An active user already exists.');
+          done();
+        }).catch(done);
+    });
+
+    it('should return the error from the Oauth provider with the default MIC version', (done) => {
+      addLoginFacebookHandler();
+      Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: wrongSetupAuthServiceId })
+        .then(() => done(new Error(shouldNotBeInvokedMessage)))
+        .catch((err) => {
+          expect(err.name).to.equal('KinveyError');
+          expect(err.message).to.equal('server_error');
+          expect(err.debug).to.contain('OAuth provider returned an error when trying to retrieve the token');
           done();
         }).catch(done);
     });

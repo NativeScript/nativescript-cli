@@ -4,7 +4,8 @@ const testsConfig = {
   deltaCollectionName: 'BooksDelta',
   fbEmail: process.env.FACEBOOK_EMAIL,
   fbPassword: process.env.FACEBOOK_PASSWORD,
-  authServiceId: 'decad9197f0f4680a46d902327c5c131'
+  authServiceId: '6caa6cb682c645708ae7cf2c21b252db',
+  wrongSetupAuthServiceId: '8a44482f4b12486593b05e3141f9abf9'
 };
 
 const appCredentials = {
