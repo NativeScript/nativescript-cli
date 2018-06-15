@@ -51,7 +51,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	private canStartLookingForDebuggerPort(data: IProjectDir): boolean {
 		const projectData = this.$projectDataService.getProjectData(data && data.projectDir);
 		const frameworkVersion = this.$iOSProjectService.getFrameworkVersion(projectData);
-		return semver.gt(frameworkVersion, IOSDebuggerPortService.MIN_REQUIRED_FRAMEWORK_VERSION);
+		return !frameworkVersion || semver.gt(frameworkVersion, IOSDebuggerPortService.MIN_REQUIRED_FRAMEWORK_VERSION);
 	}
 
 	@cache()
