@@ -117,6 +117,11 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		return transferredFiles;
 	}
 
+	public getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService {
+		const adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
+		return this.$injector.resolve(AndroidDeviceHashService, { adb, appIdentifier });
+	}
+
 	private async _transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<Mobile.ILocalToDevicePathData[]> {
 		await this.livesyncTool.sendFiles(localToDevicePaths.map(localToDevicePathData => localToDevicePathData.getLocalPath()));
 
@@ -132,19 +137,24 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 	private async _transferDirectory(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<Mobile.ILocalToDevicePathData[]> {
 		let transferredLocalToDevicePaths: Mobile.ILocalToDevicePathData[];
 		const deviceHashService = this.getDeviceHashService(deviceAppData.appIdentifier);
-		const currentShasums: IStringDictionary = await deviceHashService.generateHashesFromLocalToDevicePaths(localToDevicePaths);
-		const oldShasums = await deviceHashService.getShasumsFromDevice();
+		const currentHashes = await deviceHashService.generateHashesFromLocalToDevicePaths(localToDevicePaths);
+		const oldHashes = await deviceHashService.getShasumsFromDevice();
+		console.log("!!!!! OLD HASHES!!!!!!");
+		console.log(oldHashes);
 
-		if (this.$options.force || !oldShasums) {
+		if (this.$options.force || !oldHashes) {
+			console.log("!!!!!!!!! NO OLD HASHES!!!!! THIS SHOULD NOT HAPPEN!!!!!!!");
 			await this.livesyncTool.sendDirectory(projectFilesPath);
-			await deviceHashService.uploadHashFileToDevice(currentShasums);
+			await deviceHashService.uploadHashFileToDevice(currentHashes);
 			transferredLocalToDevicePaths = localToDevicePaths;
 		} else {
-			const changedShasums = deviceHashService.getChangedShasums(oldShasums, currentShasums);
+			const changedShasums = deviceHashService.getChangedShasums(oldHashes, currentHashes);
+			console.log("CHANGEDSHASUMS!!!!!!!!!!!!!!!");
+			console.log(changedShasums);
 			const changedFiles = _.keys(changedShasums);
 			if (changedFiles.length) {
 				await this.livesyncTool.sendFiles(changedFiles);
-				await deviceHashService.uploadHashFileToDevice(currentShasums);
+				await deviceHashService.uploadHashFileToDevice(currentHashes);
 				transferredLocalToDevicePaths = localToDevicePaths.filter(localToDevicePathData => changedFiles.indexOf(localToDevicePathData.getLocalPath()) >= 0);
 			} else {
 				transferredLocalToDevicePaths = [];
@@ -164,10 +174,5 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 				appPlatformsPath: projectFilesPath
 			});
 		}
-	}
-
-	public getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService {
-		const adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
-		return this.$injector.resolve(AndroidDeviceHashService, { adb, appIdentifier });
 	}
 }

@@ -1,5 +1,7 @@
 import { executeActionByChunks } from "../common/helpers";
 import { DEFAULT_CHUNK_SIZE } from "../common/constants";
+import { APP_FOLDER_NAME, HASHES_FILE_NAME } from "../constants";
+import * as path from "path";
 
 export class FilesHashService implements IFilesHashService {
 	constructor(private $fs: IFileSystem,
@@ -20,6 +22,29 @@ export class FilesHashService implements IFilesHashService {
 		};
 
 		await executeActionByChunks(files, DEFAULT_CHUNK_SIZE, action);
+
+		return result;
+	}
+
+	public async generateHashesForProject(platformData: IPlatformData): Promise<IStringDictionary> {
+		const appFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
+		const files = this.$fs.enumerateFilesInDirectorySync(appFilesPath);
+		const hashes = await this.generateHashes(files);
+		return hashes;
+	}
+
+	public async saveHashesForProject(platformData: IPlatformData, hashesFileDirectory: string): Promise<void> {
+		const hashes = await this.generateHashesForProject(platformData);
+		const hashesFilePath = path.join(hashesFileDirectory, HASHES_FILE_NAME);
+		this.$fs.writeJson(hashesFilePath, hashes);
+	}
+
+	public getGeneratedHashes(hashesFileDirectory: string): IStringDictionary {
+		let result = {};
+		const hashesFilePath = path.join(hashesFileDirectory, HASHES_FILE_NAME);
+		if (this.$fs.exists(hashesFilePath)) {
+			result = this.$fs.readJson(hashesFilePath);
+		}
 
 		return result;
 	}

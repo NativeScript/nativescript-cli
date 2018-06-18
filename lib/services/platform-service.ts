@@ -41,7 +41,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $projectChangesService: IProjectChangesService,
 		private $analyticsService: IAnalyticsService,
 		private $terminalSpinnerService: ITerminalSpinnerService,
-		private $pacoteService: IPacoteService
+		private $pacoteService: IPacoteService,
+		private $filesHashService: IFilesHashService
 	) {
 		super();
 	}
@@ -488,7 +489,17 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		await platformData.platformProjectService.cleanDeviceTempFolder(device.deviceInfo.identifier, projectData);
 
+		const isApplicationInstalled = await this.isApplicationInstalled(device, projectData);
+
 		await device.applicationManager.reinstallApplication(projectData.projectId, packageFile);
+
+		await this.updateHashesOnDevice({
+			device,
+			isApplicationInstalled,
+			appIdentifier: projectData.projectId,
+			outputFilePath,
+			platformData
+		});
 
 		if (!buildConfig.release) {
 			const deviceFilePath = await this.getDeviceBuildInfoFilePath(device, projectData);
@@ -501,6 +512,32 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		this.$logger.out(`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`);
+	}
+
+	private async updateHashesOnDevice(data: { device: Mobile.IDevice, isApplicationInstalled: boolean, appIdentifier: string, outputFilePath: string, platformData: IPlatformData }): Promise<void> {
+		const { device, isApplicationInstalled, appIdentifier, platformData, outputFilePath } = data;
+
+		if (!this.$mobileHelper.isAndroidPlatform(platformData.normalizedPlatformName)) {
+			return;
+		}
+
+		let hashes = null;
+		if (isApplicationInstalled) {
+			hashes = await this.$filesHashService.generateHashesForProject(platformData);
+		} else {
+			hashes = this.$filesHashService.getGeneratedHashes(outputFilePath || platformData.deviceBuildOutputPath);
+		}
+
+		await device.fileSystem.updateHashesOnDevice(hashes, appIdentifier);
+	}
+
+	private async isApplicationInstalled(device: Mobile.IDevice, projectData: IProjectData): Promise<boolean> {
+		let result = false;
+		if (this.$mobileHelper.isAndroidPlatform) {
+			result = await device.applicationManager.isApplicationInstalled(projectData.projectId);
+		}
+
+		return result;
 	}
 
 	public async deployPlatform(deployInfo: IDeployPlatformInfo): Promise<void> {

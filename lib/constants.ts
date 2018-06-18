@@ -39,6 +39,7 @@ export const CONFIG_NS_APP_RESOURCES_ENTRY = "appResourcesPath";
 export const CONFIG_NS_APP_ENTRY = "appPath";
 export const DEPENDENCIES_JSON_NAME = "dependencies.json";
 export const APK_EXTENSION_NAME = ".apk";
+export const HASHES_FILE_NAME = ".nshashes";
 
 export class PackageVersion {
 	static NEXT = "next";

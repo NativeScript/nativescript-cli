@@ -30,7 +30,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $npm: INodePackageManager,
 		private $androidPluginBuildService: IAndroidPluginBuildService,
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
-		private $androidResourcesMigrationService: IAndroidResourcesMigrationService) {
+		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
+		private $filesHashService: IFilesHashService) {
 		super($fs, $projectDataService);
 		this.isAndroidStudioTemplate = false;
 	}
@@ -340,6 +341,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				message: "Gradle build..."
 			})
 		);
+
+		await this.$filesHashService.saveHashesForProject(this._platformData, this._platformData.deviceBuildOutputPath);
 	}
 
 	private getGradleBuildOptions(settings: IAndroidBuildOptionsSettings, projectData: IProjectData): Array<string> {
