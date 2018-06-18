@@ -61,8 +61,9 @@ export class FileStore {
    *
    * @param   {Query}                 [query]                                   Query used to filter result.
    * @param   {Object}                [options]                                 Options
-   * @param   {boolean}               [options.tls=true]                        Use transport layer security
-   * @param   {number}                [options.ttl]                             Specify a time to live for the _downloadURL
+   * @param   {boolean}               [options.tls=true]                        By default, all requests to retrieve files are made with https.
+   *                                                                            By setting this flag to false, files are retrieved over unsecure http connections.
+   * @param   {number}                [options.ttl]                             Specify a time to live for the _downloadURL to limit the amount of time the download url is valid.
    * @param   {boolean}               [options.download=false]                  Download the files
    * @return  {Promise<Object[]>}                                               An array of Kinvey file objects.
    */
@@ -118,10 +119,11 @@ export class FileStore {
   /**
    * Download a file.
    *
-   * @param   {string}                [name]                                    Name of file
+   * @param   {string}                [name]                                    _id of the file to download.
    * @param   {Object}                [options]                                 Options
-   * @param   {boolean}               [options.tls=true]                        Use transport layer security
-   * @param   {number}                [options.ttl]                             Specify a time to live for the _downloadURL
+   * @param   {boolean}               [options.tls=true]                        By default, all requests to retrieve files are made with https.
+   *                                                                            By setting this flag to false, files are retrieved over unsecure http connections.
+   * @param   {number}                [options.ttl]                             Specify a time to live for the _downloadURL to limit the amount of time the download url is valid.
    * @return  {Promise<string>}                                                 A string representing the file.
   */
   download(name, options = {}) {
