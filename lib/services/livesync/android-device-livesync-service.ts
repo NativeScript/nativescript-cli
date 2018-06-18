@@ -8,17 +8,16 @@ import * as path from "path";
 import * as net from "net";
 
 export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
-	private device: Mobile.IAndroidDevice;
 	private port: number;
 
-	constructor(_device: Mobile.IDevice,
+	constructor(
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $devicePathProvider: IDevicePathProvider,
 		private $injector: IInjector,
 		private $androidProcessService: Mobile.IAndroidProcessService,
-		protected $platformsData: IPlatformsData) {
-		super($platformsData);
-		this.device = <Mobile.IAndroidDevice>(_device);
+		protected $platformsData: IPlatformsData,
+		protected device: Mobile.IAndroidDevice) {
+		super($platformsData, device);
 	}
 
 	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {

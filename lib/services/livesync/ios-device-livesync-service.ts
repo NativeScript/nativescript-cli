@@ -7,10 +7,8 @@ let currentPageReloadId = 0;
 
 export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements INativeScriptDeviceLiveSyncService {
 	private socket: net.Socket;
-	private device: Mobile.IiOSDevice;
 
-	constructor(_device: Mobile.IiOSDevice,
-		data: IProjectDir,
+	constructor(
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $iOSNotification: IiOSNotification,
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
@@ -18,9 +16,9 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		private $logger: ILogger,
 		private $fs: IFileSystem,
 		private $processService: IProcessService,
-		protected $platformsData: IPlatformsData) {
-			super($platformsData);
-			this.device = _device;
+		protected $platformsData: IPlatformsData,
+		protected device: Mobile.IiOSDevice) {
+			super($platformsData, device);
 	}
 
 	private async setupSocketIfNeeded(projectData: IProjectData): Promise<boolean> {

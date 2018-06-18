@@ -4,7 +4,10 @@ import * as path from "path";
 export abstract class DeviceLiveSyncServiceBase {
 	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml", ".html"];
 
-	constructor(protected $platformsData: IPlatformsData) { }
+	constructor(
+		protected $platformsData: IPlatformsData,
+		protected device: Mobile.IDevice
+	) { }
 
 	public canExecuteFastSync(filePath: string, projectData: IProjectData, platform: string): boolean {
 		const fastSyncFileExtensions = this.getFastLiveSyncFileExtensions(platform, projectData);
@@ -18,4 +21,15 @@ export abstract class DeviceLiveSyncServiceBase {
 		return fastSyncFileExtensions;
 	}
 
+	public async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<Mobile.ILocalToDevicePathData[]> {
+		let transferredFiles: Mobile.ILocalToDevicePathData[] = [];
+
+		if (isFullSync) {
+			transferredFiles = await this.device.fileSystem.transferDirectory(deviceAppData, localToDevicePaths, projectFilesPath);
+		} else {
+			transferredFiles = await this.device.fileSystem.transferFiles(deviceAppData, localToDevicePaths);
+		}
+
+		return transferredFiles;
+	}
 }

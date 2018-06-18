@@ -25,7 +25,7 @@ export class DevicePathProvider implements IDevicePathProvider {
 		} else if (this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
 			projectRoot = `/data/local/tmp/${options.appIdentifier}`;
 			if (!options.getDirname) {
-				const deviceLiveSyncService = this.$injector.resolve<AndroidDeviceLiveSyncService>(AndroidDeviceLiveSyncService, { _device: device });
+				const deviceLiveSyncService = this.$injector.resolve<AndroidDeviceLiveSyncService>(AndroidDeviceLiveSyncService, { device });
 				const hashService = deviceLiveSyncService.getDeviceHashService(options.appIdentifier);
 				const hashFile = options.syncAllFiles ? null : await hashService.doesShasumFileExistsOnDevice();
 				const syncFolderName = options.watch || hashFile ? LiveSyncPaths.SYNC_DIR_NAME : LiveSyncPaths.FULLSYNC_DIR_NAME;
