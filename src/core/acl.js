@@ -13,11 +13,13 @@ export class Acl {
       throw new KinveyError('entity argument must be an object');
     }
 
-    entity._acl = entity._acl || {};
-
     /**
+     * The entity.
+     *
      * @private
+     * @type {Object}
      */
+    entity._acl = entity._acl || {};
     this.entity = entity;
   }
 
