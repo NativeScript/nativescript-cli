@@ -4,6 +4,7 @@
   "author": "Kinvey, Inc.",
   "scripts": {
     "build": "lerna run build --parallel",
+    "docs": "rm -rf docs && esdoc",
     "s3": "lerna run s3 --parallel",
     "test": "mocha --require babel-polyfill --require babel-register \"src/**/*.spec.js\""
   },
@@ -35,6 +36,8 @@
     "commander": "^2.12.2",
     "copy-webpack-plugin": "^4.2.3",
     "core-js": "2.5.3",
+    "esdoc": "^1.1.0",
+    "esdoc-standard-plugin": "^1.0.0",
     "eslint": "4.12.1",
     "eslint-config-airbnb-base": "12.1.0",
     "eslint-plugin-import": "2.8.0",
