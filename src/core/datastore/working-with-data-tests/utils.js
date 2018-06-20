@@ -16,19 +16,6 @@ const typeToFilePathMap = {
   [DataStoreType.Network]: '../networkstore'
 };
 
-/** @typedef RepoMock
- * @property {expect.Spy} create
- * @property {expect.Spy} read
- * @property {expect.Spy} readById
- * @property {expect.Spy} update
- * @property {expect.Spy} deleteById
- * @property {expect.Spy} update
- * @property {expect.Spy} delete
- * @property {expect.Spy} group
- * @property {expect.Spy} clear
- * @property {expect.Spy} count
- */
-
 const buildDataStoreInstance = (storeType, collection, dataProcessor, options) => {
   switch (storeType) {
     case DataStoreType.Sync:
@@ -51,13 +38,19 @@ const storeBuilder = (storeType, collection, dataProcessor, requireMocks, option
   return new DataStoreClass(collection, dataProcessor, options);
 };
 
+/**
+ * @private
+ */
 export const datastoreFactory = {
   [DataStoreType.Sync]: storeBuilder.bind(this, DataStoreType.Sync),
   [DataStoreType.Cache]: storeBuilder.bind(this, DataStoreType.Cache),
   [DataStoreType.Network]: storeBuilder.bind(this, DataStoreType.Network)
 };
 
-/** @param {Operation} op */
+/**
+ * @private
+ * @param {Operation} op
+ */
 export function validateOperationObj(op, type, collection, query, data, entityId) {
   expect(op).toBeA(Operation);
   expect(op.type).toEqual(type);
@@ -67,12 +60,16 @@ export function validateOperationObj(op, type, collection, query, data, entityId
   expect(op.entityId).toBe(entityId);
 }
 
+/**
+ * @private
+ */
 export function createPromiseSpy(value, reject = false) {
   const promise = reject === true ? Promise.reject(value) : Promise.resolve(value);
   return expect.createSpy().andReturn(promise);
 }
 
 /**
+ * @private
  * @returns {RepoMock}
  */
 export function getRepoMock(results = {}) {
@@ -89,6 +86,9 @@ export function getRepoMock(results = {}) {
   };
 }
 
+/**
+ * @private
+ */
 export function getSyncManagerMock() {
   return {
     getSyncItemCountByEntityQuery: createPromiseSpy(0),
@@ -102,12 +102,18 @@ export function getSyncManagerMock() {
   };
 }
 
+/**
+ * @private
+ */
 export function validateError(err, expectedType, expectedMessage) {
   expect(err).toExist();
   expect(err).toBeA(expectedType);
   expect(err.message).toInclude(expectedMessage);
 }
 
+/**
+ * @private
+ */
 export function validateSpyCalls(spy, callCount, ...callArgumentSets) {
   expect(spy.calls.length).toBe(callCount);
   times(callCount, (index) => {
@@ -119,6 +125,9 @@ export function validateSpyCalls(spy, callCount, ...callArgumentSets) {
   });
 }
 
+/**
+ * @private
+ */
 export function addExpectedCreateEntityMeta(entity) {
   return Object.assign({}, entity, { _kmd: { local: true } });
 }

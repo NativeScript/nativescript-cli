@@ -10,6 +10,9 @@ import {
 import { buildCollectionUrl } from './utils';
 import { getCachedQuery } from './querycache';
 
+/**
+ * @private
+ */
 export function deltaSet(collectionName, query, options) {
   return getCachedQuery(collectionName, query)
     .then((cachedQuery) => {

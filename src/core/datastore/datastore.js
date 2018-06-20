@@ -23,6 +23,7 @@ export const DataStoreType = {
 Object.freeze(DataStoreType);
 
 /**
+ * @private
  * The DataStore class is used to find, create, update, remove, count and group entities.
  */
 export class DataStore {

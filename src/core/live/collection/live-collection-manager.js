@@ -5,6 +5,9 @@ import { KinveyError } from '../../errors';
 import { KinveyRequest, RequestMethod } from '../../request';
 import { getLiveService, isValidReceiver, isValidChannelName } from '../live-service';
 
+/**
+ * @private
+ */
 export class LiveCollectionManager {
   /**
    * @param {Client} client
@@ -76,10 +79,10 @@ export class LiveCollectionManager {
   }
 }
 
-/** @type {LiveCollectionManager} */
 let managerInstance;
 
 /**
+ * @private
  * @param {Client} client
  */
 export function getLiveCollectionManager(client) {

@@ -9,14 +9,9 @@ import { KinveyError, ActiveUserError } from '../errors';
 import { isNonemptyString } from '../utils';
 import { PubNubListener } from './pubnub-listener';
 
-/**
- * @typedef LiveServiceReceiver
- * @property {Function} onMessage
- * @property {Function} onError
- * @property {Function} onStatus
- */
 
 /**
+ * @private
  * @param {Object} obj
  * @returns {Boolean}
  */
@@ -28,10 +23,16 @@ export function isValidReceiver(obj) {
   return isFunction(onMessage) || isFunction(onError) || isFunction(onStatus);
 }
 
+/**
+ * @private
+ */
 export function isValidChannelName(str) {
   return isNonemptyString(str);
 }
 
+/**
+ * @private
+ */
 export class LiveService {
   /**
    * @param {Client} client
@@ -372,6 +373,7 @@ export class LiveService {
 let liveServiceInstance;
 
 /**
+ * @private
  * Gets a singleton LiveService class instance
  * @param {Client} client
  * @returns {LiveService}

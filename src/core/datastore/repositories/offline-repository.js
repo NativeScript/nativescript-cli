@@ -2,6 +2,9 @@ import { Client } from '../../client';
 
 import { Repository } from './repository';
 
+/**
+ * @private
+ */
 export class OfflineRepository extends Repository {
   clear() {
     this._throwNotImplementedError();

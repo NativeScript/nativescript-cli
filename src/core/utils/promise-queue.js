@@ -1,6 +1,9 @@
 import Promise from 'es6-promise';
 import { noop, wrapInPromise } from './misc';
 
+/**
+ * @private
+ */
 export class PromiseQueue {
   constructor(maxPendingPromises = 1, maxQueuedPromises = Infinity) {
     this.pendingPromises = 0;

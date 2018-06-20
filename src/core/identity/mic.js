@@ -22,6 +22,9 @@ export const AuthorizationGrant = {
 };
 Object.freeze(AuthorizationGrant);
 
+/**
+ * @private
+ */
 export class MobileIdentityConnect extends Identity {
   get identity() {
     return SocialIdentity.MobileIdentityConnect;

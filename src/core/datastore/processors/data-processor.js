@@ -9,6 +9,9 @@ import { ensureArray } from '../../utils';
 // import { Repository } from '../repositories';
 // import { NetworkRepository } from '../repositories';
 
+/**
+ * @private
+ */
 export class DataProcessor {
   _repoPromise; // protected
 

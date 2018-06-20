@@ -1,3 +1,6 @@
+/**
+ * @private
+ */
 export const OperationType = {
   Create: 'create',
   Read: 'read',

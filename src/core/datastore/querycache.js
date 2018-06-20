@@ -5,6 +5,9 @@ import { Query } from '../query';
 import { repositoryProvider } from './repositories';
 import { generateEntityId } from './utils';
 
+/**
+ * @private
+ */
 export const queryCacheCollectionName = '_QueryCache';
 
 function serializeQuery(query) {
@@ -16,6 +19,9 @@ function serializeQuery(query) {
   return queryObject && !isEmpty(queryObject) ? JSON.stringify(queryObject) : '';
 }
 
+/**
+ * @private
+ */
 export function getCachedQuery(collectionName, query) {
   const serializedQuery = serializeQuery(query);
 
@@ -44,6 +50,9 @@ export function getCachedQuery(collectionName, query) {
     });
 }
 
+/**
+ * @private
+ */
 export function createCachedQuery(collectionName, query) {
   const serializedQuery = serializeQuery(query);
 
@@ -62,6 +71,9 @@ export function createCachedQuery(collectionName, query) {
     });
 }
 
+/**
+ * @private
+ */
 export function updateCachedQuery(cachedQuery) {
   if (!cachedQuery) {
     return Promise.resolve(null);
@@ -73,6 +85,9 @@ export function updateCachedQuery(cachedQuery) {
     });
 }
 
+/**
+ * @private
+ */
 export function deleteCachedQuery(cachedQuery) {
   if (!cachedQuery) {
     return Promise.resolve(null);
@@ -84,6 +99,9 @@ export function deleteCachedQuery(cachedQuery) {
     });
 }
 
+/**
+ * @private
+ */
 export function clearQueryCache(collectionName) {
   return repositoryProvider.getOfflineRepository()
     .then((offlineRepo) => {

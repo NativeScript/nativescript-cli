@@ -11,6 +11,9 @@ import { clearQueryCache } from '../querycache';
 // imported for typings
 // import { SyncManager } from '../sync';
 
+/**
+ * @private
+ */
 export class OfflineDataProcessor extends DataProcessor {
   /** @type {SyncManager} */
   _syncManager;

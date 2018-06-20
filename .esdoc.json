@@ -2,7 +2,8 @@
   "source": "./src/core",
   "destination": "./docs",
   "includes": [
-    "\\.js$"
+    "\\.js$",
+    "\\.doc\\.js$"
   ],
   "excludes": [
     "\\.spec\\.js$"

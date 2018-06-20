@@ -16,6 +16,9 @@ import { Headers } from './headers';
 import { NetworkRack } from './rack';
 import { KinveyResponse } from './response';
 
+/**
+ * @private
+ */
 export class NetworkRequest extends Request {
   constructor(options = {}) {
     super(options);
@@ -23,6 +26,9 @@ export class NetworkRequest extends Request {
   }
 }
 
+/**
+ * @private
+ */
 export const AuthType = {
   All: 'All',
   App: 'App',
@@ -167,8 +173,14 @@ function byteCount(str) {
   return 0;
 }
 
+/**
+ * @private
+ */
 export class Properties extends Headers { }
 
+/**
+ * @private
+ */
 export class KinveyRequest extends NetworkRequest {
   constructor(options = {}) {
     super(options);

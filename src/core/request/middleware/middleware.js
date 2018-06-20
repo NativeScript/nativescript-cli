@@ -1,6 +1,9 @@
 import Promise from 'es6-promise';
 import { AsciiTree } from './asciitree';
 
+/**
+ * @private
+ */
 export class Middleware {
   constructor(name = 'Middleware') {
     this.name = name;

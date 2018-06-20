@@ -268,6 +268,9 @@ export class KinveyObservable extends Observable {
   }
 }
 
+/**
+ * @private
+ */
 export function wrapInObservable(promiseOrFunc, completeAfter = true) {
   const argIsPromise = isPromiseLike(promiseOrFunc);
 

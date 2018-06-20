@@ -6,13 +6,13 @@ import { KeyValuePersister } from '../key-value-persister';
 import { browserStorageCollectionsMaster } from '../utils';
 
 /**
+ * @private
  * @typedef BrowserStore
  * @property {Function} getItem
  * @property {Function} setItem
  * @property {Function} removeItem
  * @property {Function} clear
  */
-
 export class BrowserKeyValuePersister extends KeyValuePersister {
   /** @type {BrowserStore} */
   _store;

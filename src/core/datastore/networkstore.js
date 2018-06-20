@@ -15,6 +15,7 @@ import { Operation, OperationType } from './operations';
 import { processorFactory } from './processors';
 
 /**
+ * @private
  * The NetworkStore class is used to find, create, update, remove, count and group entities over the network.
  */
 export class NetworkStore {

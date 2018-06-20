@@ -19,6 +19,9 @@ function getCacheOfflineDataProcessor() {
   return new CacheOfflineDataProcessor(syncManager, networkRepo);
 }
 
+/**
+ * @private
+ */
 export const processorFactory = {
   getOfflineProcessor,
   getNetworkProcessor,

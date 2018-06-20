@@ -1,6 +1,9 @@
 import { Client } from '../client';
 import { KinveyError } from '../errors';
 
+/**
+ * @private
+ */
 export class Identity {
   constructor(options = {}) {
     this.client = options.client || Client.sharedInstance();
