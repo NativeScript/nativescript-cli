@@ -359,38 +359,38 @@ export class KinveyRequest extends NetworkRequest {
     this._properties = properties;
   }
 
-  getAuthorizationHeader() {
+  getAuthorizationHeader(authType, client) {
     let promise = Promise.resolve(undefined);
 
     // Add or remove the Authorization header
-    if (this.authType) {
+    if (authType) {
       // Get the auth info based on the set AuthType
-      switch (this.authType) {
+      switch (authType) {
         case AuthType.All:
-          promise = Auth.all(this.client);
+          promise = Auth.all(client);
           break;
         case AuthType.App:
-          promise = Auth.app(this.client);
+          promise = Auth.app(client);
           break;
         case AuthType.Basic:
-          promise = Auth.basic(this.client);
+          promise = Auth.basic(client);
           break;
         case AuthType.Client:
-          promise = Auth.client(this.client, this.clientId);
+          promise = Auth.client(client, this.clientId);
           break;
         case AuthType.Master:
-          promise = Auth.master(this.client);
+          promise = Auth.master(client);
           break;
         case AuthType.None:
-          promise = Auth.none(this.client);
+          promise = Auth.none(client);
           break;
         case AuthType.Session:
-          promise = Auth.session(this.client);
+          promise = Auth.session(client);
           break;
         default:
-          promise = Auth.session(this.client)
+          promise = Auth.session(client)
             .catch((error) => {
-              return Auth.master(this.client)
+              return Auth.master(client)
                 .catch(() => {
                   throw error;
                 });
@@ -402,10 +402,10 @@ export class KinveyRequest extends NetworkRequest {
       .then((authInfo) => {
         // Add the auth info to the Authorization header
         if (isDefined(authInfo)) {
-          let credentials = authInfo.credentials;
+          let { credentials } = authInfo;
 
           if (authInfo.username) {
-            credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
+            credentials = Buffer.from(`${authInfo.username}:${authInfo.password}`).toString('base64');
           }
 
           return `${authInfo.scheme} ${credentials}`;
@@ -417,7 +417,7 @@ export class KinveyRequest extends NetworkRequest {
 
   /** @returns {Promise} */
   execute(rawResponse = false, retry = true) {
-    return this.getAuthorizationHeader()
+    return this.getAuthorizationHeader(this.authType, this.client)
       .then((authorizationHeader) => {
         if (isDefined(authorizationHeader)) {
           this.headers.set('Authorization', authorizationHeader);
