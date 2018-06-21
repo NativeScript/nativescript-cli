@@ -5,7 +5,11 @@ class TestInitCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	private frameworkDependencies: IDictionary<string[]> = {
-		mocha: ['chai'],
+		mocha: ['karma-chai', 'mocha'],
+	};
+
+	private karmaConfigAdditionalFrameworks: IDictionary<string[]> = {
+		mocha: ['chai']
 	};
 
 	constructor(private $npm: INodePackageManager,
@@ -30,11 +34,30 @@ class TestInitCommand implements ICommand {
 		}
 
 		const dependencies = this.frameworkDependencies[frameworkToInstall] || [];
-		const modulesToInstall = ['karma', 'karma-' + frameworkToInstall, 'karma-nativescript-launcher'].concat(dependencies.map(f => 'karma-' + f));
+		const modulesToInstall: IDependencyInformation[] = [
+			{
+				name: 'karma',
+				// Hardcode the version unitl https://github.com/karma-runner/karma/issues/3052 is fixed
+				version: "2.0.2"
+			},
+			{
+				name: `karma-${frameworkToInstall}`
+			},
+			{
+				name: 'karma-nativescript-launcher'
+			}
+		];
+
+		modulesToInstall.push(...dependencies.map(f => ({ name: f })));
 
 		for (const mod of modulesToInstall) {
-			await this.$npm.install(mod, projectDir, {
+			let moduleToInstall = mod.name;
+			if (mod.version) {
+				moduleToInstall += `@${mod.version}`;
+			}
+			await this.$npm.install(moduleToInstall, projectDir, {
 				'save-dev': true,
+				'save-exact': true,
 				optional: false,
 				disableNpmInstall: this.$options.disableNpmInstall,
 				frameworkPath: this.$options.frameworkPath,
@@ -42,7 +65,7 @@ class TestInitCommand implements ICommand {
 				path: this.$options.path
 			});
 
-			const modulePath = path.join(projectDir, "node_modules", mod);
+			const modulePath = path.join(projectDir, "node_modules", mod.name);
 			const modulePackageJsonPath = path.join(modulePath, "package.json");
 			const modulePackageJsonContent = this.$fs.readJson(modulePackageJsonPath);
 			const modulePeerDependencies = modulePackageJsonContent.peerDependencies || {};
@@ -55,6 +78,7 @@ class TestInitCommand implements ICommand {
 				try {
 					await this.$npm.install(`${peerDependency}@${dependencyVersion}`, projectDir, {
 						'save-dev': true,
+						'save-exact': true,
 						disableNpmInstall: false,
 						frameworkPath: this.$options.frameworkPath,
 						ignoreScripts: this.$options.ignoreScripts,
@@ -79,7 +103,7 @@ class TestInitCommand implements ICommand {
 
 		const karmaConfTemplate = this.$resources.readText('test/karma.conf.js');
 		const karmaConf = _.template(karmaConfTemplate)({
-			frameworks: [frameworkToInstall].concat(dependencies)
+			frameworks: [frameworkToInstall].concat(this.karmaConfigAdditionalFrameworks[frameworkToInstall])
 				.map(fw => `'${fw}'`)
 				.join(', ')
 		});
