@@ -4,6 +4,7 @@ import qs from 'qs';
 import assign from 'lodash/assign';
 import defaults from 'lodash/defaults';
 import isEmpty from 'lodash/isEmpty';
+import isPlainObject from 'lodash/isObject';
 import url from 'url';
 import isString from 'lodash/isString';
 import { Client } from '../client';
@@ -143,7 +144,7 @@ const Auth = {
       );
     }
 
-    if (!isDefined(activeUser._kmd) || !isDefined(activeUser._kmd.authtoken)) {
+    if (!isPlainObject(activeUser._kmd) || !isDefined(activeUser._kmd.authtoken)) {
       return Promise.reject(
         new NoActiveUserError('The active user does not have a valid auth token.')
       );
