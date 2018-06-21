@@ -236,6 +236,9 @@ export class SyncManager {
   _sanitizeOfflineEntity(offlineEntity) {
     const copy = clone(offlineEntity);
     delete copy._id;
+    if (copy._kmd) {
+      delete copy._kmd.local;
+    }
     return copy;
   }
 
