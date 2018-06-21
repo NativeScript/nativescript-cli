@@ -5,11 +5,10 @@ import isNumber from 'lodash/isNumber';
 import isNaN from 'lodash/isNaN';
 import { KinveyError } from './errors';
 import { Log } from './log';
-import { isDefined, uuidv4, isValidStorageProviderValue } from './utils';
+import { isDefined, uuidv4, isValidStorageProviderValue, activeUserKey } from './utils';
 import { StorageProvider } from './datastore';
 
 const DEFAULT_TIMEOUT = 60000;
-const ACTIVE_USER_KEY = 'active_user';
 let sharedInstance = null;
 
 /**
@@ -161,14 +160,14 @@ export class Client {
    * Get the active user.
    */
   getActiveUser() {
-    return this.activeUserStorage.get(`${this.appKey}.${ACTIVE_USER_KEY}`);
+    return this.activeUserStorage.get(`${this.appKey}.${activeUserKey}`);
   }
 
   /**
    * Set the active user
    */
   setActiveUser(activeUser) {
-    return this.activeUserStorage.set(`${this.appKey}.${ACTIVE_USER_KEY}`, activeUser);
+    return this.activeUserStorage.set(`${this.appKey}.${activeUserKey}`, activeUser);
   }
 
   /**
