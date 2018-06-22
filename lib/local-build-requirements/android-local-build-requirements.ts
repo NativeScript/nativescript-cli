@@ -4,11 +4,11 @@ export class AndroidLocalBuildRequirements {
 
 	public async checkRequirements(projectDir?: string, runtimeVersion?: string): Promise<boolean> {
 		const androidToolsInfo = await this.androidToolsInfo.validateInfo();
-		const javacVersion =  await this.sysInfo.getJavaCompilerVersion();
+		const javacVersion = await this.sysInfo.getJavaCompilerVersion();
+		const isJavacVersionInvalid = !javacVersion || (await this.androidToolsInfo.validateJavacVersion(javacVersion, projectDir, runtimeVersion)).length;
 		if (androidToolsInfo.length ||
-			!javacVersion ||
 			!await this.sysInfo.getAdbVersion() ||
-			!await this.androidToolsInfo.validateJavacVersion(javacVersion, projectDir, runtimeVersion)) {
+			isJavacVersionInvalid) {
 			return false;
 		}
 
