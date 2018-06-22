@@ -101,12 +101,11 @@ class TestInitCommand implements ICommand {
 
 		this.$fs.ensureDirectoryExists(testsDir);
 
+		const frameworks = [frameworkToInstall].concat(this.karmaConfigAdditionalFrameworks[frameworkToInstall] || [])
+			.map(fw => `'${fw}'`)
+			.join(', ');
 		const karmaConfTemplate = this.$resources.readText('test/karma.conf.js');
-		const karmaConf = _.template(karmaConfTemplate)({
-			frameworks: [frameworkToInstall].concat(this.karmaConfigAdditionalFrameworks[frameworkToInstall])
-				.map(fw => `'${fw}'`)
-				.join(', ')
-		});
+		const karmaConf = _.template(karmaConfTemplate)({ frameworks });
 
 		this.$fs.writeFile(path.join(projectDir, 'karma.conf.js'), karmaConf);
 
