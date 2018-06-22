@@ -288,6 +288,10 @@ export class FileStore {
    * @private
    */
   saveFileMetadata(options, metadata) {
+    if (metadata.size <= 0) {
+      return Promise.reject(new KinveyError('Unable to create a file with a size of 0.', metadata));
+    }
+
     const isUpdate = isDefined(metadata._id);
     const request = new KinveyRequest({
       method: isUpdate ? RequestMethod.PUT : RequestMethod.POST,
