@@ -27,7 +27,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			platform,
 			emulator,
 			skipDeviceDetectionInterval: true,
-			skipInferPlatform: !platform
+			skipInferPlatform: !platform,
+			sdk: this.$options.sdk
 		});
 
 		const devices = this.$devicesService.getDeviceInstances()

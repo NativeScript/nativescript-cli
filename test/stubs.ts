@@ -309,7 +309,6 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 			frameworkPackageName: "",
 			normalizedPlatformName: "",
 			platformProjectService: this,
-			emulatorServices: undefined,
 			projectRoot: "",
 			deviceBuildOutputPath: "",
 			getValidBuildOutputData: (buildOptions: IBuildOutputOptions) => ({ packageNames: [] }),
@@ -416,7 +415,6 @@ export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
 		return {
 			frameworkPackageName: "",
 			platformProjectService: new PlatformProjectServiceStub(),
-			emulatorServices: undefined,
 			projectRoot: "",
 			normalizedPlatformName: "",
 			appDestinationDirectoryPath: "",
@@ -808,28 +806,6 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 
 	public getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
 		return null;
-	}
-}
-
-export class EmulatorPlatformService implements IEmulatorPlatformService {
-	public listAvailableEmulators(platform: string): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public getEmulatorInfo(platform: string, nameOfId: string): Promise<IEmulatorInfo> {
-		return Promise.resolve(null);
-	}
-
-	public getiOSEmulators(): Promise<IEmulatorInfo[]> {
-		return Promise.resolve(null);
-	}
-
-	public getAndroidEmulators(): IEmulatorInfo[] {
-		return null;
-	}
-
-	public startEmulator(info: IEmulatorInfo): Promise<void> {
-		return Promise.resolve();
 	}
 }
 

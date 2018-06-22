@@ -91,6 +91,7 @@ interface IDebugOptions {
 	 * If not provided, defaults to 10 seconds.
 	 */
 	timeout?: string;
+	sdk?: string;
 }
 
 /**

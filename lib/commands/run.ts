@@ -94,10 +94,9 @@ export class RunAndroidCommand implements ICommand {
 		private $injector: IInjector,
 		private $platformService: IPlatformService,
 		private $projectData: IProjectData,
-		private $options: IOptions) {
-	}
+		private $options: IOptions) { }
 
-	public async execute(args: string[]): Promise<void> {
+	public execute(args: string[]): Promise<void> {
 		return this.runCommand.execute(args);
 	}
 

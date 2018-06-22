@@ -17,8 +17,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	private isAndroidStudioTemplate: boolean;
 
-	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformServices,
-		private $androidToolsInfo: IAndroidToolsInfo,
+	constructor(private $androidToolsInfo: IAndroidToolsInfo,
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
 		$fs: IFileSystem,
@@ -72,7 +71,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				normalizedPlatformName: "Android",
 				appDestinationDirectoryPath: path.join(...appDestinationDirectoryArr),
 				platformProjectService: this,
-				emulatorServices: this.$androidEmulatorServices,
 				projectRoot: projectRoot,
 				deviceBuildOutputPath: path.join(...deviceBuildOutputArr),
 				getValidBuildOutputData: (buildOptions: IBuildOutputOptions): IValidBuildOutputData => {
