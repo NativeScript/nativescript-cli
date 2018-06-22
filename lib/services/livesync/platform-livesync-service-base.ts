@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as util from "util";
 import { APP_FOLDER_NAME } from "../../constants";
+import { getHash } from "../common/helpers";
 
 export abstract class PlatformLiveSyncServiceBase {
 	private _deviceLiveSyncServicesCache: IDictionary<INativeScriptDeviceLiveSyncService> = {};
@@ -13,8 +14,9 @@ export abstract class PlatformLiveSyncServiceBase {
 		private $projectFilesProvider: IProjectFilesProvider) { }
 
 	public getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService {
-		const key = device.deviceInfo.identifier + projectData.projectId;
-		const frameworkVersion = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData).platformProjectService.getFrameworkVersion(projectData);
+		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
+		const frameworkVersion = platformData.platformProjectService.getFrameworkVersion(projectData);
+		const key = getHash(`${device.deviceInfo.identifier}${projectData.projectId}${projectData.projectDir}${frameworkVersion}`);
 		if (!this._deviceLiveSyncServicesCache[key]) {
 			this._deviceLiveSyncServicesCache[key] = this._getDeviceLiveSyncService(device, projectData, frameworkVersion);
 		}
