@@ -3,30 +3,11 @@ import * as url from 'url';
 import { isDefined } from '../core/utils';
 import { KinveyError } from '../core/errors';
 import { RequestMethod } from '../core/request';
-import { knownFolders, path, File } from 'tns-core-modules/file-system';
+import { getDataFromPackageJson } from './utils';
 import { Client } from './client';
 
 const USERS_NAMESPACE = 'user';
 const ACTIVE_USER_COLLECTION_NAME = 'kinvey_active_user';
-const PLUGIN_NAME = 'kinvey-nativescript-sdk';
-
-/**
- * Gets settings persisted in package.json file (inside <project dir>/app/package.json)
- * @returns The data from pluginsData['kinvey-nativescript-sdk'].config of app's package.json.
- */
-function getDataFromPackageJson(): { appKey: string, appSecret: string, masterSecret: string } {
-  try {
-    const currentAppDir = knownFolders.currentApp();
-    const packageJsonFile = currentAppDir.getFile('package.json');
-    const packageJsonData = JSON.parse(packageJsonFile.readTextSync());
-
-    const pluginsData = packageJsonData && packageJsonData.pluginsData;
-    const kinveyNativeScriptSdkData = pluginsData && pluginsData[PLUGIN_NAME] && pluginsData[PLUGIN_NAME].config;
-    return kinveyNativeScriptSdkData;
-  } catch (err) {
-    return null;
-  }
-}
 
 export function init(config = <any>{}) {
   const configFromPackageJson = getDataFromPackageJson() || <any>{};
