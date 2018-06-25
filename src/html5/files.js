@@ -1,13 +1,14 @@
+import isString from 'lodash/isString';
 import { FileStore as CoreFilesStore } from '../core/files';
 import { KinveyError } from '../core/errors';
 
 export class FilesStore extends CoreFilesStore {
   upload(file, metadata = {}, options) {
-    if (!(file instanceof global.Blob)) {
-      return Promise.reject(new KinveyError('File must be an instance of a Blob.'));
+    if (!(file instanceof global.Blob) && !isString(file)) {
+      return Promise.reject(new KinveyError('File must be an instance of a Blob or the content of the file as a string.'));
     }
 
-    metadata.size = file.size;
+    metadata.size = file.size || file.length;
     return super.upload(file, metadata, options);
   }
 }
