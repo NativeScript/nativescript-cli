@@ -12,6 +12,11 @@ import { KinveyError } from '../errors';
 /**
  * @private
  */
+export const activeUserKey = 'active_user';
+
+/**
+ * @private
+ */
 export function noop() { }
 
 /**
