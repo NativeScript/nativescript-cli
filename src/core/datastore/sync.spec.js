@@ -289,6 +289,24 @@ describe('Sync', () => {
       return store.clear();
     });
 
+    it('should remove _kmd.local for a locally created entity', async () => {
+      const entityId = randomString();
+      const store = new SyncStore(collection);
+      const entity = await store.save({});
+
+      const response = { _id: entityId };
+      nock(client.apiHostname)
+        .post(backendPathname, { _kmd: {} })
+        .reply(200, response);
+
+      const result = (await store.push()).shift();
+      expect(result).toEqual({
+        _id: entity._id,
+        operation: SyncOperation.Create,
+        entity: response
+      });
+    });
+
     it('should execute pending sync operations', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
