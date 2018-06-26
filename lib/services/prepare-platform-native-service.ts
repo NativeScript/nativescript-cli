@@ -26,12 +26,12 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 			await this.cleanProject(config.platform, config.appFilesUpdaterOptions, config.platformData, config.projectData);
 		}
 
-		if (!config.changesInfo || config.changesInfo.changesRequirePrepare || config.appFilesUpdaterOptions.bundle) {
+		if (!config.changesInfo || config.changesInfo.changesRequirePrepare) {
 			this.prepareAppResources(config.platformData, config.projectData);
 			await config.platformData.platformProjectService.prepareProject(config.projectData, config.platformSpecificData);
 		}
 
-		if (!config.changesInfo || config.changesInfo.modulesChanged || config.appFilesUpdaterOptions.bundle) {
+		if (!config.changesInfo || config.changesInfo.modulesChanged) {
 			await this.$pluginsService.validate(config.platformData, config.projectData);
 
 			const appDestinationDirectoryPath = path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
