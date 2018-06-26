@@ -117,15 +117,22 @@ function getPlugins(env, platform) {
         from: 'package.json',
         transform: (content) => {
           const pkg = JSON.parse(content.toString('utf8'));
+          const postinstallScript = pkg.scripts.postinstall;
+          const preuninstallScript = pkg.scripts.preuninstall;
           delete pkg.private;
           delete pkg.devDependencies;
           delete pkg.scripts;
+          pkg.scripts = {
+            postinstall: postinstallScript,
+            preuninstall: preuninstallScript
+          };
           return new Buffer(JSON.stringify(pkg, null, 2));
         }
       },
       { from: '.travis.yml' },
       { from: path.join(__dirname, '../../src/kinvey.d.ts') },
       { from: 'platforms/ios/**/*' },
+      { from: 'lib/**/*' },
       { from: 'LICENSE' },
       { from: 'README.md' },
     ]),
