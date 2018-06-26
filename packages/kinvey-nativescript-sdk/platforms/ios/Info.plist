@@ -9,7 +9,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>redirectUri</string>
+				<string>{redirectUri}</string>
 			</array>
 		</dict>
 	</array>

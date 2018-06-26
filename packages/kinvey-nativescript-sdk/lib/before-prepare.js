@@ -16,12 +16,12 @@ module.exports = function (hookArgs) {
   if (hookArgs.platform.toLowerCase() === 'android') {
     const androidManifestPath = path.join(__dirname, '..', 'platforms', 'android', 'AndroidManifest.xml');
     let content = fs.readFileSync(androidManifestPath).toString();
-    content = content.replace(/redirectUri/i, redirectUri);
+    content = content.replace(/{redirectUri}/i, redirectUri);
     fs.writeFileSync(androidManifestPath, content);
   } else if (hookArgs.platform.toLowerCase() === 'ios') {
     const infoPlistPath = path.join(__dirname, '..', 'platforms', 'ios', 'Info.plist');
     let content = fs.readFileSync(infoPlistPath).toString();
-    content = content.replace(/redirectUri/i, redirectUri);
+    content = content.replace(/{redirectUri}/i, redirectUri);
     fs.writeFileSync(infoPlistPath, content);
   }
 };
