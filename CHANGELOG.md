@@ -1,6 +1,15 @@
 NativeScript CLI Changelog
 ================
 
+4.1.2 (2018, June 26)
+==
+
+### Fixed
+
+* [Fixed #2283](https://github.com/NativeScript/nativescript-cli/issues/2283): On adding test frameworks their peerDependencies are not installed
+* [Fixed #3689](https://github.com/NativeScript/nativescript-cli/issues/3689): `tns test <platform>` throws exception
+
+
 4.1.1 (2018, June 19)
 ==
 
