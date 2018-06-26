@@ -6,4 +6,9 @@ export class User extends CoreUser {
     const config = getDataFromPackageJson();
     return super.loginWithMIC(redirectUri || config.redirectUri, authorizationGrant, options);
   }
+
+  static loginWithMIC(redirectUri, authorizationGrant, options) {
+    const user = new User();
+    return user.loginWithMIC(redirectUri, authorizationGrant, options);
+  }
 }
