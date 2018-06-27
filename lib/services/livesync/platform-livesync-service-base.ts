@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as util from "util";
 import { APP_FOLDER_NAME } from "../../constants";
-import { getHash } from "../common/helpers";
+import { getHash } from "../../common/helpers";
 
 export abstract class PlatformLiveSyncServiceBase {
 	private _deviceLiveSyncServicesCache: IDictionary<INativeScriptDeviceLiveSyncService> = {};
@@ -58,8 +58,13 @@ export abstract class PlatformLiveSyncServiceBase {
 
 	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
 		const projectData = liveSyncInfo.projectData;
+		const deviceLiveSyncService = this.getDeviceLiveSyncService(device, projectData);
 		const syncInfo = _.merge<IFullSyncInfo>({ device, watch: true }, liveSyncInfo);
 		const deviceAppData = await this.getAppData(syncInfo);
+
+		if (deviceLiveSyncService.beforeLiveSyncAction) {
+			await deviceLiveSyncService.beforeLiveSyncAction(deviceAppData);
+		}
 
 		let modifiedLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
 		if (liveSyncInfo.filesToSync.length) {
