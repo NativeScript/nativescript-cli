@@ -19,6 +19,9 @@ const {
 } = getPlatformConfig();
 const pushTrackingByCollection = {};
 
+/**
+ * @private
+ */
 export class SyncManager {
   _offlineRepoPromise;
   _networkRepo;
@@ -233,6 +236,9 @@ export class SyncManager {
   _sanitizeOfflineEntity(offlineEntity) {
     const copy = clone(offlineEntity);
     delete copy._id;
+    if (copy._kmd) {
+      delete copy._kmd.local;
+    }
     return copy;
   }
 

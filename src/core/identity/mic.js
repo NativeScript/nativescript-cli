@@ -22,6 +22,9 @@ export const AuthorizationGrant = {
 };
 Object.freeze(AuthorizationGrant);
 
+/**
+ * @private
+ */
 export class MobileIdentityConnect extends Identity {
   get identity() {
     return SocialIdentity.MobileIdentityConnect;
@@ -156,10 +159,20 @@ export class MobileIdentityConnect extends Identity {
         const loadCallback = (event) => {
           try {
             if (event.url && event.url.toLowerCase().indexOf(redirectUri.toLowerCase()) === 0 && redirected === false) {
+              const parsedUrl = url.parse(event.url, true);
+              const query = parsedUrl.query || {};
+
               redirected = true;
               popup.removeAllListeners();
               popup.close();
-              resolve(this.parseCode(event.url));
+
+              if (query.code) {
+                resolve(query.code);
+              } else if (query.error) {
+                reject(new KinveyError(query.error, query.error_description));
+              } else {
+                reject(new KinveyError('The redirect uri did not contain a code or error.'))
+              }
             }
           } catch (error) {
             // Just catch the error
@@ -169,10 +182,20 @@ export class MobileIdentityConnect extends Identity {
         const errorCallback = (event) => {
           try {
             if (event.url && event.url.toLowerCase().indexOf(redirectUri.toLowerCase()) === 0 && redirected === false) {
+              const parsedUrl = url.parse(event.url, true);
+              const query = parsedUrl.query || {};
+
               redirected = true;
               popup.removeAllListeners();
               popup.close();
-              resolve(this.parseCode(event.url));
+
+              if (query.code) {
+                resolve(query.code);
+              } else if (query.error) {
+                reject(new KinveyError(query.error, query.error_description));
+              } else {
+                reject(new KinveyError('The redirect uri did not contain a code or error.'))
+              }
             } else if (redirected === false) {
               popup.removeAllListeners();
               popup.close();

@@ -6,31 +6,26 @@ import { Client } from './client';
 import { RequestMethod, AuthType, KinveyRequest } from './request';
 
 /**
- * Executes a custom endpoint on the Kinvey backend.
+ * Executes a custom endpoint.
  */
 export class CustomEndpoint {
+  /**
+   * @throws  {KinveyError}  Not allowed to create an instance of the this class.
+   */
   constructor() {
     throw new KinveyError('Not allowed to create an instance of the `CustomEndpoint` class.',
       'Please use `CustomEndpoint.execute()` function.');
   }
   /**
-   * Execute a custom endpoint. A promise will be returned that will be resolved
-   * with the result of the command or rejected with an error.
+   * Execute a custom endpoint.
    *
-   * @param   {String}          endpoint                          Endpoint to execute.
+   * @param   {string}          endpoint                          Endpoint to execute.
    * @param   {Object}          [args]                            Command arguments
    * @param   {Object}          [options={}]                      Options
    * @param   {Properties}      [options.properties]              Custom properties to send with
    *                                                              the request.
    * @param   {Number}          [options.timeout]                 Timeout for the request.
    * @return  {Promise}                                           Promise
-   *
-   * @example
-   * var promise = CustomEndpoint.execute('myCustomEndpoint').then(function(data) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
    */
   static execute(endpoint, args, options = {}) {
     const client = options.client || Client.sharedInstance();

@@ -13,7 +13,9 @@ import { getCachedQuery, updateCachedQuery, deleteCachedQuery } from '../queryca
 
 // imported for type info
 // import { NetworkRepository } from '../repositories';
-
+/**
+ * @private
+ */
 export class CacheOfflineDataProcessor extends OfflineDataProcessor {
   /** @type {NetworkRepository} */
   _networkRepository;

@@ -1,14 +1,23 @@
 import isNull from 'lodash/isNull';
 import isUndefined from 'lodash/isUndefined';
 
+/**
+ * @private
+ */
 export function isDefined(obj) {
   return isUndefined(obj) === false && isNull(obj) === false;
 }
 
+/**
+ * @private
+ */
 export function isNumber(num) {
   return !Number.isNaN(parseFloat(num)) && Number.isFinite(num);
 }
 
+/**
+ * @private
+ */
 export function nested(obj, dotProperty, value) {
   if (isDefined(dotProperty) === false) {
     obj = value || obj;
@@ -25,6 +34,9 @@ export function nested(obj, dotProperty, value) {
   return value || obj;
 }
 
+/**
+ * @private
+ */
 export function keyBy(array, iteratee) {
   if (!array) {
     return {};
@@ -36,6 +48,9 @@ export function keyBy(array, iteratee) {
   }, {});
 }
 
+/**
+ * @private
+ */
 export function isEmpty(obj) {
   // null and undefined are "empty"
   if (!isDefined(obj)) return true;

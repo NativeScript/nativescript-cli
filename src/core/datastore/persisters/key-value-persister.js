@@ -1,5 +1,8 @@
 const _cache = {};
 
+/**
+ * @private
+ */
 export class KeyValuePersister {
   /** @type {Boolean} */
   _cacheEnabled;

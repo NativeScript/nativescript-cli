@@ -5,6 +5,9 @@ import { platformConfigs } from './configs';
 
 let platformConfig;
 
+/**
+ * @private
+ */
 export function getPlatformConfig() {
   if (!platformConfig) {
     Log.debug('getPlatformConfig() called before setPlatformConfig()');
@@ -13,6 +16,9 @@ export function getPlatformConfig() {
   return platformConfig;
 }
 
+/**
+ * @private
+ */
 export function setPlatformConfig(platform) {
   platformConfig = assign(platformConfigs.base, platformConfigs[platform] || {});
 }

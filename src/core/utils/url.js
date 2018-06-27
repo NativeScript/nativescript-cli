@@ -46,6 +46,9 @@ function serialize(obj, options = {}, prefix) {
   return str.join('&');
 }
 
+/**
+ * @private
+ */
 export function appendQuery(uri, query, options = {}) {
   const parts = url.parse(uri, true);
   const queryToAppend = isString(query) ? qs.parse(query) : query;

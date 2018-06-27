@@ -3,6 +3,9 @@ import { platformName } from './platform-name';
 
 const mobilePlatformsConcurrentPulls = 2;
 
+/**
+ * @private
+ */
 export const platformConfigs = {
   base: {
     maxConcurrentPushRequests: 100,

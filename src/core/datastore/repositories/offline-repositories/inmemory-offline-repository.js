@@ -5,11 +5,13 @@ import { NotFoundError } from '../../../errors';
 
 import { OfflineRepository } from '../offline-repository';
 import { applyQueryToDataset, applyAggregationToDataset } from '../utils';
-import { ensureArray } from '../../../utils';
+import { ensureArray, activeUserKey } from '../../../utils';
 
 // Imported for typings
 // import { KeyValuePersister } from '../../persisters';
-
+/**
+ * @private
+ */
 export class InmemoryOfflineRepository extends OfflineRepository {
   /** @type {KeyValuePersister} */
   _persister;
@@ -186,8 +188,14 @@ export class InmemoryOfflineRepository extends OfflineRepository {
   }
 
   _deleteAll(collection) {
+    const appKey = this._getAppKey();
     const key = this._formCollectionKey(collection);
-    return this._persister.delete(key);
+
+    if (key !== `${appKey}.${activeUserKey}`) {
+      return this._persister.delete(key);
+    }
+
+    return Promise.resolve();
   }
 
   _enqueueCrudOperation(collection, operation) {

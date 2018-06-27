@@ -15,6 +15,9 @@ import {
   repositoryProvider
 } from './datastore';
 
+/**
+ * @private
+ */
 export const DataAccess = {
   Repository,
   NetworkRepository,

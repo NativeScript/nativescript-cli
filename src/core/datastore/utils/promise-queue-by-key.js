@@ -1,5 +1,8 @@
 import { PromiseQueue } from '../../utils';
 
+/**
+ * @private
+ */
 export class PromiseQueueByKey {
   _simultaneousOpsCount;
   _maxQueueLength;

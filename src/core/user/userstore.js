@@ -10,6 +10,7 @@ import { isDefined } from '../utils';
 import { Query } from '../query';
 
 /**
+ * @private
  * The UserStore class is used to find, save, update, remove, count and group users.
  */
 export class UserStore {

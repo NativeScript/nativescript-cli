@@ -1,3 +1,6 @@
+/**
+ * @private
+ */
 export class PubNubClientMock {
   config;
 

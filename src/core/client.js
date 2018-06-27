@@ -5,13 +5,15 @@ import isNumber from 'lodash/isNumber';
 import isNaN from 'lodash/isNaN';
 import { KinveyError } from './errors';
 import { Log } from './log';
-import { isDefined, uuidv4, isValidStorageProviderValue } from './utils';
+import { isDefined, uuidv4, isValidStorageProviderValue, activeUserKey } from './utils';
 import { StorageProvider } from './datastore';
 
 const DEFAULT_TIMEOUT = 60000;
-const ACTIVE_USER_KEY = 'active_user';
 let sharedInstance = null;
 
+/**
+ * @private
+ */
 class ActiveUserStorage {
   constructor() {
     this.memory = new MemoryCache();
@@ -45,6 +47,7 @@ class ActiveUserStorage {
 }
 
 /**
+ * @private
  * The Client class stores information about your application on the Kinvey platform. You can create mutiple clients
  * to send requests to different environments on the Kinvey platform.
  */
@@ -62,12 +65,6 @@ export class Client {
    * @param {string}    [options.encryptionKey]                            App Encryption Key
    * @param {string}    [options.appVersion]                               App Version
    * @return {Client}                                                      An instance of the Client class.
-   *
-   * @example
-   * var client = new Kinvey.Client({
-   *   appKey: '<appKey>',
-   *   appSecret: '<appSecret>'
-   * });
    */
 
   constructor(config = {}) {
@@ -163,14 +160,14 @@ export class Client {
    * Get the active user.
    */
   getActiveUser() {
-    return this.activeUserStorage.get(`${this.appKey}.${ACTIVE_USER_KEY}`);
+    return this.activeUserStorage.get(`${this.appKey}.${activeUserKey}`);
   }
 
   /**
    * Set the active user
    */
   setActiveUser(activeUser) {
-    return this.activeUserStorage.set(`${this.appKey}.${ACTIVE_USER_KEY}`, activeUser);
+    return this.activeUserStorage.set(`${this.appKey}.${activeUserKey}`, activeUser);
   }
 
   /**

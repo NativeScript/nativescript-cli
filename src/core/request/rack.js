@@ -6,6 +6,9 @@ import { isDefined } from '../utils';
 import { Log } from '../log';
 import { Middleware, HttpMiddleware, ParseMiddleware, SerializeMiddleware } from './middleware';
 
+/**
+ * @private
+ */
 export class Rack extends Middleware {
   constructor(name = 'Rack') {
     super(name);
@@ -84,6 +87,9 @@ export class Rack extends Middleware {
   }
 }
 
+/**
+ * @private
+ */
 class NetworkRack extends Rack {
   constructor(name = 'Network Rack') {
     super(name);
@@ -112,9 +118,14 @@ class NetworkRack extends Rack {
       });
   }
 }
+/**
+ * @private
+ */
 const networkRack = new NetworkRack();
 
-
+/**
+ * @private
+ */
 export {
   networkRack as NetworkRack
 };

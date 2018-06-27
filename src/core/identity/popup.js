@@ -1,6 +1,9 @@
 import { EventEmitter } from 'events';
 import { PopupError } from '../errors';
 
+/**
+ * @private
+ */
 export class Popup extends EventEmitter {
   open() {
     throw new PopupError('Unable to open a popup on this platform.');

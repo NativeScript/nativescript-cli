@@ -9,6 +9,9 @@ import { isDefined, appendQuery, randomString } from '../utils';
 import { Response } from './response';
 import { Headers } from './headers';
 
+/**
+ * @private
+ */
 export const RequestMethod = {
   GET: 'GET',
   POST: 'POST',
@@ -18,6 +21,9 @@ export const RequestMethod = {
 };
 Object.freeze(RequestMethod);
 
+/**
+ * @private
+ */
 export class Request {
   constructor(options = {}) {
     options = assign({

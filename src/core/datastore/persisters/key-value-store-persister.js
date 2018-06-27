@@ -5,6 +5,9 @@ import { NotFoundError, KinveyError } from '../../errors';
 
 import { KeyValuePersister } from './key-value-persister';
 
+/**
+ * @private
+ */
 export class KeyValueStorePersister extends KeyValuePersister {
   // protected property
   get _storeName() {

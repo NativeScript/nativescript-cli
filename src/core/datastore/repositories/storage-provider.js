@@ -1,3 +1,6 @@
+/**
+ * @private
+ */
 export const StorageProvider = {
   Memory: 'Memory',
   WebSQL: 'WebSQL',

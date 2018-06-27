@@ -1,0 +1,30 @@
+{
+  "source": "./src/core",
+  "destination": "./docs",
+  "includes": [
+    "\\.js$",
+    "\\.doc\\.js$"
+  ],
+  "excludes": [
+    "\\.spec\\.js$"
+  ],
+  "plugins": [
+    {
+      "name": "esdoc-standard-plugin",
+      "option": {
+        "lint": {
+          "enable": false
+        },
+        "coverage": {
+          "enable": false
+        },
+        "accessor": {
+          "access": [
+            "public"
+          ],
+          "autoPrivate": true
+        }
+      }
+    }
+  ]
+}

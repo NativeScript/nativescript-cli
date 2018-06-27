@@ -9,16 +9,33 @@ import { PromiseQueue } from './promise-queue';
 import { Query } from '../query';
 import { KinveyError } from '../errors';
 
+/**
+ * @private
+ */
+export const activeUserKey = 'active_user';
+
+/**
+ * @private
+ */
 export function noop() { }
 
+/**
+ * @private
+ */
 export function isPromiseLike(obj) {
   return !!obj && (typeof obj.then === 'function') && (typeof obj.catch === 'function');
 }
 
+/**
+ * @private
+ */
 export function isObservable(obj) {
   return obj instanceof Observable;
 }
 
+/**
+ * @private
+ */
 export function wrapInPromise(value) {
   if (isPromiseLike(value)) {
     return value;
@@ -27,6 +44,9 @@ export function wrapInPromise(value) {
   return Promise.resolve(value);
 }
 
+/**
+ * @private
+ */
 export function useIfDefined(value, defaultValue) {
   if (typeof value !== 'undefined') {
     return value;
@@ -34,17 +54,26 @@ export function useIfDefined(value, defaultValue) {
   return defaultValue;
 }
 
+/**
+ * @private
+ */
 export function ensureArray(obj) {
   obj = useIfDefined(obj, []);
   return Array.isArray(obj) ? obj : [obj];
 }
 
+/**
+ * @private
+ */
 export function isValidStorageProviderValue(value) {
   const supportedPersistances = repositoryProvider.getSupportedStorages();
   const valueAsArray = ensureArray(value);
   return !!value && valueAsArray.length && valueAsArray.every(type => supportedPersistances.some(v => type === v));
 }
 
+/**
+ * @private
+ */
 function _forEachAsync(array, func) {
   let completed = 0;
   const totalCount = array.length;
@@ -68,6 +97,9 @@ function _forEachAsync(array, func) {
   });
 }
 
+/**
+ * @private
+ */
 export function forEachAsync(array, func, maxConcurrentCount = Infinity) {
   const queue = new PromiseQueue(maxConcurrentCount);
   return _forEachAsync(array, (item) => {
@@ -75,6 +107,9 @@ export function forEachAsync(array, func, maxConcurrentCount = Infinity) {
   });
 }
 
+/**
+ * @private
+ */
 export function splitQueryIntoPages(query, pageSize, totalCount) {
   if (!isNumber(pageSize) || !isNumber(totalCount)) {
     throw new KinveyError('Invalid page size or expected entity count parameter');
