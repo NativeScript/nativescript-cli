@@ -70,13 +70,11 @@ export class ProjectChangesService implements IProjectChangesService {
 			const platformResourcesDir = path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
 			this._changesInfo.appResourcesChanged = this.containsNewerFiles(platformResourcesDir, null, projectData);
 			/*done because currently all node_modules are traversed, a possible improvement could be traversing only the production dependencies*/
-			this._changesInfo.nativeChanged = projectChangesOptions.skipModulesNativeCheck ?
-        false :
-        this.containsNewerFiles(
-          path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME),
-          path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME, "tns-ios-inspector"),
-          projectData,
-          this.fileChangeRequiresBuild);
+			this._changesInfo.nativeChanged = projectChangesOptions.skipModulesNativeCheck ? false : this.containsNewerFiles(
+				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME),
+				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME, "tns-ios-inspector"),
+				projectData,
+				this.fileChangeRequiresBuild);
 
 			if (this._newFiles > 0 || this._changesInfo.nativeChanged) {
 				this._changesInfo.modulesChanged = true;
