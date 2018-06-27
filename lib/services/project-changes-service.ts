@@ -70,11 +70,14 @@ export class ProjectChangesService implements IProjectChangesService {
 			const platformResourcesDir = path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
 			this._changesInfo.appResourcesChanged = this.containsNewerFiles(platformResourcesDir, null, projectData);
 			/*done because currently all node_modules are traversed, a possible improvement could be traversing only the production dependencies*/
+			const visitedPaths = new Set<string>();
+			visitedPaths.add(projectData.projectDir);
 			this._changesInfo.nativeChanged = this.containsNewerFiles(
 				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME),
 				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME, "tns-ios-inspector"),
 				projectData,
-				this.fileChangeRequiresBuild);
+				this.fileChangeRequiresBuild,
+				visitedPaths);
 
 			if (this._newFiles > 0 || this._changesInfo.nativeChanged) {
 				this._changesInfo.modulesChanged = true;
@@ -226,7 +229,15 @@ export class ProjectChangesService implements IProjectChangesService {
 		return false;
 	}
 
-	private containsNewerFiles(dir: string, skipDir: string, projectData: IProjectData, processFunc?: (filePath: string, projectData: IProjectData) => boolean): boolean {
+	private containsNewerFiles(dir: string, skipDir: string, projectData: IProjectData, processFunc?: (filePath: string, projectData: IProjectData) => boolean, visitedRealPaths?: Set<string>): boolean {
+
+		visitedRealPaths = visitedRealPaths || new Set<string>();
+
+		const dirRPath = this.$fs.realpath(dir);
+		if (visitedRealPaths.has(dirRPath)) {
+			return false;
+		}
+		visitedRealPaths.add(dirRPath);
 
 		const dirName = path.basename(dir);
 		if (_.startsWith(dirName, '.')) {
@@ -242,6 +253,11 @@ export class ProjectChangesService implements IProjectChangesService {
 		for (const file of files) {
 			const filePath = path.join(dir, file);
 			if (filePath === skipDir) {
+				continue;
+			}
+
+			const fileRPath = this.$fs.realpath(filePath);
+			if (visitedRealPaths.has(fileRPath)) {
 				continue;
 			}
 
@@ -261,7 +277,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 
 			if (fileStats.isDirectory()) {
-				if (this.containsNewerFiles(filePath, skipDir, projectData, processFunc)) {
+				if (this.containsNewerFiles(filePath, skipDir, projectData, processFunc, visitedRealPaths)) {
 					return true;
 				}
 			}
@@ -298,7 +314,7 @@ export class ProjectChangesService implements IProjectChangesService {
 				const fullFilePath = path.join(projectDir, path.join(filePath, "package.json"));
 				if (this.$fs.exists(fullFilePath)) {
 					const json = this.$fs.readJson(fullFilePath);
-					if (json["nativescript"] && _.startsWith(file, path.join(filePath, "platforms"))) {
+					if (json.nativescript && json.nativescript.platforms && _.startsWith(file, path.join(filePath, "platforms"))) {
 						return true;
 					}
 				}
