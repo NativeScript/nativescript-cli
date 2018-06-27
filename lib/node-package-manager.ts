@@ -1,6 +1,7 @@
 import * as path from "path";
 import { exported, cache } from "./common/decorators";
 import { isInteractive } from "./common/helpers";
+import { CACACHE_DIRECTORY_NAME } from "./constants";
 
 export class NodePackageManager implements INodePackageManager {
 	private static SCOPED_DEPENDENCY_REGEXP = /^(@.+?)(?:@(.+?))?$/;
@@ -131,7 +132,7 @@ export class NodePackageManager implements INodePackageManager {
 	@cache()
 	public async getCachePath(): Promise<string> {
 		const cachePath = await this.$childProcess.exec(`npm config get cache`);
-		return path.join(cachePath.trim(), "_cacache");
+		return path.join(cachePath.trim(), CACACHE_DIRECTORY_NAME);
 	}
 
 	private getNpmExecutableName(): string {

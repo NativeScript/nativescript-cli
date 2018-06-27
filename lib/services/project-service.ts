@@ -67,7 +67,7 @@ export class ProjectService implements IProjectService {
 			await this.ensureAppResourcesExist(projectDir);
 
 			if (!(templatePackageJsonContent && templatePackageJsonContent.dependencies && templatePackageJsonContent.dependencies[constants.TNS_CORE_MODULES_NAME])) {
-				await this.$npmInstallationManager.install(constants.TNS_CORE_MODULES_NAME, projectDir, { dependencyType: "save" });
+				await this.addTnsCoreModules(projectDir);
 			}
 
 			if (templateVersion === constants.TemplateVersions.v1) {
@@ -123,7 +123,7 @@ export class ProjectService implements IProjectService {
 				this.$fs.createDirectory(path.join(projectDir, "platforms"));
 				break;
 			case constants.TemplateVersions.v2:
-				await this.$pacoteService.downloadAndExtract(templateData.templateName, projectDir);
+				await this.$pacoteService.extractPackage(templateData.templateName, projectDir);
 				break;
 			default:
 				this.$errors.failWithoutHelp(format(constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat, templateData.templateName, templateData.templateVersion));
@@ -140,7 +140,7 @@ export class ProjectService implements IProjectService {
 			this.$fs.createDirectory(appResourcesDestinationPath);
 
 			// the template installed doesn't have App_Resources -> get from a default template
-			await this.$pacoteService.downloadAndExtract(constants.RESERVED_TEMPLATE_NAMES["default"], appPath, { filter: (name: string, entry: any) => entry.path.indexOf(constants.APP_RESOURCES_FOLDER_NAME) !== -1 });
+			await this.$pacoteService.extractPackage(constants.RESERVED_TEMPLATE_NAMES["default"], appPath, { filter: (name: string, entry: any) => entry.path.indexOf(constants.APP_RESOURCES_FOLDER_NAME) !== -1 });
 		}
 	}
 
@@ -227,6 +227,16 @@ export class ProjectService implements IProjectService {
 
 	private setAppId(projectDir: string, projectId: string): void {
 		this.$projectDataService.setNSValue(projectDir, "id", projectId);
+	}
+
+	private async addTnsCoreModules(projectDir: string): Promise<void> {
+		const projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
+		const packageJsonData = this.$fs.readJson(projectFilePath);
+
+		const version = await this.$npmInstallationManager.getLatestCompatibleVersion(constants.TNS_CORE_MODULES_NAME);
+		packageJsonData.dependencies[constants.TNS_CORE_MODULES_NAME] = version;
+
+		this.$fs.writeJson(projectFilePath, packageJsonData);
 	}
 }
 $injector.register("projectService", ProjectService);

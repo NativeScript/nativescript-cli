@@ -14,7 +14,9 @@ export class PacoteService implements IPacoteService {
 		return pacote.manifest(packageName, manifestOptions);
 	}
 
-	public async downloadAndExtract(packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> {
+	public async extractPackage(packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> {
+		// strip: Remove the specified number of leading path elements. Pathnames with fewer elements will be silently skipped. More info: https://github.com/npm/node-tar/blob/e89c4d37519b1c20133a9f49d5f6b85fa34c203b/README.md
+		// C: Create an archive
 		const extractOptions = { strip: 1, C: destinationDirectory };
 		if (options) {
 			_.extend(extractOptions, options);

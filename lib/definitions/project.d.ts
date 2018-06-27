@@ -239,9 +239,7 @@ interface ITemplateData {
 	templatePackageJsonContent: ITemplatePackageJsonContent;
 }
 
-interface ITemplatePackageJsonContent {
-	name: string;
-	version: string;
+interface ITemplatePackageJsonContent extends IBasePluginData {
 	dependencies: IStringDictionary;
 	devDependencies: IStringDictionary;
 	nativescript?: {

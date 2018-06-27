@@ -5,7 +5,7 @@ declare module "pacote" {
 	export var tarball: IPacoteTarballResult;
 
 	interface IPacoteTarballResult {
-		stream: (packageName: string, options: IPacoteTarballStreamOptions) => IPacoteTarballStreamResult;
+		stream: (packageName: string, options: IPacoteBaseOptions) => IPacoteTarballStreamResult;
 		toFile: (packageName: string) => IPacoteTarballFileResult;
 	}
 
