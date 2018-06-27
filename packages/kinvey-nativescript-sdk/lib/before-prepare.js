@@ -17,14 +17,14 @@ module.exports = function (hookArgs) {
   const redirectUriScheme = parsedRedirectUri.protocol && parsedRedirectUri.protocol.substring(0, parsedRedirectUri.protocol.indexOf(':'));
 
   if (hookArgs.platform.toLowerCase() === 'android') {
-    const androidManifestPath = path.join(__dirname, '..', 'platforms', 'android', 'AndroidManifest.xml');
+    const androidManifestPath = path.join(__dirname, '..', 'platforms', 'android', 'AndroidManifest.default.xml');
     let content = fs.readFileSync(androidManifestPath).toString();
     content = content.replace(/{redirectUriScheme}/i, redirectUriScheme);
-    fs.writeFileSync(androidManifestPath, content);
+    fs.writeFileSync(path.join(__dirname, '..', 'platforms', 'android', 'AndroidManifest.xml'), content);
   } else if (hookArgs.platform.toLowerCase() === 'ios') {
-    const infoPlistPath = path.join(__dirname, '..', 'platforms', 'ios', 'Info.plist');
+    const infoPlistPath = path.join(__dirname, '..', 'platforms', 'ios', 'Info.default.plist');
     let content = fs.readFileSync(infoPlistPath).toString();
     content = content.replace(/{redirectUriScheme}/i, redirectUriScheme);
-    fs.writeFileSync(infoPlistPath, content);
+    fs.writeFileSync(path.join(__dirname, '..', 'platforms', 'ios', 'Info.plist'), content);
   }
 };
