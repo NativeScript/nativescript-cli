@@ -1,9 +1,9 @@
 import url from 'url';
 import nock from 'nock';
 import expect from 'expect';
-import { KinveyRequest } from './network';
+import { KinveyRequest, AuthType } from './network';
 import { Request } from './request';
-import { InvalidCredentialsError, ServerError, TimeoutError } from '../errors';
+import { InvalidCredentialsError, ServerError, TimeoutError, NoActiveUserError } from '../errors';
 import { randomString } from '../utils';
 import { AuthorizationGrant } from '../identity';
 import { init } from '../kinvey';
@@ -87,6 +87,71 @@ describe('KinveyRequest', () => {
       const request = new KinveyRequest();
       expect(request).toBeA(KinveyRequest);
       expect(request).toBeA(Request);
+    });
+  });
+
+  describe('AuthType', () => {
+    describe('Session', () => {
+      it('should throw an error is no active user exists', async () => {
+        const client2 = {
+          getActiveUser() {
+            return null;
+          }
+        };
+
+        try {
+          const request = new KinveyRequest();
+          await request.getAuthorizationHeader(AuthType.Session, client2);
+        } catch (error) {
+          expect(error).toBeA(NoActiveUserError);
+          expect(error.message).toEqual('There is not an active user. Please login a user and retry the request.');
+        }
+      });
+
+      it('should throw an error if the active user _kmd is not an object', async () => {
+        const client2 = {
+          getActiveUser() {
+            return { _kmd: '' };
+          }
+        };
+
+        try {
+          const request = new KinveyRequest();
+          await request.getAuthorizationHeader(AuthType.Session, client2);
+        } catch (error) {
+          expect(error).toBeA(NoActiveUserError);
+          expect(error.message).toEqual('The active user does not have a valid auth token.');
+        }
+      });
+
+      it('should throw an error if the active user does not have a valid auth token', async () => {
+        const client2 = {
+          getActiveUser() {
+            return { _kmd: {} };
+          }
+        };
+
+        try {
+          const request = new KinveyRequest();
+          await request.getAuthorizationHeader(AuthType.Session, client2);
+        } catch (error) {
+          expect(error).toBeA(NoActiveUserError);
+          expect(error.message).toEqual('The active user does not have a valid auth token.');
+        }
+      });
+
+      it('should return auth info', async () => {
+        const authtoken = randomString();
+        const client2 = {
+          getActiveUser() {
+            return { _kmd: { authtoken } };
+          }
+        };
+
+        const request = new KinveyRequest();
+        const authorizationHeader = await request.getAuthorizationHeader(AuthType.Session, client2);
+        expect(authorizationHeader).toEqual(`Kinvey ${authtoken}`);
+      });
     });
   });
 
