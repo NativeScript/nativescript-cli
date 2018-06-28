@@ -473,7 +473,7 @@ export class KinveyRequest extends NetworkRequest {
                 },
                 properties: this.properties,
                 timeout: this.timeout,
-                clientId: oldSession.clien_id
+                clientId: oldSession.client_id
               });
               return request.execute()
                 .then(response => response.data)
