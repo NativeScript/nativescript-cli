@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.11.3](https://github.com/Kinvey/js-sdk/tree/v3.11.3) (2018-06-29)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.2...v3.11.3)<br/>
+
+#### Enhancements
+- MLIBZ-2575: Validate file size before uploading. MLIBZ-2443 and MLIBZ-2444 are related. [#313](https://github.com/Kinvey/js-sdk/pull/313)
+
+#### Bugs
+- MLIBZ-2552: Don't try to access undefined. [#312](https://github.com/Kinvey/js-sdk/pull/312)
+- MLIBZ-2450: Prevent the active user from being removed when clearing the DataStore cache and local storage is used as the storage adapter. [#311](https://github.com/Kinvey/js-sdk/pull/311)
+- MLIBZ-2526: Remove `_kmd.local` property before sending entity to the backend. [#310](https://github.com/Kinvey/js-sdk/pull/310)
+
 ## [3.11.2](https://github.com/Kinvey/js-sdk/tree/v3.11.2) (2018-06-15)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.1...v3.11.2)<br/>
 
