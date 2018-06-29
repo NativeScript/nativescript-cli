@@ -7,6 +7,7 @@ import isEmpty from 'lodash/isEmpty';
 import isPlainObject from 'lodash/isObject';
 import url from 'url';
 import isString from 'lodash/isString';
+import PQueue from 'p-queue';
 import { Client } from '../client';
 import { Query } from '../query';
 import { Aggregation } from '../aggregation';
@@ -16,6 +17,8 @@ import { Request, RequestMethod } from './request';
 import { Headers } from './headers';
 import { NetworkRack } from './rack';
 import { KinveyResponse } from './response';
+
+const requestQueue = new PQueue({ concurrency: Infinity });
 
 /**
  * @private
@@ -445,6 +448,11 @@ export class KinveyRequest extends NetworkRequest {
       })
       .catch((error) => {
         if (retry && error instanceof InvalidCredentialsError) {
+          if (requestQueue.isPaused) {
+            return requestQueue.add(() => this.execute(rawResponse, false));
+          }
+
+          requestQueue.pause();
           const activeUser = this.client.getActiveUser();
 
           if (isDefined(activeUser)) {
@@ -511,11 +519,18 @@ export class KinveyRequest extends NetworkRequest {
                     });
                 })
                 .then(() => {
+                  requestQueue.start();
                   return this.execute(rawResponse, false);
                 })
-                .catch(() => Promise.reject(error));
+                .catch(() => {
+                  requestQueue.start();
+                  return Promise.reject(error);
+                });
             }
           }
+
+          requestQueue.start();
+          return Promise.reject(error);
         }
 
         return Promise.reject(error);
