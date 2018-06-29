@@ -26,8 +26,14 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 			await this.cleanProject(config.platform, config.appFilesUpdaterOptions, config.platformData, config.projectData);
 		}
 
-		if (!config.changesInfo || config.changesInfo.changesRequirePrepare) {
+		// Move the native application resources from platforms/.../app/App_Resources
+		// to the right places in the native project,
+		// because webpack copies them on every build (not every change).
+		if (!config.changesInfo || config.changesInfo.changesRequirePrepare || config.appFilesUpdaterOptions.bundle) {
 			this.prepareAppResources(config.platformData, config.projectData);
+		}
+
+		if (!config.changesInfo || config.changesInfo.changesRequirePrepare) {
 			await config.platformData.platformProjectService.prepareProject(config.projectData, config.platformSpecificData);
 		}
 
