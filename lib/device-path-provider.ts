@@ -13,7 +13,7 @@ export class DevicePathProvider implements IDevicePathProvider {
 	public async getDeviceProjectRootPath(device: Mobile.IDevice, options: IDeviceProjectRootOptions): Promise<string> {
 		let projectRoot = "";
 		if (this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform)) {
-			projectRoot = device.isEmulator ? this.$iOSSimResolver.iOSSim.getApplicationPath(device.deviceInfo.identifier, options.appIdentifier) : LiveSyncPaths.IOS_DEVICE_PROJECT_ROOT_PATH;
+			projectRoot = device.isEmulator ? await this.$iOSSimResolver.iOSSim.getApplicationPath(device.deviceInfo.identifier, options.appIdentifier) : LiveSyncPaths.IOS_DEVICE_PROJECT_ROOT_PATH;
 
 			if (!projectRoot) {
 				this.$errors.failWithoutHelp("Unable to get application path on device.");
