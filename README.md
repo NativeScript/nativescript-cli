@@ -483,7 +483,7 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 
 [Back to Top][1]
 
-[1]: #telerik-nativescript-command-line-interface
+[1]: #nativescript-command-line-interface
 [2]: https://travis-ci.org/NativeScript/nativescript-cli
 [3]: http://docs.telerik.com/platform/appbuilder/nativescript/index
 [4]: http://www.telerik.com/nativescript
