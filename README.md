@@ -412,7 +412,7 @@ The NativeScript CLI lets you extend its behavior and customize it to fit your n
 
 When you run one of the extendable commands (for example, `tns build`), the CLI checks for hooks and executes them. Plugins can also use hooks to control the compilation of the application package.
 
-For more information, see the [Extending the CLI document](https://github.com/NativeScript/nativescript-cli/blob/production/extending-cli.md)
+For more information, see the [Extending the CLI document](https://github.com/NativeScript/nativescript-cli/blob/master/extending-cli.md)
 
 [Back to Top][1]
 
