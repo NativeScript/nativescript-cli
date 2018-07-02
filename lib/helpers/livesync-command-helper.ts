@@ -21,15 +21,15 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	}
 
 	public async executeCommandLiveSync(platform?: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions) {
+		const emulator = this.$options.emulator;
 		await this.$devicesService.initialize({
 			deviceId: this.$options.device,
-			platform: platform,
-			emulator: this.$options.emulator,
+			platform,
+			emulator,
 			skipDeviceDetectionInterval: true,
 			skipInferPlatform: !platform
 		});
 
-		await this.$devicesService.detectCurrentlyAttachedDevices({ shouldReturnImmediateResult: false, platform: platform });
 		const devices = this.$devicesService.getDeviceInstances()
 			.filter(d => !platform || d.deviceInfo.platform.toLowerCase() === platform.toLowerCase());
 

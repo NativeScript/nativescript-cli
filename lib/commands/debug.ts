@@ -35,8 +35,6 @@ export class DebugPlatformCommand implements ICommand {
 			return;
 		}
 
-		await this.$devicesService.detectCurrentlyAttachedDevices({ shouldReturnImmediateResult: false, platform: this.platform });
-
 		await this.$liveSyncCommandHelper.executeLiveSyncOperation([selectedDeviceForDebug], this.platform, {
 			deviceDebugMap: {
 				[selectedDeviceForDebug.deviceInfo.identifier]: true
@@ -51,8 +49,6 @@ export class DebugPlatformCommand implements ICommand {
 		if (this.$options.forDevice && this.$options.emulator) {
 			this.$errors.fail(DebugCommandErrors.UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR);
 		}
-
-		await this.$devicesService.detectCurrentlyAttachedDevices({ platform: this.platform, shouldReturnImmediateResult: false });
 
 		if (this.$options.device) {
 			const device = await this.$devicesService.getDevice(this.$options.device);

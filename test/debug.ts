@@ -36,7 +36,6 @@ function createTestInjector(): IInjector {
 	});
 	testInjector.register('devicesService', {
 		initialize: async () => { /* Intentionally left blank */ },
-		detectCurrentlyAttachedDevices: async () => { /* Intentionally left blank */ },
 		getDeviceInstances: (): any[] => { return []; },
 		execute: async (): Promise<any> => ({})
 	});

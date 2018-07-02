@@ -405,9 +405,6 @@ interface IPlatformTemplate {
 	platformTemplate: string;
 }
 
-interface IEmulator {
-	emulator: boolean;
-}
 
 interface IClean {
 	clean: boolean;
@@ -449,7 +446,7 @@ interface IPort {
 	port: Number;
 }
 
-interface IOptions extends ICommonOptions, IBundleString, IPlatformTemplate, IEmulator, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions {
+interface IOptions extends ICommonOptions, IBundleString, IPlatformTemplate, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions {
 	all: boolean;
 	client: boolean;
 	compileSdk: number;
@@ -482,7 +479,7 @@ interface IAppFilesUpdaterOptions extends IBundle, IRelease, IOptionalWatchAllFi
 
 interface IPlatformBuildData extends IAppFilesUpdaterOptions, IBuildConfig, IEnvOptions { }
 
-interface IDeviceEmulator extends IEmulator, IDeviceIdentifier { }
+interface IDeviceEmulator extends IHasEmulatorOption, IDeviceIdentifier { }
 
 interface IRunPlatformOptions extends IJustLaunch, IDeviceEmulator { }
 
