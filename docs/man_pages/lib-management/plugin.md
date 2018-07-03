@@ -3,7 +3,7 @@ title: tns plugin
 position: 10
 ---<% } %>
 # tns plugin
-==========
+
 
 Usage | Synopsis
 ---|---

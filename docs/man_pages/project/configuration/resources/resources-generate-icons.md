@@ -2,6 +2,7 @@
 title: tns resources generate icons
 position: 11
 ---<% } %>
+
 # tns resources generate icons
 
 Usage | Synopsis

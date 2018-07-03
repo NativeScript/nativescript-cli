@@ -3,7 +3,7 @@ title: tns platform remove
 position: 4
 ---<% } %>
 # tns platform remove
-==========
+
 
 Usage | Synopsis
 ------|-------

@@ -3,7 +3,7 @@ title: tns build ios
 position: 2
 ---<% } %>
 # tns build ios
-==========
+
 
 Usage | Synopsis
 ---|---

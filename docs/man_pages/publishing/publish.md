@@ -3,7 +3,7 @@ title: tns publish
 position: 4
 ---<% } %>
 # tns publish
-==========
+
 
 Usage | Synopsis
 ---|---

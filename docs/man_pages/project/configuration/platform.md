@@ -3,7 +3,7 @@ title: tns platform
 position: 6
 ---<% } %>
 # tns platform
-==========
+
 
 Usage | Synopsis
 ---|---

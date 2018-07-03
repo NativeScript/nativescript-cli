@@ -3,7 +3,7 @@ title: tns platform update
 position: 5
 ---<% } %>
 # tns platform update
-==========
+
 
 Usage | Synopsis
 ------|-------

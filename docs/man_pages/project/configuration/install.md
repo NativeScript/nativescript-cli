@@ -3,7 +3,7 @@ title: tns install
 position: 1
 ---<% } %>
 # tns install
-==========
+
 
 Usage | Synopsis
 ---|---
