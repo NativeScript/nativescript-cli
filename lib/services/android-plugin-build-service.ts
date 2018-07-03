@@ -5,7 +5,6 @@ import { Builder, parseString } from "xml2js";
 import { ILogger } from "log4js";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
-
 	/**
 	 * Required for hooks execution to work.
 	 */
@@ -164,113 +163,101 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	 */
 	public async buildAar(options: IBuildOptions): Promise<boolean> {
 		this.validateOptions(options);
-
-		// IDEA: Accept as an additional parameter the Android Support Library version from CLI, pass it on as -PsupportVersion later to the build
-		// IDEA: apply app.gradle here in order to get any and all user-defined variables
-		// IDEA: apply the entire include.gradle here instead of copying over the repositories {} and dependencies {} scopes
-
-		const shortPluginName = getShortPluginName(options.pluginName);
-		const newPluginDir = path.join(options.tempPluginDirPath, shortPluginName);
-		const newPluginMainSrcDir = path.join(newPluginDir, "src", "main");
-		const defaultPackageName = "org.nativescript." + shortPluginName;
-
-		// find manifest file
-		//// prepare manifest file content
 		const manifestFilePath = this.getManifest(options.platformsAndroidDirPath);
-		let shouldBuildAar = false;
-
-		// look for AndroidManifest.xml
-		if (manifestFilePath) {
-			shouldBuildAar = true;
-		}
-
-		// look for android resources
 		const androidSourceSetDirectories = this.getAndroidSourceDirectories(options.platformsAndroidDirPath);
+		const shouldBuildAar = !!manifestFilePath || androidSourceSetDirectories.length > 0;
 
-		if (androidSourceSetDirectories.length > 0) {
-			shouldBuildAar = true;
-		}
-
-		// if a manifest OR/AND resource files are present - write files, build plugin
 		if (shouldBuildAar) {
-			let updatedManifestContent;
-			this.$fs.ensureDirectoryExists(newPluginMainSrcDir);
+			const shortPluginName = getShortPluginName(options.pluginName);
+			const pluginTempDir = path.join(options.tempPluginDirPath, shortPluginName);
+			const pluginTempMainSrcDir = path.join(pluginTempDir, "src", "main");
 
-			if (manifestFilePath) {
-				let androidManifestContent;
-				try {
-					androidManifestContent = this.$fs.readText(manifestFilePath);
-				} catch (err) {
-					throw new Error(
-						`Failed to fs.readFileSync the manifest file located at ${manifestFilePath}`
-					);
-				}
-
-				updatedManifestContent = await this.updateManifestContent(androidManifestContent, defaultPackageName);
-			} else {
-				updatedManifestContent = this.createManifestContent(defaultPackageName);
-			}
-
-			// write the AndroidManifest in the temp-dir/plugin-name/src/main
-			const pathToNewAndroidManifest = path.join(newPluginMainSrcDir, MANIFEST_FILE_NAME);
-			try {
-				this.$fs.writeFile(pathToNewAndroidManifest, updatedManifestContent);
-			} catch (e) {
-				throw new Error(`Failed to write the updated AndroidManifest in the new location - ${pathToNewAndroidManifest}`);
-			}
-
-			// copy all android sourceset directories to the new temporary plugin dir
-			for (const dir of androidSourceSetDirectories) {
-				// get only the last subdirectory of the entire path string. e.g. 'res', 'java', etc.
-				const dirNameParts = dir.split(path.sep);
-				const dirName = dirNameParts[dirNameParts.length - 1];
-
-				const destination = path.join(newPluginMainSrcDir, dirName);
-				this.$fs.ensureDirectoryExists(destination);
-
-				this.$fs.copyFile(path.join(dir, "*"), destination);
-			}
-
-			// copy the preconfigured gradle android library project template to the temporary android library
-			this.$fs.copyFile(path.join(path.resolve(path.join(__dirname, AndroidPluginBuildService.ANDROID_PLUGIN_GRADLE_TEMPLATE), "*")), newPluginDir);
-
-			// sometimes the AndroidManifest.xml or certain resources in /res may have a compile dependency to a library referenced in include.gradle. Make sure to compile the plugin with a compile dependency to those libraries
-			const includeGradlePath = path.join(options.platformsAndroidDirPath, INCLUDE_GRADLE_NAME);
-			if (this.$fs.exists(includeGradlePath)) {
-				const includeGradleContent = this.$fs.readText(includeGradlePath);
-				const repositoriesAndDependenciesScopes = this.getIncludeGradleCompileDependenciesScope(includeGradleContent);
-
-				// dependencies { } object was found - append dependencies scope
-				if (repositoriesAndDependenciesScopes.length > 0) {
-					const buildGradlePath = path.join(newPluginDir, "build.gradle");
-					this.$fs.appendFile(buildGradlePath, "\n" + repositoriesAndDependenciesScopes.join("\n"));
-				}
-			}
-
-			// finally build the plugin
-			this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
-			const androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
-			await this.buildPlugin( { pluginDir: newPluginDir, pluginName: options.pluginName, androidToolsInfo });
-
-			const finalAarName = `${shortPluginName}-release.aar`;
-			const pathToBuiltAar = path.join(newPluginDir, "build", "outputs", "aar", finalAarName);
-
-			if (this.$fs.exists(pathToBuiltAar)) {
-				try {
-					if (options.aarOutputDir) {
-						this.$fs.copyFile(pathToBuiltAar, path.join(options.aarOutputDir, `${shortPluginName}.aar`));
-					}
-				} catch (e) {
-					throw new Error(`Failed to copy built aar to destination. ${e.message}`);
-				}
-
-				return true;
-			} else {
-				throw new Error(`No built aar found at ${pathToBuiltAar}`);
-			}
+			await this.updateManifest(manifestFilePath, pluginTempMainSrcDir, shortPluginName);
+			this.copySourceSetDirectories(androidSourceSetDirectories, pluginTempMainSrcDir);
+			this.setupGradle(pluginTempDir, options.platformsAndroidDirPath);
+			await this.buildPlugin({ pluginDir: pluginTempDir, pluginName: options.pluginName });
+			this.copyAar(shortPluginName, pluginTempDir, options.aarOutputDir);
 		}
 
-		return false;
+		return shouldBuildAar;
+	}
+
+	private async updateManifest(manifestFilePath: string, pluginTempMainSrcDir: string, shortPluginName: string): Promise<void> {
+		let updatedManifestContent;
+		this.$fs.ensureDirectoryExists(pluginTempMainSrcDir);
+		const defaultPackageName = "org.nativescript." + shortPluginName;
+		if (manifestFilePath) {
+			let androidManifestContent;
+			try {
+				androidManifestContent = this.$fs.readText(manifestFilePath);
+			} catch (err) {
+				throw new Error(
+					`Failed to fs.readFileSync the manifest file located at ${manifestFilePath}`
+				);
+			}
+
+			updatedManifestContent = await this.updateManifestContent(androidManifestContent, defaultPackageName);
+		} else {
+			updatedManifestContent = this.createManifestContent(defaultPackageName);
+		}
+
+		const pathToTempAndroidManifest = path.join(pluginTempMainSrcDir, MANIFEST_FILE_NAME);
+		try {
+			this.$fs.writeFile(pathToTempAndroidManifest, updatedManifestContent);
+		} catch (e) {
+			throw new Error(`Failed to write the updated AndroidManifest in the new location - ${pathToTempAndroidManifest}`);
+		}
+	}
+
+	private copySourceSetDirectories(androidSourceSetDirectories: string[], pluginTempMainSrcDir: string): void {
+		for (const dir of androidSourceSetDirectories) {
+			const dirNameParts = dir.split(path.sep);
+			// get only the last subdirectory of the entire path string. e.g. 'res', 'java', etc.
+			const dirName = dirNameParts[dirNameParts.length - 1];
+			const destination = path.join(pluginTempMainSrcDir, dirName);
+
+			this.$fs.ensureDirectoryExists(destination);
+			this.$fs.copyFile(path.join(dir, "*"), destination);
+		}
+	}
+
+	private setupGradle(pluginTempDir: string, platformsAndroidDirPath: string): void {
+		const gradleTemplatePath = path.resolve(path.join(__dirname, AndroidPluginBuildService.ANDROID_PLUGIN_GRADLE_TEMPLATE));
+		const allGradleTemplateFiles = path.join(gradleTemplatePath, "*");
+
+		this.$fs.copyFile(allGradleTemplateFiles, pluginTempDir);
+		this.addCompileDependencies(platformsAndroidDirPath, pluginTempDir);
+		// TODO: replace placeholders in target destination
+	}
+
+	private addCompileDependencies(platformsAndroidDirPath: string, pluginTempDir: string): void {
+		const includeGradlePath = path.join(platformsAndroidDirPath, INCLUDE_GRADLE_NAME);
+		if (this.$fs.exists(includeGradlePath)) {
+			const includeGradleContent = this.$fs.readText(includeGradlePath);
+			const repositoriesAndDependenciesScopes = this.getIncludeGradleCompileDependenciesScope(includeGradleContent);
+
+			if (repositoriesAndDependenciesScopes.length > 0) {
+				const buildGradlePath = path.join(pluginTempDir, "build.gradle");
+				this.$fs.appendFile(buildGradlePath, "\n" + repositoriesAndDependenciesScopes.join("\n"));
+			}
+		}
+	}
+
+	private copyAar(shortPluginName: string, pluginTempDir: string, aarOutputDir: string): void {
+		const finalAarName = `${shortPluginName}-release.aar`;
+		const pathToBuiltAar = path.join(pluginTempDir, "build", "outputs", "aar", finalAarName);
+
+		if (this.$fs.exists(pathToBuiltAar)) {
+			try {
+				if (aarOutputDir) {
+					this.$fs.copyFile(pathToBuiltAar, path.join(aarOutputDir, `${shortPluginName}.aar`));
+				}
+			} catch (e) {
+				throw new Error(`Failed to copy built aar to destination. ${e.message}`);
+			}
+		} else {
+			throw new Error(`No built aar found at ${pathToBuiltAar}`);
+		}
 	}
 
 	/**
@@ -307,6 +294,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 	@hook("buildAndroidPlugin")
 	private async buildPlugin(pluginBuildSettings: IBuildAndroidPluginData): Promise<void> {
+		if (!pluginBuildSettings.androidToolsInfo) {
+			this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
+			pluginBuildSettings.androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
+		}
+
 		const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
 
 		const localArgs = [
