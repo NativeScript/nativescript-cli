@@ -52,6 +52,14 @@ function createTestInjector(configuration: { shouldNpmInstallThrow?: boolean, pa
 		trackEventActionInGoogleAnalytics: (data: IEventActionData) => Promise.resolve()
 	});
 
+	injector.register("pacoteService", {
+		manifest: (packageName: string) => {
+			const packageJsonContent = configuration.packageJsonContent || {};
+			packageJsonContent.name = packageName;
+			return Promise.resolve(packageJsonContent);
+		}
+	});
+
 	return injector;
 }
 
@@ -134,7 +142,8 @@ describe("project-templates-service", () => {
 				const localTemplatePath = "/Users/username/localtemplate";
 				const fs = testInjector.resolve<IFileSystem>("fs");
 				fs.exists = (path: string): boolean => true;
-				fs.readJson = (filename: string, encoding?: string): any => ({ name: templateName });
+				const pacoteService = testInjector.resolve<IPacoteService>("pacoteService");
+				pacoteService.manifest = () => Promise.resolve({ name: templateName });
 				await projectTemplatesService.prepareTemplate(localTemplatePath, "tempFolder");
 				assert.deepEqual(dataSentToGoogleAnalytics, [
 					{
@@ -204,7 +213,7 @@ describe("project-templates-service", () => {
 				const notSupportedVersionString = "not supported version";
 				const testInjector = createTestInjector({ packageJsonContent: { nativescript: { templateVersion: notSupportedVersionString } } });
 				const projectTemplatesService = testInjector.resolve<IProjectTemplatesService>("projectTemplatesService");
-				const expectedError = format(constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat, nativeScriptValidatedTemplatePath, notSupportedVersionString);
+				const expectedError = format(constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat, 'tns-template-hello-world-ts', notSupportedVersionString);
 				await assert.isRejected(projectTemplatesService.prepareTemplate("typescript", "tempFolder"), expectedError);
 			});
 
