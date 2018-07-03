@@ -3,7 +3,7 @@ title: tns usage-reporting
 position: 16
 ---<% } %>
 # tns usage-reporting
-==========
+
 
 Usage | Synopsis
 ------|-------

@@ -3,7 +3,7 @@ title: tns setup
 position: 5
 ---<% } %>
 # tns setup
-==========
+
 
 Usage | Synopsis
 ------|-------

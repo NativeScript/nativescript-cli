@@ -3,7 +3,7 @@ title: tns run android
 position: 10
 ---<% } %>
 # tns run android
-==========
+
 
 Usage | Synopsis
 ---|---

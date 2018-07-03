@@ -3,7 +3,7 @@ title: tns device ios
 position: 2
 ---<% } %>
 # tns device ios
-==========
+
 
 Usage | Synopsis
 ------|-------

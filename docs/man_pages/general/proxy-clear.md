@@ -3,7 +3,7 @@ title: tns proxy clear
 position: 12
 ---<% } %>
 # tns proxy clear
-==========
+
 
 Usage | Synopsis
 ------|-------

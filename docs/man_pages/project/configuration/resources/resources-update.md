@@ -3,7 +3,7 @@ title: tns resources update
 position: 10
 ---<% } %>
 # tns resources update
-==========
+
 
 Usage | Synopsis
 ------|-------

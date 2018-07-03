@@ -3,7 +3,7 @@ title: tns create
 position: 1
 ---<% } %>
 # tns create
-==========
+
 
 Usage | Synopsis
 ---|---

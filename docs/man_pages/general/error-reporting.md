@@ -3,7 +3,7 @@ title: tns error-reporting
 position: 6
 ---<% } %>
 # tns error-reporting
-==========
+
 
 Usage | Synopsis
 ------|-------
