@@ -32,11 +32,12 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		const canExecuteFastSync = !liveSyncInfo.isFullSync && !_.some(liveSyncInfo.modifiedFilesData,
 			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
 
-		if(!canExecuteFastSync && liveSyncInfo.modifiedFilesData.length) {
+		if(liveSyncInfo.modifiedFilesData.length) {
 			await this.livesyncTool.sendDoSyncOperation();
-			await this.device.applicationManager.restartApplication({ appId: liveSyncInfo.deviceAppData.appIdentifier, projectName: projectData.projectName });
-		} else if(liveSyncInfo.modifiedFilesData.length) {
-			await this.livesyncTool.sendDoSyncOperation();
+
+			if(!canExecuteFastSync){
+				await this.device.applicationManager.restartApplication({ appId: liveSyncInfo.deviceAppData.appIdentifier, projectName: projectData.projectName });
+			}
 		}
 
 		this.livesyncTool.end();
