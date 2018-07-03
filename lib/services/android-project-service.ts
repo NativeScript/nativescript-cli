@@ -13,12 +13,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
 	private static ANDROID_PLATFORM_NAME = "android";
 	private static MIN_RUNTIME_VERSION_WITH_GRADLE = "1.5.0";
-	private static REQUIRED_DEV_DEPENDENCIES = [
-		{ name: "babel-traverse", version: "^6.4.5" },
-		{ name: "babel-types", version: "^6.4.5" },
-		{ name: "babylon", version: "^6.4.5" },
-		{ name: "lazy", version: "^1.0.11" }
-	];
+	private static MIN_RUNTIME_VERSION_WITHOUT_DEPS = "4.2.0-2018-06-29-02";
 
 	private isAndroidStudioTemplate: boolean;
 
@@ -41,7 +36,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		this.isAndroidStudioTemplate = false;
 	}
 
-	private _platformsDirCache: string = null;
 	private _platformData: IPlatformData = null;
 	public getPlatformData(projectData: IProjectData): IPlatformData {
 		if (!projectData && !this._platformData) {
@@ -71,7 +65,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 			deviceBuildOutputArr.push(constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.APK_DIR);
 
-			this._platformsDirCache = projectData.platformsDir;
 			const packageName = this.getProjectNameFromId(projectData);
 
 			this._platformData = {
@@ -178,6 +171,19 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		this.cleanResValues(targetSdkVersion, projectData);
 
+		if (semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITHOUT_DEPS)) {
+			await this.installRuntimeDeps(projectData, config);
+		}
+	}
+
+	private async installRuntimeDeps(projectData: IProjectData, config: ICreateProjectOptions) {
+		const requiredDevDependencies = [
+			{ name: "babel-traverse", version: "^6.4.5" },
+			{ name: "babel-types", version: "^6.4.5" },
+			{ name: "babylon", version: "^6.4.5" },
+			{ name: "lazy", version: "^1.0.11" }
+		];
+
 		const npmConfig: INodePackageManagerInstallOptions = {
 			save: true,
 			"save-dev": true,
@@ -190,23 +196,23 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		const projectPackageJson: any = this.$fs.readJson(projectData.projectFilePath);
 
-		for (const dependency of AndroidProjectService.REQUIRED_DEV_DEPENDENCIES) {
+		for (const dependency of requiredDevDependencies) {
 			let dependencyVersionInProject = (projectPackageJson.dependencies && projectPackageJson.dependencies[dependency.name]) ||
 				(projectPackageJson.devDependencies && projectPackageJson.devDependencies[dependency.name]);
 
 			if (!dependencyVersionInProject) {
 				await this.$npm.install(`${dependency.name}@${dependency.version}`, projectData.projectDir, npmConfig);
 			} else {
-				const cleanedVerson = semver.clean(dependencyVersionInProject);
+				const cleanedVersion = semver.clean(dependencyVersionInProject);
 
 				// The plugin version is not valid. Check node_modules for the valid version.
-				if (!cleanedVerson) {
+				if (!cleanedVersion) {
 					const pathToPluginPackageJson = path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, dependency.name, constants.PACKAGE_JSON_FILE_NAME);
 					dependencyVersionInProject = this.$fs.exists(pathToPluginPackageJson) && this.$fs.readJson(pathToPluginPackageJson).version;
 				}
 
-				if (!semver.satisfies(dependencyVersionInProject || cleanedVerson, dependency.version)) {
-					this.$errors.failWithoutHelp(`Your project have installed ${dependency.name} version ${cleanedVerson} but Android platform requires version ${dependency.version}.`);
+				if (!semver.satisfies(dependencyVersionInProject || cleanedVersion, dependency.version)) {
+					this.$errors.failWithoutHelp(`Your project have installed ${dependency.name} version ${cleanedVersion} but Android platform requires version ${dependency.version}.`);
 				}
 			}
 		}
