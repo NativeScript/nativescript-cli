@@ -92,7 +92,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 	private getTemplateNameToBeTracked(templateName: string, packageJsonContent: any): string {
 		try {
 			if (this.$fs.exists(templateName)) {
-				const templateNameToBeTracked = this.$fs.exists(path.join(templateName, constants.PACKAGE_JSON_FILE_NAME)) ? packageJsonContent.name : path.basename(templateName);
+				const templateNameToBeTracked = (packageJsonContent && packageJsonContent.name) || path.basename(templateName);
 				return `${constants.ANALYTICS_LOCAL_TEMPLATE_PREFIX}${templateNameToBeTracked}`;
 			}
 
