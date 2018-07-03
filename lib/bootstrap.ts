@@ -169,3 +169,5 @@ $injector.requirePublic("assetsGenerationService", "./services/assets-generation
 $injector.require("filesHashService", "./services/files-hash-service");
 $injector.require("iOSLogParserService", "./services/ios-log-parser-service");
 $injector.require("iOSDebuggerPortService", "./services/ios-debugger-port-service");
+
+$injector.require("pacoteService", "./services/pacote-service");

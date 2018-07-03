@@ -485,8 +485,8 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		return Promise.resolve(<any>{});
 	}
 
-	getTemplateVersion(templatePath: string): string {
-		return constants.TemplateVersions.v1;
+	getTemplateVersion(templateName: string): Promise<string> {
+		return Promise.resolve(constants.TemplateVersions.v1);
 	}
 }
 

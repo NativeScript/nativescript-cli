@@ -116,6 +116,7 @@ export const VERSION_STRING = "version";
 export const INSPECTOR_CACHE_DIRNAME = "ios-inspector";
 export const POST_INSTALL_COMMAND_NAME = "post-install-cli";
 export const ANDROID_RELEASE_BUILD_ERROR_MESSAGE = "When producing a release build, you need to specify all --key-store-* options.";
+export const CACACHE_DIRECTORY_NAME = "_cacache";
 
 export class DebugCommandErrors {
 	public static UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR = "The options --for-device and --emulator cannot be used simultaneously. Please use only one of them.";
