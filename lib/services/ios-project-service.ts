@@ -257,6 +257,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		plistTemplate += `    <key>method</key>
     <string>app-store</string>
     <key>uploadBitcode</key>
+	<false/>
+	<key>compileBitcode</key>
     <false/>
     <key>uploadSymbols</key>
     <false/>
@@ -303,6 +305,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 		plistTemplate += `
     <key>uploadBitcode</key>
+	<false/>
+	<key>compileBitcode</key>
     <false/>
 </dict>
 </plist>`;
