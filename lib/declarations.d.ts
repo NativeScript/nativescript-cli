@@ -850,3 +850,11 @@ interface IAssetsGenerationService {
 	 */
 	generateSplashScreens(splashesGenerationData: ISplashesGenerationData): Promise<void>;
 }
+
+/**
+ * Describes the Gradle versions specified in the package.json of the Android runtime
+ */
+interface IRuntimeGradleVersions {
+	gradleVersion?: string;
+	gradleAndroidPluginVersion?: string;
+}

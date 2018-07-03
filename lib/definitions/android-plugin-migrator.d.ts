@@ -1,5 +1,6 @@
 
 interface IBuildOptions extends IAndroidBuildOptions{
+	projectDir?: string
 }
 
 interface IAndroidBuildOptions {

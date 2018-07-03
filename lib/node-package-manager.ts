@@ -123,7 +123,7 @@ export class NodePackageManager implements INodePackageManager {
 		const url = `https://registry.npmjs.org/${packageName}`;
 		this.$logger.trace(`Trying to get data from npm registry for package ${packageName}, url is: ${url}`);
 		const responseData = (await this.$httpClient.httpRequest(url)).body;
-		this.$logger.trace(`Successfully received data from npm registry for package ${packageName}. Response data is: ${responseData}`);
+		this.$logger.trace(`Successfully received data from npm registry for package ${packageName}.`);
 		const jsonData = JSON.parse(responseData);
 		this.$logger.trace(`Successfully parsed data from npm registry for package ${packageName}.`);
 		return jsonData;
