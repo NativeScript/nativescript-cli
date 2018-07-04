@@ -163,6 +163,8 @@ describe("project-templates-service", () => {
 				const localTemplatePath = `/Users/username/${templateName}`;
 				const fs = testInjector.resolve<IFileSystem>("fs");
 				fs.exists = (localPath: string): boolean => path.basename(localPath) !== constants.PACKAGE_JSON_FILE_NAME;
+				const pacoteService = testInjector.resolve<IPacoteService>("pacoteService");
+				pacoteService.manifest = () => Promise.resolve({ });
 				await projectTemplatesService.prepareTemplate(localTemplatePath, "tempFolder");
 				assert.deepEqual(dataSentToGoogleAnalytics, [
 					{
