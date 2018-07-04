@@ -8,17 +8,28 @@ import { Logger } from "../../lib/common/logger";
 import * as ErrorsLib from "../../lib/common/errors";
 import temp = require("temp");
 import { INCLUDE_GRADLE_NAME } from "../../lib/constants";
+import * as stubs from "../stubs";
+import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
+import { getShortPluginName } from "../../lib/common/helpers";
+
 temp.track();
 
-describe('androiPluginBuildService', () => {
-
+describe.only('androiPluginBuildService', () => {
 	let spawnFromEventCalled = false;
-	const createTestInjector = (): IInjector => {
-		const testInjector = new Yok();
+	let testInjector: IInjector;
+	let fs: IFileSystem;
+	let androidBuildPluginService: AndroidPluginBuildService;
+	let tempFolder: string;
+	let pluginFolder: string;
 
+	function setupTestInjector(): IInjector {
+		testInjector = new Yok();
 		testInjector.register("fs", FsLib.FileSystem);
 		testInjector.register("childProcess", {
 			spawnFromEvent: async (command: string, args: string[], event: string, options?: any, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult> => {
+				const finalAarName = `${getShortPluginName("my-plugin")}-release.aar`;
+				const aar = path.join(pluginFolder, getShortPluginName("my-plugin"), "build", "outputs", "aar", finalAarName);
+				fs.writeFile(aar, "");
 				spawnFromEventCalled = command.indexOf("gradlew") !== -1;
 				return null;
 			}
@@ -41,15 +52,44 @@ describe('androiPluginBuildService', () => {
 			executeBeforeHooks: async (commandName: string, hookArguments?: IDictionary<any>): Promise<void> => undefined,
 			executeAfterHooks: async (commandName: string, hookArguments?: IDictionary<any>): Promise<void> => undefined
 		});
+		testInjector.register('projectDataService', stubs.ProjectDataService);
+		testInjector.register('platformService', {
+			getCurrentPlatformVersion: (platform: string, projectData: IProjectData): string => {
+				console.log("here?");
+				return "4.1.2";
+			}
+		});
+		testInjector.register('devicePlatformsConstants', DevicePlatformsConstants);
+		setupNpm();
 
 		return testInjector;
-	};
+	}
 
-	let testInjector: IInjector;
-	let fs: IFileSystem;
-	let androidBuildPluginService: AndroidPluginBuildService;
-	let tempFolder: string;
-	let pluginFolder: string;
+	function setupNpm(gradleVersion?: string, gradleAndroidVersion?: string): void {
+		testInjector.register('npm', {
+			getRegistryPackageData: async (packageName: string): Promise<any> => {
+				const result: any = [];
+				result["dist-tags"] = { latest: '1.0.0' };
+				result.versions = [];
+				result.versions['1.0.0'] = {
+					"name": packageName,
+					"gradle": {
+						"version": gradleVersion || "1.0.0",
+						"android": gradleAndroidVersion || "1.0.0"
+					}
+				};
+				result.versions['4.1.2'] = {
+					"name": packageName,
+					"gradle": {
+						"version": "1.0.0",
+						"android": "1.0.0"
+					}
+				};
+
+				return result;
+			}
+		});
+	}
 
 	function setUpIncludeGradle() {
 		fs = testInjector.resolve("fs");
@@ -107,7 +147,7 @@ dependencies {
 	}
 
 	before(() => {
-		testInjector = createTestInjector();
+		setupTestInjector();
 		androidBuildPluginService = testInjector.resolve<AndroidPluginBuildService>(AndroidPluginBuildService);
 	});
 
@@ -131,6 +171,65 @@ dependencies {
 			} catch (e) {
 				/* intentionally left blank */
 			}
+
+			assert.isTrue(spawnFromEventCalled);
+		});
+
+		it('should use the latest runtime gradle versions when no project dir specified', async () => {
+			const gradleVersion = "1.2.3";
+			const gradleAndroidPluginVersion = "4.5.6";
+			setupNpm(gradleVersion, gradleAndroidPluginVersion);
+			androidBuildPluginService = testInjector.resolve<AndroidPluginBuildService>(AndroidPluginBuildService);
+			setUpPluginNativeFolder(true, false, false);
+			const config: IBuildOptions = {
+				platformsAndroidDirPath: tempFolder,
+				pluginName: "my-plugin",
+				aarOutputDir: tempFolder,
+				tempPluginDirPath: pluginFolder
+			};
+
+			await androidBuildPluginService.buildAar(config);
+
+			const gradleWrappersContent = fs.readText(path.join(pluginFolder, getShortPluginName("my-plugin"), "build.gradle").toString());
+			const androidVersionRegex = /com\.android\.tools\.build\:gradle\:(.*)\'\n/g;
+			const actualAndroidVersion = androidVersionRegex.exec(gradleWrappersContent)[1];
+			assert.equal(actualAndroidVersion, gradleAndroidPluginVersion);
+
+			const buildGradleContent = fs.readText(
+				path.join(pluginFolder, getShortPluginName("my-plugin"), "gradle", "wrapper", "gradle-wrapper.properties").toString());
+			const gradleVersionRegex = /gradle\-(.*)\-bin\.zip\n/g;
+			const actualGradleVersion = gradleVersionRegex.exec(buildGradleContent)[1];
+			assert.equal(actualGradleVersion, gradleVersion);
+
+			assert.isTrue(spawnFromEventCalled);
+		});
+
+		it.only('should use specified runtime gradle versions from the project dir', async () => {
+			const gradleVersion = "1.2.3";
+			const gradleAndroidPluginVersion = "4.5.6";
+			setupNpm(gradleVersion, gradleAndroidPluginVersion);
+			androidBuildPluginService = testInjector.resolve<AndroidPluginBuildService>(AndroidPluginBuildService);
+			setUpPluginNativeFolder(true, false, false);
+			const config: IBuildOptions = {
+				platformsAndroidDirPath: tempFolder,
+				pluginName: "my-plugin",
+				aarOutputDir: tempFolder,
+				tempPluginDirPath: pluginFolder,
+				projectDir: tempFolder
+			};
+
+			await androidBuildPluginService.buildAar(config);
+
+			const gradleWrappersContent = fs.readText(path.join(pluginFolder, getShortPluginName("my-plugin"), "build.gradle").toString());
+			const androidVersionRegex = /com\.android\.tools\.build\:gradle\:(.*)\'\n/g;
+			const actualAndroidVersion = androidVersionRegex.exec(gradleWrappersContent)[1];
+			assert.equal(actualAndroidVersion, "1.0.0");
+
+			const buildGradleContent = fs.readText(
+				path.join(pluginFolder, getShortPluginName("my-plugin"), "gradle", "wrapper", "gradle-wrapper.properties").toString());
+			const gradleVersionRegex = /gradle\-(.*)\-bin\.zip\n/g;
+			const actualGradleVersion = gradleVersionRegex.exec(buildGradleContent)[1];
+			assert.equal(actualGradleVersion, "1.0.0");
 
 			assert.isTrue(spawnFromEventCalled);
 		});
