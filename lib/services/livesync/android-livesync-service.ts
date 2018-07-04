@@ -17,6 +17,6 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 		return service;
 	}
 
-	public prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir): void { /* */ }
+	public async prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir): Promise<void> { /* */ }
 }
 $injector.register("androidLiveSyncService", AndroidLiveSyncService);

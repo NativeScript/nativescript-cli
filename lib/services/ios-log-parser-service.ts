@@ -13,12 +13,12 @@ export class IOSLogParserService extends EventEmitter implements IIOSLogParserSe
 		super();
 	}
 
-	public startParsingLog(device: Mobile.IDevice, data: IProjectName): void {
+	public async startParsingLog(device: Mobile.IDevice, data: IProjectName): Promise<void> {
 		this.$deviceLogProvider.setProjectNameForDevice(device.deviceInfo.identifier, data.projectName);
 
 		if (!this.startedDeviceLogInstances[device.deviceInfo.identifier]) {
 			this.startParsingLogCore(device);
-			this.startLogProcess(device);
+			await this.startLogProcess(device);
 			this.startedDeviceLogInstances[device.deviceInfo.identifier] = true;
 		}
 	}
@@ -41,7 +41,7 @@ export class IOSLogParserService extends EventEmitter implements IIOSLogParserSe
 		}
 	}
 
-	private startLogProcess(device: Mobile.IDevice): void {
+	private async startLogProcess(device: Mobile.IDevice): Promise<void> {
 		if (device.isEmulator) {
 			return this.$iOSSimulatorLogProvider.startNewMutedLogProcess(device.deviceInfo.identifier);
 		}

@@ -36,7 +36,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 		});
 	}
 
-	public attachToDebuggerPortFoundEvent(device: Mobile.IDevice, data: IProjectDir): void {
+	public async attachToDebuggerPortFoundEvent(device: Mobile.IDevice, data: IProjectDir): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(data && data.projectDir);
 		if (!this.canStartLookingForDebuggerPort(projectData)) {
 			return;
@@ -45,7 +45,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 		this.attachToDebuggerPortFoundEventCore();
 		this.attachToAttachRequestEvent(device);
 
-		this.$iOSLogParserService.startParsingLog(device, projectData);
+		await this.$iOSLogParserService.startParsingLog(device, projectData);
 	}
 
 	private canStartLookingForDebuggerPort(data: IProjectDir): boolean {

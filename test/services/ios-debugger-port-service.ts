@@ -148,7 +148,7 @@ describe("iOSDebuggerPortService", () => {
 
 		_.each(testCases, testCase => {
 			it(testCase.name, async () => {
-				iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, mockProjectDirObj);
+				await iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, mockProjectDirObj);
 				if (testCase.emitStartingIOSApplicationEvent) {
 					emitStartingIOSApplicationEvent();
 				}
@@ -162,7 +162,7 @@ describe("iOSDebuggerPortService", () => {
 				assert.deepEqual(port, testCase.emittedPort);
 			});
 			it(`${testCase.name} for multiline debugger port message.`, async () => {
-				iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, mockProjectDirObj);
+				await iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, mockProjectDirObj);
 				if (testCase.emitStartingIOSApplicationEvent) {
 					emitStartingIOSApplicationEvent();
 				}

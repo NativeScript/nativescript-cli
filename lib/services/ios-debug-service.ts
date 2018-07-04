@@ -63,7 +63,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 			await this.device.openDeviceLogStream();
 		}
 
-		this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(this.device, debugData);
+		await this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(this.device, debugData);
 
 		if (debugOptions.emulator) {
 			if (debugOptions.start) {

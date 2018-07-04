@@ -66,9 +66,9 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		}
 	}
 
-	public prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir, liveSyncInfo: ILiveSyncInfo): void {
+	public async prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir, liveSyncInfo: ILiveSyncInfo): Promise<void> {
 		if (!liveSyncInfo.skipWatcher) {
-			this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, data);
+			return this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, data);
 		}
 	}
 
