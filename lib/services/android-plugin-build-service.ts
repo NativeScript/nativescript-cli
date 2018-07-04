@@ -240,18 +240,28 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	}
 
 	private async getRuntimeGradleVersions(projectDir: string): Promise<IRuntimeGradleVersions> {
-		const runtimeVersions: IRuntimeGradleVersions = {};
 		const registryData = await this.$npm.getRegistryPackageData(TNS_ANDROID_RUNTIME_NAME);
-		let runtimeVersion: string = registryData["dist-tags"].latest;
+		let runtimeGradleVersions: IRuntimeGradleVersions = null;
 		if (projectDir) {
-			runtimeVersion = this.$platformService.getCurrentPlatformVersion(
+			const projectRuntimeVersion = this.$platformService.getCurrentPlatformVersion(
 				this.$devicePlatformsConstants.Android,
 				this.$projectDataService.getProjectData(projectDir));
+			runtimeGradleVersions = this.getGradleVersions(registryData.versions[projectRuntimeVersion]);
 		}
 
-		const latestPackageData = registryData.versions[runtimeVersion];
-		const packageJsonGradle = latestPackageData && latestPackageData.gradle;
-		if (packageJsonGradle) {
+		if (!runtimeGradleVersions) {
+			const latestRuntimeVersion = registryData["dist-tags"].latest;
+			runtimeGradleVersions = this.getGradleVersions(registryData.versions[latestRuntimeVersion]);
+		}
+
+		return runtimeGradleVersions || {};
+	}
+
+	private getGradleVersions(packageData: any): IRuntimeGradleVersions {
+		const packageJsonGradle = packageData && packageData.gradle;
+		let runtimeVersions: IRuntimeGradleVersions = null;
+		if (packageJsonGradle && (packageJsonGradle.version || packageJsonGradle.android)) {
+			runtimeVersions = {};
 			runtimeVersions.gradleVersion = packageJsonGradle.version;
 			runtimeVersions.gradleAndroidPluginVersion = packageJsonGradle.android;
 		}
@@ -271,7 +281,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const gradleAndroidPluginVersionPlaceholder = "{{runtimeAndroidPluginVersion}}";
 		const gradleAndroidPluginVersion = version || "3.1.2";
 
-		this.replaceFileContent(buildGradlePath, gradleAndroidPluginVersionPlaceholder,gradleAndroidPluginVersion);
+		this.replaceFileContent(buildGradlePath, gradleAndroidPluginVersionPlaceholder, gradleAndroidPluginVersion);
 	}
 
 	private replaceFileContent(filePath: string, content: string, replacement: string) {
