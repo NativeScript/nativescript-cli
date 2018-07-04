@@ -224,11 +224,11 @@ describe("iOSProjectService", () => {
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>method</key>
+<key>method</key>
     <string>app-store</string>
     <key>uploadBitcode</key>
-	<false/>
-	<key>compileBitcode</key>
+    <false/>
+    <key>compileBitcode</key>
     <false/>
     <key>uploadSymbols</key>
     <false/>
@@ -244,8 +244,8 @@ describe("iOSProjectService", () => {
     <key>method</key>
     <string>app-store</string>
     <key>uploadBitcode</key>
-	<false/>
-	<key>compileBitcode</key>
+    <false/>
+    <key>compileBitcode</key>
     <false/>
     <key>uploadSymbols</key>
     <false/>
