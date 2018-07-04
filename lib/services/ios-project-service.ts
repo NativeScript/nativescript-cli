@@ -241,7 +241,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
     <key>uploadBitcode</key>
     <false/>
     <key>compileBitcode</key>
-	<false/>
+    <false/>
     <key>uploadSymbols</key>
     <false/>
 </dict>
