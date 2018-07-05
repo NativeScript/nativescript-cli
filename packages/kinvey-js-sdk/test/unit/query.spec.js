@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import Query from '../src/query';
+import Query from '../../src/query';
 
 describe('Query', () => {
   describe('equalTo()', () => {

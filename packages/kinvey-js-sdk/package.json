@@ -11,7 +11,7 @@
     "prebuild": "del dist",
     "build": "babel src -d dist/src",
     "lint": "eslint src",
-    "test": "mocha -R spec -r babel-register -r src/setup.spec.js 'src/**/*.spec.js'",
+    "test": "mocha -R spec -r babel-register -r test/unit/setup.js 'test/unit/**/*.spec.js'",
     "prepublishOnly": "node scripts/prepublish.js"
   },
   "dependencies": {
