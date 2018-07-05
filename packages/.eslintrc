@@ -1,16 +1,4 @@
 {
-  "extends": ["eslint:recommended", "airbnb-base"],
-  "parser": "babel-eslint",
-  "rules": {
-    "comma-dangle": "off",
-    "max-len": [
-      "warn",
-      {
-        "code": 120,
-        "tabWidth": 2,
-        "ignoreComments": true,
-        "ignoreTrailingComments": true
-      }
-    ]
-  }
+  "extends": ["kinvey-platform"],
+  "parser": "babel-eslint"
 }
