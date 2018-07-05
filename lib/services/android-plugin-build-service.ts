@@ -247,11 +247,13 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				this.$devicePlatformsConstants.Android,
 				this.$projectDataService.getProjectData(projectDir));
 			runtimeGradleVersions = this.getGradleVersions(registryData.versions[projectRuntimeVersion]);
+			this.$logger.trace(`Got gradle versions ${JSON.stringify(runtimeGradleVersions)} from runtime v${projectRuntimeVersion}`);
 		}
 
 		if (!runtimeGradleVersions) {
 			const latestRuntimeVersion = registryData["dist-tags"].latest;
 			runtimeGradleVersions = this.getGradleVersions(registryData.versions[latestRuntimeVersion]);
+			this.$logger.trace(`Got gradle versions ${JSON.stringify(runtimeGradleVersions)} from the latest runtime v${latestRuntimeVersion}`);
 		}
 
 		return runtimeGradleVersions || {};
