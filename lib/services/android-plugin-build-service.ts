@@ -259,7 +259,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return runtimeGradleVersions || {};
 	}
 
-	private getGradleVersions(packageData: any): IRuntimeGradleVersions {
+	private getGradleVersions(packageData: { gradle: { version: string, android: string }}): IRuntimeGradleVersions {
 		const packageJsonGradle = packageData && packageData.gradle;
 		let runtimeVersions: IRuntimeGradleVersions = null;
 		if (packageJsonGradle && (packageJsonGradle.version || packageJsonGradle.android)) {

@@ -1,20 +1,15 @@
 import { AndroidPluginBuildService } from "../../lib/services/android-plugin-build-service";
-import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
+import { INCLUDE_GRADLE_NAME } from "../../lib/constants";
+import { getShortPluginName } from "../../lib/common/helpers";
 import * as FsLib from "../../lib/common/file-system";
 import * as path from "path";
-import { HostInfo } from "../../lib/common/host-info";
-import { Logger } from "../../lib/common/logger";
-import * as ErrorsLib from "../../lib/common/errors";
-import temp = require("temp");
-import { INCLUDE_GRADLE_NAME } from "../../lib/constants";
 import * as stubs from "../stubs";
-import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
-import { getShortPluginName } from "../../lib/common/helpers";
+import temp = require("temp");
 
 temp.track();
 
-describe.only('androidPluginBuildService', () => {
+describe('androidPluginBuildService', () => {
 	const pluginName = 'my-plugin';
 	const shortPluginName = getShortPluginName(pluginName);
 	let spawnFromEventCalled = false;
@@ -40,7 +35,7 @@ describe.only('androidPluginBuildService', () => {
 		tempFolder = temp.mkdirSync("androidPluginBuildService-temp");
 		pluginFolder = temp.mkdirSync("androidPluginBuildService-plugin");
 		setupDI(options);
-		setupPluginFolders(options.addManifest, options.addResFolder, options.addAssetsFolder, options.addLegacyIncludeGradle);
+		setupPluginFolders(options);
 
 		return {
 			platformsAndroidDirPath: pluginFolder,
@@ -58,7 +53,7 @@ describe.only('androidPluginBuildService', () => {
 		projectRuntimeGradleVersion?: string,
 		projectRuntimeGradleAndroidVersion?: string,
 	}): void {
-		const testInjector: IInjector = new Yok();
+		const testInjector: IInjector = new stubs.InjectorStub();
 		testInjector.register("fs", FsLib.FileSystem);
 		testInjector.register("childProcess", {
 			spawnFromEvent: async (command: string): Promise<ISpawnResult> => {
@@ -69,31 +64,11 @@ describe.only('androidPluginBuildService', () => {
 				return null;
 			}
 		});
-		testInjector.register("hostInfo", HostInfo);
-		testInjector.register("androidToolsInfo", {
-			getToolsInfo: () => {
-				return {};
-			},
-			validateInfo: () => {
-				return true;
-			}
-		});
-		testInjector.register("logger", Logger);
-		testInjector.register("errors", ErrorsLib.Errors);
-		testInjector.register("options", {});
-		testInjector.register("config", {});
-		testInjector.register("staticConfig", {});
-		testInjector.register("hooksService", {
-			executeBeforeHooks: async (commandName: string, hookArguments?: IDictionary<any>): Promise<void> => undefined,
-			executeAfterHooks: async (commandName: string, hookArguments?: IDictionary<any>): Promise<void> => undefined
-		});
-		testInjector.register('projectDataService', stubs.ProjectDataService);
 		testInjector.register('platformService', {
 			getCurrentPlatformVersion: (platform: string, projectData: IProjectData): string => {
 				return options.addProjectRuntime ? "1.0.0" : null;
 			}
 		});
-		testInjector.register('devicePlatformsConstants', DevicePlatformsConstants);
 		testInjector.register('npm', setupNpm(options));
 
 		fs = testInjector.resolve("fs");
@@ -132,27 +107,12 @@ describe.only('androidPluginBuildService', () => {
 		};
 	}
 
-	function setUpIncludeGradle() {
-		const validIncludeGradleContent = `android {
-	productFlavors {
-		"nativescript-pro-ui" {
-			dimension "nativescript-pro-ui"
-		}
-	}
-}
-
-def supportVersion = project.hasProperty("supportVersion") ? project.supportVersion : "23.3.0"
-
-dependencies {
-	compile "com.android.support:appcompat-v7:$supportVersion"
-	compile "com.android.support:recyclerview-v7:$supportVersion"
-	compile "com.android.support:design:$supportVersion"
-}`;
-
-		fs.writeFile(path.join(pluginFolder, INCLUDE_GRADLE_NAME), validIncludeGradleContent);
-	}
-
-	function setupPluginFolders(manifestFile: boolean, resFolder: boolean, assetsFolder: boolean, addLegacyIncludeGradle: boolean) {
+	function setupPluginFolders(options: {
+		addManifest?: boolean,
+		addResFolder?: boolean,
+		addAssetsFolder?: boolean,
+		addLegacyIncludeGradle?: boolean
+	}) {
 		const validAndroidManifestContent = `<?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 </manifest>`;
@@ -162,25 +122,40 @@ dependencies {
 		name="string_name"
 		>text_string</string>
 </resources>`;
+		const validIncludeGradleContent = `android {
+			productFlavors {
+				"nativescript-pro-ui" {
+					dimension "nativescript-pro-ui"
+				}
+			}
+		}
 
-		if (manifestFile) {
+		def supportVersion = project.hasProperty("supportVersion") ? project.supportVersion : "23.3.0"
+
+		dependencies {
+			compile "com.android.support:appcompat-v7:$supportVersion"
+			compile "com.android.support:recyclerview-v7:$supportVersion"
+			compile "com.android.support:design:$supportVersion"
+		}`;
+
+		if (options.addManifest) {
 			fs.writeFile(path.join(pluginFolder, "AndroidManifest.xml"), validAndroidManifestContent);
 		}
 
-		if (resFolder) {
+		if (options.addResFolder) {
 			const valuesFolder = path.join(pluginFolder, "res", "values");
 			fs.createDirectory(valuesFolder);
 			fs.writeFile(path.join(valuesFolder, "strings.xml"), validStringsXmlContent);
 		}
 
-		if (assetsFolder) {
+		if (options.addAssetsFolder) {
 			const imagesFolder = path.join(pluginFolder, "assets", "images");
 			fs.createDirectory(imagesFolder);
 			fs.writeFile(path.join(imagesFolder, "myicon.png"), "123");
 		}
 
-		if (addLegacyIncludeGradle) {
-			setUpIncludeGradle();
+		if (options.addLegacyIncludeGradle) {
+			fs.writeFile(path.join(pluginFolder, INCLUDE_GRADLE_NAME), validIncludeGradleContent);
 		}
 	}
 
