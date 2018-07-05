@@ -10,6 +10,7 @@
   },
   "workspaces": {
     "packages": [
+      "packages/kinvey-html5-sdk",
       "packages/kinvey-js-sdk"
     ]
   }
