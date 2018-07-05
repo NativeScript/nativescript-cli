@@ -11,6 +11,10 @@
     "build": "babel src -d lib",
     "lint": "eslint src"
   },
+  "dependencies": {
+    "loglevel": "^1.6.1",
+    "loglevel-plugin-prefix": "^0.8.3"
+  },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-eslint": "8",
