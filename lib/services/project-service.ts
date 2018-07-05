@@ -75,16 +75,16 @@ export class ProjectService implements IProjectService {
 				this.removeMergedDependencies(projectDir, templatePackageJsonContent);
 			}
 
+			if (templateVersion === constants.TemplateVersions.v1) {
+				await this.$npm.uninstall(templatePackageJsonContent.name, { save: true }, projectDir);
+			}
+
 			// Install devDependencies and execute all scripts:
 			await this.$npm.install(projectDir, projectDir, {
 				disableNpmInstall: false,
 				frameworkPath: null,
 				ignoreScripts
 			});
-
-			if (templateVersion === constants.TemplateVersions.v1) {
-				await this.$npm.uninstall(templatePackageJsonContent.name, { save: true }, projectDir);
-			}
 		} catch (err) {
 			this.$fs.deleteDirectory(projectDir);
 			throw err;
