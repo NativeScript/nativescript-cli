@@ -10,10 +10,8 @@
   "devDependencies": {
     "lerna": "^2.11.0"
   },
-  "workspaces": {
-    "packages": [
-      "packages/kinvey-html5-sdk",
-      "packages/kinvey-js-sdk"
-    ]
-  }
+  "workspaces": [
+    "packages/kinvey-html5-sdk",
+    "packages/kinvey-js-sdk"
+  ]
 }
