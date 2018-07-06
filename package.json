@@ -3,6 +3,9 @@
   "license": "Apache-2.0",
   "author": "Kinvey, Inc.",
   "scripts": {
+    "bootstrap": "lerna run bootstrap",
+    "test": "lerna run test",
+    "test:ci": "lerna run lint && lerna run test",
     "preinstall": "node -e \"if(process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('js-sdk must be installed with Yarn: https://yarnpkg.com/')\""
   },
   "devDependencies": {
