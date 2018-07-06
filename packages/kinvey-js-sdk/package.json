@@ -11,7 +11,7 @@
     "prebuild": "del dist",
     "build": "babel src -d dist/src",
     "lint": "eslint src",
-    "test": "mocha -R spec -r babel-register -r test/unit/setup.js 'test/unit/**/*.spec.js'",
+    "test": "mocha -R spec -r babel-polyfill -r babel-register -r test/unit/setup.js 'test/unit/**/*.spec.js'",
     "prepublishOnly": "node scripts/prepublish.js"
   },
   "dependencies": {
@@ -23,9 +23,11 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-eslint": "8",
+    "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "babel-register": "^6.26.0",
     "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
     "del-cli": "^1.1.0",
     "eslint": "^4.19.1",
     "eslint-config-kinvey-platform": "kinvey/eslint-kinvey-platform#0.1.1",
