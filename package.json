@@ -80,7 +80,8 @@
     "xmldom": "0.1.21",
     "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
     "yargs": "6.0.0",
-    "zipstream": "https://github.com/Icenium/node-zipstream/tarball/master"
+    "zipstream": "https://github.com/Icenium/node-zipstream/tarball/master",
+    "nativescript-android-livesync-lib": "file:../nativescript-android-livesync-lib"
   },
   "analyze": true,
   "devDependencies": {
