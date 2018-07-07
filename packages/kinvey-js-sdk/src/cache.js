@@ -1,6 +1,35 @@
 import isArray from 'lodash/isArray';
 
-let adapter;
+let adapter = {
+  find() {
+    throw new Error('You must override the default cache adapter.');
+  },
+  reduce() {
+    throw new Error('You must override the default cache adapter.');
+  },
+  count() {
+    throw new Error('You must override the default cache adapter.');
+  },
+  findById() {
+    throw new Error('You must override the default cache adapter.');
+  },
+  save() {
+    throw new Error('You must override the default cache adapter.');
+  },
+  remove() {
+    throw new Error('You must override the default cache adapter.');
+  },
+  removeById() {
+    throw new Error('You must override the default cache adapter.');
+  },
+  clear() {
+    throw new Error('You must override the default cache adapter.');
+  }
+};
+
+/**
+ * @private
+ */
 export function use(customAdapter) {
   adapter = customAdapter;
 }
@@ -23,19 +52,19 @@ export default class Cache {
     this.collectionName = collectionName;
   }
 
-  find(query) {
+  async find(query) {
     return adapter.find(this.dbName, this.collectionName, query);
   }
 
-  reduce(aggregation) {
+  async reduce(aggregation) {
     return adapter.reduce(this.dbName, this.collectionName, aggregation);
   }
 
-  count(query) {
+  async count(query) {
     return adapter.count(this.dbName, this.collectionName, query);
   }
 
-  findById(id) {
+  async findById(id) {
     return adapter.findById(this.dbName, this.collectionName, id);
   }
 
@@ -70,15 +99,15 @@ export default class Cache {
     return singular ? docs[0] : docs;
   }
 
-  remove(query) {
+  async remove(query) {
     return adapter.remove(this.dbName, this.collectionName, query);
   }
 
-  removeById(id) {
+  async removeById(id) {
     return adapter.removeById(this.dbName, this.collectionName, id);
   }
 
-  clear() {
+  async clear() {
     return adapter.clear(this.dbName, this.collectionName);
   }
 }
