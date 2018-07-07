@@ -10,7 +10,7 @@ describe('Cache', () => {
   const cache = new Cache(dbName, collectionName);
 
   describe('with no custom cache adapter', () => {
-
+    it('should throw an error');
   });
 
   describe('with custom cache adapter', () => {
