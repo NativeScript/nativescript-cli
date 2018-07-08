@@ -144,7 +144,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const targetSdkVersion = androidToolsInfo && androidToolsInfo.targetSdkVersion;
 		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
 
-		this.isAndroidStudioTemplate = this.isAndroidStudioCompatibleTemplate(projectData);
+		this.isAndroidStudioTemplate = this.isAndroidStudioCompatibleTemplate(projectData, frameworkVersion);
 		if (this.isAndroidStudioTemplate) {
 			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "*", "-R");
 		} else {
@@ -703,20 +703,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	private isAndroidStudioCompatibleTemplate(projectData: IProjectData): boolean {
+	private isAndroidStudioCompatibleTemplate(projectData: IProjectData, frameworkVersion?: string): boolean {
 		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, constants.TNS_ANDROID_RUNTIME_NAME);
-		let platformVersion = currentPlatformData && currentPlatformData[constants.VERSION_STRING];
+		const platformVersion = (currentPlatformData && currentPlatformData[constants.VERSION_STRING]) || frameworkVersion;
 
 		if (!platformVersion) {
-			const tnsAndroidPackageJsonPath = path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_ANDROID_RUNTIME_NAME, constants.PACKAGE_JSON_FILE_NAME);
-			if (this.$fs.exists(tnsAndroidPackageJsonPath)) {
-				const projectPackageJson: any = this.$fs.readJson(tnsAndroidPackageJsonPath);
-				if (projectPackageJson && projectPackageJson.version) {
-					platformVersion = projectPackageJson.version;
-				}
-			} else {
-				return true;
-			}
+			return true;
 		}
 
 		if (platformVersion === constants.PackageVersion.NEXT || platformVersion === constants.PackageVersion.LATEST || platformVersion === constants.PackageVersion.RC) {

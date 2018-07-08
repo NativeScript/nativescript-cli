@@ -2,7 +2,7 @@ import * as yok from "../lib/common/yok";
 import * as stubs from "./stubs";
 import * as PlatformServiceLib from "../lib/services/platform-service";
 import * as StaticConfigLib from "../lib/config";
-import { VERSION_STRING } from "../lib/constants";
+import { VERSION_STRING, PACKAGE_JSON_FILE_NAME } from "../lib/constants";
 import * as fsLib from "../lib/common/file-system";
 import * as optionsLib from "../lib/options";
 import * as hostInfoLib from "../lib/common/host-info";
@@ -23,6 +23,7 @@ import ProjectChangesLib = require("../lib/services/project-changes-service");
 import { Messages } from "../lib/common/messages/messages";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { INFO_PLIST_FILE_NAME, MANIFEST_FILE_NAME } from "../lib/constants";
+import { mkdir } from "shelljs";
 
 require("should");
 const temp = require("temp");
@@ -36,6 +37,7 @@ function createTestInjector() {
 	testInjector.register('logger', stubs.LoggerStub);
 	testInjector.register("nodeModulesDependenciesBuilder", {});
 	testInjector.register('npmInstallationManager', stubs.NpmInstallationManagerStub);
+	// TODO: Remove the projectData - it shouldn't be required in the service itself.
 	testInjector.register('projectData', stubs.ProjectDataStub);
 	testInjector.register('platformsData', stubs.PlatformsDataStub);
 	testInjector.register('devicesService', {});
@@ -108,7 +110,16 @@ function createTestInjector() {
 	testInjector.register("androidResourcesMigrationService", stubs.AndroidResourcesMigrationServiceStub);
 	testInjector.register("filesHashService", {
 		generateHashes: () => Promise.resolve(),
-		getChanges: () => Promise.resolve({test: "testHash"})
+		getChanges: () => Promise.resolve({ test: "testHash" })
+	});
+	testInjector.register("pacoteService", {
+		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => {
+			mkdir(path.join(destinationDirectory, "framework"));
+			(new fsLib.FileSystem(testInjector)).writeFile(path.join(destinationDirectory, PACKAGE_JSON_FILE_NAME), JSON.stringify({
+				name: "package-name",
+				version: "1.0.0"
+			}));
+		}
 	});
 
 	return testInjector;
@@ -199,105 +210,85 @@ describe('Platform Service Tests', () => {
 				await platformService.addPlatforms(["IoS"], "", projectData, config);
 				await platformService.addPlatforms(["iOs"], "", projectData, config);
 			});
+
 			it("should fail if platform is already installed", async () => {
 				const projectData: IProjectData = testInjector.resolve("projectData");
 				// By default fs.exists returns true, so the platforms directory should exists
-				await assert.isRejected(platformService.addPlatforms(["android"], "", projectData, config));
-				await assert.isRejected(platformService.addPlatforms(["ios"], "", projectData, config));
+				await assert.isRejected(platformService.addPlatforms(["android"], "", projectData, config), "Platform android already added");
+				await assert.isRejected(platformService.addPlatforms(["ios"], "", projectData, config), "Platform ios already added");
 			});
-			it("should fail if npm is unavalible", async () => {
+
+			it("should fail if unable to extract runtime package", async () => {
 				const fs = testInjector.resolve("fs");
 				fs.exists = () => false;
 
-				const errorMessage = "Npm is unavalible";
-				const npmInstallationManager = testInjector.resolve("npmInstallationManager");
-				npmInstallationManager.install = () => { throw new Error(errorMessage); };
-				const projectData: IProjectData = testInjector.resolve("projectData");
-
-				try {
-					await platformService.addPlatforms(["android"], "", projectData, config);
-				} catch (err) {
-					assert.equal(errorMessage, err.message);
-				}
-			});
-			it("should respect platform version in package.json's nativescript key", async () => {
-				const versionString = "2.5.0";
-				const fs = testInjector.resolve("fs");
-				fs.exists = () => false;
-
-				const nsValueObject: any = {};
-				nsValueObject[VERSION_STRING] = versionString;
-				const projectDataService = testInjector.resolve("projectDataService");
-				projectDataService.getNSValue = () => nsValueObject;
-
-				const npmInstallationManager = testInjector.resolve("npmInstallationManager");
-				npmInstallationManager.install = (packageName: string, packageDir: string, options: INpmInstallOptions) => {
-					assert.deepEqual(options.version, versionString);
-					return "";
+				const pacoteService = testInjector.resolve<IPacoteService>("pacoteService");
+				const errorMessage = "Pacote service unable to extract package";
+				pacoteService.extractPackage = async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => {
+					throw new Error(errorMessage);
 				};
 
 				const projectData: IProjectData = testInjector.resolve("projectData");
-
-				await platformService.addPlatforms(["android"], "", projectData, config);
-				await platformService.addPlatforms(["ios"], "", projectData, config);
+				await assert.isRejected(platformService.addPlatforms(["android"], "", projectData, config), errorMessage);
 			});
-			it("should install latest platform if no information found in package.json's nativescript key", async () => {
+
+			const assertCorrectDataIsPassedToPacoteService = async (versionString: string): Promise<void> => {
 				const fs = testInjector.resolve("fs");
 				fs.exists = () => false;
+
+				const pacoteService = testInjector.resolve<IPacoteService>("pacoteService");
+				let packageNamePassedToPacoteService = "";
+				pacoteService.extractPackage = async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => {
+					packageNamePassedToPacoteService = packageName;
+				};
+
+				const platformsData = testInjector.resolve<IPlatformsData>("platformsData");
+				const packageName = "packageName";
+				platformsData.getPlatformData = (platform: string, projectData: IProjectData): IPlatformData => {
+					return {
+						frameworkPackageName: packageName,
+						platformProjectService: new stubs.PlatformProjectServiceStub(),
+						emulatorServices: undefined,
+						projectRoot: "",
+						normalizedPlatformName: "",
+						appDestinationDirectoryPath: "",
+						deviceBuildOutputPath: "",
+						getValidBuildOutputData: (buildOptions: IBuildOutputOptions) => ({ packageNames: [] }),
+						frameworkFilesExtensions: [],
+						relativeToFrameworkConfigurationFilePath: "",
+						fastLivesyncFileExtensions: []
+					};
+				};
+				const projectData: IProjectData = testInjector.resolve("projectData");
+
+				await platformService.addPlatforms(["android"], "", projectData, config);
+				assert.equal(packageNamePassedToPacoteService, `${packageName}@${versionString}`);
+				await platformService.addPlatforms(["ios"], "", projectData, config);
+				assert.equal(packageNamePassedToPacoteService, `${packageName}@${versionString}`);
+			};
+			it("should respect platform version in package.json's nativescript key", async () => {
+				const versionString = "2.5.0";
+				const nsValueObject: any = {
+					[VERSION_STRING]: versionString
+				};
+				const projectDataService = testInjector.resolve("projectDataService");
+				projectDataService.getNSValue = () => nsValueObject;
+
+				await assertCorrectDataIsPassedToPacoteService(versionString);
+			});
+
+			it("should install latest platform if no information found in package.json's nativescript key", async () => {
 
 				const projectDataService = testInjector.resolve("projectDataService");
 				projectDataService.getNSValue = (): any => null;
 
-				const npmInstallationManager = testInjector.resolve("npmInstallationManager");
-				npmInstallationManager.install = (packageName: string, packageDir: string, options: INpmInstallOptions) => {
-					assert.deepEqual(options.version, undefined);
-					return "";
+				const latestCompatibleVersion = "1.0.0";
+				const npmInstallationManager = testInjector.resolve<INpmInstallationManager>("npmInstallationManager");
+				npmInstallationManager.getLatestCompatibleVersion = async (packageName: string, referenceVersion?: string): Promise<string> => {
+					return latestCompatibleVersion;
 				};
 
-				const projectData: IProjectData = testInjector.resolve("projectData");
-
-				await platformService.addPlatforms(["android"], "", projectData, config);
-				await platformService.addPlatforms(["ios"], "", projectData, config);
-			});
-		});
-		describe("#add platform(ios)", () => {
-			it("should call validate method", async () => {
-				const fs = testInjector.resolve("fs");
-				fs.exists = () => false;
-
-				const errorMessage = "Xcode is not installed or Xcode version is smaller that 5.0";
-				const platformsData = testInjector.resolve("platformsData");
-				const platformProjectService = platformsData.getPlatformData().platformProjectService;
-				const projectData: IProjectData = testInjector.resolve("projectData");
-				platformProjectService.validate = () => {
-					throw new Error(errorMessage);
-				};
-
-				try {
-					await platformService.addPlatforms(["ios"], "", projectData, config);
-				} catch (err) {
-					assert.equal(errorMessage, err.message);
-				}
-			});
-		});
-		describe("#add platform(android)", () => {
-			it("should fail if java, ant or android are not installed", async () => {
-				const fs = testInjector.resolve("fs");
-				fs.exists = () => false;
-
-				const errorMessage = "Java, ant or android are not installed";
-				const platformsData = testInjector.resolve("platformsData");
-				const platformProjectService = platformsData.getPlatformData().platformProjectService;
-				platformProjectService.validate = () => {
-					throw new Error(errorMessage);
-				};
-				const projectData: IProjectData = testInjector.resolve("projectData");
-
-				try {
-					await platformService.addPlatforms(["android"], "", projectData, config);
-				} catch (err) {
-					assert.equal(errorMessage, err.message);
-				}
+				await assertCorrectDataIsPassedToPacoteService(latestCompatibleVersion);
 			});
 		});
 	});
@@ -962,18 +953,18 @@ describe('Platform Service Tests', () => {
 				}, {
 					name: "productFlavors are specified in .gradle file",
 					buildOutput: [`/my/path/arm64Demo/${configuration}/${apkName}-arm64-demo-${configuration}.apk`,
-						`/my/path/arm64Full/${configuration}/${apkName}-arm64-full-${configuration}.apk`,
-						`/my/path/armDemo/${configuration}/${apkName}-arm-demo-${configuration}.apk`,
-						`/my/path/armFull/${configuration}/${apkName}-arm-full-${configuration}.apk`,
-						`/my/path/x86Demo/${configuration}/${apkName}-x86-demo-${configuration}.apk`,
-						`/my/path/x86Full/${configuration}/${apkName}-x86-full-${configuration}.apk`],
+					`/my/path/arm64Full/${configuration}/${apkName}-arm64-full-${configuration}.apk`,
+					`/my/path/armDemo/${configuration}/${apkName}-arm-demo-${configuration}.apk`,
+					`/my/path/armFull/${configuration}/${apkName}-arm-full-${configuration}.apk`,
+					`/my/path/x86Demo/${configuration}/${apkName}-x86-demo-${configuration}.apk`,
+					`/my/path/x86Full/${configuration}/${apkName}-x86-full-${configuration}.apk`],
 					expectedResult: `/my/path/x86Full/${configuration}/${apkName}-x86-full-${configuration}.apk`
 				}, {
 					name: "split options are specified in .gradle file",
 					buildOutput: [`/my/path/${configuration}/${apkName}-arm64-v8a-${configuration}.apk`,
-						`/my/path/${configuration}/${apkName}-armeabi-v7a-${configuration}.apk`,
-						`/my/path/${configuration}/${apkName}-universal-${configuration}.apk`,
-						`/my/path/${configuration}/${apkName}-x86-${configuration}.apk`],
+					`/my/path/${configuration}/${apkName}-armeabi-v7a-${configuration}.apk`,
+					`/my/path/${configuration}/${apkName}-universal-${configuration}.apk`,
+					`/my/path/${configuration}/${apkName}-x86-${configuration}.apk`],
 					expectedResult: `/my/path/${configuration}/${apkName}-x86-${configuration}.apk`
 				}, {
 					name: "android-runtime has version < 4.0.0",
@@ -983,7 +974,7 @@ describe('Platform Service Tests', () => {
 			}
 
 			const platform = "Android";
-			const buildConfigs = [{buildForDevice: false}, {buildForDevice: true}];
+			const buildConfigs = [{ buildForDevice: false }, { buildForDevice: true }];
 			const apkNames = ["app", "testProj"];
 			const configurations = ["debug", "release"];
 
@@ -993,7 +984,7 @@ describe('Platform Service Tests', () => {
 						_.each(getTestCases(configuration, apkName), testCase => {
 							it(`should find correct ${configuration} ${apkName}.apk when ${testCase.name} and buildConfig is ${JSON.stringify(buildConfig)}`, async () => {
 								mockData(testCase.buildOutput, apkName);
-								const actualResult = await platformService.buildPlatform(platform, <IBuildConfig>buildConfig, <IProjectData>{projectName: ""});
+								const actualResult = await platformService.buildPlatform(platform, <IBuildConfig>buildConfig, <IProjectData>{ projectName: "" });
 								assert.deepEqual(actualResult, testCase.expectedResult);
 							});
 						});

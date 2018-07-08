@@ -104,6 +104,9 @@ function createTestInjector(): IInjector {
 		getChanges: () => Promise.resolve({}),
 		generateHashes: () => Promise.resolve()
 	});
+	testInjector.register("pacoteService", {
+		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined
+	});
 
 	return testInjector;
 }

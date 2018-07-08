@@ -36,11 +36,12 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $hostInfo: IHostInfo,
 		private $devicePathProvider: IDevicePathProvider,
-		private $npm: INodePackageManager,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $projectChangesService: IProjectChangesService,
 		private $analyticsService: IAnalyticsService,
-		private $terminalSpinnerService: ITerminalSpinnerService) {
+		private $terminalSpinnerService: ITerminalSpinnerService,
+		private $pacoteService: IPacoteService
+	) {
 		super();
 	}
 
@@ -92,10 +93,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 
-		if (version === undefined) {
-			version = this.getCurrentPlatformVersion(platform, projectData);
-		}
-
 		// Log the values for project
 		this.$logger.trace("Creating NativeScript project for the %s platform", platform);
 		this.$logger.trace("Path: %s", platformData.projectRoot);
@@ -105,28 +102,28 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.$logger.out("Copying template files...");
 
 		let packageToInstall = "";
-		const npmOptions: IStringDictionary = {
-			pathToSave: path.join(projectData.platformsDir, platform),
-			dependencyType: "save"
-		};
+		if (frameworkPath) {
+			packageToInstall = path.resolve(frameworkPath);
+		} else {
+			if (!version) {
+				version = this.getCurrentPlatformVersion(platform, projectData) ||
+					await this.$npmInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
+			}
 
-		if (!frameworkPath) {
-			packageToInstall = platformData.frameworkPackageName;
-			npmOptions["version"] = version;
+			packageToInstall = `${platformData.frameworkPackageName}@${version}`;
 		}
 
 		const spinner = this.$terminalSpinnerService.createSpinner();
-		const projectDir = projectData.projectDir;
 		const platformPath = path.join(projectData.platformsDir, platform);
 
 		try {
 			spinner.start();
-			const downloadedPackagePath = await this.$npmInstallationManager.install(packageToInstall, projectDir, npmOptions);
+			const downloadedPackagePath = temp.mkdirSync("runtimeDir");
+			temp.track();
+			await this.$pacoteService.extractPackage(packageToInstall, downloadedPackagePath);
 			let frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
 			frameworkDir = path.resolve(frameworkDir);
-
-			const coreModuleName = await this.addPlatformCore(platformData, frameworkDir, platformTemplate, projectData, config, nativePrepare);
-			await this.$npm.uninstall(coreModuleName, { save: true }, projectData.projectDir);
+			await this.addPlatformCore(platformData, frameworkDir, platformTemplate, projectData, config, nativePrepare);
 		} catch (err) {
 			this.$fs.deleteDirectory(platformPath);
 			throw err;
@@ -842,15 +839,15 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		const data = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
 		const currentVersion = data && data.version ? data.version : "0.2.0";
 
+		const installedModuleDir = temp.mkdirSync("runtime-to-update");
 		let newVersion = version === constants.PackageVersion.NEXT ?
 			await this.$npmInstallationManager.getNextVersion(platformData.frameworkPackageName) :
 			version || await this.$npmInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
-		const installedModuleDir = await this.$npmInstallationManager.install(platformData.frameworkPackageName, projectData.projectDir, { version: newVersion, dependencyType: "save" });
+		await this.$pacoteService.extractPackage(`${platformData.frameworkPackageName}@${newVersion}`, installedModuleDir);
 		const cachedPackageData = this.$fs.readJson(path.join(installedModuleDir, "package.json"));
 		newVersion = (cachedPackageData && cachedPackageData.version) || newVersion;
 
 		const canUpdate = platformData.platformProjectService.canUpdatePlatform(installedModuleDir, projectData);
-		await this.$npm.uninstall(platformData.frameworkPackageName, { save: true }, projectData.projectDir);
 		if (canUpdate) {
 			if (!semver.valid(newVersion)) {
 				this.$errors.fail("The version %s is not valid. The version should consists from 3 parts separated by dot.", newVersion);
