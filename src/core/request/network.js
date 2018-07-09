@@ -180,6 +180,49 @@ function byteCount(str) {
   return 0;
 }
 
+function logout(origRequest) {
+  // Unregester from the live service
+  const liveService = getLiveService(origRequest.client);
+  let promise = Promise.resolve();
+  if (liveService.isInitialized()) {
+    promise = liveService.fullUninitialization();
+  }
+
+  return promise
+    .then(() => {
+      // Logout the user because the refresh token request failed
+      const request = new KinveyRequest({
+        method: RequestMethod.POST,
+        authType: AuthType.Session,
+        url: url.format({
+          protocol: origRequest.client.apiProtocol,
+          host: origRequest.client.apiHost,
+          pathname: `/user/${origRequest.client.appKey}/_logout`
+        }),
+        properties: origRequest.properties,
+        timeout: origRequest.timeout,
+        client: origRequest.client
+      });
+      return request.execute();
+    })
+    .catch((error) => {
+      Log.error(error);
+      return null;
+    })
+    .then(() => {
+      return origRequest.client.setActiveUser(null);
+    })
+    .catch((error) => {
+      Log.error(error);
+      return null;
+    })
+    .then(() => DataStore.clearCache({ client: origRequest.client }))
+    .catch((error) => {
+      Log.error(error);
+      return null;
+    });
+}
+
 /**
  * @private
  */
@@ -450,16 +493,15 @@ export class KinveyRequest extends NetworkRequest {
         return response;
       })
       .catch((error) => {
-        if (retry && error instanceof InvalidCredentialsError) {
-          if (requestQueue.isPaused) {
-            return requestQueue.add(() => this.execute(rawResponse, false));
-          }
+        if (error instanceof InvalidCredentialsError) {
+          if (retry) {
+            if (requestQueue.isPaused) {
+              return requestQueue.add(() => this.execute(rawResponse, false));
+            }
 
-          requestQueue.pause();
-          const activeUser = this.client.getActiveUser();
-
-          if (isDefined(activeUser)) {
-            const socialIdentity = isDefined(activeUser._socialIdentity) ? activeUser._socialIdentity : {};
+            requestQueue.pause();
+            const activeUser = this.client.getActiveUser();
+            const socialIdentity = isDefined(activeUser) && isDefined(activeUser._socialIdentity) ? activeUser._socialIdentity : {};
             const sessionKey = Object.keys(socialIdentity)
               .find(sessionKey => socialIdentity[sessionKey].identity === 'kinveyAuth');
             const oldSession = socialIdentity[sessionKey];
@@ -521,61 +563,21 @@ export class KinveyRequest extends NetworkRequest {
                       return this.client.setActiveUser(user);
                     });
                 })
+                .catch(() => logout(this))
+                .then(() => {
+                  requestQueue.start();
+                  return Promise.reject(error);
+                })
                 .then(() => {
                   requestQueue.start();
                   return this.execute(rawResponse, false);
-                })
-                .catch(() => {
-                  // Unregester from the live service
-                  const liveService = getLiveService(this.client);
-                  let promise = Promise.resolve();
-                  if (liveService.isInitialized()) {
-                    promise = liveService.fullUninitialization();
-                  }
-
-                  return promise
-                    .then(() => {
-                      // Logout the user because the refresh token request failed
-                      const request = new KinveyRequest({
-                        method: RequestMethod.POST,
-                        authType: AuthType.Session,
-                        url: url.format({
-                          protocol: this.client.apiProtocol,
-                          host: this.client.apiHost,
-                          pathname: `/user/${this.client.appKey}/_logout`
-                        }),
-                        properties: this.properties,
-                        timeout: this.timeout,
-                        client: this.client
-                      });
-                      return request.execute();
-                    })
-                    .catch((error) => {
-                      Log.error(error);
-                      return null;
-                    })
-                    .then(() => {
-                      return this.client.setActiveUser(null);
-                    })
-                    .catch((error) => {
-                      Log.error(error);
-                      return null;
-                    })
-                    .then(() => DataStore.clearCache({ client: this.client }))
-                    .catch((error) => {
-                      Log.error(error);
-                      return null;
-                    })
-                    .then(() => {
-                      requestQueue.start();
-                      return Promise.reject(error);
-                    });
                 });
             }
+
+            requestQueue.start();
           }
 
-          requestQueue.start();
-          return Promise.reject(error);
+          return logout().then(() => Promise.reject(error));
         }
 
         return Promise.reject(error);
