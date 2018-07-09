@@ -190,26 +190,6 @@ function logout(origRequest) {
 
   return promise
     .then(() => {
-      // Logout the user because the refresh token request failed
-      const request = new KinveyRequest({
-        method: RequestMethod.POST,
-        authType: AuthType.Session,
-        url: url.format({
-          protocol: origRequest.client.apiProtocol,
-          host: origRequest.client.apiHost,
-          pathname: `/user/${origRequest.client.appKey}/_logout`
-        }),
-        properties: origRequest.properties,
-        timeout: origRequest.timeout,
-        client: origRequest.client
-      });
-      return request.execute();
-    })
-    .catch((error) => {
-      Log.error(error);
-      return null;
-    })
-    .then(() => {
       return origRequest.client.setActiveUser(null);
     })
     .catch((error) => {
@@ -496,7 +476,10 @@ export class KinveyRequest extends NetworkRequest {
         if (error instanceof InvalidCredentialsError) {
           if (retry) {
             if (requestQueue.isPaused) {
-              return requestQueue.add(() => this.execute(rawResponse, false));
+              return requestQueue.add(() => {
+                return this.execute(rawResponse, false)
+                  .catch(() => Promise.reject(error));
+              });
             }
 
             requestQueue.pause();
@@ -577,7 +560,7 @@ export class KinveyRequest extends NetworkRequest {
             requestQueue.start();
           }
 
-          return logout().then(() => Promise.reject(error));
+          return logout(this).then(() => Promise.reject(error));
         }
 
         return Promise.reject(error);
