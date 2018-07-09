@@ -17,6 +17,9 @@ import { Request, RequestMethod } from './request';
 import { Headers } from './headers';
 import { NetworkRack } from './rack';
 import { KinveyResponse } from './response';
+import { Log } from '../log';
+import { getLiveService } from '../live';
+import { DataStore } from '../datastore';
 
 const requestQueue = new PQueue({ concurrency: Infinity });
 
@@ -523,8 +526,50 @@ export class KinveyRequest extends NetworkRequest {
                   return this.execute(rawResponse, false);
                 })
                 .catch(() => {
-                  requestQueue.start();
-                  return Promise.reject(error);
+                  // Unregester from the live service
+                  const liveService = getLiveService(this.client);
+                  let promise = Promise.resolve();
+                  if (liveService.isInitialized()) {
+                    promise = liveService.fullUninitialization();
+                  }
+
+                  return promise
+                    .then(() => {
+                      // Logout the user because the refresh token request failed
+                      const request = new KinveyRequest({
+                        method: RequestMethod.POST,
+                        authType: AuthType.Session,
+                        url: url.format({
+                          protocol: this.client.apiProtocol,
+                          host: this.client.apiHost,
+                          pathname: `/user/${this.client.appKey}/_logout`
+                        }),
+                        properties: this.properties,
+                        timeout: this.timeout,
+                        client: this.client
+                      });
+                      return request.execute();
+                    })
+                    .catch((error) => {
+                      Log.error(error);
+                      return null;
+                    })
+                    .then(() => {
+                      return this.client.setActiveUser(null);
+                    })
+                    .catch((error) => {
+                      Log.error(error);
+                      return null;
+                    })
+                    .then(() => DataStore.clearCache({ client: this.client }))
+                    .catch((error) => {
+                      Log.error(error);
+                      return null;
+                    })
+                    .then(() => {
+                      requestQueue.start();
+                      return Promise.reject(error);
+                    });
                 });
             }
           }
