@@ -12,7 +12,8 @@ const {
     processTemplateFile
   },
   conditionals: {
-    when
+    when,
+    ifThenElse
   }
 } = require('kinvey-universal-runner');
 
@@ -31,6 +32,7 @@ let logServerPort;
 
 
 function runPipeline(osName) {
+  const iOSInTravis = process.env.TRAVIS && osName === 'ios';
   const runner = new Runner({
     pipeline: [
       logServer(),
@@ -99,11 +101,33 @@ function runPipeline(osName) {
           cwd: appRootPath
         });
       }),
+      //execute `cordova run osName` only for android and for local iOS builds
+      when(() => osName === 'android' || !iOSInTravis, 
       runCommand({
         command: 'cordova',
         args: ['run', osName],
         cwd: appRootPath
-      })
+      })),
+      // The following three commands are eligible for execution only on iOS in Travis
+      // in order to install and launch manually the app with `simctl`, using the already booted in .travis.yml simulator
+      when(() => iOSInTravis,
+      runCommand({
+        command: 'cordova',
+        args: ['build', osName],
+        cwd: appRootPath
+      })),
+      when(() => iOSInTravis,
+      runCommand({
+        command: 'xcrun',
+        args: ['simctl', 'install', 'booted', 'platforms/ios/build/emulator/HelloCordova.app'],
+        cwd: appRootPath
+      })),
+      when(() => iOSInTravis,
+      runCommand({
+        command: 'xcrun',
+        args: ['simctl', 'launch', 'booted', 'io.cordova.hellocordova'],
+        cwd: appRootPath
+      }))
     ]
   });
 
