@@ -546,10 +546,12 @@ export class KinveyRequest extends NetworkRequest {
                       return this.client.setActiveUser(user);
                     });
                 })
-                .catch(() => logout(this))
-                .then(() => {
-                  requestQueue.start();
-                  return Promise.reject(error);
+                .catch(() => {
+                  return logout(this)
+                    .then(() => {
+                      requestQueue.start();
+                      return Promise.reject(error);
+                    });
                 })
                 .then(() => {
                   requestQueue.start();
