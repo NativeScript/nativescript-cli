@@ -459,7 +459,7 @@ export class KinveyRequest extends NetworkRequest {
                 headers: {
                   'Content-Type': 'application/x-www-form-urlencoded'
                 },
-                authType: AuthType.App,
+                authType: AuthType.Client,
                 url: url.format({
                   protocol: this.client.micProtocol,
                   host: this.client.micHost,
@@ -472,7 +472,8 @@ export class KinveyRequest extends NetworkRequest {
                   refresh_token: oldSession.refresh_token
                 },
                 properties: this.properties,
-                timeout: this.timeout
+                timeout: this.timeout,
+                clientId: oldSession.client_id
               });
               return request.execute()
                 .then(response => response.data)
