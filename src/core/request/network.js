@@ -7,6 +7,7 @@ import isEmpty from 'lodash/isEmpty';
 import isPlainObject from 'lodash/isObject';
 import url from 'url';
 import isString from 'lodash/isString';
+import PQueue from 'p-queue';
 import { Client } from '../client';
 import { Query } from '../query';
 import { Aggregation } from '../aggregation';
@@ -16,6 +17,11 @@ import { Request, RequestMethod } from './request';
 import { Headers } from './headers';
 import { NetworkRack } from './rack';
 import { KinveyResponse } from './response';
+import { Log } from '../log';
+import { getLiveService } from '../live';
+import { DataStore } from '../datastore';
+
+const requestQueue = new PQueue({ concurrency: Infinity });
 
 /**
  * @private
@@ -172,6 +178,29 @@ function byteCount(str) {
   }
 
   return 0;
+}
+
+function logout(origRequest) {
+  // Unregester from the live service
+  const liveService = getLiveService(origRequest.client);
+  let promise = Promise.resolve();
+  if (liveService.isInitialized()) {
+    promise = liveService.fullUninitialization();
+  }
+
+  return promise
+    .then(() => {
+      return origRequest.client.setActiveUser(null);
+    })
+    .catch((error) => {
+      Log.error(error);
+      return null;
+    })
+    .then(() => DataStore.clearCache({ client: origRequest.client }))
+    .catch((error) => {
+      Log.error(error);
+      return null;
+    });
 }
 
 /**
@@ -444,11 +473,18 @@ export class KinveyRequest extends NetworkRequest {
         return response;
       })
       .catch((error) => {
-        if (retry && error instanceof InvalidCredentialsError) {
-          const activeUser = this.client.getActiveUser();
+        if (error instanceof InvalidCredentialsError) {
+          if (retry) {
+            if (requestQueue.isPaused) {
+              return requestQueue.add(() => {
+                return this.execute(rawResponse, false)
+                  .catch(() => Promise.reject(error));
+              });
+            }
 
-          if (isDefined(activeUser)) {
-            const socialIdentity = isDefined(activeUser._socialIdentity) ? activeUser._socialIdentity : {};
+            requestQueue.pause();
+            const activeUser = this.client.getActiveUser();
+            const socialIdentity = isDefined(activeUser) && isDefined(activeUser._socialIdentity) ? activeUser._socialIdentity : {};
             const sessionKey = Object.keys(socialIdentity)
               .find(sessionKey => socialIdentity[sessionKey].identity === 'kinveyAuth');
             const oldSession = socialIdentity[sessionKey];
@@ -510,12 +546,23 @@ export class KinveyRequest extends NetworkRequest {
                       return this.client.setActiveUser(user);
                     });
                 })
-                .then(() => {
-                  return this.execute(rawResponse, false);
+                .catch(() => {
+                  return logout(this)
+                    .then(() => {
+                      requestQueue.start();
+                      return Promise.reject(error);
+                    });
                 })
-                .catch(() => Promise.reject(error));
+                .then(() => {
+                  requestQueue.start();
+                  return this.execute(rawResponse, false);
+                });
             }
+
+            requestQueue.start();
           }
+
+          return logout(this).then(() => Promise.reject(error));
         }
 
         return Promise.reject(error);
