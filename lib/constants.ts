@@ -207,4 +207,9 @@ export class Hooks {
 	public static createProject = "createProject";
 }
 
+export class AndroidBuildDefaults {
+	public static GradleVersion = "4.4";
+	public static GradleAndroidPluginVersion = "3.1.2";
+}
+
 export const PACKAGE_PLACEHOLDER_NAME = "__PACKAGE__";

@@ -1,6 +1,6 @@
 import { AndroidPluginBuildService } from "../../lib/services/android-plugin-build-service";
 import { assert } from "chai";
-import { INCLUDE_GRADLE_NAME } from "../../lib/constants";
+import { INCLUDE_GRADLE_NAME, AndroidBuildDefaults } from "../../lib/constants";
 import { getShortPluginName } from "../../lib/common/helpers";
 import * as FsLib from "../../lib/common/file-system";
 import * as path from "path";
@@ -34,7 +34,7 @@ describe('androidPluginBuildService', () => {
 		spawnFromEventCalled = false;
 		tempFolder = temp.mkdirSync("androidPluginBuildService-temp");
 		pluginFolder = temp.mkdirSync("androidPluginBuildService-plugin");
-		setupDI(options);
+		createTestInjector(options);
 		setupPluginFolders(options);
 
 		return {
@@ -46,7 +46,7 @@ describe('androidPluginBuildService', () => {
 		};
 	}
 
-	function setupDI(options: {
+	function createTestInjector(options: {
 		addProjectRuntime?: boolean
 		latestRuntimeGradleVersion?: string,
 		latestRuntimeGradleAndroidVersion?: string,
@@ -242,7 +242,7 @@ describe('androidPluginBuildService', () => {
 			assert.isTrue(spawnFromEventCalled);
 		});
 
-		it('builds aar with the specified runtime gradle versions when project runtime has gradle versions', async () => {
+		it('builds aar with the specified runtime gradle versions when the project runtime has gradle versions', async () => {
 			const expectedGradleVersion = "2.2.2";
 			const expectedAndroidVersion = "3.3";
 			const config: IBuildOptions = setup({
@@ -264,9 +264,7 @@ describe('androidPluginBuildService', () => {
 			assert.isTrue(spawnFromEventCalled);
 		});
 
-		it('builds aar with a hardcoded runtime gradle versions when a project runtime and the latest runtime do not have versions specified', async () => {
-			const expectedGradleVersion = "4.4";
-			const expectedAndroidVersion = "3.1.2";
+		it('builds aar with the hardcoded gradle versions when the project runtime and the latest runtime do not have versions specified', async () => {
 			const config: IBuildOptions = setup({
 				addManifest: true,
 				addProjectDir: true,
@@ -281,8 +279,8 @@ describe('androidPluginBuildService', () => {
 			const actualAndroidVersion = getGradleAndroidPluginVersion();
 			const actualGradleVersion = getGradleVersion();
 
-			assert.equal(actualGradleVersion, expectedGradleVersion);
-			assert.equal(actualAndroidVersion, expectedAndroidVersion);
+			assert.equal(actualGradleVersion, AndroidBuildDefaults.GradleVersion);
+			assert.equal(actualAndroidVersion, AndroidBuildDefaults.GradleAndroidPluginVersion);
 			assert.isTrue(spawnFromEventCalled);
 		});
 	});
