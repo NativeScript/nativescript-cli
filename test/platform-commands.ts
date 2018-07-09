@@ -168,6 +168,9 @@ function createTestInjector() {
 	testInjector.register("platformEnvironmentRequirements", {
 		checkEnvironmentRequirements: async (platform?: string, projectDir?: string, runtimeVersion?: string): Promise<boolean> => true
 	});
+	testInjector.register("pacoteService", {
+		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined
+	});
 
 	return testInjector;
 }

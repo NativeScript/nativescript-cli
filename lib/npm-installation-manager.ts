@@ -6,7 +6,6 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	constructor(private $npm: INodePackageManager,
 		private $childProcess: IChildProcess,
 		private $logger: ILogger,
-		private $options: IOptions,
 		private $settingsService: ISettingsService,
 		private $fs: IFileSystem,
 		private $staticConfig: IStaticConfig,
@@ -39,9 +38,8 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		return maxSatisfying || latestVersion;
 	}
 
-	public async install(packageName: string, projectDir: string, opts?: INpmInstallOptions): Promise<any> {
+	public async install(packageToInstall: string, projectDir: string, opts?: INpmInstallOptions): Promise<any> {
 		try {
-			const packageToInstall = this.$options.frameworkPath || packageName;
 			const pathToSave = projectDir;
 			const version = (opts && opts.version) || null;
 			const dependencyType = (opts && opts.dependencyType) || null;
