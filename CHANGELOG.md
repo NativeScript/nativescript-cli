@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.11.4](https://github.com/Kinvey/js-sdk/tree/v3.11.3) (2018-07-09)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.3...v3.11.4)<br/>
+
+#### Bugs
+- MLIBZ-2580: Use correct Authorization header value when sending a request to refresh a MIC access token. [#315](https://github.com/Kinvey/js-sdk/pull/315)
+- MLIBZ-2585: Queue network requests while in the middle of refreshing a MIC access token. [#321](https://github.com/Kinvey/js-sdk/pull/321)
+- MLIBZ-2586: Use PubNub fork to fix Live Service on Android. [#326](https://github.com/Kinvey/js-sdk/pull/326)
+
 ## [3.11.3](https://github.com/Kinvey/js-sdk/tree/v3.11.3) (2018-06-29)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.2...v3.11.3)<br/>
 
