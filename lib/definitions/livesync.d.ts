@@ -377,7 +377,7 @@ interface IAndroidNativeScriptDeviceLiveSyncService {
 	getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService;
 }
 
-interface ILivesyncTool {
+interface IAndroidLivesyncTool {
 	/**
 	 * Creates new socket connection.
 	 * @param configuration - The configuration to the socket connection.

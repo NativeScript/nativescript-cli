@@ -13,7 +13,7 @@ const OPERATION_END_REPORT = 2;
 const REPORT_LENGTH = 1;
 const DEFAULT_LOCAL_HOST_ADDRESS = "127.0.0.1";
 
-export class LivesyncTool implements ILivesyncTool {
+export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	private operationPromises: IDictionary<any>;
 	private socketError: string | Error;
 	private socketConnection: IDuplexSocket;
@@ -394,4 +394,4 @@ export class LivesyncTool implements ILivesyncTool {
 		return relativeFilePath.split(path.sep).join(path.posix.sep);
 	}
 }
-$injector.register("livesyncTool", LivesyncTool);
+$injector.register("androidLivesyncLibrary", AndroidLivesyncTool);

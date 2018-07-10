@@ -2,11 +2,11 @@ import { DeviceAndroidDebugBridge } from "../../common/mobile/android/device-and
 import { AndroidDeviceHashService } from "../../common/mobile/android/android-device-hash-service";
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 import { APP_FOLDER_NAME } from "../../constants";
-import { LivesyncTool } from "./livesync-library";
+import { AndroidLivesyncTool } from "./android-livesync-library";
 import * as path from "path";
 
 export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
-	private livesyncTool: ILivesyncTool;
+	private livesyncTool: IAndroidLivesyncTool;
 
 	constructor(
 		private data: IProjectData,
@@ -17,7 +17,7 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		protected device: Mobile.IAndroidDevice,
 		private $options: ICommonOptions) {
 		super($platformsData, device);
-		this.livesyncTool = this.$injector.resolve(LivesyncTool);
+		this.livesyncTool = this.$injector.resolve(AndroidLivesyncTool);
 	}
 
 	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
