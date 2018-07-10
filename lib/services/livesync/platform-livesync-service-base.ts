@@ -58,7 +58,7 @@ export abstract class PlatformLiveSyncServiceBase {
 
 	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
 		const projectData = liveSyncInfo.projectData;
-		const deviceLiveSyncService = this.getDeviceLiveSyncService(device, projectData);
+		let deviceLiveSyncService = this.getDeviceLiveSyncService(device, projectData);
 		const syncInfo = _.merge<IFullSyncInfo>({ device, watch: true }, liveSyncInfo);
 		const deviceAppData = await this.getAppData(syncInfo);
 
@@ -101,7 +101,7 @@ export abstract class PlatformLiveSyncServiceBase {
 			const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, mappedFiles, []);
 			modifiedLocalToDevicePaths.push(...localToDevicePaths);
 
-			const deviceLiveSyncService = this.getDeviceLiveSyncService(device, projectData);
+			deviceLiveSyncService = this.getDeviceLiveSyncService(device, projectData);
 			await deviceLiveSyncService.removeFiles(deviceAppData, localToDevicePaths, projectFilesPath);
 		}
 

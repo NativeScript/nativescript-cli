@@ -3890,7 +3890,7 @@
       "requires": {
         "cardinal": "1.0.0",
         "chalk": "1.1.3",
-        "cli-table": "https://github.com/telerik/cli-table/tarball/v0.3.1.2",
+        "cli-table": "^0.3.1",
         "lodash.assign": "4.2.0",
         "node-emoji": "1.8.1"
       },
@@ -4199,6 +4199,44 @@
       "version": "1.1.4",
       "resolved": "https://registry.npmjs.org/natives/-/natives-1.1.4.tgz",
       "integrity": "sha512-Q29yeg9aFKwhLVdkTAejM/HvYG0Y1Am1+HUkFQGn5k2j8GS+v60TVmZh6nujpEAj/qql+wGUrlryO8bF+b1jEg=="
+    },
+    "nativescript-android-livesync-lib": {
+      "version": "file:../nativescript-android-livesync-lib",
+      "requires": {
+        "recursive-readdir": "2.2.2"
+      },
+      "dependencies": {
+        "balanced-match": {
+          "version": "1.0.0",
+          "bundled": true
+        },
+        "brace-expansion": {
+          "version": "1.1.11",
+          "bundled": true,
+          "requires": {
+            "balanced-match": "^1.0.0",
+            "concat-map": "0.0.1"
+          }
+        },
+        "concat-map": {
+          "version": "0.0.1",
+          "bundled": true
+        },
+        "minimatch": {
+          "version": "3.0.4",
+          "bundled": true,
+          "requires": {
+            "brace-expansion": "^1.1.7"
+          }
+        },
+        "recursive-readdir": {
+          "version": "2.2.2",
+          "bundled": true,
+          "requires": {
+            "minimatch": "3.0.4"
+          }
+        }
+      }
     },
     "nativescript-doctor": {
       "version": "1.2.0",

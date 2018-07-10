@@ -377,6 +377,70 @@ interface IAndroidNativeScriptDeviceLiveSyncService {
 	getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService;
 }
 
+interface ILivesyncTool {
+	/**
+	 * Creates new socket connection.
+	 * @param configuration - The configuration to the socket connection.
+	 * @returns {Promise<void>}
+	 */
+	connect(configuration: ILivesyncToolConfiguration): Promise<void>;
+	/**
+	 * Sends a file through the socket.
+	 * @param filePath - The full path to the file.
+	 * @returns {Promise<void>}
+	 */
+	sendFile(filePath: string): Promise<void>;
+	/**
+	 * Sends files through the socket.
+	 * @param filePaths - Array of files that will be send by the socket.
+	 * @returns {Promise<void>}
+	 */
+	sendFiles(filePaths: string[]): Promise<void>;
+	/**
+	 * Sends all files from directory by the socket.
+	 * @param directoryPath - The path to the directory which files will be send by the socket.
+	 * @returns {Promise<void>}
+	 */
+	sendDirectory(directoryPath: string): Promise<void>;
+	/**
+	 * Removes file
+	 * @param filePath - The full path to the file.
+	 * @returns {Promise<boolean>}
+	 */
+	removeFile(filePath: string): Promise<boolean>;
+	/**
+	 * Removes files 
+	 * @param filePaths - Array of files that will be removed.
+	 * @returns {Promise<boolean[]>}
+	 */
+	removeFiles(filePaths: string[]): Promise<boolean[]>;
+	/**
+	 * Sends doSyncOperation that will be handeled by the runtime.
+	 * @param operationId - The identifier of the operation
+	 * @param timeout - The timeout in miliseconds
+	 * @returns {Promise<void>}
+	 */
+	sendDoSyncOperation(operationId: string, timeout?: number): Promise<void>;
+	/**
+	 * Generates new operation identifier.
+	 */
+	generateOperationIdentifier(): string;
+	/**
+	 * Checks if the current operation is in progress.
+	 * @param operationId - The identifier of the operation.
+	 */
+	isOperationInProgress(operationId: string): boolean;
+	end(): void;
+}
+
+interface ILivesyncToolConfiguration {
+	appIdentifier: string;
+	deviceIdentifier: string;
+	appPlatformsPath: string; // path to platforms/android/app/src/main/assets/app/
+	localHostAddress?: string;
+	errorHandler?: any;
+}
+
 interface IDeviceProjectRootOptions {
 	appIdentifier: string;
 	getDirname?: boolean;

@@ -15,10 +15,10 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 	}
 
 	protected _getDeviceLiveSyncService(device: Mobile.IDevice, data: IProjectDir, frameworkVersion: string): INativeScriptDeviceLiveSyncService {
-		if(semver.gte(frameworkVersion, "4.2.0")){
+		if (semver.gte(frameworkVersion, "4.2.0")) {
 			return this.$injector.resolve<INativeScriptDeviceLiveSyncService>(AndroidDeviceSocketsLiveSyncService, { device, data });
 		}
-		
+
 		return this.$injector.resolve<INativeScriptDeviceLiveSyncService>(AndroidDeviceLiveSyncService, { device, data });
 	}
 
