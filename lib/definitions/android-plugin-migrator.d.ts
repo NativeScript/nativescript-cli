@@ -1,5 +1,6 @@
 
 interface IBuildOptions extends IAndroidBuildOptions{
+	projectDir?: string
 }
 
 interface IAndroidBuildOptions {
@@ -33,5 +34,5 @@ interface IBuildAndroidPluginData {
 	/**
 	 * Information about tools that will be used to build the plugin, for example compile SDK version, build tools version, etc.
 	 */
-	androidToolsInfo: IAndroidToolsInfoData;
+	androidToolsInfo?: IAndroidToolsInfoData;
 }

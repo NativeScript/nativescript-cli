@@ -100,9 +100,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this._platformData;
 	}
 
-	// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
-	// Similar to the private method of the same name in platform-service.
-	private getCurrentPlatformVersion(platformData: IPlatformData, projectData: IProjectData): string {
+	public getCurrentPlatformVersion(platformData: IPlatformData, projectData: IProjectData): string {
 		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
 
 		return currentPlatformData && currentPlatformData[constants.VERSION_STRING];
@@ -422,6 +420,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
 			if (this.$fs.exists(pluginPlatformsFolderPath)) {
 				const options: IBuildOptions = {
+					projectDir: projectData.projectDir,
 					pluginName: pluginData.name,
 					platformsAndroidDirPath: pluginPlatformsFolderPath,
 					aarOutputDir: pluginPlatformsFolderPath,
@@ -533,9 +532,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
 		try {
-			// check whether the dependency that's being removed has native code
-			// TODO: Remove prior to the 4.1 CLI release @Pip3r4o @PanayotCankov
-			// the updated gradle script will take care of cleaning the prepared android plugins
 			if (!this.runtimeVersionIsGreaterThanOrEquals(projectData, "3.3.0")) {
 				const pluginConfigDir = path.join(this.getPlatformData(projectData).projectRoot, "configurations", pluginData.name);
 				if (this.$fs.exists(pluginConfigDir)) {
@@ -563,8 +559,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			if (shouldUseNewRoutine) {
 				this.provideDependenciesJson(projectData, dependencies);
 			} else {
-				// TODO: Remove prior to the 4.1 CLI release @Pip3r4o @PanayotCankov
-
 				const platformDir = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
 				const buildDir = path.join(platformDir, "build-tools");
 				const checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
@@ -580,7 +574,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		if (!shouldUseNewRoutine) {
-			// TODO: Remove prior to the 4.0 CLI release @Pip3r4o @PanayotCankov
 			const projectRoot = this.getPlatformData(projectData).projectRoot;
 			await this.cleanProject(projectRoot, projectData);
 		}

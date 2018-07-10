@@ -4,9 +4,11 @@ import * as util from "util";
 import * as chai from "chai";
 import { EventEmitter } from "events";
 import { SpawnOptions } from "child_process";
-
 import * as path from "path";
 import * as constants from "./../lib/constants";
+import { Yok } from "./../lib/common/yok";
+import { HostInfo } from "./../lib/common/host-info";
+import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platforms-constants";
 
 export class LoggerStub implements ILogger {
 	setLevel(level: string): void { }
@@ -849,5 +851,34 @@ export class AndroidResourcesMigrationServiceStub implements IAndroidResourcesMi
 	}
 	migrate(appResourcesDir: string): Promise<void> {
 		return Promise.resolve();
+	}
+}
+
+export class InjectorStub extends Yok implements IInjector {
+	constructor() {
+		super();
+		this.register("fs", FileSystemStub);
+		this.register("hostInfo", HostInfo);
+		this.register("androidToolsInfo", AndroidToolsInfoStub);
+		this.register("logger", LoggerStub);
+		this.register("errors", ErrorsStub);
+		this.register("options", {});
+		this.register("config", {});
+		this.register("staticConfig", {});
+		this.register("hooksService", HooksServiceStub);
+		this.register('projectDataService', ProjectDataService);
+		this.register('devicePlatformsConstants', DevicePlatformsConstants);
+		this.register("emulatorPlatformService", EmulatorPlatformService);
+		this.register("androidResourcesMigrationService", AndroidResourcesMigrationServiceStub);
+		this.register("platformService", PlatformServiceStub);
+		this.register("commandsService", CommandsService);
+		this.register("projectChangesService", ProjectChangesService);
+		this.register('childProcess', ChildProcessStub);
+		this.register("liveSyncService", LiveSyncServiceStub);
+		this.register("prompter", PrompterStub);
+		this.register('platformsData', PlatformsDataStub);
+		this.register("androidPluginBuildService", AndroidPluginBuildServiceStub);
+		this.register('projectData', ProjectDataStub);
+		this.register('npmInstallationManager', NpmInstallationManagerStub);
 	}
 }
