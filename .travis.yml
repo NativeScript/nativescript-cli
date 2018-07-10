@@ -1,3 +1,6 @@
+branches:
+  only: 
+    - master
 env:
   global:
   - DATE=$(date +%Y-%m-%d)
