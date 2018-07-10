@@ -2,12 +2,13 @@ import * as yok from "../lib/common/yok";
 import * as stubs from "./stubs";
 import * as PlatformServiceLib from "../lib/services/platform-service";
 import * as StaticConfigLib from "../lib/config";
-import { VERSION_STRING, PACKAGE_JSON_FILE_NAME } from "../lib/constants";
+import { VERSION_STRING, PACKAGE_JSON_FILE_NAME, AddPlaformErrors } from "../lib/constants";
 import * as fsLib from "../lib/common/file-system";
 import * as optionsLib from "../lib/options";
 import * as hostInfoLib from "../lib/common/host-info";
 import * as ProjectFilesManagerLib from "../lib/common/services/project-files-manager";
 import * as path from "path";
+import { format } from "util";
 import { assert } from "chai";
 import { DeviceAppDataFactory } from "../lib/common/mobile/device-app-data/device-app-data-factory";
 import { LocalToDevicePathDataFactory } from "../lib/common/mobile/local-to-device-path-data-factory";
@@ -230,6 +231,16 @@ describe('Platform Service Tests', () => {
 
 				const projectData: IProjectData = testInjector.resolve("projectData");
 				await assert.isRejected(platformService.addPlatforms(["android"], "", projectData, config), errorMessage);
+			});
+
+			it("fails when path passed to frameworkPath does not exist", async () => {
+				const fs = testInjector.resolve("fs");
+				fs.exists = () => false;
+
+				const projectData: IProjectData = testInjector.resolve("projectData");
+				const frameworkPath = "invalidPath";
+				const errorMessage = format(AddPlaformErrors.InvalidFrameworkPathStringFormat, frameworkPath);
+				await assert.isRejected(platformService.addPlatforms(["android"], "", projectData, config, frameworkPath), errorMessage);
 			});
 
 			const assertCorrectDataIsPassedToPacoteService = async (versionString: string): Promise<void> => {

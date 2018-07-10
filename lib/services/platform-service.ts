@@ -4,6 +4,7 @@ import * as constants from "../constants";
 import { Configurations } from "../common/constants";
 import * as helpers from "../common/helpers";
 import * as semver from "semver";
+import { format } from "util";
 import { EventEmitter } from "events";
 import { AppFilesUpdater } from "./app-files-updater";
 import { attachAwaitDetach } from "../common/helpers";
@@ -104,6 +105,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		let packageToInstall = "";
 		if (frameworkPath) {
 			packageToInstall = path.resolve(frameworkPath);
+			if (!this.$fs.exists(packageToInstall)) {
+				const errorMessage = format(constants.AddPlaformErrors.InvalidFrameworkPathStringFormat, frameworkPath);
+				this.$errors.fail(errorMessage);
+			}
 		} else {
 			if (!version) {
 				version = this.getCurrentPlatformVersion(platform, projectData) ||
