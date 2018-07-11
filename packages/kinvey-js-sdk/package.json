@@ -17,7 +17,8 @@
   "dependencies": {
     "lodash": "^4.17.10",
     "loglevel": "^1.6.1",
-    "loglevel-plugin-prefix": "^0.8.3"
+    "loglevel-plugin-prefix": "^0.8.3",
+    "url-join": "^4.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
