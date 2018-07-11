@@ -136,7 +136,7 @@ describe('KinveyHeaders', () => {
     });
   });
 
-  describe('setAuthorization()', () => {
+  describe.skip('setAuthorization()', () => {
     it('should throw an error if no info is provided', () => {
       expect(() => {
         headers.setAuthorization();
@@ -181,7 +181,7 @@ describe('KinveyHeaders', () => {
     });
   });
 
-  describe('setAppAuthorization()', () => {
+  describe.skip('setAppAuthorization()', () => {
     it('should throw an error if no appKey is provided', () => {
       expect(() => {
         headers.setAppAuthorization();
@@ -202,7 +202,7 @@ describe('KinveyHeaders', () => {
     });
   });
 
-  describe('setSessionAuthorization()', () => {
+  describe.skip('setSessionAuthorization()', () => {
     it('should throw an error if no session is provided', () => {
       expect(() => {
         headers.setSessionAuthorization();
