@@ -10,8 +10,28 @@
   "devDependencies": {
     "lerna": "^2.11.0"
   },
-  "workspaces": [
-    "packages/kinvey-html5-sdk",
-    "packages/kinvey-js-sdk"
-  ]
+  "workspaces": {
+    "packages": [
+      "packages/kinvey-html5-sdk",
+      "packages/kinvey-js-sdk"
+    ],
+    "nohoist": [
+      "**/babel-polyfill",
+      "**/babel-polyfill/**",
+      "**/karma",
+      "**/karma/**",
+      "**/karma-babel-preprocessor",
+      "**/karma-babel-preprocessor/**",
+      "**/karma-chrome-launcher",
+      "**/karma-chrome-launcher/**",
+      "**/karma-mocha",
+      "**/karma-mocha/**",
+      "**/karma-mocha-reporter",
+      "**/karma-mocha-reporter/**",
+      "**/karma-sourcemap-loader",
+      "**/karma-sourcemap-loader/**",
+      "**/karma-webpack",
+      "**/karma-webpack/**"
+    ]
+  }
 }
