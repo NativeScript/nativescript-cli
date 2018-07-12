@@ -4,6 +4,7 @@ import { PlatformLiveSyncServiceBase } from "./platform-livesync-service-base";
 import * as semver from "semver";
 
 export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
+	private static MIN_SOCKETS_LIVESYNC_RUNTIME_VERSION = "4.2.0";
 	constructor(protected $platformsData: IPlatformsData,
 		protected $projectFilesManager: IProjectFilesManager,
 		private $injector: IInjector,
@@ -15,7 +16,7 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 	}
 
 	protected _getDeviceLiveSyncService(device: Mobile.IDevice, data: IProjectDir, frameworkVersion: string): INativeScriptDeviceLiveSyncService {
-		if (semver.gte(frameworkVersion, "4.2.0")) {
+		if (semver.gte(frameworkVersion, AndroidLiveSyncService.MIN_SOCKETS_LIVESYNC_RUNTIME_VERSION)) {
 			return this.$injector.resolve<INativeScriptDeviceLiveSyncService>(AndroidDeviceSocketsLiveSyncService, { device, data });
 		}
 

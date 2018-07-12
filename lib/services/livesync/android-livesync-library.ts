@@ -23,7 +23,8 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	constructor(private $androidProcessService: Mobile.IAndroidProcessService,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
-		private $logger: ILogger) {
+		private $logger: ILogger,
+		private $mobileHelper: Mobile.IMobileHelper) {
 			this.operationPromises = Object.create(null);
 			this.socketError = null;
 			this.socketConnection = null;
@@ -36,6 +37,10 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 
 		if (!configuration.appPlatformsPath) {
 			this.$errors.fail(`You need to provide "baseDir" as a configuration property!`);
+		}
+
+		if (this.socketConnection) {
+			this.$errors.fail("Socket connection already exists.");
 		}
 
 		if (!configuration.localHostAddress) {
@@ -267,6 +272,8 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			const error = new Error(`Socket Error:\n${err}`);
 			if (this.configuration.errorHandler) {
 				this.configuration.errorHandler(error);
+			} else {
+				this.handleSocketError(socket.uid, error.message);
 			}
 		});
 	}
@@ -381,18 +388,9 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	}
 
 	private resolveRelativePath(filePath: string): string {
-		let relativeFilePath;
+		const relativeFilePath = path.relative(this.appPlatformsPath, filePath);
 
-		if (this.configuration.appPlatformsPath) {
-			relativeFilePath = path.relative(this.configuration.appPlatformsPath, filePath);
-		} else if (this.appPlatformsPath) {
-			relativeFilePath = path.relative(this.appPlatformsPath, filePath);
-		} else {
-			this.$errors.failWithoutHelp("You need to pass either \"baseDir\" " +
-				"when you initialize the tool or \"basePath\" as a second argument to this method!");
-		}
-
-		return relativeFilePath.split(path.sep).join(path.posix.sep);
+		return this.$mobileHelper.buildDevicePath(relativeFilePath);
 	}
 }
 $injector.register("androidLivesyncLibrary", AndroidLivesyncTool);

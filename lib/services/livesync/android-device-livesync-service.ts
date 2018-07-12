@@ -52,9 +52,9 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 			getDirname: true
 		});
 
-		await this.device.adb.executeShellCommand(["rm", "-rf", await this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.FULLSYNC_DIR_NAME),
+		await this.device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.FULLSYNC_DIR_NAME),
 			this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.SYNC_DIR_NAME),
-			await this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.REMOVEDSYNC_DIR_NAME)]);
+			this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.REMOVEDSYNC_DIR_NAME)]);
 	}
 
 	private async restartApplication(deviceAppData: Mobile.IDeviceAppData, projectName: string): Promise<void> {
