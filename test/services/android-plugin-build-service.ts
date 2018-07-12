@@ -22,6 +22,7 @@ describe('androidPluginBuildService', () => {
 		addManifest?: boolean,
 		addResFolder?: boolean,
 		addAssetsFolder?: boolean,
+		addIncludeGradle?: boolean,
 		addLegacyIncludeGradle?: boolean,
 		addProjectDir?: boolean,
 		addProjectRuntime?: boolean,
@@ -111,6 +112,7 @@ describe('androidPluginBuildService', () => {
 		addManifest?: boolean,
 		addResFolder?: boolean,
 		addAssetsFolder?: boolean,
+		addIncludeGradle?: boolean,
 		addLegacyIncludeGradle?: boolean
 	}) {
 		const validAndroidManifestContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -122,21 +124,23 @@ describe('androidPluginBuildService', () => {
 		name="string_name"
 		>text_string</string>
 </resources>`;
-		const validIncludeGradleContent = `android {
-			productFlavors {
-				"nativescript-pro-ui" {
-					dimension "nativescript-pro-ui"
-				}
-			}
+		const validIncludeGradleContent =
+`android {` +
+	(options.addLegacyIncludeGradle ? `
+	productFlavors {
+		"nativescript-pro-ui" {
+			dimension "nativescript-pro-ui"
 		}
+	}` : ``) + `
+}
 
-		def supportVersion = project.hasProperty("supportVersion") ? project.supportVersion : "23.3.0"
+def supportVersion = project.hasProperty("supportVersion") ? project.supportVersion : "23.3.0"
 
-		dependencies {
-			compile "com.android.support:appcompat-v7:$supportVersion"
-			compile "com.android.support:recyclerview-v7:$supportVersion"
-			compile "com.android.support:design:$supportVersion"
-		}`;
+dependencies {
+	compile "com.android.support:appcompat-v7:$supportVersion"
+	compile "com.android.support:recyclerview-v7:$supportVersion"
+	compile "com.android.support:design:$supportVersion"
+}`;
 
 		if (options.addManifest) {
 			fs.writeFile(path.join(pluginFolder, "AndroidManifest.xml"), validAndroidManifestContent);
@@ -154,7 +158,7 @@ describe('androidPluginBuildService', () => {
 			fs.writeFile(path.join(imagesFolder, "myicon.png"), "123");
 		}
 
-		if (options.addLegacyIncludeGradle) {
+		if (options.addLegacyIncludeGradle || options.addIncludeGradle) {
 			fs.writeFile(path.join(pluginFolder, INCLUDE_GRADLE_NAME), validIncludeGradleContent);
 		}
 	}
@@ -291,11 +295,22 @@ describe('androidPluginBuildService', () => {
 				addLegacyIncludeGradle: true
 			});
 
-			await androidBuildPluginService.migrateIncludeGradle(config);
-
+			const isMigrated = await androidBuildPluginService.migrateIncludeGradle(config);
 			const includeGradleContent = fs.readText(path.join(pluginFolder, INCLUDE_GRADLE_NAME).toString());
 			const areProductFlavorsRemoved = includeGradleContent.indexOf("productFlavors") === -1;
+
+			assert.isTrue(isMigrated);
 			assert.isTrue(areProductFlavorsRemoved);
+		});
+
+		it('if there is an already migrated include.gradle file', async () => {
+			const config: IBuildOptions = setup({
+				addIncludeGradle: true
+			});
+
+			const isMigrated = await androidBuildPluginService.migrateIncludeGradle(config);
+
+			assert.isFalse(isMigrated);
 		});
 	});
 

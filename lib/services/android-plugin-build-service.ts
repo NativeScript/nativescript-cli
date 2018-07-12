@@ -127,14 +127,14 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 	private getScope(scopeName: string, content: string): string {
 		const indexOfScopeName = content.indexOf(scopeName);
-		let result = "";
 		const openingBracket = "{";
 		const closingBracket = "}";
-		let openBrackets = 0;
 		let foundFirstBracket = false;
+		let openBrackets = 0;
+		let result = "";
 
 		let i = indexOfScopeName;
-		while (i < content.length) {
+		while (i !== -1 && i < content.length) {
 			const currCharacter = content[i];
 			if (currCharacter === openingBracket) {
 				if (openBrackets === 0) {
@@ -337,15 +337,16 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			}
 
 			const productFlavorsScope = this.getScope("productFlavors", includeGradleFileContent);
+			if (productFlavorsScope) {
+				try {
+					const newIncludeGradleFileContent = includeGradleFileContent.replace(productFlavorsScope, "");
+					this.$fs.writeFile(includeGradleFilePath, newIncludeGradleFileContent);
 
-			try {
-				const newIncludeGradleFileContent = includeGradleFileContent.replace(productFlavorsScope, "");
-				this.$fs.writeFile(includeGradleFilePath, newIncludeGradleFileContent);
-
-				return true;
-			} catch (e) {
-				this.$errors.failWithoutHelp(`Failed to write the updated include.gradle ` +
-					`in - ${includeGradleFilePath}. Error is: ${e.toString()}`);
+					return true;
+				} catch (e) {
+					this.$errors.failWithoutHelp(`Failed to write the updated include.gradle ` +
+						`in - ${includeGradleFilePath}. Error is: ${e.toString()}`);
+				}
 			}
 		}
 
