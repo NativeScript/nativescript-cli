@@ -3,7 +3,6 @@
 import * as util from "util";
 import * as chai from "chai";
 import { EventEmitter } from "events";
-import { SpawnOptions } from "child_process";
 import * as path from "path";
 import * as constants from "./../lib/constants";
 import { Yok } from "./../lib/common/yok";
@@ -355,10 +354,6 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 		return Promise.resolve();
 	}
 
-	public async executeCommand(projectRoot: string, gradleArgs: string[], childProcessOpts?: SpawnOptions, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult> {
-		return { stderr: "", stdout: "", exitCode: 0 };
-	}
-
 	async buildProject(projectRoot: string): Promise<void> {
 		return Promise.resolve();
 	}
@@ -378,10 +373,6 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 
 	async preparePluginNativeCode(pluginData: IPluginData): Promise<void> {
 		return Promise.resolve();
-	}
-
-	getBuildOptions(configurationFilePath?: string): Array<string> {
-		return [];
 	}
 
 	async removePluginNativeCode(pluginData: IPluginData): Promise<void> { }

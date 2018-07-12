@@ -14,7 +14,6 @@ import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { XCConfigService } from "./xcconfig-service";
 import * as mobileprovision from "ios-mobileprovision-finder";
-import { SpawnOptions } from "child_process";
 import { BUILD_XCCONFIG_FILE_NAME } from "../constants";
 
 interface INativeSourceCodeGroup {
@@ -124,10 +123,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 
 		return true;
-	}
-
-	public async executeCommand(projectRoot: string, args: any, childProcessOpts?: SpawnOptions, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult> {
-		return { stderr: "", stdout: "", exitCode: 0 };
 	}
 
 	public getAppResourcesDestinationDirectoryPath(projectData: IProjectData): string {
@@ -1036,10 +1031,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	public async checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>> {
-		return [];
-	}
-
-	public getBuildOptions(configurationFilePath: string): Array<string> {
 		return [];
 	}
 

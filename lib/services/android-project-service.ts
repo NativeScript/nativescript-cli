@@ -308,15 +308,15 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
-		const buildOptions = this.getGradleBuildOptions(buildConfig, projectData);
+		const gradleArgs = this.getGradleBuildOptions(buildConfig, projectData);
 		if (this.$logger.getLevel() === "TRACE") {
-			buildOptions.unshift("--stacktrace");
-			buildOptions.unshift("--debug");
+			gradleArgs.unshift("--stacktrace");
+			gradleArgs.unshift("--debug");
 		}
 		if (buildConfig.release) {
-			buildOptions.unshift("assembleRelease");
+			gradleArgs.unshift("assembleRelease");
 		} else {
-			buildOptions.unshift("assembleDebug");
+			gradleArgs.unshift("assembleDebug");
 		}
 
 		const handler = (data: any) => {
@@ -326,10 +326,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
 			this.$childProcess,
 			handler,
-			this.executeCommand(this.getPlatformData(projectData).projectRoot,
-				buildOptions,
-				{ stdio: buildConfig.buildOutputStdio || "inherit" },
-				{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true }));
+			this.executeCommand({
+				projectRoot: this.getPlatformData(projectData).projectRoot,
+				gradleArgs,
+				childProcessOpts: { stdio: buildConfig.buildOutputStdio || "inherit" },
+				spawnFromEventOptions: { emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true },
+				message: "Gradle build..."
+			})
+		);
 	}
 
 	private getGradleBuildOptions(settings: IAndroidBuildOptionsSettings, projectData: IProjectData): Array<string> {
@@ -348,7 +352,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return buildOptions;
 	}
 
-	public getBuildOptions(configurationFilePath?: string): Array<string> {
+	private getBuildOptions(configurationFilePath?: string): Array<string> {
 		this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
 
 		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
@@ -607,14 +611,23 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public stopServices(projectRoot: string): Promise<ISpawnResult> {
-		return this.executeCommand(projectRoot, ["--stop", "--quiet"], {stdio: "pipe"});
+		return this.executeCommand({
+			projectRoot,
+			gradleArgs: ["--stop", "--quiet"],
+			childProcessOpts: { stdio: "pipe" },
+			message: "Gradle stop services..."
+		});
 	}
 
 	public async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
 		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
-			const buildOptions = this.getGradleBuildOptions({ release: false }, projectData);
-			buildOptions.unshift("clean");
-			await this.executeCommand(projectRoot, buildOptions);
+			const gradleArgs = this.getGradleBuildOptions({ release: false }, projectData);
+			gradleArgs.unshift("clean");
+			await this.executeCommand({
+				projectRoot,
+				gradleArgs,
+				message: "Gradle clean..."
+			});
 		}
 	}
 
@@ -676,16 +689,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return versionInManifest;
 	}
 
-	public async executeCommand(projectRoot: string, gradleArgs: any, childProcessOpts?: SpawnOptions, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult> {
+	private async executeCommand(opts: { projectRoot: string, gradleArgs: any, childProcessOpts?: SpawnOptions, spawnFromEventOptions?: ISpawnFromEventOptions, message: string }): Promise<ISpawnResult> {
 		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
+			const { projectRoot, gradleArgs, message, spawnFromEventOptions } = opts;
 			const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
 
 			if (this.$logger.getLevel() === "INFO") {
 				gradleArgs.push("--quiet");
-				this.$logger.info("Gradle build...");
 			}
 
-			childProcessOpts = childProcessOpts || {};
+			this.$logger.info(message);
+
+			const childProcessOpts = opts.childProcessOpts || {};
 			childProcessOpts.cwd = childProcessOpts.cwd || projectRoot;
 			childProcessOpts.stdio = childProcessOpts.stdio || "inherit";
 
