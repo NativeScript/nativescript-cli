@@ -2,7 +2,7 @@ import * as path from "path";
 import * as choki from "chokidar";
 import { EOL } from "os";
 import { EventEmitter } from "events";
-import { hook, isAllowedFinalFile } from "../../common/helpers";
+import { hook } from "../../common/helpers";
 import { PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME, TrackActionNames } from "../../constants";
 import { DeviceTypes, DeviceDiscoveryEventNames } from "../../common/constants";
 import { cache } from "../../common/decorators";
@@ -671,12 +671,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 					this.$logger.trace(`Chokidar raised event ${event} for ${filePath}.`);
 
-					if (!isAllowedFinalFile(filePath)) {
-						if (event === "add" || event === "addDir" || event === "change" /* <--- what to do when change event is raised ? */) {
-							filesToSync.push(filePath);
-						} else if (event === "unlink" || event === "unlinkDir") {
-							filesToRemove.push(filePath);
-						}
+					if (event === "add" || event === "addDir" || event === "change" /* <--- what to do when change event is raised ? */) {
+						filesToSync.push(filePath);
+					} else if (event === "unlink" || event === "unlinkDir") {
+						filesToRemove.push(filePath);
 					}
 
 					startSyncFilesTimeout();
