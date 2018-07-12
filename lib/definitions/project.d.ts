@@ -436,16 +436,6 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	 * Traverse through the production dependencies and find plugins that need build/rebuild
 	 */
 	checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>>;
-
-	/**
-	 * Get gradle options the CLI generates when building project
-	 */
-	getBuildOptions(configurationFilePath?: string): Array<string>;
-
-	/**
-	 * Get gradle options the CLI generates when building project
-	 */
-	executeCommand(projectRoot: string, args: any, childProcessOpts?: any, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult>;
 }
 
 interface ITestExecutionService {
