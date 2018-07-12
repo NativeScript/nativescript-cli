@@ -15,9 +15,11 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		protected $staticConfig: Config.IStaticConfig,
 		private $logger: ILogger,
 		protected device: Mobile.IAndroidDevice,
-		private $options: ICommonOptions) {
+		private $options: ICommonOptions,
+		private $processService: IProcessService) {
 		super($platformsData, device);
 		this.livesyncTool = this.$injector.resolve(AndroidLivesyncTool);
+		this.$processService.attachToProcessExitSignals(this.livesyncTool, this.livesyncTool.end);
 	}
 
 	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
@@ -35,7 +37,6 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 			const operationIdentifier = this.livesyncTool.generateOperationIdentifier();
 			const doSyncPromise = this.livesyncTool.sendDoSyncOperation(operationIdentifier);
 
-			//TODO clear interval on exit sygnals/stopLivesync
 			const syncInterval : NodeJS.Timer = setInterval(() => {
 				if (this.livesyncTool.isOperationInProgress(operationIdentifier)) {
 					this.$logger.info("Sync operation in progress...");
@@ -45,7 +46,10 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 			const clearSyncInterval = () => {
 				clearInterval(syncInterval);
 			};
+
+			this.$processService.attachToProcessExitSignals(this, clearSyncInterval);
 			doSyncPromise.then(clearSyncInterval, clearSyncInterval);
+
 			await doSyncPromise;
 
 			if (!canExecuteFastSync) {

@@ -201,8 +201,9 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 						this.socketConnection.write(chunk);
 					} else {
 						const error = this.checkConnectionStatus();
-						//TODO check if properly destroys stream
-						//fileStream.destroy();
+						//TODO Destroy method added in node 8.0.0.
+						//when we depricate node 6.x uncoment the line belolw
+						//fileStream.destroy(error);
 						reject(error);
 					}
 				})
