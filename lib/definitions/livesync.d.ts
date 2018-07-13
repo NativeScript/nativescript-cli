@@ -415,9 +415,9 @@ interface IAndroidLivesyncTool {
 	 */
 	removeFiles(filePaths: string[]): Promise<boolean[]>;
 	/**
-	 * Sends doSyncOperation that will be handeled by the runtime.
+	 * Sends doSyncOperation that will be handled by the runtime.
 	 * @param operationId - The identifier of the operation
-	 * @param timeout - The timeout in miliseconds
+	 * @param timeout - The timeout in milliseconds
 	 * @returns {Promise<void>}
 	 */
 	sendDoSyncOperation(operationId: string, timeout?: number): Promise<void>;
@@ -430,6 +430,10 @@ interface IAndroidLivesyncTool {
 	 * @param operationId - The identifier of the operation.
 	 */
 	isOperationInProgress(operationId: string): boolean;
+
+	/**
+	 * Closes the current socket connection.
+	 */
 	end(): void;
 }
 
