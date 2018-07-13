@@ -258,7 +258,6 @@ describe('Platform Service Tests', () => {
 					return {
 						frameworkPackageName: packageName,
 						platformProjectService: new stubs.PlatformProjectServiceStub(),
-						emulatorServices: undefined,
 						projectRoot: "",
 						normalizedPlatformName: "",
 						appDestinationDirectoryPath: "",

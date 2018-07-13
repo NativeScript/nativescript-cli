@@ -53,6 +53,9 @@ const tns = require("nativescript");
 * [sysInfo](#sysinfo)
 	* [getSupportedNodeVersionRange](#getsupportednodeversionrange)
 	* [getSystemWarnings](#getsystemwarnings)
+* [devicesService](#devicesService)
+	* [getAvailableEmulators](#getAvailableEmulators)
+	* [startEmulator](#startEmulator)
 
 ## Module projectService
 
@@ -1196,6 +1199,45 @@ tns.sysInfo.getSystemWarnings()
 		warnings.forEach(warn => console.log(warn));
 	})
 	.catch(err => console.error(`Error while trying to get system warnings: ${err}`));
+```
+
+## devicesService
+The `devicesService` module allows interaction with devices and emulators. You can get a list of the available emulators or start a specific emulator.
+
+### getAvailableEmulators
+The `getAvailableEmulators` method returns object of all running and available emulators. The result is in the following format: 
+```JavaScript
+	{
+		android: {
+			devices: Mobile.IDeviceInfo[],
+			errors: string[]
+		},
+		ios: {
+			devices: Mobile.IDeviceInfo[],
+			errors: string[]
+		}
+	}
+```
+
+This method accepts platform parameter. If provided only devices by specified platform will be returned.
+
+* Usage
+```TypeScript
+tns.devicesService.getAvailableEmulators()
+	.then(availableEmulatorsOutput => {
+		Object.keys(availableEmulatorsOutput)
+			.forEach(platform => {
+				availableEmulatorsOutput[platform].devices.forEach(device => console.log(device));
+			})
+	})
+```
+
+### startEmulator
+The `startEmulator` method starts the emulator specified by provided options. Returns an array of errors if something unexpected happens or null otherwise.
+* Usage
+```TypeScript
+tns.devicesService.startEmulator({imageIdentifier: "my emulator imageIdentifier"})
+	.then(errors => { });
 ```
 
 ## How to add a new method to Public API

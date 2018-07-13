@@ -835,7 +835,6 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register("hooksService", HooksServiceStub);
 		this.register('projectDataService', ProjectDataService);
 		this.register('devicePlatformsConstants', DevicePlatformsConstants);
-		this.register("emulatorPlatformService", EmulatorPlatformService);
 		this.register("androidResourcesMigrationService", AndroidResourcesMigrationServiceStub);
 		this.register("platformService", PlatformServiceStub);
 		this.register("commandsService", CommandsService);
