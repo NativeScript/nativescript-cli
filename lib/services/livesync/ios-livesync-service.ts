@@ -72,7 +72,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 	}
 
 	protected _getDeviceLiveSyncService(device: Mobile.IDevice, data: IProjectDir): INativeScriptDeviceLiveSyncService {
-		const service = this.$injector.resolve<INativeScriptDeviceLiveSyncService>(IOSDeviceLiveSyncService, { _device: device, data });
+		const service = this.$injector.resolve<INativeScriptDeviceLiveSyncService>(IOSDeviceLiveSyncService, { device, data });
 		return service;
 	}
 }
