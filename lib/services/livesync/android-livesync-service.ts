@@ -4,7 +4,7 @@ import { PlatformLiveSyncServiceBase } from "./platform-livesync-service-base";
 import * as semver from "semver";
 
 export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
-	private static MIN_SOCKETS_LIVESYNC_RUNTIME_VERSION = "4.2.0";
+	private static MIN_SOCKETS_LIVESYNC_RUNTIME_VERSION = "4.2.0-2018-07-13-01";
 	constructor(protected $platformsData: IPlatformsData,
 		protected $projectFilesManager: IProjectFilesManager,
 		private $injector: IInjector,
