@@ -86,6 +86,11 @@ interface IDebugOptions {
 	 * Defines if should print all availableDevices
 	 */
 	availableDevices?: boolean;
+	/**
+	 * Defines the timeout in seconds {N} CLI will wait to find the inspector socket port from device's logs.
+	 * If not provided, defaults to 10 seconds.
+	 */
+	timeout?: string;
 }
 
 /**

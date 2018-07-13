@@ -21,10 +21,11 @@ interface IIOSDebuggerPortService {
 	/**
 	 * Attaches on DEBUGGER_PORT_FOUND event and STARTING_IOS_APPLICATION events
 	 * In case when DEBUGGER_PORT_FOUND event is emitted, stores the port and clears the timeout if such.
-	 * In case when STARTING_IOS_APPLICATION event is emitted, sets the port to null and add timeout for 5000 miliseconds which checks if port is null and prints a warning.
+	 * In case when STARTING_IOS_APPLICATION event is emitted, sets the port to null and add timeout for 10000 miliseconds which checks if port is null and prints a warning.
 	 * @param {Mobile.IDevice} device - Describes the device which logs should be parsed.
 	 * @param {IProjectDir} data - Object that has a projectDir property.
+	 * @param {IDebugOptions} debugOptions
 	 * @returns {Promise<void>}
 	 */
-	attachToDebuggerPortFoundEvent(device: Mobile.IDevice, data: IProjectDir): Promise<void>;
+	attachToDebuggerPortFoundEvent(device: Mobile.IDevice, data: IProjectDir, debugOptions: IDebugOptions): Promise<void>;
 }

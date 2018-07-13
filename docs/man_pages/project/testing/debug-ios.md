@@ -27,7 +27,7 @@ While debugging, prints the output from the application in the console and watch
 * `--debug-brk` - Prepares, builds and deploys the application package on a device or in a simulator, runs the app, launches the developer tools of your Safari browser and stops at the first code statement.
 * `--start` - Attaches the debug tools to a deployed and running app and launches the developer tools of your Safari browser.
 * `--no-client` - If set, the NativeScript CLI attaches the debug tools but does not launch the developer tools in Safari. Could be used on already started Safari Web Inspector.
-* `--timeout` - Sets the number of seconds that NativeScript CLI will wait for the simulator/device to boot. If not set, the default timeout is 90 seconds.
+* `--timeout` - Sets the number of seconds that NativeScript CLI will wait to find the inspector socket port from device's logs. If not set, the default timeout is 10 seconds.
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--clean` - If set, forces rebuilding the native application.
 * `--chrome` - Deprecated - default behavior uses '--chrome' implicitly. Allows debugging in Chrome Developer Tools. If set, Safari Web Inspector is not started and debugging is attached to Chrome Developer Tools.
