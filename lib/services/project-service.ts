@@ -90,7 +90,7 @@ export class ProjectService implements IProjectService {
 			throw err;
 		}
 
-		this.$hooksService.executeAfterHooks(Hooks.createProject, {
+		await this.$hooksService.executeAfterHooks(Hooks.createProject, {
 			hookArgs: projectCreationSettings
 		});
 
