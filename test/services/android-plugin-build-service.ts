@@ -1,6 +1,6 @@
 import { AndroidPluginBuildService } from "../../lib/services/android-plugin-build-service";
 import { assert } from "chai";
-import { INCLUDE_GRADLE_NAME, AndroidBuildDefaults } from "../../lib/constants";
+import { INCLUDE_GRADLE_NAME, AndroidBuildDefaults, PLUGIN_BUILD_DATA_FILENAME } from "../../lib/constants";
 import { getShortPluginName } from "../../lib/common/helpers";
 import * as FsLib from "../../lib/common/file-system";
 import * as path from "path";
@@ -30,6 +30,8 @@ describe('androidPluginBuildService', () => {
 		latestRuntimeGradleAndroidVersion?: string,
 		projectRuntimeGradleVersion?: string,
 		projectRuntimeGradleAndroidVersion?: string,
+		addPreviousBuildInfo?: boolean,
+		hasChangesInShasums?: boolean,
 	}): IBuildOptions {
 		options = options || {};
 		spawnFromEventCalled = false;
@@ -53,6 +55,7 @@ describe('androidPluginBuildService', () => {
 		latestRuntimeGradleAndroidVersion?: string,
 		projectRuntimeGradleVersion?: string,
 		projectRuntimeGradleAndroidVersion?: string,
+		hasChangesInShasums?: boolean
 	}): void {
 		const testInjector: IInjector = new stubs.InjectorStub();
 		testInjector.register("fs", FsLib.FileSystem);
@@ -71,6 +74,11 @@ describe('androidPluginBuildService', () => {
 			}
 		});
 		testInjector.register('npm', setupNpm(options));
+		testInjector.register('filesHashService', <IFilesHashService>{
+			generateHashes: async (files: string[]): Promise<IStringDictionary> => ({}),
+			getChanges: async (files: string[], oldHashes: IStringDictionary): Promise<IStringDictionary> => ({}),
+			hasChangesInShasums: (oldHashes: IStringDictionary, newHashes: IStringDictionary): boolean => !!options.hasChangesInShasums
+		});
 
 		fs = testInjector.resolve("fs");
 		androidBuildPluginService = testInjector.resolve<AndroidPluginBuildService>(AndroidPluginBuildService);
@@ -113,7 +121,8 @@ describe('androidPluginBuildService', () => {
 		addResFolder?: boolean,
 		addAssetsFolder?: boolean,
 		addIncludeGradle?: boolean,
-		addLegacyIncludeGradle?: boolean
+		addLegacyIncludeGradle?: boolean,
+		addPreviousBuildInfo?: boolean,
 	}) {
 		const validAndroidManifestContent = `<?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -125,8 +134,8 @@ describe('androidPluginBuildService', () => {
 		>text_string</string>
 </resources>`;
 		const validIncludeGradleContent =
-`android {` +
-	(options.addLegacyIncludeGradle ? `
+			`android {` +
+			(options.addLegacyIncludeGradle ? `
 	productFlavors {
 		"nativescript-pro-ui" {
 			dimension "nativescript-pro-ui"
@@ -160,6 +169,13 @@ dependencies {
 
 		if (options.addLegacyIncludeGradle || options.addIncludeGradle) {
 			fs.writeFile(path.join(pluginFolder, INCLUDE_GRADLE_NAME), validIncludeGradleContent);
+		}
+
+		if (options.addPreviousBuildInfo) {
+			const pluginBuildDir = path.join(tempFolder, "my_plugin");
+			fs.ensureDirectoryExists(pluginBuildDir);
+			fs.writeFile(path.join(pluginBuildDir, PLUGIN_BUILD_DATA_FILENAME), "{}");
+			fs.writeFile(path.join(pluginFolder, "my_plugin.aar"), "{}");
 		}
 	}
 
@@ -204,6 +220,29 @@ dependencies {
 			await androidBuildPluginService.buildAar(config);
 
 			assert.isTrue(spawnFromEventCalled);
+		});
+
+		it('builds aar when plugin is already build and source files have changed since last buid', async () => {
+			const config: IBuildOptions = setup({
+				addManifest: true,
+				addPreviousBuildInfo: true,
+				hasChangesInShasums: true
+			});
+
+			await androidBuildPluginService.buildAar(config);
+
+			assert.isTrue(spawnFromEventCalled);
+		});
+
+		it('does not build aar when plugin is already build and source files have not changed', async () => {
+			const config: IBuildOptions = setup({
+				addManifest: true,
+				addPreviousBuildInfo: true
+			});
+
+			await androidBuildPluginService.buildAar(config);
+
+			assert.isFalse(spawnFromEventCalled);
 		});
 
 		it('builds aar with the latest runtime gradle versions when no project dir is specified', async () => {
@@ -316,7 +355,7 @@ dependencies {
 
 	function getGradleAndroidPluginVersion() {
 		const gradleWrappersContent = fs.readText(path.join(tempFolder, shortPluginName, "build.gradle"));
-		const androidVersionRegex = /com\.android\.tools\.build\:gradle\:(.*)\'\n/g;
+		const androidVersionRegex = /com\.android\.tools\.build\:gradle\:(.*)\'\r?\n/g;
 		const androidVersion = androidVersionRegex.exec(gradleWrappersContent)[1];
 
 		return androidVersion;
@@ -324,7 +363,7 @@ dependencies {
 
 	function getGradleVersion() {
 		const buildGradleContent = fs.readText(path.join(tempFolder, shortPluginName, "gradle", "wrapper", "gradle-wrapper.properties"));
-		const gradleVersionRegex = /gradle\-(.*)\-bin\.zip\n/g;
+		const gradleVersionRegex = /gradle\-(.*)\-bin\.zip\r?\n/g;
 		const gradleVersion = gradleVersionRegex.exec(buildGradleContent)[1];
 
 		return gradleVersion;

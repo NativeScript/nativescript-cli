@@ -217,3 +217,5 @@ export const PACKAGE_PLACEHOLDER_NAME = "__PACKAGE__";
 export class AddPlaformErrors {
 	public static InvalidFrameworkPathStringFormat = "Invalid frameworkPath: %s. Please ensure the specified frameworkPath exists.";
 }
+
+export const PLUGIN_BUILD_DATA_FILENAME = "plugin-data.json";
