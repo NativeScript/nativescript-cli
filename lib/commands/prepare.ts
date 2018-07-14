@@ -14,7 +14,6 @@ export class PrepareCommand implements ICommand {
 		const platformInfo: IPreparePlatformInfo = {
 			platform: args[0],
 			appFilesUpdaterOptions,
-			skipModulesNativeCheck: !this.$options.syncAllFiles,
 			platformTemplate: this.$options.platformTemplate,
 			projectData: this.$projectData,
 			config: this.$options,

@@ -469,7 +469,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					deviceBuildInfoDescriptor,
 					liveSyncData,
 					settings,
-					skipModulesNativeCheck: !liveSyncData.watchAllFiles,
 					bundle: liveSyncData.bundle,
 					release: liveSyncData.release,
 					env: liveSyncData.env
