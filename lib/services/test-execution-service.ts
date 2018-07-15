@@ -44,7 +44,6 @@ class TestExecutionService implements ITestExecutionService {
 						deviceId: this.$options.device,
 						emulator: this.$options.emulator
 					});
-					await this.$devicesService.detectCurrentlyAttachedDevices();
 					const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
 					const configOptions: IKarmaConfigOptions = JSON.parse(launcherConfig);
