@@ -6,6 +6,7 @@ import { PlatformsData } from "../lib/platforms-data";
 import { ProjectChangesService } from "../lib/services/project-changes-service";
 import * as Constants from "../lib/constants";
 import { FileSystem } from "../lib/common/file-system";
+import { HooksServiceStub } from "./stubs";
 
 // start tracking temporary folders/files
 temp.track();
@@ -36,6 +37,7 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 		this.injector.register("logger", {
 			warn: () => ({})
 		});
+		this.injector.register("hooksService", HooksServiceStub);
 
 		const fs = this.injector.resolve<IFileSystem>("fs");
 		fs.writeJson(path.join(this.projectDir, Constants.PACKAGE_JSON_FILE_NAME), {
@@ -149,9 +151,28 @@ describe("Project Changes Service Tests", () => {
 
 	describe("Accumulates Changes From Project Services", () => {
 		it("accumulates changes from the project service", async () => {
-			const iOSChanges = await serviceTest.projectChangesService.checkForChanges("ios", serviceTest.projectData, { bundle: false, release: false, provision: undefined, teamId: undefined });
+			const iOSChanges = await serviceTest.projectChangesService.checkForChanges({
+				platform: "ios",
+				projectData: serviceTest.projectData,
+				projectChangesOptions: {
+					bundle: false,
+					release: false,
+					provision: undefined,
+					teamId: undefined
+				}
+			});
 			assert.isTrue(!!iOSChanges.signingChanged, "iOS signingChanged expected to be true");
-			const androidChanges = await serviceTest.projectChangesService.checkForChanges("android", serviceTest.projectData, { bundle: false, release: false, provision: undefined, teamId: undefined });
+
+			const androidChanges = await serviceTest.projectChangesService.checkForChanges({
+				platform: "android",
+				projectData: serviceTest.projectData,
+				projectChangesOptions: {
+					bundle: false,
+					release: false,
+					provision: undefined,
+					teamId: undefined
+				}
+			});
 			assert.isFalse(!!androidChanges.signingChanged, "Android signingChanged expected to be false");
 		});
 	});

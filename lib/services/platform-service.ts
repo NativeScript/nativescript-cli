@@ -269,13 +269,17 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		const bundle = appFilesUpdaterOptions.bundle;
 		const nativePlatformStatus = (nativePrepare && nativePrepare.skipNativePrepare) ? constants.NativePlatformStatus.requiresPlatformAdd : constants.NativePlatformStatus.requiresPrepare;
-		const changesInfo = await this.$projectChangesService.checkForChanges(platform, projectData, {
-			bundle,
-			release: appFilesUpdaterOptions.release,
-			provision: config.provision,
-			teamId: config.teamId,
-			nativePlatformStatus,
-			skipModulesNativeCheck: skipNativeCheckOptions.skipModulesNativeCheck
+		const changesInfo = await this.$projectChangesService.checkForChanges({
+			platform,
+			projectData,
+			projectChangesOptions: {
+				bundle,
+				release: appFilesUpdaterOptions.release,
+				provision: config.provision,
+				teamId: config.teamId,
+				nativePlatformStatus,
+				skipModulesNativeCheck: skipNativeCheckOptions.skipModulesNativeCheck
+			}
 		});
 
 		this.$logger.trace("Changes info in prepare platform:", changesInfo);

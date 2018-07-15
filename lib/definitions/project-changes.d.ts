@@ -41,8 +41,12 @@ interface IProjectChangesOptions extends IAppFilesUpdaterOptions, IProvision, IT
 	nativePlatformStatus?: "1" | "2" | "3";
 }
 
+interface ICheckForChangesOptions extends IPlatform, IProjectDataComposition {
+	projectChangesOptions: IProjectChangesOptions
+}
+
 interface IProjectChangesService {
-	checkForChanges(platform: string, projectData: IProjectData, buildOptions: IProjectChangesOptions): Promise<IProjectChangesInfo>;
+	checkForChanges(checkForChangesOpts: ICheckForChangesOptions): Promise<IProjectChangesInfo>;
 	getPrepareInfo(platform: string, projectData: IProjectData): IPrepareInfo;
 	savePrepareInfo(platform: string, projectData: IProjectData): void;
 	getPrepareInfoFilePath(platform: string, projectData: IProjectData): string;

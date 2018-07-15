@@ -651,7 +651,7 @@ export class ChildProcessStub {
 }
 
 export class ProjectChangesService implements IProjectChangesService {
-	public async checkForChanges(platform: string): Promise<IProjectChangesInfo> {
+	public async checkForChanges(checkForChangesOpts: ICheckForChangesOptions): Promise<IProjectChangesInfo> {
 		return <IProjectChangesInfo>{};
 	}
 
