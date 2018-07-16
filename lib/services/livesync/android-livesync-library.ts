@@ -17,7 +17,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	private operationPromises: IDictionary<any>;
 	private socketError: string | Error;
 	private socketConnection: IDuplexSocket;
-	private configuration: ILivesyncToolConfiguration;
+	private configuration: IAndroidLivesyncToolConfiguration;
 	private appPlatformsPath: string;
 
 	constructor(private $androidProcessService: Mobile.IAndroidProcessService,
@@ -30,7 +30,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			this.socketConnection = null;
 	}
 
-	public async connect(configuration: ILivesyncToolConfiguration): Promise<void> {
+	public async connect(configuration: IAndroidLivesyncToolConfiguration): Promise<void> {
 		if (!configuration.appIdentifier) {
 			this.$errors.fail(`You need to provide "appIdentifier" as a configuration property!`);
 		}

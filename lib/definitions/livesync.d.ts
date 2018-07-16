@@ -383,7 +383,7 @@ interface IAndroidLivesyncTool {
 	 * @param configuration - The configuration to the socket connection.
 	 * @returns {Promise<void>}
 	 */
-	connect(configuration: ILivesyncToolConfiguration): Promise<void>;
+	connect(configuration: IAndroidLivesyncToolConfiguration): Promise<void>;
 	/**
 	 * Sends a file through the socket.
 	 * @param filePath - The full path to the file.
@@ -437,11 +437,26 @@ interface IAndroidLivesyncTool {
 	end(): void;
 }
 
-interface ILivesyncToolConfiguration {
+interface IAndroidLivesyncToolConfiguration {
+	/**
+	 * The application identifier.
+	 */
 	appIdentifier: string;
+	/**
+	 * The device identifier.
+	 */
 	deviceIdentifier: string;
-	appPlatformsPath: string; // path to platforms/android/app/src/main/assets/app/
+	/**
+	 * The path to app folder inside platforms folder: platforms/android/app/src/main/assets/app/
+	 */
+	appPlatformsPath: string;
+	/**
+	 * If not provided, defaults to 127.0.0.1
+	 */
 	localHostAddress?: string;
+	/**
+	 * If provider will call it when an error occurs.
+	 */
 	errorHandler?: any;
 }
 

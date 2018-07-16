@@ -70,13 +70,13 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		if (isFullSync) {
 			transferredFiles = await this._transferDirectory(deviceAppData, localToDevicePaths, projectFilesPath);
 		} else {
-			transferredFiles = await this._transferFiles(deviceAppData, localToDevicePaths, projectFilesPath);
+			transferredFiles = await this._transferFiles(localToDevicePaths);
 		}
 
 		return transferredFiles;
 	}
 
-	private async _transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<Mobile.ILocalToDevicePathData[]> {
+	private async _transferFiles(localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<Mobile.ILocalToDevicePathData[]> {
 		await this.livesyncTool.sendFiles(localToDevicePaths.map(localToDevicePathData => localToDevicePathData.getLocalPath()));
 
 		return localToDevicePaths;
@@ -94,15 +94,11 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 			transferedFiles = localToDevicePaths;
 		} else {
 			const changedShasums = deviceHashService.getChnagedShasums(oldShasums, currentShasums);
-			const changedFiles = _.map(changedShasums, (hash: string, pathToFile: string) => pathToFile);
+			const changedFiles = _.keys(changedShasums);
 			if (changedFiles.length) {
 				await this.livesyncTool.sendFiles(changedFiles);
 				await deviceHashService.uploadHashFileToDevice(currentShasums);
-				transferedFiles = localToDevicePaths.filter(localToDevicePathData => {
-					if (changedFiles.indexOf(localToDevicePathData.getLocalPath()) >= 0) {
-						return true;
-					}
-				});
+				transferedFiles = localToDevicePaths.filter(localToDevicePathData => changedFiles.indexOf(localToDevicePathData.getLocalPath()) >= 0);
 			} else {
 				transferedFiles = [];
 			}
