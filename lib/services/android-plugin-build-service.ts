@@ -187,9 +187,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		});
 
 		if (shouldBuildAar) {
-			// In case plugin was already built in the current process, we need to clean the old sources as they may break the new build.
-			this.$fs.deleteDirectory(pluginTempDir);
-			this.$fs.ensureDirectoryExists(pluginTempDir);
+			this.cleanPluginDir(pluginTempDir);
 
 			const pluginTempMainSrcDir = path.join(pluginTempDir, "src", "main");
 			await this.updateManifest(manifestFilePath, pluginTempMainSrcDir, shortPluginName);
@@ -203,16 +201,19 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return shouldBuildAar;
 	}
 
+	private cleanPluginDir(pluginTempDir: string): void {
+		// In case plugin was already built in the current process, we need to clean the old sources as they may break the new build.
+		this.$fs.deleteDirectory(pluginTempDir);
+		this.$fs.ensureDirectoryExists(pluginTempDir);
+	}
+
 	private getSourceFilesHashes(pluginTempPlatformsAndroidDir: string, shortPluginName: string): Promise<IStringDictionary> {
 		const pathToAar = path.join(pluginTempPlatformsAndroidDir, `${shortPluginName}.aar`);
-		const pluginNativeDataFiles = this.$fs.enumerateFilesInDirectorySync(pluginTempPlatformsAndroidDir, (file: string, stat: IFsStats) => {
-			return file !== pathToAar;
-		});
-
+		const pluginNativeDataFiles = this.$fs.enumerateFilesInDirectorySync(pluginTempPlatformsAndroidDir, (file: string, stat: IFsStats) => file !== pathToAar);
 		return this.$filesHashService.generateHashes(pluginNativeDataFiles);
 	}
 
-	private async writePluginHashInfo(fileHashesInfo: IStringDictionary, pluginTempDir: string): Promise<void> {
+	private writePluginHashInfo(fileHashesInfo: IStringDictionary, pluginTempDir: string): void {
 		const buildDataFile = this.getPathToPluginBuildDataFile(pluginTempDir);
 		this.$fs.writeJson(buildDataFile, fileHashesInfo);
 	}
@@ -226,7 +227,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		fileHashesInfo: IStringDictionary
 	}): Promise<boolean> {
 
-		let shouldBuildAar = !!opts.manifestFilePath || opts.androidSourceDirectories.length > 0;
+		let shouldBuildAar = !!opts.manifestFilePath || !!opts.androidSourceDirectories.length;
 
 		if (shouldBuildAar &&
 			this.$fs.exists(opts.pluginTempDir) &&

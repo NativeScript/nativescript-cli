@@ -42,7 +42,7 @@ interface IProjectChangesOptions extends IAppFilesUpdaterOptions, IProvision, IT
 }
 
 interface ICheckForChangesOptions extends IPlatform, IProjectDataComposition {
-	projectChangesOptions: IProjectChangesOptions
+	projectChangesOptions: IProjectChangesOptions;
 }
 
 interface IProjectChangesService {
