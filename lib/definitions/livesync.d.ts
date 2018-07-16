@@ -420,7 +420,7 @@ interface IAndroidLivesyncTool {
 	 * @param timeout - The timeout in milliseconds
 	 * @returns {Promise<void>}
 	 */
-	sendDoSyncOperation(operationId: string, timeout?: number): Promise<void>;
+	sendDoSyncOperation(operationId: string, timeout?: number): Promise<IAndroidLivesyncSyncOperationResult>;
 	/**
 	 * Generates new operation identifier.
 	 */
@@ -458,6 +458,11 @@ interface IAndroidLivesyncToolConfiguration {
 	 * If provider will call it when an error occurs.
 	 */
 	errorHandler?: any;
+}
+
+interface IAndroidLivesyncSyncOperationResult {
+	operationId: string,
+	didRefresh: boolean
 }
 
 interface IDeviceProjectRootOptions {

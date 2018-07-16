@@ -10,6 +10,7 @@ const CREATE_FILE_OPERATION = 8;
 const DO_SYNC_OPERATION = 9;
 const ERROR_REPORT = 1;
 const OPERATION_END_REPORT = 2;
+const OPERATION_END_NO_REFRESH_REPORT_CODE = 3;
 const REPORT_LENGTH = 1;
 const DEFAULT_LOCAL_HOST_ADDRESS = "127.0.0.1";
 
@@ -118,9 +119,9 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		return !!this.operationPromises[operationId];
 	}
 
-	public sendDoSyncOperation(operationId: string, timeout: number): Promise<any> {
+	public sendDoSyncOperation(operationId: string, timeout: number): Promise<IAndroidLivesyncSyncOperationResult> {
 		const id = operationId || this.generateOperationIdentifier();
-		const operationPromise = new Promise((resolve: Function, reject: Function) => {
+		const operationPromise: Promise<IAndroidLivesyncSyncOperationResult> = new Promise((resolve: Function, reject: Function) => {
 			this.verifyActiveConnection(reject);
 
 			const message = `${DO_SYNC_OPERATION}${id}`;
@@ -328,16 +329,18 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			const errorMessage = infoBuffer.toString();
 			this.handleSocketError(socketId, errorMessage);
 		} else if (reportType === OPERATION_END_REPORT) {
-			this.handleSyncEnd(infoBuffer);
+			this.handleSyncEnd({data:infoBuffer, didRefresh: true});
+		} else if (reportType === OPERATION_END_NO_REFRESH_REPORT_CODE) {
+			this.handleSyncEnd({data:infoBuffer, didRefresh: false});
 		}
 	}
 
-	private handleSyncEnd(data: any) {
+	private handleSyncEnd({data, didRefresh}: {data: any, didRefresh: boolean}) {
 		const operationId = data.toString();
 		const promiseHandler = this.operationPromises[operationId];
 
 		if (promiseHandler) {
-			promiseHandler.resolve(operationId);
+			promiseHandler.resolve({operationId, didRefresh});
 			delete this.operationPromises[operationId];
 		}
 	}
