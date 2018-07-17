@@ -1,8 +1,8 @@
-# android-livesync-library
-Library for livesyncing changes to a NativeScript application on Android.
+# android-livesync-tool
+Tool for livesyncing changes to a NativeScript application on Android.
 
 ## Usage
-The library has a few public methods that allow file manipulation to the files of a NativeScript application and provide control for refreshing the application. Restarting the application if necessary should be done by the user of this library.
+The tool has a few public methods that allow file manipulation to the files of a NativeScript application and provide control for refreshing the application. Restarting the application if necessary should be done by the user of this tool.
 
 ### Getting an instance
 
@@ -12,7 +12,7 @@ const globalModulesPath = require("global-modules-path");
 const cliPath = globalModulesPath.getPath("nativescript", "tns");
 cli = require(cliPath);
 
-const liveSyncTool = cli.androidLivesyncLibrary;
+const liveSyncTool = cli.androidLivesyncTool;
 ```
 
 

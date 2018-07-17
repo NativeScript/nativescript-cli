@@ -12,6 +12,8 @@ const ERROR_REPORT = 1;
 const OPERATION_END_REPORT = 2;
 const OPERATION_END_NO_REFRESH_REPORT_CODE = 3;
 const REPORT_LENGTH = 1;
+const SYNC_OPERATION_TIMEOUT = 60000;
+const TRY_CONNECT_TIMEOUT = 30000;
 const DEFAULT_LOCAL_HOST_ADDRESS = "127.0.0.1";
 
 export class AndroidLivesyncTool implements IAndroidLivesyncTool {
@@ -19,7 +21,6 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	private socketError: string | Error;
 	private socketConnection: IDuplexSocket;
 	private configuration: IAndroidLivesyncToolConfiguration;
-	private appPlatformsPath: string;
 
 	constructor(private $androidProcessService: Mobile.IAndroidProcessService,
 		private $errors: IErrors,
@@ -49,7 +50,6 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		}
 
 		this.configuration = configuration;
-		this.appPlatformsPath = this.configuration.appPlatformsPath;
 		this.socketError = null;
 
 		const port = await this.$androidProcessService.forwardFreeTcpToAbstractPort({
@@ -58,7 +58,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			abstractPort: `localabstract:${configuration.appIdentifier}-livesync`
 		});
 
-		const connectionResult = await this.connectEventuallyUntilTimeout(this.createSocket.bind(this, port), 30000);
+		const connectionResult = await this.connectEventuallyUntilTimeout(this.createSocket.bind(this, port), TRY_CONNECT_TIMEOUT);
 		this.handleConnection(connectionResult);
 	}
 
@@ -141,7 +141,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 				if (this.isOperationInProgress(id)) {
 					this.handleSocketError(socketId, "Sync operation is taking too long");
 				}
-			}, 60000);
+			}, SYNC_OPERATION_TIMEOUT);
 		});
 
 		return operationPromise;
@@ -282,18 +282,18 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	private connectEventuallyUntilTimeout(factory: () => IDuplexSocket, timeout: number): Promise<{socket: IDuplexSocket, data: NodeBuffer | string}> {
 		return new Promise((resolve, reject) => {
 			let lastKnownError: Error | string,
-				isResolved = false;
+				isConnected = false;
 
 			setTimeout(() => {
-				if (!isResolved) {
-					isResolved = true;
+				if (!isConnected) {
+					isConnected = true;
 					reject(lastKnownError);
 				}
 			}, timeout);
 
 			const tryConnect = () => {
 				const tryConnectAfterTimeout = (error: Error) => {
-					if (isResolved) {
+					if (isConnected) {
 						return;
 					}
 
@@ -310,7 +310,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 				socket.once("data", data => {
 					socket.removeListener("close", tryConnectAfterTimeout);
 					socket.removeListener("error", tryConnectAfterTimeout);
-					isResolved = true;
+					isConnected = true;
 					resolve({ socket, data });
 				});
 				socket.on("close", tryConnectAfterTimeout);
@@ -391,9 +391,9 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	}
 
 	private resolveRelativePath(filePath: string): string {
-		const relativeFilePath = path.relative(this.appPlatformsPath, filePath);
+		const relativeFilePath = path.relative(this.configuration.appPlatformsPath, filePath);
 
 		return this.$mobileHelper.buildDevicePath(relativeFilePath);
 	}
 }
-$injector.register("androidLivesyncLibrary", AndroidLivesyncTool);
+$injector.register("androidLivesyncTool", AndroidLivesyncTool);

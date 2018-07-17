@@ -14,6 +14,12 @@ export abstract class DeviceLiveSyncServiceBase {
 		return _.includes(fastSyncFileExtensions, path.extname(filePath));
 	}
 
+	protected canExecuteFastSyncForPaths(localToDevicePaths: Mobile.ILocalToDevicePathData[], projectData: IProjectData, platform: string) {
+		return !_.some(localToDevicePaths,
+			(localToDevicePath: Mobile.ILocalToDevicePathData) =>
+				!this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
+	}
+
 	@cache()
 	private getFastLiveSyncFileExtensions(platform: string, projectData: IProjectData): string[] {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);

@@ -362,9 +362,19 @@ interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase 
 	 * Removes specified files from a connected device
 	 * @param  {Mobile.IDeviceAppData} deviceAppData Data about device and app.
 	 * @param  {Mobile.ILocalToDevicePathData[]} localToDevicePaths Object containing a mapping of file paths from the system to the device.
+	 * @param  {string} projectFilesPath The Path to the app folder inside platforms folder
 	 * @return {Promise<void>}
 	 */
 	removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath?: string): Promise<void>;
+
+	/**
+	 * Transfers specified files to a connected device
+	 * @param  {Mobile.IDeviceAppData} deviceAppData Data about device and app.
+	 * @param  {Mobile.ILocalToDevicePathData[]} localToDevicePaths Object containing a mapping of file paths from the system to the device.
+	 * @param  {string} projectFilesPath The Path to the app folder inside platforms folder
+	 * @param  {boolean} isFullSync Indicates if the operation is part of a fullSync
+	 * @return {Promise<Mobile.ILocalToDevicePathData[]>} Returns the ILocalToDevicePathData of all transfered files
+	 */
 	transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<Mobile.ILocalToDevicePathData[]>;
 }
 
