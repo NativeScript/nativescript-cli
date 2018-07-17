@@ -20,7 +20,7 @@ function browserDetect(ua) {
     rOpera.exec(ua) || rSafari.exec(ua) || [];
 }
 
-function deviceInformation(pkg) {
+export function deviceInformation(pkg) {
   const libraries = [];
   let browser;
   let platform;
@@ -56,7 +56,7 @@ function deviceInformation(pkg) {
   }
 
   // Return the device information string.
-  const parts = [`${pkg.name}/${pkg.version}`];
+  const parts = [`js-${pkg.name}/${pkg.version}`];
 
   if (libraries.length !== 0) { // Add external library information.
     parts.push(`(${libraries.sort().join(', ')})`);
