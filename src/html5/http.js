@@ -56,7 +56,7 @@ function deviceInformation(pkg) {
   }
 
   // Return the device information string.
-  const parts = [`js-kinvey-html5-sdk/${pkg.version}`];
+  const parts = [`${pkg.name}/${pkg.version}`];
 
   if (libraries.length !== 0) { // Add external library information.
     parts.push(`(${libraries.sort().join(', ')})`);
