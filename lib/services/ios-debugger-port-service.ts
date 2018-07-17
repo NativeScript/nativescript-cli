@@ -109,6 +109,9 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 
 	private getTimeout(debugOptions: IDebugOptions): number {
 		let timeout = parseInt(debugOptions && debugOptions.timeout, 10);
+		if (timeout === 0) {
+			timeout = Number.MAX_SAFE_INTEGER;
+		}
 		if (!timeout) {
 			timeout = IOSDebuggerPortService.DEFAULT_TIMEOUT_IN_SECONDS;
 		}
