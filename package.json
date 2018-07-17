@@ -16,8 +16,6 @@
       "packages/kinvey-js-sdk"
     ],
     "nohoist": [
-      "**/babel-polyfill",
-      "**/babel-polyfill/**",
       "**/karma",
       "**/karma/**",
       "**/karma-babel-preprocessor",
