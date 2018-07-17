@@ -1,6 +1,6 @@
 import * as path from "path";
 import { NODE_MODULES_FOLDER_NAME, NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME } from "../constants";
-import { getHash } from "../common/helpers";
+import { getHash, hook } from "../common/helpers";
 
 const prepareInfoFileName = ".nsprepareinfo";
 
@@ -45,18 +45,25 @@ export class ProjectChangesService implements IProjectChangesService {
 	private _outputProjectMtime: number;
 	private _outputProjectCTime: number;
 
+	private get $hooksService(): IHooksService {
+		return this.$injector.resolve<IHooksService>("hooksService");
+	}
+
 	constructor(
 		private $platformsData: IPlatformsData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $fs: IFileSystem,
-		private $filesHashService: IFilesHashService) {
+		private $filesHashService: IFilesHashService,
+		private $injector: IInjector) {
 	}
 
 	public get currentChanges(): IProjectChangesInfo {
 		return this._changesInfo;
 	}
 
-	public async checkForChanges(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): Promise<IProjectChangesInfo> {
+	@hook("checkForChanges")
+	public async checkForChanges(checkForChangesOpts: ICheckForChangesOptions): Promise<IProjectChangesInfo> {
+		const { platform, projectData, projectChangesOptions } = checkForChangesOpts;
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		this._changesInfo = new ProjectChangesInfo();
 		const isNewPrepareInfo = await this.ensurePrepareInfo(platform, projectData, projectChangesOptions);
