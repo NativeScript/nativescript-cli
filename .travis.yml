@@ -1,5 +1,5 @@
 branches:
-  only: 
+  only:
     - master
 env:
   global:
@@ -49,11 +49,11 @@ deploy:
   on:
     branch: master
   api_key:
-    secure: "ghoz7UYqvQKZGmAAt2OQ9tIyzzU5o5QKHzvtRpC9ml7WYtW7HxXtC93UCQfylGJKfSJRYCvoJ7IHi6TvOIflNKJD747jYAGtPiaQDG0HGf+GesL/ormhB3MrS7Br6/fkmzlbYHizwwSurM1w8g0hFXERFv9VD3adDWAG63ZGYec="
+    secure: "FM9QLOkFq6JpHlfHkT1i2Ht1ZlttZLq7K3kQNLabw7Z5+BPMcy/f3LRJkAkYMezrKLKRkq1uXmhY0BapoTnR9AVEO/t4g6dtbZ1TZ3xBH/HHnFofTFubOrc7+61DJzKduYtnQ/sn3EEOkN8jrXSY9uas4qZh7PSm1hcfjPI8gdI="
 - provider: npm
   skip_cleanup: true
   email: nativescript@telerik.com
   on:
     branch: release
   api_key:
-    secure: "ghoz7UYqvQKZGmAAt2OQ9tIyzzU5o5QKHzvtRpC9ml7WYtW7HxXtC93UCQfylGJKfSJRYCvoJ7IHi6TvOIflNKJD747jYAGtPiaQDG0HGf+GesL/ormhB3MrS7Br6/fkmzlbYHizwwSurM1w8g0hFXERFv9VD3adDWAG63ZGYec="
+    secure: "FM9QLOkFq6JpHlfHkT1i2Ht1ZlttZLq7K3kQNLabw7Z5+BPMcy/f3LRJkAkYMezrKLKRkq1uXmhY0BapoTnR9AVEO/t4g6dtbZ1TZ3xBH/HHnFofTFubOrc7+61DJzKduYtnQ/sn3EEOkN8jrXSY9uas4qZh7PSm1hcfjPI8gdI="
