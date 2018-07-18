@@ -124,7 +124,8 @@ class TestExecutionService implements ITestExecutionService {
 						watchAllFiles: this.$options.syncAllFiles,
 						bundle: !!this.$options.bundle,
 						release: this.$options.release,
-						env: this.$options.env
+						env: this.$options.env,
+						timeout: this.$options.timeout
 					};
 
 					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
@@ -251,7 +252,8 @@ class TestExecutionService implements ITestExecutionService {
 						watchAllFiles: this.$options.syncAllFiles,
 						bundle: !!this.$options.bundle,
 						release: this.$options.release,
-						env: this.$options.env
+						env: this.$options.env,
+						timeout: this.$options.timeout
 					};
 
 					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);

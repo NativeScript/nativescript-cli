@@ -109,7 +109,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			clean: this.$options.clean,
 			bundle: !!this.$options.bundle,
 			release: this.$options.release,
-			env: this.$options.env
+			env: this.$options.env,
+			timeout: this.$options.timeout
 		};
 
 		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);

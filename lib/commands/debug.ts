@@ -159,7 +159,29 @@ export class DebugIOSCommand implements ICommand {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
+		const isValidTimeoutOption = this.isValidTimeoutOption();
+		if (!isValidTimeoutOption) {
+			this.$errors.fail(`Timeout option specifies the seconds NativeScript CLI will wait to find the inspector socket port from device's logs. Must be a number.`);
+		}
+
 		return await this.debugPlatformCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.iOS);
+	}
+
+	private isValidTimeoutOption() {
+		if (!this.$options.timeout) {
+			return true;
+		}
+
+		const timeout = parseInt(this.$options.timeout, 10);
+		if (timeout === 0) {
+			return true;
+		}
+
+		if (!timeout) {
+			return false;
+		}
+
+		return true;
 	}
 
 	public platform = this.$devicePlatformsConstants.iOS;

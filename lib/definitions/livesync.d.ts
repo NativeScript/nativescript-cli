@@ -159,6 +159,12 @@ interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IBundle, IRelease, IOp
 	 * Forces a build before the initial livesync.
 	 */
 	clean?: boolean;
+
+	/**
+	 * Defines the timeout in seconds {N} CLI will wait to find the inspector socket port from device's logs.
+	 * If not provided, defaults to 10seconds.
+	 */
+	timeout: string;
 }
 
 interface ILatestAppPackageInstalledSettings extends IDictionary<IDictionary<boolean>> { /* empty */ }
@@ -337,7 +343,7 @@ interface IPlatformLiveSyncService {
 	fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo>;
 	liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo>;
 	refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
-	prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir, liveSyncInfo: ILiveSyncInfo): Promise<void>;
+	prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir, liveSyncInfo: ILiveSyncInfo, debugOptions: IDebugOptions): Promise<void>;
 }
 
 interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase {
