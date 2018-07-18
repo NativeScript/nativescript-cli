@@ -33,7 +33,7 @@ export class SyncManager {
     this._syncStateManager = syncStateManager;
   }
 
-  push(collection, query) {
+  push(collection) {
     if (isEmpty(collection) || !isNonemptyString(collection)) {
       return Promise.reject(new KinveyError('Invalid or missing collection name'));
     }
@@ -44,14 +44,8 @@ export class SyncManager {
     }
 
     this._markPushStart(collection);
-    let prm = Promise.resolve();
 
-    if (query) {
-      prm = this._getEntityIdsForQuery(collection, query);
-    }
-
-    return prm
-      .then((entityIds) => this._syncStateManager.getSyncItems(collection, entityIds))
+    return this._syncStateManager.getSyncItems(collection)
       .then((syncItems = []) => this._processSyncItems(collection, syncItems))
       .then((pushResult) => {
         this._markPushEnd(collection);
