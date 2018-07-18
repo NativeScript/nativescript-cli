@@ -1,5 +1,4 @@
 import { Client } from '../client';
-import { Stream } from './user-to-user';
 import { getLiveService } from './live-service';
 
 function _getLiveService() {
@@ -35,7 +34,6 @@ function isInitialized() {
  * @private
  */
 export const LiveServiceFacade = {
-  Stream,
   onConnectionStatusUpdates,
   offConnectionStatusUpdates,
   isInitialized
