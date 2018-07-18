@@ -99,12 +99,11 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
     });
 
     it('should read the offline entities the query matches, to filter sync items', () => {
-      const query = new Query();
       const localEntitiesToReturn = [{ _id: '123' }];
       offlineRepoMock.read = createPromiseSpy(localEntitiesToReturn);
-      return syncManager.push(collection, query)
+      return syncManager.push(collection)
         .then(() => {
-          validateSpyCalls(offlineRepoMock.read, 1, [collection, query]);
+          validateSpyCalls(offlineRepoMock.read, 0, [collection]);
         });
     });
 
@@ -116,13 +115,12 @@ describe('SyncManager delegating to repos and SyncStateManager', () => {
     });
 
     it('should call SyncStateManager.getSyncItems() with the ids of entities matching the query', () => {
-      const query = new Query();
       const entityId = randomString();
       const localEntitiesToReturn = [{ _id: entityId }];
       offlineRepoMock.read = createPromiseSpy(localEntitiesToReturn);
-      return syncManager.push(collection, query)
+      return syncManager.push(collection)
         .then(() => {
-          validateSpyCalls(syncStateManagerMock.getSyncItems, 1, [collection, entityId]);
+          validateSpyCalls(syncStateManagerMock.getSyncItems, 1, [collection]);
         });
     });
 

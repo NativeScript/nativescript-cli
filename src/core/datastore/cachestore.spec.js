@@ -1407,31 +1407,6 @@ describe('CacheStore', () => {
           expect(count).toEqual(0);
         });
     });
-
-    it('should push only the entities matching the query to the backend', () => {
-      const store = new CacheStore(collection);
-      const syncStore = new SyncStore(collection);
-      const entity1 = { _id: randomString() };
-      const entity2 = { _id: randomString() };
-
-      return syncStore.save(entity1)
-        .then(() => syncStore.save(entity2))
-        .then(() => {
-          nock(store.client.apiHostname)
-            .put(`${store.pathname}/${entity1._id}`, entity1)
-            .reply(200, entity1);
-
-          const query = new Query().equalTo('_id', entity1._id);
-          return store.push(query);
-        })
-        .then((result) => {
-          expect(result).toEqual([{ _id: entity1._id, operation: SyncOperation.Update, entity: entity1 }]);
-          return store.pendingSyncCount();
-        })
-        .then((count) => {
-          expect(count).toEqual(1);
-        });
-    });
   });
 
   describe('pull()', () => {
