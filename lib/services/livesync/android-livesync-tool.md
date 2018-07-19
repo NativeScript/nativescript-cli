@@ -155,18 +155,19 @@ When called, sendDoSyncOperation will tell the runtime to execute a script that 
 * Definition
 ```TypeScript
 /**
- * Sends doSyncOperation that will be handeled by the runtime.
+ * Sends doSyncOperation that will be handled by the runtime.
+ * @param doRefresh - Indicates if the application should be restarted. Defaults to true.
  * @param operationId - The identifier of the operation
- * @param timeout - The timeout in miliseconds
+ * @param timeout - The timeout in milliseconds
  * @returns {Promise<void>}
  */
-sendDoSyncOperation(operationId: string, timeout?: number): Promise<void>;
+sendDoSyncOperation(doRefresh: boolean, timeout?: number, operationId?: string): Promise<IAndroidLivesyncSyncOperationResult>;
 ```
 
 * Example:
 ```JavaScript
 const operationId = liveSyncTool.generateOperationIdentifier();
-await liveSyncTool.sendDoSyncOperation(operationId);
+await liveSyncTool.sendDoSyncOperation(true, 10000, operationId);
 ```
 
 ### Calling end

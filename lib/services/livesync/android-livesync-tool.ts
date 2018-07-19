@@ -12,6 +12,9 @@ const ERROR_REPORT = 1;
 const OPERATION_END_REPORT = 2;
 const OPERATION_END_NO_REFRESH_REPORT_CODE = 3;
 const REPORT_LENGTH = 1;
+const DO_REFRESH_LENGTH = 1;
+const DO_REFRESH = 1;
+const SKIP_REFRESH = 0;
 const SYNC_OPERATION_TIMEOUT = 60000;
 const TRY_CONNECT_TIMEOUT = 30000;
 const DEFAULT_LOCAL_HOST_ADDRESS = "127.0.0.1";
@@ -119,14 +122,18 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		return !!this.operationPromises[operationId];
 	}
 
-	public sendDoSyncOperation(operationId: string, timeout: number): Promise<IAndroidLivesyncSyncOperationResult> {
+	public sendDoSyncOperation(doRefresh = true , timeout?: number, operationId?: string): Promise<IAndroidLivesyncSyncOperationResult> {
 		const id = operationId || this.generateOperationIdentifier();
 		const operationPromise: Promise<IAndroidLivesyncSyncOperationResult> = new Promise((resolve: Function, reject: Function) => {
 			this.verifyActiveConnection(reject);
-
 			const message = `${DO_SYNC_OPERATION}${id}`;
+			const headerBuffer = Buffer.alloc(Buffer.byteLength(message) + DO_REFRESH_LENGTH);
 			const socketId = this.socketConnection.uid;
-			const hash = crypto.createHash("md5").update(message).digest();
+			const doRefreshCode = doRefresh ? DO_REFRESH : SKIP_REFRESH;
+			const offset = headerBuffer.write(message);
+
+			headerBuffer.writeUInt8(doRefreshCode, offset);
+			const hash = crypto.createHash("md5").update(headerBuffer).digest();
 
 			this.operationPromises[id] = {
 				resolve,
@@ -134,14 +141,15 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 				socketId
 			};
 
-			this.socketConnection.write(message);
+			this.socketConnection.write(headerBuffer);
 			this.socketConnection.write(hash);
 
+			timeout = timeout || SYNC_OPERATION_TIMEOUT;
 			setTimeout(() => {
 				if (this.isOperationInProgress(id)) {
 					this.handleSocketError(socketId, "Sync operation is taking too long");
 				}
-			}, SYNC_OPERATION_TIMEOUT);
+			}, timeout);
 		});
 
 		return operationPromise;

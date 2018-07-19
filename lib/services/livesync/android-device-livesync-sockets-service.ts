@@ -35,7 +35,8 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 
 		if (liveSyncInfo.modifiedFilesData.length) {
 			const operationIdentifier = this.livesyncTool.generateOperationIdentifier();
-			const doSyncPromise = this.livesyncTool.sendDoSyncOperation(operationIdentifier);
+
+			const doSyncPromise = this.livesyncTool.sendDoSyncOperation(canExecuteFastSync, null, operationIdentifier);
 
 			const syncInterval : NodeJS.Timer = setInterval(() => {
 				if (this.livesyncTool.isOperationInProgress(operationIdentifier)) {

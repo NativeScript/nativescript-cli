@@ -426,11 +426,12 @@ interface IAndroidLivesyncTool {
 	removeFiles(filePaths: string[]): Promise<boolean[]>;
 	/**
 	 * Sends doSyncOperation that will be handled by the runtime.
+	 * @param doRefresh - Indicates if the application should be restarted. Defaults to true.
 	 * @param operationId - The identifier of the operation
 	 * @param timeout - The timeout in milliseconds
 	 * @returns {Promise<void>}
 	 */
-	sendDoSyncOperation(operationId: string, timeout?: number): Promise<IAndroidLivesyncSyncOperationResult>;
+	sendDoSyncOperation(doRefresh: boolean, timeout?: number, operationId?: string): Promise<IAndroidLivesyncSyncOperationResult>;
 	/**
 	 * Generates new operation identifier.
 	 */
