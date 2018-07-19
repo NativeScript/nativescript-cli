@@ -22,11 +22,16 @@ export class PacoteService implements IPacoteService {
 			_.extend(extractOptions, options);
 		}
 
-		const source = pacote.tarball.stream(packageName, { cache: await this.$npm.getCachePath() });
-		const destination = tar.x(extractOptions);
-		source.pipe(destination);
-
+		const cache = await this.$npm.getCachePath();
 		return new Promise<void>((resolve, reject) => {
+			const source = pacote.tarball.stream(packageName, { cache });
+			source.on("error", (err: Error) => {
+				reject(err);
+			});
+
+			const destination = tar.x(extractOptions);
+			source.pipe(destination);
+
 			destination.on("error", (err: Error) => reject(err));
 			destination.on("finish", () => resolve());
 		});
