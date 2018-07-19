@@ -18,7 +18,7 @@ module.exports = function (config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'test/**/*.js'
+      'tests/**/*.spec.js'
     ],
 
 
@@ -29,14 +29,14 @@ module.exports = function (config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'test/**/*.js': ['webpack', 'sourcemap']
+      'tests/**/*.spec.js': ['webpack', 'sourcemap']
     },
 
 
     // test results reporter to use
     // possible values: 'dots', 'progress', 'mocha'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
+    reporters: ['mocha'],
 
 
     // web server port
@@ -76,13 +76,6 @@ module.exports = function (config) {
       devtool: 'eval',
       module: {
         rules: [
-          {
-            loader: 'string-replace-loader',
-            options: {
-              search: '__SDK__',
-              replace: path.join(__dirname, './src'),
-            }
-          },
           {
             test: /\.js$/,
             exclude: /(node_modules)/,

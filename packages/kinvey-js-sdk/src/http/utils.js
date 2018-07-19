@@ -4,7 +4,9 @@ import { getConfig } from '../client';
 
 export function getKinveyAuthorizationHeader(info) {
   if (!info || !isString(info.scheme)) {
-    throw new Error('Please provide valid authorization info. The authorization info must have a scheme that is a string.');
+    throw new Error(
+      'Please provide valid authorization info. The authorization info must have a scheme that is a string.'
+    );
   }
 
   let { credentials } = info;
@@ -14,7 +16,9 @@ export function getKinveyAuthorizationHeader(info) {
   }
 
   if (!credentials) {
-    throw new Error('Please provide valid authorization info. The authorization info must contain either a username and password or credentials.')
+    throw new Error(
+      'Please provide valid authorization info. The authorization info must contain either a username and password or credentials.'
+    );
   }
 
   return {
