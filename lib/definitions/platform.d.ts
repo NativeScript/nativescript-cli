@@ -264,7 +264,6 @@ interface ITrackPlatformAction extends IPlatform {
 interface IPlatformData {
 	frameworkPackageName: string;
 	platformProjectService: IPlatformProjectService;
-	emulatorServices: Mobile.IEmulatorPlatformServices;
 	projectRoot: string;
 	normalizedPlatformName: string;
 	appDestinationDirectoryPath: string;

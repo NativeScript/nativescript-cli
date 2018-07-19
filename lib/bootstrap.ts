@@ -140,8 +140,6 @@ $injector.requireCommand("update", "./commands/update");
 $injector.require("iOSLogFilter", "./services/ios-log-filter");
 $injector.require("projectChangesService", "./services/project-changes-service");
 
-$injector.require("emulatorPlatformService", "./services/emulator-platform-service");
-
 $injector.require("pbxprojDomXcode", "./node/pbxproj-dom-xcode");
 $injector.require("xcode", "./node/xcode");
 

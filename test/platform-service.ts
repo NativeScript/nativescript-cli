@@ -90,7 +90,6 @@ function createTestInjector() {
 	});
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
-	testInjector.register("emulatorPlatformService", stubs.EmulatorPlatformService);
 	testInjector.register("analyticsService", {
 		track: async (): Promise<any[]> => undefined,
 		trackEventActionInGoogleAnalytics: () => Promise.resolve()
@@ -259,7 +258,6 @@ describe('Platform Service Tests', () => {
 					return {
 						frameworkPackageName: packageName,
 						platformProjectService: new stubs.PlatformProjectServiceStub(),
-						emulatorServices: undefined,
 						projectRoot: "",
 						normalizedPlatformName: "",
 						appDestinationDirectoryPath: "",

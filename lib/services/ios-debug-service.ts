@@ -129,7 +129,10 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 			args: args,
 			appId: debugData.applicationIdentifier,
 			skipInstall: true,
-			device: debugData.deviceIdentifier
+			device: debugData.deviceIdentifier,
+			justlaunch: debugOptions.justlaunch,
+			timeout: debugOptions.timeout,
+			sdk: debugOptions.sdk
 		});
 
 		const pid = getPidFromiOSSimulatorLogs(debugData.applicationIdentifier, launchResult);

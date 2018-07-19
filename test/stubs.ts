@@ -309,7 +309,6 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 			frameworkPackageName: "",
 			normalizedPlatformName: "",
 			platformProjectService: this,
-			emulatorServices: undefined,
 			projectRoot: "",
 			deviceBuildOutputPath: "",
 			getValidBuildOutputData: (buildOptions: IBuildOutputOptions) => ({ packageNames: [] }),
@@ -416,7 +415,6 @@ export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
 		return {
 			frameworkPackageName: "",
 			platformProjectService: new PlatformProjectServiceStub(),
-			emulatorServices: undefined,
 			projectRoot: "",
 			normalizedPlatformName: "",
 			appDestinationDirectoryPath: "",
@@ -811,28 +809,6 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 	}
 }
 
-export class EmulatorPlatformService implements IEmulatorPlatformService {
-	public listAvailableEmulators(platform: string): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public getEmulatorInfo(platform: string, nameOfId: string): Promise<IEmulatorInfo> {
-		return Promise.resolve(null);
-	}
-
-	public getiOSEmulators(): Promise<IEmulatorInfo[]> {
-		return Promise.resolve(null);
-	}
-
-	public getAndroidEmulators(): IEmulatorInfo[] {
-		return null;
-	}
-
-	public startEmulator(info: IEmulatorInfo): Promise<void> {
-		return Promise.resolve();
-	}
-}
-
 export class AndroidResourcesMigrationServiceStub implements IAndroidResourcesMigrationService {
 	canMigrate(platformString: string): boolean {
 		return true;
@@ -859,7 +835,6 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register("hooksService", HooksServiceStub);
 		this.register('projectDataService', ProjectDataService);
 		this.register('devicePlatformsConstants', DevicePlatformsConstants);
-		this.register("emulatorPlatformService", EmulatorPlatformService);
 		this.register("androidResourcesMigrationService", AndroidResourcesMigrationServiceStub);
 		this.register("platformService", PlatformServiceStub);
 		this.register("commandsService", CommandsService);

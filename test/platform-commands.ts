@@ -33,7 +33,6 @@ class PlatformData implements IPlatformData {
 			// intentionally left blank
 		}
 	};
-	emulatorServices: Mobile.IEmulatorPlatformServices = null;
 	projectRoot = "";
 	deviceBuildOutputPath = "";
 	getValidBuildOutputData = (buildOptions: IBuildOutputOptions) => ({ packageNames: [""] });
@@ -143,7 +142,6 @@ function createTestInjector() {
 	testInjector.register("preparePlatformJSService", {});
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
-	testInjector.register("emulatorPlatformService", stubs.EmulatorPlatformService);
 	testInjector.register("analyticsService", {
 		track: async () => async (): Promise<any[]> => undefined
 	});

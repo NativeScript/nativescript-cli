@@ -121,6 +121,11 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 	testInjector.register("httpClient", {});
 	testInjector.register("platformEnvironmentRequirements", {});
 	testInjector.register("plistParser", {});
+	testInjector.register("androidEmulatorServices", {});
+	testInjector.register("androidEmulatorDiscovery", {
+		on: () => ({})
+	});
+	testInjector.register("emulatorHelper", {});
 
 	return testInjector;
 }

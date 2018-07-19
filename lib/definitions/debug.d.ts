@@ -91,6 +91,10 @@ interface IDebugOptions {
 	 * If not provided, defaults to 10 seconds.
 	 */
 	timeout?: string;
+	/**
+	 * The sdk version of the emulator.
+	 */
+	sdk?: string;
 }
 
 /**
