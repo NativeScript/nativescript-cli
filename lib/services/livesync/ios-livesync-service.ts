@@ -35,7 +35,6 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		this.$fs.copyFile(path.join(path.dirname(projectFilesPath), `${APP_FOLDER_NAME}/*`), tempApp);
 
 		if (!syncInfo.syncAllFiles) {
-			this.$logger.info("Skipping node_modules folder! Use the syncAllFiles option to sync files from this folder.");
 			this.$fs.deleteDirectory(path.join(tempApp, TNS_MODULES_FOLDER_NAME));
 		}
 

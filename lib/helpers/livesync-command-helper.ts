@@ -11,7 +11,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $analyticsService: IAnalyticsService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
-		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider) {
+		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
+		private $logger: ILogger) {
 		this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
 	}
 
@@ -21,6 +22,10 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	}
 
 	public async executeCommandLiveSync(platform?: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions) {
+		if (!this.$options.syncAllFiles) {
+			this.$logger.info("Skipping node_modules folder! Use the syncAllFiles option to sync files from this folder.");
+		}
+
 		const emulator = this.$options.emulator;
 		await this.$devicesService.initialize({
 			deviceId: this.$options.device,
