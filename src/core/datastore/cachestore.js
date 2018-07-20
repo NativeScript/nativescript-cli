@@ -90,15 +90,14 @@ export class CacheStore extends NetworkStore {
    * Push sync items for the data store to the network. A promise will be returned that will be
    * resolved with the result of the push or rejected with an error.
    *
-   * @param   {Query}                 [query]                                   Query to push a subset of items.
    * @param   {Object}                options                                   Options
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Promise
    */
-  push(query, options) {
-    return this.syncManager.push(this.collection, query, options);
+  push(options) {
+    return this.syncManager.push(this.collection, options);
   }
 
   /**
@@ -142,7 +141,7 @@ export class CacheStore extends NetworkStore {
   sync(query, options) {
     options = assign({ useDeltaSet: this.useDeltaSet }, options);
     const result = {};
-    return this.push(query, options)
+    return this.push(options)
       .then((pushResult) => {
         result.push = pushResult;
         return this.pull(query, options);

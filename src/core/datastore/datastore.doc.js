@@ -141,14 +141,13 @@ export class DataStore {
   /**
    * Push pending sync items to the backend.
    *
-   * @param   {Query}                 [query]                                   Query to push a subset of items.
    * @param   {Object}                options                                   Options
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Push result
    */
-  push(query, options) {}
+  push(options) {}
 
   /**
    * Pull entities from the backend and save them to the local cache
