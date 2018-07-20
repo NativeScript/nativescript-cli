@@ -20,7 +20,6 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		private $processService: IProcessService) {
 		super($platformsData, device);
 		this.livesyncTool = this.$injector.resolve(AndroidLivesyncTool);
-		this.$processService.attachToProcessExitSignals(this.livesyncTool, this.livesyncTool.end);
 	}
 
 	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): Promise<void> {

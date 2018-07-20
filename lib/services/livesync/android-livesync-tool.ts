@@ -29,10 +29,12 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $mobileHelper: Mobile.IMobileHelper) {
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $processService: IProcessService) {
 			this.operationPromises = Object.create(null);
 			this.socketError = null;
 			this.socketConnection = null;
+			this.$processService.attachToProcessExitSignals(this, this.dispose);
 	}
 
 	public async connect(configuration: IAndroidLivesyncToolConfiguration): Promise<void> {
@@ -135,21 +137,22 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			headerBuffer.writeUInt8(doRefreshCode, offset);
 			const hash = crypto.createHash("md5").update(headerBuffer).digest();
 
-			this.operationPromises[id] = {
-				resolve,
-				reject,
-				socketId
-			};
-
 			this.socketConnection.write(headerBuffer);
 			this.socketConnection.write(hash);
 
 			timeout = timeout || SYNC_OPERATION_TIMEOUT;
-			setTimeout(() => {
+			const timeoutId = setTimeout(() => {
 				if (this.isOperationInProgress(id)) {
 					this.handleSocketError(socketId, "Sync operation is taking too long");
 				}
 			}, timeout);
+
+			this.operationPromises[id] = {
+				resolve,
+				reject,
+				socketId,
+				timeoutId
+			};
 		});
 
 		return operationPromise;
@@ -216,7 +219,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 					} else {
 						const error = this.checkConnectionStatus();
 						//TODO Destroy method added in node 8.0.0.
-						//when we depricate node 6.x uncoment the line belolw
+						//when we deprecate node 6.x uncomment the line below
 						//fileStream.destroy(error);
 						reject(error);
 					}
@@ -348,6 +351,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		const promiseHandler = this.operationPromises[operationId];
 
 		if (promiseHandler) {
+			clearTimeout(promiseHandler.timeoutId);
 			promiseHandler.resolve({operationId, didRefresh});
 			delete this.operationPromises[operationId];
 		}
@@ -370,6 +374,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			.forEach(operationId => {
 				const operationPromise = this.operationPromises[operationId];
 				if (operationPromise.socketId === socketId) {
+					clearTimeout(operationPromise.timeoutId);
 					operationPromise.reject(error);
 					delete this.operationPromises[operationId];
 				}
@@ -402,6 +407,16 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		const relativeFilePath = path.relative(this.configuration.appPlatformsPath, filePath);
 
 		return this.$mobileHelper.buildDevicePath(relativeFilePath);
+	}
+
+	private dispose(): void {
+		this.end();
+
+		_.keys(this.operationPromises)
+			.forEach(operationId => {
+				const operationPromise = this.operationPromises[operationId];
+				clearTimeout(operationPromise.timeoutId);
+			});
 	}
 }
 $injector.register("androidLivesyncTool", AndroidLivesyncTool);
