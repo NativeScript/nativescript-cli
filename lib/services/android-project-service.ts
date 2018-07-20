@@ -126,9 +126,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		this.$androidToolsInfo.validateTargetSdk({ showWarningsAsErrors: true });
 	}
 
-	public async validatePlugins(): Promise<void> {
-		Promise.resolve();
-	}
+	public async validatePlugins(): Promise<void> { /* */ }
 
 	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, config: ICreateProjectOptions): Promise<void> {
 		if (semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {

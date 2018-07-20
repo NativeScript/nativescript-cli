@@ -380,7 +380,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$errors.failWithoutHelp(`${pluginData.name} has Podfile and you don't have Cocoapods installed or it is not configured correctly. Please verify Cocoapods can work on your machine.`);
 			}
 		}
-		Promise.resolve();
 	}
 
 	private async buildForDevice(projectRoot: string, args: string[], buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {
@@ -1032,9 +1031,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 	}
 
-	public async prebuildNativePlugin(options: IBuildOptions): Promise<void> {
-		Promise.resolve();
-	}
+	public async prebuildNativePlugin(options: IBuildOptions): Promise<void> { /** */ }
 
 	public async checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>> {
 		return [];

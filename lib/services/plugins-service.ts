@@ -58,7 +58,7 @@ export class PluginsService implements IPluginsService {
 				this.isPluginDataValidForPlatform(pluginData, platform, projectData);
 			};
 
-			this.executeForAllInstalledPlatforms(action, projectData);
+			await this.executeForAllInstalledPlatforms(action, projectData);
 
 			try {
 				await this.$pluginVariablesService.savePluginVariablesInProjectFile(pluginData, projectData);
@@ -85,7 +85,7 @@ export class PluginsService implements IPluginsService {
 		};
 
 		this.$pluginVariablesService.removePluginVariablesFromProjectFile(pluginName.toLowerCase(), projectData);
-		this.executeForAllInstalledPlatforms(removePluginNativeCodeAction, projectData);
+		await this.executeForAllInstalledPlatforms(removePluginNativeCodeAction, projectData);
 
 		await this.executeNpmCommand(PluginsService.UNINSTALL_COMMAND_NAME, pluginName, projectData);
 
@@ -97,7 +97,7 @@ export class PluginsService implements IPluginsService {
 			showMessage = false;
 		};
 
-		this.executeForAllInstalledPlatforms(action, projectData);
+		await this.executeForAllInstalledPlatforms(action, projectData);
 
 		if (showMessage) {
 			this.$logger.out(`Successfully removed plugin ${pluginName}`);
