@@ -54,6 +54,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $fs: IFileSystem,
 		private $filesHashService: IFilesHashService,
+		private $logger: ILogger,
 		private $injector: IInjector) {
 	}
 
@@ -83,9 +84,13 @@ export class ProjectChangesService implements IProjectChangesService {
 				projectData,
 				this.fileChangeRequiresBuild);
 
+			this.$logger.trace(`Set nativeChanged to ${this._changesInfo.nativeChanged}. skipModulesNativeCheck is: ${projectChangesOptions.skipModulesNativeCheck}`);
+
 			if (this._newFiles > 0 || this._changesInfo.nativeChanged) {
+				this.$logger.trace(`Setting modulesChanged to true, newFiles: ${this._newFiles}, nativeChanged: ${this._changesInfo.nativeChanged}`);
 				this._changesInfo.modulesChanged = true;
 			}
+
 			if (platform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
 				this._changesInfo.configChanged = this.filesChanged([path.join(platformResourcesDir, platformData.configurationFileName),
 				path.join(platformResourcesDir, "LaunchScreen.storyboard"),
@@ -97,12 +102,15 @@ export class ProjectChangesService implements IProjectChangesService {
 					path.join(platformResourcesDir, APP_GRADLE_FILE_NAME)
 				]);
 			}
+
+			this.$logger.trace(`Set value of configChanged to ${this._changesInfo.configChanged}`);
 		}
 
 		const projectService = platformData.platformProjectService;
 		await projectService.checkForChanges(this._changesInfo, projectChangesOptions, projectData);
 
 		if (projectChangesOptions.bundle !== this._prepareInfo.bundle || projectChangesOptions.release !== this._prepareInfo.release) {
+			this.$logger.trace(`Setting all setting to true. Current options are: `, projectChangesOptions, " old prepare info is: ", this._prepareInfo);
 			this._changesInfo.appFilesChanged = true;
 			this._changesInfo.appResourcesChanged = true;
 			this._changesInfo.modulesChanged = true;
@@ -112,9 +120,11 @@ export class ProjectChangesService implements IProjectChangesService {
 			this._prepareInfo.bundle = projectChangesOptions.bundle;
 		}
 		if (this._changesInfo.packageChanged) {
+			this.$logger.trace("Set modulesChanged to true as packageChanged is true");
 			this._changesInfo.modulesChanged = true;
 		}
 		if (this._changesInfo.modulesChanged || this._changesInfo.appResourcesChanged) {
+			this.$logger.trace(`Set configChanged to true, current value of moduleChanged is: ${this._changesInfo.modulesChanged}, appResourcesChanged is: ${this._changesInfo.appResourcesChanged}`);
 			this._changesInfo.configChanged = true;
 		}
 		if (this._changesInfo.hasChanges) {
@@ -129,6 +139,7 @@ export class ProjectChangesService implements IProjectChangesService {
 
 		this._changesInfo.nativePlatformStatus = this._prepareInfo.nativePlatformStatus;
 
+		this.$logger.trace("checkForChanges returns", this._changesInfo);
 		return this._changesInfo;
 	}
 
@@ -234,14 +245,16 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	private containsNewerFiles(dir: string, skipDir: string, projectData: IProjectData, processFunc?: (filePath: string, projectData: IProjectData) => boolean): boolean {
-
 		const dirName = path.basename(dir);
+		this.$logger.trace(`containsNewerFiles will check ${dir}`);
 		if (_.startsWith(dirName, '.')) {
+			this.$logger.trace(`containsNewerFiles returns false for ${dir} as its name starts with dot (.) .`);
 			return false;
 		}
 
 		const dirFileStat = this.$fs.getFsStats(dir);
 		if (this.isFileModified(dirFileStat, dir)) {
+			this.$logger.trace(`containsNewerFiles returns true for ${dir} as the dir itself has been modified.`);
 			return true;
 		}
 
@@ -256,24 +269,30 @@ export class ProjectChangesService implements IProjectChangesService {
 			const changed = this.isFileModified(fileStats, filePath);
 
 			if (changed) {
+				this.$logger.trace(`File ${filePath} has been changed.`);
 				if (processFunc) {
 					this._newFiles++;
+					this.$logger.trace(`Incremented the newFiles counter. Current value is ${this._newFiles}`);
 					const filePathRelative = path.relative(projectData.projectDir, filePath);
 					if (processFunc.call(this, filePathRelative, projectData)) {
+						this.$logger.trace(`containsNewerFiles returns true for ${dir}. The modified file is ${filePath}`);
 						return true;
 					}
 				} else {
+					this.$logger.trace(`containsNewerFiles returns true for ${dir}. The modified file is ${filePath}`);
 					return true;
 				}
 			}
 
 			if (fileStats.isDirectory()) {
 				if (this.containsNewerFiles(filePath, skipDir, projectData, processFunc)) {
+					this.$logger.trace(`containsNewerFiles returns true for ${dir}.`);
 					return true;
 				}
 			}
-
 		}
+
+		this.$logger.trace(`containsNewerFiles returns false for ${dir}.`);
 		return false;
 	}
 
@@ -291,7 +310,7 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	private fileChangeRequiresBuild(file: string, projectData: IProjectData) {
-		if (path.basename(file) === "package.json") {
+		if (path.basename(file) === PACKAGE_JSON_FILE_NAME) {
 			return true;
 		}
 		const projectDir = projectData.projectDir;
@@ -302,7 +321,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			let filePath = file;
 			while (filePath !== NODE_MODULES_FOLDER_NAME) {
 				filePath = path.dirname(filePath);
-				const fullFilePath = path.join(projectDir, path.join(filePath, "package.json"));
+				const fullFilePath = path.join(projectDir, path.join(filePath, PACKAGE_JSON_FILE_NAME));
 				if (this.$fs.exists(fullFilePath)) {
 					const json = this.$fs.readJson(fullFilePath);
 					if (json["nativescript"] && _.startsWith(file, path.join(filePath, "platforms"))) {
