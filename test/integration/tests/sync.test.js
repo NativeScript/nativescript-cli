@@ -31,7 +31,7 @@ function testFunc() {
         expect(record.entity).to.not.exist;
       }
     });
-    networkStore.find().toPromise()
+    return networkStore.find().toPromise()
       .then((result) => {
         expect(result.length).to.equal(expectedServerItemsCount);
         expect(_.find(result, e => e._id === deletedItem._id)).to.not.exist;
@@ -501,19 +501,16 @@ function testFunc() {
               .catch(done);
           });
 
-          it('should push and then pull only the entities, matching the query', (done) => {
+          it('with query should push all entities and then pull only the entities, matching the query', (done) => {
             let syncResult;
             const query = new Kinvey.Query();
             query.equalTo('_id', updatedEntity2._id);
             storeToTest.sync(query)
               .then((result) => {
                 syncResult = result;
-                expect(syncResult.push.length).to.equal(1);
-                expect(syncResult.push[0]._id).to.equal(updatedEntity2._id);
-                return networkStore.find().toPromise();
+                return validatePushOperation(syncResult.push, entity1, updatedEntity2, entity3, 5);
               })
               .then((result) => {
-                expect(_.find(result, (entity) => { return entity._id === updatedEntity2._id; })).to.exist;
                 return validatePullOperation(syncResult.pull, [updatedEntity2]);
               })
               .then(() => done())
