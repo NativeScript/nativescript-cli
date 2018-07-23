@@ -1,6 +1,5 @@
 import * as path from "path";
 import * as shell from "shelljs";
-import * as os from "os";
 import * as semver from "semver";
 import * as constants from "../constants";
 import * as helpers from "../common/helpers";
@@ -28,11 +27,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private static XCODEBUILD_MIN_VERSION = "6.0";
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
 	private static IOS_PLATFORM_NAME = "ios";
-	private static PODFILE_POST_INSTALL_SECTION_NAME = "post_install";
-
-	private get $npmInstallationManager(): INpmInstallationManager {
-		return this.$injector.resolve("npmInstallationManager");
-	}
 
 	constructor($fs: IFileSystem,
 		private $childProcess: IChildProcess,
@@ -900,10 +894,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return path.join(this.getPlatformData(projectData).projectRoot, projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME);
 	}
 
-	private getProjectPodFilePath(projectData: IProjectData): string {
-		return path.join(this.getPlatformData(projectData).projectRoot, "Podfile");
-	}
-
 	private getPluginsDebugXcconfigFilePath(projectData: IProjectData): string {
 		return path.join(this.getPlatformData(projectData).projectRoot, "plugins-debug.xcconfig");
 	}
@@ -951,7 +941,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		await this.prepareResources(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareFrameworks(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareStaticLibs(pluginPlatformsFolderPath, pluginData, projectData);
-		await this.prepareCocoapods(pluginPlatformsFolderPath, projectData);
+		await this.prepareCocoapods(pluginPlatformsFolderPath, pluginData, projectData);
 	}
 
 	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
@@ -960,20 +950,14 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.removeNativeSourceCode(pluginPlatformsFolderPath, pluginData, projectData);
 		this.removeFrameworks(pluginPlatformsFolderPath, pluginData, projectData);
 		this.removeStaticLibs(pluginPlatformsFolderPath, pluginData, projectData);
-		this.removeCocoapods(pluginPlatformsFolderPath, projectData);
+		const projectRoot = this.getPlatformData(projectData).projectRoot;
+
+		this.$cocoapodsService.removePluginPodfileFromProject(pluginData, projectData, projectRoot);
 	}
 
 	public async afterPrepareAllPlugins(projectData: IProjectData): Promise<void> {
-		if (this.$fs.exists(this.getProjectPodFilePath(projectData))) {
-			const projectPodfileContent = this.$fs.readText(this.getProjectPodFilePath(projectData));
-			this.$logger.trace("Project Podfile content");
-			this.$logger.trace(projectPodfileContent);
-
-			const firstPostInstallIndex = projectPodfileContent.indexOf(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME);
-			if (firstPostInstallIndex !== -1 && firstPostInstallIndex !== projectPodfileContent.lastIndexOf(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME)) {
-				this.$cocoapodsService.mergePodfileHookContent(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME, this.getProjectPodFilePath(projectData));
-			}
-
+		const projectRoot = this.getPlatformData(projectData).projectRoot;
+		if (this.$fs.exists(this.$cocoapodsService.getProjectPodfilePath(projectRoot))) {
 			const xcuserDataPath = path.join(this.getXcodeprojPath(projectData), "xcuserdata");
 			const sharedDataPath = path.join(this.getXcodeprojPath(projectData), "xcshareddata");
 
@@ -1169,38 +1153,15 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 	}
 
-	private async prepareCocoapods(pluginPlatformsFolderPath: string, projectData: IProjectData, opts?: any): Promise<void> {
+	private async prepareCocoapods(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData, opts?: any): Promise<void> {
+		const projectRoot = this.getPlatformData(projectData).projectRoot;
+		await this.$cocoapodsService.applyPluginPodfileToProject(pluginData, projectData, projectRoot);
 		const pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
-		if (this.$fs.exists(pluginPodFilePath)) {
-			const pluginPodFileContent = this.$fs.readText(pluginPodFilePath);
-			const pluginPodFilePreparedContent = this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);
-			let projectPodFileContent = this.$fs.exists(this.getProjectPodFilePath(projectData)) ? this.$fs.readText(this.getProjectPodFilePath(projectData)) : "";
-
-			if (!~projectPodFileContent.indexOf(pluginPodFilePreparedContent)) {
-				const podFileHeader = this.$cocoapodsService.getPodfileHeader(projectData.projectName),
-					podFileFooter = this.$cocoapodsService.getPodfileFooter();
-
-				if (_.startsWith(projectPodFileContent, podFileHeader)) {
-					projectPodFileContent = projectPodFileContent.substr(podFileHeader.length);
-				}
-
-				if (_.endsWith(projectPodFileContent, podFileFooter)) {
-					projectPodFileContent = projectPodFileContent.substr(0, projectPodFileContent.length - podFileFooter.length);
-				}
-
-				const contentToWrite = `${podFileHeader}${projectPodFileContent}${pluginPodFilePreparedContent}${podFileFooter}`;
-				this.$fs.writeFile(this.getProjectPodFilePath(projectData), contentToWrite);
-
-				const project = this.createPbxProj(projectData);
-				this.savePbxProj(project, projectData);
-			}
-		}
 
 		if (opts && opts.executePodInstall && this.$fs.exists(pluginPodFilePath)) {
 			await this.executePodInstall(projectData);
 		}
 	}
-
 	private removeNativeSourceCode(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): void {
 		const project = this.createPbxProj(projectData);
 		const group = this.getRootGroup(pluginData.name, pluginPlatformsFolderPath);
@@ -1233,26 +1194,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		});
 
 		this.savePbxProj(project, projectData);
-	}
-
-	private removeCocoapods(pluginPlatformsFolderPath: string, projectData: IProjectData): void {
-		const pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
-
-		if (this.$fs.exists(pluginPodFilePath) && this.$fs.exists(this.getProjectPodFilePath(projectData))) {
-			const pluginPodFileContent = this.$fs.readText(pluginPodFilePath);
-			let projectPodFileContent = this.$fs.readText(this.getProjectPodFilePath(projectData));
-			const contentToRemove = this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);
-			projectPodFileContent = helpers.stringReplaceAll(projectPodFileContent, contentToRemove, "");
-			if (projectPodFileContent.trim() === `use_frameworks!${os.EOL}${os.EOL}target "${projectData.projectName}" do${os.EOL}${os.EOL}end`) {
-				this.$fs.deleteFile(this.getProjectPodFilePath(projectData));
-			} else {
-				this.$fs.writeFile(this.getProjectPodFilePath(projectData), projectPodFileContent);
-			}
-		}
-	}
-
-	private buildPodfileContent(pluginPodFilePath: string, pluginPodFileContent: string): string {
-		return `# Begin Podfile - ${pluginPodFilePath} ${os.EOL} ${pluginPodFileContent} ${os.EOL} # End Podfile ${os.EOL}`;
 	}
 
 	private generateModulemap(headersFolderPath: string, libraryName: string): void {

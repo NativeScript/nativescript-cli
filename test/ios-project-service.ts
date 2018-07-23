@@ -27,7 +27,6 @@ import { PluginsService } from "../lib/services/plugins-service";
 import { PluginVariablesHelper } from "../lib/common/plugin-variables-helper";
 import { Utils } from "../lib/common/utils";
 import { CocoaPodsService } from "../lib/services/cocoapods-service";
-import { NpmInstallationManager } from "../lib/npm-installation-manager";
 import { NodePackageManager } from "../lib/node-package-manager";
 
 import { assert } from "chai";
@@ -114,7 +113,6 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 			pbxGroupByName() { /* */ }
 		}
 	});
-	testInjector.register("npmInstallationManager", NpmInstallationManager);
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("xCConfigService", XCConfigService);
 	testInjector.register("settingsService", SettingsService);
@@ -384,9 +382,9 @@ describe("Cocoapods support", () => {
 			const actualProjectPodfileContent = fs.readText(projectPodfilePath);
 			const expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
-				`# Begin Podfile - ${pluginPodfilePath} `,
-				` ${pluginPodfileContent} `,
-				" # End Podfile \n",
+				`# Begin Podfile - ${pluginPodfilePath}`,
+				`${pluginPodfileContent}`,
+				"# End Podfile",
 				"end"]
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
@@ -445,7 +443,9 @@ describe("Cocoapods support", () => {
 			const pluginData = {
 				pluginPlatformsFolderPath(platform: string): string {
 					return pluginPlatformsFolderPath;
-				}
+				},
+				name: "pluginName",
+				fullPath: "fullPath"
 			};
 			const projectData: IProjectData = testInjector.resolve("projectData");
 
@@ -457,9 +457,9 @@ describe("Cocoapods support", () => {
 			const actualProjectPodfileContent = fs.readText(projectPodfilePath);
 			const expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
-				`# Begin Podfile - ${pluginPodfilePath} `,
-				` ${pluginPodfileContent} `,
-				" # End Podfile \n",
+				`# Begin Podfile - ${pluginPodfilePath}`,
+				`${pluginPodfileContent}`,
+				"# End Podfile",
 				"end"]
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);

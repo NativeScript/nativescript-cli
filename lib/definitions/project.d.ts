@@ -464,10 +464,32 @@ interface ICocoaPodsService {
 	getPodfileFooter(): string;
 
 	/**
-	 * Merges the content of hooks with the provided name if there are more than one hooks with this name in the Podfile.
-	 * @param {string} hookName The name of the hook.
-	 * @param {string} pathToPodfile The path to the Podfile.
-	 * @return {void}
+	 * Prepares the Podfile content of a plugin and merges it in the project's Podfile.
+	 * @param {IPluginData} pluginData Information about the plugin.
+	 * @param {IProjectData} projectData Information about the project.
+	 * @param {string} nativeProjectPath Path to the native Xcode project.
+	 * @returns {Promise<void>}
 	 */
-	mergePodfileHookContent(sectionName: string, pathToPodfile: string): void
+	applyPluginPodfileToProject(pluginData: IPluginData, projectData: IProjectData, nativeProjectPath: string): Promise<void>;
+
+	/**
+	 * Removes plugins Podfile content from the project.
+	 * @param {IPluginData} pluginData Information about the plugin.
+	 * @param {IProjectData} projectData Information about the project.
+	 * @param {string} nativeProjectPath Path to the native Xcode project.
+	 * @returns {void}
+	 */
+	removePluginPodfileFromProject(pluginData: IPluginData, projectData: IProjectData, nativeProjectPath: string): void;
+
+	/**
+	 * Gives the path to project's Podfile.
+	 * @param {string} nativeProjectPath Path to the native Xcode project.
+	 * @returns {string} Path to project's Podfile.
+	 */
+	getProjectPodfilePath(nativeProjectPath: string): string;
+}
+
+interface IRubyFunction {
+	functionName: string;
+	functionParameters?: string;
 }
