@@ -197,10 +197,27 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return shouldPrepareInfo.changesInfo.hasChanges || requiresNativePrepare;
 	}
 
-	private async getChangesInfo(platformInfo: IPreparePlatformInfo): Promise<IProjectChangesInfo> {
-		const platformData = this.$platformsData.getPlatformData(platformInfo.platform, platformInfo.projectData);
+	private async getChangesInfo(preparePlatformInfo: IPreparePlatformInfo): Promise<IProjectChangesInfo> {
+		await this.initialPrepare(preparePlatformInfo);
 
-		return this.initialPrepare(platformInfo.platform, platformData, platformInfo.appFilesUpdaterOptions, platformInfo.platformTemplate, platformInfo.projectData, platformInfo.config, platformInfo.nativePrepare, platformInfo);
+		const { platform, appFilesUpdaterOptions, projectData, config, nativePrepare } = preparePlatformInfo;
+		const bundle = appFilesUpdaterOptions.bundle;
+		const nativePlatformStatus = (nativePrepare && nativePrepare.skipNativePrepare) ? constants.NativePlatformStatus.requiresPlatformAdd : constants.NativePlatformStatus.requiresPrepare;
+		const changesInfo = await this.$projectChangesService.checkForChanges({
+			platform,
+			projectData,
+			projectChangesOptions: {
+				bundle,
+				release: appFilesUpdaterOptions.release,
+				provision: config.provision,
+				teamId: config.teamId,
+				nativePlatformStatus,
+				skipModulesNativeCheck: preparePlatformInfo.skipModulesNativeCheck
+			}
+		});
+
+		this.$logger.trace("Changes info in prepare platform:", changesInfo);
+		return changesInfo;
 	}
 
 	public async preparePlatform(platformInfo: IPreparePlatformInfo): Promise<boolean> {
@@ -252,7 +269,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	private async initialPrepare(platform: string, platformData: IPlatformData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, nativePrepare?: INativePrepare, skipNativeCheckOptions?: ISkipNativeCheckOptional): Promise<IProjectChangesInfo> {
+	private async initialPrepare(preparePlatformInfo: IPreparePlatformInfo) {
+		const { platform, appFilesUpdaterOptions, platformTemplate, projectData, config, nativePrepare } = preparePlatformInfo;
 		this.validatePlatform(platform, projectData);
 
 		await this.trackProjectType(projectData);
@@ -266,24 +284,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		await this.ensurePlatformInstalled(platform, platformTemplate, projectData, config, appFilesUpdaterOptions, nativePrepare);
-
-		const bundle = appFilesUpdaterOptions.bundle;
-		const nativePlatformStatus = (nativePrepare && nativePrepare.skipNativePrepare) ? constants.NativePlatformStatus.requiresPlatformAdd : constants.NativePlatformStatus.requiresPrepare;
-		const changesInfo = await this.$projectChangesService.checkForChanges({
-			platform,
-			projectData,
-			projectChangesOptions: {
-				bundle,
-				release: appFilesUpdaterOptions.release,
-				provision: config.provision,
-				teamId: config.teamId,
-				nativePlatformStatus,
-				skipModulesNativeCheck: skipNativeCheckOptions.skipModulesNativeCheck
-			}
-		});
-
-		this.$logger.trace("Changes info in prepare platform:", changesInfo);
-		return changesInfo;
 	}
 
 	/* Hooks are expected to use "filesToSync" parameter, as to give plugin authors additional information about the sync process.*/

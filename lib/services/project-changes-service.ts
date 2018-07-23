@@ -99,8 +99,10 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 		}
 
-		const projectService = platformData.platformProjectService;
-		await projectService.checkForChanges(this._changesInfo, projectChangesOptions, projectData);
+		if (checkForChangesOpts.projectChangesOptions.nativePlatformStatus !== NativePlatformStatus.requiresPlatformAdd) {
+			const projectService = platformData.platformProjectService;
+			await projectService.checkForChanges(this._changesInfo, projectChangesOptions, projectData);
+		}
 
 		if (projectChangesOptions.bundle !== this._prepareInfo.bundle || projectChangesOptions.release !== this._prepareInfo.release) {
 			this._changesInfo.appFilesChanged = true;
