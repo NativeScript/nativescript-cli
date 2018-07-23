@@ -38,4 +38,8 @@ export abstract class DeviceLiveSyncServiceBase {
 
 		return transferredFiles;
 	}
+
+	public async finalizeSync(liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
+		//implement in case a sync point for all remove/create operation is needed
+	}
 }

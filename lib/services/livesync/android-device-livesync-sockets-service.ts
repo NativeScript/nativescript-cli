@@ -29,16 +29,22 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		await this.connectLivesyncTool(projectFilesPath, this.data.projectId);
 	}
 
-	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
-		const canExecuteFastSync = !liveSyncInfo.isFullSync && this.canExecuteFastSyncForPaths(liveSyncInfo.modifiedFilesData, projectData, this.device.deviceInfo.platform);
+	public async finalizeSync(liveSyncInfo: ILiveSyncResultInfo) {
+		await this.doSync(liveSyncInfo, false);
+	}
+
+	private async doSync(liveSyncInfo: ILiveSyncResultInfo, doRefresh = false): Promise<IAndroidLivesyncSyncOperationResult> {
+		let result;
+		const operationId = this.livesyncTool.generateOperationIdentifier();
+
+		result = {operationId, didRefresh: true };
 
 		if (liveSyncInfo.modifiedFilesData.length) {
-			const operationIdentifier = this.livesyncTool.generateOperationIdentifier();
 
-			const doSyncPromise = this.livesyncTool.sendDoSyncOperation(canExecuteFastSync, null, operationIdentifier);
+			const doSyncPromise = this.livesyncTool.sendDoSyncOperation(doRefresh, null, operationId);
 
 			const syncInterval : NodeJS.Timer = setInterval(() => {
-				if (this.livesyncTool.isOperationInProgress(operationIdentifier)) {
+				if (this.livesyncTool.isOperationInProgress(operationId)) {
 					this.$logger.info("Sync operation in progress...");
 				}
 			}, AndroidDeviceSocketsLiveSyncService.STATUS_UPDATE_INTERVAL);
@@ -50,14 +56,22 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 			this.$processService.attachToProcessExitSignals(this, clearSyncInterval);
 			doSyncPromise.then(clearSyncInterval, clearSyncInterval);
 
-			const refreshResult = await doSyncPromise;
-
-			if (!canExecuteFastSync || !refreshResult.didRefresh) {
-				await this.device.applicationManager.restartApplication({ appId: liveSyncInfo.deviceAppData.appIdentifier, projectName: projectData.projectName });
-			}
+			result = await doSyncPromise;
 		}
 
+		return result;
+	}
+
+	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo) {
+		const canExecuteFastSync = !liveSyncInfo.isFullSync && this.canExecuteFastSyncForPaths(liveSyncInfo.modifiedFilesData, projectData, this.device.deviceInfo.platform);
+
+		const syncOperationResult = await this.doSync(liveSyncInfo, canExecuteFastSync);
+
 		this.livesyncTool.end();
+
+		if (!canExecuteFastSync || !syncOperationResult.didRefresh) {
+			await this.device.applicationManager.restartApplication({ appId: liveSyncInfo.deviceAppData.appIdentifier, projectName: projectData.projectName });
+		}
 	}
 
 	public async removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<void> {
