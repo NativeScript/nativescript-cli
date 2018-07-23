@@ -30,14 +30,13 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 	}
 
 	public async finalizeSync(liveSyncInfo: ILiveSyncResultInfo) {
-		await this.doSync(liveSyncInfo, false);
+		await this.doSync(liveSyncInfo);
 	}
 
-	private async doSync(liveSyncInfo: ILiveSyncResultInfo, doRefresh = false): Promise<IAndroidLivesyncSyncOperationResult> {
-		let result;
+	private async doSync(liveSyncInfo: ILiveSyncResultInfo, {doRefresh = false}: {doRefresh?: boolean} = {}): Promise<IAndroidLivesyncSyncOperationResult> {
 		const operationId = this.livesyncTool.generateOperationIdentifier();
 
-		result = {operationId, didRefresh: true };
+		let result = {operationId, didRefresh: true };
 
 		if (liveSyncInfo.modifiedFilesData.length) {
 
@@ -65,7 +64,7 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo) {
 		const canExecuteFastSync = !liveSyncInfo.isFullSync && this.canExecuteFastSyncForPaths(liveSyncInfo.modifiedFilesData, projectData, this.device.deviceInfo.platform);
 
-		const syncOperationResult = await this.doSync(liveSyncInfo, canExecuteFastSync);
+		const syncOperationResult = await this.doSync(liveSyncInfo, {doRefresh: canExecuteFastSync});
 
 		this.livesyncTool.end();
 
