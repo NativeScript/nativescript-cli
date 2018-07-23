@@ -73,18 +73,15 @@ class ProjectIntegrationTest {
 		const fs: IFileSystem = this.testInjector.resolve("fs");
 		const projectDir = path.join(tempFolder, projectName);
 		const appDirectoryPath = path.join(projectDir, "app");
-		const platformsDirectoryPath = path.join(projectDir, "platforms");
 		const tnsProjectFilePath = path.join(projectDir, "package.json");
 		const tnsModulesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_CORE_MODULES_NAME);
 		const packageJsonContent = fs.readJson(tnsProjectFilePath);
 
 		assert.isTrue(fs.exists(appDirectoryPath));
-		assert.isTrue(fs.exists(platformsDirectoryPath));
 		assert.isTrue(fs.exists(tnsProjectFilePath));
 		assert.isTrue(fs.exists(tnsModulesPath));
 
 		assert.isFalse(fs.isEmptyDir(appDirectoryPath));
-		assert.isTrue(fs.isEmptyDir(platformsDirectoryPath));
 
 		const actualAppId = packageJsonContent["nativescript"].id;
 		const expectedAppId = appId;
@@ -94,18 +91,6 @@ class ProjectIntegrationTest {
 		assert.isTrue(tnsCoreModulesRecord !== null);
 
 		const sourceDir = projectSourceDirectory;
-
-		// Hidden files (starting with dots ".") are not copied.
-		const expectedFiles = fs.enumerateFilesInDirectorySync(sourceDir, (file, stat) => stat.isDirectory() || !_.startsWith(path.basename(file), "."));
-		const actualFiles = fs.enumerateFilesInDirectorySync(appDirectoryPath);
-
-		assert.isTrue(actualFiles.length >= expectedFiles.length, "Files in created project must be at least as files in app dir.");
-
-		_.each(expectedFiles, file => {
-			const relativeToProjectDir = helpers.getRelativeToRootPath(sourceDir, file);
-			const filePathInApp = path.join(appDirectoryPath, relativeToProjectDir);
-			assert.isTrue(fs.exists(filePathInApp), `File ${filePathInApp} does not exist.`);
-		});
 
 		// assert dependencies and devDependencies are copied from template to real project
 		const sourcePackageJsonContent = fs.readJson(path.join(sourceDir, "package.json"));

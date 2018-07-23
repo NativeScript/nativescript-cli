@@ -119,8 +119,6 @@ export class ProjectService implements IProjectService {
 
 				this.$logger.trace(`Copying application from '${templateData.templatePath}' into '${destinationDirectory}'.`);
 				shelljs.cp('-R', path.join(templateData.templatePath, "*"), destinationDirectory);
-
-				this.$fs.createDirectory(path.join(projectDir, "platforms"));
 				break;
 			case constants.TemplateVersions.v2:
 				await this.$pacoteService.extractPackage(templateData.templateName, projectDir);

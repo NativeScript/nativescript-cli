@@ -1,14 +1,21 @@
 import * as pacote from "pacote";
 import * as tar from "tar";
+import * as path from "path";
 
 export class PacoteService implements IPacoteService {
-	constructor(private $npm: INodePackageManager) { }
+	constructor(private $fs: IFileSystem,
+		private $npm: INodePackageManager) { }
 
 	public async manifest(packageName: string, options?: IPacoteManifestOptions): Promise<any> {
 		// In case `tns create myapp --template https://github.com/NativeScript/template-hello-world.git` command is executed, pacote module throws an error if cache option is not provided.
-		const manifestOptions = { cache: await this.$npm.getCachePath() };
+		const cache = await this.$npm.getCachePath();
+		const manifestOptions = { cache };
 		if (options) {
 			_.extend(manifestOptions, options);
+		}
+
+		if (this.$fs.exists(packageName)) {
+			packageName = path.resolve(packageName);
 		}
 
 		return pacote.manifest(packageName, manifestOptions);
