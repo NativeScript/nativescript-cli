@@ -27,7 +27,13 @@ export class HttpMiddleware extends Middleware {
 
   handle(request: any): Promise<any> {
     const { url, method, headers, body, timeout, followRedirect } = request;
-    headers['X-Kinvey-Device-Information'] = deviceInformation(this.pkg);
+    const kinveyUrlRegex = /kinvey\.com/gm;
+
+    if (kinveyUrlRegex.test(url)) {
+      // Add the X-Kinvey-Device-Information header
+      headers['X-Kinvey-Device-Information'] = deviceInformation(this.pkg);
+    }
+
     const options = {
       method: method,
       headers: headers,

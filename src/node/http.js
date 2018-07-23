@@ -2,7 +2,7 @@ import httpRequest from 'request';
 import Promise from 'es6-promise';
 import { Middleware } from '../core/request';
 import { isDefined } from '../core/utils';
-import { NoNetworkConnectionError, TimeoutError } from '../core/errors';
+import { NetworkConnectionError, TimeoutError } from '../core/errors';
 
 function deviceInformation(pkg) {
   const platform = process.title;
@@ -37,9 +37,12 @@ export class NodeHttpMiddleware extends Middleware {
         timeout,
         followRedirect
       } = request;
+      const kinveyUrlRegex = /kinvey\.com/gm;
 
-      // Add the X-Kinvey-Device-Information header
-      headers['X-Kinvey-Device-Information'] = deviceInformation(this.pkg);
+      if (kinveyUrlRegex.test(url)) {
+        // Add the X-Kinvey-Device-Information header
+        headers['X-Kinvey-Device-Information'] = deviceInformation(this.pkg);
+      }
 
       httpRequest({
         method: method,
@@ -53,7 +56,7 @@ export class NodeHttpMiddleware extends Middleware {
           if (error.code === 'ESOCKETTIMEDOUT' || error.code === 'ETIMEDOUT') {
             return reject(new TimeoutError('The network request timed out.'));
           } else if (error.code === 'ENOENT') {
-            return reject(new NoNetworkConnectionError('You do not have a network connection.'));
+            return reject(new NetworkConnectionError('You do not have a network connection.'));
           }
 
           return reject(error);
