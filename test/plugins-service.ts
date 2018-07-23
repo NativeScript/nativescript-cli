@@ -34,6 +34,7 @@ import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import StaticConfigLib = require("../lib/config");
 import * as path from "path";
 import * as temp from "temp";
+import { PLUGINS_BUILD_DATA_FILENAME } from '../lib/constants';
 temp.track();
 
 let isErrorThrown = false;
@@ -119,6 +120,10 @@ function createTestInjector() {
 	testInjector.register("androidResourcesMigrationService", stubs.AndroidResourcesMigrationServiceStub);
 
 	testInjector.register("platformEnvironmentRequirements", {});
+	testInjector.register("filesHashService", {
+		hasChangesInShasums: (oldPluginNativeHashes: IStringDictionary, currentPluginNativeHashes: IStringDictionary) => true,
+		generateHashes: async (files: string[]): Promise<IStringDictionary> => ({})
+	});
 	return testInjector;
 }
 
@@ -539,6 +544,92 @@ describe("Plugins service", () => {
 				`\n@#[line:1,col:39].`;
 			mockBeginCommand(testInjector, expectedErrorMessage);
 			await pluginsService.prepare(pluginJsonData, "android", projectData, {});
+		});
+	});
+
+	describe("preparePluginNativeCode", () => {
+		const setupTest = (opts: { hasChangesInShasums?: boolean, newPluginHashes?: IStringDictionary, buildDataFileExists?: boolean, hasPluginPlatformsDir?: boolean }): any => {
+			const testData: any = {
+				pluginsService: null,
+				isPreparePluginNativeCodeCalled: false,
+				dataPassedToWriteJson: null
+			};
+
+			const unitTestsInjector = new Yok();
+			unitTestsInjector.register("platformsData", {
+				getPlatformData: (platform: string, projectData: IProjectData) => ({
+					projectRoot: "projectRoot",
+					platformProjectService: {
+						preparePluginNativeCode: async (pluginData: IPluginData, projData: IProjectData) => {
+							testData.isPreparePluginNativeCodeCalled = true;
+						}
+					}
+				})
+			});
+
+			const pluginHashes = opts.newPluginHashes || { "file1": "hash1" };
+			const pluginData: IPluginData = <any>{
+				fullPath: "plugin_full_path",
+				name: "plugin_name"
+			};
+
+			unitTestsInjector.register("filesHashService", {
+				hasChangesInShasums: (oldPluginNativeHashes: IStringDictionary, currentPluginNativeHashes: IStringDictionary) => !!opts.hasChangesInShasums,
+				generateHashes: async (files: string[]): Promise<IStringDictionary> => pluginHashes
+			});
+
+			unitTestsInjector.register("fs", {
+				exists: (file: string) => {
+					if (file.indexOf(PLUGINS_BUILD_DATA_FILENAME) !== -1) {
+						return !!opts.buildDataFileExists;
+					}
+
+					if (file.indexOf("platforms") !== -1) {
+						return !!opts.hasPluginPlatformsDir;
+					}
+
+					return true;
+				},
+				readJson: (file: string) => ({
+					[pluginData.name]: pluginHashes
+				}),
+				writeJson: (file: string, json: any) => { testData.dataPassedToWriteJson = json; },
+				enumerateFilesInDirectorySync: (): string[] => ["some_file"]
+			});
+
+			unitTestsInjector.register("npm", {});
+			unitTestsInjector.register("options", {});
+			unitTestsInjector.register("logger", {});
+			unitTestsInjector.register("errors", {});
+			unitTestsInjector.register("injector", unitTestsInjector);
+
+			const pluginsService: PluginsService = unitTestsInjector.resolve(PluginsService);
+			testData.pluginsService = pluginsService;
+			testData.pluginData = pluginData;
+			return testData;
+		};
+
+		const platform = "platform";
+		const projectData: IProjectData = <any>{};
+
+		it("does not prepare the files when plugin does not have platforms dir", async () => {
+			const testData = setupTest({ hasPluginPlatformsDir: false });
+			await testData.pluginsService.preparePluginNativeCode(testData.pluginData, platform, projectData);
+			assert.isFalse(testData.isPreparePluginNativeCodeCalled);
+		});
+
+		it("prepares the files when plugin has platforms dir and has not been built before", async () => {
+			const newPluginHashes = { "file": "hash" };
+			const testData = setupTest({ newPluginHashes, hasPluginPlatformsDir: true });
+			await testData.pluginsService.preparePluginNativeCode(testData.pluginData, platform, projectData);
+			assert.isTrue(testData.isPreparePluginNativeCodeCalled);
+			assert.deepEqual(testData.dataPassedToWriteJson, { [testData.pluginData.name]: newPluginHashes });
+		});
+
+		it("does not prepare the files when plugin has platforms dir and files have not changed since then", async () => {
+			const testData = setupTest({ hasChangesInShasums: false, buildDataFileExists: true, hasPluginPlatformsDir: true });
+			await testData.pluginsService.preparePluginNativeCode(testData.pluginData, platform, projectData);
+			assert.isFalse(testData.isPreparePluginNativeCodeCalled);
 		});
 	});
 });

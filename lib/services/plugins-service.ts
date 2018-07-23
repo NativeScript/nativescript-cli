@@ -36,6 +36,7 @@ export class PluginsService implements IPluginsService {
 		private $options: IOptions,
 		private $logger: ILogger,
 		private $errors: IErrors,
+		private $filesHashService: IFilesHashService,
 		private $injector: IInjector) { }
 
 	public async add(plugin: string, projectData: IProjectData): Promise<void> {
@@ -107,7 +108,7 @@ export class PluginsService implements IPluginsService {
 		return await platformData.platformProjectService.validatePlugins(projectData);
 	}
 
-	public async prepare(dependencyData: IDependencyData, platform: string, projectData: IProjectData,  projectFilesConfig: IProjectFilesConfig): Promise<void> {
+	public async prepare(dependencyData: IDependencyData, platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
 		platform = platform.toLowerCase();
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const pluginData = this.convertToPluginData(dependencyData, projectData.projectDir);
@@ -141,9 +142,26 @@ export class PluginsService implements IPluginsService {
 
 	public async preparePluginNativeCode(pluginData: IPluginData, platform: string, projectData: IProjectData): Promise<void> {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-
 		pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform);
-		await platformData.platformProjectService.preparePluginNativeCode(pluginData, projectData);
+
+		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(platform);
+		if (this.$fs.exists(pluginPlatformsFolderPath)) {
+			const pathToPluginsBuildFile = path.join(platformData.projectRoot, constants.PLUGINS_BUILD_DATA_FILENAME);
+
+			const allPluginsNativeHashes = this.getAllPluginsNativeHashes(pathToPluginsBuildFile);
+			const oldPluginNativeHashes = allPluginsNativeHashes[pluginData.name];
+			const currentPluginNativeHashes = await this.getPluginNativeHashes(pluginPlatformsFolderPath);
+
+			if (!oldPluginNativeHashes || this.$filesHashService.hasChangesInShasums(oldPluginNativeHashes, currentPluginNativeHashes)) {
+				await platformData.platformProjectService.preparePluginNativeCode(pluginData, projectData);
+				this.setPluginNativeHashes({
+					pathToPluginsBuildFile,
+					pluginData,
+					currentPluginNativeHashes,
+					allPluginsNativeHashes
+				});
+			}
+		}
 	}
 
 	public async ensureAllDependenciesAreInstalled(projectData: IProjectData): Promise<void> {
@@ -306,6 +324,30 @@ export class PluginsService implements IPluginsService {
 		}
 
 		return isValid;
+	}
+
+	private async getPluginNativeHashes(pluginPlatformsDir: string): Promise<IStringDictionary> {
+		let data: IStringDictionary = {};
+		if (this.$fs.exists(pluginPlatformsDir)) {
+			const pluginNativeDataFiles = this.$fs.enumerateFilesInDirectorySync(pluginPlatformsDir);
+			data = await this.$filesHashService.generateHashes(pluginNativeDataFiles);
+		}
+
+		return data;
+	}
+
+	private getAllPluginsNativeHashes(pathToPluginsBuildFile: string): IDictionary<IStringDictionary> {
+		let data: IDictionary<IStringDictionary> = {};
+		if (this.$fs.exists(pathToPluginsBuildFile)) {
+			data = this.$fs.readJson(pathToPluginsBuildFile);
+		}
+
+		return data;
+	}
+
+	private setPluginNativeHashes(opts: { pathToPluginsBuildFile: string, pluginData: IPluginData, currentPluginNativeHashes: IStringDictionary, allPluginsNativeHashes: IDictionary<IStringDictionary> }): void {
+		opts.allPluginsNativeHashes[opts.pluginData.name] = opts.currentPluginNativeHashes;
+		this.$fs.writeJson(opts.pathToPluginsBuildFile, opts.allPluginsNativeHashes);
 	}
 }
 
