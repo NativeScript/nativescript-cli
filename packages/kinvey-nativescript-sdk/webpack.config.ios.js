@@ -122,7 +122,8 @@ function getPlugins(env, platform) {
         }
       },
       { from: '.travis.yml' },
-      { from: path.join(__dirname, '../../src/kinvey.d.ts') },
+      { from: path.join(__dirname, 'kinvey.d.ts') },
+      { from: path.join(__dirname, 'push.d.ts') },
       { from: 'platforms/ios/**/*' },
       { from: 'LICENSE' },
       { from: 'README.md' },
