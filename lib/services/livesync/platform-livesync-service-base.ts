@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as util from "util";
 import { APP_FOLDER_NAME } from "../../constants";
+import { getHash } from "../../common/helpers";
 
 export abstract class PlatformLiveSyncServiceBase {
 	private _deviceLiveSyncServicesCache: IDictionary<INativeScriptDeviceLiveSyncService> = {};
@@ -13,15 +14,17 @@ export abstract class PlatformLiveSyncServiceBase {
 		private $projectFilesProvider: IProjectFilesProvider) { }
 
 	public getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService {
-		const key = device.deviceInfo.identifier + projectData.projectId;
+		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
+		const frameworkVersion = platformData.platformProjectService.getFrameworkVersion(projectData);
+		const key = getHash(`${device.deviceInfo.identifier}${projectData.projectId}${projectData.projectDir}${frameworkVersion}`);
 		if (!this._deviceLiveSyncServicesCache[key]) {
-			this._deviceLiveSyncServicesCache[key] = this._getDeviceLiveSyncService(device, projectData);
+			this._deviceLiveSyncServicesCache[key] = this._getDeviceLiveSyncService(device, projectData, frameworkVersion);
 		}
 
 		return this._deviceLiveSyncServicesCache[key];
 	}
 
-	protected abstract _getDeviceLiveSyncService(device: Mobile.IDevice, data: IProjectDir): INativeScriptDeviceLiveSyncService;
+	protected abstract _getDeviceLiveSyncService(device: Mobile.IDevice, data: IProjectData, frameworkVersion: string): INativeScriptDeviceLiveSyncService;
 
 	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
 		if (liveSyncInfo.isFullSync || liveSyncInfo.modifiedFilesData.length) {
@@ -44,7 +47,7 @@ export abstract class PlatformLiveSyncServiceBase {
 
 		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 		const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, null, []);
-		const modifiedFilesData = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, true);
+		const modifiedFilesData = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, true, projectData);
 
 		return {
 			modifiedFilesData,
@@ -55,8 +58,13 @@ export abstract class PlatformLiveSyncServiceBase {
 
 	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
 		const projectData = liveSyncInfo.projectData;
+		const deviceLiveSyncService = this.getDeviceLiveSyncService(device, projectData);
 		const syncInfo = _.merge<IFullSyncInfo>({ device, watch: true }, liveSyncInfo);
 		const deviceAppData = await this.getAppData(syncInfo);
+
+		if (deviceLiveSyncService.beforeLiveSyncAction) {
+			await deviceLiveSyncService.beforeLiveSyncAction(deviceAppData);
+		}
 
 		let modifiedLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
 		if (liveSyncInfo.filesToSync.length) {
@@ -77,7 +85,7 @@ export abstract class PlatformLiveSyncServiceBase {
 				const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData,
 					projectFilesPath, existingFiles, []);
 				modifiedLocalToDevicePaths.push(...localToDevicePaths);
-				modifiedLocalToDevicePaths = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, false);
+				modifiedLocalToDevicePaths = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, false, projectData);
 			}
 		}
 
@@ -93,8 +101,7 @@ export abstract class PlatformLiveSyncServiceBase {
 			const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, mappedFiles, []);
 			modifiedLocalToDevicePaths.push(...localToDevicePaths);
 
-			const deviceLiveSyncService = this.getDeviceLiveSyncService(device, projectData);
-			await deviceLiveSyncService.removeFiles(deviceAppData, localToDevicePaths);
+			await deviceLiveSyncService.removeFiles(deviceAppData, localToDevicePaths, projectFilesPath);
 		}
 
 		return {
@@ -104,13 +111,11 @@ export abstract class PlatformLiveSyncServiceBase {
 		};
 	}
 
-	protected async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<Mobile.ILocalToDevicePathData[]> {
+	protected async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean, projectData: IProjectData): Promise<Mobile.ILocalToDevicePathData[]> {
 		let transferredFiles: Mobile.ILocalToDevicePathData[] = [];
-		if (isFullSync) {
-			transferredFiles = await deviceAppData.device.fileSystem.transferDirectory(deviceAppData, localToDevicePaths, projectFilesPath);
-		} else {
-			transferredFiles = await deviceAppData.device.fileSystem.transferFiles(deviceAppData, localToDevicePaths);
-		}
+		const deviceLiveSyncService = this.getDeviceLiveSyncService(deviceAppData.device, projectData);
+
+		transferredFiles = await deviceLiveSyncService.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, isFullSync);
 
 		this.logFilesSyncInformation(transferredFiles, "Successfully transferred %s.", this.$logger.info);
 

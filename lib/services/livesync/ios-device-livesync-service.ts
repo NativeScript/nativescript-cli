@@ -7,10 +7,8 @@ let currentPageReloadId = 0;
 
 export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements INativeScriptDeviceLiveSyncService {
 	private socket: net.Socket;
-	private device: Mobile.IiOSDevice;
 
-	constructor(_device: Mobile.IiOSDevice,
-		data: IProjectDir,
+	constructor(
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $iOSNotification: IiOSNotification,
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
@@ -18,9 +16,9 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		private $logger: ILogger,
 		private $fs: IFileSystem,
 		private $processService: IProcessService,
-		protected $platformsData: IPlatformsData) {
-			super($platformsData);
-			this.device = _device;
+		protected $platformsData: IPlatformsData,
+		protected device: Mobile.IiOSDevice) {
+			super($platformsData, device);
 	}
 
 	private async setupSocketIfNeeded(projectData: IProjectData): Promise<boolean> {
@@ -63,7 +61,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => scriptRelatedFiles = _.concat(scriptRelatedFiles, localToDevicePaths.filter(file => minimatch(file.getDevicePath(), pattern, { nocase: true }))));
 
 		const otherFiles = _.difference(localToDevicePaths, _.concat(scriptFiles, scriptRelatedFiles));
-		const shouldRestart = _.some(otherFiles, (localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, deviceAppData.platform));
+		const shouldRestart = this.canExecuteFastSyncForPaths(otherFiles, projectData, deviceAppData.platform);
 
 		if (shouldRestart || (!liveSyncInfo.useLiveEdit && scriptFiles.length)) {
 			await this.restartApplication(deviceAppData, projectData.projectName);

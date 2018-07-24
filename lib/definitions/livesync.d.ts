@@ -344,6 +344,7 @@ interface IPlatformLiveSyncService {
 	liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo>;
 	refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
 	prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir, liveSyncInfo: ILiveSyncInfo, debugOptions: IDebugOptions): Promise<void>;
+	getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService;
 }
 
 interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase {
@@ -362,9 +363,27 @@ interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase 
 	 * Removes specified files from a connected device
 	 * @param  {Mobile.IDeviceAppData} deviceAppData Data about device and app.
 	 * @param  {Mobile.ILocalToDevicePathData[]} localToDevicePaths Object containing a mapping of file paths from the system to the device.
+	 * @param  {string} projectFilesPath The Path to the app folder inside platforms folder
 	 * @return {Promise<void>}
 	 */
-	removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void>;
+	removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath?: string): Promise<void>;
+
+	/**
+	 * Transfers specified files to a connected device
+	 * @param  {Mobile.IDeviceAppData} deviceAppData Data about device and app.
+	 * @param  {Mobile.ILocalToDevicePathData[]} localToDevicePaths Object containing a mapping of file paths from the system to the device.
+	 * @param  {string} projectFilesPath The Path to the app folder inside platforms folder
+	 * @param  {boolean} isFullSync Indicates if the operation is part of a fullSync
+	 * @return {Promise<Mobile.ILocalToDevicePathData[]>} Returns the ILocalToDevicePathData of all transfered files
+	 */
+	transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<Mobile.ILocalToDevicePathData[]>;
+
+	/**
+	 * Guarantees all remove/update operations have finished
+	 * @param  {ILiveSyncResultInfo} liveSyncInfo Describes the LiveSync operation - for which project directory is the operation and other settings.
+	 * @return {Promise<void>}
+	 */
+	finalizeSync(liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
 }
 
 interface IAndroidNativeScriptDeviceLiveSyncService {
@@ -374,6 +393,95 @@ interface IAndroidNativeScriptDeviceLiveSyncService {
 	 * @return {Promise<Mobile.IAndroidDeviceHashService>} The hash service
 	 */
 	getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService;
+}
+
+interface IAndroidLivesyncTool {
+	/**
+	 * Creates new socket connection.
+	 * @param configuration - The configuration to the socket connection.
+	 * @returns {Promise<void>}
+	 */
+	connect(configuration: IAndroidLivesyncToolConfiguration): Promise<void>;
+	/**
+	 * Sends a file through the socket.
+	 * @param filePath - The full path to the file.
+	 * @returns {Promise<void>}
+	 */
+	sendFile(filePath: string): Promise<void>;
+	/**
+	 * Sends files through the socket.
+	 * @param filePaths - Array of files that will be send by the socket.
+	 * @returns {Promise<void>}
+	 */
+	sendFiles(filePaths: string[]): Promise<void>;
+	/**
+	 * Sends all files from directory by the socket.
+	 * @param directoryPath - The path to the directory which files will be send by the socket.
+	 * @returns {Promise<void>}
+	 */
+	sendDirectory(directoryPath: string): Promise<void>;
+	/**
+	 * Removes file
+	 * @param filePath - The full path to the file.
+	 * @returns {Promise<boolean>}
+	 */
+	removeFile(filePath: string): Promise<boolean>;
+	/**
+	 * Removes files 
+	 * @param filePaths - Array of files that will be removed.
+	 * @returns {Promise<boolean[]>}
+	 */
+	removeFiles(filePaths: string[]): Promise<boolean[]>;
+	/**
+	 * Sends doSyncOperation that will be handled by the runtime.
+	 * @param doRefresh - Indicates if the application should be restarted. Defaults to true.
+	 * @param operationId - The identifier of the operation
+	 * @param timeout - The timeout in milliseconds
+	 * @returns {Promise<void>}
+	 */
+	sendDoSyncOperation(doRefresh: boolean, timeout?: number, operationId?: string): Promise<IAndroidLivesyncSyncOperationResult>;
+	/**
+	 * Generates new operation identifier.
+	 */
+	generateOperationIdentifier(): string;
+	/**
+	 * Checks if the current operation is in progress.
+	 * @param operationId - The identifier of the operation.
+	 */
+	isOperationInProgress(operationId: string): boolean;
+
+	/**
+	 * Closes the current socket connection.
+	 */
+	end(): void;
+}
+
+interface IAndroidLivesyncToolConfiguration {
+	/**
+	 * The application identifier.
+	 */
+	appIdentifier: string;
+	/**
+	 * The device identifier.
+	 */
+	deviceIdentifier: string;
+	/**
+	 * The path to app folder inside platforms folder: platforms/android/app/src/main/assets/app/
+	 */
+	appPlatformsPath: string;
+	/**
+	 * If not provided, defaults to 127.0.0.1
+	 */
+	localHostAddress?: string;
+	/**
+	 * If provider will call it when an error occurs.
+	 */
+	errorHandler?: any;
+}
+
+interface IAndroidLivesyncSyncOperationResult {
+	operationId: string,
+	didRefresh: boolean
 }
 
 interface IDeviceProjectRootOptions {
