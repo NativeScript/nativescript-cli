@@ -126,6 +126,10 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 		on: () => ({})
 	});
 	testInjector.register("emulatorHelper", {});
+	testInjector.register("filesHashService", {
+		hasChangesInShasums: (oldPluginNativeHashes: IStringDictionary, currentPluginNativeHashes: IStringDictionary) => true,
+		generateHashes: async (files: string[]): Promise<IStringDictionary> => ({})
+	});
 
 	return testInjector;
 }

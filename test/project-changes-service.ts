@@ -6,7 +6,7 @@ import { PlatformsData } from "../lib/platforms-data";
 import { ProjectChangesService } from "../lib/services/project-changes-service";
 import * as Constants from "../lib/constants";
 import { FileSystem } from "../lib/common/file-system";
-import { HooksServiceStub } from "./stubs";
+import { HooksServiceStub, LoggerStub } from "./stubs";
 
 // start tracking temporary folders/files
 temp.track();
@@ -34,9 +34,7 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 		this.injector.register("filesHashService", {
 			generateHashes: () => Promise.resolve({})
 		});
-		this.injector.register("logger", {
-			warn: () => ({})
-		});
+		this.injector.register("logger", LoggerStub);
 		this.injector.register("hooksService", HooksServiceStub);
 
 		const fs = this.injector.resolve<IFileSystem>("fs");
