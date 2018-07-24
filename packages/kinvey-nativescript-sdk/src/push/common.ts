@@ -2,34 +2,25 @@ import { Promise } from 'es6-promise';
 import { EventEmitter } from 'events';
 
 import { device as Device } from 'tns-core-modules/platform';
-import { Client } from '../../core/client';
-import { KinveyError, NotFoundError } from '../../core/errors';
-import { isDefined } from '../../core/utils';
-import { User } from '../../core/user';
-import { AuthType, KinveyRequest, RequestMethod } from '../../core/request';
+import {
+  client,
+  KinveyError,
+  NotFoundError,
+  User,
+  AuthType,
+  KinveyRequest,
+  RequestMethod,
+  DataAccess
+} from './kinvey-nativescript-sdk';
 import { PushConfig } from './';
-import { repositoryProvider } from '../../core/datastore';
 
 const deviceCollectionName = '__device';
 
 export class PushCommon extends EventEmitter {
-  private _client: Client;
   private _offlineRepoPromise: Promise<any>;
 
   get client() {
-    if (isDefined(this._client) === false) {
-      return Client.sharedInstance();
-    }
-
-    return this._client;
-  }
-
-  set client(client) {
-    if (isDefined(client) && (client instanceof Client) === false) {
-      throw new Error('client must be an instance of Client.');
-    }
-
-    this._client = client;
+    return client();
   }
 
   onNotification(listener: (data: any) => void) {
@@ -43,7 +34,7 @@ export class PushCommon extends EventEmitter {
   register(options = <PushConfig>{}) {
     return this._registerWithPushPlugin(options)
       .then((token) => {
-        if (isDefined(token) === false) {
+        if (!token) {
           throw new KinveyError('Unable to retrieve the device token to register this device for push notifications.');
         }
 
@@ -60,7 +51,7 @@ export class PushCommon extends EventEmitter {
         return this._getTokenFromCache();
       })
       .then((token) => {
-        if (isDefined(token) === false) {
+        if (!token) {
           throw new KinveyError('Unable to retrieve the device token to unregister this device for push notifications.');
         }
 
@@ -82,7 +73,7 @@ export class PushCommon extends EventEmitter {
   private _registerWithKinvey(token: string, options = <PushConfig>{}): Promise<string> {
     const activeUser = User.getActiveUser(this.client);
 
-    if (isDefined(activeUser) === false) {
+    if (!activeUser) {
       return Promise.reject(new KinveyError('Unable to register this device for push notifications.',
         'You must login a user.'));
     }
@@ -105,7 +96,7 @@ export class PushCommon extends EventEmitter {
   private _unregisterWithKinvey(token: string, options = <PushConfig>{}): Promise<string> {
     const activeUser = User.getActiveUser(this.client);
 
-    if (isDefined(activeUser) === false) {
+    if (!activeUser) {
       return Promise.reject(new KinveyError('Unable to unregister this device for push notifications.',
         'You must login a user.'));
     }
@@ -113,7 +104,7 @@ export class PushCommon extends EventEmitter {
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       url: `${this.client.apiHostname}/push/${this.client.appKey}/unregister-device`,
-      authType: isDefined(activeUser) ? AuthType.Session : AuthType.Master,
+      authType: activeUser ? AuthType.Session : AuthType.Master,
       data: {
         platform: Device.os.toLowerCase(),
         framework: 'nativescript',
@@ -128,7 +119,7 @@ export class PushCommon extends EventEmitter {
   private _getTokenFromCache(): Promise<string | null> {
     const activeUser = User.getActiveUser(this.client);
 
-    if (isDefined(activeUser) === false) {
+    if (!activeUser) {
       throw new KinveyError('Unable to retrieve device token.',
         'You must login a user.');
     }
@@ -143,7 +134,7 @@ export class PushCommon extends EventEmitter {
         throw error;
       })
       .then((device) => {
-        if (isDefined(device)) {
+        if (device) {
           return device.token;
         }
 
@@ -154,7 +145,7 @@ export class PushCommon extends EventEmitter {
   private _saveTokenToCache(token: any): Promise<string> {
     const activeUser = User.getActiveUser(this.client);
 
-    if (isDefined(activeUser) === false) {
+    if (!activeUser) {
       throw new KinveyError('Unable to save device token.',
         'You must login a user.');
     }
@@ -173,7 +164,7 @@ export class PushCommon extends EventEmitter {
   private _deleteTokenFromCache(): Promise<null> {
     const activeUser = User.getActiveUser(this.client);
 
-    if (isDefined(activeUser) === false) {
+    if (!activeUser) {
       throw new KinveyError('Unable to delete device token.',
         'You must login a user.');
     }
@@ -185,7 +176,7 @@ export class PushCommon extends EventEmitter {
 
   private _getOfflineRepo() {
     if (!this._offlineRepoPromise) {
-      this._offlineRepoPromise = repositoryProvider.getOfflineRepository();
+      this._offlineRepoPromise = DataAccess.repositoryProvider.getOfflineRepository();
     }
     return this._offlineRepoPromise;
   }
