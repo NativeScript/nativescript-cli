@@ -40,7 +40,6 @@ describe('LiveServiceFacade', () => {
 
   it('should have only user-facing LiveService methods', () => {
     const expectedMethods = [
-      'Stream',
       'onConnectionStatusUpdates',
       'offConnectionStatusUpdates',
       'isInitialized'

@@ -12,16 +12,27 @@ const dataStoreTypes = [DataStoreType.Sync, DataStoreType.Cache];
 const validateSyncManagerCall = (spy, query, options) => {
   expect(spy.calls.length).toBe(1);
   let expectedArgumentsCount = 1;
+
   if (query) {
     expectedArgumentsCount += 1;
   }
+
   if (options) {
     expectedArgumentsCount += 1;
-    expect(spy.calls[0].arguments[2]).toIncludeKey(optionKeyName);
   }
+
   expect(spy.calls[0].arguments.length).toBe(expectedArgumentsCount);
   expect(spy.calls[0].arguments[0]).toBe(collection);
-  expect(spy.calls[0].arguments[1]).toBe(query);
+
+  if (query) {
+    expect(spy.calls[0].arguments[1]).toBe(query);
+
+    if (options) {
+      expect(spy.calls[0].arguments[2]).toIncludeKey(optionKeyName);
+    }
+  } else if (options) {
+    expect(spy.calls[0].arguments[1]).toIncludeKey(optionKeyName);
+  }
 };
 
 describe('Data stores delegate correctly to sync manager', () => {
@@ -79,12 +90,11 @@ describe('Data stores delegate correctly to sync manager', () => {
       });
 
       it('push()', () => {
-        const query = new Query();
         const options = { [optionKeyName]: true };
-        return store.push(query, options)
+        return store.push(options)
           .then(() => {
             const spy = syncManagerMock.push;
-            validateSyncManagerCall(spy, query, options);
+            validateSyncManagerCall(spy, options);
           });
       });
 
@@ -124,9 +134,9 @@ describe('Data stores delegate correctly to sync manager', () => {
         const pullSpy = syncManagerMock.pull;
         return store.sync(query, options)
           .then(() => {
-            validateSyncManagerCall(pushSpy, query, options);
+            validateSyncManagerCall(pushSpy, null, options);
             validateSyncManagerCall(pullSpy, query, options);
-            expect(pushSpy.calls[0].arguments[2].useDeltaFetch).toBe(store.useDeltaFetch);
+            expect(pushSpy.calls[0].arguments[1].useDeltaFetch).toBe(store.useDeltaFetch);
             expect(pullSpy.calls[0].arguments[2].useDeltaFetch).toBe(store.useDeltaFetch);
           });
       });
@@ -142,8 +152,8 @@ describe('Data stores delegate correctly to sync manager', () => {
             return Promise.reject(new Error('should not happen'));
           })
           .catch(() => {
-            validateSyncManagerCall(pushSpy, query, options);
-            expect(pushSpy.calls[0].arguments[2].useDeltaFetch).toBe(store.useDeltaFetch);
+            validateSyncManagerCall(pushSpy, null, options);
+            expect(pushSpy.calls[0].arguments[1].useDeltaFetch).toBe(store.useDeltaFetch);
             expect(pullSpy.calls.length).toBe(0);
           });
       });
