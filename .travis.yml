@@ -108,6 +108,9 @@ matrix:
       language: node_js
       node_js: ${INTEGRATION_TESTS_NODEJS_VERSION}
       jdk: oraclejdk8
+      before_install:
+        - deviceId=$(xcrun simctl create 'iPhone7-11.2' com.apple.CoreSimulator.SimDeviceType.iPhone-7-Plus com.apple.CoreSimulator.SimRuntime.iOS-11-2)
+        - xcrun simctl boot $deviceId
       install:
         - npm i -g cordova@${INTEGRATION_TESTS_CORDOVA_VERSION}
         - npm i
