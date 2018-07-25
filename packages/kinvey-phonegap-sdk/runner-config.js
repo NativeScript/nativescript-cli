@@ -59,7 +59,7 @@ function runPipeline(osName) {
       ),
       runCommand({
         command: './node_modules/.bin/babel',
-        args: [commonTestsPath, '--out-dir', appTestsPath],
+        args: [commonTestsPath, shimTestsPath, '--out-dir', appTestsPath],
         cwd: rootMonoRepoPath
       }),
       copy(path.join(__dirname, 'test', 'libs'), appPath),
