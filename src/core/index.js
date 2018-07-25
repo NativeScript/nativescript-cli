@@ -45,7 +45,8 @@ export { Files } from './files';
 export { Log } from './log';
 export { Metadata } from './metadata';
 export { Query } from './query';
-export { Properties } from './request';
+export { Properties, RequestMethod } from './request';
+export { AuthType, KinveyRequest } from './request/network';
 export { User } from './user';
 export {
   ActiveUserError,

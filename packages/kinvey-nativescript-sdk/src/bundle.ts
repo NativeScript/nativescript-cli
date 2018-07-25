@@ -31,6 +31,11 @@ export {
   Query,
   User,
 
+  AuthType,
+  KinveyRequest,
+  RequestMethod,
+  DataAccess,
+
   ActiveUserError,
   APIVersionNotAvailableError,
   APIVersionNotImplementedError,
