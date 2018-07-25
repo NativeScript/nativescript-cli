@@ -31,7 +31,7 @@ function testFunc() {
         expect(record.entity).to.not.exist;
       }
     });
-    networkStore.find().toPromise()
+    return networkStore.find().toPromise()
       .then((result) => {
         expect(result.length).to.equal(expectedServerItemsCount);
         expect(_.find(result, e => e._id === deletedItem._id)).to.not.exist;
@@ -306,66 +306,12 @@ function testFunc() {
               .catch(done);
           });
 
-          it('should push to the backend only the entities matching the query, when operation is "create"', (done) => {
+          it('should disregard the passed query and push all entities to the backend', (done) => {
             const query = new Kinvey.Query();
             query.equalTo('_id', entity1._id);
             storeToTest.push(query)
-              .then((result) => {
-                expect(result.length).to.equal(1);
-                expect(result[0]._id).to.equal(entity1._id);
-
-                return networkStore.find().toPromise()
-                  .then((result) => {
-                    expect(result.length).to.equal(4); // the nameless entity from setup
-                    expect(_.find(result, e => e._id === entity1._id)).to.exist;
-                    expect(_.find(result, e => e._id === entity2._id)).to.exist;
-                    expect(_.find(result, e => e._id === entity3._id)).to.exist;
-                    done();
-                  });
-              })
-              .catch(done);
-          });
-
-          it('should push to the backend only the entities matching the query, when operation is "update"', (done) => {
-            const query = new Kinvey.Query();
-            query.equalTo('_id', entity2._id);
-            storeToTest.push(query)
-              .then((result) => {
-                expect(result.length).to.equal(1);
-                expect(result[0]._id).to.equal(entity2._id);
-
-                return networkStore.find().toPromise()
-                  .then((result) => {
-                    expect(result.length).to.equal(3); // the nameless entity from setup
-                    const expectedEntity2 = _.find(result, e => e._id === entity2._id);
-                    expect(expectedEntity2).to.exist;
-                    expect(expectedEntity2.newProperty).to.equal(updatedEntity2.newProperty);
-                    expect(_.find(result, e => e._id === entity3._id)).to.exist;
-                    done();
-                  });
-              })
-              .catch(done);
-          });
-
-          it.skip('should push to the backend only the entities matching the query, when operation is "delete"', (done) => {
-            const query = new Kinvey.Query();
-            query.equalTo('_id', entity3._id);
-            storeToTest.push(query)
-              .then((result) => {
-                expect(result.length).to.equal(1);
-                expect(result[0]._id).to.equal(entity3._id);
-
-                return networkStore.find().toPromise()
-                  .then((result) => {
-                    expect(result.length).to.equal(2); // the nameless entity from setup
-                    expect(_.find(result, e => e._id === entity1._id)).to.exist;
-                    const expectedEntity2 = _.find(result, e => e._id === entity2._id);
-                    expect(expectedEntity2).to.exist;
-                    expect(expectedEntity2.newProperty).to.equal(undefined);
-                    expect(_.find(result, e => e._id === entity3._id)).to.not.exist;
-                    done();
-                  });
-              })
+              .then((result) => validatePushOperation(result, entity1, updatedEntity2, entity3, 3))
+              .then(done)
               .catch(done);
           });
 
@@ -501,19 +447,16 @@ function testFunc() {
               .catch(done);
           });
 
-          it('should push and then pull only the entities, matching the query', (done) => {
+          it('with query should push all entities and then pull only the entities, matching the query', (done) => {
             let syncResult;
             const query = new Kinvey.Query();
             query.equalTo('_id', updatedEntity2._id);
             storeToTest.sync(query)
               .then((result) => {
                 syncResult = result;
-                expect(syncResult.push.length).to.equal(1);
-                expect(syncResult.push[0]._id).to.equal(updatedEntity2._id);
-                return networkStore.find().toPromise();
+                return validatePushOperation(syncResult.push, entity1, updatedEntity2, entity3, 5);
               })
               .then((result) => {
-                expect(_.find(result, (entity) => { return entity._id === updatedEntity2._id; })).to.exist;
                 return validatePullOperation(syncResult.pull, [updatedEntity2]);
               })
               .then(() => done())
