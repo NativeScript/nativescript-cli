@@ -7,7 +7,7 @@ import isEmpty from 'lodash/isEmpty';
 import isPlainObject from 'lodash/isObject';
 import url from 'url';
 import isString from 'lodash/isString';
-import PQueue from 'p-queue';
+import PQueue from 'promise-queue';
 import { Client } from '../client';
 import { Query } from '../query';
 import { Aggregation } from '../aggregation';
@@ -21,7 +21,8 @@ import { Log } from '../log';
 import { getLiveService } from '../live';
 import { DataStore } from '../datastore';
 
-const requestQueue = new PQueue({ concurrency: Infinity });
+PQueue.configure(Promise);
+const requestQueue = new PQueue();
 
 /**
  * @private
@@ -475,7 +476,7 @@ export class KinveyRequest extends NetworkRequest {
       .catch((error) => {
         if (error instanceof InvalidCredentialsError) {
           if (retry) {
-            if (requestQueue.isPaused) {
+            if (requestQueue.paused) {
               return requestQueue.add(() => {
                 return this.execute(rawResponse, false)
                   .catch(() => Promise.reject(error));

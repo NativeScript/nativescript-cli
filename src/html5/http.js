@@ -87,9 +87,12 @@ export class Html5HttpMiddleware extends Middleware {
         timeout,
         followRedirect
       } = request;
+      const kinveyUrlRegex = /kinvey\.com/gm;
 
-      // Add the X-Kinvey-Device-Information header
-      headers['X-Kinvey-Device-Information'] = deviceInformation(this.pkg);
+      if (kinveyUrlRegex.test(url)) {
+        // Add the X-Kinvey-Device-Information header
+        headers['X-Kinvey-Device-Information'] = deviceInformation(this.pkg);
+      }
 
       this.xhrRequest = xhr({
         method: method,
@@ -102,9 +105,11 @@ export class Html5HttpMiddleware extends Middleware {
         if (isDefined(error)) {
           if (error.code === 'ESOCKETTIMEDOUT' || error.code === 'ETIMEDOUT') {
             return reject(new TimeoutError('The network request timed out.'));
+          } else if (error.code === 'ENOENT') {
+            return reject(new NetworkConnectionError('You do not have a network connection.'));
           }
 
-          return reject(new NetworkConnectionError('There was an error connecting to the network.', error));
+          return reject(error);
         }
 
         return resolve({

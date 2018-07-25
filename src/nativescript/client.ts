@@ -1,5 +1,4 @@
 import * as cloneDeep from 'lodash/cloneDeep';
-
 import { Client as CoreClient } from '../core/client';
 import { KinveyError } from '../core/errors';
 import { isDefined, useIfDefined } from '../core/utils';

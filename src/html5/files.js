@@ -8,7 +8,7 @@ export class FilesStore extends CoreFilesStore {
       return Promise.reject(new KinveyError('File must be an instance of a Blob or the content of the file as a string.'));
     }
 
-    metadata.size = file.size || file.length;
+    metadata = Object.assign({ size: file.size || file.length }, metadata);
     return super.upload(file, metadata, options);
   }
 }
