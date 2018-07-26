@@ -170,6 +170,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					notification: msg
 				});
 			}
+
+			this.handleDeveloperDiskImageError(err, liveSyncResultInfo, projectData, debugOpts, outputPath);
 		}
 
 		this.emitLivesyncEvent(LiveSyncEvents.liveSyncExecuted, {
@@ -183,47 +185,47 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 	private async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOptions: IDebugOptions, outputPath?: string): Promise<IDebugInformation> {
 		const deviceAppData = liveSyncResultInfo.deviceAppData;
+		debugOptions = debugOptions || {};
 
 		const deviceIdentifier = liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier;
 		await this.$debugService.debugStop(deviceIdentifier);
 		this.emit(DEBUGGER_DETACHED_EVENT_NAME, { deviceIdentifier });
 
-		const applicationId = deviceAppData.appIdentifier;
-		const attachDebuggerOptions: IAttachDebuggerOptions = {
-			platform: liveSyncResultInfo.deviceAppData.device.deviceInfo.platform,
-			isEmulator: liveSyncResultInfo.deviceAppData.device.isEmulator,
-			projectDir: projectData.projectDir,
-			deviceIdentifier,
-			debugOptions,
-			outputPath
-		};
 
-		try {
-			await deviceAppData.device.applicationManager.stopApplication({ appId: applicationId, projectName: projectData.projectName });
-			// Now that we've stopped the application we know it isn't started, so set debugOptions.start to false
-			// so that it doesn't default to true in attachDebugger method
-			debugOptions = debugOptions || {};
-			debugOptions.start = false;
-		} catch (err) {
-			this.$logger.trace("Could not stop application during debug livesync. Will try to restart app instead.", err);
-			if ((err.message || err) === "Could not find developer disk image") {
-				// Set isFullSync here to true because we are refreshing with debugger
-				// We want to force a restart instead of accidentally performing LiveEdit or FastSync
-				liveSyncResultInfo.isFullSync = true;
-				await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, debugOptions, outputPath, { shouldSkipEmitLiveSyncNotification: true });
-				this.emit(USER_INTERACTION_NEEDED_EVENT_NAME, attachDebuggerOptions);
-				return;
-			} else {
-				throw err;
+		if (debugOptions.debugBrk) {
+			const applicationId = deviceAppData.appIdentifier;
+			try {
+				await deviceAppData.device.applicationManager.stopApplication({ appId: applicationId, projectName: projectData.projectName });
+			} catch (err) {
+				this.$logger.trace("Could not stop application during debug livesync. Will try to restart app instead.", err);
+				this.handleDeveloperDiskImageError(err, liveSyncResultInfo, projectData, debugOptions, outputPath);
 			}
+		} else {
+			await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, debugOptions, outputPath, { shouldSkipEmitLiveSyncNotification: true });
 		}
 
+		debugOptions.start = !debugOptions.debugBrk;
 		const deviceOption = {
 			deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
 			debugOptions: debugOptions,
 		};
 
 		return this.enableDebuggingCoreWithoutWaitingCurrentAction(deviceOption, { projectDir: projectData.projectDir });
+	}
+
+	private handleDeveloperDiskImageError(err: any, liveSyncResultInfo: ILiveSyncResultInfo, projectData: IProjectData, debugOpts: IDebugOptions, outputPath: string) {
+		if ((err.message || err) === "Could not find developer disk image") {
+			const deviceIdentifier = liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier;
+			const attachDebuggerOptions: IAttachDebuggerOptions = {
+				platform: liveSyncResultInfo.deviceAppData.device.deviceInfo.platform,
+				isEmulator: liveSyncResultInfo.deviceAppData.device.isEmulator,
+				projectDir: projectData.projectDir,
+				deviceIdentifier,
+				debugOptions: debugOpts,
+				outputPath
+			};
+			this.emit(USER_INTERACTION_NEEDED_EVENT_NAME, attachDebuggerOptions);
+		}
 	}
 
 	public async attachDebugger(settings: IAttachDebuggerOptions): Promise<IDebugInformation> {
