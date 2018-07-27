@@ -161,6 +161,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	public end() {
 		if (this.socketConnection) {
 			this.socketConnection.end();
+			this.socketConnection = null;
 		}
 	}
 
@@ -215,26 +216,31 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 				.on("data", (chunk: string | Buffer) => {
 					fileHash.update(chunk);
 					if (this.socketConnection) {
+						console.log("data!");
 						this.socketConnection.write(chunk);
 					} else {
 						const error = this.checkConnectionStatus();
 						//TODO Destroy method added in node 8.0.0.
 						//when we deprecate node 6.x uncomment the line below
 						//fileStream.destroy(error);
+						console.log("data NQMA socketConnection");
 						reject(error);
 					}
 				})
 				.on("end", () => {
 					if (this.socketConnection) {
 						this.socketConnection.write(fileHash.digest(), () => {
+							console.log("file sent");
 							resolve(true);
 						});
 					} else {
 						const error = this.checkConnectionStatus();
+						console.log("end NQMA socketConnection");
 						reject(error);
 					}
 				})
 				.on("error", (error: Error) => {
+					console.log("errorerrorerrorerrorerror");
 					reject(error);
 				});
 		});
@@ -267,6 +273,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	}
 
 	private handleConnection({ socket, data }: { socket: IDuplexSocket, data: NodeBuffer | string }) {
+		console.log("got socketConnection");
 		this.socketConnection = socket;
 		this.socketConnection.uid = this.generateOperationIdentifier();
 
@@ -303,6 +310,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			}, timeout);
 
 			const tryConnect = () => {
+				console.log("tryConnect");
 				const tryConnectAfterTimeout = (error: Error) => {
 					if (isConnected) {
 						return;
@@ -410,13 +418,14 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	}
 
 	private dispose(): void {
-		this.end();
-
+		console.log("tool dispose");
 		_.keys(this.operationPromises)
-			.forEach(operationId => {
-				const operationPromise = this.operationPromises[operationId];
-				clearTimeout(operationPromise.timeoutId);
-			});
+		.forEach(operationId => {
+			const operationPromise = this.operationPromises[operationId];
+			operationPromise.reject();
+			clearTimeout(operationPromise.timeoutId);
+		});
+		this.end();
 	}
 }
 $injector.register("androidLivesyncTool", AndroidLivesyncTool);

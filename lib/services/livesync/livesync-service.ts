@@ -63,6 +63,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			// In case deviceIdentifiers are not passed, we should stop the whole LiveSync.
 			if (!deviceIdentifiers || !deviceIdentifiers.length || !liveSyncProcessInfo.deviceDescriptors || !liveSyncProcessInfo.deviceDescriptors.length) {
 				if (liveSyncProcessInfo.timer) {
+					console.log(">>>>>> liveSyncProcessInfo.timer cleared");
 					clearTimeout(liveSyncProcessInfo.timer);
 				}
 
@@ -686,9 +687,11 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			this.liveSyncProcessesInfo[liveSyncData.projectDir].timer = timeoutTimer;
 
 			this.$processService.attachToProcessExitSignals(this, () => {
-				_.keys(this.liveSyncProcessesInfo).forEach(projectDir => {
+					console.log("this.liveSyncProcessesInfo: " + _.keys(this.liveSyncProcessesInfo).length);
+				_.keys(this.liveSyncProcessesInfo).forEach(async (projectDir) => {
+					console.log("this.liveSyncProcessesInfo.projectDir: " + projectDir);
 					// Do not await here, we are in process exit's handler.
-					this.stopLiveSync(projectDir);
+					await this.stopLiveSync(projectDir);
 				});
 			});
 		}

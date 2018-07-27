@@ -18,11 +18,13 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		protected device: Mobile.IAndroidDevice,
 		private $options: ICommonOptions,
 		private $processService: IProcessService) {
-		super($platformsData, device);
+			super($platformsData, device);
+			console.log("new AndroidDeviceSocketsLiveSyncService");
 		this.livesyncTool = this.$injector.resolve(AndroidLivesyncTool);
 	}
 
 	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
+		console.log("beforeLiveSyncAction");
 		const platformData = this.$platformsData.getPlatformData(deviceAppData.platform, this.data);
 		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 		await this.device.applicationManager.startApplication({ appId: deviceAppData.appIdentifier, projectName: this.data.projectName });
