@@ -120,6 +120,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		const spinner = this.$terminalSpinnerService.createSpinner();
 		const platformPath = path.join(projectData.platformsDir, platform);
+		let installedPlatformVersion;
 
 		try {
 			spinner.start();
@@ -128,7 +129,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			await this.$pacoteService.extractPackage(packageToInstall, downloadedPackagePath);
 			let frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
 			frameworkDir = path.resolve(frameworkDir);
-			await this.addPlatformCore(platformData, frameworkDir, platformTemplate, projectData, config, nativePrepare);
+			installedPlatformVersion =
+				await this.addPlatformCore(platformData, frameworkDir, platformTemplate, projectData, config, nativePrepare);
 		} catch (err) {
 			this.$fs.deleteDirectory(platformPath);
 			throw err;
@@ -137,7 +139,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		this.$fs.ensureDirectoryExists(platformPath);
-		this.$logger.out(`Platform ${platform} successfully added.`);
+		this.$logger.out(`Platform ${platform} successfully added. v${installedPlatformVersion}`);
 	}
 
 	private async addPlatformCore(platformData: IPlatformData, frameworkDir: string, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, nativePrepare?: INativePrepare): Promise<string> {
@@ -165,8 +167,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			});
 		}
 
-		const coreModuleName = coreModuleData.name;
-		return coreModuleName;
+		return installedVersion;
 	}
 
 	public getInstalledPlatforms(projectData: IProjectData): string[] {
