@@ -3,7 +3,7 @@
 
 import {
   Observable
-} from 'rxjs/Observable';
+} from 'rxjs';
 
 export namespace Kinvey {
   export let appVersion: string;
