@@ -24,6 +24,12 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	private socketError: string | Error;
 	private socketConnection: IDuplexSocket;
 	private configuration: IAndroidLivesyncToolConfiguration;
+	private pendingConnectionData: {
+		connectionTimer?: NodeJS.Timer,
+		socketTimer?: NodeJS.Timer,
+		rejectHandler?: Function,
+		socket?: IDuplexSocket
+	} = null;
 
 	constructor(private $androidProcessService: Mobile.IAndroidProcessService,
 		private $errors: IErrors,
@@ -295,16 +301,25 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			let lastKnownError: Error | string,
 				isConnected = false;
 
-			setTimeout(() => {
+			const connectionTimer = setTimeout(() => {
 				if (!isConnected) {
 					isConnected = true;
-					reject(lastKnownError);
+					reject(lastKnownError || { message: "Socket connection timeouted." });
+					this.pendingConnectionData = null;
 				}
 			}, timeout);
 
+			this.pendingConnectionData = {
+				connectionTimer,
+				rejectHandler: reject
+			};
+
 			const tryConnect = () => {
+				const socket = factory();
+
 				const tryConnectAfterTimeout = (error: Error) => {
 					if (isConnected) {
+						this.pendingConnectionData = null;
 						return;
 					}
 
@@ -313,10 +328,11 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 					}
 
 					lastKnownError = error;
-					setTimeout(tryConnect, 1000);
+					socket.removeAllListeners();
+					this.pendingConnectionData.socketTimer = setTimeout(tryConnect, 1000);
 				};
 
-				const socket = factory();
+				this.pendingConnectionData.socket = socket;
 
 				socket.once("data", data => {
 					socket.removeListener("close", tryConnectAfterTimeout);
@@ -366,6 +382,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		const error = this.getErrorWithMessage(errorMessage);
 		if (this.socketConnection && this.socketConnection.uid === socketId) {
 			this.end();
+			this.socketConnection.removeAllListeners();
 			this.socketConnection = null;
 			this.socketError = error;
 		}
@@ -410,6 +427,18 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	}
 
 	private dispose(): void {
+		if (this.pendingConnectionData) {
+			clearTimeout(this.pendingConnectionData.connectionTimer);
+
+			if (this.pendingConnectionData.socketTimer) {
+				clearTimeout(this.pendingConnectionData.socketTimer);
+			}
+			if (this.pendingConnectionData.socket) {
+				this.pendingConnectionData.socket.removeAllListeners();
+			}
+
+			this.pendingConnectionData.rejectHandler("LiveSync aborted.");
+		}
 		this.end();
 
 		_.keys(this.operationPromises)
