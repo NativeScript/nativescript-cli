@@ -164,9 +164,17 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		return operationPromise;
 	}
 
-	public end() {
+	public end(error?: Error) {
 		if (this.socketConnection) {
-			this.socketConnection.end();
+			const socketUid = this.socketConnection.uid;
+			const socket = this.socketConnection;
+			error = error || this.getErrorWithMessage("Socket connection ended before sync operation is complete.");
+			//remove listeners and delete this.socketConnection
+			this.cleanState(socketUid);
+			//call end of the connection (close and error callbacks won't be called - listeners removed)
+			socket.end();
+			//reject all pending sync requests and clear timeouts
+			this.rejectPendingSyncOperations(socketUid, error);
 		}
 	}
 
@@ -381,12 +389,21 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	private handleSocketError(socketId: string, errorMessage: string) {
 		const error = this.getErrorWithMessage(errorMessage);
 		if (this.socketConnection && this.socketConnection.uid === socketId) {
-			this.end();
+			this.socketError = error;
+			this.end(error);
+		} else {
+			this.rejectPendingSyncOperations(socketId, error);
+		}
+	}
+
+	private cleanState(socketId: string) {
+		if (this.socketConnection && this.socketConnection.uid === socketId) {
 			this.socketConnection.removeAllListeners();
 			this.socketConnection = null;
-			this.socketError = error;
 		}
+	}
 
+	private rejectPendingSyncOperations(socketId: string, error: Error) {
 		_.keys(this.operationPromises)
 			.forEach(operationId => {
 				const operationPromise = this.operationPromises[operationId];
@@ -395,7 +412,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 					operationPromise.reject(error);
 					delete this.operationPromises[operationId];
 				}
-		});
+			});
 	}
 
 	private getErrorWithMessage(errorMessage: string) {
