@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "3.11.4",
+  "version": "3.11.5",
   "name": "kinvey-nativescript-sdk",
   "description": "Kinvey NativeScript SDK for developing NativeScript applications.",
   "author": "Kinvey, Inc.",
@@ -26,13 +26,16 @@
   },
   "files": [
     "file-upload-worker-android.js",
-    "kinvey-nativescript-sdk.ios.js",
-    "kinvey-nativescript-sdk.ios.js.map",
     "kinvey-nativescript-sdk.android.js",
     "kinvey-nativescript-sdk.android.js.map",
-    "push.android.js",
-    "push.ios.js",
+    "kinvey-nativescript-sdk.ios.js",
+    "kinvey-nativescript-sdk.ios.js.map",
     "kinvey.d.ts",
+    "push.android.js",
+    "push.android.js.map",
+    "push.d.ts",
+    "push.ios.js",
+    "push.ios.js.map",
     "platforms/android/include.gradle",
     "platforms/ios/Podfile",
     "platforms/ios/app.entitlements"
