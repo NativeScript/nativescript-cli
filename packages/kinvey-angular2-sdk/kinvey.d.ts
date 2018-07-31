@@ -30,6 +30,7 @@ export namespace Kinvey {
 
   // ClientConfig interface
   interface ClientConfig {
+    instanceId?: string;
     apiHostname?: string;
     micHostname?: string;
     appKey: string;
@@ -550,6 +551,7 @@ interface RequestOptions {
 
 // ClientConfig interface
 interface ClientConfig {
+  instanceId?: string;
   apiHostname?: string;
   micHostname?: string;
   appKey: string;
