@@ -1,5 +1,6 @@
 import httpRequest from 'request';
 import Promise from 'es6-promise';
+import os from 'os';
 import { Middleware } from '../core/request';
 import { isDefined } from '../core/utils';
 import { NetworkConnectionError, TimeoutError } from '../core/errors';
@@ -19,6 +20,16 @@ function deviceInformation(pkg) {
 
     return 'unknown';
   }).join(' ');
+}
+
+function deviceInformation2(pkg) {
+  return {
+    hv: 1,
+    os: os.platform(),
+    ov: os.release(),
+    sdk: pkg.name,
+    pv: os.release()
+  };
 }
 
 export class NodeHttpMiddleware extends Middleware {
@@ -42,6 +53,7 @@ export class NodeHttpMiddleware extends Middleware {
       if (kinveyUrlRegex.test(url)) {
         // Add the X-Kinvey-Device-Information header
         headers['X-Kinvey-Device-Information'] = deviceInformation(this.pkg);
+        headers['X-Kinvey-Device-Info'] = JSON.stringify(deviceInformation2(this.pkg));
       }
 
       httpRequest({
