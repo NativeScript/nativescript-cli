@@ -207,6 +207,38 @@ describe('CacheStore', () => {
         });
     });
 
+    it('should return the entities that match the query but don\'t contain all matching properties', (done) => {
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
+      const store = new CacheStore(collection);
+      const query = new Query().equalTo('name', randomString());
+      const onNextSpy = expect.createSpy();
+
+      nock(store.client.apiHostname)
+        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200, [entity1, entity2]);
+
+      store.pull()
+        .then(() => {
+          nock(store.client.apiHostname)
+            .get(`/appdata/${store.client.appKey}/${collection}`)
+            .query(query.toQueryString())
+            .reply(200, [entity1]);
+
+          store.find(query)
+            .subscribe(onNextSpy, done, () => {
+              try {
+                expect(onNextSpy.calls.length).toEqual(2);
+                expect(onNextSpy.calls[0].arguments).toEqual([[]]);
+                expect(onNextSpy.calls[1].arguments).toEqual([[entity1]]);
+                done();
+              } catch (error) {
+                done(error);
+              }
+            });
+        });
+    });
+
     describe('Delta Set', () => {
       it('should find the entities', (done) => {
         const entity1 = { _id: randomString() };

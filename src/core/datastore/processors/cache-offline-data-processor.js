@@ -125,7 +125,9 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
 
               return null;
             })
-            .then(() => response.data ? response.data : response);
+            .then(() => {
+              return response.data ? response.data : response;
+            });
         })
         .then((data) => {
           if (useDeltaSet) {
@@ -141,12 +143,13 @@ export class CacheOfflineDataProcessor extends OfflineDataProcessor {
               promises.push(this._replaceOfflineEntities(collection, data.changed, data.changed));
             }
 
-            return Promise.all(promises);
+            return Promise.all(promises)
+              .then(() => super._processRead(collection, query, options));
           }
 
-          return this._replaceOfflineEntities(collection, offlineEntities, data);
+          return this._replaceOfflineEntities(collection, offlineEntities, data)
+            .then(() => data);
         })
-        .then(() => super._processRead(collection, query, options))
         .then((entities) => {
           observer.next(entities);
           return entities;
