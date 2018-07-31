@@ -1,7 +1,6 @@
 import Promise from 'es6-promise';
-import { Observable } from 'rxjs/Observable';
-import { Subscriber } from 'rxjs/Subscriber';
-import { rxSubscriber } from 'rxjs/symbol/rxSubscriber';
+import { Observable, Subscriber } from 'rxjs';
+import { rxSubscriber } from 'rxjs/internal/symbol/rxSubscriber';
 import isFunction from 'lodash/isFunction';
 import { isDefined, isPromiseLike, wrapInPromise } from './utils';
 
