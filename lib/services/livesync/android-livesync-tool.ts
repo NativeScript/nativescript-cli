@@ -346,6 +346,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 					socket.removeListener("close", tryConnectAfterTimeout);
 					socket.removeListener("error", tryConnectAfterTimeout);
 					isConnected = true;
+					clearTimeout(connectionTimer);
 					resolve({ socket, data });
 				});
 				socket.on("close", tryConnectAfterTimeout);
