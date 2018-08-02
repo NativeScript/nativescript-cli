@@ -332,6 +332,8 @@ interface ILiveSyncResultInfo {
 	useLiveEdit?: boolean;
 }
 
+interface IAndroidLiveSyncResultInfo extends ILiveSyncResultInfo, IAndroidLivesyncSyncOperationResult { }
+
 interface IFullSyncInfo extends IProjectDataComposition {
 	device: Mobile.IDevice;
 	watch: boolean;
@@ -377,22 +379,22 @@ interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase 
 	 * @return {Promise<Mobile.ILocalToDevicePathData[]>} Returns the ILocalToDevicePathData of all transfered files
 	 */
 	transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<Mobile.ILocalToDevicePathData[]>;
-
-	/**
-	 * Guarantees all remove/update operations have finished
-	 * @param  {ILiveSyncResultInfo} liveSyncInfo Describes the LiveSync operation - for which project directory is the operation and other settings.
-	 * @return {Promise<void>}
-	 */
-	finalizeSync(liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
 }
 
-interface IAndroidNativeScriptDeviceLiveSyncService {
+interface IAndroidNativeScriptDeviceLiveSyncService extends INativeScriptDeviceLiveSyncService {
 	/**
 	 * Retrieves the android device's hash service.
 	 * @param  {string} appIdentifier Application identifier.
 	 * @return {Promise<Mobile.IAndroidDeviceHashService>} The hash service
 	 */
 	getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService;
+
+	/**
+	 * Guarantees all remove/update operations have finished
+	 * @param  {ILiveSyncResultInfo} liveSyncInfo Describes the LiveSync operation - for which project directory is the operation and other settings.
+	 * @return {Promise<IAndroidLiveSyncResultInfo>}
+	 */
+	finalizeSync(liveSyncInfo: ILiveSyncResultInfo): Promise<IAndroidLiveSyncResultInfo>;
 }
 
 interface IAndroidLivesyncTool {

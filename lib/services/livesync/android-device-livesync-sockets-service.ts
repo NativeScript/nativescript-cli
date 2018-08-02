@@ -39,18 +39,23 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		return `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appIdentifier}-livesync-in-progress`;
 	}
 
-	public async finalizeSync(liveSyncInfo: ILiveSyncResultInfo) {
-		await this.doSync(liveSyncInfo);
+	public async finalizeSync(liveSyncInfo: ILiveSyncResultInfo): Promise<any> {
+		try {
+			const result = await this.doSync(liveSyncInfo);
+			return result;
+		} finally {
+			this.livesyncTool.end();
+		}
 	}
 
-	private async doSync(liveSyncInfo: ILiveSyncResultInfo, { doRefresh = false }: { doRefresh?: boolean } = {}): Promise<IAndroidLivesyncSyncOperationResult> {
+	private async doSync(liveSyncInfo: ILiveSyncResultInfo): Promise<IAndroidLivesyncSyncOperationResult> {
 		const operationId = this.livesyncTool.generateOperationIdentifier();
 
 		let result = { operationId, didRefresh: true };
 
 		if (liveSyncInfo.modifiedFilesData.length) {
 
-			const doSyncPromise = this.livesyncTool.sendDoSyncOperation(doRefresh, null, operationId);
+			const doSyncPromise = this.livesyncTool.sendDoSyncOperation(true, null, operationId);
 
 			const syncInterval: NodeJS.Timer = setInterval(() => {
 				if (this.livesyncTool.isOperationInProgress(operationId)) {
@@ -64,24 +69,21 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 			};
 
 			this.$processService.attachToProcessExitSignals(this, actionOnEnd);
-			doSyncPromise.then(actionOnEnd, actionOnEnd);
+			// We need to clear resources when the action fails
+			// But we also need the real result of the action.
+			await doSyncPromise.then(actionOnEnd.bind(this), actionOnEnd.bind(this));
 
 			result = await doSyncPromise;
+		} else {
+			await this.device.fileSystem.deleteFile(this.getPathToLiveSyncFileOnDevice(liveSyncInfo.deviceAppData.appIdentifier), liveSyncInfo.deviceAppData.appIdentifier);
 		}
-
-		await this.device.fileSystem.deleteFile(this.getPathToLiveSyncFileOnDevice(liveSyncInfo.deviceAppData.appIdentifier), liveSyncInfo.deviceAppData.appIdentifier);
 
 		return result;
 	}
 
-	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo) {
+	public async refreshApplication(projectData: IProjectData, liveSyncInfo: IAndroidLiveSyncResultInfo) {
 		const canExecuteFastSync = !liveSyncInfo.isFullSync && this.canExecuteFastSyncForPaths(liveSyncInfo.modifiedFilesData, projectData, this.device.deviceInfo.platform);
-
-		const syncOperationResult = await this.doSync(liveSyncInfo, { doRefresh: canExecuteFastSync });
-
-		this.livesyncTool.end();
-
-		if (!canExecuteFastSync || !syncOperationResult.didRefresh) {
+		if (!canExecuteFastSync || !liveSyncInfo.didRefresh) {
 			await this.device.applicationManager.restartApplication({ appId: liveSyncInfo.deviceAppData.appIdentifier, projectName: projectData.projectName });
 		}
 	}

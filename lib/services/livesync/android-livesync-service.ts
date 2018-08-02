@@ -23,6 +23,25 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 		return this.$injector.resolve<INativeScriptDeviceLiveSyncService>(AndroidDeviceLiveSyncService, { device, data });
 	}
 
+	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<IAndroidLiveSyncResultInfo> {
+		const liveSyncResult = await super.liveSyncWatchAction(device, liveSyncInfo);
+		const result = await this.finalizeSync(device, liveSyncInfo.projectData, liveSyncResult);
+		return result;
+	}
+
+	public async fullSync(syncInfo: IFullSyncInfo): Promise<IAndroidLiveSyncResultInfo> {
+		const liveSyncResult = await super.fullSync(syncInfo);
+		const result = await this.finalizeSync(syncInfo.device, syncInfo.projectData, liveSyncResult);
+		return result;
+	}
+
 	public async prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir): Promise<void> { /* */ }
+
+	private async finalizeSync(device: Mobile.IDevice, projectData: IProjectData, liveSyncResult: ILiveSyncResultInfo): Promise<IAndroidLiveSyncResultInfo> {
+		const liveSyncService = <IAndroidNativeScriptDeviceLiveSyncService>this.getDeviceLiveSyncService(device, projectData);
+		const finalizeResult = await liveSyncService.finalizeSync(liveSyncResult);
+		const result = _.extend(liveSyncResult, finalizeResult);
+		return result;
+	}
 }
 $injector.register("androidLiveSyncService", AndroidLiveSyncService);
