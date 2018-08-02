@@ -2,8 +2,10 @@ import { DeviceAndroidDebugBridge } from "../../common/mobile/android/device-and
 import { AndroidDeviceHashService } from "../../common/mobile/android/android-device-hash-service";
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 import { APP_FOLDER_NAME } from "../../constants";
+import { LiveSyncPaths } from "../../common/constants";
 import { AndroidLivesyncTool } from "./android-livesync-tool";
 import * as path from "path";
+import * as temp from "temp";
 
 export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
 	private livesyncTool: IAndroidLivesyncTool;
@@ -17,7 +19,8 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		private $logger: ILogger,
 		protected device: Mobile.IAndroidDevice,
 		private $options: ICommonOptions,
-		private $processService: IProcessService) {
+		private $processService: IProcessService,
+		private $fs: IFileSystem) {
 		super($platformsData, device);
 		this.livesyncTool = this.$injector.resolve(AndroidLivesyncTool);
 	}
@@ -25,38 +28,48 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
 		const platformData = this.$platformsData.getPlatformData(deviceAppData.platform, this.data);
 		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
+		const pathToLiveSyncFile = temp.path({ prefix: "livesync" });
+		this.$fs.writeFile(pathToLiveSyncFile, "");
+		await this.device.fileSystem.putFile(pathToLiveSyncFile, this.getPathToLiveSyncFileOnDevice(deviceAppData.appIdentifier), deviceAppData.appIdentifier);
 		await this.device.applicationManager.startApplication({ appId: deviceAppData.appIdentifier, projectName: this.data.projectName });
 		await this.connectLivesyncTool(projectFilesPath, this.data.projectId);
+	}
+
+	private getPathToLiveSyncFileOnDevice(appIdentifier: string): string {
+		return `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appIdentifier}-livesync-in-progress`;
 	}
 
 	public async finalizeSync(liveSyncInfo: ILiveSyncResultInfo) {
 		await this.doSync(liveSyncInfo);
 	}
 
-	private async doSync(liveSyncInfo: ILiveSyncResultInfo, {doRefresh = false}: {doRefresh?: boolean} = {}): Promise<IAndroidLivesyncSyncOperationResult> {
+	private async doSync(liveSyncInfo: ILiveSyncResultInfo, { doRefresh = false }: { doRefresh?: boolean } = {}): Promise<IAndroidLivesyncSyncOperationResult> {
 		const operationId = this.livesyncTool.generateOperationIdentifier();
 
-		let result = {operationId, didRefresh: true };
+		let result = { operationId, didRefresh: true };
 
 		if (liveSyncInfo.modifiedFilesData.length) {
 
 			const doSyncPromise = this.livesyncTool.sendDoSyncOperation(doRefresh, null, operationId);
 
-			const syncInterval : NodeJS.Timer = setInterval(() => {
+			const syncInterval: NodeJS.Timer = setInterval(() => {
 				if (this.livesyncTool.isOperationInProgress(operationId)) {
 					this.$logger.info("Sync operation in progress...");
 				}
 			}, AndroidDeviceSocketsLiveSyncService.STATUS_UPDATE_INTERVAL);
 
-			const clearSyncInterval = () => {
+			const actionOnEnd = async () => {
 				clearInterval(syncInterval);
+				await this.device.fileSystem.deleteFile(this.getPathToLiveSyncFileOnDevice(liveSyncInfo.deviceAppData.appIdentifier), liveSyncInfo.deviceAppData.appIdentifier);
 			};
 
-			this.$processService.attachToProcessExitSignals(this, clearSyncInterval);
-			doSyncPromise.then(clearSyncInterval, clearSyncInterval);
+			this.$processService.attachToProcessExitSignals(this, actionOnEnd);
+			doSyncPromise.then(actionOnEnd, actionOnEnd);
 
 			result = await doSyncPromise;
 		}
+
+		await this.device.fileSystem.deleteFile(this.getPathToLiveSyncFileOnDevice(liveSyncInfo.deviceAppData.appIdentifier), liveSyncInfo.deviceAppData.appIdentifier);
 
 		return result;
 	}
@@ -64,7 +77,7 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo) {
 		const canExecuteFastSync = !liveSyncInfo.isFullSync && this.canExecuteFastSyncForPaths(liveSyncInfo.modifiedFilesData, projectData, this.device.deviceInfo.platform);
 
-		const syncOperationResult = await this.doSync(liveSyncInfo, {doRefresh: canExecuteFastSync});
+		const syncOperationResult = await this.doSync(liveSyncInfo, { doRefresh: canExecuteFastSync });
 
 		this.livesyncTool.end();
 
@@ -96,7 +109,7 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 	}
 
 	private async _transferDirectory(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<Mobile.ILocalToDevicePathData[]> {
-		let transferredLocalToDevicePaths : Mobile.ILocalToDevicePathData[];
+		let transferredLocalToDevicePaths: Mobile.ILocalToDevicePathData[];
 		const deviceHashService = this.getDeviceHashService(deviceAppData.appIdentifier);
 		const currentShasums: IStringDictionary = await deviceHashService.generateHashesFromLocalToDevicePaths(localToDevicePaths);
 		const oldShasums = await deviceHashService.getShasumsFromDevice();
@@ -104,20 +117,20 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		if (this.$options.force || !oldShasums) {
 			await this.livesyncTool.sendDirectory(projectFilesPath);
 			await deviceHashService.uploadHashFileToDevice(currentShasums);
-			transferredLocalToDevicePaths  = localToDevicePaths;
+			transferredLocalToDevicePaths = localToDevicePaths;
 		} else {
 			const changedShasums = deviceHashService.getChangedShasums(oldShasums, currentShasums);
 			const changedFiles = _.keys(changedShasums);
 			if (changedFiles.length) {
 				await this.livesyncTool.sendFiles(changedFiles);
 				await deviceHashService.uploadHashFileToDevice(currentShasums);
-				transferredLocalToDevicePaths  = localToDevicePaths.filter(localToDevicePathData => changedFiles.indexOf(localToDevicePathData.getLocalPath()) >= 0);
+				transferredLocalToDevicePaths = localToDevicePaths.filter(localToDevicePathData => changedFiles.indexOf(localToDevicePathData.getLocalPath()) >= 0);
 			} else {
-				transferredLocalToDevicePaths  = [];
+				transferredLocalToDevicePaths = [];
 			}
 		}
 
-		return transferredLocalToDevicePaths ;
+		return transferredLocalToDevicePaths;
 	}
 
 	private async connectLivesyncTool(projectFilesPath: string, appIdentifier: string) {

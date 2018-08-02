@@ -1,5 +1,6 @@
 import { sleep } from "../common/helpers";
 import { DebugServiceBase } from "./debug-service-base";
+import { LiveSyncPaths } from "../common/constants";
 
 export class AndroidDebugService extends DebugServiceBase implements IPlatformDebugService {
 	private _packageName: string;
@@ -158,10 +159,10 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 		await this.device.applicationManager.stopApplication(appData);
 
 		if (debugOptions.debugBrk) {
-			await this.device.adb.executeShellCommand([`cat /dev/null > /data/local/tmp/${appData.appId}-debugbreak`]);
+			await this.device.adb.executeShellCommand([`cat /dev/null > ${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appData.appId}-debugbreak`]);
 		}
 
-		await this.device.adb.executeShellCommand([`cat /dev/null > /data/local/tmp/${appData.appId}-debugger-started`]);
+		await this.device.adb.executeShellCommand([`cat /dev/null > ${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appData.appId}-debugger-started`]);
 
 		await this.device.applicationManager.startApplication(appData);
 
@@ -169,11 +170,12 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 	}
 
 	private async waitForDebugger(packageName: String): Promise<void> {
-		const waitText: string = `0 /data/local/tmp/${packageName}-debugger-started`;
+		const debuggerStartedFilePath = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${packageName}-debugger-started`;
+		const waitText: string = `0 ${debuggerStartedFilePath}`;
 		let maxWait = 12;
 		let debuggerStarted: boolean = false;
 		while (maxWait > 0 && !debuggerStarted) {
-			const forwardsResult = await this.device.adb.executeShellCommand(["ls", "-s", `/data/local/tmp/${packageName}-debugger-started`]);
+			const forwardsResult = await this.device.adb.executeShellCommand(["ls", "-s", debuggerStartedFilePath]);
 
 			maxWait--;
 

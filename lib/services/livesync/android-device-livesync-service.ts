@@ -2,7 +2,7 @@ import { DeviceAndroidDebugBridge } from "../../common/mobile/android/device-and
 import { AndroidDeviceHashService } from "../../common/mobile/android/android-device-hash-service";
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 import * as helpers from "../../common/helpers";
-import { LiveSyncPaths } from "../../constants";
+import { LiveSyncPaths } from "../../common/constants";
 import { cache } from "../../common/decorators";
 import * as path from "path";
 import * as net from "net";
