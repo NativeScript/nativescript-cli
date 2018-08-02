@@ -4,22 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.11.6](https://github.com/Kinvey/js-sdk/tree/v3.11.6) (2018-08-02)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.5...v3.11.6)<br/>
+
 ## [3.11.5](https://github.com/Kinvey/js-sdk/tree/v3.11.5) (2018-07-25)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.4...v3.11.5)<br/>
 
 #### Bugs
-- MLIBZ-2453: The error returned from the server when `Kinvey.Files.downloadByUrl()` fails is now thrown properly. [#333](https://github.com/Kinvey/js-sdk/pull/333)
-- MLIBZ-2498: An error is not thrown when trying to upload a file and no metadata is provided. [#334](https://github.com/Kinvey/js-sdk/pull/334)
-- MLIBZ-2167: Fix `X-Kinvey-Device-Info` header for Angular2. [#330](https://github.com/Kinvey/js-sdk/pull/330)
-- MLIBZ-2626: Add `Push` TypeScript definitions file for NativeScript SDK. [#335](https://github.com/Kinvey/js-sdk/pull/335)
-- MLIBZ-2627: Prevent `Kinvey.init()` error from being thrown when registering for Push on NativeScript. [#336](https://github.com/Kinvey/js-sdk/pull/336)
-- MLIBZ-2629: Replace [p-queue](https://github.com/sindresorhus/p-queue) with [promise-queue](https://github.com/thomasconner/promise-queue) to fix an issue that prevented the PhoneGap SDK from running on Android OS 5.1. [#338](https://github.com/Kinvey/js-sdk/pull/338)
+- MLIBZ-2532: Add `instanceId?: string` to `ClientConfig` TypeScript definition. [#341](https://github.com/Kinvey/js-sdk/pull/341)
+- MLIBZ-2630: Return response from backend when calling `datastore.find()`. [#342](https://github.com/Kinvey/js-sdk/pull/342)
 
 #### Enhancements
-- MLIBZ-2604: A query is not longer accepted to push a subset of items to the backend. [#331](https://github.com/Kinvey/js-sdk/pull/331)
-
-### Maintenance
-- MLIBZ-2566: Remove Live Service stream API. [#329](https://github.com/Kinvey/js-sdk/pull/329)
+- MLIBZ-2502: Updated [rxjs](https://github.com/ReactiveX/rxjs) to 6.x. [#340](https://github.com/Kinvey/js-sdk/pull/340)
 
 ## [3.11.4](https://github.com/Kinvey/js-sdk/tree/v3.11.4) (2018-07-09)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.3...v3.11.4)<br/>
