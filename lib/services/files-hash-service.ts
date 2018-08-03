@@ -30,11 +30,18 @@ export class FilesHashService implements IFilesHashService {
 	}
 
 	public hasChangesInShasums(oldHashes: IStringDictionary, newHashes: IStringDictionary): boolean {
-		return !!_.keys(this.getChangesInShasums(oldHashes, newHashes)).length;
+		const hasChangedShasums = !!_.keys(this.getChangesInShasums(oldHashes, newHashes)).length;
+		const hasMissingShasums = !!_.keys(this.getMissingShasums(oldHashes, newHashes)).length;
+
+		return hasChangedShasums || hasMissingShasums;
 	}
 
 	private getChangesInShasums(oldHashes: IStringDictionary, newHashes: IStringDictionary): IStringDictionary {
 		return _.omitBy(newHashes, (hash: string, pathToFile: string) => !!_.find(oldHashes, (oldHash: string, oldPath: string) => pathToFile === oldPath && hash === oldHash));
+	}
+
+	private getMissingShasums(oldHashes: IStringDictionary, newHashes: IStringDictionary): IStringDictionary {
+		return _.omitBy(oldHashes, ( hash: string, pathToFile: string) => !!newHashes[pathToFile]);
 	}
 }
 $injector.register("filesHashService", FilesHashService);

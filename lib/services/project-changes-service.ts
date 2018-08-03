@@ -339,10 +339,10 @@ export class ProjectChangesService implements IProjectChangesService {
 
 	private async hasChangedAppFiles(projectData: IProjectData): Promise<boolean> {
 		const files = this.getAppFiles(projectData);
-		const changedFiles = await this.$filesHashService.getChanges(files, this._prepareInfo.appFilesHashes || {});
-		const hasChanges = changedFiles && _.keys(changedFiles).length > 0;
+		const newHashes = await  this.$filesHashService.generateHashes(files);
+		const hasChanges = this.$filesHashService.hasChangesInShasums(this._prepareInfo.appFilesHashes || {}, newHashes);
 		if (hasChanges) {
-			this._prepareInfo.appFilesHashes = await this.$filesHashService.generateHashes(files);
+			this._prepareInfo.appFilesHashes = newHashes;
 		}
 
 		return hasChanges;
