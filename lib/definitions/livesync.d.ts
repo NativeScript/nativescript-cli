@@ -394,7 +394,7 @@ interface IAndroidNativeScriptDeviceLiveSyncService extends INativeScriptDeviceL
 	 * @param  {ILiveSyncResultInfo} liveSyncInfo Describes the LiveSync operation - for which project directory is the operation and other settings.
 	 * @return {Promise<IAndroidLiveSyncResultInfo>}
 	 */
-	finalizeSync(liveSyncInfo: ILiveSyncResultInfo): Promise<IAndroidLiveSyncResultInfo>;
+	finalizeSync(liveSyncInfo: ILiveSyncResultInfo, projectData: IProjectData): Promise<IAndroidLivesyncSyncOperationResult>;
 }
 
 interface IAndroidLivesyncTool {

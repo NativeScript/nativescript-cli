@@ -39,23 +39,23 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		return `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appIdentifier}-livesync-in-progress`;
 	}
 
-	public async finalizeSync(liveSyncInfo: ILiveSyncResultInfo): Promise<any> {
+	public async finalizeSync(liveSyncInfo: ILiveSyncResultInfo, projectData: IProjectData): Promise<IAndroidLivesyncSyncOperationResult> {
 		try {
-			const result = await this.doSync(liveSyncInfo);
+			const result = await this.doSync(liveSyncInfo, projectData);
 			return result;
 		} finally {
 			this.livesyncTool.end();
 		}
 	}
 
-	private async doSync(liveSyncInfo: ILiveSyncResultInfo): Promise<IAndroidLivesyncSyncOperationResult> {
+	private async doSync(liveSyncInfo: ILiveSyncResultInfo, projectData: IProjectData): Promise<IAndroidLivesyncSyncOperationResult> {
 		const operationId = this.livesyncTool.generateOperationIdentifier();
 
 		let result = { operationId, didRefresh: true };
 
 		if (liveSyncInfo.modifiedFilesData.length) {
-
-			const doSyncPromise = this.livesyncTool.sendDoSyncOperation(true, null, operationId);
+			const canExecuteFastSync = !liveSyncInfo.isFullSync && this.canExecuteFastSyncForPaths(liveSyncInfo.modifiedFilesData, projectData, this.device.deviceInfo.platform);
+			const doSyncPromise = this.livesyncTool.sendDoSyncOperation(canExecuteFastSync, null, operationId);
 
 			const syncInterval: NodeJS.Timer = setInterval(() => {
 				if (this.livesyncTool.isOperationInProgress(operationId)) {

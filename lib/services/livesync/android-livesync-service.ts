@@ -39,7 +39,7 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 
 	private async finalizeSync(device: Mobile.IDevice, projectData: IProjectData, liveSyncResult: ILiveSyncResultInfo): Promise<IAndroidLiveSyncResultInfo> {
 		const liveSyncService = <IAndroidNativeScriptDeviceLiveSyncService>this.getDeviceLiveSyncService(device, projectData);
-		const finalizeResult = await liveSyncService.finalizeSync(liveSyncResult);
+		const finalizeResult = await liveSyncService.finalizeSync(liveSyncResult, projectData);
 		const result = _.extend(liveSyncResult, finalizeResult);
 		return result;
 	}
