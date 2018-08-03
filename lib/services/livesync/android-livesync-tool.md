@@ -177,8 +177,9 @@ End will close the current liveSync socket. Any sync operations that are still i
 ```TypeScript
 /**
  * Closes the current socket connection.
+ * @param error - Optional error for rejecting pending sync operations
  */
-end(): void;
+end(error? Error): void;
 ```
 
 * Example:

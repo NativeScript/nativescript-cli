@@ -452,8 +452,9 @@ interface IAndroidLivesyncTool {
 
 	/**
 	 * Closes the current socket connection.
+	 * @param error - Optional error for rejecting pending sync operations
 	 */
-	end(): void;
+	end(error?: Error): void;
 }
 
 interface IAndroidLivesyncToolConfiguration {
