@@ -1,7 +1,7 @@
-import * as stream from "stream";
+import { Socket } from "net";
 
 declare global {
-	interface IDuplexSocket extends stream.Duplex {
+	interface INetSocket extends Socket {
 		uid?: string;
 	}
 }
