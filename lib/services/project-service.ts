@@ -3,7 +3,7 @@ import * as path from "path";
 import * as shelljs from "shelljs";
 import { format } from "util";
 import { exported } from "../common/decorators";
-import { Hooks } from "../constants";
+import { Hooks, TemplatesV2PackageJsonKeysToRemove } from "../constants";
 
 export class ProjectService implements IProjectService {
 
@@ -212,7 +212,7 @@ export class ProjectService implements IProjectService {
 		const packageJsonData = this.$fs.readJson(projectFilePath);
 
 		// Remove the metadata keys from the package.json
-		let updatedPackageJsonData = _.omitBy<any, any>(packageJsonData, (value: any, key: string) => _.startsWith(key, "_"));
+		let updatedPackageJsonData = _.omitBy<any, any>(packageJsonData, (value: any, key: string) => _.startsWith(key, "_") || TemplatesV2PackageJsonKeysToRemove.indexOf(key) !== -1);
 		updatedPackageJsonData = _.merge(updatedPackageJsonData, this.packageJsonDefaultData);
 
 		if (updatedPackageJsonData.nativescript && updatedPackageJsonData.nativescript.templateVersion) {
