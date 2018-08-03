@@ -90,6 +90,8 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 
 	public async removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<void> {
 		await this.livesyncTool.removeFiles(_.map(localToDevicePaths, (element: any) => element.filePath));
+
+		await this.getDeviceHashService(deviceAppData.appIdentifier).removeHashes(localToDevicePaths);
 	}
 
 	public async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<Mobile.ILocalToDevicePathData[]> {
@@ -98,14 +100,20 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		if (isFullSync) {
 			transferredFiles = await this._transferDirectory(deviceAppData, localToDevicePaths, projectFilesPath);
 		} else {
-			transferredFiles = await this._transferFiles(localToDevicePaths);
+			transferredFiles = await this._transferFiles(deviceAppData, localToDevicePaths);
 		}
 
 		return transferredFiles;
 	}
 
-	private async _transferFiles(localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<Mobile.ILocalToDevicePathData[]> {
+	private async _transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<Mobile.ILocalToDevicePathData[]> {
 		await this.livesyncTool.sendFiles(localToDevicePaths.map(localToDevicePathData => localToDevicePathData.getLocalPath()));
+
+		// Update hashes
+		const deviceHashService = this.getDeviceHashService(deviceAppData.appIdentifier);
+		if (! await deviceHashService.updateHashes(localToDevicePaths)) {
+			this.$logger.trace("Unable to find hash file on device. The next livesync command will create it.");
+		}
 
 		return localToDevicePaths;
 	}
