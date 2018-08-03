@@ -53,9 +53,11 @@ const tns = require("nativescript");
 * [sysInfo](#sysinfo)
 	* [getSupportedNodeVersionRange](#getsupportednodeversionrange)
 	* [getSystemWarnings](#getsystemwarnings)
-* [devicesService](#devicesService)
-	* [getAvailableEmulators](#getAvailableEmulators)
-	* [startEmulator](#startEmulator)
+* [devicesService](#devicesservice)
+	* [getEmulatorImages](#getemulatorimages)
+	* [startEmulator](#startemulator)
+* [deviceEmitter](#deviceemitter)
+	* [events](#deviceemitterevents)
 
 ## Module projectService
 
@@ -1204,8 +1206,8 @@ tns.sysInfo.getSystemWarnings()
 ## devicesService
 The `devicesService` module allows interaction with devices and emulators. You can get a list of the available emulators or start a specific emulator.
 
-### getAvailableEmulators
-The `getAvailableEmulators` method returns object of all running and available emulators. The result is in the following format: 
+### getEmulators
+The `getEmulators` method returns object of all running and available emulators. The result is in the following format:
 ```JavaScript
 	{
 		android: {
@@ -1223,7 +1225,7 @@ This method accepts platform parameter. If provided only devices by specified pl
 
 * Usage
 ```TypeScript
-tns.devicesService.getAvailableEmulators()
+tns.devicesService.getEmulators()
 	.then(availableEmulatorsOutput => {
 		Object.keys(availableEmulatorsOutput)
 			.forEach(platform => {
@@ -1239,6 +1241,105 @@ The `startEmulator` method starts the emulator specified by provided options. Re
 tns.devicesService.startEmulator({imageIdentifier: "my emulator imageIdentifier"})
 	.then(errors => { });
 ```
+
+## deviceEmitter
+This module is used to emit information for devices, applications on them, etc.
+
+### deviceEmitterEvents
+`deviceEmitter` emits the following events:
+`deviceEmitter` module is used to emit different events related to devices attached to the system.
+You can use `deviceEmitter` to add handles for the following events:
+
+* `deviceFound` - Raised when a new device is attached to the system. The callback function will receive one argument - `deviceInfoData`.
+Sample usage:
+```JavaScript
+tns.deviceEmitter.on("deviceFound", (deviceInfoData) => {
+	console.log("Found device with identifier: " + deviceInfoData.identifier);
+});
+```
+
+* `deviceLost` - Raised when a device is detached from the system. The callback function will receive one argument - `deviceInfoData`.
+Sample usage:
+```JavaScript
+tns.deviceEmitter.on("deviceLost", (deviceInfoData) => {
+	console.log("Detached device with identifier: " + deviceInfoData.identifier);
+});
+```
+
+* `deviceLogData` - Raised when attached device reports any information. This is the output of `adb logcat` for Android devices. For iOS this is the `iOS SysLog`.
+The event is raised for any device that reports data. The callback function has two arguments - `deviceIdentifier` and `reportedData`. <br/><br/>
+Sample usage:
+```JavaScript
+tns.deviceEmitter.on("deviceLogData", (identifier, reportedData) => {
+	console.log("Device " + identifier + " reports: " + reportedData);
+});
+```
+
+* `applicationInstalled` - Raised when application is installed on a device. The callback has two arguments - `deviceIdentifier` and `applicationIdentifier`. <br/><br/>
+Sample usage:
+```JavaScript
+tns.deviceEmitter.on("applicationInstalled", (identifier, applicationIdentifier) => {
+	console.log("Application " + applicationIdentifier  + " has been installed on device with id: " + identifier);
+});
+```
+
+* `applicationUninstalled` - Raised when application is removed from device. The callback has two arguments - `deviceIdentifier` and `applicationIdentifier`. <br/><br/>
+Sample usage:
+```JavaScript
+tns.deviceEmitter.on("applicationUninstalled", (identifier, applicationIdentifier) => {
+	console.log("Application " + applicationIdentifier  + " has been uninstalled from device with id: " + identifier);
+});
+```
+
+* `debuggableAppFound` - Raised when application on a device becomes available for debugging. The callback has one argument - `applicationInfo`. <br/><br/>
+Sample usage:
+```JavaScript
+tns.deviceEmitter.on("debuggableAppFound", (applicationInfo) => {
+	console.log("Application " + applicationInfo.appIdentifier  + " is available for debugging on device with id: " + applicationInfo.deviceIdentifier);
+});
+```
+Sample result for `applicationInfo` will be:
+```JSON
+{
+	"deviceIdentifier": "4df18f307d8a8f1b",
+	"appIdentifier": "com.telerik.Fitness",
+	"framework": "NativeScript",
+	"title": "NativeScript Application"
+}
+```
+
+* `debuggableAppLost` - Raised when application on a device is not available for debugging anymore. The callback has one argument - `applicationInfo`. <br/><br/>
+Sample usage:
+```JavaScript
+tns.deviceEmitter.on("debuggableAppLost", (applicationInfo) => {
+	console.log("Application " + applicationInfo.appIdentifier  + " is not available for debugging anymore on device with id: " + applicationInfo.deviceIdentifier);
+});
+```
+Sample result for `applicationInfo` will be:
+```JSON
+{
+	"deviceIdentifier": "4df18f307d8a8f1b",
+	"appIdentifier": "com.telerik.Fitness",
+	"framework": "NativeScript",
+	"title": "NativeScript Application"
+}
+```
+
+* `emulatorImageFound` - Raised when a new Android Emulator Image or iOS Simulator is created/installed on the system. The callback has a single argument that describes the new image:
+```JavaScript
+tns.deviceEmitter.on("emulatorImageFound", (emulatorImageInfo) => {
+	console.log("Added new emulator image", emulatorImageInfo);
+});
+```
+`emulatorImageInfo` is of type [Moble.IDeviceInfo](https://github.com/telerik/mobile-cli-lib/blob/61cdaaaf7533394afbbe84dd4eee355072ade2de/definitions/mobile.d.ts#L9-L86).
+
+* `emulatorImageLost` - Raised when an Android Emulator Image or iOS Simulator is removed from the system. The callback has a single argument that describes the removed image:
+```JavaScript
+tns.deviceEmitter.on("emulatorImageLost", (emulatorImageInfo) => {
+	console.log("Removed emulator image", emulatorImageInfo);
+});
+```
+`emulatorImageInfo` is of type [Moble.IDeviceInfo](https://github.com/telerik/mobile-cli-lib/blob/61cdaaaf7533394afbbe84dd4eee355072ade2de/definitions/mobile.d.ts#L9-L86).
 
 ## How to add a new method to Public API
 CLI is designed as command line tool and when it is used as a library, it does not give you access to all of the methods. This is mainly implementation detail. Most of the CLI's code is created to work in command line, not as a library, so before adding method to public API, most probably it will require some modification.

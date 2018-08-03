@@ -1,5 +1,6 @@
 import { fromWindowsRelativePathToUnix } from "./common/helpers";
-import { APP_FOLDER_NAME, LiveSyncPaths } from "./constants";
+import { APP_FOLDER_NAME } from "./constants";
+import { LiveSyncPaths } from "./common/constants";
 import { AndroidDeviceLiveSyncService } from "./services/livesync/android-device-livesync-service";
 import * as path from "path";
 
@@ -23,7 +24,7 @@ export class DevicePathProvider implements IDevicePathProvider {
 				projectRoot = path.join(projectRoot, APP_FOLDER_NAME);
 			}
 		} else if (this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
-			projectRoot = `/data/local/tmp/${options.appIdentifier}`;
+			projectRoot = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${options.appIdentifier}`;
 			if (!options.getDirname) {
 				const deviceLiveSyncService = this.$injector.resolve<AndroidDeviceLiveSyncService>(AndroidDeviceLiveSyncService, { device });
 				const hashService = deviceLiveSyncService.getDeviceHashService(options.appIdentifier);

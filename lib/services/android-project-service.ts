@@ -5,7 +5,7 @@ import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
 import { attachAwaitDetach, isRecommendedAarFile } from "../common/helpers";
-import { Configurations } from "../common/constants";
+import { Configurations, LiveSyncPaths } from "../common/constants";
 import { SpawnOptions } from "child_process";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
@@ -631,7 +631,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void> {
 		const adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
-		const deviceRootPath = `/data/local/tmp/${projectData.projectId}`;
+		const deviceRootPath = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${projectData.projectId}`;
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
 	}
 
