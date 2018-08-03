@@ -3,7 +3,7 @@
 
 import {
   Observable
-} from 'rxjs/Observable';
+} from 'rxjs';
 
 export namespace Kinvey {
   export let appVersion: string;
@@ -30,6 +30,7 @@ export namespace Kinvey {
 
   // ClientConfig interface
   interface ClientConfig {
+    instanceId?: string;
     apiHostname?: string;
     micHostname?: string;
     appKey: string;
@@ -526,6 +527,7 @@ interface RequestOptions {
 
 // ClientConfig interface
 interface ClientConfig {
+  instanceId?: string;
   apiHostname?: string;
   micHostname?: string;
   appKey: string;

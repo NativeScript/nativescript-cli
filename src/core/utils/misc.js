@@ -1,5 +1,5 @@
 import { Promise } from 'es6-promise';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import isEmpty from 'lodash/isEmpty';
 import times from 'lodash/times';
 import isNumber from 'lodash/isNumber';
