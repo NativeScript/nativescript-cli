@@ -22,13 +22,13 @@ const DEFAULT_LOCAL_HOST_ADDRESS = "127.0.0.1";
 export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	private operationPromises: IDictionary<any>;
 	private socketError: string | Error;
-	private socketConnection: IDuplexSocket;
+	private socketConnection: INetSocket;
 	private configuration: IAndroidLivesyncToolConfiguration;
 	private pendingConnectionData: {
 		connectionTimer?: NodeJS.Timer,
 		socketTimer?: NodeJS.Timer,
 		rejectHandler?: Function,
-		socket?: IDuplexSocket
+		socket?: INetSocket
 	} = null;
 
 	constructor(private $androidProcessService: Mobile.IAndroidProcessService,
@@ -173,6 +173,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			this.cleanState(socketUid);
 			//call end of the connection (close and error callbacks won't be called - listeners removed)
 			socket.end();
+			socket.destroy();
 			//reject all pending sync requests and clear timeouts
 			this.rejectPendingSyncOperations(socketUid, error);
 		}
@@ -254,7 +255,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		});
 	}
 
-	private createSocket(port: number): IDuplexSocket {
+	private createSocket(port: number): INetSocket {
 		const socket = new net.Socket();
 		socket.connect(port, this.configuration.localHostAddress);
 		return socket;
@@ -280,7 +281,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		}
 	}
 
-	private handleConnection({ socket, data }: { socket: IDuplexSocket, data: NodeBuffer | string }) {
+	private handleConnection({ socket, data }: { socket: INetSocket, data: NodeBuffer | string }) {
 		this.socketConnection = socket;
 		this.socketConnection.uid = this.generateOperationIdentifier();
 
@@ -304,7 +305,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		});
 	}
 
-	private connectEventuallyUntilTimeout(factory: () => IDuplexSocket, timeout: number): Promise<{socket: IDuplexSocket, data: NodeBuffer | string}> {
+	private connectEventuallyUntilTimeout(factory: () => INetSocket, timeout: number): Promise<{socket: INetSocket, data: NodeBuffer | string}> {
 		return new Promise((resolve, reject) => {
 			let lastKnownError: Error | string,
 				isConnected = false;
@@ -312,7 +313,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			const connectionTimer = setTimeout(() => {
 				if (!isConnected) {
 					isConnected = true;
-					reject(lastKnownError || { message: "Socket connection timeouted." });
+					reject(lastKnownError || new Error("Socket connection timeouted."));
 					this.pendingConnectionData = null;
 				}
 			}, timeout);

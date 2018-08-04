@@ -54,6 +54,7 @@ export class LiveSyncTrackActionNames {
 }
 
 export const PackageJsonKeysToKeep: Array<String> = ["name", "main", "android", "version", "pluginsData"];
+export const TemplatesV2PackageJsonKeysToRemove: Array<String> = ["name", "version", "displayName", "templateType", "author", "keywords", "homepage", "bugs"];
 
 export class SaveOptions {
 	static PRODUCTION = "save";

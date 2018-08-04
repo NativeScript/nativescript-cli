@@ -82,6 +82,12 @@
       "integrity": "sha1-dqfBnFD+juKxZm1lP/XVV8MP4P8=",
       "dev": true
     },
+    "@types/lodash": {
+      "version": "4.14.116",
+      "resolved": "https://registry.npmjs.org/@types/lodash/-/lodash-4.14.116.tgz",
+      "integrity": "sha512-lRnAtKnxMXcYYXqOiotTmJd74uawNWuPnsnPrrO7HiFuE3npE2iQhfABatbYDyxTNqZNuXzcKGhw37R7RjBFLg==",
+      "dev": true
+    },
     "@types/node": {
       "version": "6.0.61",
       "resolved": "https://registry.npmjs.org/@types/node/-/node-6.0.61.tgz",
@@ -3684,9 +3690,9 @@
       "integrity": "sha1-Jjj8OaAzHpysGgS3F5mTHJxQ33k="
     },
     "lodash": {
-      "version": "4.13.1",
-      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.13.1.tgz",
-      "integrity": "sha1-g+SxCRP0hJbU0W/sSlYK8u50S2g="
+      "version": "4.17.10",
+      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.10.tgz",
+      "integrity": "sha512-UejweD1pDoXu+AD825lWwp4ZGtSwgnpZxb3JDViD7StjQz+Nb/6l093lx4OQ0foGWNRoc19mWy7BzL+UAK2iVg=="
     },
     "lodash-node": {
       "version": "2.4.1",

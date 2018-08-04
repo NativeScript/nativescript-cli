@@ -29,6 +29,10 @@ export class PacoteService implements IPacoteService {
 			_.extend(extractOptions, options);
 		}
 
+		if (this.$fs.exists(packageName)) {
+			packageName = path.resolve(packageName);
+		}
+
 		const cache = await this.$npm.getCachePath();
 		return new Promise<void>((resolve, reject) => {
 			const source = pacote.tarball.stream(packageName, { cache });
