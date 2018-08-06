@@ -8,10 +8,6 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _headers = require('./headers');
 
-var _headers2 = _interopRequireDefault(_headers);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -22,7 +18,7 @@ var Response = function () {
     _classCallCheck(this, Response);
 
     this.statusCode = response.statusCode;
-    this.headers = new _headers2.default(response.headers);
+    this.headers = new _headers.Headers(response.headers);
     this.data = response.data;
   }
 

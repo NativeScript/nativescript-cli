@@ -1,4 +1,4 @@
-import Headers from './headers';
+import { Headers } from './headers';
 
 /**
  * @private

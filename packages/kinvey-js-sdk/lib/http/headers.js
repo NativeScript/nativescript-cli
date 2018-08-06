@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.KinveyHeaders = undefined;
+exports.KinveyHeaders = exports.Auth = exports.Headers = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -15,6 +15,14 @@ var _isString = require('lodash/isString');
 
 var _isString2 = _interopRequireDefault(_isString);
 
+var _client = require('../client');
+
+var _kmd = require('../kmd');
+
+var _kmd2 = _interopRequireDefault(_kmd);
+
+var _session = require('./session');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -23,6 +31,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var AUTHORIZATION_HEADER = 'Authorization';
 var X_KINVEY_REQUEST_START_HEADER = 'X-Kinvey-Request-Start';
 
 function isNotString(val) {
@@ -33,7 +42,7 @@ function isNotString(val) {
  * @private
  */
 
-var Headers = function () {
+var Headers = exports.Headers = function () {
   function Headers(headers) {
     var _this = this;
 
@@ -149,12 +158,15 @@ var Headers = function () {
   return Headers;
 }();
 
+var Auth = exports.Auth = {
+  App: 'App',
+  Client: 'Client',
+  Session: 'Session'
+};
+
 /**
  * @private
  */
-
-
-exports.default = Headers;
 
 var KinveyHeaders = exports.KinveyHeaders = function (_Headers) {
   _inherits(KinveyHeaders, _Headers);
@@ -180,6 +192,36 @@ var KinveyHeaders = exports.KinveyHeaders = function (_Headers) {
     key: 'requestStart',
     get: function get() {
       return this.get(X_KINVEY_REQUEST_START_HEADER);
+    }
+  }, {
+    key: 'auth',
+    set: function set(auth) {
+      if (auth === Auth.App) {
+        var _getConfig = (0, _client.getConfig)(),
+            appKey = _getConfig.appKey,
+            appSecret = _getConfig.appSecret;
+
+        var credentials = Buffer.from(appKey + ':' + appSecret).toString('base64');
+        this.set(AUTHORIZATION_HEADER, 'Basic ' + credentials);
+      } else if (auth === Auth.Client) {
+        var _getConfig2 = (0, _client.getConfig)(),
+            clientId = _getConfig2.clientId,
+            _appSecret = _getConfig2.appSecret;
+
+        var _credentials = Buffer.from(clientId + ':' + _appSecret).toString('base64');
+        this.set(AUTHORIZATION_HEADER, 'Basic ' + _credentials);
+      } else if (auth === Auth.Session) {
+        var activeUser = (0, _session.getActiveUser)();
+
+        if (!activeUser) {
+          throw new Error('No active user to authorize the request.');
+        }
+
+        var kmd = new _kmd2.default(activeUser._kmd);
+        this.set(AUTHORIZATION_HEADER, 'Kinvey ' + kmd.authtoken);
+      } else {
+        this.delete(AUTHORIZATION_HEADER);
+      }
     }
   }]);
 

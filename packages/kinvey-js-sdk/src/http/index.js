@@ -1,8 +1,7 @@
 import parse from './parse';
 import serialize from './serialize';
 import Response from './response';
-import Request, { RequestMethod } from './request';
-import Headers, { KinveyHeaders } from './headers';
+import { use as useSessionStore } from './session';
 
 let http = async () => {
   throw new Error('You must override the default http function.');
@@ -11,8 +10,9 @@ let http = async () => {
 /**
  * @private
  */
-export function use(customHttp) {
-  http = customHttp;
+export function use(httpAdapter, sessionStore) {
+  http = httpAdapter;
+  useSessionStore(sessionStore);
 }
 
 /**
@@ -51,10 +51,18 @@ export async function execute(request) {
 }
 
 // Export
-export * from './utils';
+export {
+  Auth
+} from './headers';
 export {
   Request,
+  KinveyRequest,
   RequestMethod,
-  Headers,
-  KinveyHeaders
-};
+  formatKinveyAuthUrl,
+  formatKinveyBaasUrl
+} from './request';
+export {
+  getActiveUser,
+  setActiveUser,
+  removeActiveUser
+} from './session';

@@ -15,6 +15,10 @@ var _aggregation = require('./aggregation');
 
 var _aggregation2 = _interopRequireDefault(_aggregation);
 
+var _datastore = require('./datastore');
+
+var DataStore = _interopRequireWildcard(_datastore);
+
 var _client = require('./client');
 
 var _kmd = require('./kmd');
@@ -46,6 +50,9 @@ function sdk(httpAdapter) {
 
     // Aggregation
     Aggregation: _aggregation2.default,
+
+    // DataStore
+    DataStore: DataStore,
 
     // Kmd
     Kmd: _kmd2.default,

@@ -1,6 +1,7 @@
 import { use as useHttpAdapter } from './http';
 import Acl from './acl';
 import Aggregation from './aggregation';
+import * as DataStore from './datastore';
 import { init } from './client';
 import Kmd from './kmd';
 import Query from './query';
@@ -19,6 +20,9 @@ export default function sdk(httpAdapter) {
 
     // Aggregation
     Aggregation,
+
+    // DataStore
+    DataStore,
 
     // Kmd
     Kmd,
