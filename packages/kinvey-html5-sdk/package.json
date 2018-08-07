@@ -6,16 +6,22 @@
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "kinvey-html5-sdk.min.js",
+  "main": "src/index.js",
   "scripts": {
-    "prebuild": "rm -rf dist",
-    "build": "webpack --config webpack.config.js",
-    "release": "npm run build -- --env.uglify && ./scripts/push.sh",
-    "postrelease": "rm -rf tmp",
-    "s3": "npm run build -- --env.uglify --env.s3"
+    "prebuild": "del dist",
+    "build": "babel src -d dist/src",
+    "lint": "eslint src"
   },
-  "files": [
-    "kinvey-html5-sdk.min.js",
-    "kinvey-html5-sdk.min.js.map"
-  ]
+  "dependencies": {
+    "kinvey-js-sdk": "3.11.3"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-eslint": "8",
+    "babel-preset-env": "^1.7.0",
+    "del-cli": "^1.1.0",
+    "eslint": "^4.19.1",
+    "eslint-config-kinvey-platform": "kinvey/eslint-kinvey-platform#0.1.1",
+    "eslint-plugin-import": "^2.12.0"
+  }
 }

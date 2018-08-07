@@ -1,0 +1,51 @@
+{
+  "extends": ["eslint:recommended", "airbnb-base"],
+  "parser": "babel-eslint",
+  "rules": {
+    "arrow-body-style": "off",
+    "arrow-parens": "off",
+    "class-methods-use-this": "off",
+    "comma-dangle": "off",
+    "func-names": "off",
+    "id-length": "off",
+    "import/imports-first": "off",
+    "import/newline-after-import": "off",
+    "import/no-extraneous-dependencies": "off",
+    "import/prefer-default-export": "off",
+    "linebreak-style": "off",
+    "max-len": [
+      "warn",
+      {
+        "code": 120,
+        "tabWidth": 2,
+        "ignoreComments": true,
+        "ignoreTrailingComments": true
+      }
+    ],
+    "no-console": "error",
+    "no-fallthrough": "warn",
+    "no-loop-func": "warn",
+    "no-param-reassign": "off",
+    "no-shadow": "off",
+    "no-underscore-dangle": "off",
+    "prefer-default-export": "off",
+    "object-shorthand": [
+      "error",
+      "methods"
+    ],
+    "object-curly-newline": [
+      "error",
+      {
+        "ObjectExpression": {
+          "minProperties": 5,
+          "consistent": true
+        },
+        "ObjectPattern": {
+          "minProperties": 5,
+          "consistent": true
+        }
+      }
+    ],
+    "space-before-function-paren": "off"
+  }
+}
