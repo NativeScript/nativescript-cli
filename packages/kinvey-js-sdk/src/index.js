@@ -1,3 +1,9 @@
-import log from './log';
+import Query from './query';
 
-export default log;
+export default function sdk() {
+  // Return the sdk object
+  return {
+    // Query
+    Query
+  };
+}
