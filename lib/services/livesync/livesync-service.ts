@@ -459,8 +459,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				const platformLiveSyncService = this.getLiveSyncService(platform);
 				const deviceBuildInfoDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 
-				await platformLiveSyncService.prepareForLiveSync(device, projectData, liveSyncData, deviceBuildInfoDescriptor.debugOptions);
-
 				await this.ensureLatestAppPackageIsInstalledOnDevice({
 					device,
 					preparedPlatforms,
@@ -473,6 +471,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					release: liveSyncData.release,
 					env: liveSyncData.env
 				}, { skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare });
+
+				await platformLiveSyncService.prepareForLiveSync(device, projectData, liveSyncData, deviceBuildInfoDescriptor.debugOptions);
 
 				const liveSyncResultInfo = await platformLiveSyncService.fullSync({
 					projectData, device,
