@@ -3,15 +3,15 @@
   "license": "Apache-2.0",
   "author": "Kinvey, Inc.",
   "scripts": {
-    "preinstall": "node -e \"if(process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('js-sdk must be installed with Yarn: https://yarnpkg.com/')\""
+    "bootstrap": "lerna run bootstrap",
+    "test": "lerna run test",
+    "test:ci": "lerna run lint && lerna run test"
   },
   "devDependencies": {
     "lerna": "^2.11.0"
   },
-  "workspaces": {
-    "packages": [
-      "packages/kinvey-html5-sdk",
-      "packages/kinvey-js-sdk"
-    ]
-  }
+  "workspaces": [
+    "packages/kinvey-html5-sdk",
+    "packages/kinvey-js-sdk"
+  ]
 }
