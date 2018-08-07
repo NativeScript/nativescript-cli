@@ -1,3 +1,3 @@
-import * as Kinvey from './bundle';
-export * from './bundle';
-export { Kinvey };
+import SDK from 'kinvey-js-sdk';
+
+export default SDK();

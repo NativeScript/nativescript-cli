@@ -6,17 +6,30 @@
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "lib/index.js",
+  "main": "src/index.js",
   "scripts": {
-    "build": "babel src -d lib",
-    "lint": "eslint src"
+    "prebuild": "del dist",
+    "build": "babel src -d dist/src",
+    "lint": "eslint src",
+    "test": "mocha -R spec -r babel-register -r test/unit/setup.js 'test/unit/**/*.spec.js'",
+    "prepublishOnly": "node scripts/prepublish.js"
+  },
+  "dependencies": {
+    "lodash": "^4.17.10",
+    "loglevel": "^1.6.1",
+    "loglevel-plugin-prefix": "^0.8.3"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-eslint": "8",
     "babel-preset-env": "^1.7.0",
+    "babel-register": "^6.26.0",
+    "chai": "^4.1.2",
+    "del-cli": "^1.1.0",
     "eslint": "^4.19.1",
     "eslint-config-kinvey-platform": "kinvey/eslint-kinvey-platform#0.1.1",
-    "eslint-plugin-import": "^2.12.0"
+    "eslint-plugin-import": "^2.12.0",
+    "fs-extra": "^6.0.1",
+    "mocha": "^5.2.0"
   }
 }

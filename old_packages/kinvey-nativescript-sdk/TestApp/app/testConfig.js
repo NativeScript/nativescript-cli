@@ -1,0 +1,1 @@
+module.exports = { tests: () => [  require('./tests/constants.js'),  require('./tests/crud-entity/common-crud.test.js'),  require('./tests/crud-entity/offline-crud.test.js'),  require('./tests/delta-set.js'),  require('./tests/setup.js'),  require('./tests/sync.test.js'),  require('./tests/users/users.tests.js'),  require('./tests/utilities.js'),  ], logServerPort: '61443' };
