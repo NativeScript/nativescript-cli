@@ -3,3 +3,4 @@ node_modules
 **/README.md
 **/LICENSE
 *.d.ts
+**/*.spec.js
