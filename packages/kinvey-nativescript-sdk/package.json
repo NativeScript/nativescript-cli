@@ -37,6 +37,7 @@
     "push.ios.js",
     "push.ios.js.map",
     "platforms/android/include.gradle",
+    "platforms/android/AndroidManifest.xml",
     "platforms/ios/Podfile",
     "platforms/ios/app.entitlements"
   ],
