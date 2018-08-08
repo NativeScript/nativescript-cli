@@ -113,8 +113,8 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 	}
 
 	private async _transferDirectory(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<Mobile.ILocalToDevicePathData[]> {
-		let transferredLocalToDevicePaths: Mobile.ILocalToDevicePathData[];
-		let removedLocalToDevicePaths: Mobile.ILocalToDevicePathData[];
+		let transferredLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
+		let removedLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
 		const deviceHashService = this.getDeviceHashService(deviceAppData.appIdentifier);
 		const oldShasums = await deviceHashService.getShasumsFromDevice();
 
@@ -141,7 +141,9 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 			}
 		}
 
-		return [].concat(transferredLocalToDevicePaths).concat(removedLocalToDevicePaths);
+		transferredLocalToDevicePaths.push(...removedLocalToDevicePaths);
+
+		return transferredLocalToDevicePaths;
 	}
 
 	private async connectLivesyncTool(projectFilesPath: string, appIdentifier: string) {
