@@ -20,8 +20,7 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		protected device: Mobile.IAndroidDevice,
 		private $options: ICommonOptions,
 		private $processService: IProcessService,
-		private $fs: IFileSystem,
-		private $projectFilesManager: IProjectFilesManager) {
+		private $fs: IFileSystem) {
 		super($platformsData, device);
 		this.livesyncTool = this.$injector.resolve(AndroidLivesyncTool);
 	}
@@ -114,7 +113,6 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 
 	private async _transferDirectory(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<Mobile.ILocalToDevicePathData[]> {
 		let transferredLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
-		let removedLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
 		const deviceHashService = this.getDeviceHashService(deviceAppData.appIdentifier);
 		const oldShasums = await deviceHashService.getShasumsFromDevice();
 
@@ -124,14 +122,7 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		} else {
 			const currentShasums: IStringDictionary = await deviceHashService.generateHashesFromLocalToDevicePaths(localToDevicePaths);
 			const changedShasums = deviceHashService.getChangedShasums(oldShasums, currentShasums);
-			const missingShasums = deviceHashService.getMissingShasums(oldShasums, currentShasums);
 			const changedFiles = _.keys(changedShasums);
-			const filesToRemove = _.keys(missingShasums);
-
-			if (filesToRemove.length) {
-				removedLocalToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, filesToRemove, []);
-				await this.removeFiles(deviceAppData, removedLocalToDevicePaths, projectFilesPath);
-			}
 
 			if (changedFiles.length) {
 				await this.livesyncTool.sendFiles(changedFiles);
@@ -140,8 +131,6 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 				transferredLocalToDevicePaths = [];
 			}
 		}
-
-		transferredLocalToDevicePaths.push(...removedLocalToDevicePaths);
 
 		return transferredLocalToDevicePaths;
 	}
