@@ -28,7 +28,7 @@ function deviceInformation2(pkg) {
     os: os.platform(),
     ov: os.release(),
     sdk: pkg.name,
-    pv: os.release()
+    pv: process.version
   };
 }
 
