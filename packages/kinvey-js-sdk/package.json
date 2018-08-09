@@ -18,6 +18,7 @@
     "lodash": "^4.17.10",
     "loglevel": "^1.6.1",
     "loglevel-plugin-prefix": "^0.8.3",
+    "rxjs": "^6.2.2",
     "url-join": "^4.0.0"
   },
   "devDependencies": {

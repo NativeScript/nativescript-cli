@@ -1,4 +1,4 @@
-import isFunction from 'lodash/isFunction';
+import { Observable } from 'rxjs';
 import Cache from '../cache';
 import Query from '../query';
 import Kmd from '../kmd';
@@ -60,137 +60,201 @@ export default class CacheStore extends NetworkStore {
     this.autoSync = options.autoSync === true;
   }
 
-  async find(query, options = { autoSync: false, cacheCallback: () => {} }) {
-    const { cacheCallback } = options;
+  find(query, options = { autoSync: false }) {
+    const { autoSync = this.autoSync } = options;
+    const stream = Observable.create(async (observer) => {
+      try {
+        const cachedDocs = await this.cache.find(query);
+        observer.next(cachedDocs);
 
-    if (isFunction(cacheCallback)) {
-      const cachedDocs = await this.cache.find(query);
-      cacheCallback(cachedDocs);
-    }
-
-    await this.pull(query, options);
-    return this.cache.find(query);
-  }
-
-  async count(query, options = { autoSync: false, cacheCallback: () => {} }) {
-    const { cacheCallback } = options;
-
-    if (isFunction(cacheCallback)) {
-      const cacheCount = await this.cache.count(query);
-      cacheCallback(cacheCount);
-    }
-
-    await this.pull(query, options);
-    return this.cache.count(query);
-  }
-
-  async findById(id, options = { cacheCallback: () => {} }) {
-    const { cacheCallback } = options;
-
-    if (isFunction(cacheCallback)) {
-      const cacheDoc = await this.cache.findById(id);
-      cacheCallback(cacheDoc);
-    }
-
-    const query = new Query().equalTo('_id', id);
-    await this.pull(query, options);
-    return this.cache.findById(id);
-  }
-
-  async create(doc) {
-    const cachedDoc = await this.cache.save(doc);
-    await this.addCreateSyncEvent(cachedDoc);
-
-    if (this.autoSync) {
-      const query = new Query().equalTo('_id', cachedDoc._id);
-      await this.push(query);
-    }
-
-    return cachedDoc;
-  }
-
-  async update(doc) {
-    const cachedDoc = await this.cache.save(doc);
-    await this.addUpdateSyncEvent(cachedDoc);
-
-    if (this.autoSync) {
-      const query = new Query().equalTo('_id', cachedDoc._id);
-      await this.push(query);
-    }
-
-    return cachedDoc;
-  }
-
-  async remove(query) {
-    // Find the docs in the cache
-    const docs = await this.cache.find(query);
-
-    if (docs.length > 0) {
-      // Remove the docs from the cache
-      await this.syncCache.remove(query);
-      const count = await this.cache.remove(query);
-
-      // Add delete events to the sync cache
-      const syncDocs = await this.addDeleteSyncEvent(docs);
-
-      if (syncDocs.length > 0 && this.autoSync) {
-        // Push the sync events
-        const pushQuery = new Query().contains('_id', syncDocs.map(doc => doc._id));
-        const pushResults = await this.push(pushQuery);
-
-        // Process push results
-        return pushResults.reduce((count, pushResult) => {
-          if (pushResult.error) {
-            return count - 1;
-          }
-
-          return count;
-        }, count);
-      }
-
-      return count;
-    }
-
-    return 0;
-  }
-
-  async removeById(id) {
-    // Find the doc in the cache
-    const doc = await this.cache.findById(id);
-
-    if (doc) {
-      // Remove the doc from the cache
-      await this.syncCache.removeById(id);
-      let count = await this.cache.removeById(id);
-
-      // Add a delete event to the sync cache
-      await this.addDeleteSyncEvent(doc);
-
-      if (this.autoSync) {
-        // Push the sync event
-        const query = new Query().equalTo('_id', doc._id);
-        const pushResults = await this.push(query);
-
-        // Process push result
-        if (pushResults.length > 0) {
-          const pushResult = pushResults.shift();
-
-          if (pushResult.error) {
-            count -= 1;
-          }
+        if (autoSync) {
+          await this.pull(query, options);
+          const docs = await this.cache.find(query);
+          observer.next(docs);
         }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
       }
-
-      return count;
-    }
-
-    return 0;
+    });
+    return stream;
   }
 
-  async clear() {
-    await this.syncCache.clear();
-    await this.queryCache.clear();
-    return this.cache.clear();
+  count(query, options = { autoSync: false }) {
+    const { autoSync = this.autoSync } = options;
+    const stream = Observable.create(async (observer) => {
+      try {
+        const cacheCount = await this.cache.count(query);
+        observer.next(cacheCount);
+
+        if (autoSync) {
+          await this.pull(query, options);
+          const count = await this.cache.count(query);
+          observer.next(count);
+        }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
+  }
+
+  findById(id, options = { autoSync: false }) {
+    const { autoSync = this.autoSync } = options;
+    const stream = Observable.create(async (observer) => {
+      try {
+        const cachedDoc = await this.cache.findById(id);
+        observer.next(cachedDoc);
+
+        if (autoSync) {
+          const query = new Query().equalTo('_id', id);
+          await this.pull(query, options);
+          const doc = await this.cache.findById(id);
+          observer.next(doc);
+        }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
+  }
+
+  create(doc, options = { autoSync: false }) {
+    const { autoSync = this.autoSync } = options;
+    const stream = Observable.create(async (observer) => {
+      try {
+        const cachedDoc = await this.cache.save(doc);
+        await this.addCreateSyncEvent(cachedDoc);
+        observer.next(cachedDoc);
+
+        if (autoSync) {
+          const query = new Query().equalTo('_id', cachedDoc._id);
+          const pull = await this.pull(query);
+          const doc = pull.shift();
+          observer.next(doc);
+        }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
+  }
+
+  update(doc, options = { autoSync: false }) {
+    const { autoSync = this.autoSync } = options;
+    const stream = Observable.create(async (observer) => {
+      try {
+        const cachedDoc = await this.cache.save(doc);
+        await this.addUpdateSyncEvent(cachedDoc);
+        observer.next(cachedDoc);
+
+        if (autoSync) {
+          const query = new Query().equalTo('_id', cachedDoc._id);
+          const pull = await this.pull(query);
+          const doc = pull.shift();
+          observer.next(doc);
+        }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
+  }
+
+  remove(query, options = { autoSync: false }) {
+    const { autoSync = this.autoSync } = options;
+    const stream = Observable.create(async (observer) => {
+      try {
+        const docs = await this.cache.find(query);
+
+        if (docs.length > 0) {
+          await this.syncCache.remove(query);
+          let count = await this.cache.remove(query);
+          const syncDocs = await this.addDeleteSyncEvent(docs);
+
+          if (syncDocs.length > 0 && autoSync) {
+            const pushQuery = new Query().contains('_id', syncDocs.map(doc => doc._id));
+            const pushResults = await this.push(pushQuery);
+            count = pushResults.reduce((count, pushResult) => {
+              if (pushResult.error) {
+                return count - 1;
+              }
+              return count;
+            }, count);
+          }
+
+          observer.next(count);
+        } else {
+          observer.next(0);
+        }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
+  }
+
+  removeById(id, options = { autoSync: false }) {
+    const { autoSync = this.autoSync } = options;
+    const stream = Observable.create(async (observer) => {
+      try {
+        const doc = await this.cache.findById(id);
+
+        if (doc) {
+          await this.syncCache.removeById(id);
+          let count = await this.cache.removeById(id);
+          await this.addDeleteSyncEvent(doc);
+
+          if (autoSync) {
+            const query = new Query().equalTo('_id', doc._id);
+            const pushResults = await this.push(query);
+
+            if (pushResults.length > 0) {
+              const pushResult = pushResults.shift();
+              if (pushResult.error) {
+                count -= 1;
+              }
+            }
+          }
+
+          observer.next(count);
+        } else {
+          observer.next(0);
+        }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
+  }
+
+  clear() {
+    const stream = Observable.create(async (observer) => {
+      try {
+        await Promise.all([
+          this.syncCache.clear(),
+          this.queryCache.clear(),
+          this.cache.clear()
+        ]);
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
   }
 
   async push() {

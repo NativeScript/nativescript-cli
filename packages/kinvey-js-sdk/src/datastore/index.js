@@ -9,7 +9,7 @@ export const DataStoreType = {
   Network: 'Network'
 };
 
-export function collection(collectionName, type = DataStoreType.Cache, tag, options = { useDeltaSet: false, useAutoPagination: false }) {
+export function collection(collectionName, type = DataStoreType.Cache, tag, options) {
   if (collectionName == null || typeof collectionName !== 'string') {
     throw new Error('A collection name is required and must be a string.');
   }
