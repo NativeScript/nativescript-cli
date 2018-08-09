@@ -71,6 +71,16 @@ export function deviceInformation(pkg) {
   }).join(' ');
 }
 
+export function deviceInformation2(pkg) {
+  return {
+    hv: 1,
+    os: global.navigator.appVersion,
+    ov: global.navigator.appVersion,
+    sdk: pkg.name,
+    pv: global.navigator.userAgent
+  };
+}
+
 export class Html5HttpMiddleware extends Middleware {
   constructor(pkg) {
     super();
@@ -92,6 +102,7 @@ export class Html5HttpMiddleware extends Middleware {
       if (kinveyUrlRegex.test(url)) {
         // Add the X-Kinvey-Device-Information header
         headers['X-Kinvey-Device-Information'] = deviceInformation(this.pkg);
+        headers['X-Kinvey-Device-Info'] = JSON.stringify(deviceInformation2(this.pkg));
       }
 
       this.xhrRequest = xhr({
