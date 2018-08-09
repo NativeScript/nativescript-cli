@@ -1,6 +1,16 @@
 NativeScript CLI Changelog
 ================
 
+4.2.1 (2018, August 10)
+==
+
+### Fixed
+* [Fixed #3763](https://github.com/NativeScript/nativescript-cli/issues/3763): Duplicated entries in `tns run` log while livesyncing
+* [Fixed #3802](https://github.com/NativeScript/nativescript-cli/issues/3802): Unable to use templates without `App_Resources`
+* [Fixed #3803](https://github.com/NativeScript/nativescript-cli/issues/3803): `tns run ios` command fails if tns-ios version is a tag
+* [Fixed #3805](https://github.com/NativeScript/nativescript-cli/issues/3805): `tns run android` fails in case you do not have Android emulator images
+
+
 4.2.0 (2018, August 7)
 ==
 
