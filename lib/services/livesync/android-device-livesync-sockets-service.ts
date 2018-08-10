@@ -1,6 +1,4 @@
-import { DeviceAndroidDebugBridge } from "../../common/mobile/android/device-android-debug-bridge";
-import { AndroidDeviceHashService } from "../../common/mobile/android/android-device-hash-service";
-import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
+import { AndroidDeviceLiveSyncServiceBase } from "./android-device-livesync-service-base";
 import { APP_FOLDER_NAME } from "../../constants";
 import { LiveSyncPaths } from "../../common/constants";
 import { AndroidLivesyncTool } from "./android-livesync-tool";
@@ -8,24 +6,25 @@ import * as path from "path";
 import * as temp from "temp";
 import * as semver from "semver";
 
-export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
+export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
 	private livesyncTool: IAndroidLivesyncTool;
 	private static STATUS_UPDATE_INTERVAL = 10000;
 	private static MINIMAL_VERSION_LONG_LIVING_CONNECTION = "0.2.0";
 
 	constructor(
 		private data: IProjectData,
-		private $injector: IInjector,
+		$injector: IInjector,
 		protected $platformsData: IPlatformsData,
 		protected $staticConfig: Config.IStaticConfig,
-		private $logger: ILogger,
+		$logger: ILogger,
 		protected device: Mobile.IAndroidDevice,
 		private $options: IOptions,
 		private $processService: IProcessService,
 		private $fs: IFileSystem,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) {
-		super($platformsData, device);
-		this.livesyncTool = this.$injector.resolve(AndroidLivesyncTool);
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		$filesHashService: IFilesHashService) {
+			super($injector, $platformsData, $filesHashService, $logger, device);
+			this.livesyncTool = this.$injector.resolve(AndroidLivesyncTool);
 	}
 
 	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
@@ -101,67 +100,17 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 
 	public async removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<void> {
 		await this.livesyncTool.removeFiles(_.map(localToDevicePaths, (element: any) => element.filePath));
-
-		await this.getDeviceHashService(deviceAppData.appIdentifier).removeHashes(localToDevicePaths);
-	}
-
-	public async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<Mobile.ILocalToDevicePathData[]> {
-		let transferredFiles;
-
-		if (isFullSync) {
-			transferredFiles = await this._transferDirectory(deviceAppData, localToDevicePaths, projectFilesPath);
-		} else {
-			transferredFiles = await this._transferFiles(deviceAppData, localToDevicePaths);
-		}
-
-		return transferredFiles;
-	}
-
-	public getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService {
-		const adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
-		return this.$injector.resolve(AndroidDeviceHashService, { adb, appIdentifier });
-	}
-
-	private async _transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<Mobile.ILocalToDevicePathData[]> {
-		await this.livesyncTool.sendFiles(localToDevicePaths.map(localToDevicePathData => localToDevicePathData.getLocalPath()));
-
-		// Update hashes
 		const deviceHashService = this.getDeviceHashService(deviceAppData.appIdentifier);
-		if (! await deviceHashService.updateHashes(localToDevicePaths)) {
-			this.$logger.trace("Unable to find hash file on device. The next livesync command will create it.");
-		}
-
-		return localToDevicePaths;
+		await deviceHashService.removeHashes(localToDevicePaths);
 	}
 
-	private async _transferDirectory(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<Mobile.ILocalToDevicePathData[]> {
-		let transferredLocalToDevicePaths: Mobile.ILocalToDevicePathData[];
-		const deviceHashService = this.getDeviceHashService(deviceAppData.appIdentifier);
-		const currentHashes = await deviceHashService.generateHashesFromLocalToDevicePaths(localToDevicePaths);
-		const oldHashes = await deviceHashService.getShasumsFromDevice();
-		console.log("!!!!! OLD HASHES!!!!!!");
-		console.log(oldHashes);
+	public async transferFilesOnDevice(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
+		const files = _.map(localToDevicePaths, localToDevicePath => localToDevicePath.getLocalPath());
+		await this.livesyncTool.sendFiles(files);
+	}
 
-		if (this.$options.force || !oldHashes) {
-			console.log("!!!!!!!!! NO OLD HASHES!!!!! THIS SHOULD NOT HAPPEN!!!!!!!");
-			await this.livesyncTool.sendDirectory(projectFilesPath);
-			await deviceHashService.uploadHashFileToDevice(currentHashes);
-			transferredLocalToDevicePaths = localToDevicePaths;
-		} else {
-			const changedShasums = deviceHashService.getChangedShasums(oldHashes, currentHashes);
-			console.log("CHANGEDSHASUMS!!!!!!!!!!!!!!!");
-			console.log(changedShasums);
-			const changedFiles = _.keys(changedShasums);
-			if (changedFiles.length) {
-				await this.livesyncTool.sendFiles(changedFiles);
-				await deviceHashService.uploadHashFileToDevice(currentHashes);
-				transferredLocalToDevicePaths = localToDevicePaths.filter(localToDevicePathData => changedFiles.indexOf(localToDevicePathData.getLocalPath()) >= 0);
-			} else {
-				transferredLocalToDevicePaths = [];
-			}
-		}
-
-		return transferredLocalToDevicePaths;
+	public async transferDirectoryOnDevice(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<void> {
+		await this.livesyncTool.sendDirectory(projectFilesPath);
 	}
 
 	private async connectLivesyncTool(appIdentifier: string) {

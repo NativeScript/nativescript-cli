@@ -27,10 +27,10 @@ export abstract class DeviceLiveSyncServiceBase {
 		return fastSyncFileExtensions;
 	}
 
-	public async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<Mobile.ILocalToDevicePathData[]> {
+	public async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, projectData: IProjectData, liveSyncDeviceInfo: ILiveSyncDeviceInfo, options: ITransferFilesOptions): Promise<Mobile.ILocalToDevicePathData[]> {
 		let transferredFiles: Mobile.ILocalToDevicePathData[] = [];
 
-		if (isFullSync) {
+		if (options.isFullSync) {
 			transferredFiles = await this.device.fileSystem.transferDirectory(deviceAppData, localToDevicePaths, projectFilesPath);
 		} else {
 			transferredFiles = await this.device.fileSystem.transferFiles(deviceAppData, localToDevicePaths);

@@ -78,6 +78,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("androidPluginBuildService", stubs.AndroidPluginBuildServiceStub);
 	testInjector.register("platformEnvironmentRequirements", {});
 	testInjector.register("androidResourcesMigrationService", stubs.AndroidResourcesMigrationServiceStub);
+	testInjector.register("filesHashService", {});
 
 	return testInjector;
 }

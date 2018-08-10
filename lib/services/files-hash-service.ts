@@ -33,20 +33,10 @@ export class FilesHashService implements IFilesHashService {
 		return hashes;
 	}
 
-	public async saveHashesForProject(platformData: IPlatformData, hashesFileDirectory: string): Promise<void> {
+	public async saveHashesForProject(platformData: IPlatformData, hashesFileDirectory: string): Promise<IStringDictionary> {
 		const hashes = await this.generateHashesForProject(platformData);
-		const hashesFilePath = path.join(hashesFileDirectory, HASHES_FILE_NAME);
-		this.$fs.writeJson(hashesFilePath, hashes);
-	}
-
-	public getGeneratedHashes(hashesFileDirectory: string): IStringDictionary {
-		let result = {};
-		const hashesFilePath = path.join(hashesFileDirectory, HASHES_FILE_NAME);
-		if (this.$fs.exists(hashesFilePath)) {
-			result = this.$fs.readJson(hashesFilePath);
-		}
-
-		return result;
+		this.saveHashes(hashes, hashesFileDirectory);
+		return hashes;
 	}
 
 	public async getChanges(files: string[], oldHashes: IStringDictionary): Promise<IStringDictionary> {
@@ -56,6 +46,11 @@ export class FilesHashService implements IFilesHashService {
 
 	public hasChangesInShasums(oldHashes: IStringDictionary, newHashes: IStringDictionary): boolean {
 		return !!_.keys(this.getChangesInShasums(oldHashes, newHashes)).length;
+	}
+
+	public saveHashes(hashes: IStringDictionary, hashesFileDirectory: string): void {
+		const hashesFilePath = path.join(hashesFileDirectory, HASHES_FILE_NAME);
+		this.$fs.writeJson(hashesFilePath, hashes);
 	}
 
 	private getChangesInShasums(oldHashes: IStringDictionary, newHashes: IStringDictionary): IStringDictionary {

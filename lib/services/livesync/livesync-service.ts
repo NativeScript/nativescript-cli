@@ -505,10 +505,13 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				await platformLiveSyncService.prepareForLiveSync(device, projectData, liveSyncData, deviceBuildInfoDescriptor.debugOptions);
 
 				const liveSyncResultInfo = await platformLiveSyncService.fullSync({
-					projectData, device,
+					projectData,
+					device,
 					syncAllFiles: liveSyncData.watchAllFiles,
 					useHotModuleReload: liveSyncData.useHotModuleReload,
-					watch: !liveSyncData.skipWatcher
+					watch: !liveSyncData.skipWatcher,
+					force: liveSyncData.force,
+					liveSyncDeviceInfo: deviceBuildInfoDescriptor
 				});
 
 				await this.$platformService.trackActionForPlatform({ action: "LiveSync", platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
@@ -637,12 +640,14 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 										const service = this.getLiveSyncService(device.deviceInfo.platform);
 										const settings: ILiveSyncWatchInfo = {
+											liveSyncDeviceInfo: deviceBuildInfoDescriptor,
 											projectData,
 											filesToRemove: currentFilesToRemove,
 											filesToSync: currentFilesToSync,
 											isReinstalled: appInstalledOnDeviceResult.appInstalled,
 											syncAllFiles: liveSyncData.watchAllFiles,
-											useHotModuleReload: liveSyncData.useHotModuleReload
+											useHotModuleReload: liveSyncData.useHotModuleReload,
+											force: liveSyncData.force
 										};
 
 										const liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);

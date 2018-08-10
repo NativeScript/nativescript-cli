@@ -60,7 +60,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 	public liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
 		if (liveSyncInfo.isReinstalled) {
 			// In this case we should execute fullsync because iOS Runtime requires the full content of app dir to be extracted in the root of sync dir.
-			return this.fullSync({ projectData: liveSyncInfo.projectData, device, syncAllFiles: liveSyncInfo.syncAllFiles, watch: true });
+			return this.fullSync({ projectData: liveSyncInfo.projectData, device, syncAllFiles: liveSyncInfo.syncAllFiles, liveSyncDeviceInfo: liveSyncInfo.liveSyncDeviceInfo, watch: true });
 		} else {
 			return super.liveSyncWatchAction(device, liveSyncInfo);
 		}
