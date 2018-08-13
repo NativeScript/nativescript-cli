@@ -157,7 +157,7 @@ describe("iOSDebuggerPortService", () => {
 				}
 
 				const promise = iOSDebuggerPortService.getPort({ deviceId: deviceId, appId: appId, projectDir: mockProjectDirObj.projectDir });
-				clock.tick(10000);
+				clock.tick(20000);
 				const port = await promise;
 				assert.deepEqual(port, testCase.emittedPort);
 			});
@@ -171,7 +171,7 @@ describe("iOSDebuggerPortService", () => {
 				}
 
 				const promise = iOSDebuggerPortService.getPort({ deviceId: deviceId, appId: appId, projectDir: mockProjectDirObj.projectDir });
-				clock.tick(10000);
+				clock.tick(20000);
 				const port = await promise;
 				assert.deepEqual(port, testCase.emittedPort);
 			});
