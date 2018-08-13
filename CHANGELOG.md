@@ -1,6 +1,49 @@
 NativeScript CLI Changelog
 ================
 
+4.2.1 (2018, August 10)
+==
+
+### Fixed
+* [Fixed #3763](https://github.com/NativeScript/nativescript-cli/issues/3763): Duplicated entries in `tns run` log while livesyncing
+* [Fixed #3802](https://github.com/NativeScript/nativescript-cli/issues/3802): Unable to use templates without `App_Resources`
+* [Fixed #3803](https://github.com/NativeScript/nativescript-cli/issues/3803): `tns run ios` command fails if tns-ios version is a tag
+* [Fixed #3805](https://github.com/NativeScript/nativescript-cli/issues/3805): `tns run android` fails in case you do not have Android emulator images
+
+
+4.2.0 (2018, August 7)
+==
+
+### New
+* [Implemented #3023](https://github.com/NativeScript/nativescript-cli/issues/3023): `tns device --available-devices` to list all emulator images
+* [Implemented #3717](https://github.com/NativeScript/nativescript-cli/pull/3717): Speed up device detection
+* [Implemented #3718](https://github.com/NativeScript/nativescript-cli/issues/3718): Install the Android project dependencies only when needed
+* [Implemented #3719](https://github.com/NativeScript/nativescript-cli/issues/3719): Build plugins with the same gradle versions as the runtime
+* [Implemented #3735](https://github.com/NativeScript/nativescript-cli/pull/3735): Speed up adding native platform
+* [Implemented #3750](https://github.com/NativeScript/nativescript-cli/pull/3750): Add hook for `checkForChanges`
+* [Implemented #3733](https://github.com/NativeScript/nativescript-cli/issues/3733): [API] Expose API for listing and starting emulators and simulators when using CLI as library.
+* [Implemented #3797](https://github.com/NativeScript/nativescript-cli/issues/3797): Use sockets to LiveSync changes on Android
+* [Implemented #3798](https://github.com/NativeScript/nativescript-cli/issues/3798): Allow templates to be full application - full support
+
+### Fixed
+* [Fixed #2485](https://github.com/NativeScript/nativescript-cli/issues/2485): EACCES (Permission denied) when livesync Angular projects on Samsung devices
+* [Fixed #2547](https://github.com/NativeScript/nativescript-cli/issues/2547): `tns-android` remains inside dependencies when `tns build/run android` fails
+* [Fixed #3132](https://github.com/NativeScript/nativescript-cli/issues/3132): Xcode 9: Requires Provisioning Profile Error
+* [Fixed #3602](https://github.com/NativeScript/nativescript-cli/issues/3602): Livesync does not work on Android P
+* [Fixed #3610](https://github.com/NativeScript/nativescript-cli/issues/3610): Livesync ignores aar file changes inside a plugin
+* [Fixed #3672](https://github.com/NativeScript/nativescript-cli/issues/3672): `tns run/debug ios --syncAllFiles` with cocoapods has issues
+* [Fixed #3707](https://github.com/NativeScript/nativescript-cli/issues/3707): CLI generates aar files on changes in `app/` (livesync with webpack)
+* [Fixed #3710](https://github.com/NativeScript/nativescript-cli/issues/3710): CLI regenerates ALL aar files on changes in `node_modules`
+* [Fixed #3723](https://github.com/NativeScript/nativescript-cli/issues/3723): iOS build for device fails with Xcode 10 beta versions
+* [Fixed #3729](https://github.com/NativeScript/nativescript-cli/pull/3729): File references inside .pbxproject are incorrect when there's space in project path
+* [Fixed #3741](https://github.com/NativeScript/nativescript-cli/issues/3741): Platforms folder need to be removed after a bitcode error
+* [Fixed #3744](https://github.com/NativeScript/nativescript-cli/pull/3744): During all gradle operations "Gradle build" message is printed
+* [Fixed #3751](https://github.com/NativeScript/nativescript-cli/issues/3751): Problem building nativescript-google-maps-sdk on Android
+* [Fixed #3752](https://github.com/NativeScript/nativescript-cli/issues/3752): Increase the default timeout for debug command from 5 to 10 seconds
+* [Fixed #3768](https://github.com/NativeScript/nativescript-cli/pull/3768): Skip preparation of plugins native files in case they are not changed
+* [Fixed #3794](https://github.com/NativeScript/nativescript-cli/pull/3794): Update lodash to fix a security vulnerability.
+
+
 4.1.2 (2018, June 26)
 ==
 
