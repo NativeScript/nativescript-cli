@@ -102,7 +102,8 @@ export async function login(username, password) {
     credentials.password = credentials.password.trim();
   }
 
-  if ((!credentials.username || credentials.username === '' || !credentials.password || credentials.password === '') && !credentials._socialIdentity) {
+  if ((!credentials.username || credentials.username === '' || !credentials.password || credentials.password === '')
+    && !credentials._socialIdentity) {
     throw new Error('Username and/or password missing. Please provide both a username and password to login.');
   }
 
@@ -126,7 +127,9 @@ export async function loginWithMIC(redirectUri, authorizationGrant, options) {
   const activeUser = getActiveUser();
 
   if (activeUser) {
-    throw new Error('An active user already exists. Please logout the active user before you login with Mobile Identity Connect.');
+    throw new Error(
+      'An active user already exists. Please logout the active user before you login with Mobile Identity Connect.'
+    );
   }
 
   const session = await MIC.login(redirectUri, authorizationGrant, options);
@@ -172,4 +175,31 @@ export async function logout() {
 
   removeActiveUser();
   return true;
+}
+
+export async function remove(id, options = {}) {
+  const { hard = false } = options;
+  const activeUser = getActiveUser();
+
+  if (!isString(id)) {
+    throw new Error('id must be a string.');
+  }
+
+  if (!activeUser) {
+    throw new Error('Please login to remove the user.');
+  }
+
+  const url = formatKinveyBaasUrl(`/user/appKey/${id}`, { hard });
+  const headers = new KinveyHeaders();
+  const kmd = new Kmd(activeUser._kmd);
+  const authorizationHeader = getKinveySessionAuthorizationHeader(kmd.authtoken);
+  headers.set(authorizationHeader.name, authorizationHeader.value);
+  const request = new Request({
+    method: RequestMethod.DELETE,
+    headers,
+    url
+  });
+  const response = await execute(request);
+  removeActiveUser();
+  return response.data;
 }
