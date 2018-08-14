@@ -75,6 +75,22 @@ export default class Headers {
     return this;
   }
 
+  join(headers) {
+    if (headers instanceof Headers) {
+      headers.keys().forEach((header) => {
+        const value = headers.get(header);
+        this.set(header, value);
+      });
+    } else {
+      Object.keys(headers).forEach((header) => {
+        const value = headers[header];
+        this.set(header, value);
+      });
+    }
+
+    return this;
+  }
+
   delete(name) {
     if (!isString(name)) {
       throw new Error('Please provide a name. Name must be a string.');
@@ -112,47 +128,5 @@ export class KinveyHeaders extends Headers {
 
   get requestStart() {
     return this.get(X_KINVEY_REQUEST_START_HEADER);
-  }
-
-  setAuthorization(info) {
-    if (!info || !isString(info.scheme)) {
-      throw new Error('Please provide valid authorization info. The authorization info must have a scheme that is a string.');
-    }
-
-    let { credentials } = info;
-
-    if (isString(info.username) && isString(info.password)) {
-      credentials = Buffer.from(`${info.username}:${info.password}`).toString('base64');
-    }
-
-    if (!credentials) {
-      throw new Error('Please provide valid authorization info. The authorization info must contain either a username and password or credentials.')
-    }
-
-    this.set('Authorization', `${info.scheme} ${credentials}`);
-    return this;
-  }
-
-  setAppAuthorization(appKey, appSecret) {
-    if (!isString(appKey) || !isString(appSecret)) {
-      throw new Error('Please provide a valid appKey and appSecret. The appKey and appSecret must be a string.');
-    }
-
-    return this.setAuthorization({
-      scheme: 'Basic',
-      username: appKey,
-      password: appSecret
-    });
-  }
-
-  setSessionAuthorization(authtoken) {
-    if (!authtoken || !isString(authtoken)) {
-      throw new Error('Please provide a valid auth token. The auth token must be a string.');
-    }
-
-    return this.setAuthorization({
-      scheme: 'Kinvey',
-      credentials: authtoken
-    });
   }
 }

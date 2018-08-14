@@ -51,6 +51,7 @@ export async function execute(request) {
 }
 
 // Export
+export * from './utils';
 export {
   Request,
   RequestMethod,

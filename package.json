@@ -4,14 +4,36 @@
   "author": "Kinvey, Inc.",
   "scripts": {
     "bootstrap": "lerna run bootstrap",
-    "test": "lerna run test",
-    "test:ci": "lerna run lint && lerna run test"
+    "build": "lerna run build --parallel",
+    "lint": "lerna run lint --parallel",
+    "test": "lerna run test --parallel",
+    "test:ci": "yarn lint && yarn test"
   },
   "devDependencies": {
     "lerna": "^2.11.0"
   },
-  "workspaces": [
-    "packages/kinvey-html5-sdk",
-    "packages/kinvey-js-sdk"
-  ]
+  "workspaces": {
+    "packages": [
+      "packages/kinvey-html5-sdk",
+      "packages/kinvey-js-sdk",
+      "packages/kinvey-nativescript-sdk",
+      "packages/kinvey-node-sdk"
+    ],
+    "nohoist": [
+      "**/karma",
+      "**/karma/**",
+      "**/karma-babel-preprocessor",
+      "**/karma-babel-preprocessor/**",
+      "**/karma-chrome-launcher",
+      "**/karma-chrome-launcher/**",
+      "**/karma-mocha",
+      "**/karma-mocha/**",
+      "**/karma-mocha-reporter",
+      "**/karma-mocha-reporter/**",
+      "**/karma-sourcemap-loader",
+      "**/karma-sourcemap-loader/**",
+      "**/karma-webpack",
+      "**/karma-webpack/**"
+    ]
+  }
 }
