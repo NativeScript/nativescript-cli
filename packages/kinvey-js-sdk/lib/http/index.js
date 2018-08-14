@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.KinveyHeaders = exports.Headers = exports.RequestMethod = exports.Request = exports.execute = undefined;
+exports.removeActiveUser = exports.setActiveUser = exports.getActiveUser = exports.formatKinveyBaasUrl = exports.formatKinveyAuthUrl = exports.RequestMethod = exports.KinveyRequest = exports.Request = exports.Auth = exports.execute = undefined;
 
 /**
  * @private
@@ -75,16 +75,67 @@ var execute = exports.execute = function () {
 
 exports.use = use;
 
-var _utils = require('./utils');
+var _headers = require('./headers');
 
-Object.keys(_utils).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _utils[key];
-    }
-  });
+Object.defineProperty(exports, 'Auth', {
+  enumerable: true,
+  get: function get() {
+    return _headers.Auth;
+  }
+});
+
+var _request = require('./request');
+
+Object.defineProperty(exports, 'Request', {
+  enumerable: true,
+  get: function get() {
+    return _request.Request;
+  }
+});
+Object.defineProperty(exports, 'KinveyRequest', {
+  enumerable: true,
+  get: function get() {
+    return _request.KinveyRequest;
+  }
+});
+Object.defineProperty(exports, 'RequestMethod', {
+  enumerable: true,
+  get: function get() {
+    return _request.RequestMethod;
+  }
+});
+Object.defineProperty(exports, 'formatKinveyAuthUrl', {
+  enumerable: true,
+  get: function get() {
+    return _request.formatKinveyAuthUrl;
+  }
+});
+Object.defineProperty(exports, 'formatKinveyBaasUrl', {
+  enumerable: true,
+  get: function get() {
+    return _request.formatKinveyBaasUrl;
+  }
+});
+
+var _session = require('./session');
+
+Object.defineProperty(exports, 'getActiveUser', {
+  enumerable: true,
+  get: function get() {
+    return _session.getActiveUser;
+  }
+});
+Object.defineProperty(exports, 'setActiveUser', {
+  enumerable: true,
+  get: function get() {
+    return _session.setActiveUser;
+  }
+});
+Object.defineProperty(exports, 'removeActiveUser', {
+  enumerable: true,
+  get: function get() {
+    return _session.removeActiveUser;
+  }
 });
 
 var _parse = require('./parse');
@@ -98,14 +149,6 @@ var _serialize2 = _interopRequireDefault(_serialize);
 var _response = require('./response');
 
 var _response2 = _interopRequireDefault(_response);
-
-var _request = require('./request');
-
-var _request2 = _interopRequireDefault(_request);
-
-var _headers = require('./headers');
-
-var _headers2 = _interopRequireDefault(_headers);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -135,9 +178,7 @@ var http = function () {
 /**
  * @private
  */
-function use(customHttp) {
-  http = customHttp;
-}exports.Request = _request2.default;
-exports.RequestMethod = _request.RequestMethod;
-exports.Headers = _headers2.default;
-exports.KinveyHeaders = _headers.KinveyHeaders;
+function use(httpAdapter, sessionStore) {
+  http = httpAdapter;
+  (0, _session.use)(sessionStore);
+}

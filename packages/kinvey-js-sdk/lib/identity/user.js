@@ -3,19 +3,19 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.remove = exports.logout = exports.loginWithMIC = exports.login = exports.signup = undefined;
+exports.getActiveUser = exports.remove = exports.logout = exports.loginWithMIC = exports.login = exports.signup = undefined;
 
 var signup = exports.signup = function () {
   var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(data) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-    var activeUser, _options$state, state, url, headers, authorizationHeader, request, response, user;
+    var activeUser, _options$state, state, url, request, response, user;
 
     return regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
-            activeUser = getActiveUser();
+            activeUser = (0, _http.getActiveUser)();
             _options$state = options.state, state = _options$state === undefined ? true : _options$state;
 
             if (!(state === true && activeUser)) {
@@ -26,32 +26,28 @@ var signup = exports.signup = function () {
             throw new Error('An active user already exists. Please logout the active user before you signup.');
 
           case 4:
-            url = (0, _http.formatKinveyBaasUrl)('/user/appKey');
-            headers = new _http.KinveyHeaders();
-            authorizationHeader = (0, _http.getKinveyAppAuthorizationHeader)();
-
-            headers.set(authorizationHeader.name, authorizationHeader.value);
-            request = new _http.Request({
+            url = (0, _http.formatKinveyBaasUrl)('/' + NAMESPACE + '/appKey');
+            request = new _http.KinveyRequest({
               method: _http.RequestMethod.POST,
-              headers: headers,
+              auth: _http.Auth.App,
               url: url,
               body: (0, _isEmpty2.default)(data) ? null : data
             });
-            _context.next = 11;
+            _context.next = 8;
             return (0, _http.execute)(request);
 
-          case 11:
+          case 8:
             response = _context.sent;
             user = response.data;
 
 
             if (state === true) {
-              setActiveUser(user);
+              (0, _http.setActiveUser)(user);
             }
 
             return _context.abrupt('return', user);
 
-          case 15:
+          case 12:
           case 'end':
             return _context.stop();
         }
@@ -66,12 +62,12 @@ var signup = exports.signup = function () {
 
 var login = exports.login = function () {
   var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(username, password) {
-    var activeUser, credentials, url, headers, authorizationHeader, request, response, user;
+    var activeUser, credentials, url, request, response, user;
     return regeneratorRuntime.wrap(function _callee2$(_context2) {
       while (1) {
         switch (_context2.prev = _context2.next) {
           case 0:
-            activeUser = getActiveUser();
+            activeUser = (0, _http.getActiveUser)();
             credentials = username;
 
             if (!activeUser) {
@@ -117,28 +113,24 @@ var login = exports.login = function () {
             throw new Error('Username and/or password missing. Please provide both a username and password to login.');
 
           case 17:
-            url = (0, _http.formatKinveyBaasUrl)('/user/appKey/login');
-            headers = new _http.KinveyHeaders();
-            authorizationHeader = (0, _http.getKinveyAppAuthorizationHeader)();
-
-            headers.set(authorizationHeader.name, authorizationHeader.value);
-            request = new _http.Request({
+            url = (0, _http.formatKinveyBaasUrl)('/' + NAMESPACE + '/appKey/login');
+            request = new _http.KinveyRequest({
               method: _http.RequestMethod.POST,
-              headers: headers,
+              auth: _http.Auth.App,
               url: url,
               body: credentials
             });
-            _context2.next = 24;
+            _context2.next = 21;
             return (0, _http.execute)(request);
 
-          case 24:
+          case 21:
             response = _context2.sent;
             user = response.data;
 
-            setActiveUser(user);
+            (0, _http.setActiveUser)(user);
             return _context2.abrupt('return', user);
 
-          case 28:
+          case 25:
           case 'end':
             return _context2.stop();
         }
@@ -158,7 +150,7 @@ var loginWithMIC = exports.loginWithMIC = function () {
       while (1) {
         switch (_context3.prev = _context3.next) {
           case 0:
-            activeUser = getActiveUser();
+            activeUser = (0, _http.getActiveUser)();
 
             if (!activeUser) {
               _context3.next = 3;
@@ -219,55 +211,50 @@ var loginWithMIC = exports.loginWithMIC = function () {
 
 var logout = exports.logout = function () {
   var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
-    var activeUser, url, headers, kmd, authorizationHeader, request;
+    var activeUser, url, request;
     return regeneratorRuntime.wrap(function _callee4$(_context4) {
       while (1) {
         switch (_context4.prev = _context4.next) {
           case 0:
-            activeUser = getActiveUser();
+            activeUser = (0, _http.getActiveUser)();
 
             // TODO: unregister from live service
             // TODO: clear data store cache
 
             if (!activeUser) {
-              _context4.next = 15;
+              _context4.next = 11;
               break;
             }
 
-            url = (0, _http.formatKinveyBaasUrl)('/user/appKey/_logout');
-            headers = new _http.KinveyHeaders();
-            kmd = new _kmd2.default(activeUser._kmd);
-            authorizationHeader = (0, _http.getKinveySessionAuthorizationHeader)(kmd.authtoken);
-
-            headers.set(authorizationHeader.name, authorizationHeader.value);
-            request = new _http.Request({
+            url = (0, _http.formatKinveyBaasUrl)('/' + NAMESPACE + '/appKey/_logout');
+            request = new _http.KinveyRequest({
               method: _http.RequestMethod.POST,
-              headers: headers,
+              auth: _http.Auth.Session,
               url: url
             });
-            _context4.prev = 8;
-            _context4.next = 11;
+            _context4.prev = 4;
+            _context4.next = 7;
             return (0, _http.execute)(request);
 
-          case 11:
-            _context4.next = 15;
+          case 7:
+            _context4.next = 11;
             break;
 
-          case 13:
-            _context4.prev = 13;
-            _context4.t0 = _context4['catch'](8);
+          case 9:
+            _context4.prev = 9;
+            _context4.t0 = _context4['catch'](4);
 
-          case 15:
+          case 11:
 
-            removeActiveUser();
+            (0, _http.removeActiveUser)();
             return _context4.abrupt('return', true);
 
-          case 17:
+          case 13:
           case 'end':
             return _context4.stop();
         }
       }
-    }, _callee4, this, [[8, 13]]);
+    }, _callee4, this, [[4, 9]]);
   }));
 
   return function logout() {
@@ -279,14 +266,14 @@ var remove = exports.remove = function () {
   var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(id) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-    var _options$hard, hard, activeUser, url, headers, kmd, authorizationHeader, request, response;
+    var _options$hard, hard, activeUser, url, request, response;
 
     return regeneratorRuntime.wrap(function _callee5$(_context5) {
       while (1) {
         switch (_context5.prev = _context5.next) {
           case 0:
             _options$hard = options.hard, hard = _options$hard === undefined ? false : _options$hard;
-            activeUser = getActiveUser();
+            activeUser = (0, _http.getActiveUser)();
 
             if ((0, _isString2.default)(id)) {
               _context5.next = 4;
@@ -305,26 +292,21 @@ var remove = exports.remove = function () {
 
           case 6:
             url = (0, _http.formatKinveyBaasUrl)('/user/appKey/' + id, { hard: hard });
-            headers = new _http.KinveyHeaders();
-            kmd = new _kmd2.default(activeUser._kmd);
-            authorizationHeader = (0, _http.getKinveySessionAuthorizationHeader)(kmd.authtoken);
-
-            headers.set(authorizationHeader.name, authorizationHeader.value);
-            request = new _http.Request({
+            request = new _http.KinveyRequest({
               method: _http.RequestMethod.DELETE,
-              headers: headers,
+              auth: _http.Auth.Session,
               url: url
             });
-            _context5.next = 14;
+            _context5.next = 10;
             return (0, _http.execute)(request);
 
-          case 14:
+          case 10:
             response = _context5.sent;
 
-            removeActiveUser();
+            (0, _http.removeActiveUser)();
             return _context5.abrupt('return', response.data);
 
-          case 17:
+          case 13:
           case 'end':
             return _context5.stop();
         }
@@ -336,13 +318,6 @@ var remove = exports.remove = function () {
     return _ref5.apply(this, arguments);
   };
 }();
-
-exports.use = use;
-exports.getActiveUser = getActiveUser;
-
-var _isFunction = require('lodash/isFunction');
-
-var _isFunction2 = _interopRequireDefault(_isFunction);
 
 var _isPlainObject = require('lodash/isPlainObject');
 
@@ -356,13 +331,7 @@ var _isEmpty = require('lodash/isEmpty');
 
 var _isEmpty2 = _interopRequireDefault(_isEmpty);
 
-var _client = require('../client');
-
 var _http = require('../http');
-
-var _kmd = require('../kmd');
-
-var _kmd2 = _interopRequireDefault(_kmd);
 
 var _mic = require('./mic');
 
@@ -374,41 +343,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
-var store = new Map();
-function use(customStore) {
-  if (customStore) {
-    store = customStore;
-  }
-}
+var NAMESPACE = 'user';
 
-function getActiveUser() {
-  var _getConfig = (0, _client.getConfig)(),
-      appKey = _getConfig.appKey;
-
-  return store.get(appKey);
-}
-
-function setActiveUser(user) {
-  var _getConfig2 = (0, _client.getConfig)(),
-      appKey = _getConfig2.appKey;
-
-  if (!user) {
-    throw new Error('Please provide a valid user to set as the active user.');
-  }
-
-  store.set(appKey, user);
-  return user;
-}
-
-function removeActiveUser() {
-  var _getConfig3 = (0, _client.getConfig)(),
-      appKey = _getConfig3.appKey;
-
-  if ((0, _isFunction2.default)(store.delete)) {
-    store.delete(appKey);
-  } else {
-    store.remove(appKey);
-  }
-
-  return null;
-}
+exports.getActiveUser = _http.getActiveUser;

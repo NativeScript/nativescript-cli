@@ -1,5 +1,5 @@
 import cloneDeep from 'lodash/cloneDeep';
-import Request from './request';
+import { Request } from './request';
 
 /**
  * @private

@@ -1,6 +1,6 @@
 import { expect, use } from 'chai';
 import serialize from '../../src/http/serialize';
-import Request, { RequestMethod } from '../../src/http/request';
+import { Request, RequestMethod } from '../../src/http/request';
 
 // Register chai-as-promised
 use(require('chai-as-promised'));
