@@ -57,7 +57,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $plistParser: IPlistParser,
 		private $sysInfo: ISysInfo,
 		private $xCConfigService: XCConfigService) {
-			super($fs, $projectDataService);
+		super($fs, $projectDataService);
 	}
 
 	private _platformsDirCache: string = null;
@@ -442,11 +442,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			localArgs.push("-quiet");
 			this.$logger.info("Xcode build...");
 		}
-		return this.$childProcess.spawnFromEvent("xcodebuild",
-			localArgs,
-			"exit",
-			{ stdio: stdio || "inherit", cwd },
-			{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
+
+		let commandResult;
+		try {
+			commandResult = await this.$childProcess.spawnFromEvent("xcodebuild",
+				localArgs,
+				"exit",
+				{ stdio: stdio || "inherit", cwd },
+				{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
+		} catch (err) {
+			this.$errors.failWithoutHelp(err.message);
+		}
+
+		return commandResult;
 	}
 
 	private async setupSigningFromTeam(projectRoot: string, projectData: IProjectData, teamId: string) {
@@ -1112,7 +1120,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	private async prepareNativeSourceCode(pluginName: string, pluginPlatformsFolderPath: string, projectData: IProjectData): Promise<void> {
 		const project = this.createPbxProj(projectData);
 		const group = this.getRootGroup(pluginName, pluginPlatformsFolderPath);
-		project.addPbxGroup(group.files, group.name, group.path, null, {isMain:true});
+		project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true });
 		project.addToHeaderSearchPaths(group.path);
 		this.savePbxProj(project, projectData);
 	}
