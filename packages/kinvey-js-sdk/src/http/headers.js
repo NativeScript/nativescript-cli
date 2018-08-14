@@ -1,8 +1,5 @@
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
-import { getConfig } from '../client';
-import Kmd from '../kmd';
-import { getActiveUser } from './session';
 
 const AUTHORIZATION_HEADER = 'Authorization';
 const X_KINVEY_REQUEST_START_HEADER = 'X-Kinvey-Request-Start';
@@ -112,12 +109,6 @@ export class Headers {
   }
 }
 
-export const Auth = {
-  App: 'App',
-  Client: 'Client',
-  Session: 'Session'
-};
-
 /**
  * @private
  */
@@ -140,26 +131,7 @@ export class KinveyHeaders extends Headers {
     return this.get(X_KINVEY_REQUEST_START_HEADER);
   }
 
-  set auth(auth) {
-    if (auth === Auth.App) {
-      const { appKey, appSecret } = getConfig();
-      const credentials = Buffer.from(`${appKey}:${appSecret}`).toString('base64');
-      this.set(AUTHORIZATION_HEADER, `Basic ${credentials}`);
-    } else if (auth === Auth.Client) {
-      const { clientId, appSecret } = getConfig();
-      const credentials = Buffer.from(`${clientId}:${appSecret}`).toString('base64');
-      this.set(AUTHORIZATION_HEADER, `Basic ${credentials}`);
-    } else if (auth === Auth.Session) {
-      const activeUser = getActiveUser();
-
-      if (!activeUser) {
-        throw new Error('No active user to authorize the request.');
-      }
-
-      const kmd = new Kmd(activeUser._kmd);
-      this.set(AUTHORIZATION_HEADER, `Kinvey ${kmd.authtoken}`);
-    } else {
-      this.delete(AUTHORIZATION_HEADER);
-    }
+  setAuthorization(value) {
+    this.set(AUTHORIZATION_HEADER, value);
   }
 }

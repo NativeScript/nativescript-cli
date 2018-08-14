@@ -1,6 +1,6 @@
 import isArray from 'lodash/isArray';
 
-let adapter = {
+let store = {
   find() {
     throw new Error('You must override the default cache adapter.');
   },
@@ -24,14 +24,17 @@ let adapter = {
   },
   clear() {
     throw new Error('You must override the default cache adapter.');
+  },
+  clearAll() {
+    throw new Error('You must override the default cache adapter.');
   }
 };
 
 /**
  * @private
  */
-export function use(customAdapter) {
-  adapter = customAdapter;
+export function use(cacheStore) {
+  store = cacheStore;
 }
 
 function generateId(length = 24) {
@@ -53,19 +56,19 @@ export default class Cache {
   }
 
   async find(query) {
-    return adapter.find(this.dbName, this.collectionName, query);
+    return store.find(this.dbName, this.collectionName, query);
   }
 
   async reduce(aggregation) {
-    return adapter.reduce(this.dbName, this.collectionName, aggregation);
+    return store.reduce(this.dbName, this.collectionName, aggregation);
   }
 
   async count(query) {
-    return adapter.count(this.dbName, this.collectionName, query);
+    return store.count(this.dbName, this.collectionName, query);
   }
 
   async findById(id) {
-    return adapter.findById(this.dbName, this.collectionName, id);
+    return store.findById(this.dbName, this.collectionName, id);
   }
 
   async save(docsToSaveOrUpdate) {
@@ -93,21 +96,25 @@ export default class Cache {
         return doc;
       });
 
-      await adapter.save(this.dbName, this.collectionName, docs);
+      await store.save(this.dbName, this.collectionName, docs);
     }
 
     return singular ? docs[0] : docs;
   }
 
   async remove(query) {
-    return adapter.remove(this.dbName, this.collectionName, query);
+    return store.remove(this.dbName, this.collectionName, query);
   }
 
   async removeById(id) {
-    return adapter.removeById(this.dbName, this.collectionName, id);
+    return store.removeById(this.dbName, this.collectionName, id);
   }
 
   async clear() {
-    return adapter.clear(this.dbName, this.collectionName);
+    return store.clear(this.dbName, this.collectionName);
   }
+}
+
+export function clearAll(appKey) {
+  store.clearAll(appKey);
 }

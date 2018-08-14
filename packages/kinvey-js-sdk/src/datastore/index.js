@@ -1,4 +1,5 @@
 import { getConfig } from '../client';
+import { clearAll } from '../cache';
 import NetworkStore from './networkstore';
 import CacheStore from './cachestore';
 
@@ -6,7 +7,8 @@ const DATASTORE_POOL = new Map();
 
 export const DataStoreType = {
   Cache: 'Cache',
-  Network: 'Network'
+  Network: 'Network',
+  Sync: 'Sync'
 };
 
 export function collection(collectionName, type = DataStoreType.Cache, tag, options) {
@@ -22,7 +24,9 @@ export function collection(collectionName, type = DataStoreType.Cache, tag, opti
     if (type === DataStoreType.Network) {
       datastore = new NetworkStore(appKey, collectionName);
     } else if (type === DataStoreType.Cache) {
-      datastore = new CacheStore(appKey, collectionName, tag, options);
+      datastore = new CacheStore(appKey, collectionName, tag, Object.assign({}, options, { autoSync: true }));
+    } else if (type === DataStoreType.Sync) {
+      datastore = new CacheStore(appKey, collectionName, tag, Object.assign({}, options, { autoSync: false }));
     } else {
       throw new Error('Unknown data store type.');
     }
@@ -34,12 +38,6 @@ export function collection(collectionName, type = DataStoreType.Cache, tag, opti
 }
 
 export async function clearCache() {
-  const promises = [];
-  DATASTORE_POOL.forEach((datastore) => {
-    if (datastore instanceof CacheStore) {
-      promises.push(datastore.clear());
-    }
-  });
-  const responses = await Promise.all(promises);
-  return responses;
+  const { appKey } = getConfig();
+  await clearAll(appKey);
 }
