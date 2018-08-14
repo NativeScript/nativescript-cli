@@ -602,7 +602,7 @@ export default class Query {
    */
   join(operator, queries) {
     let that = this;
-    let filters = queries.map((query) => query.filter);
+    let filters = queries.map(query => query.filter);
 
     if (filters.length === 0) {
       that = new Query();
