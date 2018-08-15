@@ -1,6 +1,15 @@
 NativeScript CLI Changelog
 ================
 
+4.2.2 (2018, August 17)
+==
+
+### Fixed
+* [Fixed #3818](https://github.com/NativeScript/nativescript-cli/issues/3818): Unable to start application on Android device with a custom activity containing capital letters
+* [Fixed #3820](https://github.com/NativeScript/nativescript-cli/issues/3820): A command help is shown on native build error
+* [Fixed #3821](https://github.com/NativeScript/nativescript-cli/issues/3821): [Sporadic] Unable to start iOS debugger from VSCode extension
+
+
 4.2.1 (2018, August 10)
 ==
 
