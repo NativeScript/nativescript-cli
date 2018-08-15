@@ -50,6 +50,8 @@ $injector.requireCommand("run|*all", "./commands/run");
 $injector.requireCommand("run|ios", "./commands/run");
 $injector.requireCommand("run|android", "./commands/run");
 
+$injector.requireCommand("preview", "./commands/preview");
+
 $injector.requireCommand("debug|ios", "./commands/debug");
 $injector.requireCommand("debug|android", "./commands/debug");
 
@@ -127,6 +129,8 @@ $injector.requirePublicClass("androidLivesyncTool", "./services/livesync/android
 $injector.require("androidLiveSyncService", "./services/livesync/android-livesync-service");
 $injector.require("iOSLiveSyncService", "./services/livesync/ios-livesync-service");
 $injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
+$injector.require("previewAppLiveSyncService", "./services/livesync/playground/preview-app-livesync-service");
+$injector.require("previewSdkService", "./services/livesync/playground/preview-sdk-service");
 $injector.requirePublic("sysInfo", "./sys-info");
 
 $injector.require("iOSNotificationService", "./services/ios-notification-service");
