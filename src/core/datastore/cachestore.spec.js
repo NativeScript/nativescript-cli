@@ -207,6 +207,38 @@ describe('CacheStore', () => {
         });
     });
 
+    it('should return the entities that match the query but don\'t contain all matching properties', (done) => {
+      const entity1 = { _id: randomString() };
+      const entity2 = { _id: randomString() };
+      const store = new CacheStore(collection);
+      const query = new Query().equalTo('name', randomString());
+      const onNextSpy = expect.createSpy();
+
+      nock(store.client.apiHostname)
+        .get(`/appdata/${store.client.appKey}/${collection}`)
+        .reply(200, [entity1, entity2]);
+
+      store.pull()
+        .then(() => {
+          nock(store.client.apiHostname)
+            .get(`/appdata/${store.client.appKey}/${collection}`)
+            .query(query.toQueryString())
+            .reply(200, [entity1]);
+
+          store.find(query)
+            .subscribe(onNextSpy, done, () => {
+              try {
+                expect(onNextSpy.calls.length).toEqual(2);
+                expect(onNextSpy.calls[0].arguments).toEqual([[]]);
+                expect(onNextSpy.calls[1].arguments).toEqual([[entity1]]);
+                done();
+              } catch (error) {
+                done(error);
+              }
+            });
+        });
+    });
+
     describe('Delta Set', () => {
       it('should find the entities', (done) => {
         const entity1 = { _id: randomString() };
@@ -1405,31 +1437,6 @@ describe('CacheStore', () => {
         })
         .then((count) => {
           expect(count).toEqual(0);
-        });
-    });
-
-    it('should push only the entities matching the query to the backend', () => {
-      const store = new CacheStore(collection);
-      const syncStore = new SyncStore(collection);
-      const entity1 = { _id: randomString() };
-      const entity2 = { _id: randomString() };
-
-      return syncStore.save(entity1)
-        .then(() => syncStore.save(entity2))
-        .then(() => {
-          nock(store.client.apiHostname)
-            .put(`${store.pathname}/${entity1._id}`, entity1)
-            .reply(200, entity1);
-
-          const query = new Query().equalTo('_id', entity1._id);
-          return store.push(query);
-        })
-        .then((result) => {
-          expect(result).toEqual([{ _id: entity1._id, operation: SyncOperation.Update, entity: entity1 }]);
-          return store.pendingSyncCount();
-        })
-        .then((count) => {
-          expect(count).toEqual(1);
         });
     });
   });

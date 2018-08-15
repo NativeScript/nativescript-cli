@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.11.6](https://github.com/Kinvey/js-sdk/tree/v3.11.6) (2018-08-02)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.5...v3.11.6)<br/>
+
+## [3.11.5](https://github.com/Kinvey/js-sdk/tree/v3.11.5) (2018-07-25)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.4...v3.11.5)<br/>
+
+#### Bugs
+- MLIBZ-2532: Add `instanceId?: string` to `ClientConfig` TypeScript definition. [#341](https://github.com/Kinvey/js-sdk/pull/341)
+- MLIBZ-2630: Return response from backend when calling `datastore.find()`. [#342](https://github.com/Kinvey/js-sdk/pull/342)
+
+#### Enhancements
+- MLIBZ-2502: Updated [rxjs](https://github.com/ReactiveX/rxjs) to 6.x. [#340](https://github.com/Kinvey/js-sdk/pull/340)
+
+## [3.11.4](https://github.com/Kinvey/js-sdk/tree/v3.11.4) (2018-07-09)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.3...v3.11.4)<br/>
+
+#### Bugs
+- MLIBZ-2580: Use correct Authorization header value when sending a request to refresh a MIC access token. [#315](https://github.com/Kinvey/js-sdk/pull/315)
+- MLIBZ-2585: Queue network requests while in the middle of refreshing a MIC access token. [#321](https://github.com/Kinvey/js-sdk/pull/321)
+- MLIBZ-2586: Use PubNub fork to fix Live Service on Android for NativeScript. [#326](https://github.com/Kinvey/js-sdk/pull/326)
+
+## [3.11.3](https://github.com/Kinvey/js-sdk/tree/v3.11.3) (2018-06-29)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.2...v3.11.3)<br/>
+
+#### Enhancements
+- MLIBZ-2575: Validate file size before uploading. MLIBZ-2443 and MLIBZ-2444 are related. [#313](https://github.com/Kinvey/js-sdk/pull/313)
+
+#### Bugs
+- MLIBZ-2552: Don't try to access undefined. [#312](https://github.com/Kinvey/js-sdk/pull/312)
+- MLIBZ-2450: Prevent the active user from being removed when clearing the DataStore cache and local storage is used as the storage adapter. [#311](https://github.com/Kinvey/js-sdk/pull/311)
+- MLIBZ-2526: Remove `_kmd.local` property before sending entity to the backend. [#310](https://github.com/Kinvey/js-sdk/pull/310)
+
 ## [3.11.2](https://github.com/Kinvey/js-sdk/tree/v3.11.2) (2018-06-15)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.1...v3.11.2)<br/>
 

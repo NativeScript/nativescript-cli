@@ -34,7 +34,7 @@ export class CommonFileStore extends CoreFileStore {
       return Promise.reject(new KinveyError('File does not exist'));
     }
 
-    metadata.size = this.getFileSize(filePath);
+    metadata = Object.assign({ size: this.getFileSize(filePath) }, metadata);
     return super.upload(filePath, metadata, options);
   }
 

@@ -1,5 +1,6 @@
 import { request as HttpRequest } from 'tns-core-modules/http';
 import { device } from 'tns-core-modules/platform';
+import { getConnectionType, connectionType } from 'tns-core-modules/connectivity';
 import { Middleware } from '../core/request';
 
 function deviceInformation(pkg = <any>{}) {
@@ -17,6 +18,34 @@ function deviceInformation(pkg = <any>{}) {
   }).join(' ');
 }
 
+function deviceInformation2(pkg = <any>{}) {
+  let networkCondition = 'none';
+
+  switch (getConnectionType()) {
+    case connectionType.mobile:
+      networkCondition = 'cellular';
+      break;
+    case connectionType.wifi:
+      networkCondition = 'wifi';
+      break;
+    default:
+      networkCondition = 'none';
+      break;
+  }
+
+  return {
+    hv: 1,
+    md: device.model,
+    os: device.os,
+    ov: device.osVersion,
+    sdk: pkg.name,
+    pv: device.sdkVersion,
+    ty: device.deviceType,
+    nc: networkCondition,
+    id: device.uuid
+  };
+}
+
 export class HttpMiddleware extends Middleware {
   pkg: any;
 
@@ -27,7 +56,14 @@ export class HttpMiddleware extends Middleware {
 
   handle(request: any): Promise<any> {
     const { url, method, headers, body, timeout, followRedirect } = request;
-    headers['X-Kinvey-Device-Information'] = deviceInformation(this.pkg);
+    const kinveyUrlRegex = /kinvey\.com/gm;
+
+    if (kinveyUrlRegex.test(url)) {
+      // Add the X-Kinvey-Device-Information header
+      headers['X-Kinvey-Device-Information'] = deviceInformation(this.pkg);
+      headers['X-Kinvey-Device-Info'] = JSON.stringify(deviceInformation2(this.pkg));
+    }
+
     const options = {
       method: method,
       headers: headers,

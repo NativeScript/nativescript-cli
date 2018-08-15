@@ -77,7 +77,7 @@ function getPlugins(env = {}) {
           return new Buffer(JSON.stringify(pkg, null, 2));
         }
       },
-      { from: path.join(__dirname, '../../src/kinvey.d.ts') },
+      { from: path.join(__dirname, 'kinvey.d.ts') },
       { from: 'bower.json' },
       { from: '.travis.yml' },
       { from: 'LICENSE' },

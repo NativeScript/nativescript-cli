@@ -31,6 +31,7 @@ module.exports = (env = {}) => {
       'application': 'application',
       'tns-core-modules/application': 'application',
       http: 'http',
+      './kinvey-nativescript-sdk': './kinvey-nativescript-sdk',
       'tns-core-modules/http': 'http',
       'tns-core-modules/file-system': 'file-system',
       'tns-core-modules/ui/frame': 'ui/frame',
@@ -66,7 +67,7 @@ module.exports = (env = {}) => {
   bundleName = `${bundleName}.${platform}`;
   pushBundleName = `${pushBundleName}.${platform}`;
   config.entry[bundleName] = './src/index.ts';
-  config.entry[pushBundleName] = './src/push.ts';
+  config.entry[pushBundleName] = './src/push';
   return config;
 };
 
@@ -124,7 +125,8 @@ function getPlugins(env, platform) {
         }
       },
       { from: '.travis.yml' },
-      { from: path.join(__dirname, '../../src/kinvey.d.ts') },
+      { from: path.join(__dirname, 'kinvey.d.ts') },
+      { from: path.join(__dirname, 'push.d.ts') },
       { from: 'platforms/ios/**/*' },
       { from: 'LICENSE' },
       { from: 'README.md' },

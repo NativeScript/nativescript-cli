@@ -20,7 +20,7 @@ function browserDetect(ua) {
     rOpera.exec(ua) || rSafari.exec(ua) || [];
 }
 
-function deviceInformation(pkg) {
+export function deviceInformation(pkg) {
   const libraries = [];
   let browser;
   let platform;
@@ -56,7 +56,7 @@ function deviceInformation(pkg) {
   }
 
   // Return the device information string.
-  const parts = [`js-kinvey-html5-sdk/${pkg.version}`];
+  const parts = [`js-${pkg.name}/${pkg.version}`];
 
   if (libraries.length !== 0) { // Add external library information.
     parts.push(`(${libraries.sort().join(', ')})`);
@@ -69,6 +69,16 @@ function deviceInformation(pkg) {
 
     return 'unknown';
   }).join(' ');
+}
+
+export function deviceInformation2(pkg) {
+  return {
+    hv: 1,
+    os: global.navigator.appVersion,
+    ov: global.navigator.appVersion,
+    sdk: pkg.name,
+    pv: global.navigator.userAgent
+  };
 }
 
 export class Html5HttpMiddleware extends Middleware {
@@ -87,9 +97,13 @@ export class Html5HttpMiddleware extends Middleware {
         timeout,
         followRedirect
       } = request;
+      const kinveyUrlRegex = /kinvey\.com/gm;
 
-      // Add the X-Kinvey-Device-Information header
-      headers['X-Kinvey-Device-Information'] = deviceInformation(this.pkg);
+      if (kinveyUrlRegex.test(url)) {
+        // Add the X-Kinvey-Device-Information header
+        headers['X-Kinvey-Device-Information'] = deviceInformation(this.pkg);
+        headers['X-Kinvey-Device-Info'] = JSON.stringify(deviceInformation2(this.pkg));
+      }
 
       this.xhrRequest = xhr({
         method: method,
@@ -102,9 +116,11 @@ export class Html5HttpMiddleware extends Middleware {
         if (isDefined(error)) {
           if (error.code === 'ESOCKETTIMEDOUT' || error.code === 'ETIMEDOUT') {
             return reject(new TimeoutError('The network request timed out.'));
+          } else if (error.code === 'ENOENT') {
+            return reject(new NetworkConnectionError('You do not have a network connection.'));
           }
 
-          return reject(new NetworkConnectionError('There was an error connecting to the network.', error));
+          return reject(error);
         }
 
         return resolve({

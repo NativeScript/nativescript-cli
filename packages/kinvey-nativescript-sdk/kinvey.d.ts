@@ -3,7 +3,7 @@
 
 import {
   Observable
-} from 'rxjs/Observable';
+} from 'rxjs';
 
 export namespace Kinvey {
   export let appVersion: string;
@@ -30,6 +30,7 @@ export namespace Kinvey {
 
   // ClientConfig interface
   interface ClientConfig {
+    instanceId?: string;
     apiHostname?: string;
     micHostname?: string;
     appKey: string;
@@ -454,30 +455,6 @@ export namespace Kinvey {
     unregisterFromLiveService(): Promise<void>;
   }
 
-  // PushOptions interface
-  interface PushOptions {
-    android?: {
-      senderID: string
-    };
-    ios?: {
-      alert?: boolean,
-      badge?: boolean,
-      sound?: boolean
-    };
-  }
-
-  // Push class
-  export class Push {
-    private constructor();
-    static pathname: string;
-    static client: Client;
-    static isSupported(): boolean;
-    static onNotification(listener: (notifaction: any) => void);
-    static onceNotification(listener: (notifaction: any) => void);
-    static register(options: PushOptions): Promise<string>;
-    static unregister(): Promise<null>;
-  }
-
   // Error classes
   export abstract class BaseError {
     name: string;
@@ -550,6 +527,7 @@ interface RequestOptions {
 
 // ClientConfig interface
 interface ClientConfig {
+  instanceId?: string;
   apiHostname?: string;
   micHostname?: string;
   appKey: string;
@@ -968,31 +946,6 @@ export class User {
   static unregisterFromLiveService(): Promise<void>;
   registerForLiveService(): Promise<void>;
   unregisterFromLiveService(): Promise<void>;
-  static handleMICRedirectURL(redirectUri: string, micRedirectURL: string): boolean;
-}
-
-// PushOptions interface
-interface PushOptions {
-  android?: {
-    senderID: string
-  };
-  ios?: {
-    alert?: boolean,
-    badge?: boolean,
-    sound?: boolean
-  };
-}
-
-// Push class
-export class Push {
-  private constructor();
-  static pathname: string;
-  static client: Client;
-  static isSupported(): boolean;
-  static onNotification(listener: (notifaction: any) => void);
-  static onceNotification(listener: (notifaction: any) => void);
-  static register(options: PushOptions): Promise<string>;
-  static unregister(): Promise<null>;
 }
 
 // Error classes

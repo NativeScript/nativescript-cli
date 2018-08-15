@@ -776,32 +776,6 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should push only the entities matching the query to the backend', () => {
-      const store = new SyncStore(collection);
-      const entity1 = { _id: randomString() };
-      const entity2 = { _id: randomString() };
-
-      return store.save(entity1)
-        .then(() => {
-          return store.save(entity2);
-        })
-        .then(() => {
-          nock(client.apiHostname)
-            .put(`/appdata/${client.appKey}/${collection}/${entity1._id}`, entity1)
-            .reply(200, entity1);
-
-          const query = new Query().equalTo('_id', entity1._id);
-          return store.push(query);
-        })
-        .then((result) => {
-          expect(result).toEqual([{ _id: entity1._id, operation: SyncOperation.Update, entity: entity1 }]);
-          return store.pendingSyncCount();
-        })
-        .then((count) => {
-          expect(count).toEqual(1);
-        });
-    });
-
     it('should push the entities by tag', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };

@@ -1,29 +1,27 @@
 language: node_js
 node_js:
 - '9'
-
 script: echo "No tests to run"
-
 jobs:
   include:
-    - name: deploy stable
-      if: tag =~ ^((?!-\w).)*$
-      deploy:
-        provider: npm
-        email: thomas.conner@me.com
-        api_key:
-          secure: WzUGiNtUSiQ3AN6A0c46qR7JMVCEWbm5WgzD/8KXy/l5bWvHjPVXO2DpR9z9bALXWcZRTZ5oMYCvzzCANATWHJWHCCQKXtAK8hBndgV1HDakcDvbWX8gwo87ZlhkxRhkbdKlIZCe1vMw3uk3TVbm/Cz3RBHOZz6QmUXLTp8ONfxpwexDGQm3hXlnaIeCmLFHjZrvPP2J5o4ahES/gcM1UTsdz5AKvXH4mLZDgn9ef1faRY4+LHb9fwv/GXcGxiXpS8xBBifFLd5YO4S7JQcQtw86ge/Iub4XNQe+ma6YsipE1lqWtSYjj4dn/8iAjFTEjYHQau17Er3XD1FJ7Tm5uPIIRHVmJhVxDMlh/dKlZ6biKLV18W/OngYMwFLwLkJynh9zSeOpElBqhX1+aCxI34n+HgrGslVPYrkXkquCBEN2y2s9sruSJoyoea6+i8BqRiFcQ8a6j/bYfDZLs5YshQHbV8tsaJ0tTVu+/tc4l1q9jyJEaPYAPmW/SvvSXtmnTKZs46Hl2lQIAr8IgeqiBcnkSpVvpr5JpOKNPFRVAfO329+9KSO4vMetpQvNVAmOQlEnq8HbUAN5ymBH4fOLM8kD2LQ+fAwfeUSX6VfTns7LNnDn6tWeta5IVRaAv9MwrGQlC3iS67WGI3pMrkZSP+CHEcPfcOc4S0YCi7gBHOY=
-        on:
-          branch: master
-          tags: true
-    - name: deploy beta
-      if: tag =~ ^v?([0-9])*\.[0-9]*\.[0-9]*-\w+$
-      deploy:
-        provider: npm
-        tag: beta
-        email: thomas.conner@me.com
-        api_key:
-          secure: WzUGiNtUSiQ3AN6A0c46qR7JMVCEWbm5WgzD/8KXy/l5bWvHjPVXO2DpR9z9bALXWcZRTZ5oMYCvzzCANATWHJWHCCQKXtAK8hBndgV1HDakcDvbWX8gwo87ZlhkxRhkbdKlIZCe1vMw3uk3TVbm/Cz3RBHOZz6QmUXLTp8ONfxpwexDGQm3hXlnaIeCmLFHjZrvPP2J5o4ahES/gcM1UTsdz5AKvXH4mLZDgn9ef1faRY4+LHb9fwv/GXcGxiXpS8xBBifFLd5YO4S7JQcQtw86ge/Iub4XNQe+ma6YsipE1lqWtSYjj4dn/8iAjFTEjYHQau17Er3XD1FJ7Tm5uPIIRHVmJhVxDMlh/dKlZ6biKLV18W/OngYMwFLwLkJynh9zSeOpElBqhX1+aCxI34n+HgrGslVPYrkXkquCBEN2y2s9sruSJoyoea6+i8BqRiFcQ8a6j/bYfDZLs5YshQHbV8tsaJ0tTVu+/tc4l1q9jyJEaPYAPmW/SvvSXtmnTKZs46Hl2lQIAr8IgeqiBcnkSpVvpr5JpOKNPFRVAfO329+9KSO4vMetpQvNVAmOQlEnq8HbUAN5ymBH4fOLM8kD2LQ+fAwfeUSX6VfTns7LNnDn6tWeta5IVRaAv9MwrGQlC3iS67WGI3pMrkZSP+CHEcPfcOc4S0YCi7gBHOY=
-        on:
-          branch: master
-          tags: true
+  - name: deploy stable
+    if: tag =~ ^((?!-\w).)*$
+    deploy:
+      provider: npm
+      email: thomas.conner@me.com
+      api_key:
+        secure: fZ3cHtoNda61vJpBeH/H7p3d2g3PSe+1G01QT/3LuC6zTh+nuSWSeFm8nllnX+yhfzDeRMDdwjsSeTum1aHM0ckz96kRCv6NCCxE1UjqiBih3IGno65+eNh0F87BYySxQAZI6r0akgd/j1ygIBKkFSHjD1lHDp+doSl2mPVQiImD5uVJz+wLmUV6bq/SLfx6aXdP6z/ijGs8Zn1y+XFmN43lJvkVQd6ZgNeMZOPn4eXd5SQhcOSDvsHPYrHVL2LHi+ivTyNhSdTWj4k2Lh1XoWCTvcz+X0wo/RGxJA4cHDOdf0KmFmYDDyZOJ/hq2jdsMS8Y4XOtw9OodQeCwoUtewBzbDDRHtk7dk7zlohpARIIfIGroxINXNrMuDbYYPBBQWBQeiA0gizEgyilLIcV/hItKuY+Ts1RZwM/9JCUfZCqa+vQ4s5Zro+V4zwkHq87X4bB+N0qJh12S5dJdY/OJCelF3fO76ekvTZOHE3ukx62AG9FeyocSaUjvtcLpdguTZWgDryStLxtn3/WzzUltWLCBKUBMNFfXDZpRomroTfLTRgeoS9HdH37So1TcGq5l4kziAy5bw5to4llTaDlznrC3g1JQZanttFIITFSx1+oxkPdDwHXXMHP4pxFRC4WLDEesYGET676ezHRjKZ+dqnlJvaMzNyCB7mXx83yPfg=
+      on:
+        branch: master
+        tags: true
+  - name: deploy beta
+    if: tag =~ ^v?([0-9])*\.[0-9]*\.[0-9]*-\w+$
+    deploy:
+      provider: npm
+      tag: beta
+      email: thomas.conner@me.com
+      api_key:
+        secure: fZ3cHtoNda61vJpBeH/H7p3d2g3PSe+1G01QT/3LuC6zTh+nuSWSeFm8nllnX+yhfzDeRMDdwjsSeTum1aHM0ckz96kRCv6NCCxE1UjqiBih3IGno65+eNh0F87BYySxQAZI6r0akgd/j1ygIBKkFSHjD1lHDp+doSl2mPVQiImD5uVJz+wLmUV6bq/SLfx6aXdP6z/ijGs8Zn1y+XFmN43lJvkVQd6ZgNeMZOPn4eXd5SQhcOSDvsHPYrHVL2LHi+ivTyNhSdTWj4k2Lh1XoWCTvcz+X0wo/RGxJA4cHDOdf0KmFmYDDyZOJ/hq2jdsMS8Y4XOtw9OodQeCwoUtewBzbDDRHtk7dk7zlohpARIIfIGroxINXNrMuDbYYPBBQWBQeiA0gizEgyilLIcV/hItKuY+Ts1RZwM/9JCUfZCqa+vQ4s5Zro+V4zwkHq87X4bB+N0qJh12S5dJdY/OJCelF3fO76ekvTZOHE3ukx62AG9FeyocSaUjvtcLpdguTZWgDryStLxtn3/WzzUltWLCBKUBMNFfXDZpRomroTfLTRgeoS9HdH37So1TcGq5l4kziAy5bw5to4llTaDlznrC3g1JQZanttFIITFSx1+oxkPdDwHXXMHP4pxFRC4WLDEesYGET676ezHRjKZ+dqnlJvaMzNyCB7mXx83yPfg=
+      on:
+        branch: master
+        tags: true
