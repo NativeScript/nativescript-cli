@@ -433,8 +433,8 @@ export namespace Kinvey {
     isEmailVerified(): boolean;
     login(username: string, password: string): Promise<this>;
     static login(username: string, password: string): Promise<User>;
-    loginWithMIC(redirectUri: string, authorizationGrant?: AuthorizationGrant, options?: RequestOptions): Promise<this>;
-    static loginWithMIC(redirectUri: string, authorizationGrant?: AuthorizationGrant, options?: RequestOptions): Promise<User>;
+    loginWithMIC(redirectUri?: string, authorizationGrant?: AuthorizationGrant, options?: RequestOptions): Promise<this>;
+    static loginWithMIC(redirectUri?: string, authorizationGrant?: AuthorizationGrant, options?: RequestOptions): Promise<User>;
     logout(options?: RequestOptions): Promise<void>;
     static logout(options?: RequestOptions): Promise<void>;
     signup(data?: {}, options?: RequestOptions): Promise<this>;
@@ -950,8 +950,8 @@ export class User {
   isEmailVerified(): boolean;
   login(username: string, password: string): Promise<this>;
   static login(username: string, password: string): Promise<User>;
-  loginWithMIC(redirectUri: string, authorizationGrant?: AuthorizationGrant, options?: RequestOptions): Promise<this>;
-  static loginWithMIC(redirectUri: string, authorizationGrant?: AuthorizationGrant, options?: RequestOptions): Promise<User>;
+  loginWithMIC(redirectUri?: string, authorizationGrant?: AuthorizationGrant, options?: RequestOptions): Promise<this>;
+  static loginWithMIC(redirectUri?: string, authorizationGrant?: AuthorizationGrant, options?: RequestOptions): Promise<User>;
   logout(options?: RequestOptions): Promise<void>;
   static logout(options?: RequestOptions): Promise<void>;
   signup(data?: {}, options?: RequestOptions): Promise<this>;

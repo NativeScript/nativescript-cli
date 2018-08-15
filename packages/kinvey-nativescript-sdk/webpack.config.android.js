@@ -119,9 +119,15 @@ function getPlugins(env, platform) {
         from: 'package.json',
         transform: (content) => {
           const pkg = JSON.parse(content.toString('utf8'));
+          const postinstallScript = pkg.scripts.postinstall;
+          const preuninstallScript = pkg.scripts.preuninstall;
           delete pkg.private;
           delete pkg.devDependencies;
           delete pkg.scripts;
+          pkg.scripts = {
+            postinstall: postinstallScript,
+            preuninstall: preuninstallScript
+          };
           return new Buffer(JSON.stringify(pkg, null, 2));
         }
       },
@@ -129,6 +135,7 @@ function getPlugins(env, platform) {
       { from: path.join(__dirname, 'kinvey.d.ts') },
       { from: path.join(__dirname, 'push.d.ts') },
       { from: 'platforms/android/**/*' },
+      { from: 'lib/**/*' },
       { from: 'LICENSE' },
       { from: 'README.md' },
     ]),

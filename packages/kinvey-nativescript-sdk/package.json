@@ -9,6 +9,7 @@
   "main": "kinvey-nativescript-sdk.js",
   "typings": "kinvey.d.ts",
   "dependencies": {
+    "nativescript-hook": "0.2.4",
     "nativescript-sqlite": "~1.1.11",
     "nativescript-urlhandler": "^1.2.2",
     "rxjs": "~5.5.5"
@@ -23,7 +24,9 @@
     "release": "npm run release:android && npm run release:ios && ./scripts/push.sh",
     "release:android": "npm run build:android -- --env.uglify",
     "release:ios": "npm run build:ios -- --env.uglify",
-    "postrelease": "rm -rf tmp"
+    "postrelease": "rm -rf tmp",
+    "postinstall": "node lib/postinstall.js",
+    "preuninstall": "node lib/preuninstall.js"
   },
   "files": [
     "file-upload-worker-android.js",
@@ -37,15 +40,27 @@
     "push.d.ts",
     "push.ios.js",
     "push.ios.js.map",
+    "lib/before-prepare.js",
+    "lib/postinstall.js",
+    "lib/preuninstall.js",
+    "platforms/android/AndroidManifest.default.xml",
     "platforms/android/include.gradle",
     "platforms/android/AndroidManifest.xml",
     "platforms/ios/Podfile",
+    "platforms/ios/Info.default.plist",
     "platforms/ios/app.entitlements"
   ],
   "nativescript": {
+    "hooks": [
+      {
+        "type": "before-prepare",
+        "script": "lib/before-prepare.js",
+        "inject": true
+      }
+    ],
     "platforms": {
-      "ios": "3.0.0",
-      "android": "3.0.0"
+      "ios": "4.0.0",
+      "android": "4.0.0"
     }
   }
 }
