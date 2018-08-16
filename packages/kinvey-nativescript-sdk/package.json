@@ -45,7 +45,6 @@
     "lib/preuninstall.js",
     "platforms/android/AndroidManifest.default.xml",
     "platforms/android/include.gradle",
-    "platforms/android/AndroidManifest.xml",
     "platforms/ios/Podfile",
     "platforms/ios/Info.default.plist",
     "platforms/ios/app.entitlements"
@@ -53,8 +52,8 @@
   "nativescript": {
     "hooks": [
       {
-        "type": "before-prepare",
-        "script": "lib/before-prepare.js",
+        "type": "before-checkForChanges",
+        "script": "lib/before-checkForChanges.js",
         "inject": true
       }
     ],
