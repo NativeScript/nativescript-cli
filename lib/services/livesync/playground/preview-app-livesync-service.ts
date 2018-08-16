@@ -9,7 +9,8 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		private $previewSdkService: IPreviewSdkService,
-		private $projectFilesManager: IProjectFilesManager) { }
+		private $projectFilesManager: IProjectFilesManager,
+		private $qrCodeTerminalService: IQrCodeTerminalService) { }
 
 	public async initialSync(data: IPreviewAppLiveSyncData): Promise<void> {
 		this.$previewSdkService.initialize();
@@ -31,12 +32,15 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	}
 
 	private async generateQRCode(): Promise<void> {
-		console.log("QR Code was generated!!!");
+		this.$qrCodeTerminalService.generate(this.$previewSdkService.qrCodeUrl);
 	}
 
 	private async trySyncFilesOnDevice(data: IPreviewAppLiveSyncData, device: DeviceConnectedMessage, files?: string[]): Promise<void> {
+		this.$logger.info(`Start syncing changes on device ${device.deviceId}.`);
+
 		try {
 			await this.syncFilesOnDevice(data, device, files);
+			this.$logger.info(`Successfully synced changes on device ${device.deviceId}.`);
 		} catch (err) {
 			this.$logger.warn(`Unable to apply changes on device ${device.deviceId}. Error is ${err.message}.`);
 		}

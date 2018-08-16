@@ -175,3 +175,4 @@ $injector.require("iOSLogParserService", "./services/ios-log-parser-service");
 $injector.require("iOSDebuggerPortService", "./services/ios-debugger-port-service");
 
 $injector.require("pacoteService", "./services/pacote-service");
+$injector.require("qrCodeTerminalService", "./services/qr-code-terminal-service");

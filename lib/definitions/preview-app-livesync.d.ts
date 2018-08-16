@@ -10,6 +10,7 @@ declare global {
 	interface IPreviewAppLiveSyncData extends IProjectDataComposition, IAppFilesUpdaterOptionsComposition, IEnvOptions { }
 
 	interface IPreviewSdkService extends NodeJS.EventEmitter {
+		qrCodeUrl: string;
 		connectedDevices: DeviceConnectedMessage[];
 		initialize(): void;
 		applyChanges(files: FilePayload[]): Promise<void>;

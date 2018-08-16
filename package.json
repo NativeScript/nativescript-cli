@@ -64,6 +64,7 @@
     "plist-merge-patch": "0.1.1",
     "proxy-lib": "0.4.0",
     "qr-image": "3.2.0",
+    "qrcode-terminal": "0.12.0",
     "request": "2.85.0",
     "semver": "5.5.0",
     "shelljs": "0.7.6",
