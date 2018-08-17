@@ -36,6 +36,7 @@ const createTestInjector = (): IInjector => {
 			iOS: "iOS"
 		}
 	});
+	testInjector.register("previewAppLiveSyncService", {});
 
 	return testInjector;
 };

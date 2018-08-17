@@ -5,7 +5,7 @@ import { PreviewSdkEventNames, PubnubKeys } from "./preview-app-constants";
 export class PreviewSdkService extends EventEmitter implements IPreviewSdkService {
 	private messagingService: MessagingService = null;
 	private instanceId: string = null;
-	public connectedDevices: DeviceConnectedMessage[] = [];
+	public connectedDevices: Device[] = [];
 
 	constructor(private $errors: IErrors,
 		private $logger: ILogger) {
@@ -54,7 +54,7 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			},
 			onConnectedDevicesChange: (connectedDevices: ConnectedDevices) => ({ }),
 			onLogMessage: (log: string, deviceName: string) => {
-				this.$logger.trace(`device name: ${deviceName} log: ${log}`);
+				this.$logger.info(`LOG from device ${deviceName}: ${log}`);
 			},
 			onRestartMessage: () => {
 				console.log("ON RESTART MESSAGE!!!");
@@ -62,17 +62,12 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			onUncaughtErrorMessage: () => {
 				this.$errors.failWithoutHelp("UncaughtErrorMessage while preview app!!");
 			},
-			onDeviceConnected: (deviceConnectedMessage: DeviceConnectedMessage) => {
-				this.emit(PreviewSdkEventNames.DEVICE_CONNECTED, deviceConnectedMessage);
-				this.connectedDevices.push(deviceConnectedMessage);
+			onDeviceConnectedMessage: (deviceConnectedMessage: DeviceConnectedMessage) => ({ }),
+			onDeviceConnected: (device: Device) => {
+				this.emit(PreviewSdkEventNames.DEVICE_CONNECTED, device);
+				this.connectedDevices.push(device);
 			},
 			onDevicesPresence: (devices: Device[]) => {
-				this.connectedDevices.forEach(connectedDevice => {
-					const device = _.find(devices, d => d.id === connectedDevice.deviceId);
-					if (!device) {
-						_.remove(this.connectedDevices, d => d.deviceId === connectedDevice.deviceId);
-					}
-				});
 			},
 			onSendingChange: (sending: boolean) => ({ })
 		};

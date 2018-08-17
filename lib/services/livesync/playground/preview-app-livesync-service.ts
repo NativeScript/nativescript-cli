@@ -1,5 +1,5 @@
 import * as path from "path";
-import { FilePayload, DeviceConnectedMessage } from "nativescript-preview-sdk";
+import { FilePayload, Device } from "nativescript-preview-sdk";
 import { PreviewSdkEventNames } from "./preview-app-constants";
 import { APP_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME, TNS_MODULES_FOLDER_NAME } from "../../../constants";
 
@@ -8,13 +8,15 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		private $logger: ILogger,
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
+		private $projectDataService: IProjectDataService,
 		private $previewSdkService: IPreviewSdkService,
 		private $projectFilesManager: IProjectFilesManager,
 		private $qrCodeTerminalService: IQrCodeTerminalService) { }
 
 	public async initialSync(data: IPreviewAppLiveSyncData): Promise<void> {
 		this.$previewSdkService.initialize();
-		this.$previewSdkService.on(PreviewSdkEventNames.DEVICE_CONNECTED, async (device: DeviceConnectedMessage) => {
+		this.$previewSdkService.on(PreviewSdkEventNames.DEVICE_CONNECTED, async (device: Device) => {
+			this.$logger.trace("Found connected device", device);
 			await this.trySyncFilesOnDevice(data, device);
 		});
 		await this.generateQRCode();
@@ -35,22 +37,23 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		this.$qrCodeTerminalService.generate(this.$previewSdkService.qrCodeUrl);
 	}
 
-	private async trySyncFilesOnDevice(data: IPreviewAppLiveSyncData, device: DeviceConnectedMessage, files?: string[]): Promise<void> {
-		this.$logger.info(`Start syncing changes on device ${device.deviceId}.`);
+	private async trySyncFilesOnDevice(data: IPreviewAppLiveSyncData, device: Device, files?: string[]): Promise<void> {
+		this.$logger.info(`Start syncing changes on device ${device.id}.`);
 
 		try {
 			await this.syncFilesOnDevice(data, device, files);
-			this.$logger.info(`Successfully synced changes on device ${device.deviceId}.`);
+			this.$logger.info(`Successfully synced changes on device ${device.id}.`);
 		} catch (err) {
-			this.$logger.warn(`Unable to apply changes on device ${device.deviceId}. Error is ${err.message}.`);
+			this.$logger.warn(`Unable to apply changes on device ${device.id}. Error is: ${JSON.stringify(err, null, 2)}.`);
 		}
 	}
 
-	private async syncFilesOnDevice(data: IPreviewAppLiveSyncData, device: DeviceConnectedMessage, files?: string[]): Promise<void> {
-		const { appFilesUpdaterOptions, env, projectData } = data;
+	private async syncFilesOnDevice(data: IPreviewAppLiveSyncData, device: Device, files?: string[]): Promise<void> {
+		const { appFilesUpdaterOptions, env, projectDir } = data;
 		const platform = device.platform;
+		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-
+		
 		await this.preparePlatform(platform, appFilesUpdaterOptions, env, projectData);
 
 		const payloads = this.getFilePayloads(platformData, projectData, files);
@@ -64,12 +67,19 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		if (files) {
 			files = files.map(file => path.join(platformsAppFolderPath, path.relative(appFolderPath, file)));
 		} else {
-			files = this.$projectFilesManager.getProjectFiles(platformsAppFolderPath);
+			const excludedProjectDirsAndFiles = [TNS_MODULES_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME, "*.ts", "*.sass", "*.scss", ".less"];
+			files = this.$projectFilesManager.getProjectFiles(platformsAppFolderPath, excludedProjectDirsAndFiles);
 		}
 
-		const result = files
+		const filesToTransfer = files
 			.filter(file => file.indexOf(TNS_MODULES_FOLDER_NAME) === -1)
 			.filter(file => file.indexOf(APP_RESOURCES_FOLDER_NAME) === -1)
+			.filter(file => path.basename(file) !== "main.aot.js")
+			.filter(file => path.basename(file) !== ".DS_Store");
+
+		this.$logger.trace(`Transferring ${filesToTransfer.join("\n")}.`);
+
+		const payloads = filesToTransfer
 			.map(file => {
 				return {
 					event: PreviewSdkEventNames.CHANGE_EVENT_NAME,
@@ -79,7 +89,8 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 				};
 			});
 
-		return result;
+
+		return payloads;
 	}
 
 	private async preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, env: Object, projectData: IProjectData): Promise<void> {

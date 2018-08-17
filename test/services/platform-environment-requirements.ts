@@ -7,8 +7,8 @@ import { EOL } from "os";
 const platform = "android";
 const cloudBuildsErrorMessage = `In order to test your application use the $ tns login command to log in with your account and then $ tns cloud build command to build your app in the cloud.`;
 const manuallySetupErrorMessage = `To be able to build for ${platform}, verify that your environment is configured according to the system requirements described at `;
-const nonInteractiveConsoleMessageWhenExtensionIsNotInstalled = `You are missing the nativescript-cloud extension and you will not be able to execute cloud builds. Your environment is not configured properly and you will not be able to execute local builds. To continue, choose one of the following options:  ${EOL}Run $ tns setup command to run the setup script to try to automatically configure your environment for local builds.${EOL}Run $ tns cloud setup command to install the nativescript-cloud extension to configure your environment for cloud builds.${EOL}Verify that your environment is configured according to the system requirements described at `;
-const nonInteractiveConsoleMessageWhenExtensionIsInstalled = `Your environment is not configured properly and you will not be able to execute local builds. To continue, choose one of the following options: ${EOL}Run $ tns setup command to run the setup script to try to automatically configure your environment for local builds.${EOL}In order to test your application use the $ tns login command to log in with your account and then $ tns cloud build command to build your app in the cloud.${EOL}Verify that your environment is configured according to the system requirements described at .`;
+const nonInteractiveConsoleMessageWhenExtensionIsNotInstalled = `You are missing the nativescript-cloud extension and you will not be able to execute cloud builds. Your environment is not configured properly and you will not be able to execute local builds. To continue, choose one of the following options:  ${EOL}Run $ tns preview command to enjoy NativeScript without any local setup.${EOL}Run $ tns setup command to run the setup script to try to automatically configure your environment for local builds.${EOL}Run $ tns cloud setup command to install the nativescript-cloud extension to configure your environment for cloud builds.${EOL}Verify that your environment is configured according to the system requirements described at `;
+const nonInteractiveConsoleMessageWhenExtensionIsInstalled = `Your environment is not configured properly and you will not be able to execute local builds. To continue, choose one of the following options: ${EOL}Run $ tns preview command to enjoy NativeScript without any local setup.${EOL}Run $ tns setup command to run the setup script to try to automatically configure your environment for local builds.${EOL}In order to test your application use the $ tns login command to log in with your account and then $ tns cloud build command to build your app in the cloud.${EOL}Verify that your environment is configured according to the system requirements described at .`;
 
 function createTestInjector() {
 	const testInjector = new Yok();
@@ -96,7 +96,7 @@ describe("platformEnvironmentRequirements ", () => {
 			assert.isTrue(promptForChoiceData.length === 1);
 			assert.isTrue(isExtensionInstallCalled);
 			assert.deepEqual("To continue, choose one of the following options: ", promptForChoiceData[0].message);
-			assert.deepEqual(['Configure for Cloud Builds', 'Configure for Local Builds', 'Configure for Both Local and Cloud Builds', 'Skip Step and Configure Manually'], promptForChoiceData[0].choices);
+			assert.deepEqual(['Sync to Playground', 'Configure for Cloud Builds', 'Configure for Local Builds', 'Configure for Both Local and Cloud Builds', 'Skip Step and Configure Manually'], promptForChoiceData[0].choices);
 		});
 		it("should show prompt when environment is not configured and nativescript-cloud extension is installed", async () => {
 			mockDoctorService({ canExecuteLocalBuild: false });
@@ -106,7 +106,7 @@ describe("platformEnvironmentRequirements ", () => {
 			await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform));
 			assert.isTrue(promptForChoiceData.length === 1);
 			assert.deepEqual("To continue, choose one of the following options: ", promptForChoiceData[0].message);
-			assert.deepEqual(['Try Cloud Operation', 'Configure for Local Builds', 'Skip Step and Configure Manually'], promptForChoiceData[0].choices);
+			assert.deepEqual(['Sync to Playground', 'Try Cloud Operation', 'Configure for Local Builds', 'Skip Step and Configure Manually'], promptForChoiceData[0].choices);
 		});
 		it("should skip env chech when NS_SKIP_ENV_CHECK environment variable is passed", async() => {
 			process.env.NS_SKIP_ENV_CHECK = true;

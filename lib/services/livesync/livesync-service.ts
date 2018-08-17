@@ -469,7 +469,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					release: liveSyncData.release
 				},
 				env: liveSyncData.env,
-				projectData
+				projectDir: projectData.projectDir
 			});
 		});
 	}
@@ -587,7 +587,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 									release: liveSyncData.release
 								},
 								env: liveSyncData.env,
-								projectData: projectData
+								projectDir: projectData.projectDir
 							}, filesToSync);
 						});
 					} else {

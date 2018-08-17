@@ -1,6 +1,7 @@
 import { NATIVESCRIPT_CLOUD_EXTENSION_NAME, TrackActionNames } from "../constants";
 import { isInteractive } from "../common/helpers";
 import { EOL } from "os";
+import { cache } from "../common/decorators";
 
 export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequirements {
 	constructor(private $commandsService: ICommandsService,
@@ -10,11 +11,18 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		private $nativeScriptCloudExtensionService: INativeScriptCloudExtensionService,
 		private $prompter: IPrompter,
 		private $staticConfig: IStaticConfig,
-		private $analyticsService: IAnalyticsService) { }
+		private $analyticsService: IAnalyticsService,
+		private $injector: IInjector) { }
+
+	@cache()
+	private get $previewAppLiveSyncService(): IPreviewAppLiveSyncService {
+		return this.$injector.resolve("previewAppLiveSyncService");
+	}
 
 	public static CLOUD_SETUP_OPTION_NAME = "Configure for Cloud Builds";
 	public static LOCAL_SETUP_OPTION_NAME = "Configure for Local Builds";
 	public static TRY_CLOUD_OPERATION_OPTION_NAME = "Try Cloud Operation";
+	public static SYNC_TO_PREVIEW_APP_OPTION_NAME = "Sync to Playground";
 	public static MANUALLY_SETUP_OPTION_NAME = "Skip Step and Configure Manually";
 	private static BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME = "Configure for Both Local and Cloud Builds";
 	private static CHOOSE_OPTIONS_MESSAGE = "To continue, choose one of the following options: ";
@@ -23,6 +31,8 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	private static MISSING_LOCAL_AND_CLOUD_SETUP_MESSAGE = `You are missing the ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and you will not be able to execute cloud builds. ${PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE} ${PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE} `;
 	private static MISSING_LOCAL_BUT_CLOUD_SETUP_MESSAGE = `You have ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension installed, so you can execute cloud builds, but ${_.lowerFirst(PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE)}`;
 	private static RUN_TNS_SETUP_MESSAGE = 'Run $ tns setup command to run the setup script to try to automatically configure your environment for local builds.';
+	private static SYNC_TO_PREVIEW_APP_MESSAGE = `Select "Sync to Playground" to enjoy NativeScript without any local setup. All you need is a couple of companion apps installed on you devices.`;
+	private static RUN_PREVIEW_COMMAND_MESSAGE = `Run $ tns preview command to enjoy NativeScript without any local setup.`;
 
 	private cliCommandToCloudCommandName: IStringDictionary = {
 		"build": "tns cloud build",
@@ -53,10 +63,12 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			this.$logger.info(infoMessage);
 
 			const choices = this.$nativeScriptCloudExtensionService.isInstalled() ? [
+				PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_OPTION_NAME,
 				PlatformEnvironmentRequirements.TRY_CLOUD_OPERATION_OPTION_NAME,
 				PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
 				PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
 			] : [
+					PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_OPTION_NAME,
 					PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME,
 					PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
 					PlatformEnvironmentRequirements.BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME,
@@ -67,6 +79,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 
 			await this.processCloudBuildsIfNeeded(selectedOption, platform);
 			this.processManuallySetupIfNeeded(selectedOption, platform);
+			await this.processSyncToPreviewAppIfNeeded(selectedOption, projectDir);
 
 			if (selectedOption === PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME) {
 				await this.$doctorService.runSetupScript();
@@ -155,6 +168,23 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		}
 	}
 
+	private async processSyncToPreviewAppIfNeeded(selectedOption: string, projectDir: string) {
+		if (selectedOption === PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_OPTION_NAME) {
+			if (!projectDir) {
+				this.$errors.failWithoutHelp(`No project found. In order to sync to playground you need to go to project directory or specify --path option.`);
+			}
+
+			await this.$previewAppLiveSyncService.initialSync({
+				projectDir,
+				appFilesUpdaterOptions: {
+					bundle: false,
+					release: false
+				},
+				env: null
+			});
+		}
+	}
+
 	private processManuallySetup(platform?: string): void {
 		this.fail(`To be able to ${platform ? `build for ${platform}` : 'build'}, verify that your environment is configured according to the system requirements described at ${this.$staticConfig.SYS_REQUIREMENTS_LINK}. In case you have any questions, you can check our forum: 'http://forum.nativescript.org' and our public Slack channel: 'https://nativescriptcommunity.slack.com/'.`);
 	}
@@ -177,12 +207,14 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		return this.$nativeScriptCloudExtensionService.isInstalled() ?
 			this.buildMultilineMessage([
 				`${PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE} ${PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE}`,
+				PlatformEnvironmentRequirements.RUN_PREVIEW_COMMAND_MESSAGE,
 				PlatformEnvironmentRequirements.RUN_TNS_SETUP_MESSAGE,
 				this.getCloudBuildsMessage(platform),
 				this.getEnvVerificationMessage()
 			]) :
 			this.buildMultilineMessage([
 				PlatformEnvironmentRequirements.MISSING_LOCAL_AND_CLOUD_SETUP_MESSAGE,
+				PlatformEnvironmentRequirements.RUN_PREVIEW_COMMAND_MESSAGE,
 				PlatformEnvironmentRequirements.RUN_TNS_SETUP_MESSAGE,
 				`Run $ tns cloud setup command to install the ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension to configure your environment for cloud builds.`,
 				this.getEnvVerificationMessage()
@@ -193,11 +225,13 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		return this.$nativeScriptCloudExtensionService.isInstalled() ?
 			this.buildMultilineMessage([
 				`${PlatformEnvironmentRequirements.MISSING_LOCAL_BUT_CLOUD_SETUP_MESSAGE} ${PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE}`,
+				PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_MESSAGE,
 				`Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`,
 				`Select "Skip Step and Configure Manually" to disregard this option and install any required components manually.`
 			]) :
 			this.buildMultilineMessage([
 				PlatformEnvironmentRequirements.MISSING_LOCAL_AND_CLOUD_SETUP_MESSAGE,
+				PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_MESSAGE,
 				`Select "Configure for Cloud Builds" to install the ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and automatically configure your environment for cloud builds.`,
 				`Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`,
 				`Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`,
