@@ -352,7 +352,7 @@ interface IOptionalProjectChangesInfoComposition {
 }
 
 interface IPreparePlatformCoreInfo extends IPreparePlatformInfoBase, IOptionalProjectChangesInfoComposition {
-	platformSpecificData: IPlatformSpecificData
+	platformSpecificData: IPlatformSpecificData;
 }
 
 interface IPreparePlatformInfo extends IPreparePlatformInfoBase, IPlatformConfig, IPlatformTemplate, ISkipNativeCheckOptional { }
@@ -369,7 +369,10 @@ interface IOptionalFilesToRemove {
 	filesToRemove?: string[];
 }
 
-interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions, IOptionalFilesToSync, IOptionalFilesToRemove, IOptionalNativePrepareComposition { }
+interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions, IOptionalFilesToSync, IOptionalFilesToRemove, IOptionalNativePrepareComposition { 
+	skipCopyTnsModules?: boolean;
+	skipCopyAppResourcesFiles?: boolean;
+}
 
 interface IOptionalNativePrepareComposition {
 	nativePrepare?: INativePrepare;

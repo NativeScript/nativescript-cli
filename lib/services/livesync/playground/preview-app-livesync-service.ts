@@ -53,7 +53,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		const platform = device.platform;
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-		
+
 		await this.preparePlatform(platform, appFilesUpdaterOptions, env, projectData);
 
 		const payloads = this.getFilePayloads(platformData, projectData, files);
@@ -89,7 +89,6 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 				};
 			});
 
-
 		return payloads;
 	}
 
@@ -104,7 +103,9 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 			projectData,
 			nativePrepare,
 			config,
-			platformTemplate
+			platformTemplate,
+			skipCopyTnsModules: true,
+			skipCopyAppResourcesFiles: true
 		};
 		await this.$platformService.preparePlatform(prepareInfo);
 	}
