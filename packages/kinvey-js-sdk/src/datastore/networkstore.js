@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { KinveyObservable } from '../observable';
 import {
   execute,
   formatKinveyBaasUrl,
@@ -25,7 +25,7 @@ export default class NetworkStore extends DataStore {
   }
 
   find(query) {
-    const stream = Observable.create(async (observer) => {
+    const stream = KinveyObservable.create(async (observer) => {
       const url = formatKinveyBaasUrl(this.pathname, query ? query.toQueryObject() : undefined);
       const request = createRequest(RequestMethod.GET, url);
       try {
@@ -40,7 +40,7 @@ export default class NetworkStore extends DataStore {
   }
 
   count(query) {
-    const stream = Observable.create(async (observer) => {
+    const stream = KinveyObservable.create(async (observer) => {
       const url = formatKinveyBaasUrl(`${this.pathname}/_count`, query ? query.toQueryObject() : undefined);
       const request = createRequest(RequestMethod.GET, url);
       try {
@@ -55,7 +55,7 @@ export default class NetworkStore extends DataStore {
   }
 
   findById(id) {
-    const stream = Observable.create(async (observer) => {
+    const stream = KinveyObservable.create(async (observer) => {
       const url = formatKinveyBaasUrl(`${this.pathname}/${id}`);
       const request = createRequest(RequestMethod.GET, url);
       try {
@@ -70,7 +70,7 @@ export default class NetworkStore extends DataStore {
   }
 
   create(doc) {
-    const stream = Observable.create(async (observer) => {
+    const stream = KinveyObservable.create(async (observer) => {
       const url = formatKinveyBaasUrl(this.pathname);
       const request = createRequest(RequestMethod.POST, url, doc);
       try {
@@ -85,7 +85,7 @@ export default class NetworkStore extends DataStore {
   }
 
   update(doc) {
-    const stream = Observable.create(async (observer) => {
+    const stream = KinveyObservable.create(async (observer) => {
       const url = formatKinveyBaasUrl(this.pathname);
       const request = createRequest(RequestMethod.PUT, url, doc);
       try {
@@ -100,7 +100,7 @@ export default class NetworkStore extends DataStore {
   }
 
   remove(query) {
-    const stream = Observable.create(async (observer) => {
+    const stream = KinveyObservable.create(async (observer) => {
       const url = formatKinveyBaasUrl(this.pathname, query ? query.toQueryObject() : undefined);
       const request = createRequest(RequestMethod.DELETE, url);
       try {
@@ -115,7 +115,7 @@ export default class NetworkStore extends DataStore {
   }
 
   removeById(id) {
-    const stream = Observable.create(async (observer) => {
+    const stream = KinveyObservable.create(async (observer) => {
       const url = formatKinveyBaasUrl(`${this.pathname}/${id}`);
       const request = createRequest(RequestMethod.DELETE, url);
       try {

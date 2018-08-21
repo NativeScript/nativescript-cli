@@ -1,22 +1,23 @@
 import isPlainObject from 'lodash/isPlainObject';
 import isString from 'lodash/isString';
 import isEmpty from 'lodash/isEmpty';
+import * as MIC from './mic';
+import { clearCache } from '../datastore';
 import {
   execute,
   formatKinveyBaasUrl,
   KinveyRequest,
   RequestMethod,
   Auth,
-  getActiveUser,
-  setActiveUser,
-  removeActiveUser
+  getSession,
+  setSession,
+  removeSession
 } from '../http';
-import * as MIC from './mic';
 
 const NAMESPACE = 'user';
 
 export async function signup(data, options = {}) {
-  const activeUser = getActiveUser();
+  const activeUser = getSession();
   const { state = true } = options;
 
   if (state === true && activeUser) {
@@ -34,14 +35,14 @@ export async function signup(data, options = {}) {
   const user = response.data;
 
   if (state === true) {
-    setActiveUser(user);
+    setSession(user);
   }
 
   return user;
 }
 
 export async function login(username, password) {
-  const activeUser = getActiveUser();
+  const activeUser = getSession();
   let credentials = username;
 
   if (activeUser) {
@@ -52,16 +53,12 @@ export async function login(username, password) {
     credentials = { username, password };
   }
 
-  if (credentials.username && !isString(credentials.username)) {
-    throw new Error('Username must be a string.');
-  } else {
-    credentials.username = credentials.username.trim();
+  if (credentials.username) {
+    credentials.username = String(credentials.username).trim();
   }
 
-  if (credentials.password && !isString(credentials.password)) {
-    throw new Error('Password must be a string.');
-  } else {
-    credentials.password = credentials.password.trim();
+  if (credentials.password) {
+    credentials.password = String(credentials.password).trim();
   }
 
   if ((!credentials.username || credentials.username === '' || !credentials.password || credentials.password === '')
@@ -69,21 +66,20 @@ export async function login(username, password) {
     throw new Error('Username and/or password missing. Please provide both a username and password to login.');
   }
 
-  const url = formatKinveyBaasUrl(`/${NAMESPACE}/appKey/login`);
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     auth: Auth.App,
-    url,
+    url: formatKinveyBaasUrl(`/${NAMESPACE}/appKey/login`),
     body: credentials
   });
   const response = await execute(request);
   const user = response.data;
-  setActiveUser(user);
+  setSession(user);
   return user;
 }
 
 export async function loginWithMIC(redirectUri, authorizationGrant, options) {
-  const activeUser = getActiveUser();
+  const activeUser = getSession();
 
   if (activeUser) {
     throw new Error(
@@ -92,15 +88,15 @@ export async function loginWithMIC(redirectUri, authorizationGrant, options) {
   }
 
   const session = await MIC.login(redirectUri, authorizationGrant, options);
-  const socialIdentity = { kinveyAuth: session };
+  const socialIdentity = {};
+  socialIdentity[MIC.IDENTITY] = session;
   const credentials = { _socialIdentity: socialIdentity };
 
   try {
     return await login(credentials);
   } catch (error) {
     if (error.name === 'NotFoundError') {
-      await signup(credentials);
-      return await login(credentials);
+      return await signup(credentials);
     }
 
     throw error;
@@ -108,10 +104,9 @@ export async function loginWithMIC(redirectUri, authorizationGrant, options) {
 }
 
 export async function logout() {
-  const activeUser = getActiveUser();
+  const activeUser = getSession();
 
   // TODO: unregister from live service
-  // TODO: clear data store cache
 
   if (activeUser) {
     const url = formatKinveyBaasUrl(`/${NAMESPACE}/appKey/_logout`);
@@ -121,20 +116,17 @@ export async function logout() {
       url
     });
 
-    try {
-      await execute(request);
-    } catch (error) {
-      // TODO: log error
-    }
+    await execute(request);
+    removeSession();
+    await clearCache();
   }
 
-  removeActiveUser();
   return true;
 }
 
 export async function remove(id, options = {}) {
   const { hard = false } = options;
-  const activeUser = getActiveUser();
+  const activeUser = getSession();
 
   if (!isString(id)) {
     throw new Error('id must be a string.');
@@ -151,10 +143,10 @@ export async function remove(id, options = {}) {
     url
   });
   const response = await execute(request);
-  removeActiveUser();
+  removeSession();
   return response.data;
 }
 
 export {
-  getActiveUser
+  getSession as getActiveUser
 };

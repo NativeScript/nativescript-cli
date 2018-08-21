@@ -1,13 +1,19 @@
 /**
  * @private
  */
-export async function open() {
-  throw new Error('You must override the default http function.');
-}
+let popup = {
+  open() {
+    throw new Error('You must override the default popup.');
+  }
+};
 
 /**
  * @private
  */
-export async function close() {
-  throw new Error('You must override the default http function.');
+export function use(customPopup) {
+  popup = customPopup;
+}
+
+export function open(url) {
+  return popup.open(url);
 }

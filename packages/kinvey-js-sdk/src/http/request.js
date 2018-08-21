@@ -1,5 +1,8 @@
+import isFunction from 'lodash/isFunction';
 import { format } from 'url';
 import { getConfig } from '../client';
+import Kmd from '../kmd';
+import { getSession } from './session';
 import { Headers, KinveyHeaders } from './headers';
 
 /**
@@ -45,10 +48,35 @@ export function formatKinveyBaasUrl(pathname, query) {
   return getKinveyUrl(api.baas.protocol, api.baas.host, pathname, query);
 }
 
+export const Auth = {
+  App: 'App',
+  Session: 'Session'
+};
+
 export class KinveyRequest extends Request {
   constructor(request) {
     super(request);
     this.headers = new KinveyHeaders(request.headers);
-    this.headers.auth = request.auth;
+    this.auth = request.auth;
+  }
+
+  set auth(auth) {
+    if (isFunction(auth)) {
+      const value = auth();
+      this.headers.setAuthorization(value);
+    } else if (auth === Auth.App) {
+      const { appKey, appSecret } = getConfig();
+      const credentials = Buffer.from(`${appKey}:${appSecret}`).toString('base64');
+      this.headers.setAuthorization(`Basic ${credentials}`);
+    } else if (auth === Auth.Session) {
+      const session = getSession();
+
+      if (!session) {
+        throw new Error('There is no active user to authorize the request. Please login and retry the request.');
+      }
+
+      const kmd = new Kmd(session);
+      this.headers.setAuthorization(`Kinvey ${kmd.authtoken}`);
+    }
   }
 }

@@ -1,6 +1,8 @@
 import isFunction from 'lodash/isFunction';
 import { getConfig } from '../client';
 
+const TAG = 'session';
+
 let store = new Map();
 export function use(sessionStore) {
   if (sessionStore) {
@@ -8,29 +10,28 @@ export function use(sessionStore) {
   }
 }
 
-export function getActiveUser() {
+export function getSession() {
   const { appKey } = getConfig();
-  return store.get(appKey);
+  return store.get(`${appKey}${TAG}`);
 }
 
-export function setActiveUser(user) {
+export function setSession(session) {
   const { appKey } = getConfig();
 
-  if (!user) {
-    throw new Error('Please provide a valid user to set as the active user.');
+  if (session) {
+    store.set(`${appKey}${TAG}`, session);
   }
 
-  store.set(appKey, user);
-  return user;
+  return session;
 }
 
-export function removeActiveUser() {
+export function removeSession() {
   const { appKey } = getConfig();
 
   if (isFunction(store.delete)) {
-    store.delete(appKey);
+    store.delete(`${appKey}${TAG}`);
   } else {
-    store.remove(appKey);
+    store.remove(`${appKey}${TAG}`);
   }
 
   return null;

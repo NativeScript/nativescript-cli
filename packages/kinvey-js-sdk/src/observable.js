@@ -1,5 +1,18 @@
 import { Observable } from 'rxjs';
 
+export class KinveyObservable extends Observable {
+  toPromise() {
+    return new Promise((resolve, reject) => {
+      let value;
+      this.subscribe((v) => {
+        value = v;
+      }, reject, () => {
+        resolve(value);
+      });
+    });
+  }
+}
+
 /**
  * @private
  */

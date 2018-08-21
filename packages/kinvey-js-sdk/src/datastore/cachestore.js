@@ -1,8 +1,9 @@
-import { Observable } from 'rxjs';
+import { KinveyObservable } from '../observable';
 import Cache from '../cache';
 import Query from '../query';
 import Kmd from '../kmd';
-import { KinveyHeaders, RequestMethod, formatKinveyBaasUrl, execute } from '../http';
+import { RequestMethod, formatKinveyBaasUrl, execute } from '../http';
+import { KinveyHeaders } from '../http/headers';
 import NetworkStore, { createRequest } from './networkstore';
 
 const SYNC_CACHE_TAG = 'kinvey-sync';
@@ -16,29 +17,24 @@ const SyncEvent = {
 };
 
 class DataStoreCache extends Cache {
-  constructor(appKey, name, tag) {
-    let collectionName = name;
-
-    if (tag) {
-      if (!/^[a-zA-Z0-9-]+$/.test(tag)) {
-        throw new Error('A tag can only contain letters, numbers, and "-".');
-      }
-      collectionName = `${collectionName}.${tag}`;
+  constructor(appKey, collectionName, tag = '') {
+    if (tag && !/^[a-zA-Z0-9-]+$/.test(tag)) {
+      throw new Error('A tag can only contain letters, numbers, and "-".');
     }
 
-    super(appKey, collectionName);
+    super(`${appKey}${tag}`, collectionName);
   }
 }
 
 class SyncCache extends DataStoreCache {
-  constructor(appKey, collectionName) {
-    super(appKey, collectionName, SYNC_CACHE_TAG);
+  constructor(appKey, collectionName, tag) {
+    super(`${appKey}${SYNC_CACHE_TAG}`, collectionName, tag);
   }
 }
 
 class QueryCache extends DataStoreCache {
-  constructor(appKey, collectionName) {
-    super(appKey, collectionName, QUERY_CACHE_TAG);
+  constructor(appKey, collectionName, tag) {
+    super(`${appKey}${QUERY_CACHE_TAG}`, collectionName, tag);
   }
 
   updateWithResponse(doc, response) {
@@ -50,19 +46,19 @@ class QueryCache extends DataStoreCache {
 }
 
 export default class CacheStore extends NetworkStore {
-  constructor(appKey, collectionName, tag, options = { useDeltaSet: false, useAutoPagination: false, autoSync: false }) {
+  constructor(appKey, collectionName, tag, options = { useDeltaSet: false, useAutoPagination: false, autoSync: true }) {
     super(appKey, collectionName);
     this.cache = new DataStoreCache(appKey, collectionName, tag);
-    this.syncCache = new SyncCache(appKey, collectionName);
-    this.queryCache = new QueryCache(appKey, collectionName);
+    this.syncCache = new SyncCache(appKey, collectionName, tag);
+    this.queryCache = new QueryCache(appKey, collectionName, tag);
     this.useDeltaSet = options.useDeltaSet === true;
     this.useAutoPagination = options.useAutoPagination === true;
     this.autoSync = options.autoSync === true;
   }
 
-  find(query, options = { autoSync: false }) {
-    const { autoSync = this.autoSync } = options;
-    const stream = Observable.create(async (observer) => {
+  find(query, options = { autoSync: this.autoSync }) {
+    const { autoSync } = options;
+    const stream = KinveyObservable.create(async (observer) => {
       try {
         const cachedDocs = await this.cache.find(query);
         observer.next(cachedDocs);
@@ -81,9 +77,9 @@ export default class CacheStore extends NetworkStore {
     return stream;
   }
 
-  count(query, options = { autoSync: false }) {
-    const { autoSync = this.autoSync } = options;
-    const stream = Observable.create(async (observer) => {
+  count(query, options = { autoSync: this.autoSync }) {
+    const { autoSync } = options;
+    const stream = KinveyObservable.create(async (observer) => {
       try {
         const cacheCount = await this.cache.count(query);
         observer.next(cacheCount);
@@ -102,9 +98,9 @@ export default class CacheStore extends NetworkStore {
     return stream;
   }
 
-  findById(id, options = { autoSync: false }) {
-    const { autoSync = this.autoSync } = options;
-    const stream = Observable.create(async (observer) => {
+  findById(id, options = { autoSync: this.autoSync }) {
+    const { autoSync } = options;
+    const stream = KinveyObservable.create(async (observer) => {
       try {
         const cachedDoc = await this.cache.findById(id);
         observer.next(cachedDoc);
@@ -124,9 +120,9 @@ export default class CacheStore extends NetworkStore {
     return stream;
   }
 
-  create(doc, options = { autoSync: false }) {
-    const { autoSync = this.autoSync } = options;
-    const stream = Observable.create(async (observer) => {
+  create(doc, options = { autoSync: this.autoSync }) {
+    const { autoSync } = options;
+    const stream = KinveyObservable.create(async (observer) => {
       try {
         const cachedDoc = await this.cache.save(doc);
         await this.addCreateSyncEvent(cachedDoc);
@@ -147,9 +143,9 @@ export default class CacheStore extends NetworkStore {
     return stream;
   }
 
-  update(doc, options = { autoSync: false }) {
-    const { autoSync = this.autoSync } = options;
-    const stream = Observable.create(async (observer) => {
+  update(doc, options = { autoSync: this.autoSync }) {
+    const { autoSync } = options;
+    const stream = KinveyObservable.create(async (observer) => {
       try {
         const cachedDoc = await this.cache.save(doc);
         await this.addUpdateSyncEvent(cachedDoc);
@@ -170,9 +166,9 @@ export default class CacheStore extends NetworkStore {
     return stream;
   }
 
-  remove(query, options = { autoSync: false }) {
-    const { autoSync = this.autoSync } = options;
-    const stream = Observable.create(async (observer) => {
+  remove(query, options = { autoSync: this.autoSync }) {
+    const { autoSync } = options;
+    const stream = KinveyObservable.create(async (observer) => {
       try {
         const docs = await this.cache.find(query);
 
@@ -205,9 +201,9 @@ export default class CacheStore extends NetworkStore {
     return stream;
   }
 
-  removeById(id, options = { autoSync: false }) {
-    const { autoSync = this.autoSync } = options;
-    const stream = Observable.create(async (observer) => {
+  removeById(id, options = { autoSync: this.autoSync }) {
+    const { autoSync } = options;
+    const stream = KinveyObservable.create(async (observer) => {
       try {
         const doc = await this.cache.findById(id);
 
@@ -242,7 +238,7 @@ export default class CacheStore extends NetworkStore {
   }
 
   clear() {
-    const stream = Observable.create(async (observer) => {
+    const stream = KinveyObservable.create(async (observer) => {
       try {
         await Promise.all([
           this.syncCache.clear(),
@@ -279,7 +275,7 @@ export default class CacheStore extends NetworkStore {
           if (event === SyncEvent.Delete) {
             try {
               // Remove the doc from the backend
-              await super.removeById(_id);
+              await super.removeById(_id).toPromise();
 
               // Remove the sync doc
               await this.syncCache.removeById(_id);
@@ -306,7 +302,7 @@ export default class CacheStore extends NetworkStore {
 
               // Save the doc to the backend
               if (event === SyncEvent.Create) {
-                const kmd = new Kmd(doc._kmd);
+                const kmd = new Kmd(doc);
 
                 if (kmd.isLocal()) {
                   local = true;
@@ -316,11 +312,9 @@ export default class CacheStore extends NetworkStore {
                   delete doc._kmd.local;
                 }
 
-                const response = await super.create(doc);
-                doc = response.data;
+                doc = await super.create(doc).toPromise();
               } else {
-                const response = await super.update(doc);
-                doc = response.data;
+                doc = await super.update(doc).toPromise();
               }
 
               // Remove the sync doc
@@ -401,8 +395,6 @@ export default class CacheStore extends NetworkStore {
 
       // TODO: handle ParameterValueOutOfRangeError
 
-      // Find with delta set
-
       if (query) {
         queryObject = Object.assign({}, query.toQueryObject(), queryObject);
       }
@@ -434,7 +426,9 @@ export default class CacheStore extends NetworkStore {
       let docs = [];
 
       // Get the total count of docs
-      const response = await super.count(query);
+      const url = formatKinveyBaasUrl(`${this.pathname}/_count`, query ? query.toQueryObject() : undefined);
+      const request = createRequest(RequestMethod.GET, url);
+      const response = await execute(request);
       const count = 'count' in response.data ? response.data.count : Infinity;
 
       // Update the query cache
@@ -454,7 +448,9 @@ export default class CacheStore extends NetworkStore {
     }
 
     // Find the docs on the backend
-    const response = await super.find(query);
+    const url = formatKinveyBaasUrl(this.pathname, query ? query.toQueryObject() : undefined);
+    const request = createRequest(RequestMethod.GET, url);
+    const response = await execute(request);
     const docs = response.data;
 
     // Update the query cache
