@@ -1,6 +1,0 @@
-{
-  "name" : "secure",
-  "main" : "secure",
-  "types": "secure.d.ts",
-  "nativescript": {}
-}
