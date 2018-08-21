@@ -18,7 +18,7 @@ declare global {
 		extractPackage(packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void>;
 	}
 
-	interface IPacoteBaseOptions {
+	interface IPacoteBaseOptions extends IProxySettingsBase {
 		/**
 		 * The path to npm cache
 		 */
