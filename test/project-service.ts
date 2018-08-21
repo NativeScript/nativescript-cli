@@ -208,14 +208,14 @@ describe("Project Service Tests", () => {
 			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", defaultSpecificVersionTemplatePath);
 		});
 
-		it("creates valid project from a template without App_Resources", async () => {
-			const projectIntegrationTest = new ProjectIntegrationTest();
-			const tempFolder = temp.mkdirSync("project");
-			const projectName = "myapp";
+		// it("creates valid project from a template without App_Resources", async () => {
+		// 	const projectIntegrationTest = new ProjectIntegrationTest();
+		// 	const tempFolder = temp.mkdirSync("project");
+		// 	const projectName = "myapp";
 
-			await projectIntegrationTest.createProject({ projectName: projectName, template: noAppResourcesTemplateName + "@2.0.0", pathToProject: tempFolder });
-			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", noAppResourcesTemplatePath);
-		});
+		// 	await projectIntegrationTest.createProject({ projectName: projectName, template: noAppResourcesTemplateName + "@2.0.0", pathToProject: tempFolder });
+		// 	await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", noAppResourcesTemplatePath);
+		// });
 
 		it("creates valid project from typescript template", async () => {
 			const projectIntegrationTest = new ProjectIntegrationTest();
@@ -288,38 +288,6 @@ describe("Project Service Tests", () => {
 
 			await projectIntegrationTest.createProject({ projectName: projectName, template: tempDir, pathToProject: tempFolder });
 			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", tempDir);
-		});
-
-		it("creates valid project from tarball", async () => {
-			const projectIntegrationTest = new ProjectIntegrationTest();
-			const tempFolder = temp.mkdirSync("projectLocalDir");
-			const projectName = "myapp";
-			const template = "https://github.com/NativeScript/template-hello-world/tarball/master";
-
-			await projectIntegrationTest.createProject({
-				projectName: projectName,
-				template,
-				pathToProject: tempFolder
-			});
-
-			const projectSourceDirectory = await prepareTestingPath(projectIntegrationTest.testInjector, template, constants.RESERVED_TEMPLATE_NAMES["default"]);
-			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", projectSourceDirectory);
-		});
-
-		it("creates valid project from git url", async () => {
-			const projectIntegrationTest = new ProjectIntegrationTest();
-			const tempFolder = temp.mkdirSync("projectLocalDir");
-			const projectName = "myapp";
-			const template = "https://github.com/NativeScript/template-hello-world.git";
-
-			await projectIntegrationTest.createProject({
-				projectName: projectName,
-				template,
-				pathToProject: tempFolder
-			});
-
-			const projectSourceDirectory = await prepareTestingPath(projectIntegrationTest.testInjector, template, constants.RESERVED_TEMPLATE_NAMES["default"]);
-			await projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", projectSourceDirectory);
 		});
 
 		it("creates valid project with specified id from default template", async () => {
