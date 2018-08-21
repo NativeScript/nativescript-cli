@@ -1,8 +1,9 @@
-import isFunction from 'lodash/isFunction';
+import { KinveyObservable } from '../observable';
 import Cache from '../cache';
 import Query from '../query';
 import Kmd from '../kmd';
-import { KinveyHeaders, RequestMethod, formatKinveyBaasUrl, execute } from '../http';
+import { RequestMethod, formatKinveyBaasUrl, execute } from '../http';
+import { KinveyHeaders } from '../http/headers';
 import NetworkStore, { createRequest } from './networkstore';
 
 const SYNC_CACHE_TAG = 'kinvey-sync';
@@ -16,29 +17,24 @@ const SyncEvent = {
 };
 
 class DataStoreCache extends Cache {
-  constructor(appKey, name, tag) {
-    let collectionName = name;
-
-    if (tag) {
-      if (!/^[a-zA-Z0-9-]+$/.test(tag)) {
-        throw new Error('A tag can only contain letters, numbers, and "-".');
-      }
-      collectionName = `${collectionName}.${tag}`;
+  constructor(appKey, collectionName, tag = '') {
+    if (tag && !/^[a-zA-Z0-9-]+$/.test(tag)) {
+      throw new Error('A tag can only contain letters, numbers, and "-".');
     }
 
-    super(appKey, collectionName);
+    super(`${appKey}${tag}`, collectionName);
   }
 }
 
 class SyncCache extends DataStoreCache {
-  constructor(appKey, collectionName) {
-    super(appKey, collectionName, SYNC_CACHE_TAG);
+  constructor(appKey, collectionName, tag) {
+    super(`${appKey}${SYNC_CACHE_TAG}`, collectionName, tag);
   }
 }
 
 class QueryCache extends DataStoreCache {
-  constructor(appKey, collectionName) {
-    super(appKey, collectionName, QUERY_CACHE_TAG);
+  constructor(appKey, collectionName, tag) {
+    super(`${appKey}${QUERY_CACHE_TAG}`, collectionName, tag);
   }
 
   updateWithResponse(doc, response) {
@@ -50,147 +46,211 @@ class QueryCache extends DataStoreCache {
 }
 
 export default class CacheStore extends NetworkStore {
-  constructor(appKey, collectionName, tag, options = { useDeltaSet: false, useAutoPagination: false, autoSync: false }) {
+  constructor(appKey, collectionName, tag, options = { useDeltaSet: false, useAutoPagination: false, autoSync: true }) {
     super(appKey, collectionName);
     this.cache = new DataStoreCache(appKey, collectionName, tag);
-    this.syncCache = new SyncCache(appKey, collectionName);
-    this.queryCache = new QueryCache(appKey, collectionName);
+    this.syncCache = new SyncCache(appKey, collectionName, tag);
+    this.queryCache = new QueryCache(appKey, collectionName, tag);
     this.useDeltaSet = options.useDeltaSet === true;
     this.useAutoPagination = options.useAutoPagination === true;
     this.autoSync = options.autoSync === true;
   }
 
-  async find(query, options = { autoSync: false, cacheCallback: () => {} }) {
-    const { cacheCallback } = options;
+  find(query, options = { autoSync: this.autoSync }) {
+    const { autoSync } = options;
+    const stream = KinveyObservable.create(async (observer) => {
+      try {
+        const cachedDocs = await this.cache.find(query);
+        observer.next(cachedDocs);
 
-    if (isFunction(cacheCallback)) {
-      const cachedDocs = await this.cache.find(query);
-      cacheCallback(cachedDocs);
-    }
-
-    await this.pull(query, options);
-    return this.cache.find(query);
-  }
-
-  async count(query, options = { autoSync: false, cacheCallback: () => {} }) {
-    const { cacheCallback } = options;
-
-    if (isFunction(cacheCallback)) {
-      const cacheCount = await this.cache.count(query);
-      cacheCallback(cacheCount);
-    }
-
-    await this.pull(query, options);
-    return this.cache.count(query);
-  }
-
-  async findById(id, options = { cacheCallback: () => {} }) {
-    const { cacheCallback } = options;
-
-    if (isFunction(cacheCallback)) {
-      const cacheDoc = await this.cache.findById(id);
-      cacheCallback(cacheDoc);
-    }
-
-    const query = new Query().equalTo('_id', id);
-    await this.pull(query, options);
-    return this.cache.findById(id);
-  }
-
-  async create(doc) {
-    const cachedDoc = await this.cache.save(doc);
-    await this.addCreateSyncEvent(cachedDoc);
-
-    if (this.autoSync) {
-      const query = new Query().equalTo('_id', cachedDoc._id);
-      await this.push(query);
-    }
-
-    return cachedDoc;
-  }
-
-  async update(doc) {
-    const cachedDoc = await this.cache.save(doc);
-    await this.addUpdateSyncEvent(cachedDoc);
-
-    if (this.autoSync) {
-      const query = new Query().equalTo('_id', cachedDoc._id);
-      await this.push(query);
-    }
-
-    return cachedDoc;
-  }
-
-  async remove(query) {
-    // Find the docs in the cache
-    const docs = await this.cache.find(query);
-
-    if (docs.length > 0) {
-      // Remove the docs from the cache
-      await this.syncCache.remove(query);
-      const count = await this.cache.remove(query);
-
-      // Add delete events to the sync cache
-      const syncDocs = await this.addDeleteSyncEvent(docs);
-
-      if (syncDocs.length > 0 && this.autoSync) {
-        // Push the sync events
-        const pushQuery = new Query().contains('_id', syncDocs.map(doc => doc._id));
-        const pushResults = await this.push(pushQuery);
-
-        // Process push results
-        return pushResults.reduce((count, pushResult) => {
-          if (pushResult.error) {
-            return count - 1;
-          }
-
-          return count;
-        }, count);
-      }
-
-      return count;
-    }
-
-    return 0;
-  }
-
-  async removeById(id) {
-    // Find the doc in the cache
-    const doc = await this.cache.findById(id);
-
-    if (doc) {
-      // Remove the doc from the cache
-      await this.syncCache.removeById(id);
-      let count = await this.cache.removeById(id);
-
-      // Add a delete event to the sync cache
-      await this.addDeleteSyncEvent(doc);
-
-      if (this.autoSync) {
-        // Push the sync event
-        const query = new Query().equalTo('_id', doc._id);
-        const pushResults = await this.push(query);
-
-        // Process push result
-        if (pushResults.length > 0) {
-          const pushResult = pushResults.shift();
-
-          if (pushResult.error) {
-            count -= 1;
-          }
+        if (autoSync) {
+          await this.pull(query, options);
+          const docs = await this.cache.find(query);
+          observer.next(docs);
         }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
       }
-
-      return count;
-    }
-
-    return 0;
+    });
+    return stream;
   }
 
-  async clear() {
-    await this.syncCache.clear();
-    await this.queryCache.clear();
-    return this.cache.clear();
+  count(query, options = { autoSync: this.autoSync }) {
+    const { autoSync } = options;
+    const stream = KinveyObservable.create(async (observer) => {
+      try {
+        const cacheCount = await this.cache.count(query);
+        observer.next(cacheCount);
+
+        if (autoSync) {
+          await this.pull(query, options);
+          const count = await this.cache.count(query);
+          observer.next(count);
+        }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
+  }
+
+  findById(id, options = { autoSync: this.autoSync }) {
+    const { autoSync } = options;
+    const stream = KinveyObservable.create(async (observer) => {
+      try {
+        const cachedDoc = await this.cache.findById(id);
+        observer.next(cachedDoc);
+
+        if (autoSync) {
+          const query = new Query().equalTo('_id', id);
+          await this.pull(query, options);
+          const doc = await this.cache.findById(id);
+          observer.next(doc);
+        }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
+  }
+
+  create(doc, options = { autoSync: this.autoSync }) {
+    const { autoSync } = options;
+    const stream = KinveyObservable.create(async (observer) => {
+      try {
+        const cachedDoc = await this.cache.save(doc);
+        await this.addCreateSyncEvent(cachedDoc);
+        observer.next(cachedDoc);
+
+        if (autoSync) {
+          const query = new Query().equalTo('_id', cachedDoc._id);
+          const pull = await this.pull(query);
+          const doc = pull.shift();
+          observer.next(doc);
+        }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
+  }
+
+  update(doc, options = { autoSync: this.autoSync }) {
+    const { autoSync } = options;
+    const stream = KinveyObservable.create(async (observer) => {
+      try {
+        const cachedDoc = await this.cache.save(doc);
+        await this.addUpdateSyncEvent(cachedDoc);
+        observer.next(cachedDoc);
+
+        if (autoSync) {
+          const query = new Query().equalTo('_id', cachedDoc._id);
+          const pull = await this.pull(query);
+          const doc = pull.shift();
+          observer.next(doc);
+        }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
+  }
+
+  remove(query, options = { autoSync: this.autoSync }) {
+    const { autoSync } = options;
+    const stream = KinveyObservable.create(async (observer) => {
+      try {
+        const docs = await this.cache.find(query);
+
+        if (docs.length > 0) {
+          await this.syncCache.remove(query);
+          let count = await this.cache.remove(query);
+          const syncDocs = await this.addDeleteSyncEvent(docs);
+
+          if (syncDocs.length > 0 && autoSync) {
+            const pushQuery = new Query().contains('_id', syncDocs.map(doc => doc._id));
+            const pushResults = await this.push(pushQuery);
+            count = pushResults.reduce((count, pushResult) => {
+              if (pushResult.error) {
+                return count - 1;
+              }
+              return count;
+            }, count);
+          }
+
+          observer.next(count);
+        } else {
+          observer.next(0);
+        }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
+  }
+
+  removeById(id, options = { autoSync: this.autoSync }) {
+    const { autoSync } = options;
+    const stream = KinveyObservable.create(async (observer) => {
+      try {
+        const doc = await this.cache.findById(id);
+
+        if (doc) {
+          await this.syncCache.removeById(id);
+          let count = await this.cache.removeById(id);
+          await this.addDeleteSyncEvent(doc);
+
+          if (autoSync) {
+            const query = new Query().equalTo('_id', doc._id);
+            const pushResults = await this.push(query);
+
+            if (pushResults.length > 0) {
+              const pushResult = pushResults.shift();
+              if (pushResult.error) {
+                count -= 1;
+              }
+            }
+          }
+
+          observer.next(count);
+        } else {
+          observer.next(0);
+        }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
+  }
+
+  clear() {
+    const stream = KinveyObservable.create(async (observer) => {
+      try {
+        await Promise.all([
+          this.syncCache.clear(),
+          this.queryCache.clear(),
+          this.cache.clear()
+        ]);
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
   }
 
   async push() {
@@ -215,7 +275,7 @@ export default class CacheStore extends NetworkStore {
           if (event === SyncEvent.Delete) {
             try {
               // Remove the doc from the backend
-              await super.removeById(_id);
+              await super.removeById(_id).toPromise();
 
               // Remove the sync doc
               await this.syncCache.removeById(_id);
@@ -242,7 +302,7 @@ export default class CacheStore extends NetworkStore {
 
               // Save the doc to the backend
               if (event === SyncEvent.Create) {
-                const kmd = new Kmd(doc._kmd);
+                const kmd = new Kmd(doc);
 
                 if (kmd.isLocal()) {
                   local = true;
@@ -252,11 +312,9 @@ export default class CacheStore extends NetworkStore {
                   delete doc._kmd.local;
                 }
 
-                const response = await super.create(doc);
-                doc = response.data;
+                doc = await super.create(doc).toPromise();
               } else {
-                const response = await super.update(doc);
-                doc = response.data;
+                doc = await super.update(doc).toPromise();
               }
 
               // Remove the sync doc
@@ -337,8 +395,6 @@ export default class CacheStore extends NetworkStore {
 
       // TODO: handle ParameterValueOutOfRangeError
 
-      // Find with delta set
-
       if (query) {
         queryObject = Object.assign({}, query.toQueryObject(), queryObject);
       }
@@ -370,7 +426,9 @@ export default class CacheStore extends NetworkStore {
       let docs = [];
 
       // Get the total count of docs
-      const response = await super.count(query);
+      const url = formatKinveyBaasUrl(`${this.pathname}/_count`, query ? query.toQueryObject() : undefined);
+      const request = createRequest(RequestMethod.GET, url);
+      const response = await execute(request);
       const count = 'count' in response.data ? response.data.count : Infinity;
 
       // Update the query cache
@@ -390,7 +448,9 @@ export default class CacheStore extends NetworkStore {
     }
 
     // Find the docs on the backend
-    const response = await super.find(query);
+    const url = formatKinveyBaasUrl(this.pathname, query ? query.toQueryObject() : undefined);
+    const request = createRequest(RequestMethod.GET, url);
+    const response = await execute(request);
     const docs = response.data;
 
     // Update the query cache

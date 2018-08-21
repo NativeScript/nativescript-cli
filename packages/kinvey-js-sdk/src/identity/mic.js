@@ -4,28 +4,14 @@ import { parse } from 'url';
 import { getConfig } from '../client';
 import {
   execute,
-  getKinveyClientAuthorizationHeader,
   formatKinveyAuthUrl,
-  Request,
-  RequestMethod,
-  Headers
+  KinveyRequest,
+  RequestMethod
 } from '../http';
-import * as CorePopup from './popup';
+import { open } from './popup';
 
-
+// Export identity
 export const IDENTITY = 'kinveyAuth';
-
-/**
- * @private
- */
-let Popup = CorePopup;
-
-/**
- * @private
- */
-export function use(CustomPopup) {
-  Popup = CustomPopup;
-}
 
 /**
  * Enum for Mobile Identity Connect authorization grants.
@@ -39,21 +25,21 @@ export const AuthorizationGrant = {
 Object.freeze(AuthorizationGrant);
 
 async function getTempLoginUrl(clientId, redirectUri, version) {
-  const { appSecret } = getConfig();
-  const url = formatKinveyAuthUrl(urljoin(`v${version}`, '/oauth/auth'));
-  const headers = new Headers({ 'Content-Type': 'application/x-www-form-urlencoded' });
-  const authorizationHeader = getKinveyClientAuthorizationHeader(clientId, appSecret);
-  headers.set(authorizationHeader.name, authorizationHeader.value);
-  const request = new Request({
+  const request = new KinveyRequest({
     method: RequestMethod.POST,
-    headers,
-    url,
+    auth() {
+      const { appSecret } = getConfig();
+      const credentials = Buffer.from(`${clientId}:${appSecret}`).toString('base64');
+      return `Basic ${credentials}`;
+    },
+    url: formatKinveyAuthUrl(urljoin(`v${version}`, '/oauth/auth')),
     body: {
       client_id: clientId,
       redirect_uri: redirectUri,
       response_type: 'code'
     }
   });
+  request.headers.set('Content-Type', 'application/x-www-form-urlencoded');
   const response = await execute(request);
   return response.data;
 }
@@ -67,13 +53,13 @@ function loginWithPopup(clientId, redirectUri, version) {
       scope: 'openid'
     };
     const url = formatKinveyAuthUrl(urljoin(`v${version}`, '/oauth/auth'), query);
-    const popup = await Popup.open(url);
+    const popup = open(url);
     let redirected = false;
 
-    popup.on('load', (event) => {
+    popup.onLoaded((event) => {
       try {
         if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
-          const parsedUrl = url.parse(event.url, true);
+          const parsedUrl = parse(event.url, true);
           // eslint-disable-next-line camelcase
           const { code, error, error_description } = parsedUrl.query || {};
 
@@ -94,7 +80,7 @@ function loginWithPopup(clientId, redirectUri, version) {
       }
     });
 
-    popup.on('close', () => {
+    popup.onClosed(() => {
       if (!redirected) {
         popup.removeAllListeners();
         reject(new Error('Login has been cancelled.'));
@@ -104,13 +90,13 @@ function loginWithPopup(clientId, redirectUri, version) {
 }
 
 async function loginWithUrl(url, username, password, clientId, redirectUri) {
-  const { appSecret } = getConfig();
-  const headers = new Headers({ 'Content-Type': 'application/x-www-form-urlencoded' });
-  const authorizationHeader = getKinveyClientAuthorizationHeader(clientId, appSecret);
-  headers.set(authorizationHeader.name, authorizationHeader.value);
-  const request = new Request({
+  const request = new KinveyRequest({
     method: RequestMethod.POST,
-    headers,
+    auth() {
+      const { appSecret } = getConfig();
+      const credentials = Buffer.from(`${clientId}:${appSecret}`).toString('base64');
+      return `Basic ${credentials}`;
+    },
     url,
     body: {
       client_id: clientId,
@@ -121,6 +107,7 @@ async function loginWithUrl(url, username, password, clientId, redirectUri) {
       scope: 'openid'
     }
   });
+  request.headers.set('Content-Type', 'application/x-www-form-urlencoded');
   const response = await execute(request);
   const location = response.headers.get('location');
   const parsedLocation = parse(location, true) || {};
@@ -129,15 +116,13 @@ async function loginWithUrl(url, username, password, clientId, redirectUri) {
 }
 
 async function getTokenWithCode(code, clientId, redirectUri) {
-  const { appSecret } = getConfig();
-  const url = formatKinveyAuthUrl('/oauth/token');
-  const headers = new Headers({ 'Content-Type': 'application/x-www-form-urlencoded' });
-  const authorizationHeader = getKinveyClientAuthorizationHeader(clientId, appSecret);
-  headers.set(authorizationHeader.name, authorizationHeader.value);
-  const request = new Request({
+  const request = new KinveyRequest({
     method: RequestMethod.POST,
-    headers,
-    url,
+    url: formatKinveyAuthUrl('/oauth/token'),
+    auth() {
+      const { appSecret } = getConfig();
+      return Buffer.from(`${clientId}:${appSecret}`).toString('base64');
+    },
     body: {
       grant_type: 'authorization_code',
       client_id: clientId,
@@ -145,6 +130,7 @@ async function getTokenWithCode(code, clientId, redirectUri) {
       code
     }
   });
+  request.headers.set('Content-Type', 'application/x-www-form-urlencoded');
   const response = await execute(request);
   return response.data;
 }
@@ -154,7 +140,7 @@ export async function login(
   authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage,
   options = {}) {
   const { appKey } = getConfig();
-  const { micId, version, username, password } = options;
+  const { micId, version = 3, username, password } = options;
   let clientId = appKey;
   let code;
 
