@@ -228,6 +228,8 @@ describe("iOSProjectService", () => {
     <string>app-store</string>
     <key>uploadBitcode</key>
     <false/>
+    <key>compileBitcode</key>
+    <false/>
     <key>uploadSymbols</key>
     <false/>
 </dict>
@@ -242,6 +244,8 @@ describe("iOSProjectService", () => {
     <key>method</key>
     <string>app-store</string>
     <key>uploadBitcode</key>
+    <false/>
+    <key>compileBitcode</key>
     <false/>
     <key>uploadSymbols</key>
     <false/>
