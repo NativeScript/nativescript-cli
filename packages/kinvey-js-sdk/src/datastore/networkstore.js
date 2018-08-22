@@ -69,63 +69,39 @@ export default class NetworkStore extends DataStore {
     return stream;
   }
 
-  create(doc) {
-    const stream = KinveyObservable.create(async (observer) => {
-      const url = formatKinveyBaasUrl(this.pathname);
-      const request = createRequest(RequestMethod.POST, url, doc);
-      try {
-        const response = await execute(request);
-        observer.next(response.data);
-        observer.complete();
-      } catch (error) {
-        observer.error(error);
-      }
-    });
-    return stream;
+  async create(doc) {
+    const url = formatKinveyBaasUrl(this.pathname);
+    const request = createRequest(RequestMethod.POST, url, doc);
+    const response = await execute(request);
+    return response.data;
   }
 
-  update(doc) {
-    const stream = KinveyObservable.create(async (observer) => {
-      const url = formatKinveyBaasUrl(`${this.pathname}/${doc._id}`);
-      const request = createRequest(RequestMethod.PUT, url, doc);
-      try {
-        const response = await execute(request);
-        observer.next(response.data);
-        observer.complete();
-      } catch (error) {
-        observer.error(error);
-      }
-    });
-    return stream;
+  async update(doc) {
+    const url = formatKinveyBaasUrl(`${this.pathname}/${doc._id}`);
+    const request = createRequest(RequestMethod.PUT, url, doc);
+    const response = await execute(request);
+    return response.data;
   }
 
-  remove(query) {
-    const stream = KinveyObservable.create(async (observer) => {
-      const url = formatKinveyBaasUrl(this.pathname, query ? query.toQueryObject() : undefined);
-      const request = createRequest(RequestMethod.DELETE, url);
-      try {
-        const response = await execute(request);
-        observer.next(response.data);
-        observer.complete();
-      } catch (error) {
-        observer.error(error);
-      }
-    });
-    return stream;
+  save(doc, options) {
+    if (doc._id) {
+      return this.update(doc, options);
+    }
+
+    return this.create(doc, options);
   }
 
-  removeById(id) {
-    const stream = KinveyObservable.create(async (observer) => {
-      const url = formatKinveyBaasUrl(`${this.pathname}/${id}`);
-      const request = createRequest(RequestMethod.DELETE, url);
-      try {
-        const response = await execute(request);
-        observer.next(response.data);
-        observer.complete();
-      } catch (error) {
-        observer.error(error);
-      }
-    });
-    return stream;
+  async remove(query) {
+    const url = formatKinveyBaasUrl(this.pathname, query ? query.toQueryObject() : undefined);
+    const request = createRequest(RequestMethod.DELETE, url);
+    const response = await execute(request);
+    return response.data;
+  }
+
+  async removeById(id) {
+    const url = formatKinveyBaasUrl(`${this.pathname}/${id}`);
+    const request = createRequest(RequestMethod.DELETE, url);
+    const response = await execute(request);
+    return response.data;
   }
 }

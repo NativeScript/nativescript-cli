@@ -50,6 +50,7 @@ export function formatKinveyBaasUrl(pathname, query) {
 
 export const Auth = {
   App: 'App',
+  MasterSecret: 'MasterSecret',
   Session: 'Session'
 };
 
@@ -67,6 +68,10 @@ export class KinveyRequest extends Request {
     } else if (auth === Auth.App) {
       const { appKey, appSecret } = getConfig();
       const credentials = Buffer.from(`${appKey}:${appSecret}`).toString('base64');
+      this.headers.setAuthorization(`Basic ${credentials}`);
+    } else if (auth === Auth.MasterSecret) {
+      const { appKey, masterSecret } = getConfig();
+      const credentials = Buffer.from(`${appKey}:${masterSecret}`).toString('base64');
       this.headers.setAuthorization(`Basic ${credentials}`);
     } else if (auth === Auth.Session) {
       const session = getSession();

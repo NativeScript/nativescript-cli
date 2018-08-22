@@ -3,35 +3,29 @@ import { clearAll } from '../cache';
 import NetworkStore from './networkstore';
 import CacheStore from './cachestore';
 
-const DATASTORE_POOL = new Map();
-
 export const DataStoreType = {
   Cache: 'Cache',
   Network: 'Network',
   Sync: 'Sync'
 };
 
-export function collection(collectionName, type = DataStoreType.Cache, tag, options) {
+export function collection(collectionName, type = DataStoreType.Cache, options = {}) {
   if (collectionName == null || typeof collectionName !== 'string') {
     throw new Error('A collection name is required and must be a string.');
   }
 
+  const { tag = '' } = options;
   const { appKey } = getConfig();
-  const key = `${appKey}${collectionName}${type}${tag}`;
-  let datastore = DATASTORE_POOL.get(key);
+  let datastore;
 
-  if (!datastore) {
-    if (type === DataStoreType.Network) {
-      datastore = new NetworkStore(appKey, collectionName);
-    } else if (type === DataStoreType.Cache) {
-      datastore = new CacheStore(appKey, collectionName, tag, Object.assign({}, options, { autoSync: true }));
-    } else if (type === DataStoreType.Sync) {
-      datastore = new CacheStore(appKey, collectionName, tag, Object.assign({}, options, { autoSync: false }));
-    } else {
-      throw new Error('Unknown data store type.');
-    }
-
-    DATASTORE_POOL.set(key, datastore);
+  if (type === DataStoreType.Network) {
+    datastore = new NetworkStore(appKey, collectionName);
+  } else if (type === DataStoreType.Cache) {
+    datastore = new CacheStore(appKey, collectionName, tag, Object.assign({}, options, { autoSync: true }));
+  } else if (type === DataStoreType.Sync) {
+    datastore = new CacheStore(appKey, collectionName, tag, Object.assign({}, options, { autoSync: false }));
+  } else {
+    throw new Error('Unknown data store type.');
   }
 
   return datastore;

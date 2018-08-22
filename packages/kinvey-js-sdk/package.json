@@ -9,7 +9,7 @@
   "main": "lib/index.js",
   "scripts": {
     "prebuild": "del lib",
-    "build": "babel src -d lib --source-maps",
+    "build": "babel src -d lib",
     "lint": "eslint src",
     "test": "mocha -R spec -r @babel/register 'tests/**/*.spec.js'",
     "prepublishOnly": "node scripts/prepublish.js"

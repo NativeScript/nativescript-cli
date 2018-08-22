@@ -18,6 +18,7 @@ export function init(config) {
   const {
     appKey,
     appSecret,
+    masterSecret,
     appVersion,
     instanceId,
     encryptionKey,
@@ -54,6 +55,7 @@ export function init(config) {
   internalConfig = {
     appKey,
     appSecret,
+    masterSecret,
     appVersion,
     api: {
       defaultTimeout: defaultTimeout || 60000,

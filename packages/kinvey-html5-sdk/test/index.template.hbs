@@ -7,13 +7,13 @@
 </head>
 
 <body>
-  <script src="../../../node_modules/kinvey-universal-runner/injectables/bundles/testRunner.bundle.js"></script> {{#each
-  tests}}
-  <script src="{{.}}"></script> {{/each}}
-
+  <script src="../../../node_modules/kinvey-universal-runner/injectables/bundles/testRunner.bundle.js"></script>
   <script src="../dist/kinvey-html5-sdk.js"></script>
-
   <script src="./config.js"></script>
+
+  {{#each tests}}
+    <script src="{{.}}"></script>
+  {{/each}}
 
   <script>
     runner.initialize(null, {

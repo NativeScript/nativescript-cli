@@ -3,9 +3,9 @@ const spawnHeadlessChromium = require('run-headless-chromium').spawn;
 const opn = require('opn');
 
 const webRunTests = (staticPort, runner) =>
-  console.log(staticPort());
   new Promise((resolve, reject) => {
     const args = [`http://localhost:${staticPort()}/packages/kinvey-html5-sdk/test/index.html`];
+    console.log(args);
 
     if (os.type() === 'Windows_NT') {
       opn(args[0], {
