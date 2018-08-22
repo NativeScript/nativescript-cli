@@ -40,8 +40,8 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			clean: { type: OptionType.Boolean },
 			watch: { type: OptionType.Boolean, default: true },
 			background: { type: OptionType.String },
-			username: {type: OptionType.String},
-			pluginName: {type: OptionType.String}
+			username: { type: OptionType.String },
+			pluginName: { type: OptionType.String }
 		},
 			$errors, $staticConfig, $settingsService);
 

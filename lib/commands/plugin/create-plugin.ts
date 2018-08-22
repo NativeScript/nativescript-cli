@@ -4,7 +4,7 @@ import { isInteractive } from "../../common/helpers";
 export class CreatePluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 	public userMessage = "What is your GitHub username?\n(will be used to update the Github URLs in the plugin's package.json)";
-	public nameMessage = "";
+	public nameMessage = "What will be the name of your plugin?\n(use lowercase characters and dashes only)";
 	constructor(private $options: IOptions,
 		private $errors: IErrors,
 		private $terminalSpinnerService: ITerminalSpinnerService,
@@ -12,7 +12,8 @@ export class CreatePluginCommand implements ICommand {
 		private $pacoteService: IPacoteService,
 		private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
-		private $prompter: IPrompter) { }
+		private $prompter: IPrompter,
+		private $npm: INodePackageManager) { }
 
 	public async execute(args: string[]): Promise<void> {
 		const pluginRepoName = args[0];
@@ -43,37 +44,26 @@ export class CreatePluginCommand implements ICommand {
 		const cwd = path.join(projectDir, "src");
 		try {
 			spinner.start();
-			await this.$childProcess.exec("npm i", { cwd: cwd });
+			const npmOptions: any = { silent: true };
+			await this.$npm.install(cwd, cwd, npmOptions);
 		} finally {
 			spinner.stop();
 		}
 
-		let gitHubUsername = config.username;
-		if (!gitHubUsername) {
-			gitHubUsername = "NativeScriptDeveloper";
-			if (isInteractive()) {
-				gitHubUsername = await this.$prompter.getString(this.userMessage, { allowEmpty: false, defaultAction: () => { return gitHubUsername; } });
-			}
-		}
-
-		let pluginNameSource = config.pluginName;
-		if (!pluginNameSource) {
-			// remove nativescript- prefix for naming plugin files
-			const prefix = 'nativescript-';
-			pluginNameSource = pluginRepoName.toLowerCase().startsWith(prefix) ? pluginRepoName.slice(prefix.length, pluginRepoName.length) : pluginRepoName;
-			if (isInteractive()) {
-				pluginNameSource = await this.$prompter.getString(this.nameMessage, { allowEmpty: false, defaultAction: () => { return pluginNameSource; } });
-			}
-		}
+		const gitHubUsername = await this.getGitHubUsername(config.username);
+		const pluginNameSource = await this.getPluginNameSource(config.pluginName, pluginRepoName);
 
 		if (!isInteractive() && (!config.username || !config.pluginName)) {
 			this.$logger.printMarkdown("Using default values for Github user and/or plugin name since your shell is not interactive.");
 		}
 
-		const params = `gitHubUsername=${gitHubUsername} pluginName=${pluginNameSource} initGit=y`;
 		// run postclone script manually and kill it if it takes more than 10 sec
-		const outputScript = (await this.$childProcess.exec(`node scripts/postclone ${params}`, { cwd: cwd, timeout: 10000 }));
-		this.$logger.printMarkdown(outputScript);
+		const pathToPostCloneScript = path.join("scripts", "postclone");
+		const params = [pathToPostCloneScript, `gitHubUsername=${gitHubUsername}`, `pluginName=${pluginNameSource}`, "initGit=y"];
+		const outputScript = (await this.$childProcess.spawnFromEvent(process.execPath, params, "close", { cwd, timeout: 10000 }));
+		if (outputScript && outputScript.stdout) {
+			this.$logger.printMarkdown(outputScript.stdout);
+		}
 	}
 
 	private async downloadPackage(projectDir: string): Promise<void> {
@@ -94,6 +84,30 @@ export class CreatePluginCommand implements ICommand {
 		} finally {
 			spinner.stop();
 		}
+	}
+
+	private async getGitHubUsername(gitHubUsername: string) {
+		if (!gitHubUsername) {
+			gitHubUsername = "NativeScriptDeveloper";
+			if (isInteractive()) {
+				gitHubUsername = await this.$prompter.getString(this.userMessage, { allowEmpty: false, defaultAction: () => { return gitHubUsername; } });
+			}
+		}
+
+		return gitHubUsername;
+	}
+
+	private async getPluginNameSource(pluginNameSource: string, pluginRepoName: string) {
+		if (!pluginNameSource) {
+			// remove nativescript- prefix for naming plugin files
+			const prefix = 'nativescript-';
+			pluginNameSource = pluginRepoName.toLowerCase().startsWith(prefix) ? pluginRepoName.slice(prefix.length, pluginRepoName.length) : pluginRepoName;
+			if (isInteractive()) {
+				pluginNameSource = await this.$prompter.getString(this.nameMessage, { allowEmpty: false, defaultAction: () => { return pluginNameSource; } });
+			}
+		}
+
+		return pluginNameSource;
 	}
 }
 
