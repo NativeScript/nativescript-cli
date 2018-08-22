@@ -86,7 +86,7 @@ export default class NetworkStore extends DataStore {
 
   update(doc) {
     const stream = KinveyObservable.create(async (observer) => {
-      const url = formatKinveyBaasUrl(this.pathname);
+      const url = formatKinveyBaasUrl(`${this.pathname}/${doc._id}`);
       const request = createRequest(RequestMethod.PUT, url, doc);
       try {
         const response = await execute(request);

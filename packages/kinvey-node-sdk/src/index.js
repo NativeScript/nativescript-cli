@@ -1,5 +1,5 @@
-import 'babel-polyfill';
 import sdk from 'kinvey-js-sdk';
-import httpAdapter from './http';
+import http from './http';
+import * as memory from './memory';
 
-module.exports = sdk(httpAdapter);
+module.exports = sdk(http, null, null, memory);

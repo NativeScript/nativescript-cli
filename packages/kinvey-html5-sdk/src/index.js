@@ -1,4 +1,3 @@
-import 'babel-polyfill';
 import sdk from 'kinvey-js-sdk';
 import http from './http';
 import * as sessionStore from './session';

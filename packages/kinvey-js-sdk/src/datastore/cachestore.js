@@ -130,9 +130,14 @@ export default class CacheStore extends NetworkStore {
 
         if (autoSync) {
           const query = new Query().equalTo('_id', cachedDoc._id);
-          const pull = await this.pull(query);
-          const doc = pull.shift();
-          observer.next(doc);
+          const pushResults = await this.push(query);
+          const pushResult = pushResults.shift();
+
+          if (pushResult.error) {
+            throw pushResult.error;
+          } else {
+            observer.next(pushResult.doc);
+          }
         }
 
         observer.complete();
@@ -153,9 +158,14 @@ export default class CacheStore extends NetworkStore {
 
         if (autoSync) {
           const query = new Query().equalTo('_id', cachedDoc._id);
-          const pull = await this.pull(query);
-          const doc = pull.shift();
-          observer.next(doc);
+          const pushResults = await this.push(query);
+          const pushResult = pushResults.shift();
+
+          if (pushResult.error) {
+            throw pushResult.error;
+          } else {
+            observer.next(pushResult.doc);
+          }
         }
 
         observer.complete();
@@ -498,8 +508,10 @@ export default class CacheStore extends NetworkStore {
 
       if (event === SyncEvent.Delete) {
         docs = docs.filter((doc) => {
-          if (doc._kmd) {
-            return doc._kmd.local === false;
+          const kmd = new Kmd(doc);
+
+          if (kmd.isLocal()) {
+            return false;
           }
 
           return true;

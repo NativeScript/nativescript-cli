@@ -34,7 +34,9 @@ let store = {
  * @private
  */
 export function use(cacheStore) {
-  store = cacheStore;
+  if (cacheStore) {
+    store = cacheStore;
+  }
 }
 
 function generateId(length = 24) {
@@ -50,25 +52,25 @@ function generateId(length = 24) {
 }
 
 export default class Cache {
-  constructor(dbName, collectionName) {
-    this.dbName = dbName;
+  constructor(appKey, collectionName) {
+    this.appKey = appKey;
     this.collectionName = collectionName;
   }
 
   async find(query) {
-    return store.find(this.dbName, this.collectionName, query);
+    return store.find(this.appKey, this.collectionName, query);
   }
 
   async reduce(aggregation) {
-    return store.reduce(this.dbName, this.collectionName, aggregation);
+    return store.reduce(this.appKey, this.collectionName, aggregation);
   }
 
   async count(query) {
-    return store.count(this.dbName, this.collectionName, query);
+    return store.count(this.appKey, this.collectionName, query);
   }
 
   async findById(id) {
-    return store.findById(this.dbName, this.collectionName, id);
+    return store.findById(this.appKey, this.collectionName, id);
   }
 
   async save(docsToSaveOrUpdate) {
@@ -96,25 +98,25 @@ export default class Cache {
         return doc;
       });
 
-      await store.save(this.dbName, this.collectionName, docs);
+      await store.save(this.appKey, this.collectionName, docs);
     }
 
     return singular ? docs[0] : docs;
   }
 
   async remove(query) {
-    return store.remove(this.dbName, this.collectionName, query);
+    return store.remove(this.appKey, this.collectionName, query);
   }
 
   async removeById(id) {
-    return store.removeById(this.dbName, this.collectionName, id);
+    return store.removeById(this.appKey, this.collectionName, id);
   }
 
   async clear() {
-    return store.clear(this.dbName, this.collectionName);
+    return store.clear(this.appKey, this.collectionName);
   }
 }
 
-export function clearAll(appKey) {
-  store.clearAll(appKey);
+export async function clearAll(appKey) {
+  return store.clearAll(appKey);
 }
