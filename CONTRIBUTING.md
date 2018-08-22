@@ -27,7 +27,7 @@ If your issue appears to be a bug, and hasn't been reported, open a new issue. T
 
 Request a Feature
 ===
-You can request a new feature by submitting an issue with the *enhancement* label to our [GitHub Repository][2].
+You can request a new feature by submitting an issue with the *feature* label to our [GitHub Repository][2].
 If you want to implement a new feature yourself, consider submitting it to the [GitHub Repository][2] as a Pull Request.
 
 [Back to Top][1]

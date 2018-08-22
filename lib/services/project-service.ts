@@ -4,6 +4,7 @@ import * as shelljs from "shelljs";
 import { format } from "util";
 import { exported } from "../common/decorators";
 import { Hooks, TemplatesV2PackageJsonKeysToRemove } from "../constants";
+import * as temp from "temp";
 
 export class ProjectService implements IProjectService {
 
@@ -131,14 +132,16 @@ export class ProjectService implements IProjectService {
 
 	private async ensureAppResourcesExist(projectDir: string): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
-		const appPath = projectData.getAppDirectoryPath(projectDir);
 		const appResourcesDestinationPath = projectData.getAppResourcesDirectoryPath(projectDir);
 
 		if (!this.$fs.exists(appResourcesDestinationPath)) {
 			this.$fs.createDirectory(appResourcesDestinationPath);
-
+			const tempDir = temp.mkdirSync("ns-default-template");
 			// the template installed doesn't have App_Resources -> get from a default template
-			await this.$pacoteService.extractPackage(constants.RESERVED_TEMPLATE_NAMES["default"], appPath, { filter: (name: string, entry: any) => entry.path.indexOf(constants.APP_RESOURCES_FOLDER_NAME) !== -1 });
+			await this.$pacoteService.extractPackage(constants.RESERVED_TEMPLATE_NAMES["default"], tempDir);
+			const templateProjectData = this.$projectDataService.getProjectData(tempDir);
+			const templateAppResourcesDir = templateProjectData.getAppResourcesDirectoryPath(tempDir);
+			this.$fs.copyFile(path.join(templateAppResourcesDir, "*"), appResourcesDestinationPath);
 		}
 	}
 
