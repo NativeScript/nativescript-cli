@@ -629,9 +629,17 @@ export class AndroidToolsInfoStub implements IAndroidToolsInfo {
 
 export class ChildProcessStub {
 	public spawnCount = 0;
+	public execCount = 0;
 	public spawnFromEventCount = 0;
 	public lastCommand = "";
 	public lastCommandArgs: string[] = [];
+
+	public async exec(command: string, options?: any, execOptions?: any): Promise<any> {
+		this.execCount++;
+		this.lastCommand = command;
+		this.lastCommandArgs = command ? command.split(" ") : [];
+		return null;
+	}
 
 	public spawn(command: string, args?: string[], options?: any): any {
 		this.spawnCount++;

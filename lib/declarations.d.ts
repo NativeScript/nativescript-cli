@@ -446,7 +446,12 @@ interface IPort {
 	port: Number;
 }
 
-interface IOptions extends ICommonOptions, IBundleString, IPlatformTemplate, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions {
+interface IPluginSeedOptions {
+	username: string;
+	pluginName: string;
+}
+
+interface IOptions extends ICommonOptions, IBundleString, IPlatformTemplate, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions, IPluginSeedOptions {
 	all: boolean;
 	client: boolean;
 	compileSdk: number;

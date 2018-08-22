@@ -20,6 +20,7 @@ Lets you manage the plugins for your project.
 * `find` - Finds NativeScript plugins in npm.
 * `search` - Finds NativeScript plugins in npm.
 * `build` - Builds the Android parts of a NativeScript plugin.
+* `create` - Creates a project for building a new NativeScript plugin.
 
 <% if(isHtml) { %>
 ### Related Commands
@@ -30,4 +31,5 @@ Command | Description
 [plugin remove](plugin-remove.html) | Uninstalls the specified plugin and its dependencies.
 [plugin update](plugin-update.html) | Updates the specified plugin(s) and its dependencies.
 [plugin build](plugin-build.html) | Builds the Android project of a NativeScript plugin, and updates the `include.gradle`.
+[plugin create](plugin-create.html) | Builds the Android project of a NativeScript plugin, and updates the `include.gradle`.
 <% } %>
