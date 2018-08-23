@@ -4,7 +4,7 @@ import { CreatePluginCommand } from "../lib/commands/plugin/create-plugin";
 import { assert } from "chai";
 import helpers = require("../lib/common/helpers");
 
-interface pacoteOutput {
+interface IPacoteOutput {
 	packageName: string;
 	destinationDirectory: string;
 }
@@ -13,7 +13,7 @@ const originalIsInteractive = helpers.isInteractive;
 const dummyArgs = ["dummyProjectName"];
 const dummyUser = "devUsername";
 const dummyName = "devPlugin";
-const dummyPacote: pacoteOutput = { packageName: "", destinationDirectory: "" };
+const dummyPacote: IPacoteOutput = { packageName: "", destinationDirectory: "" };
 
 function createTestInjector() {
 	const testInjector = new Yok();
