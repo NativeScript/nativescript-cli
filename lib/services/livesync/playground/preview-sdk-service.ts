@@ -1,6 +1,7 @@
 import { FilePayload, MessagingService, Config, Device, DeviceConnectedMessage, SdkCallbacks, ConnectedDevices } from "nativescript-preview-sdk";
 import { EventEmitter } from "events";
 import { PreviewSdkEventNames, PubnubKeys } from "./preview-app-constants";
+const pako = require("pako");
 
 export class PreviewSdkService extends EventEmitter implements IPreviewSdkService {
 	private messagingService: MessagingService = null;
@@ -8,7 +9,8 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 	public connectedDevices: Device[] = [];
 
 	constructor(private $errors: IErrors,
-		private $logger: ILogger) {
+		private $logger: ILogger,
+		private $httpClient: Server.IHttpClient) {
 		super();
 	}
 
@@ -70,7 +72,24 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 				}
 			},
 			onDevicesPresence: (devices: Device[]) => ({ }),
-			onSendingChange: (sending: boolean) => ({ })
+			onSendingChange: (sending: boolean) => ({ }),
+			onBiggerFilesUpload: async (filesContent, callback) => {
+					// TODO: stop using the playground endpoint when we have a direct Amazon one
+					const gzippedContent = new Buffer(pako.gzip(filesContent));
+					const playgroundUploadResponse = await this.$httpClient.httpRequest({
+						url: "https://play.telerik.rocks/api/files",
+						method: "POST",
+						body: gzippedContent,
+						headers: {
+							"Content-Encoding": "gzip",
+							"Content-Type": "text/plain"
+						}
+					});
+
+					const responseBody = JSON.parse(playgroundUploadResponse.body);
+					const location = responseBody && responseBody.location;
+					callback(location, playgroundUploadResponse.error);
+				}
 		};
 	}
 }

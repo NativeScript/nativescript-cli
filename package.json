@@ -59,6 +59,7 @@
     "ora": "2.0.0",
     "osenv": "0.1.3",
     "pacote": "8.1.6",
+    "pako": "^1.0.6",
     "pbxproj-dom": "1.0.11",
     "plist": "1.1.0",
     "plist-merge-patch": "0.1.1",
