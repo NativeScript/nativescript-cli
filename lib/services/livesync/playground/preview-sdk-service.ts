@@ -65,7 +65,9 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			onDeviceConnectedMessage: (deviceConnectedMessage: DeviceConnectedMessage) => ({ }),
 			onDeviceConnected: (device: Device) => {
 				this.emit(PreviewSdkEventNames.DEVICE_CONNECTED, device);
-				this.connectedDevices.push(device);
+				if (!_.includes(this.connectedDevices, device)) {
+					this.connectedDevices.push(device);
+				}
 			},
 			onDevicesPresence: (devices: Device[]) => ({ }),
 			onSendingChange: (sending: boolean) => ({ })
