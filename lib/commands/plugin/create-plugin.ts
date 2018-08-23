@@ -18,13 +18,11 @@ export class CreatePluginCommand implements ICommand {
 	public async execute(args: string[]): Promise<void> {
 		const pluginRepoName = args[0];
 		const pathToProject = this.$options.path;
+		const selectedTemplate = this.$options.template;
 		const selectedPath = path.resolve(pathToProject || ".");
 		const projectDir = path.join(selectedPath, pluginRepoName);
 
-		this.$logger.printMarkdown("Downloading the latest version of NativeScript Plugin Seed...");
-		await this.downloadPackage(projectDir);
-
-		this.$logger.printMarkdown("Executing initial plugin configuration script...");
+		await this.downloadPackage(selectedTemplate, projectDir);
 		await this.setupSeed(projectDir, pluginRepoName);
 
 		this.$logger.printMarkdown("Solution for `%s` was successfully created.", pluginRepoName);
@@ -39,6 +37,8 @@ export class CreatePluginCommand implements ICommand {
 	}
 
 	private async setupSeed(projectDir: string, pluginRepoName: string): Promise<void> {
+		this.$logger.printMarkdown("Executing initial plugin configuration script...");
+
 		const config = this.$options;
 		const spinner = this.$terminalSpinnerService.createSpinner();
 		const cwd = path.join(projectDir, "src");
@@ -66,15 +66,21 @@ export class CreatePluginCommand implements ICommand {
 		}
 	}
 
-	private async downloadPackage(projectDir: string): Promise<void> {
+	private async downloadPackage(selectedTemplate: string, projectDir: string): Promise<void> {
 		this.$fs.createDirectory(projectDir);
 
 		if (this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir)) {
 			this.$errors.fail("Path already exists and is not empty %s", projectDir);
 		}
 
+		if (selectedTemplate) {
+			this.$logger.printMarkdown("Make sure your custom template is compatible with the Plugin Seed at https://github.com/NativeScript/nativescript-plugin-seed/");
+		} else {
+			this.$logger.printMarkdown("Downloading the latest version of NativeScript Plugin Seed...");
+		}
+
 		const spinner = this.$terminalSpinnerService.createSpinner();
-		const packageToInstall = "https://github.com/NativeScript/nativescript-plugin-seed/archive/master.tar.gz";
+		const packageToInstall = selectedTemplate || "https://github.com/NativeScript/nativescript-plugin-seed/archive/master.tar.gz";
 		try {
 			spinner.start();
 			await this.$pacoteService.extractPackage(packageToInstall, projectDir);
