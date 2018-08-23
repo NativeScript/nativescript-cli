@@ -118,12 +118,16 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public async validate(projectData: IProjectData): Promise<void> {
+	public async validate(projectData: IProjectData): Promise<IValidateOutput> {
 		this.validatePackageName(projectData.projectId);
 		this.validateProjectName(projectData.projectName);
 
-		await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(this.getPlatformData(projectData).normalizedPlatformName, projectData.projectDir);
+		const checkEnvironmentRequirementsOutput = await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(this.getPlatformData(projectData).normalizedPlatformName, projectData.projectDir);
 		this.$androidToolsInfo.validateTargetSdk({ showWarningsAsErrors: true });
+
+		return {
+			checkEnvironmentRequirementsOutput
+		};
 	}
 
 	public async validatePlugins(): Promise<void> { /* */ }

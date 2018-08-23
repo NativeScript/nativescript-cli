@@ -130,6 +130,7 @@ $injector.require("androidLiveSyncService", "./services/livesync/android-livesyn
 $injector.require("iOSLiveSyncService", "./services/livesync/ios-livesync-service");
 $injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
 $injector.require("previewAppLiveSyncService", "./services/livesync/playground/preview-app-livesync-service");
+$injector.require("previewAppPluginsService", "./services/livesync/playground/preview-app-plugins-service");
 $injector.require("previewSdkService", "./services/livesync/playground/preview-sdk-service");
 $injector.requirePublic("sysInfo", "./sys-info");
 

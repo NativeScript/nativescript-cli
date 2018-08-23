@@ -391,5 +391,10 @@ interface IUpdateAppOptions extends IOptionalFilesToSync, IOptionalFilesToRemove
 }
 
 interface IPlatformEnvironmentRequirements {
-	checkEnvironmentRequirements(platform?: string, projectDir?: string, runtimeVersion?: string): Promise<boolean>;
+	checkEnvironmentRequirements(platform?: string, projectDir?: string, runtimeVersion?: string): Promise<ICheckEnvironmentRequirementsOutput>;
+}
+
+interface ICheckEnvironmentRequirementsOutput {
+	canExecute: boolean;
+	selectedOption: string;
 }

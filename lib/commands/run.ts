@@ -3,6 +3,7 @@ import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
 import { cache } from "../common/decorators";
 
 export class RunCommandBase implements ICommand {
+	private liveSyncCommandHelperAdditionalOptions: ILiveSyncCommandHelperAdditionalOptions = <ILiveSyncCommandHelperAdditionalOptions>{};
 
 	public platform: string;
 	constructor(private $projectData: IProjectData,
@@ -13,7 +14,7 @@ export class RunCommandBase implements ICommand {
 
 	public allowedParameters: ICommandParameter[] = [];
 	public async execute(args: string[]): Promise<void> {
-		return this.$liveSyncCommandHelper.executeCommandLiveSync(this.platform);
+		return this.$liveSyncCommandHelper.executeCommandLiveSync(this.platform, this.liveSyncCommandHelperAdditionalOptions);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -28,7 +29,11 @@ export class RunCommandBase implements ICommand {
 			this.platform = this.$devicePlatformsConstants.Android;
 		}
 
-		await this.$liveSyncCommandHelper.validatePlatform(this.platform);
+		const validatePlatformOutput = await this.$liveSyncCommandHelper.validatePlatform(this.platform);
+		if (validatePlatformOutput && validatePlatformOutput[this.platform.toLowerCase()]) {
+			const checkEnvironmentRequirementsOutput = validatePlatformOutput[this.platform.toLowerCase()].checkEnvironmentRequirementsOutput;
+			this.liveSyncCommandHelperAdditionalOptions.syncToPreviewApp = checkEnvironmentRequirementsOutput && checkEnvironmentRequirementsOutput.selectedOption === "Sync to Playground";
+		}
 
 		return true;
 	}
@@ -68,7 +73,8 @@ export class RunIosCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		return await this.runCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.iOS);
+		const result = await this.runCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.iOS);
+		return result;
 	}
 }
 
@@ -110,6 +116,7 @@ export class RunAndroidCommand implements ICommand {
 		if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 			this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 		}
+
 		return this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.Android);
 	}
 }

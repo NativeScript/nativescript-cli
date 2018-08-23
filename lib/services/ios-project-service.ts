@@ -133,17 +133,21 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return path.join(this.getPlatformData(projectData).projectRoot, projectData.projectName, "Resources");
 	}
 
-	public async validate(projectData: IProjectData): Promise<void> {
+	public async validate(projectData: IProjectData): Promise<IValidateOutput> {
 		if (!this.$hostInfo.isDarwin) {
 			return;
 		}
 
-		await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(this.getPlatformData(projectData).normalizedPlatformName, projectData.projectDir);
+		const checkEnvironmentRequirementsOutput = await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(this.getPlatformData(projectData).normalizedPlatformName, projectData.projectDir);
 
 		const xcodeBuildVersion = await this.getXcodeVersion();
 		if (helpers.versionCompare(xcodeBuildVersion, IOSProjectService.XCODEBUILD_MIN_VERSION) < 0) {
 			this.$errors.fail("NativeScript can only run in Xcode version %s or greater", IOSProjectService.XCODEBUILD_MIN_VERSION);
 		}
+
+		return {
+			checkEnvironmentRequirementsOutput
+		};
 	}
 
 	// TODO: Remove Promise, reason: readDirectory - unable until androidProjectService has async operations.

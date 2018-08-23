@@ -16,4 +16,8 @@ declare global {
 		applyChanges(files: FilePayload[]): Promise<void>;
 		stop(): void;
 	}
+
+	interface IPreviewAppPluginsService {
+		comparePluginsOnDevice(device: Device): Promise<void>;
+	}
 }

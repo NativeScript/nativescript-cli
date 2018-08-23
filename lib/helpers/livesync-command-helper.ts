@@ -26,6 +26,10 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			this.$logger.info("Skipping node_modules folder! Use the syncAllFiles option to sync files from this folder.");
 		}
 
+		if (additionalOptions && additionalOptions.syncToPreviewApp) {
+			return;
+		}
+
 		const emulator = this.$options.emulator;
 		await this.$devicesService.initialize({
 			deviceId: this.$options.device,
@@ -123,15 +127,20 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 	}
 
-	public async validatePlatform(platform: string) {
+	public async validatePlatform(platform: string): Promise<IDictionary<IValidateOutput>> {
+		const result: IDictionary<IValidateOutput> = {};
+
 		const availablePlatforms = this.getPlatformsForOperation(platform);
 		for (const availablePlatform of availablePlatforms) {
 			const platformData = this.$platformsData.getPlatformData(availablePlatform, this.$projectData);
 			const platformProjectService = platformData.platformProjectService;
-			await platformProjectService.validate(this.$projectData);
+			const validateOutput = await platformProjectService.validate(this.$projectData);
+			result[availablePlatform.toLowerCase()] = validateOutput;
 		}
 
 		this.$bundleValidatorHelper.validate();
+
+		return result;
 	}
 
 	private async runInReleaseMode(platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void> {

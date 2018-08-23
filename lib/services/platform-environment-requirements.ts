@@ -31,7 +31,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	private static MISSING_LOCAL_AND_CLOUD_SETUP_MESSAGE = `You are missing the ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and you will not be able to execute cloud builds. ${PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE} ${PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE} `;
 	private static MISSING_LOCAL_BUT_CLOUD_SETUP_MESSAGE = `You have ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension installed, so you can execute cloud builds, but ${_.lowerFirst(PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE)}`;
 	private static RUN_TNS_SETUP_MESSAGE = 'Run $ tns setup command to run the setup script to try to automatically configure your environment for local builds.';
-	private static SYNC_TO_PREVIEW_APP_MESSAGE = `Select "Sync to Playground" to enjoy NativeScript without any local setup. All you need is a couple of companion apps installed on you devices.`;
+	private static SYNC_TO_PREVIEW_APP_MESSAGE = `Select "Sync to Playground" to enjoy NativeScript without any local setup. All you need is a couple of companion apps installed on your devices.`;
 	private static RUN_PREVIEW_COMMAND_MESSAGE = `Run $ tns preview command to enjoy NativeScript without any local setup.`;
 
 	private cliCommandToCloudCommandName: IStringDictionary = {
@@ -40,13 +40,18 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		"deploy": "tns cloud deploy"
 	};
 
-	public async checkEnvironmentRequirements(platform?: string, projectDir?: string, runtimeVersion?: string): Promise<boolean> {
+	public async checkEnvironmentRequirements(platform?: string, projectDir?: string, runtimeVersion?: string): Promise<ICheckEnvironmentRequirementsOutput> {
+		let selectedOption = null;
+
 		if (process.env.NS_SKIP_ENV_CHECK) {
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
 				action: TrackActionNames.CheckEnvironmentRequirements,
 				additionalData: "Skipped: NS_SKIP_ENV_CHECK is set"
 			});
-			return true;
+			return {
+				canExecute: true,
+				selectedOption
+			};
 		}
 
 		const canExecute = await this.$doctorService.canExecuteLocalBuild(platform, projectDir, runtimeVersion);
@@ -75,7 +80,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 					PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
 				];
 
-			const selectedOption = await this.promptForChoice({ infoMessage, choices });
+			selectedOption = await this.promptForChoice({ infoMessage, choices });
 
 			await this.processCloudBuildsIfNeeded(selectedOption, platform);
 			this.processManuallySetupIfNeeded(selectedOption, platform);
@@ -85,7 +90,10 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				await this.$doctorService.runSetupScript();
 
 				if (await this.$doctorService.canExecuteLocalBuild(platform, projectDir, runtimeVersion)) {
-					return true;
+					return {
+						canExecute: true,
+						selectedOption
+					};
 				}
 
 				if (this.$nativeScriptCloudExtensionService.isInstalled()) {
@@ -116,7 +124,10 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			if (selectedOption === PlatformEnvironmentRequirements.BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME) {
 				await this.processBothCloudBuildsAndSetupScript();
 				if (await this.$doctorService.canExecuteLocalBuild(platform, projectDir, runtimeVersion)) {
-					return true;
+					return {
+						canExecute: true,
+						selectedOption
+					};
 				}
 
 				this.processManuallySetup(platform);
@@ -125,7 +136,10 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			this.processTryCloudSetupIfNeeded(selectedOption, platform);
 		}
 
-		return true;
+		return {
+			canExecute,
+			selectedOption
+		};
 	}
 
 	private async processCloudBuildsIfNeeded(selectedOption: string, platform?: string): Promise<void> {
