@@ -10,6 +10,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		private $platformsData: IPlatformsData,
 		private $projectDataService: IProjectDataService,
 		private $previewSdkService: IPreviewSdkService,
+		private $previewAppPluginsService: IPreviewAppPluginsService,
 		private $projectFilesManager: IProjectFilesManager,
 		private $qrCodeTerminalService: IQrCodeTerminalService) { }
 
@@ -38,6 +39,8 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	}
 
 	private async trySyncFilesOnDevice(data: IPreviewAppLiveSyncData, device: Device, files?: string[]): Promise<void> {
+		await this.$previewAppPluginsService.comparePluginsOnDevice(device);
+
 		this.$logger.info(`Start syncing changes on device ${device.id}.`);
 
 		try {
