@@ -236,7 +236,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 			if (!port) {
 				this.$errors.fail("NativeScript debugger was not able to get inspector socket port.");
 			}
-			const socket = device ? await device.connectToPort(port) : net.connect(port);
+			const socket = device ? await device.connectToPort(port) : await this.$iOSEmulatorServices.connectToPort({ port });
 			this._sockets.push(socket);
 			return socket;
 		};
