@@ -399,6 +399,11 @@ interface IAndroidNativeScriptDeviceLiveSyncService extends INativeScriptDeviceL
 
 interface IAndroidLivesyncTool {
 	/**
+	 * The protocol version the current app(adnroid runtime) is using.
+	 */
+	protocolVersion: string;
+
+	/**
 	 * Creates new socket connection.
 	 * @param configuration - The configuration to the socket connection.
 	 * @returns {Promise<void>}
@@ -457,6 +462,11 @@ interface IAndroidLivesyncTool {
 	 * @param error - Optional error for rejecting pending sync operations
 	 */
 	end(error?: Error): void;
+
+	/**
+	 * Returns true if a connection has been already established
+	 */
+	hasConnection(): boolean;
 }
 
 interface IAndroidLivesyncToolConfiguration {
