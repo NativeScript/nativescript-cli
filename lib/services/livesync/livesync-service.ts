@@ -332,7 +332,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 		this.setLiveSyncProcessInfo(liveSyncData.projectDir, deviceDescriptors);
 
-		const shouldStartWatcher = liveSyncData.syncToPreviewApp || (!liveSyncData.skipWatcher && this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors.length);
+		const shouldStartWatcher = !liveSyncData.skipWatcher && (liveSyncData.syncToPreviewApp || this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors.length);
 		if (shouldStartWatcher) {
 			// Should be set after prepare
 			this.$usbLiveSyncService.isInitialized = true;

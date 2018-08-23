@@ -14,7 +14,7 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 		_.keys(localPlugins).forEach(localPlugin => {
 			const localPluginVersion = localPlugins[localPlugin];
 			const devicePluginVersion = devicePlugins[localPlugin];
-			
+
 			this.$logger.trace(`Comparing plugin ${localPlugin} with localPluginVersion ${localPluginVersion} and devicePluginVersion ${devicePluginVersion}`);
 
 			if (!devicePluginVersion) {
