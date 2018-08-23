@@ -45,7 +45,7 @@ function createTestInjector() {
 		extractPackage: (packageName: string, destinationDirectory: string) => {
 			dummyPacote.destinationDirectory = destinationDirectory;
 			dummyPacote.packageName = packageName;
-			Promise.resolve();
+			return Promise.resolve();
 		}
 	});
 
