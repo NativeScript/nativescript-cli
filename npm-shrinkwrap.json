@@ -4357,7 +4357,7 @@
     },
     "nativescript-preview-sdk": {
       "version": "file:../nativescript-preview-sdk/nativescript-preview-sdk-0.1.0.tgz",
-      "integrity": "sha512-vKo13Re5ch9AhfWp9urnIDP0/bC6OvsqQTdg5Nog59ZK64TAhQwRSe5W6NUw5OPilHmehux51H7rfWBb5hHikA==",
+      "integrity": "sha512-HIztUH9ErTzt8+PUoDtHJv5sciGyF6iTGbWyAzDzSJjPHDfoO2kkn1H6GUnt73SW7yPhV0AA+Cros1McQYNeWA==",
       "requires": {
         "@types/pubnub": "4.0.2",
         "@types/shortid": "0.0.29",
@@ -4856,6 +4856,11 @@
           }
         }
       }
+    },
+    "pako": {
+      "version": "1.0.6",
+      "resolved": "https://registry.npmjs.org/pako/-/pako-1.0.6.tgz",
+      "integrity": "sha512-lQe48YPsMJAig+yngZ87Lus+NF+3mtu7DVOBu6b/gHO1YpKwIj5AWjZ/TOS7i46HD/UixzWb1zeWDZfGZ3iYcg=="
     },
     "parallel-transform": {
       "version": "1.1.0",

@@ -52,7 +52,7 @@ function setup(localPlugins: IStringDictionary, previewAppPlugins: IStringDictio
 	};
 }
 
-describe.only("previewAppPluginsService", () => {
+describe("previewAppPluginsService", () => {
 	describe("comparePluginsOnDevice", () => {
 		const testCases = [
 			{

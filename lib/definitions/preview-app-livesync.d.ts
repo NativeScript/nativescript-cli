@@ -10,14 +10,24 @@ declare global {
 	interface IPreviewAppLiveSyncData extends IProjectDir, IAppFilesUpdaterOptionsComposition, IEnvOptions { }
 
 	interface IPreviewSdkService extends NodeJS.EventEmitter {
+		qrCodeUrl: string;
 		connectedDevices: Device[];
 		initialize(): void;
 		applyChanges(files: FilePayload[]): Promise<void>;
-		shortenQrCodeUrl(): Promise<string>;
 		stop(): void;
 	}
 
 	interface IPreviewAppPluginsService {
 		comparePluginsOnDevice(device: Device): Promise<void>;
+	}
+
+	interface IPreviewCommandHelper {
+		run(): void;
+	}
+
+	interface IPlaygroundQrCodeGenerator {
+		generateQrCodeForiOS(): Promise<void>;
+		generateQrCodeForAndroid(): Promise<void>;
+		generateQrCodeForCurrentApp(): Promise<void>;
 	}
 }

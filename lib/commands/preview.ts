@@ -3,9 +3,12 @@ export class PreviewCommand implements ICommand {
 
 	constructor(private $liveSyncService: ILiveSyncService,
 		private $projectData: IProjectData,
-		private $options: IOptions) { }
+		private $options: IOptions,
+		private $previewCommandHelper: IPreviewCommandHelper) { }
 
 	public async execute(args: string[]): Promise<void> {
+		this.$previewCommandHelper.run();
+
 		await this.$liveSyncService.liveSync([], {
 			syncToPreviewApp: true,
 			projectDir: this.$projectData.projectDir,

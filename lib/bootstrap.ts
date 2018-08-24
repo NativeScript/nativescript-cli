@@ -122,6 +122,7 @@ $injector.requireCommand("platform|clean", "./commands/platform-clean");
 $injector.require("bundleValidatorHelper", "./helpers/bundle-validator-helper");
 $injector.require("liveSyncCommandHelper", "./helpers/livesync-command-helper");
 $injector.require("deployCommandHelper", "./helpers/deploy-command-helper");
+$injector.require("previewCommandHelper", "./helpers/preview-command-helper");
 
 $injector.requirePublicClass("localBuildService", "./services/local-build-service");
 $injector.requirePublicClass("liveSyncService", "./services/livesync/livesync-service");
@@ -132,6 +133,7 @@ $injector.require("usbLiveSyncService", "./services/livesync/livesync-service");
 $injector.require("previewAppLiveSyncService", "./services/livesync/playground/preview-app-livesync-service");
 $injector.require("previewAppPluginsService", "./services/livesync/playground/preview-app-plugins-service");
 $injector.require("previewSdkService", "./services/livesync/playground/preview-sdk-service");
+$injector.require("playgroundQrCodeGenerator", "./services/livesync/playground/qr-code-generator");
 $injector.requirePublic("sysInfo", "./sys-info");
 
 $injector.require("iOSNotificationService", "./services/ios-notification-service");

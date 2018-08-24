@@ -12,7 +12,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		private $previewSdkService: IPreviewSdkService,
 		private $previewAppPluginsService: IPreviewAppPluginsService,
 		private $projectFilesManager: IProjectFilesManager,
-		private $qrCodeTerminalService: IQrCodeTerminalService) { }
+		private $playgroundQrCodeGenerator: IPlaygroundQrCodeGenerator) { }
 
 	public async initialSync(data: IPreviewAppLiveSyncData): Promise<void> {
 		this.$previewSdkService.initialize();
@@ -20,7 +20,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 			this.$logger.trace("Found connected device", device);
 			await this.trySyncFilesOnDevice(data, device);
 		});
-		await this.generateQRCode();
+		await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp();
 	}
 
 	public async syncFiles(data: IPreviewAppLiveSyncData, files: string[]): Promise<void> {
@@ -32,11 +32,6 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	public async stopLiveSync(): Promise<void> {
 		this.$previewSdkService.removeAllListeners();
 		this.$previewSdkService.stop();
-	}
-
-	private async generateQRCode(): Promise<void> {
-		const qrCodeUrl = await this.$previewSdkService.shortenQrCodeUrl();
-		this.$qrCodeTerminalService.generate(qrCodeUrl);
 	}
 
 	private async trySyncFilesOnDevice(data: IPreviewAppLiveSyncData, device: Device, files?: string[]): Promise<void> {

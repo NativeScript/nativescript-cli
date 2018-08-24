@@ -581,14 +581,16 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				timeoutTimer = setTimeout(async () => {
 					if (liveSyncData.syncToPreviewApp) {
 						await this.addActionToChain(projectData.projectDir, async () => {
-							await this.$previewAppLiveSyncService.syncFiles({
-								appFilesUpdaterOptions: {
-									bundle: liveSyncData.bundle,
-									release: liveSyncData.release
-								},
-								env: liveSyncData.env,
-								projectDir: projectData.projectDir
-							}, filesToSync);
+							if (filesToSync.length || filesToRemove.length) {
+								await this.$previewAppLiveSyncService.syncFiles({
+									appFilesUpdaterOptions: {
+										bundle: liveSyncData.bundle,
+										release: liveSyncData.release
+									},
+									env: liveSyncData.env,
+									projectDir: projectData.projectDir
+								}, filesToSync);
+							}
 						});
 					} else {
 						// Push actions to the queue, do not start them simultaneously
