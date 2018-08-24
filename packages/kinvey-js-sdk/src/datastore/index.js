@@ -14,16 +14,15 @@ export function collection(collectionName, type = DataStoreType.Cache, options =
     throw new Error('A collection name is required and must be a string.');
   }
 
-  const { tag = '' } = options;
   const { appKey } = getConfig();
   let datastore;
 
   if (type === DataStoreType.Network) {
     datastore = new NetworkStore(appKey, collectionName);
   } else if (type === DataStoreType.Cache) {
-    datastore = new CacheStore(appKey, collectionName, tag, Object.assign({}, options, { autoSync: true }));
+    datastore = new CacheStore(appKey, collectionName, options.tag, Object.assign({}, options, { autoSync: true }));
   } else if (type === DataStoreType.Sync) {
-    datastore = new CacheStore(appKey, collectionName, tag, Object.assign({}, options, { autoSync: false }));
+    datastore = new CacheStore(appKey, collectionName, options.tag, Object.assign({}, options, { autoSync: false }));
   } else {
     throw new Error('Unknown data store type.');
   }

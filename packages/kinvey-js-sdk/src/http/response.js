@@ -12,8 +12,9 @@ export default class Response {
 
   get error() {
     if (!this.isSuccess()) {
-      const { code, name } = this.data;
+      const name = this.data.error || this.data.name;
       const message = this.data.message || this.data.description;
+      const code = this.data.code;
       // const debug = responseData.debug;
       // const code = response.statusCode;
       // const kinveyRequestId = responseHeaders.get('X-Kinvey-Request-ID');

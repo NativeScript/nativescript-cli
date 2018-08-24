@@ -1,5 +1,7 @@
-Kinvey.init({
-  appKey: externalConfig.appKey,
-  appSecret: externalConfig.appSecret,
-  masterSecret: externalConfig.masterSecret
+before(() => {
+  return Kinvey.init({
+    appKey: externalConfig.appKey,
+    appSecret: externalConfig.appSecret,
+    masterSecret: externalConfig.masterSecret
+  });
 });

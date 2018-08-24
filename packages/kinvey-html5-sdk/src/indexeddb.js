@@ -1,30 +1,47 @@
 import Dexie from 'dexie';
+import sift from 'sift';
 import findIndex from 'lodash/findIndex';
+import isEmpty from 'lodash/isEmpty';
 
-function applyQueryAddon(db) {
+const dbVersions = {};
+
+function findAddOn(db) {
   // Makes it possible to use applyQuery() on collections.
   // eslint-disable-next-line no-param-reassign
-  db.Collection.prototype.applyQuery = async function applyQuery(query) {
+  db.Table.prototype.find = function find(query) {
+    let collection = this.toCollection();
+
     if (query) {
       const queryObject = query.toQueryObject();
       const { limit, skip } = queryObject;
-      // const filter = queryObject.query;
+      let filter = queryObject.query;
 
-      if (limit) {
-        this.limit(limit);
+      if (filter) {
+        filter = JSON.parse(filter);
+
+        if (!isEmpty(filter)) {
+          collection = collection.filter((doc) => {
+            const sifter = sift(filter);
+            return sifter([doc]);
+          });
+        }
       }
 
-      if (skip) {
-        this.offset(skip);
+      if (skip > 0) {
+        collection = collection.offset(skip);
+      }
+
+      if (limit < Infinity) {
+        collection = collection.limit(limit);
       }
     }
 
-    return this;
+    return collection;
   };
 }
 
 // Register the addon to be included by default (optional)
-Dexie.addons.push(applyQueryAddon);
+Dexie.addons.push(findAddOn);
 
 class IndexedDB extends Dexie {
   hasTable(tableName) {
@@ -48,16 +65,25 @@ class IndexedDB extends Dexie {
 
     // Add table
     if (!db.hasTable(tableName)) {
+      const nextVersion = db.verno + 1;
+
       // Close the database
       db.close();
 
       // Create the new schema
-      const schema = {};
-      schema[tableName] = '_id';
+      const newSchema = {};
+      newSchema[tableName] = '_id';
+      const versions = dbVersions[db.name] || {};
+      versions[nextVersion] = newSchema;
+      dbVersions[db.name] = versions;
+
 
       // Upgrade the database
       const upgradedDB = new IndexedDB(db.name);
-      upgradedDB.version(db.verno + 1).stores(schema);
+      Object.keys(versions).forEach((version) => {
+        const schema = versions[version];
+        upgradedDB.version(parseInt(version, 10)).stores(schema);
+      });
       await upgradedDB.open();
 
       // Return the upgraded database
@@ -70,18 +96,16 @@ class IndexedDB extends Dexie {
 
 export async function find(dbName, tableName, query) {
   const db = await IndexedDB.open(dbName, tableName);
-  const collection = db.table(tableName).toCollection();
-  await collection.applyQuery(query);
-  const docs = await collection.toArray();
+  const table = db.table(tableName);
+  const docs = await table.find(query).toArray();
   db.close();
   return docs;
 }
 
 export async function count(dbName, tableName, query) {
   const db = await IndexedDB.open(dbName, tableName);
-  const collection = db.table(tableName).toCollection();
-  await collection.applyQuery(query);
-  const count = await collection.count();
+  const table = db.table(tableName);
+  const count = await table.find(query).count();
   db.close();
   return count;
 }
@@ -89,8 +113,9 @@ export async function count(dbName, tableName, query) {
 export async function findById(dbName, tableName, id) {
   const db = await IndexedDB.open(dbName, tableName);
   const table = db.table(tableName);
+  const doc = await table.get(id);
   db.close();
-  return table.get(id);
+  return doc;
 }
 
 export async function save(dbName, tableName, docs = []) {
@@ -104,9 +129,7 @@ export async function save(dbName, tableName, docs = []) {
 export async function remove(dbName, tableName, query) {
   const db = await IndexedDB.open(dbName, tableName);
   const table = db.table(tableName);
-  const collection = table.toCollection();
-  await collection.applyQuery(query);
-  const docs = await collection.toArray();
+  const docs = await table.find(query).toArray();
   const keys = docs.map(doc => doc._id);
   await table.bulkDelete(keys);
   db.close();
@@ -124,13 +147,7 @@ export async function removeById(dbName, tableName, id) {
 export async function clear(dbName, tableName) {
   const db = await IndexedDB.open(dbName, tableName);
   const table = db.table(tableName);
-
-  try {
-    await table.clear();
-  } catch (error) {
-    // TODO: log error
-  }
-
+  await table.clear();
   db.close();
   return true;
 }

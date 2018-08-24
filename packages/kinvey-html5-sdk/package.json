@@ -20,7 +20,8 @@
     "axios": "^0.18.0",
     "dexie": "^2.0.4",
     "kinvey-js-sdk": "3.12.0",
-    "lodash": "^4.17.10"
+    "lodash": "^4.17.10",
+    "sift": "^6.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0-rc.2",
