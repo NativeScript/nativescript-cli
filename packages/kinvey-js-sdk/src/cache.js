@@ -112,8 +112,8 @@ export default class Cache {
     return store.removeById(this.appKey, this.collectionName, id);
   }
 
-  async clear() {
-    return store.clear(this.appKey, this.collectionName);
+  async clear(query) {
+    return store.clear(this.appKey, this.collectionName, query);
   }
 }
 

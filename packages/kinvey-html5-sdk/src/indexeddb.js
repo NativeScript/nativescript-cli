@@ -144,7 +144,7 @@ export async function removeById(dbName, tableName, id) {
   return 1;
 }
 
-export async function clear(dbName, tableName) {
+export async function clear(dbName, tableName, query) {
   const db = await IndexedDB.open(dbName, tableName);
   const table = db.table(tableName);
   await table.clear();

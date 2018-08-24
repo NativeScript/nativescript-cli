@@ -12,9 +12,9 @@ const QUERY_CACHE_TAG = 'kinvey-query';
 const PAGE_LIMIT = 10000;
 
 const SyncEvent = {
-  Create: 'Create',
-  Update: 'Update',
-  Delete: 'Delete'
+  Create: 'POST',
+  Update: 'PUT',
+  Delete: 'DELETE'
 };
 
 function serializeQuery(query) {
@@ -73,6 +73,12 @@ export default class Sync {
     this.tag = tag;
   }
 
+  find(query) {
+    const syncCache = new SyncCache(this.appKey, this.collectionName, this.tag);
+    return syncCache.find(query);
+  }
+
+
   count(query) {
     const syncCache = new SyncCache(this.appKey, this.collectionName, this.tag);
     return syncCache.count(query);
@@ -124,8 +130,10 @@ export default class Sync {
       syncDocs = await syncCache.save(docs.map((doc) => {
         return {
           _id: doc._id,
+          entityId: doc._id,
+          collection: this.collectionName,
           state: {
-            event
+            operation: event
           }
         };
       }));
@@ -134,12 +142,12 @@ export default class Sync {
     return singular ? syncDocs[0] : syncDocs;
   }
 
-  async push() {
+  async push(query) {
     const network = new NetworkStore(this.appKey, this.collectionName);
     const cache = new Cache(this.appKey, this.collectionName, this.tag);
     const syncCache = new SyncCache(this.appKey, this.collectionName, this.tag);
     const batchSize = 100;
-    const syncDocs = await syncCache.find();
+    const syncDocs = await syncCache.find(query);
 
     if (syncDocs.length > 0) {
       let i = 0;
@@ -153,13 +161,13 @@ export default class Sync {
         i += batchSize;
 
         const results = await Promise.all(batch.map(async (syncDoc) => {
-          const { _id, state = { event: undefined } } = syncDoc;
-          const { event } = state;
+          const { _id, state = { operation: undefined } } = syncDoc;
+          const event = state.operation;
 
           if (event === SyncEvent.Delete) {
             try {
               // Remove the doc from the backend
-              await network.removeById(_id).toPromise();
+              await network.removeById(_id);
 
               // Remove the sync doc
               await syncCache.removeById(_id);
@@ -167,13 +175,13 @@ export default class Sync {
               // Return a result
               return {
                 _id,
-                event
+                operation: event
               };
             } catch (error) {
               // Return a result with the error
               return {
                 _id,
-                event,
+                operation: event,
                 error
               };
             }
@@ -215,14 +223,14 @@ export default class Sync {
               // Return a result
               return {
                 _id,
-                event,
-                doc
+                operation: event,
+                entity: doc
               };
             } catch (error) {
               // Return a result with the error
               return {
                 _id,
-                event,
+                operation: event,
                 error
               };
             }
@@ -231,7 +239,7 @@ export default class Sync {
           // Return a default result
           return {
             _id,
-            event,
+            operation: event,
             error: new Error('Unable to push item in sync table because the event was not recognized.')
           };
         }));
@@ -330,6 +338,9 @@ export default class Sync {
     const cache = new Cache(this.appKey, this.collectionName, this.tag);
     const queryCache = new QueryCache(this.appKey, this.collectionName, this.tag);
 
+    // Clear the cache
+    await cache.clear();
+
     // Get the total count of docs
     const response = await network.count(query, true).toPromise();
     const count = 'count' in response.data ? response.data.count : Infinity;
@@ -360,12 +371,11 @@ export default class Sync {
     return totalPageCount;
   }
 
-  clear() {
+  clear(query) {
     const syncCache = new SyncCache(this.appKey, this.collectionName, this.tag);
-    const queryCache = new QueryCache(this.appKey, this.collectionName, this.tag);
-    return Promise.all([
-      queryCache.clear(),
-      syncCache.clear()
-    ]);
+    if (query) {
+      return syncCache.remove(query);
+    }
+    return syncCache.clear();
   }
 }

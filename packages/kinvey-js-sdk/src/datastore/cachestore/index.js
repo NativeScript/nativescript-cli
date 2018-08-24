@@ -96,7 +96,7 @@ export default class CacheStore {
         throw pushResult.error;
       }
 
-      return pushResult.doc;
+      return pushResult.entity;
     }
 
     return cachedDoc;
@@ -118,7 +118,7 @@ export default class CacheStore {
         throw pushResult.error;
       }
 
-      return pushResult.doc;
+      return pushResult.entity;
     }
 
     return cachedDoc;
@@ -189,11 +189,8 @@ export default class CacheStore {
 
   async clear() {
     const cache = new Cache(this.appKey, this.collectionName, this.tag);
-    const sync = new Sync(this.appKey, this.collectionName, this.tag);
-    await Promise.all([
-      sync.clear(),
-      cache.clear()
-    ]);
+    await this.clearSync();
+    return cache.clear();
   }
 
   async push(query) {
@@ -216,11 +213,11 @@ export default class CacheStore {
       }
 
       if (count === 1) {
-        throw new Error(`Unable to pull docs from the backend. There is ${count} doc`
+        throw new Error(`Unable to pull entities from the backend. There is ${count} entity`
           + ' that needs to be pushed to the backend.');
       }
 
-      throw new Error(`Unable to pull docs from the backend. There are ${count} docs`
+      throw new Error(`Unable to pull entities from the backend. There are ${count} entities`
         + ' that need to be pushed to the backend.');
     }
 
@@ -244,8 +241,22 @@ export default class CacheStore {
     return { push, pull };
   }
 
-  async clearSync() {
+  pendingSyncDocs(query) {
     const sync = new Sync(this.appKey, this.collectionName, this.tag);
-    await sync.clear();
+    return sync.find(query);
+  }
+
+  pendingSyncEntities(query) {
+    return this.pendingSyncDocs(query);
+  }
+
+  pendingSyncCount(query) {
+    const sync = new Sync(this.appKey, this.collectionName, this.tag);
+    return sync.count(query);
+  }
+
+  clearSync(query) {
+    const sync = new Sync(this.appKey, this.collectionName, this.tag);
+    return sync.clear(query);
   }
 }
