@@ -4,5 +4,6 @@
 	"CI_LOGGER": false,
 	"ANDROID_DEBUG_UI_MAC": "Google Chrome",
 	"USE_POD_SANDBOX": false,
-	"DISABLE_HOOKS": false
+	"DISABLE_HOOKS": false,
+	"UPLOAD_PLAYGROUND_FILES_ENDPOINT": "https://play.nativescript.org/api/files" 
 }

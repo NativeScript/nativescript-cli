@@ -10,7 +10,8 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 
 	constructor(private $errors: IErrors,
 		private $logger: ILogger,
-		private $httpClient: Server.IHttpClient) {
+		private $httpClient: Server.IHttpClient,
+		private $config: IConfiguration) {
 		super();
 	}
 
@@ -74,10 +75,9 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			onDevicesPresence: (devices: Device[]) => ({ }),
 			onSendingChange: (sending: boolean) => ({ }),
 			onBiggerFilesUpload: async (filesContent, callback) => {
-				// TODO: stop using the playground endpoint when we have a direct Amazon one
 				const gzippedContent = new Buffer(pako.gzip(filesContent));
 				const playgroundUploadResponse = await this.$httpClient.httpRequest({
-					url: "https://play.telerik.rocks/api/files",
+					url: this.$config.UPLOAD_PLAYGROUND_FILES_ENDPOINT,
 					method: "POST",
 					body: gzippedContent,
 					headers: {

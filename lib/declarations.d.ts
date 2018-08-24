@@ -382,6 +382,7 @@ interface IStaticConfig extends Config.IStaticConfig { }
 interface IConfiguration extends Config.IConfig {
 	ANDROID_DEBUG_UI: string;
 	USE_POD_SANDBOX: boolean;
+	UPLOAD_PLAYGROUND_FILES_ENDPOINT: string;
 }
 
 interface IApplicationPackage {
