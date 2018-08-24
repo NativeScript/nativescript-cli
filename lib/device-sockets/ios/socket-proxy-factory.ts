@@ -90,7 +90,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				this.$logger.info("Frontend client connected.");
 				let _socket;
 				try {
-					_socket = await factory();
+					_socket = await helpers.connectEventuallyUntilTimeout(factory, 10000);
 				} catch (err) {
 					err.deviceIdentifier = deviceIdentifier;
 					this.$logger.trace(err);

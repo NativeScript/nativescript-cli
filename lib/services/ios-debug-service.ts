@@ -231,14 +231,23 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	private getSocketFactory(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions): () => Promise<net.Socket> {
+		let pendingExecution: Promise<net.Socket> = null;
 		const factory = async () => {
-			const port = await this.$iOSDebuggerPortService.getPort({ projectDir: debugData.projectDir, deviceId: debugData.deviceIdentifier, appId: debugData.applicationIdentifier }, debugOptions);
-			if (!port) {
-				this.$errors.fail("NativeScript debugger was not able to get inspector socket port.");
+			if (!pendingExecution) {
+				const func = async () => {
+					const port = await this.$iOSDebuggerPortService.getPort({ projectDir: debugData.projectDir, deviceId: debugData.deviceIdentifier, appId: debugData.applicationIdentifier }, debugOptions);
+					if (!port) {
+						this.$errors.fail("NativeScript debugger was not able to get inspector socket port.");
+					}
+					const socket = device ? await device.connectToPort(port) : net.connect(port);
+					this._sockets.push(socket);
+					pendingExecution = null;
+					return socket;
+				};
+				pendingExecution = func();
 			}
-			const socket = device ? await device.connectToPort(port) : await this.$iOSEmulatorServices.connectToPort({ port });
-			this._sockets.push(socket);
-			return socket;
+
+			return pendingExecution;
 		};
 
 		factory.bind(this);
