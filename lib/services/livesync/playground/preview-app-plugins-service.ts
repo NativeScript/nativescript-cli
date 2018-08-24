@@ -22,7 +22,7 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 			}
 
 			if (devicePluginVersion && semver.gt(semver.coerce(localPluginVersion), semver.coerce(devicePluginVersion))) {
-				this.$logger.warn(`Plugin ${localPlugin} has local version ${localPluginVersion} but preview app has ${devicePluginVersion} version of plugin. Some functionalities may not work.`);
+				this.$logger.warn(`Plugin ${localPlugin} has local version ${localPluginVersion} but preview app has version ${devicePluginVersion}. Some functionalities may not work.`);
 			}
 		});
 	}

@@ -14,8 +14,8 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 		super();
 	}
 
-	public get qrCodeUrl(): string {
-		return `nsplay://boot?instanceId=${this.instanceId}&pKey=${PubnubKeys.PUBLISH_KEY}&sKey=${PubnubKeys.SUBSCRIBE_KEY}&template=play-ng`;
+	public async shortenQrCodeUrl(): Promise<string> {
+		return this.qrCodeUrl;
 	}
 
 	public initialize(): void {
@@ -38,6 +38,10 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 
 	public stop(): void {
 		this.messagingService.stop();
+	}
+
+	private get qrCodeUrl(): string {
+		return `nsplay://boot?instanceId=${this.instanceId}&pKey=${PubnubKeys.PUBLISH_KEY}&sKey=${PubnubKeys.SUBSCRIBE_KEY}&template=play-ng`;
 	}
 
 	private getInitConfig(): Config {

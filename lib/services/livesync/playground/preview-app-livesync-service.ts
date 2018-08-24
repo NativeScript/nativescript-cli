@@ -35,11 +35,13 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	}
 
 	private async generateQRCode(): Promise<void> {
-		this.$qrCodeTerminalService.generate(this.$previewSdkService.qrCodeUrl);
+		const qrCodeUrl = await this.$previewSdkService.shortenQrCodeUrl();
+		this.$qrCodeTerminalService.generate(qrCodeUrl);
 	}
 
 	private async trySyncFilesOnDevice(data: IPreviewAppLiveSyncData, device: Device, files?: string[]): Promise<void> {
 		await this.$previewAppPluginsService.comparePluginsOnDevice(device);
+		this.showWarningsForNativeFiles(files);
 
 		this.$logger.info(`Start syncing changes on device ${device.id}.`);
 
@@ -111,6 +113,16 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 			skipCopyAppResourcesFiles: true
 		};
 		await this.$platformService.preparePlatform(prepareInfo);
+	}
+
+	private async showWarningsForNativeFiles(files: string[]): Promise<void> {
+		if (files && files.length) {
+			for (const file of files) {
+				if (file.indexOf(APP_RESOURCES_FOLDER_NAME) > -1) {
+					this.$logger.warn(`Unable to apply changes from ${APP_RESOURCES_FOLDER_NAME} folder. You need to build your application in order to make changes in ${APP_RESOURCES_FOLDER_NAME} folder.`);
+				}
+			}
+		}
 	}
 }
 $injector.register("previewAppLiveSyncService", PreviewAppLiveSyncService);
