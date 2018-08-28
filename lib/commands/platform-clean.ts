@@ -26,7 +26,12 @@ export class CleanCommand implements ICommand {
 			this.$platformService.validatePlatformInstalled(platform, this.$projectData);
 
 			const currentRuntimeVersion = this.$platformService.getCurrentPlatformVersion(platform, this.$projectData);
-			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(platform, this.$projectData.projectDir, currentRuntimeVersion);
+			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
+				platform,
+				projectDir: this.$projectData.projectDir,
+				runtimeVersion: currentRuntimeVersion,
+				options: this.$options
+			});
 		}
 
 		return true;

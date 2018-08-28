@@ -83,7 +83,7 @@ describe("platformEnvironmentRequirements ", () => {
 
 		it("should return true when environment is configured", async () => {
 			mockDoctorService({ canExecuteLocalBuild: true });
-			const result = await platformEnvironmentRequirements.checkEnvironmentRequirements(platform);
+			const result = await platformEnvironmentRequirements.checkEnvironmentRequirements({ platform });
 			assert.isTrue(result.canExecute);
 			assert.isTrue(promptForChoiceData.length === 0);
 		});
@@ -92,7 +92,7 @@ describe("platformEnvironmentRequirements ", () => {
 			mockPrompter({ firstCallOptionName: PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME });
 			mockNativeScriptCloudExtensionService({ isInstalled: false });
 
-			await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform));
+			await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform }));
 			assert.isTrue(promptForChoiceData.length === 1);
 			assert.isTrue(isExtensionInstallCalled);
 			assert.deepEqual("To continue, choose one of the following options: ", promptForChoiceData[0].message);
@@ -103,7 +103,7 @@ describe("platformEnvironmentRequirements ", () => {
 			mockPrompter({ firstCallOptionName: PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME });
 			mockNativeScriptCloudExtensionService({ isInstalled: true });
 
-			await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform));
+			await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform }));
 			assert.isTrue(promptForChoiceData.length === 1);
 			assert.deepEqual("To continue, choose one of the following options: ", promptForChoiceData[0].message);
 			assert.deepEqual(['Sync to Playground', 'Try Cloud Operation', 'Configure for Local Builds', 'Skip Step and Configure Manually'], promptForChoiceData[0].choices);
@@ -111,7 +111,7 @@ describe("platformEnvironmentRequirements ", () => {
 		it("should skip env check when NS_SKIP_ENV_CHECK environment variable is passed", async() => {
 			process.env.NS_SKIP_ENV_CHECK = true;
 
-			const output = await platformEnvironmentRequirements.checkEnvironmentRequirements(platform);
+			const output = await platformEnvironmentRequirements.checkEnvironmentRequirements({ platform });
 
 			assert.isTrue(output.canExecute);
 			assert.isFalse(isExtensionInstallCalled);
@@ -130,7 +130,7 @@ describe("platformEnvironmentRequirements ", () => {
 
 				mockNativeScriptCloudExtensionService({ isInstalled: null });
 
-				const output = await platformEnvironmentRequirements.checkEnvironmentRequirements(platform);
+				const output = await platformEnvironmentRequirements.checkEnvironmentRequirements({ platform });
 				assert.isTrue(output.canExecute);
 			});
 
@@ -140,7 +140,7 @@ describe("platformEnvironmentRequirements ", () => {
 					mockPrompter({ firstCallOptionName: PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME, secondCallOptionName: PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME });
 					mockNativeScriptCloudExtensionService({ isInstalled: true });
 
-					await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), manuallySetupErrorMessage);
+					await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform }), manuallySetupErrorMessage);
 				});
 				describe("and cloud extension is not installed", () => {
 					beforeEach(() => {
@@ -150,18 +150,18 @@ describe("platformEnvironmentRequirements ", () => {
 					it("should list 2 posibile options to select", async () => {
 						mockPrompter({ firstCallOptionName: PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME });
 
-						await platformEnvironmentRequirements.checkEnvironmentRequirements(platform);
+						await platformEnvironmentRequirements.checkEnvironmentRequirements({ platform });
 						assert.deepEqual(promptForChoiceData[1].choices, ['Configure for Cloud Builds', 'Skip Step and Configure Manually']);
 					});
 					it("should install nativescript-cloud extension when 'Configure for Cloud Builds' option is selected", async () => {
 						mockPrompter({ firstCallOptionName: PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME, secondCallOptionName: PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME });
 
-						await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), cloudBuildsErrorMessage);
+						await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform }), cloudBuildsErrorMessage);
 						assert.deepEqual(isExtensionInstallCalled, true);
 					});
 					it("should setup manually when 'Skip Step and Configure Manually' option is selected", async () => {
 						mockPrompter({ firstCallOptionName: PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME, secondCallOptionName: PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME });
-						await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), manuallySetupErrorMessage);
+						await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform }), manuallySetupErrorMessage);
 					});
 				});
 			});
@@ -175,7 +175,7 @@ describe("platformEnvironmentRequirements ", () => {
 
 			it("should install nativescript-cloud extension when it is not installed", async () => {
 				mockNativeScriptCloudExtensionService({ isInstalled: false });
-				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), cloudBuildsErrorMessage);
+				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform }), cloudBuildsErrorMessage);
 				assert.isTrue(isExtensionInstallCalled);
 			});
 		});
@@ -188,11 +188,11 @@ describe("platformEnvironmentRequirements ", () => {
 
 			it("should fail when nativescript-cloud extension is installed", async () => {
 				mockNativeScriptCloudExtensionService({ isInstalled: true });
-				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), manuallySetupErrorMessage);
+				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform }), manuallySetupErrorMessage);
 			});
 			it("should fail when nativescript-cloud extension is not installed", async () => {
 				mockNativeScriptCloudExtensionService({ isInstalled: false });
-				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), manuallySetupErrorMessage);
+				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform }), manuallySetupErrorMessage);
 			});
 		});
 
@@ -205,11 +205,11 @@ describe("platformEnvironmentRequirements ", () => {
 
 			it("should fail when nativescript-cloud extension is installed", async () => {
 				mockNativeScriptCloudExtensionService({ isInstalled: true });
-				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), nonInteractiveConsoleMessageWhenExtensionIsInstalled);
+				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform }), nonInteractiveConsoleMessageWhenExtensionIsInstalled);
 			});
 			it("should fail when nativescript-cloud extension is not installed", async () => {
 				mockNativeScriptCloudExtensionService({ isInstalled: false });
-				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements(platform), nonInteractiveConsoleMessageWhenExtensionIsNotInstalled);
+				await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform }), nonInteractiveConsoleMessageWhenExtensionIsNotInstalled);
 			});
 		});
 	});

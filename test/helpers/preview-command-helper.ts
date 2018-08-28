@@ -112,8 +112,8 @@ describe("previewCommandHelper", () => {
 				qrCodeProperty: "isGeneratedForiOS",
 			},
 			{
-				name: "should generate qr code for current app when q key is pressed",
-				stdinData: "q",
+				name: "should generate qr code for current app when c key is pressed",
+				stdinData: "c",
 				qrCodeProperty: "isGeneratedForCurrentApp",
 			}
 		];
@@ -140,8 +140,8 @@ describe("previewCommandHelper", () => {
 				stdinData: "i"
 			},
 			{
-				name: "should not generate qr code for current app when q key is pressed",
-				stdinData: "q"
+				name: "should not generate qr code for current app when c key is pressed",
+				stdinData: "c"
 			}
 		];
 

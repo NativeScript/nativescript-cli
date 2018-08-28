@@ -17,7 +17,7 @@ class DoctorService implements IDoctorService {
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $versionsService: IVersionsService) { }
 
-	public async printWarnings(configOptions?: { trackResult: boolean , projectDir?: string, runtimeVersion?: string }): Promise<void> {
+	public async printWarnings(configOptions?: { trackResult: boolean , projectDir?: string, runtimeVersion?: string, options?: IOptions }): Promise<void> {
 		const infos = await this.$terminalSpinnerService.execute<NativeScriptDoctor.IInfo[]>({
 			text: `Getting environment information ${EOL}`
 		}, () => doctor.getInfos({ projectDir: configOptions && configOptions.projectDir, androidRuntimeVersion: configOptions && configOptions.runtimeVersion }));
@@ -47,7 +47,12 @@ class DoctorService implements IDoctorService {
 			this.$logger.error("Cannot get the latest versions information from npm. Please try again later.");
 		}
 
-		await this.$injector.resolve("platformEnvironmentRequirements").checkEnvironmentRequirements(null, configOptions && configOptions.projectDir);
+		await this.$injector.resolve<IPlatformEnvironmentRequirements>("platformEnvironmentRequirements").checkEnvironmentRequirements({
+			platform: null,
+			projectDir: configOptions && configOptions.projectDir,
+			runtimeVersion: configOptions && configOptions.runtimeVersion,
+			options: configOptions && configOptions.options
+		});
 	}
 
 	public async runSetupScript(): Promise<ISpawnResult> {

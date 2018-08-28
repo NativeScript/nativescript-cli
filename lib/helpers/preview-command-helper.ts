@@ -53,7 +53,7 @@ export class PreviewCommandHelper implements IPreviewCommandHelper {
 				await this.$playgroundQrCodeGenerator.generateQrCodeForiOS();
 				this.printUsage();
 				return;
-			case "q":
+			case "c":
 				await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp();
 				this.printUsage();
 				return;
@@ -64,7 +64,7 @@ export class PreviewCommandHelper implements IPreviewCommandHelper {
 		this.$logger.info(`
 -> Press ${this.underlineBoldCyan("a")} to show the QR code of NativeScript Playground app for ${this.underlineBoldCyan("Android")} devices
 -> Press ${this.underlineBoldCyan("i")} to show the QR code of NativeScript Playground app for ${this.underlineBoldCyan("iOS")} devices
--> Press ${this.underlineBoldCyan("q")} to display the QR code of the current application.
+-> Press ${this.underlineBoldCyan("c")} to display the QR code of the ${this.underlineBoldCyan("current application")}.
 		`);
 	}
 

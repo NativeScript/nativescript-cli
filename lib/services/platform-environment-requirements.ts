@@ -40,7 +40,8 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		"deploy": "tns cloud deploy"
 	};
 
-	public async checkEnvironmentRequirements(platform?: string, projectDir?: string, runtimeVersion?: string): Promise<ICheckEnvironmentRequirementsOutput> {
+	public async checkEnvironmentRequirements(input: ICheckEnvironmentRequirementsInput): Promise<ICheckEnvironmentRequirementsOutput> {
+		const { platform, projectDir, runtimeVersion, options } = input;
 		let selectedOption = null;
 
 		if (process.env.NS_SKIP_ENV_CHECK) {
@@ -84,7 +85,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 
 			await this.processCloudBuildsIfNeeded(selectedOption, platform);
 			this.processManuallySetupIfNeeded(selectedOption, platform);
-			await this.processSyncToPreviewAppIfNeeded(selectedOption, projectDir);
+			await this.processSyncToPreviewAppIfNeeded(selectedOption, projectDir, options);
 
 			if (selectedOption === PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME) {
 				await this.$doctorService.runSetupScript();
@@ -182,7 +183,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		}
 	}
 
-	private async processSyncToPreviewAppIfNeeded(selectedOption: string, projectDir: string) {
+	private async processSyncToPreviewAppIfNeeded(selectedOption: string, projectDir: string, options: IOptions) {
 		if (selectedOption === PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_OPTION_NAME) {
 			if (!projectDir) {
 				this.$errors.failWithoutHelp(`No project found. In order to sync to playground you need to go to project directory or specify --path option.`);
@@ -191,10 +192,10 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			await this.$previewAppLiveSyncService.initialSync({
 				projectDir,
 				appFilesUpdaterOptions: {
-					bundle: false,
-					release: false
+					bundle: !!options.bundle,
+					release: options.release
 				},
-				env: null
+				env: options.env
 			});
 		}
 	}
