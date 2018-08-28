@@ -20,6 +20,7 @@ const TRY_CONNECT_TIMEOUT = 30000;
 const DEFAULT_LOCAL_HOST_ADDRESS = "127.0.0.1";
 
 export class AndroidLivesyncTool implements IAndroidLivesyncTool {
+	public protocolVersion: string;
 	private operationPromises: IDictionary<any>;
 	private socketError: string | Error;
 	private socketConnection: INetSocket;
@@ -179,6 +180,10 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		}
 	}
 
+	public hasConnection(): boolean {
+		return !!this.socketConnection;
+	}
+
 	private sendFileHeader(filePath: string): Promise<void> {
 		return new Promise((resolve, reject) => {
 			let error;
@@ -292,6 +297,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		const protocolVersion = versionBuffer.toString();
 		const appIdentifier = appIdentifierBuffer.toString();
 		this.$logger.trace(`Handle socket connection for app identifier: ${appIdentifier} with protocol version: ${protocolVersion}.`);
+		this.protocolVersion = protocolVersion;
 
 		this.socketConnection.on("data", (connectionData: NodeBuffer) => this.handleData(socket.uid, connectionData));
 		this.socketConnection.on("close", (hasError: boolean) => this.handleSocketClose(socket.uid, hasError));
