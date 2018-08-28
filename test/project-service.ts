@@ -152,6 +152,9 @@ class ProjectIntegrationTest {
 			executeAfterHooks: async (commandName: string, hookArguments?: IDictionary<any>): Promise<void> => undefined
 		});
 		this.testInjector.register("pacoteService", PacoteService);
+		this.testInjector.register("proxyService", {
+			getCache: async (): Promise<IProxySettings> => null
+		});
 	}
 }
 

@@ -1,6 +1,23 @@
 NativeScript CLI Changelog
 ================
 
+4.2.3 (2018, August 27)
+==
+
+### Fixed
+* [Fixed #3840](https://github.com/NativeScript/nativescript-cli/issues/3840): Unable to reconnect to iOS Simulator when debugging
+* [Fixed #3824](https://github.com/NativeScript/nativescript-cli/issues/3824): `tns create` command not using proxy set with `tns proxy set`
+
+
+4.2.2 (2018, August 17)
+==
+
+### Fixed
+* [Fixed #3818](https://github.com/NativeScript/nativescript-cli/issues/3818): Unable to start application on Android device with a custom activity containing capital letters
+* [Fixed #3820](https://github.com/NativeScript/nativescript-cli/issues/3820): A command help is shown on native build error
+* [Fixed #3821](https://github.com/NativeScript/nativescript-cli/issues/3821): [Sporadic] Unable to start iOS debugger from VSCode extension
+
+
 4.2.1 (2018, August 10)
 ==
 

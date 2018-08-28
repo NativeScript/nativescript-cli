@@ -17,7 +17,7 @@ interface IIOSDebuggerPortService {
 	 * Gets iOS debugger port for specified deviceId and appId
 	 * @param {IIOSDebuggerPortInputData} data - Describes deviceId and appId
 	 */
-	getPort(data: IIOSDebuggerPortInputData): Promise<number>;
+	getPort(data: IIOSDebuggerPortInputData, debugOptions?: IDebugOptions): Promise<number>;
 	/**
 	 * Attaches on DEBUGGER_PORT_FOUND event and STARTING_IOS_APPLICATION events
 	 * In case when DEBUGGER_PORT_FOUND event is emitted, stores the port and clears the timeout if such.
