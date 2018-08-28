@@ -22,12 +22,12 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	}
 
 	public async executeCommandLiveSync(platform?: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions) {
-		if (!this.$options.syncAllFiles) {
-			this.$logger.info("Skipping node_modules folder! Use the syncAllFiles option to sync files from this folder.");
-		}
-
 		if (additionalOptions && additionalOptions.syncToPreviewApp) {
 			return;
+		}
+
+		if (!this.$options.syncAllFiles) {
+			this.$logger.info("Skipping node_modules folder! Use the syncAllFiles option to sync files from this folder.");
 		}
 
 		const emulator = this.$options.emulator;

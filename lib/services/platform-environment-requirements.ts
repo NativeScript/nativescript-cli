@@ -41,7 +41,9 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	};
 
 	public async checkEnvironmentRequirements(input: ICheckEnvironmentRequirementsInput): Promise<ICheckEnvironmentRequirementsOutput> {
-		const { platform, projectDir, runtimeVersion, options } = input;
+		const { platform, projectDir, runtimeVersion, hideSyncToPreviewAppOption } = input;
+		const options = input.options || <IOptions>{ };
+
 		let selectedOption = null;
 
 		if (process.env.NS_SKIP_ENV_CHECK) {
@@ -65,21 +67,9 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				this.fail(this.getNonInteractiveConsoleMessage(platform));
 			}
 
-			const infoMessage = this.getInteractiveConsoleMessage(platform);
-			this.$logger.info(infoMessage);
+			const infoMessage = this.getInteractiveConsoleMessage({ hideSyncToPreviewAppOption });
 
-			const choices = this.$nativeScriptCloudExtensionService.isInstalled() ? [
-				PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_OPTION_NAME,
-				PlatformEnvironmentRequirements.TRY_CLOUD_OPERATION_OPTION_NAME,
-				PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
-				PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
-			] : [
-					PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_OPTION_NAME,
-					PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME,
-					PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
-					PlatformEnvironmentRequirements.BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME,
-					PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
-				];
+			const choices = this.getChoices({ hideSyncToPreviewAppOption });
 
 			selectedOption = await this.promptForChoice({ infoMessage, choices });
 
@@ -236,22 +226,28 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			]);
 	}
 
-	private getInteractiveConsoleMessage(platform: string) {
-		return this.$nativeScriptCloudExtensionService.isInstalled() ?
-			this.buildMultilineMessage([
-				`${PlatformEnvironmentRequirements.MISSING_LOCAL_BUT_CLOUD_SETUP_MESSAGE} ${PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE}`,
-				PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_MESSAGE,
-				`Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`,
-				`Select "Skip Step and Configure Manually" to disregard this option and install any required components manually.`
-			]) :
-			this.buildMultilineMessage([
-				PlatformEnvironmentRequirements.MISSING_LOCAL_AND_CLOUD_SETUP_MESSAGE,
-				PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_MESSAGE,
-				`Select "Configure for Cloud Builds" to install the ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and automatically configure your environment for cloud builds.`,
-				`Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`,
-				`Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`,
-				`Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`
-			]);
+	private getInteractiveConsoleMessage(options: { hideSyncToPreviewAppOption: boolean }) {
+		const isNativeScriptCloudExtensionInstalled = this.$nativeScriptCloudExtensionService.isInstalled();
+		const message = isNativeScriptCloudExtensionInstalled ?
+			`${PlatformEnvironmentRequirements.MISSING_LOCAL_BUT_CLOUD_SETUP_MESSAGE} ${PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE}` :
+			PlatformEnvironmentRequirements.MISSING_LOCAL_AND_CLOUD_SETUP_MESSAGE;
+		const choices = isNativeScriptCloudExtensionInstalled ? [
+			`Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`,
+			`Select "Skip Step and Configure Manually" to disregard this option and install any required components manually.`
+		] : [
+			`Select "Configure for Cloud Builds" to install the ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and automatically configure your environment for cloud builds.`,
+			`Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`,
+			`Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`,
+			`Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`
+		];
+
+		if (!options.hideSyncToPreviewAppOption) {
+			choices.unshift(PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_MESSAGE);
+		}
+
+		const lines = [message].concat(choices);
+		const result = this.buildMultilineMessage(lines);
+		return result;
 	}
 
 	private async promptForChoice(opts: { infoMessage: string, choices: string[],  }): Promise<string> {
@@ -278,6 +274,25 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 
 	private buildMultilineMessage(parts: string[]): string {
 		return parts.join(EOL);
+	}
+
+	private getChoices(options: { hideSyncToPreviewAppOption: boolean }): string[] {
+		const choices = this.$nativeScriptCloudExtensionService.isInstalled() ? [
+			PlatformEnvironmentRequirements.TRY_CLOUD_OPERATION_OPTION_NAME,
+			PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
+			PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
+		] : [
+				PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME,
+				PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
+				PlatformEnvironmentRequirements.BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME,
+				PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
+			];
+
+		if (!options.hideSyncToPreviewAppOption) {
+			choices.unshift(PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_OPTION_NAME);
+		}
+
+		return choices;
 	}
 }
 $injector.register("platformEnvironmentRequirements", PlatformEnvironmentRequirements);

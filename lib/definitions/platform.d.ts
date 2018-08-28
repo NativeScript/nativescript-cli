@@ -399,6 +399,7 @@ interface ICheckEnvironmentRequirementsInput {
 	projectDir?: string;
 	runtimeVersion?: string;
 	options?: IOptions;
+	hideSyncToPreviewAppOption?: boolean;
 }
 
 interface ICheckEnvironmentRequirementsOutput {
