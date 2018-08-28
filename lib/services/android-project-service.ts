@@ -118,7 +118,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public async validate(projectData: IProjectData): Promise<IValidateOutput> {
+	public async validate(projectData: IProjectData): Promise<IValidatePlatformOutput> {
 		this.validatePackageName(projectData.projectId);
 		this.validateProjectName(projectData.projectName);
 

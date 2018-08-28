@@ -127,8 +127,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 	}
 
-	public async validatePlatform(platform: string): Promise<IDictionary<IValidateOutput>> {
-		const result: IDictionary<IValidateOutput> = {};
+	public async validatePlatform(platform: string): Promise<IDictionary<IValidatePlatformOutput>> {
+		const result: IDictionary<IValidatePlatformOutput> = {};
 
 		const availablePlatforms = this.getPlatformsForOperation(platform);
 		for (const availablePlatform of availablePlatforms) {

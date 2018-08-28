@@ -133,7 +133,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return path.join(this.getPlatformData(projectData).projectRoot, projectData.projectName, "Resources");
 	}
 
-	public async validate(projectData: IProjectData): Promise<IValidateOutput> {
+	public async validate(projectData: IProjectData): Promise<IValidatePlatformOutput> {
 		if (!this.$hostInfo.isDarwin) {
 			return;
 		}
