@@ -4,6 +4,9 @@ import { PreviewSdkEventNames } from "./preview-app-constants";
 import { APP_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME, TNS_MODULES_FOLDER_NAME } from "../../../constants";
 
 export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
+	private excludedFileExtensions = [".ts", ".sass", ".scss", ".less"];
+	private excludedFiles = [".DS_Store"];
+
 	constructor(private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $platformService: IPlatformService,
@@ -67,15 +70,14 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		if (files) {
 			files = files.map(file => path.join(platformsAppFolderPath, path.relative(appFolderPath, file)));
 		} else {
-			const excludedProjectDirsAndFiles = [TNS_MODULES_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME, "*.ts", "*.sass", "*.scss", ".less"];
-			files = this.$projectFilesManager.getProjectFiles(platformsAppFolderPath, excludedProjectDirsAndFiles);
+			files = this.$projectFilesManager.getProjectFiles(platformsAppFolderPath);
 		}
 
 		const filesToTransfer = files
 			.filter(file => file.indexOf(TNS_MODULES_FOLDER_NAME) === -1)
 			.filter(file => file.indexOf(APP_RESOURCES_FOLDER_NAME) === -1)
-			.filter(file => path.basename(file) !== "main.aot.js")
-			.filter(file => path.basename(file) !== ".DS_Store");
+			.filter(file => !_.includes(this.excludedFiles, path.basename(file)))
+			.filter(file => !_.includes(this.excludedFileExtensions, path.extname(file)));
 
 		this.$logger.trace(`Transferring ${filesToTransfer.join("\n")}.`);
 
