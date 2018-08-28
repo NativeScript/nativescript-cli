@@ -313,6 +313,10 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			const connectionTimer = setTimeout(() => {
 				if (!isConnected) {
 					isConnected = true;
+					if (this.pendingConnectionData && this.pendingConnectionData.socketTimer) {
+						clearTimeout(this.pendingConnectionData.socketTimer);
+					}
+
 					reject(lastKnownError || new Error("Socket connection timeouted."));
 					this.pendingConnectionData = null;
 				}

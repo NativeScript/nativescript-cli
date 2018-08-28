@@ -202,7 +202,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		// the VSCode Ext starts `tns debug ios --no-client` to start/attach to debug sessions
 		// check if --no-client is passed - default to opening a tcp socket (versus Chrome DevTools (websocket))
 		if ((debugOptions.inspector || !debugOptions.client) && this.$hostInfo.isDarwin) {
-			this._socketProxy = await this.$socketProxyFactory.createTCPSocketProxy(this.getSocketFactory(debugData, device));
+			this._socketProxy = await this.$socketProxyFactory.createTCPSocketProxy(this.getSocketFactory(device, debugData, debugOptions));
 			await this.openAppInspector(this._socketProxy.address(), debugData, debugOptions);
 			return null;
 		} else {
@@ -211,7 +211,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 			}
 
 			const deviceIdentifier = device ? device.deviceInfo.identifier : debugData.deviceIdentifier;
-			this._socketProxy = await this.$socketProxyFactory.createWebSocketProxy(this.getSocketFactory(debugData, device), deviceIdentifier);
+			this._socketProxy = await this.$socketProxyFactory.createWebSocketProxy(this.getSocketFactory(device, debugData, debugOptions), deviceIdentifier);
 			return this.getChromeDebugUrl(debugOptions, this._socketProxy.options.port);
 		}
 	}
@@ -230,15 +230,24 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		}
 	}
 
-	private getSocketFactory(debugData: IDebugData, device?: Mobile.IiOSDevice): () => Promise<net.Socket> {
+	private getSocketFactory(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions): () => Promise<net.Socket> {
+		let pendingExecution: Promise<net.Socket> = null;
 		const factory = async () => {
-			const port = await this.$iOSDebuggerPortService.getPort({ projectDir: debugData.projectDir, deviceId: debugData.deviceIdentifier, appId: debugData.applicationIdentifier });
-			if (!port) {
-				this.$errors.fail("NativeScript debugger was not able to get inspector socket port.");
+			if (!pendingExecution) {
+				const func = async () => {
+					const port = await this.$iOSDebuggerPortService.getPort({ projectDir: debugData.projectDir, deviceId: debugData.deviceIdentifier, appId: debugData.applicationIdentifier }, debugOptions);
+					if (!port) {
+						this.$errors.fail("NativeScript debugger was not able to get inspector socket port.");
+					}
+					const socket = device ? await device.connectToPort(port) : net.connect(port);
+					this._sockets.push(socket);
+					pendingExecution = null;
+					return socket;
+				};
+				pendingExecution = func();
 			}
-			const socket = device ? await device.connectToPort(port) : net.connect(port);
-			this._sockets.push(socket);
-			return socket;
+
+			return pendingExecution;
 		};
 
 		factory.bind(this);

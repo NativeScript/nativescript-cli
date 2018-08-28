@@ -701,11 +701,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			const childProcessOpts = opts.childProcessOpts || {};
 			childProcessOpts.cwd = childProcessOpts.cwd || projectRoot;
 			childProcessOpts.stdio = childProcessOpts.stdio || "inherit";
+			let commandResult;
+			try {
+				commandResult = await this.spawn(gradlew,
+					gradleArgs,
+					childProcessOpts,
+					spawnFromEventOptions);
+			} catch (err) {
+				this.$errors.failWithoutHelp(err.message);
+			}
 
-			return await this.spawn(gradlew,
-				gradleArgs,
-				childProcessOpts,
-				spawnFromEventOptions);
+			return commandResult;
 		}
 	}
 

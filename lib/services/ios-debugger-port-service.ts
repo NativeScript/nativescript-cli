@@ -14,7 +14,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 		private $projectDataService: IProjectDataService,
 		private $logger: ILogger) { }
 
-	public getPort(data: IIOSDebuggerPortInputData): Promise<number> {
+	public getPort(data: IIOSDebuggerPortInputData, debugOptions?: IDebugOptions): Promise<number> {
 		return new Promise((resolve, reject) => {
 			if (!this.canStartLookingForDebuggerPort(data)) {
 				resolve(IOSDebuggerPortService.DEFAULT_PORT);
@@ -22,7 +22,8 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 			}
 
 			const key = `${data.deviceId}${data.appId}`;
-			let retryCount: number = 10;
+			const timeout = this.getTimeout(debugOptions);
+			let retryCount = Math.max(timeout * 1000 / 500, 10);
 
 			const interval = setInterval(() => {
 				let port = this.getPortByKey(key);
