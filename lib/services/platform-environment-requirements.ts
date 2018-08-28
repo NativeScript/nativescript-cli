@@ -19,6 +19,11 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		return this.$injector.resolve("previewAppLiveSyncService");
 	}
 
+	@cache()
+	private get $previewCommandHelper(): IPreviewCommandHelper {
+		return this.$injector.resolve("previewCommandHelper");
+	}
+
 	public static CLOUD_SETUP_OPTION_NAME = "Configure for Cloud Builds";
 	public static LOCAL_SETUP_OPTION_NAME = "Configure for Local Builds";
 	public static TRY_CLOUD_OPERATION_OPTION_NAME = "Try Cloud Operation";
@@ -179,6 +184,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				this.$errors.failWithoutHelp(`No project found. In order to sync to playground you need to go to project directory or specify --path option.`);
 			}
 
+			this.$previewCommandHelper.run();
 			await this.$previewAppLiveSyncService.initialSync({
 				projectDir,
 				appFilesUpdaterOptions: {
