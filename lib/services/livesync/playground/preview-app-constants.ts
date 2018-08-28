@@ -4,8 +4,8 @@ export class PreviewSdkEventNames {
 }
 
 export class PubnubKeys {
-	public static PUBLISH_KEY = "pub-c-78911a3d-9dc9-4316-96e5-83e6fd17263f";
-	public static SUBSCRIBE_KEY = "sub-c-2c059576-47a1-11e7-b66e-0619f8945a4f";
+	public static PUBLISH_KEY = "pub-c-d7893276-cc78-4d18-8ab0-becba06e43de";
+	public static SUBSCRIBE_KEY = "sub-c-3dad1ebe-aaa3-11e8-8027-363023237e0b";
 }
 
 export class PlaygroundStoreUrls {
