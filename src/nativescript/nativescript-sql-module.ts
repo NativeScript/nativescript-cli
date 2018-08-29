@@ -7,9 +7,11 @@ const NativeScriptSQLite = require('nativescript-sqlite');
 
 export class NativescriptSqlModule {
   private _databaseName: string;
+  private _encryptionKey: string;
 
-  constructor(databaseName) {
+  constructor(databaseName, encryptionKey) {
     this._databaseName = databaseName;
+    this._encryptionKey = encryptionKey;
   }
 
   openTransaction(collection: string, query: any[], parameters: any[], write = false) {
@@ -18,7 +20,7 @@ export class NativescriptSqlModule {
     const isMulti = Array.isArray(query);
     query = isMulti ? query : [[query, parameters]];
 
-    return new NativeScriptSQLite(this._databaseName)
+    return new NativeScriptSQLite(this._databaseName, { key: this._encryptionKey })
       .then((db) => {
         // This will set the database to return the results as an array of objects
         db.resultType(NativeScriptSQLite.RESULTSASOBJECT);

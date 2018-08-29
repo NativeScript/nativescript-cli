@@ -8,7 +8,7 @@ import { Client as CoreClient } from '../core/client';
 import { NativescriptSqlModule } from './nativescript-sql-module';
 
 const sqliteStorageBuilder = (queue) => {
-  const sqlModule = new NativescriptSqlModule(CoreClient.sharedInstance().appKey);
+  const sqlModule = new NativescriptSqlModule(CoreClient.sharedInstance().appKey, CoreClient.sharedInstance().encryptionKey);
   const persister = new SqlKeyValueStorePersister(sqlModule);
   return new KeyValueStoreOfflineRepository(persister, queue);
 };
