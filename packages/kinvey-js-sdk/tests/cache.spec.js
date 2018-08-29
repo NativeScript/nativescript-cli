@@ -176,7 +176,7 @@ describe('Cache', () => {
       it('should call clear() on the adapter', () => {
         const spy = sinon.spy(MemoryAdapter, 'clear');
         cache.clear();
-        expect(spy.calledOnceWithExactly(dbName, collectionName)).to.be.true;
+        expect(spy.calledOnceWithExactly(dbName, collectionName, undefined)).to.be.true;
         spy.restore();
       });
     });

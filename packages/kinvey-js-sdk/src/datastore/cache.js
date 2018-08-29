@@ -1,4 +1,4 @@
-import Cache from '../../cache';
+import Cache from '../cache';
 
 export default class DataStoreCache extends Cache {
   constructor(appKey, collectionName, tag = '') {

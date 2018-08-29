@@ -1,5 +1,5 @@
-import { KinveyObservable } from '../../observable';
-import Query from '../../query';
+import { KinveyObservable } from '../observable';
+import Query from '../query';
 import Cache from './cache';
 import Sync from './sync';
 
@@ -19,11 +19,15 @@ export default class CacheStore {
     const stream = KinveyObservable.create(async (observer) => {
       try {
         const cachedDocs = await cache.find(query);
+        console.log(cachedDocs);
+        console.log();
         observer.next(cachedDocs);
 
         if (autoSync) {
           await this.pull(query, options);
           const docs = await cache.find(query);
+          console.log(docs);
+          console.log();
           observer.next(docs);
         }
 
@@ -207,10 +211,11 @@ export default class CacheStore {
     // Push sync queue
     const count = await sync.count();
     if (count > 0) {
-      if (autoSync) {
-        await sync.push();
-        return this.pull(query, Object.assign({ useDeltaSet, useAutoPagination, autoSync }, options));
-      }
+      // TODO in newer version
+      // if (autoSync) {
+      //   await sync.push();
+      //   return this.pull(query, Object.assign({ useDeltaSet, useAutoPagination, autoSync }, options));
+      // }
 
       if (count === 1) {
         throw new Error(`Unable to pull entities from the backend. There is ${count} entity`

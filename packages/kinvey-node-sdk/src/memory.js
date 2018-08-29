@@ -2,7 +2,7 @@ import Loki from 'lokijs';
 import isEmpty from 'lodash/isEmpty';
 
 class Collection extends Loki.Collection {
-  applyQuery(query, chain = false) {
+  find(query, chain = false) {
     let resultSet = this.chain();
 
     if (!query) {
@@ -69,7 +69,7 @@ class Collection extends Loki.Collection {
     return resultSet.data({ removeMeta: true });
   }
 
-  applyAggregation(aggregation) {
+  reduce(aggregation) {
     const {
       query,
       initial,
@@ -79,7 +79,7 @@ class Collection extends Loki.Collection {
     let docs = [];
 
     if (query) {
-      docs = this.applyQuery(query);
+      docs = this.find(query);
     } else {
       docs = this.chain().data({ removeMeta: true });
     }
@@ -130,7 +130,6 @@ class Memory extends Loki {
 function open(dbName, collectionName) {
   return new Promise((resolve, reject) => {
     const db = new Memory(dbName, {
-      adapter: new Loki.LokiMemoryAdapter(),
       autosave: false,
       autoload: true,
       autoloadCallback: (error) => {
@@ -159,19 +158,19 @@ function open(dbName, collectionName) {
 export async function find(appKey, collectionName, query) {
   const db = await open(appKey, collectionName);
   const collection = db.getCollection(collectionName);
-  return collection.applyQuery(query);
+  return collection.find(query);
 }
 
 export async function reduce(appKey, collectionName, aggregation) {
   const db = await open(appKey, collectionName);
   const collection = db.getCollection(collectionName);
-  return collection.applyAggregation(aggregation);
+  return collection.reduce(aggregation);
 }
 
 export async function count(appKey, collectionName, query) {
   const db = await open(appKey, collectionName);
   const collection = db.getCollection(collectionName);
-  const resultSet = collection.applyQuery(query, true);
+  const resultSet = collection.find(query, true);
   return resultSet.count();
 }
 
@@ -223,7 +222,7 @@ export async function save(appKey, collectionName, docsToSaveOrUpdate) {
 export async function remove(appKey, collectionName, query) {
   const db = await open(appKey, collectionName);
   const collection = db.getCollection(collectionName);
-  const resultSet = collection.applyQuery(query, true);
+  const resultSet = collection.find(query, true);
   const count = resultSet.count();
 
   if (count > 0) {

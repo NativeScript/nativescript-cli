@@ -6,14 +6,12 @@
     "bootstrap": "lerna run bootstrap",
     "build": "lerna run build --parallel",
     "lint": "lerna run lint --parallel",
-    "test": "lerna run test --parallel",
+    "test": "yarn wsrun test --serial",
     "test:ci": "yarn lint && yarn test"
   },
   "devDependencies": {
-    "commander": "^2.12.2",
     "lerna": "^3.0.4",
-    "lodash": "^4.17.10",
-    "request": "~2.83.0"
+    "wsrun": "^2.2.1"
   },
   "workspaces": {
     "packages": [

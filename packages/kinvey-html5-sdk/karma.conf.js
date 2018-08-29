@@ -1,5 +1,8 @@
 /* eslint-disable */
 const path = require('path');
+const Dotenv = require('dotenv-webpack');
+const merge = require('webpack-merge');
+const webpackConfig = require('./webpack.config');
 
 module.exports = function (config) {
   config.set({
@@ -18,7 +21,7 @@ module.exports = function (config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'tests/**/*.spec.js'
+      'tests/sync.spec.js'
     ],
 
 
@@ -29,7 +32,7 @@ module.exports = function (config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'tests/**/*.spec.js': ['webpack', 'sourcemap']
+      'tests/sync.spec.js': ['webpack', 'sourcemap']
     },
 
 
@@ -72,8 +75,8 @@ module.exports = function (config) {
     },
 
     // Webpack config
-    webpack: {
-      devtool: 'eval',
+    webpack: merge(webpackConfig, {
+      devtool: 'inline-source-map',
       module: {
         rules: [
           {
@@ -85,8 +88,10 @@ module.exports = function (config) {
           }
         ]
       },
-      node: { fs: 'empty' }
-    },
+      plugins: [
+        new Dotenv()
+      ]
+    }),
     webpackMiddleware: {
       stats: 'errors-only'
     }

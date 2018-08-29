@@ -10,7 +10,7 @@ const SDK_PATH = path.join(__dirname, '..', pkg.main);
 const SDK_TESTS_PATH = path.join(__dirname, '..', 'tests');
 
 // Build SDK
-npmRun.execSync('lerna run --scope kinvey-js-sdk --scope kinvey-node-sdk build --parallel');
+npmRun.execSync('lerna run --scope kinvey-js-sdk --scope kinvey-node-sdk build --parallel -- --source-maps inline');
 
 // Remove existing tests
 fs.removeSync(SDK_TESTS_PATH);

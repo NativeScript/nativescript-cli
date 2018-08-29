@@ -1,10 +1,10 @@
 import times from 'lodash/times';
 import isEmpty from 'lodash/isEmpty';
-import Kmd from '../../kmd';
-import Query from '../../query';
-import { execute, formatKinveyBaasUrl, KinveyRequest, RequestMethod, Auth } from '../../http';
-import { KinveyHeaders } from '../../http/headers';
-import NetworkStore from '../networkstore';
+import Kmd from '../kmd';
+import Query from '../query';
+import { execute, formatKinveyBaasUrl, KinveyRequest, RequestMethod, Auth } from '../http';
+import { KinveyHeaders } from '../http/headers';
+import NetworkStore from './networkstore';
 import Cache from './cache';
 
 const SYNC_CACHE_TAG = 'kinvey-sync';
@@ -114,7 +114,7 @@ export default class Sync {
 
       if (event === SyncEvent.Delete) {
         docs = docs.filter((doc) => {
-          const kmd = new Kmd(doc);
+          const kmd = new Kmd(doc._kmd);
 
           if (kmd.isLocal()) {
             return false;
@@ -194,7 +194,7 @@ export default class Sync {
 
               // Save the doc to the backend
               if (event === SyncEvent.Create) {
-                const kmd = new Kmd(doc);
+                const kmd = new Kmd(doc._kmd);
 
                 if (kmd.isLocal()) {
                   local = true;
@@ -273,56 +273,50 @@ export default class Sync {
     return docs.length;
   }
 
-  async deltaset(query, options) {
+  async deltaset(query, options = {}) {
     const useAutoPagination = options.useAutoPagination === true || options.autoPagination || this.useAutoPagination;
 
-    if (query && (query.skip > 0 || query.limit < Infinity)) {
-      if (useAutoPagination) {
-        return this.autopaginate(query, options);
-      }
+    if (!query || (query.skip === 0 && query.limit === Infinity)) {
+      try {
+        const cache = new Cache(this.appKey, this.collectionName, this.tag);
+        const queryCache = new QueryCache(this.appKey, this.collectionName, this.tag);
+        const key = serializeQuery(query);
+        const queryCacheDoc = await queryCache.findByKey(key);
 
-      return this.pull(query);
-    }
+        if (queryCacheDoc && queryCacheDoc.lastRequest) {
+          let queryObject = { since: queryCacheDoc.lastRequest };
 
-    try {
-      const cache = new Cache(this.appKey, this.collectionName, this.tag);
-      const queryCache = new QueryCache(this.appKey, this.collectionName, this.tag);
-      const key = serializeQuery(query);
-      const queryCacheDoc = await queryCache.findByKey(key);
+          if (query) {
+            queryObject = Object.assign({}, query.toQueryObject(), queryObject);
+          }
 
-      if (queryCacheDoc && queryCacheDoc.lastRequest) {
-        let queryObject = { since: queryCacheDoc.lastRequest };
+          // Delta Set request
+          const url = formatKinveyBaasUrl(`/appdata/${this.appKey}/${this.collectionName}/_deltaset`, queryObject);
+          const request = new KinveyRequest({ method: RequestMethod.GET, auth: Auth.Session, url });
+          const response = await execute(request);
+          const { changed, deleted } = response.data;
 
-        if (query) {
-          queryObject = Object.assign({}, query.toQueryObject(), queryObject);
+          // Delete the docs that have been deleted
+          if (Array.isArray(deleted) && deleted.length > 0) {
+            const removeQuery = new Query().contains('_id', deleted.map(doc => doc._id));
+            await cache.remove(removeQuery);
+          }
+
+          // Save the docs that changed
+          if (Array.isArray(changed) && changed.length > 0) {
+            await cache.save(changed);
+          }
+
+          // Update the query cache
+          await queryCache.save(query, response);
+
+          // Return the number of changed docs
+          return changed.length;
         }
-
-        // Delta Set request
-        const url = formatKinveyBaasUrl(`/appdata/${this.appKey}/${this.collectionName}/_deltaset`, queryObject);
-        const request = new KinveyRequest({ method: RequestMethod.GET, auth: Auth.Session, url });
-        const response = await execute(request);
-        const { changed, deleted } = response.data;
-
-        // Delete the docs that have been deleted
-        if (Array.isArray(deleted) && deleted.length > 0) {
-          const removeQuery = new Query().contains('_id', deleted.map(doc => doc._id));
-          await cache.remove(removeQuery);
+      } catch (error) {
+        if (error.name !== 'MissingConfiguration' && error.name !== 'ParameterValueOutOfRange') {
+          throw error;
         }
-
-        // Save the docs that changed
-        if (Array.isArray(changed) && changed.length > 0) {
-          await cache.save(changed);
-        }
-
-        // Update the query cache
-        await queryCache.save(query, response);
-
-        // Return the number of changed docs
-        return changed.length;
-      }
-    } catch (error) {
-      if (error.name !== 'MissingConfiguration' && error.name !== 'ParameterValueOutOfRange') {
-        throw error;
       }
     }
 

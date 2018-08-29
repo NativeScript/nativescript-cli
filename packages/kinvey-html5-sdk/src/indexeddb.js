@@ -12,13 +12,15 @@ function findAddOn(db) {
     let collection = this.toCollection();
 
     if (query) {
-      const queryObject = query.toQueryObject();
-      const { limit, skip } = queryObject;
-      let filter = queryObject.query;
+      const {
+        filter,
+        // sort,
+        limit,
+        skip
+      } = query;
+      // let { fields } = query;
 
       if (filter) {
-        filter = JSON.parse(filter);
-
         if (!isEmpty(filter)) {
           collection = collection.filter((doc) => {
             const sifter = sift(filter);
@@ -144,7 +146,7 @@ export async function removeById(dbName, tableName, id) {
   return 1;
 }
 
-export async function clear(dbName, tableName, query) {
+export async function clear(dbName, tableName) {
   const db = await IndexedDB.open(dbName, tableName);
   const table = db.table(tableName);
   await table.clear();

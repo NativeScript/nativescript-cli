@@ -5,13 +5,12 @@ import isPlainObject from 'lodash/isPlainObject';
  * information for an entity.
  */
 export default class Kmd {
-  constructor(entity = {}) {
-    if (!isPlainObject(entity)) {
-      throw new Error('entity must be a plain object.');
+  constructor(kmd = {}) {
+    if (!isPlainObject(kmd)) {
+      throw new Error('kmd must be a plain object.');
     }
 
-    entity._kmd = entity._kmd || {};
-    this.entity = entity;
+    this.kmd = kmd;
   }
 
   /**
@@ -20,7 +19,7 @@ export default class Kmd {
    * @returns {string} _kmd.authtoken
    */
   get authtoken() {
-    return this.entity._kmd.authtoken;
+    return this.kmd.authtoken;
   }
 
   /**
@@ -38,8 +37,8 @@ export default class Kmd {
    * @returns {Date?} _kmd.ect
    */
   get createdAt() {
-    if (this.entity._kmd.ect) {
-      return new Date(this.entity._kmd.ect);
+    if (this.kmd.ect) {
+      return new Date(this.kmd.ect);
     }
 
     return undefined;
@@ -69,8 +68,8 @@ export default class Kmd {
    * @returns {Date?} _kmd.lmt
    */
   get updatedAt() {
-    if (this.entity._kmd.lmt) {
-      return new Date(this.entity._kmd.lmt);
+    if (this.kmd.lmt) {
+      return new Date(this.kmd.lmt);
     }
 
     return undefined;
@@ -82,7 +81,7 @@ export default class Kmd {
    * @returns {Object} _kmd.emailVerification
    */
   get emailVerification() {
-    return this.entity._kmd.emailVerification;
+    return this.kmd.emailVerification;
   }
 
   /**
@@ -104,6 +103,6 @@ export default class Kmd {
    * @returns {boolean} True if the entity has been created locally otherwise false
    */
   isLocal() {
-    return this.entity._kmd.local === true;
+    return this.kmd.local === true;
   }
 }

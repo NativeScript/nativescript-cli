@@ -21,6 +21,20 @@ export default class User {
     this.data = data;
   }
 
+  get _id() {
+    if (this.data) {
+      return this.data._id;
+    }
+    return undefined;
+  }
+
+  get username() {
+    if (this.data) {
+      return this.data.username;
+    }
+    return undefined;
+  }
+
   static getActiveUser() {
     const session = getSession();
 

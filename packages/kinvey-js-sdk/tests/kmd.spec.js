@@ -11,7 +11,7 @@ describe('Kmd', () => {
 
     it('should return a Date', () => {
       const ect = new Date().toISOString();
-      const kmd = new Kmd({ _kmd: { ect } });
+      const kmd = new Kmd({ ect });
       expect(kmd.createdAt).to.deep.equal(new Date(ect));
     });
   });
@@ -24,7 +24,7 @@ describe('Kmd', () => {
 
     it('should return a Date', () => {
       const ect = new Date().toISOString();
-      const kmd = new Kmd({ _kmd: { ect } });
+      const kmd = new Kmd({ ect });
       expect(kmd.ect).to.deep.equal(new Date(ect));
     });
   });
@@ -37,7 +37,7 @@ describe('Kmd', () => {
 
     it('should return value', () => {
       const emailVerification = { status: 'Verified' };
-      const kmd = new Kmd({ _kmd: { emailVerification } });
+      const kmd = new Kmd({ emailVerification });
       expect(kmd.emailVerification).to.equal(emailVerification);
     });
   });
@@ -50,7 +50,7 @@ describe('Kmd', () => {
 
     it('should return a Date', () => {
       const lmt = new Date().toISOString();
-      const kmd = new Kmd({ _kmd: { lmt } });
+      const kmd = new Kmd({ lmt });
       expect(kmd.lastModified).to.deep.equal(new Date(lmt));
     });
   });
@@ -63,7 +63,7 @@ describe('Kmd', () => {
 
     it('should return a Date', () => {
       const lmt = new Date().toISOString();
-      const kmd = new Kmd({ _kmd: { lmt } });
+      const kmd = new Kmd({ lmt });
       expect(kmd.lmt).to.deep.equal(new Date(lmt));
     });
   });
@@ -76,19 +76,19 @@ describe('Kmd', () => {
 
     it('should return authtoken value', () => {
       const authtoken = randomString();
-      const kmd = new Kmd({ _kmd: { authtoken } });
+      const kmd = new Kmd({ authtoken });
       expect(kmd.authtoken).to.equal(authtoken);
     });
   });
 
   describe('isLocal()', () => {
     it('should return false', () => {
-      const kmd = new Kmd({ _kmd: { local: false } });
+      const kmd = new Kmd({ local: false });
       expect(kmd.isLocal()).to.equal(false);
     });
 
     it('should return true', () => {
-      const kmd = new Kmd({ _kmd: { local: true } });
+      const kmd = new Kmd({ local: true });
       expect(kmd.isLocal()).to.equal(true);
     });
   });

@@ -3,7 +3,7 @@ export function get(appKey) {
   if (session) {
     return JSON.parse(session);
   }
-  return undefined;
+  return null;
 }
 
 export function set(appKey, session) {

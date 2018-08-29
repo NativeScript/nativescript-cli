@@ -1,4 +1,4 @@
-module.exports = function(api) {
+function babel(api) {
   api.cache(false);
 
   const presets = [
@@ -19,3 +19,5 @@ module.exports = function(api) {
     plugins
   };
 }
+
+module.exports = babel;

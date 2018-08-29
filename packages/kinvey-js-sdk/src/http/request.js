@@ -80,7 +80,7 @@ export class KinveyRequest extends Request {
         throw new Error('There is no active user to authorize the request. Please login and retry the request.');
       }
 
-      const kmd = new Kmd(session);
+      const kmd = new Kmd(session._kmd);
       this.headers.setAuthorization(`Kinvey ${kmd.authtoken}`);
     }
   }
