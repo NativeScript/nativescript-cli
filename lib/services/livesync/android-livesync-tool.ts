@@ -1,13 +1,9 @@
-import * as net from "net";
 import * as path from "path";
 import * as crypto from "crypto";
 
 const PROTOCOL_VERSION_LENGTH_SIZE = 1;
 const PROTOCOL_OPERATION_LENGTH_SIZE = 1;
 const SIZE_BYTE_LENGTH = 1;
-const DELETE_FILE_OPERATION = 7;
-const CREATE_FILE_OPERATION = 8;
-const DO_SYNC_OPERATION = 9;
 const ERROR_REPORT = 1;
 const OPERATION_END_REPORT = 2;
 const OPERATION_END_NO_REFRESH_REPORT_CODE = 3;
@@ -20,6 +16,9 @@ const TRY_CONNECT_TIMEOUT = 30000;
 const DEFAULT_LOCAL_HOST_ADDRESS = "127.0.0.1";
 
 export class AndroidLivesyncTool implements IAndroidLivesyncTool {
+	public static DELETE_FILE_OPERATION = 7;
+	public static CREATE_FILE_OPERATION = 8;
+	public static DO_SYNC_OPERATION = 9;
 	public protocolVersion: string;
 	private operationPromises: IDictionary<any>;
 	private socketError: string | Error;
@@ -37,7 +36,8 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $processService: IProcessService) {
+		private $processService: IProcessService,
+		private $injector: IInjector) {
 			this.operationPromises = Object.create(null);
 			this.socketError = null;
 			this.socketConnection = null;
@@ -61,6 +61,8 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			configuration.localHostAddress = DEFAULT_LOCAL_HOST_ADDRESS;
 		}
 
+		const connectTimeout = configuration.connectTimeout || TRY_CONNECT_TIMEOUT;
+
 		this.configuration = configuration;
 		this.socketError = null;
 
@@ -70,7 +72,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			abstractPort: `localabstract:${configuration.appIdentifier}-livesync`
 		});
 
-		const connectionResult = await this.connectEventuallyUntilTimeout(this.createSocket.bind(this, port), TRY_CONNECT_TIMEOUT);
+		const connectionResult = await this.connectEventuallyUntilTimeout(this.createSocket.bind(this, port), connectTimeout);
 		this.handleConnection(connectionResult);
 	}
 
@@ -106,7 +108,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 				filePathData.filePathLengthBytes);
 
 			let offset = 0;
-			offset += headerBuffer.write(DELETE_FILE_OPERATION.toString(), offset, PROTOCOL_OPERATION_LENGTH_SIZE);
+			offset += headerBuffer.write(AndroidLivesyncTool.DELETE_FILE_OPERATION.toString(), offset, PROTOCOL_OPERATION_LENGTH_SIZE);
 			offset = headerBuffer.writeInt8(filePathData.filePathLengthSize, offset);
 			offset += headerBuffer.write(filePathData.filePathLengthString, offset, filePathData.filePathLengthSize);
 			headerBuffer.write(filePathData.relativeFilePath, offset, filePathData.filePathLengthBytes);
@@ -135,7 +137,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		const id = operationId || this.generateOperationIdentifier();
 		const operationPromise: Promise<IAndroidLivesyncSyncOperationResult> = new Promise((resolve: Function, reject: Function) => {
 			this.verifyActiveConnection(reject);
-			const message = `${DO_SYNC_OPERATION}${id}`;
+			const message = `${AndroidLivesyncTool.DO_SYNC_OPERATION}${id}`;
 			const headerBuffer = Buffer.alloc(Buffer.byteLength(message) + DO_REFRESH_LENGTH);
 			const socketId = this.socketConnection.uid;
 			const doRefreshCode = doRefresh ? DO_REFRESH : SKIP_REFRESH;
@@ -211,7 +213,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			}
 
 			let offset = 0;
-			offset += headerBuffer.write(CREATE_FILE_OPERATION.toString(), offset, PROTOCOL_OPERATION_LENGTH_SIZE);
+			offset += headerBuffer.write(AndroidLivesyncTool.CREATE_FILE_OPERATION.toString(), offset, PROTOCOL_OPERATION_LENGTH_SIZE);
 			offset = headerBuffer.writeUInt8(filePathData.filePathLengthSize, offset);
 			offset += headerBuffer.write(filePathData.filePathLengthString, offset, filePathData.filePathLengthSize);
 			offset += headerBuffer.write(filePathData.relativeFilePath, offset, filePathData.filePathLengthBytes);
@@ -261,7 +263,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	}
 
 	private createSocket(port: number): INetSocket {
-		const socket = new net.Socket();
+		const socket = this.$injector.resolve("LiveSyncSocket");
 		socket.connect(port, this.configuration.localHostAddress);
 		return socket;
 	}

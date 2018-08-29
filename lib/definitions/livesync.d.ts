@@ -488,6 +488,10 @@ interface IAndroidLivesyncToolConfiguration {
 	 * If provider will call it when an error occurs.
 	 */
 	errorHandler?: any;
+	/**
+	 * Time to wait for successful connection. Defaults to 30000 miliseconds.
+	 */
+	connectTimeout?: number;
 }
 
 interface IAndroidLivesyncSyncOperationResult {

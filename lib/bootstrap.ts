@@ -123,6 +123,7 @@ $injector.require("deployCommandHelper", "./helpers/deploy-command-helper");
 
 $injector.requirePublicClass("localBuildService", "./services/local-build-service");
 $injector.requirePublicClass("liveSyncService", "./services/livesync/livesync-service");
+$injector.require("LiveSyncSocket", "./services/livesync/livesync-socket");
 $injector.requirePublicClass("androidLivesyncTool", "./services/livesync/android-livesync-tool");
 $injector.require("androidLiveSyncService", "./services/livesync/android-livesync-service");
 $injector.require("iOSLiveSyncService", "./services/livesync/ios-livesync-service");
