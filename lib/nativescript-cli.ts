@@ -8,6 +8,7 @@ installUncaughtExceptionListener(process.exit.bind(process, ErrorCodes.UNCAUGHT)
 
 import { settlePromises } from "./common/helpers";
 
+/* tslint:disable:no-floating-promises */
 (async () => {
 	const config: Config.IConfig = $injector.resolve("$config");
 	const err: IErrors = $injector.resolve("$errors");
@@ -42,3 +43,4 @@ import { settlePromises } from "./common/helpers";
 
 	$injector.dispose();
 })();
+/* tslint:enable:no-floating-promises */

@@ -35,6 +35,7 @@
 			"check-open-brace",
 			"check-whitespace"
 		],
+		"no-floating-promises": true,
 		"quotemark": [
 			false,
 			"double"

@@ -44,7 +44,7 @@ export class AnalyticsService extends AnalyticsServiceBase {
 	}
 
 	public async trackAcceptFeatureUsage(settings: { acceptTrackFeatureUsage: boolean }): Promise<void> {
-		this.sendMessageToBroker(<IAcceptUsageReportingInformation>{
+		await this.sendMessageToBroker(<IAcceptUsageReportingInformation>{
 			type: TrackingTypes.AcceptTrackFeatureUsage,
 			acceptTrackFeatureUsage: settings.acceptTrackFeatureUsage
 		});

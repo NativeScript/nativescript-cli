@@ -88,7 +88,7 @@ describe("iOSLogParserService", () => {
 			const emittedMessagesCount = 1;
 			const promise = attachOnDebuggerFoundEvent(emittedMessagesCount);
 
-			iOSLogParserService.startParsingLog(device, mockProjectNameObj);
+			await iOSLogParserService.startParsingLog(device, mockProjectNameObj);
 			emitDeviceLog("test message");
 			emitDeviceLog(getDebuggerPortMessage(18181));
 
@@ -101,7 +101,7 @@ describe("iOSLogParserService", () => {
 			const emittedMessagesCount = 5;
 			const promise = attachOnDebuggerFoundEvent(emittedMessagesCount);
 
-			iOSLogParserService.startParsingLog(device, mockProjectNameObj);
+			await iOSLogParserService.startParsingLog(device, mockProjectNameObj);
 			emitDeviceLog(getDebuggerPortMessage(18181));
 			emitDeviceLog(getDebuggerPortMessage(18181));
 			emitDeviceLog(getDebuggerPortMessage(18181));
@@ -121,7 +121,7 @@ describe("iOSLogParserService", () => {
 			const emittedMessagesCount = 5;
 			const promise = attachOnDebuggerFoundEvent(emittedMessagesCount);
 
-			iOSLogParserService.startParsingLog(device, mockProjectNameObj);
+			await iOSLogParserService.startParsingLog(device, mockProjectNameObj);
 			emitDeviceLog(getDebuggerPortMessage(45898));
 			emitDeviceLog(getDebuggerPortMessage(1809));
 			emitDeviceLog(getDebuggerPortMessage(65072));
@@ -137,12 +137,12 @@ describe("iOSLogParserService", () => {
 			assert.deepEqual(data[3], { port: 12345, deviceId: deviceId, appId: appId });
 			assert.deepEqual(data[4], { port: 18181, deviceId: deviceId, appId: appId });
 		});
-		it(`should not receive ${DEBUGGER_PORT_FOUND_EVENT_NAME} event when debugger port message is not emitted`, () => {
+		it(`should not receive ${DEBUGGER_PORT_FOUND_EVENT_NAME} event when debugger port message is not emitted`, async () => {
 			let isDebuggedPortFound = false;
 
 			iOSLogParserService.on(DEBUGGER_PORT_FOUND_EVENT_NAME, (data: IIOSDebuggerPortData) => isDebuggedPortFound = true);
 
-			iOSLogParserService.startParsingLog(device, mockProjectNameObj);
+			await iOSLogParserService.startParsingLog(device, mockProjectNameObj);
 			emitDeviceLog("some test message");
 			emitDeviceLog("another test message");
 
