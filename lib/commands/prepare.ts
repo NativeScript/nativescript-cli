@@ -1,12 +1,15 @@
-export class PrepareCommand implements ICommand {
+import { CommandBase } from "./command-base";
+
+export class PrepareCommand extends CommandBase implements ICommand {
 	public allowedParameters = [this.$platformCommandParameter];
 
-	constructor(private $options: IOptions,
-		private $platformService: IPlatformService,
-		private $projectData: IProjectData,
+	constructor($options: IOptions,
+		$platformService: IPlatformService,
+		$projectData: IProjectData,
 		private $platformCommandParameter: ICommandParameter,
-		private $platformsData: IPlatformsData) {
-		this.$projectData.initializeProjectData();
+		$platformsData: IPlatformsData) {
+			super($options, $platformsData, $platformService, $projectData);
+			this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -23,16 +26,15 @@ export class PrepareCommand implements ICommand {
 		await this.$platformService.preparePlatform(platformInfo);
 	}
 
-	public async canExecute(args: string[]): Promise<boolean> {
+	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
 		const platform = args[0];
 		const result = await this.$platformCommandParameter.validate(platform) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, platform);
-		if (result) {
-			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
-			const platformProjectService = platformData.platformProjectService;
-			await platformProjectService.validate(this.$projectData);
+		if (!result) {
+			return false;
 		}
 
-		return result;
+		const canExecuteOutput = await super.canExecuteCommandBase(platform);
+		return canExecuteOutput;
 	}
 }
 

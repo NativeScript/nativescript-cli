@@ -15,13 +15,13 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		private $injector: IInjector) { }
 
 	@cache()
-	private get $previewAppLiveSyncService(): IPreviewAppLiveSyncService {
-		return this.$injector.resolve("previewAppLiveSyncService");
+	private get $previewCommandHelper(): IPreviewCommandHelper {
+		return this.$injector.resolve("previewCommandHelper");
 	}
 
 	@cache()
-	private get $previewCommandHelper(): IPreviewCommandHelper {
-		return this.$injector.resolve("previewCommandHelper");
+	private get $liveSyncService(): ILiveSyncService {
+		return this.$injector.resolve("liveSyncService");
 	}
 
 	public static CLOUD_SETUP_OPTION_NAME = "Configure for Cloud Builds";
@@ -46,7 +46,8 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	};
 
 	public async checkEnvironmentRequirements(input: ICheckEnvironmentRequirementsInput): Promise<ICheckEnvironmentRequirementsOutput> {
-		const { platform, projectDir, runtimeVersion, hideSyncToPreviewAppOption } = input;
+		const { platform, projectDir, runtimeVersion } = input;
+		const notConfiguredEnvOptions = input.notConfiguredEnvOptions || {};
 		const options = input.options || <IOptions>{ };
 
 		let selectedOption = null;
@@ -72,9 +73,9 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				this.fail(this.getNonInteractiveConsoleMessage(platform));
 			}
 
-			const infoMessage = this.getInteractiveConsoleMessage({ hideSyncToPreviewAppOption });
+			const infoMessage = this.getInteractiveConsoleMessage(notConfiguredEnvOptions);
 
-			const choices = this.getChoices({ hideSyncToPreviewAppOption });
+			const choices = this.getChoices(notConfiguredEnvOptions);
 
 			selectedOption = await this.promptForChoice({ infoMessage, choices });
 
@@ -154,7 +155,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	}
 
 	private getCloudBuildsMessage(platform?: string): string {
-		const cloudCommandName = this.cliCommandToCloudCommandName[this.$commandsService.currentCommandData.commandName];
+		const cloudCommandName = this.cliCommandToCloudCommandName[(this.$commandsService.currentCommandData || <any>{}).commandName];
 		if (!cloudCommandName) {
 			return `In order to test your application use the $ tns login command to log in with your account and then $ tns cloud build command to build your app in the cloud.`;
 		}
@@ -172,7 +173,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		}
 	}
 
-	private processManuallySetupIfNeeded(selectedOption: string, platform?: string) {
+	private processManuallySetupIfNeeded(selectedOption: string,	 platform?: string) {
 		if (selectedOption === PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME) {
 			this.processManuallySetup(platform);
 		}
@@ -185,13 +186,16 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			}
 
 			this.$previewCommandHelper.run();
-			await this.$previewAppLiveSyncService.initialSync({
+			await this.$liveSyncService.liveSync([], {
+				syncToPreviewApp: true,
 				projectDir,
-				appFilesUpdaterOptions: {
-					bundle: !!options.bundle,
-					release: options.release
-				},
-				env: options.env
+				skipWatcher: !options.watch,
+				watchAllFiles: options.syncAllFiles,
+				clean: options.clean,
+				bundle: !!options.bundle,
+				release: options.release,
+				env: options.env,
+				timeout: options.timeout
 			});
 		}
 	}
@@ -232,7 +236,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			]);
 	}
 
-	private getInteractiveConsoleMessage(options: { hideSyncToPreviewAppOption: boolean }) {
+	private getInteractiveConsoleMessage(options: INotConfiguredEnvOptions) {
 		const isNativeScriptCloudExtensionInstalled = this.$nativeScriptCloudExtensionService.isInstalled();
 		const message = isNativeScriptCloudExtensionInstalled ?
 			`${PlatformEnvironmentRequirements.MISSING_LOCAL_BUT_CLOUD_SETUP_MESSAGE} ${PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE}` :
@@ -282,17 +286,23 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		return parts.join(EOL);
 	}
 
-	private getChoices(options: { hideSyncToPreviewAppOption: boolean }): string[] {
-		const choices = this.$nativeScriptCloudExtensionService.isInstalled() ? [
-			PlatformEnvironmentRequirements.TRY_CLOUD_OPERATION_OPTION_NAME,
-			PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
-			PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
-		] : [
+	private getChoices(options: INotConfiguredEnvOptions): string[] {
+		const choices: string[] = [];
+		if (this.$nativeScriptCloudExtensionService.isInstalled()) {
+			choices.push(...[PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
+				PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME]);
+
+			if (!options.hideCloudBuildOption) {
+				choices.unshift(PlatformEnvironmentRequirements.TRY_CLOUD_OPERATION_OPTION_NAME);
+			}
+		} else {
+			choices.push(...[
 				PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME,
 				PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
 				PlatformEnvironmentRequirements.BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME,
 				PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
-			];
+			]);
+		}
 
 		if (!options.hideSyncToPreviewAppOption) {
 			choices.unshift(PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_OPTION_NAME);

@@ -1,18 +1,20 @@
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
+import { CommandBase } from "./command-base";
 
-export class DeployOnDeviceCommand implements ICommand {
+export class DeployOnDeviceCommand extends CommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(private $platformService: IPlatformService,
+	constructor($platformService: IPlatformService,
 		private $platformCommandParameter: ICommandParameter,
-		private $options: IOptions,
-		private $projectData: IProjectData,
+		$options: IOptions,
+		$projectData: IProjectData,
 		private $deployCommandHelper: IDeployCommandHelper,
 		private $errors: IErrors,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $platformsData: IPlatformsData,
+		$platformsData: IPlatformsData,
 		private $bundleValidatorHelper: IBundleValidatorHelper) {
-		this.$projectData.initializeProjectData();
+			super($options, $platformsData, $platformService, $projectData);
+			this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -21,7 +23,7 @@ export class DeployOnDeviceCommand implements ICommand {
 		return this.$platformService.deployPlatform(deployPlatformInfo);
 	}
 
-	public async canExecute(args: string[]): Promise<boolean> {
+	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
 		this.$bundleValidatorHelper.validate();
 		if (!args || !args.length || args.length > 1) {
 			return false;
@@ -35,11 +37,8 @@ export class DeployOnDeviceCommand implements ICommand {
 			this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 		}
 
-		const platformData = this.$platformsData.getPlatformData(args[0], this.$projectData);
-		const platformProjectService = platformData.platformProjectService;
-		await platformProjectService.validate(this.$projectData);
-
-		return this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, args[0]);
+		const result = await super.canExecuteCommandBase(args[0], { validateOptions: true });
+		return result;
 	}
 }
 

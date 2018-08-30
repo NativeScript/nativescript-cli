@@ -1,18 +1,20 @@
 import * as path from "path";
 import * as constants from "../constants";
+import { CommandBase } from "./command-base";
 
-export class UpdateCommand implements ICommand {
+export class UpdateCommand extends CommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(private $options: IOptions,
-		private $projectData: IProjectData,
-		private $platformService: IPlatformService,
-		private $platformsData: IPlatformsData,
+	constructor($options: IOptions,
+		$projectData: IProjectData,
+		$platformService: IPlatformService,
+		$platformsData: IPlatformsData,
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
 		private $fs: IFileSystem,
 		private $logger: ILogger) {
-		this.$projectData.initializeProjectData();
+			super($options, $platformsData, $platformService, $projectData);
+			this.$projectData.initializeProjectData();
 	}
 
 	static readonly folders: string[] = [
@@ -46,16 +48,30 @@ export class UpdateCommand implements ICommand {
 		}
 	}
 
-	public async canExecute(args: string[]): Promise<boolean> {
+	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
 		const platforms = this.getPlatforms();
 
+		let canExecute = true;
 		for (const platform of platforms.packagePlatforms) {
-			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
-			const platformProjectService = platformData.platformProjectService;
-			await platformProjectService.validate(this.$projectData);
+			const output = await super.canExecuteCommandBase(platform);
+			canExecute = canExecute && output.canExecute;
 		}
 
-		return args.length < 2 && this.$projectData.projectDir !== "";
+		let result = null;
+
+		if (canExecute) {
+			result = {
+				canExecute: args.length < 2 && this.$projectData.projectDir !== "",
+				suppressCommandHelp: false
+			};
+		} else {
+			result = {
+				canExecute: false,
+				suppressCommandHelp: true
+			};
+		}
+
+		return result;
 	}
 
 	private async executeCore(args: string[]): Promise<void> {

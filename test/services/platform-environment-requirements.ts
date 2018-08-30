@@ -113,11 +113,22 @@ describe("platformEnvironmentRequirements ", () => {
 			mockPrompter({ firstCallOptionName: PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME });
 			mockNativeScriptCloudExtensionService({ isInstalled: true });
 
-			await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform, hideSyncToPreviewAppOption: true }));
+			await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform, notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true }}));
 			assert.isTrue(promptForChoiceData.length === 1);
 			assert.isTrue(isExtensionInstallCalled);
 			assert.deepEqual("To continue, choose one of the following options: ", promptForChoiceData[0].message);
 			assert.deepEqual(['Try Cloud Operation', 'Configure for Local Builds', 'Skip Step and Configure Manually'], promptForChoiceData[0].choices);
+		});
+		it("should not show 'Try Cloud Build' option when hideCloudBuildOption is provided", async () => {
+			mockDoctorService({ canExecuteLocalBuild: false });
+			mockPrompter({ firstCallOptionName: PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME });
+			mockNativeScriptCloudExtensionService({ isInstalled: true });
+
+			await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform, notConfiguredEnvOptions: { hideCloudBuildOption: true }}));
+			assert.isTrue(promptForChoiceData.length === 1);
+			assert.isTrue(isExtensionInstallCalled);
+			assert.deepEqual("To continue, choose one of the following options: ", promptForChoiceData[0].message);
+			assert.deepEqual(['Sync to Playground', 'Configure for Local Builds', 'Skip Step and Configure Manually'], promptForChoiceData[0].choices);
 		});
 		it("should skip env check when NS_SKIP_ENV_CHECK environment variable is passed", async() => {
 			process.env.NS_SKIP_ENV_CHECK = true;

@@ -21,14 +21,14 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		this.$previewSdkService.initialize();
 		this.$previewSdkService.on(PreviewSdkEventNames.DEVICE_CONNECTED, async (device: Device) => {
 			this.$logger.trace("Found connected device", device);
-			await this.trySyncFilesOnDevice(data, device);
+			await this.syncFilesOnDeviceSafe(data, device);
 		});
 		await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp();
 	}
 
 	public async syncFiles(data: IPreviewAppLiveSyncData, files: string[]): Promise<void> {
 		for (const device of this.$previewSdkService.connectedDevices) {
-			await this.trySyncFilesOnDevice(data, device, files);
+			await this.syncFilesOnDeviceSafe(data, device, files);
 		}
 	}
 
@@ -37,7 +37,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		this.$previewSdkService.stop();
 	}
 
-	private async trySyncFilesOnDevice(data: IPreviewAppLiveSyncData, device: Device, files?: string[]): Promise<void> {
+	private async syncFilesOnDeviceSafe(data: IPreviewAppLiveSyncData, device: Device, files?: string[]): Promise<void> {
 		await this.$previewAppPluginsService.comparePluginsOnDevice(device);
 		this.showWarningsForNativeFiles(files);
 

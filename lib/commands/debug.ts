@@ -2,26 +2,35 @@ import { CONNECTED_STATUS } from "../common/constants";
 import { isInteractive } from "../common/helpers";
 import { cache } from "../common/decorators";
 import { DebugCommandErrors } from "../constants";
+import { CommandBase } from "./command-base";
 
-export class DebugPlatformCommand implements ICommand {
+export class DebugPlatformCommand extends CommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(private platform: string,
 		private $debugService: IDebugService,
 		protected $devicesService: Mobile.IDevicesService,
-		protected $platformService: IPlatformService,
-		protected $projectData: IProjectData,
-		protected $options: IOptions,
-		protected $platformsData: IPlatformsData,
+		$platformService: IPlatformService,
+		$projectData: IProjectData,
+		$options: IOptions,
+		$platformsData: IPlatformsData,
 		protected $logger: ILogger,
 		protected $errors: IErrors,
 		private $debugDataService: IDebugDataService,
 		private $liveSyncService: IDebugLiveSyncService,
 		private $prompter: IPrompter,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper) {
+			super($options, $platformsData, $platformService, $projectData);
 	}
 
 	public async execute(args: string[]): Promise<void> {
+		await this.$devicesService.initialize({
+			platform: this.platform,
+			deviceId: this.$options.device,
+			emulator: this.$options.emulator,
+			skipDeviceDetectionInterval: true
+		});
+
 		const debugOptions = <IDebugOptions>_.cloneDeep(this.$options.argv);
 
 		const debugData = this.$debugDataService.createDebugData(this.$projectData, this.$options);
@@ -99,7 +108,7 @@ export class DebugPlatformCommand implements ICommand {
 		this.$errors.failWithoutHelp(DebugCommandErrors.NO_DEVICES_EMULATORS_FOUND_FOR_OPTIONS);
 	}
 
-	public async canExecute(args: string[]): Promise<boolean> {
+	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
 		if (!this.$platformService.isPlatformSupportedForOS(this.platform, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.platform} can not be built on this OS`);
 		}
@@ -108,18 +117,8 @@ export class DebugPlatformCommand implements ICommand {
 			this.$errors.fail("--release flag is not applicable to this command");
 		}
 
-		const platformData = this.$platformsData.getPlatformData(this.platform, this.$projectData);
-		const platformProjectService = platformData.platformProjectService;
-		await platformProjectService.validate(this.$projectData);
-
-		await this.$devicesService.initialize({
-			platform: this.platform,
-			deviceId: this.$options.device,
-			emulator: this.$options.emulator,
-			skipDeviceDetectionInterval: true
-		});
-
-		return true;
+		const result = await super.canExecuteCommandBase(this.platform, { validateOptions: true, notConfiguredEnvOptions: { hideCloudBuildOption: true }});
+		return result;
 	}
 }
 
@@ -138,7 +137,6 @@ export class DebugIOSCommand implements ICommand {
 		private $options: IOptions,
 		private $injector: IInjector,
 		private $projectData: IProjectData,
-		private $platformsData: IPlatformsData,
 		$iosDeviceOperations: IIOSDeviceOperations,
 		$iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider) {
 		this.$projectData.initializeProjectData();
@@ -154,7 +152,7 @@ export class DebugIOSCommand implements ICommand {
 		return this.debugPlatformCommand.execute(args);
 	}
 
-	public async canExecute(args: string[]): Promise<boolean> {
+	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
 		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
@@ -164,7 +162,8 @@ export class DebugIOSCommand implements ICommand {
 			this.$errors.fail(`Timeout option specifies the seconds NativeScript CLI will wait to find the inspector socket port from device's logs. Must be a number.`);
 		}
 
-		return await this.debugPlatformCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.iOS);
+		const result = await this.debugPlatformCommand.canExecute(args);
+		return result;
 	}
 
 	private isValidTimeoutOption() {
@@ -200,19 +199,17 @@ export class DebugAndroidCommand implements ICommand {
 
 	constructor(protected $errors: IErrors,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $platformService: IPlatformService,
-		private $options: IOptions,
 		private $injector: IInjector,
-		private $projectData: IProjectData,
-		private $platformsData: IPlatformsData) {
-		this.$projectData.initializeProjectData();
+		private $projectData: IProjectData) {
+			this.$projectData.initializeProjectData();
 	}
 
 	public execute(args: string[]): Promise<void> {
 		return this.debugPlatformCommand.execute(args);
 	}
-	public async canExecute(args: string[]): Promise<boolean> {
-		return await this.debugPlatformCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.Android);
+	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
+		const result = await this.debugPlatformCommand.canExecute(args);
+		return result;
 	}
 
 	public platform = this.$devicePlatformsConstants.Android;

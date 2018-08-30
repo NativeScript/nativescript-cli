@@ -134,7 +134,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		for (const availablePlatform of availablePlatforms) {
 			const platformData = this.$platformsData.getPlatformData(availablePlatform, this.$projectData);
 			const platformProjectService = platformData.platformProjectService;
-			const validateOutput = await platformProjectService.validate(this.$projectData);
+			const validateOutput = await platformProjectService.validate(this.$projectData, this.$options);
 			result[availablePlatform.toLowerCase()] = validateOutput;
 		}
 

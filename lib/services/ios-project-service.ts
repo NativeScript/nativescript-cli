@@ -133,7 +133,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return path.join(this.getPlatformData(projectData).projectRoot, projectData.projectName, "Resources");
 	}
 
-	public async validate(projectData: IProjectData, options?: IOptions): Promise<IValidatePlatformOutput> {
+	public async validate(projectData: IProjectData, options: IOptions, notConfiguredEnvOptions?: INotConfiguredEnvOptions): Promise<IValidatePlatformOutput> {
 		if (!this.$hostInfo.isDarwin) {
 			return;
 		}
@@ -141,7 +141,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const checkEnvironmentRequirementsOutput = await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
 			platform: this.getPlatformData(projectData).normalizedPlatformName,
 			projectDir: projectData.projectDir,
-			options
+			options,
+			notConfiguredEnvOptions
 		});
 
 		const xcodeBuildVersion = await this.getXcodeVersion();

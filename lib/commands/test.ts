@@ -36,7 +36,10 @@ async function canExecute(input: { $platformEnvironmentRequirements: IPlatformEn
 		platform,
 		projectDir: $projectData.projectDir,
 		options: $options,
-		hideSyncToPreviewAppOption: true
+		notConfiguredEnvOptions: {
+			hideSyncToPreviewAppOption: true,
+			hideCloudBuildOption: true
+		}
 	});
 
 	return output.canExecute;

@@ -462,7 +462,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	private async initialSyncToPreviewApp(projectData: IProjectData, liveSyncData: ILiveSyncInfo) {
-		this.addActionToChain(projectData.projectDir, async () => {
+		await this.addActionToChain(projectData.projectDir, async () => {
 			await this.$previewAppLiveSyncService.initialSync({
 				appFilesUpdaterOptions: {
 					bundle: liveSyncData.bundle,

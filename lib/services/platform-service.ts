@@ -242,7 +242,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			platform = this.$mobileHelper.normalizePlatformName(platform);
 			this.$logger.trace("Validate options for platform: " + platform);
 			const platformData = this.$platformsData.getPlatformData(platform, projectData);
-			return await platformData.platformProjectService.validateOptions(projectData.projectId, provision, teamId);
+			const result = await platformData.platformProjectService.validateOptions(projectData.projectId, provision, teamId);
+			return result;
 		} else {
 			let valid = true;
 			for (const availablePlatform in this.$platformsData.availablePlatforms) {

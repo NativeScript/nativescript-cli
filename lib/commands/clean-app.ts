@@ -1,16 +1,18 @@
-export class CleanAppCommandBase implements ICommand {
+import { CommandBase } from "./command-base";
+
+export class CleanAppCommandBase extends CommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	protected platform: string;
 
-	constructor(protected $options: IOptions,
-		protected $projectData: IProjectData,
-		protected $platformService: IPlatformService,
+	constructor($options: IOptions,
+		$projectData: IProjectData,
+		$platformService: IPlatformService,
 		protected $errors: IErrors,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		protected $platformsData: IPlatformsData) {
-
-		this.$projectData.initializeProjectData();
+		$platformsData: IPlatformsData) {
+			super($options, $platformsData, $platformService, $projectData);
+			this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -27,15 +29,13 @@ export class CleanAppCommandBase implements ICommand {
 		return this.$platformService.cleanDestinationApp(platformInfo);
 	}
 
-	public async canExecute(args: string[]): Promise<boolean> {
+	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
 		if (!this.$platformService.isPlatformSupportedForOS(this.platform, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.platform} can not be built on this OS`);
 		}
 
-		const platformData = this.$platformsData.getPlatformData(this.platform, this.$projectData);
-		const platformProjectService = platformData.platformProjectService;
-		await platformProjectService.validate(this.$projectData);
-		return true;
+		const result = await super.canExecuteCommandBase(this.platform);
+		return result;
 	}
 }
 
