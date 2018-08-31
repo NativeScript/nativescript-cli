@@ -3,7 +3,7 @@ import isNumber from 'lodash/isNumber';
 import first from 'lodash/first';
 import sortBy from 'lodash/sortBy';
 import { DataStore, DataStoreType, Query, User } from '/Users/thomasconner/Documents/Development/Kinvey/SDKs/JavaScript/packages/kinvey-html5-sdk/lib/index.js';
-import Constants from './constants';
+import * as Constants from './constants';
 
 export function ensureArray(entities) {
   return [].concat(entities);
@@ -139,7 +139,12 @@ export function validateReadResult(dataStoreType, spy, cacheExpectedEntities, ba
     expect(firstCallArgs).to.deep.equal(cacheExpectedEntities);
   } else {
     expect(spy.calledTwice).to.be.true;
+    console.log(firstCallArgs);
+    console.log(cacheExpectedEntities);
+    console.log();
     expect(firstCallArgs).to.deep.equal(cacheExpectedEntities);
+    console.log(secondCallArgs);
+    console.log(backendExpectedEntities);
     expect(secondCallArgs).to.deep.equal(backendExpectedEntities);
   }
 }

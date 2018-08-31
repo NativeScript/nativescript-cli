@@ -19,15 +19,11 @@ export default class CacheStore {
     const stream = KinveyObservable.create(async (observer) => {
       try {
         const cachedDocs = await cache.find(query);
-        console.log(cachedDocs);
-        console.log();
         observer.next(cachedDocs);
 
         if (autoSync) {
           await this.pull(query, options);
           const docs = await cache.find(query);
-          console.log(docs);
-          console.log();
           observer.next(docs);
         }
 

@@ -1,7 +1,3 @@
-const Constants = {
-  TextFieldName: 'textField',
-  NumberFieldName: 'numberField',
-  ArrayFieldName: 'arrayField'
-};
-
-export default Constants;
+export const TextFieldName = 'textField';
+export const NumberFieldName = 'numberField';
+export const ArrayFieldName = 'arrayField';

@@ -2,14 +2,15 @@ import { expect } from 'chai';
 import { init, User } from '/Users/thomasconner/Documents/Development/Kinvey/SDKs/JavaScript/packages/kinvey-html5-sdk/lib/index.js';
 import { randomString } from './utils';
 
-describe('Auth', () => {
-  before(() => {
-    init({
-      appKey: 'kid_SykZReklX',
-      appSecret: 'adc893c7824e4c8caa4b33027a2ff883'
-    });
+before(() => {
+  return init({
+    appKey: process.env.APP_KEY,
+    appSecret: process.env.APP_SECRET,
+    masterSecret: process.env.MASTER_SECRET
   });
+});
 
+describe('Auth', () => {
   describe('login()', () => {
     afterEach(() => {
       return User.logout();
@@ -40,15 +41,15 @@ describe('Auth', () => {
       const password = randomString();
       const user = await User.signup({ username, password });
       await User.logout();
-      expect(User.getActiveUser()).to.be.undefined;
+      expect(User.getActiveUser()).to.be.null;
       await User.login({ username, password });
       await User.remove(user._id, { hard: true });
     });
 
     it('should logout when there is not an active user', async () => {
-      expect(User.getActiveUser()).to.be.undefined;
+      expect(User.getActiveUser()).to.be.null;
       await User.logout();
-      expect(User.getActiveUser()).to.be.undefined;
+      expect(User.getActiveUser()).to.be.null;
     });
   });
 
@@ -70,7 +71,7 @@ describe('Auth', () => {
       const password = randomString();
       const name = randomString();
       const user = await User.signup({ username, password, name });
-      expect(user).to.have.property('name', name);
+      expect(user.data).to.have.property('name', name);
       await User.remove(user._id, { hard: true });
     });
 
@@ -78,7 +79,7 @@ describe('Auth', () => {
       const username = randomString();
       const password = randomString();
       const user = await User.signup({ username, password }, { state: false });
-      expect(User.getActiveUser()).to.be.undefined;
+      expect(User.getActiveUser()).to.be.null;
       await User.login({ username, password });
       await User.remove(user._id, { hard: true });
     });
