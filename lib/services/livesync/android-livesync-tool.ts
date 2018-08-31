@@ -4,13 +4,8 @@ import * as crypto from "crypto";
 const PROTOCOL_VERSION_LENGTH_SIZE = 1;
 const PROTOCOL_OPERATION_LENGTH_SIZE = 1;
 const SIZE_BYTE_LENGTH = 1;
-const ERROR_REPORT = 1;
-const OPERATION_END_REPORT = 2;
-const OPERATION_END_NO_REFRESH_REPORT_CODE = 3;
 const REPORT_LENGTH = 1;
 const DO_REFRESH_LENGTH = 1;
-const DO_REFRESH = 1;
-const SKIP_REFRESH = 0;
 const SYNC_OPERATION_TIMEOUT = 60000;
 const TRY_CONNECT_TIMEOUT = 30000;
 const DEFAULT_LOCAL_HOST_ADDRESS = "127.0.0.1";
@@ -19,6 +14,11 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	public static DELETE_FILE_OPERATION = 7;
 	public static CREATE_FILE_OPERATION = 8;
 	public static DO_SYNC_OPERATION = 9;
+	public static ERROR_REPORT = 1;
+	public static OPERATION_END_REPORT = 2;
+	public static OPERATION_END_NO_REFRESH_REPORT_CODE = 3;
+	public static DO_REFRESH = 1;
+	public static SKIP_REFRESH = 0;
 	public protocolVersion: string;
 	private operationPromises: IDictionary<any>;
 	private socketError: string | Error;
@@ -50,7 +50,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		}
 
 		if (!configuration.appPlatformsPath) {
-			this.$errors.fail(`You need to provide "baseDir" as a configuration property!`);
+			this.$errors.fail(`You need to provide "appPlatformsPath" as a configuration property!`);
 		}
 
 		if (this.socketConnection) {
@@ -140,7 +140,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			const message = `${AndroidLivesyncTool.DO_SYNC_OPERATION}${id}`;
 			const headerBuffer = Buffer.alloc(Buffer.byteLength(message) + DO_REFRESH_LENGTH);
 			const socketId = this.socketConnection.uid;
-			const doRefreshCode = doRefresh ? DO_REFRESH : SKIP_REFRESH;
+			const doRefreshCode = doRefresh ? AndroidLivesyncTool.DO_REFRESH : AndroidLivesyncTool.SKIP_REFRESH;
 			const offset = headerBuffer.write(message);
 
 			headerBuffer.writeUInt8(doRefreshCode, offset);
@@ -374,13 +374,13 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		const reportType = data.readUInt8();
 		const infoBuffer = data.slice(REPORT_LENGTH, data.length);
 
-		if (reportType === ERROR_REPORT) {
+		if (reportType === AndroidLivesyncTool.ERROR_REPORT) {
 			const errorMessage = infoBuffer.toString();
 			this.handleSocketError(socketId, errorMessage);
-		} else if (reportType === OPERATION_END_REPORT) {
-			this.handleSyncEnd({data:infoBuffer, didRefresh: true});
-		} else if (reportType === OPERATION_END_NO_REFRESH_REPORT_CODE) {
-			this.handleSyncEnd({data:infoBuffer, didRefresh: false});
+		} else if (reportType === AndroidLivesyncTool.OPERATION_END_REPORT) {
+			this.handleSyncEnd({data: infoBuffer, didRefresh: true});
+		} else if (reportType === AndroidLivesyncTool.OPERATION_END_NO_REFRESH_REPORT_CODE) {
+			this.handleSyncEnd({data: infoBuffer, didRefresh: false});
 		}
 	}
 
