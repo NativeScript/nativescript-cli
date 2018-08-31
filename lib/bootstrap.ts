@@ -42,6 +42,7 @@ $injector.require("emulatorSettingsService", "./services/emulator-settings-servi
 
 $injector.require("platformCommandParameter", "./platform-command-param");
 $injector.requireCommand("create", "./commands/create-project");
+$injector.requireCommand("generate", "./commands/generate");
 $injector.requireCommand("platform|*list", "./commands/list-platforms");
 $injector.requireCommand("platform|add", "./commands/add-platform");
 $injector.requireCommand("platform|remove", "./commands/remove-platform");
