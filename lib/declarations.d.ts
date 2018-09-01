@@ -438,6 +438,10 @@ interface ICreateProjectOptions extends INpmInstallConfigurationOptionsBase {
 	pathToTemplate?: string;
 }
 
+interface IGenerateOptions {
+	collection?: string;
+}
+
 interface IDebugInformation extends IPort, Mobile.IDeviceIdentifier {
 	url: string;
 }
@@ -451,7 +455,7 @@ interface IPluginSeedOptions {
 	pluginName: string;
 }
 
-interface IOptions extends ICommonOptions, IBundleString, IPlatformTemplate, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions, IPluginSeedOptions {
+interface IOptions extends ICommonOptions, IBundleString, IPlatformTemplate, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions, IPluginSeedOptions, IGenerateOptions {
 	all: boolean;
 	client: boolean;
 	compileSdk: number;
