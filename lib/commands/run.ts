@@ -30,7 +30,8 @@ export class RunCommandBase implements ICommand {
 		}
 
 		const validatePlatformOutput = await this.$liveSyncCommandHelper.validatePlatform(this.platform);
-		if (validatePlatformOutput && validatePlatformOutput[this.platform.toLowerCase()]) {
+
+		if (this.platform && validatePlatformOutput && validatePlatformOutput[this.platform.toLowerCase()]) {
 			const checkEnvironmentRequirementsOutput = validatePlatformOutput[this.platform.toLowerCase()].checkEnvironmentRequirementsOutput;
 			this.liveSyncCommandHelperAdditionalOptions.syncToPreviewApp = checkEnvironmentRequirementsOutput && checkEnvironmentRequirementsOutput.selectedOption === "Sync to Playground";
 		}

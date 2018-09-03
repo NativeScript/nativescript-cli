@@ -53,17 +53,17 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 	private getCallbacks(): SdkCallbacks {
 		return {
 			onLogSdkMessage: (log: string) => {
-				this.$logger.trace("onLogSdkMessage!!!", log);
+				this.$logger.trace("Received onLogSdkMessage message: ", log);
 			},
 			onConnectedDevicesChange: (connectedDevices: ConnectedDevices) => ({ }),
 			onLogMessage: (log: string, deviceName: string) => {
 				this.$logger.info(`LOG from device ${deviceName}: ${log}`);
 			},
 			onRestartMessage: () => {
-				console.log("ON RESTART MESSAGE!!!");
+				this.$logger.trace("Received onRestartMessage event.");
 			},
 			onUncaughtErrorMessage: () => {
-				this.$errors.failWithoutHelp("UncaughtErrorMessage while preview app!!");
+				this.$errors.failWithoutHelp("Error while communicating with preview app.");
 			},
 			onDeviceConnectedMessage: (deviceConnectedMessage: DeviceConnectedMessage) => ({ }),
 			onDeviceConnected: (device: Device) => {

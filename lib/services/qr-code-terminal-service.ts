@@ -9,7 +9,7 @@ export class QrCodeTerminalService implements IQrCodeTerminalService {
 		try {
 			qrcode.generate(url);
 		} catch (err) {
-			this.$logger.trace(`Failed to generate QR code for ${url}`, err);
+			this.$logger.info(`Failed to generate QR code for ${url}`, err);
 		}
 	}
 }
