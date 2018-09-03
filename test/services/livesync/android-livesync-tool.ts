@@ -3,9 +3,9 @@ import { assert } from "chai";
 import * as sinon from "sinon";
 import { LoggerStub, ProcessServiceStub } from "../../stubs";
 import { AndroidLivesyncTool } from "../../../lib/services/livesync/android-livesync-tool";
+import { LiveSyncSocket } from "../../../lib/services/livesync/livesync-socket";
 import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
 import { FileSystem } from "../../../lib/common/file-system";
-import * as net from "net";
 import { MobilePlatformsCapabilities } from "../../../lib/mobile-platforms-capabilities";
 import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-platforms-constants";
 import * as path from "path";
@@ -15,12 +15,13 @@ import * as crypto from "crypto";
 temp.track();
 const protocolVersion = "0.2.0";
 
-class TestSocket extends net.Socket {
+class TestSocket extends LiveSyncSocket {
 	public accomulatedData: Buffer[] = [];
 	public connect () {
 		//ignore
 	}
-	public write(data: Buffer | string, cb?: string | Function, encoding?: Function | string): boolean {
+
+	public writeAsync(data: Buffer | string, cb?: string | Function, encoding?: Function | string): Promise<Boolean> {
 		if (data instanceof Buffer) {
 			this.accomulatedData.push(data);
 		} else {
@@ -32,20 +33,22 @@ class TestSocket extends net.Socket {
 			cb.call(this);
 		}
 
-		return true;
+		return new Promise((resolve, reject) => {
+			setTimeout(() => resolve(true), 0);
+		});
 	}
 }
 
-const rootTestFileJs = "test.js";
-const rootTestFileCss = "test.css";
-const dirTestFileJs = path.join("testdir", "testdir.js");
-const dirTestFileCss = path.join("testdir", "testdir.css");
+const rootJsFilePath = "test.js";
+const rootCssFilePath = "test.css";
+const nestedJsFilePath = path.join("testdir", "testdir.js");
+const nestedCssFilePath = path.join("testdir", "testdir.css");
 
 const fileContents = {
-	[rootTestFileJs]: "Test js content",
-	[rootTestFileCss]: "Test css content",
-	[dirTestFileJs]: "Test js in dir",
-	[dirTestFileCss]: "Test css in dir"
+	[rootJsFilePath]: "Test js content",
+	[rootCssFilePath]: "Test css content",
+	[nestedJsFilePath]: "Test js in dir",
+	[nestedCssFilePath]: "Test css in dir"
 };
 
 const projectCreated = false;
@@ -76,6 +79,9 @@ const createTestInjector = (socket: INetSocket, fileStreams: IDictionary<NodeJS.
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("errors", {
 		fail: (message: string) => {
+			throw new Error(message);
+		},
+		failWithoutHelp: (message: string) => {
 			throw new Error(message);
 		}
 	});
@@ -177,14 +183,38 @@ const getHandshakeBuffer = () => {
 	return handshakeBuffer;
 };
 
+const stubSocketEventAttach = (socket: any, sandbox: sinon.SinonSandbox, attachMethod: string, eventName: string, data: any, attachCountForAction: number, emitEvent?: string ) => {
+	const originalMethod = socket[attachMethod];
+	let attachCount = 0;
+	emitEvent = emitEvent || eventName;
+	sandbox.stub(socket, attachMethod).callsFake(function(event: string) {
+		originalMethod.apply(this, arguments);
+		if (eventName === event) {
+			attachCount++;
+			if (attachCount === attachCountForAction) {
+				socket.emit(emitEvent, data);
+			}
+		}
+	});
+};
+
+const connectTimeout = 100;
+
 describe("AndroidLivesyncTool", () => {
 	let testInjector: IInjector = null;
 	let livesyncTool: IAndroidLivesyncTool = null;
-	let testSocket: INetSocket;
+	let testSocket: ILiveSyncSocket;
 	let sandbox: sinon.SinonSandbox = null;
 	let fileStreams: IDictionary<NodeJS.ReadableStream> = null;
+	let connectData: IAndroidLivesyncToolConfiguration;
 
 	beforeEach(() => {
+		connectData = {
+			appIdentifier: "test",
+			deviceIdentifier: "test",
+			appPlatformsPath: testAppPlatformPath,
+			connectTimeout
+		};
 		sandbox = sinon.sandbox.create();
 		testSocket = new TestSocket();
 		fileStreams = {};
@@ -199,111 +229,92 @@ describe("AndroidLivesyncTool", () => {
 
 	describe("methods", () => {
 		describe("connect", () => {
-			it("should retry if first connect fails", () => {
+			it("should retry if first socket connect emits close", async () => {
 				//arrange
-				const originalOn = testSocket.on;
-				const originalOnce = testSocket.once;
 				const connectStub: sinon.SinonStub = sandbox.stub(testSocket, "connect");
-				let dataAttachCount = 0;
-				let closeAttachCount = 0;
+				connectData.connectTimeout = null;
 
-				sandbox.stub(testSocket, "on").callsFake(function(event: string) {
-					originalOn.apply(this, arguments);
-					if (event === "close") {
-						closeAttachCount++;
-						if (closeAttachCount === 1) {
-							testSocket.emit('close', false);
-						}
-					}
-				});
-
-				sandbox.stub(testSocket, "once").callsFake(function(event: string) {
-					originalOnce.apply(this, arguments);
-					if (event === "data") {
-						dataAttachCount++;
-						if (dataAttachCount === 2) {
-							testSocket.emit('data', getHandshakeBuffer());
-						}
-					}
-				});
+				stubSocketEventAttach(testSocket, sandbox, "on", "close", false, 1);
+				stubSocketEventAttach(testSocket, sandbox, "once", "data", getHandshakeBuffer(), 2);
 
 				//act
-				const connectPromise = livesyncTool.connect({ appIdentifier: "test", deviceIdentifier: "test", appPlatformsPath: "test" });
+				await livesyncTool.connect(connectData);
 
 				//assert
-				return connectPromise.then(() => {
-						assert(connectStub.calledTwice);
-						assert.isFulfilled(connectPromise);
-						assert.equal(livesyncTool.protocolVersion, protocolVersion);
-					}
-				);
+				assert(connectStub.calledTwice);
+				assert.equal(livesyncTool.protocolVersion, protocolVersion);
 			});
 
-			it("should reject if appIdentifier missing", () => {
+			it("should retry if first socket connect errors", () => {
+				//arrange
+				const errorMessage = "Socket error";
+				connectData.connectTimeout = null;
+
+				stubSocketEventAttach(testSocket, sandbox, "on", "close", new Error(errorMessage), 1, "error");
+				stubSocketEventAttach(testSocket, sandbox, "once", "data", getHandshakeBuffer(), 2);
+
 				//act
-				const connectPromise = livesyncTool.connect({ appIdentifier: "", deviceIdentifier: "test", appPlatformsPath: "test", connectTimeout: 400 });
+				const connectPromise = livesyncTool.connect(connectData);
 
 				//assert
-				return assert.isRejected(connectPromise);
+				return assert.isRejected(connectPromise, errorMessage);
 			});
 
-			it("should reject if appPlatformsPath missing", () => {
+			it("should reject if appIdentifier is missing", () => {
+				//arrange
+				connectData.appIdentifier = "";
+
 				//act
-				const connectPromise = livesyncTool.connect({ appIdentifier: "test", deviceIdentifier: "test", appPlatformsPath: "", connectTimeout: 400 });
+				const connectPromise = livesyncTool.connect(connectData);
 
 				//assert
-				return assert.isRejected(connectPromise);
+				return assert.isRejected(connectPromise, AndroidLivesyncTool.APP_IDENTIFIER_MISSING_ERROR);
+			});
+
+			it("should reject if appPlatformsPath is missing", () => {
+				//arrange
+				connectData.appPlatformsPath = "";
+
+				//act
+				const connectPromise = livesyncTool.connect(connectData);
+
+				//assert
+				return assert.isRejected(connectPromise, AndroidLivesyncTool.APP_PLATFORMS_PATH_MISSING_ERROR);
 			});
 
 			it("should fail eventually", () => {
 				//act
-				const connectPromise = livesyncTool.connect({ appIdentifier: "test", deviceIdentifier: "test", appPlatformsPath: "test", connectTimeout: 400 });
+				const connectPromise = livesyncTool.connect(connectData);
 
 				//assert
-				return assert.isRejected(connectPromise);
+				return assert.isRejected(connectPromise, AndroidLivesyncTool.SOCKET_CONNECTION_TIMED_OUT_ERROR);
 			});
 
-			it("should fail if connection alreday exists", () => {
+			it("should fail if connection alreday exists", async () => {
 				//arrange
-				const originalOnce = testSocket.once;
+				stubSocketEventAttach(testSocket, sandbox, "once", "data", getHandshakeBuffer(), 1);
 
-				sandbox.stub(testSocket, "once").callsFake(function(event: string) {
-					originalOnce.apply(this, arguments);
-					if (event === "data") {
-						testSocket.emit('data', getHandshakeBuffer());
-					}
-				});
+				await livesyncTool.connect(connectData);
 
 				//act
-				const connectPromise = livesyncTool.connect({ appIdentifier: "test", deviceIdentifier: "test", appPlatformsPath: "test", connectTimeout: 400 }).then(() => {
-					return livesyncTool.connect({ appIdentifier: "test", deviceIdentifier: "test", appPlatformsPath: "test", connectTimeout: 400 });
-				});
+				const connectPromise = livesyncTool.connect(connectData);
 
 				//assert
-				return assert.isRejected(connectPromise);
+				await assert.isRejected(connectPromise, AndroidLivesyncTool.SOCKET_CONNECTION_ALREADY_EXISTS_ERROR);
 			});
 		});
 
 		describe("which require connection", () => {
 			beforeEach(async () => {
-				const originalOnce = testSocket.once;
-				let dataAttachCount = 0;
-				sandbox.stub(testSocket, "once").callsFake(function(event: string) {
-					originalOnce.apply(this, arguments);
-					if (event === "data") {
-						dataAttachCount++;
-						if (dataAttachCount === 1) {
-							testSocket.emit('data', getHandshakeBuffer());
-						}
-					}
-				});
-				await livesyncTool.connect({ appIdentifier: "test", deviceIdentifier: "test", appPlatformsPath: testAppPlatformPath});
+				stubSocketEventAttach(testSocket, sandbox, "once", "data", getHandshakeBuffer(), 1);
+
+				await livesyncTool.connect(connectData);
 			});
 
 			describe("sendFile", () => {
 				it("sends correct information", async () => {
 					//arrange
-					const filePath = path.join(testAppPlatformPath, rootTestFileJs);
+					const filePath = path.join(testAppPlatformPath, rootJsFilePath);
 
 					//act
 					await livesyncTool.sendFile(filePath);
@@ -311,8 +322,8 @@ describe("AndroidLivesyncTool", () => {
 					const sendFileData = getSendFileData((testSocket as TestSocket).accomulatedData);
 
 					//assert
-					assert.equal(sendFileData.fileContent, fileContents[rootTestFileJs]);
-					assert.equal(sendFileData.fileName, rootTestFileJs);
+					assert.equal(sendFileData.fileContent, fileContents[rootJsFilePath]);
+					assert.equal(sendFileData.fileName, rootJsFilePath);
 					assert(sendFileData.headerHashMatch);
 					assert(sendFileData.fileHashMatch);
 					assert.equal(sendFileData.operation, AndroidLivesyncTool.CREATE_FILE_OPERATION);
@@ -329,19 +340,19 @@ describe("AndroidLivesyncTool", () => {
 				it("rejects if no connection", () => {
 					//arrange
 					livesyncTool.end();
-					const filePath = path.join(testAppPlatformPath, rootTestFileJs);
+					const filePath = path.join(testAppPlatformPath, rootJsFilePath);
 
 					//act
 					const sendFilePromise = livesyncTool.sendFile(filePath);
 
 					//assert
-					return assert.isRejected(sendFilePromise);
+					return assert.isRejected(sendFilePromise, AndroidLivesyncTool.NO_SOCKET_CONNECTION_AVAILABLE_ERROR);
 				});
 
 				it("rejects if socket sends error", () => {
 					//arrange
 					const errorMessage = "Some error";
-					const filePath = path.join(testAppPlatformPath, rootTestFileJs);
+					const filePath = path.join(testAppPlatformPath, rootJsFilePath);
 					testSocket.emit('error', errorMessage);
 
 					//act
@@ -353,11 +364,12 @@ describe("AndroidLivesyncTool", () => {
 
 				it("rejects if error received", async () => {
 					//arrange
-					const filePath = path.join(testAppPlatformPath, rootTestFileJs);
+					const filePath = path.join(testAppPlatformPath, rootJsFilePath);
 					const errorMessage = "Some error";
 					await livesyncTool.sendFile(filePath);
-					sandbox.stub(testSocket, "write").callsFake((data) => {
+					sandbox.stub(testSocket, "writeAsync").callsFake((data) => {
 						testSocket.emit('data', getSyncResponse(AndroidLivesyncTool.ERROR_REPORT, errorMessage));
+						return Promise.resolve();
 					});
 
 					//act
@@ -371,14 +383,14 @@ describe("AndroidLivesyncTool", () => {
 			describe("remove file", () => {
 				it("sends correct information", async () => {
 					//arrange
-					const filePath = path.join(testAppPlatformPath, rootTestFileJs);
+					const filePath = path.join(testAppPlatformPath, rootJsFilePath);
 					await livesyncTool.removeFile(filePath);
 
 					//act
 					const removeData = getRemoveFileData((testSocket as TestSocket).accomulatedData);
 
 					//assert
-					assert.equal(removeData.fileName, rootTestFileJs);
+					assert.equal(removeData.fileName, rootJsFilePath);
 					assert.equal(removeData.operation, AndroidLivesyncTool.DELETE_FILE_OPERATION);
 					assert(removeData.headerHashMatch);
 				});
@@ -388,24 +400,19 @@ describe("AndroidLivesyncTool", () => {
 				it("resolves after received data", () => {
 					//arrange
 					let doSyncResolved = false;
-					const originalWrite = testSocket.write.bind(testSocket);
-					const writeStub = sandbox.stub(testSocket, "write").callThrough();
-					writeStub.onSecondCall().callsFake((data) => {
-						originalWrite(data);
-					});
 
 					//act
-					const doSyncPromise = livesyncTool.sendDoSyncOperation(true);
+					const doSyncPromise = livesyncTool.sendDoSyncOperation();
 					const doSyncData = getSyncData((testSocket as TestSocket).accomulatedData);
 					doSyncPromise.then(() => {
 						doSyncResolved = true;
-					});
+					}).catch(assert.fail);
 
 					//assert
 					assert.isFalse(doSyncResolved);
 					testSocket.emit('data', getSyncResponse(AndroidLivesyncTool.OPERATION_END_REPORT, doSyncData.operationUid));
 
-					return doSyncPromise.then(function() {
+					return doSyncPromise.then(() => {
 						assert.isTrue(doSyncResolved);
 					});
 				});
@@ -413,24 +420,19 @@ describe("AndroidLivesyncTool", () => {
 				it("resolves after received data without refresh", () => {
 					//arrange
 					let doSyncResolved = false;
-					const originalWrite = testSocket.write.bind(testSocket);
-					const writeStub = sandbox.stub(testSocket, "write").callThrough();
-					writeStub.onSecondCall().callsFake((data) => {
-						originalWrite(data);
-					});
 
 					//act
-					const doSyncPromise = livesyncTool.sendDoSyncOperation(true);
+					const doSyncPromise = livesyncTool.sendDoSyncOperation();
 					const doSyncData = getSyncData((testSocket as TestSocket).accomulatedData);
 					doSyncPromise.then(() => {
 						doSyncResolved = true;
-					});
+					}).catch(assert.fail);
 
 					//assert
 					assert.isFalse(doSyncResolved);
 					testSocket.emit('data', getSyncResponse(AndroidLivesyncTool.OPERATION_END_NO_REFRESH_REPORT_CODE, doSyncData.operationUid));
 
-					return doSyncPromise.then(function() {
+					return doSyncPromise.then(() => {
 						assert.isTrue(doSyncResolved);
 					});
 				});
@@ -439,15 +441,10 @@ describe("AndroidLivesyncTool", () => {
 					//arrange
 					let doSyncRejected = false;
 					const errorMessage = "Some error";
-					const originalWrite = testSocket.write.bind(testSocket);
-					const writeStub = sandbox.stub(testSocket, "write").callThrough();
-					writeStub.onSecondCall().callsFake((data) => {
-						originalWrite(data);
-					});
 
 					//act
-					const doSyncPromise = livesyncTool.sendDoSyncOperation(true);
-					doSyncPromise.then(null, () => {
+					const doSyncPromise = livesyncTool.sendDoSyncOperation();
+					doSyncPromise.catch(() => {
 						doSyncRejected = true;
 					});
 
@@ -461,15 +458,10 @@ describe("AndroidLivesyncTool", () => {
 				it("rejects after socket closed", () => {
 					//arrange
 					let doSyncRejected = false;
-					const originalWrite = testSocket.write.bind(testSocket);
-					const writeStub = sandbox.stub(testSocket, "write").callThrough();
-					writeStub.onSecondCall().callsFake((data) => {
-						originalWrite(data);
-					});
 
 					//act
-					const doSyncPromise = livesyncTool.sendDoSyncOperation(true);
-					doSyncPromise.then(null, () => {
+					const doSyncPromise = livesyncTool.sendDoSyncOperation();
+					doSyncPromise.catch(() => {
 						doSyncRejected = true;
 					});
 
@@ -482,7 +474,7 @@ describe("AndroidLivesyncTool", () => {
 
 				it("rejects after timeout", () => {
 					//act
-					const doSyncPromise = livesyncTool.sendDoSyncOperation(true, 50);
+					const doSyncPromise = livesyncTool.sendDoSyncOperation({ timeout: 50 });
 
 					//assert
 					return assert.isRejected(doSyncPromise);
@@ -523,7 +515,7 @@ describe("AndroidLivesyncTool", () => {
 		});
 
 		describe("removeFiles", () => {
-			it("calls sendFile for each file", async () => {
+			it("calls removeFile for each file", async () => {
 				//arrange
 				const filePaths = _.keys(fileContents).map(filePath => path.join(testAppPlatformPath, filePath));
 				const removeFileStub = sandbox.stub(livesyncTool, "removeFile").callsFake(() => Promise.resolve());

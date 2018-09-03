@@ -395,6 +395,11 @@ interface IAndroidNativeScriptDeviceLiveSyncService extends INativeScriptDeviceL
 	finalizeSync(liveSyncInfo: ILiveSyncResultInfo, projectData: IProjectData): Promise<IAndroidLivesyncSyncOperationResult>;
 }
 
+interface ILiveSyncSocket extends INetSocket {
+	uid: string,
+	writeAsync(data: Buffer): Promise<Boolean>
+}
+
 interface IAndroidLivesyncTool {
 	/**
 	 * The protocol version the current app(adnroid runtime) is using.
@@ -430,21 +435,19 @@ interface IAndroidLivesyncTool {
 	 * @param filePath - The full path to the file.
 	 * @returns {Promise<boolean>}
 	 */
-	removeFile(filePath: string): Promise<boolean>;
+	removeFile(filePath: string): Promise<void>;
 	/**
 	 * Removes files
 	 * @param filePaths - Array of files that will be removed.
 	 * @returns {Promise<boolean[]>}
 	 */
-	removeFiles(filePaths: string[]): Promise<boolean[]>;
+	removeFiles(filePaths: string[]): Promise<void[]>;
 	/**
 	 * Sends doSyncOperation that will be handled by the runtime.
-	 * @param doRefresh - Indicates if the application should be restarted. Defaults to true.
-	 * @param operationId - The identifier of the operation
-	 * @param timeout - The timeout in milliseconds
+	 * @param options
 	 * @returns {Promise<void>}
 	 */
-	sendDoSyncOperation(doRefresh: boolean, timeout?: number, operationId?: string): Promise<IAndroidLivesyncSyncOperationResult>;
+	sendDoSyncOperation(options?: IDoSyncOperationOptions): Promise<IAndroidLivesyncSyncOperationResult>;
 	/**
 	 * Generates new operation identifier.
 	 */
@@ -465,6 +468,17 @@ interface IAndroidLivesyncTool {
 	 * Returns true if a connection has been already established
 	 */
 	hasConnection(): boolean;
+}
+
+/**
+ * doRefresh - Indicates if the application should be refreshed. Defaults to true.
+ * operationId - The identifier of the operation
+ * timeout - The timeout in milliseconds
+ */
+interface IDoSyncOperationOptions {
+	doRefresh?: boolean,
+	timeout?: number,
+	operationId?: string
 }
 
 interface IAndroidLivesyncToolConfiguration {
