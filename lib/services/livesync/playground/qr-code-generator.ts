@@ -32,7 +32,7 @@ export class PlaygroundQrCodeGenerator implements IPlaygroundQrCodeGenerator {
 		try {
 			const response = await this.$httpClient.httpRequest(shortenUrlEndpoint);
 			const responseBody = JSON.parse(response.body);
-			url = responseBody.shortUrl || url;
+			url = responseBody.shortURL || url;
 		} catch (e) {
 			// use the longUrl
 		}
