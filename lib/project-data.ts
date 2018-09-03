@@ -106,7 +106,7 @@ export class ProjectData implements IProjectData {
 		if (nsData) {
 			this.projectDir = projectDir;
 			this.projectName = this.$projectHelper.sanitizeName(path.basename(projectDir));
-			this.platformsDir = path.join(projectDir, constants.PLATFORMS_DIR_NAME);
+			this.platformsDir = nsData.projectName || path.join(projectDir, constants.PLATFORMS_DIR_NAME);
 			this.projectFilePath = projectFilePath;
 			this.projectId = nsData.id;
 			this.dependencies = packageJsonData.dependencies;
