@@ -30,7 +30,7 @@
     "mobile"
   ],
   "dependencies": {
-    "@nativescript/schematics-engine": "github:nativescript/schematics-engine",
+    "@nativescript/schematics-executor": "nativescript/schematics-executor",
     "byline": "4.2.1",
     "chalk": "1.1.0",
     "chokidar": "1.7.0",

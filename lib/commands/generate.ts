@@ -1,4 +1,4 @@
-import { run, ExecutionOptions } from '@nativescript/schematics-engine';
+import { run, ExecutionOptions } from '@nativescript/schematics-executor';
 
 export class GenerateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
