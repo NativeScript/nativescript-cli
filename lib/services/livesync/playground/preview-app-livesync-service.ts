@@ -2,6 +2,7 @@ import * as path from "path";
 import { FilePayload, Device } from "nativescript-preview-sdk";
 import { PreviewSdkEventNames } from "./preview-app-constants";
 import { APP_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME, TNS_MODULES_FOLDER_NAME } from "../../../constants";
+const isTextOrBinary = require('istextorbinary');
 
 export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	private excludedFileExtensions = [".ts", ".sass", ".scss", ".less"];
@@ -83,12 +84,22 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 
 		const payloads = filesToTransfer
 			.map(file => {
-				return {
+				const filePayload: FilePayload = {
 					event: PreviewSdkEventNames.CHANGE_EVENT_NAME,
 					file: path.relative(platformsAppFolderPath, file),
-					fileContents: this.$fs.readText(file),
-					binary: false
+					binary: isTextOrBinary.isBinarySync(file),
+					fileContents: ""
 				};
+
+				if (filePayload.binary) {
+					const bitmap =  <string>this.$fs.readFile(file);
+					const base64 = new Buffer(bitmap).toString('base64');
+					filePayload.fileContents = base64;
+				} else {
+					filePayload.fileContents = this.$fs.readText(file);
+				}
+
+				return filePayload;
 			});
 
 		return payloads;
