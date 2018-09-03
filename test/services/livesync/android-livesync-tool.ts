@@ -177,7 +177,7 @@ const getHandshakeBuffer = () => {
 	return handshakeBuffer;
 };
 
-describe.only("AndroidLivesyncTool", () => {
+describe("AndroidLivesyncTool", () => {
 	let testInjector: IInjector = null;
 	let livesyncTool: IAndroidLivesyncTool = null;
 	let testSocket: INetSocket;
@@ -200,10 +200,13 @@ describe.only("AndroidLivesyncTool", () => {
 	describe("methods", () => {
 		describe("connect", () => {
 			it("should retry if first connect fails", () => {
+				//arrange
 				const originalOn = testSocket.on;
 				const originalOnce = testSocket.once;
+				const connectStub: sinon.SinonStub = sandbox.stub(testSocket, "connect");
 				let dataAttachCount = 0;
 				let closeAttachCount = 0;
+
 				sandbox.stub(testSocket, "on").callsFake(function(event: string) {
 					originalOn.apply(this, arguments);
 					if (event === "close") {
@@ -223,9 +226,11 @@ describe.only("AndroidLivesyncTool", () => {
 						}
 					}
 				});
-				const connectStub: sinon.SinonStub = sandbox.stub(testSocket, "connect");
+
+				//act
 				const connectPromise = livesyncTool.connect({ appIdentifier: "test", deviceIdentifier: "test", appPlatformsPath: "test" });
 
+				//assert
 				return connectPromise.then(() => {
 						assert(connectStub.calledTwice);
 						assert.isFulfilled(connectPromise);
@@ -235,24 +240,31 @@ describe.only("AndroidLivesyncTool", () => {
 			});
 
 			it("should reject if appIdentifier missing", () => {
+				//act
 				const connectPromise = livesyncTool.connect({ appIdentifier: "", deviceIdentifier: "test", appPlatformsPath: "test", connectTimeout: 400 });
 
+				//assert
 				return assert.isRejected(connectPromise);
 			});
 
 			it("should reject if appPlatformsPath missing", () => {
+				//act
 				const connectPromise = livesyncTool.connect({ appIdentifier: "test", deviceIdentifier: "test", appPlatformsPath: "", connectTimeout: 400 });
 
+				//assert
 				return assert.isRejected(connectPromise);
 			});
 
 			it("should fail eventually", () => {
+				//act
 				const connectPromise = livesyncTool.connect({ appIdentifier: "test", deviceIdentifier: "test", appPlatformsPath: "test", connectTimeout: 400 });
 
+				//assert
 				return assert.isRejected(connectPromise);
 			});
 
 			it("should fail if connection alreday exists", () => {
+				//arrange
 				const originalOnce = testSocket.once;
 
 				sandbox.stub(testSocket, "once").callsFake(function(event: string) {
@@ -262,10 +274,12 @@ describe.only("AndroidLivesyncTool", () => {
 					}
 				});
 
+				//act
 				const connectPromise = livesyncTool.connect({ appIdentifier: "test", deviceIdentifier: "test", appPlatformsPath: "test", connectTimeout: 400 }).then(() => {
 					return livesyncTool.connect({ appIdentifier: "test", deviceIdentifier: "test", appPlatformsPath: "test", connectTimeout: 400 });
 				});
 
+				//assert
 				return assert.isRejected(connectPromise);
 			});
 		});
@@ -288,12 +302,15 @@ describe.only("AndroidLivesyncTool", () => {
 
 			describe("sendFile", () => {
 				it("sends correct information", async () => {
+					//arrange
 					const filePath = path.join(testAppPlatformPath, rootTestFileJs);
 
+					//act
 					await livesyncTool.sendFile(filePath);
 
 					const sendFileData = getSendFileData((testSocket as TestSocket).accomulatedData);
 
+					//assert
 					assert.equal(sendFileData.fileContent, fileContents[rootTestFileJs]);
 					assert.equal(sendFileData.fileName, rootTestFileJs);
 					assert(sendFileData.headerHashMatch);
@@ -302,28 +319,40 @@ describe.only("AndroidLivesyncTool", () => {
 				});
 
 				it("rejects if file doesn't exist", () => {
+					//act
 					const sendFilePromise = livesyncTool.sendFile("nonexistent.js");
 
+					//assert
 					return assert.isRejected(sendFilePromise);
 				});
 
 				it("rejects if no connection", () => {
+					//arrange
 					livesyncTool.end();
 					const filePath = path.join(testAppPlatformPath, rootTestFileJs);
+
+					//act
 					const sendFilePromise = livesyncTool.sendFile(filePath);
 
+					//assert
 					return assert.isRejected(sendFilePromise);
 				});
 
 				it("rejects if socket sends error", () => {
+					//arrange
 					const errorMessage = "Some error";
 					const filePath = path.join(testAppPlatformPath, rootTestFileJs);
 					testSocket.emit('error', errorMessage);
+
+					//act
 					const sendFilePromise = livesyncTool.sendFile(filePath);
+
+					//assert
 					return assert.isRejected(sendFilePromise, errorMessage);
 				});
 
 				it("rejects if error received", async () => {
+					//arrange
 					const filePath = path.join(testAppPlatformPath, rootTestFileJs);
 					const errorMessage = "Some error";
 					await livesyncTool.sendFile(filePath);
@@ -331,18 +360,24 @@ describe.only("AndroidLivesyncTool", () => {
 						testSocket.emit('data', getSyncResponse(AndroidLivesyncTool.ERROR_REPORT, errorMessage));
 					});
 
+					//act
 					const sendFilePromise = livesyncTool.sendFile(filePath);
+
+					//assert
 					assert.isRejected(sendFilePromise, errorMessage);
 				});
 			});
 
 			describe("remove file", () => {
 				it("sends correct information", async () => {
+					//arrange
 					const filePath = path.join(testAppPlatformPath, rootTestFileJs);
 					await livesyncTool.removeFile(filePath);
 
+					//act
 					const removeData = getRemoveFileData((testSocket as TestSocket).accomulatedData);
 
+					//assert
 					assert.equal(removeData.fileName, rootTestFileJs);
 					assert.equal(removeData.operation, AndroidLivesyncTool.DELETE_FILE_OPERATION);
 					assert(removeData.headerHashMatch);
@@ -351,6 +386,7 @@ describe.only("AndroidLivesyncTool", () => {
 
 			describe("sendDoSync", () => {
 				it("resolves after received data", () => {
+					//arrange
 					let doSyncResolved = false;
 					const originalWrite = testSocket.write.bind(testSocket);
 					const writeStub = sandbox.stub(testSocket, "write").callThrough();
@@ -358,11 +394,14 @@ describe.only("AndroidLivesyncTool", () => {
 						originalWrite(data);
 					});
 
+					//act
 					const doSyncPromise = livesyncTool.sendDoSyncOperation(true);
 					const doSyncData = getSyncData((testSocket as TestSocket).accomulatedData);
 					doSyncPromise.then(() => {
 						doSyncResolved = true;
 					});
+
+					//assert
 					assert.isFalse(doSyncResolved);
 					testSocket.emit('data', getSyncResponse(AndroidLivesyncTool.OPERATION_END_REPORT, doSyncData.operationUid));
 
@@ -372,6 +411,7 @@ describe.only("AndroidLivesyncTool", () => {
 				});
 
 				it("resolves after received data without refresh", () => {
+					//arrange
 					let doSyncResolved = false;
 					const originalWrite = testSocket.write.bind(testSocket);
 					const writeStub = sandbox.stub(testSocket, "write").callThrough();
@@ -379,11 +419,14 @@ describe.only("AndroidLivesyncTool", () => {
 						originalWrite(data);
 					});
 
+					//act
 					const doSyncPromise = livesyncTool.sendDoSyncOperation(true);
 					const doSyncData = getSyncData((testSocket as TestSocket).accomulatedData);
 					doSyncPromise.then(() => {
 						doSyncResolved = true;
 					});
+
+					//assert
 					assert.isFalse(doSyncResolved);
 					testSocket.emit('data', getSyncResponse(AndroidLivesyncTool.OPERATION_END_NO_REFRESH_REPORT_CODE, doSyncData.operationUid));
 
@@ -393,6 +436,7 @@ describe.only("AndroidLivesyncTool", () => {
 				});
 
 				it("rejects after received error", () => {
+					//arrange
 					let doSyncRejected = false;
 					const errorMessage = "Some error";
 					const originalWrite = testSocket.write.bind(testSocket);
@@ -401,10 +445,13 @@ describe.only("AndroidLivesyncTool", () => {
 						originalWrite(data);
 					});
 
+					//act
 					const doSyncPromise = livesyncTool.sendDoSyncOperation(true);
 					doSyncPromise.then(null, () => {
 						doSyncRejected = true;
 					});
+
+					//assert
 					assert.isFalse(doSyncRejected);
 					testSocket.emit('data', getSyncResponse(AndroidLivesyncTool.ERROR_REPORT, errorMessage));
 
@@ -412,6 +459,7 @@ describe.only("AndroidLivesyncTool", () => {
 				});
 
 				it("rejects after socket closed", () => {
+					//arrange
 					let doSyncRejected = false;
 					const originalWrite = testSocket.write.bind(testSocket);
 					const writeStub = sandbox.stub(testSocket, "write").callThrough();
@@ -419,10 +467,13 @@ describe.only("AndroidLivesyncTool", () => {
 						originalWrite(data);
 					});
 
+					//act
 					const doSyncPromise = livesyncTool.sendDoSyncOperation(true);
 					doSyncPromise.then(null, () => {
 						doSyncRejected = true;
 					});
+
+					//assert
 					assert.isFalse(doSyncRejected);
 					testSocket.emit('close', true);
 
@@ -430,8 +481,10 @@ describe.only("AndroidLivesyncTool", () => {
 				});
 
 				it("rejects after timeout", () => {
+					//act
 					const doSyncPromise = livesyncTool.sendDoSyncOperation(true, 50);
 
+					//assert
 					return assert.isRejected(doSyncPromise);
 				});
 			});
@@ -439,10 +492,14 @@ describe.only("AndroidLivesyncTool", () => {
 
 		describe("sendFiles", () => {
 			it("calls sendFile for each file", async () => {
+				//arrange
 				const filePaths = _.keys(fileContents).map(filePath => path.join(testAppPlatformPath, filePath));
 				const sendFileStub = sandbox.stub(livesyncTool, "sendFile").callsFake(() => Promise.resolve());
+
+				//act
 				await livesyncTool.sendFiles(filePaths);
 
+				//assert
 				_.forEach(filePaths, (filePath) => {
 					assert(sendFileStub.calledWith(filePath));
 				});
@@ -451,10 +508,14 @@ describe.only("AndroidLivesyncTool", () => {
 
 		describe("sendDirectory", () => {
 			it("calls sendFile for each file in directory", async () => {
+				//arrange
 				const filePaths = _.keys(fileContents).map(filePath => path.join(testAppPlatformPath, filePath));
 				const sendFileStub = sandbox.stub(livesyncTool, "sendFile").callsFake(() => Promise.resolve());
+
+				//act
 				await livesyncTool.sendDirectory(testAppPlatformPath);
 
+				//assert
 				_.forEach(filePaths, (filePath) => {
 					assert(sendFileStub.calledWith(filePath));
 				});
@@ -463,10 +524,14 @@ describe.only("AndroidLivesyncTool", () => {
 
 		describe("removeFiles", () => {
 			it("calls sendFile for each file", async () => {
+				//arrange
 				const filePaths = _.keys(fileContents).map(filePath => path.join(testAppPlatformPath, filePath));
 				const removeFileStub = sandbox.stub(livesyncTool, "removeFile").callsFake(() => Promise.resolve());
+
+				//act
 				await livesyncTool.removeFiles(filePaths);
 
+				//assert
 				_.forEach(filePaths, (filePath) => {
 					assert(removeFileStub.calledWith(filePath));
 				});
