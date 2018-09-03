@@ -44,7 +44,7 @@
     "ios-device-lib": "0.4.14",
     "ios-mobileprovision-finder": "1.0.10",
     "ios-sim-portable": "4.0.2",
-    "istextorbinary": "^2.2.1",
+    "istextorbinary": "2.2.1",
     "jimp": "0.2.28",
     "lockfile": "1.0.3",
     "lodash": "4.17.10",
