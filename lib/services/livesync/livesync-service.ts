@@ -727,7 +727,9 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			this.$processService.attachToProcessExitSignals(this, () => {
 				if (liveSyncData.syncToPreviewApp) {
 					// Do not await here, we are in process exit's handler.
+					/* tslint:disable:no-floating-promises */
 					this.$previewAppLiveSyncService.stopLiveSync();
+					/* tslint:enable:no-floating-promises */
 				}
 
 				_.keys(this.liveSyncProcessesInfo).forEach(projectDir => {

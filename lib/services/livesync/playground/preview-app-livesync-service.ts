@@ -123,7 +123,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		await this.$platformService.preparePlatform(prepareInfo);
 	}
 
-	private async showWarningsForNativeFiles(files: string[]): Promise<void> {
+	private showWarningsForNativeFiles(files: string[]): void {
 		if (files && files.length) {
 			for (const file of files) {
 				if (file.indexOf(APP_RESOURCES_FOLDER_NAME) > -1) {
