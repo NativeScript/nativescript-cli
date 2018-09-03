@@ -26,3 +26,4 @@ Command | Description
 [update](update.md) | Updates a NativeScript project to the latest (or specified) version.
 [resources generate icons](resources-generate-icons.md) | Generates icons for Android and iOS.
 [resources generate splashes](resources-generate-splashes.md) | Generates splashscreens for Android and iOS.
+<% } %>
