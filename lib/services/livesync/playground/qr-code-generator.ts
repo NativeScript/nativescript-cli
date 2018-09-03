@@ -28,11 +28,11 @@ export class PlaygroundQrCodeGenerator implements IPlaygroundQrCodeGenerator {
 	}
 
 	private async generateQrCodeCore(url: string): Promise<void> {
-		const shortenUrlEndpoint = util.format(this.$config.SHORTEN_URL_ENDPOINT, url);
+		const shortenUrlEndpoint = util.format(this.$config.SHORTEN_URL_ENDPOINT, encodeURIComponent(url));
 		try {
 			const response = await this.$httpClient.httpRequest(shortenUrlEndpoint);
 			const responseBody = JSON.parse(response.body);
-			url = responseBody.shortURL || url;
+			url = responseBody.shortUrl || url;
 		} catch (e) {
 			// use the longUrl
 		}
