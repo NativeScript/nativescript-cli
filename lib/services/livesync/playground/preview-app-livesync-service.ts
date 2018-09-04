@@ -15,16 +15,17 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		private $projectDataService: IProjectDataService,
 		private $previewSdkService: IPreviewSdkService,
 		private $previewAppPluginsService: IPreviewAppPluginsService,
-		private $projectFilesManager: IProjectFilesManager,
-		private $playgroundQrCodeGenerator: IPlaygroundQrCodeGenerator) { }
+		private $projectFilesManager: IProjectFilesManager) { }
+
+	public initialize() {
+		this.$previewSdkService.initialize();
+	}
 
 	public async initialSync(data: IPreviewAppLiveSyncData): Promise<void> {
-		this.$previewSdkService.initialize();
 		this.$previewSdkService.on(PreviewSdkEventNames.DEVICE_CONNECTED, async (device: Device) => {
 			this.$logger.trace("Found connected device", device);
 			await this.syncFilesOnDeviceSafe(data, device);
 		});
-		await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp();
 	}
 
 	public async syncFiles(data: IPreviewAppLiveSyncData, files: string[]): Promise<void> {

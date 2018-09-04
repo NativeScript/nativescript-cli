@@ -4,6 +4,7 @@ export class PreviewCommand implements ICommand {
 	constructor(private $liveSyncService: ILiveSyncService,
 		private $projectData: IProjectData,
 		private $options: IOptions,
+		private $playgroundQrCodeGenerator: IPlaygroundQrCodeGenerator,
 		private $previewCommandHelper: IPreviewCommandHelper) { }
 
 	public async execute(args: string[]): Promise<void> {
@@ -20,6 +21,8 @@ export class PreviewCommand implements ICommand {
 			env: this.$options.env,
 			timeout: this.$options.timeout
 		});
+
+		await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp();
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

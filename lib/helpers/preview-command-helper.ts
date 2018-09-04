@@ -12,7 +12,7 @@ export class PreviewCommandHelper implements IPreviewCommandHelper {
 			});
 		}
 
-	public run() {
+	public run(): void {
 		this.startWaitingForCommand();
 	}
 
