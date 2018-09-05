@@ -16,8 +16,9 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 		private $injector: IInjector,
 		private $androidProcessService: Mobile.IAndroidProcessService,
 		protected $platformsData: IPlatformsData,
-		protected device: Mobile.IAndroidDevice) {
-		super($platformsData, device);
+		protected device: Mobile.IAndroidDevice,
+		protected $options: IOptions) {
+		super($platformsData, device, $options);
 	}
 
 	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {

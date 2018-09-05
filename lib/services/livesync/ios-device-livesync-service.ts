@@ -17,8 +17,9 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		private $fs: IFileSystem,
 		private $processService: IProcessService,
 		protected $platformsData: IPlatformsData,
-		protected device: Mobile.IiOSDevice) {
-			super($platformsData, device);
+		protected device: Mobile.IiOSDevice,
+		protected $options: IOptions) {
+			super($platformsData, device, $options);
 	}
 
 	private async setupSocketIfNeeded(projectData: IProjectData): Promise<boolean> {

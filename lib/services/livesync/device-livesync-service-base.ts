@@ -6,12 +6,13 @@ export abstract class DeviceLiveSyncServiceBase {
 
 	constructor(
 		protected $platformsData: IPlatformsData,
-		protected device: Mobile.IDevice
+		protected device: Mobile.IDevice,
+		protected $options: IOptions
 	) { }
 
 	public canExecuteFastSync(filePath: string, projectData: IProjectData, platform: string): boolean {
 		const fastSyncFileExtensions = this.getFastLiveSyncFileExtensions(platform, projectData);
-		return _.includes(fastSyncFileExtensions, path.extname(filePath));
+		return this.$options.hmr || _.includes(fastSyncFileExtensions, path.extname(filePath));
 	}
 
 	protected canExecuteFastSyncForPaths(localToDevicePaths: Mobile.ILocalToDevicePathData[], projectData: IProjectData, platform: string) {

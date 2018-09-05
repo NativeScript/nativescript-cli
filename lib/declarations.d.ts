@@ -472,6 +472,7 @@ interface IOptions extends ICommonOptions, IBundleString, IPlatformTemplate, IHa
 	chrome: boolean;
 	inspector: boolean; // the counterpart to --chrome
 	background: string;
+	hmr: boolean;
 }
 
 interface IEnvOptions {

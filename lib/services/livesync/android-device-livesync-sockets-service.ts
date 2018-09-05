@@ -20,11 +20,11 @@ export class AndroidDeviceSocketsLiveSyncService extends DeviceLiveSyncServiceBa
 		protected $staticConfig: Config.IStaticConfig,
 		private $logger: ILogger,
 		protected device: Mobile.IAndroidDevice,
-		private $options: ICommonOptions,
+		protected $options: IOptions,
 		private $processService: IProcessService,
 		private $fs: IFileSystem,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) {
-		super($platformsData, device);
+		super($platformsData, device, $options);
 		this.livesyncTool = this.$injector.resolve(AndroidLivesyncTool);
 	}
 
