@@ -42,16 +42,13 @@ export class GenerateCommand implements ICommand {
 	private parseRawArgs(rawArgs: string[]) {
 		const collection = this.$options.collection;
 		const schematic = rawArgs.shift();
-		const {
-			options: schematicOptions,
-			args: schematicArgs,
-		} = parseSchematicSettings(rawArgs);
+		const { options, args } = parseSchematicSettings(rawArgs);
 
 		return {
 			collection,
 			schematic,
-			schematicOptions,
-			schematicArgs,
+			schematicOptions: options,
+			schematicArgs: args,
 		};
 	}
 }
