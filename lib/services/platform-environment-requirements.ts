@@ -18,7 +18,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	public static MANUALLY_SETUP_OPTION_NAME = "Skip Step and Configure Manually";
 	private static BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME = "Configure for Both Local and Cloud Builds";
 	private static CHOOSE_OPTIONS_MESSAGE = "To continue, choose one of the following options: ";
-	private static NOT_CONFIGURED_ENV_AFTER_SETUP_SCRIPT_MESSAGE = `The setup script was not able to configure your environment for local builds. To execute local builds, you have to set up your environment manually. In case you have any questions, you can check our forum: 'http://forum.nativescript.org' and our public Slack channel: 'https://nativescriptcommunity.slack.com/'.`;
+	private static NOT_CONFIGURED_ENV_AFTER_SETUP_SCRIPT_MESSAGE = `The setup script was not able to configure your environment for local builds. To execute local builds, you have to set up your environment manually. Please consult our setup instructions here 'https://docs.nativescript.org/start/quick-setup'.`;
 	private static MISSING_LOCAL_SETUP_MESSAGE = "Your environment is not configured properly and you will not be able to execute local builds.";
 	private static MISSING_LOCAL_AND_CLOUD_SETUP_MESSAGE = `You are missing the ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and you will not be able to execute cloud builds. ${PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE} ${PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE} `;
 	private static MISSING_LOCAL_BUT_CLOUD_SETUP_MESSAGE = `You have ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension installed, so you can execute cloud builds, but ${_.lowerFirst(PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE)}`;
@@ -156,7 +156,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	}
 
 	private processManuallySetup(platform?: string): void {
-		this.fail(`To be able to ${platform ? `build for ${platform}` : 'build'}, verify that your environment is configured according to the system requirements described at ${this.$staticConfig.SYS_REQUIREMENTS_LINK}. In case you have any questions, you can check our forum: 'http://forum.nativescript.org' and our public Slack channel: 'https://nativescriptcommunity.slack.com/'.`);
+		this.fail(`To be able to ${platform ? `build for ${platform}` : 'build'}, verify that your environment is configured according to the system requirements described at ${this.$staticConfig.SYS_REQUIREMENTS_LINK}. If you have any questions, check Stack Overflow: 'https://stackoverflow.com/questions/tagged/nativescript' and our public Slack channel: 'https://nativescriptcommunity.slack.com/'`);
 	}
 
 	private async processBothCloudBuildsAndSetupScript(): Promise<void> {
