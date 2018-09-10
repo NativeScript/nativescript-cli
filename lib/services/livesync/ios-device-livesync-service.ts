@@ -64,7 +64,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		const otherFiles = _.difference(localToDevicePaths, _.concat(scriptFiles, scriptRelatedFiles));
 		const canExecuteFastSync = this.canExecuteFastSyncForPaths(otherFiles, projectData, deviceAppData.platform);
 
-		if (!canExecuteFastSync || (!liveSyncInfo.useLiveEdit && scriptFiles.length)) {
+		if (!canExecuteFastSync || (!liveSyncInfo.useLiveEdit && !this.$options.hmr && scriptFiles.length)) {
 			await this.restartApplication(deviceAppData, projectData.projectName);
 			return;
 		}
