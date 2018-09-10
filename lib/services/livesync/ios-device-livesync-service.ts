@@ -17,9 +17,8 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		private $fs: IFileSystem,
 		private $processService: IProcessService,
 		protected $platformsData: IPlatformsData,
-		protected device: Mobile.IiOSDevice,
-		protected $options: IOptions) {
-			super($platformsData, device, $options);
+		protected device: Mobile.IiOSDevice) {
+			super($platformsData, device);
 	}
 
 	private async setupSocketIfNeeded(projectData: IProjectData): Promise<boolean> {
@@ -62,9 +61,9 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => scriptRelatedFiles = _.concat(scriptRelatedFiles, localToDevicePaths.filter(file => minimatch(file.getDevicePath(), pattern, { nocase: true }))));
 
 		const otherFiles = _.difference(localToDevicePaths, _.concat(scriptFiles, scriptRelatedFiles));
-		const canExecuteFastSync = this.canExecuteFastSyncForPaths(otherFiles, projectData, deviceAppData.platform);
+		const canExecuteFastSync = this.canExecuteFastSyncForPaths(liveSyncInfo, otherFiles, projectData, deviceAppData.platform);
 
-		if (!canExecuteFastSync || (!liveSyncInfo.useLiveEdit && !this.$options.hmr && scriptFiles.length)) {
+		if (!canExecuteFastSync) {
 			await this.restartApplication(deviceAppData, projectData.projectName);
 			return;
 		}

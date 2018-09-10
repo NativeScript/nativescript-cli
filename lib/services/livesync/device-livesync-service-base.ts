@@ -6,19 +6,18 @@ export abstract class DeviceLiveSyncServiceBase {
 
 	constructor(
 		protected $platformsData: IPlatformsData,
-		protected device: Mobile.IDevice,
-		protected $options: IOptions
+		protected device: Mobile.IDevice
 	) { }
 
-	public canExecuteFastSync(filePath: string, projectData: IProjectData, platform: string): boolean {
+	public canExecuteFastSync(liveSyncData: ILiveSyncResultInfo, filePath: string, projectData: IProjectData, platform: string): boolean {
 		const fastSyncFileExtensions = this.getFastLiveSyncFileExtensions(platform, projectData);
-		return this.$options.hmr || _.includes(fastSyncFileExtensions, path.extname(filePath));
+		return liveSyncData.useHotModuleReload || _.includes(fastSyncFileExtensions, path.extname(filePath));
 	}
 
-	protected canExecuteFastSyncForPaths(localToDevicePaths: Mobile.ILocalToDevicePathData[], projectData: IProjectData, platform: string) {
+	protected canExecuteFastSyncForPaths(liveSyncData:ILiveSyncResultInfo, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectData: IProjectData, platform: string) {
 		return !_.some(localToDevicePaths,
 			(localToDevicePath: Mobile.ILocalToDevicePathData) =>
-				!this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
+				!this.canExecuteFastSync(liveSyncData, localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
 	}
 
 	@cache()
