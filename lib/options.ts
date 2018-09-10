@@ -34,14 +34,14 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			all: { type: OptionType.Boolean },
 			teamId: { type: OptionType.Object },
 			syncAllFiles: { type: OptionType.Boolean, default: false },
-			liveEdit: { type: OptionType.Boolean },
 			chrome: { type: OptionType.Boolean },
 			inspector: { type: OptionType.Boolean },
 			clean: { type: OptionType.Boolean },
 			watch: { type: OptionType.Boolean, default: true },
 			background: { type: OptionType.String },
 			username: { type: OptionType.String },
-			pluginName: { type: OptionType.String }
+			pluginName: { type: OptionType.String },
+			hmr: {type: OptionType.Boolean}
 		},
 			$errors, $staticConfig, $settingsService);
 
@@ -49,6 +49,10 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 		// if justlaunch is set, it takes precedence over the --watch flag and the default true value
 		if (that.justlaunch) {
 			that.watch = false;
+		}
+
+		if (that.hmr) {
+			that.bundle = "webpack";
 		}
 	}
 }

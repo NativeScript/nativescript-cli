@@ -477,7 +477,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				const liveSyncResultInfo = await platformLiveSyncService.fullSync({
 					projectData, device,
 					syncAllFiles: liveSyncData.watchAllFiles,
-					useLiveEdit: liveSyncData.useLiveEdit,
+					useHotModuleReload: liveSyncData.useHotModuleReload,
 					watch: !liveSyncData.skipWatcher
 				});
 
@@ -597,7 +597,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 										filesToSync: currentFilesToSync,
 										isReinstalled: appInstalledOnDeviceResult.appInstalled,
 										syncAllFiles: liveSyncData.watchAllFiles,
-										useLiveEdit: liveSyncData.useLiveEdit
+										useHotModuleReload: liveSyncData.useHotModuleReload
 									};
 
 									const liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);

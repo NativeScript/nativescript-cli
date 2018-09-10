@@ -468,10 +468,10 @@ interface IOptions extends ICommonOptions, IBundleString, IPlatformTemplate, IHa
 	production: boolean; //npm flag
 	sdk: string;
 	syncAllFiles: boolean;
-	liveEdit: boolean;
 	chrome: boolean;
 	inspector: boolean; // the counterpart to --chrome
 	background: string;
+	hmr: boolean;
 }
 
 interface IEnvOptions {
