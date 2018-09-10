@@ -160,7 +160,7 @@ describe("subscriptionService", () => {
 
 			await subscriptionService.subscribeForNewsletter();
 
-			assert.equal(loggerOutput, `${SubscribeForNewsletterMessages.AgreeToReceiveEmailMsg}${SubscribeForNewsletterMessages.ReviewPrivacyPolicyMsg}`);
+			assert.equal(loggerOutput, `${SubscribeForNewsletterMessages.ReviewPrivacyPolicyMsg}${SubscribeForNewsletterMessages.AgreeToReceiveEmailMsg}`);
 		});
 
 		const expectedMessageInPrompter = SubscribeForNewsletterMessages.PromptMsg;

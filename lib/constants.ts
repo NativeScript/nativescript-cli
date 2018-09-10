@@ -182,7 +182,7 @@ export class MacOSVersions {
 export const MacOSDeprecationStringFormat = "Support for macOS %s is deprecated and will be removed in one of the next releases of NativeScript. Please, upgrade to the latest macOS version.";
 export const PROGRESS_PRIVACY_POLICY_URL = "https://www.progress.com/legal/privacy-policy";
 export class SubscribeForNewsletterMessages {
-	public static AgreeToReceiveEmailMsg = "I agree to receive email communications from Progress Software or its Partners (`https://www.progress.com/partners/partner-directory`)," +
+	public static AgreeToReceiveEmailMsg = "I agree".green.bold + " to receive email communications from Progress Software or its Partners (`https://www.progress.com/partners/partner-directory`)," +
 		"containing information about Progress Software's products. Consent may be withdrawn at any time.";
 	public static ReviewPrivacyPolicyMsg = `You can review the Progress Software Privacy Policy at \`${PROGRESS_PRIVACY_POLICY_URL}\``;
 	public static PromptMsg = "Input your e-mail address to agree".green + " or " + "leave empty to decline".red.bold + ":";
