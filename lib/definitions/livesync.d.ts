@@ -142,18 +142,12 @@ interface IOptionalSkipWatcher {
 /**
  * Describes a LiveSync operation.
  */
-interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IBundle, IRelease, IOptionalSkipWatcher {
+interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IBundle, IRelease, IOptionalSkipWatcher, IHasUseHotModuleReloadOption {
 	/**
 	 * Defines if all project files should be watched for changes. In case it is not passed, only `app` dir of the project will be watched for changes.
 	 * In case it is set to true, the package.json of the project and node_modules directory will also be watched, so any change there will be transferred to device(s).
 	 */
 	watchAllFiles?: boolean;
-
-	/**
-	 * Defines if the liveEdit functionality should be used, i.e. LiveSync of .js files without restart.
-	 * NOTE: Currently this is available only for iOS.
-	 */
-	useLiveEdit?: boolean;
 
 	/**
 	 * Forces a build before the initial livesync.
@@ -165,6 +159,13 @@ interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IBundle, IRelease, IOp
 	 * If not provided, defaults to 10seconds.
 	 */
 	timeout: string;
+}
+
+interface IHasUseHotModuleReloadOption {
+	/**
+	 * Defines if the hot module reload should be used.
+	 */
+	useHotModuleReload?: boolean;
 }
 
 interface ILatestAppPackageInstalledSettings extends IDictionary<IDictionary<boolean>> { /* empty */ }
@@ -317,28 +318,25 @@ interface IShouldSkipEmitLiveSyncNotification {
 interface IAttachDebuggerOptions extends IDebuggingAdditionalOptions, IEnableDebuggingDeviceOptions, IIsEmulator, IPlatform, IOptionalOutputPath {
 }
 
-interface ILiveSyncWatchInfo extends IProjectDataComposition {
+interface ILiveSyncWatchInfo extends IProjectDataComposition, IHasUseHotModuleReloadOption {
 	filesToRemove: string[];
 	filesToSync: string[];
 	isReinstalled: boolean;
 	syncAllFiles: boolean;
-	useLiveEdit?: boolean;
 }
 
-interface ILiveSyncResultInfo {
+interface ILiveSyncResultInfo extends IHasUseHotModuleReloadOption {
 	modifiedFilesData: Mobile.ILocalToDevicePathData[];
 	isFullSync: boolean;
 	deviceAppData: Mobile.IDeviceAppData;
-	useLiveEdit?: boolean;
 }
 
 interface IAndroidLiveSyncResultInfo extends ILiveSyncResultInfo, IAndroidLivesyncSyncOperationResult { }
 
-interface IFullSyncInfo extends IProjectDataComposition {
+interface IFullSyncInfo extends IProjectDataComposition, IHasUseHotModuleReloadOption {
 	device: Mobile.IDevice;
 	watch: boolean;
 	syncAllFiles: boolean;
-	useLiveEdit?: boolean;
 }
 
 interface IPlatformLiveSyncService {
@@ -434,7 +432,7 @@ interface IAndroidLivesyncTool {
 	 */
 	removeFile(filePath: string): Promise<boolean>;
 	/**
-	 * Removes files 
+	 * Removes files
 	 * @param filePaths - Array of files that will be removed.
 	 * @returns {Promise<boolean[]>}
 	 */

@@ -102,7 +102,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 						emulator: d.isEmulator,
 						projectDir: this.$projectData.projectDir
 					}),
-					skipNativePrepare: additionalOptions && additionalOptions.skipNativePrepare
+					skipNativePrepare: additionalOptions && additionalOptions.skipNativePrepare,
 				};
 
 				return info;
@@ -116,7 +116,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			bundle: !!this.$options.bundle,
 			release: this.$options.release,
 			env: this.$options.env,
-			timeout: this.$options.timeout
+			timeout: this.$options.timeout,
+			useHotModuleReload: this.$options.hmr
 		};
 
 		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);

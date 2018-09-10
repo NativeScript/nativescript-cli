@@ -16,9 +16,8 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 		private $injector: IInjector,
 		private $androidProcessService: Mobile.IAndroidProcessService,
 		protected $platformsData: IPlatformsData,
-		protected device: Mobile.IAndroidDevice,
-		protected $options: IOptions) {
-		super($platformsData, device, $options);
+		protected device: Mobile.IAndroidDevice) {
+		super($platformsData, device);
 	}
 
 	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
@@ -40,7 +39,7 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 		const reloadedSuccessfully = await this.reloadApplicationFiles(deviceAppData, localToDevicePaths);
 
 		const canExecuteFastSync = reloadedSuccessfully && !liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
-			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
+			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(liveSyncInfo, localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
 
 		if (!canExecuteFastSync) {
 			return this.restartApplication(deviceAppData, projectData.projectName);

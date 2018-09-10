@@ -6,19 +6,18 @@ export abstract class DeviceLiveSyncServiceBase {
 
 	constructor(
 		protected $platformsData: IPlatformsData,
-		protected device: Mobile.IDevice,
-		protected $options: IOptions
+		protected device: Mobile.IDevice
 	) { }
 
-	public canExecuteFastSync(filePath: string, projectData: IProjectData, platform: string): boolean {
+	public canExecuteFastSync(liveSyncResult: ILiveSyncResultInfo, filePath: string, projectData: IProjectData, platform: string): boolean {
 		const fastSyncFileExtensions = this.getFastLiveSyncFileExtensions(platform, projectData);
-		return this.$options.hmr || _.includes(fastSyncFileExtensions, path.extname(filePath));
+		return liveSyncResult.useHotModuleReload || _.includes(fastSyncFileExtensions, path.extname(filePath));
 	}
 
-	protected canExecuteFastSyncForPaths(localToDevicePaths: Mobile.ILocalToDevicePathData[], projectData: IProjectData, platform: string) {
+	protected canExecuteFastSyncForPaths(liveSyncResult: ILiveSyncResultInfo, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectData: IProjectData, platform: string) {
 		return !_.some(localToDevicePaths,
 			(localToDevicePath: Mobile.ILocalToDevicePathData) =>
-				!this.canExecuteFastSync(localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
+				!this.canExecuteFastSync(liveSyncResult, localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
 	}
 
 	@cache()
@@ -43,7 +42,7 @@ export abstract class DeviceLiveSyncServiceBase {
 	public async finalizeSync(liveSyncInfo: ILiveSyncResultInfo, projectData: IProjectData): Promise<IAndroidLivesyncSyncOperationResult> {
 		//implement in case a sync point for all remove/create operation is needed
 		return {
-			didRefresh:true,
+			didRefresh: true,
 			operationId: ""
 		};
 	}
