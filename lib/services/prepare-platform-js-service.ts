@@ -4,6 +4,7 @@ import * as shell from "shelljs";
 import * as temp from "temp";
 import { hook } from "../common/helpers";
 import { PreparePlatformService } from "./prepare-platform-service";
+import { TNS_CORE_MODULES } from "../common/constants";
 
 temp.track();
 
@@ -41,7 +42,7 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 			}
 		}
 
-		if (!this.$fs.exists(path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME))) {
+		if (!config.skipCopyAppResourcesFiles && !this.$fs.exists(path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME))) {
 			this.copyAppResourcesFiles(config);
 		}
 
@@ -58,6 +59,10 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 			if (!config.skipCopyTnsModules) {
 				await this.copyTnsModules(config.platform, config.platformData, config.projectData, config.appFilesUpdaterOptions, config.projectFilesConfig);
 			}
+		}
+
+		if (!config.skipCopyTnsModules && !this.$fs.exists(path.join(config.platformData.appDestinationDirectoryPath, TNS_CORE_MODULES))) {
+			await this.copyTnsModules(config.platform, config.platformData, config.projectData, config.appFilesUpdaterOptions, config.projectFilesConfig);
 		}
 	}
 

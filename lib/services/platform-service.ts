@@ -745,7 +745,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
 		// In case when no platform is added and webpack plugin is started it produces files in platforms folder. In this case {N} CLI needs to add platform and keeps the already produced files from webpack
 		if (appFilesUpdaterOptions.bundle && this.isPlatformInstalled(platform, projectData) && !this.$fs.exists(platformData.configurationFilePath) && (!prepareInfo || !prepareInfo.nativePlatformStatus || prepareInfo.nativePlatformStatus !== constants.NativePlatformStatus.alreadyPrepared)) {
-			const tmpDirectoryPath = path.join(projectData.projectDir, "platforms", "tmp");
+			const tmpDirectoryPath = path.join(projectData.projectDir, "platforms", `tmp-${platform}`);
 			this.$fs.deleteDirectory(tmpDirectoryPath);
 			this.$fs.ensureDirectoryExists(tmpDirectoryPath);
 			this.$fs.copyFile(path.join(platformData.appDestinationDirectoryPath, "*"), tmpDirectoryPath);

@@ -25,9 +25,9 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 		this.instanceId = this.messagingService.initialize(initConfig);
 	}
 
-	public applyChanges(files: FilePayload[]): Promise<void> {
+	public applyChanges(files: FilePayload[], deviceId: string): Promise<void> {
 		return new Promise((resolve, reject) => {
-			this.messagingService.applyChanges(this.instanceId, files, err => {
+			this.messagingService.applyChanges(this.instanceId, files, deviceId, err => {
 				if (err) {
 					reject(err);
 				} else {

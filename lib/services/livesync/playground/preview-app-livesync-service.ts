@@ -9,13 +9,15 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	private excludedFiles = [".DS_Store"];
 
 	constructor(private $fs: IFileSystem,
+		private $hooksService: IHooksService,
 		private $logger: ILogger,
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		private $projectDataService: IProjectDataService,
 		private $previewSdkService: IPreviewSdkService,
 		private $previewAppPluginsService: IPreviewAppPluginsService,
-		private $projectFilesManager: IProjectFilesManager) { }
+		private $projectFilesManager: IProjectFilesManager,
+		private $projectFilesProvider: IProjectFilesProvider) { }
 
 	public initialize() {
 		this.$previewSdkService.initialize();
@@ -24,13 +26,47 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	public async initialSync(data: IPreviewAppLiveSyncData): Promise<void> {
 		this.$previewSdkService.on(PreviewSdkEventNames.DEVICE_CONNECTED, async (device: Device) => {
 			this.$logger.trace("Found connected device", device);
-			await this.syncFilesOnDeviceSafe(data, device);
+			const filesToSyncMap: IDictionary<string[]> = {};
+			let promise = Promise.resolve();
+			const startSyncFilesTimeout = async (platform: string) => {
+				promise
+					.then(async () => {
+						promise = this.syncFilesForPlatformSafe(data, platform, filesToSyncMap[platform]);
+						await promise;
+					});
+				filesToSyncMap[platform] = [];
+			};
+			await this.$hooksService.executeBeforeHooks("preview-sync", {
+				hookArgs: {
+					projectData: this.$projectDataService.getProjectData(data.projectDir),
+					config: {
+						env: data.env,
+						platform: device.platform,
+						appFilesUpdaterOptions: data.appFilesUpdaterOptions,
+					},
+					filesToSyncMap,
+				 	startSyncFilesTimeout: startSyncFilesTimeout.bind(this)
+				}
+            });
+			await this.$previewAppPluginsService.comparePluginsOnDevice(device);
+			await this.syncFilesForPlatformSafe(data, device.platform);
 		});
 	}
 
-	public async syncFiles(data: IPreviewAppLiveSyncData, files: string[]): Promise<void> {
+	public async syncFiles(data: IPreviewAppLiveSyncData, files?: string[]): Promise<void> {
+		this.showWarningsForNativeFiles(files);
+
 		for (const device of this.$previewSdkService.connectedDevices) {
-			await this.syncFilesOnDeviceSafe(data, device, files);
+			await this.$previewAppPluginsService.comparePluginsOnDevice(device);
+		}
+
+		const platforms = _(this.$previewSdkService.connectedDevices)
+			.map(device => device.platform)
+			.uniq()
+			.value();
+
+		for (const platform of platforms) {
+			await this.syncFilesForPlatformSafe(data, platform, files);
 		}
 	}
 
@@ -39,37 +75,37 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		this.$previewSdkService.stop();
 	}
 
-	private async syncFilesOnDeviceSafe(data: IPreviewAppLiveSyncData, device: Device, files?: string[]): Promise<void> {
-		await this.$previewAppPluginsService.comparePluginsOnDevice(device);
-		this.showWarningsForNativeFiles(files);
-
-		this.$logger.info(`Start syncing changes on device ${device.id}.`);
+	private async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, platform: string, files?: string[]): Promise<void> {
+		this.$logger.info(`Start syncing changes for platform ${platform}.`);
 
 		try {
-			await this.syncFilesOnDevice(data, device, files);
-			this.$logger.info(`Successfully synced changes on device ${device.id}.`);
+			const { appFilesUpdaterOptions, env, projectDir } = data;
+			const projectData = this.$projectDataService.getProjectData(projectDir);
+			await this.preparePlatform(platform, appFilesUpdaterOptions, env, projectData);
+
+			// TODO: This should be refactored after implementing platform param in pubnub's meta data.
+			const devices = this.$previewSdkService.connectedDevices.filter(device => device.platform === platform);
+			for (const device of devices) {
+				await this.applyChanges(projectData, device, files);
+			}
+
+			this.$logger.info(`Successfully synced changes for platform ${platform}.`);
 		} catch (err) {
-			this.$logger.warn(`Unable to apply changes on device ${device.id}. Error is: ${JSON.stringify(err, null, 2)}.`);
+			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${JSON.stringify(err, null, 2)}.`);
 		}
 	}
 
-	private async syncFilesOnDevice(data: IPreviewAppLiveSyncData, device: Device, files?: string[]): Promise<void> {
-		const { appFilesUpdaterOptions, env, projectDir } = data;
-		const platform = device.platform;
-		const projectData = this.$projectDataService.getProjectData(projectDir);
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-
-		await this.preparePlatform(platform, appFilesUpdaterOptions, env, projectData);
-
-		const payloads = this.getFilePayloads(platformData, projectData, files);
-		await this.$previewSdkService.applyChanges(payloads);
+	private async applyChanges(projectData: IProjectData, device: Device, files: string[]) {
+		const platformData = this.$platformsData.getPlatformData(device.platform, projectData);
+		const payloads = this.getFilePayloads(platformData, projectData, _(files).uniq().value());
+		await this.$previewSdkService.applyChanges(payloads, device.id);
 	}
 
 	private getFilePayloads(platformData: IPlatformData, projectData: IProjectData, files?: string[]): FilePayload[] {
 		const appFolderPath = path.join(projectData.projectDir, APP_FOLDER_NAME);
 		const platformsAppFolderPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 
-		if (files) {
+		if (files && files.length) {
 			files = files.map(file => path.join(platformsAppFolderPath, path.relative(appFolderPath, file)));
 		} else {
 			files = this.$projectFilesManager.getProjectFiles(platformsAppFolderPath);
@@ -85,9 +121,15 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 
 		const payloads = filesToTransfer
 			.map(file => {
+				const projectFileInfo = this.$projectFilesProvider.getProjectFileInfo(file, platformData.normalizedPlatformName, null);
+				const relativePath = path.relative(platformsAppFolderPath, file);
+				const extName = path.extname(relativePath);
+				const baseName = projectFileInfo.onDeviceFileName.split(extName)[0];
+				const newFileName = `${baseName}.${platformData.normalizedPlatformName.toLowerCase()}${extName}`;
+
 				const filePayload: FilePayload = {
 					event: PreviewSdkEventNames.CHANGE_EVENT_NAME,
-					file: path.relative(platformsAppFolderPath, file),
+					file: path.join(path.dirname(relativePath), newFileName),
 					binary: isTextOrBinary.isBinarySync(file),
 					fileContents: ""
 				};
@@ -97,7 +139,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 					const base64 = new Buffer(bitmap).toString('base64');
 					filePayload.fileContents = base64;
 				} else {
-					filePayload.fileContents = this.$fs.readText(file);
+					filePayload.fileContents = this.$fs.readText(path.join(path.dirname(projectFileInfo.filePath), projectFileInfo.onDeviceFileName));
 				}
 
 				return filePayload;

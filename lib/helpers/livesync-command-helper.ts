@@ -35,18 +35,12 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			deviceId: this.$options.device,
 			platform,
 			emulator,
-			skipDeviceDetectionInterval: true,
 			skipInferPlatform: !platform,
 			sdk: this.$options.sdk
 		});
 
 		const devices = this.$devicesService.getDeviceInstances()
 			.filter(d => !platform || d.deviceInfo.platform.toLowerCase() === platform.toLowerCase());
-
-		const devicesPlatforms = _(devices).map(d => d.deviceInfo.platform).uniq().value();
-		if (this.$options.bundle && devicesPlatforms.length > 1) {
-			this.$errors.failWithoutHelp("Bundling doesn't work with multiple platforms. Please specify platform to the run command.");
-		}
 
 		await this.executeLiveSyncOperation(devices, platform, additionalOptions);
 	}

@@ -332,7 +332,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			deviceDescriptorsForInitialSync = isAlreadyLiveSyncing ? _.differenceBy(deviceDescriptors, currentlyRunningDeviceDescriptors, deviceDescriptorPrimaryKey) : deviceDescriptors;
 		}
 
-		this.setLiveSyncProcessInfo(liveSyncData.projectDir, deviceDescriptors);
+		this.setLiveSyncProcessInfo(liveSyncData, deviceDescriptors);
 
 		const shouldStartWatcher = !liveSyncData.skipWatcher && (liveSyncData.syncToPreviewApp || this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors.length);
 		if (shouldStartWatcher) {
@@ -344,7 +344,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		await this.initialSync(projectData, liveSyncData, deviceDescriptorsForInitialSync);
 	}
 
-	private setLiveSyncProcessInfo(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[]): void {
+	private setLiveSyncProcessInfo(liveSyncData: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]): void {
+		const { projectDir } = liveSyncData;
 		this.liveSyncProcessesInfo[projectDir] = this.liveSyncProcessesInfo[projectDir] || Object.create(null);
 		this.liveSyncProcessesInfo[projectDir].actionsChain = this.liveSyncProcessesInfo[projectDir].actionsChain || Promise.resolve();
 		this.liveSyncProcessesInfo[projectDir].currentSyncAction = this.liveSyncProcessesInfo[projectDir].actionsChain;
@@ -575,11 +576,12 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				currentWatcherInfo.watcher.close();
 			}
 
-			const filesToSync: string[] = [];
+			let filesToSync: string[] = [];
+			const filesToSyncMap: IDictionary<string[]> = {};
 			let filesToRemove: string[] = [];
 			let timeoutTimer: NodeJS.Timer;
 
-			const startSyncFilesTimeout = () => {
+			const startSyncFilesTimeout = (platform?: string) => {
 				timeoutTimer = setTimeout(async () => {
 					if (liveSyncData.syncToPreviewApp) {
 						await this.addActionToChain(projectData.projectDir, async () => {
@@ -648,7 +650,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 									},
 										(device: Mobile.IDevice) => {
 											const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];
-											return liveSyncProcessInfo && _.some(liveSyncProcessInfo.deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier);
+											return (!platform || platform.toLowerCase() === device.deviceInfo.platform.toLowerCase()) && liveSyncProcessInfo && _.some(liveSyncProcessInfo.deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier);
 										}
 									);
 								} catch (err) {
@@ -689,9 +691,13 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 						},
 						platforms
 					},
-					filesToSync,
+					filesToSyncMap,
 					filesToRemove,
-					startSyncFilesTimeout: startSyncFilesTimeout.bind(this)
+					startSyncFilesTimeout: async (platform: string) => {
+						filesToSync = filesToSyncMap[platform];
+						await startSyncFilesTimeout(platform);
+						filesToSyncMap[platform] = [];
+					}
 				}
 			});
 
