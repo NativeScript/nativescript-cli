@@ -52,7 +52,8 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		return {
 			deviceAppData,
 			isFullSync: true,
-			modifiedFilesData: []
+			modifiedFilesData: [],
+			useHotModuleReload: syncInfo.useHotModuleReload
 		};
 	}
 

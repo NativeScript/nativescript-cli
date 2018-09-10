@@ -52,7 +52,8 @@ export abstract class PlatformLiveSyncServiceBase {
 		return {
 			modifiedFilesData,
 			isFullSync: true,
-			deviceAppData
+			deviceAppData,
+			useHotModuleReload: syncInfo.useHotModuleReload
 		};
 	}
 
@@ -107,7 +108,8 @@ export abstract class PlatformLiveSyncServiceBase {
 		return {
 			modifiedFilesData: modifiedLocalToDevicePaths,
 			isFullSync: liveSyncInfo.isReinstalled,
-			deviceAppData
+			deviceAppData,
+			useHotModuleReload: liveSyncInfo.useHotModuleReload
 		};
 	}
 
