@@ -14,7 +14,7 @@ declare global {
 		qrCodeUrl: string;
 		connectedDevices: Device[];
 		initialize(): void;
-		applyChanges(files: FilePayload[], deviceId: string): Promise<void>;
+		applyChanges(files: FilePayload[], platform: string): Promise<void>;
 		stop(): void;
 	}
 

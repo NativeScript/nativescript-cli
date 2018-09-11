@@ -83,11 +83,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 			const projectData = this.$projectDataService.getProjectData(projectDir);
 			await this.preparePlatform(platform, appFilesUpdaterOptions, env, projectData);
 
-			// TODO: This should be refactored after implementing platform param in pubnub's meta data.
-			const devices = this.$previewSdkService.connectedDevices.filter(device => device.platform === platform);
-			for (const device of devices) {
-				await this.applyChanges(projectData, device, files);
-			}
+			await this.applyChanges(projectData, platform, files);
 
 			this.$logger.info(`Successfully synced changes for platform ${platform}.`);
 		} catch (err) {
@@ -95,10 +91,10 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		}
 	}
 
-	private async applyChanges(projectData: IProjectData, device: Device, files: string[]) {
-		const platformData = this.$platformsData.getPlatformData(device.platform, projectData);
+	private async applyChanges(projectData: IProjectData, platform: string, files: string[]) {
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const payloads = this.getFilePayloads(platformData, projectData, _(files).uniq().value());
-		await this.$previewSdkService.applyChanges(payloads, device.id);
+		await this.$previewSdkService.applyChanges(payloads, platform);
 	}
 
 	private getFilePayloads(platformData: IPlatformData, projectData: IProjectData, files?: string[]): FilePayload[] {

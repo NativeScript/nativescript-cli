@@ -25,9 +25,9 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 		this.instanceId = this.messagingService.initialize(initConfig);
 	}
 
-	public applyChanges(files: FilePayload[], deviceId: string): Promise<void> {
+	public applyChanges(files: FilePayload[], platform: string): Promise<void> {
 		return new Promise((resolve, reject) => {
-			this.messagingService.applyChanges(this.instanceId, files, deviceId, err => {
+			this.messagingService.applyChanges(this.instanceId, { files, platform }, err => {
 				if (err) {
 					reject(err);
 				} else {
@@ -46,7 +46,11 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			pubnubPublishKey: PubnubKeys.PUBLISH_KEY,
 			pubnubSubscribeKey: PubnubKeys.SUBSCRIBE_KEY,
 			callbacks: this.getCallbacks(),
-			getInitialFiles: async () => []
+			getInitialFiles: async () => {
+				return {
+					files: []
+				};
+			}
 		};
 	}
 
