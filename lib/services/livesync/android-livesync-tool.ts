@@ -323,7 +323,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 						clearTimeout(this.pendingConnectionData.socketTimer);
 					}
 
-					reject(lastKnownError || new Error("Socket connection timeouted."));
+					reject(lastKnownError || new Error("Socket connection timed out."));
 					this.pendingConnectionData = null;
 				}
 			}, timeout);
