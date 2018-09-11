@@ -459,7 +459,8 @@ describe("Project Service Tests", () => {
 			const projectDataService = testInjector.resolve<IProjectDataService>("projectDataService");
 			const projectData: any = {
 				projectDir: "projectDir",
-				projectId: "projectId"
+				projectId: "projectId",
+				projectIdentifiers: { android: "projectId", ios: "projectId"}
 			};
 
 			let returnedProjectData: any = null;

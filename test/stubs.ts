@@ -247,9 +247,10 @@ export class ProjectDataStub implements IProjectData {
 	projectDir: string;
 	projectName: string;
 	get platformsDir(): string {
-		return "";
+		return this.plafromsDir;
 	}
 	set platformsDir(value) {
+		this.plafromsDir = value;
 	}
 	projectFilePath: string;
 	projectIdentifiers: Mobile.IProjectIdentifier;
@@ -260,6 +261,7 @@ export class ProjectDataStub implements IProjectData {
 	devDependencies: IStringDictionary;
 	projectType: string;
 	appResourcesDirectoryPath: string;
+	private plafromsDir: string = "";
 	public androidManifestPath: string;
 	public infoPlistPath: string;
 	public appGradlePath: string;
