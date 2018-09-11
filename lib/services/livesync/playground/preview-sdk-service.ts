@@ -75,7 +75,7 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			onDevicesPresence: (devices: Device[]) => ({ }),
 			onSendingChange: (sending: boolean) => ({ }),
 			onBiggerFilesUpload: async (filesContent, callback) => {
-				const gzippedContent = new Buffer(pako.gzip(filesContent));
+				const gzippedContent = Buffer.from(pako.gzip(filesContent));
 				const playgroundUploadResponse = await this.$httpClient.httpRequest({
 					url: this.$config.UPLOAD_PLAYGROUND_FILES_ENDPOINT,
 					method: "POST",

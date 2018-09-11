@@ -1,6 +1,6 @@
-import { CommandBase } from "./command-base";
+import { ValidatePlatformCommandBase } from "./command-base";
 
-export class AddPlatformCommand extends CommandBase implements ICommand {
+export class AddPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor($options: IOptions,

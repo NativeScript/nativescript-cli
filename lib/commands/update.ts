@@ -1,8 +1,8 @@
 import * as path from "path";
 import * as constants from "../constants";
-import { CommandBase } from "./command-base";
+import { ValidatePlatformCommandBase } from "./command-base";
 
-export class UpdateCommand extends CommandBase implements ICommand {
+export class UpdateCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor($options: IOptions,

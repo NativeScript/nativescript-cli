@@ -2,9 +2,9 @@ import { CONNECTED_STATUS } from "../common/constants";
 import { isInteractive } from "../common/helpers";
 import { cache } from "../common/decorators";
 import { DebugCommandErrors } from "../constants";
-import { CommandBase } from "./command-base";
+import { ValidatePlatformCommandBase } from "./command-base";
 
-export class DebugPlatformCommand extends CommandBase implements ICommand {
+export class DebugPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(private platform: string,

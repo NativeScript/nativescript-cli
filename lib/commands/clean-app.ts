@@ -1,6 +1,6 @@
-import { CommandBase } from "./command-base";
+import { ValidatePlatformCommandBase } from "./command-base";
 
-export class CleanAppCommandBase extends CommandBase implements ICommand {
+export class CleanAppCommandBase extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	protected platform: string;

@@ -136,7 +136,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 
 				if (filePayload.binary) {
 					const bitmap =  <string>this.$fs.readFile(file);
-					const base64 = new Buffer(bitmap).toString('base64');
+					const base64 = Buffer.from(bitmap).toString('base64');
 					filePayload.fileContents = base64;
 				} else {
 					filePayload.fileContents = this.$fs.readText(path.join(path.dirname(projectFileInfo.filePath), projectFileInfo.onDeviceFileName));
@@ -167,13 +167,8 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	}
 
 	private showWarningsForNativeFiles(files: string[]): void {
-		if (files && files.length) {
-			for (const file of files) {
-				if (file.indexOf(APP_RESOURCES_FOLDER_NAME) > -1) {
-					this.$logger.warn(`Unable to apply changes from ${APP_RESOURCES_FOLDER_NAME} folder. You need to build your application in order to make changes in ${APP_RESOURCES_FOLDER_NAME} folder.`);
-				}
-			}
-		}
+		_.filter(files, file => file.indexOf(APP_RESOURCES_FOLDER_NAME) > -1)
+			.forEach(file => this.$logger.warn(`Unable to apply changes from ${APP_RESOURCES_FOLDER_NAME} folder. You need to build your application in order to make changes in ${APP_RESOURCES_FOLDER_NAME} folder.`));
 	}
 }
 $injector.register("previewAppLiveSyncService", PreviewAppLiveSyncService);

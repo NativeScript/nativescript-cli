@@ -142,7 +142,7 @@ interface IOptionalSkipWatcher {
 /**
  * Describes a LiveSync operation.
  */
-interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IBundle, IRelease, IOptionalSkipWatcher, IHasUseHotModuleReloadOption {
+interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IBundle, IRelease, IOptionalSkipWatcher, IHasUseHotModuleReloadOption, IHasSyncToPreviewAppOption {
 	/**
 	 * Defines if all project files should be watched for changes. In case it is not passed, only `app` dir of the project will be watched for changes.
 	 * In case it is set to true, the package.json of the project and node_modules directory will also be watched, so any change there will be transferred to device(s).
@@ -159,7 +159,12 @@ interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IBundle, IRelease, IOp
 	 * If not provided, defaults to 10seconds.
 	 */
 	timeout: string;
+}
 
+interface IHasSyncToPreviewAppOption {
+	/**
+	 * Defines if the livesync should be executed in preview app on device.
+	 */
 	syncToPreviewApp?: boolean;
 }
 
@@ -512,7 +517,7 @@ interface IDevicePathProvider {
 /**
  * Describes additional options, that can be passed to LiveSyncCommandHelper.
  */
-interface ILiveSyncCommandHelperAdditionalOptions extends IBuildPlatformAction, INativePrepare {
+interface ILiveSyncCommandHelperAdditionalOptions extends IBuildPlatformAction, INativePrepare, IHasSyncToPreviewAppOption {
 	/**
 	 * A map representing devices which have debugging enabled initially.
 	 */
@@ -524,7 +529,6 @@ interface ILiveSyncCommandHelperAdditionalOptions extends IBuildPlatformAction, 
 	 * @returns {string} The build output directory.
 	 */
 	getOutputDirectory?(options: IOutputDirectoryOptions): string;
-	syncToPreviewApp?: boolean;
 }
 
 interface ILiveSyncCommandHelper {

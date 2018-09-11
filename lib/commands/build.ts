@@ -1,7 +1,7 @@
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
-import { CommandBase } from "./command-base";
+import { ValidatePlatformCommandBase } from "./command-base";
 
-export abstract class BuildCommandBase extends CommandBase {
+export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 	constructor($options: IOptions,
 		protected $errors: IErrors,
 		$projectData: IProjectData,

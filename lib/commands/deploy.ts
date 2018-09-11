@@ -1,7 +1,7 @@
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
-import { CommandBase } from "./command-base";
+import { ValidatePlatformCommandBase } from "./command-base";
 
-export class DeployOnDeviceCommand extends CommandBase implements ICommand {
+export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor($platformService: IPlatformService,

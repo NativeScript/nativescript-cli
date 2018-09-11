@@ -1,4 +1,4 @@
-export abstract class CommandBase implements ICommandBase {
+export abstract class ValidatePlatformCommandBase {
 	constructor(protected $options: IOptions,
 		protected $platformsData: IPlatformsData,
 		protected $platformService: IPlatformService,
