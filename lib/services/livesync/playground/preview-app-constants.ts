@@ -13,7 +13,8 @@ export class PlaygroundStoreUrls {
 	public static APP_STORE_URL = "https://itunes.apple.com/us/app/nativescript-playground/id1263543946?mt=8&ls=1";
 }
 
-export class PreviewAppMessages {
+export class PluginComparisonMessages {
 	public static PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP = "Plugin %s is not included in preview app on device %s and will not work.";
-	public static PLUGIN_WITH_LOWER_VERSION_IN_PREVIEW_APP = "Plugin %s has local version %s but preview app on device %s has version %s. Some functionalities may not work.";
+	public static LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION = "Local plugin %s differs in major version from plugin in preview app. The local plugin has version %s and the plugin in preview app has version %s. Some features might not work as expected.";
+	public static LOCAL_PLUGIN_WITH_GREATHER_MINOR_VERSION = "Local plugin %s differs in minor version from plugin in preview app. The local plugin has version %s and the plugin in preview app has version %s. Some features might not work as expected.";
 }

@@ -3,7 +3,7 @@ import { PreviewAppPluginsService } from "../../../lib/services/livesync/playgro
 import { Device } from "nativescript-preview-sdk";
 import { assert } from "chai";
 import * as util from "util";
-import { PreviewAppMessages } from "../../../lib/services/livesync/playground/preview-app-constants";
+import { PluginComparisonMessages } from "../../../lib/services/livesync/playground/preview-app-constants";
 
 let readJsonParams: string[] = [];
 let warnParams: string[] = [];
@@ -32,7 +32,7 @@ function createTestInjector(localPlugins: IStringDictionary): IInjector {
 const deviceId = "myTestDeviceId";
 
 function createDevice(plugins: string): Device {
-	return  {
+	return {
 		id: deviceId,
 		platform: "iOS",
 		model: "myTestDeviceModel",
@@ -71,7 +71,7 @@ describe("previewAppPluginsService", () => {
 					"tns-core-modules": "~4.2.0"
 				},
 				expectedWarnings: [
-					util.format(PreviewAppMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, "nativescript-facebook", deviceId)
+					util.format(PluginComparisonMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, "nativescript-facebook", deviceId)
 				]
 			},
 			{
@@ -84,21 +84,9 @@ describe("previewAppPluginsService", () => {
 				previewAppPlugins: {
 				},
 				expectedWarnings: [
-					util.format(PreviewAppMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, "nativescript-facebook", deviceId),
-					util.format(PreviewAppMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, "nativescript-theme-core", deviceId),
-					util.format(PreviewAppMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, "tns-core-modules", deviceId)
-				]
-			},
-			{
-				name: "should show warning for plugin which local version is greater than preview app's version",
-				localPlugins: {
-					"nativescript-theme-core": "1.1.4"
-				},
-				previewAppPlugins: {
-					"nativescript-theme-core": "1.0.4"
-				},
-				expectedWarnings: [
-					util.format(PreviewAppMessages.PLUGIN_WITH_LOWER_VERSION_IN_PREVIEW_APP, "nativescript-theme-core", "1.1.4", deviceId, "1.0.4")
+					util.format(PluginComparisonMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, "nativescript-facebook", deviceId),
+					util.format(PluginComparisonMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, "nativescript-theme-core", deviceId),
+					util.format(PluginComparisonMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, "tns-core-modules", deviceId)
 				]
 			},
 			{
@@ -112,6 +100,72 @@ describe("previewAppPluginsService", () => {
 					"nativescript-facebook": "2.2.3"
 				},
 				expectedWarnings: <string[]>[]
+			},
+			{
+				name: "should show warning when local plugin has lower major version",
+				localPlugins: {
+					"nativescript-theme-core": "2.0.0"
+				},
+				previewAppPlugins: {
+					"nativescript-theme-core": "3.4.0"
+				},
+				expectedWarnings: [
+					util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION, "nativescript-theme-core", "2.0.0", "3.4.0")
+				]
+			},
+			{
+				name: "should show warning when local plugin has greater major version",
+				localPlugins: {
+					"nativescript-theme-core": "4.0.0"
+				},
+				previewAppPlugins: {
+					"nativescript-theme-core": "3.0.0"
+				},
+				expectedWarnings: [
+					util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION, "nativescript-theme-core", "4.0.0", "3.0.0")
+				]
+			},
+			{
+				name: "should show warning when local plugin has greater minor version and the same major version",
+				localPlugins: {
+					"nativescript-theme-core": "3.5.0"
+				},
+				previewAppPlugins: {
+					"nativescript-theme-core": "3.0.0"
+				},
+				expectedWarnings: [
+					util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_GREATHER_MINOR_VERSION, "nativescript-theme-core", "3.5.0", "3.0.0")
+				]
+			},
+			{
+				name: "should not show warning when local plugin has lower minor version and the same major version",
+				localPlugins: {
+					"nativescript-theme-core": "3.1.0"
+				},
+				previewAppPlugins: {
+					"nativescript-theme-core": "3.2.0"
+				},
+				expectedWarnings: []
+			},
+			{
+				name: "should not show warning when plugins differ only in patch versions (lower local patch version)",
+				localPlugins: {
+					"nativescript-theme-core": "3.5.0"
+				},
+				previewAppPlugins: {
+					"nativescript-theme-core": "3.5.1"
+				},
+				expectedWarnings: []
+			},
+			{
+				name: "should not show warning when plugins differ only in patch versions (greater local patch version)",
+				localPlugins: {
+					"nativescript-theme-core": "3.5.1"
+				},
+				previewAppPlugins: {
+					"nativescript-theme-core": "3.5.0"
+				},
+				expectedWarnings: []
 			}
 		];
 

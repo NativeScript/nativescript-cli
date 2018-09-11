@@ -2,7 +2,7 @@ import * as path from "path";
 import * as semver from "semver";
 import * as util from "util";
 import { Device } from "nativescript-preview-sdk";
-import { PreviewAppMessages } from "./preview-app-constants";
+import { PluginComparisonMessages } from "./preview-app-constants";
 
 export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	constructor(private $fs: IFileSystem,
@@ -19,12 +19,19 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 
 			this.$logger.trace(`Comparing plugin ${localPlugin} with localPluginVersion ${localPluginVersion} and devicePluginVersion ${devicePluginVersion}`);
 
-			if (!devicePluginVersion) {
-				this.$logger.warn(util.format(PreviewAppMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, localPlugin, device.id));
-			}
+			if (devicePluginVersion) {
+				const localPluginVersionData = semver.coerce(localPluginVersion);
+				const devicePluginVersionData = semver.coerce(devicePluginVersion);
 
-			if (devicePluginVersion && semver.gt(semver.coerce(localPluginVersion), semver.coerce(devicePluginVersion))) {
-				this.$logger.warn(util.format(PreviewAppMessages.PLUGIN_WITH_LOWER_VERSION_IN_PREVIEW_APP, localPlugin, localPluginVersion, device.id, devicePluginVersion));
+				if (localPluginVersionData.major !== devicePluginVersionData.major) {
+					this.$logger.warn(util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION, localPlugin, localPluginVersion, devicePluginVersion));
+				}
+
+				if (localPluginVersionData.major === devicePluginVersionData.major && localPluginVersionData.minor > devicePluginVersionData.minor) {
+					this.$logger.warn(util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_GREATHER_MINOR_VERSION, localPlugin, localPluginVersion, devicePluginVersion));
+				}
+			} else {
+				this.$logger.warn(util.format(PluginComparisonMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, localPlugin, device.id));
 			}
 		});
 	}
