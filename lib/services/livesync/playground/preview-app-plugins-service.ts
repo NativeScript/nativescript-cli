@@ -1,6 +1,8 @@
 import * as path from "path";
 import * as semver from "semver";
+import * as util from "util";
 import { Device } from "nativescript-preview-sdk";
+import { PreviewAppMessages } from "./preview-app-constants";
 
 export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	constructor(private $fs: IFileSystem,
@@ -18,11 +20,11 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 			this.$logger.trace(`Comparing plugin ${localPlugin} with localPluginVersion ${localPluginVersion} and devicePluginVersion ${devicePluginVersion}`);
 
 			if (!devicePluginVersion) {
-				this.$logger.warn(`Plugin ${localPlugin} is not included in preview app and will not work.`);
+				this.$logger.warn(util.format(PreviewAppMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, localPlugin, device.id));
 			}
 
 			if (devicePluginVersion && semver.gt(semver.coerce(localPluginVersion), semver.coerce(devicePluginVersion))) {
-				this.$logger.warn(`Plugin ${localPlugin} has local version ${localPluginVersion} but preview app has version ${devicePluginVersion}. Some functionalities may not work.`);
+				this.$logger.warn(util.format(PreviewAppMessages.PLUGIN_WITH_LOWER_VERSION_IN_PREVIEW_APP, localPlugin, localPluginVersion, device.id, devicePluginVersion));
 			}
 		});
 	}

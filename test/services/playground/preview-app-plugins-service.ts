@@ -2,6 +2,8 @@ import { Yok } from "../../../lib/common/yok";
 import { PreviewAppPluginsService } from "../../../lib/services/livesync/playground/preview-app-plugins-service";
 import { Device } from "nativescript-preview-sdk";
 import { assert } from "chai";
+import * as util from "util";
+import { PreviewAppMessages } from "../../../lib/services/livesync/playground/preview-app-constants";
 
 let readJsonParams: string[] = [];
 let warnParams: string[] = [];
@@ -27,9 +29,11 @@ function createTestInjector(localPlugins: IStringDictionary): IInjector {
 	return injector;
 }
 
+const deviceId = "myTestDeviceId";
+
 function createDevice(plugins: string): Device {
 	return  {
-		id: "myTestDeviceId",
+		id: deviceId,
 		platform: "iOS",
 		model: "myTestDeviceModel",
 		name: "myTestDeviceName",
@@ -67,7 +71,7 @@ describe("previewAppPluginsService", () => {
 					"tns-core-modules": "~4.2.0"
 				},
 				expectedWarnings: [
-					"Plugin nativescript-facebook is not included in preview app and will not work."
+					util.format(PreviewAppMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, "nativescript-facebook", deviceId)
 				]
 			},
 			{
@@ -80,9 +84,9 @@ describe("previewAppPluginsService", () => {
 				previewAppPlugins: {
 				},
 				expectedWarnings: [
-					"Plugin nativescript-facebook is not included in preview app and will not work.",
-					"Plugin nativescript-theme-core is not included in preview app and will not work.",
-					"Plugin tns-core-modules is not included in preview app and will not work."
+					util.format(PreviewAppMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, "nativescript-facebook", deviceId),
+					util.format(PreviewAppMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, "nativescript-theme-core", deviceId),
+					util.format(PreviewAppMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, "tns-core-modules", deviceId)
 				]
 			},
 			{
@@ -94,7 +98,7 @@ describe("previewAppPluginsService", () => {
 					"nativescript-theme-core": "1.0.4"
 				},
 				expectedWarnings: [
-					"Plugin nativescript-theme-core has local version 1.1.4 but preview app has version 1.0.4. Some functionalities may not work."
+					util.format(PreviewAppMessages.PLUGIN_WITH_LOWER_VERSION_IN_PREVIEW_APP, "nativescript-theme-core", "1.1.4", deviceId, "1.0.4")
 				]
 			},
 			{

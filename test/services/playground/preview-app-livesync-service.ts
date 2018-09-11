@@ -21,7 +21,7 @@ interface IActOptions {
 
 interface IAssertOptions {
 	checkWarnings?: boolean;
-	checkQrCode?: boolean;
+	isComparePluginsOnDeviceCalled?: boolean;
 }
 
 interface IActInput {
@@ -31,7 +31,7 @@ interface IActInput {
 	actOptions?: IActOptions;
 }
 
-let isGenerateQrCodeForCurrentAppCalled = false;
+let isComparePluginsOnDeviceCalled = false;
 let applyChangesParams: FilePayload[] = [];
 let readTextParams: string[] = [];
 let warnParams: string[] = [];
@@ -39,8 +39,12 @@ const nativeFilesWarning = "Unable to apply changes from App_Resources folder. Y
 
 const projectDirPath = "/path/to/my/project";
 const platformsDirPath = path.join(projectDirPath, "platforms");
+const normalizedPlatformName = 'iOS';
+const platformLowerCase = normalizedPlatformName.toLowerCase();
 
-const deviceMockData = <Device>{ };
+const deviceMockData = <Device>{
+	platform: normalizedPlatformName
+};
 const defaultProjectFiles = [
 	"my/test/file1.js",
 	"my/test/file2.js",
@@ -91,7 +95,8 @@ function createTestInjector(options?: {
 	});
 	injector.register("platformsData", {
 		getPlatformData: () => ({
-			appDestinationDirectoryPath: platformsDirPath
+			appDestinationDirectoryPath: platformsDirPath,
+			normalizedPlatformName
 		})
 	});
 	injector.register("projectDataService", {
@@ -101,14 +106,11 @@ function createTestInjector(options?: {
 	});
 	injector.register("previewSdkService", PreviewSdkServiceMock);
 	injector.register("previewAppPluginsService", {
-		comparePluginsOnDevice: async () => ({})
-	});
-	injector.register("projectFilesManager", ProjectFilesManager);
-	injector.register("playgroundQrCodeGenerator", {
-		generateQrCodeForCurrentApp: async () => {
-			isGenerateQrCodeForCurrentAppCalled = true;
+		comparePluginsOnDevice: async () => {
+			isComparePluginsOnDeviceCalled = true;
 		}
 	});
+	injector.register("projectFilesManager", ProjectFilesManager);
 	injector.register("previewAppLiveSyncService", PreviewAppLiveSyncService);
 	injector.register("fs", {
 		readText: (filePath: string) => {
@@ -123,7 +125,18 @@ function createTestInjector(options?: {
 		}
 	});
 	injector.register("localToDevicePathDataFactory", {});
-	injector.register("projectFilesProvider", {});
+	injector.register("projectFilesProvider", {
+		getProjectFileInfo: (filePath: string, platform: string) => {
+			return {
+				filePath,
+				onDeviceFileName: path.basename(filePath),
+				shouldIncludeFile: true
+			};
+		}
+	});
+	injector.register("hooksService", {
+		executeBeforeHooks: () => ({})
+	});
 
 	return injector;
 }
@@ -173,13 +186,13 @@ async function assert(expectedFiles: string[], options?: IAssertOptions) {
 		chai.assert.deepEqual(warnParams, [nativeFilesWarning]);
 	}
 
-	if (options.checkQrCode) {
-		chai.assert.isTrue(isGenerateQrCodeForCurrentAppCalled);
+	if (options.isComparePluginsOnDeviceCalled) {
+		chai.assert.isTrue(isComparePluginsOnDeviceCalled);
 	}
 }
 
 function reset() {
-	isGenerateQrCodeForCurrentAppCalled = false;
+	isComparePluginsOnDeviceCalled = false;
 	applyChangesParams = [];
 	readTextParams = [];
 	warnParams = [];
@@ -234,18 +247,12 @@ describe("previewAppLiveSyncService", () => {
 
 		let testCases: ITestCase[] = [
 			{
-				name: "should generate qrcode when no devices are emitted",
-				actOptions: {
-					emitDeviceConnected: false
-				}
-			},
-			{
-				name: "should generate qrcode when devices are emitted"
+				name: "should compare local plugins and plugins from preview app when devices are emitted"
 			}
 		];
 
 		testCases = testCases.map(testCase => {
-			testCase.assertOptions = { checkQrCode: true };
+			testCase.assertOptions = { isComparePluginsOnDeviceCalled: true };
 			return testCase;
 		});
 
@@ -259,27 +266,27 @@ describe("previewAppLiveSyncService", () => {
 			{
 				name: ".ts files",
 				appFiles: ["dir1/file.js", "file.ts"],
-				expectedFiles: ["dir1/file.js"]
+				expectedFiles: [`dir1/file.${platformLowerCase}.js`]
 			},
 			{
 				name: ".sass files",
 				appFiles: ["myDir1/mySubDir/myfile.css", "myDir1/mySubDir/myfile.sass"],
-				expectedFiles: ["myDir1/mySubDir/myfile.css"]
+				expectedFiles: [`myDir1/mySubDir/myfile.${platformLowerCase}.css`]
 			},
 			{
 				name: ".scss files",
 				appFiles: ["myDir1/mySubDir/myfile1.css", "myDir1/mySubDir/myfile.scss", "my/file.js"],
-				expectedFiles: ["myDir1/mySubDir/myfile1.css", "my/file.js"]
+				expectedFiles: [`myDir1/mySubDir/myfile1.${platformLowerCase}.css`, `my/file.${platformLowerCase}.js`]
 			},
 			{
 				name: ".less files",
 				appFiles: ["myDir1/mySubDir/myfile1.css", "myDir1/mySubDir/myfile.less", "my/file.js"],
-				expectedFiles: ["myDir1/mySubDir/myfile1.css", "my/file.js"]
+				expectedFiles: [`myDir1/mySubDir/myfile1.${platformLowerCase}.css`, `my/file.${platformLowerCase}.js`]
 			},
 			{
 				name: ".DS_Store file",
 				appFiles: ["my/test/file.js", ".DS_Store"],
-				expectedFiles: ["my/test/file.js"]
+				expectedFiles: [`my/test/file.${platformLowerCase}.js`]
 			}
 		];
 
@@ -309,7 +316,12 @@ describe("previewAppLiveSyncService", () => {
 		const noAppFilesTestCases: ITestCase[] = [
 			{
 				name: "should transfer correctly default project files",
-				expectedFiles: defaultProjectFiles
+				expectedFiles: defaultProjectFiles.map(filePath => {
+					const basename = path.basename(filePath);
+					const extname = path.extname(filePath);
+					const parts = basename.split(".");
+					return path.join(path.dirname(filePath), `${parts[0]}.${platformLowerCase}${extname}`);
+				})
 			}
 		];
 
