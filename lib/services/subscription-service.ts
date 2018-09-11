@@ -12,8 +12,8 @@ export class SubscriptionService implements ISubscriptionService {
 
 	public async subscribeForNewsletter(): Promise<void> {
 		if (await this.shouldAskForEmail()) {
-			this.$logger.printMarkdown(SubscribeForNewsletterMessages.AgreeToReceiveEmailMsg);
 			this.$logger.printMarkdown(SubscribeForNewsletterMessages.ReviewPrivacyPolicyMsg);
+			this.$logger.printMarkdown(SubscribeForNewsletterMessages.AgreeToReceiveEmailMsg);
 
 			const email = await this.getEmail(SubscribeForNewsletterMessages.PromptMsg);
 			await this.$userSettingsService.saveSetting("EMAIL_REGISTERED", true);
