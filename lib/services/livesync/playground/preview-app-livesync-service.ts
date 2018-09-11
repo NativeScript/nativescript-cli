@@ -119,13 +119,9 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 			.map(file => {
 				const projectFileInfo = this.$projectFilesProvider.getProjectFileInfo(file, platformData.normalizedPlatformName, null);
 				const relativePath = path.relative(platformsAppFolderPath, file);
-				const extName = path.extname(relativePath);
-				const baseName = projectFileInfo.onDeviceFileName.split(extName)[0];
-				const newFileName = `${baseName}.${platformData.normalizedPlatformName.toLowerCase()}${extName}`;
-
 				const filePayload: FilePayload = {
 					event: PreviewSdkEventNames.CHANGE_EVENT_NAME,
-					file: path.join(path.dirname(relativePath), newFileName),
+					file: path.join(path.dirname(relativePath), projectFileInfo.onDeviceFileName),
 					binary: isTextOrBinary.isBinarySync(file),
 					fileContents: ""
 				};
