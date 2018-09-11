@@ -29,7 +29,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 			const filesToSyncMap: IDictionary<string[]> = {};
 			let promise = Promise.resolve();
 			const startSyncFilesTimeout = async (platform: string) => {
-				promise
+				await promise
 					.then(async () => {
 						promise = this.syncFilesForPlatformSafe(data, platform, filesToSyncMap[platform]);
 						await promise;
