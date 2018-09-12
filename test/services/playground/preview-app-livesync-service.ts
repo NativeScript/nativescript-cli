@@ -40,7 +40,6 @@ const nativeFilesWarning = "Unable to apply changes from App_Resources folder. Y
 const projectDirPath = "/path/to/my/project";
 const platformsDirPath = path.join(projectDirPath, "platforms");
 const normalizedPlatformName = 'iOS';
-const platformLowerCase = normalizedPlatformName.toLowerCase();
 
 const deviceMockData = <Device>{
 	platform: normalizedPlatformName
@@ -266,27 +265,27 @@ describe("previewAppLiveSyncService", () => {
 			{
 				name: ".ts files",
 				appFiles: ["dir1/file.js", "file.ts"],
-				expectedFiles: [`dir1/file.${platformLowerCase}.js`]
+				expectedFiles: [`dir1/file.js`]
 			},
 			{
 				name: ".sass files",
 				appFiles: ["myDir1/mySubDir/myfile.css", "myDir1/mySubDir/myfile.sass"],
-				expectedFiles: [`myDir1/mySubDir/myfile.${platformLowerCase}.css`]
+				expectedFiles: [`myDir1/mySubDir/myfile.css`]
 			},
 			{
 				name: ".scss files",
 				appFiles: ["myDir1/mySubDir/myfile1.css", "myDir1/mySubDir/myfile.scss", "my/file.js"],
-				expectedFiles: [`myDir1/mySubDir/myfile1.${platformLowerCase}.css`, `my/file.${platformLowerCase}.js`]
+				expectedFiles: [`myDir1/mySubDir/myfile1.css`, `my/file.js`]
 			},
 			{
 				name: ".less files",
 				appFiles: ["myDir1/mySubDir/myfile1.css", "myDir1/mySubDir/myfile.less", "my/file.js"],
-				expectedFiles: [`myDir1/mySubDir/myfile1.${platformLowerCase}.css`, `my/file.${platformLowerCase}.js`]
+				expectedFiles: [`myDir1/mySubDir/myfile1.css`, `my/file.js`]
 			},
 			{
 				name: ".DS_Store file",
 				appFiles: ["my/test/file.js", ".DS_Store"],
-				expectedFiles: [`my/test/file.${platformLowerCase}.js`]
+				expectedFiles: [`my/test/file.js`]
 			}
 		];
 
@@ -316,12 +315,7 @@ describe("previewAppLiveSyncService", () => {
 		const noAppFilesTestCases: ITestCase[] = [
 			{
 				name: "should transfer correctly default project files",
-				expectedFiles: defaultProjectFiles.map(filePath => {
-					const basename = path.basename(filePath);
-					const extname = path.extname(filePath);
-					const parts = basename.split(".");
-					return path.join(path.dirname(filePath), `${parts[0]}.${platformLowerCase}${extname}`);
-				})
+				expectedFiles: defaultProjectFiles
 			}
 		];
 
