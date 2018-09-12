@@ -55,7 +55,7 @@
     "mkdirp": "0.5.1",
     "mute-stream": "0.0.5",
     "nativescript-doctor": "1.2.0",
-    "nativescript-preview-sdk": "0.1.0",
+    "nativescript-preview-sdk": "0.2.0",
     "open": "0.0.5",
     "ora": "2.0.0",
     "osenv": "0.1.3",
