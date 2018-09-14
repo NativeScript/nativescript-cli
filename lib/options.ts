@@ -53,6 +53,8 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 
 		if (that.hmr) {
 			that.bundle = "webpack";
+            that.env = that.env || {};
+            that.env.hmr = true;
 		}
 	}
 }
