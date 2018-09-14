@@ -352,7 +352,7 @@ interface IOptionalProjectChangesInfoComposition {
 }
 
 interface IPreparePlatformCoreInfo extends IPreparePlatformInfoBase, IOptionalProjectChangesInfoComposition {
-	platformSpecificData: IPlatformSpecificData
+	platformSpecificData: IPlatformSpecificData;
 }
 
 interface IPreparePlatformInfo extends IPreparePlatformInfoBase, IPlatformConfig, IPlatformTemplate, ISkipNativeCheckOptional { }
@@ -369,7 +369,10 @@ interface IOptionalFilesToRemove {
 	filesToRemove?: string[];
 }
 
-interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions, IOptionalFilesToSync, IOptionalFilesToRemove, IOptionalNativePrepareComposition { }
+interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions, IOptionalFilesToSync, IOptionalFilesToRemove, IOptionalNativePrepareComposition { 
+	skipCopyTnsModules?: boolean;
+	skipCopyAppResourcesFiles?: boolean;
+}
 
 interface IOptionalNativePrepareComposition {
 	nativePrepare?: INativePrepare;
@@ -388,5 +391,18 @@ interface IUpdateAppOptions extends IOptionalFilesToSync, IOptionalFilesToRemove
 }
 
 interface IPlatformEnvironmentRequirements {
-	checkEnvironmentRequirements(platform?: string, projectDir?: string, runtimeVersion?: string): Promise<boolean>;
+	checkEnvironmentRequirements(input: ICheckEnvironmentRequirementsInput): Promise<ICheckEnvironmentRequirementsOutput>;
+}
+
+interface ICheckEnvironmentRequirementsInput {
+	platform?: string;
+	projectDir?: string;
+	runtimeVersion?: string;
+	options?: IOptions;
+	notConfiguredEnvOptions?: INotConfiguredEnvOptions;
+}
+
+interface ICheckEnvironmentRequirementsOutput {
+	canExecute: boolean;
+	selectedOption: string;
 }

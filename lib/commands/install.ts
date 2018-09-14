@@ -32,7 +32,7 @@ export class InstallCommand implements ICommand {
 			if (frameworkPackageData && frameworkPackageData.version) {
 				try {
 					const platformProjectService = platformData.platformProjectService;
-					await platformProjectService.validate(this.$projectData);
+					await platformProjectService.validate(this.$projectData, this.$options);
 
 					await this.$platformService.addPlatforms([`${platform}@${frameworkPackageData.version}`], this.$options.platformTemplate, this.$projectData, this.$options, this.$options.frameworkPath);
 				} catch (err) {

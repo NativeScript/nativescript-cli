@@ -14,7 +14,14 @@ function createTestInjector(
 	installedPlatforms: string[] = [],
 	availablePlatforms: string[] = [],
 	projectDir: string = projectFolder,
-	validate: Function = (): Promise<void> => Promise.resolve()
+	validate: Function = async (): Promise<IValidatePlatformOutput> => {
+		return {
+			checkEnvironmentRequirementsOutput: {
+				canExecute: true,
+				selectedOption: ""
+			}
+		};
+	}
 ): IInjector {
 	const testInjector: IInjector = new yok.Yok();
 	testInjector.register("logger", stubs.LoggerStub);
@@ -94,25 +101,25 @@ describe("update command method tests", () => {
 		it("returns false if too many artuments", async () => {
 			const testInjector = createTestInjector([], ["android"]);
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
-			const canExecute = updateCommand.canExecute(["333", "111", "444"]);
+			const canExecuteOutput = await updateCommand.canExecute(["333", "111", "444"]);
 
-			return assert.eventually.equal(canExecute, false);
+			return assert.equal(canExecuteOutput.canExecute, false);
 		});
 
 		it("returns false if projectDir empty string", async () => {
 			const testInjector = createTestInjector([], ["android"], "");
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
-			const canExecute = updateCommand.canExecute([]);
+			const canExecuteOutput = await updateCommand.canExecute([]);
 
-			return assert.eventually.equal(canExecute, false);
+			return assert.equal(canExecuteOutput.canExecute, false);
 		});
 
 		it("returns true all ok", async () => {
 			const testInjector = createTestInjector([], ["android"]);
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
-			const canExecute = updateCommand.canExecute(["3.3.0"]);
+			const canExecuteOutput = await updateCommand.canExecute(["3.3.0"]);
 
-			return assert.eventually.equal(canExecute, true);
+			return assert.equal(canExecuteOutput.canExecute, true);
 		});
 	});
 

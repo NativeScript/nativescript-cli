@@ -319,7 +319,7 @@ interface ICleanNativeAppData extends IProjectDir, IPlatform { }
 
 interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectServiceBase {
 	getPlatformData(projectData: IProjectData): IPlatformData;
-	validate(projectData: IProjectData): Promise<void>;
+	validate(projectData: IProjectData, options: IOptions, notConfiguredEnvOptions?: INotConfiguredEnvOptions): Promise<IValidatePlatformOutput>;
 	createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, config: ICreateProjectOptions): Promise<void>;
 	interpolateData(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
 	interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): void;
@@ -436,6 +436,10 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	 * Traverse through the production dependencies and find plugins that need build/rebuild
 	 */
 	checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>>;
+}
+
+interface IValidatePlatformOutput {
+	checkEnvironmentRequirementsOutput: ICheckEnvironmentRequirementsOutput;
 }
 
 interface ITestExecutionService {

@@ -50,6 +50,8 @@ $injector.requireCommand("run|*all", "./commands/run");
 $injector.requireCommand("run|ios", "./commands/run");
 $injector.requireCommand("run|android", "./commands/run");
 
+$injector.requireCommand("preview", "./commands/preview");
+
 $injector.requireCommand("debug|ios", "./commands/debug");
 $injector.requireCommand("debug|android", "./commands/debug");
 
@@ -120,6 +122,7 @@ $injector.requireCommand("platform|clean", "./commands/platform-clean");
 $injector.require("bundleValidatorHelper", "./helpers/bundle-validator-helper");
 $injector.require("liveSyncCommandHelper", "./helpers/livesync-command-helper");
 $injector.require("deployCommandHelper", "./helpers/deploy-command-helper");
+$injector.require("previewCommandHelper", "./helpers/preview-command-helper");
 
 $injector.requirePublicClass("localBuildService", "./services/local-build-service");
 $injector.requirePublicClass("liveSyncService", "./services/livesync/livesync-service");
@@ -127,6 +130,10 @@ $injector.requirePublicClass("androidLivesyncTool", "./services/livesync/android
 $injector.require("androidLiveSyncService", "./services/livesync/android-livesync-service");
 $injector.require("iOSLiveSyncService", "./services/livesync/ios-livesync-service");
 $injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
+$injector.require("previewAppLiveSyncService", "./services/livesync/playground/preview-app-livesync-service");
+$injector.require("previewAppPluginsService", "./services/livesync/playground/preview-app-plugins-service");
+$injector.require("previewSdkService", "./services/livesync/playground/preview-sdk-service");
+$injector.require("playgroundQrCodeGenerator", "./services/livesync/playground/qr-code-generator");
 $injector.requirePublic("sysInfo", "./sys-info");
 
 $injector.require("iOSNotificationService", "./services/ios-notification-service");
@@ -171,3 +178,4 @@ $injector.require("iOSLogParserService", "./services/ios-log-parser-service");
 $injector.require("iOSDebuggerPortService", "./services/ios-debugger-port-service");
 
 $injector.require("pacoteService", "./services/pacote-service");
+$injector.require("qrCodeTerminalService", "./services/qr-code-terminal-service");

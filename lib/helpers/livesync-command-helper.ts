@@ -22,6 +22,10 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	}
 
 	public async executeCommandLiveSync(platform?: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions) {
+		if (additionalOptions && additionalOptions.syncToPreviewApp) {
+			return;
+		}
+
 		if (!this.$options.syncAllFiles) {
 			this.$logger.info("Skipping node_modules folder! Use the syncAllFiles option to sync files from this folder.");
 		}
@@ -31,18 +35,12 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			deviceId: this.$options.device,
 			platform,
 			emulator,
-			skipDeviceDetectionInterval: true,
 			skipInferPlatform: !platform,
 			sdk: this.$options.sdk
 		});
 
 		const devices = this.$devicesService.getDeviceInstances()
 			.filter(d => !platform || d.deviceInfo.platform.toLowerCase() === platform.toLowerCase());
-
-		const devicesPlatforms = _(devices).map(d => d.deviceInfo.platform).uniq().value();
-		if (this.$options.bundle && devicesPlatforms.length > 1) {
-			this.$errors.failWithoutHelp("Bundling doesn't work with multiple platforms. Please specify platform to the run command.");
-		}
 
 		await this.executeLiveSyncOperation(devices, platform, additionalOptions);
 	}
@@ -123,15 +121,20 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 	}
 
-	public async validatePlatform(platform: string) {
+	public async validatePlatform(platform: string): Promise<IDictionary<IValidatePlatformOutput>> {
+		const result: IDictionary<IValidatePlatformOutput> = {};
+
 		const availablePlatforms = this.getPlatformsForOperation(platform);
 		for (const availablePlatform of availablePlatforms) {
 			const platformData = this.$platformsData.getPlatformData(availablePlatform, this.$projectData);
 			const platformProjectService = platformData.platformProjectService;
-			await platformProjectService.validate(this.$projectData);
+			const validateOutput = await platformProjectService.validate(this.$projectData, this.$options);
+			result[availablePlatform.toLowerCase()] = validateOutput;
 		}
 
 		this.$bundleValidatorHelper.validate();
+
+		return result;
 	}
 
 	private async runInReleaseMode(platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void> {

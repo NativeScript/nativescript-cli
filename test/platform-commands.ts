@@ -29,8 +29,13 @@ class PlatformData implements IPlatformData {
 	frameworkPackageName = "tns-android";
 	normalizedPlatformName = "Android";
 	platformProjectService: IPlatformProjectService = <any>{
-		validate: async (projectData: IProjectData): Promise<void> => {
-			// intentionally left blank
+		validate: async (projectData: IProjectData): Promise<IValidatePlatformOutput> => {
+			return {
+				checkEnvironmentRequirementsOutput: {
+					canExecute: true,
+					selectedOption: ""
+				}
+			};
 		}
 	};
 	projectRoot = "";
@@ -164,7 +169,12 @@ function createTestInjector() {
 	});
 	testInjector.register("filesHashService", {});
 	testInjector.register("platformEnvironmentRequirements", {
-		checkEnvironmentRequirements: async (platform?: string, projectDir?: string, runtimeVersion?: string): Promise<boolean> => true
+		checkEnvironmentRequirements: async (platform?: string, projectDir?: string, runtimeVersion?: string): Promise<ICheckEnvironmentRequirementsOutput> => {
+			return {
+				canExecute: true,
+				selectedOption: ""
+			};
+		}
 	});
 	testInjector.register("pacoteService", {
 		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined

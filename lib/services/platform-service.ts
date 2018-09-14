@@ -226,6 +226,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				platformInfo.filesToSync,
 				platformInfo.filesToRemove,
 				platformInfo.nativePrepare,
+				platformInfo.skipCopyAppResourcesFiles,
+				platformInfo.skipCopyTnsModules
 			);
 			this.$projectChangesService.savePrepareInfo(platformInfo.platform, platformInfo.projectData);
 		} else {
@@ -240,7 +242,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			platform = this.$mobileHelper.normalizePlatformName(platform);
 			this.$logger.trace("Validate options for platform: " + platform);
 			const platformData = this.$platformsData.getPlatformData(platform, projectData);
-			return await platformData.platformProjectService.validateOptions(projectData.projectId, provision, teamId);
+			const result = await platformData.platformProjectService.validateOptions(projectData.projectId, provision, teamId);
+			return result;
 		} else {
 			let valid = true;
 			for (const availablePlatform in this.$platformsData.availablePlatforms) {
@@ -297,7 +300,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		changesInfo?: IProjectChangesInfo,
 		filesToSync?: string[],
 		filesToRemove?: string[],
-		nativePrepare?: INativePrepare): Promise<void> {
+		nativePrepare?: INativePrepare,
+		skipCopyAppResourcesFiles?: boolean,
+		skipCopyTnsModules?: boolean): Promise<void> {
 
 		this.$logger.out("Preparing project...");
 
@@ -313,7 +318,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			changesInfo,
 			filesToSync,
 			filesToRemove,
-			env
+			env,
+			skipCopyAppResourcesFiles,
+			skipCopyTnsModules
 		});
 
 		if (!nativePrepare || !nativePrepare.skipNativePrepare) {
@@ -738,7 +745,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
 		// In case when no platform is added and webpack plugin is started it produces files in platforms folder. In this case {N} CLI needs to add platform and keeps the already produced files from webpack
 		if (appFilesUpdaterOptions.bundle && this.isPlatformInstalled(platform, projectData) && !this.$fs.exists(platformData.configurationFilePath) && (!prepareInfo || !prepareInfo.nativePlatformStatus || prepareInfo.nativePlatformStatus !== constants.NativePlatformStatus.alreadyPrepared)) {
-			const tmpDirectoryPath = path.join(projectData.projectDir, "platforms", "tmp");
+			const tmpDirectoryPath = path.join(projectData.projectDir, "platforms", `tmp-${platform}`);
 			this.$fs.deleteDirectory(tmpDirectoryPath);
 			this.$fs.ensureDirectoryExists(tmpDirectoryPath);
 			this.$fs.copyFile(path.join(platformData.appDestinationDirectoryPath, "*"), tmpDirectoryPath);

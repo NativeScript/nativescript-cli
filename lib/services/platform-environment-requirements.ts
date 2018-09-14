@@ -1,6 +1,7 @@
 import { NATIVESCRIPT_CLOUD_EXTENSION_NAME, TrackActionNames } from "../constants";
 import { isInteractive } from "../common/helpers";
 import { EOL } from "os";
+import { cache } from "../common/decorators";
 
 export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequirements {
 	constructor(private $commandsService: ICommandsService,
@@ -10,11 +11,23 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		private $nativeScriptCloudExtensionService: INativeScriptCloudExtensionService,
 		private $prompter: IPrompter,
 		private $staticConfig: IStaticConfig,
-		private $analyticsService: IAnalyticsService) { }
+		private $analyticsService: IAnalyticsService,
+		private $injector: IInjector) { }
+
+	@cache()
+	private get $previewCommandHelper(): IPreviewCommandHelper {
+		return this.$injector.resolve("previewCommandHelper");
+	}
+
+	@cache()
+	private get $liveSyncService(): ILiveSyncService {
+		return this.$injector.resolve("liveSyncService");
+	}
 
 	public static CLOUD_SETUP_OPTION_NAME = "Configure for Cloud Builds";
 	public static LOCAL_SETUP_OPTION_NAME = "Configure for Local Builds";
 	public static TRY_CLOUD_OPERATION_OPTION_NAME = "Try Cloud Operation";
+	public static SYNC_TO_PREVIEW_APP_OPTION_NAME = "Sync to Playground";
 	public static MANUALLY_SETUP_OPTION_NAME = "Skip Step and Configure Manually";
 	private static BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME = "Configure for Both Local and Cloud Builds";
 	private static CHOOSE_OPTIONS_MESSAGE = "To continue, choose one of the following options: ";
@@ -23,6 +36,8 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	private static MISSING_LOCAL_AND_CLOUD_SETUP_MESSAGE = `You are missing the ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and you will not be able to execute cloud builds. ${PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE} ${PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE} `;
 	private static MISSING_LOCAL_BUT_CLOUD_SETUP_MESSAGE = `You have ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension installed, so you can execute cloud builds, but ${_.lowerFirst(PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE)}`;
 	private static RUN_TNS_SETUP_MESSAGE = 'Run $ tns setup command to run the setup script to try to automatically configure your environment for local builds.';
+	private static SYNC_TO_PREVIEW_APP_MESSAGE = `Select "Sync to Playground" to enjoy NativeScript without any local setup. All you need is a couple of companion apps installed on your devices.`;
+	private static RUN_PREVIEW_COMMAND_MESSAGE = `Run $ tns preview command to enjoy NativeScript without any local setup.`;
 
 	private cliCommandToCloudCommandName: IStringDictionary = {
 		"build": "tns cloud build",
@@ -30,13 +45,22 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		"deploy": "tns cloud deploy"
 	};
 
-	public async checkEnvironmentRequirements(platform?: string, projectDir?: string, runtimeVersion?: string): Promise<boolean> {
+	public async checkEnvironmentRequirements(input: ICheckEnvironmentRequirementsInput): Promise<ICheckEnvironmentRequirementsOutput> {
+		const { platform, projectDir, runtimeVersion } = input;
+		const notConfiguredEnvOptions = input.notConfiguredEnvOptions || {};
+		const options = input.options || <IOptions>{ };
+
+		let selectedOption = null;
+
 		if (process.env.NS_SKIP_ENV_CHECK) {
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
 				action: TrackActionNames.CheckEnvironmentRequirements,
 				additionalData: "Skipped: NS_SKIP_ENV_CHECK is set"
 			});
-			return true;
+			return {
+				canExecute: true,
+				selectedOption
+			};
 		}
 
 		const canExecute = await this.$doctorService.canExecuteLocalBuild(platform, projectDir, runtimeVersion);
@@ -49,30 +73,24 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				this.fail(this.getNonInteractiveConsoleMessage(platform));
 			}
 
-			const infoMessage = this.getInteractiveConsoleMessage(platform);
-			this.$logger.info(infoMessage);
+			const infoMessage = this.getInteractiveConsoleMessage(notConfiguredEnvOptions);
 
-			const choices = this.$nativeScriptCloudExtensionService.isInstalled() ? [
-				PlatformEnvironmentRequirements.TRY_CLOUD_OPERATION_OPTION_NAME,
-				PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
-				PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
-			] : [
-					PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME,
-					PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
-					PlatformEnvironmentRequirements.BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME,
-					PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
-				];
+			const choices = this.getChoices(notConfiguredEnvOptions);
 
-			const selectedOption = await this.promptForChoice({ infoMessage, choices });
+			selectedOption = await this.promptForChoice({ infoMessage, choices });
 
 			await this.processCloudBuildsIfNeeded(selectedOption, platform);
 			this.processManuallySetupIfNeeded(selectedOption, platform);
+			await this.processSyncToPreviewAppIfNeeded(selectedOption, projectDir, options);
 
 			if (selectedOption === PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME) {
 				await this.$doctorService.runSetupScript();
 
 				if (await this.$doctorService.canExecuteLocalBuild(platform, projectDir, runtimeVersion)) {
-					return true;
+					return {
+						canExecute: true,
+						selectedOption
+					};
 				}
 
 				if (this.$nativeScriptCloudExtensionService.isInstalled()) {
@@ -103,7 +121,10 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			if (selectedOption === PlatformEnvironmentRequirements.BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME) {
 				await this.processBothCloudBuildsAndSetupScript();
 				if (await this.$doctorService.canExecuteLocalBuild(platform, projectDir, runtimeVersion)) {
-					return true;
+					return {
+						canExecute: true,
+						selectedOption
+					};
 				}
 
 				this.processManuallySetup(platform);
@@ -112,7 +133,10 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			this.processTryCloudSetupIfNeeded(selectedOption, platform);
 		}
 
-		return true;
+		return {
+			canExecute,
+			selectedOption
+		};
 	}
 
 	private async processCloudBuildsIfNeeded(selectedOption: string, platform?: string): Promise<void> {
@@ -131,7 +155,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	}
 
 	private getCloudBuildsMessage(platform?: string): string {
-		const cloudCommandName = this.cliCommandToCloudCommandName[this.$commandsService.currentCommandData.commandName];
+		const cloudCommandName = this.cliCommandToCloudCommandName[(this.$commandsService.currentCommandData || <any>{}).commandName];
 		if (!cloudCommandName) {
 			return `In order to test your application use the $ tns login command to log in with your account and then $ tns cloud build command to build your app in the cloud.`;
 		}
@@ -149,9 +173,30 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		}
 	}
 
-	private processManuallySetupIfNeeded(selectedOption: string, platform?: string) {
+	private processManuallySetupIfNeeded(selectedOption: string,	 platform?: string) {
 		if (selectedOption === PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME) {
 			this.processManuallySetup(platform);
+		}
+	}
+
+	private async processSyncToPreviewAppIfNeeded(selectedOption: string, projectDir: string, options: IOptions) {
+		if (selectedOption === PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_OPTION_NAME) {
+			if (!projectDir) {
+				this.$errors.failWithoutHelp(`No project found. In order to sync to playground you need to go to project directory or specify --path option.`);
+			}
+
+			this.$previewCommandHelper.run();
+			await this.$liveSyncService.liveSync([], {
+				syncToPreviewApp: true,
+				projectDir,
+				skipWatcher: !options.watch,
+				watchAllFiles: options.syncAllFiles,
+				clean: options.clean,
+				bundle: !!options.bundle,
+				release: options.release,
+				env: options.env,
+				timeout: options.timeout
+			});
 		}
 	}
 
@@ -177,32 +222,42 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		return this.$nativeScriptCloudExtensionService.isInstalled() ?
 			this.buildMultilineMessage([
 				`${PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE} ${PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE}`,
+				PlatformEnvironmentRequirements.RUN_PREVIEW_COMMAND_MESSAGE,
 				PlatformEnvironmentRequirements.RUN_TNS_SETUP_MESSAGE,
 				this.getCloudBuildsMessage(platform),
 				this.getEnvVerificationMessage()
 			]) :
 			this.buildMultilineMessage([
 				PlatformEnvironmentRequirements.MISSING_LOCAL_AND_CLOUD_SETUP_MESSAGE,
+				PlatformEnvironmentRequirements.RUN_PREVIEW_COMMAND_MESSAGE,
 				PlatformEnvironmentRequirements.RUN_TNS_SETUP_MESSAGE,
 				`Run $ tns cloud setup command to install the ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension to configure your environment for cloud builds.`,
 				this.getEnvVerificationMessage()
 			]);
 	}
 
-	private getInteractiveConsoleMessage(platform: string) {
-		return this.$nativeScriptCloudExtensionService.isInstalled() ?
-			this.buildMultilineMessage([
-				`${PlatformEnvironmentRequirements.MISSING_LOCAL_BUT_CLOUD_SETUP_MESSAGE} ${PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE}`,
-				`Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`,
-				`Select "Skip Step and Configure Manually" to disregard this option and install any required components manually.`
-			]) :
-			this.buildMultilineMessage([
-				PlatformEnvironmentRequirements.MISSING_LOCAL_AND_CLOUD_SETUP_MESSAGE,
-				`Select "Configure for Cloud Builds" to install the ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and automatically configure your environment for cloud builds.`,
-				`Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`,
-				`Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`,
-				`Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`
-			]);
+	private getInteractiveConsoleMessage(options: INotConfiguredEnvOptions) {
+		const isNativeScriptCloudExtensionInstalled = this.$nativeScriptCloudExtensionService.isInstalled();
+		const message = isNativeScriptCloudExtensionInstalled ?
+			`${PlatformEnvironmentRequirements.MISSING_LOCAL_BUT_CLOUD_SETUP_MESSAGE} ${PlatformEnvironmentRequirements.CHOOSE_OPTIONS_MESSAGE}` :
+			PlatformEnvironmentRequirements.MISSING_LOCAL_AND_CLOUD_SETUP_MESSAGE;
+		const choices = isNativeScriptCloudExtensionInstalled ? [
+			`Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`,
+			`Select "Skip Step and Configure Manually" to disregard this option and install any required components manually.`
+		] : [
+			`Select "Configure for Cloud Builds" to install the ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and automatically configure your environment for cloud builds.`,
+			`Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`,
+			`Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`,
+			`Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`
+		];
+
+		if (!options.hideSyncToPreviewAppOption) {
+			choices.unshift(PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_MESSAGE);
+		}
+
+		const lines = [message].concat(choices);
+		const result = this.buildMultilineMessage(lines);
+		return result;
 	}
 
 	private async promptForChoice(opts: { infoMessage: string, choices: string[],  }): Promise<string> {
@@ -229,6 +284,31 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 
 	private buildMultilineMessage(parts: string[]): string {
 		return parts.join(EOL);
+	}
+
+	private getChoices(options: INotConfiguredEnvOptions): string[] {
+		const choices: string[] = [];
+		if (this.$nativeScriptCloudExtensionService.isInstalled()) {
+			choices.push(...[PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
+				PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME]);
+
+			if (!options.hideCloudBuildOption) {
+				choices.unshift(PlatformEnvironmentRequirements.TRY_CLOUD_OPERATION_OPTION_NAME);
+			}
+		} else {
+			choices.push(...[
+				PlatformEnvironmentRequirements.CLOUD_SETUP_OPTION_NAME,
+				PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
+				PlatformEnvironmentRequirements.BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME,
+				PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
+			]);
+		}
+
+		if (!options.hideSyncToPreviewAppOption) {
+			choices.unshift(PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_OPTION_NAME);
+		}
+
+		return choices;
 	}
 }
 $injector.register("platformEnvironmentRequirements", PlatformEnvironmentRequirements);

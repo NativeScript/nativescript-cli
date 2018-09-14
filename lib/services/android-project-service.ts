@@ -104,8 +104,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return currentPlatformData && currentPlatformData[constants.VERSION_STRING];
 	}
 
-	public validateOptions(): Promise<boolean> {
-		return Promise.resolve(true);
+	public async validateOptions(): Promise<boolean> {
+		return true;
 	}
 
 	public getAppResourcesDestinationDirectoryPath(projectData: IProjectData): string {
@@ -118,12 +118,22 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public async validate(projectData: IProjectData): Promise<void> {
+	public async validate(projectData: IProjectData, options: IOptions, notConfiguredEnvOptions?: INotConfiguredEnvOptions): Promise<IValidatePlatformOutput> {
 		this.validatePackageName(projectData.projectId);
 		this.validateProjectName(projectData.projectName);
 
-		await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(this.getPlatformData(projectData).normalizedPlatformName, projectData.projectDir);
+		const checkEnvironmentRequirementsOutput = await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
+			platform: this.getPlatformData(projectData).normalizedPlatformName,
+			projectDir: projectData.projectDir,
+			options,
+			notConfiguredEnvOptions
+		});
+
 		this.$androidToolsInfo.validateTargetSdk({ showWarningsAsErrors: true });
+
+		return {
+			checkEnvironmentRequirementsOutput
+		};
 	}
 
 	public async validatePlugins(): Promise<void> { /* */ }

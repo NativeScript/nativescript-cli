@@ -331,8 +331,8 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	validateOptions(): Promise<boolean> {
 		return Promise.resolve(true);
 	}
-	validate(): Promise<void> {
-		return Promise.resolve();
+	validate(): Promise<IValidatePlatformOutput> {
+		return Promise.resolve(<IValidatePlatformOutput>{});
 	}
 	validatePlugins(projectData: IProjectData) {
 		return Promise.resolve();
