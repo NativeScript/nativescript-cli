@@ -691,12 +691,18 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 						},
 						platforms
 					},
+					filesToSync,
 					filesToSyncMap,
 					filesToRemove,
 					startSyncFilesTimeout: async (platform: string) => {
-						filesToSync = filesToSyncMap[platform];
-						await startSyncFilesTimeout(platform);
-						filesToSyncMap[platform] = [];
+						if (platform) {
+							filesToSync = filesToSyncMap[platform];
+							await startSyncFilesTimeout();
+							filesToSyncMap[platform] = [];
+						} else {
+							// This code is added for backwards compatibility with old versions of nativescript-dev-webpack plugin.
+							await startSyncFilesTimeout();
+						}
 					}
 				}
 			});
