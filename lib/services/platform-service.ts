@@ -490,6 +490,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		await device.applicationManager.reinstallApplication(projectData.projectId, packageFile);
 
+		await this.updateHashesOnDevice({
+			device,
+			appIdentifier: projectData.projectId,
+			outputFilePath,
+			platformData
+		});
+
 		if (!buildConfig.release) {
 			const deviceFilePath = await this.getDeviceBuildInfoFilePath(device, projectData);
 			const options = buildConfig;
@@ -501,6 +508,22 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		this.$logger.out(`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`);
+	}
+
+	private async updateHashesOnDevice(data: { device: Mobile.IDevice, appIdentifier: string, outputFilePath: string, platformData: IPlatformData }): Promise<void> {
+		const { device, appIdentifier, platformData, outputFilePath } = data;
+
+		if (!this.$mobileHelper.isAndroidPlatform(platformData.normalizedPlatformName)) {
+			return;
+		}
+
+		let hashes = {};
+		const hashesFilePath = path.join(outputFilePath || platformData.deviceBuildOutputPath, constants.HASHES_FILE_NAME);
+		if (this.$fs.exists(hashesFilePath)) {
+			hashes = this.$fs.readJson(hashesFilePath);
+		}
+
+		await device.fileSystem.updateHashesOnDevice(hashes, appIdentifier);
 	}
 
 	public async deployPlatform(deployInfo: IDeployPlatformInfo): Promise<void> {

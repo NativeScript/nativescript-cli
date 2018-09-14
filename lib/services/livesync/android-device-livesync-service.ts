@@ -1,23 +1,29 @@
-import { DeviceAndroidDebugBridge } from "../../common/mobile/android/device-android-debug-bridge";
-import { AndroidDeviceHashService } from "../../common/mobile/android/android-device-hash-service";
-import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
+import { AndroidDeviceLiveSyncServiceBase } from "./android-device-livesync-service-base";
 import * as helpers from "../../common/helpers";
 import { LiveSyncPaths } from "../../common/constants";
-import { cache } from "../../common/decorators";
 import * as path from "path";
 import * as net from "net";
 
-export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
+export class AndroidDeviceLiveSyncService extends AndroidDeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
 	private port: number;
 
-	constructor(
-		private $mobileHelper: Mobile.IMobileHelper,
+	constructor(private $mobileHelper: Mobile.IMobileHelper,
 		private $devicePathProvider: IDevicePathProvider,
-		private $injector: IInjector,
+		$injector: IInjector,
 		private $androidProcessService: Mobile.IAndroidProcessService,
 		protected $platformsData: IPlatformsData,
-		protected device: Mobile.IAndroidDevice) {
-		super($platformsData, device);
+		protected device: Mobile.IAndroidDevice,
+		$filesHashService: IFilesHashService,
+		$logger: ILogger) {
+			super($injector, $platformsData, $filesHashService, $logger, device);
+	}
+
+	public async transferFilesOnDevice(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
+		await this.device.fileSystem.transferFiles(deviceAppData, localToDevicePaths);
+	}
+
+	public async transferDirectoryOnDevice(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<void> {
+		await this.device.fileSystem.transferDirectory(deviceAppData, localToDevicePaths, projectFilesPath);
 	}
 
 	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
@@ -114,12 +120,6 @@ export class AndroidDeviceLiveSyncService extends DeviceLiveSyncServiceBase impl
 		}
 
 		await this.getDeviceHashService(deviceAppData.appIdentifier).removeHashes(localToDevicePaths);
-	}
-
-	@cache()
-	public getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService {
-		const adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
-		return this.$injector.resolve(AndroidDeviceHashService, { adb, appIdentifier });
 	}
 
 	private async awaitRuntimeReloadSuccessMessage(): Promise<boolean> {

@@ -47,7 +47,7 @@ export abstract class PlatformLiveSyncServiceBase {
 
 		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 		const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, null, []);
-		const modifiedFilesData = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, true, projectData);
+		const modifiedFilesData = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, projectData, syncInfo.liveSyncDeviceInfo, { isFullSync: true, force: syncInfo.force });
 
 		return {
 			modifiedFilesData,
@@ -86,7 +86,7 @@ export abstract class PlatformLiveSyncServiceBase {
 				const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData,
 					projectFilesPath, existingFiles, []);
 				modifiedLocalToDevicePaths.push(...localToDevicePaths);
-				modifiedLocalToDevicePaths = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, false, projectData);
+				modifiedLocalToDevicePaths = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, projectData, liveSyncInfo.liveSyncDeviceInfo, { isFullSync: false, force: liveSyncInfo.force});
 			}
 		}
 
@@ -113,11 +113,11 @@ export abstract class PlatformLiveSyncServiceBase {
 		};
 	}
 
-	protected async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean, projectData: IProjectData): Promise<Mobile.ILocalToDevicePathData[]> {
+	protected async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, projectData: IProjectData, liveSyncDeviceInfo: ILiveSyncDeviceInfo, options: ITransferFilesOptions): Promise<Mobile.ILocalToDevicePathData[]> {
 		let transferredFiles: Mobile.ILocalToDevicePathData[] = [];
 		const deviceLiveSyncService = this.getDeviceLiveSyncService(deviceAppData.device, projectData);
 
-		transferredFiles = await deviceLiveSyncService.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, isFullSync);
+		transferredFiles = await deviceLiveSyncService.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, projectData, liveSyncDeviceInfo, options);
 
 		this.logFilesSyncInformation(transferredFiles, "Successfully transferred %s.", this.$logger.info);
 

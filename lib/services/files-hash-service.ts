@@ -1,5 +1,7 @@
 import { executeActionByChunks } from "../common/helpers";
 import { DEFAULT_CHUNK_SIZE } from "../common/constants";
+import { APP_FOLDER_NAME, HASHES_FILE_NAME } from "../constants";
+import * as path from "path";
 
 export class FilesHashService implements IFilesHashService {
 	constructor(private $fs: IFileSystem,
@@ -24,6 +26,19 @@ export class FilesHashService implements IFilesHashService {
 		return result;
 	}
 
+	public async generateHashesForProject(platformData: IPlatformData): Promise<IStringDictionary> {
+		const appFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
+		const files = this.$fs.enumerateFilesInDirectorySync(appFilesPath);
+		const hashes = await this.generateHashes(files);
+		return hashes;
+	}
+
+	public async saveHashesForProject(platformData: IPlatformData, hashesFileDirectory: string): Promise<IStringDictionary> {
+		const hashes = await this.generateHashesForProject(platformData);
+		this.saveHashes(hashes, hashesFileDirectory);
+		return hashes;
+	}
+
 	public async getChanges(files: string[], oldHashes: IStringDictionary): Promise<IStringDictionary> {
 		const newHashes = await this.generateHashes(files);
 		return this.getChangesInShasums(oldHashes, newHashes);
@@ -31,6 +46,11 @@ export class FilesHashService implements IFilesHashService {
 
 	public hasChangesInShasums(oldHashes: IStringDictionary, newHashes: IStringDictionary): boolean {
 		return !!_.keys(this.getChangesInShasums(oldHashes, newHashes)).length;
+	}
+
+	public saveHashes(hashes: IStringDictionary, hashesFileDirectory: string): void {
+		const hashesFilePath = path.join(hashesFileDirectory, HASHES_FILE_NAME);
+		this.$fs.writeJson(hashesFilePath, hashes);
 	}
 
 	private getChangesInShasums(oldHashes: IStringDictionary, newHashes: IStringDictionary): IStringDictionary {
