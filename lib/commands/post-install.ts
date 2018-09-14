@@ -20,10 +20,10 @@ export class PostInstallCliCommand extends PostInstallCommand {
 	}
 
 	public async postCommandAction(args: string[]): Promise<void> {
-		this.$logger.info("You have successfully installed NativeScript CLI.");
-		this.$logger.info("In order to create a new project, you can use:".green);
+		this.$logger.info("You have successfully installed the NativeScript CLI!");
+		this.$logger.info("To create a new project, you use:".green);
 		this.$logger.printMarkdown("`tns create <app name>`");
-		this.$logger.info("To build your project locally you can use:".green);
+		this.$logger.info("To build your project locally you use:".green);
 		this.$logger.printMarkdown("`tns build <platform>`");
 		this.$logger.printMarkdown("NOTE: Local builds require additional setup of your environment. You can find more information here: `https://docs.nativescript.org/start/quick-setup`");
 
@@ -34,10 +34,10 @@ export class PostInstallCliCommand extends PostInstallCommand {
 		this.$logger.printMarkdown("NOTE: Cloud builds require Telerik account. You can find more information here: `https://docs.nativescript.org/sidekick/intro/requirements`");
 
 		this.$logger.info("");
-		this.$logger.printMarkdown("In case you want to experiment quickly with NativeScript, you can try the Playground: `https://play.nativescript.org`");
+		this.$logger.printMarkdown("If you want to experiment with NativeScript in your browser, try the Playground: `https://play.nativescript.org`");
 
 		this.$logger.info("");
-		this.$logger.printMarkdown("In case you have any questions, you can check our forum: `https://forum.nativescript.org` and our public Slack channel: `https://nativescriptcommunity.slack.com/`");
+		this.$logger.printMarkdown("If you have any questions, check Stack Overflow: `https://stackoverflow.com/questions/tagged/nativescript` and our public Slack channel: `https://nativescriptcommunity.slack.com/`");
 	}
 }
 
