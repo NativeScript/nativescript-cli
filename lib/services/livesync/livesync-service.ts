@@ -321,7 +321,14 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		let deviceDescriptorsForInitialSync: ILiveSyncDeviceInfo[] = [];
 
 		if (liveSyncData.syncToPreviewApp) {
-			this.$previewAppLiveSyncService.initialize();
+			this.$previewAppLiveSyncService.initialize({
+				appFilesUpdaterOptions: {
+					bundle: liveSyncData.bundle,
+					release: liveSyncData.release
+				},
+				env: liveSyncData.env,
+				projectDir: projectData.projectDir
+			});
 		} else {
 			await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 			// In case liveSync is called for a second time for the same projectDir.
@@ -457,24 +464,9 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	private async initialSync(projectData: IProjectData, liveSyncData: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]): Promise<void> {
-		if (liveSyncData.syncToPreviewApp) {
-			await this.initialSyncToPreviewApp(projectData, liveSyncData);
-		} else {
+		if (!liveSyncData.syncToPreviewApp) {
 			await this.initialCableSync(projectData, liveSyncData, deviceDescriptors);
 		}
-	}
-
-	private async initialSyncToPreviewApp(projectData: IProjectData, liveSyncData: ILiveSyncInfo) {
-		await this.addActionToChain(projectData.projectDir, async () => {
-			await this.$previewAppLiveSyncService.initialSync({
-				appFilesUpdaterOptions: {
-					bundle: liveSyncData.bundle,
-					release: liveSyncData.release
-				},
-				env: liveSyncData.env,
-				projectDir: projectData.projectDir
-			});
-		});
 	}
 
 	private async initialCableSync(projectData: IProjectData, liveSyncData: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]): Promise<void> {
