@@ -4,6 +4,11 @@
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
+    "@nativescript/schematics-executor": {
+      "version": "0.0.2",
+      "resolved": "https://registry.npmjs.org/@nativescript/schematics-executor/-/schematics-executor-0.0.2.tgz",
+      "integrity": "sha512-3pA0cXbkwu55+He71QO1oRE18wQyquk5t6vpM4laAFatI5w8n2dyHYSzM7pM6bN57zpcP2sk5u1q3YtYv0d2MQ=="
+    },
     "@sinonjs/formatio": {
       "version": "2.0.0",
       "resolved": "http://registry.npmjs.org/@sinonjs/formatio/-/formatio-2.0.0.tgz",

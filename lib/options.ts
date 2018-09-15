@@ -41,7 +41,8 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			background: { type: OptionType.String },
 			username: { type: OptionType.String },
 			pluginName: { type: OptionType.String },
-			hmr: {type: OptionType.Boolean}
+			hmr: { type: OptionType.Boolean },
+			collection: { type: OptionType.String, alias: "c" },
 		},
 			$errors, $staticConfig, $settingsService);
 
