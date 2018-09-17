@@ -107,7 +107,8 @@ function createTestInjector(options?: {
 	injector.register("previewAppPluginsService", {
 		comparePluginsOnDevice: async () => {
 			isComparePluginsOnDeviceCalled = true;
-		}
+		},
+		getExternalPlugins: () => <string[]>[]
 	});
 	injector.register("projectFilesManager", ProjectFilesManager);
 	injector.register("previewAppLiveSyncService", PreviewAppLiveSyncService);
