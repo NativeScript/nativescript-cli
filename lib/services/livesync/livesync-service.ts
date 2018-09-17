@@ -602,6 +602,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 									env: liveSyncData.env,
 									projectDir: projectData.projectDir
 								}, filesToSync);
+								filesToSync = [];
+								filesToRemove = [];
 							}
 						});
 					} else {
