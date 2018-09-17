@@ -42,6 +42,9 @@ export function randomString(size = 18, prefix = '') {
   return `${prefix}${uid(size)}`;
 }
 
+export function randomEmailAddress(size, prefix) {
+  return `${randomString(size, prefix)}@test.com`;
+}
 
 export function getEntity(_id, textValue, numberValue, array) {
   const entity = {
@@ -139,12 +142,7 @@ export function validateReadResult(dataStoreType, spy, cacheExpectedEntities, ba
     expect(firstCallArgs).to.deep.equal(cacheExpectedEntities);
   } else {
     expect(spy.calledTwice).to.be.true;
-    console.log(firstCallArgs);
-    console.log(cacheExpectedEntities);
-    console.log();
     expect(firstCallArgs).to.deep.equal(cacheExpectedEntities);
-    console.log(secondCallArgs);
-    console.log(backendExpectedEntities);
     expect(secondCallArgs).to.deep.equal(backendExpectedEntities);
   }
 }

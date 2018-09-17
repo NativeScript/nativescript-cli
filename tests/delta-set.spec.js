@@ -685,7 +685,6 @@ dataStoreTypes.forEach((currentDataStoreType) => {
         const onNextSpy = sinon.spy();
         deltaStoreToTest.find()
           .subscribe(onNextSpy, done, () => {
-            console.log();
             try {
               utilities.validateReadResult(currentDataStoreType, onNextSpy, [entity1], [entity1, entity2], true);
               const anotherSpy = sinon.spy();
