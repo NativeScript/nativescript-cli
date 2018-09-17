@@ -4124,6 +4124,19 @@
             "strip-ansi": "^3.0.0",
             "supports-color": "^2.0.0"
           }
+        },
+        "cli-table": {
+          "version": "0.3.1",
+          "resolved": "https://registry.npmjs.org/cli-table/-/cli-table-0.3.1.tgz",
+          "integrity": "sha1-9TsFJmqLGguTSz0IIebi3FkUriM=",
+          "requires": {
+            "colors": "1.0.3"
+          }
+        },
+        "colors": {
+          "version": "1.0.3",
+          "resolved": "https://registry.npmjs.org/colors/-/colors-1.0.3.tgz",
+          "integrity": "sha1-BDP0TYCWgP3rYO0mDxsMJi6CpAs="
         }
       }
     },
@@ -4453,9 +4466,9 @@
       }
     },
     "nativescript-preview-sdk": {
-      "version": "0.2.2",
-      "resolved": "https://registry.npmjs.org/nativescript-preview-sdk/-/nativescript-preview-sdk-0.2.2.tgz",
-      "integrity": "sha512-+UXRbP8l7dQ53lNJbn5XfexApRabR8NUlpNAnLbKu8PGdkRXvTEK2RSCgZpkixYnOerFDCEAaE2EKgh+INFekA==",
+      "version": "0.2.4",
+      "resolved": "https://registry.npmjs.org/nativescript-preview-sdk/-/nativescript-preview-sdk-0.2.4.tgz",
+      "integrity": "sha512-Osmj370clhWCyMajq52ez7TPB47PtcghVzU6jFI4MzO69k4RpXrxq2DsHN3kN4L6o09TLYu/xYzvFoL65QDfNg==",
       "requires": {
         "@types/pubnub": "4.0.2",
         "@types/shortid": "0.0.29",

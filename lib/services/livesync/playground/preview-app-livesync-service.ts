@@ -1,5 +1,5 @@
 import * as path from "path";
-import { FilePayload, Device } from "nativescript-preview-sdk";
+import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 import { PreviewSdkEventNames } from "./preview-app-constants";
 import { APP_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME, TNS_MODULES_FOLDER_NAME } from "../../../constants";
 const isTextOrBinary = require('istextorbinary');
@@ -9,6 +9,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	private excludedFiles = [".DS_Store"];
 
 	constructor(private $fs: IFileSystem,
+		private $errors: IErrors,
 		private $hooksService: IHooksService,
 		private $logger: ILogger,
 		private $platformService: IPlatformService,
@@ -19,15 +20,14 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		private $projectFilesManager: IProjectFilesManager,
 		private $projectFilesProvider: IProjectFilesProvider) { }
 
-	public initialize() {
-		this.$previewSdkService.initialize();
-	}
+	public initialize(data: IPreviewAppLiveSyncData) {
+		this.$previewSdkService.initialize(async (device: Device) => {
+			if (!device) {
+				this.$errors.failWithoutHelp("Sending initial preview files without a specified device is not supported.");
+			}
 
-	public async initialSync(data: IPreviewAppLiveSyncData): Promise<void> {
-		this.$previewSdkService.on(PreviewSdkEventNames.DEVICE_CONNECTED, async (device: Device) => {
-			this.$logger.trace("Found connected device", device);
 			const filesToSyncMap: IDictionary<string[]> = {};
-			let promise = Promise.resolve();
+			let promise = Promise.resolve<FilesPayload>(null);
 			const startSyncFilesTimeout = async (platform: string) => {
 				await promise
 					.then(async () => {
@@ -46,11 +46,13 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 					},
 					externals: this.$previewAppPluginsService.getExternalPlugins(device),
 					filesToSyncMap,
-				 	startSyncFilesTimeout: startSyncFilesTimeout.bind(this)
+					startSyncFilesTimeout: startSyncFilesTimeout.bind(this)
 				}
-            });
+			});
 			await this.$previewAppPluginsService.comparePluginsOnDevice(device);
-			await this.syncFilesForPlatformSafe(data, device.platform);
+			const payloads = await this.syncFilesForPlatformSafe(data, device.platform);
+
+			return payloads;
 		});
 	}
 
@@ -72,33 +74,41 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	}
 
 	public async stopLiveSync(): Promise<void> {
-		this.$previewSdkService.removeAllListeners();
 		this.$previewSdkService.stop();
 	}
 
-	private async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, platform: string, files?: string[]): Promise<void> {
+	private async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, platform: string, files?: string[]): Promise<FilesPayload> {
 		this.$logger.info(`Start syncing changes for platform ${platform}.`);
 
 		try {
 			const { appFilesUpdaterOptions, env, projectDir } = data;
 			const projectData = this.$projectDataService.getProjectData(projectDir);
+			const platformData = this.$platformsData.getPlatformData(platform, projectData);
 			await this.preparePlatform(platform, appFilesUpdaterOptions, env, projectData);
 
-			await this.applyChanges(projectData, platform, files);
+			let result: FilesPayload = null;
+			if (files && files.length) {
+				result = await this.applyChanges(platformData, projectData, files);
+			} else {
+				result = await this.getFilesPayload(platformData, projectData);
+			}
 
 			this.$logger.info(`Successfully synced changes for platform ${platform}.`);
+
+			return result;
 		} catch (err) {
 			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${JSON.stringify(err, null, 2)}.`);
 		}
 	}
 
-	private async applyChanges(projectData: IProjectData, platform: string, files: string[]) {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-		const payloads = this.getFilePayloads(platformData, projectData, _(files).uniq().value());
-		await this.$previewSdkService.applyChanges(payloads, platform);
+	private async applyChanges(platformData: IPlatformData, projectData: IProjectData, files: string[]): Promise<FilesPayload> {
+		const payloads = this.getFilesPayload(platformData, projectData, _(files).uniq().value());
+		await this.$previewSdkService.applyChanges(payloads);
+
+		return payloads;
 	}
 
-	private getFilePayloads(platformData: IPlatformData, projectData: IProjectData, files?: string[]): FilePayload[] {
+	private getFilesPayload(platformData: IPlatformData, projectData: IProjectData, files?: string[]): FilesPayload {
 		const appFolderPath = path.join(projectData.projectDir, APP_FOLDER_NAME);
 		const platformsAppFolderPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 
@@ -128,7 +138,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 				};
 
 				if (filePayload.binary) {
-					const bitmap =  <string>this.$fs.readFile(file);
+					const bitmap = <string>this.$fs.readFile(file);
 					const base64 = Buffer.from(bitmap).toString('base64');
 					filePayload.fileContents = base64;
 				} else {
@@ -138,7 +148,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 				return filePayload;
 			});
 
-		return payloads;
+		return { files: payloads, platform: platformData.normalizedPlatformName.toLowerCase() };
 	}
 
 	private async preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, env: Object, projectData: IProjectData): Promise<void> {

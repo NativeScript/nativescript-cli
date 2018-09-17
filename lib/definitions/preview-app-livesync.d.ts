@@ -1,20 +1,19 @@
-import { FilePayload, Device } from "nativescript-preview-sdk";
+import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 
 declare global {
 	interface IPreviewAppLiveSyncService {
-		initialize(): void;
-		initialSync(data: IPreviewAppLiveSyncData): Promise<void>;
+		initialize(data: IPreviewAppLiveSyncData): void;
 		syncFiles(data: IPreviewAppLiveSyncData, filesToSync: string[]): Promise<void>;
 		stopLiveSync(): Promise<void>;
 	}
 
 	interface IPreviewAppLiveSyncData extends IProjectDir, IAppFilesUpdaterOptionsComposition, IEnvOptions { }
 
-	interface IPreviewSdkService extends NodeJS.EventEmitter {
+	interface IPreviewSdkService {
 		qrCodeUrl: string;
 		connectedDevices: Device[];
-		initialize(): void;
-		applyChanges(files: FilePayload[], platform: string): Promise<void>;
+		initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>): void;
+		applyChanges(filesPayload: FilesPayload): Promise<void>;
 		stop(): void;
 	}
 

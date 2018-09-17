@@ -1,7 +1,6 @@
 import { Yok } from "../../../lib/common/yok";
-import { LoggerStub } from "../../stubs";
-import { FilePayload, Device } from "nativescript-preview-sdk";
-import { EventEmitter } from "events";
+import { LoggerStub, ErrorsStub } from "../../stubs";
+import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 import { PreviewAppLiveSyncService } from "../../../lib/services/livesync/playground/preview-app-livesync-service";
 import * as chai from "chai";
 import * as path from "path";
@@ -16,23 +15,25 @@ interface ITestCase {
 }
 
 interface IActOptions {
-	emitDeviceConnected: boolean;
+	callGetInitialFiles: boolean;
 }
 
 interface IAssertOptions {
 	checkWarnings?: boolean;
 	isComparePluginsOnDeviceCalled?: boolean;
+	checkInitialFiles?: boolean;
 }
 
 interface IActInput {
 	previewAppLiveSyncService?: IPreviewAppLiveSyncService;
-	previewSdkService?: IPreviewSdkService;
+	previewSdkService?: PreviewSdkServiceMock;
 	projectFiles?: string[];
 	actOptions?: IActOptions;
 }
 
 let isComparePluginsOnDeviceCalled = false;
 let applyChangesParams: FilePayload[] = [];
+let initialFiles: FilePayload[] = [];
 let readTextParams: string[] = [];
 let warnParams: string[] = [];
 const nativeFilesWarning = "Unable to apply changes from App_Resources folder. You need to build your application in order to make changes in App_Resources folder.";
@@ -58,19 +59,28 @@ const syncFilesMockData = {
 		release: false,
 		bundle: false
 	},
-	env: { }
+	env: {}
 };
 
-class PreviewSdkServiceMock extends EventEmitter implements IPreviewSdkService {
+class PreviewSdkServiceMock implements IPreviewSdkService {
+	public getInitialFiles: (device: Device) => Promise<FilesPayload>;
+
 	public get qrCodeUrl() {
 		return "my_cool_qr_code_url";
 	}
 
 	public connectedDevices: Device[] = [deviceMockData];
-	public initialize() { /* empty block */ }
+	public initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>) {
+		this.getInitialFiles = async (device) => {
+			const filesPayload = await getInitialFiles(device);
+			initialFiles.push(...filesPayload.files);
 
-	public async applyChanges(files: FilePayload[]) {
-		applyChangesParams.push(...files);
+			return filesPayload;
+		};
+	}
+
+	public async applyChanges(files: FilesPayload) {
+		applyChangesParams.push(...files.files);
 	}
 
 	public stop() {  /* empty block */ }
@@ -92,6 +102,7 @@ function createTestInjector(options?: {
 	injector.register("platformService", {
 		preparePlatform: async () => ({})
 	});
+	injector.register("errors", ErrorsStub);
 	injector.register("platformsData", {
 		getPlatformData: () => ({
 			appDestinationDirectoryPath: platformsDirPath,
@@ -141,7 +152,7 @@ function createTestInjector(options?: {
 	return injector;
 }
 
-function arrange(options?: { projectFiles ?: string[] }) {
+function arrange(options?: { projectFiles?: string[] }) {
 	options = options || {};
 
 	const injector = createTestInjector({ projectFiles: options.projectFiles });
@@ -159,19 +170,20 @@ async function initialSync(input?: IActInput) {
 
 	const { previewAppLiveSyncService, previewSdkService, actOptions } = input;
 
-	await previewAppLiveSyncService.initialSync(syncFilesMockData);
-	if (actOptions.emitDeviceConnected) {
-		previewSdkService.emit("onDeviceConnected", deviceMockData);
+	await previewAppLiveSyncService.initialize(syncFilesMockData);
+	if (actOptions.callGetInitialFiles) {
+		await previewSdkService.getInitialFiles(deviceMockData);
 	}
 }
 
 async function syncFiles(input?: IActInput) {
-	input = input || { };
+	input = input || {};
 
 	const { previewAppLiveSyncService, previewSdkService, projectFiles, actOptions } = input;
 
-	if (actOptions.emitDeviceConnected) {
-		previewSdkService.emit("onDeviceConnected", deviceMockData);
+	await previewAppLiveSyncService.initialize(syncFilesMockData);
+	if (actOptions.callGetInitialFiles) {
+		await previewSdkService.getInitialFiles(deviceMockData);
 	}
 
 	await previewAppLiveSyncService.syncFiles(syncFilesMockData, projectFiles);
@@ -179,8 +191,9 @@ async function syncFiles(input?: IActInput) {
 
 async function assert(expectedFiles: string[], options?: IAssertOptions) {
 	options = options || {};
+	const actualFiles = options.checkInitialFiles ? initialFiles : applyChangesParams;
 
-	chai.assert.deepEqual(applyChangesParams, mapFiles(expectedFiles));
+	chai.assert.deepEqual(actualFiles, mapFiles(expectedFiles));
 
 	if (options.checkWarnings) {
 		chai.assert.deepEqual(warnParams, [nativeFilesWarning]);
@@ -194,6 +207,7 @@ async function assert(expectedFiles: string[], options?: IAssertOptions) {
 function reset() {
 	isComparePluginsOnDeviceCalled = false;
 	applyChangesParams = [];
+	initialFiles = [];
 	readTextParams = [];
 	warnParams = [];
 }
@@ -216,7 +230,7 @@ function mapFiles(files: string[]): FilePayload[] {
 function setDefaults(testCase: ITestCase): ITestCase {
 	if (!testCase.actOptions) {
 		testCase.actOptions = {
-			emitDeviceConnected: true
+			callGetInitialFiles: true
 		};
 	}
 
@@ -316,7 +330,10 @@ describe("previewAppLiveSyncService", () => {
 		const noAppFilesTestCases: ITestCase[] = [
 			{
 				name: "should transfer correctly default project files",
-				expectedFiles: defaultProjectFiles
+				expectedFiles: defaultProjectFiles,
+				assertOptions: {
+					checkInitialFiles: true
+				}
 			}
 		];
 
@@ -328,7 +345,7 @@ describe("previewAppLiveSyncService", () => {
 			{
 				name: "should show warning and not transfer native files when",
 				testCases: nativeFilesTestCases.map(testCase => {
-					testCase.assertOptions = { checkWarnings:  true };
+					testCase.assertOptions = { checkWarnings: true };
 					return testCase;
 				})
 			},

@@ -1,5 +1,4 @@
 export class PreviewSdkEventNames {
-	public static DEVICE_CONNECTED = "onDeviceConnected";
 	public static CHANGE_EVENT_NAME = "change";
 }
 
