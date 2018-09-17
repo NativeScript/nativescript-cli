@@ -66,6 +66,7 @@ interface ILiveSyncProcessInfo {
 	isStopped: boolean;
 	deviceDescriptors: ILiveSyncDeviceInfo[];
 	currentSyncAction: Promise<any>;
+	syncToPreviewApp: boolean;
 }
 
 interface IOptionalOutputPath {
