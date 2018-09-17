@@ -50,6 +50,7 @@ export function formatKinveyBaasUrl(pathname, query) {
 
 export const Auth = {
   App: 'App',
+  Default: 'Default',
   MasterSecret: 'MasterSecret',
   Session: 'Session'
 };
@@ -62,6 +63,14 @@ export class KinveyRequest extends Request {
   }
 
   set auth(auth) {
+    if (auth === Auth.Default) {
+      try {
+        this.auth = Auth.Session;
+      } catch (error) {
+        this.auth = Auth.MasterSecret;
+      }
+    }
+
     if (isFunction(auth)) {
       const value = auth();
       this.headers.setAuthorization(value);
