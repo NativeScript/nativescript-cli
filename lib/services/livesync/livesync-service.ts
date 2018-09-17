@@ -79,6 +79,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 				liveSyncProcessInfo.deviceDescriptors = [];
 
+				if (liveSyncProcessInfo.syncToPreviewApp) {
+					await this.$previewAppLiveSyncService.stopLiveSync();
+				}
+
 				// Kill typescript watcher
 				const projectData = this.$projectDataService.getProjectData(projectDir);
 				await this.$hooksService.executeAfterHooks('watch', {
@@ -350,6 +354,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		this.liveSyncProcessesInfo[projectDir].actionsChain = this.liveSyncProcessesInfo[projectDir].actionsChain || Promise.resolve();
 		this.liveSyncProcessesInfo[projectDir].currentSyncAction = this.liveSyncProcessesInfo[projectDir].actionsChain;
 		this.liveSyncProcessesInfo[projectDir].isStopped = false;
+		this.liveSyncProcessesInfo[projectDir].syncToPreviewApp = liveSyncData.syncToPreviewApp;
 
 		const currentDeviceDescriptors = this.getLiveSyncDeviceDescriptors(projectDir);
 		this.liveSyncProcessesInfo[projectDir].deviceDescriptors = _.uniqBy(currentDeviceDescriptors.concat(deviceDescriptors), deviceDescriptorPrimaryKey);
@@ -744,13 +749,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			this.liveSyncProcessesInfo[liveSyncData.projectDir].timer = timeoutTimer;
 
 			this.$processService.attachToProcessExitSignals(this, () => {
-				if (liveSyncData.syncToPreviewApp) {
-					// Do not await here, we are in process exit's handler.
-					/* tslint:disable:no-floating-promises */
-					this.$previewAppLiveSyncService.stopLiveSync();
-					/* tslint:enable:no-floating-promises */
-				}
-
 				_.keys(this.liveSyncProcessesInfo).forEach(projectDir => {
 					// Do not await here, we are in process exit's handler.
 					/* tslint:disable:no-floating-promises */
@@ -768,7 +766,9 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 			for (const projectDir in this.liveSyncProcessesInfo) {
 				try {
-					await this.stopLiveSync(projectDir, [device.deviceInfo.identifier]);
+					if (_.find(this.liveSyncProcessesInfo[projectDir].deviceDescriptors, d => d.identifier === device.deviceInfo.identifier)) {
+						await this.stopLiveSync(projectDir, [device.deviceInfo.identifier]);
+					}
 				} catch (err) {
 					this.$logger.warn(`Unable to stop LiveSync operation for ${device.deviceInfo.identifier}.`, err);
 				}

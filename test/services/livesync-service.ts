@@ -105,7 +105,8 @@ describe("liveSyncService", () => {
 				},
 				patterns: ["pattern"]
 			},
-			deviceDescriptors: []
+			deviceDescriptors: [],
+			syncToPreviewApp: false
 		});
 
 		const getDeviceDescriptor = (identifier: string): ILiveSyncDeviceInfo => ({
