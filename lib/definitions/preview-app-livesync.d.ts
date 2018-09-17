@@ -20,6 +20,7 @@ declare global {
 
 	interface IPreviewAppPluginsService {
 		comparePluginsOnDevice(device: Device): Promise<void>;
+		getExternalPlugins(device: Device): string[];
 	}
 
 	interface IPreviewCommandHelper {
