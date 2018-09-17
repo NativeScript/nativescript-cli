@@ -44,6 +44,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 						platform: device.platform,
 						appFilesUpdaterOptions: data.appFilesUpdaterOptions,
 					},
+					externals: this.$previewAppPluginsService.getExternalPlugins(device),
 					filesToSyncMap,
 				 	startSyncFilesTimeout: startSyncFilesTimeout.bind(this)
 				}
