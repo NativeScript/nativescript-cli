@@ -9,7 +9,7 @@
   "main": "kinvey-nativescript-sdk.js",
   "typings": "kinvey.d.ts",
   "dependencies": {
-    "nativescript-sqlite": "~1.1.11",
+    "nativescript-sqlite": "latest",
     "rxjs": "~5.5.5"
   },
   "scripts": {
