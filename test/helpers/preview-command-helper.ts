@@ -26,7 +26,7 @@ function createTestInjector() {
 		generateQrCodeForiOS: async () => {
 			qrCodesData.isGeneratedForiOS = true;
 		},
-		generateQrCodeForCurrentApp: async () => {
+		generateQrCodeForCurrentApp: async (useHmr: boolean) => {
 			qrCodesData.isGeneratedForCurrentApp = true;
 		}
 	});

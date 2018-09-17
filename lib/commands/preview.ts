@@ -22,7 +22,7 @@ export class PreviewCommand implements ICommand {
 			timeout: this.$options.timeout
 		});
 
-		await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp();
+		await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp(this.$options.hmr);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

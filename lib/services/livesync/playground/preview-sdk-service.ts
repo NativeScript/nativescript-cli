@@ -13,8 +13,9 @@ export class PreviewSdkService implements IPreviewSdkService {
 		private $config: IConfiguration) {
 	}
 
-	public get qrCodeUrl(): string {
-		return `nsplay://boot?instanceId=${this.instanceId}&pKey=${PubnubKeys.PUBLISH_KEY}&sKey=${PubnubKeys.SUBSCRIBE_KEY}&template=play-ng`;
+	public getQrCodeUrl(options: { useHmr: boolean }): string {
+		const hmrValue = options.useHmr ? "1" : "0";
+		return `nsplay://boot?instanceId=${this.instanceId}&pKey=${PubnubKeys.PUBLISH_KEY}&sKey=${PubnubKeys.SUBSCRIBE_KEY}&template=play-ng&hmr=${hmrValue}`;
 	}
 
 	public initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>): void {

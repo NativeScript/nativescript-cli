@@ -65,7 +65,7 @@ const syncFilesMockData = {
 class PreviewSdkServiceMock implements IPreviewSdkService {
 	public getInitialFiles: (device: Device) => Promise<FilesPayload>;
 
-	public get qrCodeUrl() {
+	public getQrCodeUrl(options: { useHmr: boolean }) {
 		return "my_cool_qr_code_url";
 	}
 
