@@ -106,8 +106,10 @@ export class ProjectChangesService implements IProjectChangesService {
 			this.$logger.trace(`Set value of configChanged to ${this._changesInfo.configChanged}`);
 		}
 
-		const projectService = platformData.platformProjectService;
-		await projectService.checkForChanges(this._changesInfo, projectChangesOptions, projectData);
+		if (checkForChangesOpts.projectChangesOptions.nativePlatformStatus !== NativePlatformStatus.requiresPlatformAdd) {
+			const projectService = platformData.platformProjectService;
+			await projectService.checkForChanges(this._changesInfo, projectChangesOptions, projectData);
+		}
 
 		if (projectChangesOptions.bundle !== this._prepareInfo.bundle || projectChangesOptions.release !== this._prepareInfo.release) {
 			this.$logger.trace(`Setting all setting to true. Current options are: `, projectChangesOptions, " old prepare info is: ", this._prepareInfo);
