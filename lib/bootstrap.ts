@@ -181,3 +181,5 @@ $injector.require("iOSDebuggerPortService", "./services/ios-debugger-port-servic
 
 $injector.require("pacoteService", "./services/pacote-service");
 $injector.require("qrCodeTerminalService", "./services/qr-code-terminal-service");
+
+$injector.require("networkConnectivityValidator", "./helpers/network-connectivity-validator");

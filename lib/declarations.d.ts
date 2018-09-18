@@ -866,3 +866,7 @@ interface IRuntimeGradleVersions {
 	gradleVersion?: string;
 	gradleAndroidPluginVersion?: string;
 }
+
+interface INetworkConnectivityValidator {
+	validate(): Promise<void>;
+}
