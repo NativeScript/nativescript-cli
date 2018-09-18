@@ -18,7 +18,7 @@ declare global {
 	}
 
 	interface IPreviewAppPluginsService {
-		comparePluginsOnDevice(device: Device): Promise<void>;
+		comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void>;
 		getExternalPlugins(device: Device): string[];
 	}
 

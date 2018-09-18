@@ -8,14 +8,30 @@ import { PluginComparisonMessages } from "../../../lib/services/livesync/playgro
 let readJsonParams: string[] = [];
 let warnParams: string[] = [];
 
-function createTestInjector(localPlugins: IStringDictionary): IInjector {
+const deviceId = "myTestDeviceId";
+const projectDir =  "testProjectDir";
+
+function createTestInjector(localPlugins: IStringDictionary, options?: { isNativeScriptPlugin?: boolean, hasPluginNativeCode?: boolean }): IInjector {
+	options = options || {};
 	const injector = new Yok();
 	injector.register("fs", {
 		readJson: (filePath: string) => {
 			readJsonParams.push(filePath);
-			return {
+			const result: any = {
 				dependencies: localPlugins
 			};
+
+			if (options.isNativeScriptPlugin) {
+				result.nativescript = {};
+			}
+
+			return result;
+		},
+		exists: (filePath: string) => {
+			return options.hasPluginNativeCode;
+		},
+		isEmptyDir: (filePath: string) => {
+			return !options.hasPluginNativeCode;
 		}
 	});
 	injector.register("logger", {
@@ -23,13 +39,11 @@ function createTestInjector(localPlugins: IStringDictionary): IInjector {
 		warn: (message: string) =>  warnParams.push(message)
 	});
 	injector.register("projectData", {
-		projectDir: "testProjectDir"
+		projectDir
 	});
 	injector.register("previewAppPluginsService", PreviewAppPluginsService);
 	return injector;
 }
-
-const deviceId = "myTestDeviceId";
 
 function createDevice(plugins: string): Device {
 	return {
@@ -45,8 +59,20 @@ function createDevice(plugins: string): Device {
 	};
 }
 
-function setup(localPlugins: IStringDictionary, previewAppPlugins: IStringDictionary): any {
-	const injector = createTestInjector(localPlugins);
+function createPreviewLiveSyncData(options?: { bundle: boolean }) {
+	return {
+		projectDir,
+		appFilesUpdaterOptions: {
+			release: false,
+			bundle: options.bundle
+		},
+		env: {}
+	};
+}
+
+function setup(localPlugins: IStringDictionary, previewAppPlugins: IStringDictionary,
+	options?: { isNativeScriptPlugin: boolean, hasPluginNativeCode: boolean }): any {
+	const injector = createTestInjector(localPlugins, options);
 	const previewAppPluginsService = injector.resolve("previewAppPluginsService");
 	const device = createDevice(JSON.stringify(previewAppPlugins));
 
@@ -57,7 +83,7 @@ function setup(localPlugins: IStringDictionary, previewAppPlugins: IStringDictio
 }
 
 describe("previewAppPluginsService", () => {
-	describe("comparePluginsOnDevice", () => {
+	describe("comparePluginsOnDevice without bundle", () => {
 		it("should persist warnings per preview app's version", async () => {
 			const localPlugins = {
 				"nativescript-facebook": "2.2.3",
@@ -84,7 +110,9 @@ describe("previewAppPluginsService", () => {
 				return originalGetLocalPlugins.apply(previewAppPluginsService);
 			};
 
-			await previewAppPluginsService.comparePluginsOnDevice(createDevice(JSON.stringify(previewAppPlugins)));
+			const previewLiveSyncData = createPreviewLiveSyncData({ bundle: false });
+
+			await previewAppPluginsService.comparePluginsOnDevice(previewLiveSyncData, createDevice(JSON.stringify(previewAppPlugins)));
 
 			const expectedWarnings = [
 				util.format(PluginComparisonMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, "nativescript-facebook", deviceId),
@@ -98,7 +126,7 @@ describe("previewAppPluginsService", () => {
 			isGetLocalPluginsCalled = false;
 			warnParams = [];
 
-			await previewAppPluginsService.comparePluginsOnDevice(createDevice(JSON.stringify(previewAppPlugins)));
+			await previewAppPluginsService.comparePluginsOnDevice(previewLiveSyncData, createDevice(JSON.stringify(previewAppPlugins)));
 
 			assert.isFalse(isGetDevicePluginsCalled);
 			assert.isFalse(isGetLocalPluginsCalled);
@@ -225,12 +253,170 @@ describe("previewAppPluginsService", () => {
 			it(`${testCase.name}`, async () => {
 				const { previewAppPluginsService, device } = setup(testCase.localPlugins, testCase.previewAppPlugins);
 
-				await previewAppPluginsService.comparePluginsOnDevice(device);
+				await previewAppPluginsService.comparePluginsOnDevice(createPreviewLiveSyncData({ bundle: false }), device);
 
 				assert.equal(warnParams.length, testCase.expectedWarnings.length);
 				testCase.expectedWarnings.forEach(warning => assert.include(warnParams, warning));
 			});
 		}
+	});
+	describe("comparePluginsOnDevice with bundle", () => {
+		const testCases = [
+			{
+				name: "should show warning for non nativescript plugin that has lower major version",
+				localPlugins: {
+					lodash: "1.2.3"
+				},
+				previewAppPlugins: {
+					lodash: "2.3.3"
+				},
+				isNativeScriptPlugin: false,
+				hasPluginNativeCode: false,
+				expectedWarnings: [
+					util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION, "lodash", "1.2.3", "2.3.3")
+				]
+			},
+			{
+				name: "should show warning for non nativescript plugin that has greather major version",
+				localPlugins: {
+					lodash: "3.2.3"
+				},
+				previewAppPlugins: {
+					lodash: "2.3.3"
+				},
+				isNativeScriptPlugin: false,
+				hasPluginNativeCode: false,
+				expectedWarnings: [
+					util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION, "lodash", "3.2.3", "2.3.3")
+				]
+			},
+			{
+				name: "should show warning for non nativescript plugin that has greather minor version",
+				localPlugins: {
+					lodash: "3.4.5"
+				},
+				previewAppPlugins: {
+					lodash: "3.3.0"
+				},
+				isNativeScriptPlugin: false,
+				hasPluginNativeCode: false,
+				expectedWarnings: [
+					util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_GREATHER_MINOR_VERSION, "lodash", "3.4.5", "3.3.0")
+				]
+			},
+			{
+				name: "should not show warning for non nativescript plugin that has the same version",
+				localPlugins: {
+					lodash: "3.4.5"
+				},
+				previewAppPlugins: {
+					lodash: "3.4.5"
+				},
+				isNativeScriptPlugin: false,
+				hasPluginNativeCode: false,
+				expectedWarnings: []
+			},
+			{
+				name: "should not show warning for nativescript plugin without native code that has lower major version",
+				localPlugins: {
+					"nativescript-theme-core": "2.4.5"
+				},
+				previewAppPlugins: {
+					"nativescript-theme-core": "3.4.5"
+				},
+				isNativeScriptPlugin: true,
+				hasPluginNativeCode: false,
+				expectedWarnings: <string[]>[]
+			},
+			{
+				name: "should not show warning for nativescript plugin without native code that has greather major version",
+				localPlugins: {
+					"nativescript-theme-core": "4.4.5"
+				},
+				previewAppPlugins: {
+					"nativescript-theme-core": "3.4.5"
+				},
+				isNativeScriptPlugin: true,
+				hasPluginNativeCode: false,
+				expectedWarnings: []
+			},
+			{
+				name: "should not show warning for nativescript plugin without native code that has greather minor version",
+				localPlugins: {
+					"nativescript-theme-core": "4.6.5"
+				},
+				previewAppPlugins: {
+					"nativescript-theme-core": "4.4.5"
+				},
+				isNativeScriptPlugin: true,
+				hasPluginNativeCode: false,
+				expectedWarnings: []
+			},
+			{
+				name: "should not show warning for nativescript plugin without native code that has the same version",
+				localPlugins: {
+					"nativescript-theme-core": "4.6.5"
+				},
+				previewAppPlugins: {
+					"nativescript-theme-core": "4.6.5"
+				},
+				isNativeScriptPlugin: true,
+				hasPluginNativeCode: false,
+				expectedWarnings: []
+			},
+			{
+				name: "should show warning for nativescript plugin with native code that has lower major version",
+				localPlugins: {
+					"nativescript-theme-core": "2.4.5"
+				},
+				previewAppPlugins: {
+					"nativescript-theme-core": "3.4.5"
+				},
+				isNativeScriptPlugin: true,
+				hasPluginNativeCode: true,
+				expectedWarnings: [util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION, "nativescript-theme-core", "2.4.5", "3.4.5")]
+			},
+			{
+				name: "should show warning for nativescript plugin with native code that has greather major version",
+				localPlugins: {
+					"nativescript-theme-core": "4.4.5"
+				},
+				previewAppPlugins: {
+					"nativescript-theme-core": "3.4.5"
+				},
+				isNativeScriptPlugin: true,
+				hasPluginNativeCode: true,
+				expectedWarnings: [util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION, "nativescript-theme-core", "4.4.5", "3.4.5")]
+			},
+			{
+				name: "should show warning for nativescript plugin with native code that has greather minor version",
+				localPlugins: {
+					"nativescript-theme-core": "4.4.5"
+				},
+				previewAppPlugins: {
+					"nativescript-theme-core": "4.3.5"
+				},
+				isNativeScriptPlugin: true,
+				hasPluginNativeCode: true,
+				expectedWarnings: [util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_GREATHER_MINOR_VERSION, "nativescript-theme-core", "4.4.5", "4.3.5")]
+			},
+		];
+
+		afterEach(() => {
+			warnParams = [];
+			readJsonParams = [];
+		});
+
+		_.each(testCases, testCase => {
+			it(`${testCase.name}`, async () => {
+				const { previewAppPluginsService, device } = setup(testCase.localPlugins, testCase.previewAppPlugins, { isNativeScriptPlugin: testCase.isNativeScriptPlugin, hasPluginNativeCode: testCase.hasPluginNativeCode });
+
+				await previewAppPluginsService.comparePluginsOnDevice(createPreviewLiveSyncData({ bundle: true }), device);
+
+				assert.equal(warnParams.length, testCase.expectedWarnings.length);
+				testCase.expectedWarnings.forEach(warning => assert.include(warnParams, warning));
+			});
+		});
 	});
 	describe("getExternalPlugins", () => {
 		const testCases = [
