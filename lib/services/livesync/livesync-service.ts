@@ -794,6 +794,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	public emitLivesyncEvent (event: string, livesyncData: ILiveSyncEventData): boolean {
+		this.$logger.trace(`Will emit event ${event} with data`, livesyncData);
 		return this.emit(event, livesyncData);
 	}
 

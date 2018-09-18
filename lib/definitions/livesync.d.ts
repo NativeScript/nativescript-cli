@@ -187,7 +187,7 @@ interface ILiveSyncEventData {
 	deviceIdentifier: string,
 	applicationIdentifier?: string,
 	projectDir: string,
-	syncedFiles?: Object
+	syncedFiles?: string[],
 	error? : Error,
 	notification?: string,
 	isFullSync?: boolean
