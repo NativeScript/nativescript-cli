@@ -56,7 +56,11 @@ export class PublishIOS implements ICommand {
 		if (!ipaFilePath) {
 			const platform = this.$devicePlatformsConstants.iOS;
 			// No .ipa path provided, build .ipa on out own.
-			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: !!this.$options.bundle, release: this.$options.release };
+			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
+				bundle: !!this.$options.bundle,
+				release: this.$options.release,
+				useHotModuleReload: false
+			};
 			const platformInfo: IPreparePlatformInfo = {
 				platform,
 				appFilesUpdaterOptions,

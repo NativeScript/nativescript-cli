@@ -773,7 +773,7 @@ describe("iOS Project Service Signing", () => {
 	describe("Check for Changes", () => {
 		it("sets signingChanged if no Xcode project exists", async () => {
 			const changes = <IProjectChangesInfo>{};
-			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined }, projectData);
+			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined, useHotModuleReload: false }, projectData);
 			assert.isTrue(!!changes.signingChanged);
 		});
 		it("sets signingChanged if the Xcode projects is configured with Automatic signing, but proivsion is specified", async () => {
@@ -787,7 +787,7 @@ describe("iOS Project Service Signing", () => {
 				};
 			};
 			const changes = <IProjectChangesInfo>{};
-			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined }, projectData);
+			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined, useHotModuleReload: false }, projectData);
 			assert.isTrue(!!changes.signingChanged);
 		});
 		it("sets signingChanged if the Xcode projects is configured with Manual signing, but the proivsion specified differs the selected in the pbxproj", async () => {
@@ -806,7 +806,7 @@ describe("iOS Project Service Signing", () => {
 				};
 			};
 			const changes = <IProjectChangesInfo>{};
-			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined }, projectData);
+			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined, useHotModuleReload: false }, projectData);
 			assert.isTrue(!!changes.signingChanged);
 		});
 		it("does not set signingChanged if the Xcode projects is configured with Manual signing and proivsion matches", async () => {
@@ -825,7 +825,7 @@ describe("iOS Project Service Signing", () => {
 				};
 			};
 			const changes = <IProjectChangesInfo>{};
-			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined }, projectData);
+			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined, useHotModuleReload: false }, projectData);
 			assert.isFalse(!!changes.signingChanged);
 		});
 	});

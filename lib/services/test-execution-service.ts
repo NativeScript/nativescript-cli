@@ -55,7 +55,11 @@ class TestExecutionService implements ITestExecutionService {
 					const socketIoJsUrl = `http://localhost:${this.$options.port}/socket.io/socket.io.js`;
 					const socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
-					const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: !!this.$options.bundle, release: this.$options.release };
+					const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
+						bundle: !!this.$options.bundle,
+						release: this.$options.release,
+						useHotModuleReload: this.$options.hmr
+					};
 					const preparePlatformInfo: IPreparePlatformInfo = {
 						platform,
 						appFilesUpdaterOptions,
@@ -125,7 +129,8 @@ class TestExecutionService implements ITestExecutionService {
 						bundle: !!this.$options.bundle,
 						release: this.$options.release,
 						env: this.$options.env,
-						timeout: this.$options.timeout
+						timeout: this.$options.timeout,
+						useHotModuleReload: this.$options.hmr
 					};
 
 					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
@@ -183,7 +188,11 @@ class TestExecutionService implements ITestExecutionService {
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
 				}
 
-				const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: !!this.$options.bundle, release: this.$options.release };
+				const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
+					bundle: !!this.$options.bundle,
+					release: this.$options.release,
+					useHotModuleReload: this.$options.hmr
+				};
 				const preparePlatformInfo: IPreparePlatformInfo = {
 					platform,
 					appFilesUpdaterOptions,
@@ -253,7 +262,8 @@ class TestExecutionService implements ITestExecutionService {
 						bundle: !!this.$options.bundle,
 						release: this.$options.release,
 						env: this.$options.env,
-						timeout: this.$options.timeout
+						timeout: this.$options.timeout,
+						useHotModuleReload: this.$options.hmr
 					};
 
 					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);

@@ -7,7 +7,11 @@ export class DeployCommandHelper implements IDeployCommandHelper {
 	}
 
 	public getDeployPlatformInfo(platform: string): IDeployPlatformInfo {
-		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: !!this.$options.bundle, release: this.$options.release };
+		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
+			bundle: !!this.$options.bundle,
+			release: this.$options.release,
+			useHotModuleReload: this.$options.hmr
+		};
 		const deployOptions: IDeployPlatformOptions = {
 			clean: this.$options.clean,
 			device: this.$options.device,

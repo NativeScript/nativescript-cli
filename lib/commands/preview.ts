@@ -21,10 +21,11 @@ export class PreviewCommand implements ICommand {
 			bundle: !!this.$options.bundle,
 			release: this.$options.release,
 			env: this.$options.env,
-			timeout: this.$options.timeout
+			timeout: this.$options.timeout,
+			useHotModuleReload: this.$options.hmr
 		});
 
-		await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp();
+		await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp({ useHotModuleReload: this.$options.hmr });
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

@@ -6,6 +6,7 @@ export class PreviewCommandHelper implements IPreviewCommandHelper {
 	private ctrlcReader: readline.ReadLine;
 
 	constructor(private $playgroundQrCodeGenerator: IPlaygroundQrCodeGenerator,
+		private $options: IOptions,
 		private $processService: IProcessService) {
 			this.$processService.attachToProcessExitSignals(this, () => {
 				this.stopWaitingForCommand();
@@ -49,7 +50,7 @@ export class PreviewCommandHelper implements IPreviewCommandHelper {
 				await this.$playgroundQrCodeGenerator.generateQrCodeForiOS();
 				return;
 			case "c":
-				await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp();
+				await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp({ useHotModuleReload: this.$options.hmr });
 				return;
 		}
 	}

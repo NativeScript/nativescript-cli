@@ -18,8 +18,8 @@ export class PlaygroundQrCodeGenerator implements IPlaygroundQrCodeGenerator {
 		await this.generateQrCode(PlaygroundStoreUrls.GOOGLE_PLAY_URL);
 	}
 
-	public async generateQrCodeForCurrentApp(): Promise<void> {
-		await this.generateQrCode(this.$previewSdkService.qrCodeUrl);
+	public async generateQrCodeForCurrentApp(options: IHasUseHotModuleReloadOption): Promise<void> {
+		await this.generateQrCode(this.$previewSdkService.getQrCodeUrl(options));
 	}
 
 	private async generateQrCode(url: string): Promise<void> {

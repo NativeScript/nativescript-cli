@@ -180,7 +180,7 @@ interface IHasUseHotModuleReloadOption {
 	/**
 	 * Defines if the hot module reload should be used.
 	 */
-	useHotModuleReload?: boolean;
+	useHotModuleReload: boolean;
 }
 
 interface ILatestAppPackageInstalledSettings extends IDictionary<IDictionary<boolean>> { /* empty */ }

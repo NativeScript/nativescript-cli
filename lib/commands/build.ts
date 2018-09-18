@@ -15,7 +15,11 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 
 	public async executeCore(args: string[]): Promise<void> {
 		const platform = args[0].toLowerCase();
-		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: !!this.$options.bundle, release: this.$options.release };
+		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
+			bundle: !!this.$options.bundle,
+			release: this.$options.release,
+			useHotModuleReload: this.$options.hmr
+		};
 		const platformInfo: IPreparePlatformInfo = {
 			platform,
 			appFilesUpdaterOptions,

@@ -328,7 +328,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			this.$previewAppLiveSyncService.initialize({
 				appFilesUpdaterOptions: {
 					bundle: liveSyncData.bundle,
-					release: liveSyncData.release
+					release: liveSyncData.release,
+					useHotModuleReload: liveSyncData.useHotModuleReload
 				},
 				env: liveSyncData.env,
 				projectDir: projectData.projectDir
@@ -389,7 +390,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				appFilesUpdaterOptions: {
 					bundle: options.bundle,
 					release: options.release,
-					watchAllFiles: options.liveSyncData.watchAllFiles
+					watchAllFiles: options.liveSyncData.watchAllFiles,
+					useHotModuleReload: options.liveSyncData.useHotModuleReload
 				},
 				projectData: options.projectData,
 				env: options.env,
@@ -589,7 +591,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 								await this.$previewAppLiveSyncService.syncFiles({
 									appFilesUpdaterOptions: {
 										bundle: liveSyncData.bundle,
-										release: liveSyncData.release
+										release: liveSyncData.release,
+										useHotModuleReload: liveSyncData.useHotModuleReload
 									},
 									env: liveSyncData.env,
 									projectDir: projectData.projectDir
@@ -691,7 +694,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 						appFilesUpdaterOptions: {
 							bundle: liveSyncData.bundle,
 							release: liveSyncData.release,
-							watchAllFiles: liveSyncData.watchAllFiles
+							watchAllFiles: liveSyncData.watchAllFiles,
+							useHotModuleReload: liveSyncData.useHotModuleReload
 						},
 						platforms
 					},
