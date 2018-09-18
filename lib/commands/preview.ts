@@ -1,7 +1,8 @@
 export class PreviewCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(private $liveSyncService: ILiveSyncService,
+	constructor(private $bundleValidatorHelper: IBundleValidatorHelper,
+		private $liveSyncService: ILiveSyncService,
 		private $projectData: IProjectData,
 		private $options: IOptions,
 		private $playgroundQrCodeGenerator: IPlaygroundQrCodeGenerator,
@@ -26,6 +27,7 @@ export class PreviewCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		this.$bundleValidatorHelper.validate();
 		return true;
 	}
 }
