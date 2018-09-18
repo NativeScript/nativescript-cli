@@ -156,7 +156,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 				platform: currentPlatform,
 				appFilesUpdaterOptions: {
 					bundle: !!this.$options.bundle,
-					release: this.$options.release
+					release: this.$options.release,
+					useHotModuleReload: this.$options.hmr
 				},
 				deployOptions,
 				buildPlatform: this.$platformService.buildPlatform.bind(this.$platformService),

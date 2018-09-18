@@ -14,8 +14,8 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		$logger: ILogger,
 		$projectFilesProvider: IProjectFilesProvider,
 		private $iOSDebuggerPortService: IIOSDebuggerPortService) {
-			super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
-		}
+		super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
+	}
 
 	public async fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo> {
 		const device = syncInfo.device;
@@ -60,7 +60,13 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 	public liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
 		if (liveSyncInfo.isReinstalled) {
 			// In this case we should execute fullsync because iOS Runtime requires the full content of app dir to be extracted in the root of sync dir.
-			return this.fullSync({ projectData: liveSyncInfo.projectData, device, syncAllFiles: liveSyncInfo.syncAllFiles, liveSyncDeviceInfo: liveSyncInfo.liveSyncDeviceInfo, watch: true });
+			return this.fullSync({
+				projectData: liveSyncInfo.projectData,
+				device, syncAllFiles: liveSyncInfo.syncAllFiles,
+				liveSyncDeviceInfo: liveSyncInfo.liveSyncDeviceInfo,
+				watch: true,
+				useHotModuleReload: liveSyncInfo.useHotModuleReload
+			});
 		} else {
 			return super.liveSyncWatchAction(device, liveSyncInfo);
 		}

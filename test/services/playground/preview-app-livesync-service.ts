@@ -1,4 +1,5 @@
 import { Yok } from "../../../lib/common/yok";
+import * as _ from 'lodash';
 import { LoggerStub, ErrorsStub } from "../../stubs";
 import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 import { PreviewAppLiveSyncService } from "../../../lib/services/livesync/playground/preview-app-livesync-service";
@@ -16,12 +17,14 @@ interface ITestCase {
 
 interface IActOptions {
 	callGetInitialFiles: boolean;
+	hmr: boolean;
 }
 
 interface IAssertOptions {
 	checkWarnings?: boolean;
 	isComparePluginsOnDeviceCalled?: boolean;
 	checkInitialFiles?: boolean;
+	hmr?: boolean;
 }
 
 interface IActInput {
@@ -32,6 +35,7 @@ interface IActInput {
 }
 
 let isComparePluginsOnDeviceCalled = false;
+let isHookCalledWithHMR = false;
 let applyChangesParams: FilePayload[] = [];
 let initialFiles: FilePayload[] = [];
 let readTextParams: string[] = [];
@@ -57,7 +61,8 @@ const syncFilesMockData = {
 	projectDir: projectDirPath,
 	appFilesUpdaterOptions: {
 		release: false,
-		bundle: false
+		bundle: false,
+		useHotModuleReload: false
 	},
 	env: {}
 };
@@ -65,7 +70,7 @@ const syncFilesMockData = {
 class PreviewSdkServiceMock implements IPreviewSdkService {
 	public getInitialFiles: (device: Device) => Promise<FilesPayload>;
 
-	public getQrCodeUrl(options: { useHmr: boolean }) {
+	public getQrCodeUrl(options: IHasUseHotModuleReloadOption) {
 		return "my_cool_qr_code_url";
 	}
 
@@ -146,7 +151,9 @@ function createTestInjector(options?: {
 		}
 	});
 	injector.register("hooksService", {
-		executeBeforeHooks: () => ({})
+		executeBeforeHooks: (name: string, args: any) => {
+			isHookCalledWithHMR = args.hookArgs.config.appFilesUpdaterOptions.useHotModuleReload;
+		}
 	});
 
 	return injector;
@@ -169,8 +176,9 @@ async function initialSync(input?: IActInput) {
 	input = input || {};
 
 	const { previewAppLiveSyncService, previewSdkService, actOptions } = input;
-
-	await previewAppLiveSyncService.initialize(syncFilesMockData);
+	const syncFilesData = _.cloneDeep(syncFilesMockData);
+	syncFilesData.appFilesUpdaterOptions.useHotModuleReload = actOptions.hmr;
+	await previewAppLiveSyncService.initialize(syncFilesData);
 	if (actOptions.callGetInitialFiles) {
 		await previewSdkService.getInitialFiles(deviceMockData);
 	}
@@ -181,7 +189,9 @@ async function syncFiles(input?: IActInput) {
 
 	const { previewAppLiveSyncService, previewSdkService, projectFiles, actOptions } = input;
 
-	await previewAppLiveSyncService.initialize(syncFilesMockData);
+	const syncFilesData = _.cloneDeep(syncFilesMockData);
+	syncFilesData.appFilesUpdaterOptions.useHotModuleReload = actOptions.hmr;
+	await previewAppLiveSyncService.initialize(syncFilesData);
 	if (actOptions.callGetInitialFiles) {
 		await previewSdkService.getInitialFiles(deviceMockData);
 	}
@@ -193,6 +203,7 @@ async function assert(expectedFiles: string[], options?: IAssertOptions) {
 	options = options || {};
 	const actualFiles = options.checkInitialFiles ? initialFiles : applyChangesParams;
 
+	chai.assert.equal(isHookCalledWithHMR, options.hmr || false);
 	chai.assert.deepEqual(actualFiles, mapFiles(expectedFiles));
 
 	if (options.checkWarnings) {
@@ -206,6 +217,7 @@ async function assert(expectedFiles: string[], options?: IAssertOptions) {
 
 function reset() {
 	isComparePluginsOnDeviceCalled = false;
+	isHookCalledWithHMR = false;
 	applyChangesParams = [];
 	initialFiles = [];
 	readTextParams = [];
@@ -230,7 +242,8 @@ function mapFiles(files: string[]): FilePayload[] {
 function setDefaults(testCase: ITestCase): ITestCase {
 	if (!testCase.actOptions) {
 		testCase.actOptions = {
-			callGetInitialFiles: true
+			callGetInitialFiles: true,
+			hmr: false
 		};
 	}
 
@@ -327,6 +340,33 @@ describe("previewAppLiveSyncService", () => {
 			}
 		];
 
+		const hmrTestCases: ITestCase[] = [
+			{
+				name: "when set to true",
+				appFiles: [],
+				expectedFiles: [],
+				actOptions: {
+					hmr: true,
+					callGetInitialFiles: true
+				},
+				assertOptions: {
+					hmr: true
+				}
+			},
+			{
+				name: "when set to false",
+				appFiles: [],
+				expectedFiles: [],
+				actOptions: {
+					hmr: false,
+					callGetInitialFiles: true
+				},
+				assertOptions: {
+					hmr: false
+				}
+			}
+		];
+
 		const noAppFilesTestCases: ITestCase[] = [
 			{
 				name: "should transfer correctly default project files",
@@ -352,6 +392,10 @@ describe("previewAppLiveSyncService", () => {
 			{
 				name: "should handle correctly when no files are provided",
 				testCases: noAppFilesTestCases
+			},
+			{
+				name: "should pass the hmr option to the hook",
+				testCases: hmrTestCases
 			}
 		];
 

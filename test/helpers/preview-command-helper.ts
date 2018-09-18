@@ -19,6 +19,7 @@ function createTestInjector() {
 	injector.register("logger", {
 		info: () => ({})
 	});
+	injector.register("options", {});
 	injector.register("playgroundQrCodeGenerator", {
 		generateQrCodeForAndroid: async () => {
 			qrCodesData.isGeneratedForAndroid = true;
@@ -26,7 +27,7 @@ function createTestInjector() {
 		generateQrCodeForiOS: async () => {
 			qrCodesData.isGeneratedForiOS = true;
 		},
-		generateQrCodeForCurrentApp: async (useHmr: boolean) => {
+		generateQrCodeForCurrentApp: async (options: IHasUseHotModuleReloadOption) => {
 			qrCodesData.isGeneratedForCurrentApp = true;
 		}
 	});

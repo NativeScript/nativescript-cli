@@ -13,8 +13,8 @@ export class PreviewSdkService implements IPreviewSdkService {
 		private $config: IConfiguration) {
 	}
 
-	public getQrCodeUrl(options: { useHmr: boolean }): string {
-		const hmrValue = options.useHmr ? "1" : "0";
+	public getQrCodeUrl(options: IHasUseHotModuleReloadOption): string {
+		const hmrValue = options.useHotModuleReload ? "1" : "0";
 		return `nsplay://boot?instanceId=${this.instanceId}&pKey=${PubnubKeys.PUBLISH_KEY}&sKey=${PubnubKeys.SUBSCRIBE_KEY}&template=play-ng&hmr=${hmrValue}`;
 	}
 

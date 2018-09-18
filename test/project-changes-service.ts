@@ -156,7 +156,8 @@ describe("Project Changes Service Tests", () => {
 					bundle: false,
 					release: false,
 					provision: undefined,
-					teamId: undefined
+					teamId: undefined,
+					useHotModuleReload: false
 				}
 			});
 			assert.isTrue(!!iOSChanges.signingChanged, "iOS signingChanged expected to be true");
@@ -168,7 +169,8 @@ describe("Project Changes Service Tests", () => {
 					bundle: false,
 					release: false,
 					provision: undefined,
-					teamId: undefined
+					teamId: undefined,
+					useHotModuleReload: false
 				}
 			});
 			assert.isFalse(!!androidChanges.signingChanged, "Android signingChanged expected to be false");

@@ -213,7 +213,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				provision: config.provision,
 				teamId: config.teamId,
 				nativePlatformStatus,
-				skipModulesNativeCheck: preparePlatformInfo.skipModulesNativeCheck
+				skipModulesNativeCheck: preparePlatformInfo.skipModulesNativeCheck,
+				useHotModuleReload: appFilesUpdaterOptions.useHotModuleReload
 			}
 		});
 

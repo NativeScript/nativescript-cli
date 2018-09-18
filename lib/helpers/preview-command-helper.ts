@@ -50,7 +50,7 @@ export class PreviewCommandHelper implements IPreviewCommandHelper {
 				await this.$playgroundQrCodeGenerator.generateQrCodeForiOS();
 				return;
 			case "c":
-				await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp(this.$options.hmr);
+				await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp({ useHotModuleReload: this.$options.hmr });
 				return;
 		}
 	}

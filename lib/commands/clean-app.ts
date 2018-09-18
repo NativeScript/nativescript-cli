@@ -16,7 +16,11 @@ export class CleanAppCommandBase extends ValidatePlatformCommandBase implements 
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: !!this.$options.bundle, release: this.$options.release };
+		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
+			bundle: !!this.$options.bundle,
+			release: this.$options.release,
+			useHotModuleReload: false
+		};
 		const platformInfo: IPreparePlatformInfo = {
 			appFilesUpdaterOptions,
 			platform: this.platform.toLowerCase(),

@@ -13,7 +13,11 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: !!this.$options.bundle, release: this.$options.release };
+		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
+			bundle: !!this.$options.bundle,
+			release: this.$options.release,
+			useHotModuleReload: this.$options.hmr
+		};
 		const platformInfo: IPreparePlatformInfo = {
 			platform: args[0],
 			appFilesUpdaterOptions,

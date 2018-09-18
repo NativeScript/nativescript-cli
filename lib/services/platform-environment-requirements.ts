@@ -195,7 +195,8 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				bundle: !!options.bundle,
 				release: options.release,
 				env: options.env,
-				timeout: options.timeout
+				timeout: options.timeout,
+				useHotModuleReload: options.hmr
 			});
 		}
 	}

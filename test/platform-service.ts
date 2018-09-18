@@ -466,7 +466,7 @@ describe('Platform Service Tests', () => {
 			projectData.appResourcesDirectoryPath = path.join(testDirData.appFolderPath, "App_Resources");
 
 			platformService = testInjector.resolve("platformService");
-			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: release };
+			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: release, useHotModuleReload: false };
 			await platformService.preparePlatform({
 				platform: platformToTest,
 				appFilesUpdaterOptions,
@@ -903,7 +903,7 @@ describe('Platform Service Tests', () => {
 			let warnings: string = "";
 			try {
 				testInjector.resolve("$logger").warn = (text: string) => warnings += text;
-				const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: false };
+				const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: false, useHotModuleReload: false };
 				await platformService.preparePlatform({
 					platform: "android",
 					appFilesUpdaterOptions,

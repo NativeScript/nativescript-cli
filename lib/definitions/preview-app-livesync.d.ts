@@ -10,7 +10,7 @@ declare global {
 	interface IPreviewAppLiveSyncData extends IProjectDir, IAppFilesUpdaterOptionsComposition, IEnvOptions { }
 
 	interface IPreviewSdkService {
-		getQrCodeUrl(options: { useHmr: boolean }): string;
+		getQrCodeUrl(options: IHasUseHotModuleReloadOption): string;
 		connectedDevices: Device[];
 		initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>): void;
 		applyChanges(filesPayload: FilesPayload): Promise<void>;
@@ -29,6 +29,6 @@ declare global {
 	interface IPlaygroundQrCodeGenerator {
 		generateQrCodeForiOS(): Promise<void>;
 		generateQrCodeForAndroid(): Promise<void>;
-		generateQrCodeForCurrentApp(useHmr: boolean): Promise<void>;
+		generateQrCodeForCurrentApp(options: IHasUseHotModuleReloadOption): Promise<void>;
 	}
 }
