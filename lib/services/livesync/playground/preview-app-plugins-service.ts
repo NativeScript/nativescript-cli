@@ -4,12 +4,14 @@ import * as util from "util";
 import { Device } from "nativescript-preview-sdk";
 import { PluginComparisonMessages } from "./preview-app-constants";
 import { NODE_MODULES_DIR_NAME } from "../../../common/constants";
+import { PLATFORMS_DIR_NAME } from "../../../constants";
 
 export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	private previewAppVersionWarnings: IDictionary<string[]> = {};
 
 	constructor(private $fs: IFileSystem,
 		private $logger: ILogger,
+		private $pluginsService: IPluginsService,
 		private $projectData: IProjectData) { }
 
 	public async comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void> {
@@ -91,17 +93,11 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	}
 
 	private isNativeScriptPluginWithoutNativeCode(localPlugin: string, platform: string): boolean {
-		return this.isNativeScriptPlugin(localPlugin) && !this.hasNativeCode(localPlugin, platform);
-	}
-
-	private isNativeScriptPlugin(localPlugin: string): boolean {
-		const pluginPackageJsonPath = path.join(this.$projectData.projectDir, NODE_MODULES_DIR_NAME, localPlugin, "package.json");
-		const pluginPackageJsonContent = this.$fs.readJson(pluginPackageJsonPath);
-		return pluginPackageJsonContent && pluginPackageJsonContent.nativescript;
+		return this.$pluginsService.isNativeScriptPlugin(localPlugin, this.$projectData) && !this.hasNativeCode(localPlugin, platform);
 	}
 
 	private hasNativeCode(localPlugin: string, platform: string): boolean {
-		const nativeFolderPath = path.join(this.$projectData.projectDir, NODE_MODULES_DIR_NAME, localPlugin, "platforms", platform.toLowerCase());
+		const nativeFolderPath = path.join(this.$projectData.projectDir, NODE_MODULES_DIR_NAME, localPlugin, PLATFORMS_DIR_NAME, platform.toLowerCase());
 		return this.$fs.exists(nativeFolderPath) && !this.$fs.isEmptyDir(nativeFolderPath);
 	}
 }

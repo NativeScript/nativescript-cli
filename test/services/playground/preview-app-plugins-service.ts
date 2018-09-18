@@ -34,6 +34,11 @@ function createTestInjector(localPlugins: IStringDictionary, options?: { isNativ
 			return !options.hasPluginNativeCode;
 		}
 	});
+	injector.register("pluginsService", {
+		isNativeScriptPlugin: () => {
+			return options.isNativeScriptPlugin;
+		}
+	});
 	injector.register("logger", {
 		trace: () => ({}),
 		warn: (message: string) =>  warnParams.push(message)
