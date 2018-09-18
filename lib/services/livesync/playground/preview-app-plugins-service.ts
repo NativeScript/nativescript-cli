@@ -3,15 +3,18 @@ import * as semver from "semver";
 import * as util from "util";
 import { Device } from "nativescript-preview-sdk";
 import { PluginComparisonMessages } from "./preview-app-constants";
+import { NODE_MODULES_DIR_NAME } from "../../../common/constants";
+import { PLATFORMS_DIR_NAME } from "../../../constants";
 
 export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	private previewAppVersionWarnings: IDictionary<string[]> = {};
 
 	constructor(private $fs: IFileSystem,
 		private $logger: ILogger,
+		private $pluginsService: IPluginsService,
 		private $projectData: IProjectData) { }
 
-	public async comparePluginsOnDevice(device: Device): Promise<void> {
+	public async comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void> {
 		if (!this.previewAppVersionWarnings[device.previewAppVersion]) {
 			const devicePlugins = this.getDevicePlugins(device);
 			const localPlugins = this.getLocalPlugins();
@@ -19,7 +22,7 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 				.map(localPlugin => {
 					const localPluginVersion = localPlugins[localPlugin];
 					const devicePluginVersion = devicePlugins[localPlugin];
-					return this.getWarningForPlugin(localPlugin, localPluginVersion, devicePluginVersion, device.id);
+					return this.getWarningForPlugin(data, localPlugin, localPluginVersion, devicePluginVersion, device);
 				})
 				.filter(item => !!item);
 			this.previewAppVersionWarnings[device.previewAppVersion] = warnings;
@@ -62,7 +65,15 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 		}
 	}
 
-	private getWarningForPlugin(localPlugin: string, localPluginVersion: string, devicePluginVersion: string, deviceId: string): string {
+	private getWarningForPlugin(data: IPreviewAppLiveSyncData, localPlugin: string, localPluginVersion: string, devicePluginVersion: string, device: Device): string {
+		if (data && data.appFilesUpdaterOptions && data.appFilesUpdaterOptions.bundle && this.isNativeScriptPluginWithoutNativeCode(localPlugin, device.platform)) {
+			return null;
+		}
+
+		return this.getWarningForPluginCore(localPlugin, localPluginVersion, devicePluginVersion, device.id);
+	}
+
+	private getWarningForPluginCore(localPlugin: string, localPluginVersion: string, devicePluginVersion: string, deviceId: string): string {
 		this.$logger.trace(`Comparing plugin ${localPlugin} with localPluginVersion ${localPluginVersion} and devicePluginVersion ${devicePluginVersion}`);
 
 		if (devicePluginVersion) {
@@ -79,6 +90,15 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 		}
 
 		return util.format(PluginComparisonMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, localPlugin, deviceId);
+	}
+
+	private isNativeScriptPluginWithoutNativeCode(localPlugin: string, platform: string): boolean {
+		return this.$pluginsService.isNativeScriptPlugin(localPlugin, this.$projectData) && !this.hasNativeCode(localPlugin, platform);
+	}
+
+	private hasNativeCode(localPlugin: string, platform: string): boolean {
+		const nativeFolderPath = path.join(this.$projectData.projectDir, NODE_MODULES_DIR_NAME, localPlugin, PLATFORMS_DIR_NAME, platform.toLowerCase());
+		return this.$fs.exists(nativeFolderPath) && !this.$fs.isEmptyDir(nativeFolderPath);
 	}
 }
 $injector.register("previewAppPluginsService", PreviewAppPluginsService);

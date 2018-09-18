@@ -49,7 +49,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 					startSyncFilesTimeout: startSyncFilesTimeout.bind(this)
 				}
 			});
-			await this.$previewAppPluginsService.comparePluginsOnDevice(device);
+			await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
 			const payloads = await this.syncFilesForPlatformSafe(data, device.platform);
 
 			return payloads;
@@ -60,7 +60,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		this.showWarningsForNativeFiles(files);
 
 		for (const device of this.$previewSdkService.connectedDevices) {
-			await this.$previewAppPluginsService.comparePluginsOnDevice(device);
+			await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
 		}
 
 		const platforms = _(this.$previewSdkService.connectedDevices)

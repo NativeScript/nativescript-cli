@@ -2,6 +2,7 @@ import * as path from "path";
 import * as shelljs from "shelljs";
 import * as semver from "semver";
 import * as constants from "../constants";
+import { NODE_MODULES_DIR_NAME } from "../common/constants";
 
 export class PluginsService implements IPluginsService {
 	private static INSTALL_COMMAND_NAME = "install";
@@ -205,6 +206,12 @@ export class PluginsService implements IPluginsService {
 			dependencies,
 			devDependencies
 		};
+	}
+
+	public isNativeScriptPlugin(pluginName: string, projectData: IProjectData): boolean {
+		const pluginPackageJsonPath = path.join(projectData.projectDir, NODE_MODULES_DIR_NAME, pluginName, "package.json");
+		const pluginPackageJsonContent = this.$fs.readJson(pluginPackageJsonPath);
+		return pluginPackageJsonContent && pluginPackageJsonContent.nativescript;
 	}
 
 	private getBasicPluginInformation(dependencies: any): IBasePluginData[] {
