@@ -3,6 +3,7 @@ export class PreviewCommand implements ICommand {
 
 	constructor(private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $liveSyncService: ILiveSyncService,
+		private $networkConnectivityValidator: INetworkConnectivityValidator,
 		private $projectData: IProjectData,
 		private $options: IOptions,
 		private $playgroundQrCodeGenerator: IPlaygroundQrCodeGenerator,
@@ -27,6 +28,7 @@ export class PreviewCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		await this.$networkConnectivityValidator.validate();
 		this.$bundleValidatorHelper.validate();
 		return true;
 	}
