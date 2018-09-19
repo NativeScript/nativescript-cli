@@ -31,7 +31,8 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 			const startSyncFilesTimeout = async (platform: string) => {
 				await promise
 					.then(async () => {
-						promise = this.syncFilesForPlatformSafe(data, platform, filesToSyncMap[platform]);
+						const projectData = this.$projectDataService.getProjectData(data.projectDir);
+						promise = this.applyChanges(this.$platformsData.getPlatformData(platform, projectData), projectData, filesToSyncMap[platform]);
 						await promise;
 					});
 				filesToSyncMap[platform] = [];
