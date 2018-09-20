@@ -48,6 +48,7 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 			return result;
 		} catch (e) {
 			this.livesyncTool.end();
+			throw e;
 		}
 	}
 
