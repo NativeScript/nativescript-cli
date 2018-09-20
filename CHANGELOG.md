@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.11.7](https://github.com/Kinvey/js-sdk/tree/v3.11.7) (2018-09-20)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.6...v3.11.7)<br/>
+
+#### Enhancements
+- MLIBZ-2466: Add new defice info header information. [#343](https://github.com/Kinvey/js-sdk/pull/343)
+- MLIBZ-649: Add encryption for NativeScript. [#351](https://github.com/Kinvey/js-sdk/pull/351)
+
+#### Bugs
+- MLIBZ-2684: Fix NativeScript TypeScript definitions for Push. [#352](https://github.com/Kinvey/js-sdk/pull/352)
+- MLIBZ-2502: Update [rxjs](https://github.com/ReactiveX/rxjs) to 6.x. [#353](https://github.com/Kinvey/js-sdk/pull/353)
+
 ## [3.11.6](https://github.com/Kinvey/js-sdk/tree/v3.11.6) (2018-08-02)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.5...v3.11.6)<br/>
 
