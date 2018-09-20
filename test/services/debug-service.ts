@@ -102,8 +102,8 @@ describe("debugService", () => {
 
 	describe("debug", () => {
 		const getDebugData = (deviceIdentifier?: string): IDebugData => ({
-			applicationIdentifier: "org.nativescript.app1",
 			deviceIdentifier: deviceIdentifier || defaultDeviceIdentifier,
+			applicationIdentifier: "org.nativescript.app1",
 			projectDir: "/Users/user/app1",
 			projectName: "app1"
 		});

@@ -14,9 +14,10 @@ export abstract class PlatformLiveSyncServiceBase {
 		private $projectFilesProvider: IProjectFilesProvider) { }
 
 	public getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService {
+		const platform = device.deviceInfo.platform.toLowerCase();
 		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 		const frameworkVersion = platformData.platformProjectService.getFrameworkVersion(projectData);
-		const key = getHash(`${device.deviceInfo.identifier}${projectData.projectId}${projectData.projectDir}${frameworkVersion}`);
+		const key = getHash(`${device.deviceInfo.identifier}${projectData.projectIdentifiers[platform]}${projectData.projectDir}${frameworkVersion}`);
 		if (!this._deviceLiveSyncServicesCache[key]) {
 			this._deviceLiveSyncServicesCache[key] = this._getDeviceLiveSyncService(device, projectData, frameworkVersion);
 		}
@@ -125,9 +126,11 @@ export abstract class PlatformLiveSyncServiceBase {
 	}
 
 	protected async getAppData(syncInfo: IFullSyncInfo): Promise<Mobile.IDeviceAppData> {
-		const deviceProjectRootOptions: IDeviceProjectRootOptions = _.assign({ appIdentifier: syncInfo.projectData.projectId }, syncInfo);
+		const platform = syncInfo.device.deviceInfo.platform.toLowerCase();
+		const appIdentifier = syncInfo.projectData.projectIdentifiers[platform];
+		const deviceProjectRootOptions: IDeviceProjectRootOptions = _.assign({ appIdentifier }, syncInfo);
 		return {
-			appIdentifier: syncInfo.projectData.projectId,
+			appIdentifier,
 			device: syncInfo.device,
 			platform: syncInfo.device.deviceInfo.platform,
 			getDeviceProjectRootPath: () => this.$devicePathProvider.getDeviceProjectRootPath(syncInfo.device, deviceProjectRootOptions),

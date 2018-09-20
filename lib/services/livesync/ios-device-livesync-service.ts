@@ -26,16 +26,18 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 			return true;
 		}
 
+		const appId = projectData.projectIdentifiers.ios;
+
 		if (this.device.isEmulator) {
-			await this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.getAttachRequest(projectData.projectId, this.device.deviceInfo.identifier), this.device.deviceInfo.identifier);
-			const port = await this.$iOSDebuggerPortService.getPort({ projectDir: projectData.projectDir, deviceId: this.device.deviceInfo.identifier, appId: projectData.projectId });
+			await this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.getAttachRequest(appId, this.device.deviceInfo.identifier), this.device.deviceInfo.identifier);
+			const port = await this.$iOSDebuggerPortService.getPort({ projectDir: projectData.projectDir, deviceId: this.device.deviceInfo.identifier, appId });
 			this.socket = await this.$iOSEmulatorServices.connectToPort({ port });
 			if (!this.socket) {
 				return false;
 			}
 		} else {
-			await this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, projectData.projectId);
-			const port = await this.$iOSDebuggerPortService.getPort({ projectDir: projectData.projectDir, deviceId: this.device.deviceInfo.identifier, appId: projectData.projectId });
+			await this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, appId);
+			const port = await this.$iOSDebuggerPortService.getPort({ projectDir: projectData.projectDir, deviceId: this.device.deviceInfo.identifier, appId });
 			this.socket = await this.device.connectToPort(port);
 		}
 

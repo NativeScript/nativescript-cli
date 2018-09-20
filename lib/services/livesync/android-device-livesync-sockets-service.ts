@@ -32,7 +32,7 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 		this.$fs.writeFile(pathToLiveSyncFile, "");
 		await this.device.fileSystem.putFile(pathToLiveSyncFile, this.getPathToLiveSyncFileOnDevice(deviceAppData.appIdentifier), deviceAppData.appIdentifier);
 		await this.device.applicationManager.startApplication({ appId: deviceAppData.appIdentifier, projectName: this.data.projectName, justLaunch: true });
-		await this.connectLivesyncTool(this.data.projectId);
+		await this.connectLivesyncTool(this.data.projectIdentifiers.android);
 	}
 
 	private getPathToLiveSyncFileOnDevice(appIdentifier: string): string {

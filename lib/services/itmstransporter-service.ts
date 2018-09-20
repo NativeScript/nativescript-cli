@@ -110,7 +110,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 	private async getBundleIdentifier(ipaFileFullPath?: string): Promise<string> {
 		if (!this._bundleIdentifier) {
 			if (!ipaFileFullPath) {
-				this._bundleIdentifier = this.$projectData.projectId;
+				this._bundleIdentifier = this.$projectData.projectIdentifiers.ios;
 			} else {
 				if (!this.$fs.exists(ipaFileFullPath) || path.extname(ipaFileFullPath) !== ".ipa") {
 					this.$errors.failWithoutHelp(`Cannot use specified ipa file ${ipaFileFullPath}. File either does not exist or is not an ipa file.`);

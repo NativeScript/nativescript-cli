@@ -103,7 +103,7 @@ export class ProjectService implements IProjectService {
 		try {
 			const projectData = this.$projectDataService.getProjectData(pathToProject);
 
-			return !!projectData && !!projectData.projectDir && !!projectData.projectId;
+			return !!projectData && !!projectData.projectDir && !!(projectData.projectIdentifiers.ios && projectData.projectIdentifiers.android);
 		} catch (e) {
 			return false;
 		}

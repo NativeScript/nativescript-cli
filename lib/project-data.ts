@@ -2,6 +2,7 @@ import * as constants from "./constants";
 import * as path from "path";
 import { parseJson } from "./common/helpers";
 import { EOL } from "os";
+import { cache } from "./common/decorators";
 
 interface IProjectType {
 	type: string;
@@ -35,7 +36,17 @@ export class ProjectData implements IProjectData {
 	public projectDir: string;
 	public platformsDir: string;
 	public projectFilePath: string;
-	public projectId: string;
+	public projectIdentifiers: Mobile.IProjectIdentifier;
+	get projectId(): string {
+		this.warnProjectId();
+		return this.projectIdentifiers.ios;
+	}
+	//just in case hook/extension modifies it.
+	set projectId(identifier: string) {
+		this.warnProjectId();
+		this.projectIdentifiers.ios = identifier;
+		this.projectIdentifiers.android = identifier;
+	}
 	public projectName: string;
 	public nsConfig: INsConfig;
 	public appDirectoryPath: string;
@@ -108,7 +119,7 @@ export class ProjectData implements IProjectData {
 			this.projectName = this.$projectHelper.sanitizeName(path.basename(projectDir));
 			this.platformsDir = path.join(projectDir, constants.PLATFORMS_DIR_NAME);
 			this.projectFilePath = projectFilePath;
-			this.projectId = nsData.id;
+			this.projectIdentifiers = this.initializeProjectIdentifiers(nsData.id);
 			this.dependencies = packageJsonData.dependencies;
 			this.devDependencies = packageJsonData.devDependencies;
 			this.projectType = this.getProjectType();
@@ -206,6 +217,25 @@ export class ProjectData implements IProjectData {
 		return path.resolve(projectDir, pathToResolve);
 	}
 
+	private initializeProjectIdentifiers(data: string | Mobile.IProjectIdentifier): Mobile.IProjectIdentifier {
+		let identifier: Mobile.IProjectIdentifier;
+		data = data || "";
+
+		if (typeof data === "string") {
+			identifier = {
+				android: data,
+				ios: data
+			};
+		} else {
+			identifier = {
+				android: data.android || "",
+				ios: data.ios || ""
+			};
+		}
+
+		return identifier;
+	}
+
 	private getProjectType(): string {
 		let detectedProjectType = _.find(ProjectData.PROJECT_TYPES, (projectType) => projectType.isDefaultProjectType).type;
 
@@ -219,6 +249,11 @@ export class ProjectData implements IProjectData {
 		});
 
 		return detectedProjectType;
+	}
+
+	@cache()
+	private warnProjectId(): void {
+		this.$logger.warnWithLabel("IProjectData.projectId is deprecated. Please use IProjectData.projectIdentifiers[platform].");
 	}
 }
 $injector.register("projectData", ProjectData);
