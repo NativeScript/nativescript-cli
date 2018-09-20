@@ -236,7 +236,7 @@ tns.projectDataService.getAssetsStructure({ projectDir: "/Users/username/myNativ
 ```
 
 ### getIOSAssetsStructure
-Gives information about the assets structure for iOS .The returned object will contain icons, splashBackgrounds, splashCenterImages and splashImages.
+Gives information about the assets structure for iOS. The returned object will contain icons, splashBackgrounds, splashCenterImages and splashImages.
 * Definition:
 ```TypeScript
 /**
@@ -256,7 +256,7 @@ tns.projectDataService.getIOSAssetsStructure({ projectDir: "/Users/username/myNa
 ```
 
 ### getAndroidAssetsStructure
-Gives information about the assets structure for Android .The returned object will contain icons, splashBackgrounds and splashCenterImages.
+Gives information about the assets structure for Android. The returned object will contain icons, splashBackgrounds and splashCenterImages.
 * Definition:
 ```TypeScript
 /**
@@ -425,7 +425,7 @@ interface IConfigurationSettings {
 * Definition:
 ```TypeScript
 /**
- * Describes service used to confugure various settings.
+ * Describes service used to configure various settings.
  */
 interface ISettingsService {
 	/**
@@ -610,7 +610,7 @@ The returned Promise will be rejected in case any error occurs. It will also be 
 /**
  * Starts debug operation based on the specified debug data.
  * @param {IDebugData} debugData Describes information for device and application that will be debugged.
- * @param {IDebugOptions} debugOptions Describe possible options to modify the behaivor of the debug operation, for example stop on the first line.
+ * @param {IDebugOptions} debugOptions Describe possible options to modify the behavior of the debug operation, for example stop on the first line.
  * @returns {Promise<IDebugInformation>} Device Identifier, full url and port where the frontend client can be connected.
  */
 debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugInformation>;
