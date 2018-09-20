@@ -1029,4 +1029,18 @@ describe("Merge Project XCConfig files", () => {
 			assertPropertyValues(expected, destinationFilePath, testInjector);
 		}
 	});
+
+	it("creates empty plugins-<config>.xcconfig in case there are no build.xcconfig in App_Resources and in plugins", async () => {
+		// run merge for all release: debug|release
+		for (const release in [true, false]) {
+			await (<any>iOSProjectService).mergeProjectXcconfigFiles(release, projectData);
+
+			const destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
+				: (<any>iOSProjectService).getPluginsDebugXcconfigFilePath(projectData);
+
+			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
+			const content = fs.readFile(destinationFilePath).toString();
+			assert.equal(content, "");
+		}
+	});
 });
