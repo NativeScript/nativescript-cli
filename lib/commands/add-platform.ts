@@ -24,6 +24,11 @@ export class AddPlatformCommand extends ValidatePlatformCommandBase implements I
 		let canExecute = true;
 		for (const arg of args) {
 			this.$platformService.validatePlatform(arg, this.$projectData);
+
+			if (!this.$platformService.isPlatformSupportedForOS(arg, this.$projectData)) {
+				this.$errors.fail(`Applications for platform ${arg} can not be built on this OS`);
+			}
+
 			const output = await super.canExecuteCommandBase(arg);
 			canExecute = canExecute && output.canExecute;
 		}
