@@ -10,7 +10,7 @@
   "typings": "kinvey.d.ts",
   "dependencies": {
     "nativescript-sqlite": "latest",
-    "rxjs": "~5.5.5"
+    "rxjs": "~6.2.2"
   },
   "scripts": {
     "prebuild": "rm -rf dist",
