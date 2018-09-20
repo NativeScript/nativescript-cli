@@ -1,0 +1,12 @@
+branches:
+  only: 
+    - master
+    - release
+language: node_js
+node_js:
+- '6'
+install:
+- npm install --ignore-scripts
+- npm install --save-dev grunt-cli
+script:
+- node_modules/.bin/grunt all
