@@ -30,7 +30,6 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			infoData.androidHomeEnvVar = this.androidHome;
 			infoData.compileSdkVersion = this.getCompileSdk();
 			infoData.buildToolsVersion = this.getBuildToolsVersion();
-			infoData.supportRepositoryVersion = this.getAndroidSupportRepositoryVersion();
 
 			this.toolsInfo = infoData;
 		}
@@ -68,19 +67,6 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			errors.push({
 				warning: "You need to have the Android SDK Build-tools installed on your system. " + message,
 				additionalInformation: invalidBuildToolsAdditionalMsg,
-				platforms: [Constants.ANDROID_PLATFORM_NAME]
-			});
-		}
-
-		if (!toolsInfoData.supportRepositoryVersion) {
-			let invalidSupportLibAdditionalMsg = `Run \`\$ ${this.getPathToSdkManagementTool()}\` to manage the Android Support Repository.`;
-			if (!isAndroidHomeValid) {
-				invalidSupportLibAdditionalMsg += ' In case you already have it installed, make sure `ANDROID_HOME` environment variable is set correctly.';
-			}
-
-			errors.push({
-				warning: `You need to have Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later and the latest Android Support Repository installed on your system.`,
-				additionalInformation: invalidSupportLibAdditionalMsg,
 				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			});
 		}
@@ -273,31 +259,6 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		}
 
 		return buildToolsVersion;
-	}
-
-	private getAppCompatRange(): string {
-		let compileSdkVersion = this.getCompileSdk();
-		let requiredAppCompatRange: string;
-		if (compileSdkVersion) {
-			requiredAppCompatRange = `>=${compileSdkVersion} <${compileSdkVersion + 1}`;
-		}
-
-		return requiredAppCompatRange;
-	}
-
-	private getAndroidSupportRepositoryVersion(): string {
-		let selectedAppCompatVersion: string;
-		const requiredAppCompatRange = this.getAppCompatRange();
-		if (this.androidHome && requiredAppCompatRange) {
-			const pathToAppCompat = path.join(this.androidHome, "extras", "android", "m2repository", "com", "android", "support", "appcompat-v7");
-			selectedAppCompatVersion = this.getMatchingDir(pathToAppCompat, requiredAppCompatRange);
-			if (!selectedAppCompatVersion) {
-				// get latest matching version, as there's no available appcompat versions for latest SDK versions.
-				selectedAppCompatVersion = this.getMatchingDir(pathToAppCompat, "*");
-			}
-		}
-
-		return selectedAppCompatVersion;
 	}
 
 	private getLatestValidAndroidTarget(): string {

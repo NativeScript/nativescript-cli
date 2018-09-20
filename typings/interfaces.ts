@@ -489,10 +489,5 @@ declare module NativeScriptDoctor {
 		 * The latest installed version of Android SDK that satisfies CLI's requirements.
 		 */
 		compileSdkVersion: number;
-
-		/**
-		 * The latest installed version of Android Support Repository that satisfies CLI's requirements.
-		 */
-		supportRepositoryVersion: string;
 	}
 }
