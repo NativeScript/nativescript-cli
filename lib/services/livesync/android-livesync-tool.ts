@@ -104,26 +104,27 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	}
 
 	public async removeFile(filePath: string): Promise<void> {
-			this.verifyActiveConnection();
-			const filePathData = this.getFilePathData(filePath);
-			const headerBuffer = Buffer.alloc(PROTOCOL_OPERATION_LENGTH_SIZE +
-				SIZE_BYTE_LENGTH +
-				filePathData.filePathLengthSize +
-				filePathData.filePathLengthBytes);
+		this.verifyActiveConnection();
+		const filePathData = this.getFilePathData(filePath);
+		const headerBuffer = Buffer.alloc(PROTOCOL_OPERATION_LENGTH_SIZE +
+			SIZE_BYTE_LENGTH +
+			filePathData.filePathLengthSize +
+			filePathData.filePathLengthBytes);
 
-			let offset = 0;
-			offset += headerBuffer.write(AndroidLivesyncTool.DELETE_FILE_OPERATION.toString(), offset, PROTOCOL_OPERATION_LENGTH_SIZE);
-			offset = headerBuffer.writeInt8(filePathData.filePathLengthSize, offset);
-			offset += headerBuffer.write(filePathData.filePathLengthString, offset, filePathData.filePathLengthSize);
-			headerBuffer.write(filePathData.relativeFilePath, offset, filePathData.filePathLengthBytes);
-			const hash = crypto.createHash("md5").update(headerBuffer).digest();
+		let offset = 0;
+		offset += headerBuffer.write(AndroidLivesyncTool.DELETE_FILE_OPERATION.toString(), offset, PROTOCOL_OPERATION_LENGTH_SIZE);
+		offset = headerBuffer.writeInt8(filePathData.filePathLengthSize, offset);
+		offset += headerBuffer.write(filePathData.filePathLengthString, offset, filePathData.filePathLengthSize);
+		headerBuffer.write(filePathData.relativeFilePath, offset, filePathData.filePathLengthBytes);
+		const hash = crypto.createHash("md5").update(headerBuffer).digest();
 
-			await this.writeToSocket(headerBuffer);
-			await this.writeToSocket(hash);
+		await this.writeToSocket(headerBuffer);
+		await this.writeToSocket(hash);
 	}
-
-	public removeFiles(files: string[]) {
-		return Promise.all(files.map(file => this.removeFile(file)));
+	public async removeFiles(files: string[]): Promise<void> {
+		for (const file of files) {
+			await this.removeFile(file);
+		}
 	}
 
 	public generateOperationIdentifier(): string {

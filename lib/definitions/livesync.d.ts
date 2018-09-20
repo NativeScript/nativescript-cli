@@ -465,7 +465,7 @@ interface IAndroidLivesyncTool {
 	 * @param filePaths - Array of files that will be removed.
 	 * @returns {Promise<boolean[]>}
 	 */
-	removeFiles(filePaths: string[]): Promise<void[]>;
+	removeFiles(filePaths: string[]): Promise<void>;
 	/**
 	 * Sends doSyncOperation that will be handled by the runtime.
 	 * @param options
