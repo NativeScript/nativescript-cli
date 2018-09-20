@@ -16,7 +16,7 @@
     "s3": "npm run build -- --env.uglify --env.s3"
   },
   "dependencies": {
-    "rxjs": "~5.5.5"
+    "rxjs": "~6.2.2"
   },
   "files": [
     "kinvey-angular2-sdk.min.js",
