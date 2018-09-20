@@ -266,6 +266,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		const error = this.checkConnectionStatus();
 		if (error && rejectHandler) {
 			rejectHandler(error);
+			return false;
 		}
 
 		if (error && !rejectHandler) {
