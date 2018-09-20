@@ -1,6 +1,18 @@
 NativeScript CLI Changelog
 ================
 
+4.2.4 (2018, September 19)
+==
+
+### Fixed
+* [Fixed #3832](https://github.com/NativeScript/nativescript-cli/issues/3832): Unable to work with devices with numeric identifiers
+* [Fixed #3881](https://github.com/NativeScript/nativescript-cli/pull/3881): Replace forum references with stack overflow.
+* [Fixed #3883](https://github.com/NativeScript/nativescript-cli/issues/3883): CLI installs the app on every change
+* [Fixed #3893](https://github.com/NativeScript/nativescript-cli/pull/3893): [API] Errors are raised when emulator lost/found event is raised.
+* [Fixed #3893](https://github.com/NativeScript/nativescript-cli/pull/3893): [API] Android emulator image display names are not correct.
+* [Fixed #3894](https://github.com/NativeScript/nativescript-cli/issues/3894): `Socket Error: Error: write ECONNABORTED` is raised when trying to run on Android
+
+
 4.2.3 (2018, August 27)
 ==
 
