@@ -43,7 +43,7 @@ docs-cli
 
 # From previous submodule
 lib/common/*.js
-lib/common/!vendor/*.json
+!lib/common/vendor/*.json
 
 lib/common/*.js.map
 !lib/common/vendor/*.js
