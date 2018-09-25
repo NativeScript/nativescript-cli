@@ -26,6 +26,7 @@ export class TnsModulesCopy {
 
 				// Remove .ts files
 				const allFiles = this.$fs.enumerateFilesInDirectorySync(tnsCoreModulesResourcePath);
+				// TODO: Remove usage of $options here.
 				const matchPattern = this.$options.release ? "**/*.ts" : "**/*.d.ts";
 				allFiles.filter(file => minimatch(file, matchPattern, { nocase: true })).map(file => this.$fs.deleteFile(file));
 
@@ -48,6 +49,32 @@ export class TnsModulesCopy {
 			shelljs.rm("-rf", path.join(targetPackageDir, "platforms"));
 
 			this.removeNonProductionDependencies(dependency, targetPackageDir);
+			this.removeDependenciesPlatformsDirs(targetPackageDir);
+		}
+	}
+
+	private removeDependenciesPlatformsDirs(dependencyDir: string): void {
+		const dependenciesFolder = path.join(dependencyDir, constants.NODE_MODULES_FOLDER_NAME);
+		if (!this.$fs.exists(dependenciesFolder)) {
+			return;
+		}
+
+		if (this.$fs.exists(dependenciesFolder)) {
+			const dependencies = this.getDependencies(dependenciesFolder);
+
+			dependencies
+				.forEach(d => {
+					const pathToDependency = path.join(dependenciesFolder, d);
+					const pathToPackageJson = path.join(pathToDependency, constants.PACKAGE_JSON_FILE_NAME);
+
+					// TODO: Reuse pluginsService.isNativeScriptPlugin after making it work with full path.
+					const pluginPackageJsonContent = this.$fs.readJson(pathToPackageJson);
+					if (pluginPackageJsonContent && pluginPackageJsonContent.nativescript) {
+						this.$fs.deleteDirectory(path.join(pathToDependency, constants.PLATFORMS_DIR_NAME));
+					}
+
+					this.removeDependenciesPlatformsDirs(pathToDependency);
+				});
 		}
 	}
 
@@ -62,20 +89,26 @@ export class TnsModulesCopy {
 
 		const dependenciesFolder = path.join(targetPackageDir, constants.NODE_MODULES_FOLDER_NAME);
 		if (this.$fs.exists(dependenciesFolder)) {
-			const dependencies = _.flatten(this.$fs.readDirectory(dependenciesFolder)
-				.map(dir => {
-					if (_.startsWith(dir, "@")) {
-						const pathToDir = path.join(dependenciesFolder, dir);
-						const contents = this.$fs.readDirectory(pathToDir);
-						return _.map(contents, subDir => `${dir}/${subDir}`);
-					}
-
-					return dir;
-				}));
+			const dependencies = this.getDependencies(dependenciesFolder);
 
 			dependencies.filter(dir => !productionDependencies || !productionDependencies.hasOwnProperty(dir))
 				.forEach(dir => shelljs.rm("-rf", path.join(dependenciesFolder, dir)));
 		}
+	}
+
+	private getDependencies(dependenciesFolder: string): string[] {
+		const dependencies = _.flatten(this.$fs.readDirectory(dependenciesFolder)
+			.map(dir => {
+				if (_.startsWith(dir, "@")) {
+					const pathToDir = path.join(dependenciesFolder, dir);
+					const contents = this.$fs.readDirectory(pathToDir);
+					return _.map(contents, subDir => `${dir}/${subDir}`);
+				}
+
+				return dir;
+			}));
+
+		return dependencies;
 	}
 }
 
@@ -160,7 +193,7 @@ export class NpmPluginPrepare {
 	public async prepareJSPlugins(dependencies: IDependencyData[], platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
 		if (_.isEmpty(dependencies) || this.allPrepared(dependencies, platform, projectData)) {
 			return;
-}
+		}
 
 		for (const dependencyKey in dependencies) {
 			const dependency = dependencies[dependencyKey];
