@@ -19,7 +19,7 @@ class AnalyticsCommand implements ICommand {
 	constructor(protected $analyticsService: IAnalyticsService,
 		private $logger: ILogger,
 		private $errors: IErrors,
-		private $options: ICommonOptions,
+		private $options: IOptions,
 		private settingName: string,
 		private humanReadableSettingName: string) { }
 
@@ -51,7 +51,7 @@ export class UsageReportingCommand extends AnalyticsCommand {
 	constructor(protected $analyticsService: IAnalyticsService,
 		$logger: ILogger,
 		$errors: IErrors,
-		$options: ICommonOptions,
+		$options: IOptions,
 		$staticConfig: Config.IStaticConfig) {
 		super($analyticsService, $logger, $errors, $options, $staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, "Usage reporting");
 	}
@@ -62,7 +62,7 @@ export class ErrorReportingCommand extends AnalyticsCommand {
 	constructor(protected $analyticsService: IAnalyticsService,
 		$logger: ILogger,
 		$errors: IErrors,
-		$options: ICommonOptions,
+		$options: IOptions,
 		$staticConfig: Config.IStaticConfig
 	) {
 		super($analyticsService, $logger, $errors, $options, $staticConfig.ERROR_REPORT_SETTING_NAME, "Error reporting");

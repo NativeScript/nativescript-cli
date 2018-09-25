@@ -12,7 +12,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		private $errors: IErrors,
 		private $iOSNotificationService: IiOSNotificationService,
 		private $iosDeviceOperations: IIOSDeviceOperations,
-		private $options: ICommonOptions,
+		private $options: IOptions,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
 		super($logger, $hooksService);
 	}

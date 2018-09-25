@@ -7,7 +7,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 		private $commandsService: ICommandsService,
 		private $staticConfig: Config.IStaticConfig,
 		private $sysInfo: ISysInfo,
-		private $options: ICommonOptions,
+		private $options: IOptions,
 		private $fs: IFileSystem) { }
 
 	public async dispatchCommand(): Promise<void> {

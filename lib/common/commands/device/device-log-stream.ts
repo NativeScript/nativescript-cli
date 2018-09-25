@@ -4,7 +4,7 @@ export class OpenDeviceLogStreamCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $errors: IErrors,
 		private $commandsService: ICommandsService,
-		private $options: ICommonOptions,
+		private $options: IOptions,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $loggingLevels: Mobile.ILoggingLevels,
 		$iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider) {

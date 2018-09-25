@@ -6,7 +6,7 @@ export class AppBuilderAndroidLiveSyncService extends AndroidLiveSyncService imp
 	constructor(_device: Mobile.IAndroidDevice,
 		$fs: IFileSystem,
 		$mobileHelper: Mobile.IMobileHelper,
-		private $options: ICommonOptions) {
+		private $options: IOptions) {
 		super(_device, $fs, $mobileHelper);
 	}
 

@@ -1,7 +1,7 @@
 export class HelpCommand implements ICommand {
 	constructor(private $injector: IInjector,
 		private $helpService: IHelpService,
-		private $options: ICommonOptions) { }
+		private $options: IOptions) { }
 
 	public enableHooks = false;
 	public async canExecute(args: string[]): Promise<boolean> {

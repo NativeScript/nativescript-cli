@@ -9,7 +9,7 @@ export class Project extends ProjectBase {
 		protected $fs: IFileSystem,
 		protected $logger: ILogger,
 		protected $nativeScriptProjectCapabilities: Project.ICapabilities,
-		protected $options: ICommonOptions,
+		protected $options: IOptions,
 		protected $projectConstants: Project.IConstants,
 		protected $staticConfig: Config.IStaticConfig) {
 		super($cordovaProjectCapabilities, $errors, $fs, $logger, $nativeScriptProjectCapabilities, $options, $projectConstants, $staticConfig);

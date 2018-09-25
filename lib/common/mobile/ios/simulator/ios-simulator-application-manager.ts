@@ -7,7 +7,7 @@ import { cache } from "../../../decorators";
 export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 	constructor(private iosSim: any,
 		private device: Mobile.IiOSDevice,
-		private $options: ICommonOptions,
+		private $options: IOptions,
 		private $fs: IFileSystem,
 		private $plistParser: IPlistParser,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider,

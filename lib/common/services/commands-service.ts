@@ -26,7 +26,7 @@ export class CommandsService implements ICommandsService {
 		private $hooksService: IHooksService,
 		private $injector: IInjector,
 		private $logger: ILogger,
-		private $options: ICommonOptions,
+		private $options: IOptions,
 		private $resources: IResourceLoader,
 		private $staticConfig: Config.IStaticConfig,
 		private $helpService: IHelpService,

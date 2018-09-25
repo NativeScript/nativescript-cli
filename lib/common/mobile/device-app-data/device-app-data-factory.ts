@@ -1,7 +1,7 @@
 export class DeviceAppDataFactory implements Mobile.IDeviceAppDataFactory {
 	constructor(private $deviceAppDataProvider: Mobile.IDeviceAppDataProvider,
 		private $injector: IInjector,
-		private $options: ICommonOptions) { }
+		private $options: IOptions) { }
 
 	create<T>(appIdentifier: string, platform: string, device: Mobile.IDevice, liveSyncOptions?: { isForCompanionApp: boolean }): T {
 		const factoryRules = this.$deviceAppDataProvider.createFactoryRules();

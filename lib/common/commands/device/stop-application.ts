@@ -2,7 +2,7 @@ export class StopApplicationOnDeviceCommand implements ICommand {
 
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $stringParameter: ICommandParameter,
-		private $options: ICommonOptions) { }
+		private $options: IOptions) { }
 
 	allowedParameters: ICommandParameter[] = [this.$stringParameter, this.$stringParameter, this.$stringParameter];
 

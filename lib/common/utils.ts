@@ -1,5 +1,5 @@
 export class Utils implements IUtils {
-	constructor(private $options: ICommonOptions,
+	constructor(private $options: IOptions,
 		private $logger: ILogger) { }
 
 	public getParsedTimeout(defaultTimeout: number): number {

@@ -15,7 +15,7 @@ class LiveSyncServiceBase implements ILiveSyncServiceBase {
 	constructor(protected $devicesService: Mobile.IDevicesService,
 		protected $mobileHelper: Mobile.IMobileHelper,
 		protected $logger: ILogger,
-		protected $options: ICommonOptions,
+		protected $options: IOptions,
 		protected $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		protected $fs: IFileSystem,
 		protected $injector: IInjector,
