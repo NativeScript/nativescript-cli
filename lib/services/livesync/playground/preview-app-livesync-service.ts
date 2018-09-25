@@ -90,11 +90,11 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 			let result: FilesPayload = null;
 			if (files && files.length) {
 				result = await this.applyChanges(platformData, projectData, files);
+				this.$logger.info(`Successfully synced ${result.files.map(filePayload => filePayload.file.yellow)} for platform ${platform}.`);
 			} else {
 				result = await this.getFilesPayload(platformData, projectData);
+				this.$logger.info(`Successfully synced changes for platform ${platform}.`);
 			}
-
-			this.$logger.info(`Successfully synced changes for platform ${platform}.`);
 
 			return result;
 		} catch (err) {
