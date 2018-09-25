@@ -3,8 +3,10 @@ interface IIOSDebuggerPortInputData extends IProjectDir {
 	appId: string;
 }
 
-interface IIOSDebuggerPortData extends IIOSDebuggerPortInputData {
-	port: number;
+interface IIOSDebuggerPortData {
+	port: number,
+	deviceId: string;
+	appId: string;
 }
 
 interface IIOSDebuggerPortStoredData {

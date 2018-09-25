@@ -1,5 +1,4 @@
 import { ChildProcess } from "child_process";
-import { DEVICE_LOG_EVENT_NAME } from "../../../constants";
 import { EventEmitter } from "events";
 
 export class IOSSimulatorLogProvider extends EventEmitter implements Mobile.IiOSSimulatorLogProvider, IDisposable, IShouldDispose {
@@ -9,7 +8,9 @@ export class IOSSimulatorLogProvider extends EventEmitter implements Mobile.IiOS
 
 	constructor(private $iOSSimResolver: Mobile.IiOSSimResolver,
 		private $logger: ILogger,
-		private $processService: IProcessService) {
+		private $processService: IProcessService,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
 			super();
 			this.shouldDispose = true;
 		}
@@ -24,7 +25,7 @@ export class IOSSimulatorLogProvider extends EventEmitter implements Mobile.IiOS
 
 			const action = (data: NodeBuffer | string) => {
 				const message = data.toString();
-				this.emit(DEVICE_LOG_EVENT_NAME, { deviceId, message, muted: (options || {}).muted });
+				this.$deviceLogProvider.logData(message, this.$devicePlatformsConstants.iOS, deviceId);
 			};
 
 			if (deviceLogChildProcess) {
@@ -51,14 +52,6 @@ export class IOSSimulatorLogProvider extends EventEmitter implements Mobile.IiOS
 			this.simulatorsLoggingEnabled[deviceId] = true;
 			this.simulatorsLogProcess[deviceId] = deviceLogChildProcess;
 		}
-	}
-
-	public async startNewMutedLogProcess(deviceId: string, options?: Mobile.IiOSLogStreamOptions): Promise<void> {
-		options = options || {};
-		options.muted = true;
-		this.simulatorsLoggingEnabled[deviceId] = false;
-		await this.startLogProcess(deviceId, options);
-		this.simulatorsLoggingEnabled[deviceId] = false;
 	}
 
 	public dispose(signal?: any) {

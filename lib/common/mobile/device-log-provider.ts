@@ -1,4 +1,5 @@
 import { DeviceLogProviderBase } from "./device-log-provider-base";
+import { DEVICE_LOG_EVENT_NAME } from "../constants";
 
 export class DeviceLogProvider extends DeviceLogProviderBase {
 	constructor(protected $logFilter: Mobile.ILogFilter,
@@ -11,6 +12,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		const data = this.$logFilter.filterData(platform, lineText, loggingOptions);
 		if (data) {
 			this.$logger.write(data);
+			this.emit(DEVICE_LOG_EVENT_NAME, lineText, deviceIdentifier);
 		}
 	}
 
