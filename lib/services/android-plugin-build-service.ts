@@ -425,8 +425,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			pluginBuildSettings.pluginDir,
 			"assembleRelease",
 			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
-			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
-			`-PsupportVersion=${pluginBuildSettings.androidToolsInfo.supportRepositoryVersion}`
+			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`
 		];
 
 		try {

@@ -603,7 +603,6 @@ export class AndroidToolsInfoStub implements IAndroidToolsInfo {
 		infoData.compileSdkVersion = 23;
 		infoData.buildToolsVersion = "23";
 		infoData.targetSdkVersion = 23;
-		infoData.supportRepositoryVersion = "23";
 		return infoData;
 	}
 

@@ -31,7 +31,6 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			infoData.compileSdkVersion = this.getCompileSdkVersion();
 			infoData.buildToolsVersion = this.getBuildToolsVersion();
 			infoData.targetSdkVersion = this.getTargetSdk();
-			infoData.supportRepositoryVersion = this.getAndroidSupportRepositoryVersion();
 			infoData.generateTypings = this.shouldGenerateTypings();
 
 			this.toolsInfo = infoData;
@@ -201,32 +200,6 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		}
 
 		return buildToolsVersion;
-	}
-
-	private getAppCompatRange(): string {
-		const compileSdkVersion = this.getCompileSdkVersion();
-		let requiredAppCompatRange: string;
-		if (compileSdkVersion) {
-			requiredAppCompatRange = `>=${compileSdkVersion} <${compileSdkVersion + 1}`;
-		}
-
-		return requiredAppCompatRange;
-	}
-
-	private getAndroidSupportRepositoryVersion(): string {
-		let selectedAppCompatVersion: string;
-		const requiredAppCompatRange = this.getAppCompatRange();
-		if (this.androidHome && requiredAppCompatRange) {
-			const pathToAppCompat = path.join(this.androidHome, "extras", "android", "m2repository", "com", "android", "support", "appcompat-v7");
-			selectedAppCompatVersion = this.getMatchingDir(pathToAppCompat, requiredAppCompatRange);
-			if (!selectedAppCompatVersion) {
-				// get latest matching version, as there's no available appcompat versions for latest SDK versions.
-				selectedAppCompatVersion = this.getMatchingDir(pathToAppCompat, "*");
-			}
-		}
-
-		this.$logger.trace(`Selected AppCompat version is: ${selectedAppCompatVersion}`);
-		return selectedAppCompatVersion;
 	}
 
 	private getLatestValidAndroidTarget(): string {
