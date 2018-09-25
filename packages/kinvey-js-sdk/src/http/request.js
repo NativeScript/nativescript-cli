@@ -1,5 +1,6 @@
 import isFunction from 'lodash/isFunction';
 import { format } from 'url';
+import { Base64 } from 'js-base64';
 import { getConfig } from '../client';
 import Kmd from '../kmd';
 import { getSession } from './session';
@@ -76,11 +77,11 @@ export class KinveyRequest extends Request {
       this.headers.setAuthorization(value);
     } else if (auth === Auth.App) {
       const { appKey, appSecret } = getConfig();
-      const credentials = Buffer.from(`${appKey}:${appSecret}`).toString('base64');
+      const credentials = Base64.encode(`${appKey}:${appSecret}`);
       this.headers.setAuthorization(`Basic ${credentials}`);
     } else if (auth === Auth.MasterSecret) {
       const { appKey, masterSecret } = getConfig();
-      const credentials = Buffer.from(`${appKey}:${masterSecret}`).toString('base64');
+      const credentials = Base64.encode(`${appKey}:${masterSecret}`);
       this.headers.setAuthorization(`Basic ${credentials}`);
     } else if (auth === Auth.Session) {
       const session = getSession();

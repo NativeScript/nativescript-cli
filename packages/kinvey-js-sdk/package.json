@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.0.0-rc.2",
+    "js-base64": "^2.4.9",
     "lodash": "^4.17.10",
     "loglevel": "^1.6.1",
     "loglevel-plugin-prefix": "^0.8.3",

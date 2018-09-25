@@ -10,11 +10,16 @@
     "test:ci": "yarn lint && yarn test"
   },
   "devDependencies": {
+    "@angular/common": "^6.0.0-rc.0 || ^6.0.0",
+    "@angular/core": "^6.0.0-rc.0 || ^6.0.0",
     "lerna": "^3.0.4",
-    "wsrun": "^2.2.1"
+    "rxjs": "~6.2.0",
+    "wsrun": "^2.2.1",
+    "zone.js": "~0.8.26"
   },
   "workspaces": {
     "packages": [
+      "packages/kinvey-angular-sdk",
       "packages/kinvey-html5-sdk",
       "packages/kinvey-js-sdk",
       "packages/kinvey-nativescript-sdk",

@@ -1,6 +1,7 @@
 import isString from 'lodash/isString';
 import urljoin from 'url-join';
 import { parse } from 'url';
+import { Base64 } from 'js-base64';
 import { getConfig } from '../client';
 import {
   execute,
@@ -29,7 +30,7 @@ async function getTempLoginUrl(clientId, redirectUri, version) {
     method: RequestMethod.POST,
     auth() {
       const { appSecret } = getConfig();
-      const credentials = Buffer.from(`${clientId}:${appSecret}`).toString('base64');
+      const credentials = Base64.encode(`${clientId}:${appSecret}`);
       return `Basic ${credentials}`;
     },
     url: formatKinveyAuthUrl(urljoin(`v${version}`, '/oauth/auth')),
@@ -94,7 +95,7 @@ async function loginWithUrl(url, username, password, clientId, redirectUri) {
     method: RequestMethod.POST,
     auth() {
       const { appSecret } = getConfig();
-      const credentials = Buffer.from(`${clientId}:${appSecret}`).toString('base64');
+      const credentials = Base64.encode(`${clientId}:${appSecret}`);
       return `Basic ${credentials}`;
     },
     url,
@@ -121,7 +122,7 @@ async function getTokenWithCode(code, clientId, redirectUri) {
     url: formatKinveyAuthUrl('/oauth/token'),
     auth() {
       const { appSecret } = getConfig();
-      return Buffer.from(`${clientId}:${appSecret}`).toString('base64');
+      return Base64.encode(`${clientId}:${appSecret}`);
     },
     body: {
       grant_type: 'authorization_code',
