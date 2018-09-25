@@ -51,10 +51,6 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 		if (that.justlaunch) {
 			that.watch = false;
 		}
-
-		if (that.hmr) {
-			that.bundle = "webpack";
-		}
 	}
 }
 $injector.register("options", Options);

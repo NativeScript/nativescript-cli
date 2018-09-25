@@ -188,7 +188,7 @@ export class OptionsBase {
 		this.argv.profileDir = this.argv["profile-dir"] = this.$settingsService.getProfileDir();
 
 		// Default to "nativescript-dev-webpack" if only `--bundle` is passed
-		if (this.argv.bundle !== undefined) {
+		if (this.argv.bundle !== undefined || this.argv.hmr) {
 			this.argv.bundle = this.argv.bundle || "webpack";
 		}
 
