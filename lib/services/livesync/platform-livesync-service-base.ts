@@ -120,7 +120,7 @@ export abstract class PlatformLiveSyncServiceBase {
 
 		transferredFiles = await deviceLiveSyncService.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, projectData, liveSyncDeviceInfo, options);
 
-		this.logFilesSyncInformation(transferredFiles, "Successfully transferred %s.", this.$logger.info);
+		this.logFilesSyncInformation(transferredFiles, "Successfully transferred %s on device %s.", this.$logger.info, deviceAppData.device.deviceInfo.identifier);
 
 		return transferredFiles;
 	}
@@ -139,10 +139,10 @@ export abstract class PlatformLiveSyncServiceBase {
 		};
 	}
 
-	private logFilesSyncInformation(localToDevicePaths: Mobile.ILocalToDevicePathData[], message: string, action: Function): void {
+	private logFilesSyncInformation(localToDevicePaths: Mobile.ILocalToDevicePathData[], message: string, action: Function, deviceIdentifier: string): void {
 		if (localToDevicePaths && localToDevicePaths.length < 10) {
 			_.each(localToDevicePaths, (file: Mobile.ILocalToDevicePathData) => {
-				action.call(this.$logger, util.format(message, path.basename(file.getLocalPath()).yellow));
+				action.call(this.$logger, util.format(message, path.basename(file.getLocalPath()).yellow), deviceIdentifier);
 			});
 		} else {
 			action.call(this.$logger, util.format(message, "all files"));
