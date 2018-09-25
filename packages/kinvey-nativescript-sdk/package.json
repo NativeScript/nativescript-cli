@@ -40,7 +40,7 @@
     "push.d.ts",
     "push.ios.js",
     "push.ios.js.map",
-    "lib/before-prepare.js",
+    "lib/before-checkForChanges.js",
     "lib/postinstall.js",
     "lib/preuninstall.js",
     "platforms/android/AndroidManifest.default.xml",
