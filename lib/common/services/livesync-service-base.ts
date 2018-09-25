@@ -221,7 +221,7 @@ class LiveSyncServiceBase implements ILiveSyncServiceBase {
 
 	private async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<void> {
 		this.$logger.info("Transferring project files...");
-		this.logFilesSyncInformation(localToDevicePaths, "Transferring %s.", this.$logger.trace);
+		this.logFilesSyncInformation(localToDevicePaths, "Transferring %s on device %s.", this.$logger.trace, deviceAppData.device.deviceInfo.identifier);
 
 		const canTransferDirectory = isFullSync && (this.$devicesService.isAndroidDevice(deviceAppData.device) || this.$devicesService.isiOSSimulator(deviceAppData.device));
 		if (canTransferDirectory) {
@@ -238,13 +238,13 @@ class LiveSyncServiceBase implements ILiveSyncServiceBase {
 			await this.$liveSyncProvider.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, isFullSync);
 		}
 
-		this.logFilesSyncInformation(localToDevicePaths, "Successfully transferred %s.", this.$logger.info);
+		this.logFilesSyncInformation(localToDevicePaths, "Successfully transferred %s on device %s.", this.$logger.info, deviceAppData.device.deviceInfo.identifier);
 	}
 
-	private logFilesSyncInformation(localToDevicePaths: Mobile.ILocalToDevicePathData[], message: string, action: Function): void {
+	private logFilesSyncInformation(localToDevicePaths: Mobile.ILocalToDevicePathData[], message: string, action: Function, deviceIdentifier: string): void {
 		if (this.showFullLiveSyncInformation) {
 			_.each(localToDevicePaths, (file: Mobile.ILocalToDevicePathData) => {
-				action.call(this.$logger, util.format(message, path.basename(file.getLocalPath()).yellow));
+				action.call(this.$logger, util.format(message, path.basename(file.getLocalPath()).yellow), deviceIdentifier);
 			});
 		} else {
 			action.call(this.$logger, util.format(message, "all files"));
