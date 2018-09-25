@@ -4466,9 +4466,9 @@
       }
     },
     "nativescript-preview-sdk": {
-      "version": "0.2.4",
-      "resolved": "https://registry.npmjs.org/nativescript-preview-sdk/-/nativescript-preview-sdk-0.2.4.tgz",
-      "integrity": "sha512-Osmj370clhWCyMajq52ez7TPB47PtcghVzU6jFI4MzO69k4RpXrxq2DsHN3kN4L6o09TLYu/xYzvFoL65QDfNg==",
+      "version": "0.2.9",
+      "resolved": "https://registry.npmjs.org/nativescript-preview-sdk/-/nativescript-preview-sdk-0.2.9.tgz",
+      "integrity": "sha512-uRQo2Yjjm457P5ahNoT5lw+4syyWWIFRLaBrk6xk/ATgdDmSEV4tX4bDBSXswi52Hbp6FGCdIbX4504xvZ9Rjw==",
       "requires": {
         "@types/pubnub": "4.0.2",
         "@types/shortid": "0.0.29",
