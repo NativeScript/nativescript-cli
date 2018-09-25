@@ -19,8 +19,16 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 			originalTemplateName = constants.RESERVED_TEMPLATE_NAMES["default"];
 		}
 
-		// support <reserved_name>@<version> syntax
-		const [name, version] = originalTemplateName.split("@");
+		// support <reserved_name>@<version> syntax, for example typescript@1.0.0
+		// support <scoped_package_name>@<version> syntax, for example @nativescript/vue-template@1.0.0
+		const lastIndexOfAtSign = originalTemplateName.lastIndexOf("@");
+		let name = originalTemplateName;
+		let version = "";
+		if (lastIndexOfAtSign > 0) {
+			name = originalTemplateName.substr(0, lastIndexOfAtSign);
+			version = originalTemplateName.substr(lastIndexOfAtSign + 1);
+		}
+
 		const templateName = constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()] || name;
 		const fullTemplateName = version ? `${templateName}@${version}` : templateName;
 		const templatePackageJsonContent = await this.getTemplatePackageJsonContent(fullTemplateName);
@@ -49,7 +57,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 			});
 		}
 
-		return { templateName, templatePath, templateVersion, templatePackageJsonContent };
+		return { templateName, templatePath, templateVersion, templatePackageJsonContent, version };
 	}
 
 	private async getTemplateVersion(templateName: string): Promise<string> {

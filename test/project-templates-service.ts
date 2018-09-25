@@ -220,5 +220,42 @@ describe("project-templates-service", () => {
 			});
 
 		});
+
+		describe("uses correct version", () => {
+			[
+				{
+					name: "is correct when package version is passed",
+					templateName: "some-template@1.0.0",
+					expectedVersion: "1.0.0",
+					expectedTemplateName: "some-template"
+				},
+				{
+					name: "is correct when reserved package name with version is passed",
+					templateName: "typescript@1.0.0",
+					expectedVersion: "1.0.0",
+					expectedTemplateName: "tns-template-hello-world-ts"
+				},
+				{
+					name: "is correct when scoped package name without version is passed",
+					templateName: "@nativescript/vue-template",
+					expectedVersion: "",
+					expectedTemplateName: "@nativescript/vue-template"
+				},
+				{
+					name: "is correct when scoped package name with version is passed",
+					templateName: "@nativescript/vue-template@1.0.0",
+					expectedVersion: "1.0.0",
+					expectedTemplateName: "@nativescript/vue-template"
+				}
+			].forEach(testCase => {
+				it(testCase.name, async () => {
+					const testInjector = createTestInjector();
+					const projectTemplatesService = testInjector.resolve<IProjectTemplatesService>("projectTemplatesService");
+					const { version, templateName } = await projectTemplatesService.prepareTemplate(testCase.templateName, "tempFolder");
+					assert.strictEqual(version, testCase.expectedVersion);
+					assert.strictEqual(templateName, testCase.expectedTemplateName);
+				});
+			});
+		});
 	});
 });
