@@ -90,7 +90,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 				finalPodfileContent = finalPodfileContent.replace(postInstallHookStart, `${postInstallHookStart}${postInstallHookContent}`);
 			} else {
 				const postInstallHook = `${postInstallHookStart}${postInstallHookContent}end`;
-				finalPodfileContent = `${finalPodfileContent}${postInstallHook}`;
+				finalPodfileContent = `${finalPodfileContent}${EOL}${EOL}${postInstallHook}`;
 			}
 		}
 
