@@ -25,6 +25,7 @@ import { Messages } from "../lib/common/messages/messages";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { INFO_PLIST_FILE_NAME, MANIFEST_FILE_NAME } from "../lib/constants";
 import { mkdir } from "shelljs";
+import * as constants from "../lib/constants";
 
 require("should");
 const temp = require("temp");
@@ -121,6 +122,7 @@ function createTestInjector() {
 			}));
 		}
 	});
+	testInjector.register("usbLiveSyncService", () => ({}));
 
 	return testInjector;
 }
@@ -1002,6 +1004,158 @@ describe('Platform Service Tests', () => {
 					});
 				});
 			});
+		});
+	});
+
+	describe("ensurePlatformInstalled", () => {
+		const platform = "android";
+		const platformTemplate = "testPlatformTemplate";
+		const appFilesUpdaterOptions = { bundle: true };
+		let isPlatformAdded = false;
+		let areWebpackFilesPersisted = false;
+
+		let projectData: IProjectData = null;
+		let usbLiveSyncService: any = null;
+		let projectChangesService: IProjectChangesService = null;
+
+		beforeEach(() => {
+			reset();
+
+			(<any>platformService).addPlatform = () => isPlatformAdded = true;
+			(<any>platformService).persistWebpackFiles = () => areWebpackFilesPersisted = true;
+
+			projectData = testInjector.resolve("projectData");
+			usbLiveSyncService = testInjector.resolve("usbLiveSyncService");
+			projectChangesService = testInjector.resolve("projectChangesService");
+
+			usbLiveSyncService.isInitialized = true;
+		});
+
+		function reset() {
+			isPlatformAdded = false;
+			areWebpackFilesPersisted = false;
+		}
+
+		function mockPrepareInfo(prepareInfo: any) {
+			projectChangesService.getPrepareInfo = () => prepareInfo;
+		}
+
+		const testCases = [
+			{
+				name: "should persist webpack files when prepareInfo is null (first execution of `tns run --bundle`)",
+				areWebpackFilesPersisted: true
+			},
+			{
+				name: "should persist webpack files when prepareInfo is null and skipNativePrepare is true (first execution of `tns preview --bundle`)",
+				nativePrepare: { skipNativePrepare: true },
+				areWebpackFilesPersisted: true
+			},
+			{
+				name: "should not persist webpack files when requires platform add",
+				prepareInfo: { nativePlatformStatus: constants.NativePlatformStatus.requiresPlatformAdd },
+				areWebpackFilesPersisted: true
+			},
+			{
+				name: "should persist webpack files when requires platform add and skipNativePrepare is true",
+				prepareInfo: { nativePlatformStatus: constants.NativePlatformStatus.requiresPlatformAdd },
+				nativePrepare: { skipNativePrepare: true },
+				areWebpackFilesPersisted: false
+			},
+			{
+				name: "should persist webpack files when platform is already prepared",
+				prepareInfo: { nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared },
+				areWebpackFilesPersisted: false
+			},
+			{
+				name: "should not persist webpack files when platform is already prepared and skipNativePrepare is true",
+				prepareInfo: { nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared },
+				areWebpackFilesPersisted: false
+			},
+			{
+				name: "should not persist webpack files when no webpack watcher is started (first execution of `tns build --bundle`)",
+				isWebpackWatcherStarted: false,
+				areWebpackFilesPersisted: false
+			},
+			{
+				name: "should not persist webpack files when no webpack watcher is started and skipNativePrepare is true (local JS prepare from cloud command)",
+				isWebpackWatcherStarted: false,
+				nativePrepare: { skipNativePrepare: true },
+				areWebpackFilesPersisted: false
+			}
+		];
+
+		_.each(testCases, (testCase: any) => {
+			it(`${testCase.name}`, async () => {
+				usbLiveSyncService.isInitialized = testCase.isWebpackWatcherStarted === undefined ? true : testCase.isWebpackWatcherStarted;
+				mockPrepareInfo(testCase.prepareInfo);
+
+				await (<any>platformService).ensurePlatformInstalled(platform, platformTemplate, projectData, config, appFilesUpdaterOptions, testCase.nativePrepare);
+				assert.deepEqual(areWebpackFilesPersisted, testCase.areWebpackFilesPersisted);
+			});
+		});
+
+		it("should not persist webpack files after the second execution of `tns preview --bundle` or `tns cloud run --bundle`", async () => {
+			// First execution of `tns preview --bundle`
+			mockPrepareInfo(null);
+			await (<any>platformService).ensurePlatformInstalled(platform, platformTemplate, projectData, config, appFilesUpdaterOptions, { skipNativePrepare: true });
+			assert.isTrue(areWebpackFilesPersisted);
+
+			// Second execution of `tns preview --bundle`
+			reset();
+			mockPrepareInfo({ nativePlatformStatus: constants.NativePlatformStatus.requiresPlatformAdd });
+			await (<any>platformService).ensurePlatformInstalled(platform, platformTemplate, projectData, config, appFilesUpdaterOptions, { skipNativePrepare: true });
+			assert.isFalse(areWebpackFilesPersisted);
+		});
+
+		it("should not persist webpack files after the second execution of `tns run --bundle`", async () => {
+			// First execution of `tns run --bundle`
+			mockPrepareInfo(null);
+			await (<any>platformService).ensurePlatformInstalled(platform, platformTemplate, projectData, config, appFilesUpdaterOptions);
+			assert.isTrue(areWebpackFilesPersisted);
+
+			// Second execution of `tns run --bundle`
+			reset();
+			mockPrepareInfo({ nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared });
+			await (<any>platformService).ensurePlatformInstalled(platform, platformTemplate, projectData, config, appFilesUpdaterOptions);
+			assert.isFalse(areWebpackFilesPersisted);
+		});
+
+		it("should handle correctly the following sequence of commands: `tns preview --bundle`, `tns run --bundle` and `tns preview --bundle`", async () => {
+			// First execution of `tns preview --bundle`
+			mockPrepareInfo(null);
+			await (<any>platformService).ensurePlatformInstalled(platform, platformTemplate, projectData, config, appFilesUpdaterOptions, { skipNativePrepare: true });
+			assert.isTrue(areWebpackFilesPersisted);
+
+			// Execution of `tns run --bundle`
+			reset();
+			mockPrepareInfo({ nativePlatformStatus: constants.NativePlatformStatus.requiresPlatformAdd });
+			await (<any>platformService).ensurePlatformInstalled(platform, platformTemplate, projectData, config, appFilesUpdaterOptions);
+			assert.isTrue(areWebpackFilesPersisted);
+
+			// Execution of `tns preview --bundle`
+			reset();
+			mockPrepareInfo({ nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared });
+			await (<any>platformService).ensurePlatformInstalled(platform, platformTemplate, projectData, config, appFilesUpdaterOptions, { skipNativePrepare: true });
+			assert.isFalse(areWebpackFilesPersisted);
+		});
+
+		it("should handle correctly the following sequence of commands: `tns preview --bundle`, `tns run --bundle` and `tns build --bundle`", async () => {
+			// Execution of `tns preview --bundle`
+			mockPrepareInfo(null);
+			await (<any>platformService).ensurePlatformInstalled(platform, platformTemplate, projectData, config, appFilesUpdaterOptions, { skipNativePrepare: true });
+			assert.isTrue(areWebpackFilesPersisted);
+
+			// Execution of `tns run --bundle`
+			reset();
+			mockPrepareInfo({ nativePlatformStatus: constants.NativePlatformStatus.requiresPlatformAdd });
+			await (<any>platformService).ensurePlatformInstalled(platform, platformTemplate, projectData, config, appFilesUpdaterOptions);
+			assert.isTrue(areWebpackFilesPersisted);
+
+			// Execution of `tns build --bundle`
+			reset();
+			mockPrepareInfo({ nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared });
+			await (<any>platformService).ensurePlatformInstalled(platform, platformTemplate, projectData, config, appFilesUpdaterOptions);
+			assert.isFalse(areWebpackFilesPersisted);
 		});
 	});
 });
