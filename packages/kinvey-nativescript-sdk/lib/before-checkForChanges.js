@@ -13,7 +13,12 @@ module.exports = function (hookArgs) {
   const pathToPackageJson = path.join(appDirectoryPath, 'package.json');
   const packageJsonContent = JSON.parse(fs.readFileSync(pathToPackageJson));
   const kinveyData = packageJsonContent.pluginsData && packageJsonContent.pluginsData[pkg.name];
-  const redirectUri = (kinveyData && kinveyData.config && kinveyData.config.redirectUri) || 'enterpriseauth://';
+  const redirectUri = (kinveyData && kinveyData.config && kinveyData.config.redirectUri);
+
+  if (!redirectUri) {
+    throw new Error(`Unable to find redirectUri info in ${pathToPackageJson}. Please provide correct redirectUri`);
+  }
+
   const parsedRedirectUri = url.parse(redirectUri);
   const redirectUriScheme = parsedRedirectUri.protocol && parsedRedirectUri.protocol.substring(0, parsedRedirectUri.protocol.indexOf(':'));
 
