@@ -1,12 +1,11 @@
 import { PreviewSdkService } from "../../lib/services/livesync/playground/preview-sdk-service";
 import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
-import { LoggerStub, ErrorsStub } from "../stubs";
+import { LoggerStub } from "../stubs";
 
 const getPreviewSdkService = (): IPreviewSdkService => {
 	const testInjector = new Yok();
 	testInjector.register("logger", LoggerStub);
-	testInjector.register("errors", ErrorsStub);
 	testInjector.register("config", {});
 	testInjector.register("previewSdkService", PreviewSdkService);
 
