@@ -7,8 +7,7 @@ export class PreviewSdkService implements IPreviewSdkService {
 	private instanceId: string = null;
 	public connectedDevices: Device[] = [];
 
-	constructor(private $errors: IErrors,
-		private $logger: ILogger,
+	constructor(private $logger: ILogger,
 		private $httpClient: Server.IHttpClient,
 		private $config: IConfiguration) {
 	}
@@ -62,7 +61,7 @@ export class PreviewSdkService implements IPreviewSdkService {
 				this.$logger.trace("Received onRestartMessage event.");
 			},
 			onUncaughtErrorMessage: () => {
-				this.$errors.failWithoutHelp("Error while communicating with preview app.");
+				this.$logger.warn("The Preview app has terminated unexpectedly. Please run it again to get a detailed crash report.");
 			},
 			onDeviceConnectedMessage: (deviceConnectedMessage: DeviceConnectedMessage) => ({ }),
 			onDeviceConnected: (device: Device) => {
