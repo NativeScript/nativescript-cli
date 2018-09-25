@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "3.11.6",
+  "version": "3.11.7",
   "name": "kinvey-node-sdk",
   "description": "Kinvey JavaScript SDK for Node.js applications.",
   "author": "Kinvey, Inc.",
@@ -15,7 +15,7 @@
     "pubnub": "~4.19.0",
     "qs": "~6.5.1",
     "request": "~2.83.0",
-    "rxjs": "~5.5.2",
+    "rxjs": "~6.2.2",
     "sift": "~5.0.0",
     "url-join": "~2.0.2"
   },

@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "3.11.6",
+  "version": "3.11.7",
   "name": "kinvey-angular2-sdk",
   "description": "Kinvey JavaScript SDK for Angular 2+/Ionic 2+ applications.",
   "author": "Kinvey, Inc.",
@@ -16,7 +16,7 @@
     "s3": "npm run build -- --env.uglify --env.s3"
   },
   "dependencies": {
-    "rxjs": "~5.5.5"
+    "rxjs": "~6.2.2"
   },
   "files": [
     "kinvey-angular2-sdk.min.js",
