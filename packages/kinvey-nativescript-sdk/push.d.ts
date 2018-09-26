@@ -52,5 +52,5 @@ export class Push {
   static onNotification(listener: (notifaction: any) => void);
   static onceNotification(listener: (notifaction: any) => void);
   static register(options: PushOptions): Promise<string>;
-  static unregister(): Promise<null>;
+  static unregister(options: PushOptions): Promise<null>;
 }
