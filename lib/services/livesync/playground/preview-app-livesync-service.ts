@@ -20,8 +20,8 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		private $projectFilesManager: IProjectFilesManager,
 		private $projectFilesProvider: IProjectFilesProvider) { }
 
-	public initialize(data: IPreviewAppLiveSyncData) {
-		this.$previewSdkService.initialize(async (device: Device) => {
+	public async initialize(data: IPreviewAppLiveSyncData): Promise<void> {
+		await this.$previewSdkService.initialize(async (device: Device) => {
 			if (!device) {
 				this.$errors.failWithoutHelp("Sending initial preview files without a specified device is not supported.");
 			}

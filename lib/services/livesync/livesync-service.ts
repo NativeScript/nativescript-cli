@@ -327,7 +327,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		let deviceDescriptorsForInitialSync: ILiveSyncDeviceInfo[] = [];
 
 		if (liveSyncData.syncToPreviewApp) {
-			this.$previewAppLiveSyncService.initialize({
+			await this.$previewAppLiveSyncService.initialize({
 				appFilesUpdaterOptions: {
 					bundle: liveSyncData.bundle,
 					release: liveSyncData.release,

@@ -17,10 +17,10 @@ export class PreviewSdkService implements IPreviewSdkService {
 		return `nsplay://boot?instanceId=${this.instanceId}&pKey=${PubnubKeys.PUBLISH_KEY}&sKey=${PubnubKeys.SUBSCRIBE_KEY}&template=play-ng&hmr=${hmrValue}`;
 	}
 
-	public initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>): void {
+	public async initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>): Promise<void> {
 		const initConfig = this.getInitConfig(getInitialFiles);
 		this.messagingService = new MessagingService();
-		this.instanceId = this.messagingService.initialize(initConfig);
+		this.instanceId = await this.messagingService.initialize(initConfig);
 	}
 
 	public applyChanges(filesPayload: FilesPayload): Promise<void> {
@@ -43,6 +43,8 @@ export class PreviewSdkService implements IPreviewSdkService {
 		return {
 			pubnubPublishKey: PubnubKeys.PUBLISH_KEY,
 			pubnubSubscribeKey: PubnubKeys.SUBSCRIBE_KEY,
+			msvKey: "cli",
+			msvEnv: this.$config.PREVIEW_APP_ENVIRONMENT,
 			callbacks: this.getCallbacks(),
 			getInitialFiles
 		};

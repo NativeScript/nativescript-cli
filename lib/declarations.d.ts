@@ -384,6 +384,7 @@ interface IConfiguration extends Config.IConfig {
 	USE_POD_SANDBOX: boolean;
 	UPLOAD_PLAYGROUND_FILES_ENDPOINT: string;
 	SHORTEN_URL_ENDPOINT: string;
+	PREVIEW_APP_ENVIRONMENT: string;
 }
 
 interface IApplicationPackage {

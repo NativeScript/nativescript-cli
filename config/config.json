@@ -5,6 +5,7 @@
 	"ANDROID_DEBUG_UI_MAC": "Google Chrome",
 	"USE_POD_SANDBOX": false,
 	"DISABLE_HOOKS": false,
-	"UPLOAD_PLAYGROUND_FILES_ENDPOINT": "https://play.nativescript.org/api/files" ,
-	"SHORTEN_URL_ENDPOINT": "https://play.nativescript.org/api/shortenurl?longUrl=%s"
+	"UPLOAD_PLAYGROUND_FILES_ENDPOINT": "https://play.nativescript.org/api/files",
+	"SHORTEN_URL_ENDPOINT": "https://play.nativescript.org/api/shortenurl?longUrl=%s",
+	"PREVIEW_APP_ENVIRONMENT": "live"
 }
