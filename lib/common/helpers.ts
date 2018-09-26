@@ -463,11 +463,11 @@ export function getHash(str: string, options?: { algorithm?: string, encoding?: 
 }
 
 export async function connectEventuallyUntilTimeout(factory: () => Promise<net.Socket>, timeout: number): Promise<net.Socket> {
-	return new Promise<net.Socket>(async(resolve, reject) => {
+	return new Promise<net.Socket>(async (resolve, reject) => {
 		let lastKnownError: Error;
 		let isResolved = false;
 
-		setTimeout(function () {
+		const connectionTimer = setTimeout(function () {
 			if (!isResolved) {
 				isResolved = true;
 				reject(lastKnownError);
@@ -484,13 +484,18 @@ export async function connectEventuallyUntilTimeout(factory: () => Promise<net.S
 				setTimeout(tryConnect, 1000);
 			};
 
-			const socket = await factory();
-			socket.on("connect", () => {
-				socket.removeListener("error", tryConnectAfterTimeout);
-				isResolved = true;
-				resolve(socket);
-			});
-			socket.on("error", tryConnectAfterTimeout);
+			try {
+				const socket = await factory();
+				socket.on("connect", () => {
+					socket.removeListener("error", tryConnectAfterTimeout);
+					isResolved = true;
+					clearTimeout(connectionTimer);
+					resolve(socket);
+				});
+				socket.on("error", tryConnectAfterTimeout);
+			} catch (e) {
+				lastKnownError = e;
+			}
 		}
 
 		await tryConnect();

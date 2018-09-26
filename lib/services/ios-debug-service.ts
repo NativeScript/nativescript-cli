@@ -142,6 +142,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		}
 		this._lldbProcess.stderr.pipe(process.stderr);
 		this._lldbProcess.stdin.write("process continue\n");
+		this._lldbProcess.stdin.write("detach\n");
 
 		return this.wireDebuggerClient(debugData, debugOptions);
 	}
