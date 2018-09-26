@@ -103,8 +103,8 @@ export class AndroidGenymotionService implements Mobile.IAndroidVirtualDeviceSer
 				path.join(osenv.home(), "genymotion", "player")
 			],
 			win32: [
-				"%ProgramFiles%\\Genymobile\\Genymotion\\player.exe",
-				"%ProgramFiles(x86)%\\Genymobile\\Genymotion\\player.exe"
+				`${process.env["PROGRAMFILES"]}\\Genymobile\\Genymotion\\player.exe`,
+				`${process.env["PROGRAMFILES(X86)"]}\\Genymobile\\Genymotion\\player.exe`
 			]
 		};
 	}
