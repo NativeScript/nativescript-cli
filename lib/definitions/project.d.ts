@@ -238,6 +238,11 @@ interface ITemplateData {
 	 * The whole content of package.json file
 	 */
 	templatePackageJsonContent: ITemplatePackageJsonContent;
+
+	/**
+	 * The version of the package used for creating the application.
+	 */
+	version: string;
 }
 
 interface ITemplatePackageJsonContent extends IBasePluginData {
