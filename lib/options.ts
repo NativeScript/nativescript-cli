@@ -25,7 +25,7 @@ export class Options {
 		private $staticConfig: Config.IStaticConfig,
 		private $settingsService: ISettingsService) {
 
-		this.options = _.extend({}, this.commonOptions, this.options, this.globalOptions);
+		this.options = _.extend({}, this.commonOptions, this.globalOptions);
 		this.setArgv();
 	}
 
