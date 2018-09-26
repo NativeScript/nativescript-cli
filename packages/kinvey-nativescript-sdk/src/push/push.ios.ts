@@ -32,7 +32,7 @@ class IOSPush extends PushCommon {
       };
 
       PushPlugin.register(config, (token) => {
-        if (!config.interactiveSettings) {
+        if (config.interactiveSettings) {
           PushPlugin.registerUserNotificationSettings(() => {
             resolve(token);
           }, (error) => {
