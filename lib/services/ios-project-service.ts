@@ -969,7 +969,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				await this.$childProcess.exec(createSchemeRubyScript, { cwd: this.getPlatformData(projectData).projectRoot });
 			}
 
-			await this.$cocoapodsService.executePodInstall(projectData, projectRoot, xcodeProjPath);
+			await this.$cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
 		}
 	}
 

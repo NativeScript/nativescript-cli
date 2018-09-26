@@ -25,7 +25,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 		return path.join(projectRoot, PODFILE_NAME);
 	}
 
-	public async executePodInstall(projectData: IProjectData, projectRoot: string, xcodeProjPath: string): Promise<ISpawnResult> {
+	public async executePodInstall(projectRoot: string, xcodeProjPath: string): Promise<ISpawnResult> {
 		// Check availability
 		try {
 			await this.$childProcess.exec("which pod");
@@ -38,21 +38,11 @@ export class CocoaPodsService implements ICocoaPodsService {
 
 		this.$logger.info("Installing pods...");
 		const podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
-		const podInstallResult = await this.$childProcess.spawnFromEvent(podTool, ["install"], "close", { cwd: projectRoot, stdio: ['pipe', process.stdout, 'pipe'] });
-		if (podInstallResult.stderr) {
-			const warnings = podInstallResult.stderr.match(/(\u001b\[(?:\d*;){0,5}\d*m[\s\S]+?\u001b\[(?:\d*;){0,5}\d*m)|(\[!\].*?\n)|(.*?warning.*)/gi);
-			_.each(warnings, (warning: string) => {
-				this.$logger.warnWithLabel(warning.replace("\n", ""));
-			});
+		// cocoapods print a lot of non-error information on stderr. Pipe the `stderr` to `stdout`, so we won't polute CLI's stderr output.
+		const podInstallResult = await this.$childProcess.spawnFromEvent(podTool, ["install"], "close", { cwd: projectRoot, stdio: ['pipe', process.stdout, process.stdout] }, { throwError: false });
 
-			let errors = podInstallResult.stderr;
-			_.each(warnings, warning => {
-				errors = errors.replace(warning, "");
-			});
-
-			if (errors.trim()) {
-				this.$errors.failWithoutHelp(`Pod install command failed. Error output: ${errors}`);
-			}
+		if (podInstallResult.exitCode !== 0) {
+			this.$errors.failWithoutHelp(`'${podTool} install' command failed.${podInstallResult.stderr ? " Error is: " + podInstallResult.stderr : ""}`);
 		}
 
 		if ((await this.$xcprojService.getXcprojInfo()).shouldUseXcproj) {

@@ -496,12 +496,11 @@ interface ICocoaPodsService {
 
 	/**
 	 * Executes `pod install` or `sanboxpod install` in the passed project.
-	 * @param {IProjectData} projectData Information about the project.
 	 * @param {string} projectRoot The root directory of the native iOS project.
 	 * @param {string} xcodeProjPath The full path to the .xcodeproj file.
 	 * @returns {Promise<ISpawnResult>} Information about the spawned process.
 	 */
-	executePodInstall(projectData: IProjectData, projectRoot: string, xcodeProjPath: string): Promise<ISpawnResult>;
+	executePodInstall(projectRoot: string, xcodeProjPath: string): Promise<ISpawnResult>;
 }
 
 interface IRubyFunction {
