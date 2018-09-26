@@ -13,7 +13,7 @@ import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { XCConfigService } from "./xcconfig-service";
 import * as mobileprovision from "ios-mobileprovision-finder";
-import { BUILD_XCCONFIG_FILE_NAME } from "../constants";
+import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
 
 interface INativeSourceCodeGroup {
 	name: string;
@@ -22,8 +22,6 @@ interface INativeSourceCodeGroup {
 }
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
-	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
-	private static XCODE_SCHEME_EXT_NAME = ".xcscheme";
 	private static XCODEBUILD_MIN_VERSION = "6.0";
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
 	private static IOS_PLATFORM_NAME = "ios";
@@ -36,7 +34,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $injector: IInjector,
 		$projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
-		private $config: IConfiguration,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $devicesService: Mobile.IDevicesService,
 		private $mobileHelper: Mobile.IMobileHelper,
@@ -174,21 +171,21 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 		this.replaceFileName("-Prefix.pch", projectRootFilePath, projectData);
 
-		const xcschemeDirPath = path.join(this.getPlatformData(projectData).projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + IOSProjectService.XCODE_PROJECT_EXT_NAME, "xcshareddata/xcschemes");
-		const xcschemeFilePath = path.join(xcschemeDirPath, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + IOSProjectService.XCODE_SCHEME_EXT_NAME);
+		const xcschemeDirPath = path.join(this.getPlatformData(projectData).projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + IosProjectConstants.XcodeProjExtName, "xcshareddata/xcschemes");
+		const xcschemeFilePath = path.join(xcschemeDirPath, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + IosProjectConstants.XcodeSchemeExtName);
 
 		if (this.$fs.exists(xcschemeFilePath)) {
 			this.$logger.debug("Found shared scheme at xcschemeFilePath, renaming to match project name.");
 			this.$logger.debug("Checkpoint 0");
 			this.replaceFileContent(xcschemeFilePath, projectData);
 			this.$logger.debug("Checkpoint 1");
-			this.replaceFileName(IOSProjectService.XCODE_SCHEME_EXT_NAME, xcschemeDirPath, projectData);
+			this.replaceFileName(IosProjectConstants.XcodeSchemeExtName, xcschemeDirPath, projectData);
 			this.$logger.debug("Checkpoint 2");
 		} else {
 			this.$logger.debug("Copying xcscheme from template not found at " + xcschemeFilePath);
 		}
 
-		this.replaceFileName(IOSProjectService.XCODE_PROJECT_EXT_NAME, this.getPlatformData(projectData).projectRoot, projectData);
+		this.replaceFileName(IosProjectConstants.XcodeProjExtName, this.getPlatformData(projectData).projectRoot, projectData);
 
 		const pbxprojFilePath = this.getPbxProjPath(projectData);
 		this.replaceFileContent(pbxprojFilePath, projectData);
@@ -891,7 +888,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private getXcodeprojPath(projectData: IProjectData): string {
-		return path.join(this.getPlatformData(projectData).projectRoot, projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME);
+		return path.join(this.getPlatformData(projectData).projectRoot, projectData.projectName + IosProjectConstants.XcodeProjExtName);
 	}
 
 	private getPluginsDebugXcconfigFilePath(projectData: IProjectData): string {
@@ -941,7 +938,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		await this.prepareResources(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareFrameworks(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareStaticLibs(pluginPlatformsFolderPath, pluginData, projectData);
-		await this.prepareCocoapods(pluginPlatformsFolderPath, pluginData, projectData);
+
+		const projectRoot = this.getPlatformData(projectData).projectRoot;
+		await this.$cocoapodsService.applyPluginPodfileToProject(pluginData, projectData, projectRoot);
 	}
 
 	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
@@ -958,8 +957,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	public async afterPrepareAllPlugins(projectData: IProjectData): Promise<void> {
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
 		if (this.$fs.exists(this.$cocoapodsService.getProjectPodfilePath(projectRoot))) {
-			const xcuserDataPath = path.join(this.getXcodeprojPath(projectData), "xcuserdata");
-			const sharedDataPath = path.join(this.getXcodeprojPath(projectData), "xcshareddata");
+			const xcodeProjPath = this.getXcodeprojPath(projectData);
+			const xcuserDataPath = path.join(xcodeProjPath, "xcuserdata");
+			const sharedDataPath = path.join(xcodeProjPath, "xcshareddata");
 
 			if (!this.$fs.exists(xcuserDataPath) && !this.$fs.exists(sharedDataPath)) {
 				this.$logger.info("Creating project scheme...");
@@ -969,7 +969,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				await this.$childProcess.exec(createSchemeRubyScript, { cwd: this.getPlatformData(projectData).projectRoot });
 			}
 
-			await this.executePodInstall(projectData);
+			await this.$cocoapodsService.executePodInstall(projectData, projectRoot, xcodeProjPath);
 		}
 	}
 
@@ -1070,43 +1070,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.$fs.rename(path.join(fileRootLocation, oldFileName), path.join(fileRootLocation, newFileName));
 	}
 
-	private async executePodInstall(projectData: IProjectData): Promise<any> {
-		// Check availability
-		try {
-			await this.$childProcess.exec("which pod");
-			await this.$childProcess.exec("which xcodeproj");
-		} catch (e) {
-			this.$errors.failWithoutHelp("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
-		}
-
-		await this.$xcprojService.verifyXcproj(true);
-
-		this.$logger.info("Installing pods...");
-		const podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
-		const childProcess = await this.$childProcess.spawnFromEvent(podTool, ["install"], "close", { cwd: this.getPlatformData(projectData).projectRoot, stdio: ['pipe', process.stdout, 'pipe'] });
-		if (childProcess.stderr) {
-			const warnings = childProcess.stderr.match(/(\u001b\[(?:\d*;){0,5}\d*m[\s\S]+?\u001b\[(?:\d*;){0,5}\d*m)|(\[!\].*?\n)|(.*?warning.*)/gi);
-			_.each(warnings, (warning: string) => {
-				this.$logger.warnWithLabel(warning.replace("\n", ""));
-			});
-
-			let errors = childProcess.stderr;
-			_.each(warnings, warning => {
-				errors = errors.replace(warning, "");
-			});
-
-			if (errors.trim()) {
-				this.$errors.failWithoutHelp(`Pod install command failed. Error output: ${errors}`);
-			}
-		}
-
-		if ((await this.$xcprojService.getXcprojInfo()).shouldUseXcproj) {
-			await this.$childProcess.spawnFromEvent("xcproj", ["--project", this.getXcodeprojPath(projectData), "touch"], "close");
-		}
-
-		return childProcess;
-	}
-
 	private async prepareNativeSourceCode(pluginName: string, pluginPlatformsFolderPath: string, projectData: IProjectData): Promise<void> {
 		const project = this.createPbxProj(projectData);
 		const group = this.getRootGroup(pluginName, pluginPlatformsFolderPath);
@@ -1153,15 +1116,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 	}
 
-	private async prepareCocoapods(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData, opts?: any): Promise<void> {
-		const projectRoot = this.getPlatformData(projectData).projectRoot;
-		await this.$cocoapodsService.applyPluginPodfileToProject(pluginData, projectData, projectRoot);
-		const pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
-
-		if (opts && opts.executePodInstall && this.$fs.exists(pluginPodFilePath)) {
-			await this.executePodInstall(projectData);
-		}
-	}
 	private removeNativeSourceCode(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): void {
 		const project = this.createPbxProj(projectData);
 		const group = this.getRootGroup(pluginData.name, pluginPlatformsFolderPath);

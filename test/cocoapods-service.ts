@@ -2,6 +2,7 @@ import * as yok from "../lib/common/yok";
 import { assert } from "chai";
 import { CocoaPodsService } from "../lib/services/cocoapods-service";
 import { EOL } from "os";
+import { LoggerStub, ErrorsStub } from "./stubs";
 
 interface IMergePodfileHooksTestCase {
 	input: string;
@@ -16,6 +17,11 @@ function createTestInjector(): IInjector {
 
 	testInjector.register("fs", {});
 	testInjector.register("cocoapodsService", CocoaPodsService);
+	testInjector.register("childProcess", {});
+	testInjector.register("errors", ErrorsStub);
+	testInjector.register("xcprojService", {});
+	testInjector.register("logger", LoggerStub);
+	testInjector.register("config", {});
 
 	return testInjector;
 }
