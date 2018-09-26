@@ -4,7 +4,7 @@ import * as util from "util";
 export class ListApplicationsCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $logger: ILogger,
-		private $options: ICommonOptions) { }
+		private $options: IOptions) { }
 
 	allowedParameters: ICommandParameter[] = [];
 

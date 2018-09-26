@@ -22,7 +22,7 @@ export class HooksService implements IHooksService {
 		private $staticConfig: Config.IStaticConfig,
 		private $injector: IInjector,
 		private $projectHelper: IProjectHelper,
-		private $options: ICommonOptions) { }
+		private $options: IOptions) { }
 
 	public get hookArgsName(): string {
 		return "hookArgs";

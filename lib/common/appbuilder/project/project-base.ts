@@ -21,7 +21,7 @@ export abstract class ProjectBase implements Project.IProjectBase {
 		protected $fs: IFileSystem,
 		protected $logger: ILogger,
 		protected $nativeScriptProjectCapabilities: Project.ICapabilities,
-		protected $options: ICommonOptions,
+		protected $options: IOptions,
 		protected $projectConstants: Project.IConstants,
 		protected $staticConfig: Config.IStaticConfig) {
 		this.configurationSpecificData = Object.create(null);

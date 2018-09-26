@@ -12,7 +12,7 @@ export class Logger implements ILogger {
 	private static LABEL = "[WARNING]:";
 
 	constructor($config: Config.IConfig,
-		private $options: ICommonOptions) {
+		private $options: IOptions) {
 		const appenders: log4js.IAppender[] = [];
 
 		if (!$config.CI_LOGGER) {

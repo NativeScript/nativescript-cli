@@ -7,7 +7,7 @@ export class ListDevicesCommand implements ICommand {
 		private $logger: ILogger,
 		private $stringParameter: ICommandParameter,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $options: ICommonOptions) { }
+		private $options: IOptions) { }
 
 	public allowedParameters = [this.$stringParameter];
 

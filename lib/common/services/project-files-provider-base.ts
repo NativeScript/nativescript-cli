@@ -7,7 +7,7 @@ export abstract class ProjectFilesProviderBase implements IProjectFilesProvider 
 	abstract mapFilePath(filePath: string, platform: string, projectData: any, projectFilesConfig: IProjectFilesConfig): string;
 
 	constructor(private $mobileHelper: Mobile.IMobileHelper,
-		protected $options: ICommonOptions) { }
+		protected $options: IOptions) { }
 
 	public getPreparedFilePath(filePath: string, projectFilesConfig?: IProjectFilesConfig): string {
 		const projectFileInfo = this.getProjectFileInfo(filePath, "", projectFilesConfig);

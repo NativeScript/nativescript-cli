@@ -1,7 +1,7 @@
 export class PutFileCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $stringParameter: ICommandParameter,
-		private $options: ICommonOptions,
+		private $options: IOptions,
 		private $project: Project.IProjectBase,
 		private $errors: IErrors) { }
 

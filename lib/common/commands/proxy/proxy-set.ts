@@ -22,7 +22,7 @@ export class ProxySetCommand extends ProxyCommandBase {
 		private $staticConfig: Config.IStaticConfig,
 		protected $analyticsService: IAnalyticsService,
 		protected $logger: ILogger,
-		protected $options: ICommonOptions,
+		protected $options: IOptions,
 		protected $proxyService: IProxyService) {
 		super($analyticsService, $logger, $proxyService, proxySetCommandName);
 	}

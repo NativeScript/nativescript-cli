@@ -36,7 +36,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $hostInfo: IHostInfo,
 		private $injector: IInjector,
-		private $options: ICommonOptions,
+		private $options: IOptions,
 		private $androidProcessService: Mobile.IAndroidProcessService,
 		private $processService: IProcessService,
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,

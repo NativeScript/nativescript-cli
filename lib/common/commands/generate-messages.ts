@@ -6,7 +6,7 @@ export class GenerateMessages implements ICommand {
 
 	constructor(private $fs: IFileSystem,
 		private $messageContractGenerator: IServiceContractGenerator,
-		private $options: ICommonOptions) {
+		private $options: IOptions) {
 	}
 
 	allowedParameters: ICommandParameter[] = [];

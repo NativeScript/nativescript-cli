@@ -18,7 +18,7 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 		private $projectConstants: Project.IConstants,
 		private $injector: IInjector,
 		$mobileHelper: Mobile.IMobileHelper,
-		$options: ICommonOptions) {
+		$options: IOptions) {
 		super($mobileHelper, $options);
 	}
 

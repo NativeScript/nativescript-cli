@@ -5,7 +5,7 @@ import * as path from "path";
 
 class ProjectFilesProvider extends ProjectFilesProviderBase {
 	constructor($mobileHelper: Mobile.IMobileHelper,
-		$options: ICommonOptions) {
+		$options: IOptions) {
 		super($mobileHelper, $options);
 	}
 

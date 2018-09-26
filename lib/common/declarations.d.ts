@@ -1256,47 +1256,6 @@ interface IHasEmulatorOption {
 	emulator: boolean;
 }
 
-interface ICommonOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvailableDevices, IProfileDir, IHasEmulatorOption {
-	argv: IYargArgv;
-	validateOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>): void;
-	options: IDictionary<any>;
-	shorthands: string[];
-	/**
-	 * Project Configuration
-	 */
-	config: string[];
-	log: string;
-	verbose: boolean;
-	path: string;
-	version: boolean;
-	help: boolean;
-	json: boolean;
-	watch: boolean;
-	timeout: string;
-	appid: string;
-	geny: string;
-	debugBrk: boolean;
-	debugPort: number;
-	start: boolean;
-	stop: boolean;
-	ddi: string; // the path to developer  disk image
-	insecure: boolean;
-	skipRefresh: boolean;
-	file: string;
-	analyticsClient: string;
-	force: boolean;
-	companion: boolean;
-	sdk: string;
-	template: string;
-	certificate: string;
-	certificatePassword: string;
-	var: Object;
-	default: Boolean;
-	count: number;
-	hooks: boolean;
-	debug: boolean;
-}
-
 interface IYargArgv extends IDictionary<any> {
 	_: string[];
 	$0: string;
@@ -1372,7 +1331,7 @@ interface IDoctorService {
 	 * @param configOptions: defines if the result should be tracked by Analytics
 	 * @returns {Promise<void>}
 	 */
-	printWarnings(configOptions?: { trackResult: boolean, projectDir?: string, runtimeVersion?: string, options?: ICommonOptions }): Promise<void>;
+	printWarnings(configOptions?: { trackResult: boolean, projectDir?: string, runtimeVersion?: string, options?: IOptions }): Promise<void>;
 	/**
 	 * Runs the setup script on host machine
 	 * @returns {Promise<ISpawnResult>}

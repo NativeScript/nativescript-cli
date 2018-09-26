@@ -3,7 +3,7 @@ export class GetFileCommand implements ICommand {
 		private $stringParameter: ICommandParameter,
 		private $project: Project.IProjectBase,
 		private $errors: IErrors,
-		private $options: ICommonOptions) { }
+		private $options: IOptions) { }
 
 	public allowedParameters: ICommandParameter[] = [this.$stringParameter, this.$stringParameter];
 

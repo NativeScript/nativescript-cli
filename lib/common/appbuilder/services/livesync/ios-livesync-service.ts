@@ -13,7 +13,7 @@ export class IOSLiveSyncService implements IDeviceLiveSyncService {
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $errors: IErrors,
-		private $options: ICommonOptions,
+		private $options: IOptions,
 		private $iosDeviceOperations: IIOSDeviceOperations) {
 		// If we execute livesync with --watch we do not want to dispose the $iosDeviceOperations.
 		this.$iosDeviceOperations.setShouldDispose(!this.$options.watch);

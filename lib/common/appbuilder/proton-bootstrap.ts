@@ -1,12 +1,10 @@
 require("./appbuilder-bootstrap");
 $injector.require("messages", "./messages/messages");
 
-import { OptionsBase } from "../options";
 $injector.require("staticConfig", "./appbuilder/proton-static-config");
 $injector.register("config", {});
 // Proton will track the features and exceptions, so no need of analyticsService here.
 $injector.register("analyiticsService", {});
-$injector.register("options", $injector.resolve(OptionsBase, { options: {}, defaultProfileDir: "" }));
 $injector.requirePublicClass("deviceEmitter", "./appbuilder/device-emitter");
 $injector.requirePublicClass("deviceLogProvider", "./appbuilder/device-log-provider");
 import { installUncaughtExceptionListener } from "../errors";

@@ -458,7 +458,45 @@ interface IPluginSeedOptions {
 	pluginName: string;
 }
 
-interface IOptions extends ICommonOptions, IBundleString, IPlatformTemplate, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions, IPluginSeedOptions, IGenerateOptions {
+interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvailableDevices, IProfileDir, IHasEmulatorOption, IBundleString, IPlatformTemplate, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions, IPluginSeedOptions, IGenerateOptions {
+	argv: IYargArgv;
+	validateOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>): void;
+	options: IDictionary<IDashedOption>;
+	shorthands: string[];
+	/**
+	 * Project Configuration
+	 */
+	config: string[];
+	log: string;
+	verbose: boolean;
+	path: string;
+	version: boolean;
+	help: boolean;
+	json: boolean;
+	watch: boolean;
+	timeout: string;
+	appid: string;
+	geny: string;
+	debugBrk: boolean;
+	debugPort: number;
+	start: boolean;
+	stop: boolean;
+	ddi: string; // the path to developer  disk image
+	insecure: boolean;
+	skipRefresh: boolean;
+	file: string;
+	analyticsClient: string;
+	force: boolean;
+	companion: boolean;
+	sdk: string;
+	template: string;
+	certificate: string;
+	certificatePassword: string;
+	var: Object;
+	default: Boolean;
+	count: number;
+	hooks: boolean;
+	debug: boolean;
 	all: boolean;
 	client: boolean;
 	compileSdk: number;
@@ -473,12 +511,12 @@ interface IOptions extends ICommonOptions, IBundleString, IPlatformTemplate, IHa
 	ng: boolean;
 	androidTypings: boolean;
 	production: boolean; //npm flag
-	sdk: string;
 	syncAllFiles: boolean;
 	chrome: boolean;
 	inspector: boolean; // the counterpart to --chrome
 	background: string;
 	hmr: boolean;
+
 }
 
 interface IEnvOptions {

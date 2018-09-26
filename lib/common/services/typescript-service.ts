@@ -31,7 +31,7 @@ export class TypeScriptService implements ITypeScriptService {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $npmService: INpmService,
-		private $options: ICommonOptions,
+		private $options: IOptions,
 		private $projectConstants: Project.IConstants,
 		private $processService: IProcessService,
 		private $errors: IErrors) { }

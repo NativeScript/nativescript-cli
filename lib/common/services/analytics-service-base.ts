@@ -28,7 +28,7 @@ export abstract class AnalyticsServiceBase implements IAnalyticsService, IDispos
 	protected analyticsStatuses: IDictionary<AnalyticsStatus> = {};
 
 	constructor(protected $logger: ILogger,
-		protected $options: ICommonOptions,
+		protected $options: IOptions,
 		protected $staticConfig: Config.IStaticConfig,
 		protected $processService: IProcessService,
 		private $prompter: IPrompter,

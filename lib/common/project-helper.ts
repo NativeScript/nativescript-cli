@@ -5,7 +5,7 @@ export class ProjectHelper implements IProjectHelper {
 		private $fs: IFileSystem,
 		private $staticConfig: Config.IStaticConfig,
 		private $errors: IErrors,
-		private $options: ICommonOptions) { }
+		private $options: IOptions) { }
 
 	private cachedProjectDir = "";
 

@@ -1,5 +1,5 @@
 export class PluginVariablesHelper implements IPluginVariablesHelper {
-	constructor(private $options: ICommonOptions) { }
+	constructor(private $options: IOptions) { }
 
 	/**
 	 * Checks if the specified pluginVariable exists in the --var option specified by user.
