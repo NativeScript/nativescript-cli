@@ -969,6 +969,39 @@ describe('CacheStore', () => {
             });
         });
     });
+
+    it('should send custom properties in x-kinvey-custom-request-properties header', async () => {
+      const store = new CacheStore(collection);
+      const entity = { _id: randomString() };
+      const properties = { a: 'b' };
+
+      nock(client.apiHostname, {
+        reqheaders: {
+          'x-kinvey-custom-request-properties': JSON.stringify(properties)
+        }
+      })
+        .post(`/appdata/${client.appKey}/${collection}`, entity)
+        .reply(200, entity);
+
+      return store.create(entity, { properties })
+        .then((createdEntity) => {
+          expect(createdEntity).toEqual(entity);
+
+          // Check the cache to make sure the entity was
+          // stored in the cache
+          const syncStore = new SyncStore(collection);
+          const query = new Query();
+          query.equalTo('_id', createdEntity._id);
+          return syncStore.find(query).toPromise()
+            .then((entities) => {
+              expect(entities).toEqual([createdEntity]);
+              return store.pendingSyncCount();
+            })
+            .then((count) => {
+              expect(count).toEqual(0);
+            });
+        });
+    });
   });
 
   describe('update()', () => {
@@ -1007,6 +1040,39 @@ describe('CacheStore', () => {
         .reply(200, entity);
 
       return store.update(entity)
+        .then((updatedEntity) => {
+          expect(updatedEntity).toEqual(entity);
+
+          // Check the cache to make sure the entity was
+          // stored in the cache
+          const syncStore = new SyncStore(collection);
+          const query = new Query();
+          query.equalTo('_id', updatedEntity._id);
+          return syncStore.find(query).toPromise()
+            .then((entities) => {
+              expect(entities).toEqual([updatedEntity]);
+              return store.pendingSyncCount();
+            })
+            .then((count) => {
+              expect(count).toEqual(0);
+            });
+        });
+    });
+
+    it('should send custom properties in x-kinvey-custom-request-properties header', async () => {
+      const store = new CacheStore(collection);
+      const entity = { _id: randomString() };
+      const properties = { a: 'b' };
+
+      nock(client.apiHostname, {
+        reqheaders: {
+          'x-kinvey-custom-request-properties': JSON.stringify(properties)
+        }
+      })
+        .put(`/appdata/${client.appKey}/${collection}/${entity._id}`, entity)
+        .reply(200, entity);
+
+      return store.update(entity, { properties })
         .then((updatedEntity) => {
           expect(updatedEntity).toEqual(entity);
 

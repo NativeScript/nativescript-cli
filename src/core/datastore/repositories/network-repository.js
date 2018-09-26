@@ -33,7 +33,7 @@ export class NetworkRepository extends Repository {
   }
 
   create(collection, entities, options) {
-    return this._processBatch(collection, RequestMethod.POST, entities, null, options);
+    return this._processBatch(collection, RequestMethod.POST, entities, options);
   }
 
   update(collection, entities, options) {
