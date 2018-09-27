@@ -697,7 +697,7 @@ end`
 			});
 
 			const xcprojService = testInjector.resolve<IXcprojService>("xcprojService");
-			xcprojService.verifyXcproj = async (shouldFail: boolean): Promise<boolean> => false;
+			xcprojService.verifyXcproj = async (opts: IVerifyXcprojOptions): Promise<boolean> => false;
 			xcprojService.getXcprojInfo = async (): Promise<IXcprojInfo> => (<any>{});
 		});
 
@@ -729,7 +729,7 @@ end`
 		it("fails with correct error when xcprojService.verifyXcproj throws", async () => {
 			const expectedError = new Error("err");
 			const xcprojService = testInjector.resolve<IXcprojService>("xcprojService");
-			xcprojService.verifyXcproj = async (shouldFail: boolean): Promise<boolean> => {
+			xcprojService.verifyXcproj = async (opts: IVerifyXcprojOptions): Promise<boolean> => {
 				throw expectedError;
 			};
 
@@ -754,6 +754,18 @@ end`
 				await cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
 				assert.equal(commandCalled, podExecutable);
 			});
+		});
+
+		it("calls xcprojService.verifyXcproj with correct arguments", async () => {
+			const xcprojService = testInjector.resolve<IXcprojService>("xcprojService");
+			let optsPassedToVerifyXcproj: any = null;
+			xcprojService.verifyXcproj = async (opts: IVerifyXcprojOptions): Promise<boolean> => {
+				optsPassedToVerifyXcproj = opts;
+				return false;
+			};
+
+			await cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
+			assert.deepEqual(optsPassedToVerifyXcproj, { shouldFail: true });
 		});
 
 		it("calls pod install spawnFromEvent with correct arguments", async () => {

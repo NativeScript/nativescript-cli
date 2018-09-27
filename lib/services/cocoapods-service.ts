@@ -34,7 +34,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 			this.$errors.failWithoutHelp("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
 		}
 
-		await this.$xcprojService.verifyXcproj(true);
+		await this.$xcprojService.verifyXcproj({ shouldFail: true });
 
 		this.$logger.info("Installing pods...");
 		const podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";

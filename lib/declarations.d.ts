@@ -774,16 +774,26 @@ interface IProjectNameService {
 }
 
 /**
+ * Describes options that can be passed to xcprojService.verifyXcproj method.
+ */
+interface IVerifyXcprojOptions {
+	/**
+	 * Whether to fail with error message or not
+	 */
+	shouldFail: boolean;
+}
+
+/**
  * Designed for getting information about xcproj.
  */
 interface IXcprojService {
 	/**
 	 * Checks whether the system needs xcproj to execute ios builds successfully.
 	 * In case the system does need xcproj but does not have it, prints an error message.
-	 * @param {boolean} whether to fail with error message or not
+	 * @param {IVerifyXcprojOptions} opts whether to fail with error message or not
 	 * @return {Promise<boolean>} whether an error occurred or not.
 	 */
-	verifyXcproj(shouldFail: boolean): Promise<boolean>;
+	verifyXcproj(opts: IVerifyXcprojOptions): Promise<boolean>;
 	/**
 	 * Collects information about xcproj.
 	 * @return {Promise<XcprojInfo>} collected info about xcproj.
