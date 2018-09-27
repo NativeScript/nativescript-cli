@@ -493,6 +493,14 @@ interface ICocoaPodsService {
 	 * @returns {string} Path to project's Podfile.
 	 */
 	getProjectPodfilePath(nativeProjectPath: string): string;
+
+	/**
+	 * Executes `pod install` or `sanboxpod install` in the passed project.
+	 * @param {string} projectRoot The root directory of the native iOS project.
+	 * @param {string} xcodeProjPath The full path to the .xcodeproj file.
+	 * @returns {Promise<ISpawnResult>} Information about the spawned process.
+	 */
+	executePodInstall(projectRoot: string, xcodeProjPath: string): Promise<ISpawnResult>;
 }
 
 interface IRubyFunction {

@@ -222,3 +222,8 @@ export class PluginNativeDirNames {
 }
 
 export const PODFILE_NAME = "Podfile";
+
+export class IosProjectConstants {
+	public static XcodeProjExtName = ".xcodeproj";
+	public static XcodeSchemeExtName = ".xcscheme";
+}

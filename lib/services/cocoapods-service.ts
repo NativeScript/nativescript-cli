@@ -6,7 +6,12 @@ export class CocoaPodsService implements ICocoaPodsService {
 	private static PODFILE_POST_INSTALL_SECTION_NAME = "post_install";
 	private static INSTALLER_BLOCK_PARAMETER_NAME = "installer";
 
-	constructor(private $fs: IFileSystem) { }
+	constructor(private $fs: IFileSystem,
+		private $childProcess: IChildProcess,
+		private $errors: IErrors,
+		private $xcprojService: IXcprojService,
+		private $logger: ILogger,
+		private $config: IConfiguration) { }
 
 	public getPodfileHeader(targetName: string): string {
 		return `use_frameworks!${EOL}${EOL}target "${targetName}" do${EOL}`;
@@ -18,6 +23,33 @@ export class CocoaPodsService implements ICocoaPodsService {
 
 	public getProjectPodfilePath(projectRoot: string): string {
 		return path.join(projectRoot, PODFILE_NAME);
+	}
+
+	public async executePodInstall(projectRoot: string, xcodeProjPath: string): Promise<ISpawnResult> {
+		// Check availability
+		try {
+			await this.$childProcess.exec("which pod");
+			await this.$childProcess.exec("which xcodeproj");
+		} catch (e) {
+			this.$errors.failWithoutHelp("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
+		}
+
+		await this.$xcprojService.verifyXcproj({ shouldFail: true });
+
+		this.$logger.info("Installing pods...");
+		const podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
+		// cocoapods print a lot of non-error information on stderr. Pipe the `stderr` to `stdout`, so we won't polute CLI's stderr output.
+		const podInstallResult = await this.$childProcess.spawnFromEvent(podTool, ["install"], "close", { cwd: projectRoot, stdio: ['pipe', process.stdout, process.stdout] }, { throwError: false });
+
+		if (podInstallResult.exitCode !== 0) {
+			this.$errors.failWithoutHelp(`'${podTool} install' command failed.${podInstallResult.stderr ? " Error is: " + podInstallResult.stderr : ""}`);
+		}
+
+		if ((await this.$xcprojService.getXcprojInfo()).shouldUseXcproj) {
+			await this.$childProcess.spawnFromEvent("xcproj", ["--project", xcodeProjPath, "touch"], "close");
+		}
+
+		return podInstallResult;
 	}
 
 	public async applyPluginPodfileToProject(pluginData: IPluginData, projectData: IProjectData, nativeProjectPath: string): Promise<void> {
