@@ -11,23 +11,26 @@ export class PlaygroundQrCodeGenerator implements IPlaygroundQrCodeGenerator {
 	}
 
 	public async generateQrCodeForiOS(): Promise<void> {
-		await this.generateQrCode(PlaygroundStoreUrls.APP_STORE_URL);
+		const message = `Scan the QR code below to install ${"NativeScript Playground app".underline.bold} on your ${"iOS".underline.bold} device or get it from ${PlaygroundStoreUrls.APP_STORE_URL.underline.bold}.`;
+		await this.generateQrCode(PlaygroundStoreUrls.APP_STORE_URL, message);
 	}
 
 	public async generateQrCodeForAndroid(): Promise<void> {
-		await this.generateQrCode(PlaygroundStoreUrls.GOOGLE_PLAY_URL);
+		const message = `Scan the QR code below to install ${"NativeScript Playground app".underline.bold} on your ${"Android".underline.bold} device or get it from ${PlaygroundStoreUrls.GOOGLE_PLAY_URL.underline.bold}.`;
+		await this.generateQrCode(PlaygroundStoreUrls.GOOGLE_PLAY_URL, message);
 	}
 
 	public async generateQrCodeForCurrentApp(options: IHasUseHotModuleReloadOption): Promise<void> {
-		await this.generateQrCode(this.$previewSdkService.getQrCodeUrl(options));
+		const message = `Use ${"NativeScript Playground app".underline.bold} and scan the QR code below to preview the application on your device.`;
+		await this.generateQrCode(this.$previewSdkService.getQrCodeUrl(options), message);
 	}
 
-	private async generateQrCode(url: string): Promise<void> {
-		await this.generateQrCodeCore(url);
+	private async generateQrCode(url: string, message: string): Promise<void> {
+		await this.generateQrCodeCore(url, message);
 		this.printUsage();
 	}
 
-	private async generateQrCodeCore(url: string): Promise<void> {
+	private async generateQrCodeCore(url: string, message: string): Promise<void> {
 		const shortenUrlEndpoint = util.format(this.$config.SHORTEN_URL_ENDPOINT, encodeURIComponent(url));
 		try {
 			const response = await this.$httpClient.httpRequest(shortenUrlEndpoint);
@@ -37,7 +40,7 @@ export class PlaygroundQrCodeGenerator implements IPlaygroundQrCodeGenerator {
 			// use the longUrl
 		}
 
-		this.$qrCodeTerminalService.generate(url);
+		this.$qrCodeTerminalService.generate(url, message);
 	}
 
 	private printUsage(): void {
