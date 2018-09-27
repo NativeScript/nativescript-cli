@@ -76,7 +76,9 @@ export class ReleaseType {
 
 export const RESERVED_TEMPLATE_NAMES: IStringDictionary = {
 	"default": "tns-template-hello-world",
+	"javascript": "tns-template-hello-world",
 	"tsc": "tns-template-hello-world-ts",
+	"vue": "https://github.com/NativeScript/template-blank-vue/tarball/0.9.0",
 	"typescript": "tns-template-hello-world-ts",
 	"ng": "tns-template-hello-world-ng",
 	"angular": "tns-template-hello-world-ng"
@@ -100,7 +102,9 @@ class ItunesConnectApplicationTypesClass implements IiTunesConnectApplicationTyp
 }
 
 export const ItunesConnectApplicationTypes = new ItunesConnectApplicationTypesClass();
+export const VUE_NAME = "vue";
 export const ANGULAR_NAME = "angular";
+export const JAVASCRIPT_NAME = "javascript";
 export const TYPESCRIPT_NAME = "typescript";
 export const BUILD_OUTPUT_EVENT_NAME = "buildOutput";
 export const CONNECTION_ERROR_EVENT_NAME = "connectionError";

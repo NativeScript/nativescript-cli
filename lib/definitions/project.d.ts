@@ -54,6 +54,7 @@ interface ICreateProjectData extends IProjectDir, IProjectName {
 }
 
 interface IProjectService {
+	validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }) : Promise<string>
 	/**
 	 * Creates new NativeScript application.
 	 * @param {any} projectSettings Options describing new project - its name, appId, path and template from which to be created.

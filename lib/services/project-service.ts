@@ -21,24 +21,35 @@ export class ProjectService implements IProjectService {
 		private $staticConfig: IStaticConfig,
 		private $npmInstallationManager: INpmInstallationManager) { }
 
-	@exported("projectService")
-	public async createProject(projectOptions: IProjectSettings): Promise<ICreateProjectData> {
-		let projectName = projectOptions.projectName;
-
+	public async validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }) : Promise<string> {
+		let projectName = opts.projectName;
 		if (!projectName) {
 			this.$errors.fail("You must specify <App name> when creating a new project.");
 		}
 
-		projectName = await this.$projectNameService.ensureValidName(projectName, { force: projectOptions.force });
-
-		const selectedPath = path.resolve(projectOptions.pathToProject || ".");
-		const projectDir = path.join(selectedPath, projectName);
-
-		this.$fs.createDirectory(projectDir);
-
+		projectName = await this.$projectNameService.ensureValidName(projectName, { force: opts.force });
+		const projectDir = this.getValidProjectDir(opts.pathToProject, projectName);
 		if (this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir)) {
 			this.$errors.fail("Path already exists and is not empty %s", projectDir);
 		}
+
+		return projectName;
+	}
+
+	private getValidProjectDir(pathToProject: string, projectName: string): string {
+		const selectedPath = path.resolve(pathToProject || ".");
+		const projectDir = path.join(selectedPath, projectName);
+
+		return projectDir;
+	}
+
+	@exported("projectService")
+	public async createProject(projectOptions: IProjectSettings): Promise<ICreateProjectData> {
+		let projectName = projectOptions.projectName;
+		projectName = await this.validateProjectName({ projectName, force: projectOptions.force, pathToProject: projectOptions.pathToProject });
+		const projectDir = this.getValidProjectDir(projectOptions.pathToProject, projectName);
+
+		this.$fs.createDirectory(projectDir);
 
 		const appId = projectOptions.appId || this.$projectHelper.generateDefaultAppId(projectName, constants.DEFAULT_APP_IDENTIFIER_PREFIX);
 		this.createPackageJson(projectDir, appId);
@@ -46,7 +57,8 @@ export class ProjectService implements IProjectService {
 
 		const projectCreationData = await this.createProjectCore({ template: projectOptions.template, projectDir, ignoreScripts: projectOptions.ignoreScripts, appId: appId, projectName });
 
-		this.$logger.printMarkdown("Project `%s` was successfully created.", projectCreationData.projectName);
+		this.$logger.info();
+		this.$logger.printMarkdown("__Project `%s` was successfully created.__", projectName);
 
 		return projectCreationData;
 	}

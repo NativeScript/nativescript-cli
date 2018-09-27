@@ -540,6 +540,9 @@ export class PrompterStub implements IPrompter {
 	async promptForChoice(promptMessage: string, choices: any[]): Promise<string> {
 		throw unreachable();
 	}
+	async promptForDetailedChoice(promptMessage: string, choices: any[]): Promise<string> {
+		throw unreachable();
+	}
 	async confirm(prompt: string, defaultAction?: () => boolean): Promise<boolean> {
 		throw unreachable();
 	}

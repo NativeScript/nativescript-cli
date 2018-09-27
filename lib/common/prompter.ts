@@ -5,6 +5,7 @@ import { ReadStream } from "tty";
 const MuteStream = require("mute-stream");
 
 export class Prompter implements IPrompter {
+	private descriptionSeparator = "|";
 	private ctrlcReader: readline.ReadLine;
 	private muteStreamInstance: any = null;
 
@@ -15,6 +16,11 @@ export class Prompter implements IPrompter {
 	}
 
 	public async get(questions: prompt.Question[]): Promise<any> {
+		_.each(questions, q => {
+			q.filter = ((selection: string) => {
+				return selection.split(this.descriptionSeparator)[0].trim();
+			});
+		});
 		try {
 				this.muteStdout();
 
@@ -71,12 +77,32 @@ export class Prompter implements IPrompter {
 		return result.inputString;
 	}
 
-	public async promptForChoice(promptMessage: string, choices: any[]): Promise<string> {
+	public async promptForChoice(promptMessage: string, choices: string[]): Promise<string> {
 		const schema: prompt.Question = {
 			message: promptMessage,
 			type: "list",
 			name: "userAnswer",
 			choices: choices
+		};
+
+		const result = await this.get([schema]);
+		return result.userAnswer;
+	}
+
+	public async promptForDetailedChoice(promptMessage: string, choices: { key: string, description: string }[]): Promise<string> {
+		const longestKeyLength = choices.concat().sort(function (a, b) { return b.key.length - a.key.length; })[0].key.length;
+		const inquirerChoices = choices.map((choice) => {
+			return {
+				name: `${_.padEnd(choice.key, longestKeyLength)}  ${this.descriptionSeparator}  ${choice.description}`,
+				short: choice.key
+			};
+		});
+
+		const schema: prompt.Question = {
+			message: promptMessage,
+			type: "list",
+			name: "userAnswer",
+			choices: inquirerChoices
 		};
 
 		const result = await this.get([schema]);
