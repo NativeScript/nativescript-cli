@@ -43,9 +43,6 @@ function createTestInjector(localPlugins: IStringDictionary, options?: { isNativ
 		trace: () => ({}),
 		warn: (message: string) =>  warnParams.push(message)
 	});
-	injector.register("projectData", {
-		projectDir
-	});
 	injector.register("previewAppPluginsService", PreviewAppPluginsService);
 	return injector;
 }
