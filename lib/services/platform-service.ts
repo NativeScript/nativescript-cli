@@ -41,7 +41,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $projectChangesService: IProjectChangesService,
 		private $analyticsService: IAnalyticsService,
 		private $terminalSpinnerService: ITerminalSpinnerService,
-		private $pacoteService: IPacoteService
+		private $pacoteService: IPacoteService,
+		private $usbLiveSyncService: any
 	) {
 		super();
 	}
@@ -726,7 +727,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				platform = data[0],
 				version = data[1];
 
-			if (this.isPlatformInstalled(platform, projectData)) {
+			if (this.hasPlatformDirectory(platform, projectData)) {
 				await this.updatePlatform(platform, version, platformTemplate, projectData, config);
 			} else {
 				await this.addPlatform(platformParam, platformTemplate, projectData, config);
@@ -769,7 +770,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	public validatePlatformInstalled(platform: string, projectData: IProjectData): void {
 		this.validatePlatform(platform, projectData);
 
-		if (!this.isPlatformInstalled(platform, projectData)) {
+		if (!this.hasPlatformDirectory(platform, projectData)) {
 			this.$errors.fail("The platform %s is not added to this project. Please use 'tns platform add <platform>'", platform);
 		}
 	}
@@ -779,31 +780,50 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
-		// In case when no platform is added and webpack plugin is started it produces files in platforms folder. In this case {N} CLI needs to add platform and keeps the already produced files from webpack
-		if (appFilesUpdaterOptions.bundle && this.isPlatformInstalled(platform, projectData) && !this.$fs.exists(platformData.configurationFilePath) && (!prepareInfo || !prepareInfo.nativePlatformStatus || prepareInfo.nativePlatformStatus !== constants.NativePlatformStatus.alreadyPrepared)) {
-			const tmpDirectoryPath = path.join(projectData.projectDir, "platforms", `tmp-${platform}`);
-			this.$fs.deleteDirectory(tmpDirectoryPath);
-			this.$fs.ensureDirectoryExists(tmpDirectoryPath);
-			this.$fs.copyFile(path.join(platformData.appDestinationDirectoryPath, "*"), tmpDirectoryPath);
-			await this.addPlatform(platform, platformTemplate, projectData, config, "", nativePrepare);
-			this.$fs.copyFile(path.join(tmpDirectoryPath, "*"), platformData.appDestinationDirectoryPath);
-			this.$fs.deleteDirectory(tmpDirectoryPath);
+
+		// In case when no platform is added and webpack plugin is started it produces files in platforms folder.
+		// In this case {N} CLI needs to add platform and keeps the already produced files from webpack
+		const shouldPersistWebpackFiles = this.shouldPersistWebpackFiles(platform, projectData, prepareInfo, appFilesUpdaterOptions, nativePrepare);
+		if (shouldPersistWebpackFiles) {
+			await this.persistWebpackFiles(platform, platformTemplate, projectData, config, platformData, nativePrepare);
 			return;
 		}
 
-		if (!this.isPlatformInstalled(platform, projectData)) {
-			await this.addPlatform(platform, platformTemplate, projectData, config, "", nativePrepare);
-		} else {
+		const hasPlatformDirectory = this.hasPlatformDirectory(platform, projectData);
+		if (hasPlatformDirectory) {
 			const shouldAddNativePlatform = !nativePrepare || !nativePrepare.skipNativePrepare;
 			// In case there's no prepare info, it means only platform add had been executed. So we've come from CLI and we do not need to prepare natively.
 			requiresNativePlatformAdd = prepareInfo && prepareInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPlatformAdd;
 			if (requiresNativePlatformAdd && shouldAddNativePlatform) {
 				await this.addPlatform(platform, platformTemplate, projectData, config, "", nativePrepare);
 			}
+		} else {
+			await this.addPlatform(platform, platformTemplate, projectData, config, "", nativePrepare);
 		}
 	}
 
-	private isPlatformInstalled(platform: string, projectData: IProjectData): boolean {
+	private shouldPersistWebpackFiles(platform: string, projectData: IProjectData, prepareInfo: IPrepareInfo, appFilesUpdaterOptions: IAppFilesUpdaterOptions, nativePrepare: INativePrepare): boolean {
+		const hasPlatformDirectory = this.hasPlatformDirectory(platform, projectData);
+		const isWebpackWatcherStarted = this.$usbLiveSyncService.isInitialized;
+		const hasNativePlatformStatus = !prepareInfo || !prepareInfo.nativePlatformStatus;
+		const requiresPlatformAdd = prepareInfo && prepareInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPlatformAdd;
+		const shouldAddNativePlatform = !nativePrepare || !nativePrepare.skipNativePrepare;
+		const shouldAddPlatform = hasNativePlatformStatus || (requiresPlatformAdd && shouldAddNativePlatform);
+		const result = appFilesUpdaterOptions.bundle && isWebpackWatcherStarted && hasPlatformDirectory && shouldAddPlatform;
+		return result;
+	}
+
+	private async persistWebpackFiles(platform: string, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, platformData: IPlatformData, nativePrepare?: INativePrepare): Promise<void> {
+		const tmpDirectoryPath = path.join(projectData.projectDir, "platforms", `tmp-${platform}`);
+		this.$fs.deleteDirectory(tmpDirectoryPath);
+		this.$fs.ensureDirectoryExists(tmpDirectoryPath);
+		this.$fs.copyFile(path.join(platformData.appDestinationDirectoryPath, "*"), tmpDirectoryPath);
+		await this.addPlatform(platform, platformTemplate, projectData, config, "", nativePrepare);
+		this.$fs.copyFile(path.join(tmpDirectoryPath, "*"), platformData.appDestinationDirectoryPath);
+		this.$fs.deleteDirectory(tmpDirectoryPath);
+	}
+
+	private hasPlatformDirectory(platform: string, projectData: IProjectData): boolean {
 		return this.$fs.exists(path.join(projectData.platformsDir, platform.toLowerCase()));
 	}
 

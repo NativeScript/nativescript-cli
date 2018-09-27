@@ -106,6 +106,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("pacoteService", {
 		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined
 	});
+	testInjector.register("usbLiveSyncService", () => ({}));
 
 	return testInjector;
 }
