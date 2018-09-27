@@ -721,14 +721,6 @@ interface IPrompterOptions extends IAllowEmpty {
 	defaultAction?: () => string
 }
 
-interface IPrompter extends IDisposable {
-	get(schemas: IPromptSchema[]): Promise<any>;
-	getPassword(prompt: string, options?: IAllowEmpty): Promise<string>;
-	getString(prompt: string, options?: IPrompterOptions): Promise<string>;
-	promptForChoice(promptMessage: string, choices: any[]): Promise<string>;
-	confirm(prompt: string, defaultAction?: () => boolean): Promise<boolean>;
-}
-
 interface IAnalyticsSettingsService {
 	canDoRequest(): Promise<boolean>;
 	getUserId(): Promise<string>;

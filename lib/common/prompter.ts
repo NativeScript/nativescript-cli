@@ -14,45 +14,34 @@ export class Prompter implements IPrompter {
 		}
 	}
 
-	public async get(schemas: IPromptSchema[]): Promise<any> {
-		let promptResult: any;
-
+	public async get(questions: prompt.Question[]): Promise<any> {
 		try {
-			promptResult = await new Promise<any>((resolve, reject) => {
 				this.muteStdout();
 
 				if (!helpers.isInteractive()) {
-					if (_.some(schemas, s => !s.default)) {
-						reject(new Error("Console is not interactive and no default action specified."));
+					if (_.some(questions, s => !s.default)) {
+						throw new Error("Console is not interactive and no default action specified.");
 					} else {
 						const result: any = {};
 
-						_.each(schemas, s => {
+						_.each(questions, s => {
 							// Curly brackets needed because s.default() may return false and break the loop
 							result[s.name] = s.default();
 						});
 
-						resolve(result);
+						return result;
 					}
 				} else {
-					prompt.prompt(schemas, (result: any) => {
-						if (result) {
-							resolve(result);
-						} else {
-							reject(new Error(`Unable to get result from prompt: ${result}`));
-						}
-					});
+					const result = await prompt.prompt(questions);
+					return result;
 				}
-			});
 		} finally {
 			this.unmuteStdout();
 		}
-
-		return promptResult;
 	}
 
 	public async getPassword(prompt: string, options?: IAllowEmpty): Promise<string> {
-		const schema: IPromptSchema = {
+		const schema: prompt.Question = {
 			message: prompt,
 			type: "password",
 			name: "password",
@@ -67,7 +56,7 @@ export class Prompter implements IPrompter {
 	}
 
 	public async getString(prompt: string, options?: IPrompterOptions): Promise<string> {
-		const schema: IPromptSchema = {
+		const schema: prompt.Question = {
 			message: prompt,
 			type: "input",
 			name: "inputString",
@@ -83,7 +72,7 @@ export class Prompter implements IPrompter {
 	}
 
 	public async promptForChoice(promptMessage: string, choices: any[]): Promise<string> {
-		const schema: IPromptSchema = {
+		const schema: prompt.Question = {
 			message: promptMessage,
 			type: "list",
 			name: "userAnswer",

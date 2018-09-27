@@ -1,6 +1,7 @@
 import * as emailValidator from "email-validator";
 import * as queryString from "querystring";
 import * as helpers from "../common/helpers";
+import * as prompt from "inquirer";
 import { SubscribeForNewsletterMessages } from "../constants";
 
 export class SubscriptionService implements ISubscriptionService {
@@ -31,7 +32,7 @@ export class SubscriptionService implements ISubscriptionService {
 	}
 
 	private async getEmail(prompt: string, options?: IPrompterOptions): Promise<string> {
-		const schema: IPromptSchema = {
+		const schema: prompt.Question = {
 			message: prompt,
 			type: "input",
 			name: "inputEmail",

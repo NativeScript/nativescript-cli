@@ -4,6 +4,7 @@ import { SubscriptionService } from "../../lib/services/subscription-service";
 import { LoggerStub } from "../stubs";
 import { stringify } from "querystring";
 import { SubscribeForNewsletterMessages } from "../../lib/constants";
+import * as prompt from "inquirer";
 const helpers = require("../../lib/common/helpers");
 
 interface IValidateTestData {
@@ -22,7 +23,7 @@ const createTestInjector = (): IInjector => {
 	});
 
 	testInjector.register("prompter", {
-		get: async (schemas: IPromptSchema[]): Promise<any> => ({
+		get: async (schemas: prompt.Question[]): Promise<any> => ({
 			inputEmail: "SomeEmail"
 		})
 	});
@@ -169,8 +170,8 @@ describe("subscriptionService", () => {
 			const subscriptionService = testInjector.resolve<SubscriptionServiceTester>(SubscriptionServiceTester);
 			subscriptionService.shouldAskForEmailResult = true;
 			const prompter = testInjector.resolve<IPrompter>("prompter");
-			let schemasPassedToPromter: IPromptSchema[] = null;
-			prompter.get = async (schemas: IPromptSchema[]): Promise<any> => {
+			let schemasPassedToPromter: prompt.Question[] = null;
+			prompter.get = async (schemas: prompt.Question[]): Promise<any> => {
 				schemasPassedToPromter = schemas;
 
 				return { inputEmail: "SomeEmail" };
@@ -209,8 +210,8 @@ describe("subscriptionService", () => {
 					const subscriptionService = testInjector.resolve<SubscriptionServiceTester>(SubscriptionServiceTester);
 					subscriptionService.shouldAskForEmailResult = true;
 					const prompter = testInjector.resolve<IPrompter>("prompter");
-					let schemasPassedToPromter: IPromptSchema[] = null;
-					prompter.get = async (schemas: IPromptSchema[]): Promise<any> => {
+					let schemasPassedToPromter: prompt.Question[] = null;
+					prompter.get = async (schemas: prompt.Question[]): Promise<any> => {
 						schemasPassedToPromter = schemas;
 						return { inputEmail: "SomeEmail" };
 					};
@@ -267,8 +268,8 @@ describe("subscriptionService", () => {
 			const testInjector = createTestInjector();
 
 			const prompter = testInjector.resolve<IPrompter>("prompter");
-			let schemasPassedToPromter: IPromptSchema[] = null;
-			prompter.get = async (schemas: IPromptSchema[]): Promise<any> => {
+			let schemasPassedToPromter: prompt.Question[] = null;
+			prompter.get = async (schemas: prompt.Question[]): Promise<any> => {
 				schemasPassedToPromter = schemas;
 				return { inputEmail: email };
 			};
