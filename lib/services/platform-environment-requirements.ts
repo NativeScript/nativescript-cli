@@ -12,7 +12,8 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		private $prompter: IPrompter,
 		private $staticConfig: IStaticConfig,
 		private $analyticsService: IAnalyticsService,
-		private $injector: IInjector) { }
+		private $injector: IInjector,
+		private $playgroundQrCodeGenerator: IPlaygroundQrCodeGenerator) { }
 
 	@cache()
 	private get $previewCommandHelper(): IPreviewCommandHelper {
@@ -198,6 +199,8 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				timeout: options.timeout,
 				useHotModuleReload: options.hmr
 			});
+
+			await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp({ useHotModuleReload: options.hmr });
 		}
 	}
 
