@@ -29,7 +29,6 @@ export {
   Log,
   Metadata,
   Query,
-  User,
 
   AuthType,
   KinveyRequest,

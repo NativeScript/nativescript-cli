@@ -130,6 +130,14 @@ export class MobileIdentityConnect extends Identity {
       .then(response => response.data.temp_login_uri);
   }
 
+  parseCode(urlString) {
+    if (typeof urlString === 'string') {
+      return url.parse(urlString, true).query.code;
+    }
+
+    return undefined;
+  }
+
   requestCodeWithPopup(clientId, redirectUri, options = {}) {
     const promise = Promise.resolve().then(() => {
       const popup = new Popup();
@@ -148,9 +156,9 @@ export class MobileIdentityConnect extends Identity {
       const promise = new Promise((resolve, reject) => {
         let redirected = false;
 
-        function loadCallback(event) {
+        const loadCallback = (event) => {
           try {
-            if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
+            if (event.url && event.url.toLowerCase().indexOf(redirectUri.toLowerCase()) === 0 && redirected === false) {
               const parsedUrl = url.parse(event.url, true);
               const query = parsedUrl.query || {};
 
@@ -169,11 +177,11 @@ export class MobileIdentityConnect extends Identity {
           } catch (error) {
             // Just catch the error
           }
-        }
+        };
 
-        function errorCallback(event) {
+        const errorCallback = (event) => {
           try {
-            if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
+            if (event.url && event.url.toLowerCase().indexOf(redirectUri.toLowerCase()) === 0 && redirected === false) {
               const parsedUrl = url.parse(event.url, true);
               const query = parsedUrl.query || {};
 
@@ -240,7 +248,7 @@ export class MobileIdentityConnect extends Identity {
       const location = response.headers.get('location');
 
       if (location) {
-        return url.parse(location, true).query.code;
+        return this.parseCode(location);
       }
 
       throw new MobileIdentityConnectError(`Unable to authorize user with username ${options.username}.`,
