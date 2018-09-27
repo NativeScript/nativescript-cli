@@ -309,6 +309,50 @@ end
 end`,
 			},
 			{
+				testCaseDescription: "adds plugin with postinstall when project's Podfile has content, but does not have postinstall",
+				input: `
+target 'MyApp' do
+	pod 'GoogleAnalytics', '~> 3.1'
+end
+
+post_install do |installer|
+	installer.pods_project.targets.each do |target|
+		puts target.name
+	end
+end`,
+				output: `use_frameworks!
+
+target "projectName" do
+# Begin Podfile - pluginPlatformsFolderPath/Podfile
+
+target 'MyApp' do
+	pod 'GoogleAnalytics', '~> 3.1'
+end
+
+def post_installplugin1_0 (installer)
+	installer.pods_project.targets.each do |target|
+		puts target.name
+	end
+end
+# End Podfile
+
+# Begin Podfile - secondPluginPlatformsFolderPath/Podfile
+pod 'OCMock', '~> 2.0.1'
+# End Podfile
+
+post_install do |installer|
+  post_installplugin1_0 installer
+end
+end`,
+				projectPodfileContent: `use_frameworks!
+
+target "projectName" do
+# Begin Podfile - secondPluginPlatformsFolderPath/Podfile
+pod 'OCMock', '~> 2.0.1'
+# End Podfile
+end`,
+			},
+			{
 				testCaseDescription: "merges more than one hooks with block parameter correctly.",
 				input: `
 target 'MyApp' do
