@@ -44,9 +44,11 @@
     "lib/postinstall.js",
     "lib/preuninstall.js",
     "platforms/android/AndroidManifest.default.xml",
+    "platforms/android/AndroidManifest.xml",
     "platforms/android/include.gradle",
     "platforms/ios/Podfile",
     "platforms/ios/Info.default.plist",
+    "platforms/ios/Info.plist",
     "platforms/ios/app.entitlements"
   ],
   "nativescript": {
