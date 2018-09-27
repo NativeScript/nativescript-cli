@@ -14,7 +14,7 @@ export class ProcessService implements IProcessService {
 		const callbackToString = callback.toString();
 
 		if (this._listeners.length === 0) {
-			_.each(ProcessService.PROCESS_EXIT_SIGNALS, (signal: string) => {
+			_.each(ProcessService.PROCESS_EXIT_SIGNALS, (signal: NodeJS.Signals) => {
 				process.on(signal, () => this.executeAllCallbacks.apply(this));
 			});
 		}

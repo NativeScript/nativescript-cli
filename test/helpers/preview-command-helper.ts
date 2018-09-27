@@ -68,8 +68,8 @@ function makeInteractive() {
 }
 
 function makeNonInteractive() {
-	process.stdout.isTTY = false;
-	process.stdin.isTTY = false;
+	(<any>process.stdout).isTTY = false;
+	(<any>process.stdin).isTTY = false;
 }
 
 function reset() {

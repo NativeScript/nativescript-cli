@@ -111,7 +111,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 
 		if (fullUrl) {
 			const parseQueryString = true;
-			const wsQueryParam = parse(fullUrl, parseQueryString).query.ws;
+			const wsQueryParam = <string>parse(fullUrl, parseQueryString).query.ws;
 			const hostPortSplit = wsQueryParam && wsQueryParam.split(":");
 			debugInfo.port = hostPortSplit && +hostPortSplit[1];
 		}

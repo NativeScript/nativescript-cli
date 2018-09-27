@@ -25,7 +25,7 @@ describe("Process service", () => {
 		$processService.attachToProcessExitSignals({}, emptyFunction);
 		$processService.attachToProcessExitSignals({}, emptyFunction);
 
-		_.each(processExitSignals, (signal: string) => {
+		_.each(processExitSignals, (signal: NodeJS.Signals) => {
 			// We need to search only for our listener because each exit signal have different listeners added to it.
 			const actualListeners = _.filter(process.listeners(signal), (listener: Function) => listener.toString().indexOf("executeAllCallbacks") >= 0);
 			assert.deepEqual(actualListeners.length, 1);

@@ -10,7 +10,7 @@ export class IOSDevice implements Mobile.IiOSDevice {
 	public deviceInfo: Mobile.IDeviceInfo;
 
 	private _socket: net.Socket;
-	private _deviceLogHandler: Function;
+	private _deviceLogHandler: (...args: any[]) => void;
 
 	constructor(private deviceActionInfo: IOSDeviceLib.IDeviceActionInfo,
 		private $injector: IInjector,

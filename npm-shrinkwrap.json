@@ -102,9 +102,9 @@
       "dev": true
     },
     "@types/node": {
-      "version": "6.0.61",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-6.0.61.tgz",
-      "integrity": "sha1-7qF0itmd7K8xm1cQFwGGMZdKxvA=",
+      "version": "8.10.30",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-8.10.30.tgz",
+      "integrity": "sha512-Le8HGMI5gjFSBqcCuKP/wfHC19oURzkU2D+ERIescUoJd+CmNEMYBib9LQ4zj1HHEZOJQWhw2ZTnbD8weASh/Q==",
       "dev": true
     },
     "@types/ora": {

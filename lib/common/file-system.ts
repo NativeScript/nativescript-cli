@@ -304,7 +304,7 @@ export class FileSystem implements IFileSystem {
 		}
 	}
 
-	public symlink(sourcePath: string, destinationPath: string, type?: string): void {
+	public symlink(sourcePath: string, destinationPath: string, type?: fs.symlink.Type): void {
 		fs.symlinkSync(sourcePath, destinationPath, type);
 	}
 
