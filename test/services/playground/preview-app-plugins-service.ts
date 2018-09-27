@@ -109,7 +109,7 @@ describe("previewAppPluginsService", () => {
 			const originalGetLocalPlugins = (<any>previewAppPluginsService).getLocalPlugins;
 			(<any>previewAppPluginsService).getLocalPlugins = () => {
 				isGetLocalPluginsCalled = true;
-				return originalGetLocalPlugins.apply(previewAppPluginsService);
+				return originalGetLocalPlugins.apply(previewAppPluginsService, [projectDir]);
 			};
 
 			const previewLiveSyncData = createPreviewLiveSyncData({ bundle: false });
