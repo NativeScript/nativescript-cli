@@ -24,8 +24,14 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 	}
 
 	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<IAndroidLiveSyncResultInfo> {
+		console.time("ALS base");
 		const liveSyncResult = await super.liveSyncWatchAction(device, liveSyncInfo);
+		console.timeEnd("ALS base");
+
+		console.time("ALS finalize");
 		const result = await this.finalizeSync(device, liveSyncInfo.projectData, liveSyncResult);
+		console.timeEnd("ALS finalize");
+
 		return result;
 	}
 

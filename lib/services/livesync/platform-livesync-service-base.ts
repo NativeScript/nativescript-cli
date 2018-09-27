@@ -65,13 +65,18 @@ export abstract class PlatformLiveSyncServiceBase {
 		const deviceAppData = await this.getAppData(syncInfo);
 
 		if (deviceLiveSyncService.beforeLiveSyncAction) {
+			console.time("beforeLiveSyncAction");
 			await deviceLiveSyncService.beforeLiveSyncAction(deviceAppData);
+			console.timeEnd("beforeLiveSyncAction");
+
 		}
 
 		let modifiedLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
 		if (liveSyncInfo.filesToSync.length) {
 			const filesToSync = liveSyncInfo.filesToSync;
+			console.time("mapFiles");
 			const mappedFiles = _.map(filesToSync, filePath => this.$projectFilesProvider.mapFilePath(filePath, device.deviceInfo.platform, projectData));
+			console.timeEnd("mapFiles");
 
 			// Some plugins modify platforms dir on afterPrepare (check nativescript-dev-sass) - we want to sync only existing file.
 			const existingFiles = mappedFiles.filter(m => m && this.$fs.exists(m));
@@ -84,10 +89,15 @@ export abstract class PlatformLiveSyncServiceBase {
 			if (existingFiles.length) {
 				const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 				const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
+				console.time("createLocalToDevicePaths");
 				const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData,
 					projectFilesPath, existingFiles, []);
+				console.timeEnd("createLocalToDevicePaths");
+
 				modifiedLocalToDevicePaths.push(...localToDevicePaths);
+				console.time("this.transferFiles");
 				modifiedLocalToDevicePaths = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, projectData, liveSyncInfo.liveSyncDeviceInfo, { isFullSync: false, force: liveSyncInfo.force});
+				console.timeEnd("this.transferFiles");
 			}
 		}
 
@@ -118,7 +128,11 @@ export abstract class PlatformLiveSyncServiceBase {
 		let transferredFiles: Mobile.ILocalToDevicePathData[] = [];
 		const deviceLiveSyncService = this.getDeviceLiveSyncService(deviceAppData.device, projectData);
 
+		console.log("will transfer ", localToDevicePaths.map(l => l.getLocalPath()));
+		console.time("%%%%%%%%%%%% %%%%%%%%% transferFiles");
 		transferredFiles = await deviceLiveSyncService.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, projectData, liveSyncDeviceInfo, options);
+		console.timeEnd("%%%%%%%%%%%% %%%%%%%%% transferFiles");
+		console.log("### after transfer files", Date.now());
 
 		this.logFilesSyncInformation(transferredFiles, "Successfully transferred %s on device %s.", this.$logger.info, deviceAppData.device.deviceInfo.identifier);
 

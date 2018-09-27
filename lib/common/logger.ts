@@ -44,12 +44,15 @@ export class Logger implements ILogger {
 	}
 
 	fatal(...args: string[]): void {
+		args.unshift(Date.now() + "");
+
 		this.log4jsLogger.fatal.apply(this.log4jsLogger, args);
 	}
 
 	error(...args: string[]): void {
 		const message = util.format.apply(null, args);
 		const colorizedMessage = message.red;
+		args.unshift(Date.now() + "");
 
 		this.log4jsLogger.error.apply(this.log4jsLogger, [colorizedMessage]);
 	}
@@ -57,6 +60,7 @@ export class Logger implements ILogger {
 	warn(...args: string[]): void {
 		const message = util.format.apply(null, args);
 		const colorizedMessage = message.yellow;
+		args.unshift(Date.now() + "");
 
 		this.log4jsLogger.warn.apply(this.log4jsLogger, [colorizedMessage]);
 	}
@@ -67,24 +71,33 @@ export class Logger implements ILogger {
 	}
 
 	info(...args: string[]): void {
+		args.unshift(Date.now() + "");
 		this.log4jsLogger.info.apply(this.log4jsLogger, args);
 	}
 
 	debug(...args: string[]): void {
 		const encodedArgs: string[] = this.getPasswordEncodedArguments(args);
+		args.unshift(Date.now() + "");
+
 		this.log4jsLogger.debug.apply(this.log4jsLogger, encodedArgs);
 	}
 
 	trace(...args: string[]): void {
 		const encodedArgs: string[] = this.getPasswordEncodedArguments(args);
+		args.unshift(Date.now() + "");
+
 		this.log4jsLogger.trace.apply(this.log4jsLogger, encodedArgs);
 	}
 
 	out(...args: string[]): void {
+		args.unshift(Date.now() + "");
+
 		console.log(util.format.apply(null, args));
 	}
 
 	write(...args: string[]): void {
+		args.unshift(Date.now() + "");
+
 		process.stdout.write(util.format.apply(null, args));
 	}
 

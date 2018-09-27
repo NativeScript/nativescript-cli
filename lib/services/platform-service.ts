@@ -224,8 +224,14 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public async preparePlatform(platformInfo: IPreparePlatformInfo): Promise<boolean> {
+		console.time("$$$$$$$$$$$$$$$$ preparePlatform");
+		console.time("$$$$$$$$$$$$$ getChangesInfo");
 		const changesInfo = await this.getChangesInfo(platformInfo);
+		console.timeEnd("$$$$$$$$$$$$$ getChangesInfo");
+
+		console.time("$$$$$$$$$ shouldPrepare");
 		const shouldPrepare = await this.shouldPrepare({ platformInfo, changesInfo });
+		console.timeEnd("$$$$$$$$$ shouldPrepare");
 
 		if (shouldPrepare) {
 			// Always clear up the app directory in platforms if `--bundle` value has changed in between builds or is passed in general
@@ -235,6 +241,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				await this.cleanDestinationApp(platformInfo);
 			}
 
+			console.time("$$$$$$ preparePlatformCore");
 			await this.preparePlatformCore(
 				platformInfo.platform,
 				platformInfo.appFilesUpdaterOptions,
@@ -248,10 +255,14 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				platformInfo.skipCopyAppResourcesFiles,
 				platformInfo.skipCopyTnsModules
 			);
+			console.timeEnd("$$$$$$ preparePlatformCore");
+
 			this.$projectChangesService.savePrepareInfo(platformInfo.platform, platformInfo.projectData);
 		} else {
 			this.$logger.out("Skipping prepare.");
 		}
+
+		console.timeEnd("$$$$$$$$$$$$$$$$ preparePlatform");
 
 		return true;
 	}
@@ -320,6 +331,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const projectFilesConfig = helpers.getProjectFilesConfig({ isReleaseBuild: appFilesUpdaterOptions.release });
+		console.time("%%%%%%%% preparePlatformJSService.preparePlatform");
 		await this.$preparePlatformJSService.preparePlatform({
 			platform,
 			platformData,
@@ -334,8 +346,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			skipCopyAppResourcesFiles,
 			skipCopyTnsModules
 		});
+		console.timeEnd("%%%%%%%% preparePlatformJSService.preparePlatform");
 
 		if (!nativePrepare || !nativePrepare.skipNativePrepare) {
+			console.time("%%%%%%%% preparePlatformNativeService.preparePlatform");
+
 			await this.$preparePlatformNativeService.preparePlatform({
 				platform,
 				platformData,
@@ -348,6 +363,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				projectFilesConfig,
 				env
 			});
+			console.timeEnd("%%%%%%%% preparePlatformNativeService.preparePlatform");
 		}
 
 		const directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
@@ -356,7 +372,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			excludedDirs.push(constants.TNS_MODULES_FOLDER_NAME);
 		}
 
+		console.time("%%%%%%%% projectFilesManager.processPlatformSpecificFiles");
+
 		this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, projectFilesConfig, excludedDirs);
+		console.timeEnd("%%%%%%%% projectFilesManager.processPlatformSpecificFiles");
 
 		this.$logger.out(`Project successfully prepared (${platform})`);
 	}

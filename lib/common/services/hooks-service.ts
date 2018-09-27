@@ -90,12 +90,16 @@ export class HooksService implements IHooksService {
 	}
 
 	private async executeHooksInDirectory(directoryPath: string, hookName: string, hookArguments?: IDictionary<any>): Promise<any[]> {
+		console.log("executeHooksInDirectory called for path: ", directoryPath, " name: ", hookName);
+		console.time("executeHooksInDirectory");
 		hookArguments = hookArguments || {};
 		const results: any[] = [];
 		const hooks = this.getHooksByName(directoryPath, hookName);
 		for (let i = 0; i < hooks.length; ++i) {
+			console.log("########### executing hook ", hookName, i);
 			const hook = hooks[i];
 			this.$logger.info("Executing %s hook from %s", hookName, hook.fullPath);
+			console.time(""+i);
 			let command = this.getSheBangInterpreter(hook);
 			let inProc = false;
 			if (!command) {
@@ -156,8 +160,14 @@ export class HooksService implements IHooksService {
 					throw new Error(output.stdout + output.stderr);
 				}
 			}
+
+			console.timeEnd(""+i);
+
+			this.$logger.info("Executed %s hook from %s", hookName, hook.fullPath);
+
 		}
 
+		console.timeEnd("executeHooksInDirectory");
 		return results;
 	}
 

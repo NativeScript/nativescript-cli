@@ -120,11 +120,15 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	private async refreshApplicationWithoutDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string, settings?: IShouldSkipEmitLiveSyncNotification): Promise<void> {
+		console.time("refreshApplicationWithoutDebug");
 		const platform = liveSyncResultInfo.deviceAppData.platform;
 		const platformLiveSyncService = this.getLiveSyncService(platform);
 		const applicationIdentifier = projectData.projectIdentifiers[platform.toLowerCase()];
 		try {
+			console.time("platformLiveSyncService.refreshApplication");
 			await platformLiveSyncService.refreshApplication(projectData, liveSyncResultInfo);
+			console.timeEnd("platformLiveSyncService.refreshApplication");
+
 		} catch (err) {
 			this.$logger.info(`Error while trying to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
 			const msg = `Unable to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Try starting it manually.`;
@@ -147,7 +151,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			isFullSync: liveSyncResultInfo.isFullSync
 		});
 
-		this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
+		this.$logger.info(Date.now() + ` Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
+		console.timeEnd("refreshApplicationWithoutDebug");
 	}
 
 	private async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOptions: IDebugOptions, outputPath?: string): Promise<IDebugInformation> {
@@ -585,8 +590,9 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			const filesToSyncMap: IDictionary<string[]> = {};
 			let filesToRemove: string[] = [];
 			let timeoutTimer: NodeJS.Timer;
-
+			let calledFromCLIWatcher = false;
 			const startSyncFilesTimeout = (platform?: string) => {
+				console.log("!!!!!!!!!!!!!!!!!!!!!!!! called startSyncFilesTimeout calledFromCLIWatcher = ", calledFromCLIWatcher, Date.now());
 				timeoutTimer = setTimeout(async () => {
 					if (liveSyncData.syncToPreviewApp) {
 						await this.addActionToChain(projectData.projectDir, async () => {
@@ -607,8 +613,11 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					} else {
 						// Push actions to the queue, do not start them simultaneously
 						await this.addActionToChain(projectData.projectDir, async () => {
+							console.log("!!!!!!!!!!!!!!!!!!!!!!!! addActionToChain action executed", Date.now());
+
 							if (filesToSync.length || filesToRemove.length) {
 								try {
+									console.time("prepareFiles");
 									const currentFilesToSync = _.cloneDeep(filesToSync);
 									filesToSync.splice(0, filesToSync.length);
 
@@ -621,42 +630,61 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 									const rebuiltInformation: ILiveSyncBuildInfo[] = [];
 
 									const latestAppPackageInstalledSettings = this.getDefaultLatestAppPackageInstalledSettings();
-
+									console.timeEnd("prepareFiles");
+									console.time("Execute for device");
 									await this.$devicesService.execute(async (device: Mobile.IDevice) => {
+										console.timeEnd("Execute for device");
 										const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];
 										const deviceBuildInfoDescriptor = _.find(liveSyncProcessInfo.deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 
-										const appInstalledOnDeviceResult = await this.ensureLatestAppPackageIsInstalledOnDevice({
-											device,
-											preparedPlatforms,
-											rebuiltInformation,
-											projectData,
-											deviceBuildInfoDescriptor,
-											liveSyncData,
-											settings: latestAppPackageInstalledSettings,
-											modifiedFiles: allModifiedFiles,
-											filesToRemove: currentFilesToRemove,
-											filesToSync: currentFilesToSync,
-											bundle: liveSyncData.bundle,
-											release: liveSyncData.release,
-											env: liveSyncData.env,
-											skipModulesNativeCheck: !liveSyncData.watchAllFiles
-										}, { skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare });
+										let appInstalledOnDeviceResult: IAppInstalledOnDeviceResult = null;
+										if (calledFromCLIWatcher) {
+											console.time("ensureLatestAppPackageIsInstalledOnDevice");
+											appInstalledOnDeviceResult = await this.ensureLatestAppPackageIsInstalledOnDevice(
+												{
+													device,
+													preparedPlatforms,
+													rebuiltInformation,
+													projectData,
+													deviceBuildInfoDescriptor,
+													liveSyncData,
+													settings: latestAppPackageInstalledSettings,
+													modifiedFiles: allModifiedFiles,
+													filesToRemove: currentFilesToRemove,
+													filesToSync: currentFilesToSync,
+													bundle: liveSyncData.bundle,
+													release: liveSyncData.release,
+													env: liveSyncData.env,
+													skipModulesNativeCheck: !liveSyncData.watchAllFiles
+												},
+												{
+													skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare
+												}
+											);
 
+											console.timeEnd("ensureLatestAppPackageIsInstalledOnDevice");
+										}
 										const service = this.getLiveSyncService(device.deviceInfo.platform);
 										const settings: ILiveSyncWatchInfo = {
 											liveSyncDeviceInfo: deviceBuildInfoDescriptor,
 											projectData,
 											filesToRemove: currentFilesToRemove,
 											filesToSync: currentFilesToSync,
-											isReinstalled: appInstalledOnDeviceResult.appInstalled,
+											isReinstalled: calledFromCLIWatcher ? appInstalledOnDeviceResult.appInstalled : false,
 											syncAllFiles: liveSyncData.watchAllFiles,
 											useHotModuleReload: liveSyncData.useHotModuleReload,
 											force: liveSyncData.force
 										};
+										calledFromCLIWatcher = false;
 
+										console.time("service.liveSyncWatchAction");
 										const liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);
+										console.timeEnd("service.liveSyncWatchAction");
+
+										console.time("refreshApp");
 										await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
+										console.timeEnd("refreshApp");
+
 									},
 										(device: Mobile.IDevice) => {
 											const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];
@@ -684,7 +712,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 							}
 						});
 					}
-				}, 250);
+				}, 25);
 
 				this.liveSyncProcessesInfo[liveSyncData.projectDir].timer = timeoutTimer;
 			};
@@ -743,6 +771,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 						filesToRemove.push(filePath);
 					}
 
+					calledFromCLIWatcher = true;
 					startSyncFilesTimeout();
 				});
 
@@ -793,7 +822,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		}
 	}
 
-	public emitLivesyncEvent (event: string, livesyncData: ILiveSyncEventData): boolean {
+	public emitLivesyncEvent(event: string, livesyncData: ILiveSyncEventData): boolean {
 		this.$logger.trace(`Will emit event ${event} with data`, livesyncData);
 		return this.emit(event, livesyncData);
 	}
