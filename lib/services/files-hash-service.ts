@@ -53,8 +53,13 @@ export class FilesHashService implements IFilesHashService {
 		this.$fs.writeJson(hashesFilePath, hashes);
 	}
 
-	private getChangesInShasums(oldHashes: IStringDictionary, newHashes: IStringDictionary): IStringDictionary {
-		return _.omitBy(newHashes, (hash: string, pathToFile: string) => !!_.find(oldHashes, (oldHash: string, oldPath: string) => pathToFile === oldPath && hash === oldHash));
+	public getChangesInShasums(oldHashes: IStringDictionary, newHashes: IStringDictionary): IStringDictionary {
+		const addedFileHashes = _.omitBy(newHashes, (hash: string, pathToFile: string) => !!oldHashes[pathToFile] && oldHashes[pathToFile] === hash);
+		const removedFileHashes = _.omitBy(oldHashes, (hash: string, pathToFile: string) => !!newHashes[pathToFile] && newHashes[pathToFile] === hash);
+		const result = {};
+		_.extend(result, addedFileHashes, removedFileHashes);
+
+		return result;
 	}
 }
 $injector.register("filesHashService", FilesHashService);
