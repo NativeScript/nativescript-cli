@@ -11,7 +11,8 @@ export class TnsModulesCopy {
 	constructor(
 		private outputRoot: string,
 		private $options: IOptions,
-		private $fs: IFileSystem
+		private $fs: IFileSystem,
+		private $pluginsService: IPluginsService
 	) {
 	}
 
@@ -67,9 +68,7 @@ export class TnsModulesCopy {
 					const pathToDependency = path.join(dependenciesFolder, d);
 					const pathToPackageJson = path.join(pathToDependency, constants.PACKAGE_JSON_FILE_NAME);
 
-					// TODO: Reuse pluginsService.isNativeScriptPlugin after making it work with full path.
-					const pluginPackageJsonContent = this.$fs.readJson(pathToPackageJson);
-					if (pluginPackageJsonContent && pluginPackageJsonContent.nativescript) {
+					if (this.$pluginsService.isNativeScriptPlugin(pathToPackageJson)) {
 						this.$fs.deleteDirectory(path.join(pathToDependency, constants.PLATFORMS_DIR_NAME));
 					}
 
