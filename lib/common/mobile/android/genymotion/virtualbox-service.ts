@@ -55,8 +55,8 @@ export class VirtualBoxService implements Mobile.IVirtualBoxService {
 				"~"
 			],
 			win32: [
-				"%ProgramFiles%\\Oracle\\VirtualBox",
-				"%ProgramFiles(x86)%\\Oracle\\VirtualBox"
+				`${process.env["PROGRAMFILES"]}\\Oracle\\VirtualBox`,
+				`${process.env["PROGRAMFILES(X86)"]}\\Oracle\\VirtualBox`
 			]
 		};
 
