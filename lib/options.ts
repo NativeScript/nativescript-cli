@@ -223,6 +223,11 @@ export class Options {
 		this.$settingsService.setSettings({ profileDir: this.argv.profileDir });
 		this.argv.profileDir = this.argv["profile-dir"] = this.$settingsService.getProfileDir();
 
+		// if justlaunch is set, it takes precedence over the --watch flag and the default true value
+		if (this.argv.justlaunch) {
+			this.argv.watch = false;
+		}
+
 		// Default to "nativescript-dev-webpack" if only `--bundle` is passed
 		if (this.argv.bundle !== undefined || this.argv.hmr) {
 			this.argv.bundle = this.argv.bundle || "webpack";
