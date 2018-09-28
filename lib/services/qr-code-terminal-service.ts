@@ -1,10 +1,13 @@
+import { EOL } from "os";
+
 const qrcode = require("qrcode-terminal");
 
 export class QrCodeTerminalService implements IQrCodeTerminalService {
 	constructor(private $logger: ILogger) { }
 
-	public generate(url: string): void {
-		this.$logger.info(`Generating qrcode for url ${url}.`);
+	public generate(url: string, message: string): void {
+		this.$logger.info(`${EOL} ${message.blue}`);
+		this.$logger.info(`${EOL} Generating qrcode for url ${url}.`);
 
 		try {
 			qrcode.generate(url);
