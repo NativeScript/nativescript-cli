@@ -74,11 +74,16 @@ export class HttpMiddleware extends Middleware {
     };
     return (HttpRequest(options) as any)
       .then((response) => {
+        const contentType = response.headers['content-type'] || response.headers['Content-Type'];
         let data = response.content.raw;
 
-        try {
-          data = response.content.toString();
-        } catch (e) {}
+        if (contentType) {
+          if (contentType.indexOf('application/json') === 0) {
+            try {
+              data = response.content.toString();
+            } catch (e) {}
+          }
+        }
 
         return {
           response: {
