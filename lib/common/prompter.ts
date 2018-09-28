@@ -159,7 +159,7 @@ export class Prompter implements IPrompter {
 	private cleanListener(stream: NodeJS.WritableStream, eventName: string, listenerName: string): void {
 		const eventListeners: any[] = process.stdout.listeners(eventName);
 
-		const listenerFunction: Function = _.find(eventListeners, (func: any) => func.name === listenerName);
+		const listenerFunction: (...args: any[]) => void = _.find(eventListeners, (func: any) => func.name === listenerName);
 
 		if (listenerFunction) {
 			stream.removeListener(eventName, listenerFunction);

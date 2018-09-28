@@ -18,7 +18,7 @@ const protocolVersion = "0.2.0";
 class TestSocket extends LiveSyncSocket {
 	public accomulatedData: Buffer[] = [];
 	public connect () {
-		//ignore
+		return this;
 	}
 
 	public writeAsync(data: Buffer | string, cb?: string | Function, encoding?: Function | string): Promise<Boolean> {

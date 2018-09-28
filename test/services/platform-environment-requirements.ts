@@ -132,7 +132,7 @@ describe("platformEnvironmentRequirements ", () => {
 			assert.deepEqual(['Sync to Playground', 'Configure for Local Builds', 'Skip Step and Configure Manually'], promptForChoiceData[0].choices);
 		});
 		it("should skip env check when NS_SKIP_ENV_CHECK environment variable is passed", async() => {
-			process.env.NS_SKIP_ENV_CHECK = true;
+			(<any>process.env).NS_SKIP_ENV_CHECK = true;
 
 			const output = await platformEnvironmentRequirements.checkEnvironmentRequirements({ platform });
 
@@ -221,8 +221,8 @@ describe("platformEnvironmentRequirements ", () => {
 
 		describe("when console is non interactive", () => {
 			beforeEach(() => {
-				process.stdout.isTTY = false;
-				process.stdin.isTTY = false;
+				(<any>process).stdout.isTTY = false;
+				(<any>process.stdin).isTTY = false;
 				mockDoctorService({ canExecuteLocalBuild: false });
 			});
 

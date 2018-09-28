@@ -192,7 +192,7 @@ export class AnalyticsService extends AnalyticsServiceBase {
 		return new Promise<void>((resolve, reject) => {
 			if (broker && broker.connected) {
 				try {
-					broker.send(message, resolve);
+					broker.send(message, (error: Error) => resolve());
 				} catch (err) {
 					this.$logger.trace("Error while trying to send message to broker:", err);
 					resolve();
