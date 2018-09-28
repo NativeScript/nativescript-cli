@@ -3,7 +3,7 @@ import { PubnubKeys } from "./preview-app-constants";
 const pako = require("pako");
 
 export class PreviewSdkService implements IPreviewSdkService {
-	private static MAX_FILES_UPLOAD_BYTE_LENGTH = 30000;
+	private static MAX_FILES_UPLOAD_BYTE_LENGTH = 15 * 1024 * 1024; // In MBs
 	private messagingService: MessagingService = null;
 	private instanceId: string = null;
 	public connectedDevices: Device[] = [];
@@ -76,7 +76,8 @@ export class PreviewSdkService implements IPreviewSdkService {
 			onSendingChange: (sending: boolean) => ({ }),
 			onBiggerFilesUpload: async (filesContent, callback) => {
 				const gzippedContent = Buffer.from(pako.gzip(filesContent));
-				const byteLength = gzippedContent.byteLength;
+				const byteLength = filesContent.length;
+
 				if (byteLength > PreviewSdkService.MAX_FILES_UPLOAD_BYTE_LENGTH) {
 					this.$logger.warn("The files to upload exceed the maximum allowed size of 15MB. Your app might not work as expected.");
 				}
