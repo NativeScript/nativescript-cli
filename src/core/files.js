@@ -181,7 +181,8 @@ export class FileStore {
     const request = new NetworkRequest({
       method: RequestMethod.GET,
       url: url,
-      timeout: options.timeout
+      timeout: options.timeout,
+      file: true
     });
     return request.execute().then(response => response.data);
   }

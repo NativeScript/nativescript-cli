@@ -55,7 +55,7 @@ export class HttpMiddleware extends Middleware {
   }
 
   handle(request: any): Promise<any> {
-    const { url, method, headers, body, timeout, followRedirect } = request;
+    const { url, method, headers, body, timeout, followRedirect, file } = request;
     const kinveyUrlRegex = /kinvey\.com/gm;
 
     if (kinveyUrlRegex.test(url)) {
@@ -74,15 +74,12 @@ export class HttpMiddleware extends Middleware {
     };
     return (HttpRequest(options) as any)
       .then((response) => {
-        const contentType = response.headers['content-type'] || response.headers['Content-Type'];
         let data = response.content.raw;
 
-        if (contentType) {
-          if (contentType.indexOf('application/json') === 0) {
-            try {
-              data = response.content.toString();
-            } catch (e) {}
-          }
+        if (!file) {
+          try {
+            data = response.content.toString();
+          } catch (e) {}
         }
 
         return {

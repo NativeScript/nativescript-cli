@@ -31,6 +31,13 @@ export class NetworkRequest extends Request {
   constructor(options = {}) {
     super(options);
     this.rack = NetworkRack;
+    this.file = options.file === true;
+  }
+
+  toPlainObject() {
+    return Object.assign(super.toPlainObject(), {
+      file: this.file
+    });
   }
 }
 
