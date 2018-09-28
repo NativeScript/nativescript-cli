@@ -43,9 +43,6 @@ function createTestInjector(localPlugins: IStringDictionary, options?: { isNativ
 		trace: () => ({}),
 		warn: (message: string) =>  warnParams.push(message)
 	});
-	injector.register("projectData", {
-		projectDir
-	});
 	injector.register("previewAppPluginsService", PreviewAppPluginsService);
 	return injector;
 }
@@ -112,7 +109,7 @@ describe("previewAppPluginsService", () => {
 			const originalGetLocalPlugins = (<any>previewAppPluginsService).getLocalPlugins;
 			(<any>previewAppPluginsService).getLocalPlugins = () => {
 				isGetLocalPluginsCalled = true;
-				return originalGetLocalPlugins.apply(previewAppPluginsService);
+				return originalGetLocalPlugins.apply(previewAppPluginsService, [projectDir]);
 			};
 
 			const previewLiveSyncData = createPreviewLiveSyncData({ bundle: false });

@@ -4,20 +4,19 @@ import * as util from "util";
 import { Device } from "nativescript-preview-sdk";
 import { PluginComparisonMessages } from "./preview-app-constants";
 import { NODE_MODULES_DIR_NAME } from "../../../common/constants";
-import { PLATFORMS_DIR_NAME } from "../../../constants";
+import { PLATFORMS_DIR_NAME, PACKAGE_JSON_FILE_NAME } from "../../../constants";
 
 export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	private previewAppVersionWarnings: IDictionary<string[]> = {};
 
 	constructor(private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $pluginsService: IPluginsService,
-		private $projectData: IProjectData) { }
+		private $pluginsService: IPluginsService) { }
 
 	public async comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void> {
 		if (!this.previewAppVersionWarnings[device.previewAppVersion]) {
 			const devicePlugins = this.getDevicePlugins(device);
-			const localPlugins = this.getLocalPlugins();
+			const localPlugins = this.getLocalPlugins(data.projectDir);
 			const warnings = _.keys(localPlugins)
 				.map(localPlugin => {
 					const localPluginVersion = localPlugins[localPlugin];
@@ -55,8 +54,8 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 		}
 	}
 
-	private getLocalPlugins(): IStringDictionary {
-		const projectFilePath = path.join(this.$projectData.projectDir, "package.json");
+	private getLocalPlugins(projectDir: string): IStringDictionary {
+		const projectFilePath = path.join(projectDir, PACKAGE_JSON_FILE_NAME);
 		try {
 			return this.$fs.readJson(projectFilePath).dependencies;
 		} catch (err) {
@@ -66,7 +65,7 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	}
 
 	private getWarningForPlugin(data: IPreviewAppLiveSyncData, localPlugin: string, localPluginVersion: string, devicePluginVersion: string, device: Device): string {
-		if (data && data.appFilesUpdaterOptions && data.appFilesUpdaterOptions.bundle && this.isNativeScriptPluginWithoutNativeCode(localPlugin, device.platform)) {
+		if (data && data.appFilesUpdaterOptions && data.appFilesUpdaterOptions.bundle && this.isNativeScriptPluginWithoutNativeCode(localPlugin, device.platform, data.projectDir)) {
 			return null;
 		}
 
@@ -92,12 +91,13 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 		return util.format(PluginComparisonMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, localPlugin, deviceId);
 	}
 
-	private isNativeScriptPluginWithoutNativeCode(localPlugin: string, platform: string): boolean {
-		return this.$pluginsService.isNativeScriptPlugin(localPlugin, this.$projectData) && !this.hasNativeCode(localPlugin, platform);
+	private isNativeScriptPluginWithoutNativeCode(localPlugin: string, platform: string, projectDir: string): boolean {
+		const pluginPackageJsonPath = path.join(projectDir, NODE_MODULES_DIR_NAME, localPlugin, PACKAGE_JSON_FILE_NAME);
+		return this.$pluginsService.isNativeScriptPlugin(pluginPackageJsonPath) && !this.hasNativeCode(localPlugin, platform, projectDir);
 	}
 
-	private hasNativeCode(localPlugin: string, platform: string): boolean {
-		const nativeFolderPath = path.join(this.$projectData.projectDir, NODE_MODULES_DIR_NAME, localPlugin, PLATFORMS_DIR_NAME, platform.toLowerCase());
+	private hasNativeCode(localPlugin: string, platform: string, projectDir: string): boolean {
+		const nativeFolderPath = path.join(projectDir, NODE_MODULES_DIR_NAME, localPlugin, PLATFORMS_DIR_NAME, platform.toLowerCase());
 		return this.$fs.exists(nativeFolderPath) && !this.$fs.isEmptyDir(nativeFolderPath);
 	}
 }
