@@ -9,7 +9,19 @@ import * as path from "path";
 
 export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	private static ANDROID_TARGET_PREFIX = "android";
-	private static SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21", "android-22", "android-23", "android-24", "android-25", "android-26", "android-27"];
+	private static SUPPORTED_TARGETS = [
+		"android-17",
+		"android-18",
+		"android-19",
+		"android-21",
+		"android-22",
+		"android-23",
+		"android-24",
+		"android-25",
+		"android-26",
+		"android-27",
+		"android-28",
+	];
 	private static MIN_REQUIRED_COMPILE_TARGET = 22;
 	private static REQUIRED_BUILD_TOOLS_RANGE_PREFIX = ">=23";
 	private static VERSION_REGEX = /((\d+\.){2}\d+)/;
