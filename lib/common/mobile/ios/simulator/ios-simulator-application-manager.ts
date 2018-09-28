@@ -3,6 +3,7 @@ import * as path from "path";
 import * as temp from "temp";
 import { hook, getPidFromiOSSimulatorLogs } from "../../../helpers";
 import { cache } from "../../../decorators";
+import { IOS_LOG_PREDICATE } from "../../../constants";
 
 export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 	constructor(private iosSim: any,
@@ -104,6 +105,6 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 
 	@cache()
 	private startDeviceLog(): Promise<void> {
-		return this.device.openDeviceLogStream({predicate: 'senderImagePath contains "NativeScript"'});
+		return this.device.openDeviceLogStream({predicate: IOS_LOG_PREDICATE});
 	}
 }

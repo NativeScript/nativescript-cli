@@ -186,7 +186,7 @@ declare module Mobile {
 	/**
 	 * Describes methods for providing device logs to a specific consumer.
 	 */
-	interface IDeviceLogProvider {
+	interface IDeviceLogProvider extends NodeJS.EventEmitter {
 		/**
 		 * Logs data in the specific way for the consumer.
 		 * @param {string} line String from the device logs.
@@ -248,12 +248,6 @@ declare module Mobile {
 		 * @param {Mobile.IiOSLogStreamOptions} options Describes the options which can be passed
 		 */
 		startLogProcess(deviceId: string, options?: Mobile.IiOSLogStreamOptions): Promise<void>;
-		/**
-		 * Starts a new process for getting simulator logs and emits and DEVICE_LOG_EVENT_NAME event. The event's reponse is with muted=true flag so it will not be printed from deviceLogProvider.
-		 * @param {string} deviceId The unique identifier of the device.
-		 * @param {Mobile.IiOSLogStreamOptions} options Describes the options which can be passed
-		 */
-		startNewMutedLogProcess(deviceId: string, options?: Mobile.IiOSLogStreamOptions): Promise<void>;
 	}
 
 	/**

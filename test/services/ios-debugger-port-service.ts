@@ -2,16 +2,16 @@ import { assert } from "chai";
 import { CONNECTED_STATUS, DEBUGGER_PORT_FOUND_EVENT_NAME, DEVICE_LOG_EVENT_NAME } from "../../lib/common/constants";
 import { ErrorsStub, LoggerStub } from "../stubs";
 import { IOSDebuggerPortService } from "../../lib/services/ios-debugger-port-service";
-import { IOSLogParserService } from "../../lib/services/ios-log-parser-service";
-import { IOSSimulatorLogProvider } from "../../lib/common/mobile/ios/simulator/ios-simulator-log-provider";
+import { LogParserService } from "../../lib/services/log-parser-service";
+import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 import { Yok } from "../../lib/common/yok";
 import { EventEmitter } from "events";
 import * as sinon from "sinon";
 
 class DeviceApplicationManagerMock extends EventEmitter { }
 
-class IOSDeviceOperationsMock extends EventEmitter {
-	public startDeviceLog(deviceId: string): void {
+class DeveiceLogProviderMock extends EventEmitter {
+	public logData(deviceId: string): void {
 		// need this to be empty
 	}
 }
@@ -21,7 +21,8 @@ const deviceId = "fbece8e562ac63749a1018a9f1ea57614c5c953a";
 const device = <Mobile.IDevice>{
 	deviceInfo: {
 		identifier: deviceId,
-		status: CONNECTED_STATUS
+		status: CONNECTED_STATUS,
+		platform: "ios"
 	},
 	applicationManager: new DeviceApplicationManagerMock()
 };
@@ -29,20 +30,17 @@ const device = <Mobile.IDevice>{
 function createTestInjector() {
 	const injector = new Yok();
 
-	injector.register("deviceLogProvider", {
-		setProjectNameForDevice: () => ({})
-	});
+	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
+	injector.register("deviceLogProvider", DeveiceLogProviderMock);
 	injector.register("errors", ErrorsStub);
 	injector.register("iOSDebuggerPortService", IOSDebuggerPortService);
-	injector.register("iosDeviceOperations", IOSDeviceOperationsMock);
-	injector.register("iOSLogParserService", IOSLogParserService);
+	injector.register("logParserService", LogParserService);
 	injector.register("iOSProjectService", {
 		getFrameworkVersion: () => "4.1.0"
 	});
 	injector.register("iOSSimResolver", {
 		iOSSim: () => ({})
 	});
-	injector.register("iOSSimulatorLogProvider", IOSSimulatorLogProvider);
 	injector.register("logger", LoggerStub);
 	injector.register("processService", {
 		attachToProcessExitSignals: () => ({})
@@ -52,6 +50,11 @@ function createTestInjector() {
 			projectName: "test",
 			projectId: appId
 		})
+	});
+	injector.register("devicesService", {
+		getDeviceByIdentifier: () => {
+			return device;
+		}
 	});
 	injector.register("iOSNotification", DeviceApplicationManagerMock);
 
@@ -85,13 +88,13 @@ function getMultilineDebuggerPortMessage(port: number) {
 }
 
 describe("iOSDebuggerPortService", () => {
-	let injector: IInjector, iOSDebuggerPortService: IIOSDebuggerPortService, iosDeviceOperations: IIOSDeviceOperations;
+	let injector: IInjector, iOSDebuggerPortService: IIOSDebuggerPortService, deviceLogProvider: Mobile.IDeviceLogProvider;
 	let clock: sinon.SinonFakeTimers = null;
 
 	beforeEach(() => {
 		injector = createTestInjector();
 		iOSDebuggerPortService = injector.resolve("iOSDebuggerPortService");
-		iosDeviceOperations = injector.resolve("iosDeviceOperations");
+		deviceLogProvider = injector.resolve("deviceLogProvider");
 		clock = sinon.useFakeTimers();
 	});
 
@@ -100,10 +103,7 @@ describe("iOSDebuggerPortService", () => {
 	});
 
 	function emitDeviceLog(message: string) {
-		iosDeviceOperations.emit(DEVICE_LOG_EVENT_NAME, {
-			deviceId: device.deviceInfo.identifier,
-			message: message
-		});
+		deviceLogProvider.emit(DEVICE_LOG_EVENT_NAME, message, device.deviceInfo.identifier);
 	}
 
 	function emitStartingIOSApplicationEvent() {

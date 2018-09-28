@@ -59,6 +59,7 @@ export class EmulatorDiscoveryNames {
 }
 
 export const DEVICE_LOG_EVENT_NAME = "deviceLogData";
+export const IOS_LOG_PREDICATE = 'senderImagePath contains "NativeScript" || eventMessage contains[c] "NativeScript"';
 
 export const TARGET_FRAMEWORK_IDENTIFIERS = {
 	Cordova: "Cordova",

@@ -1,6 +1,7 @@
 /* tslint:disable:no-empty */
 
 import * as util from "util";
+import { EventEmitter } from "events";
 
 export class CommonLoggerStub implements ILogger {
 	setLevel(level: string): void { }
@@ -146,7 +147,7 @@ export class LogcatHelperStub implements Mobile.ILogcatHelper {
 	}
 }
 
-export class DeviceLogProviderStub implements Mobile.IDeviceLogProvider {
+export class DeviceLogProviderStub extends EventEmitter implements Mobile.IDeviceLogProvider {
 	public logger = new CommonLoggerStub();
 	public currentDevicePids: IStringDictionary = {};
 	public currentDeviceProjectNames: IStringDictionary = {};
