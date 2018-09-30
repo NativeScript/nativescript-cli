@@ -171,7 +171,8 @@ class TestExecutionService implements ITestExecutionService {
 		});
 
 		const karmaConfig = this.getKarmaConfiguration(platform, projectData),
-			karmaRunner = this.$childProcess.fork(path.join(__dirname, "karma-execution.js")),
+			// In case you want to debug the unit test runner, add "--inspect-brk=<port>" as a first element in the array of args.
+			karmaRunner = this.$childProcess.spawn(process.execPath, [ path.join(__dirname, "karma-execution.js")], { stdio: ["inherit", "inherit", "inherit", "ipc"] }),
 			launchKarmaTests = async (karmaData: any) => {
 				this.$logger.trace("## Unit-testing: Parent process received message", karmaData);
 				let port: string;
