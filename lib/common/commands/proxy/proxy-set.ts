@@ -4,6 +4,7 @@ import { ProxyCommandBase } from "./proxy-base";
 import { HttpProtocolToPort } from "../../constants";
 import { parse } from "url";
 import { platform, EOL } from "os";
+import * as prompt from "inquirer";
 const { getCredentialsFromAuth } = require("proxy-lib/lib/utils");
 
 const proxySetCommandName = "proxy|set";
@@ -121,7 +122,7 @@ export class ProxySetCommand extends ProxyCommandBase {
 
 	private async getPortFromUserInput(): Promise<number> {
 		const schemaName = "port";
-		const schema: IPromptSchema = {
+		const schema: prompt.Question = {
 			message: "Port",
 			type: "input",
 			name: schemaName,

@@ -5,6 +5,7 @@ import * as chai from "chai";
 import { EventEmitter } from "events";
 import * as path from "path";
 import * as constants from "./../lib/constants";
+import * as prompt from "inquirer";
 import { Yok } from "./../lib/common/yok";
 import { HostInfo } from "./../lib/common/host-info";
 import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platforms-constants";
@@ -521,7 +522,7 @@ export class PrompterStub implements IPrompter {
 		}
 	}
 
-	async get(schemas: IPromptSchema[]): Promise<any> {
+	async get(schemas: prompt.Question[]): Promise<any> {
 		throw unreachable();
 	}
 	async getPassword(prompt: string, options?: IAllowEmpty): Promise<string> {
