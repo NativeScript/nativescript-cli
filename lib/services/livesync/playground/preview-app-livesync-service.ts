@@ -110,11 +110,10 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	}
 
 	private getFilesPayload(platformData: IPlatformData, projectData: IProjectData, files?: string[]): FilesPayload {
-		const appFolderPath = path.join(projectData.projectDir, APP_FOLDER_NAME);
 		const platformsAppFolderPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 
 		if (files && files.length) {
-			files = files.map(file => path.join(platformsAppFolderPath, path.relative(appFolderPath, file)));
+			files = files.map(file => this.$projectFilesProvider.mapFilePath(file, platformData.normalizedPlatformName, projectData));
 		} else {
 			files = this.$projectFilesManager.getProjectFiles(platformsAppFolderPath);
 		}

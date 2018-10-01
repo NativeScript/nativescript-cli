@@ -148,7 +148,8 @@ function createTestInjector(options?: {
 				onDeviceFileName: path.basename(filePath),
 				shouldIncludeFile: true
 			};
-		}
+		},
+		mapFilePath: (filePath: string) => path.join(path.join(platformsDirPath, "app"), path.relative(path.join(projectDirPath, "app"), filePath))
 	});
 	injector.register("hooksService", {
 		executeBeforeHooks: (name: string, args: any) => {
