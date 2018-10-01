@@ -29,14 +29,17 @@ export class LogParserService extends EventEmitter implements ILogParserService 
 		const device = this.$devicesService.getDeviceByIdentifier(deviceIdentifier);
 		const devicePlatform = device.deviceInfo.platform.toLowerCase();
 
-		_.forEach(this.parseRules, (parseRule) => {
-			if (!parseRule.platform || parseRule.platform.toLowerCase() === devicePlatform) {
-				const matches = parseRule.regex.exec(message);
+		const lines = message.split("\n");
+		_.forEach(lines, line => {
+			_.forEach(this.parseRules, (parseRule) => {
+				if (!parseRule.platform || parseRule.platform.toLowerCase() === devicePlatform) {
+					const matches = parseRule.regex.exec(line);
 
-				if (matches) {
-					parseRule.handler(matches, deviceIdentifier);
+					if (matches) {
+						parseRule.handler(matches, deviceIdentifier);
+					}
 				}
-			}
+			});
 		});
 	}
 }

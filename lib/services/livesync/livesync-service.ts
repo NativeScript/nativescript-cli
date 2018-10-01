@@ -4,7 +4,7 @@ import { EOL } from "os";
 import { EventEmitter } from "events";
 import { hook } from "../../common/helpers";
 import { PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME, TrackActionNames } from "../../constants";
-import { DeviceTypes, DeviceDiscoveryEventNames } from "../../common/constants";
+import { DeviceTypes, DeviceDiscoveryEventNames, HmrConstants } from "../../common/constants";
 import { cache } from "../../common/decorators";
 
 const deviceDescriptorPrimaryKey = "identifier";
@@ -38,6 +38,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		private $analyticsService: IAnalyticsService,
 		private $usbLiveSyncService: DeprecatedUsbLiveSyncService,
 		private $previewAppLiveSyncService: IPreviewAppLiveSyncService,
+		private $hmrStatusService: IHmrStatusService,
 		private $injector: IInjector) {
 		super();
 	}
@@ -147,8 +148,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
 			isFullSync: liveSyncResultInfo.isFullSync
 		});
-
-		this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
 	}
 
 	private async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOptions: IDebugOptions, outputPath?: string): Promise<IDebugInformation> {
@@ -518,6 +517,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 				await this.$platformService.trackActionForPlatform({ action: "LiveSync", platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
 				await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
+				this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
 
 				this.emitLivesyncEvent(LiveSyncEvents.liveSyncStarted, {
 					projectDir: projectData.projectDir,
@@ -564,6 +564,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		const platforms = _(devices).map(device => device.deviceInfo.platform).uniq().value();
 		const patterns = await this.getWatcherPatterns(liveSyncData, projectData, platforms);
 
+		if (liveSyncData.useHotModuleReload) {
+			this.$hmrStatusService.attachToHrmStatusEvent();
+		}
+
 		if (liveSyncData.watchAllFiles) {
 			const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
 			patterns.push(PACKAGE_JSON_FILE_NAME);
@@ -582,6 +586,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			}
 
 			let filesToSync: string[] = [];
+			const hmrData: { hash: string; fallbackFiles: IDictionary<string[]> } = {
+				hash: "",
+				fallbackFiles: {}
+			};
 			const filesToSyncMap: IDictionary<string[]> = {};
 			let filesToRemove: string[] = [];
 			let timeoutTimer: NodeJS.Timer;
@@ -610,6 +618,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 							if (filesToSync.length || filesToRemove.length) {
 								try {
 									const currentFilesToSync = _.cloneDeep(filesToSync);
+									const currentHmrData = _.cloneDeep(hmrData);
 									filesToSync.splice(0, filesToSync.length);
 
 									const currentFilesToRemove = _.cloneDeep(filesToRemove);
@@ -655,8 +664,21 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 											force: liveSyncData.force
 										};
 
-										const liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);
+										let liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);
+
 										await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
+
+										if (liveSyncData.useHotModuleReload && currentHmrData.hash) {
+											const status = await this.$hmrStatusService.awaitHmrStatus(device.deviceInfo.identifier, currentHmrData.hash);
+											if (status === HmrConstants.HMR_ERROR_STATUS) {
+												settings.filesToSync = currentHmrData.fallbackFiles[device.deviceInfo.platform];
+												liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);
+												liveSyncResultInfo.isFullSync = true;
+												await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
+											}
+										}
+
+										this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
 									},
 										(device: Mobile.IDevice) => {
 											const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];
@@ -704,6 +726,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					},
 					filesToSync,
 					filesToSyncMap,
+					hmrData,
 					filesToRemove,
 					startSyncFilesTimeout: async (platform: string) => {
 						if (platform) {

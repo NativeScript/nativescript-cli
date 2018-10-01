@@ -48,6 +48,11 @@ export class LiveSyncConstants {
 	static IOS_PROJECT_PATH = "/Documents/AppBuilder/LiveSync";
 }
 
+export class HmrConstants {
+	public static HMR_ERROR_STATUS = 3;
+	public static HMR_SUCCESS_STATUS = 2;
+}
+
 export class DeviceDiscoveryEventNames {
 	static DEVICE_FOUND = "deviceFound";
 	static DEVICE_LOST = "deviceLost";

@@ -7,6 +7,7 @@ const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
 
 	testInjector.register("platformService", {});
+	testInjector.register("hmrStatusService", {});
 	testInjector.register("projectDataService", {
 		getProjectData: (projectDir: string): IProjectData => (<any>{})
 	});
@@ -59,6 +60,7 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 		$usbLiveSyncService: DeprecatedUsbLiveSyncService,
 		$injector: IInjector,
 		$previewAppLiveSyncService: IPreviewAppLiveSyncService,
+		$hmrStatusService: IHmrStatusService,
 		$platformsData: IPlatformsData) {
 
 		super(
@@ -78,6 +80,7 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 			$analyticsService,
 			$usbLiveSyncService,
 			$previewAppLiveSyncService,
+			$hmrStatusService,
 			$injector
 		);
 	}
