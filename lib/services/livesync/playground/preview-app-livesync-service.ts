@@ -7,6 +7,7 @@ const isTextOrBinary = require('istextorbinary');
 export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	private excludedFileExtensions = [".ts", ".sass", ".scss", ".less"];
 	private excludedFiles = [".DS_Store"];
+	private deviceInitializationPromise: IDictionary<Promise<FilesPayload>> = {};
 
 	constructor(private $fs: IFileSystem,
 		private $errors: IErrors,
@@ -26,35 +27,49 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 				this.$errors.failWithoutHelp("Sending initial preview files without a specified device is not supported.");
 			}
 
-			const filesToSyncMap: IDictionary<string[]> = {};
-			let promise = Promise.resolve<FilesPayload>(null);
-			const startSyncFilesTimeout = async (platform: string) => {
-				await promise
-					.then(async () => {
-						const projectData = this.$projectDataService.getProjectData(data.projectDir);
-						promise = this.applyChanges(this.$platformsData.getPlatformData(platform, projectData), projectData, filesToSyncMap[platform]);
-						await promise;
-					});
-				filesToSyncMap[platform] = [];
-			};
-			await this.$hooksService.executeBeforeHooks("preview-sync", {
-				hookArgs: {
-					projectData: this.$projectDataService.getProjectData(data.projectDir),
-					config: {
-						env: data.env,
-						platform: device.platform,
-						appFilesUpdaterOptions: data.appFilesUpdaterOptions,
-					},
-					externals: this.$previewAppPluginsService.getExternalPlugins(device),
-					filesToSyncMap,
-					startSyncFilesTimeout: startSyncFilesTimeout.bind(this)
-				}
-			});
-			await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
-			const payloads = await this.syncFilesForPlatformSafe(data, device.platform);
+			if (this.deviceInitializationPromise[device.id]) {
+				return this.deviceInitializationPromise[device.id];
+			}
 
-			return payloads;
+			this.deviceInitializationPromise[device.id] = this.initializePreviewForDevice(data, device);
+			try {
+				const payloads = await this.deviceInitializationPromise[device.id];
+				return payloads;
+			} finally {
+				this.deviceInitializationPromise[device.id] = null;
+			}
 		});
+	}
+
+	private async initializePreviewForDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<FilesPayload> {
+		const filesToSyncMap: IDictionary<string[]> = {};
+		let promise = Promise.resolve<FilesPayload>(null);
+		const startSyncFilesTimeout = async (platform: string) => {
+			await promise
+				.then(async () => {
+					const projectData = this.$projectDataService.getProjectData(data.projectDir);
+					promise = this.applyChanges(this.$platformsData.getPlatformData(platform, projectData), projectData, filesToSyncMap[platform]);
+					await promise;
+				});
+			filesToSyncMap[platform] = [];
+		};
+		await this.$hooksService.executeBeforeHooks("preview-sync", {
+			hookArgs: {
+				projectData: this.$projectDataService.getProjectData(data.projectDir),
+				config: {
+					env: data.env,
+					platform: device.platform,
+					appFilesUpdaterOptions: data.appFilesUpdaterOptions,
+				},
+				externals: this.$previewAppPluginsService.getExternalPlugins(device),
+				filesToSyncMap,
+				startSyncFilesTimeout: startSyncFilesTimeout.bind(this)
+			}
+		});
+		await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
+		const payloads = await this.syncFilesForPlatformSafe(data, device.platform);
+		payloads.deviceId = device.id;
+		return payloads;
 	}
 
 	public async syncFiles(data: IPreviewAppLiveSyncData, files?: string[]): Promise<void> {
