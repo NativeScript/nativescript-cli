@@ -55,7 +55,7 @@ export class HttpMiddleware extends Middleware {
   }
 
   handle(request: any): Promise<any> {
-    const { url, method, headers, body, timeout, followRedirect } = request;
+    const { url, method, headers, body, timeout, followRedirect, file } = request;
     const kinveyUrlRegex = /kinvey\.com/gm;
 
     if (kinveyUrlRegex.test(url)) {
@@ -76,9 +76,11 @@ export class HttpMiddleware extends Middleware {
       .then((response) => {
         let data = response.content.raw;
 
-        try {
-          data = response.content.toString();
-        } catch (e) {}
+        if (!file) {
+          try {
+            data = response.content.toString();
+          } catch (e) {}
+        }
 
         return {
           response: {
