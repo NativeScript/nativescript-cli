@@ -65,8 +65,12 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	}
 
 	private getWarningForPlugin(data: IPreviewAppLiveSyncData, localPlugin: string, localPluginVersion: string, devicePluginVersion: string, device: Device): string {
-		if (data && data.appFilesUpdaterOptions && data.appFilesUpdaterOptions.bundle && this.isNativeScriptPluginWithoutNativeCode(localPlugin, device.platform, data.projectDir)) {
-			return null;
+		if (data && data.appFilesUpdaterOptions && data.appFilesUpdaterOptions.bundle) {
+			const pluginPackageJsonPath = path.join(data.projectDir, NODE_MODULES_DIR_NAME, localPlugin, PACKAGE_JSON_FILE_NAME);
+			const isNativeScriptPlugin = this.$pluginsService.isNativeScriptPlugin(pluginPackageJsonPath);
+			if (!isNativeScriptPlugin || (isNativeScriptPlugin && !this.hasNativeCode(localPlugin, device.platform, data.projectDir))) {
+				return null;
+			}
 		}
 
 		return this.getWarningForPluginCore(localPlugin, localPluginVersion, devicePluginVersion, device.id);
@@ -89,11 +93,6 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 		}
 
 		return util.format(PluginComparisonMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, localPlugin, deviceId);
-	}
-
-	private isNativeScriptPluginWithoutNativeCode(localPlugin: string, platform: string, projectDir: string): boolean {
-		const pluginPackageJsonPath = path.join(projectDir, NODE_MODULES_DIR_NAME, localPlugin, PACKAGE_JSON_FILE_NAME);
-		return this.$pluginsService.isNativeScriptPlugin(pluginPackageJsonPath) && !this.hasNativeCode(localPlugin, platform, projectDir);
 	}
 
 	private hasNativeCode(localPlugin: string, platform: string, projectDir: string): boolean {

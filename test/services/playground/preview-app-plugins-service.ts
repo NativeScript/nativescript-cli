@@ -265,7 +265,7 @@ describe("previewAppPluginsService", () => {
 	describe("comparePluginsOnDevice with bundle", () => {
 		const testCases = [
 			{
-				name: "should show warning for non nativescript plugin that has lower major version",
+				name: "should not show warning for non nativescript plugin that has lower major version",
 				localPlugins: {
 					lodash: "1.2.3"
 				},
@@ -274,12 +274,10 @@ describe("previewAppPluginsService", () => {
 				},
 				isNativeScriptPlugin: false,
 				hasPluginNativeCode: false,
-				expectedWarnings: [
-					util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION, "lodash", "1.2.3", "2.3.3")
-				]
+				expectedWarnings: <string[]>[]
 			},
 			{
-				name: "should show warning for non nativescript plugin that has greather major version",
+				name: "should not show warning for non nativescript plugin that has greather major version",
 				localPlugins: {
 					lodash: "3.2.3"
 				},
@@ -288,9 +286,7 @@ describe("previewAppPluginsService", () => {
 				},
 				isNativeScriptPlugin: false,
 				hasPluginNativeCode: false,
-				expectedWarnings: [
-					util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION, "lodash", "3.2.3", "2.3.3")
-				]
+				expectedWarnings: []
 			},
 			{
 				name: "should show warning for non nativescript plugin that has greather minor version",
@@ -302,9 +298,7 @@ describe("previewAppPluginsService", () => {
 				},
 				isNativeScriptPlugin: false,
 				hasPluginNativeCode: false,
-				expectedWarnings: [
-					util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_GREATHER_MINOR_VERSION, "lodash", "3.4.5", "3.3.0")
-				]
+				expectedWarnings: []
 			},
 			{
 				name: "should not show warning for non nativescript plugin that has the same version",
