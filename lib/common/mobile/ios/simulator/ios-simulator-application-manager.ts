@@ -33,7 +33,7 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 			}
 		}
 
-		return this.iosSim.installApplication(this.device.deviceInfo.identifier, packageFilePath);
+		await this.iosSim.installApplication(this.device.deviceInfo.identifier, packageFilePath);
 	}
 
 	public async uninstallApplication(appIdentifier: string): Promise<void> {
