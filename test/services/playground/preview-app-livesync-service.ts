@@ -6,6 +6,7 @@ import { PreviewAppLiveSyncService } from "../../../lib/services/livesync/playgr
 import * as chai from "chai";
 import * as path from "path";
 import { ProjectFilesManager } from "../../../lib/common/services/project-files-manager";
+import { EventEmitter } from "events";
 
 interface ITestCase {
 	name: string;
@@ -67,7 +68,7 @@ const syncFilesMockData = {
 	env: {}
 };
 
-class PreviewSdkServiceMock implements IPreviewSdkService {
+class PreviewSdkServiceMock extends EventEmitter implements IPreviewSdkService {
 	public getInitialFiles: (device: Device) => Promise<FilesPayload>;
 
 	public getQrCodeUrl(options: IHasUseHotModuleReloadOption) {
@@ -107,6 +108,7 @@ function createTestInjector(options?: {
 	injector.register("platformService", {
 		preparePlatform: async () => ({})
 	});
+	injector.register("hmrStatusService", {});
 	injector.register("errors", ErrorsStub);
 	injector.register("platformsData", {
 		getPlatformData: () => ({

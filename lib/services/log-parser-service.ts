@@ -7,7 +7,8 @@ export class LogParserService extends EventEmitter implements ILogParserService 
 
 	constructor(private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $devicesService: Mobile.IDevicesService,
-		private $errors: IErrors) {
+		private $errors: IErrors,
+		private $previewSdkService: IPreviewSdkService) {
 		super();
 	}
 
@@ -23,16 +24,16 @@ export class LogParserService extends EventEmitter implements ILogParserService 
 	@cache()
 	private startParsingLogCore(): void {
 		this.$deviceLogProvider.on(DEVICE_LOG_EVENT_NAME, (message: string, deviceIdentifier: string) => this.processDeviceLogResponse(message, deviceIdentifier));
+		this.$previewSdkService.on(DEVICE_LOG_EVENT_NAME, (message: string, deviceIdentifier: string) => this.processDeviceLogResponse(message, deviceIdentifier));
 	}
 
 	private processDeviceLogResponse(message: string, deviceIdentifier: string) {
-		const device = this.$devicesService.getDeviceByIdentifier(deviceIdentifier);
-		const devicePlatform = device.deviceInfo.platform.toLowerCase();
+		const devicePlatform = this.tryGetPlatform(deviceIdentifier);
 
 		const lines = message.split("\n");
 		_.forEach(lines, line => {
 			_.forEach(this.parseRules, (parseRule) => {
-				if (!parseRule.platform || parseRule.platform.toLowerCase() === devicePlatform) {
+				if (!devicePlatform || !parseRule.platform || parseRule.platform.toLowerCase() === devicePlatform) {
 					const matches = parseRule.regex.exec(line);
 
 					if (matches) {
@@ -41,6 +42,18 @@ export class LogParserService extends EventEmitter implements ILogParserService 
 				}
 			});
 		});
+	}
+
+	private tryGetPlatform (deviceIdentifier: string): string {
+		let devicePlatform;
+		try {
+			const device = this.$devicesService.getDeviceByIdentifier(deviceIdentifier);
+			devicePlatform = device.deviceInfo.platform.toLowerCase();
+		} catch (err) {
+			devicePlatform = null;
+		}
+
+		return devicePlatform;
 	}
 }
 

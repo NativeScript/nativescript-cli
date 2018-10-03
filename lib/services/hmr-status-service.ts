@@ -4,7 +4,7 @@ import { HmrConstants } from "../common/constants";
 export class HmrStatusService implements IHmrStatusService {
 	public static HMR_STATUS_LOG_REGEX = /([a-z A-Z]*) hmr hash ([a-z0-9]*)\./;
 	public static STARTED_MESSAGE = "Checking for updates to the bundle with";
-	public static SUCCESS_MESSAGE = "Successfuly applied update with";
+	public static SUCCESS_MESSAGE = "Successfully applied update with";
 	public static FAILED_MESSAGE = "Cannot apply update with";
 	private hashOperationStatuses: IDictionary<any> = {};
 
