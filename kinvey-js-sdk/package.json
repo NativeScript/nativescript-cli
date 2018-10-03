@@ -1,0 +1,42 @@
+{
+  "private": true,
+  "version": "3.12.0",
+  "name": "kinvey-js-sdk",
+  "description": "Kinvey JavaScript SDK for developing JavaScript applications.",
+  "author": "Kinvey, Inc.",
+  "homepage": "http://www.kinvey.com",
+  "license": "Apache-2.0",
+  "main": "lib/index.js",
+  "scripts": {
+    "prebuild": "del lib",
+    "build": "babel src -d lib",
+    "lint": "eslint src",
+    "test": "mocha -R spec -r @babel/register 'tests/**/*.spec.js'",
+    "prepublishOnly": "node scripts/prepublish.js"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.0.0-rc.2",
+    "js-base64": "^2.4.9",
+    "lodash": "^4.17.10",
+    "loglevel": "^1.6.1",
+    "loglevel-plugin-prefix": "^0.8.3",
+    "url-join": "^4.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.0.0-rc.2",
+    "@babel/core": "^7.0.0-rc.2",
+    "@babel/plugin-transform-runtime": "^7.0.0-rc.2",
+    "@babel/preset-env": "^7.0.0-rc.2",
+    "@babel/register": "^7.0.0-rc.2",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "del-cli": "^1.1.0",
+    "eslint": "^5.3.0",
+    "eslint-config-kinvey-platform": "kinvey/eslint-kinvey-platform#0.1.1",
+    "eslint-plugin-import": "^2.14.0",
+    "fs-extra": "^7.0.0",
+    "mocha": "^5.2.0",
+    "sift": "^6.0.0",
+    "sinon": "^6.1.5"
+  }
+}

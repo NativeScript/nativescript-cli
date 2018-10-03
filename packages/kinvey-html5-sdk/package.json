@@ -10,6 +10,7 @@
   "scripts": {
     "prebuild": "del lib",
     "build": "babel src -d lib",
+    "prebundle": "yarn build",
     "bundle": "webpack",
     "lint": "eslint src",
     "pretest": "node scripts/pretest.js",
@@ -17,11 +18,9 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.0.0-rc.2",
-    "axios": "^0.18.0",
-    "dexie": "^2.0.4",
-    "kinvey-js-sdk": "3.12.0",
-    "lodash": "^4.17.10",
-    "sift": "^6.0.0"
+    "kinvey-cache-indexeddb": "1.0.0",
+    "kinvey-http-web": "1.0.0",
+    "kinvey-session-web": "1.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0-rc.2",

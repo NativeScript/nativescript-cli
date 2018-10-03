@@ -1,0 +1,6 @@
+{
+  "extends": [
+    "kinvey-platform"
+  ],
+  "parser": "babel-eslint"
+}

@@ -19,11 +19,24 @@
   },
   "workspaces": {
     "packages": [
+      "packages/kinvey-acl",
+      "packages/kinvey-aggregation",
       "packages/kinvey-angular-sdk",
+      "packages/kinvey-app",
+      "packages/kinvey-cache",
+      "packages/kinvey-cache-indexeddb",
+      "packages/kinvey-datastore",
       "packages/kinvey-html5-sdk",
-      "packages/kinvey-js-sdk",
+      "packages/kinvey-http",
+      "packages/kinvey-http-web",
+      "packages/kinvey-identity",
+      "packages/kinvey-kmd",
       "packages/kinvey-nativescript-sdk",
-      "packages/kinvey-node-sdk"
+      "packages/kinvey-node-sdk",
+      "packages/kinvey-observable",
+      "packages/kinvey-query",
+      "packages/kinvey-session",
+      "packages/kinvey-session-web"
     ],
     "nohoist": [
       "**/karma",
