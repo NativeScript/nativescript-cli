@@ -186,6 +186,18 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 					platforms: [Constants.IOS_PLATFORM_NAME]
 				})
 			);
+
+			if (sysInfoData.xcodeVer) {
+				result = result.concat(
+					this.processSysInfoItem({
+						item: await this.iOSLocalBuildRequirements.isXcodeVersionValid(),
+						infoMessage: `Xcode version ${sysInfoData.xcodeVer} satisfies minimum required version ${Constants.XCODE_MIN_REQUIRED_VERSION}.`,
+						warningMessage: `Xcode version ${sysInfoData.xcodeVer} is lower than minimum required version ${Constants.XCODE_MIN_REQUIRED_VERSION}.`,
+						additionalInformation: "To build your application for iOS, update your Xcode.",
+						platforms: [Constants.IOS_PLATFORM_NAME]
+					})
+				);
+			}
 		}
 
 		return result;
@@ -208,7 +220,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		};
 	}
 
-	private processValidationErrors(data: { warnings: NativeScriptDoctor.IWarning[], infoMessage: string, platforms: string[]}): NativeScriptDoctor.IInfo[] {
+	private processValidationErrors(data: { warnings: NativeScriptDoctor.IWarning[], infoMessage: string, platforms: string[] }): NativeScriptDoctor.IInfo[] {
 		if (data.warnings.length > 0) {
 			return data.warnings.map(warning => this.convertWarningToInfo(warning));
 		}
