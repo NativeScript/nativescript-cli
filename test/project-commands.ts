@@ -7,11 +7,6 @@ import * as constants from "../lib/constants";
 import { assert } from "chai";
 import { PrompterStub } from "./stubs";
 
-const NgFlavor = "Angular";
-const VueFlavor = "Vue.js";
-const TsFlavor = "Plain TypeScript";
-const JsFlavor = "Plain JavaScript";
-
 let selectedTemplateName: string;
 let isProjectCreated: boolean;
 let createProjectCalledWithForce: boolean;
@@ -166,7 +161,7 @@ describe("Project commands tests", () => {
 		});
 
 		it("should ask for a template when ng flavor is selected.", async () => {
-			setupAnswers({ flavorAnswer: NgFlavor, templateAnswer: "Hello World" });
+			setupAnswers({ flavorAnswer: constants.NgFlavorName, templateAnswer: "Hello World" });
 
 			await createProjectCommand.execute(dummyArgs);
 
@@ -176,7 +171,7 @@ describe("Project commands tests", () => {
 		});
 
 		it("should ask for a template when ts flavor is selected.", async () => {
-			setupAnswers({ flavorAnswer: TsFlavor, templateAnswer:  "Hello World" });
+			setupAnswers({ flavorAnswer: constants.TsFlavorName, templateAnswer:  "Hello World" });
 
 			await createProjectCommand.execute(dummyArgs);
 
@@ -186,7 +181,7 @@ describe("Project commands tests", () => {
 		});
 
 		it("should ask for a template when js flavor is selected.", async () => {
-			setupAnswers({ flavorAnswer: JsFlavor, templateAnswer:  "Hello World" });
+			setupAnswers({ flavorAnswer: constants.JsFlavorName, templateAnswer:  "Hello World" });
 
 			await createProjectCommand.execute(dummyArgs);
 
@@ -196,7 +191,7 @@ describe("Project commands tests", () => {
 		});
 
 		it("should select the default vue template when the vue flavor is selected.", async () => {
-			setupAnswers({ flavorAnswer: VueFlavor });
+			setupAnswers({ flavorAnswer: constants.VueFlavorName });
 
 			await createProjectCommand.execute(dummyArgs);
 

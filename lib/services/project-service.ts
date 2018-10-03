@@ -36,17 +36,9 @@ export class ProjectService implements IProjectService {
 		return projectName;
 	}
 
-	private getValidProjectDir(pathToProject: string, projectName: string): string {
-		const selectedPath = path.resolve(pathToProject || ".");
-		const projectDir = path.join(selectedPath, projectName);
-
-		return projectDir;
-	}
-
 	@exported("projectService")
 	public async createProject(projectOptions: IProjectSettings): Promise<ICreateProjectData> {
-		let projectName = projectOptions.projectName;
-		projectName = await this.validateProjectName({ projectName, force: projectOptions.force, pathToProject: projectOptions.pathToProject });
+		const projectName = await this.validateProjectName({ projectName: projectOptions.projectName, force: projectOptions.force, pathToProject: projectOptions.pathToProject });
 		const projectDir = this.getValidProjectDir(projectOptions.pathToProject, projectName);
 
 		this.$fs.createDirectory(projectDir);
@@ -61,6 +53,24 @@ export class ProjectService implements IProjectService {
 		this.$logger.printMarkdown("__Project `%s` was successfully created.__", projectName);
 
 		return projectCreationData;
+	}
+
+	@exported("projectService")
+	public isValidNativeScriptProject(pathToProject?: string): boolean {
+		try {
+			const projectData = this.$projectDataService.getProjectData(pathToProject);
+
+			return !!projectData && !!projectData.projectDir && !!(projectData.projectIdentifiers.ios && projectData.projectIdentifiers.android);
+		} catch (e) {
+			return false;
+		}
+	}
+
+	private getValidProjectDir(pathToProject: string, projectName: string): string {
+		const selectedPath = path.resolve(pathToProject || ".");
+		const projectDir = path.join(selectedPath, projectName);
+
+		return projectDir;
 	}
 
 	private async createProjectCore(projectCreationSettings: IProjectCreationSettings): Promise<ICreateProjectData> {
@@ -108,17 +118,6 @@ export class ProjectService implements IProjectService {
 		});
 
 		return { projectName, projectDir };
-	}
-
-	@exported("projectService")
-	public isValidNativeScriptProject(pathToProject?: string): boolean {
-		try {
-			const projectData = this.$projectDataService.getProjectData(pathToProject);
-
-			return !!projectData && !!projectData.projectDir && !!(projectData.projectIdentifiers.ios && projectData.projectIdentifiers.android);
-		} catch (e) {
-			return false;
-		}
 	}
 
 	private async extractTemplate(projectDir: string, templateData: ITemplateData): Promise<void> {

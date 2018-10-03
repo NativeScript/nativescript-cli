@@ -5,16 +5,13 @@ import { isInteractive } from "../common/helpers";
 export class CreateProjectCommand implements ICommand {
 	public enableHooks = false;
 	public allowedParameters: ICommandParameter[] = [this.$stringParameter];
-	private static NgFlavor = "Angular";
-	private static VueFlavor = "Vue.js";
-	private static TsFlavor = "Plain TypeScript";
-	private static JsFlavor = "Plain JavaScript";
 	private static HelloWorldTemplateKey = "Hello World";
 	private static HelloWorldTemplateDescription = "A Hello World app";
 	private static DrawerTemplateKey = "SideDrawer";
 	private static DrawerTemplateDescription = "An app with pre-built pages that uses a drawer for navigation";
 	private static TabsTemplateKey = "Tabs";
 	private static TabsTemplateDescription = "An app with pre-built pages that uses tabs for navigation";
+	private isInteractionIntroShown = false;
 
 	private createdProjectData: ICreateProjectData;
 
@@ -49,11 +46,8 @@ export class CreateProjectCommand implements ICommand {
 			selectedTemplate = this.$options.template;
 		}
 
-		if ((!selectedTemplate || !projectName) && isInteractive()) {
-			this.printInteractiveCreationIntro();
-		}
-
 		if (!projectName && isInteractive()) {
+			this.printInteractiveCreationIntroIfNeeded();
 			projectName = await this.$prompter.getString(`${getNextInteractiveAdverb()}, what will be the name of your app?`, { allowEmpty: false });
 			this.$logger.info();
 		}
@@ -61,6 +55,7 @@ export class CreateProjectCommand implements ICommand {
 		projectName = await this.$projectService.validateProjectName({ projectName: projectName, force: this.$options.force, pathToProject: this.$options.path });
 
 		if (!selectedTemplate && isInteractive()) {
+			this.printInteractiveCreationIntroIfNeeded();
 			selectedTemplate = await this.interactiveFlavorAndTemplateSelection(getNextInteractiveAdverb(), getNextInteractiveAdverb());
 		}
 
@@ -84,22 +79,25 @@ export class CreateProjectCommand implements ICommand {
 
 	private async interactiveFlavorSelection(adverb: string) {
 		const flavorSelection = await this.$prompter.promptForDetailedChoice(`${adverb}, which flavor would you like to use?`, [
-			{ key: CreateProjectCommand.NgFlavor, description: "Learn more at https://angular.io/" },
-			{ key: CreateProjectCommand.VueFlavor, description: "Learn more at https://vuejs.org/" },
-			{ key: CreateProjectCommand.TsFlavor, description: "Learn more at https://www.typescriptlang.org/" },
-			{ key: CreateProjectCommand.JsFlavor, description: "Learn more at https://www.javascript.com/" },
+			{ key: constants.NgFlavorName, description: "Learn more at https://angular.io/" },
+			{ key: constants.VueFlavorName, description: "Learn more at https://vuejs.org/" },
+			{ key: constants.TsFlavorName, description: "Learn more at https://www.typescriptlang.org/" },
+			{ key: constants.JsFlavorName, description: "Learn more at https://www.javascript.com/" },
 		]);
 		return flavorSelection;
 	}
 
-	private printInteractiveCreationIntro() {
-		this.$logger.info();
-		this.$logger.printMarkdown(`# Let’s create a NativeScript app!`);
-		this.$logger.printMarkdown(`
+	private printInteractiveCreationIntroIfNeeded() {
+		if (!this.isInteractionIntroShown) {
+			this.isInteractionIntroShown = true;
+			this.$logger.info();
+			this.$logger.printMarkdown(`# Let’s create a NativeScript app!`);
+			this.$logger.printMarkdown(`
 Answer the following questions to help us build the right app for you. (Note: you
 can skip this prompt next time using the --template option, or the --ng, --vue, --ts,
 or --js flags.)
 `);
+		}
 	}
 
 	private async interactiveTemplateSelection(flavorSelection: string, adverb: string) {
@@ -110,19 +108,19 @@ or --js flags.)
 		}[] = [];
 		let selectedTemplate: string;
 		switch (flavorSelection) {
-			case CreateProjectCommand.NgFlavor: {
+			case constants.NgFlavorName: {
 				selectedFlavorTemplates.push(...this.getNgFlavors());
 				break;
 			}
-			case CreateProjectCommand.VueFlavor: {
+			case constants.VueFlavorName: {
 				selectedFlavorTemplates.push({ value: "https://github.com/NativeScript/template-blank-vue/tarball/0.9.0" });
 				break;
 			}
-			case CreateProjectCommand.TsFlavor: {
+			case constants.TsFlavorName: {
 				selectedFlavorTemplates.push(...this.getTsTemplates());
 				break;
 			}
-			case CreateProjectCommand.JsFlavor: {
+			case constants.JsFlavorName: {
 				selectedFlavorTemplates.push(...this.getJsTemplates());
 				break;
 			}
@@ -141,74 +139,61 @@ or --js flags.)
 	}
 
 	private getJsTemplates() {
-		const templates: {
-			key?: string;
-			value: string;
-			description?: string;
-		}[] = [];
-		templates.push({
+		const templates = [{
 			key: CreateProjectCommand.HelloWorldTemplateKey,
-			value: "tns-template-hello-world",
+			value: constants.RESERVED_TEMPLATE_NAMES.javascript,
 			description: CreateProjectCommand.HelloWorldTemplateDescription
-		});
-		templates.push({
+		},
+		{
 			key: CreateProjectCommand.DrawerTemplateKey,
 			value: "tns-template-drawer-navigation",
 			description: CreateProjectCommand.DrawerTemplateDescription
-		});
-		templates.push({
+		},
+		{
 			key: CreateProjectCommand.TabsTemplateKey,
 			value: "tns-template-tab-navigation",
 			description: CreateProjectCommand.TabsTemplateDescription
-		});
+		}];
+
 		return templates;
 	}
 
 	private getTsTemplates() {
-		const templates: {
-			key?: string;
-			value: string;
-			description?: string;
-		}[] = [];
-		templates.push({
+		const templates = [{
 			key: CreateProjectCommand.HelloWorldTemplateKey,
-			value: "tns-template-hello-world-ts",
+			value: constants.RESERVED_TEMPLATE_NAMES.typescript,
 			description: CreateProjectCommand.HelloWorldTemplateDescription
-		});
-		templates.push({
+		},
+		{
 			key: CreateProjectCommand.DrawerTemplateKey,
 			value: "tns-template-drawer-navigation-ts",
 			description: CreateProjectCommand.DrawerTemplateDescription
-		});
-		templates.push({
+		},
+		{
 			key: CreateProjectCommand.TabsTemplateKey,
 			value: "tns-template-tab-navigation-ts",
 			description: CreateProjectCommand.TabsTemplateDescription
-		});
+		}];
+
 		return templates;
 	}
 
 	private getNgFlavors() {
-		const templates: {
-			key?: string;
-			value: string;
-			description?: string;
-		}[] = [];
-		templates.push({
+		const templates = [{
 			key: CreateProjectCommand.HelloWorldTemplateKey,
-			value: "tns-template-hello-world-ng",
+			value: constants.RESERVED_TEMPLATE_NAMES.angular,
 			description: CreateProjectCommand.HelloWorldTemplateDescription
-		});
-		templates.push({
+		},
+		{
 			key: CreateProjectCommand.DrawerTemplateKey,
 			value: "tns-template-drawer-navigation-ng",
 			description: CreateProjectCommand.DrawerTemplateDescription
-		});
-		templates.push({
+		},
+		{
 			key: CreateProjectCommand.TabsTemplateKey,
 			value: "tns-template-tab-navigation-ng",
 			description: CreateProjectCommand.TabsTemplateDescription
-		});
+		}];
 
 		return templates;
 	}
