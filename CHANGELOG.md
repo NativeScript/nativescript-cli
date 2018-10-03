@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.11.8](https://github.com/Kinvey/js-sdk/tree/v3.11.8) (2018-10-03)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.7...v3.11.8)<br/>
+
+#### Enhancements
+- MLIBZ-2366: Update MIC for NativeScript to use `SFSafariViewController` on iOS and `Chrome Custom Tabs` on Android. Register the custom scheme used by the app as the `redirectUri` for MIC in the `AndroidManifest.xml` on Android and the `Info.plist` on iOS.  [#305](https://github.com/Kinvey/js-sdk/pull/360) [#362](https://github.com/Kinvey/js-sdk/pull/362)
+
+#### Bugs
+- MLIBZ-2665: Send custom properties to the backend using the `x-kinvey-custom-request-properties` header when creating an entity. [#360](https://github.com/Kinvey/js-sdk/pull/360)
+- MLIBZ-2660: Fix TypeScript definitions for `Push.unregister()` on NativeScript to allow the passing of options. Fix the boolean logic in `Push.register()` to allow interactive settings for push notifications to be registered for iOS on NativeScript. [#359](https://github.com/Kinvey/js-sdk/pull/359)
+- MLIBZ-2543: Fix encoding issue when downloading files via the NativeScript SDK. [#361](https://github.com/Kinvey/js-sdk/pull/359)
+
 ## [3.11.7](https://github.com/Kinvey/js-sdk/tree/v3.11.7) (2018-09-20)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.6...v3.11.7)<br/>
 
