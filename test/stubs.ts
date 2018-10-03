@@ -514,11 +514,13 @@ export class LockFile {
 export class PrompterStub implements IPrompter {
 	private strings: IDictionary<string> = {};
 	private passwords: IDictionary<string> = {};
+	private choices: IDictionary<string> = {};
 
-	expect(options?: { strings: IDictionary<string>, passwords: IDictionary<string> }) {
+	expect(options?: { strings?: IDictionary<string>, passwords?: IDictionary<string>, choices?: IDictionary<string> }) {
 		if (options) {
 			this.strings = options.strings || this.strings;
 			this.passwords = options.passwords || this.passwords;
+			this.choices = options.choices || this.choices;
 		}
 	}
 
@@ -540,8 +542,11 @@ export class PrompterStub implements IPrompter {
 	async promptForChoice(promptMessage: string, choices: any[]): Promise<string> {
 		throw unreachable();
 	}
-	async promptForDetailedChoice(promptMessage: string, choices: any[]): Promise<string> {
-		throw unreachable();
+	async promptForDetailedChoice(question: string, choices: any[]): Promise<string> {
+		chai.assert.ok(question in this.choices, `PrompterStub didn't expect to be asked: ${question}`);
+		const result = this.choices[question];
+		delete this.choices[question];
+		return result;
 	}
 	async confirm(prompt: string, defaultAction?: () => boolean): Promise<boolean> {
 		throw unreachable();
