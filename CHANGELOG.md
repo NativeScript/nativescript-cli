@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.12.1](https://github.com/Kinvey/js-sdk/tree/v3.12.1) (2018-10-04)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.12.0...v3.12.1)<br/>
+
+#### Bugs
+- MLIBZ-2695: Updated `webpack.config.ios.js` and `webpack.config.android.js` to treat any  `tns-core-module` imported by the SDK as an external import to prevent the bundle from including the `tns-core-module` package. [#363](https://github.com/Kinvey/js-sdk/pull/363)
+- MLIBZ-2671: Fixed MIC on Microsoft Edge and IE browsers. [#364](https://github.com/Kinvey/js-sdk/pull/364)
+- Removed the use of `tns-core-modules/connectivity`. [#365](https://github.com/Kinvey/js-sdk/pull/365)
+
 ## [3.12.0](https://github.com/Kinvey/js-sdk/tree/v3.12.0) (2018-10-03)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.7...v3.12.0)<br/>
 
