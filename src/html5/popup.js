@@ -17,7 +17,7 @@ export class Popup extends EventEmitter {
             this.emit('loadstart', event);
             this.emit('load', event);
           } catch (error) {
-            if (error.code !== global.DOMException.SECURITY_ERR) {
+            if (error.code !== global.DOMException.SECURITY_ERR && error.message.indexOf('Permission Denied') !== -1) {
               this.emit('error', error);
             }
           }
