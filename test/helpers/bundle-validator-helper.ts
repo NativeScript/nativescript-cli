@@ -22,7 +22,8 @@ function createTestInjector(options: { dependencies?: IStringDictionary, devDepe
 		devDependencies: options.devDependencies
 	});
 	testInjector.register("errors", {
-		fail: (err: string) => error = err
+		fail: (err: string) => error = err,
+		failWithoutHelp: (err: string) => error = err
 	});
 	testInjector.register("options", ({ bundle: "webpack" }));
 	testInjector.register("bundleValidatorHelper", BundleValidatorHelper);
@@ -30,7 +31,7 @@ function createTestInjector(options: { dependencies?: IStringDictionary, devDepe
 	return testInjector;
 }
 
-describe.only("BundleValidatorHelper", () => {
+describe("BundleValidatorHelper", () => {
 	beforeEach(() => error = null);
 
 	let testCases: ITestCase[] = [
@@ -52,25 +53,32 @@ describe.only("BundleValidatorHelper", () => {
 					expectedError: null
 				},
 				{
-					name: `should not throw an error when webpack's version is grather than minSupportedVersion in case when webpack is installed as ${key}`,
+					name: `should not throw an error when webpack's version is greater than minSupportedVersion when webpack is installed as ${key}`,
 					isDependency,
 					currentWebpackVersion: "0.13.1",
 					minSupportedWebpackVersion: "0.13.0",
 					expectedError: null
 				},
 				{
-					name: `should not throw an error when webpack's version is equal to minSupportedVersion in case when webpack is installed as ${key}`,
+					name: `should not throw an error when webpack's version is equal to minSupportedVersion when webpack is installed as ${key}`,
 					isDependency,
 					currentWebpackVersion: "0.10.0",
 					minSupportedWebpackVersion: "0.10.0",
 					expectedError: null
 				},
 				{
-					name: `should throw an error when webpack's version is lower than minSupportedVersion in case when webpack is installed as ${key}`,
+					name: `should throw an error when webpack's version is lower than minSupportedVersion when webpack is installed as ${key}`,
 					isDependency,
 					currentWebpackVersion: "0.17.0",
 					minSupportedWebpackVersion: "0.18.0",
 					expectedError: format(BundleValidatorMessages.NotSupportedVersion, "0.18.0")
+				},
+				{
+					name: `should not throw an error when prerelease version of webpack is installed as ${key}`,
+					isDependency,
+					currentWebpackVersion: "0.17.0-2018-09-28-173604-01",
+					minSupportedWebpackVersion: "0.17.0",
+					expectedError: null
 				}
 			]);
 		});

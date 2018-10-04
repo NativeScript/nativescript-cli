@@ -841,7 +841,7 @@ interface IDeployCommandHelper {
 interface IBundleValidatorHelper {
 	/**
 	 * Validates bundling options.
-	 * In case when minSupportedVersion is provided, gets the current version of nativescript-dev-webpack from package json and compares with the provided version.
+	 * In case when minSupportedVersion is provided, gets the current version of nativescript-dev-webpack from package.json and compares with the provided version.
 	 * @param {string} minSupportedVersion the minimum supported version of nativescript-dev-webpack
 	 * @return {void}
 	 */

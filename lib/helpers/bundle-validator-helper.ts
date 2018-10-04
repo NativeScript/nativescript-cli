@@ -16,17 +16,17 @@ export class BundleValidatorHelper implements IBundleValidatorHelper {
 	public validate(minSupportedVersion?: string): void {
 		if (this.$options.bundle) {
 			const bundlePluginName = this.bundlersMap[this.$options.bundle];
-			const hasBundlerPluginAsDependency = this.$projectData.dependencies && this.$projectData.dependencies[bundlePluginName];
-			const hasBundlerPluginAsDevDependency = this.$projectData.devDependencies && this.$projectData.devDependencies[bundlePluginName];
-			if (!bundlePluginName || (!hasBundlerPluginAsDependency && !hasBundlerPluginAsDevDependency)) {
+			const bundlerVersionInDependencies = this.$projectData.dependencies && this.$projectData.dependencies[bundlePluginName];
+			const bundlerVersionInDevDependencies = this.$projectData.devDependencies && this.$projectData.devDependencies[bundlePluginName];
+			if (!bundlePluginName || (!bundlerVersionInDependencies && !bundlerVersionInDevDependencies)) {
 				this.$errors.fail(BundleValidatorMessages.MissingBundlePlugin);
 			}
 
 			if (minSupportedVersion) {
-				const currentVersion = hasBundlerPluginAsDependency || hasBundlerPluginAsDevDependency;
+				const currentVersion = bundlerVersionInDependencies || bundlerVersionInDevDependencies;
 				const isBundleSupported = semver.gte(semver.coerce(currentVersion), semver.coerce(minSupportedVersion));
 				if (!isBundleSupported) {
-					this.$errors.fail(util.format(BundleValidatorMessages.NotSupportedVersion, minSupportedVersion));
+					this.$errors.failWithoutHelp(util.format(BundleValidatorMessages.NotSupportedVersion, minSupportedVersion));
 				}
 			}
 		}
