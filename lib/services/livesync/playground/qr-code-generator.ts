@@ -45,9 +45,9 @@ export class PlaygroundQrCodeGenerator implements IPlaygroundQrCodeGenerator {
 
 	private printUsage(): void {
 		this.$logger.info(`
--> Press ${this.underlineBoldCyan("a")} to get a link to NativeScript Playground app for ${this.underlineBoldCyan("Android")}
--> Press ${this.underlineBoldCyan("i")} to get a link to NativeScript Playground app for ${this.underlineBoldCyan("iOS")}
--> Press ${this.underlineBoldCyan("c")} to show the QR code of the ${this.underlineBoldCyan("current application")}.
+-> Press ${this.underlineBoldCyan("a")} to get a link to NativeScript Playground app for ${this.underlineBoldCyan("Android")} on Google Play
+-> Press ${this.underlineBoldCyan("i")} to get a link to NativeScript Playground app for ${this.underlineBoldCyan("iOS")} on the App Store
+-> Press ${this.underlineBoldCyan("c")} to show the QR code of ${this.underlineBoldCyan("your application")}
 		`);
 	}
 
