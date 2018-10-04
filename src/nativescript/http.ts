@@ -1,6 +1,5 @@
 import { request as HttpRequest } from 'tns-core-modules/http';
 import { device } from 'tns-core-modules/platform';
-import { getConnectionType, connectionType } from 'tns-core-modules/connectivity';
 import { Middleware } from '../core/request';
 
 function deviceInformation(pkg = <any>{}) {
@@ -19,20 +18,6 @@ function deviceInformation(pkg = <any>{}) {
 }
 
 function deviceInformation2(pkg = <any>{}) {
-  let networkCondition = 'none';
-
-  switch (getConnectionType()) {
-    case connectionType.mobile:
-      networkCondition = 'cellular';
-      break;
-    case connectionType.wifi:
-      networkCondition = 'wifi';
-      break;
-    default:
-      networkCondition = 'none';
-      break;
-  }
-
   return {
     hv: 1,
     md: device.model,
@@ -41,7 +26,6 @@ function deviceInformation2(pkg = <any>{}) {
     sdk: pkg.name,
     pv: device.sdkVersion,
     ty: device.deviceType,
-    nc: networkCondition,
     id: device.uuid
   };
 }
