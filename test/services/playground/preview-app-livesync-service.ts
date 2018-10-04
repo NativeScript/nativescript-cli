@@ -199,7 +199,7 @@ async function syncFiles(input?: IActInput) {
 		await previewSdkService.getInitialFiles(deviceMockData);
 	}
 
-	await previewAppLiveSyncService.syncFiles(syncFilesMockData, projectFiles);
+	await previewAppLiveSyncService.syncFiles(syncFilesMockData, projectFiles, []);
 }
 
 async function assert(expectedFiles: string[], options?: IAssertOptions) {

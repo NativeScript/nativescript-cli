@@ -1,5 +1,6 @@
 export class PreviewSdkEventNames {
 	public static CHANGE_EVENT_NAME = "change";
+	public static UNLINK_EVENT_NAME = "unlink";
 }
 
 export class PubnubKeys {
