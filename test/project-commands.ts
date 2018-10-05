@@ -12,6 +12,17 @@ let isProjectCreated: boolean;
 let createProjectCalledWithForce: boolean;
 let validateProjectCallsCount: number;
 const dummyArgs = ["dummyArgsString"];
+const expectedFlavorChoices = [
+	{ key: "Angular", description: "Learn more at https://angular.io/" },
+	{ key: "Vue.js", description: "Learn more at https://vuejs.org/" },
+	{ key: "Plain TypeScript", description: "Learn more at https://www.typescriptlang.org/" },
+	{ key: "Plain JavaScript", description: "Learn more at https://www.javascript.com/" }
+];
+const expectedTemplateChoices = [
+	{ key: "Hello World", description: "A Hello World app" },
+	{ key: "SideDrawer", description: "An app with pre-built pages that uses a drawer for navigation" },
+	{ key: "Tabs", description: "An app with pre-built pages that uses tabs for navigation" }
+];
 
 class ProjectServiceMock implements IProjectService {
 	async validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }): Promise<string> {
@@ -68,19 +79,25 @@ describe("Project commands tests", () => {
 		templateAnswer?: string,
 	}) {
 		const prompterStub = <stubs.PrompterStub>testInjector.resolve("$prompter");
-		const choices: IDictionary<string> = {};
+		const answers: IDictionary<string> = {};
+		const questionChoices: IDictionary<any[]> = {};
 		if (opts.projectNameAnswer) {
-			choices["First, what will be the name of your app?"] = opts.projectNameAnswer;
+			answers["First, what will be the name of your app?"] = opts.projectNameAnswer;
 		}
 		if (opts.flavorAnswer) {
-			choices[opts.projectNameAnswer ? "Next" : "First" + ", which flavor would you like to use?"] = opts.flavorAnswer;
+			const flavorQuestion = opts.projectNameAnswer ? "Next" : "First" + ", which flavor would you like to use?";
+			answers[flavorQuestion] = opts.flavorAnswer;
+			questionChoices[flavorQuestion] = expectedFlavorChoices;
 		}
 		if (opts.templateAnswer) {
-			choices[opts.projectNameAnswer ? "Finally" : "Next" + ", which template would you like to start from?"] = opts.templateAnswer;
+			const templateQuestion = opts.projectNameAnswer ? "Finally" : "Next" + ", which template would you like to start from?";
+			answers[templateQuestion] = opts.templateAnswer;
+			questionChoices[templateQuestion] = expectedTemplateChoices;
 		}
 
 		prompterStub.expect({
-			choices
+			answers,
+			questionChoices
 		});
 	}
 
@@ -171,21 +188,21 @@ describe("Project commands tests", () => {
 		});
 
 		it("should ask for a template when ts flavor is selected.", async () => {
-			setupAnswers({ flavorAnswer: constants.TsFlavorName, templateAnswer:  "Hello World" });
+			setupAnswers({ flavorAnswer: constants.TsFlavorName, templateAnswer:  "SideDrawer" });
 
 			await createProjectCommand.execute(dummyArgs);
 
-			assert.deepEqual(selectedTemplateName, "tns-template-hello-world-ts");
+			assert.deepEqual(selectedTemplateName, "tns-template-drawer-navigation-ts");
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});
 
 		it("should ask for a template when js flavor is selected.", async () => {
-			setupAnswers({ flavorAnswer: constants.JsFlavorName, templateAnswer:  "Hello World" });
+			setupAnswers({ flavorAnswer: constants.JsFlavorName, templateAnswer:  "Tabs" });
 
 			await createProjectCommand.execute(dummyArgs);
 
-			assert.deepEqual(selectedTemplateName, "tns-template-hello-world");
+			assert.deepEqual(selectedTemplateName, "tns-template-tab-navigation");
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});

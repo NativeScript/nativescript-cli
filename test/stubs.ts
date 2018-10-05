@@ -514,13 +514,15 @@ export class LockFile {
 export class PrompterStub implements IPrompter {
 	private strings: IDictionary<string> = {};
 	private passwords: IDictionary<string> = {};
-	private choices: IDictionary<string> = {};
+	private answers: IDictionary<string> = {};
+	private questionChoices: IDictionary<any[]> = {};
 
-	expect(options?: { strings?: IDictionary<string>, passwords?: IDictionary<string>, choices?: IDictionary<string> }) {
+	expect(options?: { strings?: IDictionary<string>, passwords?: IDictionary<string>, answers?: IDictionary<string>, questionChoices?: IDictionary<any[]> }) {
 		if (options) {
 			this.strings = options.strings || this.strings;
 			this.passwords = options.passwords || this.passwords;
-			this.choices = options.choices || this.choices;
+			this.answers = options.answers || this.answers;
+			this.questionChoices = options.questionChoices || this.questionChoices;
 		}
 	}
 
@@ -543,9 +545,10 @@ export class PrompterStub implements IPrompter {
 		throw unreachable();
 	}
 	async promptForDetailedChoice(question: string, choices: any[]): Promise<string> {
-		chai.assert.ok(question in this.choices, `PrompterStub didn't expect to be asked: ${question}`);
-		const result = this.choices[question];
-		delete this.choices[question];
+		chai.assert.ok(question in this.answers, `PrompterStub didn't expect to be asked: ${question}`);
+		chai.assert.deepEqual(choices, this.questionChoices[question]);
+		const result = this.answers[question];
+		delete this.answers[question];
 		return result;
 	}
 	async confirm(prompt: string, defaultAction?: () => boolean): Promise<boolean> {
