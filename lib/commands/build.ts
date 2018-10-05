@@ -97,7 +97,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 
 		super.validatePlatform(platform);
 
-		let result = await super.canExecuteCommandBase(platform);
+		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true }});
 		if (result.canExecute) {
 			result = await super.validateArgs(args, platform);
 		}
@@ -129,7 +129,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		const platform = this.$devicePlatformsConstants.Android;
 		super.validatePlatform(platform);
 
-		let result = await super.canExecuteCommandBase(platform);
+		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true }});
 		if (result.canExecute) {
 			if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 				this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
