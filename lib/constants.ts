@@ -186,9 +186,10 @@ export class AssetConstants {
 export class MacOSVersions {
 	public static Sierra = "10.12";
 	public static HighSierra = "10.13";
+	public static Mojave = "10.14";
 }
 
-export const MacOSDeprecationStringFormat = "Support for macOS %s is deprecated and will be removed in one of the next releases of NativeScript. Please, upgrade to the latest macOS version.";
+export const MacOSDeprecationStringFormat = "NativeScript does not support macOS %s and some functionality may not work. Please, upgrade to the latest macOS version.";
 export const PROGRESS_PRIVACY_POLICY_URL = "https://www.progress.com/legal/privacy-policy";
 export class SubscribeForNewsletterMessages {
 	public static AgreeToReceiveEmailMsg = "I agree".green.bold + " to receive email communications from Progress Software or its Partners (`https://www.progress.com/partners/partner-directory`)," +

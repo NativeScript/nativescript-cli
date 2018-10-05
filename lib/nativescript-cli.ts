@@ -26,8 +26,12 @@ import { settlePromises } from "./common/helpers";
 	const $sysInfo = $injector.resolve<ISysInfo>("sysInfo");
 	const macOSWarning = await $sysInfo.getMacOSWarningMessage();
 	if (macOSWarning) {
-		const message = EOL + macOSWarning + EOL ;
-		logger.warn(message);
+		const message = `${EOL}${macOSWarning.message}${EOL}`;
+		if (macOSWarning.severity === SystemWarningsSeverity.high) {
+			logger.printOnStderr(message.red.bold);
+		} else {
+			logger.warn(message);
+		}
 	}
 
 	const commandDispatcher: ICommandDispatcher = $injector.resolve("commandDispatcher");

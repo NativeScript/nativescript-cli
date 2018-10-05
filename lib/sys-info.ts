@@ -35,15 +35,17 @@ export class SysInfo implements ISysInfo {
 	}
 
 	@exported("sysInfo")
-	public async getSystemWarnings(): Promise<string[]> {
-		const warnings: string[] = [];
+	public async getSystemWarnings(): Promise<ISystemWarning[]> {
+		const warnings: ISystemWarning[] = [];
 		const macOSWarningMessage = await this.getMacOSWarningMessage();
 		if (macOSWarningMessage) {
+			macOSWarningMessage.toString = function() { return this.message; };
 			warnings.push(macOSWarningMessage);
 		}
 
 		const nodeWarning = getNodeWarning();
 		if (nodeWarning) {
+			nodeWarning.toString = function() { return this.message; };
 			warnings.push(nodeWarning);
 		}
 
@@ -57,10 +59,13 @@ export class SysInfo implements ISysInfo {
 		return jsonContent && jsonContent.engines && jsonContent.engines.node;
 	}
 
-	public async getMacOSWarningMessage(): Promise<string> {
+	public async getMacOSWarningMessage(): Promise<ISystemWarning> {
 		const macOSVersion = await this.$hostInfo.getMacOSVersion();
 		if (macOSVersion && macOSVersion < MacOSVersions.HighSierra) {
-			return format(MacOSDeprecationStringFormat, macOSVersion);
+			return {
+				message: format(MacOSDeprecationStringFormat, macOSVersion),
+				severity: SystemWarningsSeverity.high
+			};
 		}
 
 		return null;

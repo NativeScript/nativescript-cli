@@ -65,6 +65,27 @@ describe("hostInfo", () => {
 			assert.equal(calledCommand, "system_profiler SPSoftwareDataType -detailLevel mini");
 		});
 
+		it("returns correct macOS version based on system_profile, when version has two numbers only", async () => {
+			const testInjector = createTestInjector();
+			const hostInfo = testInjector.resolve<IHostInfo>("hostInfo");
+			const childProcess = testInjector.resolve<IChildProcess>("childProcess");
+			let calledCommand = "";
+			childProcess.exec = async (command: string, options?: any, execOptions?: IExecOptions): Promise<any> => {
+				calledCommand = command;
+				return `Software:
+
+    System Software Overview:
+
+      System Version: macOS 10.14 (18A391)
+      Kernel Version: Darwin 18.0.0
+      Time since boot: 1 day 5:52`;
+			};
+
+			const macOSVersion = await hostInfo.getMacOSVersion();
+			assert.deepEqual(macOSVersion, "10.14");
+			assert.equal(calledCommand, "system_profiler SPSoftwareDataType -detailLevel mini");
+		});
+
 		it("returns correct macOS version when system_profile call throws", async () => {
 			const testInjector = createTestInjector();
 			const hostInfo = testInjector.resolve<IHostInfo>("hostInfo");
