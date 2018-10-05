@@ -30,7 +30,7 @@ export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncSer
 		const deviceHashService = this.getDeviceHashService(deviceAppData.appIdentifier);
 		const currentHashes = await deviceHashService.generateHashesFromLocalToDevicePaths(localToDevicePaths);
 		const transferredFiles = await this.transferFilesCore(deviceAppData, localToDevicePaths, projectFilesPath, currentHashes, options);
-		await this.updateHashes(deviceAppData, currentHashes, projectData, liveSyncDeviceInfo);
+		await this.updateHashesOnDevice(deviceAppData, currentHashes);
 		return transferredFiles;
 	}
 
@@ -67,19 +67,9 @@ export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncSer
 		return changedLocalToDevicePaths;
 	}
 
-	private async updateHashes(deviceAppData: Mobile.IDeviceAppData, currentHashes: IStringDictionary, projectData: IProjectData, liveSyncDeviceInfo: ILiveSyncDeviceInfo): Promise<void> {
-		const hashes = await this.updateHashesOnDevice(deviceAppData, currentHashes, projectData, liveSyncDeviceInfo);
-		this.updateLocalHashes(hashes, deviceAppData, projectData, liveSyncDeviceInfo);
-	}
-
-	private async updateHashesOnDevice(deviceAppData: Mobile.IDeviceAppData, currentHashes: IStringDictionary, projectData: IProjectData, liveSyncDeviceInfo: ILiveSyncDeviceInfo): Promise<IStringDictionary> {
+	private async updateHashesOnDevice(deviceAppData: Mobile.IDeviceAppData, currentHashes: IStringDictionary): Promise<IStringDictionary> {
 		const deviceHashService = this.getDeviceHashService(deviceAppData.appIdentifier);
 		await deviceHashService.uploadHashFileToDevice(currentHashes);
 		return currentHashes;
-	}
-
-	private updateLocalHashes(hashes: IStringDictionary, deviceAppData: Mobile.IDeviceAppData, projectData: IProjectData, liveSyncDeviceInfo: ILiveSyncDeviceInfo): void {
-		const hashFilePath = liveSyncDeviceInfo.outputPath || this.$platformsData.getPlatformData(deviceAppData.platform, projectData).deviceBuildOutputPath;
-		this.$filesHashService.saveHashes(hashes, hashFilePath);
 	}
 }
