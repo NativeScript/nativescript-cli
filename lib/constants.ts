@@ -227,3 +227,8 @@ export class IosProjectConstants {
 	public static XcodeProjExtName = ".xcodeproj";
 	public static XcodeSchemeExtName = ".xcscheme";
 }
+
+export class BundleValidatorMessages {
+	public static MissingBundlePlugin = "Passing --bundle requires a bundling plugin. No bundling plugin found or the specified bundling plugin is invalid.";
+	public static NotSupportedVersion = `The NativeScript CLI requires nativescript-dev-webpack %s or later to work properly.`;
+}

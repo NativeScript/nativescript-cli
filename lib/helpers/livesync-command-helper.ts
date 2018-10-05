@@ -1,4 +1,5 @@
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
+	private static MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR = "0.17.0";
 
 	constructor(private $platformService: IPlatformService,
 		private $projectData: IProjectData,
@@ -133,7 +134,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			result[availablePlatform.toLowerCase()] = validateOutput;
 		}
 
-		this.$bundleValidatorHelper.validate();
+		const minSupportedWebpackVersion = this.$options.hmr ? LiveSyncCommandHelper.MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR : null;
+		this.$bundleValidatorHelper.validate(minSupportedWebpackVersion);
 
 		return result;
 	}
