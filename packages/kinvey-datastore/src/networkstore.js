@@ -12,7 +12,9 @@ const NAMESPACE = 'appdata';
 export function createRequest(method, url, body) {
   return new KinveyRequest({
     method,
-    auth: Auth.Session,
+    headers: {
+      Authorization: Auth.Session
+    },
     url,
     body
   });
@@ -33,7 +35,7 @@ export class NetworkStore {
       const url = formatKinveyBaasUrl(this.pathname, query ? query.toQueryObject() : undefined);
       const request = createRequest(RequestMethod.GET, url);
       try {
-        const response = await execute(request);
+        const response = await request.execute();
 
         if (rawResponse === true) {
           observer.next(response);
@@ -54,7 +56,7 @@ export class NetworkStore {
       const url = formatKinveyBaasUrl(`${this.pathname}/_count`, query ? query.toQueryObject() : undefined);
       const request = createRequest(RequestMethod.GET, url);
       try {
-        const response = await execute(request);
+        const response = await request.execute();
 
         if (rawResponse === true) {
           observer.next(response);
@@ -75,7 +77,7 @@ export class NetworkStore {
       const url = formatKinveyBaasUrl(`${this.pathname}/${id}`);
       const request = createRequest(RequestMethod.GET, url);
       try {
-        const response = await execute(request);
+        const response = await request.execute();
 
         if (rawResponse === true) {
           observer.next(response);
@@ -94,7 +96,7 @@ export class NetworkStore {
   async create(doc, rawResponse = false) {
     const url = formatKinveyBaasUrl(this.pathname);
     const request = createRequest(RequestMethod.POST, url, doc);
-    const response = await execute(request);
+    const response = await request.execute();
 
     if (rawResponse === true) {
       return response;
@@ -106,7 +108,7 @@ export class NetworkStore {
   async update(doc, rawResponse = false) {
     const url = formatKinveyBaasUrl(`${this.pathname}/${doc._id}`);
     const request = createRequest(RequestMethod.PUT, url, doc);
-    const response = await execute(request);
+    const response = await request.execute();
 
     if (rawResponse === true) {
       return response;
@@ -126,7 +128,7 @@ export class NetworkStore {
   async remove(query, rawResponse = false) {
     const url = formatKinveyBaasUrl(this.pathname, query ? query.toQueryObject() : undefined);
     const request = createRequest(RequestMethod.DELETE, url);
-    const response = await execute(request);
+    const response = await request.execute();
 
     if (rawResponse === true) {
       return response;
@@ -138,7 +140,7 @@ export class NetworkStore {
   async removeById(id, rawResponse = false) {
     const url = formatKinveyBaasUrl(`${this.pathname}/${id}`);
     const request = createRequest(RequestMethod.DELETE, url);
-    const response = await execute(request);
+    const response = await request.execute();
 
     if (rawResponse === true) {
       return response;

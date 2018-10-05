@@ -34,6 +34,8 @@
       "packages/kinvey-nativescript-sdk",
       "packages/kinvey-node-sdk",
       "packages/kinvey-observable",
+      "packages/kinvey-popup",
+      "packages/kinvey-popup-web",
       "packages/kinvey-query",
       "packages/kinvey-session",
       "packages/kinvey-session-web"

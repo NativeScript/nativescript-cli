@@ -1,15 +1,21 @@
 import { register as registerCacheStore } from 'kinvey-cache-indexeddb';
 import { register as registerHttpAdapter } from 'kinvey-http-web';
 import { register as registerSessionStore } from 'kinvey-session-web';
-// import { use as useCacheStore } from 'kinvey-cache';
-// import { init } from 'kinvey-app';
-// import * as cacheStore from 'kinvey-indexeddb';
-
-// import * as sessionStore from './session';
-// import popup from './popup';
+import { register as registerPopup } from 'kinvey-popup-web';
+import * as App from 'kinvey-app';
+import * as Identity from 'kinvey-identity';
 
 registerCacheStore();
 registerHttpAdapter();
 registerSessionStore();
+registerPopup();
 
-export * from 'kinvey-app';
+const Kinvey = {
+  User: Identity
+};
+
+Object.keys(App).forEach((key) => {
+  Kinvey[key] = App[key];
+});
+
+module.exports = Kinvey;

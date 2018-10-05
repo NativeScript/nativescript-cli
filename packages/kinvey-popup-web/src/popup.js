@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { register as _register } from 'kinvey-popup';
 
 const LOADED_EVENT = 'loaded';
 const CLOSED_EVENT = 'closed';
@@ -54,10 +55,8 @@ class Popup extends EventEmitter {
     this.emit(CLOSED_EVENT);
     return this;
   }
-}
 
-export default {
-  open(url) {
+  static open(url) {
     const popupWindow = window.open(url, '_blank', 'toolbar=no,location=no');
 
     if (!popupWindow) {
@@ -66,4 +65,8 @@ export default {
 
     return new Popup(popupWindow);
   }
-};
+}
+
+export function register() {
+  _register(Popup);
+}

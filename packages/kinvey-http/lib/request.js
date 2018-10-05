@@ -1,32 +1,24 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.register = register;
 exports.formatKinveyAuthUrl = formatKinveyAuthUrl;
 exports.formatKinveyBaasUrl = formatKinveyBaasUrl;
-exports.KinveyRequest = exports.Auth = exports.Request = exports.RequestMethod = void 0;
+exports.KinveyRequest = exports.Request = exports.RequestMethod = void 0;
 
 require("core-js/modules/es6.regexp.replace");
 
-var _isFunction = _interopRequireDefault(require("lodash/isFunction"));
-
 var _url = require("url");
 
-var _jsBase = require("js-base64");
-
 var _kinveyApp = require("kinvey-app");
-
-var _kinveyKmd = require("kinvey-kmd");
-
-var _kinveySession = require("kinvey-session");
 
 var _headers = require("./headers");
 
 var _utils = require("./utils");
+
+var _response = require("./response");
 
 let http = async () => {
   throw new Error('You must override the default http function.');
@@ -61,24 +53,16 @@ class Request {
     this._headers = new _headers.Headers(headers);
   }
 
-  get body() {
-    return this._body;
-  }
-
-  set body(body) {
-    this._body = (0, _utils.serialize)(this.headers.contentType, body);
-  }
-
   async execute() {
     // Make http request
     const responseObject = await http({
       headers: this.headers.toObject(),
       method: this.method,
       url: this.url,
-      body: this.body
+      body: (0, _utils.serialize)(this.headers.contentType, this.body)
     }); // Create a response
 
-    const response = new Response({
+    const response = new _response.Response({
       statusCode: responseObject.statusCode,
       headers: responseObject.headers,
       data: responseObject.data
@@ -122,59 +106,18 @@ function formatKinveyBaasUrl(pathname, query) {
   return getKinveyUrl(api.baas.protocol, api.baas.host, pathname, query);
 }
 
-const Auth = {
-  App: 'App',
-  Default: 'Default',
-  MasterSecret: 'MasterSecret',
-  Session: 'Session'
-};
-exports.Auth = Auth;
-
 class KinveyRequest extends Request {
   constructor(request) {
     super(request);
-    this.headers = new _headers.KinveyHeaders(request.headers);
-    this.auth = request.auth;
+    this.headers = request.headers;
   }
 
-  set auth(auth) {
-    if (auth === Auth.Default) {
-      try {
-        this.auth = Auth.Session;
-      } catch (error) {
-        this.auth = Auth.MasterSecret;
-      }
-    }
+  get headers() {
+    return this._headers;
+  }
 
-    if ((0, _isFunction.default)(auth)) {
-      const value = auth();
-      this.headers.setAuthorization(value);
-    } else if (auth === Auth.App) {
-      const _getConfig4 = (0, _kinveyApp.getConfig)(),
-            appKey = _getConfig4.appKey,
-            appSecret = _getConfig4.appSecret;
-
-      const credentials = _jsBase.Base64.encode(`${appKey}:${appSecret}`);
-
-      this.headers.setAuthorization(`Basic ${credentials}`);
-    } else if (auth === Auth.MasterSecret) {
-      const _getConfig5 = (0, _kinveyApp.getConfig)(),
-            appKey = _getConfig5.appKey,
-            masterSecret = _getConfig5.masterSecret;
-
-      const credentials = _jsBase.Base64.encode(`${appKey}:${masterSecret}`);
-
-      this.headers.setAuthorization(`Basic ${credentials}`);
-    } else if (auth === Auth.Session) {
-      const session = (0, _kinveySession.getSession)();
-
-      if (!session) {
-        throw new Error('There is no active user to authorize the request. Please login and retry the request.');
-      }
-
-      const kmd = new _kinveyKmd.Kmd(session._kmd);
-      this.headers.setAuthorization(`Kinvey ${kmd.authtoken}`);
-    }
+  set headers(headers) {
+    this._headers = new _headers.KinveyHeaders(headers);
   }
 
 }

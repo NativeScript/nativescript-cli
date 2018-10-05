@@ -10,12 +10,12 @@ export function register(sessionStore) {
   }
 }
 
-export function getSession() {
+export function get() {
   const { appKey } = getConfig();
   return store.get(`${appKey}${TAG}`);
 }
 
-export function setSession(session) {
+export function set(session) {
   const { appKey } = getConfig();
 
   if (session) {
@@ -25,7 +25,7 @@ export function setSession(session) {
   return session;
 }
 
-export function removeSession() {
+export function remove() {
   const { appKey } = getConfig();
 
   if (isFunction(store.delete)) {

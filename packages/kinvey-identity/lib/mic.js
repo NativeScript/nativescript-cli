@@ -20,7 +20,7 @@ var _kinveyApp = require("kinvey-app");
 
 var _kinveyHttp = require("kinvey-http");
 
-var _popup = require("./popup");
+var _kinveyPopup = require("kinvey-popup");
 
 // Export identity
 const IDENTITY = 'kinveyAuth';
@@ -41,16 +41,17 @@ Object.freeze(AuthorizationGrant);
 async function getTempLoginUrl(clientId, redirectUri, version) {
   const request = new _kinveyHttp.KinveyRequest({
     method: _kinveyHttp.RequestMethod.POST,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: () => {
+        const _getConfig = (0, _kinveyApp.getConfig)(),
+              appSecret = _getConfig.appSecret;
 
-    auth() {
-      const _getConfig = (0, _kinveyApp.getConfig)(),
-            appSecret = _getConfig.appSecret;
+        const credentials = _jsBase.Base64.encode(`${clientId}:${appSecret}`);
 
-      const credentials = _jsBase.Base64.encode(`${clientId}:${appSecret}`);
-
-      return `Basic ${credentials}`;
+        return `Basic ${credentials}`;
+      }
     },
-
     url: (0, _kinveyHttp.formatKinveyAuthUrl)((0, _urlJoin.default)(`v${version}`, '/oauth/auth')),
     body: {
       client_id: clientId,
@@ -58,8 +59,7 @@ async function getTempLoginUrl(clientId, redirectUri, version) {
       response_type: 'code'
     }
   });
-  request.headers.set('Content-Type', 'application/x-www-form-urlencoded');
-  const response = await (0, _kinveyHttp.execute)(request);
+  const response = await request.execute();
   return response.data;
 }
 
@@ -72,7 +72,7 @@ function loginWithPopup(clientId, redirectUri, version) {
       scope: 'openid'
     };
     const url = (0, _kinveyHttp.formatKinveyAuthUrl)((0, _urlJoin.default)(`v${version}`, '/oauth/auth'), query);
-    const popup = (0, _popup.open)(url);
+    const popup = (0, _kinveyPopup.open)(url);
     let redirected = false;
     popup.onLoaded(event => {
       try {
@@ -111,16 +111,17 @@ function loginWithPopup(clientId, redirectUri, version) {
 async function loginWithUrl(url, username, password, clientId, redirectUri) {
   const request = new _kinveyHttp.KinveyRequest({
     method: _kinveyHttp.RequestMethod.POST,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: () => {
+        const _getConfig2 = (0, _kinveyApp.getConfig)(),
+              appSecret = _getConfig2.appSecret;
 
-    auth() {
-      const _getConfig2 = (0, _kinveyApp.getConfig)(),
-            appSecret = _getConfig2.appSecret;
+        const credentials = _jsBase.Base64.encode(`${clientId}:${appSecret}`);
 
-      const credentials = _jsBase.Base64.encode(`${clientId}:${appSecret}`);
-
-      return `Basic ${credentials}`;
+        return `Basic ${credentials}`;
+      }
     },
-
     url,
     body: {
       client_id: clientId,
@@ -131,8 +132,7 @@ async function loginWithUrl(url, username, password, clientId, redirectUri) {
       scope: 'openid'
     }
   });
-  request.headers.set('Content-Type', 'application/x-www-form-urlencoded');
-  const response = await (0, _kinveyHttp.execute)(request);
+  const response = await request.execute();
   const location = response.headers.get('location');
   const parsedLocation = (0, _url.parse)(location, true) || {};
   const query = parsedLocation.query || {};
@@ -142,15 +142,18 @@ async function loginWithUrl(url, username, password, clientId, redirectUri) {
 async function getTokenWithCode(code, clientId, redirectUri) {
   const request = new _kinveyHttp.KinveyRequest({
     method: _kinveyHttp.RequestMethod.POST,
-    url: (0, _kinveyHttp.formatKinveyAuthUrl)('/oauth/token'),
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: () => {
+        const _getConfig3 = (0, _kinveyApp.getConfig)(),
+              appSecret = _getConfig3.appSecret;
 
-    auth() {
-      const _getConfig3 = (0, _kinveyApp.getConfig)(),
-            appSecret = _getConfig3.appSecret;
+        const credentials = _jsBase.Base64.encode(`${clientId}:${appSecret}`);
 
-      return _jsBase.Base64.encode(`${clientId}:${appSecret}`);
+        return `Basic ${credentials}`;
+      }
     },
-
+    url: (0, _kinveyHttp.formatKinveyAuthUrl)('/oauth/token'),
     body: {
       grant_type: 'authorization_code',
       client_id: clientId,
@@ -158,8 +161,7 @@ async function getTokenWithCode(code, clientId, redirectUri) {
       code
     }
   });
-  request.headers.set('Content-Type', 'application/x-www-form-urlencoded');
-  const response = await (0, _kinveyHttp.execute)(request);
+  const response = await request.execute();
   return response.data;
 }
 

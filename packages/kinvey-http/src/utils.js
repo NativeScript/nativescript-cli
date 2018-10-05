@@ -1,7 +1,6 @@
-import cloneDeep from 'lodash/cloneDeep';
 import isString from 'lodash/isString';
 
-export function serialize(contentType = 'application/json', body) {
+export function serialize(contentType, body) {
   if (!isString(body)) {
     if (contentType.indexOf('application/x-www-form-urlencoded') === 0) {
       const str = [];

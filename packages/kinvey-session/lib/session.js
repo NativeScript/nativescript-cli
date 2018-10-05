@@ -6,9 +6,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.register = register;
-exports.getSession = getSession;
-exports.setSession = setSession;
-exports.removeSession = removeSession;
+exports.get = get;
+exports.set = set;
+exports.remove = remove;
 
 require("core-js/modules/web.dom.iterable");
 
@@ -25,14 +25,14 @@ function register(sessionStore) {
   }
 }
 
-function getSession() {
+function get() {
   const _getConfig = (0, _kinveyApp.getConfig)(),
         appKey = _getConfig.appKey;
 
   return store.get(`${appKey}${TAG}`);
 }
 
-function setSession(session) {
+function set(session) {
   const _getConfig2 = (0, _kinveyApp.getConfig)(),
         appKey = _getConfig2.appKey;
 
@@ -43,7 +43,7 @@ function setSession(session) {
   return session;
 }
 
-function removeSession() {
+function remove() {
   const _getConfig3 = (0, _kinveyApp.getConfig)(),
         appKey = _getConfig3.appKey;
 

@@ -308,10 +308,12 @@ class Sync {
           const url = (0, _kinveyHttp.formatKinveyBaasUrl)(`/appdata/${this.appKey}/${this.collectionName}/_deltaset`, queryObject);
           const request = new _kinveyHttp.KinveyRequest({
             method: _kinveyHttp.RequestMethod.GET,
-            auth: _kinveyHttp.Auth.Session,
+            headers: {
+              Authorization: _kinveyHttp.Auth.Session
+            },
             url
           });
-          const response = await (0, _kinveyHttp.execute)(request);
+          const response = await request.execute();
           const _response$data = response.data,
                 changed = _response$data.changed,
                 deleted = _response$data.deleted; // Delete the docs that have been deleted

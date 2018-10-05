@@ -1,11 +1,8 @@
-import isFunction from 'lodash/isFunction';
 import { format } from 'url';
-import { Base64 } from 'js-base64';
 import { getConfig } from 'kinvey-app';
-import { Kmd } from 'kinvey-kmd';
-import { getSession } from 'kinvey-session';
 import { Headers, KinveyHeaders } from './headers';
-import { serialize } from './utils'
+import { serialize } from './utils';
+import { Response } from './response';
 
 let http = async () => {
   throw new Error('You must override the default http function.');
@@ -39,21 +36,13 @@ export class Request {
     this._headers = new Headers(headers);
   }
 
-  get body() {
-    return this._body;
-  }
-
-  set body(body) {
-    this._body = serialize(this.headers.contentType, body);
-  }
-
   async execute() {
     // Make http request
     const responseObject = await http({
       headers: this.headers.toObject(),
       method: this.method,
       url: this.url,
-      body: this.body
+      body: serialize(this.headers.contentType, this.body)
     });
 
     // Create a response
@@ -94,49 +83,17 @@ export function formatKinveyBaasUrl(pathname, query) {
   return getKinveyUrl(api.baas.protocol, api.baas.host, pathname, query);
 }
 
-export const Auth = {
-  App: 'App',
-  Default: 'Default',
-  MasterSecret: 'MasterSecret',
-  Session: 'Session'
-};
-
 export class KinveyRequest extends Request {
   constructor(request) {
     super(request);
-    this.headers = new KinveyHeaders(request.headers);
-    this.auth = request.auth;
+    this.headers = request.headers;
   }
 
-  set auth(auth) {
-    if (auth === Auth.Default) {
-      try {
-        this.auth = Auth.Session;
-      } catch (error) {
-        this.auth = Auth.MasterSecret;
-      }
-    }
+  get headers() {
+    return this._headers;
+  }
 
-    if (isFunction(auth)) {
-      const value = auth();
-      this.headers.setAuthorization(value);
-    } else if (auth === Auth.App) {
-      const { appKey, appSecret } = getConfig();
-      const credentials = Base64.encode(`${appKey}:${appSecret}`);
-      this.headers.setAuthorization(`Basic ${credentials}`);
-    } else if (auth === Auth.MasterSecret) {
-      const { appKey, masterSecret } = getConfig();
-      const credentials = Base64.encode(`${appKey}:${masterSecret}`);
-      this.headers.setAuthorization(`Basic ${credentials}`);
-    } else if (auth === Auth.Session) {
-      const session = getSession();
-
-      if (!session) {
-        throw new Error('There is no active user to authorize the request. Please login and retry the request.');
-      }
-
-      const kmd = new Kmd(session._kmd);
-      this.headers.setAuthorization(`Kinvey ${kmd.authtoken}`);
-    }
+  set headers(headers) {
+    this._headers = new KinveyHeaders(headers);
   }
 }

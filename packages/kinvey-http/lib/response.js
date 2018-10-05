@@ -3,15 +3,12 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
+exports.Response = void 0;
 
 var _headers = require("./headers");
 
 var _utils = require("./utils");
 
-/**
- * @private
- */
 class Response {
   constructor(response) {
     this.statusCode = response.statusCode;
@@ -68,4 +65,4 @@ class Response {
 
 }
 
-exports.default = Response;
+exports.Response = Response;

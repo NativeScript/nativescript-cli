@@ -5,13 +5,23 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.KinveyHeaders = exports.Headers = void 0;
+exports.KinveyHeaders = exports.Auth = exports.Headers = void 0;
 
 require("core-js/modules/web.dom.iterable");
 
 var _isArray = _interopRequireDefault(require("lodash/isArray"));
 
 var _isString = _interopRequireDefault(require("lodash/isString"));
+
+var _isFunction = _interopRequireDefault(require("lodash/isFunction"));
+
+var _jsBase = require("js-base64");
+
+var _kinveyApp = require("kinvey-app");
+
+var _kinveyKmd = require("kinvey-kmd");
+
+var _kinveySession = require("kinvey-session");
 
 const AUTHORIZATION_HEADER = 'Authorization';
 const X_KINVEY_REQUEST_START_HEADER = 'X-Kinvey-Request-Start';
@@ -69,18 +79,21 @@ class Headers {
   }
 
   set(name, value) {
+    const key = name.toLowerCase();
+
     if (!(0, _isString.default)(name)) {
       throw new Error('Please provide a name. Name must be a string.');
     }
 
-    if (!(0, _isString.default)(value) && !(0, _isArray.default)(value) || (0, _isArray.default)(value) && value.some(isNotString)) {
+    if (!(0, _isString.default)(value) && !(0, _isArray.default)(value) && !(0, _isFunction.default)(value) || (0, _isArray.default)(value) && value.some(isNotString)) {
       throw new Error('Please provide a value. Value must be a string or an array that contains only strings.');
     }
 
-    const key = name.toLowerCase();
-
     if ((0, _isArray.default)(value)) {
       this.headers.set(key, value.join(','));
+    } else if ((0, _isFunction.default)(value)) {
+      const val = value();
+      return this.set(name, val);
     } else {
       this.headers.set(key, value);
     }
@@ -125,12 +138,15 @@ class Headers {
   }
 
 }
-/**
- * @private
- */
-
 
 exports.Headers = Headers;
+const Auth = {
+  App: 'App',
+  Default: 'Default',
+  MasterSecret: 'MasterSecret',
+  Session: 'Session'
+};
+exports.Auth = Auth;
 
 class KinveyHeaders extends Headers {
   constructor(headers) {
@@ -138,6 +154,11 @@ class KinveyHeaders extends Headers {
 
     if (!this.has('Accept')) {
       this.set('Accept', 'application/json; charset=utf-8');
+    } // Add Content-Type header
+
+
+    if (!this.has('Content-Type')) {
+      this.set('Content-Type', 'application/json; charset=utf-8');
     } // Add the X-Kinvey-API-Version header
 
 
@@ -150,8 +171,47 @@ class KinveyHeaders extends Headers {
     return this.get(X_KINVEY_REQUEST_START_HEADER);
   }
 
-  setAuthorization(value) {
-    this.set(AUTHORIZATION_HEADER, value);
+  set(name, value) {
+    if (name.toLowerCase() === AUTHORIZATION_HEADER.toLowerCase()) {
+      const auth = value;
+
+      if (auth === Auth.Default) {
+        try {
+          return this.set(name, Auth.Session);
+        } catch (error) {
+          return this.set(name, Auth.MasterSecret);
+        }
+      }
+
+      if (auth === Auth.App) {
+        const _getConfig = (0, _kinveyApp.getConfig)(),
+              appKey = _getConfig.appKey,
+              appSecret = _getConfig.appSecret;
+
+        const credentials = _jsBase.Base64.encode(`${appKey}:${appSecret}`);
+
+        return super.set(name, `Basic ${credentials}`);
+      } else if (auth === Auth.MasterSecret) {
+        const _getConfig2 = (0, _kinveyApp.getConfig)(),
+              appKey = _getConfig2.appKey,
+              masterSecret = _getConfig2.masterSecret;
+
+        const credentials = _jsBase.Base64.encode(`${appKey}:${masterSecret}`);
+
+        return super.set(name, `Basic ${credentials}`);
+      } else if (auth === Auth.Session) {
+        const session = (0, _kinveySession.get)();
+
+        if (!session) {
+          throw new Error('There is no active user to authorize the request. Please login and retry the request.');
+        }
+
+        const kmd = new _kinveyKmd.Kmd(session._kmd);
+        return super.set(name, `Kinvey ${kmd.authtoken}`);
+      }
+    }
+
+    return super.set(name, value);
   }
 
 }

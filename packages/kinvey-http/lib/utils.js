@@ -10,11 +10,9 @@ exports.parse = parse;
 
 require("core-js/modules/web.dom.iterable");
 
-var _cloneDeep = _interopRequireDefault(require("lodash/cloneDeep"));
-
 var _isString = _interopRequireDefault(require("lodash/isString"));
 
-function serialize(contentType = 'application/json', body) {
+function serialize(contentType, body) {
   if (!(0, _isString.default)(body)) {
     if (contentType.indexOf('application/x-www-form-urlencoded') === 0) {
       const str = [];

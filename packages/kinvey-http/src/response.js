@@ -1,10 +1,7 @@
 import { Headers } from './headers';
 import { parse } from './utils';
 
-/**
- * @private
- */
-export default class Response {
+export class Response {
   constructor(response) {
     this.statusCode = response.statusCode;
     this.headers = response.headers;

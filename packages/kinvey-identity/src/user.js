@@ -5,16 +5,8 @@ import isEmpty from 'lodash/isEmpty';
 import { clearCache } from 'kinvey-datastore';
 import { Acl } from 'kinvey-acl';
 import { Kmd } from 'kinvey-kmd';
-import {
-  execute,
-  formatKinveyBaasUrl,
-  KinveyRequest,
-  RequestMethod,
-  Auth,
-  getSession,
-  setSession,
-  removeSession
-} from 'kinvey-http';
+import { execute, formatKinveyBaasUrl, KinveyRequest, RequestMethod, Auth } from 'kinvey-http';
+import { get as getSession, set as setSession, remove as removeSession } from 'kinvey-session';
 import * as MIC from './mic';
 
 const USER_NAMESPACE = 'user';
@@ -84,10 +76,12 @@ class User {
   async me() {
     const request = new KinveyRequest({
       method: RequestMethod.GET,
-      auth: Auth.Session,
+      headers: {
+        Authorization: Auth.Session
+      },
       url: formatKinveyBaasUrl(`/${USER_NAMESPACE}/appKey/_me`)
     });
-    const response = await execute(request);
+    const response = await request.execute();
     const data = response.data;
     delete data.password; // Remove sensitive data
     this.data = data;
@@ -102,11 +96,13 @@ class User {
   async update(data) {
     const request = new KinveyRequest({
       method: RequestMethod.PUT,
-      auth: Auth.Default,
+      headers: {
+        Authorization: Auth.Default
+      },
       url: formatKinveyBaasUrl(`/${USER_NAMESPACE}/appKey/${this._id}`),
       body: Object.assign(this.data, data)
     });
-    const response = await execute(request);
+    const response = await request.execute();
     this.data = response.data;
 
     if (this.isActive()) {
@@ -138,11 +134,13 @@ export async function signup(data, options = {}) {
   const url = formatKinveyBaasUrl(`/${USER_NAMESPACE}/appKey`);
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    auth: Auth.App,
+    headers: {
+      Authorization: Auth.App
+    },
     url,
     body: isEmpty(data) ? null : data
   });
-  const response = await execute(request);
+  const response = await request.execute();
   const userData = response.data;
 
   if (state === true) {
@@ -179,11 +177,13 @@ export async function login(username, password) {
 
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    auth: Auth.App,
+    headers: {
+      Authorization: Auth.App
+    },
     url: formatKinveyBaasUrl(`/${USER_NAMESPACE}/appKey/login`),
     body: credentials
   });
-  const response = await execute(request);
+  const response = await request.execute();
   const userData = response.data;
   setSession(userData);
   return new User(userData);
@@ -204,10 +204,10 @@ export async function loginWithMIC(redirectUri, authorizationGrant, options) {
   const credentials = { _socialIdentity: socialIdentity };
 
   try {
-    return await User.login(credentials);
+    return await login(credentials);
   } catch (error) {
     if (error.name === 'NotFoundError') {
-      return await User.signup(credentials);
+      return await signup(credentials);
     }
 
     throw error;
@@ -223,12 +223,14 @@ export async function logout() {
     const url = formatKinveyBaasUrl(`/${USER_NAMESPACE}/appKey/_logout`);
     const request = new KinveyRequest({
       method: RequestMethod.POST,
-      auth: Auth.Session,
+      headers: {
+        Authorization: Auth.Session
+      },
       url
     });
 
     try {
-      await execute(request);
+      await request.execute();
     } catch (error) {
       // TODO: log error
     }
@@ -279,10 +281,12 @@ export async function remove(id, options = {}) {
   const url = formatKinveyBaasUrl(`/user/appKey/${id}`, { hard });
   const request = new KinveyRequest({
     method: RequestMethod.DELETE,
-    auth: Auth.Default,
+    headers: {
+      Authorization: Auth.Default
+    },
     url
   });
-  const response = await execute(request);
+  const response = await request.execute();
   removeSession();
   return response.data;
 }
@@ -298,10 +302,12 @@ export async function verifyEmail(username) {
 
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    auth: Auth.App,
+    headers: {
+      Authorization: Auth.App
+    },
     url: formatKinveyBaasUrl(`/${RPC_NAMESPACE}/appKey/${username}/user-email-verification-initiate`)
   });
-  const response = await execute(request);
+  const response = await request.execute();
   return response.data;
 }
 
@@ -316,11 +322,13 @@ export async function forgotUsername(email) {
 
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    auth: Auth.App,
+    headers: {
+      Authorization: Auth.App
+    },
     url: formatKinveyBaasUrl(`/${RPC_NAMESPACE}/appKey/user-forgot-username`),
     body: { email }
   });
-  const response = await execute(request);
+  const response = await request.execute();
   return response.data;
 }
 
@@ -335,21 +343,25 @@ export async function resetPassword(username) {
 
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    auth: Auth.App,
+    headers: {
+      Authorization: Auth.App
+    },
     url: formatKinveyBaasUrl(`/${RPC_NAMESPACE}/appKey/${username}/user-password-reset-initiate`)
   });
-  const response = await execute(request);
+  const response = await request.execute();
   return response.data;
 }
 
 export async function lookup(query) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    auth: Auth.Default,
+    headers: {
+      Authorization: Auth.Default
+    },
     url: formatKinveyBaasUrl(`/${USER_NAMESPACE}/appKey/_lookup`),
     body: query ? query.filter : undefined
   });
-  const response = await execute(request);
+  const response = await request.execute();
   return response.data;
 }
 
@@ -364,10 +376,12 @@ export async function exists(username) {
 
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    auth: Auth.App,
+    headers: {
+      Authorization: Auth.App
+    },
     url: formatKinveyBaasUrl(`/${RPC_NAMESPACE}/appKey/check-username-exists`),
     body: { username }
   });
-  const response = await execute(request);
+  const response = await request.execute();
   return response.data.usernameExists === true;
 }

@@ -3,13 +3,8 @@ import urljoin from 'url-join';
 import { parse } from 'url';
 import { Base64 } from 'js-base64';
 import { getConfig } from 'kinvey-app';
-import {
-  execute,
-  formatKinveyAuthUrl,
-  KinveyRequest,
-  RequestMethod
-} from 'kinvey-http';
-import { open } from './popup';
+import { execute, formatKinveyAuthUrl, KinveyRequest, RequestMethod } from 'kinvey-http';
+import { open } from 'kinvey-popup';
 
 // Export identity
 export const IDENTITY = 'kinveyAuth';
@@ -28,10 +23,13 @@ Object.freeze(AuthorizationGrant);
 async function getTempLoginUrl(clientId, redirectUri, version) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    auth() {
-      const { appSecret } = getConfig();
-      const credentials = Base64.encode(`${clientId}:${appSecret}`);
-      return `Basic ${credentials}`;
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: () => {
+        const { appSecret } = getConfig();
+        const credentials = Base64.encode(`${clientId}:${appSecret}`);
+        return `Basic ${credentials}`;
+      }
     },
     url: formatKinveyAuthUrl(urljoin(`v${version}`, '/oauth/auth')),
     body: {
@@ -40,8 +38,7 @@ async function getTempLoginUrl(clientId, redirectUri, version) {
       response_type: 'code'
     }
   });
-  request.headers.set('Content-Type', 'application/x-www-form-urlencoded');
-  const response = await execute(request);
+  const response = await request.execute();
   return response.data;
 }
 
@@ -93,10 +90,13 @@ function loginWithPopup(clientId, redirectUri, version) {
 async function loginWithUrl(url, username, password, clientId, redirectUri) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    auth() {
-      const { appSecret } = getConfig();
-      const credentials = Base64.encode(`${clientId}:${appSecret}`);
-      return `Basic ${credentials}`;
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: () => {
+        const { appSecret } = getConfig();
+        const credentials = Base64.encode(`${clientId}:${appSecret}`);
+        return `Basic ${credentials}`;
+      }
     },
     url,
     body: {
@@ -108,8 +108,7 @@ async function loginWithUrl(url, username, password, clientId, redirectUri) {
       scope: 'openid'
     }
   });
-  request.headers.set('Content-Type', 'application/x-www-form-urlencoded');
-  const response = await execute(request);
+  const response = await request.execute();
   const location = response.headers.get('location');
   const parsedLocation = parse(location, true) || {};
   const query = parsedLocation.query || {};
@@ -119,11 +118,15 @@ async function loginWithUrl(url, username, password, clientId, redirectUri) {
 async function getTokenWithCode(code, clientId, redirectUri) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    url: formatKinveyAuthUrl('/oauth/token'),
-    auth() {
-      const { appSecret } = getConfig();
-      return Base64.encode(`${clientId}:${appSecret}`);
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: () => {
+        const { appSecret } = getConfig();
+        const credentials = Base64.encode(`${clientId}:${appSecret}`);
+        return `Basic ${credentials}`;
+      }
     },
+    url: formatKinveyAuthUrl('/oauth/token'),
     body: {
       grant_type: 'authorization_code',
       client_id: clientId,
@@ -131,8 +134,7 @@ async function getTokenWithCode(code, clientId, redirectUri) {
       code
     }
   });
-  request.headers.set('Content-Type', 'application/x-www-form-urlencoded');
-  const response = await execute(request);
+  const response = await request.execute();
   return response.data;
 }
 

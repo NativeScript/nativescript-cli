@@ -291,8 +291,8 @@ export class Sync {
 
           // Delta Set request
           const url = formatKinveyBaasUrl(`/appdata/${this.appKey}/${this.collectionName}/_deltaset`, queryObject);
-          const request = new KinveyRequest({ method: RequestMethod.GET, auth: Auth.Session, url });
-          const response = await execute(request);
+          const request = new KinveyRequest({ method: RequestMethod.GET, headers: { Authorization: Auth.Session }, url });
+          const response = await request.execute();
           const { changed, deleted } = response.data;
 
           // Delete the docs that have been deleted
