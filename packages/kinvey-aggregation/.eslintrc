@@ -1,7 +1,4 @@
 {
-  "env": {
-    "browser": true
-  },
   "extends": [
     "kinvey-platform"
   ],
