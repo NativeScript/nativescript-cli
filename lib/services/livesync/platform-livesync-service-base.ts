@@ -145,7 +145,7 @@ export abstract class PlatformLiveSyncServiceBase {
 				action.call(this.$logger, util.format(message, path.basename(file.getLocalPath()).yellow), deviceIdentifier);
 			});
 		} else {
-			action.call(this.$logger, util.format(message, "all files"));
+			action.call(this.$logger, util.format(message, "all files", deviceIdentifier));
 		}
 	}
 }
