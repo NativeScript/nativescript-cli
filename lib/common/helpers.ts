@@ -470,7 +470,7 @@ export async function connectEventuallyUntilTimeout(factory: () => Promise<net.S
 		const connectionTimer = setTimeout(function () {
 			if (!isResolved) {
 				isResolved = true;
-				reject(lastKnownError);
+				reject(lastKnownError || new Error(`Unable to connect for ${timeout}ms`));
 			}
 		}, timeout);
 
