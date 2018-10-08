@@ -1,4 +1,7 @@
+import { getConfig } from 'kinvey-app';
 import { KinveyObservable } from 'kinvey-observable';
+import { get as getSession } from 'kinvey-session';
+import * as Live from 'kinvey-live';
 import {
   execute,
   formatKinveyBaasUrl,
@@ -28,6 +31,15 @@ export class NetworkStore {
 
   get pathname() {
     return `/${NAMESPACE}/${this.appKey}/${this.collectionName}`;
+  }
+
+  get channelName() {
+    return `${this.appKey}.c-${this.collectionName}`;
+  }
+
+  get personalChannelName() {
+    const session = getSession();
+    return `${this.channelName}.u-${session._id}`;
   }
 
   find(query, rawResponse = false) {
@@ -147,5 +159,33 @@ export class NetworkStore {
     }
 
     return response.data;
+  }
+
+  async subscribe(receiver) {
+    const { device } = getConfig();
+    const request = new KinveyRequest({
+      method: RequestMethod.POST,
+      auth: Auth.Session,
+      url: formatKinveyBaasUrl(`${this.pathname}/_subscribe`),
+      body: { deviceId: device.id }
+    });
+    await request.execute();
+    Live.subscribeToChannel(this.channelName, receiver);
+    Live.subscribeToChannel(this.personalChannelName, receiver);
+    return this;
+  }
+
+  async unsubscribe() {
+    const { device } = getConfig();
+    const request = new KinveyRequest({
+      method: RequestMethod.POST,
+      auth: Auth.Session,
+      url: formatKinveyBaasUrl(`${this.pathname}/_unsubscribe`),
+      body: { deviceId: device.id }
+    });
+    await request.execute();
+    Live.unsubscribeFromChannel(this.channelName);
+    Live.unsubscribeFromChannel(this.personalChannelName);
+    return this;
   }
 }
