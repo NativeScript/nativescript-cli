@@ -6,7 +6,6 @@
     "bootstrap": "lerna run bootstrap",
     "build": "lerna run build --parallel",
     "lint": "lerna run lint --parallel",
-    "test": "yarn wsrun test --serial",
     "test:ci": "yarn lint && yarn test"
   },
   "devDependencies": {
@@ -36,6 +35,7 @@
       "packages/kinvey-http-web",
       "packages/kinvey-identity",
       "packages/kinvey-kmd",
+      "packages/kinvey-live",
       "packages/kinvey-observable",
       "packages/kinvey-popup",
       "packages/kinvey-popup-web",
@@ -43,7 +43,7 @@
       "packages/kinvey-session",
       "packages/kinvey-session-web",
       "packages/kinvey-test-utils",
-      "starters/html5"
+      "tests/html5"
     ],
     "nohoist": [
       "**/karma",

@@ -3,7 +3,6 @@ import { KinveyObservable } from 'kinvey-observable';
 import { get as getSession } from 'kinvey-session';
 import * as Live from 'kinvey-live';
 import {
-  execute,
   formatKinveyBaasUrl,
   KinveyRequest,
   RequestMethod,
@@ -165,7 +164,9 @@ export class NetworkStore {
     const { device } = getConfig();
     const request = new KinveyRequest({
       method: RequestMethod.POST,
-      auth: Auth.Session,
+      headers: {
+        Authorization: Auth.Session
+      },
       url: formatKinveyBaasUrl(`${this.pathname}/_subscribe`),
       body: { deviceId: device.id }
     });
@@ -179,7 +180,9 @@ export class NetworkStore {
     const { device } = getConfig();
     const request = new KinveyRequest({
       method: RequestMethod.POST,
-      auth: Auth.Session,
+      headers: {
+        Authorization: Auth.Session
+      },
       url: formatKinveyBaasUrl(`${this.pathname}/_unsubscribe`),
       body: { deviceId: device.id }
     });

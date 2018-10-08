@@ -4,7 +4,7 @@ import { DataStoreCache } from './cache';
 import { Sync } from './sync';
 import { NetworkStore } from './networkstore';
 
-export default class CacheStore {
+export class CacheStore {
   constructor(appKey, collectionName, tag, options = { useDeltaSet: false, useAutoPagination: false, autoSync: true }) {
     this.appKey = appKey;
     this.collectionName = collectionName;

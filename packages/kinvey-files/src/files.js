@@ -35,7 +35,9 @@ export async function find(query = new Query(), options = {}) {
 
   const request = new KinveyRequest({
     method: RequestMethod.GET,
-    auth: Auth.Default,
+    headers: {
+      Authorization: Auth.Default
+    },
     url: formatKinveyBaasUrl(`/${NAMESPACE}/appKey`, queryStringObject)
   });
   const response = await request.execute();
@@ -58,7 +60,9 @@ export async function findById(id, options) {
 
   const request = new KinveyRequest({
     method: RequestMethod.GET,
-    auth: Auth.Default,
+    headers: {
+      Authorization: Auth.Default
+    },
     url: formatKinveyBaasUrl(`/${NAMESPACE}/appKey/${id}`, queryStringObject)
   });
   const response = await request.execute();
@@ -95,8 +99,8 @@ async function saveFileMetadata(metadata) {
 
   const request = new KinveyRequest({
     method: metadata._id ? RequestMethod.PUT : RequestMethod.POST,
-    auth: Auth.Default,
     headers: {
+      Authorization: Auth.Default,
       'X-Kinvey-Content-Type': metadata.mimeType
     },
     url: metadata._id ? formatKinveyBaasUrl(`/${NAMESPACE}/appKey/${metadata._id}`) : formatKinveyBaasUrl(`/${NAMESPACE}/appKey`),
@@ -214,7 +218,9 @@ export async function remove() {
 export async function removeById(id) {
   const request = new KinveyRequest({
     method: RequestMethod.DELETE,
-    auth: Auth.Default,
+    headers: {
+      Authorization: Auth.Default
+    },
     url: formatKinveyBaasUrl(`/${NAMESPACE}/appKey/${id}`)
   });
   const response = await request.execute();

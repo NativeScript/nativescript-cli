@@ -14,9 +14,7 @@
     "bundle": "webpack --config webpack.dev.js",
     "lint": "eslint src",
     "prerelease": "yarn build",
-    "release": "webpack --config webpack.prod.js",
-    "pretest": "node scripts/pretest.js",
-    "test": "karma start"
+    "release": "webpack --config webpack.prod.js"
   },
   "dependencies": {
     "@babel/runtime": "^7.0.0-rc.2",

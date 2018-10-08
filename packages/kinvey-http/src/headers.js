@@ -179,7 +179,7 @@ export class KinveyHeaders extends Headers {
           throw new Error('There is no active user to authorize the request. Please login and retry the request.');
         }
 
-        const kmd = new Kmd(session._kmd);
+        const kmd = new Kmd(session);
         return super.set(name, `Kinvey ${kmd.authtoken}`);
       }
     }

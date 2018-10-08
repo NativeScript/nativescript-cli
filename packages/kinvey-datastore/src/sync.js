@@ -113,7 +113,7 @@ export class Sync {
 
       if (event === SyncEvent.Delete) {
         docs = docs.filter((doc) => {
-          const kmd = new Kmd(doc._kmd);
+          const kmd = new Kmd(doc);
 
           if (kmd.isLocal()) {
             return false;
@@ -193,7 +193,7 @@ export class Sync {
 
               // Save the doc to the backend
               if (event === SyncEvent.Create) {
-                const kmd = new Kmd(doc._kmd);
+                const kmd = new Kmd(doc);
 
                 if (kmd.isLocal()) {
                   local = true;

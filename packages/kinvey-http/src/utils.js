@@ -1,7 +1,7 @@
 import isString from 'lodash/isString';
 
 export function serialize(contentType, body) {
-  if (!isString(body)) {
+  if (body && !isString(body)) {
     if (contentType.indexOf('application/x-www-form-urlencoded') === 0) {
       const str = [];
       Object.keys(body).forEach((key) => {

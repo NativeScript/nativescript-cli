@@ -26,14 +26,14 @@ export class User {
 
   get _acl() {
     if (this.data) {
-      return new Acl(this.data._acl);
+      return new Acl(this.data);
     }
     return undefined;
   }
 
   get _kmd() {
     if (this.data) {
-      return new Kmd(this.data._kmd);
+      return new Kmd(this.data);
     }
     return undefined;
   }

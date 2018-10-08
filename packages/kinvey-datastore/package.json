@@ -18,6 +18,7 @@
     "kinvey-http": "1.0.0",
     "kinvey-kmd": "1.0.0",
     "kinvey-live": "1.0.0",
+    "kinvey-observable": "1.0.0",
     "kinvey-query": "1.0.0",
     "kinvey-session": "1.0.0",
     "lodash": "^4.17.10"
