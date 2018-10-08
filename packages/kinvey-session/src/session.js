@@ -1,7 +1,7 @@
 import isFunction from 'lodash/isFunction';
 import { getConfig } from 'kinvey-app';
 
-const TAG = 'session';
+const KEY = 'active_user';
 
 let store = new Map();
 export function register(sessionStore) {
@@ -12,14 +12,14 @@ export function register(sessionStore) {
 
 export function get() {
   const { appKey } = getConfig();
-  return store.get(`${appKey}${TAG}`);
+  return store.get(`${appKey}.${KEY}`);
 }
 
 export function set(session) {
   const { appKey } = getConfig();
 
   if (session) {
-    store.set(`${appKey}${TAG}`, session);
+    store.set(`${appKey}.${KEY}`, session);
   }
 
   return session;
@@ -29,9 +29,9 @@ export function remove() {
   const { appKey } = getConfig();
 
   if (isFunction(store.delete)) {
-    store.delete(`${appKey}${TAG}`);
+    store.delete(`${appKey}.${KEY}`);
   } else {
-    store.remove(`${appKey}${TAG}`);
+    store.remove(`${appKey}.${KEY}`);
   }
 
   return null;

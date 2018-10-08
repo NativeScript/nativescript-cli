@@ -1,4 +1,5 @@
 import { register as _register } from 'kinvey-http';
+import { register as registerSession } from 'kinvey-session-web';
 import axios from 'axios';
 
 export async function http(request) {
@@ -33,4 +34,5 @@ export async function http(request) {
 
 export function register() {
   _register(http);
+  registerSession();
 }

@@ -1,4 +1,3 @@
-# Build
-dist/
-lib/
-tests/
+dist
+lib
+test

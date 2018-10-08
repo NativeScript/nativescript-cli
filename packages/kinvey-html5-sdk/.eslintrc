@@ -1,9 +1,5 @@
 {
-  "env": {
-    "browser": true
-  },
   "extends": [
-    "kinvey-platform"
-  ],
-  "parser": "babel-eslint"
+    "../../.eslintrc"
+  ]
 }

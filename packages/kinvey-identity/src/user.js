@@ -5,14 +5,14 @@ import isEmpty from 'lodash/isEmpty';
 import { clearCache } from 'kinvey-datastore';
 import { Acl } from 'kinvey-acl';
 import { Kmd } from 'kinvey-kmd';
-import { execute, formatKinveyBaasUrl, KinveyRequest, RequestMethod, Auth } from 'kinvey-http';
+import { formatKinveyBaasUrl, KinveyRequest, RequestMethod, Auth } from 'kinvey-http';
 import { get as getSession, set as setSession, remove as removeSession } from 'kinvey-session';
 import * as MIC from './mic';
 
 const USER_NAMESPACE = 'user';
 const RPC_NAMESPACE = 'rpc';
 
-class User {
+export class User {
   constructor(data = {}) {
     this.data = data;
   }

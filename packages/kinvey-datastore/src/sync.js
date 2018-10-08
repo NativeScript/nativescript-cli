@@ -2,7 +2,7 @@ import times from 'lodash/times';
 import isEmpty from 'lodash/isEmpty';
 import { Kmd } from 'kinvey-kmd';
 import { Query } from 'kinvey-query';
-import { execute, formatKinveyBaasUrl, KinveyRequest, RequestMethod, Auth, KinveyHeaders } from 'kinvey-http';
+import { formatKinveyBaasUrl, KinveyRequest, RequestMethod, Auth, KinveyHeaders } from 'kinvey-http';
 import { NetworkStore } from './networkstore';
 import { DataStoreCache } from './cache';
 
@@ -29,13 +29,13 @@ function serializeQuery(query) {
   return queryObject && !isEmpty(queryObject) ? JSON.stringify(queryObject) : '';
 }
 
-class SyncCache extends Cache {
+class SyncCache extends DataStoreCache {
   constructor(appKey, collectionName, tag) {
     super(`${appKey}${SYNC_CACHE_TAG}`, collectionName, tag);
   }
 }
 
-class QueryCache extends Cache {
+class QueryCache extends DataStoreCache {
   constructor(appKey, collectionName, tag) {
     super(`${appKey}${QUERY_CACHE_TAG}`, collectionName, tag);
   }
@@ -143,7 +143,7 @@ export class Sync {
 
   async push(query) {
     const network = new NetworkStore(this.appKey, this.collectionName);
-    const cache = new Cache(this.appKey, this.collectionName, this.tag);
+    const cache = new DataStoreCache(this.appKey, this.collectionName, this.tag);
     const syncCache = new SyncCache(this.appKey, this.collectionName, this.tag);
     const batchSize = 100;
     const syncDocs = await syncCache.find(query);
@@ -255,7 +255,7 @@ export class Sync {
 
   async pull(query) {
     const network = new NetworkStore(this.appKey, this.collectionName);
-    const cache = new Cache(this.appKey, this.collectionName, this.tag);
+    const cache = new DataStoreCache(this.appKey, this.collectionName, this.tag);
     const queryCache = new QueryCache(this.appKey, this.collectionName, this.tag);
 
     // Find the docs on the backend
@@ -277,7 +277,7 @@ export class Sync {
 
     if (!query || (query.skip === 0 && query.limit === Infinity)) {
       try {
-        const cache = new Cache(this.appKey, this.collectionName, this.tag);
+        const cache = new DataStoreCache(this.appKey, this.collectionName, this.tag);
         const queryCache = new QueryCache(this.appKey, this.collectionName, this.tag);
         const key = serializeQuery(query);
         const queryCacheDoc = await queryCache.findByKey(key);
@@ -328,7 +328,7 @@ export class Sync {
 
   async autopaginate(query, options = {}) {
     const network = new NetworkStore(this.appKey, this.collectionName);
-    const cache = new Cache(this.appKey, this.collectionName, this.tag);
+    const cache = new DataStoreCache(this.appKey, this.collectionName, this.tag);
     const queryCache = new QueryCache(this.appKey, this.collectionName, this.tag);
 
     // Clear the cache

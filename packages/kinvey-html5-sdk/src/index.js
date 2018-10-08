@@ -1,21 +1,37 @@
-import { register as registerCacheStore } from 'kinvey-cache-indexeddb';
-import { register as registerHttpAdapter } from 'kinvey-http-web';
-import { register as registerSessionStore } from 'kinvey-session-web';
-import { register as registerPopup } from 'kinvey-popup-web';
-import * as App from 'kinvey-app';
-import * as Identity from 'kinvey-identity';
+import { Acl } from './acl';
+import { Aggregation } from './aggregation';
+import * as App from './app';
+import * as DataStore from './datastore';
+import { User } from './user';
+import { Kmd } from './kmd';
+import { Query } from './query';
 
-registerCacheStore();
-registerHttpAdapter();
-registerSessionStore();
-registerPopup();
+// SDK
+const KinveySDK = {
+  // Acl
+  Acl,
 
-const Kinvey = {
-  User: Identity
+  // Aggregation
+  Aggregation,
+
+  // DataStore
+  DataStore,
+  DataStoreType: DataStore.DataStoreType,
+
+  // Kmd
+  Kmd,
+
+  // Query
+  Query,
+
+  // User
+  User
 };
 
+// Flatten App onto KinveySDK
 Object.keys(App).forEach((key) => {
-  Kinvey[key] = App[key];
+  KinveySDK[key] = App[key];
 });
 
-module.exports = Kinvey;
+// Export
+module.exports = KinveySDK;
