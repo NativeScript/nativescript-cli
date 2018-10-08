@@ -46,7 +46,7 @@ export class PreviewSdkService implements IPreviewSdkService {
 			pubnubSubscribeKey: PubnubKeys.SUBSCRIBE_KEY,
 			msvKey: "cli",
 			msvEnv: this.$config.PREVIEW_APP_ENVIRONMENT,
-			showLoadingPage: true,
+			showLoadingPage: false,
 			callbacks: this.getCallbacks(),
 			getInitialFiles
 		};
