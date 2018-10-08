@@ -1,8 +1,10 @@
 import { MessagingService, Config, Device, DeviceConnectedMessage, SdkCallbacks, ConnectedDevices, FilesPayload } from "nativescript-preview-sdk";
 import { PubnubKeys } from "./preview-app-constants";
+import { DEVICE_LOG_EVENT_NAME } from "../../../common/constants";
+import { EventEmitter } from "events";
 const pako = require("pako");
 
-export class PreviewSdkService implements IPreviewSdkService {
+export class PreviewSdkService extends EventEmitter implements IPreviewSdkService {
 	private static MAX_FILES_UPLOAD_BYTE_LENGTH = 15 * 1024 * 1024; // In MBs
 	private messagingService: MessagingService = null;
 	private instanceId: string = null;
@@ -11,6 +13,7 @@ export class PreviewSdkService implements IPreviewSdkService {
 	constructor(private $logger: ILogger,
 		private $httpClient: Server.IHttpClient,
 		private $config: IConfiguration) {
+			super();
 	}
 
 	public getQrCodeUrl(options: IHasUseHotModuleReloadOption): string {
@@ -58,7 +61,9 @@ export class PreviewSdkService implements IPreviewSdkService {
 				this.$logger.trace("Received onLogSdkMessage message: ", log);
 			},
 			onConnectedDevicesChange: (connectedDevices: ConnectedDevices) => ({ }),
-			onLogMessage: (log: string, deviceName: string) => {
+			onLogMessage: (log: string, deviceName: string, deviceId: string) => {
+				const device = _.find(this.connectedDevices, { id: deviceId});
+				this.emit(DEVICE_LOG_EVENT_NAME, log, deviceId, device.platform);
 				this.$logger.info(`LOG from device ${deviceName}: ${log}`);
 			},
 			onRestartMessage: () => {
@@ -69,7 +74,7 @@ export class PreviewSdkService implements IPreviewSdkService {
 			},
 			onDeviceConnectedMessage: (deviceConnectedMessage: DeviceConnectedMessage) => ({ }),
 			onDeviceConnected: (device: Device) => {
-				if (!_.includes(this.connectedDevices, device)) {
+				if (!_.find(this.connectedDevices, {id: device.id})) {
 					this.connectedDevices.push(device);
 				}
 			},

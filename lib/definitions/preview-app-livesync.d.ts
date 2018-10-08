@@ -1,4 +1,5 @@
 import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
+import { EventEmitter } from "events";
 
 declare global {
 	interface IPreviewAppLiveSyncService {
@@ -9,7 +10,7 @@ declare global {
 
 	interface IPreviewAppLiveSyncData extends IProjectDir, IAppFilesUpdaterOptionsComposition, IEnvOptions { }
 
-	interface IPreviewSdkService {
+	interface IPreviewSdkService extends EventEmitter {
 		getQrCodeUrl(options: IHasUseHotModuleReloadOption): string;
 		connectedDevices: Device[];
 		initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>): void;

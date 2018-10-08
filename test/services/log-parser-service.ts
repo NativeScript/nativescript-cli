@@ -21,6 +21,9 @@ class DeveiceLogProviderMock extends EventEmitter {
 function createTestInjector() {
 	const injector = new Yok();
 	injector.register("deviceLogProvider", DeveiceLogProviderMock);
+	injector.register("previewSdkService", {
+		on: () => ({})
+	});
 	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	injector.register("logParserService", LogParserService);
 	injector.register("devicesService", {

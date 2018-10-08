@@ -16,7 +16,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 
 		if (data) {
 			this.emit('data', deviceIdentifier, data);
-			this.emit(DEVICE_LOG_EVENT_NAME, data, deviceIdentifier);
+			this.emit(DEVICE_LOG_EVENT_NAME, data, deviceIdentifier, platform);
 		}
 	}
 

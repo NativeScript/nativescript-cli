@@ -178,6 +178,7 @@ $injector.requirePublic("assetsGenerationService", "./services/assets-generation
 $injector.require("filesHashService", "./services/files-hash-service");
 $injector.require("logParserService", "./services/log-parser-service");
 $injector.require("iOSDebuggerPortService", "./services/ios-debugger-port-service");
+$injector.require("hmrStatusService", "./services/hmr-status-service");
 
 $injector.require("pacoteService", "./services/pacote-service");
 $injector.require("qrCodeTerminalService", "./services/qr-code-terminal-service");

@@ -38,6 +38,9 @@ function createTestInjector() {
 	injector.register("iOSProjectService", {
 		getFrameworkVersion: () => "4.1.0"
 	});
+	injector.register("previewSdkService", {
+		on: () => () => ({})
+	});
 	injector.register("iOSSimResolver", {
 		iOSSim: () => ({})
 	});
