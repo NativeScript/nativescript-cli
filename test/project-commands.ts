@@ -1,16 +1,37 @@
 import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import { CreateProjectCommand } from "../lib/commands/create-project";
-import { StringParameterBuilder } from "../lib/common/command-params";
+import { StringCommandParameter } from "../lib/common/command-params";
+import helpers = require("../lib/common/helpers");
 import * as constants from "../lib/constants";
 import { assert } from "chai";
+import { PrompterStub } from "./stubs";
 
 let selectedTemplateName: string;
 let isProjectCreated: boolean;
+let createProjectCalledWithForce: boolean;
+let validateProjectCallsCount: number;
 const dummyArgs = ["dummyArgsString"];
+const expectedFlavorChoices = [
+	{ key: "Angular", description: "Learn more at https://angular.io/" },
+	{ key: "Vue.js", description: "Learn more at https://vuejs.org/" },
+	{ key: "Plain TypeScript", description: "Learn more at https://www.typescriptlang.org/" },
+	{ key: "Plain JavaScript", description: "Learn more at https://www.javascript.com/" }
+];
+const expectedTemplateChoices = [
+	{ key: "Hello World", description: "A Hello World app" },
+	{ key: "SideDrawer", description: "An app with pre-built pages that uses a drawer for navigation" },
+	{ key: "Tabs", description: "An app with pre-built pages that uses tabs for navigation" }
+];
 
 class ProjectServiceMock implements IProjectService {
+	async validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }): Promise<string> {
+		validateProjectCallsCount++;
+		return null;
+	}
+
 	async createProject(projectOptions: IProjectSettings): Promise<ICreateProjectData> {
+		createProjectCalledWithForce = projectOptions.force;
 		selectedTemplateName = projectOptions.template;
 		isProjectCreated = true;
 		return null;
@@ -41,7 +62,8 @@ function createTestInjector() {
 		template: undefined
 	});
 	testInjector.register("createCommand", CreateProjectCommand);
-	testInjector.register("stringParameterBuilder", StringParameterBuilder);
+	testInjector.register("stringParameter", StringCommandParameter);
+	testInjector.register("prompter", PrompterStub);
 
 	return testInjector;
 }
@@ -51,9 +73,40 @@ describe("Project commands tests", () => {
 	let options: IOptions;
 	let createProjectCommand: ICommand;
 
+	function setupAnswers(opts: {
+		projectNameAnswer?: string,
+		flavorAnswer?: string,
+		templateAnswer?: string,
+	}) {
+		const prompterStub = <stubs.PrompterStub>testInjector.resolve("$prompter");
+		const answers: IDictionary<string> = {};
+		const questionChoices: IDictionary<any[]> = {};
+		if (opts.projectNameAnswer) {
+			answers["First, what will be the name of your app?"] = opts.projectNameAnswer;
+		}
+		if (opts.flavorAnswer) {
+			const flavorQuestion = opts.projectNameAnswer ? "Next" : "First" + ", which flavor would you like to use?";
+			answers[flavorQuestion] = opts.flavorAnswer;
+			questionChoices[flavorQuestion] = expectedFlavorChoices;
+		}
+		if (opts.templateAnswer) {
+			const templateQuestion = opts.projectNameAnswer ? "Finally" : "Next" + ", which template would you like to start from?";
+			answers[templateQuestion] = opts.templateAnswer;
+			questionChoices[templateQuestion] = expectedTemplateChoices;
+		}
+
+		prompterStub.expect({
+			answers,
+			questionChoices
+		});
+	}
+
 	beforeEach(() => {
 		testInjector = createTestInjector();
+		helpers.isInteractive = () => true;
 		isProjectCreated = false;
+		validateProjectCallsCount = 0;
+		createProjectCalledWithForce = false;
 		selectedTemplateName = undefined;
 		options = testInjector.resolve("$options");
 		createProjectCommand = testInjector.resolve("$createCommand");
@@ -66,6 +119,8 @@ describe("Project commands tests", () => {
 			await createProjectCommand.execute(dummyArgs);
 
 			assert.isTrue(isProjectCreated);
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
 		});
 
 		it("should not fail when using only --tsc.", async () => {
@@ -74,6 +129,8 @@ describe("Project commands tests", () => {
 			await createProjectCommand.execute(dummyArgs);
 
 			assert.isTrue(isProjectCreated);
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
 		});
 
 		it("should not fail when using only --template.", async () => {
@@ -82,6 +139,8 @@ describe("Project commands tests", () => {
 			await createProjectCommand.execute(dummyArgs);
 
 			assert.isTrue(isProjectCreated);
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
 		});
 
 		it("should set the template name correctly when used --ng.", async () => {
@@ -90,6 +149,8 @@ describe("Project commands tests", () => {
 			await createProjectCommand.execute(dummyArgs);
 
 			assert.deepEqual(selectedTemplateName, constants.ANGULAR_NAME);
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
 		});
 
 		it("should set the template name correctly when used --tsc.", async () => {
@@ -98,22 +159,8 @@ describe("Project commands tests", () => {
 			await createProjectCommand.execute(dummyArgs);
 
 			assert.deepEqual(selectedTemplateName, constants.TYPESCRIPT_NAME);
-		});
-
-		it("should not set the template name when --ng is not used.", async () => {
-			options.ng = false;
-
-			await createProjectCommand.execute(dummyArgs);
-
-			assert.isUndefined(selectedTemplateName);
-		});
-
-		it("should not set the template name when --tsc is not used.", async () => {
-			options.tsc = false;
-
-			await createProjectCommand.execute(dummyArgs);
-
-			assert.isUndefined(selectedTemplateName);
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
 		});
 
 		it("should fail when --ng and --template are used simultaneously.", async () => {
@@ -128,6 +175,44 @@ describe("Project commands tests", () => {
 			options.template = "tsc";
 
 			await assert.isRejected(createProjectCommand.execute(dummyArgs));
+		});
+
+		it("should ask for a template when ng flavor is selected.", async () => {
+			setupAnswers({ flavorAnswer: constants.NgFlavorName, templateAnswer: "Hello World" });
+
+			await createProjectCommand.execute(dummyArgs);
+
+			assert.deepEqual(selectedTemplateName, "tns-template-hello-world-ng");
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
+		});
+
+		it("should ask for a template when ts flavor is selected.", async () => {
+			setupAnswers({ flavorAnswer: constants.TsFlavorName, templateAnswer:  "SideDrawer" });
+
+			await createProjectCommand.execute(dummyArgs);
+
+			assert.deepEqual(selectedTemplateName, "tns-template-drawer-navigation-ts");
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
+		});
+
+		it("should ask for a template when js flavor is selected.", async () => {
+			setupAnswers({ flavorAnswer: constants.JsFlavorName, templateAnswer:  "Tabs" });
+
+			await createProjectCommand.execute(dummyArgs);
+
+			assert.deepEqual(selectedTemplateName, "tns-template-tab-navigation");
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
+		});
+
+		it("should select the default vue template when the vue flavor is selected.", async () => {
+			setupAnswers({ flavorAnswer: constants.VueFlavorName });
+
+			await createProjectCommand.execute(dummyArgs);
+
+			assert.deepEqual(selectedTemplateName, "https://github.com/NativeScript/template-blank-vue/tarball/0.9.0");
 		});
 	});
 });

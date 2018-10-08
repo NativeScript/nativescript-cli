@@ -21,24 +21,27 @@ export class ProjectService implements IProjectService {
 		private $staticConfig: IStaticConfig,
 		private $npmInstallationManager: INpmInstallationManager) { }
 
-	@exported("projectService")
-	public async createProject(projectOptions: IProjectSettings): Promise<ICreateProjectData> {
-		let projectName = projectOptions.projectName;
-
+	public async validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }) : Promise<string> {
+		let projectName = opts.projectName;
 		if (!projectName) {
 			this.$errors.fail("You must specify <App name> when creating a new project.");
 		}
 
-		projectName = await this.$projectNameService.ensureValidName(projectName, { force: projectOptions.force });
-
-		const selectedPath = path.resolve(projectOptions.pathToProject || ".");
-		const projectDir = path.join(selectedPath, projectName);
-
-		this.$fs.createDirectory(projectDir);
-
+		projectName = await this.$projectNameService.ensureValidName(projectName, { force: opts.force });
+		const projectDir = this.getValidProjectDir(opts.pathToProject, projectName);
 		if (this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir)) {
 			this.$errors.fail("Path already exists and is not empty %s", projectDir);
 		}
+
+		return projectName;
+	}
+
+	@exported("projectService")
+	public async createProject(projectOptions: IProjectSettings): Promise<ICreateProjectData> {
+		const projectName = await this.validateProjectName({ projectName: projectOptions.projectName, force: projectOptions.force, pathToProject: projectOptions.pathToProject });
+		const projectDir = this.getValidProjectDir(projectOptions.pathToProject, projectName);
+
+		this.$fs.createDirectory(projectDir);
 
 		const appId = projectOptions.appId || this.$projectHelper.generateDefaultAppId(projectName, constants.DEFAULT_APP_IDENTIFIER_PREFIX);
 		this.createPackageJson(projectDir, appId);
@@ -46,9 +49,28 @@ export class ProjectService implements IProjectService {
 
 		const projectCreationData = await this.createProjectCore({ template: projectOptions.template, projectDir, ignoreScripts: projectOptions.ignoreScripts, appId: appId, projectName });
 
-		this.$logger.printMarkdown("Project `%s` was successfully created.", projectCreationData.projectName);
+		this.$logger.info();
+		this.$logger.printMarkdown("__Project `%s` was successfully created.__", projectName);
 
 		return projectCreationData;
+	}
+
+	@exported("projectService")
+	public isValidNativeScriptProject(pathToProject?: string): boolean {
+		try {
+			const projectData = this.$projectDataService.getProjectData(pathToProject);
+
+			return !!projectData && !!projectData.projectDir && !!(projectData.projectIdentifiers.ios && projectData.projectIdentifiers.android);
+		} catch (e) {
+			return false;
+		}
+	}
+
+	private getValidProjectDir(pathToProject: string, projectName: string): string {
+		const selectedPath = path.resolve(pathToProject || ".");
+		const projectDir = path.join(selectedPath, projectName);
+
+		return projectDir;
 	}
 
 	private async createProjectCore(projectCreationSettings: IProjectCreationSettings): Promise<ICreateProjectData> {
@@ -96,17 +118,6 @@ export class ProjectService implements IProjectService {
 		});
 
 		return { projectName, projectDir };
-	}
-
-	@exported("projectService")
-	public isValidNativeScriptProject(pathToProject?: string): boolean {
-		try {
-			const projectData = this.$projectDataService.getProjectData(pathToProject);
-
-			return !!projectData && !!projectData.projectDir && !!(projectData.projectIdentifiers.ios && projectData.projectIdentifiers.android);
-		} catch (e) {
-			return false;
-		}
 	}
 
 	private async extractTemplate(projectDir: string, templateData: ITemplateData): Promise<void> {

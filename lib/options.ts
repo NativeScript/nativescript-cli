@@ -62,8 +62,15 @@ export class Options {
 			port: { type: OptionType.Number },
 			copyTo: { type: OptionType.String },
 			platformTemplate: { type: OptionType.String },
+			js: { type: OptionType.Boolean },
+			javascript: { type: OptionType.Boolean },
 			ng: { type: OptionType.Boolean },
+			angular: { type: OptionType.Boolean },
+			vue: { type: OptionType.Boolean },
+			vuejs: { type: OptionType.Boolean },
 			tsc: { type: OptionType.Boolean },
+			ts: { type: OptionType.Boolean },
+			typescript: { type: OptionType.Boolean },
 			androidTypings: { type: OptionType.Boolean },
 			bundle: { type: OptionType.String },
 			all: { type: OptionType.Boolean },
@@ -226,6 +233,22 @@ export class Options {
 		// if justlaunch is set, it takes precedence over the --watch flag and the default true value
 		if (this.argv.justlaunch) {
 			this.argv.watch = false;
+		}
+
+		if (this.argv.ts || this.argv.typescript) {
+			this.argv.tsc = true;
+		}
+
+		if (this.argv.angular) {
+			this.argv.ng = true;
+		}
+
+		if (this.argv.vuejs) {
+			this.argv.vue = true;
+		}
+
+		if (this.argv.javascript) {
+			this.argv.js = true;
 		}
 
 		// Default to "nativescript-dev-webpack" if only `--bundle` is passed

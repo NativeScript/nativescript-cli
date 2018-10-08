@@ -20,11 +20,11 @@ export class ProjectData implements IProjectData {
 			isDefaultProjectType: true
 		},
 		{
-			type: "Angular",
+			type: constants.NgFlavorName,
 			requiredDependencies: ["@angular/core", "nativescript-angular"]
 		},
 		{
-			type: "Vue.js",
+			type: constants.VueFlavorName,
 			requiredDependencies: ["nativescript-vue"]
 		},
 		{
