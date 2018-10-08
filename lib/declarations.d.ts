@@ -523,7 +523,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	inspector: boolean; // the counterpart to --chrome
 	background: string;
 	hmr: boolean;
-
+	link: boolean;
 }
 
 interface IEnvOptions {

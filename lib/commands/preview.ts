@@ -7,12 +7,9 @@ export class PreviewCommand implements ICommand {
 		private $networkConnectivityValidator: INetworkConnectivityValidator,
 		private $projectData: IProjectData,
 		private $options: IOptions,
-		private $playgroundQrCodeGenerator: IPlaygroundQrCodeGenerator,
-		private $previewCommandHelper: IPreviewCommandHelper) { }
+		private $playgroundQrCodeGenerator: IPlaygroundQrCodeGenerator) { }
 
-	public async execute(args: string[]): Promise<void> {
-		this.$previewCommandHelper.run();
-
+	public async execute(): Promise<void> {
 		await this.$liveSyncService.liveSync([], {
 			syncToPreviewApp: true,
 			projectDir: this.$projectData.projectDir,
@@ -26,7 +23,7 @@ export class PreviewCommand implements ICommand {
 			useHotModuleReload: this.$options.hmr
 		});
 
-		await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp({ useHotModuleReload: this.$options.hmr });
+		await this.$playgroundQrCodeGenerator.generateQrCode({ useHotModuleReload: this.$options.hmr, link: this.$options.link });
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

@@ -123,7 +123,6 @@ $injector.requireCommand("platform|clean", "./commands/platform-clean");
 $injector.require("bundleValidatorHelper", "./helpers/bundle-validator-helper");
 $injector.require("liveSyncCommandHelper", "./helpers/livesync-command-helper");
 $injector.require("deployCommandHelper", "./helpers/deploy-command-helper");
-$injector.require("previewCommandHelper", "./helpers/preview-command-helper");
 
 $injector.requirePublicClass("localBuildService", "./services/local-build-service");
 $injector.requirePublicClass("liveSyncService", "./services/livesync/livesync-service");
