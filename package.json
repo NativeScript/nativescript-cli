@@ -40,8 +40,7 @@
       "packages/kinvey-query",
       "packages/kinvey-session",
       "packages/kinvey-session-web",
-
-      "starters/html5/webpack"
+      "starters/html5"
     ],
     "nohoist": [
       "**/karma",
