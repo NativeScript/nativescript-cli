@@ -22,7 +22,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		"android-27",
 		"android-28",
 	];
-	private static MIN_REQUIRED_COMPILE_TARGET = 22;
+	private static MIN_REQUIRED_COMPILE_TARGET = 28;
 	private static REQUIRED_BUILD_TOOLS_RANGE_PREFIX = ">=23";
 	private static VERSION_REGEX = /((\d+\.){2}\d+)/;
 	private static MIN_JAVA_VERSION = "1.8.0";
