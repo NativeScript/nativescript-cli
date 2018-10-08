@@ -4,6 +4,7 @@ import * as path from "path";
 import * as log4js from "log4js";
 import { ChildProcess } from "child_process";
 import { DebugServiceBase } from "./debug-service-base";
+import { IOS_LOG_PREDICATE } from "../common/constants";
 import { CONNECTION_ERROR_EVENT_NAME, AWAIT_NOTIFICATION_TIMEOUT_SECONDS } from "../constants";
 import { getPidFromiOSSimulatorLogs } from "../common/helpers";
 const inspectorAppName = "NativeScript Inspector.app";
@@ -15,7 +16,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	private _sockets: net.Socket[] = [];
 	private _socketProxy: any;
 
-	constructor(protected device: Mobile.IDevice,
+	constructor(protected device: Mobile.IiOSDevice,
 		protected $devicesService: Mobile.IDevicesService,
 		private $platformService: IPlatformService,
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
@@ -60,7 +61,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 				this.$deviceLogProvider.setProjectNameForDevice(debugData.deviceIdentifier, projectName);
 			}
 
-			await this.device.openDeviceLogStream();
+			await this.device.openDeviceLogStream({ predicate: IOS_LOG_PREDICATE });
 		}
 
 		await this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(this.device, debugData, debugOptions);

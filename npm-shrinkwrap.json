@@ -3814,9 +3814,9 @@
       }
     },
     "ios-sim-portable": {
-      "version": "4.0.3",
-      "resolved": "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-4.0.3.tgz",
-      "integrity": "sha512-vgNif6/akztliDeh9iUxBnrhoFMEGHbnXms1sIyJWBd5B3gQEnWXpe0v0hqsJtUhezKqHfjrZs4ksQjHZLOzKA==",
+      "version": "4.0.4",
+      "resolved": "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-4.0.4.tgz",
+      "integrity": "sha512-B8Wu31MVRjTxJJwOXj8UYby7rM4u1xnH3fOisZx4AZcOkqdBzgDOkByKD5Sd1le2a2zkpgThD4Mw4wW0HXeu0w==",
       "requires": {
         "bplist-parser": "https://github.com/telerik/node-bplist-parser/tarball/master",
         "colors": "0.6.2",
@@ -3892,7 +3892,7 @@
         },
         "yargs-parser": {
           "version": "2.4.1",
-          "resolved": "https://registry.npmjs.org/yargs-parser/-/yargs-parser-2.4.1.tgz",
+          "resolved": "http://registry.npmjs.org/yargs-parser/-/yargs-parser-2.4.1.tgz",
           "integrity": "sha1-hVaN488VD/SfpRgl8DqMiA3cxcQ=",
           "requires": {
             "camelcase": "^3.0.0",

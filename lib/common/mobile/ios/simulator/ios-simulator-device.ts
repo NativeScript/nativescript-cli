@@ -55,6 +55,8 @@ export class IOSSimulator implements Mobile.IiOSSimulator {
 
 	@cache()
 	public async openDeviceLogStream(options?: Mobile.IiOSLogStreamOptions): Promise<void> {
+		options = options || {};
+		options.predicate = options.hasOwnProperty("predicate") ? options.predicate : constants.IOS_LOG_PREDICATE;
 		return this.$iOSSimulatorLogProvider.startLogProcess(this.simulator.id, options);
 	}
 }

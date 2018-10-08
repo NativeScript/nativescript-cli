@@ -1,5 +1,3 @@
-import { IOS_LOG_PREDICATE } from "../../constants";
-
 export class OpenDeviceLogStreamCommand implements ICommand {
 	private static NOT_SPECIFIED_DEVICE_ERROR_MESSAGE = "More than one device found. Specify device explicitly.";
 
@@ -25,7 +23,7 @@ export class OpenDeviceLogStreamCommand implements ICommand {
 			this.$errors.fail(OpenDeviceLogStreamCommand.NOT_SPECIFIED_DEVICE_ERROR_MESSAGE);
 		}
 
-		const action = (device: Mobile.IiOSDevice) => device.openDeviceLogStream({predicate: IOS_LOG_PREDICATE});
+		const action = (device: Mobile.IiOSDevice) => device.openDeviceLogStream();
 		await this.$devicesService.execute(action);
 	}
 }
