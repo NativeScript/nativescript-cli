@@ -129,10 +129,6 @@ export class HelpService implements IHelpService {
 
 	public async showCommandLineHelp(commandData: ICommandData): Promise<void> {
 		const help = await this.getCommandLineHelpForCommand(commandData);
-		if (this.$staticConfig.FULL_CLIENT_NAME) {
-			this.$logger.info(this.$staticConfig.FULL_CLIENT_NAME.green.bold + EOL);
-		}
-
 		this.$logger.printMarkdown(help);
 	}
 
