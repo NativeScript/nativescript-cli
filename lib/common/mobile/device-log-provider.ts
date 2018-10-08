@@ -12,7 +12,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		const data = this.$logFilter.filterData(platform, lineText, loggingOptions);
 		if (data) {
 			this.$logger.write(data);
-			this.emit(DEVICE_LOG_EVENT_NAME, lineText, deviceIdentifier);
+			this.emit(DEVICE_LOG_EVENT_NAME, lineText, deviceIdentifier, platform);
 		}
 	}
 

@@ -669,7 +669,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 										await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
 
 										if (liveSyncData.useHotModuleReload && currentHmrData.hash) {
-											const status = await this.$hmrStatusService.awaitHmrStatus(device.deviceInfo.identifier, currentHmrData.hash);
+											const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, currentHmrData.hash);
 											if (status === HmrConstants.HMR_ERROR_STATUS) {
 												settings.filesToSync = currentHmrData.fallbackFiles[device.deviceInfo.platform];
 												liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);

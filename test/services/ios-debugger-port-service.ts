@@ -39,7 +39,7 @@ function createTestInjector() {
 		getFrameworkVersion: () => "4.1.0"
 	});
 	injector.register("previewSdkService", {
-		on: () => {}
+		on: () => () => ({})
 	});
 	injector.register("iOSSimResolver", {
 		iOSSim: () => ({})

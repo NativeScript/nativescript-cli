@@ -22,7 +22,7 @@ function createTestInjector() {
 	const injector = new Yok();
 	injector.register("deviceLogProvider", DeveiceLogProviderMock);
 	injector.register("previewSdkService", {
-		on: () => {}
+		on: () => ({})
 	});
 	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	injector.register("logParserService", LogParserService);

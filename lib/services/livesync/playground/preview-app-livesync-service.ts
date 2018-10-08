@@ -57,17 +57,18 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 					const platformData = this.$platformsData.getPlatformData(platform, projectData);
 					const currentHmrData = _.cloneDeep(hmrData);
 					const filesToSync = _.cloneDeep(filesToSyncMap[platform]);
-					promise = this.applyChanges(platformData, projectData, filesToSync, data.appFilesUpdaterOptions.useHotModuleReload);
+					promise = this.applyChanges(platformData, projectData, filesToSync, { useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload});
 					await promise;
 
 					if (data.appFilesUpdaterOptions.useHotModuleReload && currentHmrData.hash) {
 						const devices = _.filter(this.$previewSdkService.connectedDevices, { platform: platform.toLowerCase() });
-						_.forEach(devices, async (previewDevice: Device) => {
-							const status = await this.$hmrStatusService.awaitHmrStatus(previewDevice.id, currentHmrData.hash);
+
+						await Promise.all(_.map(devices, async (previewDevice: Device) => {
+							const status = await this.$hmrStatusService.getHmrStatus(previewDevice.id, currentHmrData.hash);
 							if (status === HmrConstants.HMR_ERROR_STATUS) {
-								await this.applyChanges(platformData, projectData, currentHmrData.fallbackFiles[platform], false);
+								await this.applyChanges(platformData, projectData, currentHmrData.fallbackFiles[platform], { useHotModuleReload: false }, previewDevice.id);
 							}
-						});
+						}));
 					}
 				});
 			filesToSyncMap[platform] = [];
@@ -124,7 +125,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 
 			let result: FilesPayload = null;
 			if (files && files.length) {
-				result = await this.applyChanges(platformData, projectData, files, data.appFilesUpdaterOptions.useHotModuleReload);
+				result = await this.applyChanges(platformData, projectData, files, { useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload});
 				this.$logger.info(`Successfully synced ${result.files.map(filePayload => filePayload.file.yellow)} for platform ${platform}.`);
 			} else {
 				const hmrMode = data.appFilesUpdaterOptions.useHotModuleReload ? 1 : 0;
@@ -138,7 +139,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		}
 	}
 
-	private async applyChanges(platformData: IPlatformData, projectData: IProjectData, files: string[], useHotModuleReload: Boolean, deviceId?: string): Promise<FilesPayload> {
+	private async applyChanges(platformData: IPlatformData, projectData: IProjectData, files: string[], { useHotModuleReload }: {useHotModuleReload: Boolean}, deviceId?: string): Promise<FilesPayload> {
 		const hmrMode = useHotModuleReload ? 1 : 0;
 		const payloads = this.getFilesPayload(platformData, projectData, hmrMode, _(files).uniq().value(), deviceId);
 		await this.$previewSdkService.applyChanges(payloads);

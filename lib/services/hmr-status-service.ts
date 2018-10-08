@@ -7,19 +7,24 @@ export class HmrStatusService implements IHmrStatusService {
 	public static SUCCESS_MESSAGE = "Successfully applied update with";
 	public static FAILED_MESSAGE = "Cannot apply update with";
 	private hashOperationStatuses: IDictionary<any> = {};
+	private intervals: IDictionary<any> = {};
 
 	constructor(private $logParserService: ILogParserService,
-		private $logger: ILogger) { }
+		private $processService: IProcessService,
+		private $logger: ILogger) {
+			this.$processService.attachToProcessExitSignals(this, this.dispose);
+		}
 
-	public awaitHmrStatus(deviceId: string, operationHash: string): Promise<number> {
+	public getHmrStatus(deviceId: string, operationHash: string): Promise<number> {
 		return new Promise((resolve, reject) => {
 			const key = `${deviceId}${operationHash}`;
 			let retryCount = 40;
 
-			const interval = setInterval(() => {
+			this.intervals[key] = setInterval(() => {
 				const status = this.getStatusByKey(key);
 				if (status || retryCount === 0) {
-					clearInterval(interval);
+					clearInterval(this.intervals[key]);
+					this.intervals[key] = null;
 					resolve(status);
 				} else {
 					retryCount--;
@@ -80,6 +85,13 @@ export class HmrStatusService implements IHmrStatusService {
 		}
 
 		this.hashOperationStatuses[key].status = status;
+	}
+
+	private dispose() {
+		_.forEach(this.intervals, (value, key) => {
+			clearInterval(value);
+			this.intervals[key] = null;
+		});
 	}
 }
 

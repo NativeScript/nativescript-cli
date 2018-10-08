@@ -62,7 +62,8 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			},
 			onConnectedDevicesChange: (connectedDevices: ConnectedDevices) => ({ }),
 			onLogMessage: (log: string, deviceName: string, deviceId: string) => {
-				this.emit(DEVICE_LOG_EVENT_NAME, log, deviceId);
+				const device = _.find(this.connectedDevices, { id: deviceId});
+				this.emit(DEVICE_LOG_EVENT_NAME, log, deviceId, device.platform);
 				this.$logger.info(`LOG from device ${deviceName}: ${log}`);
 			},
 			onRestartMessage: () => {
@@ -73,7 +74,7 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			},
 			onDeviceConnectedMessage: (deviceConnectedMessage: DeviceConnectedMessage) => ({ }),
 			onDeviceConnected: (device: Device) => {
-				if (!_.includes(this.connectedDevices, device)) {
+				if (!_.find(this.connectedDevices, {id: device.id})) {
 					this.connectedDevices.push(device);
 				}
 			},
