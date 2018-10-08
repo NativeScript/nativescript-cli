@@ -26,4 +26,4 @@ log.getLogger = function getLoggerOverride(name) {
 };
 
 // Export
-export default log;
+export { log as logger };

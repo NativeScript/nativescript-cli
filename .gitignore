@@ -32,11 +32,3 @@ Desktop.ini
 
 # Mac
 .DS_Store
-
-# Generated test files
-packages/kinvey-html5-sdk/test/index.html
-packages/kinvey-nativescript-sdk/TestApp/
-packages/kinvey-phonegap-sdk/KinveyCordovaTestApp/
-packages/kinvey-phonegap-sdk/test/config.js
-packages/kinvey-nativescript-sdk/test/config.js
-packages/kinvey-html5-sdk/test/config.js

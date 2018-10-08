@@ -1,5 +1,9 @@
 {
   "extends": [
-    "../../.eslintrc"
-  ]
+    "kinvey-platform"
+  ],
+  "parser": "babel-eslint",
+  "rules": {
+    "import/prefer-default-export": "off"
+  }
 }
