@@ -57,17 +57,7 @@ export class HostInfo implements IHostInfo {
 		try {
 			const systemProfileOutput = await this.$childProcess.exec(systemProfileCommand);
 
-			// Output of command is similar to:
-			/*
-Software:
-
-    System Software Overview:
-
-      System Version: macOS 10.13.3 (17D47)
-      Kernel Version: Darwin 17.4.0
-      Time since boot: 68 days 22:12
-*/
-			const versionRegExp = /System Version:\s+?macOS\s+?(\d+\.\d+)\.\d+\s+/g;
+			const versionRegExp = /System Version:\s+?macOS\s+?(\d+\.\d+)(\.\d+)?\s+/g;
 			const regExpMatchers = versionRegExp.exec(systemProfileOutput);
 			const macOSVersion = regExpMatchers && regExpMatchers[1];
 			if (macOSVersion) {

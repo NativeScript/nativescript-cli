@@ -42,6 +42,10 @@ export class LoggerStub implements ILogger {
 	}
 
 	printMarkdown(message: string): void { }
+
+	printOnStderr(...args: string[]): void {
+		// nothing to do here
+	}
 }
 
 export class ProcessServiceStub implements IProcessService {

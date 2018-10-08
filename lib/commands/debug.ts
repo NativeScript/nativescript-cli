@@ -135,6 +135,7 @@ export class DebugIOSCommand implements ICommand {
 		private $platformService: IPlatformService,
 		private $options: IOptions,
 		private $injector: IInjector,
+		private $sysInfo: ISysInfo,
 		private $projectData: IProjectData,
 		$iosDeviceOperations: IIOSDeviceOperations,
 		$iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider) {
@@ -161,6 +162,12 @@ export class DebugIOSCommand implements ICommand {
 			this.$errors.fail(`Timeout option specifies the seconds NativeScript CLI will wait to find the inspector socket port from device's logs. Must be a number.`);
 		}
 
+		if (this.$options.inspector) {
+			const macOSWarning = await this.$sysInfo.getMacOSWarningMessage();
+			if (macOSWarning && macOSWarning.severity === SystemWarningsSeverity.high) {
+				this.$errors.fail(`You cannot use NativeScript Inspector on this OS. To use it, please update your OS.`);
+			}
+		}
 		const result = await this.debugPlatformCommand.canExecute(args);
 		return result;
 	}

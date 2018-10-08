@@ -148,6 +148,12 @@ export class Logger implements ILogger {
 		this.write(formattedMessage);
 	}
 
+	public printOnStderr(...args: string[]): void {
+		if (process.stderr) {
+			process.stderr.write(util.format.apply(null, args));
+		}
+	}
+
 	private getPasswordEncodedArguments(args: string[]): string[] {
 		return _.map(args, argument => {
 			if (typeof argument === 'string' && !!argument.match(/password/i)) {

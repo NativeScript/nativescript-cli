@@ -41,6 +41,10 @@ export class CommonLoggerStub implements ILogger {
 	printMarkdown(message: string): void {
 		this.output += message;
 	}
+
+	printOnStderr(...args: string[]): void {
+		// nothing to do here
+	}
 }
 
 export class ErrorsStub implements IErrors {

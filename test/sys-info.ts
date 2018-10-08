@@ -32,8 +32,8 @@ describe("sysInfo", () => {
 	};
 
 	describe("getSystemWarnings", () => {
-		const getSystemWarnings = async (opts?: { nodeJsWarning?: string, macOSDeprecatedVersion?: string }): Promise<string[]> => {
-			sandbox.stub(verifyNodeVersion, "getNodeWarning").returns(opts && opts.nodeJsWarning);
+		const getSystemWarnings = async (opts?: { nodeJsWarning?: string, macOSDeprecatedVersion?: string }): Promise<ISystemWarning[]> => {
+			sandbox.stub(verifyNodeVersion, "getNodeWarning").returns(opts && opts.nodeJsWarning ? { message: opts.nodeJsWarning, severity: SystemWarningsSeverity.medium } : null);
 
 			const testInjector = createTestInjector();
 			const $hostInfo = testInjector.resolve<IHostInfo>("hostInfo");
@@ -50,28 +50,31 @@ describe("sysInfo", () => {
 
 		it("returns correct single warning when macOS version is deprecated", async () => {
 			const macOSDeprecatedVersion = MacOSVersions.Sierra;
-			const macOSWarning = format(MacOSDeprecationStringFormat, macOSDeprecatedVersion);
+			const macOSWarning = { message: format(MacOSDeprecationStringFormat, macOSDeprecatedVersion), severity: SystemWarningsSeverity.high };
 			const warnings = await getSystemWarnings({ macOSDeprecatedVersion });
+			_.each(warnings, warning => delete warning.toString);
 			assert.deepEqual(warnings, [macOSWarning]);
 		});
 
 		it("returns correct single warning when Node.js version is deprecated", async () => {
-			const nodeJsWarning = "Node.js Warning";
-			const warnings = await getSystemWarnings({ nodeJsWarning });
+			const nodeJsWarning = { message: "Node.js Warning", severity: SystemWarningsSeverity.medium };
+			const warnings = await getSystemWarnings({ nodeJsWarning: nodeJsWarning.message });
+			_.each(warnings, warning => delete warning.toString);
 			assert.deepEqual(warnings, [nodeJsWarning]);
 		});
 
 		it("returns correct warnings when both Node.js and macOS versions are deprecated", async () => {
 			const macOSDeprecatedVersion = MacOSVersions.Sierra;
-			const macOSWarning = format(MacOSDeprecationStringFormat, macOSDeprecatedVersion);
-			const nodeJsWarning = "Node.js Warning";
-			const warnings = await getSystemWarnings({ macOSDeprecatedVersion, nodeJsWarning });
+			const macOSWarning = { message: format(MacOSDeprecationStringFormat, macOSDeprecatedVersion), severity: SystemWarningsSeverity.high };
+			const nodeJsWarning = { message: "Node.js Warning", severity: SystemWarningsSeverity.medium };
+			const warnings = await getSystemWarnings({ macOSDeprecatedVersion, nodeJsWarning: nodeJsWarning.message });
+			_.each(warnings, warning => delete warning.toString);
 			assert.deepEqual(warnings, [macOSWarning, nodeJsWarning]);
 		});
 	});
 
 	describe("getMacOSWarningMessage", () => {
-		const getMacOSWarning = async (macOSDeprecatedVersion?: string): Promise<string> => {
+		const getMacOSWarning = async (macOSDeprecatedVersion?: string): Promise<ISystemWarning> => {
 			sandbox.stub(verifyNodeVersion, "getNodeWarning").returns(null);
 
 			const testInjector = createTestInjector();
@@ -89,8 +92,9 @@ describe("sysInfo", () => {
 
 		it("returns correct single warning when macOS version is deprecated", async () => {
 			const macOSDeprecatedVersion = MacOSVersions.Sierra;
-			const macOSWarning = format(MacOSDeprecationStringFormat, macOSDeprecatedVersion);
+			const macOSWarning: ISystemWarning = { message: format(MacOSDeprecationStringFormat, macOSDeprecatedVersion), severity: SystemWarningsSeverity.high };
 			const warning = await getMacOSWarning(macOSDeprecatedVersion);
+			delete warning.toString;
 			assert.deepEqual(warning, macOSWarning);
 		});
 	});

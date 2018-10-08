@@ -1143,6 +1143,12 @@ interface IDeviceLiveSyncService extends IDeviceLiveSyncServiceBase {
 	afterInstallApplicationAction?(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<boolean>;
 }
 
+interface ISystemWarning {
+	message: string;
+	severity: SystemWarningsSeverity;
+	toString?: () => string;
+}
+
 interface ISysInfo {
 	getSysInfo(config?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.ISysInfoData>;
 	/**
@@ -1163,15 +1169,15 @@ interface ISysInfo {
 
 	/**
 	 * Gets all global warnings for the current environment, for example Node.js version compatibility, OS compatibility, etc.
-	 * @return {Promise<string[]>} All warnings. Empty array is returned in case the system is setup correctly.
+	 * @return {Promise<ISystemWarning[]>} All warnings. Empty array is returned in case the system is setup correctly.
 	 */
-	getSystemWarnings(): Promise<string[]>;
+	getSystemWarnings(): Promise<ISystemWarning[]>;
 
 	/**
 	 * Gets warning message for current macOS version.
 	 * @return {Promise<string>} Message in case the current macOS version is deprecated, null otherwise.
 	 */
-	getMacOSWarningMessage(): Promise<string>;
+	getMacOSWarningMessage(): Promise<ISystemWarning>;
 
 	/**
 	 * Returns the value of engines.node key from CLI's package.json file.
