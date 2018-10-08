@@ -5,12 +5,13 @@ import isPlainObject from 'lodash/isPlainObject';
  * information for an entity and to modify the access control permissions.
  */
 export class Acl {
-  constructor(acl = {}) {
-    if (!isPlainObject(acl)) {
-      throw new Error('acl must be a plain object.');
+  constructor(entity = {}) {
+    if (!isPlainObject(entity)) {
+      throw new Error('entity must be an object.');
     }
 
-    this.acl = acl;
+    entity._acl = entity._acl || {}; // eslint-disable-line no-param-reassign
+    this.entity = entity;
   }
 
   /**
@@ -19,7 +20,7 @@ export class Acl {
    * @returns {string} Creator
    */
   get creator() {
-    return this.acl.creator;
+    return this.entity._acl.creator;
   }
 
   /**
@@ -28,7 +29,7 @@ export class Acl {
    * @returns {string[]} Readers
    */
   get readers() {
-    return Array.isArray(this.acl.r) ? this.acl.r : [];
+    return Array.isArray(this.entity._acl.r) ? this.entity._acl.r : [];
   }
 
   /**
@@ -37,7 +38,7 @@ export class Acl {
    * @returns {string[]} Writers
    */
   get writers() {
-    return Array.isArray(this.acl.w) ? this.acl.w : [];
+    return Array.isArray(this.entity._acl.w) ? this.entity._acl.w : [];
   }
 
   /**
@@ -46,7 +47,7 @@ export class Acl {
    * @returns {string[]} Reader groups
    */
   get readerGroups() {
-    return this.acl.groups && Array.isArray(this.acl.groups.r) ? this.acl.groups.r : [];
+    return this.entity._acl.groups && Array.isArray(this.entity._acl.groups.r) ? this.entity._acl.groups.r : [];
   }
 
   /**
@@ -55,7 +56,7 @@ export class Acl {
    * @returns {string[]} Writer groups
    */
   get writerGroups() {
-    return this.acl.groups && Array.isArray(this.acl.groups.w) ? this.acl.groups.w : [];
+    return this.entity._acl.groups && Array.isArray(this.entity._acl.groups.w) ? this.entity._acl.groups.w : [];
   }
 
   /**
@@ -64,7 +65,7 @@ export class Acl {
    * @param {boolean} gr Globally readable
    */
   set globallyReadable(gr) {
-    this.acl.gr = gr === true;
+    this.entity._acl.gr = gr === true;
   }
 
   /**
@@ -73,7 +74,7 @@ export class Acl {
    * @param {boolean} gw Globally writable
    */
   set globallyWritable(gw) {
-    this.acl.gw = gw === true;
+    this.entity._acl.gw = gw === true;
   }
 
   /**
@@ -89,7 +90,7 @@ export class Acl {
       r.push(reader);
     }
 
-    this.acl.r = r;
+    this.entity._acl.r = r;
     return this;
   }
 
@@ -106,8 +107,8 @@ export class Acl {
       groups.push(group);
     }
 
-    this.acl = Object.assign(this.acl, { groups: {} });
-    this.acl.groups = Object.assign(this.acl.groups, { r: groups });
+    this.entity._acl = Object.assign(this.entity._acl, { groups: {} });
+    this.entity._acl.groups = Object.assign(this.entity._acl.groups, { r: groups });
     return this;
   }
 
@@ -124,7 +125,7 @@ export class Acl {
       w.push(writer);
     }
 
-    this.acl.w = w;
+    this.entity._acl.w = w;
     return this;
   }
 
@@ -141,8 +142,8 @@ export class Acl {
       groups.push(group);
     }
 
-    this.acl = Object.assign(this.acl, { groups: {} });
-    this.acl.groups = Object.assign(this.acl.groups, { w: groups });
+    this.entity._acl = Object.assign(this.entity._acl, { groups: {} });
+    this.entity._acl.groups = Object.assign(this.entity._acl.groups, { w: groups });
     return this;
   }
 
@@ -152,7 +153,7 @@ export class Acl {
    * @returns {boolean} True if globally readable is allowed otherwise false
    */
   isGloballyReadable() {
-    return this.acl.gr === true;
+    return this.entity._acl.gr === true;
   }
 
   /**
@@ -161,7 +162,7 @@ export class Acl {
    * @returns {boolean} True if globally writable is allowed otherwise false
    */
   isGloballyWritable() {
-    return this.acl.gw === true;
+    return this.entity._acl.gw === true;
   }
 
   /**
@@ -178,7 +179,7 @@ export class Acl {
       r.splice(index, 1);
     }
 
-    this.acl.r = r;
+    this.entity._acl.r = r;
     return this;
   }
 
@@ -196,7 +197,7 @@ export class Acl {
       groups.splice(index, 1);
     }
 
-    this.acl.groups = Object.assign(this.acl.groups, { r: groups });
+    this.entity._acl.groups = Object.assign(this.entity._acl.groups, { r: groups });
     return this;
   }
 
@@ -214,7 +215,7 @@ export class Acl {
       w.splice(index, 1);
     }
 
-    this.acl.w = w;
+    this.entity._acl.w = w;
     return this;
   }
 
@@ -232,7 +233,7 @@ export class Acl {
       groups.splice(index, 1);
     }
 
-    this.acl.groups = Object.assign(this.acl.groups, { w: groups });
+    this.entity._acl.groups = Object.assign(this.entity._acl.groups, { w: groups });
     return this;
   }
 }
