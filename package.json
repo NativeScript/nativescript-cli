@@ -30,6 +30,7 @@
       "packages/kinvey-cache-memory",
       "packages/kinvey-datastore",
       "packages/kinvey-endpoint",
+      "packages/kinvey-files",
       "packages/kinvey-html5-sdk",
       "packages/kinvey-http",
       "packages/kinvey-http-web",
@@ -41,6 +42,7 @@
       "packages/kinvey-query",
       "packages/kinvey-session",
       "packages/kinvey-session-web",
+      "packages/kinvey-test-utils",
       "starters/html5"
     ],
     "nohoist": [

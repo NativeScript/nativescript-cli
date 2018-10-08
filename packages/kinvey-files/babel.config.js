@@ -12,8 +12,10 @@ module.exports = (api) => {
       useBuiltIns: 'usage'
     }]
   ];
+  const plugins = ['@babel/plugin-transform-runtime'];
 
   return {
-    presets
+    presets,
+    plugins
   };
 };
