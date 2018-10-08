@@ -1,0 +1,3 @@
+[submodule "starters/html5"]
+	path = starters/html5
+	url = git@github.com:KinveyApps/HTML5-Starter.git
