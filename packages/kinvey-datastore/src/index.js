@@ -1,36 +1,19 @@
-import { getConfig } from 'kinvey-app';
-import { clearAll } from 'kinvey-cache';
-import NetworkStore from './networkstore';
-import CacheStore from './cachestore';
+import isString from 'lodash/isString';
+import { formatKinveyBaasUrl, KinveyRequest, RequestMethod, Auth } from 'kinvey-http';
 
-export const DataStoreType = {
-  Cache: 'Cache',
-  Network: 'Network',
-  Sync: 'Sync'
-};
+const RPC_NAMESPACE = 'rpc';
 
-export function collection(collectionName, type = DataStoreType.Cache, options = {}) {
-  if (collectionName == null || typeof collectionName !== 'string') {
-    throw new Error('A collection name is required and must be a string.');
+export async function endpoint(endpoint, args) {
+  if (!isString(endpoint)) {
+    throw new Error('An endpoint is required and must be a string.');
   }
 
-  const { appKey } = getConfig();
-  let datastore;
-
-  if (type === DataStoreType.Network) {
-    datastore = new NetworkStore(appKey, collectionName);
-  } else if (type === DataStoreType.Cache) {
-    datastore = new CacheStore(appKey, collectionName, options.tag, Object.assign({}, options, { autoSync: true }));
-  } else if (type === DataStoreType.Sync) {
-    datastore = new CacheStore(appKey, collectionName, options.tag, Object.assign({}, options, { autoSync: false }));
-  } else {
-    throw new Error('Unknown data store type.');
-  }
-
-  return datastore;
-}
-
-export async function clearCache() {
-  const { appKey } = getConfig();
-  await clearAll(appKey);
+  const request = new KinveyRequest({
+    method: RequestMethod.POST,
+    auth: Auth.Session,
+    url: formatKinveyBaasUrl(`/${RPC_NAMESPACE}/appKey/custom/${endpoint}`),
+    body: args
+  });
+  const response = await request.execute();
+  return response.data;
 }

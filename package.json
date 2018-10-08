@@ -29,6 +29,7 @@
       "packages/kinvey-cache-indexeddb",
       "packages/kinvey-cache-memory",
       "packages/kinvey-datastore",
+      "packages/kinvey-endpoint",
       "packages/kinvey-html5-sdk",
       "packages/kinvey-http",
       "packages/kinvey-http-web",
