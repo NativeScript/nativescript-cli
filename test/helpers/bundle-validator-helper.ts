@@ -79,6 +79,13 @@ describe("BundleValidatorHelper", () => {
 					currentWebpackVersion: "0.17.0-2018-09-28-173604-01",
 					minSupportedWebpackVersion: "0.17.0",
 					expectedError: null
+				},
+				{
+					name: `should not throw an error when next version of webpack is installed as ${key}`,
+					isDependency,
+					currentWebpackVersion: "next",
+					minSupportedWebpackVersion: "0.17.0",
+					expectedError: null
 				}
 			]);
 		});

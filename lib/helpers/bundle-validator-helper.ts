@@ -24,9 +24,12 @@ export class BundleValidatorHelper implements IBundleValidatorHelper {
 
 			if (minSupportedVersion) {
 				const currentVersion = bundlerVersionInDependencies || bundlerVersionInDevDependencies;
-				const isBundleSupported = semver.gte(semver.coerce(currentVersion), semver.coerce(minSupportedVersion));
-				if (!isBundleSupported) {
-					this.$errors.failWithoutHelp(util.format(BundleValidatorMessages.NotSupportedVersion, minSupportedVersion));
+				const shouldSkipCheck = !semver.valid(currentVersion) && !semver.validRange(currentVersion);
+				if (!shouldSkipCheck) {
+					const isBundleSupported = semver.gte(semver.coerce(currentVersion), semver.coerce(minSupportedVersion));
+					if (!isBundleSupported) {
+						this.$errors.failWithoutHelp(util.format(BundleValidatorMessages.NotSupportedVersion, minSupportedVersion));
+					}
 				}
 			}
 		}
