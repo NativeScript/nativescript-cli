@@ -3,7 +3,7 @@ import urljoin from 'url-join';
 import { parse } from 'url';
 import { Base64 } from 'js-base64';
 import { getConfig } from 'kinvey-app';
-import { execute, formatKinveyAuthUrl, KinveyRequest, RequestMethod } from 'kinvey-http';
+import { formatKinveyAuthUrl, KinveyRequest, RequestMethod } from 'kinvey-http';
 import { open } from 'kinvey-popup';
 
 // Export identity

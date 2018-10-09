@@ -1,6 +1,17 @@
 /* eslint-disable */
 const path = require('path');
+const fs = require('fs');
 const Dotenv = require('dotenv-webpack');
+const webpack = require('webpack');
+
+const DOT_ENV_FILE = path.resolve(__dirname, '.env');
+
+if (!fs.existsSync(DOT_ENV_FILE)) {
+  throw new Error(
+    '.env file is missing. ' +
+    'Please create a .env file that contains the appKey, appSecret, and masterSecret for the application you would like to use for running the integration tests.'
+  );
+}
 
 module.exports = function (config) {
   config.set({
@@ -19,7 +30,7 @@ module.exports = function (config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'tests/users.spec.js'
+      'tests/**/*.js'
     ],
 
 
@@ -30,7 +41,7 @@ module.exports = function (config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'tests/users.spec.js': ['webpack', 'sourcemap']
+      'tests/**/*.js': ['webpack', 'sourcemap']
     },
 
 
@@ -54,7 +65,7 @@ module.exports = function (config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Chrome'],
+    browsers: ['ChromeHeadless'],
 
 
     // Continuous Integration mode
@@ -68,7 +79,7 @@ module.exports = function (config) {
     // Mocha config
     client: {
       mocha: {
-        timeout: 6000
+        timeout: 10000
       }
     },
 
@@ -88,7 +99,7 @@ module.exports = function (config) {
       },
       plugins: [
         new Dotenv({
-          path: path.resolve(__dirname, '.env')
+          path: DOT_ENV_FILE
         })
       ]
     },

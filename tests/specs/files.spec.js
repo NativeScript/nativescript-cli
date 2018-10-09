@@ -1,28 +1,39 @@
-import fs from 'fs';
-import path from 'path';
 import { expect } from 'chai';
-import { init, Files, Query } from '__SDK__';
-
-before(() => {
-  return init({
-    appKey: process.env.APP_KEY,
-    appSecret: process.env.APP_SECRET,
-    masterSecret: process.env.MASTER_SECRET
-  });
-});
+import { init, Files, Query, User } from '__SDK__';
+import { randomString } from './utils';
 
 describe('Files', () => {
+  before(() => {
+    return init({
+      appKey: process.env.APP_KEY,
+      appSecret: process.env.APP_SECRET,
+      masterSecret: process.env.MASTER_SECRET
+    });
+  });
+
+  before(async () => {
+    return User.signup({
+      username: randomString(),
+      password: randomString()
+    });
+  });
+
+  after(() => {
+    const activeUser = User.getActiveUser();
+    return User.remove(activeUser._id, { hard: true });
+  });
+
   describe('find()', () => {
     let uploadedFile;
 
     before(async () => {
-      const testFile = fs.readFileSync(path.resolve(__dirname, './test.png'));
-      const filename = 'test.png';
-      const mimeType = 'image/png';
+      const testFile = randomString();
+      const filename = `${randomString()}.txt`;
+      const mimeType = 'text/plain';
       const size = testFile.length;
       uploadedFile = await Files.upload(testFile, {
-        filename: 'test.png',
-        mimeType: 'image/png',
+        filename,
+        mimeType,
         size
       });
     });
@@ -46,16 +57,16 @@ describe('Files', () => {
 
   describe('upload()', () => {
     it('should upload a file', async () => {
-      const testFile = fs.readFileSync(path.resolve(__dirname, './test.png'));
-      const filename = 'test.png';
-      const mimeType = 'image/png';
+      const testFile = randomString();
+      const filename = `${randomString()}.txt`;
+      const mimeType = 'text/plain';
       const size = testFile.length;
 
       // Upload the file
       const file = await Files.upload(testFile, {
         public: true,
-        filename: 'test.png',
-        mimeType: 'image/png',
+        filename,
+        mimeType,
         size
       });
 

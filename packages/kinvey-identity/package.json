@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.0.0-rc.2",
+    "js-base64": "^2.4.9",
     "kinvey-acl": "1.0.0",
+    "kinvey-app": "1.0.0",
     "kinvey-datastore": "1.0.0",
     "kinvey-http": "1.0.0",
     "kinvey-kmd": "1.0.0",

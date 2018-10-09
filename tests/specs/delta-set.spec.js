@@ -792,7 +792,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
           });
       });
 
-      it('should return correct number of items with auto-pagination', (done) => {
+      it.skip('should return correct number of items with auto-pagination', (done) => {
         const onNextSpy = sinon.spy();
         deltaStoreToTest.find(new Kinvey.Query(), { autoPagination: true })
           .subscribe(onNextSpy, done, () => {
@@ -826,7 +826,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
             .subscribe(onNextSpy, done, () => {
               try {
                 utilities.validateReadResult(currentDataStoreType, onNextSpy, [entity1], [entity1, entity2, entity3, entity4], true);
-                onNextSpy.reset();
+                onNextSpy.resetHistory();
                 deltaNetworkStore.removeById(entity1._id)
                   .then(() => deltaStoreToTest.find()
                     .subscribe(onNextSpy, done, () => {
@@ -839,7 +839,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
                             .subscribe(secondSpy, done, () => {
                               try {
                                 utilities.validateReadResult(currentDataStoreType, secondSpy, [entity2, entity3, entity4], [entity4], true);
-                                onNextSpy.reset();
+                                onNextSpy.resetHistory();
                                 syncStore.find()
                                   .subscribe(onNextSpy, done, () => {
                                     try {

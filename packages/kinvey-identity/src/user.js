@@ -12,6 +12,8 @@ import * as MIC from './mic';
 const USER_NAMESPACE = 'user';
 const RPC_NAMESPACE = 'rpc';
 
+export { AuthorizationGrant } from './mic';
+
 export class User {
   constructor(data = {}) {
     this.data = data;

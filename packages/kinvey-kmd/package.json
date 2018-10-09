@@ -10,7 +10,8 @@
     "prebuild": "del lib",
     "build": "babel src -d lib",
     "lint": "eslint src",
-    "test": "mocha -r @babel/register \"src/**/*.spec.js\""
+    "test": "mocha -r @babel/register \"src/**/*.spec.js\"",
+    "test:ci": "yarn test"
   },
   "dependencies": {
     "@babel/runtime": "^7.0.0",

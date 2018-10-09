@@ -24,6 +24,8 @@
     "kinvey-cache-indexeddb": "1.0.0",
     "kinvey-cache-memory": "1.0.0",
     "kinvey-datastore": "1.0.0",
+    "kinvey-endpoint": "1.0.0",
+    "kinvey-files": "1.0.0",
     "kinvey-http-web": "1.0.0",
     "kinvey-identity": "1.0.0",
     "kinvey-kmd": "1.0.0",

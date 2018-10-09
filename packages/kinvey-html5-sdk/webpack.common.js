@@ -5,11 +5,11 @@ const pkg = require('./package.json');
 const config = {
   entry: {},
   plugins: [
-    new CleanWebpackPlugin(['bundle']),
+    new CleanWebpackPlugin(['dist']),
   ],
   output: {
     filename: '[name].js',
-    path: path.resolve(__dirname, 'bundle'),
+    path: path.resolve(__dirname, 'dist'),
     libraryTarget: 'umd',
     library: 'Kinvey'
   }
