@@ -1,6 +1,6 @@
-import { PlaygroundStoreUrls } from "./preview-app-constants";
 import * as util from "util";
-const chalk = require("chalk");
+import { EOL } from "os";
+import { PlaygroundStoreUrls } from "./preview-app-constants";
 
 export class PlaygroundQrCodeGenerator implements IPlaygroundQrCodeGenerator {
 	constructor(private $previewSdkService: IPreviewSdkService,
@@ -10,27 +10,8 @@ export class PlaygroundQrCodeGenerator implements IPlaygroundQrCodeGenerator {
 		private $logger: ILogger) {
 	}
 
-	public async generateQrCodeForiOS(): Promise<void> {
-		const message = `Scan the QR code below to install ${"NativeScript Playground app".underline.bold} on your ${"iOS".underline.bold} device or get it from ${PlaygroundStoreUrls.APP_STORE_URL.underline.bold}.`;
-		await this.generateQrCode(PlaygroundStoreUrls.APP_STORE_URL, message);
-	}
-
-	public async generateQrCodeForAndroid(): Promise<void> {
-		const message = `Scan the QR code below to install ${"NativeScript Playground app".underline.bold} on your ${"Android".underline.bold} device or get it from ${PlaygroundStoreUrls.GOOGLE_PLAY_URL.underline.bold}.`;
-		await this.generateQrCode(PlaygroundStoreUrls.GOOGLE_PLAY_URL, message);
-	}
-
-	public async generateQrCodeForCurrentApp(options: IHasUseHotModuleReloadOption): Promise<void> {
-		const message = `Use ${"NativeScript Playground app".underline.bold} and scan the QR code below to preview the application on your device.`;
-		await this.generateQrCode(this.$previewSdkService.getQrCodeUrl(options), message);
-	}
-
-	private async generateQrCode(url: string, message: string): Promise<void> {
-		await this.generateQrCodeCore(url, message);
-		this.printUsage();
-	}
-
-	private async generateQrCodeCore(url: string, message: string): Promise<void> {
+	public async generateQrCode(options: IGenerateQrCodeOptions): Promise<void> {
+		let url = this.$previewSdkService.getQrCodeUrl(options);
 		const shortenUrlEndpoint = util.format(this.$config.SHORTEN_URL_ENDPOINT, encodeURIComponent(url));
 		try {
 			const response = await this.$httpClient.httpRequest(shortenUrlEndpoint);
@@ -40,20 +21,22 @@ export class PlaygroundQrCodeGenerator implements IPlaygroundQrCodeGenerator {
 			// use the longUrl
 		}
 
-		this.$qrCodeTerminalService.generate(url, message);
-	}
+		this.$logger.info();
+		const message = `${EOL} Generating qrcode for url ${url}.`;
+		this.$logger.trace(message);
 
-	private printUsage(): void {
-		this.$logger.info(`
--> Press ${this.underlineBoldCyan("a")} to get a link to NativeScript Playground app for ${this.underlineBoldCyan("Android")} on Google Play
--> Press ${this.underlineBoldCyan("i")} to get a link to NativeScript Playground app for ${this.underlineBoldCyan("iOS")} on the App Store
--> Press ${this.underlineBoldCyan("c")} to show the QR code of ${this.underlineBoldCyan("your application")}
-		`);
-	}
+		if (options.link) {
+			this.$logger.printMarkdown(message);
+		} else {
+			this.$qrCodeTerminalService.generate(url);
 
-	private underlineBoldCyan(str: string) {
-		const { bold, underline, cyan } = chalk;
-		return underline(bold(cyan(str)));
+			this.$logger.info();
+			this.$logger.printMarkdown(`# Use \`NativeScript Playground app\` and scan the \`QR code\` below to preview the application on your device.`);
+			this.$logger.printMarkdown(`
+To scan the QR code and deploy your app on a device, you need to have the \`NativeScript Playground app\`:
+	App Store (iOS): ${PlaygroundStoreUrls.APP_STORE_URL}
+	Google Play (Android): ${PlaygroundStoreUrls.GOOGLE_PLAY_URL}`);
+		}
 	}
 }
 $injector.register("playgroundQrCodeGenerator", PlaygroundQrCodeGenerator);

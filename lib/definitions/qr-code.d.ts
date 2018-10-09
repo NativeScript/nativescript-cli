@@ -1,3 +1,3 @@
 interface IQrCodeTerminalService {
-	generate(url: string, message: string): void;
+	generate(url: string): void;
 }

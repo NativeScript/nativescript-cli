@@ -23,13 +23,15 @@ declare global {
 		getExternalPlugins(device: Device): string[];
 	}
 
-	interface IPreviewCommandHelper {
-		run(): void;
+	interface IPlaygroundQrCodeGenerator {
+		generateQrCode(options: IGenerateQrCodeOptions): Promise<void>;
 	}
 
-	interface IPlaygroundQrCodeGenerator {
-		generateQrCodeForiOS(): Promise<void>;
-		generateQrCodeForAndroid(): Promise<void>;
-		generateQrCodeForCurrentApp(options: IHasUseHotModuleReloadOption): Promise<void>;
+	interface IGenerateQrCodeOptions extends IHasUseHotModuleReloadOption {
+		/**
+		 * If set to true, a link will be shown on console instead of QR code
+		 * Default value is false.
+		 */
+		link: boolean;
 	}
 }

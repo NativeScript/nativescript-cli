@@ -16,11 +16,6 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		private $playgroundQrCodeGenerator: IPlaygroundQrCodeGenerator) { }
 
 	@cache()
-	private get $previewCommandHelper(): IPreviewCommandHelper {
-		return this.$injector.resolve("previewCommandHelper");
-	}
-
-	@cache()
 	private get $liveSyncService(): ILiveSyncService {
 		return this.$injector.resolve("liveSyncService");
 	}
@@ -186,7 +181,6 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				this.$errors.failWithoutHelp(`No project found. In order to sync to playground you need to go to project directory or specify --path option.`);
 			}
 
-			this.$previewCommandHelper.run();
 			await this.$liveSyncService.liveSync([], {
 				syncToPreviewApp: true,
 				projectDir,
@@ -200,7 +194,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				useHotModuleReload: options.hmr
 			});
 
-			await this.$playgroundQrCodeGenerator.generateQrCodeForCurrentApp({ useHotModuleReload: options.hmr });
+			await this.$playgroundQrCodeGenerator.generateQrCode({ useHotModuleReload: options.hmr, link: options.link });
 		}
 	}
 
