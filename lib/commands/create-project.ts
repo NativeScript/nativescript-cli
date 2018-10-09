@@ -202,7 +202,7 @@ or --js flags.)
 		const { projectDir } = this.createdProjectData;
 		const relativePath = path.relative(process.cwd(), projectDir);
 		this.$logger.printMarkdown(`Now you can navigate to your project with \`$ cd ${relativePath}\``);
-		this.$logger.printMarkdown(`After that you can run it on device/emulator by executing \`$ tns run <platform>\``);
+		this.$logger.printMarkdown(`After that you can preview it on device by executing \`$ tns preview\``);
 	}
 }
 
