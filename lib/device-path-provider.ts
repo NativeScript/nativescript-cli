@@ -1,12 +1,10 @@
 import { fromWindowsRelativePathToUnix } from "./common/helpers";
 import { APP_FOLDER_NAME } from "./constants";
 import { LiveSyncPaths } from "./common/constants";
-import { AndroidDeviceLiveSyncService } from "./services/livesync/android-device-livesync-service";
 import * as path from "path";
 
 export class DevicePathProvider implements IDevicePathProvider {
 	constructor(private $mobileHelper: Mobile.IMobileHelper,
-		private $injector: IInjector,
 		private $iOSSimResolver: Mobile.IiOSSimResolver,
 		private $errors: IErrors) {
 	}
@@ -26,8 +24,7 @@ export class DevicePathProvider implements IDevicePathProvider {
 		} else if (this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
 			projectRoot = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${options.appIdentifier}`;
 			if (!options.getDirname) {
-				const deviceLiveSyncService = this.$injector.resolve<AndroidDeviceLiveSyncService>(AndroidDeviceLiveSyncService, { device });
-				const hashService = deviceLiveSyncService.getDeviceHashService(options.appIdentifier);
+				const hashService = (<Mobile.IAndroidDevice>device).fileSystem.getDeviceHashService(options.appIdentifier);
 				const hashFile = options.syncAllFiles ? null : await hashService.doesShasumFileExistsOnDevice();
 				const syncFolderName = options.watch || hashFile ? LiveSyncPaths.SYNC_DIR_NAME : LiveSyncPaths.FULLSYNC_DIR_NAME;
 				projectRoot = path.join(projectRoot, syncFolderName);

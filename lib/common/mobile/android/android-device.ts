@@ -19,7 +19,7 @@ interface IAdbDeviceStatusInfo {
 export class AndroidDevice implements Mobile.IAndroidDevice {
 	public adb: Mobile.IDeviceAndroidDebugBridge;
 	public applicationManager: Mobile.IDeviceApplicationManager;
-	public fileSystem: Mobile.IDeviceFileSystem;
+	public fileSystem: Mobile.IAndroidDeviceFileSystem;
 	public deviceInfo: Mobile.IDeviceInfo;
 
 	// http://stackoverflow.com/questions/31178195/what-does-adb-device-status-mean

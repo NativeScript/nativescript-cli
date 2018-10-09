@@ -118,6 +118,11 @@ declare module Mobile {
 	interface IAndroidDevice extends IDevice {
 		adb: Mobile.IDeviceAndroidDebugBridge;
 		init(): Promise<void>;
+		fileSystem: Mobile.IAndroidDeviceFileSystem;
+	}
+
+	interface IAndroidDeviceFileSystem extends IDeviceFileSystem {
+		getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService;
 	}
 
 	interface IiOSSimulator extends IDevice { }

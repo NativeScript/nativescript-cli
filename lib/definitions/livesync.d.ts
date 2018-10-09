@@ -415,13 +415,6 @@ interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase 
 
 interface IAndroidNativeScriptDeviceLiveSyncService extends INativeScriptDeviceLiveSyncService {
 	/**
-	 * Retrieves the android device's hash service.
-	 * @param  {string} appIdentifier Application identifier.
-	 * @return {Promise<Mobile.IAndroidDeviceHashService>} The hash service
-	 */
-	getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService;
-
-	/**
 	 * Guarantees all remove/update operations have finished
 	 * @param  {ILiveSyncResultInfo} liveSyncInfo Describes the LiveSync operation - for which project directory is the operation and other settings.
 	 * @return {Promise<IAndroidLiveSyncResultInfo>}

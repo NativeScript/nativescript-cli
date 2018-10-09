@@ -12,7 +12,7 @@ import { LiveSyncPaths } from "../../../constants";
 const myTestAppIdentifier = "org.nativescript.myApp";
 let isAdbPushExecuted = false;
 let isAdbPushAppDirCalled = false;
-let androidDeviceFileSystem: Mobile.IDeviceFileSystem;
+let androidDeviceFileSystem: Mobile.IAndroidDeviceFileSystem;
 
 class AndroidDebugBridgeMock {
 	public executeCommand(args: string[]) {
@@ -138,9 +138,13 @@ function setup(options?: {
 	return {
 		localToDevicePaths,
 		deviceAppData,
-		projectRoot
+		projectRoot,
+		injector
 	};
 }
+
+let resolveParams: any[] = [];
+const appIdentifier = "testAppIdentifier";
 
 describe("AndroidDeviceFileSystem", () => {
 	describe("transferDirectory", () => {
@@ -184,6 +188,54 @@ describe("AndroidDeviceFileSystem", () => {
 
 			assert.isTrue(isAdbPushExecuted);
 			assert.isFalse(isAdbPushAppDirCalled);
+		});
+	});
+
+	describe("getDeviceHashService", () => {
+		beforeEach(() => {
+			resolveParams = [];
+			const { injector } = setup();
+			injector.resolve = (service: any, args: string[]) => resolveParams.push({ service, args });
+		});
+		it("should resolve AndroidDeviceHashService when the key is not stored in dictionary", () => {
+			androidDeviceFileSystem.getDeviceHashService(appIdentifier);
+			assert.equal(resolveParams.length, 1);
+			assert.isFunction(resolveParams[0].service);
+			assert.isDefined(resolveParams[0].args.adb);
+			assert.equal(resolveParams[0].args.appIdentifier, appIdentifier);
+		});
+		it("should return already stored value when the method is called for second time with the same deviceIdentifier and appIdentifier", () => {
+			androidDeviceFileSystem.getDeviceHashService(appIdentifier);
+			assert.equal(resolveParams.length, 1);
+			assert.isFunction(resolveParams[0].service);
+			assert.isDefined(resolveParams[0].args.adb);
+			assert.equal(resolveParams[0].args.appIdentifier, appIdentifier);
+
+			androidDeviceFileSystem.getDeviceHashService(appIdentifier);
+			assert.equal(resolveParams.length, 1);
+			assert.isFunction(resolveParams[0].service);
+			assert.isDefined(resolveParams[0].args.adb);
+			assert.equal(resolveParams[0].args.appIdentifier, appIdentifier);
+		});
+		it("should return AndroidDeviceHashService when the method is called for second time with different appIdentifier and same deviceIdentifier", () => {
+			androidDeviceFileSystem.getDeviceHashService(appIdentifier);
+			assert.equal(resolveParams.length, 1);
+			assert.isFunction(resolveParams[0].service);
+			assert.isDefined(resolveParams[0].args.adb);
+			assert.equal(resolveParams[0].args.appIdentifier, appIdentifier);
+
+			androidDeviceFileSystem.getDeviceHashService(appIdentifier);
+			assert.equal(resolveParams.length, 1);
+			assert.isFunction(resolveParams[0].service);
+			assert.isDefined(resolveParams[0].args.adb);
+			assert.equal(resolveParams[0].args.appIdentifier, appIdentifier);
+
+			const newAppIdentifier = "myNewAppIdentifier";
+			androidDeviceFileSystem.getDeviceHashService(newAppIdentifier);
+			assert.equal(resolveParams.length, 2);
+			assert.isFunction(resolveParams[1].service);
+			assert.isDefined(resolveParams[1].args.adb);
+			assert.equal(resolveParams[1].args.appIdentifier, newAppIdentifier);
 		});
 	});
 });
