@@ -31,7 +31,7 @@ export class PlaygroundQrCodeGenerator implements IPlaygroundQrCodeGenerator {
 			this.$qrCodeTerminalService.generate(url);
 
 			this.$logger.info();
-			this.$logger.printMarkdown(`# Use \`NativeScript Playground app\` and scan the \`QR code\` below to preview the application on your device.`);
+			this.$logger.printMarkdown(`# Use \`NativeScript Playground app\` and scan the \`QR code\` above to preview the application on your device.`);
 			this.$logger.printMarkdown(`
 To scan the QR code and deploy your app on a device, you need to have the \`NativeScript Playground app\`:
 	App Store (iOS): ${PlaygroundStoreUrls.APP_STORE_URL}
