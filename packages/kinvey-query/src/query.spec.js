@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import Query from '../src/query';
-import { randomString, randomNumber } from './utils';
+import { randomString, randomNumber } from 'kinvey-test-utils';
+import { Query } from './query';
 
 describe('Query', () => {
   describe('equalTo()', () => {

@@ -1,8 +1,8 @@
 import { expect, use } from 'chai';
 import * as sinon from 'sinon';
-import Cache, { use as useCacheAdapter } from '../src/cache';
-import Query from '../src/query';
-import Aggregation from '../src/aggregation';
+import { Query } from 'kinvey-query';
+import { Aggregation } from 'kinvey-aggregation';
+import { Cache, register } from './cache';
 
 // Use chai-as-promised
 use(require('chai-as-promised'));
@@ -75,11 +75,11 @@ describe('Cache', () => {
     };
 
     before(() => {
-      useCacheAdapter(MemoryAdapter);
+      register(MemoryAdapter);
     });
 
     after(() => {
-      useCacheAdapter(null);
+      register(null);
     });
 
     describe('find()', () => {

@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Request } from '../../src/http/request';
+import { Request } from './request';
 
 describe('Request', () => {
   it('should set a timeout', () => {

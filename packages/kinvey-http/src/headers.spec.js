@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Headers, KinveyHeaders } from '../../src/http/headers';
+import { Headers, KinveyHeaders } from './headers';
 
 const HEADER = { name: 'Content-Type', value: 'application/json' };
 

@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import Response from '../../src/http/response';
+import { Response } from './response';
 
 describe('Response', () => {
   describe('error', () => {

@@ -1,8 +1,8 @@
 const sift = require('sift');
+import { randomString } from 'kinvey-test-utils';
+import { Query } from 'kinvey-query';
 import { expect } from 'chai';
-import Aggregation, { count, sum, min, max, average } from '../src/aggregation';
-import Query from '../src/query';
-import { randomString } from './utils';
+import { Aggregation, count, sum, min, max, average } from './aggregation';
 
 function nested(obj, dotProperty, value) {
   if (!dotProperty) {

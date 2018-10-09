@@ -61,8 +61,6 @@ export class Headers {
   }
 
   set(name, value) {
-    const key = name.toLowerCase();
-
     if (!isString(name)) {
       throw new Error('Please provide a name. Name must be a string.');
     }
@@ -71,6 +69,8 @@ export class Headers {
       || (isArray(value) && value.some(isNotString))) {
       throw new Error('Please provide a value. Value must be a string or an array that contains only strings.');
     }
+
+    const key = name.toLowerCase();
 
     if (isArray(value)) {
       this.headers.set(key, value.join(','));

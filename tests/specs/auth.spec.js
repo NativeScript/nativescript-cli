@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { init, User } from '__SDK__';
-import { randomString } from './utils';
+import { randomString } from 'kinvey-test-utils';
 
 before(() => {
   return init({
