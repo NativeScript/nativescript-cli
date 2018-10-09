@@ -2,43 +2,85 @@ import Dexie from 'dexie';
 import sift from 'sift';
 import findIndex from 'lodash/findIndex';
 import isEmpty from 'lodash/isEmpty';
+import isArray from 'lodash/isArray';
+import { nested } from './utils';
 
 const dbVersions = {};
 
 function findAddOn(db) {
-  // Makes it possible to use applyQuery() on collections.
   // eslint-disable-next-line no-param-reassign
-  db.Table.prototype.find = function find(query) {
-    let collection = this.toCollection();
+  db.Table.prototype.find = async function find(query) {
+    const collection = this.toCollection();
+    let docs = await collection.toArray();
 
     if (query) {
       const {
         filter,
-        // sort,
+        sort,
         limit,
-        skip
+        skip,
+        fields
       } = query;
-      // let { fields } = query;
 
-      if (filter) {
-        if (!isEmpty(filter)) {
-          collection = collection.filter((doc) => {
-            const sifter = sift(filter);
-            return sifter([doc]);
-          });
+      if (filter && !isEmpty(filter)) {
+        docs = sift(filter, docs);
+      }
+
+      /* eslint-disable no-restricted-syntax, no-prototype-builtins  */
+      if (sort) {
+        docs.sort((a, b) => {
+          for (const field in sort) {
+            if (sort.hasOwnProperty(field)) {
+              // Find field in objects.
+              const aField = nested(a, field);
+              const bField = nested(b, field);
+              const modifier = sort[field]; // 1 (ascending) or -1 (descending).
+
+              if ((aField !== null && typeof aField !== 'undefined')
+              && (bField === null || typeof bField === 'undefined')) {
+                return 1 * modifier;
+              } else if ((bField !== null && typeof bField !== 'undefined')
+                && (aField === null || typeof aField === 'undefined')) {
+                return -1 * modifier;
+              } else if (typeof aField === 'undefined' && bField === null) {
+                return 0;
+              } else if (aField === null && typeof bField === 'undefined') {
+                return 0;
+              } else if (aField !== bField) {
+                return (aField < bField ? -1 : 1) * modifier;
+              }
+            }
+          }
+
+          return 0;
+        });
+      }
+      /* eslint-enable no-restricted-syntax, no-prototype-builtins */
+
+      if (skip > 0) {
+        if (limit < Infinity) {
+          docs = docs.slice(skip, skip + limit);
+        } else {
+          docs = docs.slice(skip);
         }
       }
 
-      if (skip > 0) {
-        collection = collection.offset(skip);
-      }
+      if (isArray(fields) && fields.length > 0) {
+        docs = docs.map((doc) => {
+          const keys = Object.keys(doc);
+          keys.forEach((key) => {
+            if (fields.indexOf(key) === -1) {
+              // eslint-disable-next-line no-param-reassign
+              delete doc[key];
+            }
+          });
 
-      if (limit < Infinity) {
-        collection = collection.limit(limit);
+          return doc;
+        });
       }
     }
 
-    return collection;
+    return docs;
   };
 }
 
@@ -99,7 +141,7 @@ class IndexedDB extends Dexie {
 export async function find(dbName, tableName, query) {
   const db = await IndexedDB.open(dbName, tableName);
   const table = db.table(tableName);
-  const docs = await table.find(query).toArray();
+  const docs = await table.find(query);
   db.close();
   return docs;
 }
@@ -107,9 +149,9 @@ export async function find(dbName, tableName, query) {
 export async function count(dbName, tableName, query) {
   const db = await IndexedDB.open(dbName, tableName);
   const table = db.table(tableName);
-  const count = await table.find(query).count();
+  const docs = await table.find(query);
   db.close();
-  return count;
+  return docs.length;
 }
 
 export async function findById(dbName, tableName, id) {
@@ -131,7 +173,7 @@ export async function save(dbName, tableName, docs = []) {
 export async function remove(dbName, tableName, query) {
   const db = await IndexedDB.open(dbName, tableName);
   const table = db.table(tableName);
-  const docs = await table.find(query).toArray();
+  const docs = await table.find(query);
   const keys = docs.map(doc => doc._id);
   await table.bulkDelete(keys);
   db.close();

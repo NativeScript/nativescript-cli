@@ -63,6 +63,10 @@ export class CacheStore {
     const cache = new DataStoreCache(this.appKey, this.collectionName, this.tag);
     const stream = KinveyObservable.create(async (observer) => {
       try {
+        if (!id) {
+          throw new Error('No id was provided. A valid id is required.');
+        }
+
         const cachedDoc = await cache.findById(id);
         observer.next(cachedDoc);
 

@@ -28,6 +28,13 @@ export class NetworkStore {
     this.collectionName = collectionName;
   }
 
+  /**
+   * @deprecated 4.0.0 - Use collectionName instead.
+   */
+  get collection() {
+    return this.collectionName;
+  }
+
   get pathname() {
     return `/${NAMESPACE}/${this.appKey}/${this.collectionName}`;
   }
@@ -72,7 +79,7 @@ export class NetworkStore {
         if (rawResponse === true) {
           observer.next(response);
         } else {
-          observer.next(response.data);
+          observer.next(response.data.count);
         }
 
         observer.complete();
@@ -88,6 +95,10 @@ export class NetworkStore {
       const url = formatKinveyBaasUrl(`${this.pathname}/${id}`);
       const request = createRequest(RequestMethod.GET, url);
       try {
+        if (!id) {
+          throw new Error('No id was provided. A valid id is required.');
+        }
+
         const response = await request.execute();
 
         if (rawResponse === true) {

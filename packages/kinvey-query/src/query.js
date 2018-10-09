@@ -1,6 +1,9 @@
 import isNumber from 'lodash/isNumber';
 import isPlainObject from 'lodash/isPlainObject';
 
+const PROTECTED_FIELDS = ['_id', '_acl'];
+const UNSUPPORTED_CONDITIONS = ['$nearSphere'];
+
 export class Query {
   constructor(query) {
     const config = Object.assign({
@@ -19,7 +22,11 @@ export class Query {
   }
 
   get fields() {
-    return this._fields;
+    if (this._fields.length > 0) {
+      return [].concat(this._fields, PROTECTED_FIELDS);
+    }
+
+    return [];
   }
 
   set fields(fields) {
@@ -80,6 +87,34 @@ export class Query {
     } else {
       this._skip = skip;
     }
+  }
+
+  /**
+   * Returns true or false depending on if the query is able to be processed offline.
+   *
+   * @returns {boolean} True if the query is supported offline otherwise false.
+   */
+  isSupportedOffline() {
+    return Object.keys(this.filter).reduce((supported, key) => {
+      if (supported) {
+        const value = this.filter[key];
+        return UNSUPPORTED_CONDITIONS.some((unsupportedConditions) => {
+          if (!value) {
+            return true;
+          }
+
+          if (typeof value !== 'object') {
+            return true;
+          }
+
+          return !Object.keys(value).some((condition) => {
+            return condition === unsupportedConditions;
+          });
+        });
+      }
+
+      return supported;
+    }, true);
   }
 
   /**
@@ -558,6 +593,37 @@ export class Query {
    */
   toQueryString() {
     return this.toQueryObject();
+  }
+
+  /**
+   * Returns Object representation of the query.
+   *
+   * @returns {Object} Object
+   */
+  toPlainObject() {
+    if (this._parent) {
+      return this._parent.toPlainObject();
+    }
+
+    // Return set of parameters.
+    const json = {
+      fields: this.fields,
+      filter: this.filter,
+      sort: this.sort,
+      skip: this.skip,
+      limit: this.limit
+    };
+
+    return json;
+  }
+
+  /**
+   * Returns query string representation of the query.
+   *
+   * @return {string} Query string string.
+   */
+  toString() {
+    return JSON.stringify(this.toQueryString());
   }
 
   /**

@@ -13,6 +13,21 @@ if (!fs.existsSync(DOT_ENV_FILE)) {
   );
 }
 
+function parseTestPattern(argv) {
+  let found = false;
+  const pattern = argv.map(function (v) {
+    if (found) {
+      return v;
+    }
+    if (v === '--') {
+      found = true;
+    }
+  }).
+    filter(function (a) { return a }).
+    join(' ');
+  return pattern ? ['--grep', pattern] : [];
+}
+
 module.exports = function (config) {
   config.set({
     // level of logging
@@ -78,6 +93,7 @@ module.exports = function (config) {
 
     // Mocha config
     client: {
+      args: parseTestPattern(process.argv),
       mocha: {
         timeout: 10000
       }

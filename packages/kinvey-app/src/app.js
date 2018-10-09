@@ -82,14 +82,8 @@ export function init(config) {
 /**
  * @deprecated Please use init().
  */
-export function initialize(config) {
-  try {
-    init(config);
-    return Promise.resolve(null);
-    // return Promise.resolve(User.getActiveUser(client));
-  } catch (error) {
-    return Promise.reject(error);
-  }
+export function initialize() {
+  return Promise.reject(new Error('initialize() has been deprecated. Please use init().'));
 }
 
 /**

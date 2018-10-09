@@ -33,4 +33,5 @@ export function collection(collectionName, type = DataStoreType.Cache, options =
 export async function clearCache() {
   const { appKey } = getConfig();
   await clearAll(appKey);
+  return null;
 }
