@@ -6,7 +6,7 @@
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
   "scripts": {
-    "test": "node copytests.js && karma start --",
+    "test2": "node copytests.js && karma start --",
     "test:ci": "node copytests.js &&  karma start karma.ci.js"
   },
   "dependencies": {},

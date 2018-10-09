@@ -6,6 +6,7 @@
     "bootstrap": "lerna run bootstrap",
     "build": "lerna run build --parallel",
     "lint": "lerna run lint --parallel",
+    "test": "lerna run test --parallel",
     "test:ci": "yarn lint && yarn test"
   },
   "devDependencies": {
