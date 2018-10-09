@@ -49,7 +49,7 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			pubnubSubscribeKey: PubnubKeys.SUBSCRIBE_KEY,
 			msvKey: "cli",
 			msvEnv: this.$config.PREVIEW_APP_ENVIRONMENT,
-			showLoadingPage: true,
+			showLoadingPage: false,
 			callbacks: this.getCallbacks(),
 			getInitialFiles
 		};
