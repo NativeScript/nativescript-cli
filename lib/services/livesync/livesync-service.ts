@@ -596,9 +596,15 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 			const startSyncFilesTimeout = (platform?: string) => {
 				timeoutTimer = setTimeout(async () => {
-					if (liveSyncData.syncToPreviewApp) {
-						await this.addActionToChain(projectData.projectDir, async () => {
-							if (filesToSync.length || filesToRemove.length) {
+					if (filesToSync.length || filesToRemove.length) {
+						const currentFilesToSync = _.cloneDeep(filesToSync);
+						filesToSync.splice(0, filesToSync.length);
+
+						const currentFilesToRemove = _.cloneDeep(filesToRemove);
+						filesToRemove = [];
+
+						if (liveSyncData.syncToPreviewApp) {
+							await this.addActionToChain(projectData.projectDir, async () => {
 								await this.$previewAppLiveSyncService.syncFiles({
 									appFilesUpdaterOptions: {
 										bundle: liveSyncData.bundle,
@@ -607,22 +613,13 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 									},
 									env: liveSyncData.env,
 									projectDir: projectData.projectDir
-								}, filesToSync);
-								filesToSync = [];
-								filesToRemove = [];
-							}
-						});
-					} else {
-						// Push actions to the queue, do not start them simultaneously
-						await this.addActionToChain(projectData.projectDir, async () => {
-							if (filesToSync.length || filesToRemove.length) {
+								}, currentFilesToSync, currentFilesToRemove);
+							});
+						} else {
+							// Push actions to the queue, do not start them simultaneously
+							await this.addActionToChain(projectData.projectDir, async () => {
 								try {
-									const currentFilesToSync = _.cloneDeep(filesToSync);
 									const currentHmrData = _.cloneDeep(hmrData);
-									filesToSync.splice(0, filesToSync.length);
-
-									const currentFilesToRemove = _.cloneDeep(filesToRemove);
-									filesToRemove = [];
 
 									const allModifiedFiles = [].concat(currentFilesToSync).concat(currentFilesToRemove);
 
@@ -703,8 +700,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 										}
 									}
 								}
-							}
-						});
+							});
+						}
 					}
 				}, 250);
 
