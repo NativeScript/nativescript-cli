@@ -306,10 +306,15 @@ interface INodeModulesData extends IPlatform, IProjectDataComposition, IAppFiles
 	projectFilesConfig: IProjectFilesConfig;
 }
 
+interface INodeModulesBuilderData {
+	nodeModulesData: INodeModulesData;
+	release: boolean;
+}
+
 interface INodeModulesBuilder {
-	prepareNodeModules(nodeModulesData: INodeModulesData): Promise<void>;
-	prepareJSNodeModules(jsNodeModulesData: INodeModulesData): Promise<void>;
-	cleanNodeModules(absoluteOutputPath: string, platform: string): void;
+	prepareNodeModules(opts: INodeModulesBuilderData): Promise<void>;
+	prepareJSNodeModules(opts: INodeModulesBuilderData): Promise<void>;
+	cleanNodeModules(absoluteOutputPath: string): void;
 }
 
 interface INodeModulesDependenciesBuilder {
@@ -369,7 +374,7 @@ interface IOptionalFilesToRemove {
 	filesToRemove?: string[];
 }
 
-interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions, IOptionalFilesToSync, IOptionalFilesToRemove, IOptionalNativePrepareComposition { 
+interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions, IOptionalFilesToSync, IOptionalFilesToRemove, IOptionalNativePrepareComposition {
 	skipCopyTnsModules?: boolean;
 	skipCopyAppResourcesFiles?: boolean;
 }

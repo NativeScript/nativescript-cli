@@ -10,33 +10,21 @@ export interface ILocalDependencyData extends IDependencyData {
 export class TnsModulesCopy {
 	constructor(
 		private outputRoot: string,
-		private $options: IOptions,
 		private $fs: IFileSystem,
 		private $pluginsService: IPluginsService
 	) {
 	}
 
-	public copyModules(dependencies: IDependencyData[], platform: string): void {
-		for (const entry in dependencies) {
-			const dependency = dependencies[entry];
+	public copyModules(opts: { dependencies: IDependencyData[], release: boolean }): void {
+		const filePatternsToDelete = opts.release ? "**/*.ts" : "**/*.d.ts";
+		for (const entry in opts.dependencies) {
+			const dependency = opts.dependencies[entry];
 
-			this.copyDependencyDir(dependency);
-
-			if (dependency.name === constants.TNS_CORE_MODULES_NAME) {
-				const tnsCoreModulesResourcePath = path.join(this.outputRoot, constants.TNS_CORE_MODULES_NAME);
-
-				// Remove .ts files
-				const allFiles = this.$fs.enumerateFilesInDirectorySync(tnsCoreModulesResourcePath);
-				// TODO: Remove usage of $options here.
-				const matchPattern = this.$options.release ? "**/*.ts" : "**/*.d.ts";
-				allFiles.filter(file => minimatch(file, matchPattern, { nocase: true })).map(file => this.$fs.deleteFile(file));
-
-				shelljs.rm("-rf", path.join(tnsCoreModulesResourcePath, constants.NODE_MODULES_FOLDER_NAME));
-			}
+			this.copyDependencyDir(dependency, filePatternsToDelete);
 		}
 	}
 
-	private copyDependencyDir(dependency: IDependencyData): void {
+	private copyDependencyDir(dependency: IDependencyData, filePatternsToDelete: string): void {
 		if (dependency.depth === 0) {
 			const targetPackageDir = path.join(this.outputRoot, dependency.name);
 
@@ -51,14 +39,13 @@ export class TnsModulesCopy {
 
 			this.removeNonProductionDependencies(dependency, targetPackageDir);
 			this.removeDependenciesPlatformsDirs(targetPackageDir);
+			const allFiles = this.$fs.enumerateFilesInDirectorySync(targetPackageDir);
+			allFiles.filter(file => minimatch(file, filePatternsToDelete, { nocase: true })).map(file => this.$fs.deleteFile(file));
 		}
 	}
 
 	private removeDependenciesPlatformsDirs(dependencyDir: string): void {
 		const dependenciesFolder = path.join(dependencyDir, constants.NODE_MODULES_FOLDER_NAME);
-		if (!this.$fs.exists(dependenciesFolder)) {
-			return;
-		}
 
 		if (this.$fs.exists(dependenciesFolder)) {
 			const dependencies = this.getDependencies(dependenciesFolder);

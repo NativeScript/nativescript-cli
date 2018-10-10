@@ -7,23 +7,24 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder
 	) { }
 
-	public async prepareNodeModules(nodeModulesData: INodeModulesData): Promise<void> {
-		const productionDependencies = this.initialPrepareNodeModules(nodeModulesData);
+	public async prepareNodeModules(opts: INodeModulesBuilderData): Promise<void> {
+		const productionDependencies = this.initialPrepareNodeModules(opts);
 		const npmPluginPrepare: NpmPluginPrepare = this.$injector.resolve(NpmPluginPrepare);
-		await npmPluginPrepare.preparePlugins(productionDependencies, nodeModulesData.platform, nodeModulesData.projectData, nodeModulesData.projectFilesConfig);
+		await npmPluginPrepare.preparePlugins(productionDependencies, opts.nodeModulesData.platform, opts.nodeModulesData.projectData, opts.nodeModulesData.projectFilesConfig);
 	}
 
-	public async prepareJSNodeModules(jsNodeModulesData: INodeModulesData): Promise<void> {
-		const productionDependencies = this.initialPrepareNodeModules(jsNodeModulesData);
+	public async prepareJSNodeModules(opts: INodeModulesBuilderData): Promise<void> {
+		const productionDependencies = this.initialPrepareNodeModules(opts);
 		const npmPluginPrepare: NpmPluginPrepare = this.$injector.resolve(NpmPluginPrepare);
-		await npmPluginPrepare.prepareJSPlugins(productionDependencies, jsNodeModulesData.platform, jsNodeModulesData.projectData, jsNodeModulesData.projectFilesConfig);
+		await npmPluginPrepare.prepareJSPlugins(productionDependencies, opts.nodeModulesData.platform, opts.nodeModulesData.projectData, opts.nodeModulesData.projectFilesConfig);
 	}
 
-	public cleanNodeModules(absoluteOutputPath: string, platform: string): void {
+	public cleanNodeModules(absoluteOutputPath: string): void {
 		shelljs.rm("-rf", absoluteOutputPath);
 	}
 
-	private initialPrepareNodeModules(nodeModulesData: INodeModulesData): IDependencyData[] {
+	private initialPrepareNodeModules(opts: INodeModulesBuilderData): IDependencyData[] {
+		const { nodeModulesData, release } = opts;
 		const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(nodeModulesData.projectData.projectDir);
 
 		if (!this.$fs.exists(nodeModulesData.absoluteOutputPath)) {
@@ -32,12 +33,12 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 		}
 
 		if (!nodeModulesData.appFilesUpdaterOptions.bundle) {
-			const tnsModulesCopy = this.$injector.resolve(TnsModulesCopy, {
+			const tnsModulesCopy: TnsModulesCopy = this.$injector.resolve(TnsModulesCopy, {
 				outputRoot: nodeModulesData.absoluteOutputPath
 			});
-			tnsModulesCopy.copyModules(productionDependencies, nodeModulesData.platform);
+			tnsModulesCopy.copyModules({ dependencies: productionDependencies, release});
 		} else {
-			this.cleanNodeModules(nodeModulesData.absoluteOutputPath, nodeModulesData.platform);
+			this.cleanNodeModules(nodeModulesData.absoluteOutputPath);
 		}
 
 		return productionDependencies;
