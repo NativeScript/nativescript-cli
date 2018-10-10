@@ -212,7 +212,7 @@ describe("Project commands tests", () => {
 
 			await createProjectCommand.execute(dummyArgs);
 
-			assert.deepEqual(selectedTemplateName, "https://github.com/NativeScript/template-blank-vue/tarball/0.9.0");
+			assert.deepEqual(selectedTemplateName, "tns-template-blank-vue");
 		});
 	});
 });

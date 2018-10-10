@@ -78,7 +78,7 @@ export const RESERVED_TEMPLATE_NAMES: IStringDictionary = {
 	"default": "tns-template-hello-world",
 	"javascript": "tns-template-hello-world",
 	"tsc": "tns-template-hello-world-ts",
-	"vue": "https://github.com/NativeScript/template-blank-vue/tarball/0.9.0",
+	"vue": "tns-template-blank-vue",
 	"typescript": "tns-template-hello-world-ts",
 	"ng": "tns-template-hello-world-ng",
 	"angular": "tns-template-hello-world-ng"
