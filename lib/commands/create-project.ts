@@ -113,7 +113,7 @@ or --js flags.)
 				break;
 			}
 			case constants.VueFlavorName: {
-				selectedFlavorTemplates.push({ value: "https://github.com/NativeScript/template-blank-vue/tarball/0.9.0" });
+				selectedFlavorTemplates.push({ value: "tns-template-blank-vue" });
 				break;
 			}
 			case constants.TsFlavorName: {
