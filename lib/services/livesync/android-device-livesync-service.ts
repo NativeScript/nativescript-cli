@@ -119,7 +119,8 @@ export class AndroidDeviceLiveSyncService extends AndroidDeviceLiveSyncServiceBa
 			await this.device.adb.executeShellCommand(["mkdir", "-p", path.dirname(deviceFilePath), " && ", "touch", deviceFilePath]);
 		}
 
-		await this.getDeviceHashService(deviceAppData.appIdentifier).removeHashes(localToDevicePaths);
+		const deviceHashService = this.device.fileSystem.getDeviceHashService(deviceAppData.appIdentifier);
+		await deviceHashService.removeHashes(localToDevicePaths);
 	}
 
 	private async awaitRuntimeReloadSuccessMessage(): Promise<boolean> {

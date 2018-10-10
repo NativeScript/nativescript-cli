@@ -3,6 +3,7 @@ import { AndroidDeviceLiveSyncServiceBase } from "../../../lib/services/livesync
 import { LiveSyncPaths } from "../../../lib/common/constants";
 import { assert } from "chai";
 import * as path from "path";
+import { AndroidDeviceHashService } from "../../../lib/common/mobile/android/android-device-hash-service";
 
 interface ITestSetupInput {
 	existsHashesFile?: boolean;
@@ -19,14 +20,15 @@ interface ITestSetupOutput {
 	projectRoot: string;
 	changedFileLocalPath: string;
 	unchangedFileLocalPath: string;
+	deviceHashService: Mobile.IAndroidDeviceHashService;
 }
 
 const transferFilesOnDeviceParams: any[] = [];
 let transferDirectoryOnDeviceParams: any[] = [];
-let resolveParams: any[] = [];
 const deleteFileParams: any[] = [];
 const writeJsonParams: any[] = [];
 const pushFileParams: any[] = [];
+const appIdentifier = "testAppIdentifier";
 
 class AndroidDeviceLiveSyncServiceBaseMock extends AndroidDeviceLiveSyncServiceBase {
 	constructor($injector: IInjector,
@@ -77,16 +79,20 @@ function createTestInjector() {
 	return injector;
 }
 
-const device: Mobile.IAndroidDevice = {
-	deviceInfo: mockDeviceInfo(),
-	adb: mockAdb(),
-	applicationManager: mockDeviceApplicationManager(),
-	fileSystem: mockDeviceFileSystem(),
-	isEmulator: true,
-	openDeviceLogStream: () => Promise.resolve(),
-	getApplicationInfo: () => Promise.resolve(null),
-	init: () => Promise.resolve()
-};
+function mockDevice(deviceHashService: Mobile.IAndroidDeviceHashService): Mobile.IAndroidDevice {
+	const device: Mobile.IAndroidDevice = {
+		deviceInfo: mockDeviceInfo(),
+		adb: mockAdb(),
+		applicationManager: mockDeviceApplicationManager(),
+		fileSystem: mockDeviceFileSystem(deviceHashService),
+		isEmulator: true,
+		openDeviceLogStream: () => Promise.resolve(),
+		getApplicationInfo: () => Promise.resolve(null),
+		init: () => Promise.resolve()
+	};
+
+	return device;
+}
 
 function mockDeviceInfo(): Mobile.IDeviceInfo {
 	return {
@@ -103,15 +109,11 @@ function mockDeviceInfo(): Mobile.IDeviceInfo {
 	};
 }
 
-function createDeviceAppData(androidVersion?: string): Mobile.IDeviceAppData {
+function createDeviceAppData(deviceHashService: Mobile.IAndroidDeviceHashService): Mobile.IDeviceAppData {
 	return {
 		getDeviceProjectRootPath: async () => `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${LiveSyncPaths.SYNC_DIR_NAME}`,
 		appIdentifier,
-		device: <Mobile.IDevice>{
-			deviceInfo: {
-				version: androidVersion || "8.1.2"
-			}
-		},
+		device: mockDevice(deviceHashService),
 		isLiveSyncSupported: async () => true,
 		platform: "Android"
 	};
@@ -136,11 +138,13 @@ function mockDeviceApplicationManager(): Mobile.IDeviceApplicationManager {
 	return <Mobile.IDeviceApplicationManager>{};
 }
 
-function mockDeviceFileSystem(): Mobile.IDeviceFileSystem {
-	return <Mobile.IDeviceFileSystem> {
-		deleteFile: async (deviceFilePath, appIdentifier) => {
-			deleteFileParams.push({ deviceFilePath, appIdentifier });
-		}
+function mockDeviceFileSystem(deviceHashService: Mobile.IAndroidDeviceHashService): Mobile.IAndroidDeviceFileSystem {
+	return <any> {
+		deleteFile: async (deviceFilePath: string, appId: string) => {
+			deleteFileParams.push({ deviceFilePath, appId });
+		},
+		getDeviceHashService: () => deviceHashService,
+		updateHashesOnDevice: () => ({})
 	};
 }
 
@@ -163,13 +167,6 @@ function mockLogger(): any {
 	};
 }
 
-function createAndroidDeviceLiveSyncServiceBase() {
-	const injector = new Yok();
-	injector.resolve = (service, args) => resolveParams.push({ service, args });
-	const androidDeviceLiveSyncServiceBase = new AndroidDeviceLiveSyncServiceBaseMock(injector, mockPlatformsData(), mockFilesHashService(), mockLogger(), device);
-	return androidDeviceLiveSyncServiceBase;
-}
-
 function setup(options?: ITestSetupInput): ITestSetupOutput {
 	options = options || {};
 	const projectRoot = "~/TestApp/app";
@@ -186,11 +183,12 @@ function setup(options?: ITestSetupInput): ITestSetupOutput {
 	}
 
 	const injector = createTestInjector();
-	const localToDevicePaths = _.keys(filesToShasums).map(file => injector.resolve(LocalToDevicePathDataMock, { filePath: file }));
-	const deviceAppData = createDeviceAppData();
-	const androidDeviceLiveSyncServiceBase = new AndroidDeviceLiveSyncServiceBaseMock(injector, mockPlatformsData(), mockFilesHashService(), mockLogger(), device);
-
 	const fs = injector.resolve("fs");
+	const deviceHashService = new AndroidDeviceHashService(mockAdb(), appIdentifier, fs, injector.resolve("mobileHelper"));
+	const localToDevicePaths = _.keys(filesToShasums).map(file => injector.resolve(LocalToDevicePathDataMock, { filePath: file }));
+	const deviceAppData = createDeviceAppData(deviceHashService);
+	const androidDeviceLiveSyncServiceBase = new AndroidDeviceLiveSyncServiceBaseMock(injector, mockPlatformsData(), mockFilesHashService(), mockLogger(), mockDevice(deviceHashService));
+
 	fs.exists = () => options.existsHashesFile;
 	fs.getFsStats = mockFsStats({ isDirectory: false, isFile: true });
 	fs.getFileShasum = async (filePath: string) => filesToShasums[filePath];
@@ -211,11 +209,10 @@ function setup(options?: ITestSetupInput): ITestSetupOutput {
 		androidDeviceLiveSyncServiceBase,
 		projectRoot,
 		changedFileLocalPath,
-		unchangedFileLocalPath
+		unchangedFileLocalPath,
+		deviceHashService
 	};
 }
-
-const appIdentifier = "testAppIdentifier";
 
 async function transferFiles(testSetup: ITestSetupOutput, options: { force: boolean, isFullSync: boolean}): Promise<Mobile.ILocalToDevicePathData[]> {
 	const androidDeviceLiveSyncServiceBase = testSetup.androidDeviceLiveSyncServiceBase;
@@ -231,55 +228,6 @@ async function transferFiles(testSetup: ITestSetupOutput, options: { force: bool
 }
 
 describe("AndroidDeviceLiveSyncServiceBase", () => {
-	describe("getDeviceHashService", () => {
-		beforeEach(() => {
-			resolveParams = [];
-		});
-		it("should resolve AndroidDeviceHashService when the key is not stored in dictionary", () => {
-			const androidDeviceLiveSyncServiceBase = createAndroidDeviceLiveSyncServiceBase();
-			androidDeviceLiveSyncServiceBase.getDeviceHashService(appIdentifier);
-			assert.equal(resolveParams.length, 1);
-			assert.isFunction(resolveParams[0].service);
-			assert.isDefined(resolveParams[0].args.adb);
-			assert.equal(resolveParams[0].args.appIdentifier, appIdentifier);
-		});
-		it("should return already stored value when the method is called for second time with the same deviceIdentifier and appIdentifier", () => {
-			const androidDeviceLiveSyncServiceBase = createAndroidDeviceLiveSyncServiceBase();
-			androidDeviceLiveSyncServiceBase.getDeviceHashService(appIdentifier);
-			assert.equal(resolveParams.length, 1);
-			assert.isFunction(resolveParams[0].service);
-			assert.isDefined(resolveParams[0].args.adb);
-			assert.equal(resolveParams[0].args.appIdentifier, appIdentifier);
-
-			androidDeviceLiveSyncServiceBase.getDeviceHashService(appIdentifier);
-			assert.equal(resolveParams.length, 1);
-			assert.isFunction(resolveParams[0].service);
-			assert.isDefined(resolveParams[0].args.adb);
-			assert.equal(resolveParams[0].args.appIdentifier, appIdentifier);
-		});
-		it("should return AndroidDeviceHashService when the method is called for second time with different appIdentifier and same deviceIdentifier", () => {
-			const androidDeviceLiveSyncServiceBase = createAndroidDeviceLiveSyncServiceBase();
-			androidDeviceLiveSyncServiceBase.getDeviceHashService(appIdentifier);
-			assert.equal(resolveParams.length, 1);
-			assert.isFunction(resolveParams[0].service);
-			assert.isDefined(resolveParams[0].args.adb);
-			assert.equal(resolveParams[0].args.appIdentifier, appIdentifier);
-
-			androidDeviceLiveSyncServiceBase.getDeviceHashService(appIdentifier);
-			assert.equal(resolveParams.length, 1);
-			assert.isFunction(resolveParams[0].service);
-			assert.isDefined(resolveParams[0].args.adb);
-			assert.equal(resolveParams[0].args.appIdentifier, appIdentifier);
-
-			const newAppIdentifier = "myNewAppIdentifier";
-			androidDeviceLiveSyncServiceBase.getDeviceHashService(newAppIdentifier);
-			assert.equal(resolveParams.length, 2);
-			assert.isFunction(resolveParams[1].service);
-			assert.isDefined(resolveParams[1].args.adb);
-			assert.equal(resolveParams[1].args.appIdentifier, newAppIdentifier);
-		});
-	});
-
 	describe("transferFiles", () => {
 		beforeEach(() => {
 			transferDirectoryOnDeviceParams = [];

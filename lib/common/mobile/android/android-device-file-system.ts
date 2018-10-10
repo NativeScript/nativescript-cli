@@ -147,16 +147,16 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		await deviceHashService.uploadHashFileToDevice(hashes);
 	}
 
-	private getTempDir(): string {
-		temp.track();
-		return temp.mkdirSync("application-");
-	}
-
-	private getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService {
+	public getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService {
 		if (!this._deviceHashServices[appIdentifier]) {
 			this._deviceHashServices[appIdentifier] = this.$injector.resolve(AndroidDeviceHashService, { adb: this.adb, appIdentifier });
 		}
 
 		return this._deviceHashServices[appIdentifier];
+	}
+
+	private getTempDir(): string {
+		temp.track();
+		return temp.mkdirSync("application-");
 	}
 }

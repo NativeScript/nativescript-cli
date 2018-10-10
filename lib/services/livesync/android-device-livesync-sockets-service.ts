@@ -101,7 +101,7 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 
 	public async removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<void> {
 		await this.livesyncTool.removeFiles(_.map(localToDevicePaths, (element: any) => element.filePath));
-		const deviceHashService = this.getDeviceHashService(deviceAppData.appIdentifier);
+		const deviceHashService = this.device.fileSystem.getDeviceHashService(deviceAppData.appIdentifier);
 		await deviceHashService.removeHashes(localToDevicePaths);
 	}
 
