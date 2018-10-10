@@ -1,0 +1,5 @@
+.env
+app/tests
+package-lock.json
+platforms
+hooks

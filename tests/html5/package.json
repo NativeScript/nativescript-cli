@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "test2": "node copytests.js && karma start --",
-    "test:ci": "node copytests.js &&  karma start karma.ci.js"
+    "test:ci": "node copytests.js && karma start karma.ci.js"
   },
   "dependencies": {},
   "devDependencies": {
