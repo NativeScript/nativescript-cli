@@ -415,55 +415,11 @@ describe("previewAppPluginsService", () => {
 		});
 	});
 	describe("getExternalPlugins", () => {
-		const testCases = [
-			{
-				name: "should return default plugins(`tns-core-modules` and `tns-core-modules-widgets`) when no plugins are provided",
-				plugins: {},
-				expectedPlugins: ["tns-core-modules", "tns-core-modules-widgets"]
-			},
-			{
-				name: "should exclude `nativescript-vue`",
-				plugins: { "nativescript-vue": "1.2.3" },
-				expectedPlugins: ["tns-core-modules", "tns-core-modules-widgets"]
-			},
-			{
-				name: "should exclude `nativescript-intl`",
-				plugins: { "nativescript-intl": "4.5.6" },
-				expectedPlugins: ["tns-core-modules", "tns-core-modules-widgets"]
-			},
-			{
-				name: "should exclude `nativescript-angular`",
-				plugins: { "nativescript-angular": "7.8.9" },
-				expectedPlugins: ["tns-core-modules", "tns-core-modules-widgets"]
-			},
-			{
-				name: "should exclude `nativescript-theme-core`",
-				plugins: { "nativescript-theme-core": "1.3.5" },
-				expectedPlugins: ["tns-core-modules", "tns-core-modules-widgets"]
-			},
-			{
-				name: "should return plugins that contain `nativescript` in their names",
-				plugins: {
-					"nativescript-facebook": "4.5.6"
-				},
-				expectedPlugins: ["nativescript-facebook", "tns-core-modules", "tns-core-modules-widgets"]
-			},
-			{
-				name: "should not return plugins that do not contain `nativescript` in their names",
-				plugins: {
-					lodash: "4.5.6",
-					xmlhttprequest: "1.2.3"
-				},
-				expectedPlugins: ["tns-core-modules", "tns-core-modules-widgets"]
-			}
-		];
-
-		_.each(testCases, testCase => {
-			it(`${testCase.name}`, () => {
-				const { previewAppPluginsService, device } = setup(testCase.plugins, testCase.plugins);
-				const actualPlugins = previewAppPluginsService.getExternalPlugins(device);
-				assert.deepEqual(actualPlugins, testCase.expectedPlugins);
-			});
+		it("should exclude `nativescript-theme-core`", () => {
+			const plugins = { "nativescript-theme-core": "1.3.5" };
+			const { previewAppPluginsService, device } = setup(plugins, plugins);
+			const actualPlugins = previewAppPluginsService.getExternalPlugins(device);
+			assert.notInclude(actualPlugins, "nativescript-theme-core");
 		});
 	});
 });
