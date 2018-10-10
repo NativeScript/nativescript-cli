@@ -54,7 +54,7 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 			};
 
 			// Process node_modules folder
-			await this.$nodeModulesBuilder.prepareNodeModules(nodeModulesData);
+			await this.$nodeModulesBuilder.prepareNodeModules({ nodeModulesData, release: config.appFilesUpdaterOptions.release });
 		}
 
 		if (!config.changesInfo || config.changesInfo.configChanged || config.changesInfo.modulesChanged) {
