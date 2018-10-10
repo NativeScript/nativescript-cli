@@ -7,7 +7,7 @@ const SIZE_BYTE_LENGTH = 1;
 const REPORT_LENGTH = 1;
 const DO_REFRESH_LENGTH = 1;
 const SYNC_OPERATION_TIMEOUT = 60000;
-const TRY_CONNECT_TIMEOUT = 30000;
+const TRY_CONNECT_TIMEOUT = 60000;
 const DEFAULT_LOCAL_HOST_ADDRESS = "127.0.0.1";
 
 export class AndroidLivesyncTool implements IAndroidLivesyncTool {
