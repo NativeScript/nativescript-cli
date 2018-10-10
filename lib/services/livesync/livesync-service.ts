@@ -649,6 +649,11 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 											skipModulesNativeCheck: !liveSyncData.watchAllFiles
 										}, { skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare });
 
+										if (liveSyncData.useHotModuleReload && appInstalledOnDeviceResult.appInstalled) {
+											const additionalFilesToSync = currentHmrData && currentHmrData.fallbackFiles && currentHmrData.fallbackFiles[device.deviceInfo.platform];
+											_.each(additionalFilesToSync, fileToSync => currentFilesToSync.push(fileToSync));
+										}
+
 										const service = this.getLiveSyncService(device.deviceInfo.platform);
 										const settings: ILiveSyncWatchInfo = {
 											liveSyncDeviceInfo: deviceBuildInfoDescriptor,
