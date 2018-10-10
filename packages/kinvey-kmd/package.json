@@ -8,7 +8,7 @@
   "main": "lib/kmd.js",
   "scripts": {
     "prebuild": "del lib",
-    "build": "babel src -d lib",
+    "build": "babel src -d lib --ignore \"src/**/*.spec.js\"",
     "lint": "eslint src",
     "test": "mocha -r @babel/register \"src/**/*.spec.js\""
   },
