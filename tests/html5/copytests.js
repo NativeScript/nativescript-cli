@@ -3,6 +3,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const klawSync = require('klaw-sync');
+const babel = require('@babel/core');
 
 const SDK = 'kinvey-html5-sdk';
 const SHARED_TESTS_PATH = path.resolve(__dirname, '..', 'specs');
@@ -20,10 +21,11 @@ const files = klawSync(SHARED_TESTS_PATH);
 // Replace __SDK__ with the node sdk and write the file
 files.map((file) => {
   if (path.extname(file.path) === '.js') {
-    const data = fs.readFileSync(file.path, 'utf8');
-    const newData = data.replace(/__SDK__/i, SDK);
+    const content = fs.readFileSync(file.path, 'utf8');
+    const newContent = content.replace(/__SDK__/i, SDK);
+    const result = babel.transform(newContent);
     fs.ensureDirSync(SDK_TESTS_PATH);
-    fs.writeFileSync(path.resolve(SDK_TESTS_PATH, path.basename(file.path)), newData);
+    fs.writeFileSync(path.resolve(SDK_TESTS_PATH, path.basename(file.path)), result.code);
   } else {
     fs.copySync(file.path, path.resolve(SDK_TESTS_PATH, path.basename(file.path)));
   }

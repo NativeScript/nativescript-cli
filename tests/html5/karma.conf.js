@@ -101,17 +101,7 @@ module.exports = function (config) {
 
     // Webpack config
     webpack: {
-      module: {
-        rules: [
-          {
-            test: /\.js$/,
-            exclude: /(node_modules)/,
-            use: {
-              loader: 'babel-loader'
-            }
-          }
-        ]
-      },
+      mode: 'development',
       plugins: [
         new Dotenv({
           path: DOT_ENV_FILE
@@ -119,7 +109,7 @@ module.exports = function (config) {
       ]
     },
     webpackMiddleware: {
-      stats: false
+      stats: 'errors-only'
     }
   });
 }
