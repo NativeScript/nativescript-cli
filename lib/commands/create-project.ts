@@ -78,11 +78,11 @@ export class CreateProjectCommand implements ICommand {
 	}
 
 	private async interactiveFlavorSelection(adverb: string) {
-		const flavorSelection = await this.$prompter.promptForDetailedChoice(`${adverb}, which flavor would you like to use?`, [
-			{ key: constants.NgFlavorName, description: "Learn more at https://angular.io/" },
-			{ key: constants.VueFlavorName, description: "Learn more at https://vuejs.org/" },
-			{ key: constants.TsFlavorName, description: "Learn more at https://www.typescriptlang.org/" },
-			{ key: constants.JsFlavorName, description: "Learn more at https://www.javascript.com/" },
+		const flavorSelection = await this.$prompter.promptForDetailedChoice(`${adverb}, which style of NativeScript project would you like to use:`, [
+			{ key: constants.NgFlavorName, description: "Learn more at https://nativescript.org/angular" },
+			{ key: constants.VueFlavorName, description: "Learn more at https://nativescript.org/vue" },
+			{ key: constants.TsFlavorName, description: "Learn more at https://nativescript.org/typescript" },
+			{ key: constants.JsFlavorName, description: "Use NativeScript without any framework" },
 		]);
 		return flavorSelection;
 	}
@@ -130,7 +130,7 @@ or --js flags.)
 			const templateChoices = selectedFlavorTemplates.map((template) => {
 				return { key: template.key, description: template.description };
 			});
-			const selectedTemplateKey = await this.$prompter.promptForDetailedChoice(`${adverb}, which template would you like to start from?`, templateChoices);
+			const selectedTemplateKey = await this.$prompter.promptForDetailedChoice(`${adverb}, which template would you like to start from:`, templateChoices);
 			selectedTemplate = selectedFlavorTemplates.find(t => t.key === selectedTemplateKey).value;
 		} else {
 			selectedTemplate = selectedFlavorTemplates[0].value;
