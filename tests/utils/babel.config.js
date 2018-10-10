@@ -1,20 +1,16 @@
 module.exports = (api) => {
-  api.cache(false);
+  api.cache.never();
 
   const presets = [
     ['@babel/env', {
-      targets: {
-        ie: '11',
-        edge: '17',
-        firefox: '60',
-        chrome: '67',
-        safari: '11.1'
-      },
+      targets: 'last 2 versions, maintained node versions, not dead',
       useBuiltIns: 'usage'
     }]
   ];
+  const plugins = ['@babel/plugin-transform-runtime'];
 
   return {
-    presets
+    presets,
+    plugins
   };
 };

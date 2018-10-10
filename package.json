@@ -10,11 +10,7 @@
     "test:ci": "yarn lint && yarn test"
   },
   "devDependencies": {
-    "@angular/common": "^6.0.0-rc.0 || ^6.0.0",
-    "@angular/core": "^6.0.0-rc.0 || ^6.0.0",
-    "lerna": "^3.0.4",
-    "rxjs": "~6.2.0",
-    "zone.js": "~0.8.26"
+    "lerna": "^3.0.4"
   },
   "workspaces": {
     "packages": [
@@ -28,7 +24,6 @@
       "packages/kinvey-endpoint",
       "packages/kinvey-files",
       "packages/kinvey-http",
-      "packages/kinvey-http-nativescript",
       "packages/kinvey-http-web",
       "packages/kinvey-identity",
       "packages/kinvey-kmd",
@@ -40,40 +35,9 @@
       "packages/kinvey-session",
       "packages/kinvey-session-web",
       "sdks/kinvey-html5-sdk",
-      "sdks/kinvey-nativescript-sdk",
       "tests/utils",
-      "tests/html5",
-      "tests/nativescript"
+      "tests/html5"
     ],
-    "nohoist": [
-      "**/karma",
-      "**/karma/**",
-      "**/karma-babel-preprocessor",
-      "**/karma-babel-preprocessor/**",
-      "**/karma-chai",
-      "**/karma-chai/**",
-      "**/karma-chrome-launcher",
-      "**/karma-chrome-launcher/**",
-      "**/karma-mocha",
-      "**/karma-mocha/**",
-      "**/karma-mocha-reporter",
-      "**/karma-mocha-reporter/**",
-      "**/karma-nativescript-launcher",
-      "**/karma-nativescript-launcher/**",
-      "**/karma-sourcemap-loader",
-      "**/karma-sourcemap-loader/**",
-      "**/karma-webpack",
-      "**/karma-webpack/**",
-      "**/kinvey-nativescript-sdk",
-      "**/kinvey-nativescript-sdk/**",
-      "**/kinvey-test-utils",
-      "**/kinvey-test-utils/**",
-      "**/nativescript-theme-core",
-      "**/nativescript-theme-core/**",
-      "**/nativescript-unit-test-runner",
-      "**/nativescript-unit-test-runner/**",
-      "**/tns-core-modules",
-      "**/tns-core-modules/**"
-    ]
+    "nohoist": []
   }
 }

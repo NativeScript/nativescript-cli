@@ -56,7 +56,7 @@ module.exports = function (config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'tests/**/*.js': ['webpack', 'sourcemap']
+      'tests/**/*.js': ['webpack']
     },
 
 
@@ -101,7 +101,6 @@ module.exports = function (config) {
 
     // Webpack config
     webpack: {
-      devtool: 'inline-source-map',
       module: {
         rules: [
           {
@@ -120,7 +119,7 @@ module.exports = function (config) {
       ]
     },
     webpackMiddleware: {
-      stats: 'errors-only'
+      stats: false
     }
   });
 }
