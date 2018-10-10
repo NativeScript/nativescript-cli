@@ -309,6 +309,7 @@ interface INodeModulesData extends IPlatform, IProjectDataComposition, IAppFiles
 interface INodeModulesBuilderData {
 	nodeModulesData: INodeModulesData;
 	release: boolean;
+	copyNodeModules?: boolean;
 }
 
 interface INodeModulesBuilder {

@@ -109,7 +109,8 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 					appFilesUpdaterOptions,
 					projectFilesConfig
 				},
-				release: appFilesUpdaterOptions.release
+				release: appFilesUpdaterOptions.release,
+				copyNodeModules: true
 			});
 		} catch (error) {
 			this.$logger.debug(error);
