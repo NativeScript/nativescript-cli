@@ -8,24 +8,33 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 	) { }
 
 	public async prepareNodeModules(opts: INodeModulesBuilderData): Promise<void> {
-		const productionDependencies = this.initialPrepareNodeModules(opts);
+		const productionDependencies = this.intialPrepareNodeModulesIfRequired(opts);
 		const npmPluginPrepare: NpmPluginPrepare = this.$injector.resolve(NpmPluginPrepare);
 		await npmPluginPrepare.preparePlugins(productionDependencies, opts.nodeModulesData.platform, opts.nodeModulesData.projectData, opts.nodeModulesData.projectFilesConfig);
 	}
 
 	public async prepareJSNodeModules(opts: INodeModulesBuilderData): Promise<void> {
-		const productionDependencies = this.initialPrepareNodeModules(opts);
+		const productionDependencies = this.intialPrepareNodeModulesIfRequired(opts);
 		const npmPluginPrepare: NpmPluginPrepare = this.$injector.resolve(NpmPluginPrepare);
 		await npmPluginPrepare.prepareJSPlugins(productionDependencies, opts.nodeModulesData.platform, opts.nodeModulesData.projectData, opts.nodeModulesData.projectFilesConfig);
+	}
+
+	private intialPrepareNodeModulesIfRequired(opts: INodeModulesBuilderData): IDependencyData[] {
+		const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(opts.nodeModulesData.projectData.projectDir);
+
+		if (opts.copyNodeModules) {
+			this.initialPrepareNodeModules(opts, productionDependencies);
+		}
+
+		return productionDependencies;
 	}
 
 	public cleanNodeModules(absoluteOutputPath: string): void {
 		shelljs.rm("-rf", absoluteOutputPath);
 	}
 
-	private initialPrepareNodeModules(opts: INodeModulesBuilderData): IDependencyData[] {
+	private initialPrepareNodeModules(opts: INodeModulesBuilderData, productionDependencies: IDependencyData[]): IDependencyData[] {
 		const { nodeModulesData, release } = opts;
-		const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(nodeModulesData.projectData.projectDir);
 
 		if (!this.$fs.exists(nodeModulesData.absoluteOutputPath)) {
 			// Force copying if the destination doesn't exist.
@@ -36,7 +45,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 			const tnsModulesCopy: TnsModulesCopy = this.$injector.resolve(TnsModulesCopy, {
 				outputRoot: nodeModulesData.absoluteOutputPath
 			});
-			tnsModulesCopy.copyModules({ dependencies: productionDependencies, release});
+			tnsModulesCopy.copyModules({ dependencies: productionDependencies, release });
 		} else {
 			this.cleanNodeModules(nodeModulesData.absoluteOutputPath);
 		}
