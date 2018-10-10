@@ -280,9 +280,7 @@ export namespace Kinvey {
     find(query?: Query, options?: RequestOptions): Observable<T[]>;
     findById(id: string, options?: RequestOptions): Observable<T>;
     group(aggregation: Aggregation, options?: RequestOptions): Observable<{}>;
-    count(query?: Query, options?: RequestOptions): Observable<{
-      count: number
-    }>;
+    count(query?: Query, options?: RequestOptions): Observable<number>;
     create(entities: {}, options?: RequestOptions): Promise<T>;
     update(entities: {}, options?: RequestOptions): Promise<T>;
     save(entity: {}, options?: RequestOptions): Promise<T>;
@@ -304,9 +302,7 @@ export namespace Kinvey {
     clear(query?: Query, options?: RequestOptions): Promise<{
       count: number
     }>;
-    pendingSyncCount(query?: Query, options?: RequestOptions): Promise<{
-      count: number
-    }>;
+    pendingSyncCount(query?: Query, options?: RequestOptions): Promise<number>;
     pendingSyncEntities(query?: Query, options?: RequestOptions): Promise<SyncEntity[]>;
     push(query?: Query, options?: RequestOptions): Promise<PushResult<T>[]>;
     pull(query?: Query, options?: PullRequestOptions): Promise<number>;
@@ -349,9 +345,7 @@ export namespace Kinvey {
     static downloadByUrl(url: string, options?: RequestOptions): Promise<{}>;
     static stream<T extends File = File>(name: string, options?: RequestOptions): Promise<T>;
     static group(aggregation: Aggregation, options?: RequestOptions): Promise<{}>;
-    static count(query?: Query, options?: RequestOptions): Promise<{
-      count: number
-    }>;
+    static count(query?: Query, options?: RequestOptions): Promise<number>;
     static upload<T extends File = File>(file: {}, metadata?: FileMetadata, options?: RequestOptions): Promise<T>;
     static remove(query?: Query, options?: RequestOptions): Promise<{
       count: number
@@ -781,7 +775,7 @@ declare class NetworkStore<T extends Entity = Entity> {
   find(query?: Query, options?: RequestOptions): Observable<T[]>;
   findById(id: string, options?: RequestOptions): Observable<T>;
   group(aggregation: Aggregation, options?: RequestOptions): Observable<{}>;
-  count(query?: Query, options?: RequestOptions): Observable<{ count: number }>;
+  count(query?: Query, options?: RequestOptions): Observable<number>;
   create(entity: T, options?: RequestOptions): Promise<T>;
   update(entity: T, options?: RequestOptions): Promise<T>;
   save(entity: T, options?: RequestOptions): Promise<T>;
@@ -844,9 +838,7 @@ export class Files {
   static downloadByUrl(url: string, options?: RequestOptions): Promise<{}>;
   static stream<T extends File = File>(name: string, options?: RequestOptions): Promise<T>;
   static group(aggregation: Aggregation, options?: RequestOptions): Promise<{}>;
-  static count(query?: Query, options?: RequestOptions): Promise<{
-    count: number
-  }>;
+  static count(query?: Query, options?: RequestOptions): Promise<number>;
   static upload<T extends File = File>(file: {}, metadata?: FileMetadata, options?: RequestOptions): Promise<T>;
   static remove(query?: Query, options?: RequestOptions): Promise<{
     count: number
