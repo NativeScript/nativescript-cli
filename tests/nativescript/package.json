@@ -6,7 +6,7 @@
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
   "scripts": {
-    "test": "node prepare.js",
+    "test": "node prepare.js && yarn test:android && yarn test:ios",
     "test:android": "tns test android --justlaunch --disableNpmInstall",
     "test:ios": "tns test ios --justlaunch --disableNpmInstall",
     "test:ci": "node prepare.js && karma start karma.ci.js"
