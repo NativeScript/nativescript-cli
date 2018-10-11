@@ -349,6 +349,7 @@ interface ILiveSyncWatchInfo extends IProjectDataComposition, IHasUseHotModuleRe
 	isReinstalled: boolean;
 	syncAllFiles: boolean;
 	liveSyncDeviceInfo: ILiveSyncDeviceInfo;
+	hmrData: { hash: string; fallbackFiles: IDictionary<string[]> };
 	force?: boolean;
 }
 
@@ -356,6 +357,7 @@ interface ILiveSyncResultInfo extends IHasUseHotModuleReloadOption {
 	modifiedFilesData: Mobile.ILocalToDevicePathData[];
 	isFullSync: boolean;
 	deviceAppData: Mobile.IDeviceAppData;
+	didRecover?: boolean
 }
 
 interface IAndroidLiveSyncResultInfo extends ILiveSyncResultInfo, IAndroidLivesyncSyncOperationResult { }

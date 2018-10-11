@@ -666,6 +666,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 											filesToSync: currentFilesToSync,
 											isReinstalled: appInstalledOnDeviceResult.appInstalled,
 											syncAllFiles: liveSyncData.watchAllFiles,
+											hmrData: currentHmrData,
 											useHotModuleReload: liveSyncData.useHotModuleReload,
 											force: liveSyncData.force
 										};
@@ -674,11 +675,13 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 										await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
 
-										if (liveSyncData.useHotModuleReload && currentHmrData.hash) {
+										//If didRecover is true, this means we were in ErrorActivity and fallback files were already transfered and app will be restarted.
+										if (!liveSyncResultInfo.didRecover && liveSyncData.useHotModuleReload && currentHmrData.hash) {
 											const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, currentHmrData.hash);
 											if (status === HmrConstants.HMR_ERROR_STATUS) {
 												settings.filesToSync = currentHmrData.fallbackFiles[device.deviceInfo.platform];
 												liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);
+												//We want to force a restart of the application.
 												liveSyncResultInfo.isFullSync = true;
 												await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
 											}
