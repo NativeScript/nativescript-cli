@@ -1,12 +1,11 @@
 {
   "private": true,
-  "version": "4.0.0",
-  "name": "kinvey-node-sdk",
-  "description": "Kinvey JavaScript SDK for Node.js applications.",
+  "version": "1.0.0",
+  "name": "kinvey-http-node",
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "lib/index.js",
+  "main": "lib/http.js",
   "scripts": {
     "prebuild": "del lib",
     "build": "babel src -d lib --ignore \"src/**/*.spec.js\"",
@@ -14,17 +13,8 @@
   },
   "dependencies": {
     "@babel/runtime": "7.1.2",
-    "kinvey-acl": "1.0.0",
-    "kinvey-aggregation": "1.0.0",
-    "kinvey-app": "1.0.0",
-    "kinvey-cache-memory": "1.0.0",
-    "kinvey-datastore": "1.0.0",
-    "kinvey-endpoint": "1.0.0",
-    "kinvey-files": "1.0.0",
-    "kinvey-http-node": "1.0.0",
-    "kinvey-identity": "1.0.0",
-    "kinvey-kmd": "1.0.0",
-    "kinvey-query": "1.0.0"
+    "kinvey-http": "1.0.0",
+    "request": "2.88.0"
   },
   "devDependencies": {
     "@babel/cli": "7.1.2",
@@ -32,11 +22,9 @@
     "@babel/plugin-transform-runtime": "7.1.0",
     "@babel/preset-env": "7.1.0",
     "babel-eslint": "10.0.1",
+    "del-cli": "1.1.0",
     "eslint": "5.3.0",
     "eslint-config-kinvey-platform": "kinvey/eslint-kinvey-platform#0.1.1",
     "eslint-plugin-import": "2.14.0"
-  },
-  "files": [
-    "lib/*"
-  ]
+  }
 }

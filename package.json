@@ -25,6 +25,7 @@
       "packages/kinvey-files",
       "packages/kinvey-http",
       "packages/kinvey-http-nativescript",
+      "packages/kinvey-http-node",
       "packages/kinvey-http-web",
       "packages/kinvey-identity",
       "packages/kinvey-kmd",
@@ -37,8 +38,10 @@
       "packages/kinvey-session-web",
       "sdks/kinvey-html5-sdk",
       "sdks/kinvey-nativescript-sdk",
+      "sdks/kinvey-node-sdk",
       "tests/html5",
       "tests/nativescript",
+      "tests/node",
       "tests/utils"
     ],
     "nohoist": [

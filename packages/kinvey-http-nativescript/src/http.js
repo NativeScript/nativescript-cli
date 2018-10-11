@@ -1,7 +1,7 @@
 import { register as _register } from 'kinvey-http';
 import { request as httpRequest } from 'tns-core-modules/http';
 
-export default async function http(request) {
+async function http(request) {
   const response = await httpRequest({
     headers: request.headers,
     method: request.method,

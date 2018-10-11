@@ -1,6 +1,7 @@
+import { register as _register } from 'kinvey-http';
 import httpRequest from 'request';
 
-export default function http(request) {
+function http(request) {
   return new Promise((resolve, reject) => {
     httpRequest({
       headers: request.headers,
@@ -11,8 +12,17 @@ export default function http(request) {
       if (error) {
         reject(error);
       } else {
-        resolve({ statusCode: httpResponse.statusCode, headers: httpResponse.headers, data });
+        resolve({
+          statusCode:
+          httpResponse.statusCode,
+          headers: httpResponse.headers,
+          data
+        });
       }
     });
   });
+}
+
+export function register() {
+  _register(http);
 }

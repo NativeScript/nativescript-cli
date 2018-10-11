@@ -1,0 +1,30 @@
+{
+  "private": true,
+  "version": "1.0.0",
+  "name": "kinvey-node-tests",
+  "author": "Kinvey, Inc.",
+  "homepage": "http://www.kinvey.com",
+  "license": "Apache-2.0",
+  "scripts": {
+    "test": "node prepare.js && mocha --timeout 10000 --slow 5000 --require dotenv/config \"tests/**/*.spec.js\""
+  },
+  "dependencies": {
+    "@babel/runtime": "7.1.2",
+    "kinvey-node-sdk": "4.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "7.1.2",
+    "@babel/core": "7.1.2",
+    "@babel/plugin-transform-runtime": "7.1.0",
+    "@babel/preset-env": "7.1.0",
+    "babel-eslint": "10.0.1",
+    "babel-loader": "8.0.4",
+    "chai": "4.2.0",
+    "dotenv": "6.1.0",
+    "fs-extra": "7.0.0",
+    "klaw-sync": "6.0.0",
+    "lodash": "4.17.11",
+    "mocha": "5.2.0",
+    "sinon": "6.3.5"
+  }
+}
