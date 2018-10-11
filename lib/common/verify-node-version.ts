@@ -78,9 +78,13 @@ export function getNodeWarning(): ISystemWarning {
 		}
 	}
 
-	return {
-		message: warningMessage,
-		severity: SystemWarningsSeverity.medium
-	};
+	if (warningMessage) {
+		return {
+			message: warningMessage,
+			severity: SystemWarningsSeverity.medium
+		};
+	}
+
+	return null;
 }
 /* tslint:enable */
