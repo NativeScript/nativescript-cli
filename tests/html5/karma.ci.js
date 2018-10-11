@@ -2,11 +2,14 @@
 const path = require('path');
 const Dotenv = require('dotenv-webpack');
 
+const DOT_ENV_FILE = path.resolve(__dirname, '.env');
+
 module.exports = function (config) {
   config.set({
     // level of logging
     // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
-    logLevel: config.LOG_WARN,
+    logLevel: config.LOG_INFO,
+
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
@@ -19,7 +22,7 @@ module.exports = function (config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'tests/**/*.js'
+      'tests/**/*.spec.js'
     ],
 
 
@@ -29,9 +32,7 @@ module.exports = function (config) {
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: {
-      'tests/**/*.js': ['webpack', 'sourcemap']
-    },
+    preprocessors: {},
 
 
     // test results reporter to use
@@ -49,7 +50,7 @@ module.exports = function (config) {
 
 
     // enable / disable watching file and executing tests whenever any file changes
-    autoWatch: true,
+    autoWatch: false,
 
 
     // start these browsers
@@ -135,8 +136,8 @@ module.exports = function (config) {
 
       // Mac OS
       'bs_macos_chrome_69',
-      // 'bs_macos_firefox_62',
-      // 'bs_macos_safari_11',
+      'bs_macos_firefox_62',
+      'bs_macos_safari_11',
 
       // iOS
       // 'bs_ios_11',
@@ -161,34 +162,10 @@ module.exports = function (config) {
       }
     },
 
-    // Webpack config
-    webpack: {
-      devtool: 'inline-source-map',
-      module: {
-        rules: [
-          {
-            test: /\.js$/,
-            exclude: /(node_modules)/,
-            use: {
-              loader: 'babel-loader'
-            }
-          }
-        ]
-      },
-      plugins: [
-        new Dotenv({
-          path: path.resolve(__dirname, '.env')
-        })
-      ]
-    },
-    webpackMiddleware: {
-      stats: 'errors-only'
-    },
-
     // BrowserStack
     browserStack: {
-      username: process.env.BS_USERNAME,
-      accessKey: process.env.BS_ACCESS_KEY,
+      username: 'kinveymobileteam1',
+      accessKey: 'EGfszrX4Lx9uykWsqPHX',
       project: 'Kinvey JavaScript SDK',
       name: 'HTML5',
       build: process.env.TRAVIS_BUILD_NUMBER,

@@ -1,17 +1,6 @@
 /* eslint-disable */
 const path = require('path');
 const fs = require('fs');
-const Dotenv = require('dotenv-webpack');
-const webpack = require('webpack');
-
-const DOT_ENV_FILE = path.resolve(__dirname, '.env');
-
-if (!fs.existsSync(DOT_ENV_FILE)) {
-  throw new Error(
-    '.env file is missing. ' +
-    'Please create a .env file that contains the appKey, appSecret, and masterSecret for the application you would like to use for running the integration tests.'
-  );
-}
 
 function parseTestPattern(argv) {
   let found = false;
@@ -32,7 +21,8 @@ module.exports = function (config) {
   config.set({
     // level of logging
     // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
-    logLevel: config.LOG_WARN,
+    logLevel: config.LOG_INFO,
+
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
@@ -45,7 +35,7 @@ module.exports = function (config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'tests/**/*.js'
+      'tests/**/*.spec.js'
     ],
 
 
@@ -55,9 +45,7 @@ module.exports = function (config) {
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: {
-      'tests/**/*.js': ['webpack']
-    },
+    preprocessors: {},
 
 
     // test results reporter to use
@@ -75,7 +63,7 @@ module.exports = function (config) {
 
 
     // enable / disable watching file and executing tests whenever any file changes
-    autoWatch: true,
+    autoWatch: false,
 
 
     // start these browsers
@@ -97,19 +85,6 @@ module.exports = function (config) {
       mocha: {
         timeout: 10000
       }
-    },
-
-    // Webpack config
-    webpack: {
-      mode: 'development',
-      plugins: [
-        new Dotenv({
-          path: DOT_ENV_FILE
-        })
-      ]
-    },
-    webpackMiddleware: {
-      stats: 'errors-only'
     }
   });
 }
