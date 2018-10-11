@@ -24,6 +24,7 @@
       "packages/kinvey-endpoint",
       "packages/kinvey-files",
       "packages/kinvey-http",
+      "packages/kinvey-http-nativescript",
       "packages/kinvey-http-web",
       "packages/kinvey-identity",
       "packages/kinvey-kmd",
@@ -35,9 +36,20 @@
       "packages/kinvey-session",
       "packages/kinvey-session-web",
       "sdks/kinvey-html5-sdk",
-      "tests/utils",
-      "tests/html5"
+      "sdks/kinvey-nativescript-sdk",
+      "tests/html5",
+      "tests/nativescript",
+      "tests/utils"
     ],
-    "nohoist": []
+    "nohoist": [
+      "**/karma",
+      "**/karma/**",
+      "**/nativescript-theme-core",
+      "**/nativescript-theme-core/**",
+      "**/nativescript-unit-test-runner",
+      "**/nativescript-unit-test-runner/**",
+      "**/tns-core-modules",
+      "**/tns-core-modules/**"
+    ]
   }
 }

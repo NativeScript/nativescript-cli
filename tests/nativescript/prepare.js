@@ -8,10 +8,10 @@ const webpack = require('webpack');
 const Dotenv = require('dotenv-webpack');
 const glob = require('glob');
 
-const SDK = 'kinvey-html5-sdk';
+const SDK = 'kinvey-nativescript-sdk';
 const SHARED_TESTS_PATH = path.resolve(__dirname, '..', 'specs');
 const SDK_TMP_TESTS_PATH = path.resolve(__dirname, 'tmp');
-const SDK_TESTS_PATH = path.resolve(__dirname, 'tests');
+const SDK_TESTS_PATH = path.resolve(__dirname, 'app', 'tests');
 const DOT_ENV_FILE = path.resolve(__dirname, '.env');
 
 // Check if .env file exists
@@ -70,6 +70,7 @@ webpack({
       path: DOT_ENV_FILE
     })
   ],
+  externals: [/^tns-core-modules\/*/],
   entry,
   output: {
     filename: '[name].spec.js',
