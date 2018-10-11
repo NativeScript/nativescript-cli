@@ -63,7 +63,7 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			onConnectedDevicesChange: (connectedDevices: ConnectedDevices) => ({ }),
 			onLogMessage: (log: string, deviceName: string, deviceId: string) => {
 				const device = _.find(this.connectedDevices, { id: deviceId});
-				this.emit(DEVICE_LOG_EVENT_NAME, log, deviceId, device.platform);
+				this.emit(DEVICE_LOG_EVENT_NAME, log, deviceId, device ? device.platform : "");
 				this.$logger.info(`LOG from device ${deviceName}: ${log}`);
 			},
 			onRestartMessage: () => {
