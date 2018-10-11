@@ -596,6 +596,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 			const startSyncFilesTimeout = (platform?: string) => {
 				timeoutTimer = setTimeout(async () => {
+					if (platform && liveSyncData.bundle) {
+						filesToSync = filesToSyncMap[platform];
+					}
+
 					if (filesToSync.length || filesToRemove.length) {
 						const currentFilesToSync = _.cloneDeep(filesToSync);
 						filesToSync.splice(0, filesToSync.length);
@@ -732,9 +736,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					filesToRemove,
 					startSyncFilesTimeout: async (platform: string) => {
 						if (platform) {
-							filesToSync = filesToSyncMap[platform];
-							await startSyncFilesTimeout();
-							filesToSyncMap[platform] = [];
+							await startSyncFilesTimeout(platform);
 						} else {
 							// This code is added for backwards compatibility with old versions of nativescript-dev-webpack plugin.
 							await startSyncFilesTimeout();
