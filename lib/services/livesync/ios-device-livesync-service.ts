@@ -14,7 +14,6 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
 		private $iOSDebuggerPortService: IIOSDebuggerPortService,
 		private $logger: ILogger,
-		private $fs: IFileSystem,
 		private $processService: IProcessService,
 		protected $platformsData: IPlatformsData,
 		protected device: Mobile.IiOSDevice) {
@@ -71,8 +70,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		}
 
 		if (await this.setupSocketIfNeeded(projectData)) {
-			await this.liveEdit(scriptFiles);
-			await this.reloadPage(deviceAppData, otherFiles);
+			await this.reloadPage(otherFiles);
 		} else {
 			await this.restartApplication(deviceAppData, projectData.projectName);
 		}
@@ -82,28 +80,12 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		return this.device.applicationManager.restartApplication({ appId: deviceAppData.appIdentifier, projectName });
 	}
 
-	private async reloadPage(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
+	private async reloadPage(localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
 		if (localToDevicePaths.length) {
 			const message = JSON.stringify({
 				method: "Page.reload",
 				params: {
 					ignoreCache: false
-				},
-				id: ++currentPageReloadId
-			});
-
-			await this.sendMessage(message);
-		}
-	}
-
-	private async liveEdit(localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
-		for (const localToDevicePath of localToDevicePaths) {
-			const content = this.$fs.readText(localToDevicePath.getLocalPath());
-			const message = JSON.stringify({
-				method: "Debugger.setScriptSource",
-				params: {
-					scriptUrl: localToDevicePath.getRelativeToProjectBasePath(),
-					scriptSource: content
 				},
 				id: ++currentPageReloadId
 			});
