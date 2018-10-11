@@ -93,7 +93,7 @@ export class Prompter implements IPrompter {
 		const longestKeyLength = choices.concat().sort(function (a, b) { return b.key.length - a.key.length; })[0].key.length;
 		const inquirerChoices = choices.map((choice) => {
 			return {
-				name: `${_.padEnd(choice.key, longestKeyLength)}  ${this.descriptionSeparator}  ${choice.description}`,
+				name: `${_.padEnd(choice.key, longestKeyLength)}  ${choice.description ? this.descriptionSeparator : ""}  ${choice.description}`,
 				short: choice.key
 			};
 		});

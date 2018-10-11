@@ -13,10 +13,10 @@ let createProjectCalledWithForce: boolean;
 let validateProjectCallsCount: number;
 const dummyArgs = ["dummyArgsString"];
 const expectedFlavorChoices = [
-	{ key: "Angular", description: "Learn more at https://angular.io/" },
-	{ key: "Vue.js", description: "Learn more at https://vuejs.org/" },
-	{ key: "Plain TypeScript", description: "Learn more at https://www.typescriptlang.org/" },
-	{ key: "Plain JavaScript", description: "Learn more at https://www.javascript.com/" }
+	{ key: "Angular", description: "Learn more at https://nativescript.org/angular" },
+	{ key: "Vue.js", description: "Learn more at https://nativescript.org/vue" },
+	{ key: "Plain TypeScript", description: "Learn more at https://nativescript.org/typescript" },
+	{ key: "Plain JavaScript", description: "Use NativeScript without any framework" }
 ];
 const expectedTemplateChoices = [
 	{ key: "Hello World", description: "A Hello World app" },
@@ -85,12 +85,12 @@ describe("Project commands tests", () => {
 			answers["First, what will be the name of your app?"] = opts.projectNameAnswer;
 		}
 		if (opts.flavorAnswer) {
-			const flavorQuestion = opts.projectNameAnswer ? "Next" : "First" + ", which flavor would you like to use?";
+			const flavorQuestion = opts.projectNameAnswer ? "Next" : "First, which style of NativeScript project would you like to use:";
 			answers[flavorQuestion] = opts.flavorAnswer;
 			questionChoices[flavorQuestion] = expectedFlavorChoices;
 		}
 		if (opts.templateAnswer) {
-			const templateQuestion = opts.projectNameAnswer ? "Finally" : "Next" + ", which template would you like to start from?";
+			const templateQuestion = opts.projectNameAnswer ? "Finally" : "Next, which template would you like to start from:";
 			answers[templateQuestion] = opts.templateAnswer;
 			questionChoices[templateQuestion] = expectedTemplateChoices;
 		}
