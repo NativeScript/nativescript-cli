@@ -44,6 +44,10 @@
     "nohoist": [
       "**/karma",
       "**/karma/**",
+      "**/karma-mocha",
+      "**/karma-mocha/**",
+      "**/karma-nativescript-launcher",
+      "**/karma-nativescript-launcher/**",
       "**/nativescript-theme-core",
       "**/nativescript-theme-core/**",
       "**/nativescript-unit-test-runner",

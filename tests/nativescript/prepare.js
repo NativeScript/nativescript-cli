@@ -70,11 +70,14 @@ webpack({
       path: DOT_ENV_FILE
     })
   ],
-  externals: [/^tns-core-modules\/*/],
+  externals: {
+    'tns-core-modules/http': 'tns-core-modules/http'
+  },
   entry,
   output: {
     filename: '[name].spec.js',
-    path: SDK_TESTS_PATH
+    path: SDK_TESTS_PATH,
+    libraryTarget: 'commonjs2'
   }
 }, (err, stats) => {
   if (err) {
