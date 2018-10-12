@@ -565,7 +565,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		const patterns = await this.getWatcherPatterns(liveSyncData, projectData, platforms);
 
 		if (liveSyncData.useHotModuleReload) {
-			this.$hmrStatusService.attachToHrmStatusEvent();
+			this.$hmrStatusService.attachToHmrStatusEvent();
 		}
 
 		if (liveSyncData.watchAllFiles) {
@@ -586,10 +586,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			}
 
 			let filesToSync: string[] = [];
-			const hmrData: { hash: string; fallbackFiles: IDictionary<string[]> } = {
-				hash: "",
-				fallbackFiles: {}
-			};
+			const hmrData: IDictionary<IPlatformHmrData> = {};
 			const filesToSyncMap: IDictionary<string[]> = {};
 			let filesToRemove: string[] = [];
 			let timeoutTimer: NodeJS.Timer;
@@ -635,6 +632,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 									await this.$devicesService.execute(async (device: Mobile.IDevice) => {
 										const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];
 										const deviceBuildInfoDescriptor = _.find(liveSyncProcessInfo.deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
+										const platformHmrData = (currentHmrData && currentHmrData[device.deviceInfo.platform]) || <any>{};
 
 										const settings: ILiveSyncWatchInfo = {
 											liveSyncDeviceInfo: deviceBuildInfoDescriptor,
@@ -643,7 +641,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 											filesToSync: currentFilesToSync,
 											isReinstalled: false,
 											syncAllFiles: liveSyncData.watchAllFiles,
-											hmrData: currentHmrData,
+											hmrData: platformHmrData,
 											useHotModuleReload: liveSyncData.useHotModuleReload,
 											force: liveSyncData.force,
 											connectTimeout: 1000
@@ -657,10 +655,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 											await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
 
 											// If didRecover is true, this means we were in ErrorActivity and fallback files were already transfered and app will be restarted.
-											if (!liveSyncResultInfo.didRecover && liveSyncData.useHotModuleReload && currentHmrData.hash) {
-												const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, currentHmrData.hash);
+											if (!liveSyncResultInfo.didRecover && liveSyncData.useHotModuleReload && platformHmrData.hash) {
+												const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, platformHmrData.hash);
 												if (status === HmrConstants.HMR_ERROR_STATUS) {
-													watchInfo.filesToSync = currentHmrData.fallbackFiles[device.deviceInfo.platform];
+													watchInfo.filesToSync = platformHmrData.fallbackFiles;
 													liveSyncResultInfo = await service.liveSyncWatchAction(device, watchInfo);
 													// We want to force a restart of the application.
 													liveSyncResultInfo.isFullSync = true;
@@ -703,8 +701,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 										settings.connectTimeout = null;
 
 										if (liveSyncData.useHotModuleReload && appInstalledOnDeviceResult.appInstalled) {
-											const additionalFilesToSync = currentHmrData && currentHmrData.fallbackFiles && currentHmrData.fallbackFiles[device.deviceInfo.platform];
-											_.each(additionalFilesToSync, fileToSync => currentFilesToSync.push(fileToSync));
+											_.each(platformHmrData.fallbackFiles, fileToSync => currentFilesToSync.push(fileToSync));
 										}
 
 										await watchAction(settings);
