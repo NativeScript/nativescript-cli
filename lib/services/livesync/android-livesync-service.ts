@@ -30,7 +30,7 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 		// This is the case when the app has crashed and is in ErrorActivity.
 		// As the app might not have time to apply the patches, we will send the whole bundle.js(fallbackFiles)
 		if (liveSyncInfo.useHotModuleReload && !result.didRefresh && liveSyncInfo.hmrData && liveSyncInfo.hmrData.hash) {
-			liveSyncInfo.filesToSync = liveSyncInfo.hmrData.fallbackFiles[device.deviceInfo.platform];
+			liveSyncInfo.filesToSync = liveSyncInfo.hmrData.fallbackFiles;
 			result = await this.liveSyncWatchActionCore(device, liveSyncInfo);
 			result.didRecover = true;
 		}

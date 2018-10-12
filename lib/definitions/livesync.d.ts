@@ -356,7 +356,7 @@ interface ILiveSyncWatchInfo extends IProjectDataComposition, IHasUseHotModuleRe
 	isReinstalled: boolean;
 	syncAllFiles: boolean;
 	liveSyncDeviceInfo: ILiveSyncDeviceInfo;
-	hmrData: { hash: string; fallbackFiles: IDictionary<string[]> };
+	hmrData: IPlatformHmrData;
 	force?: boolean;
 }
 
@@ -375,6 +375,11 @@ interface IFullSyncInfo extends IProjectDataComposition, IHasUseHotModuleReloadO
 	syncAllFiles: boolean;
 	liveSyncDeviceInfo: ILiveSyncDeviceInfo;
 	force?: boolean;
+}
+
+interface IPlatformHmrData {
+	hash: string;
+	fallbackFiles: string[];
 }
 
 interface ITransferFilesOptions {

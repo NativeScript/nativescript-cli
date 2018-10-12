@@ -54,27 +54,25 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 
 	private async initializePreviewForDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<FilesPayload> {
 		const filesToSyncMap: IDictionary<string[]> = {};
-		const hmrData: { hash: string; fallbackFiles: IDictionary<string[]> } = {
-			hash: "",
-			fallbackFiles: {}
-		};
+		const hmrData: IDictionary<IPlatformHmrData> = {};
 		let promise = Promise.resolve<FilesPayload>(null);
 		const startSyncFilesTimeout = async (platform: string) => {
 			await promise
 				.then(async () => {
 						const currentHmrData = _.cloneDeep(hmrData);
+						const platformHmrData = currentHmrData[platform] || <any>{};
 						const filesToSync = _.cloneDeep(filesToSyncMap[platform]);
 						// We don't need to prepare when webpack emits changed files. We just need to send a message to pubnub.
 						promise = this.syncFilesForPlatformSafe(data, platform, { filesToSync, skipPrepare: true, useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
 						await promise;
 
-						if (data.appFilesUpdaterOptions.useHotModuleReload && currentHmrData.hash) {
+						if (data.appFilesUpdaterOptions.useHotModuleReload && platformHmrData.hash) {
 							const devices = _.filter(this.$previewSdkService.connectedDevices, { platform: platform.toLowerCase() });
 
 							await Promise.all(_.map(devices, async (previewDevice: Device) => {
-								const status = await this.$hmrStatusService.getHmrStatus(previewDevice.id, currentHmrData.hash);
+								const status = await this.$hmrStatusService.getHmrStatus(previewDevice.id, platformHmrData.hash);
 								if (status === HmrConstants.HMR_ERROR_STATUS) {
-									await this.syncFilesForPlatformSafe(data, platform, { filesToSync: currentHmrData.fallbackFiles[platform], useHotModuleReload: false, deviceId: previewDevice.id });
+									await this.syncFilesForPlatformSafe(data, platform, { filesToSync: platformHmrData.fallbackFiles, useHotModuleReload: false, deviceId: previewDevice.id });
 								}
 							}));
 						}

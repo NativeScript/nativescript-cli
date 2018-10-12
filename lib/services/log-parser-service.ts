@@ -29,7 +29,7 @@ export class LogParserService extends EventEmitter implements ILogParserService 
 	private processDeviceLogResponse(message: string, deviceIdentifier: string, devicePlatform: string) {
 		const lines = message.split("\n");
 		_.forEach(lines, line => {
-			_.forEach(this.parseRules, (parseRule) => {
+			_.forEach(this.parseRules, parseRule => {
 				if (!devicePlatform || !parseRule.platform || parseRule.platform.toLowerCase() === devicePlatform.toLowerCase()) {
 					const matches = parseRule.regex.exec(line);
 

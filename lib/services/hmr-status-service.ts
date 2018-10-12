@@ -34,7 +34,7 @@ export class HmrStatusService implements IHmrStatusService {
 	}
 
 	@cache()
-	public attachToHrmStatusEvent(): void {
+	public attachToHmrStatusEvent(): void {
 		this.$logParserService.addParseRule({
 			regex: HmrStatusService.HMR_STATUS_LOG_REGEX,
 			handler: this.handleHmrStatusFound.bind(this),
@@ -62,7 +62,7 @@ export class HmrStatusService implements IHmrStatusService {
 			}
 		}
 
-		this.$logger.trace("Found hmr status.", {status, hash});
+		this.$logger.trace("Found hmr status.", { status, hash });
 
 		if (status) {
 			this.setData(status, hash, deviceId);
