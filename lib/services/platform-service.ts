@@ -481,7 +481,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public async installApplication(device: Mobile.IDevice, buildConfig: IBuildConfig, projectData: IProjectData, packageFile?: string, outputFilePath?: string): Promise<void> {
-		this.$logger.out("Installing...");
+		this.$logger.out(`Installing on device ${device.deviceInfo.identifier}...`);
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: constants.TrackActionNames.Deploy,
