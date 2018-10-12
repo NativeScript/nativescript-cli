@@ -149,7 +149,7 @@ declare module Mobile {
 		muted?: boolean;
 	}
 
-	interface IDeviceAppData extends IPlatform {
+	interface IDeviceAppData extends IPlatform, IConnectTimeoutOption {
 		appIdentifier: string;
 		device: Mobile.IDevice;
 		getDeviceProjectRootPath(): Promise<string>;

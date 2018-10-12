@@ -594,7 +594,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			let filesToRemove: string[] = [];
 			let timeoutTimer: NodeJS.Timer;
 
-			const startSyncFilesTimeout = (platform?: string) => {
+			const startSyncFilesTimeout = (platform?: string, opts?: { calledFromHook: boolean }) => {
 				timeoutTimer = setTimeout(async () => {
 					if (platform && liveSyncData.bundle) {
 						filesToSync = filesToSyncMap[platform];
@@ -636,6 +636,52 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 										const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];
 										const deviceBuildInfoDescriptor = _.find(liveSyncProcessInfo.deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 
+										const settings: ILiveSyncWatchInfo = {
+											liveSyncDeviceInfo: deviceBuildInfoDescriptor,
+											projectData,
+											filesToRemove: currentFilesToRemove,
+											filesToSync: currentFilesToSync,
+											isReinstalled: false,
+											syncAllFiles: liveSyncData.watchAllFiles,
+											hmrData: currentHmrData,
+											useHotModuleReload: liveSyncData.useHotModuleReload,
+											force: liveSyncData.force,
+											connectTimeout: 1000
+										};
+
+										const service = this.getLiveSyncService(device.deviceInfo.platform);
+
+										const watchAction = async (watchInfo: ILiveSyncWatchInfo): Promise<void> => {
+											let liveSyncResultInfo = await service.liveSyncWatchAction(device, watchInfo);
+
+											await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
+
+											// If didRecover is true, this means we were in ErrorActivity and fallback files were already transfered and app will be restarted.
+											if (!liveSyncResultInfo.didRecover && liveSyncData.useHotModuleReload && currentHmrData.hash) {
+												const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, currentHmrData.hash);
+												if (status === HmrConstants.HMR_ERROR_STATUS) {
+													watchInfo.filesToSync = currentHmrData.fallbackFiles[device.deviceInfo.platform];
+													liveSyncResultInfo = await service.liveSyncWatchAction(device, watchInfo);
+													// We want to force a restart of the application.
+													liveSyncResultInfo.isFullSync = true;
+													await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
+												}
+											}
+
+											this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
+										};
+
+										if (liveSyncData.useHotModuleReload && opts && opts.calledFromHook) {
+											try {
+												this.$logger.trace("Try executing watch action without any preparation of files.");
+												await watchAction(settings);
+												this.$logger.trace("Successfully executed watch action without any preparation of files.");
+												return;
+											} catch (err) {
+												this.$logger.trace(`Error while trying to execute fast sync. Now we'll check the state of the app and we'll try to resurrect from the error. The error is: ${err}`);
+											}
+										}
+
 										const appInstalledOnDeviceResult = await this.ensureLatestAppPackageIsInstalledOnDevice({
 											device,
 											preparedPlatforms,
@@ -653,41 +699,15 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 											skipModulesNativeCheck: !liveSyncData.watchAllFiles
 										}, { skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare });
 
+										settings.isReinstalled = appInstalledOnDeviceResult.appInstalled;
+										settings.connectTimeout = null;
+
 										if (liveSyncData.useHotModuleReload && appInstalledOnDeviceResult.appInstalled) {
 											const additionalFilesToSync = currentHmrData && currentHmrData.fallbackFiles && currentHmrData.fallbackFiles[device.deviceInfo.platform];
 											_.each(additionalFilesToSync, fileToSync => currentFilesToSync.push(fileToSync));
 										}
 
-										const service = this.getLiveSyncService(device.deviceInfo.platform);
-										const settings: ILiveSyncWatchInfo = {
-											liveSyncDeviceInfo: deviceBuildInfoDescriptor,
-											projectData,
-											filesToRemove: currentFilesToRemove,
-											filesToSync: currentFilesToSync,
-											isReinstalled: appInstalledOnDeviceResult.appInstalled,
-											syncAllFiles: liveSyncData.watchAllFiles,
-											hmrData: currentHmrData,
-											useHotModuleReload: liveSyncData.useHotModuleReload,
-											force: liveSyncData.force
-										};
-
-										let liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);
-
-										await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
-
-										//If didRecover is true, this means we were in ErrorActivity and fallback files were already transfered and app will be restarted.
-										if (!liveSyncResultInfo.didRecover && liveSyncData.useHotModuleReload && currentHmrData.hash) {
-											const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, currentHmrData.hash);
-											if (status === HmrConstants.HMR_ERROR_STATUS) {
-												settings.filesToSync = currentHmrData.fallbackFiles[device.deviceInfo.platform];
-												liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);
-												//We want to force a restart of the application.
-												liveSyncResultInfo.isFullSync = true;
-												await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
-											}
-										}
-
-										this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
+										await watchAction(settings);
 									},
 										(device: Mobile.IDevice) => {
 											const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];
@@ -715,7 +735,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 							});
 						}
 					}
-				}, 250);
+				}, liveSyncData.useHotModuleReload ? 0 : 250);
 
 				this.liveSyncProcessesInfo[liveSyncData.projectDir].timer = timeoutTimer;
 			};
@@ -738,11 +758,12 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					hmrData,
 					filesToRemove,
 					startSyncFilesTimeout: async (platform: string) => {
+						const opts = { calledFromHook: true };
 						if (platform) {
-							await startSyncFilesTimeout(platform);
+							await startSyncFilesTimeout(platform, opts);
 						} else {
 							// This code is added for backwards compatibility with old versions of nativescript-dev-webpack plugin.
-							await startSyncFilesTimeout();
+							await startSyncFilesTimeout(null, opts);
 						}
 					}
 				}
@@ -823,7 +844,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		}
 	}
 
-	public emitLivesyncEvent (event: string, livesyncData: ILiveSyncEventData): boolean {
+	public emitLivesyncEvent(event: string, livesyncData: ILiveSyncEventData): boolean {
 		this.$logger.trace(`Will emit event ${event} with data`, livesyncData);
 		return this.emit(event, livesyncData);
 	}
