@@ -130,6 +130,12 @@ export class FileStore {
     options = assign({ tls: true }, options);
     const queryStringObject = { tls: options.tls === true };
 
+    if (!isDefined(name)) {
+      return Promise.reject(
+        new KinveyError('A valid id is required to find a file by id.');
+      );
+    }
+
     if (isNumber(options.ttl)) {
       queryStringObject.ttl_in_seconds = parseInt(options.ttl, 10);
     }
