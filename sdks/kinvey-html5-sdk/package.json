@@ -4,7 +4,7 @@
   "name": "kinvey-html5-sdk",
   "description": "Kinvey JavaScript SDK for HTML5 applications.",
   "author": "Kinvey, Inc.",
-  "homepage": "http://www.kinvey.com",
+  "homepage": "http://devcenter.kinvey.com",
   "license": "Apache-2.0",
   "main": "lib/index.js",
   "scripts": {
@@ -44,6 +44,8 @@
     "eslint-config-kinvey-platform": "kinvey/eslint-kinvey-platform#0.1.1",
     "eslint-plugin-import": "2.14.0",
     "webpack": "4.20.2",
+    "webpack-bundle-analyzer": "3.0.2",
+    "webpack-cli": "3.1.2",
     "webpack-merge": "4.1.4"
   },
   "files": [

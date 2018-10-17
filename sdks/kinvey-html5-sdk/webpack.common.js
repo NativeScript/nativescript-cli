@@ -1,11 +1,25 @@
 const path = require('path');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const webpack = require('webpack');
 const pkg = require('./package.json');
+
+const BANNER = `
+/**
+ * ${pkg.name} - ${pkg.description}
+ * @version ${pkg.version}
+ * @author ${pkg.author}
+ * @license ${pkg.license}
+ */
+`;
 
 const config = {
   entry: {},
   plugins: [
     new CleanWebpackPlugin(['dist']),
+    new webpack.BannerPlugin({
+      banner: BANNER,
+      raw: true
+    })
   ],
   output: {
     filename: '[name].js',
