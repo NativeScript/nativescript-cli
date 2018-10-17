@@ -744,6 +744,14 @@ describe('User', () => {
   });
 
   describe('me()', () => {
+    beforeEach(() => {
+      return UserMock.logout();
+    });
+
+    beforeEach(() => {
+      return UserMock.login(randomString(), randomString());
+    });
+
     it('should refresh the users data', () => {
       const user = new User({ _id: randomString(), name: randomString() });
       const reply = {
@@ -798,6 +806,27 @@ describe('User', () => {
       return user.me()
         .then((user) => {
           expect(user.data).toEqual(User.getActiveUser().data);
+        });
+    });
+
+    it('should merge _socialIdentity metadata', async () => {
+      await UserMock.loginWithMIC(randomString())
+      const activeUser = User.getActiveUser();
+      const _socialIdentity = activeUser._socialIdentity;
+      const reply = {
+        _id: activeUser._id,
+        username: randomString()
+      };
+
+      // Kinvey API response
+      nock(activeUser.client.apiHostname)
+        .get(`${activeUser.pathname}/_me`)
+        .reply(200, reply);
+
+      return activeUser.me()
+        .then((user) => {
+          console.log(user.data);
+          expect(user._socialIdentity).toEqual(_socialIdentity);
         });
     });
 

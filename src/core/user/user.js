@@ -596,6 +596,15 @@ export class User {
 
         // Store the active user
         if (this.isActive()) {
+          // Merge _socialIdentity metadata not returned from the /_me endpoint
+          if (this._socialIdentity) {
+            data._socialIdentity = data._socialIdentity || {};
+            data._socialIdentity = Object.keys(this._socialIdentity).reduce((_socialIdentity, identity) => {
+              _socialIdentity[identity] = Object.assign(_socialIdentity[identity], data._socialIdentity[identity]);
+              return _socialIdentity;
+            }, this._socialIdentity);
+          }
+
           return this.client.setActiveUser(data);
         }
 
