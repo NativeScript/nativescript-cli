@@ -16,6 +16,7 @@ import { NodeHttpMiddleware } from '../../node/http';
 import { init } from '../kinvey';
 import { getLiveService } from '../live';
 import { UserMock } from './user-mock';
+import { mergeSocialIdentity } from './utils';
 
 chai.use(require('chai-as-promised'));
 
@@ -741,6 +742,32 @@ describe('User', () => {
             });
         });
     });
+
+    it('should merge _socialIdentity metadata', async () => {
+      await UserMock.loginWithMIC(randomString());
+      const activeUser = User.getActiveUser();
+      const email = randomString();
+      const requestData = assign(activeUser.data, { email: email });
+      const responseData = assign(requestData, {
+        _socialIdentity: {
+          kinveyAuth: {
+            attribute: randomString(),
+            refresh_token: randomString()
+          }
+        }
+      });
+      const newSocialIdentity = mergeSocialIdentity(activeUser._socialIdentity, responseData._socialIdentity);
+
+      // Kinvey API response
+      nock(client.apiHostname)
+        .put(`${activeUser.pathname}/${activeUser._id}`, requestData)
+        .reply(200, responseData);
+
+      return activeUser.update({ email: email })
+        .then((user) => {
+          expect(user._socialIdentity).toEqual(newSocialIdentity);
+        });
+    });
   });
 
   describe('me()', () => {
@@ -810,13 +837,19 @@ describe('User', () => {
     });
 
     it('should merge _socialIdentity metadata', async () => {
-      await UserMock.loginWithMIC(randomString())
+      await UserMock.loginWithMIC(randomString());
       const activeUser = User.getActiveUser();
-      const _socialIdentity = activeUser._socialIdentity;
       const reply = {
         _id: activeUser._id,
-        username: randomString()
+        username: randomString(),
+        _socialIdentity: {
+          kinveyAuth: {
+            attribute: randomString(),
+            refresh_token: randomString()
+          }
+        }
       };
+      const newSocialIdentity = mergeSocialIdentity(activeUser._socialIdentity, reply._socialIdentity);
 
       // Kinvey API response
       nock(activeUser.client.apiHostname)
@@ -825,8 +858,7 @@ describe('User', () => {
 
       return activeUser.me()
         .then((user) => {
-          console.log(user.data);
-          expect(user._socialIdentity).toEqual(_socialIdentity);
+          expect(user._socialIdentity).toEqual(newSocialIdentity);
         });
     });
 

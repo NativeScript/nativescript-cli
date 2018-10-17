@@ -15,6 +15,7 @@ import { Acl } from '../acl';
 import { Metadata } from '../metadata';
 import { getLiveService } from '../live';
 import { UserStore } from './userstore';
+import { mergeSocialIdentity } from './utils';
 
 /**
  * The User class is used to represent a single user on the Kinvey platform.
@@ -540,7 +541,14 @@ export class User {
     const store = new UserStore();
     return store.update(data, options)
       .then((data) => {
+        // Remove sensitive data
+        delete data.password;
+
         if (this.isActive()) {
+          if (data._socialIdentity) {
+            data._socialIdentity = mergeSocialIdentity(this._socialIdentity, data._socialIdentity);
+          }
+
           return this.client.setActiveUser(data);
         }
 
@@ -594,15 +602,9 @@ export class User {
         // Remove sensitive data
         delete data.password;
 
-        // Store the active user
         if (this.isActive()) {
-          // Merge _socialIdentity metadata not returned from the /_me endpoint
-          if (this._socialIdentity) {
-            data._socialIdentity = data._socialIdentity || {};
-            data._socialIdentity = Object.keys(this._socialIdentity).reduce((_socialIdentity, identity) => {
-              _socialIdentity[identity] = Object.assign(_socialIdentity[identity], data._socialIdentity[identity]);
-              return _socialIdentity;
-            }, this._socialIdentity);
+          if (data._socialIdentity) {
+            data._socialIdentity = mergeSocialIdentity(this._socialIdentity, data._socialIdentity);
           }
 
           return this.client.setActiveUser(data);
