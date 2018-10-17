@@ -161,7 +161,7 @@ function testFunc() {
 
     it('should login the user, using the default Auth service, which allows refresh tokens', (done) => {
       addLoginFacebookHandler();
-      Kinvey.User.loginWithMIC(redirectUrl)
+      Kinvey.User.loginWithMIC(redirectUrl, null)
         .then((user) => {
           validateMICUser(user, true);
           return Kinvey.User.exists(user.username)

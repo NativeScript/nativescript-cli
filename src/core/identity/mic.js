@@ -70,7 +70,7 @@ export class MobileIdentityConnect extends Identity {
 
     const promise = Promise.resolve()
       .then(() => {
-        if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
+        if (!authorizationGrant || authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
           // Step 1: Request a code
           return this.requestCodeWithPopup(clientId, redirectUri, options);
         } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
