@@ -132,7 +132,7 @@ export class FileStore {
 
     if (!isDefined(name)) {
       return Promise.reject(
-        new KinveyError('A valid id is required to find a file by id.');
+        new KinveyError('A valid id is required to find a file by id.')
       );
     }
 
