@@ -5,16 +5,22 @@ position: 11
 
 # tns resources generate icons
 
+### Description
+
+Generates all icons for Android and iOS platforms and places the generated images in the correct directories under `App_Resources/<platform>` directory.
+
+### Commands
+
 Usage | Synopsis
 ------|-------
 `$ tns resources generate icons <Path to image>` | Generate all icons for Android and iOS based on the specified image.
 
-Generates all icons for Android and iOS platforms and places the generated images in the correct directories under `App_Resources/<platform>` directory.
+### Arguments
 
-### Attributes
 * `<Path to image>` is a valid path to an image that will be used to generate all icons.
 
 <% if(isHtml) { %>
+
 ### Related Commands
 
 Command | Description
